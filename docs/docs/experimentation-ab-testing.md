@@ -4,78 +4,291 @@ sidebar_label: Experimentation (A/B Testing)
 sidebar_position: 4
 ---
 
-A/B testing enables you to experiment with design and functionality variants of your application. The data generated will allow you to make modifications to your app, safe in the knowledge that it will have a net positive effect.
+:::info
 
-You can use Flagsmith to perform A/B tests. Using a combination of [multivariate flags](/managing-flags/core-management) and a 3rd party analytics tool like [Amplitude](https://amplitude.com/) or [Mixpanel](https://mixpanel.com/), you can easily perform complex A/B tests that will help improve your product.
+Experimentation in Flagsmith is currently in active development. This page
+describes the flow as it stands in the current prototype — naming, scope,
+and behaviour may change before general availability. Feedback welcome on
+the draft PR.
 
-Running A/B tests require two main components: a bucketing engine and an analytics platform. The bucketing engine is used to put users into a particular A/B testing bucket. These buckets will control the specific user experience that is being tested. The analytics platform will receive a stream of event data derived from the behaviour of the user. Combining these two concepts allows you to deliver seamless A/B test.
+:::
 
-We have [integrations](/third-party-integrations/analytics/segment) with a number of analytics platforms. If we don't integrate with the platform you are using, you can still manually send the test data to the downstream platform manually.
+![TODO: Hero image — wide shot of the Experiment Results dashboard with lift bars and the recommendation callout](/img/experimentation/hero-results-dashboard.png)
 
-By the end of this tutorial, you will be able to:
+Flagsmith Experimentation lets you run controlled A/B tests on your
+multivariate feature flags and read the results inside Flagsmith itself.
+You define a hypothesis, pick the flag to split traffic on, choose which
+metrics matter, and Flagsmith tracks the outcome by reading evaluation
+and event data from your data warehouse.
 
--   Set up a multivariate flag in Flagsmith for A/B testing.
--   Implement logic in your application to bucket users and display variants.
--   Send A/B test data to an analytics platform.
--   Understand how to use anonymous identities for A/B testing on unknown users.
+This replaces the earlier "bring your own analytics" approach where
+Flagsmith handled variation assignment but results lived in Amplitude or
+Mixpanel. Everything — configuration, running, and results — now lives
+in one place.
 
-## Before you begin
+## Key benefits
 
-To follow this tutorial, you will need:
+- **One workflow for the full experiment lifecycle.** Configure, launch,
+  monitor, and read results without leaving Flagsmith.
+- **Structured hypothesis and metric tracking.** Experiments are a
+  first-class object with a hypothesis, primary / secondary / guardrail
+  metrics, and a significance verdict — not a free-form flag configuration.
+- **Reuses existing Flagsmith concepts.** Assignment uses the same
+  identity-based bucketing as multivariate flags. Target audiences use
+  existing segments.
+- **Warehouse-backed metrics.** Results are computed from your data
+  warehouse (Snowflake, BigQuery, Databricks), so metric definitions stay
+  close to where your business already stores event data.
 
-- A basic understanding of [multivariate flags](/managing-flags/core-management) in Flagsmith. Remember: multivariate bucketing only works when users are identified (use real identities or persistent anonymous GUIDs).
-- Access to a third-party analytics platform (e.g., Amplitude, Mixpanel) where you can send custom events. You can explore Flagsmith [integrations](/third-party-integrations/analytics/segment) for this purpose.
-- A development environment for your application where you can implement changes and integrate the Flagsmith SDK.
+## How it fits with Flagsmith
 
-## Scenario - Testing a new Paypal button
+Experimentation builds on three concepts you already use:
 
-For this example, lets assume we have an app that currently accepts credit card payments only. We have a hunch that we are losing out on potential customers that would like to pay with PayPal. We're going to test whether adding PayPal to the payment options increases our checkout rate.
+- **[Multivariate flags](/managing-flags/core-management)** — every
+  experiment runs on a multivariate flag. The flag's existing variations
+  become the experiment's control and treatment variations.
+- **[Segments](/flagsmith-concepts/targeting-and-rollouts)** — experiments
+  target a segment. Users outside the segment see the flag's environment
+  default, unchanged.
+- **[Identities](/flagsmith-concepts/identities)** — users are bucketed
+  by identity, the same way multivariate flag values are assigned today.
+  A user consistently sees the same variation for the duration of the
+  experiment.
 
-We have a lot of users on our platform, so we don't want to run this test against our entire user-base. We want 90% of our users to be excluded from the test. Then for our test, 5% of our users will see the new Paypal button, and the remaining 5% will not see it. So we will have 3 buckets:
+---
 
-1. Excluded (Control) Users
-2. Paypal test button users
-3. Test users that don't see the Paypal button
+## 1. Connecting a data warehouse
 
-Because Flagsmith flags can contain both boolean states as well as multivariate flag values, we can make use of both. We will use the boolean flag state to control whether to run the test. Then, if the flag is `enabled`, check the multivariate value. In this example, we will only show the PayPal button if the value is set to `show`.
+Before you can run experiments, connect the data warehouse where your
+flag-evaluation and custom-event data lives. Flagsmith reads from the
+warehouse to compute metric values per variation.
 
-## Steps
+:::info
 
-1. Create a new [multivariate flag](/managing-flags/core-management) that will control which of the 3 buckets the user is put into. We'll call this flag `paypal_button_test`. We will provide 3 variate options:
+The data warehouse connection is **organisation-scoped** — one connection
+per organisation, available across all projects. Configure it once and
+every project inherits it.
 
-   1. Control - 90% of users
-   2. Paypal button - 5% of users
-   3. Test users that don't see the Paypal button - 5% of users
+:::
 
-2. In our app, we want to [identify](/flagsmith-concepts/identities) each user before they start the checkout process. All Flagsmith multivariate flags need us to identify the user, so we can bucket them in a reproducible manner.
-3. When we get to the checkout page, check the `value` of the `paypal_button_test` flag for that user. If it evaluates to `show`, show the PayPal payment button. Otherwise, don't show the button.
-4. Send an event message to the analytics platform, adding the name/value pair of `paypal_button_test` and the value of the flag; in this case it would be one of either `control`, `show` or `hide`.
-5. Deploy our app, enable the flag and watch the data come in to your analytics platform.
+### Step 1: Open Organisation Integrations
 
-Here is what creating the flag would look like.
+![TODO: Organisation Integrations page with the Data Warehouse card highlighted](/img/experimentation/integrations-list-warehouse-card.png)
 
-![Image](/img/ab-test-paypal-example.png)
+1. Go to **Organisation Integrations** from the organisation nav.
+2. Locate the **Data Warehouse** card.
+3. Click **Add Integration**.
 
-Once the test is set up, and the flag has been enabled, data will start streaming into the analytics platform. We can now evaluate the results of the tests based on the behavioral changes that the new button has created.
+### Step 2: Choose a warehouse
 
-## Handling Anonymous/Unknown Identities
+![TODO: Configuration form showing Snowflake / BigQuery / Databricks selector cards](/img/experimentation/warehouse-config-form.png)
 
-To do A/B testing you need to use identities. Without an identity to key from, it's impossible for the platform to serve a consistent experience to your users.
+1. Pick your warehouse provider — **Snowflake**, **BigQuery**, or
+   **Databricks**.
+2. Fill in the connection details (account URL, database, schema,
+   warehouse, user, authentication method).
 
-What if you want to run an A/B test in an area of your application where you don't know who your users are? For example on the homepage of your website? In this instance, you need to generate _anonymous identities_ values for your users. In this case we will generate a GUID for each user.
+### Step 3: Test and connect
 
-A GUID value is just a random string that has an extremely high likelihood of being unique. There's more info about generating GUID values [on Stack Overflow](https://stackoverflow.com/a/2117523).
+![TODO: Test-passed state showing the inline success banner above the action row](/img/experimentation/warehouse-test-passed.png)
 
-The general flow would be:
+1. Click **Test Connection** to verify your credentials without saving
+   them. Flagsmith attempts to authenticate and reports the result inline.
+2. If the test passes, click **Connect** to save the configuration and
+   start streaming data.
+3. If the test fails, review the error, correct your credentials, and
+   re-run the test.
 
-1. A new browser visits your website homepage for the first time.
-2. You see that this is an anonymous user, so you generate a random GUID for that user and assign it to them.
-3. You send that GUID along with an identify call to Flagsmith. This will then segment that visitor.
-4. You add a cookie to the browser and store the GUID. That way, if the user returns to your page, they will still be in the same segment.
+:::warning
 
-These techniques will be slightly different depending on what platform you are developing for, but the general concept will remain the same.
+Editing any connection field clears the last test result. Re-run the
+test before connecting so you aren't saving untested credentials.
 
-## Next steps
+:::
 
-- Explore [Flagsmith's integrations](/third-party-integrations/analytics/segment) with analytics platforms.
-- Learn more about [managing identities](/flagsmith-concepts/identities) in Flagsmith.
+### Step 4: Verify data is flowing
+
+![TODO: Connected state — live stats card showing 24h flag evaluations and custom events, plus connection details grid](/img/experimentation/warehouse-connected.png)
+
+Once connected, the warehouse page shows:
+
+- **24-hour flag evaluation count** — confirms Flagsmith is writing to
+  your warehouse
+- **24-hour custom event count** — confirms your app is writing events
+  Flagsmith can read for metric computation
+- **Connection details** — read-only summary of what's configured, with
+  **Edit** and **Disconnect** controls
+
+---
+
+## 2. Creating an experiment
+
+All experiment workflows start on the **Experiments** page in the
+project sidebar (alongside Features, Segments, and Identities). The list
+is the hub: it's where you launch a new experiment and where you click
+in to read the results of an existing one.
+
+![TODO: Experiments list page with a mix of Running, Completed, and Draft rows, highlighting the Create Experiment button](/img/experimentation/experiments-list.png)
+
+Creating an experiment is a 5-step wizard. Each step validates before
+you continue, and you can jump back to any earlier step from the
+Review & Launch summary.
+
+### Step 1: Open the Experiments list
+
+1. Go to **Experiments** in the project sidebar.
+2. Click **Create Experiment** in the top right.
+
+### Step 2: Experiment Details
+
+![TODO: Experiment Details step — name field, hypothesis textarea, start/end date pickers](/img/experimentation/wizard-details.png)
+
+1. **Name** — a short identifier (e.g. `checkout_paypal_button_test`).
+2. **Hypothesis** — required. State what you expect to happen and why.
+   This becomes part of the experiment's permanent record so future team
+   members can see the original intent.
+3. **Start and end dates** — default to today + 14 days. Adjust if you
+   want to schedule the experiment for later or run for a different
+   window.
+
+### Step 3: Flag & Variations
+
+![TODO: Flag picker with multi-variant flags; the single-variant blocking banner below for context](/img/experimentation/wizard-flag-variations.png)
+
+1. Pick the **multivariate flag** to experiment on. Single-variant flags
+   are not eligible — the wizard blocks them with an explanation and a
+   link to add a variation.
+2. Review the **Variations** table — read-only. These are the flag's
+   existing multivariate values and become the experiment's control and
+   treatment variations.
+
+:::info
+
+Experiments require at least one non-control variation. If the selected
+flag has none, the wizard shows a banner prompting you to add one on the
+flag's main page first.
+
+:::
+
+### Step 4: Select Metrics
+
+![TODO: Metric picker showing pre-selected metrics with the Primary / Secondary / Guardrail segmented control visible on a row](/img/experimentation/wizard-metrics.png)
+
+Pick the metrics this experiment will track. Each metric has a **role**
+that tells Flagsmith how to interpret it:
+
+- **Primary** — the metric that drives the verdict. Significance here
+  determines whether the experiment succeeds.
+- **Secondary** — informational. Tracked and displayed alongside primary,
+  but doesn't influence the recommendation.
+- **Guardrail** — a safety check. Used to detect regressions on metrics
+  you don't want to break (e.g. page-load time, error rate).
+
+1. Select metrics from the list.
+2. For each selected metric, choose its role using the three-way segmented
+   control.
+3. If you select multiple primary metrics, a soft warning appears — this
+   is allowed but harder to interpret statistically.
+
+### Step 5: Segments & Traffic
+
+![TODO: Segment selector with an active conflict banner shown for context; traffic-split inputs below](/img/experimentation/wizard-segment-traffic.png)
+
+1. Pick the **segment** whose users will be eligible for the experiment.
+   Everyone outside the segment sees the flag's environment default,
+   unchanged.
+2. Set **traffic weights** — the percentage of eligible users assigned to
+   each variation. Weights auto-balance: adjusting one rebalances the
+   others proportionally. Click **Split evenly** to reset.
+
+:::warning
+
+If the chosen flag already has a segment override for this segment, the
+wizard shows a conflict banner. Resolve the conflict (pick a different
+segment, or remove the override) before continuing — a running
+experiment on a segment with an override produces incorrect assignment.
+
+:::
+
+### Step 6: Review & Launch
+
+![TODO: Review summary with per-section edit links](/img/experimentation/wizard-review-launch.png)
+
+1. Review the full configuration — details, flag, variations, metrics
+   with roles, segment, traffic split, and dates.
+2. Click any section's **Edit** link to jump back to that step.
+3. Click **Launch Experiment**.
+4. Confirm the launch in the modal. Once confirmed, the experiment
+   starts assigning traffic immediately and the flag begins splitting
+   variations by the configured weights within the chosen segment.
+
+:::info
+
+Once launched, experiment configuration is locked for the duration of
+the run to preserve statistical validity. To change the setup, stop the
+experiment and create a new one.
+
+:::
+
+---
+
+## 3. Reading experiment results
+
+From the **Experiments** list, click any running or completed experiment
+to open its **Results** dashboard.
+
+![TODO: Full results dashboard — stat cards, recommendation callout, metrics comparison table, and trend chart stacked](/img/experimentation/results-dashboard-full.png)
+
+Read the dashboard top-down:
+
+### Summary cards
+
+- **Lift vs. control** on the primary metric
+- **Probability of being best** — how confident the statistical engine is
+  that the leading variation truly wins
+- **Sample size per variation** — how many assigned identities have
+  contributed data so far
+
+### Recommendation callout
+
+![TODO: Recommendation callout — "Treatment B is outperforming Control with 94% probability" style](/img/experimentation/results-recommendation-callout.png)
+
+A plain-language summary of the current state — which variation is
+leading, how confident the verdict is, and a suggested next action
+(continue, declare a winner, investigate).
+
+### Metrics comparison table
+
+![TODO: Metrics comparison table — primary row emphasised, guardrail badge visible, zero-centred lift bars](/img/experimentation/results-comparison-table.png)
+
+One row per metric, with the **primary row** visually emphasised so
+your eye lands on the verdict-driving metric first. Each row shows:
+
+- **Role badge** — Primary / Secondary / Guardrail
+- **Control value** and **Treatment value**
+- **Lift bar** — zero-centred, showing the relative change and its
+  direction
+- **Significance** — statistical confidence in the observed lift
+
+### Trend over time
+
+![TODO: Trend line chart with metric selector above it — control vs. treatment lines](/img/experimentation/results-trend-chart.png)
+
+Below the table, a line chart plots each variation's metric value over
+the duration of the experiment. The metric selector lets you inspect any
+of the experiment's metrics independently.
+
+This helps you distinguish a stable result from one that only recently
+flipped — if lines have been consistently separated for days, the
+verdict is more trustworthy than if they crossed yesterday.
+
+---
+
+## What's next
+
+- Learn more about **[multivariate flags](/managing-flags/core-management)**
+  — the building block every experiment sits on top of.
+- Explore **[segments](/flagsmith-concepts/targeting-and-rollouts)** to
+  define the audience for an experiment.
+- Read about **[identities](/flagsmith-concepts/identities)**, the unit
+  Flagsmith buckets users by when assigning variations.
