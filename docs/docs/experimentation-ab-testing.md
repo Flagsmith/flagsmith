@@ -13,7 +13,7 @@ the draft PR.
 
 :::
 
-![TODO: Hero image — wide shot of the Experiment Results dashboard with lift bars and the recommendation callout](/img/experimentation/hero-results-dashboard.png)
+> **Screenshot placeholder —** Hero image — wide shot of the Experiment Results dashboard with lift bars and the recommendation callout. Target path: `/img/experimentation/hero-results-dashboard.png`
 
 Flagsmith Experimentation lets you run controlled A/B tests on your
 multivariate feature flags and read the results inside Flagsmith itself.
@@ -73,7 +73,7 @@ every project inherits it.
 
 ### Step 1: Open Organisation Integrations
 
-![TODO: Organisation Integrations page with the Data Warehouse card highlighted](/img/experimentation/integrations-list-warehouse-card.png)
+> **Screenshot placeholder —** Organisation Integrations page with the Data Warehouse card highlighted. Target path: `/img/experimentation/integrations-list-warehouse-card.png`
 
 1. Go to **Organisation Integrations** from the organisation nav.
 2. Locate the **Data Warehouse** card.
@@ -81,7 +81,7 @@ every project inherits it.
 
 ### Step 2: Choose a warehouse
 
-![TODO: Configuration form showing Snowflake / BigQuery / Databricks selector cards](/img/experimentation/warehouse-config-form.png)
+> **Screenshot placeholder —** Configuration form showing Snowflake / BigQuery / Databricks selector cards. Target path: `/img/experimentation/warehouse-config-form.png`
 
 1. Pick your warehouse provider — **Snowflake**, **BigQuery**, or
    **Databricks**.
@@ -90,7 +90,7 @@ every project inherits it.
 
 ### Step 3: Test and connect
 
-![TODO: Test-passed state showing the inline success banner above the action row](/img/experimentation/warehouse-test-passed.png)
+> **Screenshot placeholder —** Test-passed state showing the inline success banner above the action row. Target path: `/img/experimentation/warehouse-test-passed.png`
 
 1. Click **Test Connection** to verify your credentials without saving
    them. Flagsmith attempts to authenticate and reports the result inline.
@@ -108,7 +108,7 @@ test before connecting so you aren't saving untested credentials.
 
 ### Step 4: Verify data is flowing
 
-![TODO: Connected state — live stats card showing 24h flag evaluations and custom events, plus connection details grid](/img/experimentation/warehouse-connected.png)
+> **Screenshot placeholder —** Connected state — live stats card showing 24h flag evaluations and custom events, plus connection details grid. Target path: `/img/experimentation/warehouse-connected.png`
 
 Once connected, the warehouse page shows:
 
@@ -128,7 +128,7 @@ project sidebar (alongside Features, Segments, and Identities). The list
 is the hub: it's where you launch a new experiment and where you click
 in to read the results of an existing one.
 
-![TODO: Experiments list page with a mix of Running, Completed, and Draft rows, highlighting the Create Experiment button](/img/experimentation/experiments-list.png)
+> **Screenshot placeholder —** Experiments list page with a mix of Running, Completed, and Draft rows, highlighting the Create Experiment button. Target path: `/img/experimentation/experiments-list.png`
 
 Creating an experiment is a 5-step wizard. Each step validates before
 you continue, and you can jump back to any earlier step from the
@@ -141,7 +141,7 @@ Review & Launch summary.
 
 ### Step 2: Experiment Details
 
-![TODO: Experiment Details step — name field, hypothesis textarea, start/end date pickers](/img/experimentation/wizard-details.png)
+> **Screenshot placeholder —** Experiment Details step — name field, hypothesis textarea, start/end date pickers. Target path: `/img/experimentation/wizard-details.png`
 
 1. **Name** — a short identifier (e.g. `checkout_paypal_button_test`).
 2. **Hypothesis** — required. State what you expect to happen and why.
@@ -153,7 +153,7 @@ Review & Launch summary.
 
 ### Step 3: Flag & Variations
 
-![TODO: Flag picker with multi-variant flags; the single-variant blocking banner below for context](/img/experimentation/wizard-flag-variations.png)
+> **Screenshot placeholder —** Flag picker with multi-variant flags; the single-variant blocking banner below for context. Target path: `/img/experimentation/wizard-flag-variations.png`
 
 1. Pick the **multivariate flag** to experiment on. Single-variant flags
    are not eligible — the wizard blocks them with an explanation and a
@@ -172,7 +172,7 @@ flag's main page first.
 
 ### Step 4: Select Metrics
 
-![TODO: Metric picker showing pre-selected metrics with the Primary / Secondary / Guardrail segmented control visible on a row](/img/experimentation/wizard-metrics.png)
+> **Screenshot placeholder —** Metric picker showing pre-selected metrics with the Primary / Secondary / Guardrail segmented control visible on a row. Target path: `/img/experimentation/wizard-metrics.png`
 
 Pick the metrics this experiment will track. Each metric has a **role**
 that tells Flagsmith how to interpret it:
@@ -192,7 +192,7 @@ that tells Flagsmith how to interpret it:
 
 ### Step 5: Segments & Traffic
 
-![TODO: Segment selector with an active conflict banner shown for context; traffic-split inputs below](/img/experimentation/wizard-segment-traffic.png)
+> **Screenshot placeholder —** Segment selector with an active conflict banner shown for context; traffic-split inputs below. Target path: `/img/experimentation/wizard-segment-traffic.png`
 
 1. Pick the **segment** whose users will be eligible for the experiment.
    Everyone outside the segment sees the flag's environment default,
@@ -212,7 +212,7 @@ experiment on a segment with an override produces incorrect assignment.
 
 ### Step 6: Review & Launch
 
-![TODO: Review summary with per-section edit links](/img/experimentation/wizard-review-launch.png)
+> **Screenshot placeholder —** Review summary with per-section edit links. Target path: `/img/experimentation/wizard-review-launch.png`
 
 1. Review the full configuration — details, flag, variations, metrics
    with roles, segment, traffic split, and dates.
@@ -237,7 +237,7 @@ experiment and create a new one.
 From the **Experiments** list, click any running or completed experiment
 to open its **Results** dashboard.
 
-![TODO: Full results dashboard — stat cards, recommendation callout, metrics comparison table, and trend chart stacked](/img/experimentation/results-dashboard-full.png)
+> **Screenshot placeholder —** Full results dashboard — stat cards, recommendation callout, metrics comparison table, and trend chart stacked. Target path: `/img/experimentation/results-dashboard-full.png`
 
 Read the dashboard top-down:
 
@@ -251,7 +251,7 @@ Read the dashboard top-down:
 
 ### Recommendation callout
 
-![TODO: Recommendation callout — "Treatment B is outperforming Control with 94% probability" style](/img/experimentation/results-recommendation-callout.png)
+> **Screenshot placeholder —** Recommendation callout — "Treatment B is outperforming Control with 94% probability" style. Target path: `/img/experimentation/results-recommendation-callout.png`
 
 A plain-language summary of the current state — which variation is
 leading, how confident the verdict is, and a suggested next action
@@ -259,7 +259,7 @@ leading, how confident the verdict is, and a suggested next action
 
 ### Metrics comparison table
 
-![TODO: Metrics comparison table — primary row emphasised, guardrail badge visible, zero-centred lift bars](/img/experimentation/results-comparison-table.png)
+> **Screenshot placeholder —** Metrics comparison table — primary row emphasised, guardrail badge visible, zero-centred lift bars. Target path: `/img/experimentation/results-comparison-table.png`
 
 One row per metric, with the **primary row** visually emphasised so
 your eye lands on the verdict-driving metric first. Each row shows:
@@ -272,7 +272,7 @@ your eye lands on the verdict-driving metric first. Each row shows:
 
 ### Trend over time
 
-![TODO: Trend line chart with metric selector above it — control vs. treatment lines](/img/experimentation/results-trend-chart.png)
+> **Screenshot placeholder —** Trend line chart with metric selector above it — control vs. treatment lines. Target path: `/img/experimentation/results-trend-chart.png`
 
 Below the table, a line chart plots each variation's metric value over
 the duration of the experiment. The metric selector lets you inspect any
