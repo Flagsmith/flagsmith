@@ -1187,17 +1187,6 @@ CORS_ALLOW_HEADERS = list(
 # Hubspot settings
 HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
 ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
-HUBSPOT_IGNORE_DOMAINS = env.list(
-    "HUBSPOT_IGNORE_DOMAINS",
-    subcast=str,
-    default=[],
-)
-HUBSPOT_IGNORE_DOMAINS_REGEX = env.str("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
-HUBSPOT_IGNORE_ORGANISATION_DOMAINS = env.list(
-    "HUBSPOT_IGNORE_ORGANISATION_DOMAINS",
-    subcast=str,
-    default=[],
-)
 
 # Number of minutes to wait for a user that has signed up to
 # join or create an organisation before creating a lead in

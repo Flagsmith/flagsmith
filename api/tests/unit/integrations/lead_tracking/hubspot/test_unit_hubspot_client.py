@@ -3,7 +3,6 @@ import typing
 
 import pytest
 import responses
-from hubspot.crm.associations.v4 import AssociationSpec  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 from rest_framework import status
 
@@ -214,32 +213,6 @@ def test_create_company__without_organisation_info__creates_with_name_and_domain
         "domain": domain,
         "name": name,
     }
-
-
-def test_associate_contact_to_company__valid_ids__calls_hubspot_api(
-    hubspot_client: HubspotClient,
-) -> None:
-    # Given
-    company_id = "456"
-    contact_id = "123"
-
-    # When
-    hubspot_client.associate_contact_to_company(
-        contact_id=contact_id, company_id=company_id
-    )
-
-    # Then
-    hubspot_client.client.crm.associations.v4.basic_api.create.assert_called_once_with(
-        object_type="contacts",
-        object_id=contact_id,
-        to_object_type="companies",
-        to_object_id=company_id,
-        association_spec=[
-            AssociationSpec(
-                association_category="HUBSPOT_DEFINED", association_type_id=1
-            )
-        ],
-    )
 
 
 @pytest.mark.parametrize(
