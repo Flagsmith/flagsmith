@@ -1,10 +1,12 @@
 from task_processor.decorators import register_task_handler
 
+from features.feature_external_resources.models import FeatureExternalResource
 from integrations.gitlab.models import GitLabConfiguration
 from integrations.gitlab.services import (
     deregister_webhook_for_path,
     ensure_webhook_registered,
     has_live_resource_for_path,
+    post_linked_comment,
 )
 
 
@@ -34,3 +36,15 @@ def deregister_gitlab_webhook(config_id: int, project_path: str) -> None:
     if config.deleted_at is None and has_live_resource_for_path(config, project_path):
         return
     deregister_webhook_for_path(config, project_path)
+
+
+@register_task_handler()
+def post_gitlab_linked_comment(resource_id: int) -> None:
+    """Post a comment on the linked GitLab resource showing the feature flag's
+    current state. Dispatched at link time.
+    """
+    try:
+        resource = FeatureExternalResource.objects.get(id=resource_id)
+    except FeatureExternalResource.DoesNotExist:
+        return
+    post_linked_comment(resource)

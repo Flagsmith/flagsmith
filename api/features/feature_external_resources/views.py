@@ -16,7 +16,10 @@ from integrations.github.client import (
 from integrations.github.models import GitHubRepository
 from integrations.gitlab.models import GitLabConfiguration
 from integrations.gitlab.services import parse_project_path
-from integrations.gitlab.tasks import register_gitlab_webhook
+from integrations.gitlab.tasks import (
+    post_gitlab_linked_comment,
+    register_gitlab_webhook,
+)
 from organisations.models import Organisation
 
 from .models import GITLAB_RESOURCE_TYPES, FeatureExternalResource, ResourceType
@@ -146,28 +149,33 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
 
     def perform_create(self, serializer: FeatureExternalResourceSerializer) -> None:  # type: ignore[override]
         resource = serializer.save()
-        resource_type = ResourceType(resource.type)
+        if resource.type in GITLAB_RESOURCE_TYPES:
+            self._register_gitlab_webhook(resource)
+            self._log_gitlab_link_event(resource)
+            self._post_gitlab_link_comment(resource)
 
-        if resource_type in GITLAB_RESOURCE_TYPES:
-            project_path = parse_project_path(resource.url)
-            config = GitLabConfiguration.objects.filter(
-                project=resource.feature.project,
-            ).first()
-            if config is not None and project_path is not None:
-                register_gitlab_webhook.delay(args=(config.id, project_path))
+    def _register_gitlab_webhook(self, resource: FeatureExternalResource) -> None:
+        project_path = parse_project_path(resource.url)
+        config = GitLabConfiguration.objects.filter(
+            project=resource.feature.project,
+        ).first()
+        if config is not None and project_path is not None:
+            register_gitlab_webhook.delay(args=(config.id, project_path))
 
-        log_event_names: dict[ResourceType, tuple[str, str]] = {
-            ResourceType.GITLAB_ISSUE: ("gitlab", "issue.linked"),
-            ResourceType.GITLAB_MR: ("gitlab", "merge_request.linked"),
-        }
-        if resource_type in log_event_names:
-            logger_name, event_name = log_event_names[resource_type]
-            structlog.get_logger(logger_name).info(
-                event_name,
-                organisation__id=resource.feature.project.organisation_id,
-                project__id=resource.feature.project_id,
-                feature__id=resource.feature.id,
-            )
+    def _log_gitlab_link_event(self, resource: FeatureExternalResource) -> None:
+        event_name = {
+            ResourceType.GITLAB_ISSUE: "issue.linked",
+            ResourceType.GITLAB_MR: "merge_request.linked",
+        }[ResourceType(resource.type)]
+        structlog.get_logger("gitlab").info(
+            event_name,
+            organisation__id=resource.feature.project.organisation_id,
+            project__id=resource.feature.project_id,
+            feature__id=resource.feature.id,
+        )
+
+    def _post_gitlab_link_comment(self, resource: FeatureExternalResource) -> None:
+        post_gitlab_linked_comment.delay(args=(resource.id,))
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         external_resource_id = int(self.kwargs["pk"])

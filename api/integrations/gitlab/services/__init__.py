@@ -1,3 +1,6 @@
+from integrations.gitlab.services.comments import (
+    post_linked_comment,
+)
 from integrations.gitlab.services.tagging import (
     apply_initial_tag,
     apply_tag_for_event,
@@ -21,5 +24,6 @@ __all__ = [
     "has_live_resource_for_path",
     "parse_project_path",
     "parse_resource_iid",
+    "post_linked_comment",
     "set_gitlab_tag",
 ]
