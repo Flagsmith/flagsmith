@@ -35,7 +35,12 @@ const IntegrationsPage: FC = () => {
     API.trackPage(Constants.pages.INTEGRATIONS)
   }, [])
 
-  const integrations = Object.keys(Utils.getIntegrationData())
+  const integrationData = Utils.getIntegrationData()
+  const integrations = Object.keys(integrationData).sort((a, b) =>
+    (integrationData[a]?.title || a).localeCompare(
+      integrationData[b]?.title || b,
+    ),
+  )
   const organisationId = AccountStore.getOrganisation()?.id
   const { isLoading: permissionsLoading, permission } = useHasPermission({
     id: projectId,

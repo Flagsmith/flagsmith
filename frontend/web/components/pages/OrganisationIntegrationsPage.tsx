@@ -14,7 +14,11 @@ const OrganisationIntegrationsPage = ({ match }) => {
   }, [])
 
   const integrationData = Utils.getIntegrationData()
-  const allIntegrations = Object.keys(integrationData)
+  const allIntegrations = Object.keys(integrationData).sort((a, b) =>
+    (integrationData[a]?.title || a).localeCompare(
+      integrationData[b]?.title || b,
+    ),
+  )
   const orgIntegrations = allIntegrations.filter(
     (key) => !!integrationData[key]?.organisation,
   )

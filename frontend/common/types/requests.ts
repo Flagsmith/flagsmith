@@ -941,6 +941,21 @@ export type Req = {
     projectId?: string
     environmentId?: string
   }
+  createIntegration: {
+    integrationId: string
+    projectId?: string
+    environmentId?: string
+    organisationId?: string
+    body: Record<string, any>
+  }
+  updateIntegration: {
+    integrationId: string
+    id: string
+    projectId?: string
+    environmentId?: string
+    organisationId?: string
+    body: Record<string, any>
+  }
   getGitLabConfiguration: { project_id: number }
   getGitLabProjects: PagedRequest<{ project_id: number }>
   getGitLabIssues: PagedRequest<{

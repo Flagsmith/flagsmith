@@ -11,11 +11,19 @@ import Project from 'common/project'
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
 import Input from 'components/base/forms/Input'
-import { IntegrationData, IntegrationFieldOption } from 'common/types/responses'
+import {
+  IntegrationData,
+  IntegrationField,
+  IntegrationFieldOption,
+} from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import cloneDeep from 'lodash/cloneDeep'
 import ProjectSelect from 'components/ProjectSelect'
-import { useGetIntegrationQuery } from 'common/services/useIntegration'
+import {
+  useCreateIntegrationMutation,
+  useGetIntegrationQuery,
+  useUpdateIntegrationMutation,
+} from 'common/services/useIntegration'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 
 const GITHUB_INSTALLATION_UPDATE = 'update'
@@ -131,12 +139,11 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
     useGetIntegrationQuery(integrationQueryArgs ?? { integrationId: '' }, {
       skip: !integrationQueryArgs,
     })
+  const [createIntegration] = useCreateIntegrationMutation()
+  const [updateIntegration] = useUpdateIntegrationMutation()
 
-  // When the user switches project, wipe state carried over from the previous
-  // project — including flagsmithEnvironment, which per-environment queries key
-  // off and would otherwise stay stuck to the old project's environment.
-  // Env changes within the same project are handled by the query-resolution
-  // effect below.
+  // Reset on project change so a stale flagsmithEnvironment can't key the
+  // per-environment query to the old project.
   const previousProjectRef = useRef(selectedProjectId)
   useEffect(() => {
     if (!requiresProjectSelection) return
@@ -160,8 +167,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
       })
       return
     }
-    // Query resolved with no existing config for this project/environment —
-    // clear prior values so we don't carry over the previous selection.
+    // No existing config — reset to defaults.
     setLoadedIntegration(null)
     setFormData(buildDefaultFormData())
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -241,55 +247,53 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
 
     setIsLoading(true)
 
-    const baseUrl = constructBaseUrl({
-      environmentId: formData.flagsmithEnvironment,
+    if (isOauth) {
+      const baseUrl = constructBaseUrl({
+        environmentId: formData.flagsmithEnvironment,
+        integrationId: id,
+        organisationId,
+        projectId,
+      })
+      _data
+        .get(`${baseUrl}/signature/`, {
+          redirect_url: document.location.href,
+        })
+        .then((res: any) => handleOauthSignature(res))
+      return
+    }
+
+    if (!id) return
+    const mutationArgs = {
+      environmentId: integration.perEnvironment
+        ? formData.flagsmithEnvironment
+        : undefined,
       integrationId: id,
       organisationId,
-      projectId,
-    })
-
-    if (integration.perEnvironment) {
-      if (isOauth) {
-        _data
-          .get(`${baseUrl}/signature/`, {
-            redirect_url: document.location.href,
-          })
-          .then((res: any) => handleOauthSignature(res))
-      } else if (isEdit) {
-        _data
-          .put(`${baseUrl}/${existingId}/`, formData)
-          .then(onComplete)
-          .catch(onError)
-      } else {
-        _data.post(`${baseUrl}/`, formData).then(onComplete).catch(onError)
-      }
-    } else if (isOauth) {
-      _data
-        .get(`${baseUrl}/signature/`, { redirect_url: document.location.href })
-        .then((res: any) => handleOauthSignature(res))
-    } else if (isEdit) {
-      _data
-        .put(`${baseUrl}/${existingId}/`, formData)
-        .then(onComplete)
-        .catch(onError)
-    } else {
-      _data.post(`${baseUrl}/`, formData).then(onComplete).catch(onError)
+      projectId: integration.perEnvironment ? undefined : projectId,
     }
+    const request = isEdit
+      ? updateIntegration({
+          ...mutationArgs,
+          body: formData,
+          id: `${existingId}`,
+        }).unwrap()
+      : createIntegration({ ...mutationArgs, body: formData }).unwrap()
+    request.then(onComplete).catch(onError)
   }
 
-  const onError = (res: Response) => {
+  const onError = (err: any) => {
     const defaultError =
       'There was an error adding your integration. Please check the details and try again.'
-    res.text().then((errorText) => {
-      try {
-        const err = JSON.parse(errorText)
-        setError(err[0] || defaultError)
-      } catch {
-        setError(defaultError)
-      } finally {
-        setIsLoading(false)
-      }
-    })
+    try {
+      const payload = err?.data ?? err
+      setError(
+        (Array.isArray(payload) ? payload[0] : undefined) || defaultError,
+      )
+    } catch {
+      setError(defaultError)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const openGitHubWinInstallations = () => {
@@ -324,6 +328,52 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
       }
     })
   }
+
+  const renderFieldSelect = (field: IntegrationField) => {
+    const options = field.options || []
+    const selected = options.find(
+      (v: IntegrationFieldOption) => v.value === formData[field.key],
+    )
+    return (
+      <div className='full-width mb-2'>
+        <Select
+          onChange={(v: { value: string }) => update(field.key, v.value)}
+          options={options}
+          value={
+            selected
+              ? { label: selected.label, value: selected.value }
+              : { label: 'Please select' }
+          }
+        />
+      </div>
+    )
+  }
+
+  const renderFieldInput = (field: IntegrationField) => (
+    <Input
+      id={field.label.replace(/ /g, '')}
+      value={formData[field.key] ?? field.default ?? ''}
+      onChange={(e: any) => update(field.key, e)}
+      isValid={!!formData[field.key]}
+      type={field.hidden ? 'password' : field.inputType || 'text'}
+      className='full-width mb-2'
+      autocomplete={field.hidden ? 'new-password' : 'off'}
+    />
+  )
+
+  const renderField = (field: IntegrationField) => (
+    <div key={field.key}>
+      <div>
+        <label
+          htmlFor={field.label.replace(/ /g, '')}
+          className={!modal ? 'mb-1 fw-bold' : ''}
+        >
+          {field.label}
+        </label>
+      </div>
+      {field.options ? renderFieldSelect(field) : renderFieldInput(field)}
+    </div>
+  )
 
   return (
     <form
@@ -388,58 +438,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
             ))}
           </div>
         )}
-        {!readOnly &&
-          fields.map((field) => (
-            <div key={field.key}>
-              <div>
-                <label
-                  htmlFor={field.label.replace(/ /g, '')}
-                  className={!modal ? 'mb-1 fw-bold' : ''}
-                >
-                  {field.label}
-                </label>
-              </div>
-              {field.options ? (
-                <div className='full-width mb-2'>
-                  <Select
-                    onChange={(v: { value: string }) =>
-                      update(field.key, v.value)
-                    }
-                    options={field.options}
-                    value={
-                      formData[field.key] &&
-                      field.options.find(
-                        (v: IntegrationFieldOption) =>
-                          v.value === formData[field.key],
-                      )
-                        ? {
-                            label: field.options.find(
-                              (v: IntegrationFieldOption) =>
-                                v.value === formData[field.key],
-                            )?.label,
-                            value: formData[field.key],
-                          }
-                        : { label: 'Please select' }
-                    }
-                  />
-                </div>
-              ) : (
-                <Input
-                  id={field.label.replace(/ /g, '')}
-                  value={
-                    typeof formData[field.key] !== 'undefined'
-                      ? formData[field.key]
-                      : field.default
-                  }
-                  onChange={(e: any) => update(field.key, e)}
-                  isValid={!!formData[field.key]}
-                  type={field.hidden ? 'password' : field.inputType || 'text'}
-                  className='full-width mb-2'
-                  autocomplete={field.hidden ? 'new-password' : 'off'}
-                />
-              )}
-            </div>
-          ))}
+        {!readOnly && fields.map(renderField)}
         {authorised && id === 'slack' && (
           <div>
             Can't see your channel? Enter your channel ID here (C0xxxxxx)

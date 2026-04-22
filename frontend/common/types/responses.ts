@@ -1304,7 +1304,7 @@ export type Res = {
   processOAuthConsent: {
     redirect_uri: string
   }
-  integration: ({ id: string } & Record<string, any>)[]
+  integration: (ActiveIntegration & Record<string, any>)[]
   gitlabConfiguration: GitLabConfiguration[]
   gitlabProjects: PagedResponse<GitLabProject>
   gitlabIssues: PagedResponse<GitLabIssue>
