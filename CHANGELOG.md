@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.229.1](https://github.com/Flagsmith/flagsmith/compare/v2.229.0...v2.229.1) (2026-04-22)
+
+
+### Bug Fixes
+
+* **Dogfooding:** OpenFeature-gated flags always resolving to default ([#7310](https://github.com/Flagsmith/flagsmith/issues/7310)) ([d6cba10](https://github.com/Flagsmith/flagsmith/commit/d6cba10b2089cd008a1e191a90c79fe01374e7d7))
+* **hubspot:** simplify integration to only create contacts ([#7147](https://github.com/Flagsmith/flagsmith/issues/7147)) ([bfbe582](https://github.com/Flagsmith/flagsmith/commit/bfbe5824d0deac7290b96f64b501871ffb88cf77))
+
 ## [2.229.0](https://github.com/Flagsmith/flagsmith/compare/v2.228.0...v2.229.0) (2026-04-22)
 
 
