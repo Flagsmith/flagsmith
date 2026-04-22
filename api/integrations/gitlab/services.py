@@ -9,8 +9,8 @@ import structlog
 from rest_framework.exceptions import ValidationError
 
 from integrations.gitlab.client import (
-    add_flagsmith_label_to_gitlab_issue,
-    add_flagsmith_label_to_gitlab_merge_request,
+    GitLabResourceKind,
+    add_flagsmith_label_to_gitlab_resource,
     create_flagsmith_label,
     url_encode_gitlab_project_path,
 )
@@ -24,6 +24,11 @@ logger = structlog.get_logger("gitlab")
 GITLAB_RESOURCE_PATH_PATTERN = re.compile(
     r"^/(?P<path>.+?)/-/(?:issues|work_items|merge_requests)/(?P<iid>\d+)/?$"
 )
+
+GITLAB_RESOURCE_KIND_BY_TYPE: dict[str, GitLabResourceKind] = {
+    ResourceType.GITLAB_ISSUE.value: "issues",
+    ResourceType.GITLAB_MR.value: "merge_requests",
+}
 
 
 def apply_flagsmith_label_to_resource(
@@ -64,20 +69,13 @@ def apply_flagsmith_label_to_resource(
         if created:
             log.info("label.created")
 
-        if resource.type == ResourceType.GITLAB_ISSUE:
-            add_flagsmith_label_to_gitlab_issue(
-                config.gitlab_instance_url,
-                config.access_token,
-                gitlab_project=gitlab_project,
-                issue_iid=resource_iid,
-            )
-        else:
-            add_flagsmith_label_to_gitlab_merge_request(
-                config.gitlab_instance_url,
-                config.access_token,
-                gitlab_project=gitlab_project,
-                merge_request_iid=resource_iid,
-            )
+        add_flagsmith_label_to_gitlab_resource(
+            config.gitlab_instance_url,
+            config.access_token,
+            gitlab_project=gitlab_project,
+            resource_kind=GITLAB_RESOURCE_KIND_BY_TYPE[resource.type],
+            resource_iid=resource_iid,
+        )
         log.info("label.applied")
     except requests.RequestException as exc:
         log.exception("label.failed")
