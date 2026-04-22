@@ -81,14 +81,13 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
     def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         resource_type = request.data.get("type")
 
-        # GitLab side effects run in ``perform_create`` below.
-        if resource_type in GITLAB_RESOURCE_TYPES:
-            return super().create(request, *args, **kwargs)
-
-        if resource_type not in (
-            ResourceType.GITHUB_ISSUE,
-            ResourceType.GITHUB_PR,
-        ):
+        # TODO(#7315): route link/unlink/state-change/delete through a
+        # provider-agnostic dispatcher so adding a new VCS is contained
+        # to one integration app rather than spread across view, model,
+        # and serializer hooks.
+        if resource_type not in (ResourceType.GITHUB_ISSUE, ResourceType.GITHUB_PR):
+            # GitLab side effects run in ``perform_create`` below; other
+            # types fall through to the default create.
             return super().create(request, *args, **kwargs)
 
         feature = get_object_or_404(
@@ -173,6 +172,13 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
                 ),
             )
         super().perform_destroy(instance)
+        gitlab_logger.info(
+            "resource.unlinked",
+            organisation__id=instance.feature.project.organisation_id,
+            project__id=instance.feature.project_id,
+            feature__id=instance.feature.id,
+            resource__type=instance.type.lower(),
+        )
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         external_resource_id = int(self.kwargs["pk"])

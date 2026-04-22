@@ -144,6 +144,17 @@ Attributes:
  - `project.id`
  - `resource.type`
 
+### `gitlab.resource.unlinked`
+
+Logged at `info` from:
+ - `api/features/feature_external_resources/views.py:176`
+
+Attributes:
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `resource.type`
+
 ### `gitlab.webhook.deregistered`
 
 Logged at `info` from:
