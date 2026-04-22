@@ -1,14 +1,13 @@
+from __future__ import annotations
+
 import re
+from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 
 import requests
 import structlog
 from rest_framework.exceptions import ValidationError
 
-from features.feature_external_resources.models import (
-    FeatureExternalResource,
-    ResourceType,
-)
 from integrations.gitlab.client import (
     add_flagsmith_label_to_gitlab_issue,
     add_flagsmith_label_to_gitlab_merge_request,
@@ -17,9 +16,12 @@ from integrations.gitlab.client import (
 )
 from integrations.gitlab.models import GitLabConfiguration
 
+if TYPE_CHECKING:
+    from features.feature_external_resources.models import FeatureExternalResource
+
 logger = structlog.get_logger("gitlab")
 
-_GITLAB_RESOURCE_PATH_PATTERN = re.compile(
+GITLAB_RESOURCE_PATH_PATTERN = re.compile(
     r"^/(?P<path>.+?)/-/(?:issues|work_items|merge_requests)/(?P<iid>\d+)/?$"
 )
 
@@ -32,6 +34,8 @@ def apply_flagsmith_label_to_resource(
     and apply it to the resource. No-op if tagging is disabled or unconfigured;
     raises ``ValidationError`` on parse/API failure (rolls back under atomic).
     """
+    from features.feature_external_resources.models import ResourceType
+
     project = resource.feature.project
     config: GitLabConfiguration | None = GitLabConfiguration.objects.filter(
         project=project
@@ -39,7 +43,7 @@ def apply_flagsmith_label_to_resource(
     if not config or not config.tagging_enabled:
         return
 
-    path_with_namespace, resource_iid = _parse_gitlab_resource_url(resource.url)
+    path_with_namespace, resource_iid = parse_gitlab_resource_url(resource.url)
     gitlab_project = url_encode_gitlab_project_path(path_with_namespace)
 
     log = logger.bind(
@@ -87,8 +91,8 @@ def apply_flagsmith_label_to_resource(
         ) from exc
 
 
-def _parse_gitlab_resource_url(url: str) -> tuple[str, int]:
-    match = _GITLAB_RESOURCE_PATH_PATTERN.match(urlsplit(url).path)
+def parse_gitlab_resource_url(url: str) -> tuple[str, int]:
+    match = GITLAB_RESOURCE_PATH_PATTERN.match(urlsplit(url).path)
     if not match:
         raise ValidationError({"url": "Could not parse GitLab resource URL."})
     return match["path"], int(match["iid"])

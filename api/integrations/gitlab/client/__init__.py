@@ -4,6 +4,8 @@ from integrations.gitlab.client.api import (
     create_project_hook,
     delete_project_hook,
     fetch_gitlab_projects,
+    remove_flagsmith_label_from_gitlab_issue,
+    remove_flagsmith_label_from_gitlab_merge_request,
     search_gitlab_issues,
     search_gitlab_merge_requests,
 )
@@ -26,6 +28,8 @@ __all__ = [
     "create_project_hook",
     "delete_project_hook",
     "fetch_gitlab_projects",
+    "remove_flagsmith_label_from_gitlab_issue",
+    "remove_flagsmith_label_from_gitlab_merge_request",
     "search_gitlab_issues",
     "search_gitlab_merge_requests",
 ]
