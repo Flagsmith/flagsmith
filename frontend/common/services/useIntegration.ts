@@ -47,7 +47,8 @@ export const integrationService = service
         Res['integration'][number],
         Req['createIntegration']
       >({
-        invalidatesTags: (_res, _err, args) => [integrationTag(args)],
+        invalidatesTags: (_res, err, args) =>
+          err ? [] : [integrationTag(args)],
         query: ({ body, ...args }) => ({
           body,
           method: 'POST',
@@ -62,7 +63,8 @@ export const integrationService = service
         Res['integration'][number],
         Req['updateIntegration']
       >({
-        invalidatesTags: (_res, _err, args) => [integrationTag(args)],
+        invalidatesTags: (_res, err, args) =>
+          err ? [] : [integrationTag(args)],
         query: ({ body, id, ...args }) => ({
           body,
           method: 'PUT',

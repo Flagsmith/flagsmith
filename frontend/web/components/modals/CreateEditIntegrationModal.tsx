@@ -167,9 +167,13 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
       })
       return
     }
-    // No existing config — reset to defaults.
+    // No existing config — reset to defaults, preserving the env the user
+    // just picked (otherwise the env select would flicker and clear).
     setLoadedIntegration(null)
-    setFormData(buildDefaultFormData())
+    setFormData({
+      ...buildDefaultFormData(),
+      ...(integration.perEnvironment ? { flagsmithEnvironment: envId } : {}),
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existingIntegrations, isFetchingIntegration])
 
@@ -361,6 +365,21 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
     />
   )
 
+  const renderReadOnlyValue = (field: IntegrationField) => {
+    const value = formData[field.key]
+    if (field.inputType === 'checkbox') return value ? 'Yes' : 'No'
+    if (field.options) {
+      return (
+        field.options.find((o) => o.value === value)?.label ??
+        String(value ?? '')
+      )
+    }
+    if (field.hidden && typeof value === 'string') {
+      return value.replace(/./g, '*')
+    }
+    return value ?? ''
+  }
+
   const renderField = (field: IntegrationField) => (
     <div key={field.key}>
       <div>
@@ -431,9 +450,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
             )}
             {fields.map((field) => (
               <SummaryItem key={field.key} label={field.label}>
-                {field.hidden
-                  ? formData[field.key]?.replace(/./g, '*')
-                  : formData[field.key]}
+                {renderReadOnlyValue(field)}
               </SummaryItem>
             ))}
           </div>
