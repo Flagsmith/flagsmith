@@ -84,7 +84,7 @@ project sidebar (alongside Features, Segments, and Identities). The list
 is the hub: it's where you launch a new experiment and where you click
 in to read the results of an existing one.
 
-> **Screenshot placeholder —** Experiments list page with a mix of Running, Completed, and Draft rows, highlighting the Create Experiment button. Target path: `/img/experimentation/experiments-list.png`
+![Experiments list page with a mix of Running, Completed, and Draft rows, highlighting the Create Experiment button](/img/experimentation/experiments-list.png)
 
 Creating an experiment is a 5-step wizard. Each step validates before
 you continue, and you can jump back to any earlier step from the
@@ -97,7 +97,7 @@ Review & Launch summary.
 
 ### Step 2: Experiment Details
 
-> **Screenshot placeholder —** Experiment Details step — name field, hypothesis textarea, start/end date pickers. Target path: `/img/experimentation/wizard-details.png`
+![Experiment Details step — name field, hypothesis textarea, start/end date pickers](/img/experimentation/wizard-details.png)
 
 1. **Name** — a short identifier (e.g. `checkout_paypal_button_test`).
 2. **Hypothesis** — required. State what you expect to happen and why.
@@ -168,7 +168,7 @@ experiment on a segment with an override produces incorrect assignment.
 
 ### Step 6: Review & Launch
 
-> **Screenshot placeholder —** Review summary with per-section edit links. Target path: `/img/experimentation/wizard-review-launch.png`
+![Review summary with per-section edit links](/img/experimentation/wizard-review-launch.png)
 
 1. Review the full configuration — details, flag, variations, metrics
    with roles, segment, traffic split, and dates.
@@ -193,7 +193,7 @@ experiment and create a new one.
 From the **Experiments** list, click any running or completed experiment
 to open its **Results** dashboard.
 
-> **Screenshot placeholder —** Full results dashboard — stat cards, recommendation callout, metrics comparison table, and trend chart stacked. Target path: `/img/experimentation/results-dashboard-full.png`
+![Full results dashboard — stat cards, recommendation callout, metrics comparison table, and trend chart stacked](/img/experimentation/results-dashboard-full.png)
 
 Read the dashboard top-down:
 

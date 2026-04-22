@@ -74,7 +74,7 @@ test before connecting so you aren't saving untested credentials.
 
 ### Step 4: Verify data is flowing
 
-> **Screenshot placeholder —** Connected state — live stats card showing 24h flag evaluations and custom events, plus connection details grid. Target path: `/img/integrations/data-warehouse/connected.png`
+![Connected state — live stats card showing 24h flag evaluations and custom events, plus connection details grid](/img/integrations/data-warehouse/connected.png)
 
 Once connected, the warehouse page shows:
 
