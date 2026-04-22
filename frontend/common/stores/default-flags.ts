@@ -37,6 +37,18 @@ const defaultFlags = {
       'perEnvironment': false,
       'title': 'Code References',
     },
+    'data-warehouse': {
+      'description':
+        'Connect Snowflake, BigQuery, or Databricks to compute experiment metrics from your event data. Required for experimentation.',
+      'docs': '/organisation/:organisationId/warehouse',
+      'external': true,
+      'image': '/static/images/integrations/data-warehouse.svg',
+      'organisation': true,
+      'perEnvironment': false,
+      'project': true,
+      'tags': ['analytics'],
+      'title': 'Data Warehouse',
+    },
     'datadog': {
       'description':
         'Sends events to Datadog for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',

@@ -1,0 +1,40 @@
+.experiment-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  flex: 1;
+
+  &__label {
+    font-size: var(--font-caption-size);
+    color: var(--color-text-secondary);
+  }
+
+  &__value {
+    font-family: var(--font-family);
+    font-size: var(--font-h3-size);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-default);
+
+    &--positive {
+      color: var(--color-text-success);
+    }
+
+    &--negative {
+      color: var(--color-text-danger);
+    }
+
+    &--neutral {
+      color: var(--color-text-secondary);
+    }
+  }
+
+  &__subtitle {
+    font-size: var(--font-caption-size);
+    color: var(--color-text-secondary);
+  }
+}

@@ -47,12 +47,16 @@ import CreateReleasePipelinePage from './components/pages/CreateReleasePipelineP
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 import SegmentPage from './components/pages/SegmentPage'
 import ExperimentsPage from './components/pages/ExperimentsPage'
+import CreateExperimentPage from './components/experiments-v2/CreateExperimentPage'
+import ExperimentResultsPage from './components/experiments-v2/ExperimentResultsPage'
+import MetricsLibraryPage from './components/experiments-v2/MetricsLibraryPage'
 import ReleaseManagerPage from './components/pages/ReleaseManagerPage'
 import FlagEnvironmentsPage from './components/pages/FlagEnvironmentsPage'
 import ExecutiveViewPage from './components/pages/ExecutiveViewPage'
 import DevViewPage from './components/pages/DevViewPage'
 import AdminDashboardPage from './components/pages/admin-dashboard/AdminDashboardPage'
 import CleanupPage from './components/pages/feature-lifecycle'
+import WarehousePage from './components/warehouse/WarehousePage'
 import OAuthAuthorizePage from './components/pages/OAuthAuthorizePage'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
@@ -77,7 +81,13 @@ export const routes = {
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
   'executive-view': '/organisation/:organisationId/executive-view',
+  'experiment-results':
+    '/project/:projectId/environment/:environmentId/experiments/:experimentId',
   'experiments': '/project/:projectId/environment/:environmentId/experiments',
+  'experiments-create':
+    '/project/:projectId/environment/:environmentId/experiments/create',
+  'experiments-metrics':
+    '/project/:projectId/environment/:environmentId/experiments/metrics',
   'feature-history': '/project/:projectId/environment/:environmentId/history',
   'feature-history-detail':
     '/project/:projectId/environment/:environmentId/history/:id/',
@@ -133,6 +143,7 @@ export const routes = {
   'segment': '/project/:projectId/segments/:id',
   'segments': '/project/:projectId/segments',
   'signup': '/signup',
+  'warehouse': '/organisation/:organisationId/warehouse',
 }
 export default (
   <Switch>
@@ -163,6 +174,21 @@ export default (
           path={routes.features}
           exact
           component={FlagsPage}
+        />
+        <ParameterizedRoute
+          path={routes['experiments-create']}
+          exact
+          component={CreateExperimentPage}
+        />
+        <ParameterizedRoute
+          path={routes['experiments-metrics']}
+          exact
+          component={MetricsLibraryPage}
+        />
+        <ParameterizedRoute
+          path={routes['experiment-results']}
+          exact
+          component={ExperimentResultsPage}
         />
         <ParameterizedRoute
           path={routes.experiments}
@@ -304,6 +330,11 @@ export default (
           path={routes.segment}
           exact
           component={SegmentPage}
+        />
+        <ParameterizedRoute
+          path={routes.warehouse}
+          exact
+          component={WarehousePage}
         />
         <ParameterizedRoute
           path={routes['organisation-settings']}

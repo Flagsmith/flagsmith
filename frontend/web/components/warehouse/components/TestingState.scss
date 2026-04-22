@@ -1,0 +1,59 @@
+@use '../../../styles/animations';
+
+.wh-testing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 80px 40px;
+  flex: 1;
+
+  &__spinner {
+    @include animations.spinner;
+    color: var(--color-icon-action);
+  }
+
+  &__title {
+    font-size: var(--font-h6-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-default);
+  }
+
+  &__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 280px;
+  }
+
+  &__step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: var(--font-body-sm-size);
+    color: var(--color-text-secondary);
+
+    svg {
+      color: var(--color-icon-secondary);
+      flex-shrink: 0;
+    }
+
+    &--done {
+      color: var(--color-text-success);
+
+      svg {
+        color: var(--color-icon-success);
+      }
+    }
+  }
+
+  &__step-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: var(--radius-full);
+    border: 2px solid var(--color-border-default);
+    flex-shrink: 0;
+    @include animations.animate-pulse;
+  }
+}

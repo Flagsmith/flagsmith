@@ -85,7 +85,10 @@ const Integration: FC<IntegrationProps> = (props) => {
     window.addEventListener('message', (event) => {
       if (
         event.source === childWindow &&
-        (event.data?.hasOwnProperty('installationId') ||
+        (Object.prototype.hasOwnProperty.call(
+          event.data ?? {},
+          'installationId',
+        ) ||
           event.data.installationId)
       ) {
         setWindowInstallationId(event.data.installationId)
@@ -129,6 +132,75 @@ const Integration: FC<IntegrationProps> = (props) => {
     activeIntegrations.length
   )
 
+  const isInternalPath = typeof docs === 'string' && docs.startsWith('/')
+  const resolvedHref = isInternalPath
+    ? docs.replace(
+        ':organisationId',
+        String(AccountStore.getOrganisation()?.id ?? ''),
+      )
+    : docs
+
+  const renderAddCta = () => {
+    if (external && !isExternalInstallation) {
+      return (
+        <a
+          href={resolvedHref}
+          {...(isInternalPath ? {} : { rel: 'noreferrer', target: '_blank' })}
+          className='btn btn-primary btn-xsm ml-3'
+          id='show-create-segment-btn'
+          data-test='show-create-segment-btn'
+        >
+          Add Integration
+        </a>
+      )
+    }
+    if (
+      external &&
+      isExternalInstallation &&
+      (windowInstallationId || props.githubMeta.hasIntegrationWithGithub)
+    ) {
+      return (
+        <Button
+          className='ml-3'
+          id='show-create-segment-btn'
+          data-test='show-create-segment-btn'
+          onClick={add}
+          size='xSmall'
+        >
+          Manage Integration
+        </Button>
+      )
+    }
+    if (
+      external &&
+      !props.githubMeta.hasIntegrationWithGithub &&
+      isExternalInstallation
+    ) {
+      return (
+        <Button
+          className='ml-3'
+          id='show-create-segment-btn'
+          data-test='show-create-segment-btn'
+          onClick={openChildWin}
+          size='xSmall'
+        >
+          Add Integration
+        </Button>
+      )
+    }
+    return (
+      <Button
+        className='ml-3'
+        id='show-create-segment-btn'
+        data-test='show-create-segment-btn'
+        onClick={add}
+        size='xSmall'
+      >
+        Add Integration
+      </Button>
+    )
+  }
+
   return (
     <div className='panel panel-integrations p-4 mb-3'>
       <div className='d-flex align-items-center gap-4'>
@@ -168,57 +240,7 @@ const Integration: FC<IntegrationProps> = (props) => {
                     Delete Integration
                   </Button>
                 ))}
-              {showAdd && (
-                <>
-                  {external && !isExternalInstallation ? (
-                    <a
-                      href={docs}
-                      target={'_blank'}
-                      className='btn btn-primary btn-xsm ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      rel='noreferrer'
-                    >
-                      Add Integration
-                    </a>
-                  ) : external &&
-                    isExternalInstallation &&
-                    (windowInstallationId ||
-                      props.githubMeta.hasIntegrationWithGithub) ? (
-                    <Button
-                      className='ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      onClick={add}
-                      size='xSmall'
-                    >
-                      Manage Integration
-                    </Button>
-                  ) : external &&
-                    !props.githubMeta.hasIntegrationWithGithub &&
-                    isExternalInstallation ? (
-                    <Button
-                      className='ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      onClick={openChildWin}
-                      size='xSmall'
-                    >
-                      Add Integration
-                    </Button>
-                  ) : (
-                    <Button
-                      className='ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      onClick={add}
-                      size='xSmall'
-                    >
-                      Add Integration
-                    </Button>
-                  )}
-                </>
-              )}
+              {showAdd && renderAddCta()}
             </Row>
           </Row>
         </div>
@@ -267,6 +289,7 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
   useEffect(() => {
     fetch()
     fetchGithubIntegration()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchGithubIntegration = () => {

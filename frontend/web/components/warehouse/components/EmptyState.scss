@@ -1,0 +1,30 @@
+.wh-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 80px 40px;
+  text-align: center;
+  flex: 1;
+
+  > svg,
+  > .icon {
+    color: var(--color-icon-secondary);
+  }
+
+  &__heading {
+    font-size: var(--font-h5-size);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-default);
+    margin: 0;
+  }
+
+  &__text {
+    font-size: var(--font-body-size);
+    color: var(--color-text-secondary);
+    max-width: 420px;
+    line-height: 1.5;
+    margin: 0;
+  }
+}

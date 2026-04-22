@@ -1,0 +1,121 @@
+.wizard-step-indicator {
+  display: flex;
+  gap: 20px;
+
+  &--done {
+    cursor: pointer;
+
+    .wizard-step-indicator__circle {
+      background: var(--color-surface-success);
+      border: 2px solid var(--green-500);
+      color: var(--color-text-success);
+    }
+
+    .wizard-step-indicator__title {
+      color: var(--color-text-default);
+    }
+  }
+
+  &--active {
+    .wizard-step-indicator__circle {
+      border: 2px solid var(--color-border-action);
+      color: var(--color-text-action);
+    }
+
+    .wizard-step-indicator__title {
+      color: var(--color-text-default);
+    }
+
+    .wizard-step-indicator__connector {
+      border-color: var(--color-border-default);
+    }
+  }
+
+  &--upcoming {
+    .wizard-step-indicator__circle {
+      border: 2px solid var(--color-border-default);
+      color: var(--color-text-disabled);
+    }
+
+    .wizard-step-indicator__title {
+      color: var(--color-text-disabled);
+    }
+  }
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 32px;
+    flex-shrink: 0;
+  }
+
+  &__circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+  }
+
+  &__number {
+    font-family: var(--font-family);
+    font-size: var(--font-body-sm-size);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &__connector {
+    width: 2px;
+    flex: 1;
+    min-height: 24px;
+    background: var(--color-border-default);
+  }
+
+  &__right {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 0 24px;
+    flex: 1;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__title {
+    font-family: var(--font-family);
+    font-size: var(--font-h6-size);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &__badge {
+    font-size: var(--font-caption-xs-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-success);
+    background: var(--color-surface-success);
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+  }
+
+  &__summary {
+    font-size: var(--font-body-sm-size);
+    color: var(--color-text-secondary);
+  }
+
+  &__description {
+    font-size: var(--font-body-size);
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+
+  &__subtitle {
+    font-size: var(--font-body-sm-size);
+    color: var(--color-text-disabled);
+  }
+}

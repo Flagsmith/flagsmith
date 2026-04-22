@@ -1,0 +1,107 @@
+// =============================================================================
+// Shared Keyframes & Mixins
+// Uses motion tokens from _tokens.scss. For CSS-only animations.
+// For orchestrated JS animations, use common/utils/motion.ts with the motion library.
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Keyframes
+// -----------------------------------------------------------------------------
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Mixins
+// -----------------------------------------------------------------------------
+
+/// Focus ring for interactive elements (inputs, cards, buttons)
+@mixin focus-ring {
+  border: 2px solid var(--color-border-action);
+  box-shadow: 0 0 0 3px oklch(from var(--purple-600) l c h / 0.13);
+  outline: none;
+}
+
+/// Danger focus ring (validation errors)
+@mixin focus-ring-danger {
+  border: 2px solid var(--color-border-danger);
+  box-shadow: 0 0 0 3px oklch(from var(--red-500) l c h / 0.13);
+  outline: none;
+}
+
+/// Apply shake animation (form validation errors)
+@mixin input-error-shake {
+  animation: shake 350ms var(--easing-standard);
+}
+
+/// Spinner animation
+@mixin spinner {
+  animation: spin 800ms linear infinite;
+}
+
+/// Fade in with configurable duration
+@mixin animate-fade-in($duration: var(--duration-normal)) {
+  animation: fade-in $duration var(--easing-entrance);
+}
+
+/// Slide in from below with fade
+@mixin animate-slide-in-up($duration: var(--duration-normal)) {
+  animation: slide-in-up $duration var(--easing-entrance);
+}
+
+/// Pulse (loading skeletons, pending states)
+@mixin animate-pulse {
+  animation: pulse 1.5s var(--easing-standard) infinite;
+}
