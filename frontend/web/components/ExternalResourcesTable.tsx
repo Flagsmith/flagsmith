@@ -116,7 +116,7 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
                       })
                     }}
                   >
-                    Delete
+                    Unlink
                   </Button>
                 </div>
               </div>,
