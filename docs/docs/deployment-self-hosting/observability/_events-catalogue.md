@@ -136,7 +136,7 @@ Attributes:
 ### `gitlab.resource.linked`
 
 Logged at `info` from:
- - `api/features/feature_external_resources/views.py:154`
+ - `api/features/feature_external_resources/views.py:153`
 
 Attributes:
  - `feature.id`
@@ -147,7 +147,7 @@ Attributes:
 ### `gitlab.resource.unlinked`
 
 Logged at `info` from:
- - `api/features/feature_external_resources/views.py:176`
+ - `api/features/feature_external_resources/views.py:174`
 
 Attributes:
  - `feature.id`

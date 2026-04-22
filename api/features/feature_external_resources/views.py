@@ -171,14 +171,14 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
                     instance.feature.project_id,
                 ),
             )
+            gitlab_logger.info(
+                "resource.unlinked",
+                organisation__id=instance.feature.project.organisation_id,
+                project__id=instance.feature.project_id,
+                feature__id=instance.feature.id,
+                resource__type=instance.type.lower(),
+            )
         super().perform_destroy(instance)
-        gitlab_logger.info(
-            "resource.unlinked",
-            organisation__id=instance.feature.project.organisation_id,
-            project__id=instance.feature.project_id,
-            feature__id=instance.feature.id,
-            resource__type=instance.type.lower(),
-        )
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         external_resource_id = int(self.kwargs["pk"])
