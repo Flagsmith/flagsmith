@@ -1,8 +1,10 @@
 import pytest
 import pytest_mock
 
+from features.models import FeatureState
 from integrations.gitlab.tasks import (
     post_gitlab_linked_comment,
+    post_gitlab_state_change_comment,
     post_gitlab_unlinked_comment,
 )
 
@@ -48,3 +50,38 @@ def test_post_gitlab_unlinked_comment_task__called__delegates_to_service(
         resource_type="GITLAB_ISSUE",
         project_id=42,
     )
+
+
+@pytest.mark.django_db
+def test_post_gitlab_state_change_comment_task__feature_state_missing__noop(
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    # Given
+    mock_post = mocker.patch(
+        "integrations.gitlab.tasks.post_state_change_comment",
+    )
+
+    # When
+    post_gitlab_state_change_comment(feature_state_id=999_999)
+
+    # Then
+    mock_post.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_post_gitlab_state_change_comment_task__called__delegates_to_service(
+    mocker: pytest_mock.MockerFixture,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    mock_post = mocker.patch(
+        "integrations.gitlab.tasks.post_state_change_comment",
+    )
+
+    # When
+    post_gitlab_state_change_comment(feature_state_id=feature_state.id)
+
+    # Then
+    mock_post.assert_called_once()
+    [call_args] = mock_post.call_args_list
+    assert call_args.args[0].id == feature_state.id

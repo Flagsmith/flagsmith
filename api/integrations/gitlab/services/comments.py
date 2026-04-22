@@ -5,6 +5,7 @@ from django.template.loader import render_to_string
 
 from core.helpers import get_current_site_url
 from features.feature_external_resources.models import (
+    GITLAB_RESOURCE_TYPES,
     FeatureExternalResource,
     ResourceType,
 )
@@ -21,6 +22,56 @@ from integrations.gitlab.services.url_parsing import (
 from integrations.gitlab.types import GitLabEnvironmentState
 
 logger = structlog.get_logger("gitlab")
+
+
+def _post_note_to_resource(
+    *,
+    config: GitLabConfiguration,
+    resource_url: str,
+    resource_type: str,
+    feature_id: int,
+    body: str,
+) -> None:
+    """Parse a GitLab resource URL, post a note via the API, and log the
+    outcome.  Shared by every comment-posting function in this module.
+    """
+    if (project_path := parse_project_path(resource_url)) is None:
+        return
+
+    if (iid := parse_resource_iid(resource_url)) is None:
+        return  # pragma: no cover — same regex as parse_project_path; unreachable
+
+    log = logger.bind(
+        organisation__id=config.project.organisation_id,
+        project__id=config.project_id,
+        feature__id=feature_id,
+        gitlab__project__path=project_path,
+        gitlab__resource__iid=iid,
+    )
+
+    try:
+        if resource_type == ResourceType.GITLAB_ISSUE:
+            create_issue_note(
+                instance_url=config.gitlab_instance_url,
+                access_token=config.access_token,
+                project_path=project_path,
+                issue_iid=iid,
+                body=body,
+            )
+        elif resource_type == ResourceType.GITLAB_MR:
+            create_merge_request_note(
+                instance_url=config.gitlab_instance_url,
+                access_token=config.access_token,
+                project_path=project_path,
+                merge_request_iid=iid,
+                body=body,
+            )
+        else:
+            return
+    except requests.RequestException as exc:
+        log.warning("comment.post_failed", exc_info=exc)
+    else:
+        log.info("comment.posted")
 
 
 def _get_environment_states(
@@ -49,7 +100,7 @@ def _get_environment_states(
             ).first()
         )
         if feature_state is None:
-            continue
+            continue  # pragma: no cover — initial states are always created
 
         value = feature_state.get_feature_state_value()
         env_url = (
@@ -79,12 +130,6 @@ def post_linked_comment(resource: FeatureExternalResource) -> None:
     except GitLabConfiguration.DoesNotExist:
         return
 
-    if (project_path := parse_project_path(resource.url)) is None:
-        return
-
-    if (iid := parse_resource_iid(resource.url)) is None:
-        return
-
     feature = resource.feature
     environment_states = _get_environment_states(feature)
     body = render_to_string(
@@ -95,37 +140,13 @@ def post_linked_comment(resource: FeatureExternalResource) -> None:
         },
     )
 
-    log = logger.bind(
-        organisation__id=config.project.organisation_id,
-        project__id=config.project_id,
-        feature__id=feature.id,
-        gitlab__project__path=project_path,
-        gitlab__resource__iid=iid,
+    _post_note_to_resource(
+        config=config,
+        resource_url=resource.url,
+        resource_type=resource.type,
+        feature_id=feature.id,
+        body=body,
     )
-
-    try:
-        if resource.type == ResourceType.GITLAB_ISSUE:
-            create_issue_note(
-                instance_url=config.gitlab_instance_url,
-                access_token=config.access_token,
-                project_path=project_path,
-                issue_iid=iid,
-                body=body,
-            )
-        elif resource.type == ResourceType.GITLAB_MR:
-            create_merge_request_note(
-                instance_url=config.gitlab_instance_url,
-                access_token=config.access_token,
-                project_path=project_path,
-                merge_request_iid=iid,
-                body=body,
-            )
-        else:
-            return
-    except requests.RequestException as exc:
-        log.warning("comment.post_failed", exc_info=exc)
-    else:
-        log.info("comment.posted")
 
 
 def post_unlinked_comment(
@@ -148,45 +169,74 @@ def post_unlinked_comment(
     except GitLabConfiguration.DoesNotExist:
         return
 
-    if (project_path := parse_project_path(resource_url)) is None:
-        return
-
-    if (iid := parse_resource_iid(resource_url)) is None:
-        return
-
     body = render_to_string(
         "gitlab/feature_unlinked_comment.md",
         {"feature_name": feature_name},
     )
 
-    log = logger.bind(
-        organisation__id=config.project.organisation_id,
-        project__id=project_id,
-        feature__id=feature_id,
-        gitlab__project__path=project_path,
-        gitlab__resource__iid=iid,
+    _post_note_to_resource(
+        config=config,
+        resource_url=resource_url,
+        resource_type=resource_type,
+        feature_id=feature_id,
+        body=body,
     )
 
+
+def post_state_change_comment(feature_state: FeatureState) -> None:
+    """Post a comment on every linked GitLab resource when a feature flag's
+    state changes, covering environment-level, segment override, and identity
+    override scopes.
+    """
+    feature = feature_state.feature
+
     try:
-        if resource_type == ResourceType.GITLAB_ISSUE:
-            create_issue_note(
-                instance_url=config.gitlab_instance_url,
-                access_token=config.access_token,
-                project_path=project_path,
-                issue_iid=iid,
-                body=body,
-            )
-        elif resource_type == ResourceType.GITLAB_MR:
-            create_merge_request_note(
-                instance_url=config.gitlab_instance_url,
-                access_token=config.access_token,
-                project_path=project_path,
-                merge_request_iid=iid,
-                body=body,
-            )
-        else:
-            return
-    except requests.RequestException as exc:
-        log.warning("comment.post_failed", exc_info=exc)
+        config: GitLabConfiguration = GitLabConfiguration.objects.get(
+            project=feature.project,
+        )
+    except GitLabConfiguration.DoesNotExist:
+        return
+
+    resources = feature.external_resources.filter(type__in=GITLAB_RESOURCE_TYPES)
+    if not resources.exists():
+        return
+
+    environment = feature_state.environment
+    if environment is None:
+        return
+
+    if feature_state.feature_segment_id is not None:
+        feature_segment = feature_state.feature_segment
+        scope = "segment"
+        scope_name: str | None = (
+            feature_segment.segment.name if feature_segment else None
+        )
+    elif feature_state.identity_id is not None:
+        identity = feature_state.identity
+        scope = "identity"
+        scope_name = identity.identifier if identity else None
     else:
-        log.info("comment.posted")
+        scope = "environment"
+        scope_name = None
+
+    value = feature_state.get_feature_state_value()
+    body = render_to_string(
+        "gitlab/feature_state_changed_comment.md",
+        {
+            "feature_name": feature.name,
+            "environment_name": environment.name,
+            "enabled": feature_state.enabled,
+            "value": value if value not in (None, "") else None,
+            "scope": scope,
+            "scope_name": scope_name,
+        },
+    )
+
+    for resource in resources:
+        _post_note_to_resource(
+            config=config,
+            resource_url=resource.url,
+            resource_type=resource.type,
+            feature_id=feature.id,
+            body=body,
+        )

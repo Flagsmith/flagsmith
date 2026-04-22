@@ -1,12 +1,14 @@
 from task_processor.decorators import register_task_handler
 
 from features.feature_external_resources.models import FeatureExternalResource
+from features.models import FeatureState
 from integrations.gitlab.models import GitLabConfiguration
 from integrations.gitlab.services import (
     deregister_webhook_for_path,
     ensure_webhook_registered,
     has_live_resource_for_path,
     post_linked_comment,
+    post_state_change_comment,
     post_unlinked_comment,
 )
 
@@ -70,3 +72,20 @@ def post_gitlab_unlinked_comment(
         resource_type=resource_type,
         project_id=project_id,
     )
+
+
+@register_task_handler()
+def post_gitlab_state_change_comment(feature_state_id: int) -> None:
+    """Post a comment on every linked GitLab resource when a feature flag's
+    state changes.  Dispatched from the feature-state serialiser save hook.
+    """
+    try:
+        feature_state = FeatureState.objects.select_related(
+            "feature",
+            "environment",
+            "feature_segment__segment",
+            "identity",
+        ).get(id=feature_state_id)
+    except FeatureState.DoesNotExist:
+        return
+    post_state_change_comment(feature_state)

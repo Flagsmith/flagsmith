@@ -1,0 +1,1 @@
+{% autoescape off %}Feature flag `{{ feature_name }}` was **{% if enabled %}enabled{% else %}disabled{% endif %}** in **{{ environment_name }}**{% if scope == "segment" %} for segment **{{ scope_name }}**{% elif scope == "identity" %} for identity **{{ scope_name }}**{% endif %}{% if value is not None %} with value `{{ value }}`{% endif %}{% endautoescape %}

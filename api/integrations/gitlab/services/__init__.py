@@ -1,5 +1,6 @@
 from integrations.gitlab.services.comments import (
     post_linked_comment,
+    post_state_change_comment,
     post_unlinked_comment,
 )
 from integrations.gitlab.services.tagging import (
@@ -26,6 +27,7 @@ __all__ = [
     "parse_project_path",
     "parse_resource_iid",
     "post_linked_comment",
+    "post_state_change_comment",
     "post_unlinked_comment",
     "set_gitlab_tag",
 ]

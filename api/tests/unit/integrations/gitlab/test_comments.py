@@ -6,17 +6,20 @@ import responses
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
+from environments.identities.models import Identity
 from environments.models import Environment
 from features.feature_external_resources.models import (
     FeatureExternalResource,
     ResourceType,
 )
-from features.models import Feature
+from features.models import Feature, FeatureSegment, FeatureState
 from integrations.gitlab.models import GitLabConfiguration
 from integrations.gitlab.services.comments import (
     post_linked_comment,
+    post_state_change_comment,
     post_unlinked_comment,
 )
+from segments.models import Segment
 
 
 @pytest.fixture(autouse=True)
@@ -212,3 +215,178 @@ def test_post_unlinked_comment__no_config__returns_early(
 
     # Then
     assert log.events == []
+
+
+# --- post_state_change_comment ---
+
+
+@pytest.mark.parametrize(
+    "scope, expected_body_fragment",
+    [
+        ("environment", "was **disabled** in **Test Environment**\n"),
+        (
+            "segment",
+            "was **disabled** in **Test Environment** for segment **segment**\n",
+        ),
+        (
+            "identity",
+            "was **disabled** in **Test Environment** for identity **test_identity**\n",
+        ),
+    ],
+    ids=["environment", "segment", "identity"],
+)
+@pytest.mark.django_db
+@responses.activate
+def test_post_state_change_comment__all_scopes__posts_note_with_correct_body(
+    gitlab_config: GitLabConfiguration,
+    feature: Feature,
+    environment: Environment,
+    segment: Segment,
+    identity: Identity,
+    log: StructuredLogCapture,
+    scope: str,
+    expected_body_fragment: str,
+) -> None:
+    # Given
+    FeatureExternalResource.objects.create(
+        url="https://gitlab.example.com/testorg/testrepo/-/issues/42",
+        type=ResourceType.GITLAB_ISSUE.value,
+        feature=feature,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/42/notes",
+        json={"id": 1},
+        status=201,
+    )
+
+    if scope == "environment":
+        feature_state = FeatureState.objects.get(
+            feature=feature,
+            environment=environment,
+            feature_segment__isnull=True,
+            identity__isnull=True,
+        )
+    elif scope == "segment":
+        feature_segment = FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment,
+        )
+        feature_state = FeatureState.objects.create(
+            feature=feature,
+            environment=environment,
+            feature_segment=feature_segment,
+        )
+    else:
+        feature_state = FeatureState.objects.create(
+            feature=feature,
+            environment=environment,
+            identity=identity,
+        )
+
+    # When
+    post_state_change_comment(feature_state)
+
+    # Then
+    [call] = responses.calls
+    body = json.loads(call.request.body)["body"]
+    assert body == f"Feature flag `{feature.name}` {expected_body_fragment}"
+
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "comment.posted",
+            "organisation__id": gitlab_config.project.organisation_id,
+            "project__id": gitlab_config.project_id,
+            "feature__id": feature.id,
+            "gitlab__project__path": "testorg/testrepo",
+            "gitlab__resource__iid": 42,
+        },
+    ]
+
+
+@pytest.mark.django_db
+def test_post_state_change_comment__no_config__returns_early(
+    feature: Feature,
+    environment: Environment,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.get(
+        feature=feature,
+        environment=environment,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+
+    # When
+    post_state_change_comment(feature_state)
+
+    # Then
+    assert log.events == []
+
+
+@pytest.mark.django_db
+def test_post_state_change_comment__no_linked_resources__returns_early(
+    gitlab_config: GitLabConfiguration,
+    feature: Feature,
+    environment: Environment,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.get(
+        feature=feature,
+        environment=environment,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+
+    # When
+    post_state_change_comment(feature_state)
+
+    # Then
+    assert log.events == []
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_post_state_change_comment__api_error__logs_warning(
+    gitlab_config: GitLabConfiguration,
+    feature: Feature,
+    environment: Environment,
+    log: StructuredLogCapture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    FeatureExternalResource.objects.create(
+        url="https://gitlab.example.com/testorg/testrepo/-/issues/42",
+        type=ResourceType.GITLAB_ISSUE.value,
+        feature=feature,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/42/notes",
+        status=500,
+    )
+    feature_state = FeatureState.objects.get(
+        feature=feature,
+        environment=environment,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+
+    # When
+    post_state_change_comment(feature_state)
+
+    # Then
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "comment.post_failed",
+            "organisation__id": gitlab_config.project.organisation_id,
+            "project__id": gitlab_config.project_id,
+            "feature__id": feature.id,
+            "gitlab__project__path": "testorg/testrepo",
+            "gitlab__resource__iid": 42,
+            "exc_info": mocker.ANY,
+        },
+    ]
