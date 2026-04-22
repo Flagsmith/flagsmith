@@ -1,4 +1,4 @@
-import { PropsWithChildren } from 'react'
+import { PropsWithChildren, useEffect, useState } from 'react'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import { useRouteMatch } from 'react-router-dom'
 
@@ -48,10 +48,20 @@ const EnvironmentReadyChecker = ({
   // 'create' is the new-env form route sentinel, not an env ID.
   const hasEnvironmentId = !!environmentId && environmentId !== 'create'
 
+  // Gate pollingInterval on a state flag rather than reading `data` inside the
+  // hook options: `data` is the same hook's destructured result and is
+  // unassigned at options-evaluation time, so a direct reference silently
+  // evaluates to `undefined` and polling never starts.
+  const [pollingStopped, setPollingStopped] = useState(false)
+
+  useEffect(() => {
+    setPollingStopped(false)
+  }, [environmentId])
+
   const { data, isError } = useGetEnvironmentQuery(
     { id: environmentId || '' },
     {
-      pollingInterval: data?.is_creating ? POLL_INTERVAL_MS : 0,
+      pollingInterval: pollingStopped ? 0 : POLL_INTERVAL_MS,
       skip: !hasEnvironmentId,
     },
   )
@@ -60,6 +70,12 @@ const EnvironmentReadyChecker = ({
   const wrongProject =
     !!data && !!projectId && data.project !== Number(projectId)
   const environmentNotFound = hasEnvironmentId && (wrongProject || isError)
+
+  useEffect(() => {
+    if ((data && !data.is_creating) || isError || wrongProject) {
+      setPollingStopped(true)
+    }
+  }, [data, isError, wrongProject])
 
   if (!hasEnvironmentId) return children
   if (environmentNotFound) return <NotFoundState />
