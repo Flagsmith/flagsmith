@@ -158,6 +158,25 @@ class Feature(  # type: ignore[django-manager-missing]
                 feature_states=None,
             )
 
+    @hook(AFTER_SAVE)  # type: ignore[misc]
+    def create_gitlab_comment(self) -> None:
+        from features.feature_external_resources.models import (
+            GITLAB_RESOURCE_TYPES,
+        )
+        from integrations.gitlab.tasks import (
+            post_gitlab_feature_deleted_comment,
+        )
+
+        if (
+            self.deleted_at
+            and self.external_resources.filter(
+                type__in=GITLAB_RESOURCE_TYPES,
+            ).exists()
+        ):
+            post_gitlab_feature_deleted_comment.delay(
+                args=(self.name, self.id, self.project_id),
+            )
+
     @hook(AFTER_CREATE)
     def create_feature_states(self):  # type: ignore[no-untyped-def]
         FeatureState.create_initial_feature_states_for_feature(feature=self)

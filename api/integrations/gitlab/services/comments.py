@@ -183,6 +183,47 @@ def post_unlinked_comment(
     )
 
 
+def post_feature_deleted_comment(
+    feature_name: str,
+    feature_id: int,
+    project_id: int,
+) -> None:
+    """Post a comment on every linked GitLab resource informing that the
+    feature flag has been deleted.
+
+    All parameters are passed explicitly because the feature is being
+    soft-deleted and may no longer be fully usable as an ORM object by the
+    time this runs asynchronously.
+    """
+    try:
+        config: GitLabConfiguration = GitLabConfiguration.objects.get(
+            project_id=project_id,
+        )
+    except GitLabConfiguration.DoesNotExist:
+        return
+
+    resources = FeatureExternalResource.objects.filter(
+        feature_id=feature_id,
+        type__in=GITLAB_RESOURCE_TYPES,
+    )
+    if not resources.exists():
+        return
+
+    body = render_to_string(
+        "gitlab/feature_deleted_comment.md",
+        {"feature_name": feature_name},
+    )
+
+    for resource in resources:
+        _post_note_to_resource(
+            config=config,
+            resource_url=resource.url,
+            resource_type=resource.type,
+            feature_id=feature_id,
+            body=body,
+        )
+
+
 def post_state_change_comment(feature_state: FeatureState) -> None:
     """Post a comment on every linked GitLab resource when a feature flag's
     state changes, covering environment-level, segment override, and identity

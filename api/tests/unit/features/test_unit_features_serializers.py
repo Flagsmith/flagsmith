@@ -1,7 +1,14 @@
+from unittest.mock import call
+
 import pytest
+from pytest_mock import MockerFixture
 
 from core.constants import BOOLEAN, INTEGER, STRING
 from environments.models import Environment
+from features.feature_external_resources.models import (
+    FeatureExternalResource,
+    ResourceType,
+)
 from features.models import Feature, FeatureState
 from features.multivariate.models import (
     MultivariateFeatureOption,
@@ -12,6 +19,7 @@ from features.multivariate.serializers import (
     MultivariateOptionValuesSerializer,
 )
 from features.serializers import FeatureStateSerializerBasic
+from integrations.gitlab.models import GitLabConfiguration
 
 
 @pytest.mark.parametrize(
@@ -145,3 +153,51 @@ def test_mv_options_values_response_serializer__without_feature_state__returns_n
     # Then
     assert serializer.data["control_value"] is None
     assert len(serializer.data["options"]) == 3
+
+
+@pytest.mark.django_db
+def test_feature_state_serializer_basic__save_with_gitlab_resource__dispatches_comment_task(
+    feature: Feature,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    GitLabConfiguration.objects.create(
+        project=feature.project,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+    )
+    FeatureExternalResource.objects.create(
+        url="https://gitlab.example.com/testorg/testrepo/-/issues/42",
+        type=ResourceType.GITLAB_ISSUE.value,
+        feature=feature,
+    )
+    mock_task = mocker.patch(
+        "integrations.gitlab.tasks.post_gitlab_state_change_comment",
+    )
+    feature_state = FeatureState.objects.get(
+        feature=feature,
+        environment=environment,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+    data = {
+        "id": feature_state.id,
+        "feature": feature.id,
+        "environment": environment.id,
+        "enabled": True,
+    }
+    serializer = FeatureStateSerializerBasic(
+        instance=feature_state,
+        data=data,
+        context={"environment": environment},
+    )
+    serializer.is_valid(raise_exception=True)
+
+    # When
+    serializer.save()  # type: ignore[no-untyped-call]
+
+    # Then
+    assert mock_task.delay.call_args_list == [
+        call(args=(feature_state.id,)),
+    ]

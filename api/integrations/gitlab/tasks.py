@@ -7,6 +7,7 @@ from integrations.gitlab.services import (
     deregister_webhook_for_path,
     ensure_webhook_registered,
     has_live_resource_for_path,
+    post_feature_deleted_comment,
     post_linked_comment,
     post_state_change_comment,
     post_unlinked_comment,
@@ -89,3 +90,20 @@ def post_gitlab_state_change_comment(feature_state_id: int) -> None:
     except FeatureState.DoesNotExist:
         return
     post_state_change_comment(feature_state)
+
+
+@register_task_handler()
+def post_gitlab_feature_deleted_comment(
+    feature_name: str,
+    feature_id: int,
+    project_id: int,
+) -> None:
+    """Post a comment on every linked GitLab resource informing that the
+    feature flag has been deleted.  Dispatched from the Feature model
+    soft-delete hook.
+    """
+    post_feature_deleted_comment(
+        feature_name=feature_name,
+        feature_id=feature_id,
+        project_id=project_id,
+    )

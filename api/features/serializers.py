@@ -24,7 +24,6 @@ from environments.identities.models import Identity
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
-from features.feature_external_resources.models import GITLAB_RESOURCE_TYPES
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
@@ -654,11 +653,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
                     feature_states=[feature_state],
                 )
 
-            if isinstance(feature_state, FeatureState) and (
-                feature_state.feature.external_resources.filter(
-                    type__in=GITLAB_RESOURCE_TYPES,
-                ).exists()
-            ):
+            if isinstance(feature_state, FeatureState):
                 from integrations.gitlab.tasks import (
                     post_gitlab_state_change_comment,
                 )

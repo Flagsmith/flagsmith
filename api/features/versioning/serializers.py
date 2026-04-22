@@ -6,7 +6,6 @@ from rest_framework import serializers
 
 from api_keys.user import APIKeyUser
 from environments.models import Environment
-from features.feature_external_resources.models import GITLAB_RESOURCE_TYPES
 from features.feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
     exceeds_segment_override_limit,
@@ -55,16 +54,11 @@ class CustomEnvironmentFeatureVersionFeatureStateSerializer(
                 feature_states=[feature_state],
             )
 
-        if feature_state.feature.external_resources.filter(
-            type__in=GITLAB_RESOURCE_TYPES,
-        ).exists():
-            from integrations.gitlab.tasks import (
-                post_gitlab_state_change_comment,
-            )
+        from integrations.gitlab.tasks import post_gitlab_state_change_comment
 
-            post_gitlab_state_change_comment.delay(
-                args=(feature_state.id,),
-            )
+        post_gitlab_state_change_comment.delay(
+            args=(feature_state.id,),
+        )
 
         return response
 

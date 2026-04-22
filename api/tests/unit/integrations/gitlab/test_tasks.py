@@ -3,6 +3,7 @@ import pytest_mock
 
 from features.models import FeatureState
 from integrations.gitlab.tasks import (
+    post_gitlab_feature_deleted_comment,
     post_gitlab_linked_comment,
     post_gitlab_state_change_comment,
     post_gitlab_unlinked_comment,
@@ -85,3 +86,26 @@ def test_post_gitlab_state_change_comment_task__called__delegates_to_service(
     mock_post.assert_called_once()
     [call_args] = mock_post.call_args_list
     assert call_args.args[0].id == feature_state.id
+
+
+def test_post_gitlab_feature_deleted_comment_task__called__delegates_to_service(
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    # Given
+    mock_post = mocker.patch(
+        "integrations.gitlab.tasks.post_feature_deleted_comment",
+    )
+
+    # When
+    post_gitlab_feature_deleted_comment(
+        feature_name="show_new_checkout",
+        feature_id=99,
+        project_id=42,
+    )
+
+    # Then
+    mock_post.assert_called_once_with(
+        feature_name="show_new_checkout",
+        feature_id=99,
+        project_id=42,
+    )
