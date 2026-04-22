@@ -1,7 +1,3 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 import pytest
 import requests
 import responses
@@ -13,34 +9,11 @@ from features.feature_external_resources.models import (
 )
 from features.models import Feature
 from integrations.gitlab.models import GitLabConfiguration, GitLabWebhook
-from integrations.gitlab.services import (
+from integrations.gitlab.services.webhooks import (
     deregister_webhook_for_path,
     ensure_webhook_registered,
-    parse_project_path,
 )
 from integrations.gitlab.tasks import register_gitlab_webhook
-
-if TYPE_CHECKING:
-    from projects.models import Project
-
-
-@pytest.fixture()
-def gitlab_config(project: Project) -> GitLabConfiguration:
-    return GitLabConfiguration.objects.create(  # type: ignore[no-any-return]
-        project=project,
-        gitlab_instance_url="https://gitlab.example.com",
-        access_token="glpat-test-token",
-    )
-
-
-def test_parse_project_path__empty_input__returns_none() -> None:
-    # Given / When
-    none_result = parse_project_path(None)
-    empty_result = parse_project_path("")
-
-    # Then
-    assert none_result is None
-    assert empty_result is None
 
 
 @pytest.mark.django_db
