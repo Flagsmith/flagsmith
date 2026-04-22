@@ -22,6 +22,12 @@ import orderBy from 'lodash/orderBy'
 import Panel from './base/grid/Panel'
 import Utils from 'common/utils/utils'
 import { SortOrder } from 'common/types/requests'
+import {
+  colorIconAction,
+  colorIconSecondary,
+  colorTextAction,
+  colorTextSecondary,
+} from 'common/theme/tokens'
 
 type SortOption = {
   value: string
@@ -48,6 +54,7 @@ interface PanelSearchProps<T> {
   searchPanel?: ReactNode
   sorting?: SortOption[]
   title?: ReactNode
+  titleLevel?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
   filterRowContent?: ReactNode
   onBlur?: () => void
   onChange?: (value: string) => void
@@ -263,6 +270,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
     <Panel
       className={props.className}
       title={props.title}
+      titleLevel={props.titleLevel}
       action={
         filterRow || sorting || props.filterElement || props.actionButton ? (
           <Row>
@@ -275,12 +283,14 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
                     <a
                       onClick={toggle}
                       className='flex-row'
-                      style={{ color: isActive ? '#6837FC' : '#656d7b' }}
+                      style={{
+                        color: isActive ? colorTextAction : colorTextSecondary,
+                      }}
                     >
                       <span className='mr-1'>
                         <Icon
                           name='height'
-                          fill={isActive ? '#6837FC' : '#656d7b'}
+                          fill={isActive ? colorIconAction : colorIconSecondary}
                         />
                       </span>
                       {currentSort ? currentSort.label : 'Unsorted'}

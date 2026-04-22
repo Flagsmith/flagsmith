@@ -1,8 +1,9 @@
-import React, { PureComponent, ReactNode } from 'react'
+import React, { PureComponent, ReactNode, createElement } from 'react'
 
 type PanelProps = {
   children?: ReactNode
   title?: ReactNode
+  titleLevel?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
   action?: ReactNode
   className?: string
 }
@@ -11,7 +12,7 @@ class Panel extends PureComponent<PanelProps> {
   static displayName = 'Panel'
 
   render() {
-    const { action, children, className, title } = this.props
+    const { action, children, className, title, titleLevel = 'h5' } = this.props
 
     return (
       <div
@@ -23,7 +24,12 @@ class Panel extends PureComponent<PanelProps> {
           <div className='panel-heading mb-2'>
             <Row space>
               <Row className='flex-1 mr-3'>
-                {title && <h5 className='m-b-0 title'>{title}</h5>}
+                {title &&
+                  createElement(
+                    titleLevel,
+                    { className: 'm-b-0 title' },
+                    title,
+                  )}
               </Row>
               {action}
             </Row>

@@ -21,13 +21,18 @@ const SelectOrgAndProject: FC<SelectOrgAndProjectType> = ({
 
   return (
     <Row className='gap-2'>
-      <Link data-test='home-link' to={'/organisations'}>
+      <Link
+        data-test='home-link'
+        to={'/organisations'}
+        aria-label='Flagsmith home'
+      >
         <img
           style={{
             height: 24,
             width: 24,
           }}
           src='/static/images/nav-logo.png'
+          alt='Flagsmith'
         />
       </Link>
       {!isAppLevelPage && (

@@ -9,7 +9,7 @@ interface GithubIconProps {
 
 export const GithubIcon: React.FC<GithubIconProps> = ({
   className = '',
-  fill = '#000000',
+  fill = 'currentColor',
   height = 14,
   width = 14,
 }) => {

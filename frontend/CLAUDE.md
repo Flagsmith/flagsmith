@@ -19,6 +19,7 @@
 5. **Linting**: ALWAYS run `npx eslint --fix <file>` on any files you modify
 6. **Type Enums**: Extract inline union types to named types (e.g., `type Status = 'A' | 'B'` instead of inline)
 7. **NO FETCH**: NEVER use `fetch()` directly - ALWAYS use RTK Query mutations/queries (inject endpoints into services in `common/services/`), see api-integration context
+8. **Design system**: Before writing or editing any visual code (SCSS, CSS, TSX/JSX with `className` or inline styles), read the relevant file(s) in `.claude/rules/`. Start with `design-tokens.md` (always) and `color.md`. The rules describe Flagsmith's dual-mode (light / dark via `.dark` class) token system — use semantic CSS custom properties (`var(--color-*)`, `var(--radius-*)`, `var(--duration-*)`) over raw values or primitives.
 
 ## Key Files
 - Store: `common/store.ts`
@@ -37,3 +38,29 @@ For detailed guidance on specific topics:
 - **Code Patterns**: `.claude/context/patterns/` - Complete examples, best practices
 
 **Tip:** Start with `quick-reference.md` for common tasks and checklists.
+
+## Design System Rules
+
+The `.claude/rules/` directory contains the Flagsmith design system — tokens, components, composition patterns, states, accessibility floor. Required reading for any visual code change.
+
+- **Always load**: `design-tokens.md` — token hierarchy, semantic CSS vars, dual-mode rules.
+- **Colour / type / space**: `color.md`, `typography.md`, `spacing.md`.
+- **Components**: `components.md` (buttons, inputs, tables, cards, modals, tabs).
+- **Composition**: `composition.md` (page title row, section anatomy, heading + descriptor, page templates).
+- **States**: `states.md` (loading, empty, error, hover, active, disabled, selected).
+- **Accessibility floor**: `accessibility.md` (WCAG AA minimums — not optional).
+- **Motion / density / responsive / data-viz / copy / anti-patterns**: load when the work touches them.
+- **Roadmap / gaps**: `ROADMAP.md` — known open items in the token system.
+
+### Design audits and fixes
+
+Slash commands are available for audit and fix workflows:
+
+- `/audit-component <path>` — audit one file / component.
+- `/audit-scope <glob>` — audit a directory or glob.
+- `/audit-runtime <url>` — audit a live page via Chrome DevTools MCP.
+- `/audit-app [base-url]` — walk primary routes and audit each.
+- `/fix-tokens <path>` — audit a path, then apply safe mechanical token fixes.
+- `/fix-app [base-url]` — closed-loop: runtime audit → static audit → fixes → re-verify.
+
+Backing subagents live in `.claude/agents/`: `design-auditor` (read-only), `token-fixer` (mechanical substitutions only), `runtime-auditor` (Chrome DevTools MCP).

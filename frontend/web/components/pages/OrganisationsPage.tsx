@@ -7,6 +7,8 @@ import { SortOrder } from 'common/types/requests'
 import Utils from 'common/utils/utils'
 import Icon from 'components/icons/Icon'
 import PanelSearch from 'components/PanelSearch'
+import ProjectLetterAvatar from 'components/ProjectLetterAvatar'
+import { colorIconSecondary, colorTextSecondary } from 'common/theme/tokens'
 import AppActions from 'common/dispatcher/app-actions'
 import { useHistory } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -41,7 +43,11 @@ const OrganisationsPage: FC = () => {
                     >
                       <Row className='flex-nowrap'>
                         <div className='btn-project-icon'>
-                          <Icon name='bar-chart' width={32} fill='#9DA4AE' />
+                          <Icon
+                            name='bar-chart'
+                            width={32}
+                            fill={colorIconSecondary}
+                          />
                         </div>
                         <div className='font-weight-medium btn-project-title'>
                           Platform Hub
@@ -55,8 +61,9 @@ const OrganisationsPage: FC = () => {
             <PanelSearch
               id='organisation-list'
               className='no-pad panel-projects'
-              listClassName='row mt-n2 gy-3'
+              listClassName='row gy-3'
               title='Organisations'
+              titleLevel='h2'
               filterRow={(item: Organisation, search: string) =>
                 item.name.toLowerCase().indexOf(search) > -1
               }
@@ -69,10 +76,13 @@ const OrganisationsPage: FC = () => {
                 },
               ]}
               header={
-                <div className='fs-small mb-2 lh-sm'>
+                <p
+                  className='fs-small mb-3 lh-sm'
+                  style={{ color: colorTextSecondary }}
+                >
                   Organisations allow you to manage multiple projects within a
                   team.
-                </div>
+                </p>
               }
               items={(user?.organisations || []) as Organisation[]}
               renderRow={({ id, name }, i) => {
@@ -88,7 +98,11 @@ const OrganisationsPage: FC = () => {
                           >
                             <Row className='flex-nowrap'>
                               <div className='btn-project-icon'>
-                                <Icon name='plus' width={32} fill='#9DA4AE' />
+                                <Icon
+                                  name='plus'
+                                  width={32}
+                                  fill={colorIconSecondary}
+                                />
                               </div>
                               <div className='font-weight-medium btn-project-title'>
                                 Create Organisation
@@ -111,14 +125,7 @@ const OrganisationsPage: FC = () => {
                     >
                       <Button className='btn-project'>
                         <Row className='flex-nowrap'>
-                          <h2
-                            style={{
-                              backgroundColor: Utils.getProjectColour(i),
-                            }}
-                            className='btn-project-letter mb-0'
-                          >
-                            {name[0]}
-                          </h2>
+                          <ProjectLetterAvatar name={name} index={i} />
                           <div className='font-weight-medium btn-project-title overflow-hidden'>
                             {name}
                           </div>

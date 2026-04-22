@@ -197,9 +197,20 @@ button.btn {
     width: 100%;
     height: 76px;
     border-radius: $border-radius-lg;
+    transition:
+      background-color var(--duration-fast) var(--easing-standard),
+      color var(--duration-fast) var(--easing-standard),
+      border-color var(--duration-fast) var(--easing-standard),
+      box-shadow var(--duration-fast) var(--easing-standard);
+    &:focus-visible {
+      outline: none;
+      box-shadow:
+        0 0 0 2px var(--color-surface-default),
+        0 0 0 4px var(--color-border-action);
+    }
     &.btn-project-create {
       background-color: transparent;
-      border: 1px dashed $basic-alpha-24;
+      border: 1px dashed var(--color-border-strong);
       &:disabled {
         color: $body-color;
       }
@@ -239,6 +250,9 @@ button.btn {
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: $h2-font-size;
+      font-weight: $font-weight-semibold;
+      line-height: 1;
     }
     &-title {
       white-space: normal;
@@ -414,7 +428,7 @@ $add-btn-size: 34px;
     }
 
     &-project {
-      background-color: $bg-dark200;
+      background-color: $bg-dark400;
       color: $text-icon-light;
       &.btn-project-create {
         &:hover {
@@ -433,7 +447,7 @@ $add-btn-size: 34px;
 
       &.btn:hover,
       &.btn:focus,&.btn:active {
-        background-color: $bg-dark200;
+        background-color: $bg-dark400;
         color: $text-icon-light;
         & .btn-project-letter {
           background-color: $primary;

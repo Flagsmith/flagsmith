@@ -83,11 +83,11 @@ const CreateProject = class extends Component {
                   }
                   isValid={name && name.length}
                   type='text'
-                  title='Project Name*'
+                  title='Project name *'
                   placeholder='My Product Name'
                 />
                 {error && <ErrorMessage error={error} />}
-                <div className='text-right mt-5'>
+                <div className='text-right mt-4'>
                   <Button
                     type='submit'
                     data-test='create-project-btn'
@@ -95,7 +95,7 @@ const CreateProject = class extends Component {
                     disabled={!canCreate || isSaving || !name}
                     className='text-right'
                   >
-                    {isSaving ? 'Creating' : 'Create Project'}
+                    {isSaving ? 'Creating' : 'Create project'}
                   </Button>
                 </div>
               </form>

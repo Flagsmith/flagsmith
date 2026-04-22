@@ -1,6 +1,7 @@
 import React from 'react'
 import Icon from './icons/Icon'
 import Tooltip from './Tooltip'
+import { colorIconSecondary } from 'common/theme/tokens'
 
 let prom
 class _Headway extends React.Component {
@@ -40,7 +41,7 @@ class _Headway extends React.Component {
             }}
             className={this.props.className}
           >
-            <Icon name='bell' width={20} fill='#9DA4AE' />
+            <Icon name='bell' width={20} fill={colorIconSecondary} />
             <span id='headway'>
               <span />
             </span>

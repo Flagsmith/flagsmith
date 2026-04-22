@@ -16,6 +16,8 @@ import PanelSearch from './PanelSearch'
 import Icon from './icons/Icon'
 import AppActions from 'common/dispatcher/app-actions'
 import CreateProjectModal from './modals/CreateProject'
+import ProjectLetterAvatar from './ProjectLetterAvatar'
+import { colorIconSecondary, colorTextSecondary } from 'common/theme/tokens'
 
 type SegmentsPageType = {
   organisationId: number | null
@@ -48,7 +50,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
   }, [organisationId, organisation, canCreateProject, create])
   const handleCreateProjectClick = useCallback(() => {
     openModal(
-      'Create Project',
+      'Create project',
       <CreateProjectModal history={history} />,
       'p-0 side-modal',
     )
@@ -80,15 +82,19 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
             ) : (
               isAdmin && (
                 <div className='container-mw-700 mb-4'>
-                  <h5 className='mb-2'>
-                    Great! Now you can create your first project.
-                  </h5>
-                  <p className='fs-small lh-sm mb-0'>
+                  <h5 className='mb-2'>Create your first project</h5>
+                  <p
+                    className='fs-small lh-sm mb-0'
+                    style={{ color: colorTextSecondary }}
+                  >
                     When you create a project we'll also generate a{' '}
                     <strong>development</strong> and <strong>production</strong>{' '}
                     environment for you.
                   </p>
-                  <p className='fs-small lh-sm mb-0'>
+                  <p
+                    className='fs-small lh-sm mb-0'
+                    style={{ color: colorTextSecondary }}
+                  >
                     You can create features for your project, then enable and
                     configure them per environment.
                   </p>
@@ -106,13 +112,17 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                   <PanelSearch
                     id='projects-list'
                     className='no-pad panel-projects'
-                    listClassName='row mt-n2 gy-3'
+                    listClassName='row gy-3'
                     title='Projects'
+                    titleLevel='h2'
                     header={
-                      <div className='fs-small mb-2 lh-sm'>
+                      <p
+                        className='fs-small mb-3 lh-sm'
+                        style={{ color: colorTextSecondary }}
+                      >
                         Projects let you create and manage a set of features and
                         configure them between multiple app environments.
-                      </div>
+                      </p>
                     }
                     items={projects}
                     renderRow={({ environments, id, name }, i) => {
@@ -137,11 +147,11 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                                       <Icon
                                         name='plus'
                                         width={32}
-                                        fill='#9DA4AE'
+                                        fill={colorIconSecondary}
                                       />
                                     </div>
                                     <div className='font-weight-medium btn-project-title'>
-                                      Create Project
+                                      Create project
                                     </div>
                                   </Row>
                                 </Button>,
@@ -162,14 +172,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                           >
                             <Button className='btn-project'>
                               <Row className='flex-nowrap'>
-                                <h2
-                                  style={{
-                                    backgroundColor: Utils.getProjectColour(i),
-                                  }}
-                                  className='btn-project-letter mb-0'
-                                >
-                                  {name[0]}
-                                </h2>
+                                <ProjectLetterAvatar name={name} index={i} />
                                 <div className='font-weight-medium btn-project-title overflow-hidden'>
                                   {name}
                                 </div>
@@ -185,12 +188,17 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                           <>
                             <h5 className='mt-4 mb-2'>Projects</h5>
                             <div className='container-mw-700 mb-4'>
-                              <p className='fs-small lh-sm mb-0'>
+                              <p
+                                className='fs-small lh-sm mb-0'
+                                style={{
+                                  color: colorTextSecondary,
+                                }}
+                              >
                                 You do not have access to any projects within
-                                this Organisation. If this is unexpected please
-                                contact a member of the Project who has
-                                Administrator privileges. Users can be added to
-                                Projects from the Project settings menu.
+                                this organisation. If this is unexpected please
+                                contact a member of the project who has
+                                administrator privileges. Users can be added to
+                                projects from the project settings menu.
                               </p>
                             </div>
                           </>
@@ -210,10 +218,14 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                             >
                               <Row>
                                 <div className='btn-project-icon'>
-                                  <Icon name='plus' width={32} fill='#9DA4AE' />
+                                  <Icon
+                                    name='plus'
+                                    width={32}
+                                    fill={colorIconSecondary}
+                                  />
                                 </div>
                                 <div className='font-weight-medium'>
-                                  Create Project
+                                  Create project
                                 </div>
                               </Row>
                             </Button>

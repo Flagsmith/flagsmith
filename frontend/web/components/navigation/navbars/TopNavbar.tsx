@@ -7,6 +7,7 @@ import Icon from 'components/icons/Icon'
 import Headway from 'components/Headway'
 import { Project } from 'common/types/responses'
 import AccountDropdown from 'components/navigation/AccountDropdown'
+import { colorIconSecondary } from 'common/theme/tokens'
 
 type TopNavType = {
   activeProject: Project | undefined
@@ -31,7 +32,7 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
             className='d-flex gap-1 d-none d-md-flex text-end lh-1 align-items-center'
           >
             <span>
-              <Icon name='rocket' width={20} fill='#9DA4AE' />
+              <Icon name='rocket' width={20} fill={colorIconSecondary} />
             </span>
             <span className='d-none d-md-block'>Getting Started</span>
           </NavLink>
@@ -40,7 +41,7 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
             href={'https://docs.flagsmith.com'}
           >
             <span>
-              <Icon name='file-text' width={20} fill='#9DA4AE' />
+              <Icon name='file-text' width={20} fill={colorIconSecondary} />
             </span>
             <span className='d-none d-md-block'>Docs</span>
           </a>
@@ -57,7 +58,7 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
               to={'/account'}
             >
               <span className='mr-1'>
-                <Icon name='person' width={20} fill='#9DA4AE' />
+                <Icon name='person' width={20} fill={colorIconSecondary} />
               </span>
               <span className='d-none d-md-block'>Account</span>
             </NavLink>
