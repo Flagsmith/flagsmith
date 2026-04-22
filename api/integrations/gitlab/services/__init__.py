@@ -17,6 +17,7 @@ from integrations.gitlab.services.webhooks import (
     deregister_webhook_for_path,
     ensure_webhook_registered,
     has_live_resource_for_path,
+    register_gitlab_webhook_for_resource,
 )
 
 __all__ = [
@@ -31,5 +32,6 @@ __all__ = [
     "post_linked_comment",
     "post_state_change_comment",
     "post_unlinked_comment",
+    "register_gitlab_webhook_for_resource",
     "set_gitlab_tag",
 ]

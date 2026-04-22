@@ -1,6 +1,5 @@
 import json
 
-import pytest
 import responses
 from pytest_structlog import StructuredLogCapture
 from rest_framework import status
@@ -15,7 +14,6 @@ from projects.models import Project
 from projects.tags.models import TagType
 
 
-@pytest.mark.django_db()
 def test_create_external_resource__gitlab_issue__returns_201(
     admin_client: APIClient,
     project: int,
@@ -49,15 +47,15 @@ def test_create_external_resource__gitlab_issue__returns_201(
     assert log.events == [
         {
             "level": "info",
-            "event": "issue.linked",
+            "event": "resource.linked",
             "organisation__id": organisation_id,
             "project__id": project,
             "feature__id": feature,
+            "resource__type": "gitlab_issue",
         },
     ]
 
 
-@pytest.mark.django_db()
 def test_create_external_resource__gitlab_merge_request__returns_201(
     admin_client: APIClient,
     project: int,
@@ -92,10 +90,11 @@ def test_create_external_resource__gitlab_merge_request__returns_201(
     assert log.events == [
         {
             "level": "info",
-            "event": "merge_request.linked",
+            "event": "resource.linked",
             "organisation__id": organisation_id,
             "project__id": project,
             "feature__id": feature,
+            "resource__type": "gitlab_mr",
         },
     ]
 
@@ -218,19 +217,20 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
     assert log.events == [
         {
             "level": "info",
+            "event": "resource.linked",
+            "organisation__id": organisation,
+            "project__id": project,
+            "feature__id": feature,
+            "resource__type": "gitlab_issue",
+        },
+        {
+            "level": "info",
             "event": "webhook.registered",
             "organisation__id": organisation,
             "project__id": project,
             "gitlab__project__id": expected_gitlab_project_id,
             "gitlab__project__path": "testorg/testrepo",
             "gitlab__hook__id": expected_gitlab_hook_id,
-        },
-        {
-            "level": "info",
-            "event": "issue.linked",
-            "organisation__id": organisation,
-            "project__id": project,
-            "feature__id": feature,
         },
         {
             "level": "info",
@@ -298,19 +298,20 @@ def test_create_external_resource__gitlab_mr__registers_webhook_and_tags_feature
     assert log.events == [
         {
             "level": "info",
+            "event": "resource.linked",
+            "organisation__id": organisation,
+            "project__id": project,
+            "feature__id": feature,
+            "resource__type": "gitlab_mr",
+        },
+        {
+            "level": "info",
             "event": "webhook.registered",
             "organisation__id": organisation,
             "project__id": project,
             "gitlab__project__id": 777,
             "gitlab__project__path": "testorg/testrepo",
             "gitlab__hook__id": 77,
-        },
-        {
-            "level": "info",
-            "event": "merge_request.linked",
-            "organisation__id": organisation,
-            "project__id": project,
-            "feature__id": feature,
         },
         {
             "level": "info",
@@ -376,10 +377,11 @@ def test_create_external_resource__second_link_same_gitlab_project__reuses_webho
     assert log.events == [
         {
             "level": "info",
-            "event": "merge_request.linked",
+            "event": "resource.linked",
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
+            "resource__type": "gitlab_mr",
         },
         {
             "level": "info",
@@ -393,7 +395,6 @@ def test_create_external_resource__second_link_same_gitlab_project__reuses_webho
     ]
 
 
-@pytest.mark.django_db()
 def test_create_external_resource__unparseable_url__no_webhook_registered(
     admin_client: APIClient,
     project: int,
@@ -423,7 +424,6 @@ def test_create_external_resource__unparseable_url__no_webhook_registered(
     assert not GitLabWebhook.objects.exists()
 
 
-@pytest.mark.django_db()
 @responses.activate
 def test_delete_external_resource__last_link_for_path__deregisters_webhook_and_posts_comment(
     admin_client: APIClient,
@@ -473,7 +473,7 @@ def test_delete_external_resource__last_link_for_path__deregisters_webhook_and_p
 
     [note_call] = [c for c in responses.calls if "/notes" in c.request.url]
     assert json.loads(note_call.request.body)["body"] == (
-        f"Unlinked from Flagsmith feature flag `{feature_name}`\n"
+        f"⛓️‍💥 Unlinked from Flagsmith feature flag `{feature_name}`\n"
     )
 
     assert log.events == [
@@ -497,7 +497,6 @@ def test_delete_external_resource__last_link_for_path__deregisters_webhook_and_p
     ]
 
 
-@pytest.mark.django_db()
 @responses.activate
 def test_delete_external_resource__another_link_for_path_exists__preserves_webhook(
     admin_client: APIClient,
@@ -547,7 +546,6 @@ def test_delete_external_resource__another_link_for_path_exists__preserves_webho
     assert GitLabWebhook.objects.filter(id=webhook.id).exists()
 
 
-@pytest.mark.django_db()
 def test_list_external_resources__gitlab_issue__returns_200(
     admin_client: APIClient,
     project: int,
@@ -574,7 +572,6 @@ def test_list_external_resources__gitlab_issue__returns_200(
     assert results[0]["metadata"] == {"title": "Fix login bug", "state": "opened"}
 
 
-@pytest.mark.django_db()
 def test_list_external_resources__gitlab_merge_request__returns_200(
     admin_client: APIClient,
     project: int,

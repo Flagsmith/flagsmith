@@ -39,6 +39,17 @@ def has_live_resource_for_path(
     return any(parse_project_path(url) == project_path for url in urls)
 
 
+def register_gitlab_webhook_for_resource(resource: FeatureExternalResource) -> None:
+    from integrations.gitlab.tasks import register_gitlab_webhook
+
+    project_path = parse_project_path(resource.url)
+    config = GitLabConfiguration.objects.filter(
+        project=resource.feature.project,
+    ).first()
+    if config is not None and project_path is not None:
+        register_gitlab_webhook.delay(args=(config.id, project_path))
+
+
 def ensure_webhook_registered(
     config: GitLabConfiguration,
     project_path: str,

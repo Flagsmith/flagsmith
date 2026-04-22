@@ -185,7 +185,7 @@ def test_post_unlinked_comment__valid_resource__posts_note_and_logs(
     # Then
     [call] = responses.calls
     assert json.loads(call.request.body)["body"] == dedent(f"""\
-        Unlinked from Flagsmith feature flag `{feature.name}`
+        ⛓️‍💥 Unlinked from Flagsmith feature flag `{feature.name}`
         """)
 
     assert log.events == [

@@ -133,10 +133,21 @@ Attributes:
  - `project.id`
  - `tag.label`
 
+### `gitlab.resource.linked`
+
+Logged at `info` from:
+ - `api/features/feature_external_resources/views.py:154`
+
+Attributes:
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `resource.type`
+
 ### `gitlab.webhook.deregistered`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services/webhooks.py:130`
+ - `api/integrations/gitlab/services/webhooks.py:141`
 
 Attributes:
  - `gitlab.hook.id`
@@ -147,7 +158,7 @@ Attributes:
 ### `gitlab.webhook.deregistration_failed`
 
 Logged at `warning` from:
- - `api/integrations/gitlab/services/webhooks.py:123`
+ - `api/integrations/gitlab/services/webhooks.py:134`
 
 Attributes:
  - `exc_info`
@@ -159,7 +170,7 @@ Attributes:
 ### `gitlab.webhook.registered`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services/webhooks.py:83`
+ - `api/integrations/gitlab/services/webhooks.py:94`
 
 Attributes:
  - `gitlab.hook.id`
@@ -171,7 +182,7 @@ Attributes:
 ### `gitlab.webhook.registration_failed`
 
 Logged at `error` from:
- - `api/integrations/gitlab/services/webhooks.py:68`
+ - `api/integrations/gitlab/services/webhooks.py:79`
 
 Attributes:
  - `exc_info`

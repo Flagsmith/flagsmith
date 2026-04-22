@@ -14,17 +14,17 @@ from integrations.github.client import (
     label_github_issue_pr,
 )
 from integrations.github.models import GitHubRepository
-from integrations.gitlab.models import GitLabConfiguration
-from integrations.gitlab.services import parse_project_path
+from integrations.gitlab.services import register_gitlab_webhook_for_resource
 from integrations.gitlab.tasks import (
     post_gitlab_linked_comment,
     post_gitlab_unlinked_comment,
-    register_gitlab_webhook,
 )
 from organisations.models import Organisation
 
 from .models import GITLAB_RESOURCE_TYPES, FeatureExternalResource, ResourceType
 from .serializers import FeatureExternalResourceSerializer
+
+gitlab_logger = structlog.get_logger("gitlab")
 
 
 @method_decorator(
@@ -151,48 +151,28 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
     def perform_create(self, serializer: FeatureExternalResourceSerializer) -> None:  # type: ignore[override]
         resource = serializer.save()
         if resource.type in GITLAB_RESOURCE_TYPES:
-            self._register_gitlab_webhook(resource)
-            self._log_gitlab_link_event(resource)
-            self._post_gitlab_link_comment(resource)
-
-    def _register_gitlab_webhook(self, resource: FeatureExternalResource) -> None:
-        project_path = parse_project_path(resource.url)
-        config = GitLabConfiguration.objects.filter(
-            project=resource.feature.project,
-        ).first()
-        if config is not None and project_path is not None:
-            register_gitlab_webhook.delay(args=(config.id, project_path))
-
-    def _log_gitlab_link_event(self, resource: FeatureExternalResource) -> None:
-        event_name = {
-            ResourceType.GITLAB_ISSUE: "issue.linked",
-            ResourceType.GITLAB_MR: "merge_request.linked",
-        }[ResourceType(resource.type)]
-        structlog.get_logger("gitlab").info(
-            event_name,
-            organisation__id=resource.feature.project.organisation_id,
-            project__id=resource.feature.project_id,
-            feature__id=resource.feature.id,
-        )
-
-    def _post_gitlab_link_comment(self, resource: FeatureExternalResource) -> None:
-        post_gitlab_linked_comment.delay(args=(resource.id,))
+            gitlab_logger.info(
+                "resource.linked",
+                organisation__id=resource.feature.project.organisation_id,
+                project__id=resource.feature.project_id,
+                feature__id=resource.feature.id,
+                resource__type=resource.type.lower(),
+            )
+            register_gitlab_webhook_for_resource(resource)
+            post_gitlab_linked_comment.delay(args=(resource.id,))
 
     def perform_destroy(self, instance: FeatureExternalResource) -> None:
         if instance.type in GITLAB_RESOURCE_TYPES:
-            self._post_gitlab_unlink_comment(instance)
+            post_gitlab_unlinked_comment.delay(
+                args=(
+                    instance.feature.name,
+                    instance.feature.id,
+                    instance.url,
+                    instance.type,
+                    instance.feature.project_id,
+                ),
+            )
         super().perform_destroy(instance)
-
-    def _post_gitlab_unlink_comment(self, resource: FeatureExternalResource) -> None:
-        post_gitlab_unlinked_comment.delay(
-            args=(
-                resource.feature.name,
-                resource.feature.id,
-                resource.url,
-                resource.type,
-                resource.feature.project_id,
-            ),
-        )
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         external_resource_id = int(self.kwargs["pk"])
