@@ -458,9 +458,6 @@ const Utils = Object.assign({}, BaseUtils, {
     if (plan.includes('scale-up')) {
       return planNames.scaleUp
     }
-    if (plan.includes('scale-up')) {
-      return planNames.scaleUp
-    }
     if (plan.includes('scaleup')) {
       return planNames.scaleUp
     }
