@@ -13,6 +13,7 @@ import Utils from 'common/utils/utils'
 import Input from 'components/base/forms/Input'
 import { IntegrationData, IntegrationFieldOption } from 'common/types/responses'
 import cloneDeep from 'lodash/cloneDeep'
+import { useGetProjectsQuery } from 'common/services/useProject'
 
 const GITHUB_INSTALLATION_UPDATE = 'update'
 
@@ -48,6 +49,7 @@ interface CreateEditIntegrationProps {
   integration: IntegrationData
   readOnly?: boolean
   modal?: boolean
+  requiresProjectSelection?: boolean
   onComplete?: () => void
 }
 
@@ -60,17 +62,81 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
     modal,
     onComplete: _onComplete,
     organisationId,
-    projectId,
+    projectId: initialProjectId,
     readOnly,
+    requiresProjectSelection,
   } = props
   const [fields, setFields] = useState(cloneDeep(integration.fields || []))
 
-  const [formData, setFormData] = useState<Record<string, any>>(
-    data || { fields },
-  )
+  const [formData, setFormData] = useState<Record<string, any>>(() => {
+    if (data) return data
+    const initial: Record<string, any> = { fields }
+    integration.fields?.forEach((field) => {
+      if (field.default !== undefined) initial[field.key] = field.default
+    })
+    return initial
+  })
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [authorised, setAuthorised] = useState<boolean>(false)
+  const [selectedProjectId, setSelectedProjectId] = useState<
+    string | undefined
+  >(initialProjectId)
+  const [loadedIntegration, setLoadedIntegration] = useState<{
+    id: string
+    [key: string]: any
+  } | null>(null)
+  const projectId = requiresProjectSelection
+    ? selectedProjectId
+    : initialProjectId
+  const { data: projects } = useGetProjectsQuery(
+    { organisationId: AccountStore.getOrganisation()?.id },
+    { skip: !requiresProjectSelection },
+  )
+
+  useEffect(() => {
+    if (!requiresProjectSelection || !id) return
+    const env = formData.flagsmithEnvironment
+    // For per-environment integrations, we need both project and env before
+    // we can check for an existing config at the environment endpoint.
+    if (integration.perEnvironment) {
+      if (!env) {
+        setLoadedIntegration(null)
+        return
+      }
+      _data
+        .get(`${Project.api}environments/${env}/integrations/${id}/`)
+        .then((res: any) => {
+          if (Array.isArray(res) && res.length) {
+            const existing = res[0]
+            setLoadedIntegration(existing)
+            setFormData({
+              ...existing,
+              fields: existing.fields || fields,
+              flagsmithEnvironment: env,
+            })
+          } else {
+            setLoadedIntegration(null)
+          }
+        })
+        .catch(() => setLoadedIntegration(null))
+      return
+    }
+    if (!selectedProjectId) return
+    _data
+      .get(`${Project.api}projects/${selectedProjectId}/integrations/${id}/`)
+      .then((res: any) => {
+        if (Array.isArray(res) && res.length) {
+          const existing = res[0]
+          setLoadedIntegration(existing)
+          setFormData({ ...existing, fields: existing.fields || fields })
+        } else {
+          setLoadedIntegration(null)
+        }
+      })
+      .catch(() => setLoadedIntegration(null))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProjectId, formData.flagsmithEnvironment])
 
   const onComplete = () => {
     closeModal()
@@ -134,7 +200,8 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
     e.preventDefault()
 
     const isOauth = integration.isOauth && !authorised
-    const isEdit = data && data.id
+    const existingId = data?.id || loadedIntegration?.id
+    const isEdit = !!existingId
 
     if (integration.isExternalInstallation) {
       onComplete?.()
@@ -161,7 +228,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
           .then((res: any) => handleOauthSignature(res))
       } else if (isEdit) {
         _data
-          .put(`${baseUrl}/${data.id}/`, formData)
+          .put(`${baseUrl}/${existingId}/`, formData)
           .then(onComplete)
           .catch(onError)
       } else {
@@ -173,7 +240,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
         .then((res: any) => handleOauthSignature(res))
     } else if (isEdit) {
       _data
-        .put(`${baseUrl}/${data.id}/`, formData)
+        .put(`${baseUrl}/${existingId}/`, formData)
         .then(onComplete)
         .catch(onError)
     } else {
@@ -233,8 +300,41 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
     <form
       className={classNames({ 'px-4 h-100': !!modal })}
       onSubmit={handleSubmit}
+      autoComplete='off'
     >
       <div className={classNames({ 'pt-4': !!modal })}>
+        {requiresProjectSelection &&
+          (() => {
+            const selectedProject = projects?.find(
+              (p: { id: number }) => `${p.id}` === `${selectedProjectId}`,
+            )
+            return (
+              <div className='mb-3'>
+                <label className={!modal ? 'mb-1 fw-bold' : ''}>
+                  Flagsmith Project
+                </label>
+                <Select
+                  value={
+                    selectedProject
+                      ? {
+                          label: selectedProject.name,
+                          value: `${selectedProject.id}`,
+                        }
+                      : { label: 'Select a project' }
+                  }
+                  options={(projects || []).map(
+                    (p: { id: number; name: string }) => ({
+                      label: p.name,
+                      value: `${p.id}`,
+                    }),
+                  )}
+                  onChange={(v: { value: string }) => {
+                    setSelectedProjectId(v.value)
+                  }}
+                />
+              </div>
+            )
+          })()}
         {integration.perEnvironment && projectId && (
           <div className='mb-3'>
             <label className={!modal ? 'mb-1 fw-bold' : ''}>
@@ -314,6 +414,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
                 isValid={!!formData[field.key]}
                 type={field.hidden ? 'password' : field.inputType || 'text'}
                 className='full-width mb-2'
+                autocomplete={field.hidden ? 'new-password' : 'off'}
               />
             )}
           </div>
@@ -327,6 +428,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
               isValid={!!formData.channel_id}
               type='text'
               className='full-width mt-2'
+              autocomplete='off'
             />
           </div>
         )}
@@ -343,7 +445,8 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
           <Button
             disabled={
               isLoading ||
-              (!formData.flagsmithEnvironment && integration.perEnvironment)
+              (!formData.flagsmithEnvironment && integration.perEnvironment) ||
+              (requiresProjectSelection && !selectedProjectId)
             }
             type='submit'
           >

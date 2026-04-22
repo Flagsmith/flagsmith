@@ -1,4 +1,11 @@
-import React, { FC, useState, useEffect } from 'react'
+import React, {
+  FC,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -14,9 +21,75 @@ import {
 } from 'common/types/responses'
 import map from 'lodash/map'
 import Button from './base/forms/Button'
+import ActionButton from './ActionButton'
+import useOutsideClick from 'common/useOutsideClick'
+import { calculateListPosition } from 'common/utils/calculateListPosition'
+import classNames from 'classnames'
 import Utils from 'common/utils/utils'
 import { useHistory } from 'react-router-dom'
 import each from 'lodash/each'
+
+type IntegrationAction = {
+  label: string
+  onClick: () => void
+  dataTest?: string
+  disabled?: boolean
+  tooltip?: string
+  primary?: boolean
+  requiresOrgAdmin?: boolean
+}
+
+const IntegrationActionsMenu: FC<{ actions: IntegrationAction[] }> = ({
+  actions,
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const btnRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
+
+  const close = useCallback(() => setIsOpen(false), [])
+  useOutsideClick(listRef, () => isOpen && close())
+
+  useLayoutEffect(() => {
+    if (!isOpen || !listRef.current || !btnRef.current) return
+    const { left, top } = calculateListPosition(
+      btnRef.current,
+      listRef.current,
+      true,
+    )
+    listRef.current.style.top = `${top}px`
+    listRef.current.style.left = `${left}px`
+  }, [isOpen])
+
+  return (
+    <div className='feature-action'>
+      <div ref={btnRef}>
+        <ActionButton onClick={() => setIsOpen(!isOpen)} />
+      </div>
+      {isOpen && (
+        <div ref={listRef} className='feature-action__list'>
+          {actions.map((action, i) => (
+            <div
+              key={i}
+              className={classNames('feature-action__item', {
+                'feature-action__item_disabled': action.disabled,
+              })}
+              data-test={action.dataTest}
+              title={action.tooltip}
+              onClick={(e) => {
+                e.stopPropagation()
+                if (action.disabled) return
+                action.onClick()
+                close()
+              }}
+            >
+              <span>{action.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const GITHUB_INSTALLATION_SETUP = 'install'
 
@@ -38,6 +111,7 @@ type IntegrationProps = {
   ) => void
   organisationId?: string
   projectId?: string
+  isOrgAdmin?: boolean
   githubMeta: {
     githubId: number
     hasIntegrationWithGithub: boolean
@@ -46,6 +120,7 @@ type IntegrationProps = {
 }
 
 const Integration: FC<IntegrationProps> = (props) => {
+  const history = useHistory()
   const [reFetchgithubId, setReFetchgithubId] = useState<string>('')
   const [windowInstallationId, setWindowInstallationId] = useState<string>('')
 
@@ -85,8 +160,8 @@ const Integration: FC<IntegrationProps> = (props) => {
     window.addEventListener('message', (event) => {
       if (
         event.source === childWindow &&
-        (event.data?.hasOwnProperty('installationId') ||
-          event.data.installationId)
+        event.data &&
+        'installationId' in event.data
       ) {
         setWindowInstallationId(event.data.installationId)
         localStorage.removeItem('githubIntegrationSetupFromFlagsmith')
@@ -119,7 +194,9 @@ const Integration: FC<IntegrationProps> = (props) => {
     external,
     image,
     isExternalInstallation,
+    organisation: isOrganisationLevel,
     perEnvironment,
+    project: isProjectLevel,
     title,
   } = props.integration
   const activeIntegrations = props.activeIntegrations
@@ -128,6 +205,129 @@ const Integration: FC<IntegrationProps> = (props) => {
     activeIntegrations &&
     activeIntegrations.length
   )
+  const isOrgPage = !!props.organisationId
+  // Org-only: shown on project page but must be configured at org level
+  const isOrgOnlyOnProjectPage =
+    !isOrgPage && !!isOrganisationLevel && !isProjectLevel
+  // Dual-level: can be configured at both project and org level
+  const isDualLevelOnProjectPage =
+    !isOrgPage && !!isOrganisationLevel && !!isProjectLevel
+  // Project-only integration surfaced on the org page (read-only, informational)
+  const isProjectOnlyOnOrgPage = isOrgPage && !isOrganisationLevel
+  const orgIntegrationsHref = `/organisation/${
+    AccountStore.getOrganisation()?.id
+  }/integrations`
+  const isConnectedAtOrg = !!props.githubMeta.hasIntegrationWithGithub
+  const hasActiveConfig = !!activeIntegrations?.length
+  const isEditing = hasActiveConfig && !perEnvironment
+  const scopeLabel = isOrgPage ? 'organisation' : 'project'
+  const addCtaLabel = isEditing
+    ? `Edit ${scopeLabel} integration`
+    : `Add to ${scopeLabel}`
+  const addCtaTheme = isEditing ? 'secondary' : 'primary'
+
+  const orgLinkAction: IntegrationAction = {
+    dataTest: 'org-level-integration-cta',
+    disabled: !props.isOrgAdmin,
+    label: isConnectedAtOrg
+      ? 'Edit organisation integration'
+      : 'Add to organisation',
+    onClick: () => history.push(orgIntegrationsHref),
+    requiresOrgAdmin: true,
+    tooltip: !props.isOrgAdmin
+      ? 'Organisation admin permission is required. Please contact your organisation administrator.'
+      : undefined,
+  }
+
+  const actions: IntegrationAction[] = []
+  if (isProjectOnlyOnOrgPage) {
+    actions.push({
+      dataTest: 'show-create-segment-btn',
+      label: 'Add to project',
+      onClick: add,
+      primary: true,
+    })
+  } else if (isOrgOnlyOnProjectPage) {
+    actions.push(orgLinkAction)
+    if (isConnectedAtOrg) {
+      actions.push({
+        dataTest: 'show-create-segment-btn',
+        label: 'Manage Repositories',
+        onClick: add,
+        primary: true,
+      })
+    }
+  } else {
+    if (isDualLevelOnProjectPage && showAdd) {
+      actions.push(orgLinkAction)
+    }
+    if (showAdd) {
+      if (external && !isExternalInstallation) {
+        actions.push({
+          dataTest: 'show-create-segment-btn',
+          label: addCtaLabel,
+          onClick: () => window.open(docs, '_blank', 'noreferrer'),
+          primary: true,
+        })
+      } else if (
+        external &&
+        isExternalInstallation &&
+        (windowInstallationId || props.githubMeta.hasIntegrationWithGithub)
+      ) {
+        actions.push({
+          dataTest: 'show-create-segment-btn',
+          label: 'Manage Integration',
+          onClick: add,
+          primary: true,
+        })
+      } else if (external && isExternalInstallation) {
+        actions.push({
+          dataTest: 'show-create-segment-btn',
+          label: addCtaLabel,
+          onClick: openChildWin,
+          primary: true,
+        })
+      } else {
+        actions.push({
+          dataTest: 'show-create-segment-btn',
+          label: addCtaLabel,
+          onClick: add,
+          primary: true,
+        })
+      }
+    }
+  }
+
+  const renderActions = () => {
+    if (actions.length === 0) return null
+    if (actions.length === 1) {
+      const action = actions[0]
+      const requiresOrgAdmin =
+        (isOrgPage && !!action.primary) || !!action.requiresOrgAdmin
+      const lacksOrgAdmin = requiresOrgAdmin && !props.isOrgAdmin
+      const button = (
+        <Button
+          theme={action.primary ? addCtaTheme : 'secondary'}
+          onClick={action.onClick}
+          disabled={action.disabled || lacksOrgAdmin}
+          data-test={action.dataTest}
+          size='xSmall'
+          title={action.tooltip}
+        >
+          {action.label}
+        </Button>
+      )
+      if (requiresOrgAdmin) {
+        return Utils.renderWithPermission(
+          !!props.isOrgAdmin,
+          'Organisation admin permission is required to manage organisation integrations.',
+          button,
+        )
+      }
+      return button
+    }
+    return <IntegrationActionsMenu actions={actions} />
+  }
 
   return (
     <div className='panel panel-integrations p-4 mb-3'>
@@ -135,93 +335,21 @@ const Integration: FC<IntegrationProps> = (props) => {
         <img src={image} alt='Integration' />
         <div className='flex-1 flex-column'>
           <h4 className='mb-0'>{title}</h4>
-          <Row space style={{ flexWrap: 'noWrap' }}>
-            <div className='subtitle'>
-              {description}{' '}
-              {docs && (
-                <Button
-                  theme='text'
-                  href={docs}
-                  target='_blank'
-                  className='fw-normal'
-                >
-                  View docs
-                </Button>
-              )}
-            </div>
-            <Row style={{ flexWrap: 'noWrap' }}>
-              {activeIntegrations &&
-                activeIntegrations.map((integration) => (
-                  <Button
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      remove(integration)
-                      return false
-                    }}
-                    className='ml-3'
-                    theme='secondary'
-                    type='submit'
-                    size='xSmall'
-                    key={integration.id}
-                  >
-                    Delete Integration
-                  </Button>
-                ))}
-              {showAdd && (
-                <>
-                  {external && !isExternalInstallation ? (
-                    <a
-                      href={docs}
-                      target={'_blank'}
-                      className='btn btn-primary btn-xsm ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      rel='noreferrer'
-                    >
-                      Add Integration
-                    </a>
-                  ) : external &&
-                    isExternalInstallation &&
-                    (windowInstallationId ||
-                      props.githubMeta.hasIntegrationWithGithub) ? (
-                    <Button
-                      className='ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      onClick={add}
-                      size='xSmall'
-                    >
-                      Manage Integration
-                    </Button>
-                  ) : external &&
-                    !props.githubMeta.hasIntegrationWithGithub &&
-                    isExternalInstallation ? (
-                    <Button
-                      className='ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      onClick={openChildWin}
-                      size='xSmall'
-                    >
-                      Add Integration
-                    </Button>
-                  ) : (
-                    <Button
-                      className='ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      onClick={add}
-                      size='xSmall'
-                    >
-                      Add Integration
-                    </Button>
-                  )}
-                </>
-              )}
-            </Row>
-          </Row>
+          <div className='subtitle'>
+            {description}{' '}
+            {docs && (
+              <Button
+                theme='text'
+                href={docs}
+                target='_blank'
+                className='fw-normal'
+              >
+                View docs
+              </Button>
+            )}
+          </div>
         </div>
+        <div className='d-flex align-items-center'>{renderActions()}</div>
       </div>
 
       {activeIntegrations &&
@@ -241,6 +369,22 @@ const Integration: FC<IntegrationProps> = (props) => {
                   integration={props.integration}
                 />
               </Flex>
+              <div onClick={(e) => e.stopPropagation()}>
+                <IntegrationActionsMenu
+                  actions={[
+                    {
+                      dataTest: 'edit-integration',
+                      label: 'Edit',
+                      onClick: () => edit(integration),
+                    },
+                    {
+                      dataTest: 'delete-integration',
+                      label: 'Delete',
+                      onClick: () => remove(integration),
+                    },
+                  ]}
+                />
+              </div>
             </Row>
           </div>
         ))}
@@ -251,7 +395,8 @@ const Integration: FC<IntegrationProps> = (props) => {
 interface IntegrationListProps {
   integrations: string[]
   projectId?: string
-  organisationId: string
+  organisationId?: string
+  isOrgAdmin?: boolean
 }
 const IntegrationList: FC<IntegrationListProps> = (props) => {
   const [githubId, setGithubId] = useState<number>(0)
@@ -400,12 +545,18 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
     githubId: any = undefined,
   ) => {
     const params = Utils.fromParam()
+    // On the org page, a project-level-only integration cannot be saved
+    // against the organisation — the user must pick a project in the modal.
+    const requiresProjectSelection =
+      !!props.organisationId && !integration.organisation
     openModal(
       `${integration.title} Integration`,
       <CreateEditIntegration
         id={id}
         modal
-        organisationId={props.organisationId}
+        organisationId={
+          requiresProjectSelection ? undefined : props.organisationId
+        }
         integration={integration}
         data={
           params.environment
@@ -416,6 +567,7 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
         }
         githubMeta={{ githubId: githubId, installationId: installationId }}
         projectId={props.projectId}
+        requiresProjectSelection={requiresProjectSelection}
         onComplete={githubId ? fetchGithubIntegration : fetch}
       />,
       'side-modal',
@@ -455,6 +607,8 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
               editIntegration={editIntegration}
               removeIntegration={removeIntegration}
               projectId={props.projectId}
+              organisationId={props.organisationId}
+              isOrgAdmin={props.isOrgAdmin}
               id={i}
               key={i}
               githubMeta={{
