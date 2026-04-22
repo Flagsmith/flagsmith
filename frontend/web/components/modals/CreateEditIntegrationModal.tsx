@@ -1,4 +1,4 @@
-import React, { FC, FormEvent, useEffect, useState } from 'react'
+import React, { FC, FormEvent, useEffect, useRef, useState } from 'react'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import MyGitHubRepositoriesComponent from 'components/MyGitHubRepositoriesComponent'
 import _data from 'common/data/base/_data'
@@ -12,8 +12,10 @@ import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
 import Input from 'components/base/forms/Input'
 import { IntegrationData, IntegrationFieldOption } from 'common/types/responses'
+import { Req } from 'common/types/requests'
 import cloneDeep from 'lodash/cloneDeep'
-import { useGetProjectsQuery } from 'common/services/useProject'
+import ProjectSelect from 'components/ProjectSelect'
+import { useGetIntegrationQuery } from 'common/services/useIntegration'
 
 const GITHUB_INSTALLATION_UPDATE = 'update'
 
@@ -68,14 +70,18 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
   } = props
   const [fields, setFields] = useState(cloneDeep(integration.fields || []))
 
-  const [formData, setFormData] = useState<Record<string, any>>(() => {
-    if (data) return data
+  const buildDefaultFormData = (): Record<string, any> => {
     const initial: Record<string, any> = { fields }
     integration.fields?.forEach((field) => {
-      if (field.default !== undefined) initial[field.key] = field.default
+      // Explicitly set every field so controlled inputs reset to empty rather
+      // than going uncontrolled (which would retain the previous value).
+      initial[field.key] = field.default ?? ''
     })
     return initial
-  })
+  }
+  const [formData, setFormData] = useState<Record<string, any>>(
+    () => data || buildDefaultFormData(),
+  )
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [authorised, setAuthorised] = useState<boolean>(false)
@@ -89,54 +95,56 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
   const projectId = requiresProjectSelection
     ? selectedProjectId
     : initialProjectId
-  const { data: projects } = useGetProjectsQuery(
-    { organisationId: AccountStore.getOrganisation()?.id },
-    { skip: !requiresProjectSelection },
-  )
+
+  const envId = formData.flagsmithEnvironment
+  const integrationQueryArgs = ((): Req['getIntegration'] | null => {
+    if (!requiresProjectSelection || !id) return null
+    if (integration.perEnvironment) {
+      return envId ? { environmentId: envId, integrationId: id } : null
+    }
+    return selectedProjectId
+      ? { integrationId: id, projectId: selectedProjectId }
+      : null
+  })()
+  const { data: existingIntegrations, isFetching: isFetchingIntegration } =
+    useGetIntegrationQuery(integrationQueryArgs ?? { integrationId: '' }, {
+      skip: !integrationQueryArgs,
+    })
+
+  // When the user switches project, wipe state carried over from the previous
+  // project — including flagsmithEnvironment, which per-environment queries key
+  // off and would otherwise stay stuck to the old project's environment.
+  // Env changes within the same project are handled by the query-resolution
+  // effect below.
+  const previousProjectRef = useRef(selectedProjectId)
+  useEffect(() => {
+    if (!requiresProjectSelection) return
+    if (previousProjectRef.current === selectedProjectId) return
+    previousProjectRef.current = selectedProjectId
+    setLoadedIntegration(null)
+    setFormData(buildDefaultFormData())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProjectId])
 
   useEffect(() => {
-    if (!requiresProjectSelection || !id) return
-    const env = formData.flagsmithEnvironment
-    // For per-environment integrations, we need both project and env before
-    // we can check for an existing config at the environment endpoint.
-    if (integration.perEnvironment) {
-      if (!env) {
-        setLoadedIntegration(null)
-        return
-      }
-      _data
-        .get(`${Project.api}environments/${env}/integrations/${id}/`)
-        .then((res: any) => {
-          if (Array.isArray(res) && res.length) {
-            const existing = res[0]
-            setLoadedIntegration(existing)
-            setFormData({
-              ...existing,
-              fields: existing.fields || fields,
-              flagsmithEnvironment: env,
-            })
-          } else {
-            setLoadedIntegration(null)
-          }
-        })
-        .catch(() => setLoadedIntegration(null))
+    if (!requiresProjectSelection || !id || !integrationQueryArgs) return
+    if (isFetchingIntegration) return
+    const existing = existingIntegrations?.[0]
+    if (existing) {
+      setLoadedIntegration(existing)
+      setFormData({
+        ...existing,
+        fields: existing.fields || fields,
+        ...(integration.perEnvironment ? { flagsmithEnvironment: envId } : {}),
+      })
       return
     }
-    if (!selectedProjectId) return
-    _data
-      .get(`${Project.api}projects/${selectedProjectId}/integrations/${id}/`)
-      .then((res: any) => {
-        if (Array.isArray(res) && res.length) {
-          const existing = res[0]
-          setLoadedIntegration(existing)
-          setFormData({ ...existing, fields: existing.fields || fields })
-        } else {
-          setLoadedIntegration(null)
-        }
-      })
-      .catch(() => setLoadedIntegration(null))
+    // Query resolved with no existing config for this project/environment —
+    // clear prior values so we don't carry over the previous selection.
+    setLoadedIntegration(null)
+    setFormData(buildDefaultFormData())
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProjectId, formData.flagsmithEnvironment])
+  }, [existingIntegrations, isFetchingIntegration])
 
   const onComplete = () => {
     closeModal()
@@ -303,38 +311,18 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
       autoComplete='off'
     >
       <div className={classNames({ 'pt-4': !!modal })}>
-        {requiresProjectSelection &&
-          (() => {
-            const selectedProject = projects?.find(
-              (p: { id: number }) => `${p.id}` === `${selectedProjectId}`,
-            )
-            return (
-              <div className='mb-3'>
-                <label className={!modal ? 'mb-1 fw-bold' : ''}>
-                  Flagsmith Project
-                </label>
-                <Select
-                  value={
-                    selectedProject
-                      ? {
-                          label: selectedProject.name,
-                          value: `${selectedProject.id}`,
-                        }
-                      : { label: 'Select a project' }
-                  }
-                  options={(projects || []).map(
-                    (p: { id: number; name: string }) => ({
-                      label: p.name,
-                      value: `${p.id}`,
-                    }),
-                  )}
-                  onChange={(v: { value: string }) => {
-                    setSelectedProjectId(v.value)
-                  }}
-                />
-              </div>
-            )
-          })()}
+        {requiresProjectSelection && (
+          <div className='mb-3'>
+            <label className={!modal ? 'mb-1 fw-bold' : ''}>
+              Flagsmith Project
+            </label>
+            <ProjectSelect
+              organisationId={AccountStore.getOrganisation()?.id}
+              value={selectedProjectId}
+              onChange={(v) => setSelectedProjectId(v)}
+            />
+          </div>
+        )}
         {integration.perEnvironment && projectId && (
           <div className='mb-3'>
             <label className={!modal ? 'mb-1 fw-bold' : ''}>

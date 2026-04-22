@@ -239,13 +239,35 @@ const Integration: FC<IntegrationProps> = (props) => {
       : undefined,
   }
 
+  const getPrimaryCta = (): { label: string; onClick: () => void } => {
+    if (external && !isExternalInstallation) {
+      return {
+        label: addCtaLabel,
+        onClick: () => window.open(docs, '_blank', 'noreferrer'),
+      }
+    }
+    if (
+      external &&
+      isExternalInstallation &&
+      (windowInstallationId || props.githubMeta.hasIntegrationWithGithub)
+    ) {
+      return { label: 'Manage Integration', onClick: add }
+    }
+    if (external && isExternalInstallation) {
+      return { label: addCtaLabel, onClick: openChildWin }
+    }
+    return { label: addCtaLabel, onClick: add }
+  }
+
   const actions: IntegrationAction[] = []
   if (isProjectOnlyOnOrgPage) {
     actions.push({
       dataTest: 'show-create-segment-btn',
+      disabled: !props.isOrgAdmin,
       label: 'Add to project',
       onClick: add,
       primary: true,
+      requiresOrgAdmin: true,
     })
   } else if (isOrgOnlyOnProjectPage) {
     actions.push(orgLinkAction)
@@ -262,39 +284,13 @@ const Integration: FC<IntegrationProps> = (props) => {
       actions.push(orgLinkAction)
     }
     if (showAdd) {
-      if (external && !isExternalInstallation) {
-        actions.push({
-          dataTest: 'show-create-segment-btn',
-          label: addCtaLabel,
-          onClick: () => window.open(docs, '_blank', 'noreferrer'),
-          primary: true,
-        })
-      } else if (
-        external &&
-        isExternalInstallation &&
-        (windowInstallationId || props.githubMeta.hasIntegrationWithGithub)
-      ) {
-        actions.push({
-          dataTest: 'show-create-segment-btn',
-          label: 'Manage Integration',
-          onClick: add,
-          primary: true,
-        })
-      } else if (external && isExternalInstallation) {
-        actions.push({
-          dataTest: 'show-create-segment-btn',
-          label: addCtaLabel,
-          onClick: openChildWin,
-          primary: true,
-        })
-      } else {
-        actions.push({
-          dataTest: 'show-create-segment-btn',
-          label: addCtaLabel,
-          onClick: add,
-          primary: true,
-        })
-      }
+      const cta = getPrimaryCta()
+      actions.push({
+        dataTest: 'show-create-segment-btn',
+        label: cta.label,
+        onClick: cta.onClick,
+        primary: true,
+      })
     }
   }
 
@@ -302,14 +298,11 @@ const Integration: FC<IntegrationProps> = (props) => {
     if (actions.length === 0) return null
     if (actions.length === 1) {
       const action = actions[0]
-      const requiresOrgAdmin =
-        (isOrgPage && !!action.primary) || !!action.requiresOrgAdmin
-      const lacksOrgAdmin = requiresOrgAdmin && !props.isOrgAdmin
       const button = (
         <Button
           theme={action.primary ? addCtaTheme : 'secondary'}
           onClick={action.onClick}
-          disabled={action.disabled || lacksOrgAdmin}
+          disabled={action.disabled}
           data-test={action.dataTest}
           size='xSmall'
           title={action.tooltip}
@@ -317,7 +310,7 @@ const Integration: FC<IntegrationProps> = (props) => {
           {action.label}
         </Button>
       )
-      if (requiresOrgAdmin) {
+      if (action.requiresOrgAdmin) {
         return Utils.renderWithPermission(
           !!props.isOrgAdmin,
           'Organisation admin permission is required to manage organisation integrations.',
