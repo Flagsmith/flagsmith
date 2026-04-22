@@ -222,14 +222,14 @@ def test_post_unlinked_comment__no_config__returns_early(
 @pytest.mark.parametrize(
     "scope, expected_body_fragment",
     [
-        ("environment", "was **disabled** in **Test Environment**\n"),
+        ("environment", "in **Test Environment**: :x: Disabled\n"),
         (
             "segment",
-            "was **disabled** in **Test Environment** for segment **segment**\n",
+            "in **Test Environment** for segment **segment**: :x: Disabled\n",
         ),
         (
             "identity",
-            "was **disabled** in **Test Environment** for identity **test_identity**\n",
+            "in **Test Environment** for identity **test_identity**: :x: Disabled\n",
         ),
     ],
     ids=["environment", "segment", "identity"],
@@ -771,6 +771,6 @@ def test_post_state_change_comment__enabled_with_value__renders_value_in_body(
     body = json.loads(call.request.body)["body"]
     assert body == (
         f"Feature flag `{feature.name}` "
-        f"was **enabled** in **{environment.name}** "
-        f"with value `my_value`\n"
+        f"in **{environment.name}**: "
+        f":white_check_mark: Enabled, value `my_value`\n"
     )
