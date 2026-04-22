@@ -16,8 +16,29 @@ import { Req } from 'common/types/requests'
 import cloneDeep from 'lodash/cloneDeep'
 import ProjectSelect from 'components/ProjectSelect'
 import { useGetIntegrationQuery } from 'common/services/useIntegration'
+import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 
 const GITHUB_INSTALLATION_UPDATE = 'update'
+
+const SummaryItem: FC<{ label: string; children: React.ReactNode }> = ({
+  children,
+  label,
+}) => (
+  <div className='col-md-3 mb-2'>
+    <div className='fw-bold'>{label}</div>
+    <div>{children}</div>
+  </div>
+)
+
+const ReadOnlyEnvironmentName: FC<{ environmentId?: string }> = ({
+  environmentId,
+}) => {
+  const { data: environment } = useGetEnvironmentQuery(
+    { id: environmentId as any },
+    { skip: !environmentId },
+  )
+  return <>{environment?.name || ''}</>
+}
 
 const constructBaseUrl = ({
   environmentId,
@@ -323,14 +344,14 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
             />
           </div>
         )}
-        {integration.perEnvironment && projectId && (
+        {integration.perEnvironment && projectId && !readOnly && (
           <div className='mb-3'>
             <label className={!modal ? 'mb-1 fw-bold' : ''}>
               Flagsmith Environment
             </label>
             <EnvironmentSelect
               projectId={projectId}
-              readOnly={!!data || readOnly}
+              readOnly={!!data}
               value={formData.flagsmithEnvironment}
               onChange={(environment) =>
                 update('flagsmithEnvironment', environment)
@@ -349,64 +370,76 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
             />
           </div>
         )}
-        {fields.map((field) => (
-          <div key={field.key}>
-            <div>
-              <label
-                htmlFor={field.label.replace(/ /g, '')}
-                className={!modal ? 'mb-1 fw-bold' : ''}
-              >
-                {field.label}
-              </label>
-            </div>
-
-            {readOnly ? (
-              <div className='mb-3'>
-                {field.hidden
-                  ? formData[field.key].replace(/./g, '*')
-                  : formData[field.key]}
-              </div>
-            ) : field.options ? (
-              <div className='full-width mb-2'>
-                <Select
-                  onChange={(v: { value: string }) =>
-                    update(field.key, v.value)
-                  }
-                  options={field.options}
-                  value={
-                    formData[field.key] &&
-                    field.options.find(
-                      (v: IntegrationFieldOption) =>
-                        v.value === formData[field.key],
-                    )
-                      ? {
-                          label: field.options.find(
-                            (v: IntegrationFieldOption) =>
-                              v.value === formData[field.key],
-                          )?.label,
-                          value: formData[field.key],
-                        }
-                      : { label: 'Please select' }
-                  }
+        {readOnly && (
+          <div className='row'>
+            {integration.perEnvironment && projectId && (
+              <SummaryItem label='Flagsmith Environment'>
+                <ReadOnlyEnvironmentName
+                  environmentId={formData.flagsmithEnvironment}
                 />
-              </div>
-            ) : (
-              <Input
-                id={field.label.replace(/ /g, '')}
-                value={
-                  typeof formData[field.key] !== 'undefined'
-                    ? formData[field.key]
-                    : field.default
-                }
-                onChange={(e: any) => update(field.key, e)}
-                isValid={!!formData[field.key]}
-                type={field.hidden ? 'password' : field.inputType || 'text'}
-                className='full-width mb-2'
-                autocomplete={field.hidden ? 'new-password' : 'off'}
-              />
+              </SummaryItem>
             )}
+            {fields.map((field) => (
+              <SummaryItem key={field.key} label={field.label}>
+                {field.hidden
+                  ? formData[field.key]?.replace(/./g, '*')
+                  : formData[field.key]}
+              </SummaryItem>
+            ))}
           </div>
-        ))}
+        )}
+        {!readOnly &&
+          fields.map((field) => (
+            <div key={field.key}>
+              <div>
+                <label
+                  htmlFor={field.label.replace(/ /g, '')}
+                  className={!modal ? 'mb-1 fw-bold' : ''}
+                >
+                  {field.label}
+                </label>
+              </div>
+              {field.options ? (
+                <div className='full-width mb-2'>
+                  <Select
+                    onChange={(v: { value: string }) =>
+                      update(field.key, v.value)
+                    }
+                    options={field.options}
+                    value={
+                      formData[field.key] &&
+                      field.options.find(
+                        (v: IntegrationFieldOption) =>
+                          v.value === formData[field.key],
+                      )
+                        ? {
+                            label: field.options.find(
+                              (v: IntegrationFieldOption) =>
+                                v.value === formData[field.key],
+                            )?.label,
+                            value: formData[field.key],
+                          }
+                        : { label: 'Please select' }
+                    }
+                  />
+                </div>
+              ) : (
+                <Input
+                  id={field.label.replace(/ /g, '')}
+                  value={
+                    typeof formData[field.key] !== 'undefined'
+                      ? formData[field.key]
+                      : field.default
+                  }
+                  onChange={(e: any) => update(field.key, e)}
+                  isValid={!!formData[field.key]}
+                  type={field.hidden ? 'password' : field.inputType || 'text'}
+                  className='full-width mb-2'
+                  autocomplete={field.hidden ? 'new-password' : 'off'}
+                />
+              )}
+            </div>
+          ))}
         {authorised && id === 'slack' && (
           <div>
             Can't see your channel? Enter your channel ID here (C0xxxxxx)
