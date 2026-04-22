@@ -57,7 +57,7 @@ Experimentation builds on three concepts you already use:
 
 ---
 
-## 1. Connecting a data warehouse
+## 1. Connect a data warehouse
 
 Before you can run experiments, connect the data warehouse where your
 flag-evaluation and custom-event data lives. Flagsmith reads from the
@@ -65,59 +65,15 @@ warehouse to compute metric values per variation.
 
 :::info
 
-The data warehouse connection is **organisation-scoped** — one connection
-per organisation, available across all projects. Configure it once and
-every project inherits it.
+The data warehouse connection is **organisation-scoped** — configure it
+once and every project inherits it.
 
 :::
 
-### Step 1: Open Organisation Integrations
+See the full setup guide:
+**[Data Warehouse Integration](/third-party-integrations/analytics/data-warehouse)**.
 
-> **Screenshot placeholder —** Organisation Integrations page with the Data Warehouse card highlighted. Target path: `/img/experimentation/integrations-list-warehouse-card.png`
-
-1. Go to **Organisation Integrations** from the organisation nav.
-2. Locate the **Data Warehouse** card.
-3. Click **Add Integration**.
-
-### Step 2: Choose a warehouse
-
-> **Screenshot placeholder —** Configuration form showing Snowflake / BigQuery / Databricks selector cards. Target path: `/img/experimentation/warehouse-config-form.png`
-
-1. Pick your warehouse provider — **Snowflake**, **BigQuery**, or
-   **Databricks**.
-2. Fill in the connection details (account URL, database, schema,
-   warehouse, user, authentication method).
-
-### Step 3: Test and connect
-
-> **Screenshot placeholder —** Test-passed state showing the inline success banner above the action row. Target path: `/img/experimentation/warehouse-test-passed.png`
-
-1. Click **Test Connection** to verify your credentials without saving
-   them. Flagsmith attempts to authenticate and reports the result inline.
-2. If the test passes, click **Connect** to save the configuration and
-   start streaming data.
-3. If the test fails, review the error, correct your credentials, and
-   re-run the test.
-
-:::warning
-
-Editing any connection field clears the last test result. Re-run the
-test before connecting so you aren't saving untested credentials.
-
-:::
-
-### Step 4: Verify data is flowing
-
-> **Screenshot placeholder —** Connected state — live stats card showing 24h flag evaluations and custom events, plus connection details grid. Target path: `/img/experimentation/warehouse-connected.png`
-
-Once connected, the warehouse page shows:
-
-- **24-hour flag evaluation count** — confirms Flagsmith is writing to
-  your warehouse
-- **24-hour custom event count** — confirms your app is writing events
-  Flagsmith can read for metric computation
-- **Connection details** — read-only summary of what's configured, with
-  **Edit** and **Disconnect** controls
+Once connected and data is flowing, continue to the next step.
 
 ---
 
