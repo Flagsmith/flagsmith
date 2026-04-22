@@ -18,6 +18,7 @@ from integrations.gitlab.models import GitLabConfiguration
 from integrations.gitlab.services import parse_project_path
 from integrations.gitlab.tasks import (
     post_gitlab_linked_comment,
+    post_gitlab_unlinked_comment,
     register_gitlab_webhook,
 )
 from organisations.models import Organisation
@@ -176,6 +177,22 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
 
     def _post_gitlab_link_comment(self, resource: FeatureExternalResource) -> None:
         post_gitlab_linked_comment.delay(args=(resource.id,))
+
+    def perform_destroy(self, instance: FeatureExternalResource) -> None:
+        if instance.type in GITLAB_RESOURCE_TYPES:
+            self._post_gitlab_unlink_comment(instance)
+        super().perform_destroy(instance)
+
+    def _post_gitlab_unlink_comment(self, resource: FeatureExternalResource) -> None:
+        post_gitlab_unlinked_comment.delay(
+            args=(
+                resource.feature.name,
+                resource.feature.id,
+                resource.url,
+                resource.type,
+                resource.feature.project_id,
+            ),
+        )
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         external_resource_id = int(self.kwargs["pk"])

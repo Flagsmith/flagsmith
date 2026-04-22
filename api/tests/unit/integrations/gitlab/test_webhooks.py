@@ -1,6 +1,7 @@
 import pytest
 import requests
 import responses
+from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
 from features.feature_external_resources.models import (
@@ -21,8 +22,9 @@ from integrations.gitlab.tasks import register_gitlab_webhook
 def test_ensure_webhook_registered__gitlab_http_error__logs_and_raises(
     gitlab_config: GitLabConfiguration,
     log: StructuredLogCapture,
+    mocker: MockerFixture,
 ) -> None:
-    # Given — GitLab rejects the hook creation.
+    # Given
     responses.post(
         "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/hooks",
         status=500,
@@ -32,11 +34,16 @@ def test_ensure_webhook_registered__gitlab_http_error__logs_and_raises(
     with pytest.raises(requests.RequestException):
         ensure_webhook_registered(gitlab_config, "testorg/testrepo")
 
-    assert any(
-        e["event"] == "webhook.registration_failed"
-        and e["gitlab__project__path"] == "testorg/testrepo"
-        for e in log.events
-    )
+    assert log.events == [
+        {
+            "level": "error",
+            "event": "webhook.registration_failed",
+            "organisation__id": gitlab_config.project.organisation_id,
+            "project__id": gitlab_config.project_id,
+            "gitlab__project__path": "testorg/testrepo",
+            "exc_info": mocker.ANY,
+        },
+    ]
     assert not GitLabWebhook.objects.exists()
 
 
@@ -45,10 +52,10 @@ def test_deregister_webhook_for_path__no_matching_webhook__noop(
     gitlab_config: GitLabConfiguration,
     log: StructuredLogCapture,
 ) -> None:
-    # Given / When — no webhook row exists for this (config, path) pair.
+    # Given / When
     deregister_webhook_for_path(gitlab_config, "never/registered")
 
-    # Then — nothing logged, nothing raised.
+    # Then
     assert log.events == []
 
 
@@ -56,10 +63,10 @@ def test_deregister_webhook_for_path__no_matching_webhook__noop(
 def test_register_gitlab_webhook_task__config_missing__noop(
     log: StructuredLogCapture,
 ) -> None:
-    # Given / When — a stale task fires after the config was hard-deleted.
+    # Given / When
     register_gitlab_webhook(config_id=999_999, project_path="testorg/testrepo")
 
-    # Then — no webhook created, no log.
+    # Then
     assert not GitLabWebhook.objects.exists()
     assert log.events == []
 
@@ -70,7 +77,7 @@ def test_deregister_gitlab_webhook_hook__unparseable_url__noop(
     feature: Feature,
     log: StructuredLogCapture,
 ) -> None:
-    # Given — a GitLab-typed link whose URL doesn't match the issue/MR shape.
+    # Given
     resource = FeatureExternalResource.objects.create(
         url="https://gitlab.example.com/not-a-resource",
         type=ResourceType.GITLAB_ISSUE.value,
@@ -80,7 +87,7 @@ def test_deregister_gitlab_webhook_hook__unparseable_url__noop(
     # When
     resource.delete()
 
-    # Then — no deregistration attempted.
+    # Then
     assert log.events == []
 
 
@@ -89,7 +96,7 @@ def test_deregister_gitlab_webhook_hook__no_config__noop(
     feature: Feature,
     log: StructuredLogCapture,
 ) -> None:
-    # Given — a GitLab-typed link exists but the config was removed.
+    # Given
     resource = FeatureExternalResource.objects.create(
         url="https://gitlab.example.com/testorg/testrepo/-/issues/1",
         type=ResourceType.GITLAB_ISSUE.value,
@@ -99,5 +106,5 @@ def test_deregister_gitlab_webhook_hook__no_config__noop(
     # When
     resource.delete()
 
-    # Then — no deregistration attempted.
+    # Then
     assert log.events == []

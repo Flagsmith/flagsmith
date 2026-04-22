@@ -126,3 +126,67 @@ def post_linked_comment(resource: FeatureExternalResource) -> None:
         log.warning("comment.post_failed", exc_info=exc)
     else:
         log.info("comment.posted")
+
+
+def post_unlinked_comment(
+    feature_name: str,
+    feature_id: int,
+    resource_url: str,
+    resource_type: str,
+    project_id: int,
+) -> None:
+    """Post a comment on the GitLab issue or merge request informing that the
+    feature flag has been unlinked.
+
+    All parameters are passed explicitly because the
+    ``FeatureExternalResource`` row no longer exists by the time this runs.
+    """
+    try:
+        config: GitLabConfiguration = GitLabConfiguration.objects.get(
+            project_id=project_id,
+        )
+    except GitLabConfiguration.DoesNotExist:
+        return
+
+    if (project_path := parse_project_path(resource_url)) is None:
+        return
+
+    if (iid := parse_resource_iid(resource_url)) is None:
+        return
+
+    body = render_to_string(
+        "gitlab/feature_unlinked_comment.md",
+        {"feature_name": feature_name},
+    )
+
+    log = logger.bind(
+        organisation__id=config.project.organisation_id,
+        project__id=project_id,
+        feature__id=feature_id,
+        gitlab__project__path=project_path,
+        gitlab__resource__iid=iid,
+    )
+
+    try:
+        if resource_type == ResourceType.GITLAB_ISSUE:
+            create_issue_note(
+                instance_url=config.gitlab_instance_url,
+                access_token=config.access_token,
+                project_path=project_path,
+                issue_iid=iid,
+                body=body,
+            )
+        elif resource_type == ResourceType.GITLAB_MR:
+            create_merge_request_note(
+                instance_url=config.gitlab_instance_url,
+                access_token=config.access_token,
+                project_path=project_path,
+                merge_request_iid=iid,
+                body=body,
+            )
+        else:
+            return
+    except requests.RequestException as exc:
+        log.warning("comment.post_failed", exc_info=exc)
+    else:
+        log.info("comment.posted")

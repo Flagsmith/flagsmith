@@ -407,7 +407,7 @@ def test_create_external_resource__unparseable_url__no_webhook_registered(
         access_token="glpat-test-token",
     )
 
-    # When — URL doesn't match our GitLab issue/MR regex.
+    # When
     response = admin_client.post(
         f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
         data={
@@ -425,12 +425,15 @@ def test_create_external_resource__unparseable_url__no_webhook_registered(
 
 @pytest.mark.django_db()
 @responses.activate
-def test_delete_external_resource__last_link_for_path__deregisters_webhook(
+def test_delete_external_resource__last_link_for_path__deregisters_webhook_and_posts_comment(
     admin_client: APIClient,
+    organisation: int,
     project: int,
     feature: int,
+    feature_name: str,
+    log: StructuredLogCapture,
 ) -> None:
-    # Given — a linked resource with a registered webhook.
+    # Given
     project_instance = Project.objects.get(id=project)
     config = GitLabConfiguration.objects.create(
         project=project_instance,
@@ -453,16 +456,45 @@ def test_delete_external_resource__last_link_for_path__deregisters_webhook(
         f"https://gitlab.example.com/api/v4/projects/{webhook.gitlab_project_id}/hooks/{webhook.gitlab_hook_id}",
         status=204,
     )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/1/notes",
+        json={"id": 1},
+        status=201,
+    )
 
     # When
     response = admin_client.delete(
         f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/{resource.id}/",
     )
 
-    # Then — unlink succeeds and the hook is gone from GitLab and our DB.
+    # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert len(responses.calls) == 1
     assert not GitLabWebhook.objects.filter(id=webhook.id).exists()
+
+    [note_call] = [c for c in responses.calls if "/notes" in c.request.url]
+    assert json.loads(note_call.request.body)["body"] == (
+        f"Unlinked from Flagsmith feature flag `{feature_name}`\n"
+    )
+
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "comment.posted",
+            "organisation__id": organisation,
+            "project__id": project,
+            "feature__id": feature,
+            "gitlab__project__path": "testorg/testrepo",
+            "gitlab__resource__iid": 1,
+        },
+        {
+            "level": "info",
+            "event": "webhook.deregistered",
+            "organisation__id": organisation,
+            "project__id": project,
+            "gitlab__project__id": 777,
+            "gitlab__hook__id": 42,
+        },
+    ]
 
 
 @pytest.mark.django_db()
@@ -472,7 +504,7 @@ def test_delete_external_resource__another_link_for_path_exists__preserves_webho
     project: int,
     feature: int,
 ) -> None:
-    # Given — two resources referencing the same GitLab project; one webhook.
+    # Given
     project_instance = Project.objects.get(id=project)
     config = GitLabConfiguration.objects.create(
         project=project_instance,
@@ -497,16 +529,21 @@ def test_delete_external_resource__another_link_for_path_exists__preserves_webho
         type="GITLAB_ISSUE",
         url="https://gitlab.example.com/testorg/testrepo/-/issues/2",
     )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/1/notes",
+        json={"id": 1},
+        status=201,
+    )
 
-    # When — unlink the first one.
+    # When
     response = admin_client.delete(
         f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/{first.id}/",
     )
 
-    # Then — no GitLab DELETE fired (issue #2 still references the project),
-    # webhook row untouched.
+    # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert len(responses.calls) == 0
+    [call] = responses.calls
+    assert "/notes" in call.request.url
     assert GitLabWebhook.objects.filter(id=webhook.id).exists()
 
 

@@ -7,6 +7,7 @@ from integrations.gitlab.services import (
     ensure_webhook_registered,
     has_live_resource_for_path,
     post_linked_comment,
+    post_unlinked_comment,
 )
 
 
@@ -48,3 +49,24 @@ def post_gitlab_linked_comment(resource_id: int) -> None:
     except FeatureExternalResource.DoesNotExist:
         return
     post_linked_comment(resource)
+
+
+@register_task_handler()
+def post_gitlab_unlinked_comment(
+    feature_name: str,
+    feature_id: int,
+    resource_url: str,
+    resource_type: str,
+    project_id: int,
+) -> None:
+    """Post a comment on the GitLab resource informing that the feature flag
+    has been unlinked.  Dispatched at unlink time.  All data is passed
+    directly because the resource row no longer exists.
+    """
+    post_unlinked_comment(
+        feature_name=feature_name,
+        feature_id=feature_id,
+        resource_url=resource_url,
+        resource_type=resource_type,
+        project_id=project_id,
+    )
