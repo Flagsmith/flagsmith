@@ -1,6 +1,5 @@
 import re
 
-import structlog
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
@@ -14,17 +13,14 @@ from integrations.github.client import (
     label_github_issue_pr,
 )
 from integrations.github.models import GitHubRepository
-from integrations.gitlab.services import register_gitlab_webhook_for_resource
-from integrations.gitlab.tasks import (
-    post_gitlab_linked_comment,
-    post_gitlab_unlinked_comment,
+from integrations.vcs.services import (
+    dispatch_vcs_on_resource_create,
+    dispatch_vcs_on_resource_destroy,
 )
 from organisations.models import Organisation
 
-from .models import GITLAB_RESOURCE_TYPES, FeatureExternalResource, ResourceType
+from .models import FeatureExternalResource, ResourceType
 from .serializers import FeatureExternalResourceSerializer
-
-gitlab_logger = structlog.get_logger("gitlab")
 
 
 @method_decorator(
@@ -149,35 +145,10 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
 
     def perform_create(self, serializer: FeatureExternalResourceSerializer) -> None:  # type: ignore[override]
         resource = serializer.save()
-        if resource.type in GITLAB_RESOURCE_TYPES:
-            gitlab_logger.info(
-                "resource.linked",
-                organisation__id=resource.feature.project.organisation_id,
-                project__id=resource.feature.project_id,
-                feature__id=resource.feature.id,
-                resource__type=resource.type.lower(),
-            )
-            register_gitlab_webhook_for_resource(resource)
-            post_gitlab_linked_comment.delay(args=(resource.id,))
+        dispatch_vcs_on_resource_create(resource)
 
     def perform_destroy(self, instance: FeatureExternalResource) -> None:
-        if instance.type in GITLAB_RESOURCE_TYPES:
-            post_gitlab_unlinked_comment.delay(
-                args=(
-                    instance.feature.name,
-                    instance.feature.id,
-                    instance.url,
-                    instance.type,
-                    instance.feature.project_id,
-                ),
-            )
-            gitlab_logger.info(
-                "resource.unlinked",
-                organisation__id=instance.feature.project.organisation_id,
-                project__id=instance.feature.project_id,
-                feature__id=instance.feature.id,
-                resource__type=instance.type.lower(),
-            )
+        dispatch_vcs_on_resource_destroy(instance)
         super().perform_destroy(instance)
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]

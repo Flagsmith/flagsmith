@@ -156,6 +156,7 @@ INSTALLED_APPS = [
     "integrations.github",
     "integrations.gitlab",
     "integrations.grafana",
+    "integrations.vcs",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",

@@ -78,7 +78,7 @@ Attributes:
 ### `gitlab.comment.post_failed`
 
 Logged at `warning` from:
- - `api/integrations/gitlab/services/comments.py:72`
+ - `api/integrations/gitlab/services/comments.py:70`
 
 Attributes:
  - `exc_info`
@@ -91,7 +91,7 @@ Attributes:
 ### `gitlab.comment.posted`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services/comments.py:74`
+ - `api/integrations/gitlab/services/comments.py:72`
 
 Attributes:
  - `feature.id`
@@ -136,7 +136,7 @@ Attributes:
 ### `gitlab.resource.linked`
 
 Logged at `info` from:
- - `api/features/feature_external_resources/views.py:153`
+ - `api/integrations/vcs/services.py:27`
 
 Attributes:
  - `feature.id`
@@ -147,7 +147,7 @@ Attributes:
 ### `gitlab.resource.unlinked`
 
 Logged at `info` from:
- - `api/features/feature_external_resources/views.py:174`
+ - `api/integrations/vcs/services.py:52`
 
 Attributes:
  - `feature.id`
