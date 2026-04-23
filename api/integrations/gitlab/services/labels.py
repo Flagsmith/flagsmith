@@ -1,29 +1,22 @@
-from __future__ import annotations
-
-import re
-from typing import TYPE_CHECKING
-from urllib.parse import urlsplit
+from typing import Literal
 
 import requests
 import structlog
 from rest_framework.exceptions import ValidationError
 
+from features.feature_external_resources.models import (
+    FeatureExternalResource,
+    ResourceType,
+)
 from integrations.gitlab.client import (
-    GitLabResourceKind,
     add_flagsmith_label_to_gitlab_resource,
     create_flagsmith_label,
-    url_encode_gitlab_project_path,
 )
 from integrations.gitlab.models import GitLabConfiguration
 
-if TYPE_CHECKING:
-    from features.feature_external_resources.models import FeatureExternalResource
-
 logger = structlog.get_logger("gitlab")
 
-GITLAB_RESOURCE_PATH_PATTERN = re.compile(
-    r"^/(?P<path>.+?)/-/(?:issues|work_items|merge_requests)/(?P<iid>\d+)/?$"
-)
+GitLabResourceKind = Literal["issues", "merge_requests"]
 
 GITLAB_RESOURCE_KIND_BY_TYPE: dict[str, GitLabResourceKind] = {
     ResourceType.GITLAB_ISSUE.value: "issues",
@@ -34,22 +27,23 @@ GITLAB_RESOURCE_KIND_BY_TYPE: dict[str, GitLabResourceKind] = {
 def apply_flagsmith_label_to_resource(
     resource: FeatureExternalResource,
 ) -> None:
-    """
-    Ensure the "Flagsmith Flag" label exists on the resource's GitLab project
-    and apply it to the resource. No-op if tagging is disabled or unconfigured;
+    """Ensure the "Flagsmith Flag" label exists on the resource's GitLab project
+    and apply it to the resource. No-op if labeling is disabled or unconfigured;
     raises ``ValidationError`` on parse/API failure (rolls back under atomic).
     """
-    from features.feature_external_resources.models import ResourceType
+    from integrations.gitlab.services import parse_project_path, parse_resource_iid
 
     project = resource.feature.project
     config: GitLabConfiguration | None = GitLabConfiguration.objects.filter(
         project=project
     ).first()
-    if not config or not config.tagging_enabled:
+    if not config or not config.labeling_enabled:
         return
 
-    path_with_namespace, resource_iid = parse_gitlab_resource_url(resource.url)
-    gitlab_project = url_encode_gitlab_project_path(path_with_namespace)
+    path_with_namespace = parse_project_path(resource.url)
+    resource_iid = parse_resource_iid(resource.url)
+    if path_with_namespace is None or resource_iid is None:
+        raise ValidationError({"url": "Could not parse GitLab resource URL."})
 
     log = logger.bind(
         organisation__id=project.organisation_id,
@@ -64,7 +58,7 @@ def apply_flagsmith_label_to_resource(
         created = create_flagsmith_label(
             config.gitlab_instance_url,
             config.access_token,
-            gitlab_project=gitlab_project,
+            project_path=path_with_namespace,
         )
         if created:
             log.info("label.created")
@@ -72,11 +66,10 @@ def apply_flagsmith_label_to_resource(
         add_flagsmith_label_to_gitlab_resource(
             config.gitlab_instance_url,
             config.access_token,
-            gitlab_project=gitlab_project,
+            project_path=path_with_namespace,
             resource_kind=GITLAB_RESOURCE_KIND_BY_TYPE[resource.type],
             resource_iid=resource_iid,
         )
-        log.info("label.applied")
     except requests.RequestException as exc:
         log.exception("label.failed")
         raise ValidationError(
@@ -87,10 +80,3 @@ def apply_flagsmith_label_to_resource(
                 ),
             },
         ) from exc
-
-
-def parse_gitlab_resource_url(url: str) -> tuple[str, int]:
-    match = GITLAB_RESOURCE_PATH_PATTERN.match(urlsplit(url).path)
-    if not match:
-        raise ValidationError({"url": "Could not parse GitLab resource URL."})
-    return match["path"], int(match["iid"])
