@@ -2490,6 +2490,7 @@ def test_create_segment_override__max_limit_reached__returns_400(
     settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.EDGE_ENABLED = True
     project.max_segment_overrides_allowed = 1
     project.save()
 
@@ -2530,6 +2531,7 @@ def test_create_feature__max_limit_reached__returns_400(
     settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.EDGE_ENABLED = True
     project.max_features_allowed = 1
     project.save()
 
@@ -2552,6 +2554,83 @@ def test_create_feature__max_limit_reached__returns_400(
         response.json()["project"]
         == "The Project has reached the maximum allowed features limit."
     )
+
+
+def test_create_feature__edge_disabled_max_limit_reached__returns_201(
+    admin_client_new: APIClient,
+    project: Project,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.EDGE_ENABLED = False
+    project.max_features_allowed = 1
+    project.save()
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # Now, create the first feature
+    response = admin_client_new.post(
+        url, data={"name": "test_feature", "project": project.id}
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+
+    # When
+    response = admin_client_new.post(
+        url, data={"name": "second_feature", "project": project.id}
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_create_segment_override__edge_disabled_max_limit_reached__returns_201(
+    admin_client_new: APIClient,
+    feature: Feature,
+    segment: Segment,
+    another_segment: Segment,
+    project: Project,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.EDGE_ENABLED = False
+    project.max_segment_overrides_allowed = 1
+    project.save()
+
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment.api_key, feature.id],
+    )
+
+    # First override
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(
+            {
+                "feature_state_value": {"string_value": "value"},
+                "enabled": True,
+                "feature_segment": {"segment": segment.id},
+            }
+        ),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+
+    # When - second override exceeds the limit but edge is off
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(
+            {
+                "feature_state_value": {"string_value": "value"},
+                "enabled": True,
+                "feature_segment": {"segment": another_segment.id},
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
 
 
 def test_create_segment_override__environment_viewset__returns_201(

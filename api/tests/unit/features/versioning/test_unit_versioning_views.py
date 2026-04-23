@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -1235,11 +1236,13 @@ def test_create_version__exceeds_segment_override_limit__returns_bad_request(
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     with_project_permissions: WithProjectPermissionsCallable,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
+    settings.EDGE_ENABLED = True
     # We update the limit of segment overrides on the project
     project.max_segment_overrides_allowed = 1
     project.save()
@@ -1306,11 +1309,13 @@ def test_create_version__no_new_overrides_with_existing_at_limit__returns_create
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     with_project_permissions: WithProjectPermissionsCallable,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
+    settings.EDGE_ENABLED = True
     # We update the limit of segment overrides on the project
     project.max_segment_overrides_allowed = 1
     project.save()
@@ -1364,11 +1369,13 @@ def test_create_version__new_override_within_limit__returns_created(
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     with_project_permissions: WithProjectPermissionsCallable,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
+    settings.EDGE_ENABLED = True
     # We update the limit of segment overrides on the project
     project.max_segment_overrides_allowed = 2
     project.save()
@@ -1439,11 +1446,13 @@ def test_create_version__delete_and_create_override_at_limit__returns_created(
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     with_project_permissions: WithProjectPermissionsCallable,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
+    settings.EDGE_ENABLED = True
     # We update the limit of segment overrides on the project
     project.max_segment_overrides_allowed = 1
     project.save()

@@ -190,7 +190,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:141`
+ - `api/segments/serializers.py:142`
 
 Attributes:
  - `revision_id`
