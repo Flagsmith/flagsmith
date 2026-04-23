@@ -54,23 +54,14 @@ and analysis.
 2. Fill in the connection details (account URL, database, schema,
    warehouse, user, authentication method).
 
-### Step 3: Test and connect
+### Step 3: Connect
 
-> **Screenshot placeholder —** Test-passed state showing the inline success banner above the action row. Target path: `/img/integrations/data-warehouse/test-passed.png`
+Click **Connect** to save the configuration. Flagsmith validates your
+credentials, and once authenticated, starts streaming flag-evaluation
+and custom-event data to your warehouse.
 
-1. Click **Test Connection** to verify your credentials without saving
-   them. Flagsmith attempts to authenticate and reports the result inline.
-2. If the test passes, click **Connect** to save the configuration and
-   start streaming data.
-3. If the test fails, review the error, correct your credentials, and
-   re-run the test.
-
-:::warning
-
-Editing any connection field clears the last test result. Re-run the
-test before connecting so you aren't saving untested credentials.
-
-:::
+If Flagsmith can't authenticate, the page shows the error with the
+details your admin will need. Correct the credentials and try again.
 
 ### Step 4: Verify data is flowing
 
@@ -88,7 +79,7 @@ Once connected, the warehouse page shows:
 ## Managing the connection
 
 - **Edit** — opens the configuration form with existing values prefilled.
-  Any change clears the last test result; re-run the test before saving.
+  Save to revalidate the credentials.
 - **Disconnect** — stops data streaming and clears the configuration.
   Historical data already written to your warehouse is unaffected.
 
