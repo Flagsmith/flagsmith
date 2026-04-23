@@ -4,24 +4,17 @@ import {
   ReleasePipelineStageStats,
 } from 'common/types/responses'
 import { SortOrder } from 'common/types/requests'
+import { colorTextSuccess } from 'common/theme/tokens'
 import PanelSearch from 'components/PanelSearch'
 import Icon from 'components/icons/Icon'
-import { PieChart, PieSlice } from 'components/charts'
+import { buildChartColorMap, PieChart, PieSlice } from 'components/charts'
 
 interface ReleasePipelineStatsTableProps {
   stats: ReleasePipelineOverview[]
   totalProjects: number
 }
 
-const stageColours = [
-  '#6C63FF',
-  '#0AADDF',
-  '#FF9F43',
-  '#E74C3C',
-  '#9B59B6',
-  '#3498DB',
-]
-const releasedColour = '#27AB95'
+const RELEASED_COLOUR = colorTextSuccess
 
 type OrgRow = {
   organisation_id: number
@@ -111,14 +104,10 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
       { name: 'Released', value: completedFeatures },
     ].filter((s) => s.value > 0)
 
+    const stageColorMap = buildChartColorMap(stages.map((s) => s.stage_name))
     const pieColorMap: Record<string, string> = {
-      ...Object.fromEntries(
-        stages.map((stage, idx) => [
-          stage.stage_name,
-          stageColours[idx % stageColours.length],
-        ]),
-      ),
-      Released: releasedColour,
+      ...stageColorMap,
+      Released: RELEASED_COLOUR,
     }
 
     return (
@@ -158,7 +147,7 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
 
         {/* Stage list */}
         <div style={{ flex: 1 }}>
-          {stages.map((stage, idx) => (
+          {stages.map((stage) => (
             <div
               key={stage.order}
               className='d-flex flex-row align-items-center'
@@ -166,7 +155,7 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
             >
               <div
                 style={{
-                  background: stageColours[idx % stageColours.length],
+                  background: stageColorMap[stage.stage_name],
                   borderRadius: 3,
                   height: 10,
                   marginRight: 8,
@@ -204,7 +193,7 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
           >
             <div
               style={{
-                background: releasedColour,
+                background: RELEASED_COLOUR,
                 borderRadius: 3,
                 height: 10,
                 marginRight: 8,
@@ -215,7 +204,7 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
             <div style={{ flex: 1 }}>
               <span
                 className='font-weight-medium'
-                style={{ color: releasedColour, fontSize: 13 }}
+                style={{ color: RELEASED_COLOUR, fontSize: 13 }}
               >
                 Released
               </span>
