@@ -35,11 +35,10 @@ def _post_note_to_resource(
     """Parse a GitLab resource URL, post a note via the API, and log the
     outcome.  Shared by every comment-posting function in this module.
     """
-    if (project_path := parse_project_path(resource_url)) is None:
+    project_path = parse_project_path(resource_url)
+    iid = parse_resource_iid(resource_url)
+    if project_path is None or iid is None:
         return
-
-    if (iid := parse_resource_iid(resource_url)) is None:
-        return  # pragma: no cover — same regex as parse_project_path; unreachable
 
     log = logger.bind(
         organisation__id=config.project.organisation_id,
