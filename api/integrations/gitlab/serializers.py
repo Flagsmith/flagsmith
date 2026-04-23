@@ -11,7 +11,7 @@ WRITE_ONLY_PLACEHOLDER = "write-only"
 class GitLabConfigurationSerializer(BaseProjectIntegrationModelSerializer):
     class Meta:
         model = GitLabConfiguration
-        fields = ("id", "gitlab_instance_url", "access_token", "tagging_enabled")
+        fields = ("id", "gitlab_instance_url", "access_token", "labeling_enabled")
 
     def to_representation(self, instance: GitLabConfiguration) -> dict[str, Any]:
         data = super().to_representation(instance)

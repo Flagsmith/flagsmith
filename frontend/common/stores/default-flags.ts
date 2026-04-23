@@ -105,7 +105,7 @@ const defaultFlags = {
         {
           'default': false,
           'inputType': 'checkbox',
-          'key': 'tagging_enabled',
+          'key': 'labeling_enabled',
           'label': 'Add "Flagsmith Flag" label to linked issues and MRs',
         },
       ],

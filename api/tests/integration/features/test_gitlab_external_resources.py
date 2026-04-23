@@ -14,6 +14,36 @@ from projects.models import Project
 from projects.tags.models import TagType
 
 
+<<<<<<< HEAD
+=======
+
+@pytest.fixture()
+def gitlab_config(project: int) -> GitLabConfiguration:
+    config: GitLabConfiguration = GitLabConfiguration.objects.create(
+        project=Project.objects.get(id=project),
+        gitlab_instance_url=GITLAB_INSTANCE_URL,
+        access_token=GITLAB_ACCESS_TOKEN,
+    )
+    return config
+
+
+@pytest.fixture()
+def gitlab_config_with_labeling(project: int) -> GitLabConfiguration:
+    config: GitLabConfiguration = GitLabConfiguration.objects.create(
+        project=Project.objects.get(id=project),
+        gitlab_instance_url=GITLAB_INSTANCE_URL,
+        access_token=GITLAB_ACCESS_TOKEN,
+        labeling_enabled=True,
+    )
+    return config
+
+
+def _mock_webhook_registration() -> None:
+    responses.post(GITLAB_HOOKS_URL, json={"id": 1, "project_id": 1}, status=201)
+
+
+@pytest.mark.django_db()
+>>>>>>> ee9265c90 (feat: rename tagging_enabled to labeling_enabled on GitLabConfiguration)
 def test_create_external_resource__gitlab_issue__returns_201(
     admin_client: APIClient,
     project: int,
@@ -604,3 +634,368 @@ def test_list_external_resources__gitlab_merge_request__returns_200(
     assert len(results) == 1
     assert results[0]["type"] == "GITLAB_MR"
     assert results[0]["metadata"] == {"title": "Add login button", "state": "opened"}
+<<<<<<< HEAD
+=======
+
+
+@pytest.mark.django_db()
+@responses.activate
+def test_create_external_resource__gitlab_issue_with_labeling_enabled__creates_and_applies_label(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    gitlab_config_with_labeling: GitLabConfiguration,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    label_create = responses.post(
+        GITLAB_LABELS_URL,
+        json={"id": 1, "name": "Flagsmith Flag"},
+        status=201,
+        match=[
+            responses.matchers.header_matcher({"PRIVATE-TOKEN": GITLAB_ACCESS_TOKEN}),
+            responses.matchers.json_params_matcher(
+                {
+                    "name": "Flagsmith Flag",
+                    "color": "#6633FF",
+                    "description": (
+                        "This GitLab Issue/MR is linked to a Flagsmith Feature Flag"
+                    ),
+                },
+            ),
+        ],
+    )
+    label_apply = responses.put(
+        GITLAB_ISSUE_API_URL,
+        json={"iid": 42, "labels": ["Flagsmith Flag"]},
+        status=200,
+        match=[
+            responses.matchers.json_params_matcher({"add_labels": "Flagsmith Flag"}),
+        ],
+    )
+    _mock_webhook_registration()
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={"type": "GITLAB_ISSUE", "url": GITLAB_ISSUE_URL, "feature": feature},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert label_create.call_count == 1
+    assert label_apply.call_count == 1
+    assert FeatureExternalResource.objects.count() == 1
+    assert [e["event"] for e in log.events] == [
+        "label.created",
+        "webhook.registered",
+        "issue.linked",
+    ]
+
+
+@pytest.mark.django_db()
+@responses.activate
+def test_create_external_resource__gitlab_mr_with_labeling_enabled__creates_and_applies_label(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    gitlab_config_with_labeling: GitLabConfiguration,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    responses.post(
+        GITLAB_LABELS_URL,
+        json={"id": 1, "name": "Flagsmith Flag"},
+        status=201,
+    )
+    label_apply = responses.put(
+        GITLAB_MR_API_URL,
+        json={"iid": 7, "labels": ["Flagsmith Flag"]},
+        status=200,
+        match=[
+            responses.matchers.json_params_matcher({"add_labels": "Flagsmith Flag"}),
+        ],
+    )
+    _mock_webhook_registration()
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={"type": "GITLAB_MR", "url": GITLAB_MR_URL, "feature": feature},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert label_apply.call_count == 1
+    assert [e["event"] for e in log.events] == [
+        "label.created",
+        "webhook.registered",
+        "merge_request.linked",
+    ]
+
+
+@pytest.mark.django_db()
+@responses.activate
+def test_create_external_resource__gitlab_issue_with_labeling_disabled__skips_label_api(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    gitlab_config: GitLabConfiguration,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    _mock_webhook_registration()
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={"type": "GITLAB_ISSUE", "url": GITLAB_ISSUE_URL, "feature": feature},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert [e["event"] for e in log.events] == ["webhook.registered", "issue.linked"]
+
+
+@pytest.mark.django_db()
+@responses.activate
+def test_create_external_resource__gitlab_issue_label_already_exists__applies_label(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    gitlab_config_with_labeling: GitLabConfiguration,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    responses.post(
+        GITLAB_LABELS_URL,
+        json={"message": {"title": ["has already been taken"]}},
+        status=409,
+    )
+    label_apply = responses.put(
+        GITLAB_ISSUE_API_URL,
+        json={"iid": 42, "labels": ["Flagsmith Flag"]},
+        status=200,
+    )
+    _mock_webhook_registration()
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={"type": "GITLAB_ISSUE", "url": GITLAB_ISSUE_URL, "feature": feature},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert label_apply.call_count == 1
+    assert [e["event"] for e in log.events] == [
+        "webhook.registered",
+        "issue.linked",
+    ]
+
+
+@pytest.mark.django_db()
+@responses.activate
+def test_create_external_resource__gitlab_issue_label_apply_fails__rolls_back_link(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    gitlab_config_with_labeling: GitLabConfiguration,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    responses.post(
+        GITLAB_LABELS_URL,
+        json={"id": 1, "name": "Flagsmith Flag"},
+        status=201,
+    )
+    responses.put(GITLAB_ISSUE_API_URL, json={"message": "403 Forbidden"}, status=403)
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={"type": "GITLAB_ISSUE", "url": GITLAB_ISSUE_URL, "feature": feature},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert FeatureExternalResource.objects.count() == 0
+    assert [e["event"] for e in log.events] == ["label.created", "label.failed"]
+
+
+@pytest.mark.django_db()
+@responses.activate
+def test_create_external_resource__gitlab_issue_label_create_fails__rolls_back_link(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    gitlab_config_with_labeling: GitLabConfiguration,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    responses.post(
+        GITLAB_LABELS_URL,
+        json={"message": "internal server error"},
+        status=500,
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={"type": "GITLAB_ISSUE", "url": GITLAB_ISSUE_URL, "feature": feature},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert FeatureExternalResource.objects.count() == 0
+    assert [e["event"] for e in log.events] == ["label.failed"]
+
+
+@pytest.mark.django_db()
+@responses.activate
+def test_create_external_resource__gitlab_issue_invalid_url__rolls_back_link(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    gitlab_config_with_labeling: GitLabConfiguration,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_ISSUE",
+            "url": f"{GITLAB_INSTANCE_URL}/not-a-valid-resource-url",
+            "feature": feature,
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"url": "Could not parse GitLab resource URL."}
+    assert FeatureExternalResource.objects.count() == 0
+
+
+@pytest.mark.django_db()
+@responses.activate
+@pytest.mark.parametrize(
+    "other_links_count, expected_removal_calls",
+    [(0, 1), (1, 0)],
+    ids=["last_link_removes_label", "shared_link_keeps_label"],
+)
+def test_delete_external_resource__gitlab_issue__removes_label_only_when_last_link(
+    other_links_count: int,
+    expected_removal_calls: int,
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    gitlab_config_with_labeling: GitLabConfiguration,
+) -> None:
+    # Given
+    resource = FeatureExternalResource.objects.create(
+        url=GITLAB_ISSUE_URL,
+        type="GITLAB_ISSUE",
+        feature=Feature.objects.get(id=feature),
+    )
+    for i in range(other_links_count):
+        other_feature = Feature.objects.create(
+            name=f"other_feature_{i}",
+            project=gitlab_config_with_labeling.project,
+        )
+        FeatureExternalResource.objects.create(
+            url=GITLAB_ISSUE_URL,
+            type="GITLAB_ISSUE",
+            feature=other_feature,
+        )
+    label_remove = responses.put(
+        GITLAB_ISSUE_API_URL,
+        json={"iid": 42, "labels": []},
+        status=200,
+        match=[
+            responses.matchers.json_params_matcher({"remove_labels": "Flagsmith Flag"}),
+        ],
+    )
+
+    # When
+    response = admin_client.delete(
+        f"/api/v1/projects/{project}/features/{feature}"
+        f"/feature-external-resources/{resource.id}/",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert label_remove.call_count == expected_removal_calls
+
+
+@pytest.mark.django_db()
+@responses.activate
+def test_delete_external_resource__gitlab_mr_last_link__removes_label(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    gitlab_config_with_labeling: GitLabConfiguration,
+) -> None:
+    # Given
+    resource = FeatureExternalResource.objects.create(
+        url=GITLAB_MR_URL,
+        type="GITLAB_MR",
+        feature=Feature.objects.get(id=feature),
+    )
+    label_remove = responses.put(
+        GITLAB_MR_API_URL,
+        json={"iid": 7, "labels": []},
+        status=200,
+        match=[
+            responses.matchers.json_params_matcher({"remove_labels": "Flagsmith Flag"}),
+        ],
+    )
+
+    # When
+    response = admin_client.delete(
+        f"/api/v1/projects/{project}/features/{feature}"
+        f"/feature-external-resources/{resource.id}/",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert label_remove.call_count == 1
+
+
+@pytest.mark.django_db()
+@responses.activate
+def test_delete_external_resource__gitlab_label_removal_fails__unlink_still_succeeds(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    gitlab_config_with_labeling: GitLabConfiguration,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    resource = FeatureExternalResource.objects.create(
+        url=GITLAB_ISSUE_URL,
+        type="GITLAB_ISSUE",
+        feature=Feature.objects.get(id=feature),
+    )
+    responses.put(
+        GITLAB_ISSUE_API_URL,
+        json={"message": "500 Internal Server Error"},
+        status=500,
+    )
+
+    # When
+    response = admin_client.delete(
+        f"/api/v1/projects/{project}/features/{feature}"
+        f"/feature-external-resources/{resource.id}/",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not FeatureExternalResource.objects.filter(pk=resource.pk).exists()
+    assert "label.removal_failed" in {e["event"] for e in log.events}
+>>>>>>> ee9265c90 (feat: rename tagging_enabled to labeling_enabled on GitLabConfiguration)

@@ -11,6 +11,10 @@ class GitLabConfiguration(SoftDeleteExportableModel):
     )
     gitlab_instance_url = models.URLField(max_length=200)
     access_token = models.CharField(max_length=300)
+<<<<<<< HEAD
+=======
+    labeling_enabled = models.BooleanField(default=False)
+>>>>>>> ee9265c90 (feat: rename tagging_enabled to labeling_enabled on GitLabConfiguration)
 
 
 class GitLabWebhook(SoftDeleteExportableModel):
