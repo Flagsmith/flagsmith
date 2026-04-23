@@ -66,7 +66,7 @@ function generateFakeData(days: number, labels: string[]): ChartDataPoint[] {
 const meta: Meta<typeof LineChart> = {
   component: LineChart,
   tags: ['autodocs'],
-  title: 'Components/LineChart',
+  title: 'Components/Charts/LineChart',
 }
 export default meta
 

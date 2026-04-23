@@ -37,7 +37,7 @@ const TWO_SLICE_DATA: PieSlice[] = [
 const meta: Meta<typeof PieChart> = {
   component: PieChart,
   tags: ['autodocs'],
-  title: 'Components/PieChart',
+  title: 'Components/Charts/PieChart',
 }
 export default meta
 
