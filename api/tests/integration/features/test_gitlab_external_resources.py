@@ -217,14 +217,6 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
     assert log.events == [
         {
             "level": "info",
-            "event": "resource.linked",
-            "organisation__id": organisation,
-            "project__id": project,
-            "feature__id": feature,
-            "resource__type": "gitlab_issue",
-        },
-        {
-            "level": "info",
             "event": "webhook.registered",
             "organisation__id": organisation,
             "project__id": project,
@@ -240,6 +232,14 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
             "feature__id": feature,
             "gitlab__project__path": "testorg/testrepo",
             "gitlab__resource__iid": 42,
+        },
+        {
+            "level": "info",
+            "event": "resource.linked",
+            "organisation__id": organisation,
+            "project__id": project,
+            "feature__id": feature,
+            "resource__type": "gitlab_issue",
         },
     ]
 
@@ -298,14 +298,6 @@ def test_create_external_resource__gitlab_mr__registers_webhook_and_tags_feature
     assert log.events == [
         {
             "level": "info",
-            "event": "resource.linked",
-            "organisation__id": organisation,
-            "project__id": project,
-            "feature__id": feature,
-            "resource__type": "gitlab_mr",
-        },
-        {
-            "level": "info",
             "event": "webhook.registered",
             "organisation__id": organisation,
             "project__id": project,
@@ -321,6 +313,14 @@ def test_create_external_resource__gitlab_mr__registers_webhook_and_tags_feature
             "feature__id": feature,
             "gitlab__project__path": "testorg/testrepo",
             "gitlab__resource__iid": 7,
+        },
+        {
+            "level": "info",
+            "event": "resource.linked",
+            "organisation__id": organisation,
+            "project__id": project,
+            "feature__id": feature,
+            "resource__type": "gitlab_mr",
         },
     ]
 
@@ -377,20 +377,20 @@ def test_create_external_resource__second_link_same_gitlab_project__reuses_webho
     assert log.events == [
         {
             "level": "info",
-            "event": "resource.linked",
-            "organisation__id": organisation,
-            "project__id": project,
-            "feature__id": feature,
-            "resource__type": "gitlab_mr",
-        },
-        {
-            "level": "info",
             "event": "comment.posted",
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
             "gitlab__project__path": "testorg/testrepo",
             "gitlab__resource__iid": 5,
+        },
+        {
+            "level": "info",
+            "event": "resource.linked",
+            "organisation__id": organisation,
+            "project__id": project,
+            "feature__id": feature,
+            "resource__type": "gitlab_mr",
         },
     ]
 
