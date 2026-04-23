@@ -1,5 +1,4 @@
 import { FC, useMemo, useState } from 'react'
-import { Cell, Pie, PieChart, Tooltip } from 'recharts'
 import {
   ReleasePipelineOverview,
   ReleasePipelineStageStats,
@@ -7,6 +6,7 @@ import {
 import { SortOrder } from 'common/types/requests'
 import PanelSearch from 'components/PanelSearch'
 import Icon from 'components/icons/Icon'
+import { PieChart, PieSlice } from 'components/charts'
 
 interface ReleasePipelineStatsTableProps {
   stats: ReleasePipelineOverview[]
@@ -102,15 +102,24 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
     _totalFeatures: number,
     completedFeatures: number,
   ) => {
-    // Build pie chart data for this pipeline
-    const pieData = [
-      ...stages.map((stage, idx) => ({
-        colour: stageColours[idx % stageColours.length],
+    // Build pie chart data and colour map for this pipeline
+    const pieSlices: PieSlice[] = [
+      ...stages.map((stage) => ({
         name: stage.stage_name,
         value: stage.features_in_stage,
       })),
-      { colour: releasedColour, name: 'Released', value: completedFeatures },
-    ].filter((d) => d.value > 0)
+      { name: 'Released', value: completedFeatures },
+    ].filter((s) => s.value > 0)
+
+    const pieColorMap: Record<string, string> = {
+      ...Object.fromEntries(
+        stages.map((stage, idx) => [
+          stage.stage_name,
+          stageColours[idx % stageColours.length],
+        ]),
+      ),
+      Released: releasedColour,
+    }
 
     return (
       <div
@@ -132,24 +141,14 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
             paddingLeft: 72,
           }}
         >
-          {pieData.length > 0 ? (
-            <PieChart width={180} height={180}>
-              <Pie
-                data={pieData}
-                dataKey='value'
-                nameKey='name'
-                cx='50%'
-                cy='50%'
-                innerRadius={40}
-                outerRadius={75}
-                paddingAngle={2}
-              >
-                {pieData.map((entry, idx) => (
-                  <Cell key={idx} fill={entry.colour} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
+          {pieSlices.length > 0 ? (
+            <PieChart
+              data={pieSlices}
+              colorMap={pieColorMap}
+              size={180}
+              innerRadius={40}
+              outerRadius={75}
+            />
           ) : (
             <div className='text-muted' style={{ fontSize: 12 }}>
               No features yet
