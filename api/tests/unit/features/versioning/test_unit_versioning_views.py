@@ -1739,7 +1739,7 @@ def test_create_version__with_gitlab_resource__dispatches_comment_task(
         feature=feature,
     )
     mock_task = mocker.patch(
-        "integrations.gitlab.tasks.post_gitlab_state_change_comment",
+        "features.versioning.serializers.post_gitlab_state_change_comment",
     )
     url = reverse(
         "api-v1:versioning:environment-feature-versions-list",

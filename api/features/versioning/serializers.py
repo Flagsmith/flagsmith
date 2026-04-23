@@ -16,6 +16,7 @@ from features.serializers import (
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
+from integrations.gitlab.tasks import post_gitlab_state_change_comment
 from segments.models import Segment
 from users.models import FFAdminUser
 
@@ -53,8 +54,6 @@ class CustomEnvironmentFeatureVersionFeatureStateSerializer(
                 url=None,
                 feature_states=[feature_state],
             )
-
-        from integrations.gitlab.tasks import post_gitlab_state_change_comment
 
         post_gitlab_state_change_comment.delay(
             args=(feature_state.id,),
