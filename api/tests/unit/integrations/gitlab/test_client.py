@@ -3,6 +3,7 @@ import requests
 import responses
 
 from integrations.gitlab.client import (
+    create_flagsmith_label,
     create_issue_note,
     create_merge_request_note,
     fetch_gitlab_projects,
@@ -377,3 +378,22 @@ def test_remove_flagsmith_label_from_gitlab_resource__gitlab_mr__puts_remove_lab
 
     # Then
     assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_create_flagsmith_label__label_already_exists__returns_false() -> None:
+    # Given
+    responses.post(
+        f"{INSTANCE_URL}/api/v4/projects/g%2Fp/labels",
+        status=409,
+    )
+
+    # When
+    result = create_flagsmith_label(
+        INSTANCE_URL,
+        ACCESS_TOKEN,
+        project_path="g/p",
+    )
+
+    # Then
+    assert result is False
