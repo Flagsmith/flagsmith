@@ -7,6 +7,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
+import ChartTooltip from './ChartTooltip'
 
 export type PieSlice = {
   name: string
@@ -70,10 +71,7 @@ const PieChart: FC<PieChartProps> = ({
         </Pie>
         {showTooltip && (
           <Tooltip
-            formatter={(value: number, name: string) => [
-              value.toLocaleString(),
-              seriesLabels?.[name] ?? name,
-            ]}
+            content={<ChartTooltip seriesLabels={seriesLabels} hideTotal />}
           />
         )}
         {showLegend && (
