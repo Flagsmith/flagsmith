@@ -1,5 +1,5 @@
 import pytest
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lazy_fixture
 
 from api_keys.models import MasterAPIKey
 from api_keys.user import APIKeyUser

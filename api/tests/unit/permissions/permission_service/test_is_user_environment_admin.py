@@ -2,7 +2,7 @@ import typing
 
 import pytest
 from django.conf import settings
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lazy_fixture
 
 from environments.models import Environment
 from environments.permissions.models import (

@@ -15,7 +15,7 @@ from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lazy_fixture
 from pytest_mock import MockerFixture
 from pytz import UTC
 from rest_framework import status

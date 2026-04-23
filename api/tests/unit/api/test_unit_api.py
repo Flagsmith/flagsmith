@@ -1,6 +1,6 @@
 import pytest
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 

@@ -7,7 +7,7 @@ import pytest
 import requests
 import responses
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lazy_fixture
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.response import Response
