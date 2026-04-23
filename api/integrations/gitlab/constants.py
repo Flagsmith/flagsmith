@@ -1,5 +1,8 @@
 from enum import Enum
 
+from features.feature_external_resources.models import ResourceType
+
+GITLAB_TAG_COLOR = "#FC6D26"
 GITLAB_CLIENT_TIMEOUT_SECONDS = 10
 
 GITLAB_FLAGSMITH_LABEL = "Flagsmith Feature"
@@ -7,8 +10,6 @@ GITLAB_FLAGSMITH_LABEL_COLOUR = "#6633FF"
 GITLAB_FLAGSMITH_LABEL_DESCRIPTION = (
     "This GitLab Issue/MR is linked to a Flagsmith feature"
 )
-
-GITLAB_TAG_COLOR = "#FC6D26"
 
 
 class GitLabTagLabel(Enum):
@@ -27,6 +28,12 @@ GITLAB_TAG_KIND_BY_LABEL: dict[GitLabTagLabel, str] = {
     GitLabTagLabel.MR_CLOSED: "MR",
     GitLabTagLabel.MR_MERGED: "MR",
     GitLabTagLabel.MR_DRAFT: "MR",
+}
+
+
+GITLAB_TAG_KIND_BY_RESOURCE_TYPE: dict[str, str] = {
+    ResourceType.GITLAB_ISSUE.value: "Issue",
+    ResourceType.GITLAB_MR.value: "MR",
 }
 
 

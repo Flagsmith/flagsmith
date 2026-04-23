@@ -12,6 +12,7 @@ from integrations.gitlab.services.labels import (
 from integrations.gitlab.services.tagging import (
     apply_initial_tag,
     apply_tag_for_event,
+    clear_tag_for_resource,
     set_gitlab_tag,
 )
 from integrations.gitlab.services.url_parsing import (
@@ -31,6 +32,7 @@ __all__ = [
     "apply_flagsmith_label_to_resource",
     "apply_initial_tag",
     "apply_tag_for_event",
+    "clear_tag_for_resource",
     "deregister_gitlab_webhook_for_resource",
     "deregister_webhook_for_path",
     "ensure_webhook_registered",

@@ -123,7 +123,7 @@ Attributes:
 ### `gitlab.feature.tagged`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services/tagging.py:88`
+ - `api/integrations/gitlab/services/tagging.py:89`
 
 Attributes:
  - `action`
@@ -186,7 +186,7 @@ Attributes:
 ### `gitlab.resource.linked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:34`
+ - `api/integrations/vcs/services.py:25`
 
 Attributes:
  - `feature.id`
@@ -197,7 +197,7 @@ Attributes:
 ### `gitlab.resource.unlinked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:70`
+ - `api/integrations/vcs/services.py:63`
 
 Attributes:
  - `feature.id`

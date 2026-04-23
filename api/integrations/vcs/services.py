@@ -10,17 +10,8 @@ from features.feature_external_resources.models import (
     GITLAB_RESOURCE_TYPES,
     FeatureExternalResource,
 )
-from integrations.gitlab.services import (
-    apply_flagsmith_label_to_resource,
-    apply_initial_tag,
-    deregister_gitlab_webhook_for_resource,
-    register_gitlab_webhook_for_resource,
-)
-from integrations.gitlab.tasks import (
-    post_gitlab_linked_comment,
-    post_gitlab_unlinked_comment,
-    remove_gitlab_label,
-)
+from integrations.gitlab import services as gitlab
+from integrations.gitlab import tasks as gitlab_tasks
 
 gitlab_logger = structlog.get_logger("gitlab")
 
@@ -30,7 +21,7 @@ def dispatch_vcs_on_resource_create(resource: FeatureExternalResource) -> None:
     is created.
     """
     if resource.type in GITLAB_RESOURCE_TYPES:
-        apply_flagsmith_label_to_resource(resource)
+        gitlab.apply_flagsmith_label_to_resource(resource)
         gitlab_logger.info(
             "resource.linked",
             organisation__id=resource.feature.project.organisation_id,
@@ -38,9 +29,9 @@ def dispatch_vcs_on_resource_create(resource: FeatureExternalResource) -> None:
             feature__id=resource.feature.id,
             resource__type=resource.type.lower(),
         )
-        register_gitlab_webhook_for_resource(resource)
-        apply_initial_tag(resource)
-        post_gitlab_linked_comment.delay(args=(resource.id,))
+        gitlab.register_gitlab_webhook_for_resource(resource)
+        gitlab.apply_initial_tag(resource)
+        gitlab_tasks.post_gitlab_linked_comment.delay(args=(resource.id,))
 
 
 def dispatch_vcs_on_resource_destroy(resource: FeatureExternalResource) -> None:
@@ -48,7 +39,7 @@ def dispatch_vcs_on_resource_destroy(resource: FeatureExternalResource) -> None:
     has been destroyed. `resource` is a memory-only object at this point.
     """
     if resource.type in GITLAB_RESOURCE_TYPES:
-        remove_gitlab_label.delay(
+        gitlab_tasks.remove_gitlab_label.delay(
             kwargs={
                 "project_id": resource.feature.project_id,
                 "feature_id": resource.feature_id,
@@ -57,7 +48,7 @@ def dispatch_vcs_on_resource_destroy(resource: FeatureExternalResource) -> None:
                 "resource_type": resource.type,
             },
         )
-        post_gitlab_unlinked_comment.delay(
+        gitlab_tasks.post_gitlab_unlinked_comment.delay(
             args=(
                 resource.feature.name,
                 resource.feature.id,
@@ -66,7 +57,9 @@ def dispatch_vcs_on_resource_destroy(resource: FeatureExternalResource) -> None:
                 resource.feature.project_id,
             ),
         )
-        deregister_gitlab_webhook_for_resource(resource)
+        gitlab.deregister_gitlab_webhook_for_resource(resource)
+
+        gitlab.clear_tag_for_resource(resource)
         gitlab_logger.info(
             "resource.unlinked",
             organisation__id=resource.feature.project.organisation_id,
