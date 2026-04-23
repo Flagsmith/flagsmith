@@ -105,6 +105,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
           },
         )
     }
+    // Intentionally runs only on mount — Slack channel setup is a one-time fetch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -263,7 +264,21 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
           </div>
         )}
         {fields.map((field) => {
-          if (field.inputType === 'checkbox' && !readOnly) {
+          if (field.inputType === 'checkbox') {
+            if (readOnly) {
+              return (
+                <div key={field.key} className='mt-3 mb-2'>
+                  <Input
+                    id={field.label.replace(/ /g, '')}
+                    value={formData[field.key] ?? field.default}
+                    label={field.label}
+                    onChange={() => {}}
+                    disabled
+                    type='checkbox'
+                  />
+                </div>
+              )
+            }
             return (
               <div key={field.key} className='mt-3 mb-2'>
                 <Input
@@ -329,14 +344,12 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
           }
           return (
             <div key={field.key}>
-              <div>
-                <label
-                  htmlFor={field.label.replace(/ /g, '')}
-                  className={!modal ? 'mb-1 fw-bold' : ''}
-                >
-                  {field.label}
-                </label>
-              </div>
+              <label
+                htmlFor={field.label.replace(/ /g, '')}
+                className={classNames('d-block', !modal && 'mb-1 fw-bold')}
+              >
+                {field.label}
+              </label>
               {fieldControl}
             </div>
           )
