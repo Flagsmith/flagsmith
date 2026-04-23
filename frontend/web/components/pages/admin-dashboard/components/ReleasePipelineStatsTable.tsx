@@ -140,9 +140,7 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
               outerRadius={75}
             />
           ) : (
-            <div className='text-muted' style={{ fontSize: 12 }}>
-              No features yet
-            </div>
+            <div className='text-muted fs-captionSmall'>No features yet</div>
           )}
         </div>
 
@@ -156,19 +154,19 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
             >
               <ColorSwatch color={stageColorMap[stage.stage_name]} size='md' />
               <div style={{ flex: 1 }}>
-                <span className='font-weight-medium' style={{ fontSize: 13 }}>
+                <span className='font-weight-medium fs-caption'>
                   {stage.stage_name}
                 </span>
                 <div
-                  className='text-muted'
-                  style={{ fontSize: 11, marginTop: 1 }}
+                  className='text-muted fs-captionXSmall'
+                  style={{ marginTop: 1 }}
                 >
                   {stage.trigger_description} · {stage.action_description}
                 </div>
               </div>
               <span
-                className='font-weight-medium'
-                style={{ fontSize: 13, minWidth: 90, textAlign: 'right' }}
+                className='font-weight-medium fs-caption'
+                style={{ minWidth: 90, textAlign: 'right' }}
               >
                 Features ({stage.features_in_stage})
               </span>
@@ -185,22 +183,19 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
           >
             <ColorSwatch color={RELEASED_COLOUR} size='md' />
             <div style={{ flex: 1 }}>
-              <span
-                className='font-weight-medium text-success'
-                style={{ fontSize: 13 }}
-              >
+              <span className='font-weight-medium text-success fs-caption'>
                 Released
               </span>
               <div
-                className='text-muted'
-                style={{ fontSize: 11, marginTop: 1 }}
+                className='text-muted fs-captionXSmall'
+                style={{ marginTop: 1 }}
               >
                 Features that completed this pipeline
               </div>
             </div>
             <span
-              className='font-weight-medium'
-              style={{ fontSize: 13, minWidth: 90, textAlign: 'right' }}
+              className='font-weight-medium fs-caption'
+              style={{ minWidth: 90, textAlign: 'right' }}
             >
               Features ({completedFeatures})
             </span>
@@ -240,7 +235,7 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
                   name={isExpanded ? 'chevron-down' : 'chevron-right'}
                   width={14}
                 />
-                <span className='font-weight-medium' style={{ fontSize: 13 }}>
+                <span className='font-weight-medium fs-caption'>
                   {pipeline.pipeline_name}
                 </span>
                 <span
@@ -260,18 +255,18 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
                 </span>
               </div>
               <div
-                className='table-column text-muted'
-                style={{ fontSize: 13, width: 100 }}
+                className='table-column text-muted fs-caption'
+                style={{ width: 100 }}
               >
                 {pipeline.stages.length} stages
               </div>
               <div
-                className='table-column text-muted'
-                style={{ fontSize: 13, width: 100 }}
+                className='table-column text-muted fs-caption'
+                style={{ width: 100 }}
               >
                 {pipeline.total_features} features
                 {inFlightTotal > 0 && (
-                  <span style={{ fontSize: 11 }}>
+                  <span className='fs-captionXSmall'>
                     {' '}
                     ({inFlightTotal} in progress)
                   </span>
@@ -307,8 +302,8 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
                   />
                 </div>
                 <span
-                  className='font-weight-medium'
-                  style={{ fontSize: 12, minWidth: 52, whiteSpace: 'nowrap' }}
+                  className='font-weight-medium fs-captionSmall'
+                  style={{ minWidth: 52, whiteSpace: 'nowrap' }}
                 >
                   {pipeline.completed_features}/{pipeline.total_features}{' '}
                   released
@@ -356,23 +351,23 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
                   name={isExpanded ? 'chevron-down' : 'chevron-right'}
                   width={14}
                 />
-                <span className='font-weight-medium' style={{ fontSize: 13 }}>
+                <span className='font-weight-medium fs-caption'>
                   {project.project_name}
                 </span>
-                <span className='text-muted' style={{ fontSize: 12 }}>
+                <span className='text-muted fs-captionSmall'>
                   ({projectPipelineCount}{' '}
                   {projectPipelineCount === 1 ? 'pipeline' : 'pipelines'})
                 </span>
               </div>
               <div
-                className='table-column text-muted'
-                style={{ fontSize: 13, width: 120 }}
+                className='table-column text-muted fs-caption'
+                style={{ width: 120 }}
               >
                 {projectFeatures} features
               </div>
               <div
-                className='table-column font-weight-medium'
-                style={{ color: '#27AB95', fontSize: 13, width: 120 }}
+                className='table-column font-weight-medium text-success fs-caption'
+                style={{ width: 120 }}
               >
                 {projectReleased} released
               </div>
@@ -386,7 +381,7 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
 
   return (
     <div>
-      <div className='text-muted mb-3' style={{ fontSize: 13, paddingLeft: 4 }}>
+      <div className='text-muted mb-3 fs-caption' style={{ paddingLeft: 4 }}>
         {projectsWithPipelines} of {totalProjects} projects use release
         pipelines ({adoptionPct}%)
       </div>
@@ -452,14 +447,14 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
                   </span>
                 </div>
                 <div
-                  className='table-column font-weight-medium'
-                  style={{ fontSize: 13, width: 120 }}
+                  className='table-column font-weight-medium fs-caption'
+                  style={{ width: 120 }}
                 >
                   {org.pipeline_count}
                 </div>
                 <div
-                  className='table-column font-weight-medium'
-                  style={{ fontSize: 13, width: 120 }}
+                  className='table-column font-weight-medium fs-caption'
+                  style={{ width: 120 }}
                 >
                   {org.total_features}
                 </div>
@@ -467,13 +462,10 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
                   className='table-column d-flex align-items-center'
                   style={{ gap: 8, width: 120 }}
                 >
-                  <span
-                    className='font-weight-medium'
-                    style={{ color: '#27AB95', fontSize: 13 }}
-                  >
+                  <span className='font-weight-medium text-success fs-caption'>
                     {org.total_released}
                   </span>
-                  <span className='text-muted' style={{ fontSize: 12 }}>
+                  <span className='text-muted fs-captionSmall'>
                     ({releasedPct}%)
                   </span>
                 </div>
