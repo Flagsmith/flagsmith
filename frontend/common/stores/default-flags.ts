@@ -106,7 +106,7 @@ const defaultFlags = {
           'default': false,
           'inputType': 'checkbox',
           'key': 'labeling_enabled',
-          'label': 'Add "Flagsmith Flag" label to linked issues and MRs',
+          'label': 'Add "Flagsmith Feature" label to linked issues and MRs',
         },
       ],
       'image': '/static/images/integrations/gitlab.svg',

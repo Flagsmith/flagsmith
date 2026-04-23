@@ -27,7 +27,7 @@ GITLAB_RESOURCE_KIND_BY_TYPE: dict[str, GitLabResourceKind] = {
 def apply_flagsmith_label_to_resource(
     resource: FeatureExternalResource,
 ) -> None:
-    """Ensure the "Flagsmith Flag" label exists on the resource's GitLab project
+    """Ensure the "Flagsmith Feature" label exists on the resource's GitLab project
     and apply it to the resource. No-op if labeling is disabled or unconfigured;
     raises ``ValidationError`` on parse/API failure (rolls back under atomic).
     """
@@ -75,7 +75,7 @@ def apply_flagsmith_label_to_resource(
         raise ValidationError(
             {
                 "detail": (
-                    "Failed to apply the Flagsmith Flag label on GitLab. "
+                    "Failed to apply the Flagsmith Feature label on GitLab. "
                     "Check the GitLab access token's permissions and try again."
                 ),
             },

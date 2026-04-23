@@ -650,13 +650,13 @@ def test_create_external_resource__gitlab_issue_with_labeling_enabled__creates_a
     # Given
     label_create = responses.post(
         GITLAB_LABELS_URL,
-        json={"id": 1, "name": "Flagsmith Flag"},
+        json={"id": 1, "name": "Flagsmith Feature"},
         status=201,
         match=[
             responses.matchers.header_matcher({"PRIVATE-TOKEN": GITLAB_ACCESS_TOKEN}),
             responses.matchers.json_params_matcher(
                 {
-                    "name": "Flagsmith Flag",
+                    "name": "Flagsmith Feature",
                     "color": "#6633FF",
                     "description": (
                         "This GitLab Issue/MR is linked to a Flagsmith Feature Flag"
@@ -667,10 +667,10 @@ def test_create_external_resource__gitlab_issue_with_labeling_enabled__creates_a
     )
     label_apply = responses.put(
         GITLAB_ISSUE_API_URL,
-        json={"iid": 42, "labels": ["Flagsmith Flag"]},
+        json={"iid": 42, "labels": ["Flagsmith Feature"]},
         status=200,
         match=[
-            responses.matchers.json_params_matcher({"add_labels": "Flagsmith Flag"}),
+            responses.matchers.json_params_matcher({"add_labels": "Flagsmith Feature"}),
         ],
     )
     _mock_webhook_registration()
@@ -706,15 +706,15 @@ def test_create_external_resource__gitlab_mr_with_labeling_enabled__creates_and_
     # Given
     responses.post(
         GITLAB_LABELS_URL,
-        json={"id": 1, "name": "Flagsmith Flag"},
+        json={"id": 1, "name": "Flagsmith Feature"},
         status=201,
     )
     label_apply = responses.put(
         GITLAB_MR_API_URL,
-        json={"iid": 7, "labels": ["Flagsmith Flag"]},
+        json={"iid": 7, "labels": ["Flagsmith Feature"]},
         status=200,
         match=[
-            responses.matchers.json_params_matcher({"add_labels": "Flagsmith Flag"}),
+            responses.matchers.json_params_matcher({"add_labels": "Flagsmith Feature"}),
         ],
     )
     _mock_webhook_registration()
@@ -777,7 +777,7 @@ def test_create_external_resource__gitlab_issue_label_already_exists__applies_la
     )
     label_apply = responses.put(
         GITLAB_ISSUE_API_URL,
-        json={"iid": 42, "labels": ["Flagsmith Flag"]},
+        json={"iid": 42, "labels": ["Flagsmith Feature"]},
         status=200,
     )
     _mock_webhook_registration()
@@ -810,7 +810,7 @@ def test_create_external_resource__gitlab_issue_label_apply_fails__rolls_back_li
     # Given
     responses.post(
         GITLAB_LABELS_URL,
-        json={"id": 1, "name": "Flagsmith Flag"},
+        json={"id": 1, "name": "Flagsmith Feature"},
         status=201,
     )
     responses.put(GITLAB_ISSUE_API_URL, json={"message": "403 Forbidden"}, status=403)
@@ -918,7 +918,7 @@ def test_delete_external_resource__gitlab_issue__removes_label_only_when_last_li
         json={"iid": 42, "labels": []},
         status=200,
         match=[
-            responses.matchers.json_params_matcher({"remove_labels": "Flagsmith Flag"}),
+            responses.matchers.json_params_matcher({"remove_labels": "Flagsmith Feature"}),
         ],
     )
 
@@ -952,7 +952,7 @@ def test_delete_external_resource__gitlab_mr_last_link__removes_label(
         json={"iid": 7, "labels": []},
         status=200,
         match=[
-            responses.matchers.json_params_matcher({"remove_labels": "Flagsmith Flag"}),
+            responses.matchers.json_params_matcher({"remove_labels": "Flagsmith Feature"}),
         ],
     )
 
