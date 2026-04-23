@@ -1,7 +1,7 @@
 from enum import Enum
 
 GITLAB_TAG_COLOR = "#FC6D26"
-GITLAB_WEBHOOK_TIMEOUT = 10
+GITLAB_CLIENT_TIMEOUT_SECONDS = 10
 
 
 class GitLabTagLabel(Enum):
