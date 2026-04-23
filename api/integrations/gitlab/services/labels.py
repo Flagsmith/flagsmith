@@ -13,6 +13,10 @@ from integrations.gitlab.client import (
     create_flagsmith_label,
 )
 from integrations.gitlab.models import GitLabConfiguration
+from integrations.gitlab.services.url_parsing import (
+    parse_project_path,
+    parse_resource_iid,
+)
 
 logger = structlog.get_logger("gitlab")
 
@@ -31,8 +35,6 @@ def apply_flagsmith_label_to_resource(
     and apply it to the resource. No-op if labeling is disabled or unconfigured;
     raises ``ValidationError`` on parse/API failure (rolls back under atomic).
     """
-    from integrations.gitlab.services import parse_project_path, parse_resource_iid
-
     project = resource.feature.project
     config: GitLabConfiguration | None = GitLabConfiguration.objects.filter(
         project=project

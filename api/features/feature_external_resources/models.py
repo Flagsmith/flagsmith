@@ -16,7 +16,6 @@ from features.models import Feature, FeatureState
 from integrations.github.constants import GitHubEventType, GitHubTag
 from integrations.github.github import call_github_task
 from integrations.github.models import GitHubRepository
-from integrations.gitlab.tasks import remove_flagsmith_label_from_gitlab_resource
 from organisations.models import Organisation
 from projects.tags.models import Tag, TagType
 
@@ -141,19 +140,6 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignor
                 url=None,
                 feature_states=feature_states,
             )
-
-    @hook(BEFORE_DELETE, when="type", is_now="GITLAB_ISSUE")  # type: ignore[misc]
-    @hook(BEFORE_DELETE, when="type", is_now="GITLAB_MR")  # type: ignore[misc]
-    def notify_gitlab_on_unlink(self) -> None:
-        remove_flagsmith_label_from_gitlab_resource.delay(
-            kwargs={
-                "project_id": self.feature.project_id,
-                "feature_id": self.feature_id,
-                "resource_pk": self.pk,
-                "resource_url": self.url,
-                "resource_type": self.type,
-            },
-        )
 
     @hook(BEFORE_DELETE, when="type", is_now="GITHUB_ISSUE")  # type: ignore[misc]
     @hook(BEFORE_DELETE, when="type", is_now="GITHUB_PR")  # type: ignore[misc]

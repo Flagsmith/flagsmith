@@ -1,7 +1,14 @@
 from enum import Enum
 
-GITLAB_TAG_COLOR = "#FC6D26"
 GITLAB_CLIENT_TIMEOUT_SECONDS = 10
+
+GITLAB_FLAGSMITH_LABEL = "Flagsmith Feature"
+GITLAB_FLAGSMITH_LABEL_COLOUR = "#6633FF"
+GITLAB_FLAGSMITH_LABEL_DESCRIPTION = (
+    "This GitLab Issue/MR is linked to a Flagsmith feature"
+)
+
+GITLAB_TAG_COLOR = "#FC6D26"
 
 
 class GitLabTagLabel(Enum):

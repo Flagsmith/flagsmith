@@ -5,6 +5,10 @@ from integrations.gitlab.services.comments import (
     post_state_change_comment,
     post_unlinked_comment,
 )
+from integrations.gitlab.services.labels import (
+    GITLAB_RESOURCE_KIND_BY_TYPE,
+    apply_flagsmith_label_to_resource,
+)
 from integrations.gitlab.services.tagging import (
     apply_initial_tag,
     apply_tag_for_event,
@@ -23,6 +27,8 @@ from integrations.gitlab.services.webhooks import (
 )
 
 __all__ = [
+    "GITLAB_RESOURCE_KIND_BY_TYPE",
+    "apply_flagsmith_label_to_resource",
     "apply_initial_tag",
     "apply_tag_for_event",
     "deregister_gitlab_webhook_for_resource",

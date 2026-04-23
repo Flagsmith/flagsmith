@@ -1,13 +1,22 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 import pytest_mock
 
 from features.models import FeatureState
+from integrations.gitlab.models import GitLabConfiguration
 from integrations.gitlab.tasks import (
     post_gitlab_feature_deleted_comment,
     post_gitlab_linked_comment,
     post_gitlab_state_change_comment,
     post_gitlab_unlinked_comment,
+    remove_gitlab_label,
 )
+
+if TYPE_CHECKING:
+    from projects.models import Project
 
 
 @pytest.mark.django_db
@@ -109,3 +118,28 @@ def test_post_gitlab_feature_deleted_comment_task__called__delegates_to_service(
         feature_id=99,
         project_id=42,
     )
+
+
+@pytest.mark.django_db
+def test_remove_gitlab_label__unparseable_url__noop(
+    project: Project,
+) -> None:
+    # Given
+    config = GitLabConfiguration.objects.create(
+        project=project,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+        labeling_enabled=True,
+    )
+
+    # When
+    remove_gitlab_label(
+        project_id=config.project_id,
+        feature_id=0,
+        resource_pk=0,
+        resource_url="https://gitlab.example.com/not-a-resource",
+        resource_type="GITLAB_ISSUE",
+    )
+
+    # Then
+    assert GitLabConfiguration.objects.filter(project=project).exists()
