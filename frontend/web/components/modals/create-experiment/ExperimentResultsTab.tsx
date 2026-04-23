@@ -13,6 +13,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { colorTextSecondary } from 'common/theme/tokens'
 import { useGetExperimentResultsQuery } from 'common/services/useExperimentResults'
 
 const WINNER_COLOUR = 'rgba(22, 163, 74, 0.8)'
@@ -78,24 +79,28 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
         <h5 className='mb-2'>Conversion Rate (%)</h5>
         <ResponsiveContainer height={300} width='100%'>
           <BarChart data={data.variants}>
-            <CartesianGrid stroke='#EFF1F4' vertical={false} />
+            <CartesianGrid
+              strokeDasharray='3 5'
+              strokeOpacity={0.4}
+              vertical={false}
+            />
             <XAxis
               dataKey='variant'
-              tick={{ fill: '#656D7B' }}
+              tick={{ fill: colorTextSecondary }}
               tickLine={false}
-              axisLine={{ stroke: '#EFF1F4' }}
+              axisLine={{ stroke: colorTextSecondary }}
             />
             <YAxis
-              tick={{ fill: '#656D7B' }}
+              tick={{ fill: colorTextSecondary }}
               tickLine={false}
-              axisLine={{ stroke: '#EFF1F4' }}
+              axisLine={{ stroke: colorTextSecondary }}
             />
             <Tooltip cursor={{ fill: 'transparent' }} />
             <Bar dataKey='conversion_rate' barSize={40}>
               <LabelList
                 dataKey='conversion_rate'
                 position='top'
-                fill='#656D7B'
+                fill={colorTextSecondary}
                 formatter={(v: number) => `${v.toFixed(1)}%`}
               />
               {data.variants.map(
@@ -116,17 +121,21 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
         <h5 className='mb-2'>Evaluations & Conversions</h5>
         <ResponsiveContainer height={300} width='100%'>
           <BarChart data={data.variants}>
-            <CartesianGrid stroke='#EFF1F4' vertical={false} />
+            <CartesianGrid
+              strokeDasharray='3 5'
+              strokeOpacity={0.4}
+              vertical={false}
+            />
             <XAxis
               dataKey='variant'
-              tick={{ fill: '#656D7B' }}
+              tick={{ fill: colorTextSecondary }}
               tickLine={false}
-              axisLine={{ stroke: '#EFF1F4' }}
+              axisLine={{ stroke: colorTextSecondary }}
             />
             <YAxis
-              tick={{ fill: '#656D7B' }}
+              tick={{ fill: colorTextSecondary }}
               tickLine={false}
-              axisLine={{ stroke: '#EFF1F4' }}
+              axisLine={{ stroke: colorTextSecondary }}
             />
             <Tooltip cursor={{ fill: 'transparent' }} />
             <Legend />
