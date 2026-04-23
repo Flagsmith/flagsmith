@@ -89,6 +89,9 @@ def test_update_environment_json__valid_response__writes_masked_data(  # type: i
     assert written_json["project"]["id"] == 0
     assert written_json["project"]["segments"] == []
     assert written_json["project"]["organisation"]["id"] == 0
+    # AWS ALB → Lambda has a ~1 MB response limit, so gzip must be negotiated
+    # for large environment documents to avoid 502 Bad Gateway responses.
+    assert responses.calls[0].request.headers["Accept-Encoding"] == "gzip"
 
 
 @responses.activate

@@ -33,7 +33,10 @@ def update_environment_json(
 
     response = requests.get(
         f"{api_url}/environment-document",
-        headers={"X-Environment-Key": environment_key},
+        headers={
+            "X-Environment-Key": environment_key,
+            "Accept-Encoding": "gzip",
+        },
     )
     if response.status_code != 200:
         raise FlagsmithIntegrationError(

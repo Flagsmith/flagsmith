@@ -362,10 +362,22 @@ are all computed locally.
   pagination:
 
 ```bash
-curl https://edge.api.flagsmith.com/api/v1/environment-document \
+curl --compressed https://edge.api.flagsmith.com/api/v1/environment-document \
   -H 'X-Environment-Key: <Your server-side environment key>' \
   --verbose
 ```
+
+:::caution Accept-Encoding: gzip is required for large environment documents
+
+The Edge API is served by AWS Lambda behind an Application Load Balancer, which enforces a ~1 MB
+response payload limit. Uncompressed environment documents that exceed this limit will return a
+`502 Bad Gateway` from the load balancer before your request reaches Flagsmith.
+
+All official Flagsmith SDKs negotiate gzip and decompress responses transparently. If you are
+writing a custom integration or calling the API with a low-level HTTP client, make sure to send
+`Accept-Encoding: gzip` (or pass `--compressed` to curl) and to decode the response accordingly.
+
+:::
 
 The `link` response header will contain the url to next page:
 
