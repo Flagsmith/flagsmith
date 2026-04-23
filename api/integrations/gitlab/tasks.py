@@ -85,6 +85,7 @@ def post_gitlab_state_change_comment(feature_state_id: int) -> None:
             "feature",
             "environment",
             "feature_segment__segment",
+            "feature__project",
             "identity",
         ).get(id=feature_state_id)
     except FeatureState.DoesNotExist:
