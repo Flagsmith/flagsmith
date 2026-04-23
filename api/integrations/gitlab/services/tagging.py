@@ -9,6 +9,7 @@ from integrations.gitlab.constants import (
     GITLAB_TAG_COLOR,
     GITLAB_TAG_DESCRIPTION_BY_LABEL,
     GITLAB_TAG_KIND_BY_LABEL,
+    GITLAB_TAG_KIND_BY_RESOURCE_TYPE,
     GitLabTagLabel,
 )
 from integrations.gitlab.mappers import (
@@ -91,4 +92,30 @@ def apply_tag_for_event(
         tag__label=label.value,
         object_kind=payload.get("object_kind"),
         action=attrs.get("action"),
+    )
+
+
+def clear_tag_for_resource(resource: FeatureExternalResource) -> None:
+    """Remove the GitLab tag for `resource`'s kind (Issue/MR) from its
+    feature when no other linked `FeatureExternalResource` of the same
+    kind remains. Safe to call whether `resource` is still in the DB or
+    has already been deleted.
+    """
+    kind = GITLAB_TAG_KIND_BY_RESOURCE_TYPE.get(resource.type)
+    if kind is None:
+        return
+    if (
+        FeatureExternalResource.objects.filter(
+            feature=resource.feature,
+            type=resource.type,
+        )
+        .exclude(pk=resource.pk)
+        .exists()
+    ):
+        return
+    resource.feature.tags.remove(
+        *resource.feature.tags.filter(
+            type=TagType.GITLAB.value,
+            label__startswith=kind,
+        )
     )
