@@ -1,6 +1,10 @@
+import pytest
+import requests
 import responses
 
 from integrations.gitlab.client import (
+    create_issue_note,
+    create_merge_request_note,
     fetch_gitlab_projects,
     search_gitlab_issues,
     search_gitlab_merge_requests,
@@ -222,3 +226,93 @@ def test_search_gitlab_merge_requests__merged_mr__merged_is_true() -> None:
 
     # Then
     assert result["results"][0]["merged"] is True
+
+
+@responses.activate
+def test_create_issue_note__valid_request__posts_to_notes_api() -> None:
+    # Given
+    responses.post(
+        f"{INSTANCE_URL}/api/v4/projects/testorg%2Ftestrepo/issues/42/notes",
+        json={"id": 1},
+        status=201,
+        match=[
+            responses.matchers.header_matcher({"PRIVATE-TOKEN": ACCESS_TOKEN}),
+            responses.matchers.json_params_matcher({"body": "Test comment"}),
+        ],
+    )
+
+    # When
+    create_issue_note(
+        instance_url=INSTANCE_URL,
+        access_token=ACCESS_TOKEN,
+        project_path="testorg/testrepo",
+        issue_iid=42,
+        body="Test comment",
+    )
+
+    # Then
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_create_issue_note__server_error__raises() -> None:
+    # Given
+    responses.post(
+        f"{INSTANCE_URL}/api/v4/projects/testorg%2Ftestrepo/issues/42/notes",
+        status=500,
+    )
+
+    # When / Then
+    with pytest.raises(requests.HTTPError):
+        create_issue_note(
+            instance_url=INSTANCE_URL,
+            access_token=ACCESS_TOKEN,
+            project_path="testorg/testrepo",
+            issue_iid=42,
+            body="Test comment",
+        )
+
+
+@responses.activate
+def test_create_merge_request_note__valid_request__posts_to_notes_api() -> None:
+    # Given
+    responses.post(
+        f"{INSTANCE_URL}/api/v4/projects/testorg%2Ftestrepo/merge_requests/7/notes",
+        json={"id": 2},
+        status=201,
+        match=[
+            responses.matchers.header_matcher({"PRIVATE-TOKEN": ACCESS_TOKEN}),
+            responses.matchers.json_params_matcher({"body": "MR comment"}),
+        ],
+    )
+
+    # When
+    create_merge_request_note(
+        instance_url=INSTANCE_URL,
+        access_token=ACCESS_TOKEN,
+        project_path="testorg/testrepo",
+        merge_request_iid=7,
+        body="MR comment",
+    )
+
+    # Then
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_create_merge_request_note__server_error__raises() -> None:
+    # Given
+    responses.post(
+        f"{INSTANCE_URL}/api/v4/projects/testorg%2Ftestrepo/merge_requests/7/notes",
+        status=500,
+    )
+
+    # When / Then
+    with pytest.raises(requests.HTTPError):
+        create_merge_request_note(
+            instance_url=INSTANCE_URL,
+            access_token=ACCESS_TOKEN,
+            project_path="testorg/testrepo",
+            merge_request_iid=7,
+            body="MR comment",
+        )

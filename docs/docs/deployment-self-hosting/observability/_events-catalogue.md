@@ -75,6 +75,31 @@ Attributes:
  - `organisation.id`
  - `project.id`
 
+### `gitlab.comment.post_failed`
+
+Logged at `warning` from:
+ - `api/integrations/gitlab/services/comments.py:69`
+
+Attributes:
+ - `exc_info`
+ - `feature.id`
+ - `gitlab.project.path`
+ - `gitlab.resource.iid`
+ - `organisation.id`
+ - `project.id`
+
+### `gitlab.comment.posted`
+
+Logged at `info` from:
+ - `api/integrations/gitlab/services/comments.py:71`
+
+Attributes:
+ - `feature.id`
+ - `gitlab.project.path`
+ - `gitlab.resource.iid`
+ - `organisation.id`
+ - `project.id`
+
 ### `gitlab.configuration.created`
 
 Logged at `info` from:
@@ -98,7 +123,7 @@ Attributes:
 ### `gitlab.feature.tagged`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services.py:230`
+ - `api/integrations/gitlab/services/tagging.py:88`
 
 Attributes:
  - `action`
@@ -108,10 +133,32 @@ Attributes:
  - `project.id`
  - `tag.label`
 
+### `gitlab.resource.linked`
+
+Logged at `info` from:
+ - `api/integrations/vcs/services.py:31`
+
+Attributes:
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `resource.type`
+
+### `gitlab.resource.unlinked`
+
+Logged at `info` from:
+ - `api/integrations/vcs/services.py:58`
+
+Attributes:
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `resource.type`
+
 ### `gitlab.webhook.deregistered`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services.py:160`
+ - `api/integrations/gitlab/services/webhooks.py:152`
 
 Attributes:
  - `gitlab.hook.id`
@@ -122,7 +169,7 @@ Attributes:
 ### `gitlab.webhook.deregistration_failed`
 
 Logged at `warning` from:
- - `api/integrations/gitlab/services.py:153`
+ - `api/integrations/gitlab/services/webhooks.py:145`
 
 Attributes:
  - `exc_info`
@@ -134,7 +181,7 @@ Attributes:
 ### `gitlab.webhook.registered`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services.py:113`
+ - `api/integrations/gitlab/services/webhooks.py:105`
 
 Attributes:
  - `gitlab.hook.id`
@@ -146,7 +193,7 @@ Attributes:
 ### `gitlab.webhook.registration_failed`
 
 Logged at `error` from:
- - `api/integrations/gitlab/services.py:98`
+ - `api/integrations/gitlab/services/webhooks.py:90`
 
 Attributes:
  - `exc_info`

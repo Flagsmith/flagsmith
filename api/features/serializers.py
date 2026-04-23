@@ -27,6 +27,9 @@ from environments.sdk.serializers_mixins import (
 )
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
+from integrations.gitlab.services import (
+    post_gitlab_state_change_comment_for_feature_state,
+)
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.code_references.serializers import (
     FeatureFlagCodeReferencesRepositoryCountSerializer,
@@ -655,6 +658,9 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
                     url=None,
                     feature_states=[feature_state],
                 )
+
+            if isinstance(feature_state, FeatureState):
+                post_gitlab_state_change_comment_for_feature_state(feature_state)
 
             return response
 

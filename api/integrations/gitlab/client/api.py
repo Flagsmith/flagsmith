@@ -12,6 +12,7 @@ from integrations.gitlab.client.types import (
     GitLabProjectHook,
     T,
 )
+from integrations.gitlab.constants import GITLAB_CLIENT_TIMEOUT_SECONDS
 
 
 def _get_from_gitlab_api(
@@ -189,4 +190,40 @@ def delete_project_hook(
     )
     if response.status_code == 404:
         return
+    response.raise_for_status()
+
+
+def create_issue_note(
+    instance_url: str,
+    access_token: str,
+    *,
+    project_path: str,
+    issue_iid: int,
+    body: str,
+) -> None:
+    encoded_path = quote(project_path, safe="")
+    response = requests.post(
+        f"{instance_url}/api/v4/projects/{encoded_path}/issues/{issue_iid}/notes",
+        headers={"PRIVATE-TOKEN": access_token},
+        json={"body": body},
+        timeout=GITLAB_CLIENT_TIMEOUT_SECONDS,
+    )
+    response.raise_for_status()
+
+
+def create_merge_request_note(
+    instance_url: str,
+    access_token: str,
+    *,
+    project_path: str,
+    merge_request_iid: int,
+    body: str,
+) -> None:
+    encoded_path = quote(project_path, safe="")
+    response = requests.post(
+        f"{instance_url}/api/v4/projects/{encoded_path}/merge_requests/{merge_request_iid}/notes",
+        headers={"PRIVATE-TOKEN": access_token},
+        json={"body": body},
+        timeout=GITLAB_CLIENT_TIMEOUT_SECONDS,
+    )
     response.raise_for_status()

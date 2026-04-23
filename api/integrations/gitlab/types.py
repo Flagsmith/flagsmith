@@ -23,3 +23,10 @@ class GitLabWebhookObjectAttributes(TypedDict, total=False):
 class GitLabWebhookPayload(TypedDict, total=False):
     object_kind: str
     object_attributes: GitLabWebhookObjectAttributes
+
+
+class GitLabEnvironmentState(TypedDict):
+    name: str
+    url: str
+    enabled: bool
+    value: str | int | bool | None

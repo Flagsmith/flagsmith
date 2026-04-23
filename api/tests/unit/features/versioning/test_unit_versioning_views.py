@@ -1722,3 +1722,38 @@ def test_list_versions__enterprise_plan_saas__returns_all_versions(
     assert {v["uuid"] for v in response_json["results"]} == {
         str(v.uuid) for v in [initial_version, *all_versions]
     }
+
+
+def test_create_version__feature_state_save__dispatches_gitlab_state_change(
+    feature: Feature,
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_dispatch = mocker.patch(
+        "features.versioning.serializers.post_gitlab_state_change_comment_for_feature_state",
+    )
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_update": [
+            {
+                "feature_segment": None,
+                "enabled": True,
+                "feature_state_value": {"type": "unicode", "string_value": "updated!"},
+            }
+        ],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert mock_dispatch.call_count == 1

@@ -1,4 +1,6 @@
 from integrations.gitlab.client.api import (
+    create_issue_note,
+    create_merge_request_note,
     create_project_hook,
     delete_project_hook,
     fetch_gitlab_projects,
@@ -19,6 +21,8 @@ __all__ = [
     "GitLabPage",
     "GitLabProject",
     "GitLabProjectHook",
+    "create_issue_note",
+    "create_merge_request_note",
     "create_project_hook",
     "delete_project_hook",
     "fetch_gitlab_projects",

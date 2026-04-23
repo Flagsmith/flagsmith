@@ -1,6 +1,5 @@
 import re
 
-import structlog
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
@@ -14,12 +13,13 @@ from integrations.github.client import (
     label_github_issue_pr,
 )
 from integrations.github.models import GitHubRepository
-from integrations.gitlab.models import GitLabConfiguration
-from integrations.gitlab.services import parse_project_path
-from integrations.gitlab.tasks import register_gitlab_webhook
+from integrations.vcs.services import (
+    dispatch_vcs_on_resource_create,
+    dispatch_vcs_on_resource_destroy,
+)
 from organisations.models import Organisation
 
-from .models import GITLAB_RESOURCE_TYPES, FeatureExternalResource, ResourceType
+from .models import FeatureExternalResource, ResourceType
 from .serializers import FeatureExternalResourceSerializer
 
 
@@ -77,14 +77,13 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
     def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         resource_type = request.data.get("type")
 
-        # GitLab side effects run in ``perform_create`` below.
-        if resource_type in GITLAB_RESOURCE_TYPES:
-            return super().create(request, *args, **kwargs)
-
-        if resource_type not in (
-            ResourceType.GITHUB_ISSUE,
-            ResourceType.GITHUB_PR,
-        ):
+        # TODO(#7315): route link/unlink/state-change/delete through a
+        # provider-agnostic dispatcher so adding a new VCS is contained
+        # to one integration app rather than spread across view, model,
+        # and serializer hooks.
+        if resource_type not in (ResourceType.GITHUB_ISSUE, ResourceType.GITHUB_PR):
+            # GitLab side effects run in ``perform_create`` below; other
+            # types fall through to the default create.
             return super().create(request, *args, **kwargs)
 
         feature = get_object_or_404(
@@ -146,28 +145,11 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
 
     def perform_create(self, serializer: FeatureExternalResourceSerializer) -> None:  # type: ignore[override]
         resource = serializer.save()
-        resource_type = ResourceType(resource.type)
+        dispatch_vcs_on_resource_create(resource)
 
-        if resource_type in GITLAB_RESOURCE_TYPES:
-            project_path = parse_project_path(resource.url)
-            config = GitLabConfiguration.objects.filter(
-                project=resource.feature.project,
-            ).first()
-            if config is not None and project_path is not None:
-                register_gitlab_webhook.delay(args=(config.id, project_path))
-
-        log_event_names: dict[ResourceType, tuple[str, str]] = {
-            ResourceType.GITLAB_ISSUE: ("gitlab", "issue.linked"),
-            ResourceType.GITLAB_MR: ("gitlab", "merge_request.linked"),
-        }
-        if resource_type in log_event_names:
-            logger_name, event_name = log_event_names[resource_type]
-            structlog.get_logger(logger_name).info(
-                event_name,
-                organisation__id=resource.feature.project.organisation_id,
-                project__id=resource.feature.project_id,
-                feature__id=resource.feature.id,
-            )
+    def perform_destroy(self, instance: FeatureExternalResource) -> None:
+        super().perform_destroy(instance)
+        dispatch_vcs_on_resource_destroy(instance)
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         external_resource_id = int(self.kwargs["pk"])
