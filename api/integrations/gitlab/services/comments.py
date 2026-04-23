@@ -66,8 +66,6 @@ def _post_note_to_resource(
                 merge_request_iid=iid,
                 body=body,
             )
-        else:
-            return
     except requests.RequestException as exc:
         log.warning("comment.post_failed", exc_info=exc)
     else:

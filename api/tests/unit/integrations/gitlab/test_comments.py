@@ -15,7 +15,6 @@ from features.feature_external_resources.models import (
 from features.models import Feature, FeatureSegment, FeatureState
 from integrations.gitlab.models import GitLabConfiguration
 from integrations.gitlab.services.comments import (
-    _post_note_to_resource,
     post_feature_deleted_comment,
     post_gitlab_state_change_comment_for_feature_state,
     post_linked_comment,
@@ -663,42 +662,24 @@ def test_post_feature_deleted_comment__multiple_resources__posts_to_all(
         "https://gitlab.example.com/not-a-resource",
         "",
     ],
-    ids=["no_path_match", "empty_url"],
+    ids=["unparseable_url", "empty_url"],
 )
 @pytest.mark.django_db
-def test_post_note_to_resource__unparseable_url__returns_early(
+def test_post_linked_comment__unparseable_url__returns_early(
     gitlab_config: GitLabConfiguration,
     feature: Feature,
     log: StructuredLogCapture,
     bad_url: str,
 ) -> None:
-    # Given / When
-    _post_note_to_resource(
-        config=gitlab_config,
-        resource_url=bad_url,
-        resource_type=ResourceType.GITLAB_ISSUE.value,
-        feature_id=feature.id,
-        body="test",
+    # Given
+    resource = FeatureExternalResource.objects.create(
+        url=bad_url,
+        type=ResourceType.GITLAB_ISSUE.value,
+        feature=feature,
     )
 
-    # Then
-    assert log.events == []
-
-
-@pytest.mark.django_db
-def test_post_note_to_resource__unrecognised_resource_type__returns_early(
-    gitlab_config: GitLabConfiguration,
-    feature: Feature,
-    log: StructuredLogCapture,
-) -> None:
-    # Given / When
-    _post_note_to_resource(
-        config=gitlab_config,
-        resource_url="https://gitlab.example.com/testorg/testrepo/-/issues/42",
-        resource_type="UNKNOWN_TYPE",
-        feature_id=feature.id,
-        body="test",
-    )
+    # When
+    post_linked_comment(resource)
 
     # Then
     assert log.events == []
