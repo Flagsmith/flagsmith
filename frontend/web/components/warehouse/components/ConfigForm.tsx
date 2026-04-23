@@ -17,26 +17,12 @@ type ConfigFormProps = {
   onCancel: () => void
 }
 
-type TestStatus = 'idle' | 'testing' | 'passed' | 'failed'
-
 const ConfigForm: FC<ConfigFormProps> = ({ onCancel, onConnect }) => {
   const [config, setConfig] = useState<WarehouseConfig>(MOCK_CONFIG)
   const [selectedType, setSelectedType] = useState<WarehouseType>('snowflake')
-  const [testStatus, setTestStatus] = useState<TestStatus>('idle')
 
   const updateField = (field: keyof WarehouseConfig, value: string) => {
     setConfig((prev) => ({ ...prev, [field]: value }))
-    if (testStatus !== 'idle') {
-      // Stale test result — clear so users re-verify after editing
-      setTestStatus('idle')
-    }
-  }
-
-  const runTest = () => {
-    setTestStatus('testing')
-    setTimeout(() => {
-      setTestStatus(Math.random() > 0.25 ? 'passed' : 'failed')
-    }, 1500)
   }
 
   return (
@@ -146,53 +132,14 @@ const ConfigForm: FC<ConfigFormProps> = ({ onCancel, onConnect }) => {
           />
         </div>
 
-        {testStatus !== 'idle' && (
-          <div
-            className={`wh-config-form__test-result wh-config-form__test-result--${testStatus}`}
-          >
-            {testStatus === 'testing' && (
-              <>
-                <Icon name='refresh' width={16} />
-                <span>Testing connection…</span>
-              </>
-            )}
-            {testStatus === 'passed' && (
-              <>
-                <Icon name='checkmark-circle' width={16} />
-                <span>
-                  Connection test passed. Click <strong>Connect</strong> to save
-                  and start streaming.
-                </span>
-              </>
-            )}
-            {testStatus === 'failed' && (
-              <>
-                <Icon name='warning' width={16} />
-                <span>
-                  Connection test failed. Check your credentials and try again.
-                </span>
-              </>
-            )}
-          </div>
-        )}
-
         <div className='wh-config-form__actions'>
           <Button theme='outline' size='small' onClick={onCancel}>
             Cancel
           </Button>
           <Button
-            theme='outline'
-            size='small'
-            onClick={runTest}
-            disabled={testStatus === 'testing'}
-          >
-            Test Connection
-          </Button>
-          <Button
             theme='primary'
             size='small'
             onClick={() => onConnect(config)}
-            disabled={testStatus === 'testing'}
           >
             Connect
           </Button>
