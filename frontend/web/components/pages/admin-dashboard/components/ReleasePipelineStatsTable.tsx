@@ -6,6 +6,7 @@ import {
 import { SortOrder } from 'common/types/requests'
 import { colorTextSuccess } from 'common/theme/tokens'
 import PanelSearch from 'components/PanelSearch'
+import ColorSwatch from 'components/ColorSwatch'
 import Icon from 'components/icons/Icon'
 import { buildChartColorMap, PieChart, PieSlice } from 'components/charts'
 
@@ -150,19 +151,10 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
           {stages.map((stage) => (
             <div
               key={stage.order}
-              className='d-flex flex-row align-items-center'
+              className='d-flex flex-row align-items-center gap-2'
               style={{ paddingBottom: 6, paddingRight: 20, paddingTop: 6 }}
             >
-              <div
-                style={{
-                  background: stageColorMap[stage.stage_name],
-                  borderRadius: 3,
-                  height: 10,
-                  marginRight: 8,
-                  minWidth: 10,
-                  width: 10,
-                }}
-              />
+              <ColorSwatch color={stageColorMap[stage.stage_name]} size='md' />
               <div style={{ flex: 1 }}>
                 <span className='font-weight-medium' style={{ fontSize: 13 }}>
                   {stage.stage_name}
@@ -183,7 +175,7 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
             </div>
           ))}
           <div
-            className='d-flex flex-row align-items-center'
+            className='d-flex flex-row align-items-center gap-2'
             style={{
               borderTop: '1px solid #e0e0e0',
               marginTop: 4,
@@ -191,20 +183,11 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
               paddingTop: 8,
             }}
           >
-            <div
-              style={{
-                background: RELEASED_COLOUR,
-                borderRadius: 3,
-                height: 10,
-                marginRight: 8,
-                minWidth: 10,
-                width: 10,
-              }}
-            />
+            <ColorSwatch color={RELEASED_COLOUR} size='md' />
             <div style={{ flex: 1 }}>
               <span
-                className='font-weight-medium'
-                style={{ color: RELEASED_COLOUR, fontSize: 13 }}
+                className='font-weight-medium text-success'
+                style={{ fontSize: 13 }}
               >
                 Released
               </span>
