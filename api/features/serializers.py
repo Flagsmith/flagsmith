@@ -20,6 +20,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from app_analytics.serializers import LabelsQuerySerializerMixin, LabelsSerializer
+from edge_api.utils import is_edge_enabled
 from environments.identities.models import Identity
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
@@ -278,6 +279,8 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         return instance  # type: ignore[no-any-return]
 
     def validate_project_features_limit(self, project: Project) -> None:
+        if not is_edge_enabled():
+            return
         if project.features.count() >= project.max_features_allowed:
             raise serializers.ValidationError(
                 {

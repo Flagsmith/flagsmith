@@ -7,6 +7,7 @@ from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from edge_api.utils import is_edge_enabled
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
@@ -177,6 +178,8 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         ]
 
     def _validate_project_segment_limit(self, project: Project) -> None:
+        if not is_edge_enabled():
+            return
         segment_count = Segment.live_objects.filter(project=project).count()
         if segment_count >= project.max_segments_allowed:
             raise ValidationError(
