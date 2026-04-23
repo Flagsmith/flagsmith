@@ -1,5 +1,12 @@
 import React, { FC } from 'react'
-import { Cell, Legend, Pie, PieChart as RawPieChart, Tooltip } from 'recharts'
+import {
+  Cell,
+  Legend,
+  Pie,
+  PieChart as RawPieChart,
+  ResponsiveContainer,
+  Tooltip,
+} from 'recharts'
 
 export type PieSlice = {
   name: string
@@ -10,11 +17,15 @@ type PieChartProps = {
   data: PieSlice[]
   /** Per-slice colour, keyed by slice `name`. */
   colorMap: Record<string, string>
-  /** Chart dimensions in pixels. Default: 200. */
-  size?: number
+  /**
+   * Chart height in pixels. Width is fluid — the chart fills its parent's
+   * width via `<ResponsiveContainer>`. Default: 240. When `showLegend` is
+   * true, remember to reserve vertical space for the legend too.
+   */
+  height?: number
   /** Inner radius in pixels. Set `> 0` for a donut. Default: 0 (solid pie). */
   innerRadius?: number
-  /** Outer radius in pixels. Default: derived from `size` with a small margin. */
+  /** Outer radius in pixels. Default: 80. */
   outerRadius?: number
   /** Gap between slices in degrees. Default: 2. */
   paddingAngle?: number
@@ -32,47 +43,49 @@ type PieChartProps = {
 const PieChart: FC<PieChartProps> = ({
   colorMap,
   data,
+  height = 240,
   innerRadius = 0,
-  outerRadius,
+  outerRadius = 80,
   paddingAngle = 2,
   seriesLabels,
   showLegend = false,
   showTooltip = true,
-  size = 200,
 }) => {
-  const resolvedOuter = outerRadius ?? Math.floor(size / 2) - 10
-
   return (
-    <RawPieChart width={size} height={size}>
-      <Pie
-        data={data}
-        dataKey='value'
-        nameKey='name'
-        cx='50%'
-        cy='50%'
-        innerRadius={innerRadius}
-        outerRadius={resolvedOuter}
-        paddingAngle={paddingAngle}
-      >
-        {data.map((entry) => (
-          <Cell key={entry.name} fill={colorMap[entry.name]} />
-        ))}
-      </Pie>
-      {showTooltip && (
-        <Tooltip
-          formatter={(value: number, name: string) => [
-            value.toLocaleString(),
-            seriesLabels?.[name] ?? name,
-          ]}
-        />
-      )}
-      {showLegend && (
-        <Legend
-          wrapperStyle={{ paddingTop: 16 }}
-          formatter={(value) => seriesLabels?.[String(value)] ?? String(value)}
-        />
-      )}
-    </RawPieChart>
+    <ResponsiveContainer width='100%' height={height}>
+      <RawPieChart>
+        <Pie
+          data={data}
+          dataKey='value'
+          nameKey='name'
+          cx='50%'
+          cy='50%'
+          innerRadius={innerRadius}
+          outerRadius={outerRadius}
+          paddingAngle={paddingAngle}
+        >
+          {data.map((entry) => (
+            <Cell key={entry.name} fill={colorMap[entry.name]} />
+          ))}
+        </Pie>
+        {showTooltip && (
+          <Tooltip
+            formatter={(value: number, name: string) => [
+              value.toLocaleString(),
+              seriesLabels?.[name] ?? name,
+            ]}
+          />
+        )}
+        {showLegend && (
+          <Legend
+            wrapperStyle={{ paddingTop: 16 }}
+            formatter={(value) =>
+              seriesLabels?.[String(value)] ?? String(value)
+            }
+          />
+        )}
+      </RawPieChart>
+    </ResponsiveContainer>
   )
 }
 

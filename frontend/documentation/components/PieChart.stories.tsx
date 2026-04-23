@@ -53,15 +53,16 @@ export const Donut: Story = {
       )
       return (
         <div className='d-flex justify-content-center'>
-          <div>
+          <div style={{ width: 240 }}>
             <p className='text-secondary fs-small mb-3 text-center'>
               Donut variant — inner cutout for a secondary label or count.
             </p>
             <PieChart
               data={data}
               colorMap={colorMap}
-              size={220}
-              innerRadius={50}
+              height={240}
+              innerRadius={60}
+              outerRadius={100}
             />
           </div>
         </div>
@@ -80,11 +81,16 @@ export const SolidPie: Story = {
       )
       return (
         <div className='d-flex justify-content-center'>
-          <div>
+          <div style={{ width: 240 }}>
             <p className='text-secondary fs-small mb-3 text-center'>
               Solid pie — no inner radius.
             </p>
-            <PieChart data={data} colorMap={colorMap} size={220} />
+            <PieChart
+              data={data}
+              colorMap={colorMap}
+              height={240}
+              outerRadius={100}
+            />
           </div>
         </div>
       )
@@ -102,15 +108,16 @@ export const TwoSlices: Story = {
       )
       return (
         <div className='d-flex justify-content-center'>
-          <div>
+          <div style={{ width: 220 }}>
             <p className='text-secondary fs-small mb-3 text-center'>
               Minimal case — two slices for a released vs. in-progress split.
             </p>
             <PieChart
               data={data}
               colorMap={colorMap}
-              size={200}
-              innerRadius={50}
+              height={220}
+              innerRadius={60}
+              outerRadius={90}
             />
           </div>
         </div>
@@ -129,15 +136,16 @@ export const ManySlices: Story = {
       )
       return (
         <div className='d-flex justify-content-center'>
-          <div>
+          <div style={{ width: 300 }}>
             <p className='text-secondary fs-small mb-3 text-center'>
               Seven slices — stress-test of the colour palette.
             </p>
             <PieChart
               data={data}
               colorMap={colorMap}
-              size={260}
+              height={380}
               innerRadius={60}
+              outerRadius={100}
               showLegend
             />
           </div>
@@ -157,15 +165,16 @@ export const WithLegend: Story = {
       )
       return (
         <div className='d-flex justify-content-center'>
-          <div>
+          <div style={{ width: 300 }}>
             <p className='text-secondary fs-small mb-3 text-center'>
               Legend enabled — useful when slices are many or narrow.
             </p>
             <PieChart
               data={data}
               colorMap={colorMap}
-              size={260}
+              height={340}
               innerRadius={60}
+              outerRadius={100}
               showLegend
             />
           </div>

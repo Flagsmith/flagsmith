@@ -132,13 +132,15 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
           }}
         >
           {pieSlices.length > 0 ? (
-            <PieChart
-              data={pieSlices}
-              colorMap={pieColorMap}
-              size={180}
-              innerRadius={40}
-              outerRadius={75}
-            />
+            <div style={{ width: 180 }}>
+              <PieChart
+                data={pieSlices}
+                colorMap={pieColorMap}
+                height={180}
+                innerRadius={40}
+                outerRadius={75}
+              />
+            </div>
           ) : (
             <div className='text-muted fs-captionSmall'>No features yet</div>
           )}
