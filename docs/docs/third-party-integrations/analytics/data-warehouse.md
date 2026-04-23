@@ -47,7 +47,7 @@ and analysis.
 
 ### Step 2: Choose a warehouse
 
-> **Screenshot placeholder —** Configuration form showing the Snowflake / BigQuery / Databricks selector cards. Target path: `/img/integrations/data-warehouse/config-form.png`
+![Configuration form showing the Snowflake / BigQuery / Databricks selector cards](/img/integrations/data-warehouse/config-form.png)
 
 1. Pick your warehouse provider — **Snowflake**, **BigQuery**, or
    **Databricks**.

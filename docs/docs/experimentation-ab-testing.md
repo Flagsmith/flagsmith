@@ -109,7 +109,7 @@ Review & Launch summary.
 
 ### Step 3: Flag & Variations
 
-> **Screenshot placeholder —** Flag picker with multi-variant flags; the single-variant blocking banner below for context. Target path: `/img/experimentation/wizard-flag-variations.png`
+![Flag picker with multi-variant flags; the single-variant blocking banner below for context](/img/experimentation/wizard-flag-variations.png)
 
 1. Pick the **multivariate flag** to experiment on. Single-variant flags
    are not eligible — the wizard blocks them with an explanation and a
@@ -128,7 +128,7 @@ flag's main page first.
 
 ### Step 4: Select Metrics
 
-> **Screenshot placeholder —** Metric picker showing pre-selected metrics with the Primary / Secondary / Guardrail segmented control visible on a row. Target path: `/img/experimentation/wizard-metrics.png`
+![Metric picker showing pre-selected metrics with the Primary / Secondary / Guardrail segmented control visible on a row](/img/experimentation/wizard-metrics.png)
 
 Pick the metrics this experiment will track. Each metric has a **role**
 that tells Flagsmith how to interpret it:
@@ -148,7 +148,7 @@ that tells Flagsmith how to interpret it:
 
 ### Step 5: Segments & Traffic
 
-> **Screenshot placeholder —** Segment selector with an active conflict banner shown for context; traffic-split inputs below. Target path: `/img/experimentation/wizard-segment-traffic.png`
+![Segment selector with an active conflict banner shown for context; traffic-split inputs below](/img/experimentation/wizard-segment-traffic.png)
 
 1. Pick the **segment** whose users will be eligible for the experiment.
    Everyone outside the segment sees the flag's environment default,
@@ -207,7 +207,7 @@ Read the dashboard top-down:
 
 ### Recommendation callout
 
-> **Screenshot placeholder —** Recommendation callout — "Treatment B is outperforming Control with 94% probability" style. Target path: `/img/experimentation/results-recommendation-callout.png`
+![Recommendation callout — "Treatment B is outperforming Control with 94% probability" style](/img/experimentation/results-recommendation-callout.png)
 
 A plain-language summary of the current state — which variation is
 leading, how confident the verdict is, and a suggested next action
@@ -215,7 +215,7 @@ leading, how confident the verdict is, and a suggested next action
 
 ### Metrics comparison table
 
-> **Screenshot placeholder —** Metrics comparison table — primary row emphasised, guardrail badge visible, zero-centred lift bars. Target path: `/img/experimentation/results-comparison-table.png`
+![Metrics comparison table — primary row emphasised, guardrail badge visible, zero-centred lift bars](/img/experimentation/results-comparison-table.png)
 
 One row per metric, with the **primary row** visually emphasised so
 your eye lands on the verdict-driving metric first. Each row shows:
@@ -228,7 +228,7 @@ your eye lands on the verdict-driving metric first. Each row shows:
 
 ### Trend over time
 
-> **Screenshot placeholder —** Trend line chart with metric selector above it — control vs. treatment lines. Target path: `/img/experimentation/results-trend-chart.png`
+![Trend line chart with metric selector above it — control vs. treatment lines](/img/experimentation/results-trend-chart.png)
 
 Below the table, a line chart plots each variation's metric value over
 the duration of the experiment. The metric selector lets you inspect any
