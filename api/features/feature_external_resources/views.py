@@ -148,8 +148,8 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
         dispatch_vcs_on_resource_create(resource)
 
     def perform_destroy(self, instance: FeatureExternalResource) -> None:
-        dispatch_vcs_on_resource_destroy(instance)
         super().perform_destroy(instance)
+        dispatch_vcs_on_resource_destroy(instance)
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         external_resource_id = int(self.kwargs["pk"])

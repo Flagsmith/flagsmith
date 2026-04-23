@@ -78,7 +78,7 @@ Attributes:
 ### `gitlab.comment.post_failed`
 
 Logged at `warning` from:
- - `api/integrations/gitlab/services/comments.py:70`
+ - `api/integrations/gitlab/services/comments.py:69`
 
 Attributes:
  - `exc_info`
@@ -91,7 +91,7 @@ Attributes:
 ### `gitlab.comment.posted`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services/comments.py:72`
+ - `api/integrations/gitlab/services/comments.py:71`
 
 Attributes:
  - `feature.id`
@@ -136,7 +136,7 @@ Attributes:
 ### `gitlab.resource.linked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:27`
+ - `api/integrations/vcs/services.py:31`
 
 Attributes:
  - `feature.id`
@@ -147,7 +147,7 @@ Attributes:
 ### `gitlab.resource.unlinked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:52`
+ - `api/integrations/vcs/services.py:58`
 
 Attributes:
  - `feature.id`
@@ -158,7 +158,7 @@ Attributes:
 ### `gitlab.webhook.deregistered`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services/webhooks.py:141`
+ - `api/integrations/gitlab/services/webhooks.py:152`
 
 Attributes:
  - `gitlab.hook.id`
@@ -169,7 +169,7 @@ Attributes:
 ### `gitlab.webhook.deregistration_failed`
 
 Logged at `warning` from:
- - `api/integrations/gitlab/services/webhooks.py:134`
+ - `api/integrations/gitlab/services/webhooks.py:145`
 
 Attributes:
  - `exc_info`
@@ -181,7 +181,7 @@ Attributes:
 ### `gitlab.webhook.registered`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services/webhooks.py:94`
+ - `api/integrations/gitlab/services/webhooks.py:105`
 
 Attributes:
  - `gitlab.hook.id`
@@ -193,7 +193,7 @@ Attributes:
 ### `gitlab.webhook.registration_failed`
 
 Logged at `error` from:
- - `api/integrations/gitlab/services/webhooks.py:79`
+ - `api/integrations/gitlab/services/webhooks.py:90`
 
 Attributes:
  - `exc_info`

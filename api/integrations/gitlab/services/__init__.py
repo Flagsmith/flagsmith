@@ -15,6 +15,7 @@ from integrations.gitlab.services.url_parsing import (
     parse_resource_iid,
 )
 from integrations.gitlab.services.webhooks import (
+    deregister_gitlab_webhook_for_resource,
     deregister_webhook_for_path,
     ensure_webhook_registered,
     has_live_resource_for_path,
@@ -24,6 +25,7 @@ from integrations.gitlab.services.webhooks import (
 __all__ = [
     "apply_initial_tag",
     "apply_tag_for_event",
+    "deregister_gitlab_webhook_for_resource",
     "deregister_webhook_for_path",
     "ensure_webhook_registered",
     "has_live_resource_for_path",

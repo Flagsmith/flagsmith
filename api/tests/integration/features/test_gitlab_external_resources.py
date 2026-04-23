@@ -488,19 +488,19 @@ def test_delete_external_resource__last_link_for_path__deregisters_webhook_and_p
         },
         {
             "level": "info",
-            "event": "resource.unlinked",
-            "organisation__id": organisation,
-            "project__id": project,
-            "feature__id": feature,
-            "resource__type": "gitlab_issue",
-        },
-        {
-            "level": "info",
             "event": "webhook.deregistered",
             "organisation__id": organisation,
             "project__id": project,
             "gitlab__project__id": 777,
             "gitlab__hook__id": 42,
+        },
+        {
+            "level": "info",
+            "event": "resource.unlinked",
+            "organisation__id": organisation,
+            "project__id": project,
+            "feature__id": feature,
+            "resource__type": "gitlab_issue",
         },
     ]
 
