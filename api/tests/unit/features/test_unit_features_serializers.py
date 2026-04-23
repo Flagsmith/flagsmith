@@ -1,14 +1,8 @@
-from unittest.mock import call
-
 import pytest
 from pytest_mock import MockerFixture
 
 from core.constants import BOOLEAN, INTEGER, STRING
 from environments.models import Environment
-from features.feature_external_resources.models import (
-    FeatureExternalResource,
-    ResourceType,
-)
 from features.models import Feature, FeatureState
 from features.multivariate.models import (
     MultivariateFeatureOption,
@@ -19,7 +13,6 @@ from features.multivariate.serializers import (
     MultivariateOptionValuesSerializer,
 )
 from features.serializers import FeatureStateSerializerBasic
-from integrations.gitlab.models import GitLabConfiguration
 
 
 @pytest.mark.parametrize(
@@ -156,24 +149,14 @@ def test_mv_options_values_response_serializer__without_feature_state__returns_n
 
 
 @pytest.mark.django_db
-def test_feature_state_serializer_basic__save_with_gitlab_resource__dispatches_comment_task(
+def test_feature_state_serializer_basic__save__dispatches_gitlab_state_change(
     feature: Feature,
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    GitLabConfiguration.objects.create(
-        project=feature.project,
-        gitlab_instance_url="https://gitlab.example.com",
-        access_token="glpat-test-token",
-    )
-    FeatureExternalResource.objects.create(
-        url="https://gitlab.example.com/testorg/testrepo/-/issues/42",
-        type=ResourceType.GITLAB_ISSUE.value,
-        feature=feature,
-    )
-    mock_task = mocker.patch(
-        "integrations.gitlab.tasks.post_gitlab_state_change_comment",
+    mock_dispatch = mocker.patch(
+        "features.serializers.post_gitlab_state_change_comment_for_feature_state",
     )
     feature_state = FeatureState.objects.get(
         feature=feature,
@@ -198,6 +181,4 @@ def test_feature_state_serializer_basic__save_with_gitlab_resource__dispatches_c
     serializer.save()  # type: ignore[no-untyped-call]
 
     # Then
-    assert mock_task.delay.call_args_list == [
-        call(args=(feature_state.id,)),
-    ]
+    mock_dispatch.assert_called_once_with(feature_state)

@@ -224,6 +224,23 @@ def post_feature_deleted_comment(
         )
 
 
+def post_gitlab_state_change_comment_for_feature_state(
+    feature_state: FeatureState,
+) -> None:
+    """Dispatch a state-change comment task for `feature_state` when the
+    project has a GitLab integration configured. No-op otherwise so projects
+    without GitLab don't pay for a queue entry and a `GitLabConfiguration`
+    lookup per feature-state save.
+    """
+    from integrations.gitlab.tasks import post_gitlab_state_change_comment
+
+    if not feature_state.environment:
+        return
+    if not hasattr(feature_state.environment.project, "gitlab_config"):
+        return
+    post_gitlab_state_change_comment.delay(args=(feature_state.id,))
+
+
 def post_state_change_comment(feature_state: FeatureState) -> None:
     """Post a comment on every linked GitLab resource when a feature flag's
     state changes, covering environment-level, segment override, and identity

@@ -17,6 +17,7 @@ from integrations.gitlab.models import GitLabConfiguration
 from integrations.gitlab.services.comments import (
     _post_note_to_resource,
     post_feature_deleted_comment,
+    post_gitlab_state_change_comment_for_feature_state,
     post_linked_comment,
     post_state_change_comment,
     post_unlinked_comment,
@@ -774,3 +775,72 @@ def test_post_state_change_comment__enabled_with_value__renders_value_in_body(
         f"in **{environment.name}**: "
         f":white_check_mark: Enabled, value `my_value`\n"
     )
+
+
+@pytest.mark.django_db
+def test_post_gitlab_state_change_comment_for_feature_state__gitlab_config__dispatches_task(
+    gitlab_config: GitLabConfiguration,
+    feature: Feature,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_task = mocker.patch(
+        "integrations.gitlab.tasks.post_gitlab_state_change_comment",
+    )
+    feature_state = FeatureState.objects.get(
+        feature=feature,
+        environment=environment,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+
+    # When
+    post_gitlab_state_change_comment_for_feature_state(feature_state)
+
+    # Then
+    mock_task.delay.assert_called_once_with(args=(feature_state.id,))
+
+
+@pytest.mark.django_db
+def test_post_gitlab_state_change_comment_for_feature_state__no_gitlab_config__noop(
+    feature: Feature,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    # No GitLabConfiguration on the project.
+    mock_task = mocker.patch(
+        "integrations.gitlab.tasks.post_gitlab_state_change_comment",
+    )
+    feature_state = FeatureState.objects.get(
+        feature=feature,
+        environment=environment,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+
+    # When
+    post_gitlab_state_change_comment_for_feature_state(feature_state)
+
+    # Then
+    mock_task.delay.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_post_gitlab_state_change_comment_for_feature_state__no_environment__noop(
+    gitlab_config: GitLabConfiguration,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_task = mocker.patch(
+        "integrations.gitlab.tasks.post_gitlab_state_change_comment",
+    )
+    feature_state = FeatureState(feature=feature, environment=None)
+
+    # When
+    post_gitlab_state_change_comment_for_feature_state(feature_state)
+
+    # Then
+    mock_task.delay.assert_not_called()

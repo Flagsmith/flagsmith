@@ -1,7 +1,6 @@
 import json
 import typing
 from datetime import datetime, timedelta
-from unittest.mock import call
 
 import pytest
 from common.environments.permissions import (
@@ -23,10 +22,6 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from core.constants import STRING
 from environments.models import Environment
-from features.feature_external_resources.models import (
-    FeatureExternalResource,
-    ResourceType,
-)
 from features.feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
 )
@@ -34,7 +29,6 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from features.versioning.models import EnvironmentFeatureVersion
-from integrations.gitlab.models import GitLabConfiguration
 from organisations.models import (
     OrganisationSubscriptionInformationCache,
     Subscription,
@@ -1721,25 +1715,15 @@ def test_list_versions__enterprise_plan_saas__returns_all_versions(
     }
 
 
-def test_create_version__with_gitlab_resource__dispatches_comment_task(
+def test_create_version__feature_state_save__dispatches_gitlab_state_change(
     feature: Feature,
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    GitLabConfiguration.objects.create(
-        project=feature.project,
-        gitlab_instance_url="https://gitlab.example.com",
-        access_token="glpat-test-token",
-    )
-    FeatureExternalResource.objects.create(
-        url="https://gitlab.example.com/testorg/testrepo/-/issues/42",
-        type=ResourceType.GITLAB_ISSUE.value,
-        feature=feature,
-    )
-    mock_task = mocker.patch(
-        "features.versioning.serializers.post_gitlab_state_change_comment",
+    mock_dispatch = mocker.patch(
+        "features.versioning.serializers.post_gitlab_state_change_comment_for_feature_state",
     )
     url = reverse(
         "api-v1:versioning:environment-feature-versions-list",
@@ -1763,6 +1747,4 @@ def test_create_version__with_gitlab_resource__dispatches_comment_task(
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-    assert mock_task.delay.call_count == 1
-    feature_state_id = mock_task.delay.call_args_list[0]
-    assert feature_state_id == call(args=(mocker.ANY,))
+    assert mock_dispatch.call_count == 1

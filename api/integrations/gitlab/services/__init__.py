@@ -1,5 +1,6 @@
 from integrations.gitlab.services.comments import (
     post_feature_deleted_comment,
+    post_gitlab_state_change_comment_for_feature_state,
     post_linked_comment,
     post_state_change_comment,
     post_unlinked_comment,
@@ -29,6 +30,7 @@ __all__ = [
     "parse_project_path",
     "parse_resource_iid",
     "post_feature_deleted_comment",
+    "post_gitlab_state_change_comment_for_feature_state",
     "post_linked_comment",
     "post_state_change_comment",
     "post_unlinked_comment",
