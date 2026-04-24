@@ -23,6 +23,7 @@ def dispatch_vcs_on_resource_create(resource: FeatureExternalResource) -> None:
     if resource.type in GITLAB_RESOURCE_TYPES:
         gitlab.register_gitlab_webhook_for_resource(resource)
         gitlab.apply_initial_tag(resource)
+        gitlab_tasks.apply_gitlab_label.delay(args=(resource.id,))
         gitlab_tasks.post_gitlab_linked_comment.delay(args=(resource.id,))
         gitlab_logger.info(
             "resource.linked",
@@ -38,6 +39,15 @@ def dispatch_vcs_on_resource_destroy(resource: FeatureExternalResource) -> None:
     has been destroyed. `resource` is a memory-only object at this point.
     """
     if resource.type in GITLAB_RESOURCE_TYPES:
+        gitlab_tasks.remove_gitlab_label.delay(
+            kwargs={
+                "project_id": resource.feature.project_id,
+                "feature_id": resource.feature_id,
+                "resource_pk": resource.pk,
+                "resource_url": resource.url,
+                "resource_type": resource.type,
+            },
+        )
         gitlab_tasks.post_gitlab_unlinked_comment.delay(
             args=(
                 resource.feature.name,

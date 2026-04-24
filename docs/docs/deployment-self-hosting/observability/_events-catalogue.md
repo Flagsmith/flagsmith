@@ -133,10 +133,60 @@ Attributes:
  - `project.id`
  - `tag.label`
 
+### `gitlab.label.created`
+
+Logged at `info` from:
+ - `api/integrations/gitlab/services/labels.py:66`
+
+Attributes:
+ - `feature.id`
+ - `gitlab_project.path`
+ - `organisation.id`
+ - `project.id`
+ - `resource.iid`
+ - `resource.type`
+
+### `gitlab.label.failed`
+
+Logged at `exception` from:
+ - `api/integrations/gitlab/services/labels.py:76`
+
+Attributes:
+ - `feature.id`
+ - `gitlab_project.path`
+ - `organisation.id`
+ - `project.id`
+ - `resource.iid`
+ - `resource.type`
+
+### `gitlab.label.removal_failed`
+
+Logged at `exception` from:
+ - `api/integrations/gitlab/tasks.py:185`
+
+Attributes:
+ - `feature.id`
+ - `gitlab_project.path`
+ - `project.id`
+ - `resource.iid`
+ - `resource.type`
+
+### `gitlab.label.removed`
+
+Logged at `info` from:
+ - `api/integrations/gitlab/tasks.py:183`
+
+Attributes:
+ - `feature.id`
+ - `gitlab_project.path`
+ - `project.id`
+ - `resource.iid`
+ - `resource.type`
+
 ### `gitlab.resource.linked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:27`
+ - `api/integrations/vcs/services.py:28`
 
 Attributes:
  - `feature.id`
@@ -147,7 +197,7 @@ Attributes:
 ### `gitlab.resource.unlinked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:53`
+ - `api/integrations/vcs/services.py:63`
 
 Attributes:
  - `feature.id`

@@ -1,7 +1,10 @@
+import requests
+import structlog
 from task_processor.decorators import register_task_handler
 
 from features.feature_external_resources.models import FeatureExternalResource
 from features.models import FeatureState
+from integrations.gitlab.client import remove_flagsmith_label_from_gitlab_resource
 from integrations.gitlab.models import GitLabConfiguration
 from integrations.gitlab.services import (
     deregister_webhook_for_path,
@@ -12,6 +15,16 @@ from integrations.gitlab.services import (
     post_state_change_comment,
     post_unlinked_comment,
 )
+from integrations.gitlab.services.labels import (
+    GITLAB_RESOURCE_KIND_BY_TYPE,
+    apply_flagsmith_label_to_resource,
+)
+from integrations.gitlab.services.url_parsing import (
+    parse_project_path,
+    parse_resource_iid,
+)
+
+logger = structlog.get_logger("gitlab")
 
 
 @register_task_handler()
@@ -108,3 +121,65 @@ def post_gitlab_feature_deleted_comment(
         feature_id=feature_id,
         project_id=project_id,
     )
+
+
+@register_task_handler()
+def apply_gitlab_label(resource_id: int) -> None:
+    """Apply the "Flagsmith Feature" label to the linked GitLab resource.
+    Dispatched at link time.  No-op if labelling is disabled or unconfigured.
+    """
+    try:
+        resource = FeatureExternalResource.objects.get(id=resource_id)
+    except FeatureExternalResource.DoesNotExist:
+        return
+    apply_flagsmith_label_to_resource(resource)
+
+
+@register_task_handler()
+def remove_gitlab_label(
+    *,
+    project_id: int,
+    feature_id: int,
+    resource_pk: int,
+    resource_url: str,
+    resource_type: str,
+) -> None:
+    """Remove the "Flagsmith Feature" label from a GitLab issue/MR.
+    No-op if another FeatureExternalResource still references the same URL.
+    """
+    config: GitLabConfiguration | None = GitLabConfiguration.objects.filter(
+        project_id=project_id
+    ).first()
+    if not config or not config.labeling_enabled:
+        return
+    if (
+        FeatureExternalResource.objects.filter(url=resource_url)
+        .exclude(pk=resource_pk)
+        .exists()
+    ):
+        return
+
+    path_with_namespace = parse_project_path(resource_url)
+    resource_iid = parse_resource_iid(resource_url)
+    if path_with_namespace is None or resource_iid is None:
+        return
+
+    log = logger.bind(
+        project__id=project_id,
+        feature__id=feature_id,
+        gitlab_project__path=path_with_namespace,
+        resource__type=resource_type,
+        resource__iid=resource_iid,
+    )
+
+    try:
+        remove_flagsmith_label_from_gitlab_resource(
+            config.gitlab_instance_url,
+            config.access_token,
+            project_path=path_with_namespace,
+            resource_kind=GITLAB_RESOURCE_KIND_BY_TYPE[resource_type],
+            resource_iid=resource_iid,
+        )
+        log.info("label.removed")
+    except requests.RequestException:
+        log.exception("label.removal_failed")

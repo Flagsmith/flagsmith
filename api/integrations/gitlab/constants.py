@@ -5,6 +5,12 @@ from features.feature_external_resources.models import ResourceType
 GITLAB_TAG_COLOR = "#FC6D26"
 GITLAB_CLIENT_TIMEOUT_SECONDS = 10
 
+GITLAB_FLAGSMITH_LABEL = "Flagsmith Feature"
+GITLAB_FLAGSMITH_LABEL_COLOUR = "#6633FF"
+GITLAB_FLAGSMITH_LABEL_DESCRIPTION = (
+    "This GitLab Issue/MR is linked to a Flagsmith feature"
+)
+
 
 class GitLabTagLabel(Enum):
     ISSUE_OPEN = "Issue Open"

@@ -53,7 +53,7 @@ Flagsmith will post a comment to the linked issue or MR with the flag's current
 state across all environments. When the flag state changes, a new comment is
 posted automatically.
 
-A **Flagsmith Flag** label is added to linked issues and merge requests so your
+A **Flagsmith Feature** label is added to linked issues and merge requests so your
 team can filter for them in GitLab.
 
 ## Automatic state sync

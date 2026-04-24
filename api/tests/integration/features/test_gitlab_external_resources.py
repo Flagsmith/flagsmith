@@ -580,6 +580,190 @@ def test_list_external_resources__gitlab_issue__returns_200(
     assert results[0]["metadata"] == {"title": "Fix login bug", "state": "opened"}
 
 
+@responses.activate
+def test_create_external_resource__gitlab_issue_with_labeling__applies_label(
+    admin_client: APIClient,
+    organisation: int,
+    project: int,
+    feature: int,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    project_instance = Project.objects.get(id=project)
+    GitLabConfiguration.objects.create(
+        project=project_instance,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+        labeling_enabled=True,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/labels",
+        json={"name": "Flagsmith Feature"},
+        status=201,
+    )
+    responses.put(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/42",
+        json={"iid": 42},
+        status=200,
+        match=[
+            responses.matchers.json_params_matcher(
+                {"add_labels": "Flagsmith Feature"},
+            ),
+        ],
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/hooks",
+        json={"id": 1, "project_id": 1},
+        status=201,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/42/notes",
+        json={"id": 1},
+        status=201,
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_ISSUE",
+            "url": "https://gitlab.example.com/testorg/testrepo/-/issues/42",
+            "feature": feature,
+            "metadata": {"title": "Bug fix", "state": "opened"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert any(e["event"] == "label.created" for e in log.events)
+    assert any(e["event"] == "resource.linked" for e in log.events)
+
+
+@responses.activate
+def test_create_external_resource__gitlab_issue_with_labeling_disabled__skips_label_api(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    project_instance = Project.objects.get(id=project)
+    GitLabConfiguration.objects.create(
+        project=project_instance,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+        labeling_enabled=False,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/hooks",
+        json={"id": 1, "project_id": 1},
+        status=201,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/42/notes",
+        json={"id": 1},
+        status=201,
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_ISSUE",
+            "url": "https://gitlab.example.com/testorg/testrepo/-/issues/42",
+            "feature": feature,
+            "metadata": {"title": "Bug fix", "state": "opened"},
+        },
+        format="json",
+    )
+
+    # Then — no label API called, resource still created.
+    assert response.status_code == status.HTTP_201_CREATED
+    assert not any(e["event"] == "label.created" for e in log.events)
+
+
+@responses.activate
+def test_create_external_resource__gitlab_issue_label_api_failure__still_creates_resource(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    project_instance = Project.objects.get(id=project)
+    GitLabConfiguration.objects.create(
+        project=project_instance,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+        labeling_enabled=True,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/labels",
+        status=403,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/hooks",
+        json={"id": 1, "project_id": 1},
+        status=201,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/42/notes",
+        json={"id": 1},
+        status=201,
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_ISSUE",
+            "url": "https://gitlab.example.com/testorg/testrepo/-/issues/42",
+            "feature": feature,
+            "metadata": {"title": "Bug fix", "state": "opened"},
+        },
+        format="json",
+    )
+
+    # Then — resource created, webhook registered, comment posted despite label failure.
+    assert response.status_code == status.HTTP_201_CREATED
+    assert FeatureExternalResource.objects.exists()
+    assert any(e["event"] == "label.failed" for e in log.events)
+    assert any(e["event"] == "webhook.registered" for e in log.events)
+    assert any(e["event"] == "comment.posted" for e in log.events)
+    assert any(e["event"] == "resource.linked" for e in log.events)
+
+
+def test_create_external_resource__gitlab_issue_with_labeling_unparseable_url__still_creates_resource(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given
+    project_instance = Project.objects.get(id=project)
+    GitLabConfiguration.objects.create(
+        project=project_instance,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+        labeling_enabled=True,
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_ISSUE",
+            "url": "https://gitlab.example.com/not-a-resource",
+            "feature": feature,
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert FeatureExternalResource.objects.exists()
+
+
 def test_list_external_resources__gitlab_merge_request__returns_200(
     admin_client: APIClient,
     project: int,

@@ -3,9 +3,11 @@ import requests
 import responses
 
 from integrations.gitlab.client import (
+    create_flagsmith_label,
     create_issue_note,
     create_merge_request_note,
     fetch_gitlab_projects,
+    remove_flagsmith_label_from_gitlab_resource,
     search_gitlab_issues,
     search_gitlab_merge_requests,
 )
@@ -316,3 +318,82 @@ def test_create_merge_request_note__server_error__raises() -> None:
             merge_request_iid=7,
             body="MR comment",
         )
+
+
+@responses.activate
+def test_remove_flagsmith_label_from_gitlab_resource__gitlab_issue__puts_remove_labels() -> (
+    None
+):
+    # Given
+    responses.put(
+        f"{INSTANCE_URL}/api/v4/projects/g%2Fp/issues/42",
+        json={"iid": 42, "labels": []},
+        status=200,
+        match=[
+            responses.matchers.header_matcher({"PRIVATE-TOKEN": ACCESS_TOKEN}),
+            responses.matchers.json_params_matcher(
+                {"remove_labels": "Flagsmith Feature"},
+            ),
+        ],
+    )
+
+    # When
+    remove_flagsmith_label_from_gitlab_resource(
+        INSTANCE_URL,
+        ACCESS_TOKEN,
+        project_path="g/p",
+        resource_kind="issues",
+        resource_iid=42,
+    )
+
+    # Then
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_remove_flagsmith_label_from_gitlab_resource__gitlab_mr__puts_remove_labels() -> (
+    None
+):
+    # Given
+    responses.put(
+        f"{INSTANCE_URL}/api/v4/projects/g%2Fp/merge_requests/7",
+        json={"iid": 7, "labels": []},
+        status=200,
+        match=[
+            responses.matchers.header_matcher({"PRIVATE-TOKEN": ACCESS_TOKEN}),
+            responses.matchers.json_params_matcher(
+                {"remove_labels": "Flagsmith Feature"},
+            ),
+        ],
+    )
+
+    # When
+    remove_flagsmith_label_from_gitlab_resource(
+        INSTANCE_URL,
+        ACCESS_TOKEN,
+        project_path="g/p",
+        resource_kind="merge_requests",
+        resource_iid=7,
+    )
+
+    # Then
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_create_flagsmith_label__label_already_exists__returns_false() -> None:
+    # Given
+    responses.post(
+        f"{INSTANCE_URL}/api/v4/projects/g%2Fp/labels",
+        status=409,
+    )
+
+    # When
+    result = create_flagsmith_label(
+        INSTANCE_URL,
+        ACCESS_TOKEN,
+        project_path="g/p",
+    )
+
+    # Then
+    assert result is False
