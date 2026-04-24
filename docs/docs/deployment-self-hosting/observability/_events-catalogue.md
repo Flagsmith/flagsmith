@@ -1,4 +1,35 @@
 
+### `api_usage.notification.evaluated`
+
+Logged at `info` from:
+ - `api/organisations/task_helpers.py:153`
+
+Attributes:
+ - `allowed_api_calls`
+ - `api_usage`
+ - `api_usage_percent`
+ - `matched_threshold`
+ - `organisation.id`
+ - `period_ends_at`
+ - `period_starts_at`
+
+### `api_usage.notification.missing_billing_starts_at`
+
+Logged at `error` from:
+ - `api/organisations/task_helpers.py:118`
+
+Attributes:
+ - `organisation.id`
+
+### `api_usage.notification.sent`
+
+Logged at `info` from:
+ - `api/organisations/task_helpers.py:176`
+
+Attributes:
+ - `matched_threshold`
+ - `organisation.id`
+
 ### `app_analytics.no_analytics_database_configured`
 
 Logged at `warning` from:
