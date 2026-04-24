@@ -94,6 +94,7 @@ const defaultFlags = {
         'https://docs.flagsmith.com/third-party-integrations/project-management/gitlab',
       'fields': [
         {
+          'default': 'https://gitlab.com',
           'key': 'gitlab_instance_url',
           'label': 'GitLab Instance URL',
         },
