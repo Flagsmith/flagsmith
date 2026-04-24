@@ -10,6 +10,7 @@ Attributes:
  - `api_usage_percent`
  - `matched_threshold`
  - `organisation.id`
+ - `period_ends_at`
  - `period_starts_at`
 
 ### `api_usage.notification.missing_billing_starts_at`
@@ -23,7 +24,7 @@ Attributes:
 ### `api_usage.notification.sent`
 
 Logged at `info` from:
- - `api/organisations/task_helpers.py:175`
+ - `api/organisations/task_helpers.py:176`
 
 Attributes:
  - `matched_threshold`

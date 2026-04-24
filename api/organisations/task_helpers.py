@@ -157,6 +157,7 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         allowed_api_calls=allowed_api_calls,
         api_usage_percent=api_usage_percent,
         period_starts_at=period_starts_at.isoformat(),
+        period_ends_at=now.isoformat(),
         matched_threshold=matched_threshold,
     )
 
