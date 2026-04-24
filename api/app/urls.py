@@ -111,6 +111,43 @@ if settings.SAML_INSTALLED:  # pragma: no cover
 
 if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover
     workflow_views = importlib.import_module("workflows_logic.views")
+
+    from features.workflows.core.models import ChangeRequest
+    from organisations.models import Organisation
+    from organisations.subscriptions.constants import SubscriptionPlanFamily
+    from organisations.subscriptions.permissions import (
+        organisation_from_environment_api_key,
+        require_minimum_plan,
+    )
+
+    _cr_env_plan_permission = require_minimum_plan(
+        SubscriptionPlanFamily.SCALE_UP,
+        get_organisation=organisation_from_environment_api_key,
+    )
+
+    def _org_from_change_request(obj: object) -> Organisation | None:
+        if isinstance(obj, ChangeRequest):
+            return obj.project.organisation
+        return None
+
+    _cr_detail_plan_permission = require_minimum_plan(
+        SubscriptionPlanFamily.SCALE_UP,
+        get_organisation_from_object=_org_from_change_request,
+    )
+
+    workflow_views.ChangeRequestViewSet.permission_classes = [
+        *workflow_views.ChangeRequestViewSet.permission_classes,
+        _cr_detail_plan_permission,
+    ]
+    workflow_views.create_change_request.cls.permission_classes = [
+        *workflow_views.create_change_request.cls.permission_classes,
+        _cr_env_plan_permission,
+    ]
+    workflow_views.ListChangeRequestsAPIView.permission_classes = [
+        *workflow_views.ListChangeRequestsAPIView.permission_classes,
+        _cr_env_plan_permission,
+    ]
+
     urlpatterns += [
         path("api/v1/features/workflows/", include("workflows_logic.urls")),
         path(

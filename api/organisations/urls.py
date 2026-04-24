@@ -19,6 +19,11 @@ from integrations.github.views import (
 )
 from integrations.grafana.views import GrafanaOrganisationConfigurationViewSet
 from metadata.views import MetaDataModelFieldViewSet
+from organisations.subscriptions.constants import SubscriptionPlanFamily
+from organisations.subscriptions.permissions import (
+    organisation_from_organisation_pk,
+    require_minimum_plan,
+)
 from organisations.views import (
     OrganisationAPIUsageNotificationView,
     OrganisationWebhookViewSet,
@@ -78,6 +83,15 @@ organisations_router.register(
 organisations_router.register(
     "audit", OrganisationAuditLogViewSet, basename="audit-log"
 )
+
+_audit_plan_permission = require_minimum_plan(
+    SubscriptionPlanFamily.SCALE_UP,
+    get_organisation=organisation_from_organisation_pk,
+)
+OrganisationAuditLogViewSet.permission_classes = [
+    *OrganisationAuditLogViewSet.permission_classes,
+    _audit_plan_permission,
+]
 
 organisations_router.register(
     r"integrations/grafana",
@@ -189,6 +203,24 @@ if settings.IS_RBAC_INSTALLED:
         RoleViewSet,
         UserRoleViewSet,
     )
+
+    _rbac_plan_permission = require_minimum_plan(
+        SubscriptionPlanFamily.SCALE_UP,
+        get_organisation=organisation_from_organisation_pk,
+    )
+    for _vs in (
+        RoleViewSet,
+        UserRoleViewSet,
+        GroupRoleViewSet,
+        RoleEnvironmentPermissionsViewSet,
+        RoleOrganisationPermissionViewSet,
+        RoleProjectPermissionsViewSet,
+        MasterAPIKeyRoleViewSet,
+        RolesbyMasterAPIPrefixViewSet,
+        RolesByUserViewSet,
+        RolesByGroupViewSet,
+    ):
+        _vs.permission_classes = [*_vs.permission_classes, _rbac_plan_permission]
 
     organisations_router.register("roles", RoleViewSet, basename="organisation-roles")
     nested_user_roles_routes = routers.NestedSimpleRouter(
