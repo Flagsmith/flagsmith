@@ -13,25 +13,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { colorTextSecondary } from 'common/theme/tokens'
+import { colorTextSecondary, colorTextSuccess } from 'common/theme/tokens'
 import { useGetExperimentResultsQuery } from 'common/services/useExperimentResults'
-
-const WINNER_COLOUR = 'rgba(22, 163, 74, 0.8)'
-const VARIANT_COLOURS = [
-  'rgba(37, 99, 235, 0.8)',
-  'rgba(234, 88, 12, 0.8)',
-  'rgba(124, 58, 237, 0.8)',
-  'rgba(8, 145, 178, 0.8)',
-  'rgba(219, 39, 119, 0.8)',
-  'rgba(220, 38, 38, 0.8)',
-  'rgba(132, 204, 22, 0.8)',
-  'rgba(245, 158, 11, 0.8)',
-]
-
-const getVariantColour = (variant: string, index: number, winner?: string) =>
-  variant === winner
-    ? WINNER_COLOUR
-    : VARIANT_COLOURS[index % VARIANT_COLOURS.length]
+import { buildChartColorMap } from 'components/charts'
 
 type ExperimentResultsTabProps = {
   environmentId: string
@@ -65,6 +49,12 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
   }
 
   const winner = data.statistics?.winner
+  const variantColorMap: Record<string, string> = {
+    ...buildChartColorMap(
+      data.variants.map((v: { variant: string }) => v.variant),
+    ),
+    ...(winner ? { [winner]: colorTextSuccess } : {}),
+  }
   const chanceToWinData = data.statistics?.chance_to_win
     ? Object.entries(data.statistics.chance_to_win).map(([variant, value]) => ({
         chance: (value as number) * 100,
@@ -103,14 +93,12 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
                 fill={colorTextSecondary}
                 formatter={(v: number) => `${v.toFixed(1)}%`}
               />
-              {data.variants.map(
-                (entry: { variant: string }, index: number) => (
-                  <Cell
-                    key={index}
-                    fill={getVariantColour(entry.variant, index, winner)}
-                  />
-                ),
-              )}
+              {data.variants.map((entry: { variant: string }) => (
+                <Cell
+                  key={entry.variant}
+                  fill={variantColorMap[entry.variant]}
+                />
+              ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -139,8 +127,14 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
             />
             <Tooltip cursor={{ fill: 'transparent' }} />
             <Legend />
-            <Bar dataKey='evaluations' fill={VARIANT_COLOURS[0]} barSize={40} />
-            <Bar dataKey='conversions' fill={WINNER_COLOUR} barSize={40} />
+            <Bar
+              dataKey='evaluations'
+              fill={
+                variantColorMap[data.variants[0]?.variant] ?? colorTextSecondary
+              }
+              barSize={40}
+            />
+            <Bar dataKey='conversions' fill={colorTextSuccess} barSize={40} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -162,10 +156,10 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
                   `${variant}: ${chance.toFixed(1)}%`
                 }
               >
-                {chanceToWinData.map((entry, index) => (
+                {chanceToWinData.map((entry) => (
                   <Cell
-                    key={index}
-                    fill={getVariantColour(entry.variant, index, winner)}
+                    key={entry.variant}
+                    fill={variantColorMap[entry.variant] ?? colorTextSecondary}
                   />
                 ))}
               </Pie>
