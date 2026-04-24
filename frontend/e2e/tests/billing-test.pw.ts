@@ -69,7 +69,7 @@ test.describe('Billing', () => {
     await click(byId('org-settings-link'))
     await click(byId('billing'))
 
-    const trialButton = () =>
+    const getTrialButton = () =>
       page
         .locator('button[data-cb-type="checkout"]')
         .filter({ hasText: '14 Day Free Trial' })
@@ -77,7 +77,7 @@ test.describe('Billing', () => {
     const toggle = page.getByRole('switch').first()
 
     log('Confirm free-trial button is wired in yearly mode')
-    const yearlyButton = trialButton()
+    const yearlyButton = getTrialButton()
     await yearlyButton.waitFor({ state: 'visible' })
     const yearlyPlanId = await yearlyButton.getAttribute('data-cb-plan-id')
     expect(yearlyPlanId).toBeTruthy()
@@ -88,7 +88,7 @@ test.describe('Billing', () => {
 
     log('Toggle to Monthly and click the free-trial button')
     await toggle.click()
-    const monthlyButton = trialButton()
+    const monthlyButton = getTrialButton()
     await monthlyButton.waitFor({ state: 'visible' })
     const monthlyPlanId = await monthlyButton.getAttribute('data-cb-plan-id')
     expect(monthlyPlanId).toBeTruthy()
@@ -102,7 +102,7 @@ test.describe('Billing', () => {
 
     log('Toggle back to Yearly and click the free-trial button')
     await toggle.click()
-    const yearlyButtonAgain = trialButton()
+    const yearlyButtonAgain = getTrialButton()
     await yearlyButtonAgain.waitFor({ state: 'visible' })
     expect(await yearlyButtonAgain.getAttribute('data-cb-plan-id')).toBe(
       yearlyPlanId,
