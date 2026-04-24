@@ -60,9 +60,16 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState }) => {
    * immutable fields (type + accountIdentifier) on edit per issue #7276.
    */
   const [isEditingExisting, setIsEditingExisting] = useState(false)
+  /**
+   * Where to return when the user cancels out of the edit form — the state
+   * they were in before clicking Edit. `empty` when they're creating fresh.
+   */
+  const [cancelReturnState, setCancelReturnState] =
+    useState<ConnectionState>('empty')
 
   const handleConnect = useCallback(() => {
     setIsEditingExisting(false)
+    setCancelReturnState('empty')
     setConnectionState('configuring')
   }, [])
 
@@ -82,8 +89,9 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState }) => {
 
   const handleEdit = useCallback(() => {
     setIsEditingExisting(true)
+    setCancelReturnState(connectionState === 'error' ? 'error' : 'connected')
     setConnectionState('configuring')
-  }, [])
+  }, [connectionState])
 
   const handleRetry = useCallback(() => {
     setConnectionState('testing')
@@ -101,8 +109,8 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState }) => {
   }, [])
 
   const handleCancel = useCallback(() => {
-    setConnectionState('empty')
-  }, [])
+    setConnectionState(cancelReturnState)
+  }, [cancelReturnState])
 
   const renderState = () => {
     switch (connectionState) {
