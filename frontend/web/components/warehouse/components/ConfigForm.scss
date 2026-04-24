@@ -24,7 +24,9 @@
   }
 
   &__type-card {
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     width: 180px;
 
     &--disabled {
@@ -34,9 +36,7 @@
   }
 
   &__coming-soon {
-    position: absolute;
-    bottom: 12px;
-    left: 16px;
+    align-self: flex-start;
     font-size: var(--font-caption-xs-size);
     font-weight: var(--font-weight-semibold);
     color: var(--color-text-warning);
