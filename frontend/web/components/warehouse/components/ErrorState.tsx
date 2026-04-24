@@ -8,7 +8,11 @@ import './ErrorState.scss'
 type ErrorStateProps = {
   error: ConnectionError
   details: ConnectionDetail[]
+  /** Re-run the test without changing anything. */
   onRetry: () => void
+  /** Go back to the setup-script view — useful if the customer needs to
+   *  re-copy the SQL or confirm they ran it correctly. */
+  onShowSetupScript: () => void
   onEdit: () => void
 }
 
@@ -17,6 +21,7 @@ const ErrorState: FC<ErrorStateProps> = ({
   error,
   onEdit,
   onRetry,
+  onShowSetupScript,
 }) => {
   return (
     <div className='wh-error'>
@@ -71,7 +76,10 @@ const ErrorState: FC<ErrorStateProps> = ({
       {/* Actions */}
       <div className='wh-error__actions'>
         <Button theme='primary' size='small' onClick={onRetry}>
-          Retry Connection
+          Retry test
+        </Button>
+        <Button theme='outline' size='small' onClick={onShowSetupScript}>
+          Show setup script
         </Button>
         <Button
           theme='outline'
