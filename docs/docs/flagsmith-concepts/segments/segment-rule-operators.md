@@ -95,8 +95,8 @@ If an SDK client tries to evaluate a segment rule that has an unrecognised opera
 
 These are the default limits for segments and rules:
 
-- 100 segments per project
-- 100 segment overrides per environment
+- 500 segments per project
+- 2000 segment overrides per environment
 - 100 rules per segment override
 - 1000 bytes per segment rule value
 
