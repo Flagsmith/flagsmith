@@ -1,6 +1,6 @@
 import { test, expect } from '../test-setup'
 import { byId, log, createHelpers } from '../helpers'
-import { E2E_USER, PASSWORD } from '../config'
+import { E2E_BILLING_USER, PASSWORD } from '../config'
 
 declare global {
   interface Window {
@@ -60,7 +60,7 @@ test.describe('Billing', () => {
     })
 
     log('Login')
-    await login(E2E_USER, PASSWORD)
+    await login(E2E_BILLING_USER, PASSWORD)
 
     log('Navigate to Billing tab')
     await waitForElementVisible(byId('organisation-link'))

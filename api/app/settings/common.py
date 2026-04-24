@@ -601,6 +601,9 @@ E2E_NON_ADMIN_USER_WITH_A_ROLE = (
     f"e2e_non_admin_user_with_a_role@{E2E_TEST_EMAIL_DOMAIN}"
 )
 E2E_SEPARATE_TEST_USER = f"e2e_separate_test_user@{E2E_TEST_EMAIL_DOMAIN}"
+# User on a Free-plan organisation, used by the Billing tab E2E tests
+# that need to exercise the "no active subscription" payment flow.
+E2E_BILLING_USER = f"e2e_billing_user@{E2E_TEST_EMAIL_DOMAIN}"
 #  Identity for E2E segment tests
 E2E_IDENTITY = "test-identity"
 
