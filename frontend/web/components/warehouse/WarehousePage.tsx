@@ -87,6 +87,10 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState }) => {
     setConnectionState('empty')
   }, [])
 
+  const handleShowSetupScript = useCallback(() => {
+    setConnectionState('pending_customer_setup')
+  }, [])
+
   const handleCancel = useCallback(() => {
     setConnectionState('empty')
   }, [])
@@ -125,6 +129,7 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState }) => {
             error={MOCK_ERROR}
             details={MOCK_CONNECTION_DETAILS}
             onRetry={handleRetry}
+            onShowSetupScript={handleShowSetupScript}
             onEdit={handleEdit}
           />
         )
