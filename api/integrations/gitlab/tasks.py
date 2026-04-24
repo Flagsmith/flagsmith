@@ -15,7 +15,10 @@ from integrations.gitlab.services import (
     post_state_change_comment,
     post_unlinked_comment,
 )
-from integrations.gitlab.services.labels import GITLAB_RESOURCE_KIND_BY_TYPE
+from integrations.gitlab.services.labels import (
+    GITLAB_RESOURCE_KIND_BY_TYPE,
+    apply_flagsmith_label_to_resource,
+)
 from integrations.gitlab.services.url_parsing import (
     parse_project_path,
     parse_resource_iid,
@@ -118,6 +121,18 @@ def post_gitlab_feature_deleted_comment(
         feature_id=feature_id,
         project_id=project_id,
     )
+
+
+@register_task_handler()
+def apply_gitlab_label(resource_id: int) -> None:
+    """Apply the "Flagsmith Feature" label to the linked GitLab resource.
+    Dispatched at link time.  No-op if labelling is disabled or unconfigured.
+    """
+    try:
+        resource = FeatureExternalResource.objects.get(id=resource_id)
+    except FeatureExternalResource.DoesNotExist:
+        return
+    apply_flagsmith_label_to_resource(resource)
 
 
 @register_task_handler()

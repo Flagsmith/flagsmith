@@ -21,9 +21,9 @@ def dispatch_vcs_on_resource_create(resource: FeatureExternalResource) -> None:
     is created.
     """
     if resource.type in GITLAB_RESOURCE_TYPES:
-        gitlab.apply_flagsmith_label_to_resource(resource)
         gitlab.register_gitlab_webhook_for_resource(resource)
         gitlab.apply_initial_tag(resource)
+        gitlab_tasks.apply_gitlab_label.delay(args=(resource.id,))
         gitlab_tasks.post_gitlab_linked_comment.delay(args=(resource.id,))
         gitlab_logger.info(
             "resource.linked",

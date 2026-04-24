@@ -162,7 +162,7 @@ Attributes:
 ### `gitlab.label.removal_failed`
 
 Logged at `exception` from:
- - `api/integrations/gitlab/tasks.py:170`
+ - `api/integrations/gitlab/tasks.py:185`
 
 Attributes:
  - `feature.id`
@@ -174,7 +174,7 @@ Attributes:
 ### `gitlab.label.removed`
 
 Logged at `info` from:
- - `api/integrations/gitlab/tasks.py:168`
+ - `api/integrations/gitlab/tasks.py:183`
 
 Attributes:
  - `feature.id`

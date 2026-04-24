@@ -684,10 +684,11 @@ def test_create_external_resource__gitlab_issue_with_labeling_disabled__skips_la
 
 
 @responses.activate
-def test_create_external_resource__gitlab_issue_label_api_failure__returns_400(
+def test_create_external_resource__gitlab_issue_label_api_failure__still_creates_resource(
     admin_client: APIClient,
     project: int,
     feature: int,
+    log: StructuredLogCapture,
 ) -> None:
     # Given
     project_instance = Project.objects.get(id=project)
@@ -700,6 +701,16 @@ def test_create_external_resource__gitlab_issue_label_api_failure__returns_400(
     responses.post(
         "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/labels",
         status=403,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/hooks",
+        json={"id": 1, "project_id": 1},
+        status=201,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/42/notes",
+        json={"id": 1},
+        status=201,
     )
 
     # When
@@ -714,12 +725,16 @@ def test_create_external_resource__gitlab_issue_label_api_failure__returns_400(
         format="json",
     )
 
-    # Then — resource not created, transaction rolled back.
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert not FeatureExternalResource.objects.exists()
+    # Then — resource created, webhook registered, comment posted despite label failure.
+    assert response.status_code == status.HTTP_201_CREATED
+    assert FeatureExternalResource.objects.exists()
+    assert any(e["event"] == "label.failed" for e in log.events)
+    assert any(e["event"] == "webhook.registered" for e in log.events)
+    assert any(e["event"] == "comment.posted" for e in log.events)
+    assert any(e["event"] == "resource.linked" for e in log.events)
 
 
-def test_create_external_resource__gitlab_issue_with_labeling_unparseable_url__returns_400(
+def test_create_external_resource__gitlab_issue_with_labeling_unparseable_url__still_creates_resource(
     admin_client: APIClient,
     project: int,
     feature: int,
@@ -744,9 +759,9 @@ def test_create_external_resource__gitlab_issue_with_labeling_unparseable_url__r
         format="json",
     )
 
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert not FeatureExternalResource.objects.exists()
+    # Then — resource still created, label silently skipped.
+    assert response.status_code == status.HTTP_201_CREATED
+    assert FeatureExternalResource.objects.exists()
 
 
 def test_list_external_resources__gitlab_merge_request__returns_200(

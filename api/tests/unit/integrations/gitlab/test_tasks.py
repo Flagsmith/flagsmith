@@ -11,6 +11,7 @@ from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature, FeatureState
 from integrations.gitlab.models import GitLabConfiguration
 from integrations.gitlab.tasks import (
+    apply_gitlab_label,
     post_gitlab_feature_deleted_comment,
     post_gitlab_linked_comment,
     post_gitlab_state_change_comment,
@@ -121,6 +122,46 @@ def test_post_gitlab_feature_deleted_comment_task__called__delegates_to_service(
         feature_id=99,
         project_id=42,
     )
+
+
+@pytest.mark.django_db
+def test_apply_gitlab_label__resource_missing__noop(
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    # Given
+    mock_apply = mocker.patch(
+        "integrations.gitlab.tasks.apply_flagsmith_label_to_resource",
+    )
+
+    # When
+    apply_gitlab_label(resource_id=999_999)
+
+    # Then
+    mock_apply.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_apply_gitlab_label__resource_exists__calls_apply_flagsmith_label(
+    mocker: pytest_mock.MockerFixture,
+    feature: Feature,
+) -> None:
+    # Given
+    resource = FeatureExternalResource.objects.create(
+        url="https://gitlab.example.com/testorg/testrepo/-/issues/1",
+        type="GITLAB_ISSUE",
+        feature=feature,
+    )
+    mock_apply = mocker.patch(
+        "integrations.gitlab.tasks.apply_flagsmith_label_to_resource",
+    )
+
+    # When
+    apply_gitlab_label(resource_id=resource.id)
+
+    # Then
+    mock_apply.assert_called_once()
+    [call_args] = mock_apply.call_args_list
+    assert call_args.args[0].id == resource.id
 
 
 @pytest.mark.django_db

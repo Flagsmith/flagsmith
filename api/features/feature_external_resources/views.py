@@ -1,6 +1,5 @@
 import re
 
-from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
@@ -144,7 +143,6 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    @transaction.atomic
     def perform_create(self, serializer: FeatureExternalResourceSerializer) -> None:  # type: ignore[override]
         resource = serializer.save()
         dispatch_vcs_on_resource_create(resource)

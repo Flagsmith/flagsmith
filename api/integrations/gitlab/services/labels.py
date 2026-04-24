@@ -2,7 +2,6 @@ from typing import Literal
 
 import requests
 import structlog
-from rest_framework.exceptions import ValidationError
 
 from features.feature_external_resources.models import (
     FeatureExternalResource,
@@ -31,9 +30,10 @@ GITLAB_RESOURCE_KIND_BY_TYPE: dict[str, GitLabResourceKind] = {
 def apply_flagsmith_label_to_resource(
     resource: FeatureExternalResource,
 ) -> None:
-    """Ensure the "Flagsmith Feature" label exists on the resource's GitLab project
-    and apply it to the resource. No-op if labeling is disabled or unconfigured;
-    raises ``ValidationError`` on parse/API failure (rolls back under atomic).
+    """Ensure the "Flagsmith Feature" label exists on the resource's GitLab
+    project and apply it to the resource.  No-op if labelling is disabled,
+    unconfigured, or the URL is unparseable.  Never raises — failures are
+    logged via ``label.failed``.
     """
     project = resource.feature.project
     config: GitLabConfiguration | None = GitLabConfiguration.objects.filter(
@@ -45,7 +45,7 @@ def apply_flagsmith_label_to_resource(
     path_with_namespace = parse_project_path(resource.url)
     resource_iid = parse_resource_iid(resource.url)
     if path_with_namespace is None or resource_iid is None:
-        raise ValidationError({"url": "Could not parse GitLab resource URL."})
+        return
 
     log = logger.bind(
         organisation__id=project.organisation_id,
@@ -72,13 +72,5 @@ def apply_flagsmith_label_to_resource(
             resource_kind=GITLAB_RESOURCE_KIND_BY_TYPE[resource.type],
             resource_iid=resource_iid,
         )
-    except requests.RequestException as exc:
+    except requests.RequestException:
         log.exception("label.failed")
-        raise ValidationError(
-            {
-                "detail": (
-                    "Failed to apply the Flagsmith Feature label on GitLab. "
-                    "Check the GitLab access token's permissions and try again."
-                ),
-            },
-        ) from exc
