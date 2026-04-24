@@ -1,7 +1,6 @@
 import React, { FC } from 'react'
-import BarChart from 'components/charts/BarChart'
+import BarChart, { ChartDataPoint } from 'components/charts/BarChart'
 import EmptyState from 'components/EmptyState'
-import { ChartDataPoint } from 'components/organisation-settings/usage/OrganisationUsageMetrics.container'
 
 interface SingleSDKLabelsChartProps {
   title: string

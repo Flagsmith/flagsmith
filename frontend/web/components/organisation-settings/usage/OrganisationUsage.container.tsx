@@ -31,13 +31,13 @@ const OrganisationUsage: FC<OrganisationUsageProps> = ({
 }) => {
   const formattedData: ChartDataPoint[] = useMemo(
     () =>
-      chartData.map((d) => ({
+      chartData?.map((d) => ({
         day: moment(d.day).format('D MMM'),
         environment_document: d.environment_document ?? 0,
         flags: d.flags ?? 0,
         identities: d.identities ?? 0,
         traits: d.traits ?? 0,
-      })),
+      })) ?? [],
     [chartData],
   )
 

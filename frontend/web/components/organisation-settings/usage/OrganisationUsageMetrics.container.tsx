@@ -3,14 +3,12 @@ import moment from 'moment'
 import { Res } from 'common/types/responses'
 import SingleSDKLabelsChart from './components/SingleSDKLabelsChart'
 import { MultiSelect } from 'components/base/select/multi-select'
+import { ChartDataPoint } from 'components/charts/BarChart'
 
 interface OrganisationUsageMetricsProps {
   data?: Res['organisationUsage']
   selectedMetrics: string[]
 }
-export type ChartDataPoint = {
-  day: string
-} & Record<string, number>
 
 const colours = [
   'rgba(37, 99, 235, 0.8)',
