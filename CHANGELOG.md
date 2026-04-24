@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.230.0](https://github.com/Flagsmith/flagsmith/compare/v2.229.1...v2.230.0) (2026-04-24)
+
+
+### Features
+
+* **Admin:** Register LaunchDarkly import requests ([#7325](https://github.com/Flagsmith/flagsmith/issues/7325)) ([137b750](https://github.com/Flagsmith/flagsmith/commit/137b750f6622d6f1b09430fa0b244c65fac2d868))
+* bump default project limits (features 1000, segments 500, overrides 2000) ([#7334](https://github.com/Flagsmith/flagsmith/issues/7334)) ([bc6ec16](https://github.com/Flagsmith/flagsmith/commit/bc6ec16d9b91fe6ce3de62913c2ed191eb8f4732))
+* **GitLab:** Label linked issues and merge requests ([#7307](https://github.com/Flagsmith/flagsmith/issues/7307)) ([a6945cf](https://github.com/Flagsmith/flagsmith/commit/a6945cf02c2fc258b4c4eae67e771863d6c54216))
+* **GitLab:** Post comments when linking an issue or merge request to a Flagsmith feature ([#7306](https://github.com/Flagsmith/flagsmith/issues/7306)) ([bcddaeb](https://github.com/Flagsmith/flagsmith/commit/bcddaebd5b149e873621b14ecf2d55d3c4e4da27))
+* Only enforce project limits when edge is enabled ([#7324](https://github.com/Flagsmith/flagsmith/issues/7324)) ([6a01df5](https://github.com/Flagsmith/flagsmith/commit/6a01df5cd97c8ca282f3cd9342db7c2c68934e4b))
+
+
+### Bug Fixes
+
+* **Billing:** Free trial buttons stop working after toggling yearly/monthly ([#7335](https://github.com/Flagsmith/flagsmith/issues/7335)) ([1fee291](https://github.com/Flagsmith/flagsmith/commit/1fee29135aec4ee098c95bd0615f69764ce9d4c1))
+* **frontend:** stop Identity page flashing on feature search keystrokes ([#7303](https://github.com/Flagsmith/flagsmith/issues/7303)) ([ee3abef](https://github.com/Flagsmith/flagsmith/commit/ee3abef4e6c23a9eb3c5a74f63052d377d9f5b96))
+* **GitLab:** Orphaned feature tag after unlinking an issue or merge request ([#7327](https://github.com/Flagsmith/flagsmith/issues/7327)) ([0fa5050](https://github.com/Flagsmith/flagsmith/commit/0fa50506c64b43fb2ff6738ea299885616f66951))
+* **integrations:** Adds Delete button with each integration row ([#7319](https://github.com/Flagsmith/flagsmith/issues/7319)) ([447d3b8](https://github.com/Flagsmith/flagsmith/commit/447d3b843e5e3fc9482cb257de27e6ade5f41f5b))
+* revert prevent infinite API loop on invalid environment URLs ([#7312](https://github.com/Flagsmith/flagsmith/issues/7312)) ([2eb5f9a](https://github.com/Flagsmith/flagsmith/commit/2eb5f9a64b68f16a962deafb11314a3ec2b416a8))
+* scaleup check ([#7318](https://github.com/Flagsmith/flagsmith/issues/7318)) ([821c0f4](https://github.com/Flagsmith/flagsmith/commit/821c0f4c9e74243afadaa7292c3e1a5ec9e37804))
+
+
+### Tests
+
+* **Billing:** Post-deploy E2E does not include plans ([#7337](https://github.com/Flagsmith/flagsmith/issues/7337)) ([4e7ec1e](https://github.com/Flagsmith/flagsmith/commit/4e7ec1ee498c90ead05decdd1b4c642bdf37e63a))
+
 ## [2.229.1](https://github.com/Flagsmith/flagsmith/compare/v2.229.0...v2.229.1) (2026-04-22)
 
 
