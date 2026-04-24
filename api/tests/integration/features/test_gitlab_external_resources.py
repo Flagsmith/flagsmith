@@ -719,6 +719,36 @@ def test_create_external_resource__gitlab_issue_label_api_failure__returns_400(
     assert not FeatureExternalResource.objects.exists()
 
 
+def test_create_external_resource__gitlab_issue_with_labeling_unparseable_url__returns_400(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given
+    project_instance = Project.objects.get(id=project)
+    GitLabConfiguration.objects.create(
+        project=project_instance,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+        labeling_enabled=True,
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_ISSUE",
+            "url": "https://gitlab.example.com/not-a-resource",
+            "feature": feature,
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert not FeatureExternalResource.objects.exists()
+
+
 def test_list_external_resources__gitlab_merge_request__returns_200(
     admin_client: APIClient,
     project: int,

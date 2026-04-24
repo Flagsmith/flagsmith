@@ -186,7 +186,7 @@ Attributes:
 ### `gitlab.resource.linked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:25`
+ - `api/integrations/vcs/services.py:28`
 
 Attributes:
  - `feature.id`
