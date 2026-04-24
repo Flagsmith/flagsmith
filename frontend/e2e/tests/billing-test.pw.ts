@@ -1,5 +1,5 @@
 import { test, expect } from '../test-setup'
-import { byId, log, createHelpers, getFlagsmith } from '../helpers'
+import { byId, log, createHelpers } from '../helpers'
 import { E2E_USER, PASSWORD } from '../config'
 
 declare global {
@@ -9,21 +9,10 @@ declare global {
 }
 
 test.describe('Billing', () => {
-  test('Free trial buttons stay wired after toggling between yearly and monthly @enterprise', async ({
+  test('Free trial buttons stay wired after toggling between yearly and monthly @saas', async ({
     page,
   }) => {
     const { click, login, waitForElementVisible } = createHelpers(page)
-
-    const flagsmith = await getFlagsmith()
-    if (
-      !flagsmith.hasFeature('payments_enabled') ||
-      !flagsmith.hasFeature('rtk_payment_modal_migration')
-    ) {
-      log(
-        'Skipping: requires payments_enabled and rtk_payment_modal_migration flags',
-      )
-      return
-    }
 
     // Serve an empty Chargebee bundle so useScript resolves without pulling
     // the real library from Chargebee's CDN.
