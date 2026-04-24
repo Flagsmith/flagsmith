@@ -79,7 +79,11 @@ const IntegrationsPage: FC = () => {
                 )}
               </div>
             ) : (
-              <div>{Constants.projectPermissions(ProjectPermission.ADMIN)}</div>
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: Constants.projectPermissions(ProjectPermission.ADMIN),
+                }}
+              />
             )}
           </div>
         </div>
