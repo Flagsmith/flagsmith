@@ -64,21 +64,21 @@ export type WarehouseTypeOption = {
 export const WAREHOUSE_TYPES: WarehouseTypeOption[] = [
   {
     available: true,
-    description: 'Connected warehouse',
+    description: 'Cloud data warehouse',
     icon: 'snowflake',
     label: 'Snowflake',
     type: 'snowflake',
   },
   {
     available: false,
-    description: 'Coming Soon',
+    description: 'Google Cloud data warehouse',
     icon: 'database',
     label: 'BigQuery',
     type: 'bigquery',
   },
   {
     available: false,
-    description: 'Coming Soon',
+    description: 'Unified analytics platform',
     icon: 'database',
     label: 'Databricks',
     type: 'databricks',
