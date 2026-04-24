@@ -24,15 +24,12 @@ const SERIES_LABELS: Record<string, string> = {
 const UsageTrendsChart: FC<UsageTrendsChartProps> = ({ days = 30, trends }) => {
   const data = useMemo<ChartDataPoint[]>(
     () =>
-      trends.map(
-        (trend) =>
-          ({
-            api_calls: trend.api_calls,
-            day: moment(trend.date).format('MMM DD'),
-            flag_evaluations: trend.flag_evaluations,
-            identity_requests: trend.identity_requests,
-          } as unknown as ChartDataPoint),
-      ),
+      trends.map((trend) => ({
+        api_calls: trend.api_calls,
+        day: moment(trend.date).format('MMM DD'),
+        flag_evaluations: trend.flag_evaluations,
+        identity_requests: trend.identity_requests,
+      })),
     [trends],
   )
 

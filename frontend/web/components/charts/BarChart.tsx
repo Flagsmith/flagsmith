@@ -14,7 +14,8 @@ import ChartTooltip from './ChartTooltip'
 
 export type ChartDataPoint = {
   day: string
-} & Record<string, number>
+  [key: string]: string | number
+}
 
 type BarChartProps = {
   data: ChartDataPoint[]
