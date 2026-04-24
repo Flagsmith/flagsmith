@@ -14,11 +14,26 @@ type ConfigFormProps = {
   /** Commits the config and transitions to the pending-setup state. */
   onConnect: (config: WarehouseConfig) => void
   onCancel: () => void
+  /**
+   * Editing an existing connection. `type` and `accountIdentifier` become
+   * read-only — per the API they're immutable (PATCH rejects changes).
+   * Changing either means disconnecting and starting over.
+   */
+  isEdit?: boolean
+  /** Prefilled config when editing. Ignored when `isEdit` is false. */
+  initialConfig?: WarehouseConfig
 }
 
-const ConfigForm: FC<ConfigFormProps> = ({ onCancel, onConnect }) => {
-  const [config, setConfig] = useState<WarehouseConfig>(MOCK_CONFIG)
-  const [selectedType, setSelectedType] = useState<WarehouseType>('snowflake')
+const ConfigForm: FC<ConfigFormProps> = ({
+  initialConfig,
+  isEdit = false,
+  onCancel,
+  onConnect,
+}) => {
+  const [config, setConfig] = useState<WarehouseConfig>(
+    initialConfig ?? MOCK_CONFIG,
+  )
+  const [selectedType, setSelectedType] = useState<WarehouseType>(config.type)
 
   const updateField = (field: keyof WarehouseConfig, value: string) => {
     setConfig((prev) => ({ ...prev, [field]: value }))
@@ -29,28 +44,40 @@ const ConfigForm: FC<ConfigFormProps> = ({ onCancel, onConnect }) => {
       <div className='wh-config-form__section'>
         <span className='wh-config-form__section-label'>Warehouse Type</span>
         <div className='wh-config-form__type-row'>
-          {WAREHOUSE_TYPES.map((wh) => (
-            <div
-              key={wh.type}
-              className={`wh-config-form__type-card ${
-                !wh.available ? 'wh-config-form__type-card--disabled' : ''
-              }`}
-            >
-              <SelectableCard
-                icon={wh.type === 'snowflake' ? 'flash' : 'layers'}
-                title={wh.label}
-                description={wh.description}
-                selected={selectedType === wh.type}
-                onClick={() => {
-                  if (wh.available) setSelectedType(wh.type)
-                }}
-              />
-              {!wh.available && (
-                <span className='wh-config-form__coming-soon'>Coming Soon</span>
-              )}
-            </div>
-          ))}
+          {WAREHOUSE_TYPES.map((wh) => {
+            const locked = isEdit && wh.type !== selectedType
+            const cardDisabled = !wh.available || isEdit
+            return (
+              <div
+                key={wh.type}
+                className={`wh-config-form__type-card ${
+                  cardDisabled ? 'wh-config-form__type-card--disabled' : ''
+                }`}
+              >
+                <SelectableCard
+                  icon={wh.type === 'snowflake' ? 'flash' : 'layers'}
+                  title={wh.label}
+                  description={wh.description}
+                  selected={selectedType === wh.type}
+                  onClick={() => {
+                    if (wh.available && !isEdit) setSelectedType(wh.type)
+                  }}
+                />
+                {!wh.available && !locked && (
+                  <span className='wh-config-form__coming-soon'>
+                    Coming Soon
+                  </span>
+                )}
+              </div>
+            )
+          })}
         </div>
+        {isEdit && (
+          <span className='wh-config-form__hint'>
+            Warehouse type can&apos;t be changed. To move to a different
+            provider, disconnect and create a new connection.
+          </span>
+        )}
       </div>
 
       <div className='wh-config-form__card'>
@@ -62,10 +89,12 @@ const ConfigForm: FC<ConfigFormProps> = ({ onCancel, onConnect }) => {
               updateField('accountIdentifier', e.target.value)
             }
             placeholder='xy12345.us-east-1'
+            disabled={isEdit}
           />
           <span className='wh-config-form__hint'>
-            The Snowflake account identifier — the part of your Snowflake URL
-            before <code>.snowflakecomputing.com</code>.
+            {isEdit
+              ? "Identifier can't be changed. To move to a different Snowflake account, disconnect and re-connect."
+              : 'The Snowflake account identifier — the part of your Snowflake URL before .snowflakecomputing.com.'}
           </span>
         </div>
 
@@ -126,11 +155,13 @@ const ConfigForm: FC<ConfigFormProps> = ({ onCancel, onConnect }) => {
           />
         </div>
 
-        <div className='wh-config-form__note'>
-          Flagsmith generates an RSA key pair on save — no passwords or private
-          keys to type. You&apos;ll get a setup script to run in Snowflake after
-          saving.
-        </div>
+        {!isEdit && (
+          <div className='wh-config-form__note'>
+            Flagsmith generates an RSA key pair on save — no passwords or
+            private keys to type. You&apos;ll get a setup script to run in
+            Snowflake after saving.
+          </div>
+        )}
 
         <div className='wh-config-form__actions'>
           <Button theme='outline' size='small' onClick={onCancel}>
@@ -141,7 +172,7 @@ const ConfigForm: FC<ConfigFormProps> = ({ onCancel, onConnect }) => {
             size='small'
             onClick={() => onConnect(config)}
           >
-            Save and continue
+            {isEdit ? 'Save changes' : 'Save and continue'}
           </Button>
         </div>
       </div>
