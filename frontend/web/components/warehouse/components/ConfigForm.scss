@@ -73,45 +73,26 @@
     gap: 16px;
   }
 
-  &__divider {
-    height: 1px;
-    background: var(--color-border-default);
-  }
+  &__hint {
+    font-size: var(--font-caption-xs-size);
+    color: var(--color-text-tertiary);
 
-  &__select-display {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 12px;
-    height: 36px;
-    background: var(--color-surface-muted);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-md);
-    font-size: var(--font-body-sm-size);
-    color: var(--color-text-default);
-    cursor: pointer;
-
-    svg {
-      color: var(--color-icon-secondary);
+    code {
+      font-size: inherit;
+      padding: 1px 4px;
+      background: var(--color-surface-muted);
+      border-radius: var(--radius-sm);
+      color: var(--color-text-secondary);
     }
   }
 
-  &__textarea {
-    width: 100%;
-    min-height: 80px;
-    padding: 12px;
-    background: var(--color-surface-muted);
+  &__note {
+    padding: 12px 14px;
+    background: var(--color-surface-info-subtle, var(--color-surface-muted));
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-md);
-    color: var(--color-text-secondary);
-    font-family: var(--font-family);
     font-size: var(--font-caption-size);
-    resize: vertical;
-    transition: border-color var(--duration-fast) var(--easing-standard);
-
-    &:focus {
-      @include animations.focus-ring;
-    }
+    color: var(--color-text-secondary);
   }
 
   &__actions {

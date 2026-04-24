@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import Utils from 'common/utils/utils'
 import EmptyState from './components/EmptyState'
 import ConfigForm from './components/ConfigForm'
+import PendingSetupState from './components/PendingSetupState'
 import TestingState from './components/TestingState'
 import ConnectedState from './components/ConnectedState'
 import ErrorState from './components/ErrorState'
@@ -10,6 +11,8 @@ import {
   ConnectionState,
   MOCK_CONNECTION_DETAILS,
   MOCK_ERROR,
+  MOCK_PUBLIC_KEY,
+  MOCK_SETUP_SCRIPT,
   MOCK_STATS,
   WarehouseConfig,
 } from './types'
@@ -18,6 +21,7 @@ import './WarehousePage.scss'
 const VALID_STATES: ConnectionState[] = [
   'empty',
   'configuring',
+  'pending_customer_setup',
   'testing',
   'connected',
   'error',
@@ -28,6 +32,7 @@ const STATE_LABELS: Record<ConnectionState, string> = {
   connected: 'Connected',
   empty: 'Empty',
   error: 'Error',
+  pending_customer_setup: 'Pending setup',
   testing: 'Testing',
 }
 
@@ -54,10 +59,15 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState }) => {
   }, [])
 
   const handleConnectSubmit = useCallback((_config: WarehouseConfig) => {
+    // Real API: POST returns the generated public_key + setup_script and sets
+    // status to pending_customer_setup until the customer runs the SQL and
+    // clicks "Test Connection".
+    setConnectionState('pending_customer_setup')
+  }, [])
+
+  const handleTestConnection = useCallback(() => {
     setConnectionState('testing')
-    // Simulate connecting delay — in real app this would be an API call
     setTimeout(() => {
-      // Randomly succeed or fail for demo purposes
       setConnectionState(Math.random() > 0.3 ? 'connected' : 'error')
     }, 3000)
   }, [])
@@ -88,6 +98,15 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState }) => {
       case 'configuring':
         return (
           <ConfigForm onConnect={handleConnectSubmit} onCancel={handleCancel} />
+        )
+      case 'pending_customer_setup':
+        return (
+          <PendingSetupState
+            setupScript={MOCK_SETUP_SCRIPT}
+            publicKey={MOCK_PUBLIC_KEY}
+            onTestConnection={handleTestConnection}
+            onEdit={handleEdit}
+          />
         )
       case 'testing':
         return <TestingState />
