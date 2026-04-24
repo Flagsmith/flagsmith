@@ -19,7 +19,7 @@ import {
 } from './constants'
 import { useScript } from 'common/hooks/useScript'
 import { usePaymentState } from './hooks'
-import { initChargebee } from './chargebee'
+import { bindChargebeeButtons } from './chargebee'
 
 export type PaymentProps = {
   isDisableAccountText?: string
@@ -42,7 +42,7 @@ export const Payment: FC<PaymentProps> = ({
 
   useEffect(() => {
     if (ready && !error) {
-      initChargebee({ isPaymentsEnabled })
+      bindChargebeeButtons({ isPaymentsEnabled })
     }
   }, [ready, error, isPaymentsEnabled, yearly])
 
