@@ -1,6 +1,9 @@
+import uuid
+
 import pytest
 import requests
 import responses
+from django.urls import resolve
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
@@ -15,6 +18,19 @@ from integrations.gitlab.services.webhooks import (
     ensure_webhook_registered,
 )
 from integrations.gitlab.tasks import register_gitlab_webhook
+from integrations.gitlab.views import gitlab_webhook
+
+
+def test_gitlab_webhook_url__expected_path__resolves_to_webhook_view() -> None:
+    # Given
+    webhook_uuid = uuid.uuid4()
+
+    # When
+    match = resolve(f"/api/v1/gitlab-webhook/{webhook_uuid}/")
+
+    # Then
+    assert match.func is gitlab_webhook
+    assert match.kwargs == {"webhook_uuid": webhook_uuid}
 
 
 @pytest.mark.django_db
