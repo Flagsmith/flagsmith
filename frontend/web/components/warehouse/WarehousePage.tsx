@@ -9,6 +9,7 @@ import ConnectedState from './components/ConnectedState'
 import ErrorState from './components/ErrorState'
 import {
   ConnectionState,
+  MOCK_CONFIG,
   MOCK_CONNECTION_DETAILS,
   MOCK_ERROR,
   MOCK_PUBLIC_KEY,
@@ -53,8 +54,15 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState }) => {
   const [connectionState, setConnectionState] = useState<ConnectionState>(
     initialState ?? stateFromUrl ?? 'empty',
   )
+  /**
+   * Distinguishes "creating a new connection" from "editing the existing one"
+   * while both share the `configuring` state. Used by ConfigForm to lock
+   * immutable fields (type + accountIdentifier) on edit per issue #7276.
+   */
+  const [isEditingExisting, setIsEditingExisting] = useState(false)
 
   const handleConnect = useCallback(() => {
+    setIsEditingExisting(false)
     setConnectionState('configuring')
   }, [])
 
@@ -73,6 +81,7 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState }) => {
   }, [])
 
   const handleEdit = useCallback(() => {
+    setIsEditingExisting(true)
     setConnectionState('configuring')
   }, [])
 
@@ -101,7 +110,12 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState }) => {
         return <EmptyState onConnect={handleConnect} />
       case 'configuring':
         return (
-          <ConfigForm onConnect={handleConnectSubmit} onCancel={handleCancel} />
+          <ConfigForm
+            onConnect={handleConnectSubmit}
+            onCancel={handleCancel}
+            isEdit={isEditingExisting}
+            initialConfig={isEditingExisting ? MOCK_CONFIG : undefined}
+          />
         )
       case 'pending_customer_setup':
         return (
