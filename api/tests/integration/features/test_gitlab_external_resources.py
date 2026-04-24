@@ -759,7 +759,7 @@ def test_create_external_resource__gitlab_issue_with_labeling_unparseable_url__s
         format="json",
     )
 
-    # Then — resource still created, label silently skipped.
+    # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert FeatureExternalResource.objects.exists()
 
