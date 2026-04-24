@@ -129,9 +129,8 @@ def remove_gitlab_label(
     resource_url: str,
     resource_type: str,
 ) -> None:
-    """Best-effort: remove the "Flagsmith Feature" label from a GitLab issue/MR.
+    """Remove the "Flagsmith Feature" label from a GitLab issue/MR.
     No-op if another FeatureExternalResource still references the same URL.
-    Never raises — failures are logged via ``label.removal_failed``.
     """
     config: GitLabConfiguration | None = GitLabConfiguration.objects.filter(
         project_id=project_id
