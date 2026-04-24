@@ -8,30 +8,34 @@ type InitChargebeeParams = {
 }
 
 export const initChargebee = ({ isPaymentsEnabled }: InitChargebeeParams) => {
-  if (initialised || !Project.chargebee?.site) return
+  if (!Project.chargebee?.site) return
 
-  Chargebee.init({ site: Project.chargebee.site })
-  Chargebee.registerAgain()
-  firstpromoter()
-  Chargebee.getInstance().setCheckoutCallbacks?.(() => ({
-    success: (hostedPageId: string) => {
-      AppActions.updateSubscription(hostedPageId)
-    },
-  }))
+  if (!initialised) {
+    Chargebee.init({ site: Project.chargebee.site })
+    firstpromoter()
+    Chargebee.getInstance().setCheckoutCallbacks?.(() => ({
+      success: (hostedPageId: string) => {
+        AppActions.updateSubscription(hostedPageId)
+      },
+    }))
 
-  // Handle plan cookie from signup flow
-  const planId = API.getCookie('plan')
-  if (planId && isPaymentsEnabled) {
-    const link = document.createElement('a')
-    link.setAttribute('data-cb-type', 'checkout')
-    link.setAttribute('data-cb-plan-id', planId)
-    link.setAttribute('href', '#')
-    document.body.appendChild(link)
-    Chargebee.registerAgain()
-    link.click()
-    document.body.removeChild(link)
-    API.setCookie('plan', null)
+    const planId = API.getCookie('plan')
+    if (planId && isPaymentsEnabled) {
+      const link = document.createElement('a')
+      link.setAttribute('data-cb-type', 'checkout')
+      link.setAttribute('data-cb-plan-id', planId)
+      link.setAttribute('href', '#')
+      document.body.appendChild(link)
+      Chargebee.registerAgain()
+      link.click()
+      document.body.removeChild(link)
+      API.setCookie('plan', null)
+    }
+
+    initialised = true
   }
 
-  initialised = true
+  // Re-scan the DOM so buttons rendered after the initial mount
+  // (e.g. after toggling the yearly/monthly switch) get wired up.
+  Chargebee.registerAgain()
 }

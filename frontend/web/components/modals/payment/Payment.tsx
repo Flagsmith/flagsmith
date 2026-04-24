@@ -44,7 +44,7 @@ export const Payment: FC<PaymentProps> = ({
     if (ready && !error) {
       initChargebee({ isPaymentsEnabled })
     }
-  }, [ready, error, isPaymentsEnabled])
+  }, [ready, error, isPaymentsEnabled, yearly])
 
   if (isAWS) {
     return (
