@@ -1,6 +1,6 @@
-import logging
 from datetime import timedelta
 
+import structlog
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
@@ -21,7 +21,7 @@ from users.models import FFAdminUser
 
 from .constants import API_USAGE_ALERT_THRESHOLDS
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("api_usage")
 
 
 def send_api_flags_blocked_notification(organisation: Organisation) -> None:
@@ -115,10 +115,9 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         billing_starts_at = subscription_cache.current_billing_term_starts_at
 
         if billing_starts_at is None:
-            # Since the calling code is a list of many organisations
-            # log the error and return without raising an exception.
             logger.error(
-                f"Paid organisation {organisation.id} is missing billing_starts_at datetime"
+                "notification.missing_billing_starts_at",
+                organisation__id=organisation.id,
             )
             return
 
@@ -151,6 +150,16 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
 
         matched_threshold = threshold
 
+    logger.info(
+        "notification.evaluated",
+        organisation__id=organisation.id,
+        api_usage=api_usage,
+        allowed_api_calls=allowed_api_calls,
+        api_usage_percent=api_usage_percent,
+        period_starts_at=period_starts_at.isoformat(),
+        matched_threshold=matched_threshold,
+    )
+
     # Didn't match even the lowest threshold, so no notification.
     if matched_threshold is None:
         return
@@ -162,6 +171,12 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
     ).exists():
         # Already sent the max notification level so don't resend.
         return
+
+    logger.info(
+        "notification.sent",
+        organisation__id=organisation.id,
+        matched_threshold=matched_threshold,
+    )
 
     _send_api_usage_notification(organisation, matched_threshold)
 
