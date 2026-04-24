@@ -3,7 +3,11 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import StatusBadge from 'components/experiments-v2/shared/StatusBadge'
 import ConnectionDetailsGrid from './ConnectionDetailsGrid'
-import { ConnectionDetail, ConnectionStats } from 'components/warehouse/types'
+import {
+  ConnectionDetail,
+  ConnectionStats,
+  MOCK_CONFIG,
+} from 'components/warehouse/types'
 import './ConnectedState.scss'
 
 type ConnectedStateProps = {
@@ -31,7 +35,7 @@ const ConnectedState: FC<ConnectedStateProps> = ({
             <div className='wh-connected__name-col'>
               <span className='wh-connected__name'>Snowflake</span>
               <span className='wh-connected__account'>
-                myorg.snowflakecomputing.com
+                {MOCK_CONFIG.accountIdentifier}
               </span>
             </div>
           </div>

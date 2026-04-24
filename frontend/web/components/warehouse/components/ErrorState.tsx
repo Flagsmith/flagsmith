@@ -2,7 +2,11 @@ import React, { FC } from 'react'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import ConnectionDetailsGrid from './ConnectionDetailsGrid'
-import { ConnectionDetail, ConnectionError } from 'components/warehouse/types'
+import {
+  ConnectionDetail,
+  ConnectionError,
+  MOCK_CONFIG,
+} from 'components/warehouse/types'
 import './ErrorState.scss'
 
 type ErrorStateProps = {
@@ -35,7 +39,7 @@ const ErrorState: FC<ErrorStateProps> = ({
             <div className='wh-error__name-col'>
               <span className='wh-error__name'>Snowflake</span>
               <span className='wh-error__account'>
-                myorg.snowflakecomputing.com
+                {MOCK_CONFIG.accountIdentifier}
               </span>
             </div>
           </div>
