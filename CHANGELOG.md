@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.231.0](https://github.com/Flagsmith/flagsmith/compare/v2.230.0...v2.231.0) (2026-04-27)
+
+
+### Features
+
+* **Billing:** Add organisation usage logs ([#7336](https://github.com/Flagsmith/flagsmith/issues/7336)) ([0d32e5b](https://github.com/Flagsmith/flagsmith/commit/0d32e5be0f38c84c7f94a0004f07101eb225005e))
+
+
+### Bug Fixes
+
+* **GitLab:** Webhook registration fails with NoReverseMatch in task processor ([#7347](https://github.com/Flagsmith/flagsmith/issues/7347)) ([c2746e7](https://github.com/Flagsmith/flagsmith/commit/c2746e71a2f9518f2ad823ace5001cf7f697150c))
+* include specific IDs in owner validation errors ([#7116](https://github.com/Flagsmith/flagsmith/issues/7116)) ([dbd79bb](https://github.com/Flagsmith/flagsmith/commit/dbd79bbb46a5bc15bc5e99b23d6d2d5597af55bd))
+* **Mappers:** Env document includes feature-specific segments with no FeatureSegment in env ([#7346](https://github.com/Flagsmith/flagsmith/issues/7346)) ([7145da4](https://github.com/Flagsmith/flagsmith/commit/7145da40af5bcc285d8591187d44cb46dacb8d32))
+
 ## [2.230.0](https://github.com/Flagsmith/flagsmith/compare/v2.229.1...v2.230.0) (2026-04-24)
 
 
