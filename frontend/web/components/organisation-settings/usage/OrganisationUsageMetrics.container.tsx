@@ -1,15 +1,14 @@
 import React, { useMemo, useState } from 'react'
+import moment from 'moment'
 import { Res } from 'common/types/responses'
 import SingleSDKLabelsChart from './components/SingleSDKLabelsChart'
 import { MultiSelect } from 'components/base/select/multi-select'
+import { ChartDataPoint } from 'components/charts/BarChart'
 
 interface OrganisationUsageMetricsProps {
   data?: Res['organisationUsage']
   selectedMetrics: string[]
 }
-export type ChartDataPoint = {
-  day: string
-} & Record<string, number>
 
 const colours = [
   'rgba(37, 99, 235, 0.8)',
@@ -46,7 +45,7 @@ const OrganisationUsageMetrics: React.FC<OrganisationUsageMetricsProps> = ({
         return {
           aggregateChartData: [],
           allUserAgents: [],
-          userAgentColorMap: new Map(),
+          userAgentColorMap: {} as Record<string, string>,
         }
 
       const aggregateGrouped: Record<string, ChartDataPoint> = {}
@@ -54,7 +53,9 @@ const OrganisationUsageMetrics: React.FC<OrganisationUsageMetricsProps> = ({
       const userAgentSet = new Set<string>()
 
       data.events_list.forEach((event) => {
-        const date = event.day
+        // BarChart consumes the displayed day string as the x-axis dataKey,
+        // so format here once and let the chart use it verbatim.
+        const date = moment(event.day).format('D MMM')
         const userAgent = event.labels?.user_agent || 'Unknown'
 
         if (!userAgentSet.has(userAgent)) {
@@ -79,9 +80,9 @@ const OrganisationUsageMetrics: React.FC<OrganisationUsageMetricsProps> = ({
           (aggregateGrouped[date][userAgent] || 0) + totalForUserAgent
       })
 
-      const colorMap = new Map()
+      const colorMap: Record<string, string> = {}
       userAgents.forEach((agent, index) => {
-        colorMap.set(agent, colours[index % colours.length])
+        colorMap[agent] = colours[index % colours.length]
       })
 
       return {
@@ -124,9 +125,7 @@ const OrganisationUsageMetrics: React.FC<OrganisationUsageMetricsProps> = ({
         <SingleSDKLabelsChart
           data={aggregateChartData}
           userAgents={filteredUserAgents}
-          metricKey='aggregate'
           title='API Usage'
-          colours={colours}
           userAgentsColorMap={userAgentColorMap}
         />
       </div>
