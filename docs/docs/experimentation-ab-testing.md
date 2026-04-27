@@ -109,12 +109,18 @@ the wizard warns you if you select more than one.
 
 ![Segment selector with an active conflict banner shown for context; traffic-split inputs below](/img/experimentation/wizard-segment-traffic.png)
 
-Pick the **segment** of users who'll be eligible. Users outside the
-segment keep the flag's environment default.
+An experiment's audience is the segment you select. All matched users
+are in the experiment, and the traffic weights decide which variation
+each one sees. Users outside the segment keep the flag's environment
+default and aren't part of the experiment.
 
-Set **traffic weights**: the percentage of eligible users assigned to
-each variation. Weights auto-balance, so adjusting one rebalances the
-others. Click **Split evenly** to reset.
+Pick the **segment** of users who'll be eligible.
+
+Set **traffic weights**: the percentage of users assigned to each
+variation. Control takes one of the weight slots alongside the
+variations, so a 50/50 split means 50% control, 50% treatment. Weights
+auto-balance, so adjusting one rebalances the others. Click **Split
+evenly** to reset.
 
 :::warning
 
@@ -124,6 +130,11 @@ the override before continuing. A live experiment on a segment with an
 override produces incorrect assignment.
 
 :::
+
+**Note:** In v1, an experiment runs on the entire matched segment. To
+test on a smaller slice, define a smaller segment. Only one experiment
+can run on a given segment + flag at a time. Changing weights mid-run
+breaks statistical validity, so design with the final weights up front.
 
 ### Review & Launch
 
