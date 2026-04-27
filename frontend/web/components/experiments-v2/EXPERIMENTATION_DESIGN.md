@@ -34,84 +34,95 @@ It does **not** cover:
 
 ## Vocabulary
 
-We chose Flagsmith-native terms wherever the concept exists. Where we
-borrowed, we say so.
+The audience of an experiment has three layers, each with its own term.
+Segments stay a Flagsmith primitive — they just stop pulling double duty.
 
-| Term we use | Alternative (LD) | Why |
+| Term we use | What it means | Notes |
 |---|---|---|
-| **Segment** | Audience | `Segment` is a real Flagsmith data model; `Audience` isn't anywhere else in the product |
-| **Variation** | Variation / Arm | Matches the existing flag field name |
-| **Control value** | Variation | In Flagsmith's model, control is a **field on the flag**, not an entry in the variations list |
-| **Traffic split** | Allocation | Common term across all vendors |
-| **Guardrail metric** | Secondary / Health | Distinct role — see [Metric roles](#metric-roles) |
+| **Audience** | The whole step / concept: who's eligible, how many of them are in, and how they split | LD calls this "Audience allocation" |
+| **Targeting** (optional **Segment** filter) | Eligibility filter. Users matching the segment are eligible; everyone else is excluded. Empty = all identities in the environment | Segments stay a normal Flagsmith primitive — they just don't define the experiment audience by themselves |
+| **Sample size** | Percentage of eligible users actually sampled into the experiment. The rest see the flag's environment default | LD: "Percent of users in this experiment" |
+| **Variation split** | Among the sampled users, the per-arm weight distribution. Control takes a slot. Sum to 100 | LD: "Variation split" |
+| **Variation** / **Control value** | Variation = an entry in the flag's variation list; control value = a field on the flag itself | Existing Flagsmith concepts |
+| **Guardrail metric** | A safety-check role separate from primary/secondary | See [Metric roles](#metric-roles) |
 
 Internally we use `arm` as jargon for "control or variation" when doing
 weight math, but user-facing copy stays as "variation".
 
+### Why segments aren't the audience
+
+The earlier prototype used a segment as the experiment's audience: pick
+one segment, set per-arm weights, done. That conflated **targeting**
+(property-based filter) with **audience allocation** (random sample of
+eligible users). Two concrete failure modes:
+
+1. **No segment? No experiment.** Want to A/B test on the whole user
+   base? You'd need a fake "All users" segment. Segments are
+   property-based, not "everyone".
+2. **No way to ramp.** Want to start at 5% and ramp up? You'd need a
+   property-based segment that captures 5% of users — segments aren't
+   random samplers.
+
+Splitting the concept into three layers (Targeting / Sample size /
+Variation split) fixes both: targeting is *optional*, sampling is *its
+own knob*, and split is *just the variation distribution*.
+
 ## Data model
 
-An experiment in Flagsmith is a **first-class record** that owns a
-segment override (segment + per-variation weights) plus
-experiment-level fields for sample size, outside variation, and mutual
-exclusion. In v1 the segment override does all the audience work and
-the extra fields stay at their defaults; v2 surfaces the dials. See
-[Path C — forward-designed fields](#path-c--forward-designed-fields)
-below for why the fields exist before the UI uses them.
+An experiment is a **first-class record** that holds the audience
+configuration plus the variation weights. The audience is layered —
+optional segment filter, sample percentage, and per-arm weights — and
+each layer has a backend equivalent.
 
 ```
 Experiment {
-  segment: <your target segment>
+  // Audience
+  targeting_segment: <segment id> | null   // null = all identities in the environment
+  sample_percentage: 0–100                 // fraction of eligible users sampled in
   weights: [
     { value: <control_value>, weight: X },
     { value: <variation_1.value>, weight: Y },
     { value: <variation_2.value>, weight: Z },
-  ]  // X + Y + Z = 100
+  ]                                         // X + Y + Z = 100
 
-  // Forward-designed for v2, defaulted in v1:
-  sample_percentage: 100              // % of matched segment in the experiment
-  outside_variation: <flag default>   // served to eligible-but-not-sampled users
-  mutual_exclusion_group: null        // layer ID; null means no exclusion
+  // Forward-designed for later iterations
+  outside_variation: <flag default>         // served to eligible-but-not-sampled users
+  mutual_exclusion_group: null              // layer ID; null means no exclusion
 }
 ```
 
-**v1 implications:**
+**Implications:**
 
-1. An experiment targets **one segment**. Users outside that segment hit the
-   flag's environment default, not the experiment.
-2. Weights must sum to 100% across **all values** of the flag — including
-   control. You can't have a split that only touches the variations; users
-   matching the segment have to be assigned somewhere.
-3. Two overrides on the same segment **cannot coexist**. This is why the
-   wizard shows a blocking conflict banner when the selected segment already
-   has an override on the target flag.
-4. Existing segment overrides on other segments are unaffected. Priority
+1. **Targeting is optional.** No segment selected = the eligible pool is
+   every identity in the environment. This is the default.
+2. **Sample size is independent of variation split.** Setting sample_size
+   to 10% means 10% of eligible identities are in the experiment, and the
+   variation weights split *those* users. The other 90% see the flag's
+   environment default.
+3. **Weights must sum to 100% across the sampled pool**, including
+   control. Control is still a field on the flag, not a variation —
+   the wizard treats it as one of the weight slots.
+4. **One experiment per (segment, flag) pair.** If the chosen segment
+   already has an override on the flag, the wizard shows a conflict
+   banner. Existing overrides on other segments are unaffected; priority
    ordering decides who wins for users matching multiple segments.
+5. **Assignment requires two hash dimensions.** Hash 1 (`experiment_id +
+   identity`) decides "in or out of the experiment". Hash 2
+   (`experiment_id + identity` with a salt) decides which variation. This
+   keeps "% in experiment" stable when you change the variation split,
+   and vice versa.
 
-### Path C — forward-designed fields
+### Forward-designed fields (`outside_variation`, `mutual_exclusion_group`)
 
-LaunchDarkly's experiment creation has a layered audience model:
-targeting rule (eligibility) → sample size (% in experiment) → outside
-variation → variation split → mutual exclusion. We're shipping v1 with
-the **single-layer** model above (segment + weights) — but the
-experiment record stores three extra fields so v2 can light up the LD
-layers without a schema migration.
+The data model includes two more fields the v1 UI doesn't surface:
 
-| Field | v1 default | v2 use case |
+| Field | v1 default | When it lights up |
 |---|---|---|
-| `sample_percentage` | `100` (full segment is in) | Surface a "% of segment in experiment" dial. Eligible-but-not-sampled users see `outside_variation`. Needs a second hash dimension so changing this value doesn't reshuffle existing variation assignments. |
-| `outside_variation` | flag's environment default | Let teams pick which variation eligible-but-not-sampled users see, decoupled from the flag's default. Useful when the experiment overrides the flag default or when ramping without rolling back the default. |
+| `outside_variation` | flag's environment default | Let teams pick which variation eligible-but-not-sampled users see, decoupled from the flag's default. Useful when the experiment changes the flag default or when ramping without rolling back the default. |
 | `mutual_exclusion_group` | `null` | Group experiments into a "layer" so a user is in at most one experiment per layer. Prevents traffic overlap when several experiments target the same audience. |
 
-The fields are inert in v1: the wizard doesn't expose them, and the
-evaluation logic only honours `sample_percentage = 100`,
-`outside_variation = flag default`, and
-`mutual_exclusion_group = null`. v2 unhides them and the evaluation
-logic starts respecting the values.
-
-**Why include them now**: adding fields to a live data model later is
-expensive (schema migration, evaluation-logic rewrite, possible
-re-randomisation of running experiments). Adding them up front is
-cheap and keeps the v1 → v2 transition migration-free.
+Both stay inert until the UI exposes them. Including them up front
+avoids a future schema migration on a live data model.
 
 ## Wizard flow
 
@@ -120,7 +131,7 @@ Five steps, in this order:
 1. **Experiment Details** — name, hypothesis (required), start and end dates
 2. **Flag & Variations** — pick a multi-variant flag, view its variations (read-only)
 3. **Select Metrics** — primary, secondary, guardrail roles
-4. **Segments & Traffic** — target segment + per-arm weights
+4. **Audience** — optional segment filter, sample size, variation split
 5. **Review & Launch** — full summary with edit shortcuts
 
 ### Why Details first, not Flag first
@@ -351,9 +362,12 @@ From the Experiments list, **Create Experiment**. Walk the 5 steps:
    User (secondary) + Page Load Time (guardrail). Click one to show
    the three-role segmented control. Add a second primary to surface
    the soft multi-primary warning
-4. **Segment & Traffic** — select Premium Tier on flag-1 to trigger
-   the inline conflict banner. Reset, play with the auto-balancing
-   weights (change one → watch the others rebalance proportionally)
+4. **Audience** — three sub-blocks: Targeting (leave empty for "all
+   users", or pick Premium Tier on flag-1 to trigger the inline
+   conflict banner), Sample size (toggle 100 → 10 to show the dial
+   independently from the variation split), Variation split (play
+   with the auto-balancing weights — change one, watch the others
+   rebalance proportionally)
 5. **Review & Launch** — full summary with per-section edit links.
    Click **Launch** → confirmation modal → toast + redirect to list
 

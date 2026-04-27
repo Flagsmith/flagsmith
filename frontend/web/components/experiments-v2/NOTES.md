@@ -123,10 +123,11 @@ for the prototype; the presentation flow clicks through anyway.
 
 ## Deferred: sample-size / duration calculator
 
-**Context:** the Segments & Traffic step (`steps/SegmentTrafficStep.tsx`)
-currently shows a soft one-liner under the Traffic Split: *"Rough split: ~N
-users per arm. Actual sample size and time-to-significance depend on
-traffic, baseline rate, and the lift you're trying to detect."*
+**Context:** the Audience step (`steps/AudienceStep.tsx`) currently shows
+a soft one-liner under the variation split: *"Sampling N% (~M users) into
+the experiment, split as Control ~X, Treatment ~Y. Actual
+time-to-significance depends on traffic, baseline rate, and the lift
+you're trying to detect."*
 
 The earlier prototype showed a fabricated *"Est. 14 days to significance"*
 — removed because it had no statistical basis and would set false

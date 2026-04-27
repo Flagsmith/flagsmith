@@ -84,9 +84,20 @@ export type ArmWeight = {
   weight: number
 }
 
-export type SegmentTrafficConfig = {
+/** Preset values for the sample-size dial (% of eligible audience in
+ *  the experiment). 100 means the full eligible audience is in. */
+export const SAMPLE_SIZE_PRESETS = [5, 10, 25, 50, 100] as const
+
+export type AudienceConfig = {
+  /** Optional targeting filter. null = all identities in the environment.
+   *  When set, only users matching the segment are eligible for the
+   *  experiment; everyone else sees the flag's environment default. */
   segmentId: string | null
-  /** Per-arm weights for users matched by the segment. Must sum to 100. */
+  /** Percentage of eligible identities sampled into the experiment.
+   *  100 means the full eligible audience is in; lower values let you
+   *  ramp without exposing every user. Defaulted to 100 in v1. */
+  samplePercentage: number
+  /** Per-arm weights for sampled users. Must sum to 100. */
   weights: ArmWeight[]
 }
 
@@ -104,7 +115,7 @@ export type ExperimentWizardState = {
   featureFlagId: string | null
   controlValue: string
   variations: Variation[]
-  segmentTraffic: SegmentTrafficConfig
+  audience: AudienceConfig
 }
 
 // -----------------------------------------------------------------------------
@@ -605,8 +616,8 @@ export const EXPERIMENT_WIZARD_STEPS: WizardStepDef[] = [
     title: 'Select Metrics',
   },
   {
-    subtitle: 'Define who sees the experiment and traffic allocation',
-    title: 'Segments & Traffic',
+    subtitle: 'Choose the audience and how to split traffic',
+    title: 'Audience',
   },
   {
     subtitle: 'Review your configuration and launch',

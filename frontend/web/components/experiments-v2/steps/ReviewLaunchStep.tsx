@@ -21,9 +21,10 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
 }) => {
   const flagLabel =
     MOCK_FLAGS.find((f) => f.value === wizardState.featureFlagId)?.label ?? '—'
-  const segmentLabel =
-    MOCK_SEGMENTS.find((s) => s.value === wizardState.segmentTraffic.segmentId)
-      ?.label ?? '—'
+  const targetingLabel = wizardState.audience.segmentId
+    ? MOCK_SEGMENTS.find((s) => s.value === wizardState.audience.segmentId)
+        ?.label ?? '—'
+    : 'All users in this environment'
 
   const controlArm: Variation = {
     colour: CONTROL_COLOUR,
@@ -34,8 +35,7 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
   }
   const arms: Variation[] = [controlArm, ...wizardState.variations]
   const weightFor = (armId: string) =>
-    wizardState.segmentTraffic.weights.find((w) => w.armId === armId)?.weight ??
-    0
+    wizardState.audience.weights.find((w) => w.armId === armId)?.weight ?? 0
 
   return (
     <div className='review-launch-step'>
@@ -141,19 +141,23 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
         )}
       </div>
 
-      {/* Step 4: Segments & Traffic */}
+      {/* Step 4: Audience */}
       <div className='review-launch-step__section'>
         <div className='review-launch-step__section-header'>
-          <span className='review-launch-step__section-title'>
-            Segments & Traffic
-          </span>
+          <span className='review-launch-step__section-title'>Audience</span>
           <Button theme='text' size='xSmall' onClick={() => onEditStep(3)}>
             Edit
           </Button>
         </div>
         <div className='review-launch-step__row'>
-          <span className='review-launch-step__label'>Segment</span>
-          <span className='review-launch-step__value'>{segmentLabel}</span>
+          <span className='review-launch-step__label'>Targeting</span>
+          <span className='review-launch-step__value'>{targetingLabel}</span>
+        </div>
+        <div className='review-launch-step__row'>
+          <span className='review-launch-step__label'>Sample size</span>
+          <span className='review-launch-step__value'>
+            {wizardState.audience.samplePercentage}% of eligible users
+          </span>
         </div>
         <div className='review-launch-step__traffic-split'>
           <div className='review-launch-step__traffic-bar'>
