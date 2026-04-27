@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from environments.models import Environment
 from features.import_export.types import FeatureExportData
 from features.models import Feature, FeatureSegment, FeatureState
@@ -5,6 +7,7 @@ from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
+from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project
 
 
@@ -29,16 +32,26 @@ def overwrite_feature_for_environment(
         environment=environment, identity__isnull=False
     ).delete()
 
-    feature_state = existing_feature.feature_states.filter(
+    feature_state = FeatureState.objects.get_live_feature_states(
         environment=environment,
-        identity__isnull=True,
-        feature_segment__isnull=True,
+        additional_filters=Q(
+            feature=existing_feature,
+            identity__isnull=True,
+            feature_segment__isnull=True,
+        ),
     ).first()
     if feature_state is None:
-        feature_state = FeatureState.objects.create(
-            feature=existing_feature,
-            environment=environment,
-        )
+        fs_kwargs: dict[str, object] = {
+            "feature": existing_feature,
+            "environment": environment,
+        }
+        if environment.use_v2_feature_versioning:
+            fs_kwargs["environment_feature_version"] = (
+                EnvironmentFeatureVersion.create_initial_version(
+                    environment=environment, feature=existing_feature
+                )
+            )
+        feature_state = FeatureState.objects.create(**fs_kwargs)
 
     existing_options_by_value: dict[
         tuple[str | None, str | int | bool | None], MultivariateFeatureOption

@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 
 import pytest
+from django.db.models import Q
 from django.utils import timezone
 from freezegun.api import FrozenDateTimeFactory
 from pytest_django.fixtures import SettingsWrapper
@@ -31,6 +32,7 @@ from features.import_export.tasks import (
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
+from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Organisation
 from projects.models import Project
 from projects.tags.models import Tag
@@ -688,6 +690,121 @@ def test_import_features_for_environment__overwrite_destructive_with_matching_fe
     assert target_fs.pk == target_fs_pk
     assert target_fs.enabled is True
     assert target_fs.feature_state_value.value == "imported_value"
+
+
+def test_import_features_for_environment__overwrite_destructive_with_v2_versioning_and_missing_target_feature_state__creates_versioned_live_feature_state(
+    db: None,
+) -> None:
+    # Given a v2-versioned environment where the feature has no FeatureState
+    # (simulating the legacy "feature predates env" case).
+    organisation = Organisation.objects.create(name="Receiving")
+    project = Project.objects.create(name="Web", organisation=organisation)
+    Environment.objects.create(name="Bystander", project=project)
+    existing_feature = Feature.objects.create(
+        name="3", project=project, initial_value="keepme"
+    )
+    target_env = Environment.objects.create(
+        name="Target", project=project, use_v2_feature_versioning=True
+    )
+    EnvironmentFeatureVersion.objects.filter(
+        environment=target_env, feature=existing_feature
+    ).delete()
+    existing_feature.feature_states.filter(environment=target_env).delete()
+
+    payload = [
+        {
+            "name": "3",
+            "default_enabled": True,
+            "is_server_key_only": False,
+            "initial_value": "imported",
+            "value": "imported_target",
+            "type": STRING,
+            "enabled": True,
+            "multivariate": [],
+        }
+    ]
+    feature_import = FeatureImport.objects.create(
+        environment=target_env,
+        strategy=OVERWRITE_DESTRUCTIVE,
+        data=json.dumps(payload),
+    )
+
+    # When
+    import_features_for_environment(feature_import.id)
+
+    # Then live state reflects the import (the created FS is versioned and visible).
+    live_states = list(
+        FeatureState.objects.get_live_feature_states(
+            environment=target_env,
+            additional_filters=Q(
+                feature=existing_feature,
+                identity__isnull=True,
+                feature_segment__isnull=True,
+            ),
+        )
+    )
+    assert len(live_states) == 1
+    live_fs = live_states[0]
+    assert live_fs.enabled is True
+    assert live_fs.feature_state_value.value == "imported_target"
+
+
+def test_import_features_for_environment__overwrite_destructive_with_v2_versioning__updates_live_feature_state(
+    db: None,
+) -> None:
+    # Given a v2-versioned environment where the feature has multiple published
+    # versions, so the initial-version FeatureState is no longer the live one.
+    organisation = Organisation.objects.create(name="Receiving")
+    project = Project.objects.create(name="Web", organisation=organisation)
+    target_env = Environment.objects.create(
+        name="Target", project=project, use_v2_feature_versioning=True
+    )
+    existing_feature = Feature.objects.create(
+        name="3", project=project, initial_value="keepme"
+    )
+
+    second_version = EnvironmentFeatureVersion.objects.create(
+        environment=target_env, feature=existing_feature
+    )
+    second_version.publish()
+
+    payload = [
+        {
+            "name": "3",
+            "default_enabled": True,
+            "is_server_key_only": False,
+            "initial_value": "imported",
+            "value": "imported_value",
+            "type": STRING,
+            "enabled": True,
+            "multivariate": [],
+        }
+    ]
+    feature_import = FeatureImport.objects.create(
+        environment=target_env,
+        strategy=OVERWRITE_DESTRUCTIVE,
+        data=json.dumps(payload),
+    )
+
+    # When
+    import_features_for_environment(feature_import.id)
+
+    # Then live state — what `get_live_feature_states` returns — reflects the
+    # imported value and enabled flag.
+    live_states = list(
+        FeatureState.objects.get_live_feature_states(
+            environment=target_env,
+            additional_filters=Q(
+                feature=existing_feature,
+                identity__isnull=True,
+                feature_segment__isnull=True,
+            ),
+        )
+    )
+    assert len(live_states) == 1
+    live_fs = live_states[0]
+    assert live_fs.enabled is True
+    assert live_fs.feature_state_value.value == "imported_value"
 
 
 def test_create_flagsmith_on_flagsmith_feature_export__valid_config__creates_export(
