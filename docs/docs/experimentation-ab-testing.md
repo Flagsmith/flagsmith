@@ -6,245 +6,190 @@ sidebar_position: 4
 
 :::info
 
-Experimentation in Flagsmith is currently in active development. This page
-describes the flow as it stands in the current prototype — naming, scope,
-and behaviour may change before general availability. Feedback welcome on
-the draft PR.
+Experimentation is in active development. Naming, scope, and behaviour
+may change before general availability. The draft PR is the place for
+feedback.
 
 :::
 
 > **Screenshot placeholder —** Hero image — wide shot of the Experiment Results dashboard with lift bars and the recommendation callout. Target path: `/img/experimentation/hero-results-dashboard.png`
 
+# Experimentation (A/B Testing)
+
+## Overview
+
 Flagsmith Experimentation lets you run controlled A/B tests on your
-multivariate feature flags and read the results inside Flagsmith itself.
-You define a hypothesis, pick the flag to split traffic on, choose which
-metrics matter, and Flagsmith tracks the outcome by reading evaluation
-and event data from your data warehouse.
+multivariate feature flags. Metrics are computed from your data
+warehouse, and results are read inside Flagsmith.
 
-This replaces the earlier "bring your own analytics" approach where
-Flagsmith handled variation assignment but results lived in Amplitude or
-Mixpanel. Everything — configuration, running, and results — now lives
-in one place.
+This guide covers three flows:
 
-## Key benefits
+- **Connect a data warehouse** — one-time organisation-level setup so
+  Flagsmith can compute metric values.
+- **Create an experiment** — a 5-step wizard for hypothesis, flag,
+  metrics, audience, and traffic split.
+- **Read experiment results** — summary cards, recommendation, metrics
+  comparison, and trend chart.
 
-- **One workflow for the full experiment lifecycle.** Configure, launch,
-  monitor, and read results without leaving Flagsmith.
-- **Structured hypothesis and metric tracking.** Experiments are a
-  first-class object with a hypothesis, primary / secondary / guardrail
-  metrics, and a significance verdict — not a free-form flag configuration.
-- **Reuses existing Flagsmith concepts.** Assignment uses the same
-  identity-based bucketing as multivariate flags. Target audiences use
-  existing segments.
-- **Warehouse-backed metrics.** Results are computed from your data
-  warehouse (Snowflake, BigQuery, Databricks), so metric definitions stay
-  close to where your business already stores event data.
+Experimentation builds on three Flagsmith concepts:
 
-## How it fits with Flagsmith
+- **[Multivariate flags](/managing-flags/core-management).** Every
+  experiment runs on one. Existing variations become control and
+  treatment.
+- **[Segments](/flagsmith-concepts/targeting-and-rollouts).** Define
+  the audience. Users outside the segment see the flag's environment
+  default.
+- **[Identities](/flagsmith-concepts/identities).** Users are bucketed
+  by identity, the same way multivariate values are assigned today. A
+  user keeps their variation for the duration of the run.
 
-Experimentation builds on three concepts you already use:
+## Prerequisites
 
-- **[Multivariate flags](/managing-flags/core-management)** — every
-  experiment runs on a multivariate flag. The flag's existing variations
-  become the experiment's control and treatment variations.
-- **[Segments](/flagsmith-concepts/targeting-and-rollouts)** — experiments
-  target a segment. Users outside the segment see the flag's environment
-  default, unchanged.
-- **[Identities](/flagsmith-concepts/identities)** — users are bucketed
-  by identity, the same way multivariate flag values are assigned today.
-  A user consistently sees the same variation for the duration of the
-  experiment.
+A connected data warehouse. See
+[Data Warehouse Integration](/third-party-integrations/analytics/data-warehouse)
+for setup. The connection is organisation-scoped, so configure it once
+per organisation and every project picks it up.
 
----
+## Creating an experiment
 
-## 1. Connect a data warehouse
-
-Before you can run experiments, connect the data warehouse where your
-flag-evaluation and custom-event data lives. Flagsmith reads from the
-warehouse to compute metric values per variation.
-
-:::info
-
-The data warehouse connection is **organisation-scoped** — configure it
-once and every project inherits it.
-
-:::
-
-See the full setup guide:
-**[Data Warehouse Integration](/third-party-integrations/analytics/data-warehouse)**.
-
-Once connected and data is flowing, continue to the next step.
-
----
-
-## 2. Creating an experiment
-
-All experiment workflows start on the **Experiments** page in the
-project sidebar (alongside Features, Segments, and Identities). The list
-is the hub: it's where you launch a new experiment and where you click
-in to read the results of an existing one.
+Experiments have their own page in the project sidebar, alongside
+Features, Segments, and Identities. Both creating and reading
+experiments start here.
 
 ![Experiments list page with a mix of Running, Completed, and Draft rows, highlighting the Create Experiment button](/img/experimentation/experiments-list.png)
 
-Creating an experiment is a 5-step wizard. Each step validates before
-you continue, and you can jump back to any earlier step from the
-Review & Launch summary.
+Click **Create Experiment** in the top right to open the 5-step wizard.
+Each step validates before the next; jump back from the Review & Launch
+summary at any time.
 
-### Step 1: Open the Experiments list
-
-1. Go to **Experiments** in the project sidebar.
-2. Click **Create Experiment** in the top right.
-
-### Step 2: Experiment Details
+### Experiment Details
 
 ![Experiment Details step — name field, hypothesis textarea, start/end date pickers](/img/experimentation/wizard-details.png)
 
-1. **Name** — a short identifier (e.g. `checkout_paypal_button_test`).
-2. **Hypothesis** — required. State what you expect to happen and why.
-   This becomes part of the experiment's permanent record so future team
-   members can see the original intent.
-3. **Start and end dates** — default to today + 14 days. Adjust if you
-   want to schedule the experiment for later or run for a different
-   window.
+1. **Name.** A short identifier, e.g. `checkout_paypal_button_test`.
+2. **Hypothesis** (required). What you expect to happen, and why. This
+   stays attached to the experiment after launch, so the original intent
+   is still visible later.
+3. **Start and end dates.** Default to today plus 14 days. Change them
+   to schedule for later or run a longer window.
 
-### Step 3: Flag & Variations
+### Flag & Variations
 
 ![Flag picker with multi-variant flags; the single-variant blocking banner below for context](/img/experimentation/wizard-flag-variations.png)
 
-1. Pick the **multivariate flag** to experiment on. Single-variant flags
-   are not eligible — the wizard blocks them with an explanation and a
-   link to add a variation.
-2. Review the **Variations** table — read-only. These are the flag's
-   existing multivariate values and become the experiment's control and
-   treatment variations.
+Pick the **multivariate flag** to experiment on. The Variations table
+shows the flag's existing values, which become the experiment's control
+and treatment.
 
-:::info
+Single-variant flags aren't eligible. The wizard blocks them and links
+to the flag's page so you can add a variation.
 
-Experiments require at least one non-control variation. If the selected
-flag has none, the wizard shows a banner prompting you to add one on the
-flag's main page first.
+**Note:** Experiments need at least one non-control variation. If the
+flag doesn't have one, the wizard points you to the flag's main page to
+add it.
 
-:::
-
-### Step 4: Select Metrics
+### Select Metrics
 
 ![Metric picker showing pre-selected metrics with the Primary / Secondary / Guardrail segmented control visible on a row](/img/experimentation/wizard-metrics.png)
 
-Pick the metrics this experiment will track. Each metric has a **role**
-that tells Flagsmith how to interpret it:
+Select the metrics this experiment will track. Each metric has a role:
 
-- **Primary** — the metric that drives the verdict. Significance here
-  determines whether the experiment succeeds.
-- **Secondary** — informational. Tracked and displayed alongside primary,
-  but doesn't influence the recommendation.
-- **Guardrail** — a safety check. Used to detect regressions on metrics
-  you don't want to break (e.g. page-load time, error rate).
+- **Primary.** Drives the verdict. The experiment succeeds or fails
+  based on significance here.
+- **Secondary.** Tracked alongside primary metrics, but doesn't
+  influence the recommendation.
+- **Guardrail.** A safety check for metrics you don't want to break,
+  such as page-load time or error rate.
 
-1. Select metrics from the list.
-2. For each selected metric, choose its role using the three-way segmented
-   control.
-3. If you select multiple primary metrics, a soft warning appears — this
-   is allowed but harder to interpret statistically.
+Pick a role for each metric with the three-way segmented control.
+Multiple primaries are allowed but harder to interpret statistically;
+the wizard warns you if you select more than one.
 
-### Step 5: Segments & Traffic
+### Segments & Traffic
 
 ![Segment selector with an active conflict banner shown for context; traffic-split inputs below](/img/experimentation/wizard-segment-traffic.png)
 
-1. Pick the **segment** whose users will be eligible for the experiment.
-   Everyone outside the segment sees the flag's environment default,
-   unchanged.
-2. Set **traffic weights** — the percentage of eligible users assigned to
-   each variation. Weights auto-balance: adjusting one rebalances the
-   others proportionally. Click **Split evenly** to reset.
+Pick the **segment** of users who'll be eligible. Users outside the
+segment keep the flag's environment default.
+
+Set **traffic weights**: the percentage of eligible users assigned to
+each variation. Weights auto-balance, so adjusting one rebalances the
+others. Click **Split evenly** to reset.
 
 :::warning
 
-If the chosen flag already has a segment override for this segment, the
-wizard shows a conflict banner. Resolve the conflict (pick a different
-segment, or remove the override) before continuing — a running
-experiment on a segment with an override produces incorrect assignment.
+If the flag already has an override for the chosen segment, the wizard
+blocks you with a conflict banner. Pick a different segment or remove
+the override before continuing. A live experiment on a segment with an
+override produces incorrect assignment.
 
 :::
 
-### Step 6: Review & Launch
+### Review & Launch
 
 ![Review summary with per-section edit links](/img/experimentation/wizard-review-launch.png)
 
-1. Review the full configuration — details, flag, variations, metrics
-   with roles, segment, traffic split, and dates.
-2. Click any section's **Edit** link to jump back to that step.
-3. Click **Launch Experiment**.
-4. Confirm the launch in the modal. Once confirmed, the experiment
-   starts assigning traffic immediately and the flag begins splitting
-   variations by the configured weights within the chosen segment.
+Read through the summary, edit any section by clicking its **Edit**
+link, then click **Launch Experiment** and confirm.
 
-:::info
+Traffic assignment starts immediately. The flag begins serving the
+configured weights to users in the chosen segment.
 
-Once launched, experiment configuration is locked for the duration of
-the run to preserve statistical validity. To change the setup, stop the
-experiment and create a new one.
+**Note:** Once launched, the configuration is locked for the rest of
+the run to keep the result statistically valid. To change anything,
+stop the experiment and start a new one.
 
-:::
+## Reading experiment results
 
----
-
-## 3. Reading experiment results
-
-From the **Experiments** list, click any running or completed experiment
+Click any running or completed experiment from the **Experiments** list
 to open its **Results** dashboard.
 
 ![Full results dashboard — stat cards, recommendation callout, metrics comparison table, and trend chart stacked](/img/experimentation/results-dashboard-full.png)
 
-Read the dashboard top-down:
-
 ### Summary cards
 
-- **Lift vs. control** on the primary metric
-- **Probability of being best** — how confident the statistical engine is
-  that the leading variation truly wins
-- **Sample size per variation** — how many assigned identities have
-  contributed data so far
+- **Lift vs. control** on the primary metric.
+- **Probability of being best.** Confidence that the leading variation
+  actually wins.
+- **Sample size per variation.** How many assigned identities have
+  contributed data so far.
 
 ### Recommendation callout
 
 ![Recommendation callout — "Treatment B is outperforming Control with 94% probability" style](/img/experimentation/results-recommendation-callout.png)
 
-A plain-language summary of the current state — which variation is
-leading, how confident the verdict is, and a suggested next action
-(continue, declare a winner, investigate).
+A plain-language summary: which variation is leading, how confident the
+verdict is, and what to do next (keep running, declare a winner, or
+investigate).
 
 ### Metrics comparison table
 
 ![Metrics comparison table — primary row emphasised, guardrail badge visible, zero-centred lift bars](/img/experimentation/results-comparison-table.png)
 
-One row per metric, with the **primary row** visually emphasised so
-your eye lands on the verdict-driving metric first. Each row shows:
+One row per metric, with the primary row visually emphasised. Each row
+shows:
 
-- **Role badge** — Primary / Secondary / Guardrail
-- **Control value** and **Treatment value**
-- **Lift bar** — zero-centred, showing the relative change and its
-  direction
-- **Significance** — statistical confidence in the observed lift
+- **Role badge.** Primary, Secondary, or Guardrail.
+- **Control value** and **Treatment value.**
+- **Lift bar.** Zero-centred, showing the relative change and its
+  direction.
+- **Significance.** Statistical confidence in the observed lift.
 
 ### Trend over time
 
 ![Trend line chart with metric selector above it — control vs. treatment lines](/img/experimentation/results-trend-chart.png)
 
-Below the table, a line chart plots each variation's metric value over
-the duration of the experiment. The metric selector lets you inspect any
-of the experiment's metrics independently.
+A line chart plots each variation's value over the experiment's run.
+Use the metric selector above the chart to switch between metrics.
 
-This helps you distinguish a stable result from one that only recently
-flipped — if lines have been consistently separated for days, the
-verdict is more trustworthy than if they crossed yesterday.
-
----
+Look for stability. Lines separated for several days are more
+trustworthy than ones that crossed yesterday.
 
 ## What's next
 
-- Learn more about **[multivariate flags](/managing-flags/core-management)**
-  — the building block every experiment sits on top of.
-- Explore **[segments](/flagsmith-concepts/targeting-and-rollouts)** to
-  define the audience for an experiment.
-- Read about **[identities](/flagsmith-concepts/identities)**, the unit
-  Flagsmith buckets users by when assigning variations.
+- **[Multivariate flags](/managing-flags/core-management).** The
+  building block under every experiment.
+- **[Segments](/flagsmith-concepts/targeting-and-rollouts).** Define
+  an experiment's audience.
+- **[Identities](/flagsmith-concepts/identities).** The unit Flagsmith
+  buckets users by.
