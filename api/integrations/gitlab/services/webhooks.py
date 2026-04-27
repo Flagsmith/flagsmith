@@ -3,7 +3,6 @@ import uuid
 
 import requests
 import structlog
-from django.urls import reverse
 
 from core.helpers import get_current_site_url
 from features.feature_external_resources.models import (
@@ -18,11 +17,6 @@ from integrations.gitlab.models import GitLabConfiguration, GitLabWebhook
 from integrations.gitlab.services.url_parsing import parse_project_path
 
 logger = structlog.get_logger("gitlab")
-
-
-def _get_webhook_url(webhook_uuid: uuid.UUID) -> str:
-    path = reverse("api-v1:gitlab-webhook", kwargs={"webhook_uuid": str(webhook_uuid)})
-    return f"{get_current_site_url()}{path}"
 
 
 def has_live_resource_for_path(
@@ -83,7 +77,7 @@ def ensure_webhook_registered(
             instance_url=config.gitlab_instance_url,
             access_token=config.access_token,
             project_path=project_path,
-            hook_url=_get_webhook_url(webhook_uuid),
+            hook_url=f"{get_current_site_url()}/api/v1/gitlab-webhook/{webhook_uuid}/",
             secret=secret,
         )
     except requests.RequestException as exc:
