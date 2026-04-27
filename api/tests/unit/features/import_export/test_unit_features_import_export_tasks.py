@@ -452,7 +452,7 @@ def test_import_features_for_environment__overwrite_destructive__leaves_other_en
             ],
         }
     ]
-    feature_import = FeatureImport.objects.create(  # type: ignore[misc]
+    feature_import = FeatureImport.objects.create(
         environment=target_env,
         strategy=OVERWRITE_DESTRUCTIVE,
         data=json.dumps(payload),
@@ -546,7 +546,7 @@ def test_import_features_for_environment__overwrite_destructive__deletes_target_
             "multivariate": [],
         }
     ]
-    feature_import = FeatureImport.objects.create(  # type: ignore[misc]
+    feature_import = FeatureImport.objects.create(
         environment=target_env,
         strategy=OVERWRITE_DESTRUCTIVE,
         data=json.dumps(payload),
@@ -603,7 +603,7 @@ def test_import_features_for_environment__overwrite_destructive_with_missing_tar
             "multivariate": [],
         }
     ]
-    feature_import = FeatureImport.objects.create(  # type: ignore[misc]
+    feature_import = FeatureImport.objects.create(
         environment=target_env,
         strategy=OVERWRITE_DESTRUCTIVE,
         data=json.dumps(payload),
@@ -668,7 +668,7 @@ def test_import_features_for_environment__overwrite_destructive_with_matching_fe
             "multivariate": [],
         }
     ]
-    feature_import = FeatureImport.objects.create(  # type: ignore[misc]
+    feature_import = FeatureImport.objects.create(
         environment=target_env,
         strategy=OVERWRITE_DESTRUCTIVE,
         data=json.dumps(payload),

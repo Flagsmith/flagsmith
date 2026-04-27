@@ -278,7 +278,7 @@ def _overwrite_feature_for_environment(
         type=feature_data["type"],  # type: ignore[arg-type]
         feature_state_value=feature_state.feature_state_value,
     )
-    feature_state.enabled = feature_data["enabled"]  # type: ignore[assignment]
+    feature_state.enabled = feature_data["enabled"]
     feature_state.save()
 
 
