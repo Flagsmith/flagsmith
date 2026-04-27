@@ -7,9 +7,9 @@ import WizardNavButtons from './wizard/WizardNavButtons'
 import ExperimentDetailsStep from './steps/ExperimentDetailsStep'
 import SelectMetricsStep from './steps/SelectMetricsStep'
 import FlagVariationsStep from './steps/FlagVariationsStep'
-import SegmentTrafficStep from './steps/SegmentTrafficStep'
+import AudienceStep from './steps/AudienceStep'
 import ReviewLaunchStep from './steps/ReviewLaunchStep'
-import { buildExperimentArms, splitEvenly } from './steps/SegmentTrafficStep'
+import { buildExperimentArms, splitEvenly } from './steps/AudienceStep'
 import {
   EXPERIMENT_WIZARD_STEPS,
   ExperimentWizardState,
@@ -36,6 +36,11 @@ const DEFAULT_END = new Date(DEFAULT_START)
 DEFAULT_END.setDate(DEFAULT_END.getDate() + 14)
 
 const INITIAL_STATE: ExperimentWizardState = {
+  audience: {
+    samplePercentage: 100,
+    segmentId: 'seg-3',
+    weights: splitEvenly(INITIAL_ARMS.map((a) => a.id)),
+  },
   controlValue: INITIAL_FLAG.controlValue,
   currentStep: 0,
   details: {
@@ -51,10 +56,6 @@ const INITIAL_STATE: ExperimentWizardState = {
     { ...MOCK_METRICS[1], role: 'secondary' },
     { ...MOCK_METRICS[2], role: 'guardrail' },
   ],
-  segmentTraffic: {
-    segmentId: 'seg-3',
-    weights: splitEvenly(INITIAL_ARMS.map((a) => a.id)),
-  },
   variations: MOCK_VARIATIONS,
 }
 
@@ -82,16 +83,18 @@ const CreateExperimentPage: FC = () => {
 
   const handleLaunch = useCallback(() => {
     const segment = MOCK_SEGMENTS.find(
-      (s) => s.value === state.segmentTraffic.segmentId,
+      (s) => s.value === state.audience.segmentId,
     )
     const flag = MOCK_FLAGS.find((f) => f.value === state.featureFlagId)
+    const audienceLabel = segment?.label ?? 'all users in the environment'
     openConfirm({
       body: (
         <span>
           This will start serving variations of{' '}
-          <strong>{flag?.label ?? 'this flag'}</strong> to users matching{' '}
-          <strong>{segment?.label ?? 'the selected segment'}</strong>. You can
-          pause or stop the experiment at any time.
+          <strong>{flag?.label ?? 'this flag'}</strong> to{' '}
+          <strong>{state.audience.samplePercentage}%</strong> of{' '}
+          <strong>{audienceLabel}</strong>. You can pause or stop the experiment
+          at any time.
         </span>
       ),
       onYes: () => {
@@ -156,12 +159,11 @@ const CreateExperimentPage: FC = () => {
       )
     }
     if (state.currentStep === 3) {
-      if (!state.segmentTraffic.segmentId) return false
-      const sum = (state.segmentTraffic.weights ?? []).reduce(
+      const sum = (state.audience.weights ?? []).reduce(
         (s, w) => s + w.weight,
         0,
       )
-      return sum === 100
+      return sum === 100 && state.audience.samplePercentage > 0
     }
     return true
   }, [
@@ -170,8 +172,8 @@ const CreateExperimentPage: FC = () => {
     state.details.hypothesis,
     state.featureFlagId,
     state.variations.length,
-    state.segmentTraffic.segmentId,
-    state.segmentTraffic.weights,
+    state.audience.samplePercentage,
+    state.audience.weights,
   ])
 
   const stepsWithSummary = EXPERIMENT_WIZARD_STEPS.map((step, i) => {
@@ -204,10 +206,20 @@ const CreateExperimentPage: FC = () => {
         break
       }
       case 3: {
-        const parts = (state.segmentTraffic.weights ?? [])
+        const splitParts = (state.audience.weights ?? [])
           .filter((w) => w.weight > 0)
           .map((w) => `${w.weight}%`)
-        completeSummary = parts.length > 0 ? parts.join(' / ') : undefined
+        const split = splitParts.length > 0 ? splitParts.join('/') : null
+        const audienceLabel = state.audience.segmentId
+          ? MOCK_SEGMENTS.find((s) => s.value === state.audience.segmentId)
+              ?.label ?? 'segment'
+          : 'All users'
+        const summaryParts = [
+          audienceLabel,
+          `${state.audience.samplePercentage}%`,
+          split,
+        ].filter(Boolean)
+        completeSummary = summaryParts.join(' · ')
         break
       }
       default:
@@ -242,8 +254,8 @@ const CreateExperimentPage: FC = () => {
                 const arms = buildExperimentArms(prev.controlValue, variations)
                 return {
                   ...prev,
-                  segmentTraffic: {
-                    ...prev.segmentTraffic,
+                  audience: {
+                    ...prev.audience,
                     weights: splitEvenly(arms.map((a) => a.id)),
                   },
                   variations,
@@ -264,15 +276,13 @@ const CreateExperimentPage: FC = () => {
         const flag =
           MOCK_FLAGS.find((f) => f.value === state.featureFlagId) ?? null
         return (
-          <SegmentTrafficStep
-            segmentTraffic={state.segmentTraffic}
+          <AudienceStep
+            audience={state.audience}
             flag={flag}
             controlValue={state.controlValue}
             variations={state.variations}
             environmentName='Development'
-            onChange={(segmentTraffic) =>
-              setState((prev) => ({ ...prev, segmentTraffic }))
-            }
+            onChange={(audience) => setState((prev) => ({ ...prev, audience }))}
           />
         )
       }

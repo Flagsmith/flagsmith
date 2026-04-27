@@ -1,4 +1,4 @@
-.segment-traffic-step {
+.audience-step {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -58,6 +58,18 @@
     color: var(--color-text-default);
   }
 
+  &__optional-badge {
+    margin-left: 8px;
+    padding: 2px 6px;
+    font-size: var(--font-body-xs-size);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    background: var(--color-surface-subtle);
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
   &__label {
     font-size: var(--font-body-sm-size);
     font-weight: var(--font-weight-medium);
@@ -75,6 +87,62 @@
 
   &__hint {
     color: var(--color-text-secondary);
+  }
+
+  &__targeting-toggle {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  &__targeting-clear {
+    margin-left: auto;
+  }
+
+  &__sample-presets {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  &__sample-preset {
+    padding: 8px 14px;
+    font-size: var(--font-body-sm-size);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-default);
+    background: var(--color-surface-default);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--easing-standard);
+
+    &:hover:not(&--active) {
+      background: var(--color-surface-subtle);
+    }
+
+    &--active {
+      background: var(--color-surface-action-subtle);
+      border-color: var(--color-border-action);
+      color: var(--color-text-action);
+    }
+  }
+
+  &__sample-custom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+
+    input {
+      width: 80px;
+      padding: 8px 10px;
+      font-family: var(--font-family);
+      font-size: var(--font-body-size);
+      border: 1px solid var(--color-border-default);
+      border-radius: var(--radius-sm);
+      text-align: right;
+    }
   }
 
   &__arms {
