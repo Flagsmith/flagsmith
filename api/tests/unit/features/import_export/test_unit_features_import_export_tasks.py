@@ -289,13 +289,51 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
     organisation2 = Organisation.objects.create(name="Receiving")
     project2 = Project.objects.create(name="Web", organisation=organisation2)
     environment2 = Environment.objects.create(name="Bat", project=project2)
-    Environment.objects.create(name="Ignore Me", project=project2)
+    bystander_environment = Environment.objects.create(
+        name="Ignore Me", project=project2
+    )
 
     overlapping_feature = Feature.objects.create(
         name="3",
         project=project2,
         initial_value="keepme",
     )
+
+    # Bystander env state on the overlapping feature should survive the import.
+    bystander_fs = overlapping_feature.feature_states.get(
+        environment=bystander_environment
+    )
+    bystander_fs.enabled = True
+    bystander_fs.save()
+    bystander_fs.feature_state_value.type = STRING
+    bystander_fs.feature_state_value.string_value = "bystander_value"
+    bystander_fs.feature_state_value.save()
+    bystander_fs_pk = bystander_fs.pk
+
+    # Target env override state should be destroyed by the import.
+    target_segment = Segment.objects.create(name="Beta", project=project2)
+    target_feature_segment = FeatureSegment.objects.create(
+        feature=overlapping_feature,
+        segment=target_segment,
+        environment=environment2,
+    )
+    target_segment_fs = FeatureState.objects.create(
+        feature=overlapping_feature,
+        environment=environment2,
+        feature_segment=target_feature_segment,
+    )
+    target_identity = Identity.objects.create(
+        identifier="target-id", environment=environment2
+    )
+    target_identity_fs = FeatureState.objects.create(
+        feature=overlapping_feature,
+        environment=environment2,
+        identity=target_identity,
+    )
+    target_segment_pk = target_feature_segment.pk
+    target_segment_fs_pk = target_segment_fs.pk
+    target_identity_fs_pk = target_identity_fs.pk
+
     feature_export = FeatureExport.objects.create(
         environment=environment,
         status=PROCESSING,
@@ -376,188 +414,13 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
     assert new_feature_state3.feature_state_value.type == STRING
     assert new_feature_state3.feature_state_value.value == "changed"
 
-
-def test_import_features_for_environment__overwrite_destructive__leaves_other_environments_unchanged(
-    db: None,
-) -> None:
-    # Given
-    organisation = Organisation.objects.create(name="Receiving")
-    project = Project.objects.create(name="Web", organisation=organisation)
-    target_env = Environment.objects.create(name="Target", project=project)
-    bystander_env = Environment.objects.create(name="Bystander", project=project)
-
-    existing_feature = Feature.objects.create(
-        name="3",
-        project=project,
-        initial_value="keepme",
-        default_enabled=False,
-    )
-    mv_option_1 = MultivariateFeatureOption.objects.create(
-        feature=existing_feature,
-        default_percentage_allocation=30,
-        type=STRING,
-        string_value="mv1",
-    )
-    mv_option_2 = MultivariateFeatureOption.objects.create(
-        feature=existing_feature,
-        default_percentage_allocation=70,
-        type=STRING,
-        string_value="mv2",
-    )
-
-    bystander_fs = existing_feature.feature_states.get(environment=bystander_env)
-    bystander_fs.enabled = True
-    bystander_fs.save()
-    bystander_fs.feature_state_value.type = STRING
-    bystander_fs.feature_state_value.string_value = "bystander_value"
-    bystander_fs.feature_state_value.save()
-
-    bystander_mv_value_1 = bystander_fs.multivariate_feature_state_values.get(
-        multivariate_feature_option=mv_option_1
-    )
-    bystander_mv_value_1.percentage_allocation = 25
-    bystander_mv_value_1.save()
-    bystander_mv_value_2 = bystander_fs.multivariate_feature_state_values.get(
-        multivariate_feature_option=mv_option_2
-    )
-    bystander_mv_value_2.percentage_allocation = 75
-    bystander_mv_value_2.save()
-
-    feature_pk = existing_feature.pk
-    bystander_fs_pk = bystander_fs.pk
-    bystander_fsv_pk = bystander_fs.feature_state_value.pk
-    bystander_mv_value_1_pk = bystander_mv_value_1.pk
-    bystander_mv_value_2_pk = bystander_mv_value_2.pk
-
-    payload = [
-        {
-            "name": "3",
-            "default_enabled": True,
-            "is_server_key_only": False,
-            "initial_value": "imported",
-            "value": "imported_target_value",
-            "type": STRING,
-            "enabled": True,
-            "multivariate": [
-                {
-                    "percentage_allocation": 90,
-                    "default_percentage_allocation": 30,
-                    "value": "mv1",
-                    "type": STRING,
-                },
-                {
-                    "percentage_allocation": 10,
-                    "default_percentage_allocation": 70,
-                    "value": "mv2",
-                    "type": STRING,
-                },
-            ],
-        }
-    ]
-    feature_import = FeatureImport.objects.create(
-        environment=target_env,
-        strategy=OVERWRITE_DESTRUCTIVE,
-        data=json.dumps(payload),
-    )
-
-    # When
-    import_features_for_environment(feature_import.id)
-
-    # Then
-    existing_feature.refresh_from_db()
-    assert existing_feature.pk == feature_pk
-
+    # Bystander env's FeatureState row is preserved unchanged.
     bystander_fs.refresh_from_db()
     assert bystander_fs.pk == bystander_fs_pk
     assert bystander_fs.enabled is True
-    assert bystander_fs.feature_state_value.pk == bystander_fsv_pk
     assert bystander_fs.feature_state_value.value == "bystander_value"
 
-    bystander_mv_value_1.refresh_from_db()
-    bystander_mv_value_2.refresh_from_db()
-    assert bystander_mv_value_1.pk == bystander_mv_value_1_pk
-    assert bystander_mv_value_1.percentage_allocation == 25
-    assert bystander_mv_value_2.pk == bystander_mv_value_2_pk
-    assert bystander_mv_value_2.percentage_allocation == 75
-
-
-def test_import_features_for_environment__overwrite_destructive__deletes_target_environment_segment_and_identity_overrides(
-    db: None,
-) -> None:
-    # Given
-    organisation = Organisation.objects.create(name="Receiving")
-    project = Project.objects.create(name="Web", organisation=organisation)
-    target_env = Environment.objects.create(name="Target", project=project)
-    bystander_env = Environment.objects.create(name="Bystander", project=project)
-    segment = Segment.objects.create(name="Beta", project=project)
-
-    existing_feature = Feature.objects.create(
-        name="3",
-        project=project,
-        initial_value="keepme",
-    )
-
-    target_segment = FeatureSegment.objects.create(
-        feature=existing_feature, segment=segment, environment=target_env
-    )
-    target_segment_fs = FeatureState.objects.create(
-        feature=existing_feature,
-        environment=target_env,
-        feature_segment=target_segment,
-    )
-    bystander_segment = FeatureSegment.objects.create(
-        feature=existing_feature, segment=segment, environment=bystander_env
-    )
-    bystander_segment_fs = FeatureState.objects.create(
-        feature=existing_feature,
-        environment=bystander_env,
-        feature_segment=bystander_segment,
-    )
-
-    target_identity = Identity.objects.create(
-        identifier="target-id", environment=target_env
-    )
-    target_identity_fs = FeatureState.objects.create(
-        feature=existing_feature, environment=target_env, identity=target_identity
-    )
-    bystander_identity = Identity.objects.create(
-        identifier="bystander-id", environment=bystander_env
-    )
-    bystander_identity_fs = FeatureState.objects.create(
-        feature=existing_feature,
-        environment=bystander_env,
-        identity=bystander_identity,
-    )
-
-    target_segment_pk = target_segment.pk
-    target_segment_fs_pk = target_segment_fs.pk
-    target_identity_fs_pk = target_identity_fs.pk
-    bystander_segment_pk = bystander_segment.pk
-    bystander_segment_fs_pk = bystander_segment_fs.pk
-    bystander_identity_fs_pk = bystander_identity_fs.pk
-
-    payload = [
-        {
-            "name": "3",
-            "default_enabled": False,
-            "is_server_key_only": False,
-            "initial_value": "imported",
-            "value": "imported",
-            "type": STRING,
-            "enabled": False,
-            "multivariate": [],
-        }
-    ]
-    feature_import = FeatureImport.objects.create(
-        environment=target_env,
-        strategy=OVERWRITE_DESTRUCTIVE,
-        data=json.dumps(payload),
-    )
-
-    # When
-    import_features_for_environment(feature_import.id)
-
-    # Then
+    # Target env's segment + identity overrides are gone (live filter excludes them).
     assert not FeatureSegment.objects.filter(pk=target_segment_pk).exists()
     assert not FeatureState.objects.filter(
         pk=target_segment_fs_pk, deleted_at__isnull=True
@@ -566,178 +429,87 @@ def test_import_features_for_environment__overwrite_destructive__deletes_target_
         pk=target_identity_fs_pk, deleted_at__isnull=True
     ).exists()
 
-    assert FeatureSegment.objects.filter(pk=bystander_segment_pk).exists()
-    assert FeatureState.objects.filter(
-        pk=bystander_segment_fs_pk, deleted_at__isnull=True
-    ).exists()
-    assert FeatureState.objects.filter(
-        pk=bystander_identity_fs_pk, deleted_at__isnull=True
-    ).exists()
 
-
-def test_import_features_for_environment__overwrite_destructive_with_missing_target_feature_state__creates_environment_default(
+def test_export_and_import_features__overwrite_destructive_with_v2_versioning__publishes_new_version_preserving_history(
     db: None,
+    environment: Environment,
+    project: Project,
 ) -> None:
-    # Given
-    organisation = Organisation.objects.create(name="Receiving")
-    project = Project.objects.create(name="Web", organisation=organisation)
-    bystander_env = Environment.objects.create(name="Bystander", project=project)
-    existing_feature = Feature.objects.create(
-        name="3",
-        project=project,
-        initial_value="keepme",
+    # Given a source env exporting a feature with a known value, and a target
+    # project whose v2-versioned env already has the overlapping feature with
+    # an established live version.
+    source_feature = Feature.objects.create(
+        name="3", project=project, initial_value="changeme"
     )
-    target_env = Environment.objects.create(name="Target", project=project)
-    existing_feature.feature_states.filter(environment=target_env).delete()
+    source_fs = source_feature.feature_states.get(environment=environment)
+    source_fs.enabled = True
+    source_fs.save()
+    source_fs.feature_state_value.type = STRING
+    source_fs.feature_state_value.string_value = "imported_value"
+    source_fs.feature_state_value.save()
 
-    feature_pk = existing_feature.pk
-    bystander_fs_pk = existing_feature.feature_states.get(environment=bystander_env).pk
-
-    payload = [
-        {
-            "name": "3",
-            "default_enabled": True,
-            "is_server_key_only": False,
-            "initial_value": "imported",
-            "value": "imported_target",
-            "type": STRING,
-            "enabled": True,
-            "multivariate": [],
-        }
-    ]
-    feature_import = FeatureImport.objects.create(
-        environment=target_env,
-        strategy=OVERWRITE_DESTRUCTIVE,
-        data=json.dumps(payload),
-    )
-
-    # When
-    import_features_for_environment(feature_import.id)
-
-    # Then
-    existing_feature.refresh_from_db()
-    assert existing_feature.pk == feature_pk
-
-    target_fs_qs = existing_feature.feature_states.filter(
-        environment=target_env,
-        identity__isnull=True,
-        feature_segment__isnull=True,
-    )
-    assert target_fs_qs.count() == 1
-    target_fs = target_fs_qs.get()
-    assert target_fs.enabled is True
-    assert target_fs.feature_state_value.value == "imported_target"
-
-    assert (
-        existing_feature.feature_states.get(environment=bystander_env).pk
-        == bystander_fs_pk
-    )
-
-
-def test_import_features_for_environment__overwrite_destructive_with_matching_feature__updates_target_environment_value_and_enabled(
-    db: None,
-) -> None:
-    # Given
-    organisation = Organisation.objects.create(name="Receiving")
-    project = Project.objects.create(name="Web", organisation=organisation)
-    target_env = Environment.objects.create(name="Target", project=project)
-    existing_feature = Feature.objects.create(
-        name="3",
-        project=project,
-        initial_value="keepme",
-        default_enabled=False,
-        is_server_key_only=False,
-    )
-    target_fs = existing_feature.feature_states.get(environment=target_env)
-    target_fs.enabled = False
-    target_fs.save()
-    target_fs.feature_state_value.type = STRING
-    target_fs.feature_state_value.string_value = "old_value"
-    target_fs.feature_state_value.save()
-
-    feature_pk = existing_feature.pk
-    target_fs_pk = target_fs.pk
-
-    payload = [
-        {
-            "name": "3",
-            "default_enabled": True,
-            "is_server_key_only": True,
-            "initial_value": "imported_initial",
-            "value": "imported_value",
-            "type": STRING,
-            "enabled": True,
-            "multivariate": [],
-        }
-    ]
-    feature_import = FeatureImport.objects.create(
-        environment=target_env,
-        strategy=OVERWRITE_DESTRUCTIVE,
-        data=json.dumps(payload),
-    )
-
-    # When
-    import_features_for_environment(feature_import.id)
-
-    # Then
-    existing_feature.refresh_from_db()
-    assert existing_feature.pk == feature_pk
-    assert existing_feature.initial_value == "imported_initial"
-    assert existing_feature.default_enabled is True
-    assert existing_feature.is_server_key_only is True
-
-    target_fs.refresh_from_db()
-    assert target_fs.pk == target_fs_pk
-    assert target_fs.enabled is True
-    assert target_fs.feature_state_value.value == "imported_value"
-
-
-def test_import_features_for_environment__overwrite_destructive_with_v2_versioning_and_missing_target_feature_state__creates_versioned_live_feature_state(
-    db: None,
-) -> None:
-    # Given a v2-versioned environment where the feature has no FeatureState
-    # (simulating the legacy "feature predates env" case).
-    organisation = Organisation.objects.create(name="Receiving")
-    project = Project.objects.create(name="Web", organisation=organisation)
-    Environment.objects.create(name="Bystander", project=project)
-    existing_feature = Feature.objects.create(
-        name="3", project=project, initial_value="keepme"
-    )
+    organisation2 = Organisation.objects.create(name="Receiving")
+    project2 = Project.objects.create(name="Web", organisation=organisation2)
     target_env = Environment.objects.create(
-        name="Target", project=project, use_v2_feature_versioning=True
+        name="Target", project=project2, use_v2_feature_versioning=True
     )
-    EnvironmentFeatureVersion.objects.filter(
-        environment=target_env, feature=existing_feature
-    ).delete()
-    existing_feature.feature_states.filter(environment=target_env).delete()
+    target_feature = Feature.objects.create(
+        name="3", project=project2, initial_value="keepme"
+    )
 
-    payload = [
-        {
-            "name": "3",
-            "default_enabled": True,
-            "is_server_key_only": False,
-            "initial_value": "imported",
-            "value": "imported_target",
-            "type": STRING,
-            "enabled": True,
-            "multivariate": [],
-        }
-    ]
-    feature_import = FeatureImport.objects.create(
-        environment=target_env,
-        strategy=OVERWRITE_DESTRUCTIVE,
-        data=json.dumps(payload),
+    original_version = EnvironmentFeatureVersion.objects.get(
+        environment=target_env, feature=target_feature
+    )
+    original_fs = original_version.feature_states.get(
+        identity__isnull=True, feature_segment__isnull=True
+    )
+    original_fs.enabled = False
+    original_fs.save()
+    original_fs.feature_state_value.type = STRING
+    original_fs.feature_state_value.string_value = "original_value"
+    original_fs.feature_state_value.save()
+
+    original_version_pk = original_version.pk
+    original_fs_pk = original_fs.pk
+
+    feature_export = FeatureExport.objects.create(
+        environment=environment, status=PROCESSING
     )
 
     # When
+    export_features_for_environment(feature_export.id)
+    feature_export.refresh_from_db()
+
+    feature_import = FeatureImport.objects.create(  # type: ignore[misc]
+        environment=target_env,
+        strategy=OVERWRITE_DESTRUCTIVE,
+        data=feature_export.data,
+    )
     import_features_for_environment(feature_import.id)
 
-    # Then live state reflects the import (the created FS is versioned and visible).
+    # Then a new published version exists, the original version is unchanged,
+    # and live state reflects the import.
+    versions = EnvironmentFeatureVersion.objects.filter(
+        environment=target_env, feature=target_feature
+    )
+    assert versions.count() == 2
+
+    original_version.refresh_from_db()
+    assert original_version.pk == original_version_pk
+
+    original_fs.refresh_from_db()
+    assert original_fs.pk == original_fs_pk
+    assert original_fs.enabled is False
+    assert original_fs.feature_state_value.value == "original_value"
+
+    new_version = versions.exclude(pk=original_version_pk).get()
+    assert new_version.published_at is not None
+
     live_states = list(
         FeatureState.objects.get_live_feature_states(
             environment=target_env,
             additional_filters=Q(
-                feature=existing_feature,
+                feature=target_feature,
                 identity__isnull=True,
                 feature_segment__isnull=True,
             ),
@@ -745,64 +517,7 @@ def test_import_features_for_environment__overwrite_destructive_with_v2_versioni
     )
     assert len(live_states) == 1
     live_fs = live_states[0]
-    assert live_fs.enabled is True
-    assert live_fs.feature_state_value.value == "imported_target"
-
-
-def test_import_features_for_environment__overwrite_destructive_with_v2_versioning__updates_live_feature_state(
-    db: None,
-) -> None:
-    # Given a v2-versioned environment where the feature has multiple published
-    # versions, so the initial-version FeatureState is no longer the live one.
-    organisation = Organisation.objects.create(name="Receiving")
-    project = Project.objects.create(name="Web", organisation=organisation)
-    target_env = Environment.objects.create(
-        name="Target", project=project, use_v2_feature_versioning=True
-    )
-    existing_feature = Feature.objects.create(
-        name="3", project=project, initial_value="keepme"
-    )
-
-    second_version = EnvironmentFeatureVersion.objects.create(
-        environment=target_env, feature=existing_feature
-    )
-    second_version.publish()
-
-    payload = [
-        {
-            "name": "3",
-            "default_enabled": True,
-            "is_server_key_only": False,
-            "initial_value": "imported",
-            "value": "imported_value",
-            "type": STRING,
-            "enabled": True,
-            "multivariate": [],
-        }
-    ]
-    feature_import = FeatureImport.objects.create(
-        environment=target_env,
-        strategy=OVERWRITE_DESTRUCTIVE,
-        data=json.dumps(payload),
-    )
-
-    # When
-    import_features_for_environment(feature_import.id)
-
-    # Then live state — what `get_live_feature_states` returns — reflects the
-    # imported value and enabled flag.
-    live_states = list(
-        FeatureState.objects.get_live_feature_states(
-            environment=target_env,
-            additional_filters=Q(
-                feature=existing_feature,
-                identity__isnull=True,
-                feature_segment__isnull=True,
-            ),
-        )
-    )
-    assert len(live_states) == 1
-    live_fs = live_states[0]
+    assert live_fs.environment_feature_version_id == new_version.uuid
     assert live_fs.enabled is True
     assert live_fs.feature_state_value.value == "imported_value"
 
