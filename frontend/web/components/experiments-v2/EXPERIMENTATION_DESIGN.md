@@ -50,22 +50,31 @@ weight math, but user-facing copy stays as "variation".
 
 ## Data model
 
-An experiment in Flagsmith is a **segment override with weights on a
-multi-variant flag**. Specifically:
+An experiment in Flagsmith is a **first-class record** that owns a
+segment override (segment + per-variation weights) plus
+experiment-level fields for sample size, outside variation, and mutual
+exclusion. In v1 the segment override does all the audience work and
+the extra fields stay at their defaults; v2 surfaces the dials. See
+[Path C — forward-designed fields](#path-c--forward-designed-fields)
+below for why the fields exist before the UI uses them.
 
 ```
-FeatureSegment {
+Experiment {
   segment: <your target segment>
-  priority: <assigned automatically>
   weights: [
     { value: <control_value>, weight: X },
     { value: <variation_1.value>, weight: Y },
     { value: <variation_2.value>, weight: Z },
   ]  // X + Y + Z = 100
+
+  // Forward-designed for v2, defaulted in v1:
+  sample_percentage: 100              // % of matched segment in the experiment
+  outside_variation: <flag default>   // served to eligible-but-not-sampled users
+  mutual_exclusion_group: null        // layer ID; null means no exclusion
 }
 ```
 
-**Implications:**
+**v1 implications:**
 
 1. An experiment targets **one segment**. Users outside that segment hit the
    flag's environment default, not the experiment.
@@ -77,6 +86,32 @@ FeatureSegment {
    has an override on the target flag.
 4. Existing segment overrides on other segments are unaffected. Priority
    ordering decides who wins for users matching multiple segments.
+
+### Path C — forward-designed fields
+
+LaunchDarkly's experiment creation has a layered audience model:
+targeting rule (eligibility) → sample size (% in experiment) → outside
+variation → variation split → mutual exclusion. We're shipping v1 with
+the **single-layer** model above (segment + weights) — but the
+experiment record stores three extra fields so v2 can light up the LD
+layers without a schema migration.
+
+| Field | v1 default | v2 use case |
+|---|---|---|
+| `sample_percentage` | `100` (full segment is in) | Surface a "% of segment in experiment" dial. Eligible-but-not-sampled users see `outside_variation`. Needs a second hash dimension so changing this value doesn't reshuffle existing variation assignments. |
+| `outside_variation` | flag's environment default | Let teams pick which variation eligible-but-not-sampled users see, decoupled from the flag's default. Useful when the experiment overrides the flag default or when ramping without rolling back the default. |
+| `mutual_exclusion_group` | `null` | Group experiments into a "layer" so a user is in at most one experiment per layer. Prevents traffic overlap when several experiments target the same audience. |
+
+The fields are inert in v1: the wizard doesn't expose them, and the
+evaluation logic only honours `sample_percentage = 100`,
+`outside_variation = flag default`, and
+`mutual_exclusion_group = null`. v2 unhides them and the evaluation
+logic starts respecting the values.
+
+**Why include them now**: adding fields to a live data model later is
+expensive (schema migration, evaluation-logic rewrite, possible
+re-randomisation of running experiments). Adding them up front is
+cheap and keeps the v1 → v2 transition migration-free.
 
 ## Wizard flow
 
