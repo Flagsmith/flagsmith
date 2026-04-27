@@ -1,6 +1,6 @@
 import json
 from datetime import timedelta
-from typing import Optional, Union
+from typing import Optional
 
 from django.conf import settings
 from django.db.models import Q
@@ -10,22 +10,25 @@ from task_processor.decorators import (
     register_task_handler,
 )
 
-from environments.models import Environment
-from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
-from features.multivariate.models import (
-    MultivariateFeatureOption,
-    MultivariateFeatureStateValue,
+from features.import_export.constants import (
+    FAILED,
+    OVERWRITE_DESTRUCTIVE,
+    PROCESSING,
+    SKIP,
+    SUCCESS,
 )
-from features.value_types import BOOLEAN, INTEGER, STRING
-from features.versioning.versioning_service import get_environment_flags_list
-from projects.models import Project
-
-from .constants import FAILED, OVERWRITE_DESTRUCTIVE, PROCESSING, SKIP, SUCCESS
-from .models import (
+from features.import_export.models import (
     FeatureExport,
     FeatureImport,
     FlagsmithOnFlagsmithFeatureExport,
 )
+from features.import_export.services import (
+    create_feature_for_environment,
+    overwrite_feature_for_environment,
+)
+from features.import_export.types import FeatureExportData
+from features.models import Feature
+from features.versioning.versioning_service import get_environment_flags_list
 
 
 @register_recurring_task(
@@ -144,7 +147,7 @@ def import_features_for_environment(feature_import_id: int) -> None:
 
 def _import_features_for_environment(feature_import: FeatureImport) -> None:
     environment = feature_import.environment
-    input_data = json.loads(feature_import.data)
+    input_data: list[FeatureExportData] = json.loads(feature_import.data)
     project = environment.project
 
     for feature_data in input_data:
@@ -158,167 +161,15 @@ def _import_features_for_environment(feature_import: FeatureImport) -> None:
                 continue
 
             if feature_import.strategy == OVERWRITE_DESTRUCTIVE:
-                _overwrite_feature_for_environment(
+                overwrite_feature_for_environment(
                     feature_data, existing_feature, environment
                 )
                 continue
 
-        _create_new_feature(feature_data, project, environment)
+        create_feature_for_environment(feature_data, project, environment)
 
     feature_import.status = SUCCESS
     feature_import.save()
-
-
-def _save_feature_state_value_with_type(
-    value: Optional[Union[int, bool, str]],
-    type: str,
-    feature_state_value: FeatureStateValue,
-) -> None:
-    feature_state_value.type = type
-    if feature_state_value.type == INTEGER:
-        feature_state_value.integer_value = value
-    elif feature_state_value.type == BOOLEAN:
-        feature_state_value.boolean_value = value  # type: ignore[assignment]
-    else:
-        assert feature_state_value.type == STRING
-        feature_state_value.string_value = value
-
-    feature_state_value.save()
-
-
-def _create_multivariate_feature_option(
-    value: Optional[Union[int, bool, str]],
-    type: str,
-    feature: Feature,
-    default_percentage_allocation: Union[int, float],
-) -> MultivariateFeatureOption:
-    mvfo = MultivariateFeatureOption(
-        feature=feature,
-        default_percentage_allocation=default_percentage_allocation,
-        type=type,
-    )
-    if mvfo.type == INTEGER:
-        mvfo.integer_value = value
-    elif mvfo.type == BOOLEAN:
-        mvfo.boolean_value = value  # type: ignore[assignment]
-    else:
-        assert mvfo.type == STRING
-        mvfo.string_value = value
-
-    mvfo.save()
-    return mvfo
-
-
-def _overwrite_feature_for_environment(
-    feature_data: dict[str, Optional[Union[bool, str, int]]],
-    existing_feature: Feature,
-    environment: Environment,
-) -> None:
-    existing_feature.initial_value = feature_data["initial_value"]
-    existing_feature.is_server_key_only = feature_data["is_server_key_only"]  # type: ignore[assignment]
-    existing_feature.default_enabled = feature_data["default_enabled"]  # type: ignore[assignment]
-    existing_feature.save()
-
-    FeatureSegment.objects.filter(
-        feature=existing_feature, environment=environment
-    ).delete()
-    existing_feature.feature_states.filter(
-        environment=environment, identity__isnull=False
-    ).delete()
-
-    feature_state = existing_feature.feature_states.filter(
-        environment=environment,
-        identity__isnull=True,
-        feature_segment__isnull=True,
-    ).first()
-    if feature_state is None:
-        feature_state = FeatureState.objects.create(
-            feature=existing_feature,
-            environment=environment,
-        )
-
-    existing_options_by_value = {
-        (option.type, option.value): option
-        for option in existing_feature.multivariate_options.all()
-    }
-    imported_option_ids: set[int] = set()
-    for mv_data in feature_data["multivariate"]:  # type: ignore[union-attr]
-        key = (mv_data["type"], mv_data["value"])  # type: ignore[index]
-        mv_option = existing_options_by_value.get(key)
-        if mv_option is None:
-            mv_option = _create_multivariate_feature_option(
-                value=mv_data["value"],  # type: ignore[index]
-                type=mv_data["type"],  # type: ignore[index]
-                feature=existing_feature,
-                default_percentage_allocation=mv_data["default_percentage_allocation"],  # type: ignore[arg-type,index]
-            )
-        imported_option_ids.add(mv_option.pk)
-        mv_state_value = feature_state.multivariate_feature_state_values.filter(
-            multivariate_feature_option=mv_option,
-        ).first()
-        if mv_state_value is None:
-            MultivariateFeatureStateValue.objects.create(
-                feature_state=feature_state,
-                multivariate_feature_option=mv_option,
-                percentage_allocation=mv_data["percentage_allocation"],  # type: ignore[index]
-            )
-        else:
-            mv_state_value.percentage_allocation = mv_data["percentage_allocation"]  # type: ignore[index]
-            mv_state_value.save()
-
-    for mv_state_value in feature_state.multivariate_feature_state_values.exclude(
-        multivariate_feature_option_id__in=imported_option_ids,
-    ):
-        if mv_state_value.percentage_allocation != 0:
-            mv_state_value.percentage_allocation = 0
-            mv_state_value.save()
-
-    _save_feature_state_value_with_type(
-        value=feature_data["value"],
-        type=feature_data["type"],  # type: ignore[arg-type]
-        feature_state_value=feature_state.feature_state_value,
-    )
-    feature_state.enabled = feature_data["enabled"]
-    feature_state.save()
-
-
-def _create_new_feature(
-    feature_data: dict[str, Optional[Union[bool, str, int]]],
-    project: Project,
-    environment: Environment,
-) -> None:
-    feature = Feature.objects.create(
-        name=feature_data["name"],
-        project=project,
-        initial_value=feature_data["initial_value"],
-        is_server_key_only=feature_data["is_server_key_only"],
-        default_enabled=feature_data["default_enabled"],
-    )
-    feature_state = feature.feature_states.get(
-        environment=environment,
-    )
-
-    for mv_data in feature_data["multivariate"]:  # type: ignore[union-attr]
-        mv_feature_option = _create_multivariate_feature_option(
-            value=mv_data["value"],  # type: ignore[index]
-            type=mv_data["type"],  # type: ignore[index]
-            feature=feature,
-            default_percentage_allocation=mv_data["default_percentage_allocation"],  # type: ignore[arg-type,index]
-        )
-        mv_feature_state_value = feature_state.multivariate_feature_state_values.filter(
-            multivariate_feature_option=mv_feature_option
-        ).first()
-        mv_feature_state_value.percentage_allocation = mv_data["percentage_allocation"]  # type: ignore[index]
-        mv_feature_state_value.save()
-
-    feature_state_value = feature_state.feature_state_value
-    _save_feature_state_value_with_type(
-        value=feature_data["value"],
-        type=feature_data["type"],  # type: ignore[arg-type]
-        feature_state_value=feature_state_value,
-    )
-    feature_state.enabled = feature_data["enabled"]
-    feature_state.save()
 
 
 # Should only run on official flagsmith instance.
