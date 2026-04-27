@@ -27,7 +27,7 @@ This guide covers three flows:
 - **Connect a data warehouse** — one-time organisation-level setup so
   Flagsmith can compute metric values.
 - **Create an experiment** — a 5-step wizard for hypothesis, flag,
-  metrics, audience, and traffic split.
+  metrics, and audience (targeting, sample size, variation split).
 - **Read experiment results** — summary cards, recommendation, metrics
   comparison, and trend chart.
 
@@ -36,9 +36,9 @@ Experimentation builds on three Flagsmith concepts:
 - **[Multivariate flags](/managing-flags/core-management).** Every
   experiment runs on one. Existing variations become control and
   treatment.
-- **[Segments](/flagsmith-concepts/targeting-and-rollouts).** Define
-  the audience. Users outside the segment see the flag's environment
-  default.
+- **[Segments](/flagsmith-concepts/targeting-and-rollouts).** Optional
+  filter on who's eligible for an experiment. Leave empty to run on the
+  whole environment.
 - **[Identities](/flagsmith-concepts/identities).** Users are bucketed
   by identity, the same way multivariate values are assigned today. A
   user keeps their variation for the duration of the run.
@@ -105,22 +105,25 @@ Pick a role for each metric with the three-way segmented control.
 Multiple primaries are allowed but harder to interpret statistically;
 the wizard warns you if you select more than one.
 
-### Segments & Traffic
+### Audience
 
-![Segment selector with an active conflict banner shown for context; traffic-split inputs below](/img/experimentation/wizard-segment-traffic.png)
+![Audience step with three sub-blocks: Targeting, Sample size, Variation split](/img/experimentation/wizard-audience.png)
 
-An experiment's audience is the segment you select. All matched users
-are in the experiment, and the traffic weights decide which variation
-each one sees. Users outside the segment keep the flag's environment
-default and aren't part of the experiment.
+The audience step has three layers, applied in order:
 
-Pick the **segment** of users who'll be eligible.
+1. **Targeting** — *who's eligible.*
+2. **Sample size** — *of those, how many enter the experiment.*
+3. **Variation split** — *of those sampled, who sees what.*
 
-Set **traffic weights**: the percentage of users assigned to each
-variation. Control takes one of the weight slots alongside the
-variations, so a 50/50 split means 50% control, 50% treatment. Weights
-auto-balance, so adjusting one rebalances the others. Click **Split
-evenly** to reset.
+Each layer is independent, which lets you run a 10% canary on the whole
+environment, a 50/50 test on premium users only, or anything in between.
+
+#### Targeting (optional)
+
+Filter the experiment to a specific segment. Leave empty to run on all
+identities in the environment, which is the default. Users not matched
+by the segment keep the flag's environment default and aren't part of
+the result.
 
 :::warning
 
@@ -131,10 +134,29 @@ override produces incorrect assignment.
 
 :::
 
-**Note:** In v1, an experiment runs on the entire matched segment. To
-test on a smaller slice, define a smaller segment. Only one experiment
-can run on a given segment + flag at a time. Changing weights mid-run
-breaks statistical validity, so design with the final weights up front.
+#### Sample size
+
+Choose what percentage of eligible users actually enters the
+experiment. Presets are 5 / 10 / 25 / 50 / 100, or pick Custom for any
+value. Defaults to 100. Eligible users not sampled in keep the flag's
+environment default — they're not part of the result.
+
+Use a smaller sample to start a canary and validate before ramping
+wider. Use 100 when you want every eligible user in the result from
+day one.
+
+#### Variation split
+
+Distribute the sampled users across control and treatment variations.
+Control takes one of the weight slots alongside the variations, so a
+50/50 split means 50% control, 50% treatment. Weights auto-balance, so
+adjusting one rebalances the others. Click **Split evenly** to reset.
+
+**Note:** In v1, only one experiment can run on a given segment + flag
+at a time. Changing the variation split mid-run breaks statistical
+validity, so design with the final split up front. To ramp the
+audience size, use the sample-size dial — it changes who's in the
+experiment without changing how the in-experiment users are split.
 
 ### Review & Launch
 
@@ -144,7 +166,8 @@ Read through the summary, edit any section by clicking its **Edit**
 link, then click **Launch Experiment** and confirm.
 
 Traffic assignment starts immediately. The flag begins serving the
-configured weights to users in the chosen segment.
+configured variation weights to the sampled portion of the eligible
+audience; everyone else keeps the flag's environment default.
 
 **Note:** Once launched, the configuration is locked for the rest of
 the run to keep the result statistically valid. To change anything,
