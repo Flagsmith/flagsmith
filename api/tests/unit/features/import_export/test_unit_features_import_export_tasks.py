@@ -433,11 +433,12 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
     )
     assert new_feature1_mv_value.percentage_allocation == 65
 
-    # Overlapping MV feature was updated in place: pk preserved, attrs replaced
-    # by the import.
+    # Overlapping MV feature was updated in place: pk preserved, Feature
+    # definition (initial_value, is_server_key_only, default_enabled) preserved
+    # — destructive overwrite touches only env-default state, not the Feature.
     assert new_feature2.pk == overlapping_feature_2_pk
     assert new_feature2.type == MULTIVARIATE
-    assert new_feature2.initial_value == "banana"
+    assert new_feature2.initial_value == "overwrite_me"
     assert new_feature2.is_server_key_only is False
     assert new_feature2.default_enabled is False
 
@@ -483,7 +484,7 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
     assert new_mv_feature_option2.default_percentage_allocation == 70
 
     assert new_feature3.type == STANDARD
-    assert new_feature3.initial_value == "changeme"
+    assert new_feature3.initial_value == "keepme"
 
     queryset = new_feature3.feature_states.filter(
         environment=environment2,

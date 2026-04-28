@@ -12,20 +12,17 @@ from task_processor.decorators import (
 
 from features.import_export.constants import (
     FAILED,
-    OVERWRITE_DESTRUCTIVE,
     PROCESSING,
     SKIP,
     SUCCESS,
 )
+from features.import_export.mappers import map_feature_export_data_to_feature
 from features.import_export.models import (
     FeatureExport,
     FeatureImport,
     FlagsmithOnFlagsmithFeatureExport,
 )
-from features.import_export.services import (
-    create_feature_for_environment,
-    overwrite_feature_for_environment,
-)
+from features.import_export.services import overwrite_feature_for_environment
 from features.import_export.types import FeatureExportData
 from features.models import Feature
 from features.versioning.versioning_service import get_environment_flags_list
@@ -156,17 +153,14 @@ def _import_features_for_environment(feature_import: FeatureImport) -> None:
             project=project,
         ).first()
 
-        if existing_feature:
-            if feature_import.strategy == SKIP:
-                continue
+        if existing_feature and feature_import.strategy == SKIP:
+            continue
 
-            if feature_import.strategy == OVERWRITE_DESTRUCTIVE:
-                overwrite_feature_for_environment(
-                    feature_data, existing_feature, environment
-                )
-                continue
+        if existing_feature is None:
+            existing_feature = map_feature_export_data_to_feature(feature_data, project)
+            existing_feature.save()
 
-        create_feature_for_environment(feature_data, project, environment)
+        overwrite_feature_for_environment(feature_data, existing_feature, environment)
 
     feature_import.status = SUCCESS
     feature_import.save()

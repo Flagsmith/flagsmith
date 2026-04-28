@@ -4,7 +4,6 @@ from environments.models import Environment
 from features.import_export.types import FeatureExportData
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
-from projects.models import Project
 
 
 def overwrite_feature_for_environment(
@@ -14,13 +13,8 @@ def overwrite_feature_for_environment(
 ) -> None:
     """
     Apply a destructive feature import to a single environment without
-    affecting other environments' feature states.
+    affecting other environments' feature states or the Feature definition.
     """
-    existing_feature.initial_value = feature_data["initial_value"]
-    existing_feature.is_server_key_only = feature_data["is_server_key_only"]
-    existing_feature.default_enabled = feature_data["default_enabled"]
-    existing_feature.save()
-
     FeatureSegment.objects.filter(
         feature=existing_feature, environment=environment
     ).delete()
@@ -72,50 +66,6 @@ def overwrite_feature_for_environment(
         if mv_state_value.percentage_allocation != 0:
             mv_state_value.percentage_allocation = 0
             mv_state_value.save()
-
-    feature_state_value = feature_state.feature_state_value
-    feature_state_value.type = feature_data["type"]
-    setattr(
-        feature_state_value,
-        FeatureState.get_feature_state_key_name(feature_data["type"]),
-        feature_data["value"],
-    )
-    feature_state_value.save()
-    feature_state.enabled = feature_data["enabled"]
-    feature_state.save()
-
-
-def create_feature_for_environment(
-    feature_data: FeatureExportData,
-    project: Project,
-    environment: Environment,
-) -> None:
-    feature = Feature.objects.create(
-        name=feature_data["name"],
-        project=project,
-        initial_value=feature_data["initial_value"],
-        is_server_key_only=feature_data["is_server_key_only"],
-        default_enabled=feature_data["default_enabled"],
-    )
-    feature_state = feature.feature_states.get(environment=environment)
-
-    for mv_data in feature_data["multivariate"]:
-        mv_feature_option = MultivariateFeatureOption(
-            feature=feature,
-            default_percentage_allocation=mv_data["default_percentage_allocation"],
-            type=mv_data["type"],
-        )
-        setattr(
-            mv_feature_option,
-            FeatureState.get_feature_state_key_name(mv_data["type"]),
-            mv_data["value"],
-        )
-        mv_feature_option.save()
-        mv_feature_state_value = feature_state.multivariate_feature_state_values.filter(
-            multivariate_feature_option=mv_feature_option
-        ).first()
-        mv_feature_state_value.percentage_allocation = mv_data["percentage_allocation"]
-        mv_feature_state_value.save()
 
     feature_state_value = feature_state.feature_state_value
     feature_state_value.type = feature_data["type"]
