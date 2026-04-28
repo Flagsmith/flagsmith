@@ -145,7 +145,10 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
 
     def perform_create(self, serializer: FeatureExternalResourceSerializer) -> None:  # type: ignore[override]
         resource = serializer.save()
-        dispatch_vcs_on_resource_create(resource)
+        dispatch_vcs_on_resource_create(
+            resource,
+            api_base_url=self.request.build_absolute_uri("/"),
+        )
 
     def perform_destroy(self, instance: FeatureExternalResource) -> None:
         super().perform_destroy(instance)

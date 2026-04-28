@@ -193,7 +193,7 @@ Attributes:
 ### `gitlab.label.removal_failed`
 
 Logged at `exception` from:
- - `api/integrations/gitlab/tasks.py:185`
+ - `api/integrations/gitlab/tasks.py:189`
 
 Attributes:
  - `feature.id`
@@ -205,7 +205,7 @@ Attributes:
 ### `gitlab.label.removed`
 
 Logged at `info` from:
- - `api/integrations/gitlab/tasks.py:183`
+ - `api/integrations/gitlab/tasks.py:187`
 
 Attributes:
  - `feature.id`
@@ -217,7 +217,7 @@ Attributes:
 ### `gitlab.resource.linked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:28`
+ - `api/integrations/vcs/services.py:35`
 
 Attributes:
  - `feature.id`
@@ -228,7 +228,7 @@ Attributes:
 ### `gitlab.resource.unlinked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:63`
+ - `api/integrations/vcs/services.py:70`
 
 Attributes:
  - `feature.id`
@@ -239,7 +239,7 @@ Attributes:
 ### `gitlab.webhook.deregistered`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services/webhooks.py:146`
+ - `api/integrations/gitlab/services/webhooks.py:157`
 
 Attributes:
  - `gitlab.hook.id`
@@ -250,7 +250,7 @@ Attributes:
 ### `gitlab.webhook.deregistration_failed`
 
 Logged at `warning` from:
- - `api/integrations/gitlab/services/webhooks.py:139`
+ - `api/integrations/gitlab/services/webhooks.py:150`
 
 Attributes:
  - `exc_info`
@@ -262,7 +262,7 @@ Attributes:
 ### `gitlab.webhook.registered`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services/webhooks.py:99`
+ - `api/integrations/gitlab/services/webhooks.py:110`
 
 Attributes:
  - `gitlab.hook.id`
@@ -274,7 +274,7 @@ Attributes:
 ### `gitlab.webhook.registration_failed`
 
 Logged at `error` from:
- - `api/integrations/gitlab/services/webhooks.py:84`
+ - `api/integrations/gitlab/services/webhooks.py:95`
 
 Attributes:
  - `exc_info`

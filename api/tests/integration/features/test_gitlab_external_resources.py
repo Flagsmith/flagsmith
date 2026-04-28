@@ -5,7 +5,6 @@ from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.helpers import get_current_site_url
 from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature
 from integrations.github.models import GithubConfiguration
@@ -202,7 +201,7 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
     hook_call, *_ = responses.calls
     assert hook_call.request.headers["PRIVATE-TOKEN"] == "glpat-test-token"
     assert json.loads(hook_call.request.body) == {
-        "url": f"{get_current_site_url()}/api/v1/gitlab-webhook/{webhook.uuid}/",
+        "url": f"http://testserver/api/v1/gitlab-webhook/{webhook.uuid}/",
         "token": webhook.secret,
         "issues_events": True,
         "merge_requests_events": True,
