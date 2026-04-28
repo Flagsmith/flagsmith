@@ -1,7 +1,7 @@
 import typing
 
 import pytest
-from pytest_lazy_fixtures import lazy_fixture
+from pytest_lazy_fixtures import lf as lazy_fixture
 
 from organisations.models import Organisation, UserOrganisation
 from permissions.permission_service import is_user_project_admin

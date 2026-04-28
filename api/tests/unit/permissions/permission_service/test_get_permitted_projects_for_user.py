@@ -6,7 +6,7 @@ from common.projects.permissions import (
     DELETE_FEATURE,
     VIEW_PROJECT,
 )
-from pytest_lazy_fixtures import lazy_fixture
+from pytest_lazy_fixtures import lf as lazy_fixture
 
 from organisations.models import Organisation, UserOrganisation
 from permissions.models import PermissionModel

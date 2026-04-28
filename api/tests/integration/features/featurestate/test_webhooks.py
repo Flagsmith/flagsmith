@@ -6,7 +6,7 @@ import pytest
 import responses
 from django.urls import reverse
 from freezegun import freeze_time
-from pytest_lazy_fixtures import lazy_fixture
+from pytest_lazy_fixtures import lf as lazy_fixture
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient

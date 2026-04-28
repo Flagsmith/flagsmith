@@ -2,7 +2,7 @@ import typing
 
 import pytest
 from django.conf import settings
-from pytest_lazy_fixtures import lazy_fixture
+from pytest_lazy_fixtures import lf as lazy_fixture
 
 from environments.models import Environment
 from environments.permissions.models import (

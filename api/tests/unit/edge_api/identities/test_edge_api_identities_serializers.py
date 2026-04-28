@@ -1,7 +1,7 @@
 import pytest
 from django.test import RequestFactory
 from django.utils import timezone
-from pytest_lazy_fixtures import lazy_fixture
+from pytest_lazy_fixtures import lf as lazy_fixture
 from pytest_mock import MockerFixture
 
 from api_keys.user import APIKeyUser

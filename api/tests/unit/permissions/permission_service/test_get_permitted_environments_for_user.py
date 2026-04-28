@@ -6,7 +6,7 @@ from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from pytest_lazy_fixtures import lazy_fixture
+from pytest_lazy_fixtures import lf as lazy_fixture
 
 from environments.models import Environment
 from environments.permissions.models import (

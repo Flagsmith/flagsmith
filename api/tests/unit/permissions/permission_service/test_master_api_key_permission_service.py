@@ -1,5 +1,5 @@
 import pytest
-from pytest_lazy_fixtures import lazy_fixture
+from pytest_lazy_fixtures import lf as lazy_fixture
 
 from environments.permissions.models import EnvironmentPermissionModel
 from organisations.permissions.models import OrganisationPermissionModel
