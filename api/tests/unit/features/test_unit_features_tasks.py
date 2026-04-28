@@ -1,11 +1,13 @@
 import pytest
+from django.db import OperationalError
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
+from task_processor.exceptions import TaskBackoffError
 
 from api_keys.models import MasterAPIKey
 from environments.models import Environment
 from features.models import Feature, FeatureState
-from features.tasks import trigger_feature_state_change_webhooks
+from features.tasks import delete_feature, trigger_feature_state_change_webhooks
 from organisations.models import Organisation
 from projects.models import Project
 from users.models import FFAdminUser
@@ -164,3 +166,34 @@ def test_trigger_feature_state_change_webhooks__deleted_flag_no_history__uses_fs
 
     assert data["previous_state"]["feature"]["id"] == feature_state.feature.id
     assert event_type == WebhookEventType.FLAG_DELETED.value
+
+
+@pytest.mark.django_db
+def test_delete_feature__feature_does_not_exist__succeeds_silently(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_get_feature = mocker.patch("features.tasks.Feature.objects.get")
+    mock_get_feature.side_effect = Feature.DoesNotExist
+
+    # When
+    delete_feature(feature_id=1)
+
+    # Then
+    mock_get_feature.assert_called_once_with(pk=1)
+
+
+@pytest.mark.django_db
+def test_delete_feature__database_deadlock__raises_task_backoff_error(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_get_feature = mocker.patch("features.tasks.Feature.objects.get")
+    mock_get_feature.side_effect = OperationalError
+
+    # When
+    with pytest.raises(TaskBackoffError):
+        delete_feature(feature_id=1)
+
+    # Then
+    mock_get_feature.assert_called_once_with(pk=1)
