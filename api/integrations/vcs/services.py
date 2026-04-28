@@ -16,12 +16,19 @@ from integrations.gitlab import tasks as gitlab_tasks
 gitlab_logger = structlog.get_logger("gitlab")
 
 
-def dispatch_vcs_on_resource_create(resource: FeatureExternalResource) -> None:
+def dispatch_vcs_on_resource_create(
+    resource: FeatureExternalResource,
+    *,
+    api_base_url: str,
+) -> None:
     """Dispatch integration side-effects after a `FeatureExternalResource`
     is created.
     """
     if resource.type in GITLAB_RESOURCE_TYPES:
-        gitlab.register_gitlab_webhook_for_resource(resource)
+        gitlab.register_gitlab_webhook_for_resource(
+            resource,
+            api_base_url=api_base_url,
+        )
         gitlab.apply_initial_tag(resource)
         gitlab_tasks.apply_gitlab_label.delay(args=(resource.id,))
         gitlab_tasks.post_gitlab_linked_comment.delay(args=(resource.id,))

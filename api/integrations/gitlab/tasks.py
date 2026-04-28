@@ -28,7 +28,11 @@ logger = structlog.get_logger("gitlab")
 
 
 @register_task_handler()
-def register_gitlab_webhook(config_id: int, project_path: str) -> None:
+def register_gitlab_webhook(
+    config_id: int,
+    project_path: str,
+    api_base_url: str,
+) -> None:
     """Register a webhook for the GitLab project at ``project_path`` under this
     config. Dispatched at link time. Idempotent.
     """
@@ -39,7 +43,7 @@ def register_gitlab_webhook(config_id: int, project_path: str) -> None:
         )
     except GitLabConfiguration.DoesNotExist:
         return
-    ensure_webhook_registered(config, project_path)
+    ensure_webhook_registered(config, project_path, api_base_url=api_base_url)
 
 
 @register_task_handler()
