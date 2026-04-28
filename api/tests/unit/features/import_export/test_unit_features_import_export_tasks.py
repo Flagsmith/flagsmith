@@ -430,14 +430,14 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
     ).exists()
 
 
-def test_export_and_import_features__overwrite_destructive_with_v2_versioning__publishes_new_version_preserving_history(
+def test_export_and_import_features__overwrite_destructive_with_v2_versioning__updates_live_version_in_place(
     db: None,
     environment: Environment,
     project: Project,
 ) -> None:
     # Given a source env exporting a feature with a known value, and a target
-    # project whose v2-versioned env already has the overlapping feature with
-    # an established live version.
+    # v2-versioned env where the overlapping feature has multiple published
+    # versions (so the initial version is no longer the live one).
     source_feature = Feature.objects.create(
         name="3", project=project, initial_value="changeme"
     )
@@ -457,20 +457,24 @@ def test_export_and_import_features__overwrite_destructive_with_v2_versioning__p
         name="3", project=project2, initial_value="keepme"
     )
 
-    original_version = EnvironmentFeatureVersion.objects.get(
+    initial_version = EnvironmentFeatureVersion.objects.get(
         environment=target_env, feature=target_feature
     )
-    original_fs = original_version.feature_states.get(
+    initial_fs = initial_version.feature_states.get(
         identity__isnull=True, feature_segment__isnull=True
     )
-    original_fs.enabled = False
-    original_fs.save()
-    original_fs.feature_state_value.type = STRING
-    original_fs.feature_state_value.string_value = "original_value"
-    original_fs.feature_state_value.save()
+    initial_fs.feature_state_value.type = STRING
+    initial_fs.feature_state_value.string_value = "initial_value"
+    initial_fs.feature_state_value.save()
 
-    original_version_pk = original_version.pk
-    original_fs_pk = original_fs.pk
+    second_version = EnvironmentFeatureVersion.objects.create(
+        environment=target_env, feature=target_feature
+    )
+    second_version.publish()
+
+    initial_fs_pk = initial_fs.pk
+    initial_version_pk = initial_version.pk
+    second_version_pk = second_version.pk
 
     feature_export = FeatureExport.objects.create(
         environment=environment, status=PROCESSING
@@ -487,23 +491,18 @@ def test_export_and_import_features__overwrite_destructive_with_v2_versioning__p
     )
     import_features_for_environment(feature_import.id)
 
-    # Then a new published version exists, the original version is unchanged,
-    # and live state reflects the import.
+    # Then no new version is created (destructive means destructive — no audit
+    # trail of an extra published version), the live version's FS reflects the
+    # imported value, and the prior version's FS is left untouched.
     versions = EnvironmentFeatureVersion.objects.filter(
         environment=target_env, feature=target_feature
     )
     assert versions.count() == 2
+    assert {v.pk for v in versions} == {initial_version_pk, second_version_pk}
 
-    original_version.refresh_from_db()
-    assert original_version.pk == original_version_pk
-
-    original_fs.refresh_from_db()
-    assert original_fs.pk == original_fs_pk
-    assert original_fs.enabled is False
-    assert original_fs.feature_state_value.value == "original_value"
-
-    new_version = versions.exclude(pk=original_version_pk).get()
-    assert new_version.published_at is not None
+    initial_fs.refresh_from_db()
+    assert initial_fs.pk == initial_fs_pk
+    assert initial_fs.feature_state_value.value == "initial_value"
 
     live_states = list(
         FeatureState.objects.get_live_feature_states(
@@ -517,7 +516,7 @@ def test_export_and_import_features__overwrite_destructive_with_v2_versioning__p
     )
     assert len(live_states) == 1
     live_fs = live_states[0]
-    assert live_fs.environment_feature_version_id == new_version.uuid
+    assert live_fs.environment_feature_version_id == second_version.uuid
     assert live_fs.enabled is True
     assert live_fs.feature_state_value.value == "imported_value"
 

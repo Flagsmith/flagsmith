@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from environments.models import Environment
 from features.import_export.types import FeatureExportData
 from features.models import Feature, FeatureSegment, FeatureState
@@ -5,7 +7,6 @@ from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
-from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project
 
 
@@ -23,30 +24,21 @@ def overwrite_feature_for_environment(
     existing_feature.default_enabled = feature_data["default_enabled"]
     existing_feature.save()
 
-    # Identity overrides aren't versioned and live on the FeatureState directly.
+    FeatureSegment.objects.filter(
+        feature=existing_feature, environment=environment
+    ).delete()
     existing_feature.feature_states.filter(
         environment=environment, identity__isnull=False
     ).delete()
 
-    new_version: EnvironmentFeatureVersion | None = None
-    if environment.use_v2_feature_versioning:
-        draft_version = EnvironmentFeatureVersion.objects.create(
-            environment=environment, feature=existing_feature
-        )
-        draft_version.feature_states.filter(feature_segment__isnull=False).delete()
-        feature_state = draft_version.feature_states.get(
-            identity__isnull=True, feature_segment__isnull=True
-        )
-        new_version = draft_version
-    else:
-        FeatureSegment.objects.filter(
-            feature=existing_feature, environment=environment
-        ).delete()
-        feature_state = existing_feature.feature_states.get(
-            environment=environment,
+    feature_state = FeatureState.objects.get_live_feature_states(
+        environment=environment,
+        additional_filters=Q(
+            feature=existing_feature,
             identity__isnull=True,
             feature_segment__isnull=True,
-        )
+        ),
+    ).get()
 
     existing_options_by_value: dict[
         tuple[str | None, str | int | bool | None], MultivariateFeatureOption
@@ -101,9 +93,6 @@ def overwrite_feature_for_environment(
     feature_state_value.save()
     feature_state.enabled = feature_data["enabled"]
     feature_state.save()
-
-    if new_version is not None and not new_version.published:
-        new_version.publish()
 
 
 def create_feature_for_environment(
