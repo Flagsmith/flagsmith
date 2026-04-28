@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from pathlib import Path
 from typing import Iterable
 import prometheus_client
@@ -60,3 +61,12 @@ def _parse_proc_status_memory_kb(value: str) -> int | None:
 
     return memory_kb
 
+=======
+import prometheus_client
+
+flagsmith_worker_rss_bytes = prometheus_client.Gauge(
+    "flagsmith_worker_rss_bytes",
+    "Resident Set Size (RSS) of the worker process in bytes.",
+    ["pid"]
+)
+>>>>>>> d7ea9dc2 (created worker metric Prometheus gauge)
