@@ -237,6 +237,19 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
         initial_value="changeme",
     )
 
+    feature1_mv_option = MultivariateFeatureOption.objects.create(
+        feature=feature1,
+        default_percentage_allocation=40,
+        type=STRING,
+        string_value="feature1_mv",
+    )
+    feature_state1 = feature1.feature_states.get(environment=environment)
+    feature1_mv_state_value = feature_state1.multivariate_feature_state_values.get(
+        multivariate_feature_option=feature1_mv_option
+    )
+    feature1_mv_state_value.percentage_allocation = 65
+    feature1_mv_state_value.save()
+
     multivariate_feature_option1 = MultivariateFeatureOption.objects.create(
         feature=feature2,
         default_percentage_allocation=30,
@@ -298,6 +311,46 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
         project=project2,
         initial_value="keepme",
     )
+
+    # Overlapping multivariate feature with a matching MV option (reuse path)
+    # and an extra option not in the import (zero-out path).
+    overlapping_feature_2 = Feature.objects.create(
+        name="2",
+        project=project2,
+        initial_value="overwrite_me",
+    )
+    overlapping_mv_option_match = MultivariateFeatureOption.objects.create(
+        feature=overlapping_feature_2,
+        default_percentage_allocation=30,
+        type=STRING,
+        string_value="mv_feature_option1",
+    )
+    overlapping_mv_option_extra = MultivariateFeatureOption.objects.create(
+        feature=overlapping_feature_2,
+        default_percentage_allocation=25,
+        type=STRING,
+        string_value="extra_option",
+    )
+    overlapping_feature_2_state = overlapping_feature_2.feature_states.get(
+        environment=environment2
+    )
+    overlapping_mv_match_value = (
+        overlapping_feature_2_state.multivariate_feature_state_values.get(
+            multivariate_feature_option=overlapping_mv_option_match
+        )
+    )
+    overlapping_mv_match_value.percentage_allocation = 60
+    overlapping_mv_match_value.save()
+    overlapping_mv_extra_value = (
+        overlapping_feature_2_state.multivariate_feature_state_values.get(
+            multivariate_feature_option=overlapping_mv_option_extra
+        )
+    )
+    overlapping_mv_extra_value.percentage_allocation = 40
+    overlapping_mv_extra_value.save()
+    overlapping_feature_2_pk = overlapping_feature_2.pk
+    overlapping_mv_option_match_pk = overlapping_mv_option_match.pk
+    overlapping_mv_option_extra_pk = overlapping_mv_option_extra.pk
 
     # Bystander env state on the overlapping feature should survive the import.
     bystander_fs = overlapping_feature.feature_states.get(
@@ -362,11 +415,27 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
     new_feature3 = project2.features.get(name="3")
     assert new_feature3.pk == overlapping_feature.pk
 
-    assert new_feature1.type == STANDARD
+    assert new_feature1.type == MULTIVARIATE
     assert new_feature1.initial_value == "200"
     assert new_feature1.is_server_key_only is True
     assert new_feature1.default_enabled is True
 
+    # Newly created MV feature has its options + allocations populated by the
+    # create-strategy path.
+    assert new_feature1.multivariate_options.count() == 1
+    new_feature1_mv_option = new_feature1.multivariate_options.get(
+        string_value="feature1_mv"
+    )
+    assert new_feature1_mv_option.default_percentage_allocation == 40
+    new_feature1_state = new_feature1.feature_states.get(environment=environment2)
+    new_feature1_mv_value = new_feature1_state.multivariate_feature_state_values.get(
+        multivariate_feature_option=new_feature1_mv_option
+    )
+    assert new_feature1_mv_value.percentage_allocation == 65
+
+    # Overlapping MV feature was updated in place: pk preserved, attrs replaced
+    # by the import.
+    assert new_feature2.pk == overlapping_feature_2_pk
     assert new_feature2.type == MULTIVARIATE
     assert new_feature2.initial_value == "banana"
     assert new_feature2.is_server_key_only is False
@@ -379,13 +448,21 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
 
     new_feature_state2 = queryset.first()
 
-    assert new_feature2.multivariate_options.count() == 2
+    # Three options: the matching one was reused (pk preserved), the second is
+    # newly created from the import, the extra one survives but its target-env
+    # allocation is zeroed.
+    assert new_feature2.multivariate_options.count() == 3
     new_mv_feature_option1 = new_feature2.multivariate_options.get(
         string_value="mv_feature_option1"
     )
     new_mv_feature_option2 = new_feature2.multivariate_options.get(
         string_value="mv_feature_option2"
     )
+    new_mv_feature_option_extra = new_feature2.multivariate_options.get(
+        string_value="extra_option"
+    )
+    assert new_mv_feature_option1.pk == overlapping_mv_option_match_pk
+    assert new_mv_feature_option_extra.pk == overlapping_mv_option_extra_pk
 
     new_mv_fs_value1 = new_feature_state2.multivariate_feature_state_values.get(
         multivariate_feature_option=new_mv_feature_option1
@@ -393,8 +470,12 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
     new_mv_fs_value2 = new_feature_state2.multivariate_feature_state_values.get(
         multivariate_feature_option=new_mv_feature_option2
     )
+    new_mv_fs_value_extra = new_feature_state2.multivariate_feature_state_values.get(
+        multivariate_feature_option=new_mv_feature_option_extra
+    )
     assert new_mv_fs_value1.percentage_allocation == 90
     assert new_mv_fs_value2.percentage_allocation == 10
+    assert new_mv_fs_value_extra.percentage_allocation == 0
 
     assert new_mv_feature_option1.type == STRING
     assert new_mv_feature_option1.default_percentage_allocation == 30

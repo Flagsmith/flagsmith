@@ -3,10 +3,7 @@ from django.db.models import Q
 from environments.models import Environment
 from features.import_export.types import FeatureExportData
 from features.models import Feature, FeatureSegment, FeatureState
-from features.multivariate.models import (
-    MultivariateFeatureOption,
-    MultivariateFeatureStateValue,
-)
+from features.multivariate.models import MultivariateFeatureOption
 from projects.models import Project
 
 
@@ -63,18 +60,11 @@ def overwrite_feature_for_environment(
             )
             mv_option.save()
         imported_option_ids.add(mv_option.pk)
-        mv_state_value = feature_state.multivariate_feature_state_values.filter(
+        mv_state_value = feature_state.multivariate_feature_state_values.get(
             multivariate_feature_option=mv_option,
-        ).first()
-        if mv_state_value is None:
-            MultivariateFeatureStateValue.objects.create(
-                feature_state=feature_state,
-                multivariate_feature_option=mv_option,
-                percentage_allocation=mv_data["percentage_allocation"],
-            )
-        else:
-            mv_state_value.percentage_allocation = mv_data["percentage_allocation"]
-            mv_state_value.save()
+        )
+        mv_state_value.percentage_allocation = mv_data["percentage_allocation"]
+        mv_state_value.save()
 
     for mv_state_value in feature_state.multivariate_feature_state_values.exclude(
         multivariate_feature_option_id__in=imported_option_ids,
