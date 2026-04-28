@@ -35,7 +35,7 @@ We use the Given When Then structure in all our tests.
 
 ### Code guidelines: metrics
 
-Flagsmith's backend exports Prometheus metrics. When planning a feature, consider which metrics should cover it — counters for domain events, histograms for latency or sizes, gauges for cardinalities. See [documentation for existing metrics](../docs/docs/administration-and-security/platform-configuration/metrics.md). Metrics code is hosted in `metrics.py` modules.
+The Flagsmith backend exports Prometheus metrics. When planning a feature, consider which metrics should cover it — counters for domain events, histograms for latency or sizes, gauges for cardinalities. See [documentation for existing metrics](https://docs.flagsmith.com/deployment-self-hosting/observability/metrics). Metrics code is hosted in `metrics.py` modules.
 
 Name metrics `flagsmith_{domain}_{entity}_{unit}` and give them a comprehensive description.
 

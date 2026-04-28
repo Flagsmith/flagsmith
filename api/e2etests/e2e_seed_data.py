@@ -59,6 +59,7 @@ def teardown() -> None:
         user_email=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE
     )
     delete_user_and_its_organisations(user_email=settings.E2E_SEPARATE_TEST_USER)
+    delete_user_and_its_organisations(user_email=settings.E2E_BILLING_USER)
 
 
 def seed_data() -> None:
@@ -107,6 +108,17 @@ def seed_data() -> None:
         password=PASSWORD,
     )
     separate_test_user.add_organisation(separate_org, OrganisationRole.ADMIN)
+
+    # Billing-tab tests need an organisation on a Free plan (no
+    # `subscription_id`) so PaymentButton renders the Chargebee DOM-scan
+    # branch. The default Subscription created by Organisation's AFTER_CREATE
+    # hook already matches — leave it untouched.
+    billing_org: Organisation = Organisation.objects.create(name="E2E Billing Org")
+    billing_user: FFAdminUser = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
+        email=settings.E2E_BILLING_USER,
+        password=PASSWORD,
+    )
+    billing_user.add_organisation(billing_org, OrganisationRole.ADMIN)
 
     # We add different projects and environments to give each e2e test its own isolated context.
     project_test_data = [

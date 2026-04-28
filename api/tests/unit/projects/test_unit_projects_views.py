@@ -853,9 +853,9 @@ def test_get_project__with_features_and_segments__returns_detailed_data(
 
     response_json = response.json()
     assert response_json["name"] == project.name
-    assert response_json["max_segments_allowed"] == 100
-    assert response_json["max_features_allowed"] == 400
-    assert response_json["max_segment_overrides_allowed"] == 100
+    assert response_json["max_segments_allowed"] == 500
+    assert response_json["max_features_allowed"] == 1000
+    assert response_json["max_segment_overrides_allowed"] == 2000
     assert response_json["total_features"] == num_features
     assert response_json["total_segments"] == num_segments
     assert response_json["show_edge_identity_overrides_for_feature"] is False

@@ -450,20 +450,24 @@ const Utils = Object.assign({}, BaseUtils, {
         }
     }
   },
-  getPlanName: (plan: string) => {
-    if (plan && plan.includes('free')) {
+  getPlanName: (_plan: string) => {
+    const plan = (_plan || '')?.toLowerCase()
+    if (plan.includes('free')) {
       return planNames.free
     }
-    if (plan && plan.includes('scale-up')) {
+    if (plan.includes('scale-up')) {
       return planNames.scaleUp
     }
-    if (plan && plan.includes('startup')) {
+    if (plan.includes('scaleup')) {
+      return planNames.scaleUp
+    }
+    if (plan.includes('startup')) {
       return planNames.startup
     }
-    if (plan && plan.includes('start-up')) {
+    if (plan.includes('start-up')) {
       return planNames.startup
     }
-    if (Utils.isEnterpriseImage() || (plan && plan.includes('enterprise'))) {
+    if (Utils.isEnterpriseImage() || plan.includes('enterprise')) {
       return planNames.enterprise
     }
     return planNames.free
@@ -517,15 +521,15 @@ const Utils = Object.assign({}, BaseUtils, {
       case 'RBAC':
       case 'AUDIT':
       case '4_EYES_PROJECT':
-      case '4_EYES': {
+      case '4_EYES':
+      case 'SAML': {
         plan = 'scale-up'
         break
       }
       case 'STALE_FLAGS':
       case 'REALTIME':
       case 'METADATA':
-      case 'RELEASE_PIPELINES':
-      case 'SAML': {
+      case 'RELEASE_PIPELINES': {
         plan = 'enterprise'
         break
       }

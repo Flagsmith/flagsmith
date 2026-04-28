@@ -13,9 +13,13 @@ from integrations.github.client import (
     label_github_issue_pr,
 )
 from integrations.github.models import GitHubRepository
+from integrations.vcs.services import (
+    dispatch_vcs_on_resource_create,
+    dispatch_vcs_on_resource_destroy,
+)
 from organisations.models import Organisation
 
-from .models import FeatureExternalResource
+from .models import FeatureExternalResource, ResourceType
 from .serializers import FeatureExternalResourceSerializer
 
 
@@ -45,7 +49,6 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
             features_pk = self.kwargs["feature_pk"]
             return FeatureExternalResource.objects.filter(feature=features_pk)
 
-    # Override get list view to add github issue/pr name to each linked external resource
     def list(self, request, *args, **kwargs) -> Response:  # type: ignore[no-untyped-def]
         queryset = self.get_queryset()  # type: ignore[no-untyped-call]
         serializer = self.get_serializer(queryset, many=True)
@@ -56,7 +59,14 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
             Feature.objects.filter(id=self.kwargs["feature_pk"]),
         ).project.organisation_id
 
+        # Add github issue/PR name to each linked external resource
         for resource in data if isinstance(data, list) else []:
+            if ResourceType(resource["type"]) not in [
+                ResourceType.GITHUB_ISSUE,
+                ResourceType.GITHUB_PR,
+            ]:
+                continue
+
             if resource_url := resource.get("url"):
                 resource["metadata"] = get_github_issue_pr_title_and_state(
                     organisation_id=organisation_id, resource_url=resource_url
@@ -65,6 +75,17 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
         return Response(data={"results": data})
 
     def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        resource_type = request.data.get("type")
+
+        # TODO(#7315): route link/unlink/state-change/delete through a
+        # provider-agnostic dispatcher so adding a new VCS is contained
+        # to one integration app rather than spread across view, model,
+        # and serializer hooks.
+        if resource_type not in (ResourceType.GITHUB_ISSUE, ResourceType.GITHUB_PR):
+            # GitLab side effects run in ``perform_create`` below; other
+            # types fall through to the default create.
+            return super().create(request, *args, **kwargs)
+
         feature = get_object_or_404(
             Feature.objects.filter(
                 id=self.kwargs["feature_pk"],
@@ -121,6 +142,14 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
                 content_type="application/json",
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+    def perform_create(self, serializer: FeatureExternalResourceSerializer) -> None:  # type: ignore[override]
+        resource = serializer.save()
+        dispatch_vcs_on_resource_create(resource)
+
+    def perform_destroy(self, instance: FeatureExternalResource) -> None:
+        super().perform_destroy(instance)
+        dispatch_vcs_on_resource_destroy(instance)
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         external_resource_id = int(self.kwargs["pk"])

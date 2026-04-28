@@ -27,6 +27,11 @@ class GitLabMergeRequest(TypedDict):
     draft: bool
 
 
+class GitLabProjectHook(TypedDict):
+    id: int
+    project_id: int
+
+
 class GitLabPage(TypedDict, Generic[T]):
     results: list[T]
     current_page: int

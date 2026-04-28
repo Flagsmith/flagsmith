@@ -10,6 +10,7 @@ from django.utils import timezone
 from freezegun.api import FrozenDateTimeFactory
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 
 from core.helpers import get_current_site_url
 from organisations.chargebee.metadata import ChargebeeObjMetadata
@@ -290,7 +291,7 @@ def test_send_org_subscription_cancelled_alert__valid_organisation__sends_cancel
 
 def test_handle_api_usage_notification_for_organisation__billing_starts_at_is_none__logs_warning(
     organisation: Organisation,
-    caplog: pytest.LogCaptureFixture,
+    log: StructuredLogCapture,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -313,14 +314,18 @@ def test_handle_api_usage_notification_for_organisation__billing_starts_at_is_no
 
     # Then
     api_usage_mock.assert_not_called()
-    assert caplog.messages == [
-        f"Paid organisation {organisation.id} is missing billing_starts_at datetime"
+    assert log.events == [
+        {
+            "level": "error",
+            "event": "notification.missing_billing_starts_at",
+            "organisation__id": organisation.id,
+        }
     ]
 
 
 def test_handle_api_usage_notification_for_organisation__cancellation_date_is_set__skips_notification(
     organisation: Organisation,
-    caplog: pytest.LogCaptureFixture,
+    log: StructuredLogCapture,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -346,8 +351,7 @@ def test_handle_api_usage_notification_for_organisation__cancellation_date_is_se
     # Then
     assert OrganisationAPIUsageNotification.objects.count() == 0
 
-    # Check to ensure that error messages haven't been set.
-    assert caplog.messages == []
+    assert not any(e["level"] == "error" for e in log.events)
 
 
 def test_handle_api_usage_notification_for_organisation__billing_starts_at_over_12_months_ago__uses_12_month_offset(

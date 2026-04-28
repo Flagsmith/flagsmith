@@ -146,10 +146,6 @@
                     "value": "True"
                 },
                 {
-                    "name": "HUBSPOT_IGNORE_DOMAINS",
-                    "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
-                },
-                {
                     "name": "GITHUB_APP_ID",
                     "value": "811209"
                 },

@@ -9,6 +9,7 @@ class TagType(models.Choices):
     STALE = "STALE"
     GITHUB = "GITHUB"
     UNHEALTHY = "UNHEALTHY"
+    GITLAB = "GITLAB"
 
 
 class Tag(AbstractBaseExportableModel):

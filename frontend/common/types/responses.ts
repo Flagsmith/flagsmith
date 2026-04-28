@@ -292,6 +292,35 @@ export type GithubResource = {
   draft: boolean
 }
 
+export type GitLabConfiguration = {
+  id: number
+  gitlab_instance_url: string
+}
+
+export type GitLabProject = {
+  id: number
+  name: string
+  path_with_namespace: string
+}
+
+export type GitLabIssue = {
+  web_url: string
+  id: number
+  title: string
+  iid: number
+  state: string
+}
+
+export type GitLabMergeRequest = {
+  web_url: string
+  id: number
+  title: string
+  iid: number
+  state: string
+  merged: boolean
+  draft: boolean
+}
+
 export type GithubPaginatedRepos<T> = {
   total_count: number
   repository_selection: string
@@ -1275,5 +1304,9 @@ export type Res = {
   processOAuthConsent: {
     redirect_uri: string
   }
+  gitlabConfiguration: GitLabConfiguration[]
+  gitlabProjects: PagedResponse<GitLabProject>
+  gitlabIssues: PagedResponse<GitLabIssue>
+  gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
   // END OF TYPES
 }

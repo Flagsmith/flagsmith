@@ -1,5 +1,6 @@
 ---
 title: Monitoring
+sidebar_position: 10
 description: Setting up monitoring integrations like AppDynamics and StatsD.
 ---
 
@@ -86,11 +87,17 @@ If you need additional AppDynamics setup options, you can find the other environ
 
 To enable the Prometheus `/metrics` endpoint, set the `PROMETHEUS_ENABLED` environment variable to `true`.
 
-For the full list of metrics, see the [Metrics reference](/administration-and-security/platform-configuration/metrics).
+For the full list of metrics, see the [Metrics reference](/deployment-self-hosting/observability/metrics).
 
 ## StatsD
 
-There is currently no specific documentation for setting up StatsD.
+Set `STATSD_HOST` to enable. Optional:
+
+- `STATSD_PORT` — defaults to `8125`.
+- `STATSD_PREFIX` — defaults to `flagsmith.api`.
+
+See the [Gunicorn instrumentation docs](https://gunicorn.org/instrumentation/) for the full list of
+metrics.
 
 ## Task Processor Monitoring
 

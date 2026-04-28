@@ -150,24 +150,6 @@ const Integration: FC<IntegrationProps> = (props) => {
               )}
             </div>
             <Row style={{ flexWrap: 'noWrap' }}>
-              {activeIntegrations &&
-                activeIntegrations.map((integration) => (
-                  <Button
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      remove(integration)
-                      return false
-                    }}
-                    className='ml-3'
-                    theme='secondary'
-                    type='submit'
-                    size='xSmall'
-                    key={integration.id}
-                  >
-                    Delete Integration
-                  </Button>
-                ))}
               {showAdd && (
                 <>
                   {external && !isExternalInstallation ? (
@@ -241,6 +223,20 @@ const Integration: FC<IntegrationProps> = (props) => {
                   integration={props.integration}
                 />
               </Flex>
+              <Button
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  remove(integration)
+                  return false
+                }}
+                className='ml-3'
+                theme='secondary'
+                type='submit'
+                size='xSmall'
+              >
+                Delete Integration
+              </Button>
             </Row>
           </div>
         ))}

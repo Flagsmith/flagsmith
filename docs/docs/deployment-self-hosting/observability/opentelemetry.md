@@ -1,5 +1,6 @@
 ---
 title: OpenTelemetry
+sidebar_position: 20
 description: Exporting traces and structured logs from Flagsmith using OpenTelemetry.
 ---
 
@@ -87,6 +88,9 @@ Excluded paths produce no spans at all.
 
 Flagsmith uses [structlog](https://www.structlog.org/) for application logging. When OTel is enabled, structlog events
 are exported as OTLP log records. The `flagsmith.event` attribute duplicates the event name for backends that don't surface OTel's `EventName` field.
+
+See the [Events reference](/deployment-self-hosting/observability/events) for the catalogue of structured events the
+backend emits, with attributes and source locations.
 
 ### Span events
 

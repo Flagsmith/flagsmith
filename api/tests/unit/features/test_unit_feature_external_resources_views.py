@@ -284,7 +284,8 @@ def test_create_feature_external_resource__incorrect_github_type__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == "Incorrect GitHub type"
+    assert "type" in response.json()
+    assert "is not a valid choice" in response.json()["type"][0]
 
 
 def test_create_feature_external_resource__no_github_integration__returns_400(
