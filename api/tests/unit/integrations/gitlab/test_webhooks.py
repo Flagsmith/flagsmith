@@ -48,7 +48,11 @@ def test_ensure_webhook_registered__gitlab_http_error__logs_and_raises(
 
     # When / Then
     with pytest.raises(requests.RequestException):
-        ensure_webhook_registered(gitlab_config, "testorg/testrepo")
+        ensure_webhook_registered(
+            gitlab_config,
+            "testorg/testrepo",
+            api_base_url="https://api.flagsmith.example.com/",
+        )
 
     assert log.events == [
         {
@@ -80,7 +84,11 @@ def test_register_gitlab_webhook_task__config_missing__noop(
     log: StructuredLogCapture,
 ) -> None:
     # Given / When
-    register_gitlab_webhook(config_id=999_999, project_path="testorg/testrepo")
+    register_gitlab_webhook(
+        config_id=999_999,
+        project_path="testorg/testrepo",
+        api_base_url="https://api.flagsmith.example.com/",
+    )
 
     # Then
     assert not GitLabWebhook.objects.exists()

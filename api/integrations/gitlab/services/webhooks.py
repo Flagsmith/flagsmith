@@ -1,10 +1,10 @@
 import secrets
 import uuid
+from urllib.parse import urljoin
 
 import requests
 import structlog
 
-from core.helpers import get_current_site_url
 from features.feature_external_resources.models import (
     GITLAB_RESOURCE_TYPES,
     FeatureExternalResource,
@@ -33,7 +33,11 @@ def has_live_resource_for_path(
     return any(parse_project_path(url) == project_path for url in urls)
 
 
-def register_gitlab_webhook_for_resource(resource: FeatureExternalResource) -> None:
+def register_gitlab_webhook_for_resource(
+    resource: FeatureExternalResource,
+    *,
+    api_base_url: str,
+) -> None:
     from integrations.gitlab.tasks import register_gitlab_webhook
 
     project_path = parse_project_path(resource.url)
@@ -41,7 +45,9 @@ def register_gitlab_webhook_for_resource(resource: FeatureExternalResource) -> N
         project=resource.feature.project,
     ).first()
     if config is not None and project_path is not None:
-        register_gitlab_webhook.delay(args=(config.id, project_path))
+        register_gitlab_webhook.delay(
+            args=(config.id, project_path, api_base_url),
+        )
 
 
 def deregister_gitlab_webhook_for_resource(resource: FeatureExternalResource) -> None:
@@ -58,6 +64,8 @@ def deregister_gitlab_webhook_for_resource(resource: FeatureExternalResource) ->
 def ensure_webhook_registered(
     config: GitLabConfiguration,
     project_path: str,
+    *,
+    api_base_url: str,
 ) -> GitLabWebhook:
     existing: GitLabWebhook | None = GitLabWebhook.objects.filter(
         gitlab_configuration=config,
@@ -77,7 +85,10 @@ def ensure_webhook_registered(
             instance_url=config.gitlab_instance_url,
             access_token=config.access_token,
             project_path=project_path,
-            hook_url=f"{get_current_site_url()}/api/v1/gitlab-webhook/{webhook_uuid}/",
+            hook_url=urljoin(
+                api_base_url,
+                f"/api/v1/gitlab-webhook/{webhook_uuid}/",
+            ),
             secret=secret,
         )
     except requests.RequestException as exc:

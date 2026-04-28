@@ -320,7 +320,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
       {strategy === 'OVERWRITE_DESTRUCTIVE' && (
         <WarningMessage
           warningMessage={
-            'Using overwrite destructive may affect ALL environments. All other environments will be set to the values defined when the feature was initially created. Use with caution.'
+            'Existing features will have their target-environment state overwritten — value, enabled flag, segment and identity overrides, and multivariate allocations. Other environments and the feature definition are not affected.'
           }
         />
       )}
