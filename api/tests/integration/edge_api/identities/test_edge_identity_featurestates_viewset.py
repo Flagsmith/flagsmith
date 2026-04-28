@@ -8,7 +8,7 @@ import pytest
 from django.urls import reverse
 from mypy_boto3_dynamodb.service_resource import Table
 from mypy_boto3_dynamodb.type_defs import TableAttributeValueTypeDef
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.exceptions import NotFound

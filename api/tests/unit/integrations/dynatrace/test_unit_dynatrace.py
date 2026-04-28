@@ -2,7 +2,7 @@ from typing import Type
 
 import pytest
 from django.contrib.auth.models import AbstractUser
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
