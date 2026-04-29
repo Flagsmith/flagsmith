@@ -1,11 +1,4 @@
-import React, {
-  FC,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -21,10 +14,7 @@ import {
 } from 'common/types/responses'
 import map from 'lodash/map'
 import Button from './base/forms/Button'
-import ActionButton from './ActionButton'
-import useOutsideClick from 'common/useOutsideClick'
-import { calculateListPosition } from 'common/utils/calculateListPosition'
-import classNames from 'classnames'
+import DropdownMenu from './base/DropdownMenu'
 import Utils from 'common/utils/utils'
 import { useHistory } from 'react-router-dom'
 import each from 'lodash/each'
@@ -37,58 +27,6 @@ type IntegrationAction = {
   tooltip?: string
   primary?: boolean
   requiresOrgAdmin?: boolean
-}
-
-const IntegrationActionsMenu: FC<{ actions: IntegrationAction[] }> = ({
-  actions,
-}) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const btnRef = useRef<HTMLDivElement>(null)
-  const listRef = useRef<HTMLDivElement>(null)
-
-  const close = useCallback(() => setIsOpen(false), [])
-  useOutsideClick(listRef, () => isOpen && close())
-
-  useLayoutEffect(() => {
-    if (!isOpen || !listRef.current || !btnRef.current) return
-    const { left, top } = calculateListPosition(
-      btnRef.current,
-      listRef.current,
-      true,
-    )
-    listRef.current.style.top = `${top}px`
-    listRef.current.style.left = `${left}px`
-  }, [isOpen])
-
-  return (
-    <div className='feature-action'>
-      <div ref={btnRef}>
-        <ActionButton onClick={() => setIsOpen(!isOpen)} />
-      </div>
-      {isOpen && (
-        <div ref={listRef} className='feature-action__list'>
-          {actions.map((action, i) => (
-            <div
-              key={i}
-              className={classNames('feature-action__item', {
-                'feature-action__item_disabled': action.disabled,
-              })}
-              data-test={action.dataTest}
-              title={action.tooltip}
-              onClick={(e) => {
-                e.stopPropagation()
-                if (action.disabled) return
-                action.onClick()
-                close()
-              }}
-            >
-              <span>{action.label}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
 }
 
 const GITHUB_INSTALLATION_SETUP = 'install'
@@ -319,7 +257,7 @@ const Integration: FC<IntegrationProps> = (props) => {
       }
       return button
     }
-    return <IntegrationActionsMenu actions={actions} />
+    return <DropdownMenu items={actions} />
   }
 
   return (
@@ -363,8 +301,8 @@ const Integration: FC<IntegrationProps> = (props) => {
                 />
               </Flex>
               <div onClick={(e) => e.stopPropagation()}>
-                <IntegrationActionsMenu
-                  actions={[
+                <DropdownMenu
+                  items={[
                     {
                       dataTest: 'edit-integration',
                       label: 'Edit',
@@ -405,6 +343,7 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
   useEffect(() => {
     fetch()
     fetchGithubIntegration()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchGithubIntegration = () => {

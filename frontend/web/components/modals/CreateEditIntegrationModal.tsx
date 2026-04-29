@@ -38,23 +38,23 @@ const SummaryItem: FC<{ label: string; children: React.ReactNode }> = ({
   </div>
 )
 
-const ReadOnlyEnvironmentName: FC<{ environmentId?: string }> = ({
-  environmentId,
+const ReadOnlyEnvironmentName: FC<{ environmentApiKey?: string }> = ({
+  environmentApiKey,
 }) => {
   const { data: environment } = useGetEnvironmentQuery(
-    { id: environmentId as any },
-    { skip: !environmentId },
+    { id: environmentApiKey ?? '' },
+    { skip: !environmentApiKey },
   )
   return <>{environment?.name || ''}</>
 }
 
 const constructBaseUrl = ({
-  environmentId,
+  environmentApiKey,
   integrationId,
   organisationId,
   projectId,
 }: {
-  environmentId?: string
+  environmentApiKey?: string
   integrationId: string
   organisationId?: string
   projectId?: string
@@ -62,8 +62,8 @@ const constructBaseUrl = ({
   if (organisationId) {
     return `${Project.api}organisations/${organisationId}/integrations/${integrationId}`
   }
-  if (environmentId) {
-    return `${Project.api}environments/${environmentId}/integrations/${integrationId}`
+  if (environmentApiKey) {
+    return `${Project.api}environments/${environmentApiKey}/integrations/${integrationId}`
   }
   if (projectId) {
     return `${Project.api}projects/${projectId}/integrations/${integrationId}`
@@ -129,7 +129,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
   const integrationQueryArgs = ((): Req['getIntegration'] | null => {
     if (!requiresProjectSelection || !id) return null
     if (integration.perEnvironment) {
-      return envId ? { environmentId: envId, integrationId: id } : null
+      return envId ? { environmentApiKey: envId, integrationId: id } : null
     }
     return selectedProjectId
       ? { integrationId: id, projectId: selectedProjectId }
@@ -229,7 +229,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
         `${document.location.href}?environment=${formData.flagsmithEnvironment}&configure=${id}`,
       )}&signature=${signature}`
       document.location = `${constructBaseUrl({
-        environmentId: formData.flagsmithEnvironment,
+        environmentApiKey: formData.flagsmithEnvironment,
         integrationId: id,
         organisationId,
         projectId,
@@ -255,7 +255,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
 
     if (isOauth) {
       const baseUrl = constructBaseUrl({
-        environmentId: formData.flagsmithEnvironment,
+        environmentApiKey: formData.flagsmithEnvironment,
         integrationId: id,
         organisationId,
         projectId,
@@ -270,7 +270,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
 
     if (!id) return
     const mutationArgs = {
-      environmentId: integration.perEnvironment
+      environmentApiKey: integration.perEnvironment
         ? formData.flagsmithEnvironment
         : undefined,
       integrationId: id,
@@ -290,16 +290,9 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
   const onError = (err: any) => {
     const defaultError =
       'There was an error adding your integration. Please check the details and try again.'
-    try {
-      const payload = err?.data ?? err
-      setError(
-        (Array.isArray(payload) ? payload[0] : undefined) || defaultError,
-      )
-    } catch {
-      setError(defaultError)
-    } finally {
-      setIsLoading(false)
-    }
+    const payload = err?.data ?? err
+    setError((Array.isArray(payload) ? payload[0] : undefined) || defaultError)
+    setIsLoading(false)
   }
 
   const openGitHubWinInstallations = () => {
@@ -461,7 +454,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
             {integration.perEnvironment && projectId && (
               <SummaryItem label='Flagsmith Environment'>
                 <ReadOnlyEnvironmentName
-                  environmentId={formData.flagsmithEnvironment}
+                  environmentApiKey={formData.flagsmithEnvironment}
                 />
               </SummaryItem>
             )}

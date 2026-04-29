@@ -405,7 +405,7 @@ export type Req = {
     role_id: number
   }
   getGetSubscriptionMetadata: { id: number }
-  getEnvironment: { id: number }
+  getEnvironment: { id: string }
   getSubscriptionMetadata: { id: number }
   getMetadataModelFields: { organisation_id: number }
   getMetadataModelField: { organisation_id: number; id: number }
@@ -939,12 +939,12 @@ export type Req = {
   getIntegration: {
     integrationId: string
     projectId?: string
-    environmentId?: string
+    environmentApiKey?: string
   }
   createIntegration: {
     integrationId: string
     projectId?: string
-    environmentId?: string
+    environmentApiKey?: string
     organisationId?: string
     body: Record<string, any>
   }
@@ -952,7 +952,7 @@ export type Req = {
     integrationId: string
     id: string
     projectId?: string
-    environmentId?: string
+    environmentApiKey?: string
     organisationId?: string
     body: Record<string, any>
   }

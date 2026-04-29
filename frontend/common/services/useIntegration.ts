@@ -3,38 +3,38 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
 const integrationListUrl = ({
-  environmentId,
+  environmentApiKey,
   integrationId,
   organisationId,
   projectId,
 }: {
   integrationId: string
-  environmentId?: string
+  environmentApiKey?: string
   projectId?: string
   organisationId?: string
 }) => {
   if (organisationId) {
     return `organisations/${organisationId}/integrations/${integrationId}/`
   }
-  if (environmentId) {
-    return `environments/${environmentId}/integrations/${integrationId}/`
+  if (environmentApiKey) {
+    return `environments/${environmentApiKey}/integrations/${integrationId}/`
   }
   return `projects/${projectId}/integrations/${integrationId}/`
 }
 
 const integrationTag = ({
-  environmentId,
+  environmentApiKey,
   integrationId,
   organisationId,
   projectId,
 }: {
   integrationId: string
-  environmentId?: string
+  environmentApiKey?: string
   projectId?: string
   organisationId?: string
 }) => ({
   id: `${integrationId}:${organisationId ?? ''}:${projectId ?? ''}:${
-    environmentId ?? ''
+    environmentApiKey ?? ''
   }`,
   type: 'Integration' as const,
 })
