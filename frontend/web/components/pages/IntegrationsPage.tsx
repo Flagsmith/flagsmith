@@ -4,7 +4,6 @@ import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import Utils from 'common/utils/utils'
-import AccountStore from 'common/stores/account-store'
 import API from 'project/api'
 import { useGetProjectQuery } from 'common/services/useProject'
 import { useRouteContext } from 'components/providers/RouteContext'
@@ -30,7 +29,7 @@ export type IntegrationSummary = {
 }
 
 const IntegrationsPage: FC = () => {
-  const { projectId } = useRouteContext()
+  const { organisationId, projectId } = useRouteContext()
   useEffect(() => {
     API.trackPage(Constants.pages.INTEGRATIONS)
   }, [])
@@ -41,7 +40,6 @@ const IntegrationsPage: FC = () => {
       integrationData[b]?.title || b,
     ),
   )
-  const organisationId = AccountStore.getOrganisation()?.id
   const { isLoading: permissionsLoading, permission } = useHasPermission({
     id: projectId,
     level: 'project',
