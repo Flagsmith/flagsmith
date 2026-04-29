@@ -1,8 +1,6 @@
 import React, { FC } from 'react'
 import Format from 'common/utils/format'
-import { IonIcon } from '@ionic/react'
-import { informationCircle } from 'ionicons/icons'
-import { Form } from 'reactstrap'
+import Icon from './icons/Icon'
 
 type IdentifierStringType = {
   value: string | undefined | null
@@ -20,7 +18,7 @@ const IdentifierString: FC<IdentifierStringType> = ({ value }) => {
         title={
           <>
             {display}
-            <IonIcon className='ms-1' icon={informationCircle} />
+            <Icon name='info' className='ms-1' />
           </>
         }
       >

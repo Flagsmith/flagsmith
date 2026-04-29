@@ -1,7 +1,5 @@
-import React, { PureComponent, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Icon, { IconName } from './icons/Icon'
-import { chevronForward, close as closeIcon, chevronDown } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 import { FC } from 'react'
 import Button from './base/forms/Button'
 
@@ -88,7 +86,7 @@ const InfoMessage: FC<InfoMessageType> = ({
             )}
             {collapseId && (
               <span className='ml-auto lh-1'>
-                <IonIcon icon={isCollapsed ? chevronForward : chevronDown} />
+                <Icon name={isCollapsed ? 'chevron-right' : 'chevron-down'} />
               </span>
             )}
           </div>
@@ -97,7 +95,7 @@ const InfoMessage: FC<InfoMessageType> = ({
       {isClosable && (
         <a onClick={close} className=' pl-2'>
           <span className={`icon close-btn`}>
-            <IonIcon icon={closeIcon} />
+            <Icon name='close' fill='currentColor' />
           </span>
         </a>
       )}
