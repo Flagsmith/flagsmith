@@ -297,11 +297,11 @@ const Integration: FC<IntegrationProps> = (props) => {
         <div className='alert alert-success d-flex align-items-center gap-2 mt-3 mb-0'>
           <Icon fill='#27AB95' name='checkmark-circle' />
           <span className='flex-1 text-white'>
-            {props.lastSaved.isCreate ? 'Added to ' : 'Updated in '}
+            {`${props.lastSaved.isCreate ? 'Added to' : 'Saved to'} `}
             <strong className='text-white'>
               {lastSavedProject?.name ?? 'your project'}
             </strong>
-            .{' '}
+            {'. '}
             <Link
               to={`/project/${props.lastSaved.projectId}/integrations`}
               data-test='view-project-integrations-link'

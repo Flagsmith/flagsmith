@@ -298,7 +298,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
         } else if (project?.name) {
           scope = `${project.name} project`
         }
-        const verb = isEdit ? 'updated in' : 'added to'
+        const verb = isEdit ? 'saved to' : 'added to'
         toast(`${integrationName} integration ${verb} ${scope}`)
         onComplete({ isCreate: !isEdit, projectId })
       })
