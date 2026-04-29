@@ -15,7 +15,9 @@ import {
 import map from 'lodash/map'
 import Button from './base/forms/Button'
 import DropdownMenu from './base/DropdownMenu'
-import SuccessMessage from './messages/SuccessMessage'
+import Icon from './icons/Icon'
+import { IonIcon } from '@ionic/react'
+import { close as closeIcon } from 'ionicons/icons'
 import Utils from 'common/utils/utils'
 import { Link, useHistory } from 'react-router-dom'
 import each from 'lodash/each'
@@ -292,19 +294,29 @@ const Integration: FC<IntegrationProps> = (props) => {
       </div>
 
       {isProjectOnlyOnOrgPage && props.lastAddedProjectId && (
-        <div className='mt-3'>
-          <SuccessMessage
-            isClosable
-            close={props.onDismissLastAdded}
-            title={`Added to ${lastAddedProject?.name ?? 'your project'}`}
-          >
+        <div className='alert alert-success d-flex align-items-center gap-2 mt-3 mb-0'>
+          <Icon fill='#27AB95' name='checkmark-circle' />
+          <span className='flex-1 text-white'>
+            Added to <strong>{lastAddedProject?.name ?? 'your'}</strong>{' '}
+            project.{' '}
             <Link
               to={`/project/${props.lastAddedProjectId}/integrations`}
               data-test='view-project-integrations-link'
+              className='text-primary'
             >
               Manage in project integrations
             </Link>
-          </SuccessMessage>
+          </span>
+          {props.onDismissLastAdded && (
+            <a
+              onClick={props.onDismissLastAdded}
+              className='ml-auto text-white d-flex align-items-center'
+              style={{ cursor: 'pointer', fontSize: 20 }}
+              aria-label='Dismiss'
+            >
+              <IonIcon icon={closeIcon} />
+            </a>
+          )}
         </div>
       )}
 
