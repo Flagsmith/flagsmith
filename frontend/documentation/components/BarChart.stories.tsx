@@ -71,8 +71,7 @@ function generateFakeData(days: number, labels: string[]): ChartDataPoint[] {
 
 const meta: Meta<typeof BarChart> = {
   component: BarChart,
-  tags: ['autodocs'],
-  title: 'Components/BarChart',
+  title: 'Components/Data Display/BarChart',
 }
 export default meta
 

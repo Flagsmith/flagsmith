@@ -53,34 +53,19 @@ export default meta
 
 type Story = StoryObj<ButtonType>
 
-// ---------------------------------------------------------------------------
-// Default — interactive playground
-// ---------------------------------------------------------------------------
-
 export const Default: Story = {}
-
-// ---------------------------------------------------------------------------
-// All Variants
-// ---------------------------------------------------------------------------
 
 export const Variants: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'All available button themes. Use `primary` for main actions, `secondary` for alternatives, `outline` for low-emphasis actions, `danger` for destructive actions, and `success` for positive confirmations.',
+          'All available button themes. Use `primary` for main actions, `secondary` for alternatives, `outline` for low-emphasis actions, `danger` for destructive actions, and `success` for positive confirmations. `icon` is for icon-only buttons (copy, action triggers in tables); `project` is the avatar-style button used in the project picker.',
       },
     },
   },
   render: () => (
-    <div
-      style={{
-        alignItems: 'center',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '12px',
-      }}
-    >
+    <div className='d-flex align-items-center flex-wrap gap-2'>
       <Button theme='primary'>Primary</Button>
       <Button theme='secondary'>Secondary</Button>
       <Button theme='outline'>Outline</Button>
@@ -88,13 +73,13 @@ export const Variants: Story = {
       <Button theme='success'>Success</Button>
       <Button theme='tertiary'>Tertiary</Button>
       <Button theme='text'>Text</Button>
+      <Button theme='icon' iconLeft='copy'>
+        {''}
+      </Button>
+      <Button theme='project'>Project</Button>
     </div>
   ),
 }
-
-// ---------------------------------------------------------------------------
-// Sizes
-// ---------------------------------------------------------------------------
 
 export const Sizes: Story = {
   parameters: {
@@ -105,14 +90,7 @@ export const Sizes: Story = {
     },
   },
   render: () => (
-    <div
-      style={{
-        alignItems: 'center',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '12px',
-      }}
-    >
+    <div className='d-flex align-items-center flex-wrap gap-2'>
       <Button size='large'>Large</Button>
       <Button size='default'>Default</Button>
       <Button size='small'>Small</Button>
@@ -120,10 +98,6 @@ export const Sizes: Story = {
     </div>
   ),
 }
-
-// ---------------------------------------------------------------------------
-// Disabled
-// ---------------------------------------------------------------------------
 
 export const Disabled: Story = {
   parameters: {
@@ -134,14 +108,7 @@ export const Disabled: Story = {
     },
   },
   render: () => (
-    <div
-      style={{
-        alignItems: 'center',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '12px',
-      }}
-    >
+    <div className='d-flex align-items-center flex-wrap gap-2'>
       <Button theme='primary' disabled>
         Primary
       </Button>
@@ -158,10 +125,6 @@ export const Disabled: Story = {
   ),
 }
 
-// ---------------------------------------------------------------------------
-// With Icons
-// ---------------------------------------------------------------------------
-
 export const WithIcons: Story = {
   parameters: {
     docs: {
@@ -172,14 +135,7 @@ export const WithIcons: Story = {
     },
   },
   render: () => (
-    <div
-      style={{
-        alignItems: 'center',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '12px',
-      }}
-    >
+    <div className='d-flex align-items-center flex-wrap gap-2'>
       <Button theme='primary' iconLeft='plus'>
         Add Item
       </Button>
