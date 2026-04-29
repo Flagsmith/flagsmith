@@ -3690,6 +3690,7 @@ def test_list_features__with_code_references__returns_counts(
             project=project,
             repository_url="https://gitlab.flagsmith.com/frontend/",
             revision="frontend-1",
+            vcs_provider="gitlab",
             code_references=[
                 {
                     "feature_name": feature.name,
@@ -3715,6 +3716,7 @@ def test_list_features__with_code_references__returns_counts(
             project=project,
             repository_url="https://gitlab.flagsmith.com/frontend/",
             revision="frontend-2",
+            vcs_provider="gitlab",
             code_references=[
                 {
                     "feature_name": feature.name,
@@ -3737,12 +3739,14 @@ def test_list_features__with_code_references__returns_counts(
     assert response.json()["results"][0]["code_references_counts"] == [
         {
             "repository_url": "https://github.flagsmith.com/backend/",
+            "vcs_provider": "github",
             "count": 0,
             "last_successful_repository_scanned_at": "2099-01-02T14:00:00+00:00",
             "last_feature_found_at": "2099-01-01T13:00:00+00:00",
         },
         {
             "repository_url": "https://gitlab.flagsmith.com/frontend/",
+            "vcs_provider": "gitlab",
             "count": 2,
             "last_successful_repository_scanned_at": "2099-01-02T14:00:00+00:00",
             "last_feature_found_at": "2099-01-02T14:00:00+00:00",
