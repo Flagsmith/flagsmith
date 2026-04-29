@@ -82,7 +82,7 @@ interface CreateEditIntegrationProps {
   readOnly?: boolean
   modal?: boolean
   requiresProjectSelection?: boolean
-  onComplete?: () => void
+  onComplete?: (result?: { isCreate: boolean; projectId?: string }) => void
 }
 
 const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
@@ -182,9 +182,9 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existingIntegrations, isFetchingIntegration])
 
-  const onComplete = () => {
+  const onComplete = (result?: { isCreate: boolean; projectId?: string }) => {
     closeModal()
-    _onComplete?.()
+    _onComplete?.(result)
   }
 
   useEffect(() => {
@@ -301,7 +301,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
           }
           toast(`${integrationName} integration added to ${scope}`)
         }
-        onComplete()
+        onComplete({ isCreate: !isEdit, projectId })
       })
       .catch(onError)
   }

@@ -16,8 +16,9 @@ import map from 'lodash/map'
 import Button from './base/forms/Button'
 import DropdownMenu from './base/DropdownMenu'
 import Utils from 'common/utils/utils'
-import { useHistory } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import each from 'lodash/each'
+import { useGetProjectQuery } from 'common/services/useProject'
 
 type IntegrationAction = {
   label: string
@@ -55,12 +56,18 @@ type IntegrationProps = {
     hasIntegrationWithGithub: boolean
     installationId: string
   }
+  lastAddedProjectId?: string
+  onDismissLastAdded?: () => void
 }
 
 const Integration: FC<IntegrationProps> = (props) => {
   const history = useHistory()
   const [reFetchgithubId, setReFetchgithubId] = useState<string>('')
   const [windowInstallationId, setWindowInstallationId] = useState<string>('')
+  const { data: lastAddedProject } = useGetProjectQuery(
+    { id: Number(props.lastAddedProjectId) },
+    { skip: !props.lastAddedProjectId },
+  )
 
   const add = () => {
     const isGithubIntegration =
@@ -283,6 +290,30 @@ const Integration: FC<IntegrationProps> = (props) => {
         <div className='d-flex align-items-center'>{renderActions()}</div>
       </div>
 
+      {isProjectOnlyOnOrgPage && props.lastAddedProjectId && (
+        <div className='alert alert-success d-flex align-items-center gap-2 mt-3 mb-0'>
+          <span className='flex-1'>
+            Added to <strong>{lastAddedProject?.name ?? 'project'}</strong>.{' '}
+            <Link
+              to={`/project/${props.lastAddedProjectId}/integrations`}
+              data-test='view-project-integrations-link'
+            >
+              View this project's integrations
+            </Link>
+            .
+          </span>
+          {props.onDismissLastAdded && (
+            <Button
+              theme='text'
+              onClick={props.onDismissLastAdded}
+              className='fw-normal'
+            >
+              Dismiss
+            </Button>
+          )}
+        </div>
+      )}
+
       {activeIntegrations &&
         activeIntegrations.map((integration) => (
           <div
@@ -336,6 +367,9 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
   const [installationId, setInstallationId] = useState<string>('')
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [activeIntegrations, setActiveIntegrations] = useState<any[]>([])
+  const [lastAddedByIntegration, setLastAddedByIntegration] = useState<
+    Record<string, string>
+  >({})
   const history = useHistory()
 
   const organisationId = props.organisationId
@@ -500,7 +534,23 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
         githubMeta={{ githubId: githubId, installationId: installationId }}
         projectId={props.projectId}
         requiresProjectSelection={requiresProjectSelection}
-        onComplete={githubId ? fetchGithubIntegration : fetch}
+        onComplete={(result) => {
+          if (
+            result?.isCreate &&
+            requiresProjectSelection &&
+            result.projectId
+          ) {
+            setLastAddedByIntegration((prev) => ({
+              ...prev,
+              [id]: result.projectId!,
+            }))
+          }
+          if (githubId) {
+            fetchGithubIntegration()
+          } else {
+            fetch()
+          }
+        }}
       />,
       'side-modal',
     )
@@ -550,6 +600,14 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
               }}
               activeIntegrations={activeIntegrations[index]}
               integration={Utils.getIntegrationData()[i]}
+              lastAddedProjectId={lastAddedByIntegration[i]}
+              onDismissLastAdded={() =>
+                setLastAddedByIntegration((prev) => {
+                  const next = { ...prev }
+                  delete next[i]
+                  return next
+                })
+              }
             />
           ))
         ) : (
