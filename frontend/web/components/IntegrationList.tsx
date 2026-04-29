@@ -15,6 +15,7 @@ import {
 import map from 'lodash/map'
 import Button from './base/forms/Button'
 import DropdownMenu from './base/DropdownMenu'
+import SuccessMessage from './messages/SuccessMessage'
 import Utils from 'common/utils/utils'
 import { Link, useHistory } from 'react-router-dom'
 import each from 'lodash/each'
@@ -291,26 +292,19 @@ const Integration: FC<IntegrationProps> = (props) => {
       </div>
 
       {isProjectOnlyOnOrgPage && props.lastAddedProjectId && (
-        <div className='alert alert-success d-flex align-items-center gap-2 mt-3 mb-0'>
-          <span className='flex-1'>
-            Added to <strong>{lastAddedProject?.name ?? 'project'}</strong>.{' '}
+        <div className='mt-3'>
+          <SuccessMessage
+            isClosable
+            close={props.onDismissLastAdded}
+            title={`Added to ${lastAddedProject?.name ?? 'your project'}`}
+          >
             <Link
               to={`/project/${props.lastAddedProjectId}/integrations`}
               data-test='view-project-integrations-link'
             >
-              View this project's integrations
+              Manage in project integrations
             </Link>
-            .
-          </span>
-          {props.onDismissLastAdded && (
-            <Button
-              theme='text'
-              onClick={props.onDismissLastAdded}
-              className='fw-normal'
-            >
-              Dismiss
-            </Button>
-          )}
+          </SuccessMessage>
         </div>
       )}
 
