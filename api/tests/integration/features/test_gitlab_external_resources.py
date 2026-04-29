@@ -1,12 +1,10 @@
 import json
 
-import pytest
 import responses
 from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.helpers import get_current_site_url
 from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature
 from integrations.github.models import GithubConfiguration
@@ -15,7 +13,6 @@ from projects.models import Project
 from projects.tags.models import TagType
 
 
-@pytest.mark.django_db()
 def test_create_external_resource__gitlab_issue__returns_201(
     admin_client: APIClient,
     project: int,
@@ -49,15 +46,15 @@ def test_create_external_resource__gitlab_issue__returns_201(
     assert log.events == [
         {
             "level": "info",
-            "event": "issue.linked",
+            "event": "resource.linked",
             "organisation__id": organisation_id,
             "project__id": project,
             "feature__id": feature,
+            "resource__type": "gitlab_issue",
         },
     ]
 
 
-@pytest.mark.django_db()
 def test_create_external_resource__gitlab_merge_request__returns_201(
     admin_client: APIClient,
     project: int,
@@ -92,10 +89,11 @@ def test_create_external_resource__gitlab_merge_request__returns_201(
     assert log.events == [
         {
             "level": "info",
-            "event": "merge_request.linked",
+            "event": "resource.linked",
             "organisation__id": organisation_id,
             "project__id": project,
             "feature__id": feature,
+            "resource__type": "gitlab_mr",
         },
     ]
 
@@ -123,6 +121,11 @@ def test_create_external_resource__gitlab_issue_with_github_also_configured__ret
     responses.post(
         "https://gitlab.com/api/v4/projects/testorg%2Ftestrepo/hooks",
         json={"id": 1, "project_id": 1},
+        status=201,
+    )
+    responses.post(
+        "https://gitlab.com/api/v4/projects/testorg%2Ftestrepo/issues/99/notes",
+        json={"id": 1},
         status=201,
     )
 
@@ -167,6 +170,11 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
         },
         status=201,
     )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/42/notes",
+        json={"id": 1},
+        status=201,
+    )
 
     # When
     response = admin_client.post(
@@ -190,10 +198,10 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
     assert webhook.gitlab_path_with_namespace == "testorg/testrepo"
 
     # Registered exactly once with GitLab with the expected payload.
-    [call] = responses.calls
-    assert call.request.headers["PRIVATE-TOKEN"] == "glpat-test-token"
-    assert json.loads(call.request.body) == {
-        "url": f"{get_current_site_url()}/api/v1/gitlab-webhook/{webhook.uuid}/",
+    hook_call, *_ = responses.calls
+    assert hook_call.request.headers["PRIVATE-TOKEN"] == "glpat-test-token"
+    assert json.loads(hook_call.request.body) == {
+        "url": f"http://testserver/api/v1/gitlab-webhook/{webhook.uuid}/",
         "token": webhook.secret,
         "issues_events": True,
         "merge_requests_events": True,
@@ -205,7 +213,6 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
         ("Issue Open", TagType.GITLAB.value)
     ]
 
-    # Product telemetry emitted: webhook registration + link.
     assert log.events == [
         {
             "level": "info",
@@ -218,10 +225,20 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
         },
         {
             "level": "info",
-            "event": "issue.linked",
+            "event": "comment.posted",
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
+            "gitlab__project__path": "testorg/testrepo",
+            "gitlab__resource__iid": 42,
+        },
+        {
+            "level": "info",
+            "event": "resource.linked",
+            "organisation__id": organisation,
+            "project__id": project,
+            "feature__id": feature,
+            "resource__type": "gitlab_issue",
         },
     ]
 
@@ -244,6 +261,11 @@ def test_create_external_resource__gitlab_mr__registers_webhook_and_tags_feature
     responses.post(
         "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/hooks",
         json={"id": 77, "project_id": 777},
+        status=201,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/merge_requests/7/notes",
+        json={"id": 1},
         status=201,
     )
 
@@ -272,14 +294,40 @@ def test_create_external_resource__gitlab_mr__registers_webhook_and_tags_feature
     assert list(Feature.objects.get(id=feature).tags.values_list("label", "type")) == [
         ("MR Open", TagType.GITLAB.value)
     ]
-    assert any(e["event"] == "webhook.registered" for e in log.events) and any(
-        e["event"] == "merge_request.linked" for e in log.events
-    )
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "webhook.registered",
+            "organisation__id": organisation,
+            "project__id": project,
+            "gitlab__project__id": 777,
+            "gitlab__project__path": "testorg/testrepo",
+            "gitlab__hook__id": 77,
+        },
+        {
+            "level": "info",
+            "event": "comment.posted",
+            "organisation__id": organisation,
+            "project__id": project,
+            "feature__id": feature,
+            "gitlab__project__path": "testorg/testrepo",
+            "gitlab__resource__iid": 7,
+        },
+        {
+            "level": "info",
+            "event": "resource.linked",
+            "organisation__id": organisation,
+            "project__id": project,
+            "feature__id": feature,
+            "resource__type": "gitlab_mr",
+        },
+    ]
 
 
 @responses.activate
 def test_create_external_resource__second_link_same_gitlab_project__reuses_webhook(
     admin_client: APIClient,
+    organisation: int,
     project: int,
     feature: int,
     log: StructuredLogCapture,
@@ -298,7 +346,11 @@ def test_create_external_resource__second_link_same_gitlab_project__reuses_webho
         gitlab_hook_id=42,
         secret="existing-secret",
     )
-    # No GitLab mock is set up — if registration fires, the call will fail.
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/merge_requests/5/notes",
+        json={"id": 1},
+        status=201,
+    )
 
     # When
     response = admin_client.post(
@@ -314,7 +366,6 @@ def test_create_external_resource__second_link_same_gitlab_project__reuses_webho
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-    assert len(responses.calls) == 0
     assert GitLabWebhook.objects.filter(gitlab_configuration=config).count() == 1
 
     # Feature tagged with `MR Open`
@@ -322,11 +373,27 @@ def test_create_external_resource__second_link_same_gitlab_project__reuses_webho
         ("MR Open", TagType.GITLAB.value)
     ]
 
-    # No webhook registration event
-    assert "webhook.registered" not in {event["event"] for event in log.events}
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "comment.posted",
+            "organisation__id": organisation,
+            "project__id": project,
+            "feature__id": feature,
+            "gitlab__project__path": "testorg/testrepo",
+            "gitlab__resource__iid": 5,
+        },
+        {
+            "level": "info",
+            "event": "resource.linked",
+            "organisation__id": organisation,
+            "project__id": project,
+            "feature__id": feature,
+            "resource__type": "gitlab_mr",
+        },
+    ]
 
 
-@pytest.mark.django_db()
 def test_create_external_resource__unparseable_url__no_webhook_registered(
     admin_client: APIClient,
     project: int,
@@ -340,7 +407,7 @@ def test_create_external_resource__unparseable_url__no_webhook_registered(
         access_token="glpat-test-token",
     )
 
-    # When — URL doesn't match our GitLab issue/MR regex.
+    # When
     response = admin_client.post(
         f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
         data={
@@ -356,14 +423,16 @@ def test_create_external_resource__unparseable_url__no_webhook_registered(
     assert not GitLabWebhook.objects.exists()
 
 
-@pytest.mark.django_db()
 @responses.activate
-def test_delete_external_resource__last_link_for_path__deregisters_webhook(
+def test_delete_external_resource__last_link_for_path__deregisters_webhook_and_posts_comment(
     admin_client: APIClient,
+    organisation: int,
     project: int,
     feature: int,
+    feature_name: str,
+    log: StructuredLogCapture,
 ) -> None:
-    # Given — a linked resource with a registered webhook.
+    # Given
     project_instance = Project.objects.get(id=project)
     config = GitLabConfiguration.objects.create(
         project=project_instance,
@@ -386,26 +455,62 @@ def test_delete_external_resource__last_link_for_path__deregisters_webhook(
         f"https://gitlab.example.com/api/v4/projects/{webhook.gitlab_project_id}/hooks/{webhook.gitlab_hook_id}",
         status=204,
     )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/1/notes",
+        json={"id": 1},
+        status=201,
+    )
 
     # When
     response = admin_client.delete(
         f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/{resource.id}/",
     )
 
-    # Then — unlink succeeds and the hook is gone from GitLab and our DB.
+    # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert len(responses.calls) == 1
     assert not GitLabWebhook.objects.filter(id=webhook.id).exists()
 
+    [note_call] = [c for c in responses.calls if "/notes" in c.request.url]
+    assert json.loads(note_call.request.body)["body"] == (
+        f"⛓️‍💥 Unlinked from Flagsmith feature flag `{feature_name}`\n"
+    )
 
-@pytest.mark.django_db()
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "comment.posted",
+            "organisation__id": organisation,
+            "project__id": project,
+            "feature__id": feature,
+            "gitlab__project__path": "testorg/testrepo",
+            "gitlab__resource__iid": 1,
+        },
+        {
+            "level": "info",
+            "event": "webhook.deregistered",
+            "organisation__id": organisation,
+            "project__id": project,
+            "gitlab__project__id": 777,
+            "gitlab__hook__id": 42,
+        },
+        {
+            "level": "info",
+            "event": "resource.unlinked",
+            "organisation__id": organisation,
+            "project__id": project,
+            "feature__id": feature,
+            "resource__type": "gitlab_issue",
+        },
+    ]
+
+
 @responses.activate
 def test_delete_external_resource__another_link_for_path_exists__preserves_webhook(
     admin_client: APIClient,
     project: int,
     feature: int,
 ) -> None:
-    # Given — two resources referencing the same GitLab project; one webhook.
+    # Given
     project_instance = Project.objects.get(id=project)
     config = GitLabConfiguration.objects.create(
         project=project_instance,
@@ -430,20 +535,24 @@ def test_delete_external_resource__another_link_for_path_exists__preserves_webho
         type="GITLAB_ISSUE",
         url="https://gitlab.example.com/testorg/testrepo/-/issues/2",
     )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/1/notes",
+        json={"id": 1},
+        status=201,
+    )
 
-    # When — unlink the first one.
+    # When
     response = admin_client.delete(
         f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/{first.id}/",
     )
 
-    # Then — no GitLab DELETE fired (issue #2 still references the project),
-    # webhook row untouched.
+    # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert len(responses.calls) == 0
+    [call] = responses.calls
+    assert "/notes" in call.request.url
     assert GitLabWebhook.objects.filter(id=webhook.id).exists()
 
 
-@pytest.mark.django_db()
 def test_list_external_resources__gitlab_issue__returns_200(
     admin_client: APIClient,
     project: int,
@@ -470,7 +579,190 @@ def test_list_external_resources__gitlab_issue__returns_200(
     assert results[0]["metadata"] == {"title": "Fix login bug", "state": "opened"}
 
 
-@pytest.mark.django_db()
+@responses.activate
+def test_create_external_resource__gitlab_issue_with_labeling__applies_label(
+    admin_client: APIClient,
+    organisation: int,
+    project: int,
+    feature: int,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    project_instance = Project.objects.get(id=project)
+    GitLabConfiguration.objects.create(
+        project=project_instance,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+        labeling_enabled=True,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/labels",
+        json={"name": "Flagsmith Feature"},
+        status=201,
+    )
+    responses.put(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/42",
+        json={"iid": 42},
+        status=200,
+        match=[
+            responses.matchers.json_params_matcher(
+                {"add_labels": "Flagsmith Feature"},
+            ),
+        ],
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/hooks",
+        json={"id": 1, "project_id": 1},
+        status=201,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/42/notes",
+        json={"id": 1},
+        status=201,
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_ISSUE",
+            "url": "https://gitlab.example.com/testorg/testrepo/-/issues/42",
+            "feature": feature,
+            "metadata": {"title": "Bug fix", "state": "opened"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert any(e["event"] == "label.created" for e in log.events)
+    assert any(e["event"] == "resource.linked" for e in log.events)
+
+
+@responses.activate
+def test_create_external_resource__gitlab_issue_with_labeling_disabled__skips_label_api(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    project_instance = Project.objects.get(id=project)
+    GitLabConfiguration.objects.create(
+        project=project_instance,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+        labeling_enabled=False,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/hooks",
+        json={"id": 1, "project_id": 1},
+        status=201,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/42/notes",
+        json={"id": 1},
+        status=201,
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_ISSUE",
+            "url": "https://gitlab.example.com/testorg/testrepo/-/issues/42",
+            "feature": feature,
+            "metadata": {"title": "Bug fix", "state": "opened"},
+        },
+        format="json",
+    )
+
+    # Then — no label API called, resource still created.
+    assert response.status_code == status.HTTP_201_CREATED
+    assert not any(e["event"] == "label.created" for e in log.events)
+
+
+@responses.activate
+def test_create_external_resource__gitlab_issue_label_api_failure__still_creates_resource(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    project_instance = Project.objects.get(id=project)
+    GitLabConfiguration.objects.create(
+        project=project_instance,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+        labeling_enabled=True,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/labels",
+        status=403,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/hooks",
+        json={"id": 1, "project_id": 1},
+        status=201,
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/issues/42/notes",
+        json={"id": 1},
+        status=201,
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_ISSUE",
+            "url": "https://gitlab.example.com/testorg/testrepo/-/issues/42",
+            "feature": feature,
+            "metadata": {"title": "Bug fix", "state": "opened"},
+        },
+        format="json",
+    )
+
+    # Then — resource created, webhook registered, comment posted despite label failure.
+    assert response.status_code == status.HTTP_201_CREATED
+    assert FeatureExternalResource.objects.exists()
+    assert any(e["event"] == "label.failed" for e in log.events)
+    assert any(e["event"] == "webhook.registered" for e in log.events)
+    assert any(e["event"] == "comment.posted" for e in log.events)
+    assert any(e["event"] == "resource.linked" for e in log.events)
+
+
+def test_create_external_resource__gitlab_issue_with_labeling_unparseable_url__still_creates_resource(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given
+    project_instance = Project.objects.get(id=project)
+    GitLabConfiguration.objects.create(
+        project=project_instance,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+        labeling_enabled=True,
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_ISSUE",
+            "url": "https://gitlab.example.com/not-a-resource",
+            "feature": feature,
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert FeatureExternalResource.objects.exists()
+
+
 def test_list_external_resources__gitlab_merge_request__returns_200(
     admin_client: APIClient,
     project: int,

@@ -1,7 +1,7 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.15.11
+    rev: v0.15.12
     hooks:
       # Run the linter.
       - id: ruff
@@ -33,7 +33,7 @@ repos:
         language: system
         entry: make -C api generate-docs
         pass_filenames: false
-        types: [python, toml]
+        types_or: [python, toml]
       - id: python-typecheck
         name: python-typecheck
         language: system

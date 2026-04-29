@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any
 import hubspot  # type: ignore[import-untyped]
 import requests
 from django.conf import settings
-from hubspot.crm.associations.v4 import AssociationSpec  # type: ignore[import-untyped]
 from hubspot.crm.companies import (  # type: ignore[import-untyped]
     PublicObjectSearchRequest,
     SimplePublicObjectInput,
@@ -115,21 +114,6 @@ class HubspotClient:
                 f"status code and following response: {response.text}"
             )
         return response.json()  # type: ignore[no-any-return]
-
-    def associate_contact_to_company(self, contact_id: str, company_id: str) -> None:
-        association_spec = [
-            AssociationSpec(
-                association_category="HUBSPOT_DEFINED", association_type_id=1
-            )
-        ]
-
-        self.client.crm.associations.v4.basic_api.create(
-            object_type="contacts",
-            object_id=contact_id,
-            to_object_type="companies",
-            to_object_id=company_id,
-            association_spec=association_spec,
-        )
 
     def get_company_by_domain(self, domain: str) -> dict[str, Any] | None:
         """

@@ -156,6 +156,7 @@ INSTALLED_APPS = [
     "integrations.github",
     "integrations.gitlab",
     "integrations.grafana",
+    "integrations.vcs",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -600,6 +601,9 @@ E2E_NON_ADMIN_USER_WITH_A_ROLE = (
     f"e2e_non_admin_user_with_a_role@{E2E_TEST_EMAIL_DOMAIN}"
 )
 E2E_SEPARATE_TEST_USER = f"e2e_separate_test_user@{E2E_TEST_EMAIL_DOMAIN}"
+# User on a Free-plan organisation, used by the Billing tab E2E tests
+# that need to exercise the "no active subscription" payment flow.
+E2E_BILLING_USER = f"e2e_billing_user@{E2E_TEST_EMAIL_DOMAIN}"
 #  Identity for E2E segment tests
 E2E_IDENTITY = "test-identity"
 
@@ -1187,17 +1191,6 @@ CORS_ALLOW_HEADERS = list(
 # Hubspot settings
 HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
 ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
-HUBSPOT_IGNORE_DOMAINS = env.list(
-    "HUBSPOT_IGNORE_DOMAINS",
-    subcast=str,
-    default=[],
-)
-HUBSPOT_IGNORE_DOMAINS_REGEX = env.str("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
-HUBSPOT_IGNORE_ORGANISATION_DOMAINS = env.list(
-    "HUBSPOT_IGNORE_ORGANISATION_DOMAINS",
-    subcast=str,
-    default=[],
-)
 
 # Number of minutes to wait for a user that has signed up to
 # join or create an organisation before creating a lead in

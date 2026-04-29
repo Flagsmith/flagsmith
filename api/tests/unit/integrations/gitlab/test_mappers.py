@@ -5,7 +5,7 @@ from integrations.gitlab.mappers import map_gitlab_resource_to_tag_label
 
 
 def test_map_gitlab_resource_to_tag_label__non_gitlab_type__returns_none() -> None:
-    # Given — a non-GitLab resource type reaches the mapper defensively.
+    # Given
     resource = Mock(type=ResourceType.GITHUB_ISSUE.value, metadata='{"state": "open"}')
 
     # When

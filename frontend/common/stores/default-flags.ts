@@ -102,6 +102,12 @@ const defaultFlags = {
           'key': 'access_token',
           'label': 'Access Token',
         },
+        {
+          'default': false,
+          'inputType': 'checkbox',
+          'key': 'labeling_enabled',
+          'label': 'Add "Flagsmith Feature" label to linked issues and MRs',
+        },
       ],
       'image': '/static/images/integrations/gitlab.svg',
       'perEnvironment': false,

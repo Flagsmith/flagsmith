@@ -16,6 +16,13 @@ const Project = {
   flagsmithClientEdgeAPI: 'https://edge.bullet-train-staging.win/api/v1/',
   // This is used for Sentry tracking
   maintenance: false,
+  plans: {
+    scaleUp: {
+      annual: 'Scale-Up-v4-USD-Yearly',
+      monthly: 'Scale-Up-v4-USD-Monthly',
+    },
+    startup: { annual: 'startup-annual-v2', monthly: 'startup-v2' },
+  },
   useSecureCookies: true,
   ...(_globalThis.projectOverrides || {}),
 }

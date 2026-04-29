@@ -16,7 +16,6 @@ import AppActions from 'common/dispatcher/app-actions'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
 import BuildVersion from 'components/BuildVersion'
-import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import Constants from 'common/constants'
 import EnvironmentNavbar from './navbars/EnvironmentNavbar'
@@ -103,8 +102,6 @@ const CustomSingleValue = ({ hasWarning, ...rest }: CustomSingleValueProps) => {
 
 const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
   const history = useHistory()
-  const { data: environments, isSuccess: environmentsLoaded } =
-    useGetEnvironmentsQuery({ projectId }, { skip: !projectId })
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: projectId },
     { skip: !projectId },
@@ -129,17 +126,8 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
       ? null
       : (ProjectStore.getEnvironment(environmentId) as any)
 
-  const environmentNotFound =
-    environmentId !== 'create' &&
-    environmentsLoaded &&
-    !environments?.results?.some((env) => env.api_key === environmentId)
-
   const onProjectSave = () => {
     AppActions.refreshOrganisation()
-  }
-
-  if (environmentNotFound) {
-    return null
   }
   return (
     <>

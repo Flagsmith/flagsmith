@@ -182,7 +182,6 @@ def test_delete_configuration__with_registered_webhooks__deregisters_each_and_cl
     assert len(deregister_events) == 2
     assert {e["gitlab__hook__id"] for e in deregister_events} == {11, 22}
 
-    # Rows are cleared so a new config can register the same project afresh.
     assert not GitLabWebhook.objects.exists()
 
 
@@ -225,7 +224,6 @@ def test_delete_configuration__gitlab_delete_fails_for_one__still_removes_config
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert not GitLabConfiguration.objects.filter(project=project).exists()
-    # Second hook still deregistered; failure for the first was logged.
     assert any(
         e["event"] == "webhook.deregistered" and e["gitlab__hook__id"] == 22
         for e in log.events

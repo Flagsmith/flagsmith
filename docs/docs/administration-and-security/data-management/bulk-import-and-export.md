@@ -38,7 +38,7 @@ Feature exports are available for only two weeks, so if an export is needed for 
 On the Import tab of the project settings page, you will find the feature import functionality, complete with file upload at the bottom of the page.
 
 :::caution
-The target environment is the environment to inherit the features of the exported environment. All other environments will be set to the values defined when the feature was initially created. Use with caution, especially when using the Overwrite Destructive merge strategy.
+The target environment is the environment to inherit the features of the exported environment. The Overwrite Destructive merge strategy will replace the target environment's state for every overlapping feature — including its segment and identity overrides — so use it with caution.
 :::
 
 ### Merge Strategy
@@ -47,4 +47,4 @@ Since a feature may have an identical name, it is important to carefully select 
 
 The first option is the Skip strategy, which allows an import to process a feature export and, at any time a feature has a pre-existing feature present, it skips the import for that given feature. For example, if you are importing ten features but two of them were already there, only eight features will be added to the project. This strategy is best for organisations that want to retain their existing data as closely as possible.
 
-The second option is the Overwrite Destructive strategy. In contrast to the Skip strategy, the Overwrite Destructive method overwrites your existing features, and it is important to remember that this is across all environments. This strategy is most useful only when every feature that was included in the export was vetted to be authoritative in the target project. 
+The second option is the Overwrite Destructive strategy. In contrast to the Skip strategy, Overwrite Destructive replaces the target environment's state for every overlapping feature — env-default value, enabled flag, segment and identity overrides, and multivariate allocations. The feature definition (name, initial value, default enabled, server-key-only) and other environments' state are preserved. This strategy is most useful when every feature that was included in the export was vetted to be authoritative for the target environment. 

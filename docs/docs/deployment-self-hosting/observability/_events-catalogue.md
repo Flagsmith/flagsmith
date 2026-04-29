@@ -1,4 +1,35 @@
 
+### `api_usage.notification.evaluated`
+
+Logged at `info` from:
+ - `api/organisations/task_helpers.py:153`
+
+Attributes:
+ - `allowed_api_calls`
+ - `api_usage`
+ - `api_usage_percent`
+ - `matched_threshold`
+ - `organisation.id`
+ - `period_ends_at`
+ - `period_starts_at`
+
+### `api_usage.notification.missing_billing_starts_at`
+
+Logged at `error` from:
+ - `api/organisations/task_helpers.py:118`
+
+Attributes:
+ - `organisation.id`
+
+### `api_usage.notification.sent`
+
+Logged at `info` from:
+ - `api/organisations/task_helpers.py:176`
+
+Attributes:
+ - `matched_threshold`
+ - `organisation.id`
+
 ### `app_analytics.no_analytics_database_configured`
 
 Logged at `warning` from:
@@ -75,6 +106,31 @@ Attributes:
  - `organisation.id`
  - `project.id`
 
+### `gitlab.comment.post_failed`
+
+Logged at `warning` from:
+ - `api/integrations/gitlab/services/comments.py:69`
+
+Attributes:
+ - `exc_info`
+ - `feature.id`
+ - `gitlab.project.path`
+ - `gitlab.resource.iid`
+ - `organisation.id`
+ - `project.id`
+
+### `gitlab.comment.posted`
+
+Logged at `info` from:
+ - `api/integrations/gitlab/services/comments.py:71`
+
+Attributes:
+ - `feature.id`
+ - `gitlab.project.path`
+ - `gitlab.resource.iid`
+ - `organisation.id`
+ - `project.id`
+
 ### `gitlab.configuration.created`
 
 Logged at `info` from:
@@ -98,7 +154,7 @@ Attributes:
 ### `gitlab.feature.tagged`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services.py:230`
+ - `api/integrations/gitlab/services/tagging.py:89`
 
 Attributes:
  - `action`
@@ -108,10 +164,82 @@ Attributes:
  - `project.id`
  - `tag.label`
 
+### `gitlab.label.created`
+
+Logged at `info` from:
+ - `api/integrations/gitlab/services/labels.py:66`
+
+Attributes:
+ - `feature.id`
+ - `gitlab_project.path`
+ - `organisation.id`
+ - `project.id`
+ - `resource.iid`
+ - `resource.type`
+
+### `gitlab.label.failed`
+
+Logged at `exception` from:
+ - `api/integrations/gitlab/services/labels.py:76`
+
+Attributes:
+ - `feature.id`
+ - `gitlab_project.path`
+ - `organisation.id`
+ - `project.id`
+ - `resource.iid`
+ - `resource.type`
+
+### `gitlab.label.removal_failed`
+
+Logged at `exception` from:
+ - `api/integrations/gitlab/tasks.py:189`
+
+Attributes:
+ - `feature.id`
+ - `gitlab_project.path`
+ - `project.id`
+ - `resource.iid`
+ - `resource.type`
+
+### `gitlab.label.removed`
+
+Logged at `info` from:
+ - `api/integrations/gitlab/tasks.py:187`
+
+Attributes:
+ - `feature.id`
+ - `gitlab_project.path`
+ - `project.id`
+ - `resource.iid`
+ - `resource.type`
+
+### `gitlab.resource.linked`
+
+Logged at `info` from:
+ - `api/integrations/vcs/services.py:35`
+
+Attributes:
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `resource.type`
+
+### `gitlab.resource.unlinked`
+
+Logged at `info` from:
+ - `api/integrations/vcs/services.py:70`
+
+Attributes:
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `resource.type`
+
 ### `gitlab.webhook.deregistered`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services.py:160`
+ - `api/integrations/gitlab/services/webhooks.py:157`
 
 Attributes:
  - `gitlab.hook.id`
@@ -122,7 +250,7 @@ Attributes:
 ### `gitlab.webhook.deregistration_failed`
 
 Logged at `warning` from:
- - `api/integrations/gitlab/services.py:153`
+ - `api/integrations/gitlab/services/webhooks.py:150`
 
 Attributes:
  - `exc_info`
@@ -134,7 +262,7 @@ Attributes:
 ### `gitlab.webhook.registered`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services.py:113`
+ - `api/integrations/gitlab/services/webhooks.py:110`
 
 Attributes:
  - `gitlab.hook.id`
@@ -146,7 +274,7 @@ Attributes:
 ### `gitlab.webhook.registration_failed`
 
 Logged at `error` from:
- - `api/integrations/gitlab/services.py:98`
+ - `api/integrations/gitlab/services/webhooks.py:95`
 
 Attributes:
  - `exc_info`
@@ -190,7 +318,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:141`
+ - `api/segments/serializers.py:142`
 
 Attributes:
  - `revision_id`
