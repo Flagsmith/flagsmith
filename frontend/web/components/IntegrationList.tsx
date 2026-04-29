@@ -297,9 +297,9 @@ const Integration: FC<IntegrationProps> = (props) => {
         <div className='alert alert-success d-flex align-items-center gap-2 mt-3 mb-0'>
           <Icon fill='#27AB95' name='checkmark-circle' />
           <span className='flex-1 text-white'>
-            {`${title ?? 'Integration'} ${
+            {`Integration ${
               props.lastSaved.isCreate ? 'added to' : 'saved to'
-            } ${lastSavedProject?.name ?? 'your project'}. `}
+            } ${lastSavedProject?.name ?? 'your project'}.\u00A0`}
             <Link
               to={`/project/${props.lastSaved.projectId}/integrations`}
               data-test='view-project-integrations-link'
