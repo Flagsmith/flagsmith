@@ -291,16 +291,15 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
       : createIntegration({ ...mutationArgs, body: formData }).unwrap()
     request
       .then(() => {
-        if (!isEdit) {
-          const integrationName = integration.title || 'Integration'
-          let scope = 'project'
-          if (organisationId) {
-            scope = 'organisation'
-          } else if (project?.name) {
-            scope = `${project.name} project`
-          }
-          toast(`${integrationName} integration added to ${scope}`)
+        const integrationName = integration.title || 'Integration'
+        let scope = 'project'
+        if (organisationId) {
+          scope = 'organisation'
+        } else if (project?.name) {
+          scope = `${project.name} project`
         }
+        const verb = isEdit ? 'updated in' : 'added to'
+        toast(`${integrationName} integration ${verb} ${scope}`)
         onComplete({ isCreate: !isEdit, projectId })
       })
       .catch(onError)

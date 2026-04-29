@@ -59,17 +59,17 @@ type IntegrationProps = {
     hasIntegrationWithGithub: boolean
     installationId: string
   }
-  lastAddedProjectId?: string
-  onDismissLastAdded?: () => void
+  lastSaved?: { projectId: string; isCreate: boolean }
+  onDismissLastSaved?: () => void
 }
 
 const Integration: FC<IntegrationProps> = (props) => {
   const history = useHistory()
   const [reFetchgithubId, setReFetchgithubId] = useState<string>('')
   const [windowInstallationId, setWindowInstallationId] = useState<string>('')
-  const { data: lastAddedProject } = useGetProjectQuery(
-    { id: Number(props.lastAddedProjectId) },
-    { skip: !props.lastAddedProjectId },
+  const { data: lastSavedProject } = useGetProjectQuery(
+    { id: Number(props.lastSaved?.projectId) },
+    { skip: !props.lastSaved?.projectId },
   )
 
   const add = () => {
@@ -293,23 +293,23 @@ const Integration: FC<IntegrationProps> = (props) => {
         <div className='d-flex align-items-center'>{renderActions()}</div>
       </div>
 
-      {isProjectOnlyOnOrgPage && props.lastAddedProjectId && (
+      {isProjectOnlyOnOrgPage && props.lastSaved && (
         <div className='alert alert-success d-flex align-items-center gap-2 mt-3 mb-0'>
           <Icon fill='#27AB95' name='checkmark-circle' />
           <span className='flex-1 text-white'>
-            Added to <strong>{lastAddedProject?.name ?? 'your'}</strong>{' '}
-            project.{' '}
+            {props.lastSaved.isCreate ? 'Added to ' : 'Updated in '}
+            <strong>{lastSavedProject?.name ?? 'your'}</strong> project.{' '}
             <Link
-              to={`/project/${props.lastAddedProjectId}/integrations`}
+              to={`/project/${props.lastSaved.projectId}/integrations`}
               data-test='view-project-integrations-link'
               className='text-primary'
             >
               Manage in project integrations
             </Link>
           </span>
-          {props.onDismissLastAdded && (
+          {props.onDismissLastSaved && (
             <a
-              onClick={props.onDismissLastAdded}
+              onClick={props.onDismissLastSaved}
               className='ml-auto text-white d-flex align-items-center'
               style={{ cursor: 'pointer', fontSize: 20 }}
               aria-label='Dismiss'
@@ -373,8 +373,8 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
   const [installationId, setInstallationId] = useState<string>('')
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [activeIntegrations, setActiveIntegrations] = useState<any[]>([])
-  const [lastAddedByIntegration, setLastAddedByIntegration] = useState<
-    Record<string, string>
+  const [lastSavedByIntegration, setLastSavedByIntegration] = useState<
+    Record<string, { projectId: string; isCreate: boolean }>
   >({})
   const history = useHistory()
 
@@ -541,14 +541,13 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
         projectId={props.projectId}
         requiresProjectSelection={requiresProjectSelection}
         onComplete={(result) => {
-          if (
-            result?.isCreate &&
-            requiresProjectSelection &&
-            result.projectId
-          ) {
-            setLastAddedByIntegration((prev) => ({
+          if (requiresProjectSelection && result?.projectId) {
+            setLastSavedByIntegration((prev) => ({
               ...prev,
-              [id]: result.projectId!,
+              [id]: {
+                isCreate: !!result.isCreate,
+                projectId: result.projectId!,
+              },
             }))
           }
           if (githubId) {
@@ -606,9 +605,9 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
               }}
               activeIntegrations={activeIntegrations[index]}
               integration={Utils.getIntegrationData()[i]}
-              lastAddedProjectId={lastAddedByIntegration[i]}
-              onDismissLastAdded={() =>
-                setLastAddedByIntegration((prev) => {
+              lastSaved={lastSavedByIntegration[i]}
+              onDismissLastSaved={() =>
+                setLastSavedByIntegration((prev) => {
                   const next = { ...prev }
                   delete next[i]
                   return next
