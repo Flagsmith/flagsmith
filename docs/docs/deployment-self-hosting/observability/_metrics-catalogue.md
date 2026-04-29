@@ -101,3 +101,14 @@ Labels:
  - `task_type`
  - `result`
 
+### `flagsmith_worker_rss_bytes`
+
+Gauge.
+
+Resident Set Size (RSS) of the worker process in bytes. Used to track memory usage of each worker process. The `pid` label identifies which process the measurement belongs to.
+
+Labels:
+ - `pid`
+
+
+
