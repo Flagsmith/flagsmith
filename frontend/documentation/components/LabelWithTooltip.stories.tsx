@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from 'storybook'
-import { userEvent } from 'storybook/test'
+import { fireEvent } from 'storybook/test'
 
 import LabelWithTooltip from 'components/base/LabelWithTooltip'
 
@@ -24,14 +24,22 @@ export const WithoutTooltip: Story = {
 
 export const Hovered: Story = {
   parameters: {
-    chromatic: { delay: 300 },
+    chromatic: { delay: 800 },
     docs: {
       description: { story: 'Tooltip in its visible state.' },
       story: { height: '160px' },
     },
   },
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
-    const trigger = canvasElement.querySelector('[data-tooltip-id]')
-    if (trigger) await userEvent.hover(trigger as HTMLElement)
+    const trigger =
+      canvasElement.querySelector<HTMLElement>('[data-tooltip-id]')
+    if (!trigger) return
+    // react-tooltip's pointer detection in Chromatic's headless Chrome
+    // doesn't always pick up userEvent.hover; fire all four event
+    // variants so whichever the library is listening for triggers.
+    fireEvent.pointerEnter(trigger)
+    fireEvent.pointerOver(trigger)
+    fireEvent.mouseEnter(trigger)
+    fireEvent.mouseOver(trigger)
   },
 }
