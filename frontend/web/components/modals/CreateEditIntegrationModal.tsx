@@ -25,6 +25,7 @@ import {
   useUpdateIntegrationMutation,
 } from 'common/services/useIntegration'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
+import { useGetProjectQuery } from 'common/services/useProject'
 
 const GITHUB_INSTALLATION_UPDATE = 'update'
 
@@ -141,6 +142,10 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
     })
   const [createIntegration] = useCreateIntegrationMutation()
   const [updateIntegration] = useUpdateIntegrationMutation()
+  const { data: project } = useGetProjectQuery(
+    { id: Number(projectId) },
+    { skip: !projectId },
+  )
 
   // Reset on project change so a stale flagsmithEnvironment can't key the
   // per-environment query to the old project.
@@ -284,7 +289,21 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
           id: `${existingId}`,
         }).unwrap()
       : createIntegration({ ...mutationArgs, body: formData }).unwrap()
-    request.then(onComplete).catch(onError)
+    request
+      .then(() => {
+        if (!isEdit) {
+          const integrationName = integration.title || 'Integration'
+          let scope = 'project'
+          if (organisationId) {
+            scope = 'organisation'
+          } else if (project?.name) {
+            scope = `${project.name} project`
+          }
+          toast(`${integrationName} integration added to ${scope}`)
+        }
+        onComplete()
+      })
+      .catch(onError)
   }
 
   const onError = (err: any) => {
