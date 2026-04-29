@@ -298,7 +298,10 @@ const Integration: FC<IntegrationProps> = (props) => {
           <Icon fill='#27AB95' name='checkmark-circle' />
           <span className='flex-1 text-white'>
             {props.lastSaved.isCreate ? 'Added to ' : 'Updated in '}
-            <strong>{lastSavedProject?.name ?? 'your'}</strong> project.{' '}
+            <strong className='text-white'>
+              {lastSavedProject?.name ?? 'your project'}
+            </strong>
+            .{' '}
             <Link
               to={`/project/${props.lastSaved.projectId}/integrations`}
               data-test='view-project-integrations-link'
@@ -311,7 +314,7 @@ const Integration: FC<IntegrationProps> = (props) => {
             <a
               onClick={props.onDismissLastSaved}
               className='ml-auto text-white d-flex align-items-center'
-              style={{ cursor: 'pointer', fontSize: 20 }}
+              style={{ cursor: 'pointer' }}
               aria-label='Dismiss'
             >
               <IonIcon icon={closeIcon} />
