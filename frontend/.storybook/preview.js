@@ -11,7 +11,12 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import Utils from 'common/utils/utils'
 import ReactSelect, { components as selectComponents } from 'react-select'
+// Register safe globals that project-components.js would normally set.
+// Only import components that use the automatic JSX transform (TSX files).
+// Legacy .js files (Flex, Column, Input) use old JSX transform and crash here.
 import Tooltip from '../web/components/Tooltip'
+import Row from '../web/components/base/grid/Row'
+import FormGroup from '../web/components/base/grid/FormGroup'
 
 window.React = React
 window.propTypes = PropTypes
@@ -47,10 +52,13 @@ global.Select = (props) =>
       components: { ...props.components },
     }),
   )
-global.Tooltip = Tooltip
+window.Tooltip = Tooltip
+window.Row = Row
+window.FormGroup = FormGroup
 
 /** @type { import('storybook').Preview } */
 const preview = {
+  tags: ['autodocs'],
   globalTypes: {
     theme: {
       description: 'Dark mode toggle',
