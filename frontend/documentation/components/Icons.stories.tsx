@@ -34,6 +34,7 @@ const CATEGORIES: IconCategory[] = [
   },
   {
     icons: [
+      'close',
       'close-circle',
       'copy',
       'copy-outlined',
