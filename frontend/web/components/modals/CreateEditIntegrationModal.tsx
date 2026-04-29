@@ -1,4 +1,4 @@
-import React, { FC, FormEvent, useEffect, useState } from 'react'
+import React, { FC, FormEvent, useEffect, useRef, useState } from 'react'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import MyGitHubRepositoriesComponent from 'components/MyGitHubRepositoriesComponent'
 import _data from 'common/data/base/_data'
@@ -11,18 +11,51 @@ import Project from 'common/project'
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
 import Input from 'components/base/forms/Input'
-import { IntegrationData, IntegrationFieldOption } from 'common/types/responses'
+import {
+  IntegrationData,
+  IntegrationField,
+  IntegrationFieldOption,
+} from 'common/types/responses'
+import { Req } from 'common/types/requests'
 import cloneDeep from 'lodash/cloneDeep'
+import ProjectSelect from 'components/ProjectSelect'
+import {
+  useCreateIntegrationMutation,
+  useGetIntegrationQuery,
+  useUpdateIntegrationMutation,
+} from 'common/services/useIntegration'
+import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
+import { useGetProjectQuery } from 'common/services/useProject'
 
 const GITHUB_INSTALLATION_UPDATE = 'update'
 
+const SummaryItem: FC<{ label: string; children: React.ReactNode }> = ({
+  children,
+  label,
+}) => (
+  <div className='col-md-3 mb-2'>
+    <div className='fw-bold'>{label}</div>
+    <div>{children}</div>
+  </div>
+)
+
+const ReadOnlyEnvironmentName: FC<{ environmentApiKey?: string }> = ({
+  environmentApiKey,
+}) => {
+  const { data: environment } = useGetEnvironmentQuery(
+    { id: environmentApiKey ?? '' },
+    { skip: !environmentApiKey },
+  )
+  return <>{environment?.name || ''}</>
+}
+
 const constructBaseUrl = ({
-  environmentId,
+  environmentApiKey,
   integrationId,
   organisationId,
   projectId,
 }: {
-  environmentId?: string
+  environmentApiKey?: string
   integrationId: string
   organisationId?: string
   projectId?: string
@@ -30,8 +63,8 @@ const constructBaseUrl = ({
   if (organisationId) {
     return `${Project.api}organisations/${organisationId}/integrations/${integrationId}`
   }
-  if (environmentId) {
-    return `${Project.api}environments/${environmentId}/integrations/${integrationId}`
+  if (environmentApiKey) {
+    return `${Project.api}environments/${environmentApiKey}/integrations/${integrationId}`
   }
   if (projectId) {
     return `${Project.api}projects/${projectId}/integrations/${integrationId}`
@@ -48,7 +81,8 @@ interface CreateEditIntegrationProps {
   integration: IntegrationData
   readOnly?: boolean
   modal?: boolean
-  onComplete?: () => void
+  requiresProjectSelection?: boolean
+  onComplete?: (result?: { isCreate: boolean; projectId?: string }) => void
 }
 
 const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
@@ -60,21 +94,97 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
     modal,
     onComplete: _onComplete,
     organisationId,
-    projectId,
+    projectId: initialProjectId,
     readOnly,
+    requiresProjectSelection,
   } = props
   const [fields, setFields] = useState(cloneDeep(integration.fields || []))
 
+  const buildDefaultFormData = (): Record<string, any> => {
+    const initial: Record<string, any> = { fields }
+    integration.fields?.forEach((field) => {
+      // Explicitly set every field so controlled inputs reset to empty rather
+      // than going uncontrolled (which would retain the previous value).
+      initial[field.key] = field.default ?? ''
+    })
+    return initial
+  }
   const [formData, setFormData] = useState<Record<string, any>>(
-    data || { fields },
+    () => data || buildDefaultFormData(),
   )
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [authorised, setAuthorised] = useState<boolean>(false)
+  const [selectedProjectId, setSelectedProjectId] = useState<
+    string | undefined
+  >(initialProjectId)
+  const [loadedIntegration, setLoadedIntegration] = useState<{
+    id: string
+    [key: string]: any
+  } | null>(null)
+  const projectId = requiresProjectSelection
+    ? selectedProjectId
+    : initialProjectId
 
-  const onComplete = () => {
+  const envId = formData.flagsmithEnvironment
+  const integrationQueryArgs = ((): Req['getIntegration'] | null => {
+    if (!requiresProjectSelection || !id) return null
+    if (integration.perEnvironment) {
+      return envId ? { environmentApiKey: envId, integrationId: id } : null
+    }
+    return selectedProjectId
+      ? { integrationId: id, projectId: selectedProjectId }
+      : null
+  })()
+  const { data: existingIntegrations, isFetching: isFetchingIntegration } =
+    useGetIntegrationQuery(integrationQueryArgs ?? { integrationId: '' }, {
+      skip: !integrationQueryArgs,
+    })
+  const [createIntegration] = useCreateIntegrationMutation()
+  const [updateIntegration] = useUpdateIntegrationMutation()
+  const { data: project } = useGetProjectQuery(
+    { id: Number(projectId) },
+    { skip: !projectId },
+  )
+
+  // Reset on project change so a stale flagsmithEnvironment can't key the
+  // per-environment query to the old project.
+  const previousProjectRef = useRef(selectedProjectId)
+  useEffect(() => {
+    if (!requiresProjectSelection) return
+    if (previousProjectRef.current === selectedProjectId) return
+    previousProjectRef.current = selectedProjectId
+    setLoadedIntegration(null)
+    setFormData(buildDefaultFormData())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProjectId])
+
+  useEffect(() => {
+    if (!requiresProjectSelection || !id || !integrationQueryArgs) return
+    if (isFetchingIntegration) return
+    const existing = existingIntegrations?.[0]
+    if (existing) {
+      setLoadedIntegration(existing)
+      setFormData({
+        ...existing,
+        fields: existing.fields || fields,
+        ...(integration.perEnvironment ? { flagsmithEnvironment: envId } : {}),
+      })
+      return
+    }
+    // No existing config — reset to defaults, preserving the env the user
+    // just picked (otherwise the env select would flicker and clear).
+    setLoadedIntegration(null)
+    setFormData({
+      ...buildDefaultFormData(),
+      ...(integration.perEnvironment ? { flagsmithEnvironment: envId } : {}),
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingIntegrations, isFetchingIntegration])
+
+  const onComplete = (result?: { isCreate: boolean; projectId?: string }) => {
     closeModal()
-    _onComplete?.()
+    _onComplete?.(result)
   }
 
   useEffect(() => {
@@ -124,7 +234,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
         `${document.location.href}?environment=${formData.flagsmithEnvironment}&configure=${id}`,
       )}&signature=${signature}`
       document.location = `${constructBaseUrl({
-        environmentId: formData.flagsmithEnvironment,
+        environmentApiKey: formData.flagsmithEnvironment,
         integrationId: id,
         organisationId,
         projectId,
@@ -136,7 +246,8 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
     e.preventDefault()
 
     const isOauth = integration.isOauth && !authorised
-    const isEdit = data && data.id
+    const existingId = data?.id || loadedIntegration?.id
+    const isEdit = !!existingId
 
     if (integration.isExternalInstallation) {
       onComplete?.()
@@ -147,55 +258,59 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
 
     setIsLoading(true)
 
-    const baseUrl = constructBaseUrl({
-      environmentId: formData.flagsmithEnvironment,
+    if (isOauth) {
+      const baseUrl = constructBaseUrl({
+        environmentApiKey: formData.flagsmithEnvironment,
+        integrationId: id,
+        organisationId,
+        projectId,
+      })
+      _data
+        .get(`${baseUrl}/signature/`, {
+          redirect_url: document.location.href,
+        })
+        .then((res: any) => handleOauthSignature(res))
+      return
+    }
+
+    if (!id) return
+    const mutationArgs = {
+      environmentApiKey: integration.perEnvironment
+        ? formData.flagsmithEnvironment
+        : undefined,
       integrationId: id,
       organisationId,
-      projectId,
-    })
-
-    if (integration.perEnvironment) {
-      if (isOauth) {
-        _data
-          .get(`${baseUrl}/signature/`, {
-            redirect_url: document.location.href,
-          })
-          .then((res: any) => handleOauthSignature(res))
-      } else if (isEdit) {
-        _data
-          .put(`${baseUrl}/${data.id}/`, formData)
-          .then(onComplete)
-          .catch(onError)
-      } else {
-        _data.post(`${baseUrl}/`, formData).then(onComplete).catch(onError)
-      }
-    } else if (isOauth) {
-      _data
-        .get(`${baseUrl}/signature/`, { redirect_url: document.location.href })
-        .then((res: any) => handleOauthSignature(res))
-    } else if (isEdit) {
-      _data
-        .put(`${baseUrl}/${data.id}/`, formData)
-        .then(onComplete)
-        .catch(onError)
-    } else {
-      _data.post(`${baseUrl}/`, formData).then(onComplete).catch(onError)
+      projectId: integration.perEnvironment ? undefined : projectId,
     }
+    const request = isEdit
+      ? updateIntegration({
+          ...mutationArgs,
+          body: formData,
+          id: `${existingId}`,
+        }).unwrap()
+      : createIntegration({ ...mutationArgs, body: formData }).unwrap()
+    request
+      .then(() => {
+        const integrationName = integration.title || 'Integration'
+        let scope = 'project'
+        if (organisationId) {
+          scope = 'organisation'
+        } else if (project?.name) {
+          scope = `${project.name} project`
+        }
+        const verb = isEdit ? 'saved to' : 'added to'
+        toast(`${integrationName} integration ${verb} ${scope}`)
+        onComplete({ isCreate: !isEdit, projectId })
+      })
+      .catch(onError)
   }
 
-  const onError = (res: Response) => {
+  const onError = (err: any) => {
     const defaultError =
       'There was an error adding your integration. Please check the details and try again.'
-    res.text().then((errorText) => {
-      try {
-        const err = JSON.parse(errorText)
-        setError(err[0] || defaultError)
-      } catch {
-        setError(defaultError)
-      } finally {
-        setIsLoading(false)
-      }
-    })
+    const payload = err?.data ?? err
+    setError((Array.isArray(payload) ? payload[0] : undefined) || defaultError)
+    setIsLoading(false)
   }
 
   const openGitHubWinInstallations = () => {
@@ -231,20 +346,109 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
     })
   }
 
+  const renderFieldSelect = (field: IntegrationField) => {
+    const options = field.options || []
+    const selected = options.find(
+      (v: IntegrationFieldOption) => v.value === formData[field.key],
+    )
+    return (
+      <div className='full-width mb-2'>
+        <Select
+          onChange={(v: { value: string }) => update(field.key, v.value)}
+          options={options}
+          value={
+            selected
+              ? { label: selected.label, value: selected.value }
+              : { label: 'Please select' }
+          }
+        />
+      </div>
+    )
+  }
+
+  const renderFieldInput = (field: IntegrationField) => (
+    <Input
+      id={field.label.replace(/ /g, '')}
+      value={formData[field.key] ?? field.default ?? ''}
+      onChange={(e: any) => update(field.key, e)}
+      isValid={!!formData[field.key]}
+      type={field.hidden ? 'password' : field.inputType || 'text'}
+      className='full-width mb-2'
+      autocomplete={field.hidden ? 'new-password' : 'off'}
+    />
+  )
+
+  const renderReadOnlyValue = (field: IntegrationField) => {
+    const value = formData[field.key]
+    if (field.inputType === 'checkbox') return value ? 'Yes' : 'No'
+    if (field.options) {
+      return (
+        field.options.find((o) => o.value === value)?.label ??
+        String(value ?? '')
+      )
+    }
+    if (field.hidden && typeof value === 'string') {
+      return value.replace(/./g, '*')
+    }
+    return value ?? ''
+  }
+
+  const renderField = (field: IntegrationField) => {
+    if (field.inputType === 'checkbox') {
+      return (
+        <div key={field.key} className='mt-3 mb-2'>
+          <Input
+            id={field.label.replace(/ /g, '')}
+            value={formData[field.key] ?? field.default}
+            label={field.label}
+            onChange={(e: any) => update(field.key, e)}
+            type='checkbox'
+          />
+        </div>
+      )
+    }
+    return (
+      <div key={field.key}>
+        <div>
+          <label
+            htmlFor={field.label.replace(/ /g, '')}
+            className={!modal ? 'mb-1 fw-bold' : ''}
+          >
+            {field.label}
+          </label>
+        </div>
+        {field.options ? renderFieldSelect(field) : renderFieldInput(field)}
+      </div>
+    )
+  }
+
   return (
     <form
       className={classNames({ 'px-4 h-100': !!modal })}
       onSubmit={handleSubmit}
+      autoComplete='off'
     >
       <div className={classNames({ 'pt-4': !!modal })}>
-        {integration.perEnvironment && projectId && (
+        {requiresProjectSelection && (
+          <div className='mb-3'>
+            <label className={!modal ? 'mb-1 fw-bold' : ''}>
+              Flagsmith Project
+            </label>
+            <ProjectSelect
+              organisationId={AccountStore.getOrganisation()?.id}
+              value={selectedProjectId}
+              onChange={(v) => setSelectedProjectId(v)}
+            />
+          </div>
+        )}
+        {integration.perEnvironment && projectId && !readOnly && (
           <div className='mb-3'>
             <label className={!modal ? 'mb-1 fw-bold' : ''}>
               Flagsmith Environment
             </label>
             <EnvironmentSelect
               projectId={projectId}
-              readOnly={!!data || readOnly}
+              readOnly={!!data}
               value={formData.flagsmithEnvironment}
               onChange={(environment) =>
                 update('flagsmithEnvironment', environment)
@@ -263,97 +467,23 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
             />
           </div>
         )}
-        {fields.map((field) => {
-          if (field.inputType === 'checkbox') {
-            if (readOnly) {
-              return (
-                <div key={field.key} className='mt-3 mb-2'>
-                  <Input
-                    id={field.label.replace(/ /g, '')}
-                    value={formData[field.key] ?? field.default}
-                    label={field.label}
-                    onChange={() => {}}
-                    disabled
-                    type='checkbox'
-                  />
-                </div>
-              )
-            }
-            return (
-              <div key={field.key} className='mt-3 mb-2'>
-                <Input
-                  id={field.label.replace(/ /g, '')}
-                  value={
-                    typeof formData[field.key] !== 'undefined'
-                      ? formData[field.key]
-                      : field.default
-                  }
-                  label={field.label}
-                  onChange={(e: any) => update(field.key, e)}
-                  type='checkbox'
+        {readOnly && (
+          <div className='row'>
+            {integration.perEnvironment && projectId && (
+              <SummaryItem label='Flagsmith Environment'>
+                <ReadOnlyEnvironmentName
+                  environmentApiKey={formData.flagsmithEnvironment}
                 />
-              </div>
-            )
-          }
-          let fieldControl: React.ReactNode
-          if (readOnly) {
-            fieldControl = (
-              <div className='mb-3'>
-                {field.hidden
-                  ? formData[field.key].replace(/./g, '*')
-                  : formData[field.key]}
-              </div>
-            )
-          } else if (field.options) {
-            const selectedOption = field.options.find(
-              (v: IntegrationFieldOption) => v.value === formData[field.key],
-            )
-            fieldControl = (
-              <div className='full-width mb-2'>
-                <Select
-                  onChange={(v: { value: string }) =>
-                    update(field.key, v.value)
-                  }
-                  options={field.options}
-                  value={
-                    selectedOption
-                      ? {
-                          label: selectedOption.label,
-                          value: formData[field.key],
-                        }
-                      : { label: 'Please select' }
-                  }
-                />
-              </div>
-            )
-          } else {
-            fieldControl = (
-              <Input
-                id={field.label.replace(/ /g, '')}
-                value={
-                  typeof formData[field.key] !== 'undefined'
-                    ? formData[field.key]
-                    : field.default
-                }
-                onChange={(e: any) => update(field.key, e)}
-                isValid={!!formData[field.key]}
-                type={field.hidden ? 'password' : field.inputType || 'text'}
-                className='full-width mb-2'
-              />
-            )
-          }
-          return (
-            <div key={field.key}>
-              <label
-                htmlFor={field.label.replace(/ /g, '')}
-                className={classNames('d-block', !modal && 'mb-1 fw-bold')}
-              >
-                {field.label}
-              </label>
-              {fieldControl}
-            </div>
-          )
-        })}
+              </SummaryItem>
+            )}
+            {fields.map((field) => (
+              <SummaryItem key={field.key} label={field.label}>
+                {renderReadOnlyValue(field)}
+              </SummaryItem>
+            ))}
+          </div>
+        )}
+        {!readOnly && fields.map(renderField)}
         {authorised && id === 'slack' && (
           <div>
             Can't see your channel? Enter your channel ID here (C0xxxxxx)
@@ -363,6 +493,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
               isValid={!!formData.channel_id}
               type='text'
               className='full-width mt-2'
+              autocomplete='off'
             />
           </div>
         )}
@@ -379,7 +510,8 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
           <Button
             disabled={
               isLoading ||
-              (!formData.flagsmithEnvironment && integration.perEnvironment)
+              (!formData.flagsmithEnvironment && integration.perEnvironment) ||
+              (requiresProjectSelection && !selectedProjectId)
             }
             type='submit'
           >
