@@ -1,13 +1,11 @@
 import React, {
+  ChangeEventHandler,
   FC,
-  FormEventHandler,
   KeyboardEventHandler,
   useState,
 } from 'react'
-import Utils from 'common/utils/utils'
 import { filter } from 'lodash'
-import { close } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
+import Icon from './icons/Icon'
 
 type ChipInputType = {
   placeholder?: string
@@ -30,8 +28,8 @@ const ChipInput: FC<ChipInputType> = ({ onChange, placeholder, value }) => {
     setInputValue('')
   }
 
-  const onChangeText: FormEventHandler = (e) => {
-    const v = Utils.safeParseEventValue(e)
+  const onChangeText: ChangeEventHandler<HTMLInputElement> = (e) => {
+    const v = e.currentTarget.value
     if (v.search(/[ ,]/) !== -1) {
       addChips(v.split(/[ ,;]/))
     } else {
@@ -58,7 +56,7 @@ const ChipInput: FC<ChipInputType> = ({ onChange, placeholder, value }) => {
 
   const onDelete = (index: number) => {
     const v = value || []
-    onChange(Utils.removeElementFromArray(v, index))
+    onChange(v.filter((_, i) => i !== index))
   }
 
   return (
@@ -76,7 +74,7 @@ const ChipInput: FC<ChipInputType> = ({ onChange, placeholder, value }) => {
                 if (e.key === 'Enter' || e.key === ' ') onDelete(index)
               }}
             >
-              <IonIcon icon={close} />
+              <Icon name='close' width={16} height={16} fill='currentColor' />
             </span>
           </span>
         ))}
