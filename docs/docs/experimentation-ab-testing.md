@@ -4,78 +4,226 @@ sidebar_label: Experimentation (A/B Testing)
 sidebar_position: 4
 ---
 
-A/B testing enables you to experiment with design and functionality variants of your application. The data generated will allow you to make modifications to your app, safe in the knowledge that it will have a net positive effect.
+:::info
 
-You can use Flagsmith to perform A/B tests. Using a combination of [multivariate flags](/managing-flags/core-management) and a 3rd party analytics tool like [Amplitude](https://amplitude.com/) or [Mixpanel](https://mixpanel.com/), you can easily perform complex A/B tests that will help improve your product.
+Experimentation is in active development. Naming, scope, and behaviour
+may change before general availability. The draft PR is the place for
+feedback.
 
-Running A/B tests require two main components: a bucketing engine and an analytics platform. The bucketing engine is used to put users into a particular A/B testing bucket. These buckets will control the specific user experience that is being tested. The analytics platform will receive a stream of event data derived from the behaviour of the user. Combining these two concepts allows you to deliver seamless A/B test.
+:::
 
-We have [integrations](/third-party-integrations/analytics/segment) with a number of analytics platforms. If we don't integrate with the platform you are using, you can still manually send the test data to the downstream platform manually.
+> **Screenshot placeholder —** Hero image — wide shot of the Experiment Results dashboard with lift bars and the recommendation callout. Target path: `/img/experimentation/hero-results-dashboard.png`
 
-By the end of this tutorial, you will be able to:
+# Experimentation (A/B Testing)
 
--   Set up a multivariate flag in Flagsmith for A/B testing.
--   Implement logic in your application to bucket users and display variants.
--   Send A/B test data to an analytics platform.
--   Understand how to use anonymous identities for A/B testing on unknown users.
+## Overview
 
-## Before you begin
+Flagsmith Experimentation lets you run controlled A/B tests on your
+multivariate feature flags. Metrics are computed from your data
+warehouse, and results are read inside Flagsmith.
 
-To follow this tutorial, you will need:
+This guide covers three flows:
 
-- A basic understanding of [multivariate flags](/managing-flags/core-management) in Flagsmith. Remember: multivariate bucketing only works when users are identified (use real identities or persistent anonymous GUIDs).
-- Access to a third-party analytics platform (e.g., Amplitude, Mixpanel) where you can send custom events. You can explore Flagsmith [integrations](/third-party-integrations/analytics/segment) for this purpose.
-- A development environment for your application where you can implement changes and integrate the Flagsmith SDK.
+- **Connect a data warehouse** — one-time organisation-level setup so
+  Flagsmith can compute metric values.
+- **Create an experiment** — a 5-step wizard for hypothesis, flag,
+  metrics, and audience (targeting, sample size, variation split).
+- **Read experiment results** — summary cards, recommendation, metrics
+  comparison, and trend chart.
 
-## Scenario - Testing a new Paypal button
+Experimentation builds on three Flagsmith concepts:
 
-For this example, lets assume we have an app that currently accepts credit card payments only. We have a hunch that we are losing out on potential customers that would like to pay with PayPal. We're going to test whether adding PayPal to the payment options increases our checkout rate.
+- **[Multivariate flags](/managing-flags/core-management).** Every
+  experiment runs on one. Existing variations become control and
+  treatment.
+- **[Segments](/flagsmith-concepts/targeting-and-rollouts).** Optional
+  filter on who's eligible for an experiment. Leave empty to run on the
+  whole environment.
+- **[Identities](/flagsmith-concepts/identities).** Users are bucketed
+  by identity, the same way multivariate values are assigned today. A
+  user keeps their variation for the duration of the run.
 
-We have a lot of users on our platform, so we don't want to run this test against our entire user-base. We want 90% of our users to be excluded from the test. Then for our test, 5% of our users will see the new Paypal button, and the remaining 5% will not see it. So we will have 3 buckets:
+## Prerequisites
 
-1. Excluded (Control) Users
-2. Paypal test button users
-3. Test users that don't see the Paypal button
+A connected data warehouse. See
+[Data Warehouse Integration](/third-party-integrations/analytics/data-warehouse)
+for setup. The connection is organisation-scoped, so configure it once
+per organisation and every project picks it up.
 
-Because Flagsmith flags can contain both boolean states as well as multivariate flag values, we can make use of both. We will use the boolean flag state to control whether to run the test. Then, if the flag is `enabled`, check the multivariate value. In this example, we will only show the PayPal button if the value is set to `show`.
+## Creating an experiment
 
-## Steps
+Experiments have their own page in the project sidebar, alongside
+Features, Segments, and Identities. Both creating and reading
+experiments start here.
 
-1. Create a new [multivariate flag](/managing-flags/core-management) that will control which of the 3 buckets the user is put into. We'll call this flag `paypal_button_test`. We will provide 3 variate options:
+![Experiments list page with a mix of Running, Completed, and Draft rows, highlighting the Create Experiment button](/img/experimentation/experiments-list.png)
 
-   1. Control - 90% of users
-   2. Paypal button - 5% of users
-   3. Test users that don't see the Paypal button - 5% of users
+Click **Create Experiment** in the top right to open the 5-step wizard.
+Each step validates before the next; jump back from the Review & Launch
+summary at any time.
 
-2. In our app, we want to [identify](/flagsmith-concepts/identities) each user before they start the checkout process. All Flagsmith multivariate flags need us to identify the user, so we can bucket them in a reproducible manner.
-3. When we get to the checkout page, check the `value` of the `paypal_button_test` flag for that user. If it evaluates to `show`, show the PayPal payment button. Otherwise, don't show the button.
-4. Send an event message to the analytics platform, adding the name/value pair of `paypal_button_test` and the value of the flag; in this case it would be one of either `control`, `show` or `hide`.
-5. Deploy our app, enable the flag and watch the data come in to your analytics platform.
+### Experiment Details
 
-Here is what creating the flag would look like.
+![Experiment Details step — name field, hypothesis textarea, start/end date pickers](/img/experimentation/wizard-details.png)
 
-![Image](/img/ab-test-paypal-example.png)
+1. **Name.** A short identifier, e.g. `checkout_paypal_button_test`.
+2. **Hypothesis** (required). What you expect to happen, and why. This
+   stays attached to the experiment after launch, so the original intent
+   is still visible later.
+3. **Start and end dates.** Default to today plus 14 days. Change them
+   to schedule for later or run a longer window.
 
-Once the test is set up, and the flag has been enabled, data will start streaming into the analytics platform. We can now evaluate the results of the tests based on the behavioral changes that the new button has created.
+### Flag & Variations
 
-## Handling Anonymous/Unknown Identities
+![Flag picker with multi-variant flags; the single-variant blocking banner below for context](/img/experimentation/wizard-flag-variations.png)
 
-To do A/B testing you need to use identities. Without an identity to key from, it's impossible for the platform to serve a consistent experience to your users.
+Pick the **multivariate flag** to experiment on. The Variations table
+shows the flag's existing values, which become the experiment's control
+and treatment.
 
-What if you want to run an A/B test in an area of your application where you don't know who your users are? For example on the homepage of your website? In this instance, you need to generate _anonymous identities_ values for your users. In this case we will generate a GUID for each user.
+Single-variant flags aren't eligible. The wizard blocks them and links
+to the flag's page so you can add a variation.
 
-A GUID value is just a random string that has an extremely high likelihood of being unique. There's more info about generating GUID values [on Stack Overflow](https://stackoverflow.com/a/2117523).
+**Note:** Experiments need at least one non-control variation. If the
+flag doesn't have one, the wizard points you to the flag's main page to
+add it.
 
-The general flow would be:
+### Select Metrics
 
-1. A new browser visits your website homepage for the first time.
-2. You see that this is an anonymous user, so you generate a random GUID for that user and assign it to them.
-3. You send that GUID along with an identify call to Flagsmith. This will then segment that visitor.
-4. You add a cookie to the browser and store the GUID. That way, if the user returns to your page, they will still be in the same segment.
+![Metric picker showing pre-selected metrics with the Primary / Secondary / Guardrail segmented control visible on a row](/img/experimentation/wizard-metrics.png)
 
-These techniques will be slightly different depending on what platform you are developing for, but the general concept will remain the same.
+Select the metrics this experiment will track. Each metric has a role:
 
-## Next steps
+- **Primary.** Drives the verdict. The experiment succeeds or fails
+  based on significance here.
+- **Secondary.** Tracked alongside primary metrics, but doesn't
+  influence the recommendation.
+- **Guardrail.** A safety check for metrics you don't want to break,
+  such as page-load time or error rate.
 
-- Explore [Flagsmith's integrations](/third-party-integrations/analytics/segment) with analytics platforms.
-- Learn more about [managing identities](/flagsmith-concepts/identities) in Flagsmith.
+Pick a role for each metric with the three-way segmented control.
+Multiple primaries are allowed but harder to interpret statistically;
+the wizard warns you if you select more than one.
+
+### Audience
+
+![Audience step with three sub-blocks: Targeting, Sample size, Variation split](/img/experimentation/wizard-audience.png)
+
+The audience step has three layers, applied in order:
+
+1. **Targeting** — *who's eligible.*
+2. **Sample size** — *of those, how many enter the experiment.*
+3. **Variation split** — *of those sampled, who sees what.*
+
+Each layer is independent, which lets you run a 10% canary on the whole
+environment, a 50/50 test on premium users only, or anything in between.
+
+#### Targeting (optional)
+
+Filter the experiment to a specific segment. Leave empty to run on all
+identities in the environment, which is the default. Users not matched
+by the segment keep the flag's environment default and aren't part of
+the result.
+
+:::warning
+
+If the flag already has an override for the chosen segment, the wizard
+blocks you with a conflict banner. Pick a different segment or remove
+the override before continuing. A live experiment on a segment with an
+override produces incorrect assignment.
+
+:::
+
+#### Sample size
+
+Choose what percentage of eligible users actually enters the
+experiment. Presets are 5 / 10 / 25 / 50 / 100, or pick Custom for any
+value. Defaults to 100. Eligible users not sampled in keep the flag's
+environment default — they're not part of the result.
+
+Use a smaller sample to start a canary and validate before ramping
+wider. Use 100 when you want every eligible user in the result from
+day one.
+
+#### Variation split
+
+Distribute the sampled users across control and treatment variations.
+Control takes one of the weight slots alongside the variations, so a
+50/50 split means 50% control, 50% treatment. Weights auto-balance, so
+adjusting one rebalances the others. Click **Split evenly** to reset.
+
+**Note:** In v1, only one experiment can run on a given segment + flag
+at a time. Changing the variation split mid-run breaks statistical
+validity, so design with the final split up front. To ramp the
+audience size, use the sample-size dial — it changes who's in the
+experiment without changing how the in-experiment users are split.
+
+### Review & Launch
+
+![Review summary with per-section edit links](/img/experimentation/wizard-review-launch.png)
+
+Read through the summary, edit any section by clicking its **Edit**
+link, then click **Launch Experiment** and confirm.
+
+Traffic assignment starts immediately. The flag begins serving the
+configured variation weights to the sampled portion of the eligible
+audience; everyone else keeps the flag's environment default.
+
+**Note:** Once launched, the configuration is locked for the rest of
+the run to keep the result statistically valid. To change anything,
+stop the experiment and start a new one.
+
+## Reading experiment results
+
+Click any running or completed experiment from the **Experiments** list
+to open its **Results** dashboard.
+
+![Full results dashboard — stat cards, recommendation callout, metrics comparison table, and trend chart stacked](/img/experimentation/results-dashboard-full.png)
+
+### Summary cards
+
+- **Lift vs. control** on the primary metric.
+- **Probability of being best.** Confidence that the leading variation
+  actually wins.
+- **Sample size per variation.** How many assigned identities have
+  contributed data so far.
+
+### Recommendation callout
+
+![Recommendation callout — "Treatment B is outperforming Control with 94% probability" style](/img/experimentation/results-recommendation-callout.png)
+
+A plain-language summary: which variation is leading, how confident the
+verdict is, and what to do next (keep running, declare a winner, or
+investigate).
+
+### Metrics comparison table
+
+![Metrics comparison table — primary row emphasised, guardrail badge visible, zero-centred lift bars](/img/experimentation/results-comparison-table.png)
+
+One row per metric, with the primary row visually emphasised. Each row
+shows:
+
+- **Role badge.** Primary, Secondary, or Guardrail.
+- **Control value** and **Treatment value.**
+- **Lift bar.** Zero-centred, showing the relative change and its
+  direction.
+- **Significance.** Statistical confidence in the observed lift.
+
+### Trend over time
+
+![Trend line chart with metric selector above it — control vs. treatment lines](/img/experimentation/results-trend-chart.png)
+
+A line chart plots each variation's value over the experiment's run.
+Use the metric selector above the chart to switch between metrics.
+
+Look for stability. Lines separated for several days are more
+trustworthy than ones that crossed yesterday.
+
+## What's next
+
+- **[Multivariate flags](/managing-flags/core-management).** The
+  building block under every experiment.
+- **[Segments](/flagsmith-concepts/targeting-and-rollouts).** Define
+  an experiment's audience.
+- **[Identities](/flagsmith-concepts/identities).** The unit Flagsmith
+  buckets users by.
