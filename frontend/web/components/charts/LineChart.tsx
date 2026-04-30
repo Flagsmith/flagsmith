@@ -11,7 +11,7 @@ import {
 } from 'recharts'
 import { colorTextSecondary } from 'common/theme/tokens'
 import ChartTooltip from './ChartTooltip'
-import { ChartDataPoint } from './BarChart'
+import { ChartDataPoint } from './types'
 
 type LineChartProps = {
   data: ChartDataPoint[]

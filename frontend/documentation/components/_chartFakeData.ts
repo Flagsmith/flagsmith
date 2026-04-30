@@ -1,4 +1,4 @@
-import { ChartDataPoint } from 'components/charts/BarChart'
+import { ChartDataPoint } from 'components/charts/types'
 
 // Deterministic stand-in for Math.random — same `(label, day)` pair always
 // produces the same value, so Chromatic snapshots stay stable across runs.
