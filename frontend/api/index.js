@@ -66,7 +66,6 @@ app.get('/config/project-overrides', (req, res) => {
     { name: 'headway', value: process.env.HEADWAY_API_KEY },
     { name: 'ga', value: process.env.GOOGLE_ANALYTICS_API_KEY },
     { name: 'sha', value: sha },
-    { name: 'crispChat', value: process.env.CRISP_WEBSITE_ID },
     { name: 'pylonAppId', value: process.env.PYLON_APP_ID },
     { name: 'fpr', value: process.env.FIRST_PROMOTER_ID },
     { name: 'sentry', value: process.env.SENTRY_API_KEY },
