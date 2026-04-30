@@ -62,9 +62,20 @@ function setupPylon() {
   }
 }
 
+function hidePylon() {
+  if (typeof window.Pylon !== 'undefined') {
+    window.Pylon('hideChatBubble')
+  }
+}
+
 export function identifyChatUser() {
   if (flagsmith.hasFeature('pylon_chat') && !isFreePlan()) {
     setupPylon()
+    if (typeof window.Pylon !== 'undefined') {
+      window.Pylon('showChatBubble')
+    }
+  } else {
+    hidePylon()
   }
 }
 
