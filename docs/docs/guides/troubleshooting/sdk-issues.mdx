@@ -59,8 +59,6 @@ evaluation.
 
 -   **Enterprise feature.** Real-time updates require a Flagsmith Enterprise subscription on SaaS, or the real-time
     service running alongside your self-hosted deployment.
--   **Self-hosted prerequisite.** The real-time service depends on Redis — make sure it is reachable from both the API
-    and the real-time container.
 -   **Supported SDKs.** Not every SDK has SSE client support. Check the [Real-time Flags](/performance/real-time-flags)
     page for the current SDK matrix.
 
@@ -70,6 +68,49 @@ correct real-time URL and that your network allows long-lived HTTP connections t
 **Related documentation:** [Server-Side SDKs](/integrating-with-flagsmith/sdks/server-side) •
 [Real-time Flags](/performance/real-time-flags) •
 [Caching Strategies](/deployment-self-hosting/core-configuration/caching-strategies)
+
+---
+
+## SDK initialisation times out
+
+The first call to the SDK (commonly `init`, `getFlags`, or constructing the client) hangs and eventually fails, leaving
+your application without flag data.
+
+### Common causes
+
+-   **Network path to the API is slow or blocked.** A corporate proxy, firewall, or VPN may be intercepting outbound
+    HTTPS to `edge.api.flagsmith.com` (or your self-hosted domain). The SDK can't distinguish "blocked" from "slow" and
+    will sit on the connection until the request timeout fires.
+-   **DNS resolution is slow.** Cold containers or restricted DNS (e.g. some Lambda VPC configurations) can add several
+    seconds to the first lookup.
+-   **Default request timeout is shorter than the network round-trip.** Most server-side SDKs default to a 10-second
+    HTTP request timeout (Node.js defaults to 30). On a cold start to a self-hosted instance behind a slow proxy, that
+    ceiling is easy to hit.
+-   **Local evaluation fetching a large environment document.** The first refresh in
+    [local evaluation mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode) downloads the full
+    environment. For projects with thousands of flags or segments, that response can take longer than a tight default
+    timeout allows.
+
+### Steps to resolve
+
+1. Confirm the SDK can reach the API at all:
+   `curl -v https://edge.api.flagsmith.com/api/v1/flags/ -H "X-Environment-Key: <your key>"` from the same host the SDK
+   is running on. A clean response rules out network and DNS issues.
+2. Raise the SDK's request timeout. Each server-side SDK exposes a parameter for this. Examples:
+   `request_timeout_seconds` (Python, Ruby, Rust), `requestTimeoutSeconds` (Node.js), `RequestTimeout` (.NET),
+   `WithRequestTimeout(...)` (Go), or `connectTimeout` / `readTimeout` / `writeTimeout` on the OkHttp builder (Java).
+   See the [Server-Side SDKs reference](/integrating-with-flagsmith/sdks/server-side) for the exact parameter and
+   default value for your SDK.
+3. Enable debug logging in the SDK to see whether the SDK is making the request, where the time is being spent, and
+   whether it's the initial fetch or a subsequent refresh that is slow.
+4. If you're in local evaluation mode and the environment document is large, see the
+   [504 Gateway Timeout guidance](/guides/troubleshooting/http-errors#504-gateway-timeout). The same fixes (caching,
+   archiving unused flags, splitting projects) apply.
+5. If init genuinely cannot succeed in time, configure an offline handler or a `default_flag_handler` so your
+   application has a sensible fallback rather than blocking on flag data.
+
+**Related documentation:** [Server-Side SDKs](/integrating-with-flagsmith/sdks/server-side) •
+[Offline Handlers](/integrating-with-flagsmith/sdks/server-side#using-an-offline-handler)
 
 ---
 
@@ -127,7 +168,7 @@ Segment rules or identity overrides that depend on traits are not matching the w
     match. Traits are not automatically created; they only exist once your application sends them via the SDK or API.
 -   **Local evaluation with missing traits.** In local evaluation mode, the SDK evaluates segments using only the traits
     you provide in the `get_identity_flags` call. If you omit a trait that the segment rule depends on, the rule will
-    not match — even if that trait exists on the server.
+    not match, even if that trait exists on the server.
 
 ### Steps to resolve
 
@@ -138,7 +179,7 @@ Segment rules or identity overrides that depend on traits are not matching the w
 
 :::tip Evaluation order
 
-If a flag value surprises you, keep the precedence in mind — Flagsmith evaluates in this order, highest priority first:
+If a flag value surprises you, keep the precedence in mind. Flagsmith evaluates in this order, highest priority first:
 
 1. **Identity overrides** (set directly on a specific identity).
 2. **Segment overrides** (the first matching segment wins; segments are evaluated top-to-bottom on the feature).
@@ -164,17 +205,18 @@ You have enabled local evaluation but flags are not matching dashboard state, or
 -   **Stale environment document.** The SDK refreshes the environment document on a timer (see the
     [refresh interval table](#server-side-sdks-in-local-evaluation-mode) above). If you changed a flag very recently,
     the SDK might not have picked it up yet.
--   **Segment rules that depend on server-side data.** Some segment types (e.g. percentage-based splits on anonymous
-    users) are evaluated server-side. In local evaluation mode, these may behave differently if the SDK does not have
-    the full context.
+-   **Inconsistent identifier for percentage-based segments.** Local evaluation evaluates everything in-process,
+    including percentage splits. The SDK hashes the identifier you pass to `get_identity_flags(...)` to decide which
+    bucket the identity falls into. If that identifier differs from the one used elsewhere (or you make a call without
+    one), bucketing will diverge from what you saw via remote evaluation.
 
 ### Steps to resolve
 
 1. Confirm you are using the Server-side Environment Key.
 2. Check the SDK's refresh interval. If you need near-instant updates, lower the interval (but be aware this increases
    network calls).
-3. For percentage-based segments, verify that you are passing a consistent identity identifier — the hash-based
-   bucketing relies on it.
+3. For percentage-based segments, verify that you are passing a consistent identity identifier. The hash-based bucketing
+   relies on it.
 4. Enable debug logging in the SDK to see when the environment document is refreshed and what it contains.
 
 **Related documentation:**

@@ -8,7 +8,7 @@ import Link from '@docusaurus/Link';
 
 This page covers common HTTP error codes returned by the Flagsmith API and what to do about each one.
 
-## 401 / 403 — Authentication failures
+## 401 and 403 Authentication failures
 
 A `401 Unauthorized` or `403 Forbidden` response means the API could not verify your credentials.
 
@@ -26,12 +26,14 @@ A `401 Unauthorized` or `403 Forbidden` response means the API could not verify 
 
 ### Steps to resolve
 
-1. Confirm which API you are calling — Flags (`/api/v1/flags/`) or Admin (`/api/v1/environments/`, `/api/v1/projects/`,
+1. Confirm which API you are calling: Flags (`/api/v1/flags/`) or Admin (`/api/v1/environments/`, `/api/v1/projects/`,
    etc.).
 2. Check you are sending the correct header:
 
--   Flags API: `X-Environment-Key: <your environment key>`
--   Admin API: `Authorization: Api-Key <your organisation token>`
+-   [Flags API](/integrating-with-flagsmith/flagsmith-api-overview/flags-api):
+    `X-Environment-Key: <your environment key>`
+-   [Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api):
+    `Authorization: Api-Key <your organisation token>`
 
 3. Verify the key value in the Flagsmith dashboard under the relevant Environment or Organisation settings.
 4. For local evaluation, ensure you are using the **Server-side Environment Key**, not the Client-side key.
@@ -43,9 +45,16 @@ A `401 Unauthorized` or `403 Forbidden` response means the API could not verify 
 
 ---
 
-## 404 — Endpoint not found
+## 404 Endpoint not found
 
 A `404 Not Found` usually means the request URL is wrong, not that a resource is missing.
+
+:::note
+
+An unknown or invalid Environment Key returns `401 Unauthorized`, not `404`. If you suspect a bad key is the cause, see
+[401 and 403 Authentication failures](#401-and-403-authentication-failures) above.
+
+:::
 
 ### Common causes
 
@@ -53,7 +62,7 @@ A `404 Not Found` usually means the request URL is wrong, not that a resource is
     `https://api.flagsmith.com/api/v1/`. Self-hosted deployments use your own domain.
 -   **Missing `/api/v1/` prefix.** All endpoints are nested under this path.
 -   **Trailing-slash mismatch.** Django (the framework behind the Flagsmith API) expects a trailing slash on most
-    endpoints. `/api/v1/flags` will redirect or 404 depending on server configuration — use `/api/v1/flags/` instead.
+    endpoints. `/api/v1/flags` will redirect or 404 depending on server configuration. Use `/api/v1/flags/` instead.
 -   **EU vs. US region confusion.** If your project is on the EU cluster, the base URL differs from the default US
     cluster. Check your project settings in the dashboard.
 
@@ -70,14 +79,16 @@ A `404 Not Found` usually means the request URL is wrong, not that a resource is
 
 ---
 
-## 429 — Rate limited
+## 429 Rate limited
 
 A `429 Too Many Requests` response means you have exceeded a traffic limit.
 
 ### How rate limiting works in Flagsmith
 
 -   **SDK endpoints (Flags API)** are _not_ rate limited by design. However, your plan has a monthly request allowance.
-    If you exceed it, Flagsmith may block requests depending on your plan tier.
+    You can review current usage and your plan tier under **Organisation → Admin Settings** in the dashboard, or see
+    [Billing & API Usage](/administration-and-security/billing-api-usage). If you exceed the allowance, Flagsmith may
+    block requests depending on your plan tier.
 -   **Admin API endpoints** are rate limited to **500 requests per minute** per user by default. Self-hosted deployments
     can adjust this with the `USER_THROTTLE_RATE` environment variable.
 
@@ -108,7 +119,7 @@ A `429 Too Many Requests` response means you have exceeded a traffic limit.
 
 ---
 
-## 502 / 503 — Transient or upstream failures
+## 502 and 503 Transient or upstream failures
 
 A `502 Bad Gateway` or `503 Service Unavailable` means the API server did not return a valid response to the upstream
 proxy or load balancer.
@@ -138,7 +149,7 @@ Common causes include:
 
 ---
 
-## 504 / Timeout — Slow responses
+## 504 Gateway Timeout
 
 A `504 Gateway Timeout` means the API did not respond within the proxy or load balancer's timeout window.
 
