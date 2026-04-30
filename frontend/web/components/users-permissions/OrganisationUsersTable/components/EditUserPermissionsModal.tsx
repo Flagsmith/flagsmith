@@ -15,6 +15,7 @@ const EditUserPermissionsModal: FC<EditUserPermissionsModalProps> = ({
   user,
 }) => {
   const [tab, setTab] = useState(0)
+  const [permissionsTab, setPermissionsTab] = useState(0)
   return (
     <div>
       <Tabs
@@ -26,7 +27,12 @@ const EditUserPermissionsModal: FC<EditUserPermissionsModalProps> = ({
         {user.role !== 'ADMIN' && (
           <TabItem tabLabel='Permissions'>
             <div className='pt-4'>
-              <PermissionsTabs uncontrolled user={user} orgId={orgId} />
+              <PermissionsTabs
+                value={permissionsTab}
+                onChange={setPermissionsTab}
+                user={user}
+                orgId={orgId}
+              />
             </div>
           </TabItem>
         )}

@@ -36,6 +36,7 @@ type CreateGroupType = {
 
 const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
   const [tab, setTab] = useState(0)
+  const [permissionsTab, setPermissionsTab] = useState(0)
   const [edited, setEdited] = useState(false)
   const [externalId, setExternalId] = useState('')
   const [name, setName] = useState('')
@@ -446,7 +447,8 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
     <div className='mt-4'>
       {!!groupData && (
         <PermissionsTabs
-          uncontrolled
+          value={permissionsTab}
+          onChange={setPermissionsTab}
           orgId={AccountStore.getOrganisation()?.id}
           group={group}
         />

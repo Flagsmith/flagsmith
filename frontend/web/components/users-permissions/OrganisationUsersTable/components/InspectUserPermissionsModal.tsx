@@ -14,6 +14,7 @@ const InspectUserPermissionsModal: FC<InspectUserPermissionsModalProps> = ({
   user,
 }) => {
   const [tab, setTab] = useState(0)
+  const [permissionsTab, setPermissionsTab] = useState(0)
   return (
     <div>
       <Tabs
@@ -24,7 +25,12 @@ const InspectUserPermissionsModal: FC<InspectUserPermissionsModalProps> = ({
       >
         <TabItem tabLabel='Permissions'>
           <div className='pt-4'>
-            <InspectPermissions uncontrolled user={user} orgId={orgId} />
+            <InspectPermissions
+              value={permissionsTab}
+              onChange={setPermissionsTab}
+              user={user}
+              orgId={orgId}
+            />
           </div>
         </TabItem>
       </Tabs>

@@ -16,16 +16,14 @@ type InspectPermissionsType = {
   group?: UserGroupSummary
   user?: User
   role?: Role | undefined
-  value?: number
-  onChange?: (v: number) => void
-  uncontrolled?: boolean
+  value: number
+  onChange: (v: number) => void
   tabRef?: Ref<any>
 }
 
 const InspectPermissions: FC<InspectPermissionsType> = ({
   onChange,
   orgId,
-  uncontrolled,
   user,
   value,
 }) => {
@@ -46,13 +44,7 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
 
   return (
     <PlanBasedAccess feature={'RBAC'} theme={'page'}>
-      <Tabs
-        uncontrolled={uncontrolled}
-        value={value}
-        onChange={onChange}
-        theme='pill'
-        isRoles={true}
-      >
+      <Tabs value={value} onChange={onChange} theme='pill' isRoles={true}>
         <TabItem
           tabLabel='Organisation'
           data-test='organisation-permissions-tab'

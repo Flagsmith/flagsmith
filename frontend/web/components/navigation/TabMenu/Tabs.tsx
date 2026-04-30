@@ -20,8 +20,6 @@ interface TabsProps {
   children: ReactNode | ReactNode[]
   onChange?: (index: number) => void
   theme?: 'tab' | 'pill'
-  /** @deprecated Use a `useState` (or `useTabUrlSync`) in the consumer and pass `value`/`onChange`. */
-  uncontrolled?: boolean
   value?: number
   className?: string
   /** @deprecated Use `useTabUrlSync(paramName, labels)` in the consumer and pass `value`/`onChange`. */
@@ -39,7 +37,10 @@ interface TabsProps {
 // Falls back to tabLabel when it is already a plain string, so consumers
 // only need tabLabelString when tabLabel is JSX.
 const getLabelString = (child: ReactElement): string => {
-  const { tabLabel, tabLabelString } = child.props
+  const { tabLabel, tabLabelString } = child.props as {
+    tabLabel?: ReactNode
+    tabLabelString?: string
+  }
   if (tabLabelString) return tabLabelString
   return typeof tabLabel === 'string' ? tabLabel : ''
 }
@@ -58,18 +59,16 @@ const Tabs: React.FC<TabsProps> = ({
   noFocus,
   onChange,
   theme = 'tab',
-  uncontrolled = false,
   urlParam,
   value: propValue = 0,
 }) => {
   const tabChildren = (Array.isArray(children) ? children : [children]).filter(
     Boolean,
   )
-  const [internalValue, setInternalValue] = useState(0)
   const routerHistory = useHistory() || history
 
   const disableOverflow = theme === 'pill'
-  let value = uncontrolled ? internalValue : propValue
+  let value = propValue
   if (urlParam) {
     const tabParam = Utils.fromParam()[urlParam]
     if (tabParam) {
@@ -129,12 +128,10 @@ const Tabs: React.FC<TabsProps> = ({
           pathname: window.location.pathname,
           search: searchParams.toString(),
         })
-      } else if (uncontrolled) {
-        setInternalValue(i)
       }
       onChange?.(i)
     },
-    [onChange, routerHistory, uncontrolled, urlParam],
+    [onChange, routerHistory, urlParam],
   )
 
   return (

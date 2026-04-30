@@ -22,9 +22,8 @@ type PermissionsTabsType = {
   group?: UserGroupSummary
   user?: User
   role?: Role | undefined
-  value?: number
-  onChange?: (v: number) => void
-  uncontrolled?: boolean
+  value: number
+  onChange: (v: number) => void
   tabRef?: Ref<any>
 }
 
@@ -34,7 +33,6 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
   orgId,
   role,
   tabRef,
-  uncontrolled,
   user,
   value,
 }) => {
@@ -79,7 +77,6 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
     <PlanBasedAccess feature={'RBAC'} theme={'page'}>
       {!!group && <WarningMessage warningMessage={deprecationMessage} />}
       <Tabs
-        uncontrolled={uncontrolled}
         value={value}
         onChange={onChange}
         theme='pill'

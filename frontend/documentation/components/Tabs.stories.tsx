@@ -23,9 +23,10 @@ export default meta
 
 type Story = StoryObj
 
-export const Default: Story = {
-  render: () => (
-    <Tabs uncontrolled>
+const DefaultRenderer = () => {
+  const [tab, setTab] = useState(0)
+  return (
+    <Tabs value={tab} onChange={setTab}>
       <TabItem tabLabel='Features'>
         <p className='mt-3'>Features tab content</p>
       </TabItem>
@@ -36,12 +37,17 @@ export const Default: Story = {
         <p className='mt-3'>Settings tab content</p>
       </TabItem>
     </Tabs>
-  ),
+  )
 }
 
-export const PillTheme: Story = {
-  render: () => (
-    <Tabs theme='pill' uncontrolled>
+export const Default: Story = {
+  render: () => <DefaultRenderer />,
+}
+
+const PillThemeRenderer = () => {
+  const [tab, setTab] = useState(0)
+  return (
+    <Tabs theme='pill' value={tab} onChange={setTab}>
       <TabItem tabLabel='Overview'>
         <p className='mt-3'>Overview content</p>
       </TabItem>
@@ -49,7 +55,24 @@ export const PillTheme: Story = {
         <p className='mt-3'>Activity content</p>
       </TabItem>
     </Tabs>
-  ),
+  )
+}
+
+export const PillTheme: Story = {
+  render: () => <PillThemeRenderer />,
+}
+
+const HideNavOnSingleTabRenderer = () => {
+  const [tab, setTab] = useState(0)
+  return (
+    <Tabs hideNavOnSingleTab value={tab} onChange={setTab}>
+      <TabItem tabLabel='Permissions'>
+        <p className='mt-3'>
+          Tab nav is hidden because there is only one TabItem.
+        </p>
+      </TabItem>
+    </Tabs>
+  )
 }
 
 export const HideNavOnSingleTab: Story = {
@@ -61,15 +84,7 @@ export const HideNavOnSingleTab: Story = {
       },
     },
   },
-  render: () => (
-    <Tabs hideNavOnSingleTab uncontrolled>
-      <TabItem tabLabel='Permissions'>
-        <p className='mt-3'>
-          Tab nav is hidden because there is only one TabItem.
-        </p>
-      </TabItem>
-    </Tabs>
-  ),
+  render: () => <HideNavOnSingleTabRenderer />,
 }
 
 const URL_SYNC_LABELS = ['Overview', 'Activity', 'Settings']
@@ -125,17 +140,10 @@ export const Controlled: Story = {
   render: () => <ControlledRenderer />,
 }
 
-export const WithDirtyMarker: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Set `isDirty` on a `TabItem` to show an unsaved-changes badge next to its label. The badge sits inside an inline-flex wrapper so it never breaks onto a second line and stays vertically aligned with the label.',
-      },
-    },
-  },
-  render: () => (
-    <Tabs uncontrolled>
+const WithDirtyMarkerRenderer = () => {
+  const [tab, setTab] = useState(0)
+  return (
+    <Tabs value={tab} onChange={setTab}>
       <TabItem tabLabel='Value' isDirty>
         <p className='mt-3'>This tab has unsaved changes.</p>
       </TabItem>
@@ -146,5 +154,17 @@ export const WithDirtyMarker: Story = {
         <p className='mt-3'>No unsaved changes here.</p>
       </TabItem>
     </Tabs>
-  ),
+  )
+}
+
+export const WithDirtyMarker: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Set `isDirty` on a `TabItem` to show an unsaved-changes badge next to its label. The badge sits inside an inline-flex wrapper so it never breaks onto a second line and stays vertically aligned with the label.',
+      },
+    },
+  },
+  render: () => <WithDirtyMarkerRenderer />,
 }
