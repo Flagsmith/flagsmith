@@ -2017,18 +2017,18 @@ files = [
 
 [[package]]
 name = "flagsmith"
-version = "5.1.1"
+version = "5.3.0"
 description = "Flagsmith Python SDK"
 optional = false
 python-versions = "<4,>=3.9"
 groups = ["main"]
 files = [
-    {file = "flagsmith-5.1.1-py3-none-any.whl", hash = "sha256:220943ff42bb631d4fad0f7d9ce89f56738d480657ce4aeb4b2cc779dcaea66a"},
-    {file = "flagsmith-5.1.1.tar.gz", hash = "sha256:42fc5ad3eaa578777e4f6b955a44349e974f6d79ee004b220847a9b0ca778d91"},
+    {file = "flagsmith-5.3.0-py3-none-any.whl", hash = "sha256:47a589a6e55cf9151f03092c11aa344e68df44d9b081d83716ca44cf79fc8be1"},
+    {file = "flagsmith-5.3.0.tar.gz", hash = "sha256:79befb381fb759d13402ae471fe00c0539ba7799a93edea4b7fa82b7835d0f41"},
 ]
 
 [package.dependencies]
-flagsmith-flag-engine = ">=10.0.3,<11.0.0"
+flagsmith-flag-engine = ">=10.0.4,<11.0.0"
 requests = ">=2.32.3,<3.0.0"
 requests-futures = ">=1.0.1,<2.0.0"
 sseclient-py = ">=1.8.0,<2.0.0"
@@ -2102,14 +2102,14 @@ test-tools = ["pyfakefs (>=5,<6)", "pytest-django (>=4,<5)"]
 
 [[package]]
 name = "flagsmith-flag-engine"
-version = "10.0.3"
+version = "10.0.4"
 description = "Flag engine for the Flagsmith API."
 optional = false
 python-versions = "*"
 groups = ["main", "workflows"]
 files = [
-    {file = "flagsmith_flag_engine-10.0.3-py3-none-any.whl", hash = "sha256:aed9009377fc1a6322483277f971f06d542668a69d93cbe4a3efd4baae78dfc1"},
-    {file = "flagsmith_flag_engine-10.0.3.tar.gz", hash = "sha256:0aa449bb87bee54fc67b5c7ca25eca78246a7bbb5a6cc229260c3f262d58ac54"},
+    {file = "flagsmith_flag_engine-10.0.4-py3-none-any.whl", hash = "sha256:3d9fc0eaf7ec9bc9251de781a652b77c962115bdcc81b2b8a800655849ccdc3f"},
+    {file = "flagsmith_flag_engine-10.0.4.tar.gz", hash = "sha256:bf71712c5cce62311c7a9da01f1a7a7d7a97c86655a76f4efdfb6c975f93563c"},
 ]
 
 [package.dependencies]
@@ -3198,29 +3198,30 @@ signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 
 [[package]]
 name = "openfeature-provider-flagsmith"
-version = "0.1.6"
+version = "0.2.0"
 description = "Openfeature provider for Flagsmith"
 optional = false
-python-versions = "<4.0,>=3.9"
+python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "openfeature_provider_flagsmith-0.1.6.tar.gz", hash = "sha256:49fe9f779dd83f3e73ce1480dd16e8a2cd332e237e48a4d08e200282a4c3f206"},
+    {file = "openfeature_provider_flagsmith-0.2.0-py3-none-any.whl", hash = "sha256:5a87df0ddaf0efaa664f0a71a9422733ac4ab7bd47782503039022c9c3206d8e"},
+    {file = "openfeature_provider_flagsmith-0.2.0.tar.gz", hash = "sha256:b5411613fa24efde96356d987b15c3efbb0455c4771306c26d73d526a0021a73"},
 ]
 
 [package.dependencies]
-flagsmith = ">=3.6.0,<6.0.0"
-openfeature-sdk = ">=0.6.0,<0.9.0"
+flagsmith = ">=5.2.0,<7.0.0"
+openfeature-sdk = ">=0.9.0,<0.10.0"
 
 [[package]]
 name = "openfeature-sdk"
-version = "0.8.4"
+version = "0.9.0"
 description = "Standardizing Feature Flagging for Everyone"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "openfeature_sdk-0.8.4-py3-none-any.whl", hash = "sha256:805ba090669798fc343ca9fdcbc56ff0f4b57bf6757533f0854d2021192e620a"},
-    {file = "openfeature_sdk-0.8.4.tar.gz", hash = "sha256:66abf71f928ec8c0db1111072bb0ef2635dfbd09510f77f4b548e5d0ea0e6c1a"},
+    {file = "openfeature_sdk-0.9.0-py3-none-any.whl", hash = "sha256:511fd66fe66807e95ea5a18074b559bc18657fe8294be0de4668201e297e98ad"},
+    {file = "openfeature_sdk-0.9.0.tar.gz", hash = "sha256:d65ca82c3f1abc5005b0b54bb4c729db04d7a70595f05dd373b47477b6b176bf"},
 ]
 
 [[package]]
@@ -6022,4 +6023,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.14"
-content-hash = "3887d5db2a2c09afcc53b6bdda606a15226230b49c0e1712346099b7a3a71d52"
+content-hash = "ab928775bdf9d19af3e730c5003e1cade248c67f036f2f453a901c81d93488c6"
