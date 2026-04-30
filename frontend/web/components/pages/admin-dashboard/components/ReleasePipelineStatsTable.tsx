@@ -4,7 +4,7 @@ import {
   ReleasePipelineStageStats,
 } from 'common/types/responses'
 import { SortOrder } from 'common/types/requests'
-import { colorTextSuccess } from 'common/theme/tokens'
+import { colorBorderDefault, colorTextSuccess } from 'common/theme/tokens'
 import PanelSearch from 'components/PanelSearch'
 import ColorSwatch from 'components/ColorSwatch'
 import Icon from 'components/icons/Icon'
@@ -177,7 +177,7 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
           <div
             className='d-flex flex-row align-items-center gap-2'
             style={{
-              borderTop: '1px solid #e0e0e0',
+              borderTop: `1px solid ${colorBorderDefault}`,
               marginTop: 4,
               paddingRight: 20,
               paddingTop: 8,
