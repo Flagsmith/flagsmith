@@ -3,6 +3,7 @@ from contextlib import suppress
 from datetime import datetime
 from typing import Any
 
+import structlog
 from chargebee.api_error import (  # type: ignore[import-untyped]
     APIError as ChargebeeAPIError,
 )
@@ -31,9 +32,11 @@ from organisations.chargebee.client import chargebee_client
 from organisations.chargebee.constants import (
     ADDITIONAL_API_SCALE_UP_ADDON_ID,
     ADDITIONAL_API_START_UP_ADDON_ID,
+    SEAT_ADDON_BY_PLAN_PREFIX,
+    SEAT_SCALE_UP_V2_ADDON_BY_BILLING_PERIOD,
 )
 from organisations.chargebee.metadata import ChargebeeObjMetadata
-from organisations.subscriptions.constants import CHARGEBEE
+from organisations.subscriptions.constants import CHARGEBEE, SubscriptionPlanFamily
 from organisations.subscriptions.exceptions import (
     CannotCancelChargebeeSubscription,
     UpgradeAPIUsageError,
@@ -43,6 +46,7 @@ from organisations.subscriptions.exceptions import (
 )
 
 logger = logging.getLogger(__name__)
+audit_log = structlog.get_logger("billing")
 
 CHARGEBEE_PAYMENT_ERROR_CODES = [
     "payment_processing_failed",
@@ -224,13 +228,21 @@ def add_single_seat(subscription_id: str) -> None:
             SubscriptionOps.UpdateParams(
                 addons=[
                     SubscriptionOps.UpdateAddonParams(
-                        id=_get_additional_seat_addon_id(subscription),
+                        id=addon_id,
                         quantity=current_seats + 1,
                     )
                 ],
                 prorate=True,
                 invoice_immediately=True,
             ),
+        )
+
+        audit_log.info(
+            "seat.added",
+            subscription__id=subscription_id,
+            addon__id=addon_id,
+            seats__previous=current_seats,
+            seats__new=current_seats + 1,
         )
 
     except ChargebeeAPIError as e:
@@ -252,16 +264,24 @@ def add_single_seat(subscription_id: str) -> None:
 
 
 def _get_additional_seat_addon_id(subscription: SubscriptionOps) -> str:
-    addon_id_prefix = "additional-team-members-scale-up-v2"
-    addon_suffixes_by_billing_period = {1: "monthly", 6: "semiannual", 12: "annual"}
-    suffix = addon_suffixes_by_billing_period.get(subscription.billing_period)
-    if not suffix:
-        logger.warning(
-            "Unexpected billing period for subscription ID %s",
-            subscription.id,
-        )
-        suffix = "monthly"
-    return "-".join([addon_id_prefix, suffix])
+    normalised_plan = SubscriptionPlanFamily.normalise_plan_id(
+        str(getattr(subscription, "plan_id", ""))
+    )
+    for prefix, addon_id in SEAT_ADDON_BY_PLAN_PREFIX.items():
+        if normalised_plan.startswith(prefix):
+            return addon_id
+
+    v2_addon_id = SEAT_SCALE_UP_V2_ADDON_BY_BILLING_PERIOD.get(
+        subscription.billing_period
+    )
+    if v2_addon_id:
+        return v2_addon_id
+
+    logger.warning(
+        "Unexpected billing period for subscription ID %s",
+        subscription.id,
+    )
+    return SEAT_SCALE_UP_V2_ADDON_BY_BILLING_PERIOD[1]
 
 
 def add_100k_api_calls_start_up(

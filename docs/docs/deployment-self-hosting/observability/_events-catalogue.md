@@ -39,6 +39,17 @@ Logged at `warning` from:
 Attributes:
  - `details`
 
+### `billing.seat.added`
+
+Logged at `info` from:
+ - `api/organisations/chargebee/chargebee.py:240`
+
+Attributes:
+ - `addon.id`
+ - `seats.new`
+ - `seats.previous`
+ - `subscription.id`
+
 ### `code_references.cleanup_issues.created`
 
 Logged at `info` from:
