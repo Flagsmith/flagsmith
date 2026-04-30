@@ -331,6 +331,9 @@ const CreateRole: FC<CreateRoleType> = ({
       }
     }
 
+    let saveLabel = buttonText
+    if (isSaving) saveLabel = isEdit ? 'Updating' : 'Creating'
+
     return isLoading ? (
       <div className='text-center'>
         <Loader />
@@ -374,10 +377,7 @@ const CreateRole: FC<CreateRoleType> = ({
             data-test='save-role'
             disabled={isSaving || !roleName}
           >
-            {(() => {
-              if (!isSaving) return buttonText
-              return isEdit ? 'Updating' : 'Creating'
-            })()}
+            {saveLabel}
           </Button>
         </div>
       </div>
