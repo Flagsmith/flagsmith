@@ -1,27 +1,21 @@
 import { FC, useMemo, useState } from 'react'
-import { Cell, Pie, PieChart, Tooltip } from 'recharts'
 import {
   ReleasePipelineOverview,
   ReleasePipelineStageStats,
 } from 'common/types/responses'
 import { SortOrder } from 'common/types/requests'
+import { colorBorderDefault, colorTextSuccess } from 'common/theme/tokens'
 import PanelSearch from 'components/PanelSearch'
+import ColorSwatch from 'components/ColorSwatch'
 import Icon from 'components/icons/Icon'
+import { buildChartColorMap, PieChart, PieSlice } from 'components/charts'
 
 interface ReleasePipelineStatsTableProps {
   stats: ReleasePipelineOverview[]
   totalProjects: number
 }
 
-const stageColours = [
-  '#6C63FF',
-  '#0AADDF',
-  '#FF9F43',
-  '#E74C3C',
-  '#9B59B6',
-  '#3498DB',
-]
-const releasedColour = '#27AB95'
+const RELEASED_COLOUR = colorTextSuccess
 
 type OrgRow = {
   organisation_id: number
@@ -102,15 +96,20 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
     _totalFeatures: number,
     completedFeatures: number,
   ) => {
-    // Build pie chart data for this pipeline
-    const pieData = [
-      ...stages.map((stage, idx) => ({
-        colour: stageColours[idx % stageColours.length],
+    // Build pie chart data and colour map for this pipeline
+    const pieSlices: PieSlice[] = [
+      ...stages.map((stage) => ({
         name: stage.stage_name,
         value: stage.features_in_stage,
       })),
-      { colour: releasedColour, name: 'Released', value: completedFeatures },
-    ].filter((d) => d.value > 0)
+      { name: 'Released', value: completedFeatures },
+    ].filter((s) => s.value > 0)
+
+    const stageColorMap = buildChartColorMap(stages.map((s) => s.stage_name))
+    const pieColorMap: Record<string, string> = {
+      ...stageColorMap,
+      Released: RELEASED_COLOUR,
+    }
 
     return (
       <div
@@ -132,104 +131,73 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
             paddingLeft: 72,
           }}
         >
-          {pieData.length > 0 ? (
-            <PieChart width={180} height={180}>
-              <Pie
-                data={pieData}
-                dataKey='value'
-                nameKey='name'
-                cx='50%'
-                cy='50%'
+          {pieSlices.length > 0 ? (
+            <div style={{ width: 180 }}>
+              <PieChart
+                data={pieSlices}
+                colorMap={pieColorMap}
+                height={180}
                 innerRadius={40}
                 outerRadius={75}
-                paddingAngle={2}
-              >
-                {pieData.map((entry, idx) => (
-                  <Cell key={idx} fill={entry.colour} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          ) : (
-            <div className='text-muted' style={{ fontSize: 12 }}>
-              No features yet
+              />
             </div>
+          ) : (
+            <div className='text-muted fs-captionSmall'>No features yet</div>
           )}
         </div>
 
         {/* Stage list */}
         <div style={{ flex: 1 }}>
-          {stages.map((stage, idx) => (
+          {stages.map((stage) => (
             <div
               key={stage.order}
-              className='d-flex flex-row align-items-center'
+              className='d-flex flex-row align-items-center gap-2'
               style={{ paddingBottom: 6, paddingRight: 20, paddingTop: 6 }}
             >
-              <div
-                style={{
-                  background: stageColours[idx % stageColours.length],
-                  borderRadius: 3,
-                  height: 10,
-                  marginRight: 8,
-                  minWidth: 10,
-                  width: 10,
-                }}
-              />
+              <ColorSwatch color={stageColorMap[stage.stage_name]} size='md' />
               <div style={{ flex: 1 }}>
-                <span className='font-weight-medium' style={{ fontSize: 13 }}>
+                <span className='font-weight-medium fs-caption'>
                   {stage.stage_name}
                 </span>
                 <div
-                  className='text-muted'
-                  style={{ fontSize: 11, marginTop: 1 }}
+                  className='text-muted fs-captionXSmall'
+                  style={{ marginTop: 1 }}
                 >
                   {stage.trigger_description} · {stage.action_description}
                 </div>
               </div>
               <span
-                className='font-weight-medium'
-                style={{ fontSize: 13, minWidth: 90, textAlign: 'right' }}
+                className='font-weight-medium fs-caption'
+                style={{ minWidth: 90, textAlign: 'right' }}
               >
                 Features ({stage.features_in_stage})
               </span>
             </div>
           ))}
           <div
-            className='d-flex flex-row align-items-center'
+            className='d-flex flex-row align-items-center gap-2'
             style={{
-              borderTop: '1px solid #e0e0e0',
+              borderTop: `1px solid ${colorBorderDefault}`,
               marginTop: 4,
               paddingRight: 20,
               paddingTop: 8,
             }}
           >
-            <div
-              style={{
-                background: releasedColour,
-                borderRadius: 3,
-                height: 10,
-                marginRight: 8,
-                minWidth: 10,
-                width: 10,
-              }}
-            />
+            <ColorSwatch color={RELEASED_COLOUR} size='md' />
             <div style={{ flex: 1 }}>
-              <span
-                className='font-weight-medium'
-                style={{ color: releasedColour, fontSize: 13 }}
-              >
+              <span className='font-weight-medium text-success fs-caption'>
                 Released
               </span>
               <div
-                className='text-muted'
-                style={{ fontSize: 11, marginTop: 1 }}
+                className='text-muted fs-captionXSmall'
+                style={{ marginTop: 1 }}
               >
                 Features that completed this pipeline
               </div>
             </div>
             <span
-              className='font-weight-medium'
-              style={{ fontSize: 13, minWidth: 90, textAlign: 'right' }}
+              className='font-weight-medium fs-caption'
+              style={{ minWidth: 90, textAlign: 'right' }}
             >
               Features ({completedFeatures})
             </span>
@@ -269,7 +237,7 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
                   name={isExpanded ? 'chevron-down' : 'chevron-right'}
                   width={14}
                 />
-                <span className='font-weight-medium' style={{ fontSize: 13 }}>
+                <span className='font-weight-medium fs-caption'>
                   {pipeline.pipeline_name}
                 </span>
                 <span
@@ -289,18 +257,18 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
                 </span>
               </div>
               <div
-                className='table-column text-muted'
-                style={{ fontSize: 13, width: 100 }}
+                className='table-column text-muted fs-caption'
+                style={{ width: 100 }}
               >
                 {pipeline.stages.length} stages
               </div>
               <div
-                className='table-column text-muted'
-                style={{ fontSize: 13, width: 100 }}
+                className='table-column text-muted fs-caption'
+                style={{ width: 100 }}
               >
                 {pipeline.total_features} features
                 {inFlightTotal > 0 && (
-                  <span style={{ fontSize: 11 }}>
+                  <span className='fs-captionXSmall'>
                     {' '}
                     ({inFlightTotal} in progress)
                   </span>
@@ -336,8 +304,8 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
                   />
                 </div>
                 <span
-                  className='font-weight-medium'
-                  style={{ fontSize: 12, minWidth: 52, whiteSpace: 'nowrap' }}
+                  className='font-weight-medium fs-captionSmall'
+                  style={{ minWidth: 52, whiteSpace: 'nowrap' }}
                 >
                   {pipeline.completed_features}/{pipeline.total_features}{' '}
                   released
@@ -385,23 +353,23 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
                   name={isExpanded ? 'chevron-down' : 'chevron-right'}
                   width={14}
                 />
-                <span className='font-weight-medium' style={{ fontSize: 13 }}>
+                <span className='font-weight-medium fs-caption'>
                   {project.project_name}
                 </span>
-                <span className='text-muted' style={{ fontSize: 12 }}>
+                <span className='text-muted fs-captionSmall'>
                   ({projectPipelineCount}{' '}
                   {projectPipelineCount === 1 ? 'pipeline' : 'pipelines'})
                 </span>
               </div>
               <div
-                className='table-column text-muted'
-                style={{ fontSize: 13, width: 120 }}
+                className='table-column text-muted fs-caption'
+                style={{ width: 120 }}
               >
                 {projectFeatures} features
               </div>
               <div
-                className='table-column font-weight-medium'
-                style={{ color: '#27AB95', fontSize: 13, width: 120 }}
+                className='table-column font-weight-medium text-success fs-caption'
+                style={{ width: 120 }}
               >
                 {projectReleased} released
               </div>
@@ -415,7 +383,7 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
 
   return (
     <div>
-      <div className='text-muted mb-3' style={{ fontSize: 13, paddingLeft: 4 }}>
+      <div className='text-muted mb-3 fs-caption' style={{ paddingLeft: 4 }}>
         {projectsWithPipelines} of {totalProjects} projects use release
         pipelines ({adoptionPct}%)
       </div>
@@ -481,14 +449,14 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
                   </span>
                 </div>
                 <div
-                  className='table-column font-weight-medium'
-                  style={{ fontSize: 13, width: 120 }}
+                  className='table-column font-weight-medium fs-caption'
+                  style={{ width: 120 }}
                 >
                   {org.pipeline_count}
                 </div>
                 <div
-                  className='table-column font-weight-medium'
-                  style={{ fontSize: 13, width: 120 }}
+                  className='table-column font-weight-medium fs-caption'
+                  style={{ width: 120 }}
                 >
                   {org.total_features}
                 </div>
@@ -496,13 +464,10 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
                   className='table-column d-flex align-items-center'
                   style={{ gap: 8, width: 120 }}
                 >
-                  <span
-                    className='font-weight-medium'
-                    style={{ color: '#27AB95', fontSize: 13 }}
-                  >
+                  <span className='font-weight-medium text-success fs-caption'>
                     {org.total_released}
                   </span>
-                  <span className='text-muted' style={{ fontSize: 12 }}>
+                  <span className='text-muted fs-captionSmall'>
                     ({releasedPct}%)
                   </span>
                 </div>

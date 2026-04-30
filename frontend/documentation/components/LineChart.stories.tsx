@@ -1,7 +1,6 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import type { Meta, StoryObj } from 'storybook'
-import BarChart from 'components/charts/BarChart'
-import { MultiSelect } from 'components/base/select/multi-select'
+import LineChart from 'components/charts/LineChart'
 import { buildChartColorMap } from 'components/charts/buildChartColorMap'
 import { generateChartFakeData } from './_chartFakeData'
 
@@ -9,101 +8,53 @@ import { generateChartFakeData } from './_chartFakeData'
 // Fake data
 // ============================================================================
 
-const SDKS = [
-  'flagsmith-js-sdk',
-  'flagsmith-python-sdk',
-  'flagsmith-java-sdk',
-  'flagsmith-go-sdk',
-  'flagsmith-ruby-sdk',
-]
-
-const BAR_BASE_MAP: Record<string, number> = {
-  Development: 1200,
-  Production: 5000,
-  Staging: 2400,
-  'flagsmith-js-sdk': 4500,
-  'flagsmith-python-sdk': 2200,
+const LINE_BASE_MAP: Record<string, number> = {
+  'API Calls': 12000,
+  Clicks: 2000,
+  Conversions: 800,
+  Errors: 80,
+  'Flag Evaluations': 8000,
+  'Identity Requests': 5000,
+  'Page Views': 15000,
 }
 
 const generateFakeData = (days: number, labels: string[]) =>
   generateChartFakeData({
-    baseMap: BAR_BASE_MAP,
+    baseMap: LINE_BASE_MAP,
     days,
-    defaultBase: 800,
     labels,
-    variance: 0.4,
-    weekendDip: 0.4,
   })
 
 // ============================================================================
 // Stories
 // ============================================================================
 
-const meta: Meta<typeof BarChart> = {
-  component: BarChart,
+const meta: Meta<typeof LineChart> = {
+  component: LineChart,
   tags: ['autodocs'],
-  title: 'Components/Charts/BarChart',
+  title: 'Components/Charts/LineChart',
 }
 export default meta
 
-type Story = StoryObj<typeof BarChart>
+type Story = StoryObj<typeof LineChart>
 
-export const WithLabelledBuckets: Story = {
+export const UsageTrends: Story = {
   decorators: [
     () => {
-      const labels = useMemo(() => SDKS.slice(0, 5), [])
-      const data = useMemo(() => generateFakeData(30, labels), [labels])
-      const colorMap = useMemo(() => buildChartColorMap(labels), [labels])
-      const [selectedLabels, setSelectedLabels] = useState<string[]>([])
-
-      const filteredLabels =
-        selectedLabels.length > 0
-          ? labels.filter((l) => selectedLabels.includes(l))
-          : labels
-
-      const labelOptions = labels.map((l) => ({ label: l, value: l }))
-
-      return (
-        <div className='mx-auto' style={{ maxWidth: 900 }}>
-          <p className='text-secondary fs-small mb-3'>
-            Stacked by SDK label — each color represents a different SDK sending
-            evaluations.
-          </p>
-          <div className='mb-3' style={{ maxWidth: 400 }}>
-            <MultiSelect
-              label='Filter by SDK'
-              options={labelOptions}
-              selectedValues={selectedLabels}
-              onSelectionChange={setSelectedLabels}
-              colorMap={colorMap}
-            />
-          </div>
-          <BarChart
-            data={data}
-            series={filteredLabels}
-            colorMap={colorMap}
-            xAxisInterval={2}
-            showLegend
-          />
-        </div>
+      const labels = useMemo(
+        () => ['API Calls', 'Flag Evaluations', 'Identity Requests'],
+        [],
       )
-    },
-  ],
-}
-
-export const WithoutLabels: Story = {
-  decorators: [
-    () => {
-      const labels = useMemo(() => ['Production', 'Staging', 'Development'], [])
       const data = useMemo(() => generateFakeData(30, labels), [labels])
       const colorMap = useMemo(() => buildChartColorMap(labels), [labels])
 
       return (
         <div className='mx-auto' style={{ maxWidth: 900 }}>
           <p className='text-secondary fs-small mb-3'>
-            No labels — grouped by environment (current behaviour).
+            Mirrors the API Usage Trends dashboard — three independent metrics
+            plotted over 30 days.
           </p>
-          <BarChart
+          <LineChart
             data={data}
             series={labels}
             colorMap={colorMap}
@@ -116,19 +67,55 @@ export const WithoutLabels: Story = {
   ],
 }
 
-export const SingleSeries: Story = {
+export const SingleLine: Story = {
   decorators: [
     () => {
-      const labels = useMemo(() => ['flagsmith-js-sdk'], [])
+      const labels = useMemo(() => ['API Calls'], [])
       const data = useMemo(() => generateFakeData(30, labels), [labels])
       const colorMap = useMemo(() => buildChartColorMap(labels), [labels])
 
       return (
         <div className='mx-auto' style={{ maxWidth: 900 }}>
           <p className='text-secondary fs-small mb-3'>
-            Single SDK — no filter needed when there's only one series.
+            One metric over time — legend hidden since the series is obvious
+            from the chart title.
           </p>
-          <BarChart
+          <LineChart
+            data={data}
+            series={labels}
+            colorMap={colorMap}
+            xAxisInterval={2}
+          />
+        </div>
+      )
+    },
+  ],
+}
+
+export const ManyLines: Story = {
+  decorators: [
+    () => {
+      const labels = useMemo(
+        () => [
+          'API Calls',
+          'Flag Evaluations',
+          'Identity Requests',
+          'Page Views',
+          'Clicks',
+          'Conversions',
+          'Errors',
+        ],
+        [],
+      )
+      const data = useMemo(() => generateFakeData(30, labels), [labels])
+      const colorMap = useMemo(() => buildChartColorMap(labels), [labels])
+
+      return (
+        <div className='mx-auto' style={{ maxWidth: 900 }}>
+          <p className='text-secondary fs-small mb-3'>
+            Seven lines — stress-test of the colour palette.
+          </p>
+          <LineChart
             data={data}
             series={labels}
             colorMap={colorMap}

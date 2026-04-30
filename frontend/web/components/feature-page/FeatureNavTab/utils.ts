@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { ChartDataPoint } from 'components/charts/BarChart'
+import { ChartDataPoint } from 'components/charts/types'
 import { Res } from 'common/types/responses'
 import { buildChartColorMap } from 'components/charts/buildChartColorMap'
 
