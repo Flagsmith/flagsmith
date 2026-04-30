@@ -503,15 +503,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           urlParam='segmentTab'
           onChange={(tab: UserTabs) => setTab(tab)}
         >
-          <TabItem
-            tabLabelString='General'
-            tabLabel={
-              <Row className='justify-content-center flex-nowrap'>
-                General{' '}
-                {valueChanged && <div className='unread ml-2 px-1'>{'*'}</div>}
-              </Row>
-            }
-          >
+          <TabItem tabLabel='General' isDirty={valueChanged}>
             <div className='my-4'>
               <CreateSegmentRulesTabForm
                 is4Eyes={is4Eyes}
@@ -564,17 +556,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           </TabItem>
           {metadataEnable && segmentContentType?.id && (
-            <TabItem
-              tabLabelString='Custom Fields'
-              tabLabel={
-                <Row className='justify-content-center flex-nowrap'>
-                  Custom Fields
-                  {metadataValueChanged && (
-                    <div className='unread ml-2 px-1 pt-2'>{'*'}</div>
-                  )}
-                </Row>
-              }
-            >
+            <TabItem tabLabel='Custom Fields' isDirty={metadataValueChanged}>
               <div className='my-4'>{MetadataTab}</div>
             </TabItem>
           )}

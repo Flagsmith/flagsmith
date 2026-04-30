@@ -50,3 +50,27 @@ export const PillTheme: Story = {
     </Tabs>
   ),
 }
+
+export const WithDirtyMarker: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Set `isDirty` on a `TabItem` to show an unsaved-changes badge next to its label. The badge sits inside an inline-flex wrapper so it never breaks onto a second line and stays vertically aligned with the label.',
+      },
+    },
+  },
+  render: () => (
+    <Tabs uncontrolled>
+      <TabItem tabLabel='Value' isDirty>
+        <p className='mt-3'>This tab has unsaved changes.</p>
+      </TabItem>
+      <TabItem tabLabel='Segment Overrides' isDirty>
+        <p className='mt-3'>This tab also has unsaved changes.</p>
+      </TabItem>
+      <TabItem tabLabel='Settings'>
+        <p className='mt-3'>No unsaved changes here.</p>
+      </TabItem>
+    </Tabs>
+  ),
+}

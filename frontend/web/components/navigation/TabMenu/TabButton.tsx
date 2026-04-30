@@ -27,7 +27,10 @@ const TabButton = React.forwardRef<HTMLButtonElement | null, TabButtonProps>(
           isSelected ? ' tab-active' : ''
         } ${className}`}
       >
-        {child.props.tabLabel}
+        <span className='btn-tab__label'>
+          {child.props.tabLabel}
+          {child.props.isDirty && <span className='unread'>*</span>}
+        </span>
       </Button>
     )
   },
