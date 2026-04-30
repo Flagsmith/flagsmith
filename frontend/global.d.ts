@@ -20,17 +20,11 @@ declare namespace UniversalAnalytics {
   }
 }
 export declare const openModal: (name?: string) => Promise<void>
-type CrispCommand = [command: string, ...args: any[]]
-type Crisp = {
-  // The push method accepts a CrispCommand array.
-  push: (command: CrispCommand) => void
-}
 declare global {
   function ga(
     command: 'send',
     fields: UniversalAnalytics.PageviewFieldsObject,
   ): void
-  const $crisp: Crisp
   const delighted: {
     survey: (opts: {
       createdAt: string
@@ -98,7 +92,6 @@ declare global {
 
   interface Window {
     E2E: boolean
-    $crisp: Crisp
     engagement: {
       init(apiKey: string, options?: InitOptions): void
       plugin(): unknown
