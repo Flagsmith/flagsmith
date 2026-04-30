@@ -32,14 +32,6 @@ module.exports = function getLoaders(isDev = false) {
       ],
     },
     {
-      include: /node_modules/,
-
-      resolve: { fullySpecified: false },
-      // Allow ESM modules from node_modules (e.g. remark-gfm, unified)
-      test: /\.m?js$/,
-      type: 'javascript/auto',
-    },
-    {
       test: /\.css$/,
       use: ['style-loader', 'css-loader'],
     },
