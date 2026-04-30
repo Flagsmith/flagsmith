@@ -10,11 +10,6 @@ export type OpenConfirm = {
   noText?: string
 }
 import { TooltipProps } from './web/components/Tooltip'
-type CrispCommand = [command: string, ...args: any[]]
-type Crisp = {
-  // The push method accepts a CrispCommand array.
-  push: (command: CrispCommand) => void
-}
 declare namespace UniversalAnalytics {
   interface PageviewFieldsObject {
     hitType: 'pageview' | 'event'
@@ -25,6 +20,11 @@ declare namespace UniversalAnalytics {
   }
 }
 export declare const openModal: (name?: string) => Promise<void>
+type CrispCommand = [command: string, ...args: any[]]
+type Crisp = {
+  // The push method accepts a CrispCommand array.
+  push: (command: CrispCommand) => void
+}
 declare global {
   function ga(
     command: 'send',

@@ -1,11 +1,24 @@
+declare global {
+  interface Window {
+    Pylon?: ((...args: unknown[]) => void) & { q?: unknown[][] }
+    pylon?: { chat_settings: Record<string, string | undefined> }
+  }
+}
+
 import flagsmith from '@flagsmith/flagsmith'
 import moment from 'moment'
 import AccountStore from './stores/account-store'
 import { getStore } from './store'
 import { selectBuildVersion } from './services/useBuildVersion'
 import getUserDisplayName from './utils/getUserDisplayName'
+import Utils, { planNames } from './utils/utils'
 import { AccountModel, Organisation } from './types/responses'
 import Project from './project'
+
+function isFreePlan(): boolean {
+  const plan = AccountStore.getActiveOrgPlan()
+  return Utils.getPlanName(plan) === planNames.free
+}
 
 // Used in self-hosted pages where users can opt into reaching out
 const defaultCrispID = '8857f89e-0eb5-4263-ab49-a293872b6c19'
@@ -32,21 +45,14 @@ async function loadCrisp(crispWebsiteId: string) {
 }
 
 async function loadPylon(pylonAppId: string) {
-  // @ts-ignore
   if (window.Pylon) {
     return
   }
 
-  // Initialize Pylon using their recommended script format
   await new Promise((resolve, reject) => {
     const t = document
-    const n = function (...args: any[]) {
-      // @ts-ignore
-      n.q.push(args)
-    }
-    // @ts-ignore
-    n.q = []
-    // @ts-ignore
+    const n: ((...args: unknown[]) => void) & { q?: unknown[][] } =
+      Object.assign((...args: unknown[]) => n.q!.push(args), { q: [] })
     window.Pylon = n
 
     const s = t.createElement('script')
@@ -61,7 +67,7 @@ async function loadPylon(pylonAppId: string) {
 }
 
 function setupCrisp() {
-  const user = AccountStore.model as AccountModel
+  const user = AccountStore.getUser() as AccountModel
   if (typeof $crisp === 'undefined' || !user) {
     return
   }
@@ -110,7 +116,7 @@ function setupCrisp() {
 }
 
 function setupPylon() {
-  const user = AccountStore.model as AccountModel
+  const user = AccountStore.getUser() as AccountModel
   if (typeof window.Pylon === 'undefined' || !user) {
     return
   }
@@ -131,7 +137,7 @@ function setupPylon() {
 }
 
 export function identifyChatUser() {
-  const usePylon = flagsmith.hasFeature('pylon_chat')
+  const usePylon = flagsmith.hasFeature('pylon_chat') && !isFreePlan()
 
   if (usePylon) {
     setupPylon()
@@ -141,7 +147,7 @@ export function identifyChatUser() {
 }
 
 export function openChat() {
-  const usePylon = flagsmith.hasFeature('pylon_chat')
+  const usePylon = flagsmith.hasFeature('pylon_chat') && !isFreePlan()
 
   if (usePylon && typeof window.Pylon !== 'undefined') {
     window.Pylon('show')
@@ -157,7 +163,7 @@ export default async function loadChat(forceDefaultAPIKey?: boolean) {
     const isWidget = document.location.href.includes('/widget')
     if (isWidget) return
 
-    const usePylon = flagsmith.hasFeature('pylon_chat')
+    const usePylon = flagsmith.hasFeature('pylon_chat') && !isFreePlan()
     const pylonId = forceDefaultAPIKey ? defaultPylonID : Project.pylonAppId
     const crispId = forceDefaultAPIKey ? defaultCrispID : Project.crispChat
 
