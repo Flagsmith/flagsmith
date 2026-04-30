@@ -582,10 +582,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
       )}
       {!(isEdit && !condensed) && metadataEnable && segmentContentType?.id && (
         <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
-          <TabItem
-            tabLabelString='Basic configuration'
-            tabLabel={'Basic configuration'}
-          >
+          <TabItem tabLabel='Basic configuration'>
             <div className={className || 'my-3 mx-4'}>
               <CreateSegmentRulesTabForm
                 save={save}
@@ -613,12 +610,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               />
             </div>
           </TabItem>
-          <TabItem
-            tabLabelString='Custom Fields'
-            tabLabel={
-              <Row className='justify-content-center'>Custom Fields</Row>
-            }
-          >
+          <TabItem tabLabel='Custom Fields'>
             <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
           </TabItem>
         </Tabs>

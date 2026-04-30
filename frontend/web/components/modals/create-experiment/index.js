@@ -464,7 +464,6 @@ const Index = class extends Component {
                                   onChange={() => this.forceUpdate()}
                                   urlParam='tab'
                                   history={this.props.history}
-                                  overflowX
                                 >
                                   <TabItem
                                     data-test='value'
@@ -542,12 +541,7 @@ const Index = class extends Component {
                                   </TabItem>
                                   <TabItem
                                     data-test='results'
-                                    tabLabelString='Results'
-                                    tabLabel={
-                                      <Row className='justify-content-center'>
-                                        Results
-                                      </Row>
-                                    }
+                                    tabLabel='Results'
                                   >
                                     <ExperimentResultsTab
                                       environmentId={this.props.environmentId}

@@ -576,7 +576,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   urlParam='tab'
                   history={props.history}
                   onChange={() => setTabKey((k) => k + 1)}
-                  overflowX
                 >
                   <TabItem
                     data-test='value'
@@ -670,12 +669,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       />
                     </TabItem>
                   )}
-                  <TabItem
-                    tabLabelString='Usage'
-                    tabLabel={
-                      <Row className='justify-content-center'>Usage</Row>
-                    }
-                  >
+                  <TabItem tabLabel='Usage'>
                     <UsageTab
                       projectId={projectId}
                       featureId={projectFlag.id}
@@ -683,11 +677,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                     />
                   </TabItem>
                   {
-                    <TabItem
-                      data-test='feature_health'
-                      tabLabelString='Health'
-                      tabLabel={'Health'}
-                    >
+                    <TabItem data-test='feature_health' tabLabel='Health'>
                       <FeatureHealthTabContent
                         projectId={projectFlag.project}
                         environmentId={environment.id}
@@ -698,10 +688,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   {isLinksTabEnabled && (
                     <TabItem
                       data-test='external-resources-links'
-                      tabLabelString='Links'
-                      tabLabel={
-                        <Row className='justify-content-center'>Links</Row>
-                      }
+                      tabLabel='Links'
                     >
                       {hasIntegrationWithGithub && (
                         <GitHubLinkSection

@@ -54,7 +54,7 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
         isRoles={true}
       >
         <TabItem
-          tabLabel={<Row className='justify-content-center'>Organisation</Row>}
+          tabLabel='Organisation'
           data-test='organisation-permissions-tab'
         >
           <div className='my-2'>
@@ -65,16 +65,10 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
             />
           </div>
         </TabItem>
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>Project</Row>}
-          data-test='project-permissions-tab'
-        >
+        <TabItem tabLabel='Project' data-test='project-permissions-tab'>
           <ProjectPermissions userId={user?.id} />
         </TabItem>
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>Environment</Row>}
-          data-test='environment-permissions-tab'
-        >
+        <TabItem tabLabel='Environment' data-test='environment-permissions-tab'>
           <Row className='justify-content-between'>
             <h5 className='my-3'>Permissions</h5>
             <Input

@@ -376,18 +376,8 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
         Tab1
       ) : (
         <Tabs uncontrolled>
-          <TabItem
-            tabLabel={
-              <Row className='justify-content-center'>Basic Configuration</Row>
-            }
-          >
-            {Tab1}
-          </TabItem>
-          <TabItem
-            tabLabel={
-              <Row className='justify-content-center'>Attribute Mapping</Row>
-            }
-          >
+          <TabItem tabLabel='Basic Configuration'>{Tab1}</TabItem>
+          <TabItem tabLabel='Attribute Mapping'>
             <div className='create-feature-tab px-3'>
               <Tab2 />
             </div>

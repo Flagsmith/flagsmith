@@ -1,4 +1,5 @@
 import React, {
+  ReactElement,
   ReactNode,
   useCallback,
   useLayoutEffect,
@@ -28,9 +29,19 @@ interface TabsProps {
   noFocus?: boolean
   isRoles?: boolean
   history?: any
-  overflowX?: boolean
   cta?: ReactNode
 }
+
+// Falls back to tabLabel when it is already a plain string, so consumers
+// only need tabLabelString when tabLabel is JSX.
+const getLabelString = (child: ReactElement): string => {
+  const { tabLabel, tabLabelString } = child.props
+  if (tabLabelString) return tabLabelString
+  return typeof tabLabel === 'string' ? tabLabel : ''
+}
+
+const toUrlSlug = (label: string): string =>
+  label.toLowerCase().replace(/ /g, '-')
 
 const Tabs: React.FC<TabsProps> = ({
   buttonTheme,
@@ -59,10 +70,7 @@ const Tabs: React.FC<TabsProps> = ({
     const tabParam = Utils.fromParam()[urlParam]
     if (tabParam) {
       const idx = tabChildren.findIndex(
-        (v) =>
-          String(v?.props?.tabLabelString || v?.props?.tabLabel)
-            .toLowerCase()
-            .replace(/ /g, '-') === tabParam,
+        (v) => v && toUrlSlug(getLabelString(v as ReactElement)) === tabParam,
       )
       if (idx !== -1) value = idx
     }
@@ -112,10 +120,7 @@ const Tabs: React.FC<TabsProps> = ({
       e.preventDefault()
       if (urlParam) {
         const searchParams = new URLSearchParams(window.location.search)
-        searchParams.set(
-          urlParam,
-          String(tabLabel).toLowerCase().replace(/ /g, '-'),
-        )
+        searchParams.set(urlParam, toUrlSlug(tabLabel))
         routerHistory?.replace({
           pathname: window.location.pathname,
           search: searchParams.toString(),
@@ -134,7 +139,7 @@ const Tabs: React.FC<TabsProps> = ({
         ref={outerContainerRef}
         className={`${
           hideNav ? '' : 'tabs-nav'
-        } ${theme} justify-content-between gap-4 d-flex align-items-center ${className}`}
+        } ${theme} justify-content-between gap-4 d-flex align-items-center`}
       >
         <div
           ref={itemsContainerRef}
@@ -151,11 +156,7 @@ const Tabs: React.FC<TabsProps> = ({
                 className={canGrow ? 'tab-nav-full' : ''}
                 noFocus={noFocus}
                 onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                  handleChange(
-                    e,
-                    String(child.props.tabLabelString || child.props.tabLabel),
-                    i,
-                  )
+                  handleChange(e, getLabelString(child as ReactElement), i)
                 }
                 child={child}
                 buttonTheme={buttonTheme}
@@ -206,9 +207,7 @@ const Tabs: React.FC<TabsProps> = ({
                   onClick: (e: any) => {
                     handleChange(
                       e,
-                      String(
-                        child.props.tabLabelString || child.props.tabLabel,
-                      ),
+                      getLabelString(child as ReactElement),
                       actualIndex,
                     )
                   },

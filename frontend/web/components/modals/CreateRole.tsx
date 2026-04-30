@@ -374,11 +374,10 @@ const CreateRole: FC<CreateRoleType> = ({
             data-test='save-role'
             disabled={isSaving || !roleName}
           >
-            {isSaving && isEdit
-              ? 'Updating'
-              : isSaving && !isEdit
-              ? 'Creating'
-              : buttonText}
+            {(() => {
+              if (!isSaving) return buttonText
+              return isEdit ? 'Updating' : 'Creating'
+            })()}
           </Button>
         </div>
       </div>
@@ -437,15 +436,10 @@ const CreateRole: FC<CreateRoleType> = ({
         buttonTheme='text'
         history={history}
       >
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>General</Row>}
-        >
+        <TabItem tabLabel='General'>
           <Tab1 ref={ref} />
         </TabItem>
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>Members</Row>}
-          data-test='members-tab'
-        >
+        <TabItem tabLabel='Members' data-test='members-tab'>
           <div>
             <div className='mt-4'>
               <SettingsButton onClick={() => setShowUserSelect(true)}>
@@ -514,10 +508,7 @@ const CreateRole: FC<CreateRoleType> = ({
             </p>
           </div>
         </TabItem>
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>Permissions</Row>}
-          data-test='permissions-tab'
-        >
+        <TabItem tabLabel='Permissions' data-test='permissions-tab'>
           <div className='mt-4'>
             <PermissionsTabs
               tabRef={ref}
