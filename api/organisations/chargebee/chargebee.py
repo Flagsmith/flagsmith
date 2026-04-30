@@ -1,10 +1,9 @@
 import logging
 from contextlib import suppress
-
-import structlog
 from datetime import datetime
 from typing import Any
 
+import structlog
 from chargebee.api_error import (  # type: ignore[import-untyped]
     APIError as ChargebeeAPIError,
 )
