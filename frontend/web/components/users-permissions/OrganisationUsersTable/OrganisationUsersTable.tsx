@@ -1,15 +1,12 @@
 import React from 'react'
 import AppActions from 'common/dispatcher/app-actions'
-import Tabs from 'components/navigation/TabMenu/Tabs'
-import TabItem from 'components/navigation/TabMenu/TabItem'
 import { Organisation, User } from 'common/types/responses'
 import PanelSearch from 'components/PanelSearch'
-import PermissionsTabs from 'components/PermissionsTabs'
-import UsersGroups from 'components/UsersGroups'
-import InspectPermissions from 'components/inspect-permissions/InspectPermissions'
 import Format from 'common/utils/format'
 import OrganisationUsersTableHeader from './components/OrganisationUsersTableHeader'
 import OrganisationUsersTableRow from './components/OrganisationUsersTableRow'
+import EditUserPermissionsModal from './components/EditUserPermissionsModal'
+import InspectUserPermissionsModal from './components/InspectUserPermissionsModal'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 interface OrganisationUsersTableProps {
   users: User[]
@@ -27,26 +24,7 @@ const OrganisationUsersTable: React.FC<OrganisationUsersTableProps> = ({
       user.first_name || user.last_name
         ? `${user.first_name} ${user.last_name}`
         : `${user.email}`,
-      <div>
-        <Tabs uncontrolled hideNavOnSingleTab className='mt-4 ml-3'>
-          {user.role !== 'ADMIN' && (
-            <TabItem tabLabel='Permissions'>
-              <div className='pt-4'>
-                <PermissionsTabs
-                  uncontrolled
-                  user={user}
-                  orgId={organisationId}
-                />
-              </div>
-            </TabItem>
-          )}
-          <TabItem tabLabel='Groups'>
-            <div className='pt-4'>
-              <UsersGroups user={user} orgId={organisationId} />
-            </div>
-          </TabItem>
-        </Tabs>
-      </div>,
+      <EditUserPermissionsModal user={user} orgId={organisationId} />,
       'p-0 side-modal',
     )
   }
@@ -54,19 +32,7 @@ const OrganisationUsersTable: React.FC<OrganisationUsersTableProps> = ({
   const inspectPermissions = (user: User, organisationId: number) => {
     openModal(
       getUserDisplayName(user),
-      <div>
-        <Tabs uncontrolled hideNavOnSingleTab className='mt-4 ml-3'>
-          <TabItem tabLabel='Permissions'>
-            <div className='pt-4'>
-              <InspectPermissions
-                uncontrolled
-                user={user}
-                orgId={organisationId}
-              />
-            </div>
-          </TabItem>
-        </Tabs>
-      </div>,
+      <InspectUserPermissionsModal user={user} orgId={organisationId} />,
       'p-0 side-modal',
     )
   }
