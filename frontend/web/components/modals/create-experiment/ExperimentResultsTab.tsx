@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useMemo } from 'react'
 import {
   Bar,
   BarChart,
@@ -31,6 +31,17 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
     featureName,
   })
 
+  const variantColorMap = useMemo<Record<string, string>>(() => {
+    if (!data?.variants?.length) return {}
+    const winner = data.statistics?.winner
+    return {
+      ...buildChartColorMap(
+        data.variants.map((v: { variant: string }) => v.variant),
+      ),
+      ...(winner ? { [winner]: colorTextSuccess } : {}),
+    }
+  }, [data])
+
   if (isLoading) {
     return (
       <div className='text-center'>
@@ -46,14 +57,6 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
         users use it.
       </div>
     )
-  }
-
-  const winner = data.statistics?.winner
-  const variantColorMap: Record<string, string> = {
-    ...buildChartColorMap(
-      data.variants.map((v: { variant: string }) => v.variant),
-    ),
-    ...(winner ? { [winner]: colorTextSuccess } : {}),
   }
   const chanceToWinData = data.statistics?.chance_to_win
     ? Object.entries(data.statistics.chance_to_win).map(([variant, value]) => ({
