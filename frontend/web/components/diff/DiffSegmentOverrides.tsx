@@ -1,5 +1,5 @@
 import { TDiffSegmentOverride } from './diff-utils'
-import React, { FC, useMemo } from 'react'
+import React, { FC, useMemo, useState } from 'react'
 import DiffString from './DiffString'
 import DiffEnabled from './DiffEnabled'
 import { sortBy } from 'lodash'
@@ -7,7 +7,7 @@ import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
-import { Link, useHistory } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import DiffVariations from './DiffVariations'
 import { ProjectFlag } from 'common/types/responses'
 
@@ -96,7 +96,7 @@ const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
   projectFlag,
   projectId,
 }) => {
-  const history = useHistory()
+  const [tab, setTab] = useState(0)
   const { created, deleted, modified, unChanged } = useMemo(() => {
     const created: TDiffSegmentOverride[] = []
     const deleted: TDiffSegmentOverride[] = []
@@ -133,7 +133,7 @@ const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
   )
 
   return diffs ? (
-    <Tabs className='mt-4' uncontrolled theme='pill' history={history}>
+    <Tabs className='mt-4' value={tab} onChange={setTab} theme='pill'>
       {!!created.length && (
         <TabItem
           className='p-0'

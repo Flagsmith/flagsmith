@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
+import { useTabUrlSync } from 'common/hooks/useTabUrlSync'
 import { withRouter } from './_decorators'
 
 const meta: Meta = {
@@ -49,6 +50,79 @@ export const PillTheme: Story = {
       </TabItem>
     </Tabs>
   ),
+}
+
+export const HideNavOnSingleTab: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Pass `hideNavOnSingleTab` so the tab bar collapses to nothing when only one TabItem is rendered (e.g. after permission or plan filtering removes the others). Avoids showing a single, useless tab button.',
+      },
+    },
+  },
+  render: () => (
+    <Tabs hideNavOnSingleTab uncontrolled>
+      <TabItem tabLabel='Permissions'>
+        <p className='mt-3'>
+          Tab nav is hidden because there is only one TabItem.
+        </p>
+      </TabItem>
+    </Tabs>
+  ),
+}
+
+const URL_SYNC_LABELS = ['Overview', 'Activity', 'Settings']
+
+const WithUrlSyncRenderer = () => {
+  const [tab, setTab] = useTabUrlSync('demo', URL_SYNC_LABELS)
+  return (
+    <Tabs value={tab} onChange={setTab}>
+      {URL_SYNC_LABELS.map((label) => (
+        <TabItem key={label} tabLabel={label}>
+          <p className='mt-3'>Active label: {label}.</p>
+        </TabItem>
+      ))}
+    </Tabs>
+  )
+}
+
+export const WithUrlSync: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Compose `useTabUrlSync(paramName, labels)` with a controlled `<Tabs value onChange>` to persist the active tab in a URL query param. Labels are slugified (lowercase, spaces → hyphens). The hook also handles modal-portal contexts where `useHistory()` is unavailable by falling back to `history.replaceState`.',
+      },
+    },
+  },
+  render: () => <WithUrlSyncRenderer />,
+}
+
+const ControlledRenderer = () => {
+  const [tab, setTab] = useState(0)
+  return (
+    <Tabs value={tab} onChange={setTab}>
+      <TabItem tabLabel='Overview'>
+        <p className='mt-3'>Active index: {tab}</p>
+      </TabItem>
+      <TabItem tabLabel='Activity'>
+        <p className='mt-3'>Active index: {tab}</p>
+      </TabItem>
+    </Tabs>
+  )
+}
+
+export const Controlled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Tabs is controlled — pass `value` (active index) and `onChange`. For local state use `useState`, for URL state use `useTabUrlSync`. Avoid the legacy `uncontrolled` and `urlParam` props on new code.',
+      },
+    },
+  },
+  render: () => <ControlledRenderer />,
 }
 
 export const WithDirtyMarker: Story = {

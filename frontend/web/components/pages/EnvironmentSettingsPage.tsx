@@ -46,6 +46,15 @@ import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import { useRouteContext } from 'components/providers/RouteContext'
 import SettingTitle from 'components/SettingTitle'
 import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
+import { useTabUrlSync } from 'common/hooks/useTabUrlSync'
+
+const ENVIRONMENT_SETTINGS_TABS = [
+  'General',
+  'SDK Settings',
+  'Permissions',
+  'Webhooks',
+  'Custom Fields',
+]
 
 const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
   { label: 'Inherit from Project', value: null },
@@ -65,6 +74,7 @@ const EnvironmentSettingsPage: React.FC = () => {
     environmentId: string
   }>()
   const { projectId } = useRouteContext()
+  const [tab, setTab] = useTabUrlSync('tab', ENVIRONMENT_SETTINGS_TABS)
   const [currentEnv, setCurrentEnv] = useState<Environment | null>(null)
   const [roles, setRoles] = useState<Role[]>([])
   const [rolesLoaded, setRolesLoaded] = useState(false)
@@ -422,7 +432,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                 </div>
               )}
               {!isLoading && (
-                <Tabs urlParam='tab' className='mt-0' uncontrolled noFocus>
+                <Tabs value={tab} onChange={setTab} className='mt-0' noFocus>
                   <TabItem tabLabel='General'>
                     <div className='mt-4 col-md-8'>
                       <SettingTitle>Environment Information</SettingTitle>

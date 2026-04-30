@@ -43,6 +43,9 @@ import {
 import OrganisationUsersTable from 'components/users-permissions/OrganisationUsersTable/OrganisationUsersTable'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import { OrganisationPermission } from 'common/types/permissions.types'
+import { useTabUrlSync } from 'common/hooks/useTabUrlSync'
+
+const USERS_AND_PERMISSIONS_TABS = ['Members', 'Groups', 'Roles']
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -76,6 +79,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   })
 
   const history = useHistory()
+  const [tab, setTab] = useTabUrlSync('type', USERS_AND_PERMISSIONS_TABS)
 
   const [deleteUserInvite] = useDeleteUserInviteMutation()
   const [resendUserInvite] = useResendUserInviteMutation()
@@ -190,7 +194,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
               )}
               {!isLoading && (
                 <div>
-                  <Tabs urlParam={'type'} theme='pill' uncontrolled>
+                  <Tabs value={tab} onChange={setTab} theme='pill'>
                     <TabItem tabLabel='Members'>
                       <Row space className='mt-4'>
                         <h5 className='mb-0'>Team Members</h5>
@@ -234,56 +238,68 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                               for your plan.{' '}
                               {usedSeats && (
                                 <>
-                                  {overSeats &&
-                                  (!verifySeatsLimit || !autoSeats) ? (
-                                    <strong>
-                                      If you wish to invite any additional
-                                      members, please{' '}
-                                      {Utils.isSaas() ? (
-                                        <a
-                                          href='#'
-                                          onClick={(e) => {
-                                            e.stopPropagation()
-                                            openChat()
-                                          }}
-                                        >
-                                          contact us
-                                        </a>
-                                      ) : (
-                                        <a
-                                          href='mailto:support@flagsmith.com'
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          contact us
-                                        </a>
-                                      )}
-                                      .
-                                    </strong>
-                                  ) : needsUpgradeForAdditionalSeats ? (
-                                    <div className='fw-semibold'>
-                                      If you wish to invite any additional
-                                      members, please{' '}
-                                      {
-                                        <a
-                                          href='#'
-                                          onClick={() => {
-                                            history.replace(
-                                              '/organisation-settings?tab=billing',
-                                            )
-                                          }}
-                                        >
-                                          Upgrade your plan
-                                        </a>
-                                      }
-                                      .
-                                    </div>
-                                  ) : (
-                                    <strong>
-                                      You will automatically be charged
-                                      $60/month for each additional member that
-                                      joins your organisation.
-                                    </strong>
-                                  )}
+                                  {(() => {
+                                    if (
+                                      overSeats &&
+                                      (!verifySeatsLimit || !autoSeats)
+                                    ) {
+                                      return (
+                                        <strong>
+                                          If you wish to invite any additional
+                                          members, please{' '}
+                                          {Utils.isSaas() ? (
+                                            <a
+                                              href='#'
+                                              onClick={(e) => {
+                                                e.stopPropagation()
+                                                openChat()
+                                              }}
+                                            >
+                                              contact us
+                                            </a>
+                                          ) : (
+                                            <a
+                                              href='mailto:support@flagsmith.com'
+                                              onClick={(e) =>
+                                                e.stopPropagation()
+                                              }
+                                            >
+                                              contact us
+                                            </a>
+                                          )}
+                                          .
+                                        </strong>
+                                      )
+                                    }
+                                    if (needsUpgradeForAdditionalSeats) {
+                                      return (
+                                        <div className='fw-semibold'>
+                                          If you wish to invite any additional
+                                          members, please{' '}
+                                          {
+                                            <a
+                                              href='#'
+                                              onClick={() => {
+                                                history.replace(
+                                                  '/organisation-settings?tab=billing',
+                                                )
+                                              }}
+                                            >
+                                              Upgrade your plan
+                                            </a>
+                                          }
+                                          .
+                                        </div>
+                                      )
+                                    }
+                                    return (
+                                      <strong>
+                                        You will automatically be charged
+                                        $60/month for each additional member
+                                        that joins your organisation.
+                                      </strong>
+                                    )
+                                  })()}
                                 </>
                               )}
                             </InfoMessage>

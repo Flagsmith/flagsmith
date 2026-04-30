@@ -20,6 +20,7 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
   title,
 }) => {
   const [visible, setVisible] = useState(false)
+  const [tab, setTab] = useState(0)
   const { data } = useGetServersideEnvironmentKeysQuery({ environmentId })
   const envAdmin = useHasPermission({
     id: environmentId,
@@ -66,7 +67,7 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
             </a>{' '}
             and allowing offline capabilities.
           </div>
-          <Tabs uncontrolled theme='pill' history={history}>
+          <Tabs value={tab} onChange={setTab} theme='pill'>
             <TabItem tabLabel={'Client-side'}>
               <div className='mt-3'>
                 <InfoMessage

@@ -12,8 +12,17 @@ import Button from 'components/base/forms/Button'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import ErrorMessage from 'components/ErrorMessage'
+import { useTabUrlSync } from 'common/hooks/useTabUrlSync'
+
+const ADMIN_DASHBOARD_TABS = [
+  'Usage',
+  'Release Pipeline',
+  'Flag Lifecycle',
+  'Integrations',
+]
 
 const AdminDashboardPage: FC = () => {
+  const [tab, setTab] = useTabUrlSync('tab', ADMIN_DASHBOARD_TABS)
   const [days, setDays] = useState<30 | 60 | 90>(30)
   const [isStuck, setIsStuck] = useState(false)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -114,7 +123,7 @@ const AdminDashboardPage: FC = () => {
           </div>
 
           {/* Tabbed sections */}
-          <Tabs urlParam='tab' uncontrolled>
+          <Tabs value={tab} onChange={setTab}>
             <TabItem tabLabel='Usage'>
               <div className='mt-4'>
                 <div className='mb-4'>

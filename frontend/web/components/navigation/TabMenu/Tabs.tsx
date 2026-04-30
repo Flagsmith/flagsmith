@@ -20,14 +20,18 @@ interface TabsProps {
   children: ReactNode | ReactNode[]
   onChange?: (index: number) => void
   theme?: 'tab' | 'pill'
+  /** @deprecated Use a `useState` (or `useTabUrlSync`) in the consumer and pass `value`/`onChange`. */
   uncontrolled?: boolean
   value?: number
   className?: string
+  /** @deprecated Use `useTabUrlSync(paramName, labels)` in the consumer and pass `value`/`onChange`. */
   urlParam?: string
   hideNavOnSingleTab?: boolean
   buttonTheme?: string
   noFocus?: boolean
+  /** @deprecated Domain-specific class hook — push padding to the consuming `TabItem` via `className` instead. */
   isRoles?: boolean
+  /** @deprecated `useTabUrlSync` handles the modal-portal Router fallback internally; this prop is only honoured by the legacy `urlParam` path. */
   history?: any
   cta?: ReactNode
 }

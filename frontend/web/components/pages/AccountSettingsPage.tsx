@@ -48,6 +48,7 @@ const AccountSettingsPage: FC = () => {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword1, setNewPassword1] = useState('')
   const [newPassword2, setNewPassword2] = useState('')
+  const [tab, setTab] = useState(0)
 
   useEffect(() => {
     const handleChange = () => {
@@ -188,7 +189,7 @@ const AccountSettingsPage: FC = () => {
         }
         title={'Account Settings'}
       />
-      <Tabs uncontrolled className='mt-0'>
+      <Tabs value={tab} onChange={setTab} className='mt-0'>
         <TabItem tabLabel='General'>
           <div className='mt-4 col-md-8'>
             <SettingTitle>Account Information</SettingTitle>

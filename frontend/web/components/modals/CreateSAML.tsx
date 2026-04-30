@@ -34,6 +34,7 @@ type samlAttributeType = { id: number; label: string; value: AttributeName }
 type samlAttributesType = samlAttributeType[]
 
 const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
+  const [tab, setTab] = useState(0)
   const [previousName, setPreviousName] = useState<string>(samlName || '')
   const [name, setName] = useState<string>(samlName || '')
   const [frontendUrl, setFrontendUrl] = useState<string>(window.location.origin)
@@ -375,7 +376,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       {!isEdit ? (
         Tab1
       ) : (
-        <Tabs uncontrolled>
+        <Tabs value={tab} onChange={setTab}>
           <TabItem tabLabel='Basic Configuration'>{Tab1}</TabItem>
           <TabItem tabLabel='Attribute Mapping'>
             <div className='create-feature-tab px-3'>

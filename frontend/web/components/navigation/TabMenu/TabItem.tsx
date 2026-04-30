@@ -1,6 +1,7 @@
 import { FC, ReactNode } from 'react'
 
 type TabItemType = {
+  /** @deprecated Only required when `tabLabel` is JSX and the parent `<Tabs>` uses the legacy `urlParam` prop for slug derivation. New consumers should pass a string `tabLabel` and use `useTabUrlSync` for URL persistence. */
   tabLabelString?: string
   tabLabel: ReactNode
   children: ReactNode

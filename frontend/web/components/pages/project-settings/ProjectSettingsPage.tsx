@@ -16,6 +16,7 @@ import { ProjectPermissionsTab } from './tabs/ProjectPermissionsTab'
 import { CustomFieldsTab } from './tabs/CustomFieldsTab'
 import { ImportTab } from './tabs/ImportTab'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { useTabUrlSync } from 'common/hooks/useTabUrlSync'
 
 type ProjectSettingsTab = {
   component: ReactNode
@@ -37,6 +38,22 @@ const ProjectSettingsPage = () => {
     { projectId: projectId ?? '' },
     { skip: !projectId },
   )
+
+  // Must mirror the visibility filter applied to `tabs` below — the hook
+  // resolves URL slug → index against this list, so the order/contents
+  // need to match what gets rendered.
+  const hasEnvironmentsForUrl = (environments?.results?.length || 0) > 0
+  const hasFeatureHealthForUrl = Utils.getFlagsmithHasFeature('feature_health')
+  const visibleTabLabels = [
+    'General',
+    'SDK Settings',
+    'Usage',
+    ...(hasFeatureHealthForUrl ? ['Feature Health'] : []),
+    'Permissions',
+    'Custom Fields',
+    ...(hasEnvironmentsForUrl ? ['Import', 'Export'] : []),
+  ]
+  const [tab, setTab] = useTabUrlSync('tab', visibleTabLabels)
 
   useEffect(() => {
     API.trackPage(Constants.pages.PROJECT_SETTINGS)
@@ -143,7 +160,7 @@ const ProjectSettingsPage = () => {
   return (
     <div className='app-container container'>
       <PageTitle title='Project Settings' />
-      <Tabs urlParam='tab' className='mt-0' uncontrolled>
+      <Tabs value={tab} onChange={setTab} className='mt-0'>
         {tabs.map(({ component, key, label, labelString }) => (
           <TabItem
             key={key}

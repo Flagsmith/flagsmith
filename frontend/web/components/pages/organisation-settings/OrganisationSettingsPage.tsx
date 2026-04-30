@@ -6,6 +6,7 @@ import PageTitle from 'components/PageTitle'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import Constants from 'common/constants'
+import { useTabUrlSync } from 'common/hooks/useTabUrlSync'
 import { GeneralTab } from './tabs/general-tab'
 import { BillingTab } from './tabs/BillingTab'
 import { LicensingTab } from './tabs/LicensingTab'
@@ -35,6 +36,21 @@ const OrganisationSettingsPage: FC = () => {
     { skip: !organisationId },
   )
 
+  // Must mirror the visibility filter applied to `tabs` below — the hook
+  // resolves URL slug → index against this list, so the order/contents
+  // need to match what gets rendered.
+  const isAWS = organisation?.subscription?.payment_method === 'AWS_MARKETPLACE'
+  const visibleTabLabels = [
+    'General',
+    ...(paymentsEnabled && !isAWS ? ['Billing'] : []),
+    ...(isEnterprise ? ['Licensing'] : []),
+    'Custom Fields',
+    'API Keys',
+    'Webhooks',
+    'SAML',
+  ]
+  const [tab, setTab] = useTabUrlSync('tab', visibleTabLabels)
+
   useEffect(() => {
     API.trackPage(Constants.pages.ORGANISATION_SETTINGS)
   }, [])
@@ -62,7 +78,6 @@ const OrganisationSettingsPage: FC = () => {
   }
 
   const isAdmin = organisation.role === 'ADMIN'
-  const isAWS = organisation.subscription?.payment_method === 'AWS_MARKETPLACE'
 
   if (!isAdmin) {
     return (
@@ -82,7 +97,7 @@ const OrganisationSettingsPage: FC = () => {
     },
     {
       component: <BillingTab organisation={organisation} />,
-      isVisible: paymentsEnabled && !isAWS,
+      isVisible: !!paymentsEnabled && !isAWS,
       key: 'billing',
       label: 'Billing',
     },
@@ -121,7 +136,7 @@ const OrganisationSettingsPage: FC = () => {
   return (
     <div className='app-container container'>
       <PageTitle title='Organisation Settings' />
-      <Tabs urlParam='tab' className='mt-0' uncontrolled hideNavOnSingleTab>
+      <Tabs value={tab} onChange={setTab} className='mt-0' hideNavOnSingleTab>
         {tabs.map(({ component, key, label }) => (
           <TabItem key={key} tabLabel={label} data-test={key}>
             {component}

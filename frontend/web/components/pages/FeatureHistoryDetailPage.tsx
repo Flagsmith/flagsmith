@@ -19,6 +19,9 @@ import Breadcrumb from 'components/Breadcrumb'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
 import { useRouteContext } from 'components/providers/RouteContext'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
+import { useTabUrlSync } from 'common/hooks/useTabUrlSync'
+
+const FEATURE_HISTORY_TABS = ['Compare to Previous', 'Compare to Live']
 interface RouteParams {
   id: string
   environmentId: string
@@ -28,6 +31,7 @@ interface RouteParams {
 const FeatureHistoryPage: FC = () => {
   const match = useRouteMatch<RouteParams>()
   const { projectId } = useRouteContext()
+  const [tab, setTab] = useTabUrlSync('compare', FEATURE_HISTORY_TABS)
 
   const env: Environment | undefined = ProjectStore.getEnvironment(
     match.params.environmentId,
@@ -112,7 +116,7 @@ const FeatureHistoryPage: FC = () => {
                   {user ? `${getUserDisplayName(user)} ` : 'System '}
                 </strong>
               </div>
-              <Tabs urlParam='compare' theme='pill' uncontrolled>
+              <Tabs value={tab} onChange={setTab} theme='pill'>
                 {!!data.previous_version_uuid && (
                   <TabItem tabLabel='Compare to Previous'>
                     <div className='mt-4'>

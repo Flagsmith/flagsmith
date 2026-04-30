@@ -22,6 +22,9 @@ import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ChangeRequestList from 'components/ChangeRequestsList'
+import { useTabUrlSync } from 'common/hooks/useTabUrlSync'
+
+const CHANGE_REQUESTS_TABS = ['Open', 'Closed']
 
 type ChangeRequestsPageType = {
   router: RouterChildContext['router']
@@ -38,6 +41,7 @@ const ChangeRequestsPage: FC<ChangeRequestsPageType> = ({ match, router }) => {
   const [page, setPage] = useState(1)
   const [pageCommitted, setPageCommitted] = useState(1)
   const history = useHistory()
+  const [tab, setTab] = useTabUrlSync('tab', CHANGE_REQUESTS_TABS)
   const organisationId = AccountStore.getOrganisation()?.id
   const environment = ProjectStore.getEnvironment(
     environmentId,
@@ -162,7 +166,7 @@ export const ChangeRequestsInner: FC<ChangeRequestsInnerType> = ({
           <div>
             {changeRequestsDisabled && <p>{ChangeRequestsDisabledMessage}</p>}
 
-            <Tabs urlParam={'tab'}>
+            <Tabs value={tab} onChange={setTab}>
               <TabItem
                 tabLabelString='Open'
                 tabLabel={

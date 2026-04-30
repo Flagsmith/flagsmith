@@ -48,6 +48,7 @@ import CreateSegmentRulesTabForm from './CreateSegmentRulesTabForm'
 import CreateSegmentUsersTabContent from './CreateSegmentUsersTabContent'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import API from 'project/api'
+import { useTabUrlSync } from 'common/hooks/useTabUrlSync'
 
 type PageType = {
   number: number
@@ -202,6 +203,19 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
     organisation_id: AccountStore.getOrganisation().id,
   })
+
+  // The edit-segment Tabs below mirror this label list — keep in sync if
+  // visibility conditions or labels change.
+  const segmentTabLabels = [
+    'General',
+    segment.feature ? 'Feature' : 'Features',
+    'Identities',
+    ...(metadataEnable ? ['Custom Fields'] : []),
+  ]
+  const [segmentTab, setSegmentTab] = useTabUrlSync(
+    'segmentTab',
+    segmentTabLabels,
+  )
 
   const segmentContentType = useMemo(() => {
     if (supportedContentTypes) {
@@ -497,12 +511,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
         />
       )}
       {isEdit && !condensed && (
-        <Tabs
-          value={tab}
-          theme='pill'
-          urlParam='segmentTab'
-          onChange={(tab: UserTabs) => setTab(tab)}
-        >
+        <Tabs value={segmentTab} onChange={setSegmentTab} theme='pill'>
           <TabItem tabLabel='General' isDirty={valueChanged}>
             <div className='my-4'>
               <CreateSegmentRulesTabForm

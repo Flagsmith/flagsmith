@@ -17,6 +17,9 @@ import AccountStore from 'common/stores/account-store'
 import Constants from 'common/constants'
 import { useHistory } from 'react-router-dom'
 import { OrganisationPermission } from 'common/types/permissions.types'
+import { useTabUrlSync } from 'common/hooks/useTabUrlSync'
+
+const IMPORT_PAGE_TABS = ['Flagsmith', 'LaunchDarkly']
 
 type ImportPageType = {
   projectId: string
@@ -25,6 +28,7 @@ type ImportPageType = {
 
 const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
   const history = useHistory()
+  const [tab, setTab] = useTabUrlSync('import', IMPORT_PAGE_TABS)
   const [LDKey, setLDKey] = useState<string>('')
   const [importId, setImportId] = useState<number>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -227,7 +231,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
         </div>
       )}
       <div className='mt-4'>
-        <Tabs urlParam={'import'} theme='pill' history={history}>
+        <Tabs value={tab} onChange={setTab} theme='pill'>
           <TabItem tabLabel={'Flagsmith'}>
             <div className='mt-4'>
               <FeatureImport projectId={projectId} />

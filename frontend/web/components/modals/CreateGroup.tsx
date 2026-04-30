@@ -35,6 +35,7 @@ type CreateGroupType = {
 }
 
 const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
+  const [tab, setTab] = useState(0)
   const [edited, setEdited] = useState(false)
   const [externalId, setExternalId] = useState('')
   const [name, setName] = useState('')
@@ -453,7 +454,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
     </div>
   )
   return isEdit ? (
-    <Tabs uncontrolled className='px-0'>
+    <Tabs value={tab} onChange={setTab} className='px-0'>
       <TabItem tabLabel='General' isDirty={!!edited}>
         {editGroupEl}
       </TabItem>

@@ -38,6 +38,7 @@ import FeatureUpdateSummary from './components/FeatureUpdateSummary'
 import FeatureNameInput from './components/FeatureNameInput'
 import IdentitySaveFooter from './components/IdentitySaveFooter'
 import { ProjectPermission } from 'common/types/permissions.types'
+import { useTabUrlSync } from 'common/hooks/useTabUrlSync'
 import type {
   ChangeRequest,
   FeatureState,
@@ -120,7 +121,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const [skipSaveProjectFeature, setSkipSaveProjectFeature] = useState(false)
   const [ownerIds, setOwnerIds] = useState<number[]>([])
   const [groupOwnerIds, setGroupOwnerIds] = useState<number[]>([])
-  const [, setTabKey] = useState(0)
 
   const isEdit = !!props.projectFlag
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -356,6 +356,33 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const isLinksTabEnabled =
     (hasIntegrationWithGithub || hasGitlabIntegration) && !!projectFlag?.id
 
+  const isVersionedForTabs = !!environment?.use_v2_feature_versioning
+  const isVersionedChangeRequestForTabs =
+    !!existingChangeRequest && isVersionedForTabs
+  const hideIdentityOverridesTabForTabs =
+    Utils.getShouldHideIdentityOverridesTab()
+  const flagIdForTabs = props.environmentFlag?.id
+  // Mirrors the conditional rendering of TabItems below — keep in sync if
+  // tab visibility conditions change.
+  const featureTabLabels = [
+    'Value',
+    ...((!existingChangeRequest || isVersionedChangeRequestForTabs) &&
+    updateSegments
+      ? ['Segment Overrides']
+      : []),
+    ...(!existingChangeRequest && !hideIdentityOverridesTabForTabs
+      ? ['Identity Overrides']
+      : []),
+    'Usage',
+    'Health',
+    ...(isLinksTabEnabled ? ['Links'] : []),
+    ...(!existingChangeRequest && flagIdForTabs && isVersionedForTabs
+      ? ['History']
+      : []),
+    ...(!existingChangeRequest ? ['Settings'] : []),
+  ]
+  const [tab, setTab] = useTabUrlSync('tab', featureTabLabels)
+
   const [linkedResources, setLinkedResources] = useState<ExternalResource[]>()
 
   const { permission: createFeaturePermission } = useHasPermission({
@@ -572,11 +599,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   projectId={`${projectId}`}
                   featureId={projectFlag?.id}
                 />
-                <Tabs
-                  urlParam='tab'
-                  history={props.history}
-                  onChange={() => setTabKey((k) => k + 1)}
-                >
+                <Tabs value={tab} onChange={setTab}>
                   <TabItem
                     data-test='value'
                     tabLabel='Value'
