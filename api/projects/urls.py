@@ -29,6 +29,11 @@ from integrations.grafana.views import GrafanaProjectConfigurationViewSet
 from integrations.launch_darkly.views import LaunchDarklyImportRequestViewSet
 from integrations.new_relic.views import NewRelicConfigurationViewSet
 from metadata.views import ProjectMetadataFieldViewSet
+from organisations.subscriptions.constants import SubscriptionPlanFamily
+from organisations.subscriptions.permissions import (
+    organisation_from_project_pk,
+    require_minimum_plan,
+)
 from projects.tags.views import TagViewSet
 from segments.views import SegmentViewSet
 
@@ -86,6 +91,14 @@ projects_router.register(
     ProjectAuditLogViewSet,
     basename="project-audit",
 )
+
+ProjectAuditLogViewSet.permission_classes = [
+    *ProjectAuditLogViewSet.permission_classes,
+    require_minimum_plan(
+        SubscriptionPlanFamily.SCALE_UP,
+        get_organisation=organisation_from_project_pk,
+    ),
+]
 projects_router.register(
     "feature-health/providers",
     FeatureHealthProviderViewSet,
@@ -104,6 +117,15 @@ projects_router.register(
 
 if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover
     workflow_views = importlib.import_module("workflows_logic.views")
+
+    workflow_views.ProjectChangeRequestViewSet.permission_classes = [
+        *workflow_views.ProjectChangeRequestViewSet.permission_classes,
+        require_minimum_plan(
+            SubscriptionPlanFamily.SCALE_UP,
+            get_organisation=organisation_from_project_pk,
+        ),
+    ]
+
     projects_router.register(
         r"change-requests",
         workflow_views.ProjectChangeRequestViewSet,
