@@ -7,6 +7,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
+import { colorTextSecondary } from 'common/theme/tokens'
 import ChartTooltip from './ChartTooltip'
 
 export type PieSlice = {
@@ -66,7 +67,10 @@ const PieChart: FC<PieChartProps> = ({
           paddingAngle={paddingAngle}
         >
           {data.map((entry) => (
-            <Cell key={entry.name} fill={colorMap[entry.name]} />
+            <Cell
+              key={entry.name}
+              fill={colorMap[entry.name] ?? colorTextSecondary}
+            />
           ))}
         </Pie>
         {showTooltip && (
