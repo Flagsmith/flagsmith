@@ -600,6 +600,42 @@ def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(
     )
 
 
+def test_add_single_seat__scale_up_v4_plan__uses_v4_addon(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    subscription_id = "subscription-id"
+    expected_addon_id = "Additional-Team-Members-Scale-Up-v4"
+
+    mocked_subscription = mocker.MagicMock(
+        id=subscription_id,
+        plan_id="Scale-Up-v4",
+        addons=[],
+        billing_period=1,
+    )
+    mocked_chargebee = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+    mocked_chargebee.Subscription.retrieve.return_value.subscription = (
+        mocked_subscription
+    )
+
+    # When
+    add_single_seat(subscription_id)
+
+    # Then
+    mocked_chargebee.Subscription.update.assert_called_once_with(
+        subscription_id,
+        SubscriptionOps.UpdateParams(
+            addons=[
+                SubscriptionOps.UpdateAddonParams(id=expected_addon_id, quantity=1)
+            ],
+            prorate=True,
+            invoice_immediately=True,
+        ),
+    )
+
+
 def test_add_single_seat__api_error__raises_upgrade_seats_error(  # type: ignore[no-untyped-def]
     mocker, caplog
 ) -> None:
