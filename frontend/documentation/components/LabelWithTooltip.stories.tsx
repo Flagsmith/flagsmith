@@ -1,5 +1,6 @@
+import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
-import { fireEvent } from 'storybook/test'
+import { userEvent, waitFor } from 'storybook/test'
 
 import LabelWithTooltip from 'components/base/LabelWithTooltip'
 
@@ -10,7 +11,7 @@ const meta: Meta<typeof LabelWithTooltip> = {
   },
   component: LabelWithTooltip,
   parameters: { layout: 'centered' },
-  title: 'Components/Data Display/LabelWithTooltip',
+  title: 'Components/Forms/LabelWithTooltip',
 }
 export default meta
 
@@ -23,23 +24,34 @@ export const WithoutTooltip: Story = {
 }
 
 export const Hovered: Story = {
+  decorators: [
+    (StoryFn: React.ComponentType) => (
+      <div className='pt-5 pl-5 pr-5'>
+        <StoryFn />
+      </div>
+    ),
+  ],
   parameters: {
-    chromatic: { delay: 800 },
     docs: {
       description: { story: 'Tooltip in its visible state.' },
-      story: { height: '160px' },
+      story: { height: '200px' },
     },
   },
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    // Wait for the nested Tooltip's useEffect to register the
+    // react-tooltip anchor before hovering.
+    await new Promise((resolve) => setTimeout(resolve, 100))
     const trigger =
       canvasElement.querySelector<HTMLElement>('[data-tooltip-id]')
     if (!trigger) return
-    // react-tooltip's pointer detection in Chromatic's headless Chrome
-    // doesn't always pick up userEvent.hover; fire all four event
-    // variants so whichever the library is listening for triggers.
-    fireEvent.pointerEnter(trigger)
-    fireEvent.pointerOver(trigger)
-    fireEvent.mouseEnter(trigger)
-    fireEvent.mouseOver(trigger)
+    await userEvent.hover(trigger)
+    await waitFor(
+      () => {
+        if (!document.body.querySelector('[role="tooltip"]')) {
+          throw new Error('tooltip popover not yet visible')
+        }
+      },
+      { timeout: 2000 },
+    )
   },
 }

@@ -1,12 +1,11 @@
 import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
-import { fireEvent } from 'storybook/test'
+import { userEvent, waitFor } from 'storybook/test'
 
 import Tooltip from 'components/Tooltip'
 
 const meta: Meta = {
   parameters: {
-    chromatic: { delay: 800 },
     docs: {
       description: {
         component:
@@ -21,42 +20,48 @@ export default meta
 
 type Story = StoryObj
 
-const hoverFirstTooltip = ({
+const hoverFirstTooltip = async ({
   canvasElement,
 }: {
   canvasElement: HTMLElement
 }) => {
   const trigger = canvasElement.querySelector<HTMLElement>('[data-tooltip-id]')
   if (!trigger) return
-  // react-tooltip's pointer detection in Chromatic's headless Chrome
-  // doesn't always fire from userEvent.hover; dispatch all four event
-  // variants so whichever the library is listening for triggers.
-  fireEvent.pointerEnter(trigger)
-  fireEvent.pointerOver(trigger)
-  fireEvent.mouseEnter(trigger)
-  fireEvent.mouseOver(trigger)
+  await userEvent.hover(trigger)
+  await waitFor(
+    () => {
+      if (!document.body.querySelector('[role="tooltip"]')) {
+        throw new Error('tooltip popover not yet visible')
+      }
+    },
+    { timeout: 2000 },
+  )
 }
 
 export const Default: Story = {
   parameters: {
-    docs: { story: { height: '160px' } },
+    docs: { story: { height: '200px' } },
   },
   play: hoverFirstTooltip,
   render: () => (
-    <Tooltip title={<span>Hover me</span>}>
-      This is the tooltip content.
-    </Tooltip>
+    <div className='pt-5'>
+      <Tooltip title={<span>Hover me</span>}>
+        This is the tooltip content.
+      </Tooltip>
+    </div>
   ),
 }
 
 export const PlainText: Story = {
   parameters: {
-    docs: { story: { height: '160px' } },
+    docs: { story: { height: '200px' } },
   },
   play: hoverFirstTooltip,
   render: () => (
-    <Tooltip title={<span>Plain text tooltip</span>} plainText>
-      Simple text without HTML rendering.
-    </Tooltip>
+    <div className='pt-5'>
+      <Tooltip title={<span>Plain text tooltip</span>} plainText>
+        Simple text without HTML rendering.
+      </Tooltip>
+    </div>
   ),
 }
