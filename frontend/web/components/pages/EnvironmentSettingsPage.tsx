@@ -602,12 +602,9 @@ const EnvironmentSettingsPage: React.FC = () => {
                           <Button
                             id='delete-env-btn'
                             onClick={() => {
-                              const envToRemove = find(
-                                project?.environments,
-                                {
-                                  api_key: match.params.environmentId,
-                                },
-                              )
+                              const envToRemove = find(project?.environments, {
+                                api_key: match.params.environmentId,
+                              })
                               if (!envToRemove) return
                               confirmRemove(envToRemove, () => {
                                 deleteEnv(envToRemove)

@@ -1,6 +1,6 @@
 import React, { FC, useEffect } from 'react'
-import { close, checkmark } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
+import classNames from 'classnames'
+import Icon from './icons/Icon'
 
 type PasswordRequirementsProps = {
   onRequirementsMet: (met: boolean) => void
@@ -16,7 +16,7 @@ const PasswordRequirements: FC<PasswordRequirementsProps> = ({
     { label: 'Contains a number', test: /\d/.test(password) },
     {
       label: 'Contains a special character',
-      test: /[!@#$%^&*(),.?":{}|<>[\]\\\/_+=-]/.test(password),
+      test: /[!@#$%^&*(),.?":{}|<>[\]\\/_+=-]/.test(password),
     },
     { label: 'Contains an uppercase letter', test: /[A-Z]/.test(password) },
     { label: 'Contains a lowercase letter', test: /[a-z]/.test(password) },
@@ -29,29 +29,25 @@ const PasswordRequirements: FC<PasswordRequirementsProps> = ({
   }, [allRequirementsMet, onRequirementsMet])
 
   return (
-    <div>
-      <ul
-        className='password-requirements'
-        style={{ listStyleType: 'none', padding: 0 }}
-      >
-        {requirements.map((req, index) => (
-          <p
-            key={index}
-            style={{
-              color: req.test ? 'green' : 'red',
-              fontSize: '12px',
-              margin: '4px 0',
-            }}
-          >
-            <IonIcon
-              style={{ marginRight: '4px', verticalAlign: 'middle' }}
-              icon={req.test ? checkmark : close}
-            />
-            {req.label}
-          </p>
-        ))}
-      </ul>
-    </div>
+    <ul className='password-requirements list-unstyled mb-0 mt-2'>
+      {requirements.map((req, index) => (
+        <li
+          key={index}
+          className={classNames(
+            'd-flex align-items-center gap-1 fs-small lh-sm mb-1',
+            req.test ? 'text-success' : 'text-danger',
+          )}
+        >
+          <Icon
+            name={req.test ? 'checkmark' : 'close-circle'}
+            width={12}
+            height={12}
+            fill='currentColor'
+          />
+          {req.label}
+        </li>
+      ))}
+    </ul>
   )
 }
 

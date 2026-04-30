@@ -31,7 +31,7 @@ const meta: Meta<SettingRowProps> = {
   },
   component: SettingRow,
   parameters: { layout: 'padded' },
-  title: 'Patterns/SettingRow',
+  title: 'Components/Patterns/SettingRow',
 }
 
 export default meta
@@ -48,7 +48,7 @@ const InteractiveSetting = (args: SettingRowProps) => {
 }
 
 export const Default: Story = {
-  render: (args) => <InteractiveSetting {...args} />,
+  render: (args: SettingRowProps) => <InteractiveSetting {...args} />,
 }
 
 // ---------------------------------------------------------------------------

@@ -3,8 +3,8 @@ import StatItem from 'components/StatItem'
 
 const meta: Meta<typeof StatItem> = {
   component: StatItem,
-  tags: ['autodocs'],
-  title: 'Components/StatItem',
+  parameters: { layout: 'padded' },
+  title: 'Components/Data Display/StatItem',
 }
 export default meta
 
