@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.232.0](https://github.com/Flagsmith/flagsmith/compare/v2.231.1...v2.232.0) (2026-04-30)
+
+
+### Features
+
+* only paid accounts can use pylon chat ([#7381](https://github.com/Flagsmith/flagsmith/issues/7381)) ([1bb5667](https://github.com/Flagsmith/flagsmith/commit/1bb566750e0ca64337fa21e0a6912bb22cdee813))
+
+
+### Bug Fixes
+
+* **GitLab:** Improve GitLab docs showcasing ([#7372](https://github.com/Flagsmith/flagsmith/issues/7372)) ([2baa846](https://github.com/Flagsmith/flagsmith/commit/2baa846ce3dd8a2acf73127c683ce3a2848258f8))
+* render all top-level segment rules in the UI instead ([#7342](https://github.com/Flagsmith/flagsmith/issues/7342)) ([94e25f7](https://github.com/Flagsmith/flagsmith/commit/94e25f752c62753bed29810f924267727d1c2add))
+
+
+### Dependency Updates
+
+* bump openfeature and flagsmith clients ([#7374](https://github.com/Flagsmith/flagsmith/issues/7374)) ([413c9b8](https://github.com/Flagsmith/flagsmith/commit/413c9b8f6cfcb96889513391334e74fcf3338e8c))
+
+
+### Refactoring
+
+* scope-aware project and organisation integrations ([#7311](https://github.com/Flagsmith/flagsmith/issues/7311)) ([3bd5277](https://github.com/Flagsmith/flagsmith/commit/3bd5277b64e444f3a04763bfbdae245c3c1b6e3c))
+
 ## [2.231.1](https://github.com/Flagsmith/flagsmith/compare/v2.231.0...v2.231.1) (2026-04-28)
 
 
