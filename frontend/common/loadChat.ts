@@ -62,7 +62,7 @@ function setupPylon() {
   }
 }
 
-function hidePylon() {
+export function hidePylon() {
   if (typeof window.Pylon !== 'undefined') {
     window.Pylon('hideChatBubble')
   }
