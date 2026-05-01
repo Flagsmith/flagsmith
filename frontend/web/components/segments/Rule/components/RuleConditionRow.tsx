@@ -17,6 +17,7 @@ import classNames from 'classnames'
 interface RuleConditionRowProps {
   rule: SegmentCondition
   ruleIndex: number
+  ruleType: 'ALL' | 'ANY' | 'NONE'
   operators: Operator[]
   readOnly?: boolean
   showDescription?: boolean
@@ -43,6 +44,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
   removeRule,
   rule,
   ruleIndex,
+  ruleType,
   rules,
   setRuleProperty,
   showDescription,
@@ -75,7 +77,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
         <Row className='or-divider my-1'>
           <Row>
             <div className='or-divider__up' />
-            Or
+            {ruleType === 'ALL' ? 'And' : 'Or'}
             <div className='or-divider__down' />
           </Row>
           <Flex className='or-divider__line' />
@@ -141,7 +143,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
               type='button'
               onClick={addRule}
             >
-              Or
+              {ruleType === 'ALL' ? 'And' : 'Or'}
             </Button>
           ) : (
             <div style={{ width: 64 }} />

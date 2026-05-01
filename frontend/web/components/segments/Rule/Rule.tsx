@@ -191,6 +191,7 @@ const Rule: React.FC<RuleProps> = ({
             key={i}
             rule={ruleCondition}
             ruleIndex={i}
+            ruleType={rule.type}
             operators={operators}
             readOnly={readOnly}
             showDescription={showDescription}
