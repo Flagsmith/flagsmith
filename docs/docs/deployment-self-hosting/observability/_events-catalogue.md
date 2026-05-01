@@ -46,6 +46,7 @@ Logged at `info` from:
 
 Attributes:
  - `addon.id`
+ - `organisation.id`
  - `seats.new`
  - `seats.previous`
  - `subscription.id`
