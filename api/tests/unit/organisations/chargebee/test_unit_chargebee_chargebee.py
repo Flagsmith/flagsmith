@@ -534,7 +534,7 @@ def test_add_single_seat__existing_addon__increments_quantity(mocker) -> None:  
     )
 
     # When
-    add_single_seat(subscription_id)
+    add_single_seat(subscription_id, organisation_id=1)
 
     # Then
     mocked_chargebee.Subscription.update.assert_called_once_with(
@@ -585,7 +585,7 @@ def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(
     )
 
     # When
-    add_single_seat(subscription_id)
+    add_single_seat(subscription_id, organisation_id=1)
 
     # Then
     mocked_chargebee.Subscription.update.assert_called_once_with(
@@ -621,7 +621,7 @@ def test_add_single_seat__scale_up_v4_plan__uses_v4_addon(
     )
 
     # When
-    add_single_seat(subscription_id)
+    add_single_seat(subscription_id, organisation_id=1)
 
     # Then
     mocked_chargebee.Subscription.update.assert_called_once_with(
@@ -672,7 +672,7 @@ def test_add_single_seat__api_error__raises_upgrade_seats_error(  # type: ignore
 
     # When
     with pytest.raises(UpgradeSeatsError):
-        add_single_seat(subscription_id)
+        add_single_seat(subscription_id, organisation_id=1)
 
     # Then
     mocked_chargebee.Subscription.update.assert_called_once_with(

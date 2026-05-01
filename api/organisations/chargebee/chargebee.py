@@ -46,7 +46,7 @@ from organisations.subscriptions.exceptions import (
 )
 
 logger = logging.getLogger(__name__)
-audit_log = structlog.get_logger("billing")
+log = structlog.get_logger("billing")
 
 CHARGEBEE_PAYMENT_ERROR_CODES = [
     "payment_processing_failed",
@@ -210,7 +210,7 @@ def cancel_subscription(subscription_id: str) -> None:
         raise CannotCancelChargebeeSubscription(msg) from e
 
 
-def add_single_seat(subscription_id: str) -> None:
+def add_single_seat(subscription_id: str, organisation_id: int) -> None:
     try:
         subscription = chargebee_client.Subscription.retrieve(
             subscription_id
@@ -237,8 +237,9 @@ def add_single_seat(subscription_id: str) -> None:
             ),
         )
 
-        audit_log.info(
+        log.info(
             "seat.added",
+            organisation__id=organisation_id,
             subscription__id=subscription_id,
             addon__id=addon_id,
             seats__previous=current_seats,
