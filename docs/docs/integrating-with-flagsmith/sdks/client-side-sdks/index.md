@@ -6,13 +6,15 @@ sidebar_position: 1
 
 # Client-Side SDKs
 
-Client-side SDKs are designed to run in browser environments, mobile applications, and other client-side contexts where you need to evaluate feature flags on the user's device.
+Client-side SDKs are designed to run in browser environments, mobile applications, and other client-side contexts where
+you need to evaluate feature flags on the user's device.
 
 ## Available SDKs
 
 - [JavaScript](/integrating-with-flagsmith/sdks/client-side-sdks/javascript) - For web applications
 - [React](/integrating-with-flagsmith/sdks/client-side-sdks/react) - For React applications
-- [Next.js and SSR](/integrating-with-flagsmith/sdks/client-side-sdks/nextjs-and-ssr) - For Next.js applications with server-side rendering
+- [Next.js and SSR](/integrating-with-flagsmith/sdks/client-side-sdks/nextjs-and-ssr) - For Next.js applications with
+  server-side rendering
 - [Android](/integrating-with-flagsmith/sdks/client-side-sdks/android) - For Android applications
 - [iOS](/integrating-with-flagsmith/sdks/client-side-sdks/ios) - For iOS applications
 - [Flutter](/integrating-with-flagsmith/sdks/client-side-sdks/flutter) - For Flutter applications
@@ -27,3 +29,8 @@ Client-side SDKs are designed to run in browser environments, mobile application
 ## Getting Started
 
 Choose the SDK that matches your platform and follow the specific integration guide for your technology stack.
+
+## Troubleshooting
+
+If flags aren't updating in the browser, the SDK is returning default values, or trait-based segment rules aren't
+matching as expected, see the [SDK Issues](/guides/troubleshooting/sdk-issues) troubleshooting guide.
