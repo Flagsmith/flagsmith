@@ -40,6 +40,8 @@ export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
   theme?: keyof typeof themeClassNames
   size?: keyof typeof sizeClassNames
   iconSize?: number
+  isLoading?: boolean
+  loadingLabel?: string
 }
 
 export const Button = React.forwardRef<
@@ -50,12 +52,15 @@ export const Button = React.forwardRef<
     {
       children,
       className,
+      disabled,
       href,
       iconLeft,
       iconLeftColour,
       iconRight,
       iconRightColour,
       iconSize = 24,
+      isLoading = false,
+      loadingLabel = 'Saving...',
       onMouseUp,
       size = 'default',
       target,
@@ -65,6 +70,33 @@ export const Button = React.forwardRef<
     },
     ref,
   ) => {
+    const buttonContent = isLoading ? (
+      <div className='d-flex align-items-center justify-content-center gap-2'>
+        <Loader width='15px' height='15px' />
+        <span>{loadingLabel}</span>
+      </div>
+    ) : (
+      <>
+        {!!iconLeft && (
+          <Icon
+            fill={iconLeftColour ? iconColours[iconLeftColour] : undefined}
+            className='mr-2'
+            name={iconLeft}
+            width={iconSize}
+          />
+        )}
+        {children}
+        {!!iconRight && (
+          <Icon
+            fill={iconRightColour ? iconColours[iconRightColour] : undefined}
+            className='ml-2'
+            name={iconRight}
+            width={iconSize}
+          />
+        )}
+      </>
+    )
+
     return href ? (
       <a
         onClick={rest.onClick as React.MouseEventHandler}
@@ -96,6 +128,8 @@ export const Button = React.forwardRef<
     ) : (
       <button
         {...rest}
+        aria-busy={isLoading}
+        disabled={isLoading || disabled}
         type={type}
         onMouseUp={onMouseUp}
         className={cn(
@@ -106,23 +140,7 @@ export const Button = React.forwardRef<
         )}
         ref={ref as React.RefObject<HTMLButtonElement>}
       >
-        {!!iconLeft && (
-          <Icon
-            fill={iconLeftColour ? iconColours[iconLeftColour] : undefined}
-            className='mr-2'
-            name={iconLeft}
-            width={iconSize}
-          />
-        )}
-        {children}
-        {!!iconRight && (
-          <Icon
-            fill={iconRightColour ? iconColours[iconRightColour] : undefined}
-            className='ml-2'
-            name={iconRight}
-            width={iconSize}
-          />
-        )}
+        {buttonContent}
       </button>
     )
   },
