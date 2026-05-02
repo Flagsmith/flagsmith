@@ -129,6 +129,7 @@ export const Button = React.forwardRef<
       <button
         {...rest}
         aria-busy={isLoading}
+        aria-live='polite'
         disabled={isLoading || disabled}
         type={type}
         onMouseUp={onMouseUp}
