@@ -4234,6 +4234,101 @@ files = [
 ]
 
 [[package]]
+name = "pyroaring"
+version = "1.1.0"
+description = "Library for handling efficiently sorted integer sets."
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "pyroaring-1.1.0-cp310-cp310-macosx_14_0_arm64.whl", hash = "sha256:19c9bb8b32f17fe63e54e78f88a7a67fe2dca352bf79d7d3b43f0a901db5ea3b"},
+    {file = "pyroaring-1.1.0-cp310-cp310-macosx_14_0_universal2.whl", hash = "sha256:212f471da113eba24a0fedbd1ef078bfed34b792e8f48dba3f7301f1bca2678a"},
+    {file = "pyroaring-1.1.0-cp310-cp310-macosx_14_0_x86_64.whl", hash = "sha256:a31276323fdd355505883162f1dca4d7acc3d6ec2159c85ddef863f1fe9e8f05"},
+    {file = "pyroaring-1.1.0-cp310-cp310-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:55c9d0b708a65308eaa95c53d9de56a2b4425812395f6e57a4d9ad8efb081bf9"},
+    {file = "pyroaring-1.1.0-cp310-cp310-manylinux_2_24_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:5599b691e5e993f7fdd9880429d1c485eae03dc392ba5b2dbe2eef0434bea1a5"},
+    {file = "pyroaring-1.1.0-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:8376c62e60a49e8fe51ffce569f74beed6e53fb58e5d6739f954c8c51ec0bec3"},
+    {file = "pyroaring-1.1.0-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:cc998e81748b72659802a7b434b39292308a5f4ab8dd4bf4739d65de1d4ed2bf"},
+    {file = "pyroaring-1.1.0-cp310-cp310-musllinux_1_2_armv7l.whl", hash = "sha256:fe0b9f0baf190663df37571cbb8a77370e7bd3a66068276d48f813c53ceba530"},
+    {file = "pyroaring-1.1.0-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:83815b3a4cb9c3b17096c70833373610d5c93e89c134548cf43436c90326bfb3"},
+    {file = "pyroaring-1.1.0-cp310-cp310-win32.whl", hash = "sha256:e9caf67c0c05d27bab0d88cf193e73023f624c6714f1ff807c7d4b135b19d36a"},
+    {file = "pyroaring-1.1.0-cp310-cp310-win_amd64.whl", hash = "sha256:a6343249ce9401dd90c3b934fd9a4a618b6fc455f27a9aa11d198eebd4743137"},
+    {file = "pyroaring-1.1.0-cp310-cp310-win_arm64.whl", hash = "sha256:8f5194c0544b08e56e108dad096c468c67f8ac60eec42763aed36ccbd3565346"},
+    {file = "pyroaring-1.1.0-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:462b0952277d3100a90ae890ae641d3fb3561b10cfea542e02468f0bef7700a5"},
+    {file = "pyroaring-1.1.0-cp311-cp311-macosx_14_0_universal2.whl", hash = "sha256:9cf8608c9d6cb6bff9c624744f7a2ba8ab12276f097a07930490fe0e2219e9be"},
+    {file = "pyroaring-1.1.0-cp311-cp311-macosx_14_0_x86_64.whl", hash = "sha256:44a9f9719ed18e86627286f90057f9b7e22f6ba1d952c9793f9600b5c14e8680"},
+    {file = "pyroaring-1.1.0-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c14fc6bd65e5624f76b90297b081222261476978f795f60d48745553617ddceb"},
+    {file = "pyroaring-1.1.0-cp311-cp311-manylinux_2_24_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:01212da3752d6486adcca98c9d353f8fb8e36513e05062cdd0feebc4211dbe70"},
+    {file = "pyroaring-1.1.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:100585f438b293112e2c52e45a442835837c8a0267dd1e513bafec35628f8ecb"},
+    {file = "pyroaring-1.1.0-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:532e53191d8dd29dedfc5202cbb45632f7df751b207a7f6d6860fb7067c7fe11"},
+    {file = "pyroaring-1.1.0-cp311-cp311-musllinux_1_2_armv7l.whl", hash = "sha256:731a7a9e050758986d5757eea10f9ccb08f9c3ef514ce0335f4a90e126f81131"},
+    {file = "pyroaring-1.1.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:e9864e19109e76111befc75d799d334e7365eb4189607aa734053c12e7840fa5"},
+    {file = "pyroaring-1.1.0-cp311-cp311-win32.whl", hash = "sha256:7caf95de39ce869ea0978068521cf6faa7350574fd1734ad6c63e5ed8cd06baa"},
+    {file = "pyroaring-1.1.0-cp311-cp311-win_amd64.whl", hash = "sha256:a23cd023985b5f2ba23e84e1fadaeacde3c8a59e1d2adb3fe782e99db1e22387"},
+    {file = "pyroaring-1.1.0-cp311-cp311-win_arm64.whl", hash = "sha256:a98d1147fe1d3195053b67b474bccc0be5021506765d27f613a943c8c99f9e4c"},
+    {file = "pyroaring-1.1.0-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:fdf484d26016e0c016f23f2b635d2899daec034565fdcc062ed6b10f3b26a3f4"},
+    {file = "pyroaring-1.1.0-cp312-cp312-macosx_14_0_universal2.whl", hash = "sha256:e9c2b9aa8decdcf40ed8f4c887092c20a272f8c32215c3fee65e9db92ecf418e"},
+    {file = "pyroaring-1.1.0-cp312-cp312-macosx_14_0_x86_64.whl", hash = "sha256:5eb031237e9d39cbdfc9276facacdd88e27aefb58940bd8b56b878dfd38d6022"},
+    {file = "pyroaring-1.1.0-cp312-cp312-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:66aa6a321fbc598f26d5e66050a7f145c2253f3fe5737b589841ff0cbe5cb177"},
+    {file = "pyroaring-1.1.0-cp312-cp312-manylinux_2_24_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:8cff06d18c9a30f8547a92757078aa345db1ba5b22e3082a05f64e50b384e27a"},
+    {file = "pyroaring-1.1.0-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:043dbbaa905f7288c515ac06a96b67a3763f35e9ae06f0c0278c0d9964d16760"},
+    {file = "pyroaring-1.1.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:71fec09bd42f8c33ac3b762cd00c5db842eb583ffd0e361739ce1c17ad078a6a"},
+    {file = "pyroaring-1.1.0-cp312-cp312-musllinux_1_2_armv7l.whl", hash = "sha256:c9f30ca28b991a920b446ed3ee19c7ecafcc49c46db592abf89cf239a7bb45f4"},
+    {file = "pyroaring-1.1.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:67650460c65bdd7b4f5078d9c955aa38f64627d02cb48f9cfb24eae84bca2aba"},
+    {file = "pyroaring-1.1.0-cp312-cp312-win32.whl", hash = "sha256:61a8eabee99104ca197b6e7cce05dc4f27f503be52881800cd370eb5a5152d3f"},
+    {file = "pyroaring-1.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:51ebe5e6f48e3dc9df91a4cb62137ef72e1469acd6f37479abd9991f6d945cc9"},
+    {file = "pyroaring-1.1.0-cp312-cp312-win_arm64.whl", hash = "sha256:9882a204178cc8c915e0ce30abb4bdd1668e383c571b06649d5ed272d9625877"},
+    {file = "pyroaring-1.1.0-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:72f68a16b00b35481d9b3bfe897ecd8a1f7da69efd92ba5b17347ca11c21cb0d"},
+    {file = "pyroaring-1.1.0-cp313-cp313-macosx_14_0_universal2.whl", hash = "sha256:4c443e9f942b6089efe8c9b264576e9d116f90be28a315679375bba2d8a915d6"},
+    {file = "pyroaring-1.1.0-cp313-cp313-macosx_14_0_x86_64.whl", hash = "sha256:3beb40eb1220d1ce4fb3661bb019e9a21857e5bb294fe8c1c5016aeb6e82318c"},
+    {file = "pyroaring-1.1.0-cp313-cp313-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:8f1f56004e8f1c1489bf279c25f1fa4764252cd9af5fb35675774268a4a615ba"},
+    {file = "pyroaring-1.1.0-cp313-cp313-manylinux_2_24_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:13660386ea8905ee4d42c21a6275463e2dc7d31e0b5d65eec210aa7043ad96f4"},
+    {file = "pyroaring-1.1.0-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:0dfb6cf50fd8898179e460e699a6b8326ca508c627d083f7bf62f769fe1717d5"},
+    {file = "pyroaring-1.1.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:81ebbc0c880c8a10f13118632e5c0d59159ceada8b651bba18f2e6dc70efdeda"},
+    {file = "pyroaring-1.1.0-cp313-cp313-musllinux_1_2_armv7l.whl", hash = "sha256:370d191b0d1b32bbd99452ef5f0485f22fcc4bf7404d33b821d0ce2459951152"},
+    {file = "pyroaring-1.1.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:e8b3bfad0ae3ef0e67b40c193863dce8b7d79de545dadbe53c19acc3ace38f66"},
+    {file = "pyroaring-1.1.0-cp313-cp313-win32.whl", hash = "sha256:eead129046822cb0fd47c78740b81bdaffd0515c0bb0306a2318acf0f0540b58"},
+    {file = "pyroaring-1.1.0-cp313-cp313-win_amd64.whl", hash = "sha256:90ab2f00c09eed5bd986a80c8641e2dc10e7aca1a2d892d89a44b396e39c08ea"},
+    {file = "pyroaring-1.1.0-cp313-cp313-win_arm64.whl", hash = "sha256:51dd2490a64ad4ed53c4fb58ef1ee3f84f6cbd97cdb47abd9065c9f714ab72ef"},
+    {file = "pyroaring-1.1.0-cp314-cp314-macosx_14_0_arm64.whl", hash = "sha256:5e337f8c5b3c2e0c27da83fc2cb702684a47eee907a960cfee964fcb5344515b"},
+    {file = "pyroaring-1.1.0-cp314-cp314-macosx_14_0_universal2.whl", hash = "sha256:53acecba8f898e96b84d4139356e30719c70358177e270055901d3ec1cb0e34c"},
+    {file = "pyroaring-1.1.0-cp314-cp314-macosx_14_0_x86_64.whl", hash = "sha256:986efb3aec7655d69c14db2309a2072dbf181bdb906091fede83ad18e316cdaf"},
+    {file = "pyroaring-1.1.0-cp314-cp314-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:92643c9dd303de8960c3dbed93a28b8d87da5ed0a7776568979f379d7bc8a885"},
+    {file = "pyroaring-1.1.0-cp314-cp314-manylinux_2_24_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:6a1d4c59d5b23c01d62f86d57ceefd0c0977de0425aafa7069f2d70563fed3b8"},
+    {file = "pyroaring-1.1.0-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b8ac1bc26223befbca986551521f37f4c1670dfe26fccb2f0fc2775e75be99c1"},
+    {file = "pyroaring-1.1.0-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:b490f2d22df30affbfdcbe4f7896f321edb72a8dc0cbe5f38adec3de5b947c25"},
+    {file = "pyroaring-1.1.0-cp314-cp314-musllinux_1_2_armv7l.whl", hash = "sha256:56a67794188275f8897a8f1fa64d6313c48241bebbdef38833063e7281b29ef8"},
+    {file = "pyroaring-1.1.0-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:9d9f196007f0b15ea19c21732faacaea83cbf5946b6db4949b3b98cf871c93f0"},
+    {file = "pyroaring-1.1.0-cp314-cp314-win32.whl", hash = "sha256:abc0f0ce22464864fea208315d25e999e45cb5ee646ac1ca11d314a6a51dbe4a"},
+    {file = "pyroaring-1.1.0-cp314-cp314-win_amd64.whl", hash = "sha256:532ae6bb1d3431d9956ef07589dd5c8dd918301a83d937c7dc6e511b1364d76a"},
+    {file = "pyroaring-1.1.0-cp314-cp314-win_arm64.whl", hash = "sha256:d2706a89242a347be20805147d58a38f4f4d8f6846228c4ee8dfd3587113719c"},
+    {file = "pyroaring-1.1.0-cp314-cp314t-macosx_14_0_arm64.whl", hash = "sha256:39eff7dd06c163c22d0a9f9fd72d27e671457bea8cdb71215382a10512539e1d"},
+    {file = "pyroaring-1.1.0-cp314-cp314t-macosx_14_0_universal2.whl", hash = "sha256:562fa04bbfd41144d1276ed79505007557c161371450d68a1d71fc83dc01d083"},
+    {file = "pyroaring-1.1.0-cp314-cp314t-macosx_14_0_x86_64.whl", hash = "sha256:591e2ed4d60443dafd9075c1f72e9aaf359ccf5120e32a8c340c2b2ae3da45e7"},
+    {file = "pyroaring-1.1.0-cp314-cp314t-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:381eda673442c389993f8b0db2dbf5d02ea8ea9aac6ba736f64cc1ffb6c96885"},
+    {file = "pyroaring-1.1.0-cp314-cp314t-manylinux_2_24_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:d9127feb5356ba3a92bdffa04c1bf6bcbc8d436369f78badf441018c3029dd63"},
+    {file = "pyroaring-1.1.0-cp314-cp314t-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:650db21c10f42ff2b09ef02c10a779a3d59d0c7512552f3844738b30adbcb8a5"},
+    {file = "pyroaring-1.1.0-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:8a5fbcb86e44f1c0c9c052917eee67a04cbac9de7392fb4bc77c140ff4a7e471"},
+    {file = "pyroaring-1.1.0-cp314-cp314t-musllinux_1_2_armv7l.whl", hash = "sha256:0f1d76ef29034017eb2cceebd5fa0504d6ced218ce6432f99da5adecbe038269"},
+    {file = "pyroaring-1.1.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:19d0c81c865d63791fe20e5b38733b66f4f962e677ae7e8b3d3c4947ac6e752f"},
+    {file = "pyroaring-1.1.0-cp314-cp314t-win32.whl", hash = "sha256:1fc112b9a9890f89cc645a16604783ed7fa25299f149b0ef7b45a5e2e3c1f31f"},
+    {file = "pyroaring-1.1.0-cp314-cp314t-win_amd64.whl", hash = "sha256:d92a0f4c7e6bb7deeafac68c79c92ef9340895fe825cf1a31078443753ab6756"},
+    {file = "pyroaring-1.1.0-cp314-cp314t-win_arm64.whl", hash = "sha256:99c42fe1449acfbf130da65e66b4d5b2726aba4497be359bae7672e38a15fc62"},
+    {file = "pyroaring-1.1.0-cp39-cp39-macosx_14_0_arm64.whl", hash = "sha256:c967ddb5e137c604ec94c7120d2f420ac9a9ce27b0e44987c7134b0eb5fe7a60"},
+    {file = "pyroaring-1.1.0-cp39-cp39-macosx_14_0_universal2.whl", hash = "sha256:4ae81a0353af50d6885720b9119783b8be7bcd079e727ea1c4fca3f452fe95ba"},
+    {file = "pyroaring-1.1.0-cp39-cp39-macosx_14_0_x86_64.whl", hash = "sha256:f742ebdd879063d2a92f4d57708886c720e854bc84ca240733f220936be0cb7e"},
+    {file = "pyroaring-1.1.0-cp39-cp39-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:0183b26c6e25a14e32b2aed7095a19491d6c835096032b33bc00b4ae995495bf"},
+    {file = "pyroaring-1.1.0-cp39-cp39-manylinux_2_24_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:cc2d113bf6236aa873dc710b38a856808c6054efd3a1a403c5acfceaf87138f1"},
+    {file = "pyroaring-1.1.0-cp39-cp39-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:499f0a5d03d64e7b846ee749e87721fb8516da7233baafb24ab69aa63bcf080b"},
+    {file = "pyroaring-1.1.0-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:974fb6fa4c4a682c633c4d7fa6087ccd717804726f9db1f771f1c2ea4f3990b7"},
+    {file = "pyroaring-1.1.0-cp39-cp39-musllinux_1_2_armv7l.whl", hash = "sha256:25d65257258f7a3df8b872ddfe18f3681f20b3bc2a3093f08fc80c66338051f4"},
+    {file = "pyroaring-1.1.0-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:9dc61b7e38aca2ef384ac22b87a9c2b1e8769a1e15d916f93ea6a9a4551fc1d7"},
+    {file = "pyroaring-1.1.0-cp39-cp39-win32.whl", hash = "sha256:cdf2b8ab0effc335a9e61cf2a1e14c2295b999a656569b35f35ea3dc55a8931f"},
+    {file = "pyroaring-1.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:4a2c7ecd74e7b3ded54ad771a2b7c0aa08aa98f78e43500fa970d68d684bef0c"},
+    {file = "pyroaring-1.1.0-cp39-cp39-win_arm64.whl", hash = "sha256:3d04c3eb039cf2295e4d375ef81fd6e3cae7cefe3b5c457ccaf78d7d6f963a5d"},
+    {file = "pyroaring-1.1.0.tar.gz", hash = "sha256:f02e4021397ae02a139defdc6813b9942ab163de90affddd4ce4efbac299f619"},
+]
+
+[[package]]
 name = "pysaml2"
 version = "7.4.2"
 description = "Python implementation of SAML Version 2 Standard"
@@ -6022,4 +6117,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.14"
-content-hash = "3887d5db2a2c09afcc53b6bdda606a15226230b49c0e1712346099b7a3a71d52"
+content-hash = "70c98c96a6c29cd3902154601c6c087da3f02fe9e370856f865671c7d684657f"
