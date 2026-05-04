@@ -7,8 +7,6 @@ import {
   colorChart1,
   colorChart3,
   colorChart4,
-  colorSurfaceAction,
-  colorSurfaceMuted,
 } from 'common/theme/tokens'
 
 const meta: Meta<typeof ColorSwatch> = {
@@ -113,23 +111,6 @@ export const Shapes: Story = {
     <div className='d-flex align-items-center gap-3'>
       <ColorSwatch color={colorChart1} shape='square' size='lg' />
       <ColorSwatch color={colorChart1} shape='circle' size='lg' />
-    </div>
-  ),
-}
-
-export const BooleanDot: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'On/off state shown as a dot — `circle` shape with action and muted surface tokens.',
-      },
-    },
-  },
-  render: () => (
-    <div className='d-flex align-items-center gap-3'>
-      <ColorSwatch color={colorSurfaceAction} shape='circle' size='lg' />
-      <ColorSwatch color={colorSurfaceMuted} shape='circle' size='lg' />
     </div>
   ),
 }
