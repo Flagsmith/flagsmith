@@ -117,7 +117,7 @@
   // Border
   --color-border-action: var(--purple-600);
   --color-border-danger: var(--red-500);
-  --color-border-default: oklch(from var(--slate-500) l c h / 0.16);
+  --color-border-default: oklch(from var(--slate-500) l c h / 0.24);
   --color-border-disabled: oklch(from var(--slate-500) l c h / 0.08);
   --color-border-info: var(--blue-500);
   --color-border-strong: oklch(from var(--slate-500) l c h / 0.24);
@@ -196,7 +196,7 @@
   --color-text-secondary: var(--slate-300);
   --color-text-tertiary: oklch(from var(--slate-0) l c h / 0.48);
   --color-border-action: var(--purple-400);
-  --color-border-default: oklch(from var(--slate-0) l c h / 0.16);
+  --color-border-default: oklch(from var(--slate-0) l c h / 0.24);
   --color-border-disabled: oklch(from var(--slate-0) l c h / 0.08);
   --color-border-strong: oklch(from var(--slate-0) l c h / 0.24);
   --color-icon-action: var(--purple-400);

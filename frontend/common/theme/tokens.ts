@@ -119,7 +119,7 @@ export const easing: Record<string, TokenEntry> = {
 export const colorBorderAction = 'var(--color-border-action, #6837fc)'
 export const colorBorderDanger = 'var(--color-border-danger, #ef4d56)'
 export const colorBorderDefault =
-  'var(--color-border-default, rgba(101, 109, 123, 0.16))'
+  'var(--color-border-default, rgba(101, 109, 123, 0.24))'
 export const colorBorderDisabled =
   'var(--color-border-disabled, rgba(101, 109, 123, 0.08))'
 export const colorBorderInfo = 'var(--color-border-info, #0aaddf)'
