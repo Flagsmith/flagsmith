@@ -405,7 +405,7 @@ export type Req = {
     role_id: number
   }
   getGetSubscriptionMetadata: { id: number }
-  getEnvironment: { id: number }
+  getEnvironment: { id: string }
   getSubscriptionMetadata: { id: number }
   getMetadataModelFields: { organisation_id: number }
   getMetadataModelField: { organisation_id: number; id: number }
@@ -935,6 +935,26 @@ export type Req = {
     code_challenge: string
     code_challenge_method: string
     state?: string
+  }
+  getIntegration: {
+    integrationId: string
+    projectId?: string
+    environmentApiKey?: string
+  }
+  createIntegration: {
+    integrationId: string
+    projectId?: string
+    environmentApiKey?: string
+    organisationId?: string
+    body: Record<string, any>
+  }
+  updateIntegration: {
+    integrationId: string
+    id: string
+    projectId?: string
+    environmentApiKey?: string
+    organisationId?: string
+    body: Record<string, any>
   }
   getGitLabConfiguration: { project_id: number }
   getGitLabProjects: PagedRequest<{ project_id: number }>

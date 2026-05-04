@@ -1,9 +1,9 @@
 import React, { FC } from 'react'
 import {
-  Bar,
-  BarChart as RawBarChart,
   CartesianGrid,
   Legend,
+  Line,
+  LineChart as RawLineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -13,7 +13,7 @@ import { colorTextSecondary } from 'common/theme/tokens'
 import ChartTooltip from './ChartTooltip'
 import { ChartDataPoint } from './types'
 
-type BarChartProps = {
+type LineChartProps = {
   data: ChartDataPoint[]
   series: string[]
   colorMap: Record<string, string>
@@ -31,14 +31,11 @@ type BarChartProps = {
    * (e.g. numeric env ids) that need a human-readable label on display.
    */
   seriesLabels?: Record<string, string>
-  /** Fixed bar width in pixels. Default: recharts auto-sizes by available space. */
-  barSize?: number
   /** Render vertical grid lines (one per x tick). Default `true`. */
   verticalGrid?: boolean
 }
 
-const BarChart: FC<BarChartProps> = ({
-  barSize,
+const LineChart: FC<LineChartProps> = ({
   colorMap,
   data,
   series,
@@ -49,7 +46,7 @@ const BarChart: FC<BarChartProps> = ({
 }) => {
   return (
     <ResponsiveContainer height={400} width='100%'>
-      <RawBarChart data={data}>
+      <RawLineChart data={data}>
         <CartesianGrid
           strokeDasharray='3 5'
           strokeOpacity={0.4}
@@ -74,7 +71,7 @@ const BarChart: FC<BarChartProps> = ({
           }
         />
         <Tooltip
-          cursor={{ fill: 'transparent' }}
+          cursor={{ stroke: colorTextSecondary, strokeDasharray: '3 3' }}
           content={<ChartTooltip seriesLabels={seriesLabels} />}
         />
         {showLegend && (
@@ -86,21 +83,22 @@ const BarChart: FC<BarChartProps> = ({
           />
         )}
         {series.map((label, index) => (
-          <Bar
+          <Line
             key={label}
+            type='monotone'
             dataKey={label}
-            stackId='series'
-            fill={colorMap[label]}
-            barSize={barSize}
+            stroke={colorMap[label]}
+            strokeWidth={2}
+            dot={false}
             animationBegin={index * 80}
             animationDuration={600}
             animationEasing='ease-out'
           />
         ))}
-      </RawBarChart>
+      </RawLineChart>
     </ResponsiveContainer>
   )
 }
 
-BarChart.displayName = 'BarChart'
-export default BarChart
+LineChart.displayName = 'LineChart'
+export default LineChart

@@ -1,17 +1,11 @@
 import { test, expect } from '../test-setup'
-import { byId, log, createHelpers, getFlagsmith } from '../helpers'
+import { byId, log, createHelpers } from '../helpers'
 import { E2E_USER, PASSWORD, E2E_TEST_PROJECT } from '../config'
 
 test.describe('SDK Keys Tests', () => {
   test('Server-side SDK keys can be created and deleted @oss', async ({
     page,
   }) => {
-    const flagsmith = await getFlagsmith()
-    if (!flagsmith.hasFeature('rtk_server_side_sdk_keys')) {
-      log('Flag rtk_server_side_sdk_keys is off — skipping test')
-      return
-    }
-
     const {
       click,
       gotoProject,

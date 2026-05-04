@@ -56,6 +56,16 @@ posted automatically.
 A **Flagsmith Feature** label is added to linked issues and merge requests so your
 team can filter for them in GitLab.
 
+![Comment posted by Flagsmith in a GitLab issue](/img/integrations/gitlab/comment-in-gitlab.png)
+
+Each subsequent state change — environment-level, or for a segment or identity
+override — produces its own comment naming the affected environment, the override
+scope when applicable, the new enabled state, and the new value when one is set.
+Other updates to the flag — such as unlinking or deletion — also post a comment,
+and unlinking removes the **Flagsmith Feature** label.
+
+![GitLab activity showing a state-change comment, the Flagsmith Feature label being removed, and an unlink comment](/img/integrations/gitlab/subsequent-comment-in-gitlab.png)
+
 ## Automatic state sync
 
 When a linked issue or merge request changes state in GitLab — closed, merged,

@@ -33,7 +33,6 @@ module.exports = function setupRoutes(app) {
       { name: 'headway', value: process.env.HEADWAY_API_KEY },
       { name: 'ga', value: process.env.GOOGLE_ANALYTICS_API_KEY },
       { name: 'sha', value: sha },
-      { name: 'crispChat', value: process.env.CRISP_WEBSITE_ID },
       { name: 'pylonAppId', value: process.env.PYLON_APP_ID },
       { name: 'fpr', value: process.env.FIRST_PROMOTER_ID },
       { name: 'sentry', value: process.env.SENTRY_API_KEY },
@@ -57,8 +56,6 @@ module.exports = function setupRoutes(app) {
       { name: 'githubAppURL', value: process.env.GITHUB_APP_URL },
       { name: 'e2eToken', value: process.env[`E2E_TEST_TOKEN_${(process.env.ENV || 'dev').toUpperCase()}`] || process.env.E2E_TEST_TOKEN || '' },
       { name: 'evaluationAnalyticsServerUrl', value: process.env.EVALUATION_ANALYTICS_SERVER_URL },
-      { name: 'gramProjectSlug', value: process.env.GRAM_PROJECT_SLUG },
-      { name: 'gramMcpUrl', value: process.env.GRAM_MCP_URL },
     ]
     let output = values.map(getVariable).join('')
     res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate')

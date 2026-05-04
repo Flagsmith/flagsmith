@@ -78,13 +78,11 @@ type CreateSegmentType = {
 type CreateSegmentError = {
   status: number
   data: {
-    rules: [
-      {
-        rules: Array<{
-          conditions: SegmentConditionsError[]
-        }>
-      },
-    ]
+    rules: Array<{
+      rules: Array<{
+        conditions: SegmentConditionsError[]
+      }>
+    }>
   }
 }
 
@@ -227,7 +225,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     newValue: SegmentRule,
   ) => {
     const newRules = cloneDeep(rules)
-    newRules[0].rules[elementNumber] = newValue
+    newRules[rulesIndex].rules[elementNumber] = newValue
     setRules(newRules)
   }
 
@@ -336,10 +334,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
     return () => setInterceptClose(null)
   }, [onClosing])
   const isValid = useMemo(() => {
-    if (!rules[0]?.rules?.find((v) => !v.delete)) {
+    const allSubRules = rules.flatMap((r) => r.rules)
+    if (!allSubRules.find((v) => !v.delete)) {
       return false
     }
-    const res = rules[0].rules.find((v) =>
+    const res = allSubRules.find((v) =>
       v.conditions.find((c) => !Utils.validateRule(c)),
     )
     return !res
@@ -400,38 +399,42 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }
     return warnings
   }, [operators, rules])
-  //Find any non-deleted rules
-  const hasNoRules = !rules[0]?.rules?.find((v) => !v.delete)
-  const rulesToShow = rules[0].rules.filter((v) => !v.delete)
+  const allSubRules = rules.flatMap((r) => r.rules)
+  const hasNoRules = !allSubRules.find((v) => !v.delete)
+  const rulesToShow = allSubRules.filter((v) => !v.delete)
   const rulesEl = (
     <div className='overflow-visible'>
       <div>
         <div className='mb-4'>
-          {rules[0].rules.map((rule, i) => {
-            if (rule.delete || !operators) {
-              return null
-            }
-            const displayIndex = rulesToShow.indexOf(rule)
-            return (
-              <div key={i}>
-                <SegmentRuleDivider rule={rule} index={displayIndex} />
-                <Rule
-                  showDescription={showDescriptions}
-                  readOnly={readOnly}
-                  data-test={`rule-${displayIndex}`}
-                  rule={rule}
-                  index={i}
-                  operators={operators}
-                  onChange={(v: SegmentRule) => {
-                    setValueChanged(true)
-                    updateRule(0, i, v)
-                  }}
-                  errors={error?.data?.rules?.[0]?.rules?.[i]?.conditions}
-                  projectId={projectId}
-                />
-              </div>
-            )
-          })}
+          {rules.map((topRule, rulesIndex) =>
+            topRule.rules.map((rule, i) => {
+              if (rule.delete || !operators) {
+                return null
+              }
+              const displayIndex = rulesToShow.indexOf(rule)
+              return (
+                <div key={`${rulesIndex}-${i}`}>
+                  <SegmentRuleDivider rule={rule} index={displayIndex} />
+                  <Rule
+                    showDescription={showDescriptions}
+                    readOnly={readOnly}
+                    data-test={`rule-${displayIndex}`}
+                    rule={rule}
+                    index={i}
+                    operators={operators}
+                    onChange={(v: SegmentRule) => {
+                      setValueChanged(true)
+                      updateRule(rulesIndex, i, v)
+                    }}
+                    errors={
+                      error?.data?.rules?.[rulesIndex]?.rules?.[i]?.conditions
+                    }
+                    projectId={projectId}
+                  />
+                </div>
+              )
+            }),
+          )}
         </div>
         {hasNoRules && (
           <InfoMessage>

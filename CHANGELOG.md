@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.231.1](https://github.com/Flagsmith/flagsmith/compare/v2.231.0...v2.231.1) (2026-04-28)
+
+
+### Bug Fixes
+
+* **GitLab:** GitLab webhooks not reaching our API ([#7357](https://github.com/Flagsmith/flagsmith/issues/7357)) ([4d772cc](https://github.com/Flagsmith/flagsmith/commit/4d772cc804fb0bf41b15a5b90b324a73dc995a2a))
+* **Import/Export:** Destructive environment-level import resets feature states in other environments ([#7349](https://github.com/Flagsmith/flagsmith/issues/7349)) ([567637e](https://github.com/Flagsmith/flagsmith/commit/567637e1a93e24fef79b4a020a916e9a8f03eb7e))
+
+
+### CI
+
+* pre-commit autoupdate ([#7352](https://github.com/Flagsmith/flagsmith/issues/7352)) ([fbbe30d](https://github.com/Flagsmith/flagsmith/commit/fbbe30d48e1a291e05a158ab7360fc983156a0cc))
+
+
+### Refactoring
+
+* consolidate charts with BarChart component ([#7223](https://github.com/Flagsmith/flagsmith/issues/7223)) ([8557ad6](https://github.com/Flagsmith/flagsmith/commit/8557ad6a102dc71b8d7843ac4c808f085a6ff8dd))
+
 ## [2.231.0](https://github.com/Flagsmith/flagsmith/compare/v2.230.0...v2.231.0) (2026-04-27)
 
 

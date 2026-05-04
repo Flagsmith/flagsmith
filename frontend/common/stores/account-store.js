@@ -13,6 +13,7 @@ import { sortBy } from 'lodash'
 import Project from 'common/project'
 import { getStore } from 'common/store'
 import { setSelectedOrganisationId } from 'common/selectedOrganisationSlice'
+import { hidePylon, identifyChatUser } from 'common/loadChat'
 import { service } from 'common/service'
 import { getBuildVersion } from 'common/services/useBuildVersion'
 import { createOnboardingSupportOptIn } from 'common/services/useOnboardingSupportOptIn'
@@ -312,6 +313,7 @@ const controller = {
     store.organisation = find(store.model.organisations, { id })
     getStore().dispatch(setSelectedOrganisationId(id))
     store.changed()
+    identifyChatUser()
   },
 
   setToken: (token) => {
@@ -373,6 +375,7 @@ const controller = {
       ).finally(() => {
         API.setCookie('t', '')
         data.setToken(null)
+        hidePylon()
         API.reset().finally(() => {
           store.model = user
           store.organisation = null
