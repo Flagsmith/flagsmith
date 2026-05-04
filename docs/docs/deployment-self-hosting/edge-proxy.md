@@ -318,12 +318,8 @@ Some Edge Proxy settings can only be set using environment variables:
 Identity overrides defined in the dashboard are evaluated by the Edge Proxy. They are embedded in the environment
 document the proxy fetches from the Flagsmith API, and applied during local evaluation by the Flagsmith engine.
 
-For overrides to flow through to the Edge Proxy:
-
-- The environment must have **Use identity overrides in local evaluation** enabled. This is the default for new
-  environments.
-- The Edge Proxy must be able to fetch a fresh environment document. Polling frequency is controlled by
-  [`api_poll_frequency_seconds`](#api_poll_frequency_seconds).
+For overrides to flow through to the Edge Proxy, the environment must have **Use identity overrides in local
+evaluation** enabled. This is the default for new environments.
 
 :::warning Edge Proxy version
 
