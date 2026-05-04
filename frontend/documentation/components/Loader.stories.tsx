@@ -28,10 +28,6 @@ type Story = StoryObj<typeof Loader>
 
 export const Default: Story = {}
 
-export const Small: Story = {
-  args: { height: '20px', width: '20px' },
-}
-
 export const Sizes: Story = {
   render: () => (
     <div className='d-flex align-items-center gap-4'>
