@@ -331,7 +331,7 @@ later, or use `:latest`, to pick up override deletions.
 :::
 
 When an identity has both an override and a matching segment override, the identity override takes precedence — this
-matches the behaviour of [Local Evaluation Mode](/integrating-with-flagsmith/integration-overview).
+matches the behaviour of [Local Evaluation Mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode).
 
 ## Troubleshooting
 
