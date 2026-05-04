@@ -4,11 +4,13 @@ sidebar_label: Overview
 sidebar_position: 10
 ---
 
-The Flagsmith API is divided into two distinct parts, each serving a different purpose. Understanding the difference is key to integrating with Flagsmith effectively.
+The Flagsmith API is divided into two distinct parts, each serving a different purpose. Understanding the difference is
+key to integrating with Flagsmith effectively.
 
 ### 1. The Flags API (Public SDK API)
 
-This is the API that your client and server-side SDKs interact with to get flag and remote configuration values for your environments and users. It's designed to be fast, scalable, and publicly accessible.
+This is the API that your client and server-side SDKs interact with to get flag and remote configuration values for your
+environments and users. It's designed to be fast, scalable, and publicly accessible.
 
 - **Purpose:** Serving flags to your applications.
 - **Authentication:** Uses a public, non-secret **Environment Key**.
@@ -18,10 +20,19 @@ This is the API that your client and server-side SDKs interact with to get flag 
 
 ### 2. The Admin API (Private Admin API)
 
-This is the API you use to programmatically manage your Flagsmith projects. Anything you can do in the Flagsmith dashboard, you can also do via the Admin API.
+This is the API you use to programmatically manage your Flagsmith projects. Anything you can do in the Flagsmith
+dashboard, you can also do via the Admin API.
 
 - **Purpose:** Creating, updating, and deleting projects, environments, flags, segments, and users.
 - **Authentication:** Uses a secret **Organisation API Token**.
 - **Security:** Requires a secret key that should never be exposed in client-side code.
 
-[Learn more about the Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api). 
+[Learn more about the Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api).
+
+:::tip Troubleshooting
+
+Seeing `401`, `403`, `429`, `502`, or `504` responses from the API? The
+[HTTP Errors troubleshooting guide](/guides/troubleshooting/http-errors) walks through common causes and fixes for each
+status code.
+
+:::
