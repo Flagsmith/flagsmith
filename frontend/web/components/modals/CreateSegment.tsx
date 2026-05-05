@@ -231,6 +231,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   const topLevelRuleType: 'ALL' | 'ANY' =
     rules[0]?.type === 'ANY' ? 'ANY' : 'ALL'
+  const hasMixedTopLevelRuleTypes =
+    rules.length > 1 && rules.some((r) => r.type !== rules[0]?.type)
 
   const setTopLevelRuleType = (newType: 'ALL' | 'ANY') => {
     const subRuleType = newType === 'ANY' ? 'ALL' : 'ANY'
@@ -422,6 +424,12 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const rulesEl = (
     <div className='overflow-visible'>
       <div>
+        {hasMixedTopLevelRuleTypes && (
+          <InfoMessage className='mb-4'>
+            This segment has top-level rules with mixed types. Changing the rule
+            type will normalise all top-level rules to the same type.
+          </InfoMessage>
+        )}
         <div className='mb-4'>
           {rules.map((topRule, rulesIndex) =>
             topRule.rules.map((rule, i) => {
