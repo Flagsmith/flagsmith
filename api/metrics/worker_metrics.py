@@ -1,8 +1,6 @@
-<<<<<<< HEAD
 from pathlib import Path
 from typing import Iterable
 import prometheus_client
-
 
 PROC_SELF_STATUS_PATH = Path("/proc/self/status")
 MAX_RSS_KB_TO_BYTES = 1024
@@ -12,7 +10,7 @@ flagsmith_worker_rss_bytes = prometheus_client.Gauge(
     "flagsmith_worker_rss_bytes",
     "Resident Set Size (RSS) of the worker process in bytes.",
     ["pid"],
-    
+    multiprocess_mode="liveall"
 )
 
 def get_current_process_max_rss_bytes() -> int | None:
@@ -60,13 +58,3 @@ def _parse_proc_status_memory_kb(value: str) -> int | None:
         return None
 
     return memory_kb
-
-=======
-import prometheus_client
-
-flagsmith_worker_rss_bytes = prometheus_client.Gauge(
-    "flagsmith_worker_rss_bytes",
-    "Resident Set Size (RSS) of the worker process in bytes.",
-    ["pid"]
-)
->>>>>>> d7ea9dc2 (created worker metric Prometheus gauge)
