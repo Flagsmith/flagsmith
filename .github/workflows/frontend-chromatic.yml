@@ -23,7 +23,12 @@ jobs:
   chromatic:
     name: Chromatic
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event.pull_request.draft == false
+    # Dependabot PRs use a separate secrets store, so they can't read
+    # CHROMATIC_PROJECT_TOKEN. main's post-merge push runs Chromatic
+    # with full secrets, so coverage isn't lost.
+    if: |
+      github.actor != 'dependabot[bot]'
+      && (github.event_name == 'push' || github.event.pull_request.draft == false)
 
     defaults:
       run:
