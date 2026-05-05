@@ -327,6 +327,43 @@ Logged at `warning` from:
 
 Attributes:
 
+### `segment_membership.atom.eval_failed`
+
+Logged at `exception` from:
+ - `api/segment_membership/services.py:424`
+
+Attributes:
+ - `atom.id`
+
+### `segment_membership.backfill.atom.eval_failed`
+
+Logged at `exception` from:
+ - `api/segment_membership/services.py:332`
+
+Attributes:
+ - `atom.id`
+ - `environment.id`
+ - `identity.id`
+
+### `segment_membership.backfill.atoms.completed`
+
+Logged at `info` from:
+ - `api/segment_membership/services.py:346`
+
+Attributes:
+ - `atoms.count`
+ - `environment.id`
+ - `identities.count`
+
+### `segment_membership.backfill.atoms.start`
+
+Logged at `info` from:
+ - `api/segment_membership/services.py:305`
+
+Attributes:
+ - `atoms.count`
+ - `environment.id`
+
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:

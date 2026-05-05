@@ -5,6 +5,7 @@ from django.db.models import Prefetch, Q
 from flag_engine.engine import get_evaluation_result
 
 from environments.identities.managers import IdentityManager
+from environments.identities.signals import traits_changed
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from environments.sdk.types import SDKTraitData
@@ -211,6 +212,12 @@ class Identity(models.Model):
 
         if persist:
             Trait.objects.bulk_create(trait_models_to_persist)
+            if trait_models_to_persist:
+                traits_changed.send(
+                    sender=type(self),
+                    instance=self,
+                    changed_keys={t.trait_key for t in trait_models_to_persist},
+                )
 
         return trait_models
 
@@ -289,6 +296,18 @@ class Identity(models.Model):
         # update or create.
         # See: https://github.com/Flagsmith/flagsmith/issues/370
         Trait.objects.bulk_create(new_traits, ignore_conflicts=True)
+
+        changed_keys = (
+            keys_to_delete
+            | {t.trait_key for t in updated_traits}
+            | {t.trait_key for t in new_traits}
+        )
+        if changed_keys:
+            traits_changed.send(
+                sender=type(self),
+                instance=self,
+                changed_keys=changed_keys,
+            )
 
         # return the full list of traits for this identity
         # override persisted traits by transient traits in case of key collisions

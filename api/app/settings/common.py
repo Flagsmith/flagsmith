@@ -118,6 +118,7 @@ INSTALLED_APPS = [
     "features.workflows.core",
     "features.release_pipelines.core",
     "segments",
+    "segment_membership",
     "app",
     "e2etests",
     "simple_history",
