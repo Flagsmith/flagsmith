@@ -86,7 +86,7 @@ const claudeDesktopSnippet = (selfHosted: boolean, serverUrl: string) => {
   const env = selfHosted
     ? `,
       "env": {
-        "MCP_FLAGSMITH_TOKEN_AUTH": "your-token-value"
+        "MCP_FLAGSMITH_TOKEN_AUTH": "Api-Key YOUR_API_KEY_HERE"
       }`
     : ''
   return `{
@@ -139,7 +139,7 @@ const vscodeDeepLink = (selfHosted: boolean, serverUrl: string) => {
   if (selfHosted) {
     config.headers = {
       'Mcp-Flagsmith-Server-Url': serverUrl,
-      'Mcp-Flagsmith-Token-Auth': 'your-token-value',
+      'Mcp-Flagsmith-Token-Auth': 'Api-Key YOUR_API_KEY_HERE',
     }
   }
   return `vscode:mcp/install?${encodeURIComponent(JSON.stringify(config))}`
