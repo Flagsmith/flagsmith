@@ -1,5 +1,52 @@
 # Changelog
 
+## [2.232.0](https://github.com/Flagsmith/flagsmith/compare/v2.231.1...v2.232.0) (2026-05-06)
+
+
+### Features
+
+* add Storybook stories for base components ([#7100](https://github.com/Flagsmith/flagsmith/issues/7100)) ([c771931](https://github.com/Flagsmith/flagsmith/commit/c771931ce3c83746be879de32713f2f9d836c024))
+* added scale up extra seat addon handling ([#7382](https://github.com/Flagsmith/flagsmith/issues/7382)) ([70a8911](https://github.com/Flagsmith/flagsmith/commit/70a8911f0ce1303ac6b91f1ac5b7328fc55027fb))
+* hide and show pylon on user login events ([#7383](https://github.com/Flagsmith/flagsmith/issues/7383)) ([85e994d](https://github.com/Flagsmith/flagsmith/commit/85e994d3d3a3d95dd66c542836f52fcffa1d44d4))
+* only paid accounts can use pylon chat ([#7381](https://github.com/Flagsmith/flagsmith/issues/7381)) ([1bb5667](https://github.com/Flagsmith/flagsmith/commit/1bb566750e0ca64337fa21e0a6912bb22cdee813))
+* removed-gram-implementation ([#7378](https://github.com/Flagsmith/flagsmith/issues/7378)) ([f9be78d](https://github.com/Flagsmith/flagsmith/commit/f9be78dc7eed9c9da99e74f34abbf98d5c6a6e91))
+
+
+### Bug Fixes
+
+* **GitLab:** Improve GitLab docs showcasing ([#7372](https://github.com/Flagsmith/flagsmith/issues/7372)) ([2baa846](https://github.com/Flagsmith/flagsmith/commit/2baa846ce3dd8a2acf73127c683ce3a2848258f8))
+* improve GitHub installation completion page ([#7385](https://github.com/Flagsmith/flagsmith/issues/7385)) ([b0c41a4](https://github.com/Flagsmith/flagsmith/commit/b0c41a43978d067b5cb760cb36d61dd83024b89d))
+* render all top-level segment rules in the UI instead ([#7342](https://github.com/Flagsmith/flagsmith/issues/7342)) ([94e25f7](https://github.com/Flagsmith/flagsmith/commit/94e25f752c62753bed29810f924267727d1c2add))
+* **tabs:** unsaved-changes badge positioning and styling ([#7404](https://github.com/Flagsmith/flagsmith/issues/7404)) ([8c3d908](https://github.com/Flagsmith/flagsmith/commit/8c3d908a7fdc95c8afadbc511fff12cbc6dc2474))
+* **ui:** added optional chaining to getContentType to prevent undefin… ([#6990](https://github.com/Flagsmith/flagsmith/issues/6990)) ([937d09a](https://github.com/Flagsmith/flagsmith/commit/937d09a1a43620ed7fa2483364626ff47b4d884a))
+
+
+### Dependency Updates
+
+* bump axios from 1.15.0 to 1.16.0 in /frontend ([#7430](https://github.com/Flagsmith/flagsmith/issues/7430)) ([52b600c](https://github.com/Flagsmith/flagsmith/commit/52b600c3a2c06cd5f0571617b7dd1548ce45304c))
+* bump dompurify from 3.3.2 to 3.4.1 in /frontend ([#7317](https://github.com/Flagsmith/flagsmith/issues/7317)) ([b344557](https://github.com/Flagsmith/flagsmith/commit/b34455779e7f15c744800aa3b5e4340ba61fb966))
+* bump engine to 10.1.0 ([#7432](https://github.com/Flagsmith/flagsmith/issues/7432)) ([e62219a](https://github.com/Flagsmith/flagsmith/commit/e62219af4f5cf90ee734aa2a8b4febbf751a0bd0))
+* bump flagsmith-common from 3.8.2 to 3.9.0 in /api ([#7389](https://github.com/Flagsmith/flagsmith/issues/7389)) ([7b4d78e](https://github.com/Flagsmith/flagsmith/commit/7b4d78e16f6fa1cc3aec60ec75219fb3c64a2290))
+* bump follow-redirects from 1.15.11 to 1.16.0 in /frontend ([#7226](https://github.com/Flagsmith/flagsmith/issues/7226)) ([8dfde11](https://github.com/Flagsmith/flagsmith/commit/8dfde117432116af0aa7fc6b587a3d203daf98ae))
+* bump openfeature and flagsmith clients ([#7374](https://github.com/Flagsmith/flagsmith/issues/7374)) ([413c9b8](https://github.com/Flagsmith/flagsmith/commit/413c9b8f6cfcb96889513391334e74fcf3338e8c))
+
+
+### CI
+
+* **chromatic:** skip Chromatic on Dependabot PRs ([#7425](https://github.com/Flagsmith/flagsmith/issues/7425)) ([c8023f0](https://github.com/Flagsmith/flagsmith/commit/c8023f00bfbde72265b6cd2d99b9ec749a73495e))
+* Turn off Depot CI ([#7390](https://github.com/Flagsmith/flagsmith/issues/7390)) ([b467b77](https://github.com/Flagsmith/flagsmith/commit/b467b77020eae12bfeeb8813f9e5f490ad575918))
+
+
+### Docs
+
+* added missing flags documentation for fof ([#7388](https://github.com/Flagsmith/flagsmith/issues/7388)) ([e40a59e](https://github.com/Flagsmith/flagsmith/commit/e40a59efa7d103aa07d5452e3c0a1718b7fc3d26))
+
+
+### Refactoring
+
+* consolidate remaining charts into LineChart + PieChart wrappers ([#7328](https://github.com/Flagsmith/flagsmith/issues/7328)) ([7e53e17](https://github.com/Flagsmith/flagsmith/commit/7e53e17b44fa175221fc0bdc4ef9deae7dcba071))
+* scope-aware project and organisation integrations ([#7311](https://github.com/Flagsmith/flagsmith/issues/7311)) ([3bd5277](https://github.com/Flagsmith/flagsmith/commit/3bd5277b64e444f3a04763bfbdae245c3c1b6e3c))
+
 ## [2.231.1](https://github.com/Flagsmith/flagsmith/compare/v2.231.0...v2.231.1) (2026-04-28)
 
 
