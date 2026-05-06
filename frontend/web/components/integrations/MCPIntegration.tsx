@@ -6,6 +6,7 @@ import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
+import AccountStore from 'common/stores/account-store'
 
 const MCP_URL = 'https://app.getgram.ai/mcp/flagsmith-mcp'
 const DOCS_URL =
@@ -245,10 +246,23 @@ const buildTabs = (selfHosted: boolean, serverUrl: string): EditorTab[] => [
   },
 ]
 
+const InlineCode: FC<{ children: React.ReactNode }> = ({ children }) => (
+  <pre
+    className='d-inline px-1 py-0 mb-0'
+    style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
+  >
+    {children}
+  </pre>
+)
+
 const MCPIntegration: FC = () => {
   const isSaas = Utils.isSaas()
   const serverUrl = isSaas ? SERVER_URL_PLACEHOLDER : getSelfHostedServerUrl()
   const tabs = buildTabs(!isSaas, serverUrl)
+  const organisationId = AccountStore.getOrganisation()?.id
+  const apiKeysHref = organisationId
+    ? `/organisation/${organisationId}/settings?tab=keys`
+    : undefined
 
   return (
     <div>
@@ -288,15 +302,26 @@ const MCPIntegration: FC = () => {
                 </p>
               ) : (
                 <div className='text-muted mt-2 mb-0'>
-                  Self-hosted installs require a Flagsmith auth token. The
-                  <pre
-                    className='d-inline px-1 py-0 mb-0 mx-1'
-                    style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
-                  >
-                    Mcp-Flagsmith-Server-Url
-                  </pre>
-                  header is optional and only required if you are running your
-                  own Flagsmith API.
+                  <p className='mb-1'>
+                    Set the auth token in your shell, prefixed with{' '}
+                    <InlineCode>Api-Key</InlineCode>:
+                  </p>
+                  <Snippet
+                    code={
+                      'MCP_FLAGSMITH_TOKEN_AUTH="Api-Key YOUR_API_KEY_HERE"'
+                    }
+                  />
+                  <p className='mb-0 mt-2'>
+                    Generate an Organisation API Key in{' '}
+                    {apiKeysHref ? (
+                      <a href={apiKeysHref}>Organisation Settings → API Keys</a>
+                    ) : (
+                      <>Organisation Settings → API Keys</>
+                    )}
+                    . The <InlineCode>Mcp-Flagsmith-Server-Url</InlineCode>{' '}
+                    header is only required if you are running your own
+                    Flagsmith API.
+                  </p>
                 </div>
               )}
             </div>
