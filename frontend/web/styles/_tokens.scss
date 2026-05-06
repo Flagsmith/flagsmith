@@ -193,35 +193,30 @@
 }
 
 .dark {
-  --color-surface-action: var(--purple-400);
-  --color-surface-action-active: var(--purple-200);
-  --color-surface-action-hover: var(--purple-300);
+  --color-surface-action-active: var(--purple-400);
+  --color-surface-action-hover: var(--purple-500);
   --color-surface-action-muted: oklch(from var(--slate-0) l c h / 0.16);
   --color-surface-action-subtle: oklch(from var(--slate-0) l c h / 0.08);
   --color-surface-active: oklch(from var(--slate-0) l c h / 0.24);
-  --color-surface-danger: var(--red-400);
-  --color-surface-danger-active: var(--red-200);
-  --color-surface-danger-hover: var(--red-300);
+  --color-surface-danger-active: var(--red-300);
+  --color-surface-danger-hover: var(--red-400);
   --color-surface-danger-muted: oklch(from var(--slate-0) l c h / 0.16);
   --color-surface-danger-subtle: oklch(from var(--slate-0) l c h / 0.08);
   --color-surface-default: var(--slate-950);
   --color-surface-emphasis: var(--slate-800);
   --color-surface-hover: oklch(from var(--slate-0) l c h / 0.16);
-  --color-surface-info: var(--blue-400);
-  --color-surface-info-active: var(--blue-200);
-  --color-surface-info-hover: var(--blue-300);
+  --color-surface-info-active: var(--blue-300);
+  --color-surface-info-hover: var(--blue-400);
   --color-surface-info-muted: oklch(from var(--slate-0) l c h / 0.16);
   --color-surface-info-subtle: oklch(from var(--slate-0) l c h / 0.08);
   --color-surface-muted: var(--slate-850);
   --color-surface-subtle: var(--slate-900);
-  --color-surface-success: var(--green-400);
-  --color-surface-success-active: var(--green-200);
-  --color-surface-success-hover: var(--green-300);
+  --color-surface-success-active: var(--green-300);
+  --color-surface-success-hover: var(--green-400);
   --color-surface-success-muted: oklch(from var(--slate-0) l c h / 0.16);
   --color-surface-success-subtle: oklch(from var(--slate-0) l c h / 0.08);
-  --color-surface-warning: var(--orange-300);
-  --color-surface-warning-active: var(--orange-100);
-  --color-surface-warning-hover: var(--orange-200);
+  --color-surface-warning-active: var(--orange-300);
+  --color-surface-warning-hover: var(--orange-400);
   --color-surface-warning-muted: oklch(from var(--slate-0) l c h / 0.16);
   --color-surface-warning-subtle: oklch(from var(--slate-0) l c h / 0.08);
   --color-text-action: var(--purple-400);

@@ -140,22 +140,23 @@ export const colorIconSuccess = 'var(--color-icon-success, #27ab95)'
 export const colorIconWarning = 'var(--color-icon-warning, #ff9f43)'
 
 // Surface
-export const colorSurfaceAction = 'var(--color-surface-action, #6837fc)'
+export const colorSurfaceAction =
+  'var(--color-surface-action, var(--purple-600))'
 export const colorSurfaceActionActive =
-  'var(--color-surface-action-active, #3919b7)'
+  'var(--color-surface-action-active, var(--purple-800))'
 export const colorSurfaceActionHover =
-  'var(--color-surface-action-hover, #4e25db)'
+  'var(--color-surface-action-hover, var(--purple-700))'
 export const colorSurfaceActionMuted =
   'var(--color-surface-action-muted, rgba(104, 55, 252, 0.16))'
 export const colorSurfaceActionSubtle =
   'var(--color-surface-action-subtle, rgba(104, 55, 252, 0.08))'
 export const colorSurfaceActive =
   'var(--color-surface-active, rgba(0, 0, 0, 0.24))'
-export const colorSurfaceDanger = 'var(--color-surface-danger, #ef4d56)'
+export const colorSurfaceDanger = 'var(--color-surface-danger, var(--red-500))'
 export const colorSurfaceDangerActive =
-  'var(--color-surface-danger-active, #bb1720)'
+  'var(--color-surface-danger-active, var(--red-700))'
 export const colorSurfaceDangerHover =
-  'var(--color-surface-danger-hover, #e61b26)'
+  'var(--color-surface-danger-hover, var(--red-600))'
 export const colorSurfaceDangerMuted =
   'var(--color-surface-danger-muted, rgba(239, 77, 86, 0.16))'
 export const colorSurfaceDangerSubtle =
@@ -164,30 +165,33 @@ export const colorSurfaceDefault = 'var(--color-surface-default, #ffffff)'
 export const colorSurfaceEmphasis = 'var(--color-surface-emphasis, #e0e3e9)'
 export const colorSurfaceHover =
   'var(--color-surface-hover, rgba(0, 0, 0, 0.16))'
-export const colorSurfaceInfo = 'var(--color-surface-info, #0aaddf)'
+export const colorSurfaceInfo = 'var(--color-surface-info, var(--blue-500))'
 export const colorSurfaceInfoActive =
-  'var(--color-surface-info-active, #0b7190)'
-export const colorSurfaceInfoHover = 'var(--color-surface-info-hover, #0b8bb2)'
+  'var(--color-surface-info-active, var(--blue-700))'
+export const colorSurfaceInfoHover =
+  'var(--color-surface-info-hover, var(--blue-600))'
 export const colorSurfaceInfoMuted =
   'var(--color-surface-info-muted, rgba(10, 173, 223, 0.16))'
 export const colorSurfaceInfoSubtle =
   'var(--color-surface-info-subtle, rgba(10, 173, 223, 0.08))'
 export const colorSurfaceMuted = 'var(--color-surface-muted, #eff1f4)'
 export const colorSurfaceSubtle = 'var(--color-surface-subtle, #fafafb)'
-export const colorSurfaceSuccess = 'var(--color-surface-success, #27ab95)'
+export const colorSurfaceSuccess =
+  'var(--color-surface-success, var(--green-500))'
 export const colorSurfaceSuccessActive =
-  'var(--color-surface-success-active, #116163)'
+  'var(--color-surface-success-active, var(--green-700))'
 export const colorSurfaceSuccessHover =
-  'var(--color-surface-success-hover, #13787b)'
+  'var(--color-surface-success-hover, var(--green-600))'
 export const colorSurfaceSuccessMuted =
   'var(--color-surface-success-muted, rgba(39, 171, 149, 0.16))'
 export const colorSurfaceSuccessSubtle =
   'var(--color-surface-success-subtle, rgba(39, 171, 149, 0.08))'
-export const colorSurfaceWarning = 'var(--color-surface-warning, #ff9f43)'
+export const colorSurfaceWarning =
+  'var(--color-surface-warning, var(--orange-500))'
 export const colorSurfaceWarningActive =
-  'var(--color-surface-warning-active, #d06907)'
+  'var(--color-surface-warning-active, var(--orange-700))'
 export const colorSurfaceWarningHover =
-  'var(--color-surface-warning-hover, #fa810c)'
+  'var(--color-surface-warning-hover, var(--orange-600))'
 export const colorSurfaceWarningMuted =
   'var(--color-surface-warning-muted, rgba(255, 159, 67, 0.16))'
 export const colorSurfaceWarningSubtle =
