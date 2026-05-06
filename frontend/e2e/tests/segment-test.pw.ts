@@ -390,18 +390,27 @@ test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page
 })
 
 test('Segment test 4 - Create ANY rule type segment and verify match changes when rule is updated @oss', async ({ page }) => {
+  const ANY_FEATURE = 'any_segment_feature'
+  const ANY_SEGMENT = 'any_segment_test'
   const {
+    addSegmentOverrideConfig,
+    assertUserFeatureValue,
     click,
+    createRemoteConfig,
     createSegment,
     createTrait,
+    deleteFeature,
     deleteSegment,
     deleteTrait,
     goToUser,
+    gotoFeature,
+    gotoFeatures,
     gotoProject,
     gotoSegments,
     gotoTraits,
     login,
     navigateToSegment,
+    saveFeatureSegments,
     setSegmentRule,
     waitAndRefresh,
     waitForElementVisible,
@@ -421,6 +430,9 @@ test('Segment test 4 - Create ANY rule type segment and verify match changes whe
   await gotoProject(E2E_SEGMENT_PROJECT_1)
   await waitForElementVisible(byId('features-page'))
 
+  log('Create remote config feature with default value')
+  await createRemoteConfig({ name: ANY_FEATURE, value: 'default' })
+
   log('Set traits matching the first ANY group')
   await gotoTraits(E2E_TEST_IDENTITY)
   await createTrait('age_any', 18)
@@ -428,34 +440,36 @@ test('Segment test 4 - Create ANY rule type segment and verify match changes whe
 
   log('Create ANY-mode segment')
   await gotoSegments()
-  await createSegment('any_segment_test', segmentAnyRules, 'ANY')
+  await createSegment(ANY_SEGMENT, segmentAnyRules, 'ANY')
 
-  log('Verify user is in the segment (matches first ANY group)')
+  log('Override feature value via segment')
+  await gotoFeatures()
+  await gotoFeature(ANY_FEATURE)
+  await addSegmentOverrideConfig(0, 'overridden', 0)
+  await saveFeatureSegments()
+
+  log('Verify user is in the segment (gets overridden value)')
   await goToUser(E2E_TEST_IDENTITY)
   await waitAndRefresh()
-  const matchingSegment = page
-    .locator('[data-test^="segment-"][data-test$="-name"]')
-    .filter({ hasText: 'any_segment_test' })
-  await expect(matchingSegment).toBeVisible()
+  await assertUserFeatureValue(ANY_FEATURE, '"overridden"')
 
   log('Update segment so user no longer matches')
   await gotoSegments()
-  await navigateToSegment('any_segment_test')
+  await navigateToSegment(ANY_SEGMENT)
   // Change the first group's `team` condition from "alpha" to "gamma" — user has team=alpha so no longer matches.
   await setSegmentRule(0, 1, 'team', 'EQUAL', 'gamma')
   await click(byId('update-segment'))
 
-  log('Verify user is no longer in the segment')
+  log('Verify user is no longer in the segment (gets default value)')
   await goToUser(E2E_TEST_IDENTITY)
   await waitAndRefresh()
-  const stillMatching = page
-    .locator('[data-test^="segment-"][data-test$="-name"]')
-    .filter({ hasText: 'any_segment_test' })
-  await expect(stillMatching).toHaveCount(0)
+  await assertUserFeatureValue(ANY_FEATURE, '"default"')
 
-  log('Clean up segment and traits')
+  log('Clean up feature, segment, and traits')
+  await gotoFeatures()
+  await deleteFeature(ANY_FEATURE)
   await gotoSegments()
-  await deleteSegment('any_segment_test')
+  await deleteSegment(ANY_SEGMENT)
   await gotoTraits(E2E_TEST_IDENTITY)
   await deleteTrait('age_any')
   await deleteTrait('team')
