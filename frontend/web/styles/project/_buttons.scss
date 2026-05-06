@@ -102,18 +102,18 @@ button.btn {
   // to 16% (use --color-surface-hover) or add a new --color-surface-base
   // token. Until then, secondary keeps the SCSS variable bypass.
   &-secondary {
-    color: $body-color;
+    color: var(--color-text-default);
     background-color: $btn-secondary-bg !important;
 
     &:hover,
     &:focus {
       background-color: $btn-secondary-hover-bg !important;
-      color: $body-color;
+      color: var(--color-text-default);
     }
 
     &.btn:active {
       background-color: $btn-secondary-active-bg !important;
-      color: $body-color;
+      color: var(--color-text-default);
     }
   }
 
@@ -128,12 +128,12 @@ button.btn {
     &:hover,
     &:focus {
       background-color: $btn-tertiary-hover-bg;
-      color: $body-color;
+      color: var(--color-text-default);
     }
 
     &.btn:active {
       background-color: $btn-tertiary-active-bg;
-      color: $body-color;
+      color: var(--color-text-default);
     }
   }
   &.btn-icon {
@@ -196,23 +196,23 @@ button.btn {
   // variable bypasses.
   &-project {
     background-color: $bg-light200;
-    color: $body-color;
+    color: var(--color-text-default);
     padding: 0px 8px;
     width: 100%;
     height: 76px;
     border-radius: $border-radius-lg;
     &.btn-project-create {
       background-color: transparent;
-      border: 1px dashed $basic-alpha-24;
+      border: 1px dashed var(--color-border-strong);
       &:disabled {
-        color: $body-color;
+        color: var(--color-text-default);
       }
       &:hover {
         background-color: transparent;
         & .btn-project-icon {
-          background-color: $primary-alfa-8;
+          background-color: var(--color-surface-action-subtle);
           path {
-            fill: $primary;
+            fill: var(--color-icon-action);
           }
         }
       }
@@ -227,9 +227,9 @@ button.btn {
     &.btn:active,
     &.btn:focus {
       background-color: $bg-light200;
-      color: $body-color;
+      color: var(--color-text-default);
       & .btn-project-letter {
-        background-color: $primary;
+        background-color: var(--color-surface-action);
       }
     }
     &-letter {
@@ -237,7 +237,7 @@ button.btn {
       height: 60px;
       background-color: $primary400;
       border-radius: $border-radius;
-      color: $text-icon-light;
+      color: var(--color-text-inverse);
       text-transform: uppercase;
       margin-right: 12px;
       display: flex;
@@ -342,48 +342,32 @@ $add-btn-size: 34px;
   }
 }
 
-// Dark-mode overrides — only for themes still on SCSS variables
-// (secondary, tertiary, project). Migrated themes (primary, danger,
-// success, outline, link, icon, with-icon) auto-adapt via CSS vars.
+// Dark-mode overrides — only for the bg values that don't have a clean
+// semantic-token equivalent in dark mode. Everything else (text colors,
+// action-tinted hover bgs, action-tinted icon paths) auto-adapts via
+// CSS vars and lives in the light blocks above.
 .dark {
   .btn {
     &.btn-secondary {
-      color: white;
       background-color: $btn-secondary-bg-dark !important;
       &:hover,
       &:focus {
         background-color: $btn-secondary-hover-bg-dark !important;
       }
       &:active {
-        color: white;
         background-color: $btn-secondary-active-bg-dark !important;
       }
     }
     &-project {
       background-color: $bg-dark200;
-      color: $text-icon-light;
       &.btn-project-create {
-        &:hover {
-          background-color: transparent;
-          & .btn-project-icon {
-            background-color: $primary-alfa-8;
-            path {
-              fill: $primary;
-            }
-          }
-        }
         & .btn-project-icon {
           background-color: $basic-alpha-8;
         }
       }
-
       &.btn:hover,
       &.btn:focus,&.btn:active {
         background-color: $bg-dark200;
-        color: $text-icon-light;
-        & .btn-project-letter {
-          background-color: $primary;
-        }
       }
     }
     &.btn-with-icon {
