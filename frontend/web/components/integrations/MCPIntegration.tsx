@@ -46,8 +46,8 @@ const claudeCodeSnippet = (selfHosted: boolean, serverUrl: string) =>
   selfHosted
     ? `claude mcp add --transport http "flagsmith" \\
     "${MCP_URL}" \\
-    --header 'Mcp-Flagsmith-Token-Auth: \${MCP_FLAGSMITH_TOKEN_AUTH}' \\
-    --header 'Mcp-Flagsmith-Server-Url: ${serverUrl}'`
+    --header 'Mcp-Flagsmith-Token-Auth:\${MCP_FLAGSMITH_TOKEN_AUTH}' \\
+    --header 'Mcp-Flagsmith-Server-Url:${serverUrl}'`
     : `claude mcp add --transport http "flagsmith" \\
     "${MCP_URL}"`
 
@@ -111,8 +111,8 @@ url = "${MCP_URL}"${headers}`
 const geminiCliSnippet = (selfHosted: boolean, serverUrl: string) =>
   selfHosted
     ? `gemini mcp add --transport http "flagsmith" "${MCP_URL}" \\
-  --header 'Mcp-Flagsmith-Token-Auth: \${MCP_FLAGSMITH_TOKEN_AUTH}' \\
-  --header 'Mcp-Flagsmith-Server-Url: ${serverUrl}'`
+  --header 'Mcp-Flagsmith-Token-Auth:\${MCP_FLAGSMITH_TOKEN_AUTH}' \\
+  --header 'Mcp-Flagsmith-Server-Url:${serverUrl}'`
     : `gemini mcp add --transport http "flagsmith" "${MCP_URL}"`
 
 const cursorDeepLink = (selfHosted: boolean, serverUrl: string) => {
