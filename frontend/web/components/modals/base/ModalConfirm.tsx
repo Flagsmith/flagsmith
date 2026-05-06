@@ -1,6 +1,5 @@
 import { Modal, ModalBody, ModalFooter } from 'reactstrap'
 import Button from 'components/base/forms/Button'
-import { Icon } from 'components/icons'
 import React, { FC, ReactNode } from 'react'
 import ModalHeader from './ModalHeader'
 import ModalHR from 'components/modals/ModalHR'
@@ -72,7 +71,6 @@ const Confirm: FC<Confirm> = ({
             onClick={yes}
           >
             {yesText}
-            <Icon name='trash-2' />
           </Button>
         ) : (
           <Button
