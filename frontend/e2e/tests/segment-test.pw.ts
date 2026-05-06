@@ -1,5 +1,5 @@
 import { test, expect } from '../test-setup';
-import { byId, log, createHelpers, visualSnapshot } from '../helpers';
+import { byId, log, createHelpers, visualSnapshot, getFlagsmith } from '../helpers';
 import { E2E_USER, PASSWORD, E2E_TEST_IDENTITY, E2E_SEGMENT_PROJECT_1, E2E_SEGMENT_PROJECT_2, E2E_SEGMENT_PROJECT_3 } from '../config'
 
 const REMOTE_CONFIG_FEATURE = 'remote_config'
@@ -50,6 +50,35 @@ const segmentRules =  [
     name: 'age',
     operator: 'GREATER_THAN_INCLUSIVE',
     value: 18,
+  },
+]
+
+// (age_any = 18 AND team = "alpha") OR (age_any = 25 AND team = "beta")
+// Note: `ors` field is reused for "additional conditions in the same group" — in ANY mode these are AND-ed.
+const segmentAnyRules = [
+  {
+    name: 'age_any',
+    operator: 'EQUAL',
+    value: 18,
+    ors: [
+      {
+        name: 'team',
+        operator: 'EQUAL',
+        value: 'alpha',
+      },
+    ],
+  },
+  {
+    name: 'age_any',
+    operator: 'EQUAL',
+    value: 25,
+    ors: [
+      {
+        name: 'team',
+        operator: 'EQUAL',
+        value: 'beta',
+      },
+    ],
   },
 ]
 
@@ -358,4 +387,76 @@ test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page
   await gotoFeatures()
   await deleteFeature(FLAG_FEATURE)
   await deleteFeature(REMOTE_CONFIG_FEATURE)
+})
+
+test('Segment test 4 - Create ANY rule type segment and verify match changes when rule is updated @oss', async ({ page }) => {
+  const {
+    click,
+    createSegment,
+    createTrait,
+    deleteSegment,
+    deleteTrait,
+    goToUser,
+    gotoProject,
+    gotoSegments,
+    gotoTraits,
+    login,
+    navigateToSegment,
+    setSegmentRule,
+    waitAndRefresh,
+    waitForElementVisible,
+  } = createHelpers(page)
+  const flagsmith = await getFlagsmith()
+  const hasFeature = flagsmith.hasFeature('segment_any_rule_type')
+
+  log('Login')
+  await login(E2E_USER, PASSWORD)
+
+  if (!hasFeature) {
+    log('Skipping ANY segment test, feature not enabled.')
+    test.skip()
+    return
+  }
+
+  await gotoProject(E2E_SEGMENT_PROJECT_1)
+  await waitForElementVisible(byId('features-page'))
+
+  log('Set traits matching the first ANY group')
+  await gotoTraits(E2E_TEST_IDENTITY)
+  await createTrait('age_any', 18)
+  await createTrait('team', 'alpha')
+
+  log('Create ANY-mode segment')
+  await gotoSegments()
+  await createSegment('any_segment_test', segmentAnyRules, 'ANY')
+
+  log('Verify user is in the segment (matches first ANY group)')
+  await goToUser(E2E_TEST_IDENTITY)
+  await waitAndRefresh()
+  const matchingSegment = page
+    .locator('[data-test^="segment-"][data-test$="-name"]')
+    .filter({ hasText: 'any_segment_test' })
+  await expect(matchingSegment).toBeVisible()
+
+  log('Update segment so user no longer matches')
+  await gotoSegments()
+  await navigateToSegment('any_segment_test')
+  // Change the first group's `team` condition from "alpha" to "gamma" — user has team=alpha so no longer matches.
+  await setSegmentRule(0, 1, 'team', 'EQUAL', 'gamma')
+  await click(byId('update-segment'))
+
+  log('Verify user is no longer in the segment')
+  await goToUser(E2E_TEST_IDENTITY)
+  await waitAndRefresh()
+  const stillMatching = page
+    .locator('[data-test^="segment-"][data-test$="-name"]')
+    .filter({ hasText: 'any_segment_test' })
+  await expect(stillMatching).toHaveCount(0)
+
+  log('Clean up segment and traits')
+  await gotoSegments()
+  await deleteSegment('any_segment_test')
+  await gotoTraits(E2E_TEST_IDENTITY)
+  await deleteTrait('age_any')
+  await deleteTrait('team')
 })

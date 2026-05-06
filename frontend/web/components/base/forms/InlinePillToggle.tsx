@@ -41,6 +41,7 @@ function InlinePillToggle<T extends string>({
           type='button'
           role='radio'
           aria-checked={value === option.value}
+          data-test={dataTest ? `${dataTest}-${option.value}` : undefined}
           className={cn('inline-pill-toggle__option', {
             'inline-pill-toggle__option--active': value === option.value,
           })}
