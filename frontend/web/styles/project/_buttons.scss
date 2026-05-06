@@ -167,9 +167,6 @@ button.btn {
     svg path {
       fill: var(--color-icon-secondary);
     }
-    &.btn-remove {
-      background-color: var(--color-surface-danger-subtle);
-    }
     &:hover,
     &:active,
     &:disabled {
@@ -307,12 +304,6 @@ button.btn {
   }
   &:active {
     background: transparent;
-  }
-  &.btn-with-icon {
-    padding: 0 14px;
-    background-color: $basic-alpha-8;
-    border-radius: $border-radius;
-    line-height: $btn-line-height;
   }
 }
 
