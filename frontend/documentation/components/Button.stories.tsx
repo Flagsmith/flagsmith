@@ -61,7 +61,7 @@ export const Variants: Story = {
     docs: {
       description: {
         story:
-          'All available button themes. Use `primary` for main actions, `secondary` for alternatives, `outline` for low-emphasis actions, `danger` for destructive actions, and `success` for positive confirmations. `icon` is for icon-only buttons (copy, action triggers in tables); `project` is the avatar-style button used in the project picker.',
+          'All available button themes. Use `primary` for main actions, `secondary` for alternatives, `outline` for low-emphasis actions, `danger` for destructive actions, and `success` for positive confirmations. `icon` is for icon-only buttons (copy, action triggers in tables).',
       },
     },
   },
@@ -77,7 +77,6 @@ export const Variants: Story = {
       <Button theme='icon'>
         <Icon name='copy' />
       </Button>
-      <Button theme='project'>Project</Button>
     </div>
   ),
 }
