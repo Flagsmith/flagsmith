@@ -5,13 +5,21 @@ import Icon from 'components/icons/Icon'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import Utils from 'common/utils/utils'
+import Constants from 'common/constants'
 
 const MCP_URL = 'https://app.getgram.ai/mcp/flagsmith-mcp'
 const DOCS_URL =
   'https://docs.flagsmith.com/integrating-with-flagsmith/mcp-server'
 
-const TOKEN_HEADER = `Mcp-Flagsmith-Token-Auth: \${MCP_FLAGSMITH_TOKEN_AUTH}`
-const SERVER_URL_HEADER = `Mcp-Flagsmith-Server-Url: https://your-flagsmith-instance.com`
+const SERVER_URL_PLACEHOLDER = 'https://your-flagsmith-instance.com'
+
+const getSelfHostedServerUrl = () => {
+  try {
+    return new URL(Constants.getFlagsmithSDKUrl()).origin
+  } catch (_) {
+    return SERVER_URL_PLACEHOLDER
+  }
+}
 
 const Snippet: FC<{ code: string; language?: string }> = ({
   code,
@@ -34,34 +42,33 @@ const Snippet: FC<{ code: string; language?: string }> = ({
   </div>
 )
 
-const claudeCodeSnippet = (selfHosted: boolean) =>
+const claudeCodeSnippet = (selfHosted: boolean, serverUrl: string) =>
   selfHosted
     ? `claude mcp add --transport http "flagsmith" \\
     "${MCP_URL}" \\
-    --header '${TOKEN_HEADER}' \\
-    --header '${SERVER_URL_HEADER}'`
+    --header 'Mcp-Flagsmith-Token-Auth: \${MCP_FLAGSMITH_TOKEN_AUTH}' \\
+    --header 'Mcp-Flagsmith-Server-Url: ${serverUrl}'`
     : `claude mcp add --transport http "flagsmith" \\
     "${MCP_URL}"`
 
-const httpJsonConfig = (selfHosted: boolean) => {
+const cursorJsonConfig = (selfHosted: boolean, serverUrl: string) => {
   const headers = selfHosted
     ? `,
       "headers": {
         "Mcp-Flagsmith-Token-Auth": "\${MCP_FLAGSMITH_TOKEN_AUTH}",
-        "Mcp-Flagsmith-Server-Url": "https://your-flagsmith-instance.com"
+        "Mcp-Flagsmith-Server-Url": "${serverUrl}"
       }`
     : ''
   return `{
   "mcpServers": {
     "flagsmith": {
-      "type": "http",
       "url": "${MCP_URL}"${headers}
     }
   }
 }`
 }
 
-const claudeDesktopSnippet = (selfHosted: boolean) => {
+const claudeDesktopSnippet = (selfHosted: boolean, serverUrl: string) => {
   const args = selfHosted
     ? `[
         "mcp-remote@0.1.25",
@@ -69,7 +76,7 @@ const claudeDesktopSnippet = (selfHosted: boolean) => {
         "--header",
         "Mcp-Flagsmith-Token-Auth:\${MCP_FLAGSMITH_TOKEN_AUTH}",
         "--header",
-        "Mcp-Flagsmith-Server-Url:https://your-flagsmith-instance.com"
+        "Mcp-Flagsmith-Server-Url:${serverUrl}"
       ]`
     : `[
         "mcp-remote@0.1.25",
@@ -91,29 +98,30 @@ const claudeDesktopSnippet = (selfHosted: boolean) => {
 }`
 }
 
-const codexSnippet = (selfHosted: boolean) => {
+const codexSnippet = (selfHosted: boolean, serverUrl: string) => {
   const headers = selfHosted
     ? `
-http_headers = { "Mcp-Flagsmith-Token-Auth" = "your-token-value", "Mcp-Flagsmith-Server-Url" = "https://your-flagsmith-instance.com" }`
+http_headers = { "Mcp-Flagsmith-Server-Url" = "${serverUrl}" }
+env_http_headers = { "Mcp-Flagsmith-Token-Auth" = "MCP_FLAGSMITH_TOKEN_AUTH" }`
     : ''
   return `[mcp_servers.flagsmith]
 url = "${MCP_URL}"${headers}`
 }
 
-const geminiCliSnippet = (selfHosted: boolean) =>
+const geminiCliSnippet = (selfHosted: boolean, serverUrl: string) =>
   selfHosted
     ? `gemini mcp add --transport http "flagsmith" "${MCP_URL}" \\
-  --header 'Mcp-Flagsmith-Token-Auth:\${MCP_FLAGSMITH_TOKEN_AUTH}' \\
-  --header 'Mcp-Flagsmith-Server-Url:https://your-flagsmith-instance.com'`
+  --header 'Mcp-Flagsmith-Token-Auth: \${MCP_FLAGSMITH_TOKEN_AUTH}' \\
+  --header 'Mcp-Flagsmith-Server-Url: ${serverUrl}'`
     : `gemini mcp add --transport http "flagsmith" "${MCP_URL}"`
 
-const cursorDeepLink = (selfHosted: boolean) => {
+const cursorDeepLink = (selfHosted: boolean, serverUrl: string) => {
   const config: Record<string, unknown> = {
     url: MCP_URL,
   }
   if (selfHosted) {
     config.headers = {
-      'Mcp-Flagsmith-Server-Url': 'https://your-flagsmith-instance.com',
+      'Mcp-Flagsmith-Server-Url': serverUrl,
       'Mcp-Flagsmith-Token-Auth': '{{MCP-FLAGSMITH-TOKEN-AUTH}}',
     }
   }
@@ -121,7 +129,7 @@ const cursorDeepLink = (selfHosted: boolean) => {
   return `cursor://anysphere.cursor-deeplink/mcp/install?config=${encoded}&name=flagsmith`
 }
 
-const vscodeDeepLink = (selfHosted: boolean) => {
+const vscodeDeepLink = (selfHosted: boolean, serverUrl: string) => {
   const config: Record<string, unknown> = {
     name: 'flagsmith',
     type: 'http',
@@ -129,16 +137,16 @@ const vscodeDeepLink = (selfHosted: boolean) => {
   }
   if (selfHosted) {
     config.headers = {
-      'Mcp-Flagsmith-Server-Url': 'https://your-flagsmith-instance.com',
+      'Mcp-Flagsmith-Server-Url': serverUrl,
       'Mcp-Flagsmith-Token-Auth': 'your-token-value',
     }
   }
   return `vscode:mcp/install?${encodeURIComponent(JSON.stringify(config))}`
 }
 
-const vscodeSnippet = (selfHosted: boolean) =>
+const vscodeSnippet = (selfHosted: boolean, serverUrl: string) =>
   selfHosted
-    ? `code --add-mcp '{"name":"flagsmith","type":"http","url":"${MCP_URL}","headers":{"Mcp-Flagsmith-Token-Auth":"\${MCP_FLAGSMITH_TOKEN_AUTH}","Mcp-Flagsmith-Server-Url":"https://your-flagsmith-instance.com"}}'`
+    ? `code --add-mcp '{"name":"flagsmith","type":"http","url":"${MCP_URL}","headers":{"Mcp-Flagsmith-Token-Auth":"\${MCP_FLAGSMITH_TOKEN_AUTH}","Mcp-Flagsmith-Server-Url":"${serverUrl}"}}'`
     : `code --add-mcp '{"name":"flagsmith","type":"http","url":"${MCP_URL}"}'`
 
 type EditorTab = {
@@ -150,26 +158,14 @@ type EditorTab = {
   deepLink?: { href: string; label: string }
 }
 
-const buildTabs = (selfHosted: boolean): EditorTab[] => [
+const buildTabs = (selfHosted: boolean, serverUrl: string): EditorTab[] => [
   {
     description: 'Run this in your terminal to register the MCP server.',
     label: 'Claude Code',
     language: 'bash',
-    snippet: claudeCodeSnippet(selfHosted),
+    snippet: claudeCodeSnippet(selfHosted, serverUrl),
   },
   {
-    configHint: (
-      <>
-        Add this to your{' '}
-        <pre
-          className='d-inline px-1 py-0 mb-0'
-          style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
-        >
-          claude_desktop_config.json
-        </pre>
-        .
-      </>
-    ),
     configHint: (
       <>
         In Claude Desktop, open{' '}
@@ -182,7 +178,7 @@ const buildTabs = (selfHosted: boolean): EditorTab[] => [
     description: '',
     label: 'Claude Desktop',
     language: 'json',
-    snippet: claudeDesktopSnippet(selfHosted),
+    snippet: claudeDesktopSnippet(selfHosted, serverUrl),
   },
   {
     configHint: (
@@ -200,7 +196,7 @@ const buildTabs = (selfHosted: boolean): EditorTab[] => [
     description: '',
     label: 'Codex',
     language: 'toml',
-    snippet: codexSnippet(selfHosted),
+    snippet: codexSnippet(selfHosted, serverUrl),
   },
   {
     configHint: (
@@ -223,35 +219,36 @@ const buildTabs = (selfHosted: boolean): EditorTab[] => [
       </>
     ),
     deepLink: {
-      href: cursorDeepLink(selfHosted),
+      href: cursorDeepLink(selfHosted, serverUrl),
       label: 'Add to Cursor',
     },
     description: '',
     label: 'Cursor',
     language: 'json',
-    snippet: httpJsonConfig(selfHosted),
+    snippet: cursorJsonConfig(selfHosted, serverUrl),
   },
   {
     description: 'Run this in your terminal to register the MCP server.',
     label: 'Gemini CLI',
     language: 'bash',
-    snippet: geminiCliSnippet(selfHosted),
+    snippet: geminiCliSnippet(selfHosted, serverUrl),
   },
   {
     deepLink: {
-      href: vscodeDeepLink(selfHosted),
+      href: vscodeDeepLink(selfHosted, serverUrl),
       label: 'Add to VS Code',
     },
     description: '',
     label: 'VS Code',
     language: 'bash',
-    snippet: vscodeSnippet(selfHosted),
+    snippet: vscodeSnippet(selfHosted, serverUrl),
   },
 ]
 
 const MCPIntegration: FC = () => {
   const isSaas = Utils.isSaas()
-  const tabs = buildTabs(!isSaas)
+  const serverUrl = isSaas ? SERVER_URL_PLACEHOLDER : getSelfHostedServerUrl()
+  const tabs = buildTabs(!isSaas, serverUrl)
 
   return (
     <div>
