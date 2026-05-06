@@ -5,8 +5,12 @@ button.btn {
   white-space: nowrap;
   color: white;
   // Project button, to remove with project select bar
+  // Use `:focus-visible` (keyboard / programmatic focus only) instead of
+  // `:focus` so a mouse click doesn't leave the button visibly "pressed"
+  // until the user clicks elsewhere — focus persists on click by design,
+  // we just don't want it to look like a held-down state.
   &:hover,
-  &:focus {
+  &:focus-visible {
     background-color: $btn-hover-bg;
   }
   &:focus-visible {
