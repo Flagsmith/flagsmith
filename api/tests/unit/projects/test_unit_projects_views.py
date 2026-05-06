@@ -1079,7 +1079,10 @@ def test_list_projects__non_numeric_organisation_parameter_with_valid_projects__
 ) -> None:
     # Given - a request with non-numeric organisation query parameter
     # even though there are projects in the system
-    url = reverse("api-v1:projects:project-list") + f"?organisation=invalid_id_{organisation.id}"
+    url = (
+        reverse("api-v1:projects:project-list")
+        + f"?organisation=invalid_id_{organisation.id}"
+    )
 
     # When
     response = admin_client.get(url)
