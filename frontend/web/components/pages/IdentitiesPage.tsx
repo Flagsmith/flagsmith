@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
-import { Link, useRouteMatch, withRouter } from 'react-router-dom'
+import { Link as RouterLink, useRouteMatch, withRouter } from 'react-router-dom'
 import { useHasPermission } from 'common/providers/Permission'
 import ConfigProvider from 'common/providers/ConfigProvider'
 
@@ -13,6 +13,7 @@ import { Req } from 'common/types/requests'
 import CreateUserModal from 'components/modals/CreateUser'
 import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
+import Link from 'components/Link'
 import JSONReference from 'components/JSONReference'
 import Utils from 'common/utils/utils'
 import Icon from 'components/icons/Icon'
@@ -160,14 +161,9 @@ const IdentitiesPage: FC<{ props: any }> = (props) => {
         View and manage features states for individual identities. This will
         override individual default feature settings for your selected
         environment.{' '}
-        <Button
-          theme='text'
-          target='_blank'
-          href='https://docs.flagsmith.com/basic-features/managing-identities'
-          className='fw-normal'
-        >
+        <Link href='https://docs.flagsmith.com/basic-features/managing-identities'>
           Learn more.
-        </Button>
+        </Link>
       </PageTitle>
       <div>
         <FormGroup>
@@ -246,7 +242,7 @@ const IdentitiesPage: FC<{ props: any }> = (props) => {
                   key={id}
                   data-test={`user-item-${index}`}
                 >
-                  <Link
+                  <RouterLink
                     to={`/project/${projectId}/environment/${
                       props.match.params.environmentId
                     }/identities/${encodeURIComponent(identifier)}/${id}`}
@@ -262,7 +258,7 @@ const IdentitiesPage: FC<{ props: any }> = (props) => {
                         </div>
                       )}
                     </div>
-                  </Link>
+                  </RouterLink>
                   <div className='table-column'>
                     <Button
                       id='remove-feature'

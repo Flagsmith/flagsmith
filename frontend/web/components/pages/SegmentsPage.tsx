@@ -12,6 +12,7 @@ import {
 import { useHasPermission } from 'common/providers/Permission'
 import API from 'project/api'
 import Button from 'components/base/forms/Button'
+import Link from 'components/Link'
 import CreateSegmentModal from 'components/modals/CreateSegment'
 import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
@@ -149,23 +150,14 @@ const SegmentsPage: FC = () => {
         title={'Segments'}
       >
         Create and manage groups of identities with similar{' '}
-        <Button
-          theme='text'
-          href='https://docs.flagsmith.com/basic-features/managing-identities#identity-traits'
-          target='_blank'
-        >
+        <Link href='https://docs.flagsmith.com/basic-features/managing-identities#identity-traits'>
           traits
-        </Button>
+        </Link>
         . Segments can be used to override features within the features page for
         any environment.{' '}
-        <Button
-          theme='text'
-          target='_blank'
-          href='https://docs.flagsmith.com/basic-features/segments'
-          className='fw-normal'
-        >
+        <Link href='https://docs.flagsmith.com/basic-features/segments'>
           Learn more.
-        </Button>
+        </Link>
       </PageTitle>
       <div className='segments-page'>
         {isLoading && !segments && !searchInput && (

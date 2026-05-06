@@ -316,14 +316,9 @@ const AccountSettingsPage: FC = () => {
                 <p>
                   You can use this token to securely integrate with the private
                   endpoints of our{' '}
-                  <Button
-                    theme='text'
-                    href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'
-                    target='_blank'
-                    className='fw-normal'
-                  >
+                  <Link href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>
                     RESTful API
-                  </Button>
+                  </Link>
                   .
                 </p>
                 <p>

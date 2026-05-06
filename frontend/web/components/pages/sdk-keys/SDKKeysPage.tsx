@@ -1,5 +1,6 @@
 import React, { FC } from 'react'
 import Button from 'components/base/forms/Button'
+import Link from 'components/Link'
 import Input from 'components/base/forms/Input'
 import Icon from 'components/icons/Icon'
 import PageTitle from 'components/PageTitle'
@@ -37,13 +38,9 @@ const SDKKeysPage: FC = () => {
     >
       <PageTitle title='Client-side Environment Key'>
         Use this key to initialise{' '}
-        <Button
-          theme='text'
-          href='https://docs.flagsmith.com/clients/overview#client-side-sdks'
-          target='_blank'
-        >
+        <Link href='https://docs.flagsmith.com/clients/overview#client-side-sdks'>
           Client-side
-        </Button>{' '}
+        </Link>{' '}
         SDKs.
       </PageTitle>
       <div className='col-md-6'>

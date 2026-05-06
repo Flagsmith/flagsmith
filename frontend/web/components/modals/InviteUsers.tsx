@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, FC } from 'react'
 import Button from 'components/base/forms/Button'
-import DocsLink from 'components/DocsLink'
+import Link from 'components/Link'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import Icon from 'components/icons/Icon'
@@ -298,9 +298,9 @@ const InviteUsers: FC = () => {
                 Users without administrator privileges will need to be invited
                 to individual projects.
                 <div>
-                  <DocsLink href='https://docs.flagsmith.com/system-administration/rbac'>
+                  <Link href='https://docs.flagsmith.com/system-administration/rbac'>
                     Learn about User Roles.
-                  </DocsLink>
+                  </Link>
                 </div>
               </div>
               {error && <ErrorMessage error={error} />}

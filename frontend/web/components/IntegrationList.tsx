@@ -14,13 +14,13 @@ import {
 } from 'common/types/responses'
 import map from 'lodash/map'
 import Button from './base/forms/Button'
-import DocsLink from './DocsLink'
+import Link from './Link'
 import DropdownMenu from './base/DropdownMenu'
 import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
 import { close as closeIcon } from 'ionicons/icons'
 import Utils from 'common/utils/utils'
-import { Link, useHistory } from 'react-router-dom'
+import { Link as RouterLink, useHistory } from 'react-router-dom'
 import each from 'lodash/each'
 import { useGetProjectQuery } from 'common/services/useProject'
 
@@ -278,7 +278,7 @@ const Integration: FC<IntegrationProps> = (props) => {
         <div className='flex-1 flex-column'>
           <h4 className='mb-0'>{title}</h4>
           <div className='subtitle'>
-            {description} {docs && <DocsLink href={docs}>View docs</DocsLink>}
+            {description} {docs && <Link href={docs}>View docs</Link>}
           </div>
         </div>
         <div className='d-flex align-items-center'>{renderActions()}</div>
@@ -291,13 +291,13 @@ const Integration: FC<IntegrationProps> = (props) => {
             {`Integration ${
               props.lastSaved.isCreate ? 'added to' : 'saved to'
             } ${lastSavedProject?.name ?? 'your project'}.\u00A0`}
-            <Link
+            <RouterLink
               to={`/project/${props.lastSaved.projectId}/integrations`}
               data-test='view-project-integrations-link'
               className='text-primary'
             >
               Manage in project integrations
-            </Link>
+            </RouterLink>
           </span>
           {props.onDismissLastSaved && (
             <a

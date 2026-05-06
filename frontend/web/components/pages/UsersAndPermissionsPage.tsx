@@ -1,6 +1,7 @@
 import React, { FC, useState } from 'react'
 import JSONReference from 'components/JSONReference'
 import Button from 'components/base/forms/Button'
+import Link from 'components/Link'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import Utils from 'common/utils/utils'
@@ -170,14 +171,9 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
             Flagsmith lets you manage fine-grained permissions for your projects
             and environments, invite members as a user or an administrator and
             then set permission in your Project and Environment settings.{' '}
-            <Button
-              theme='text'
-              href='https://docs.flagsmith.com/system-administration/rbac'
-              target='_blank'
-              className='fw-normal'
-            >
+            <Link href='https://docs.flagsmith.com/system-administration/rbac'>
               Learn about User Roles.
-            </Button>
+            </Link>
           </p>
         </div>
         <div>
@@ -234,6 +230,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                               for your plan.{' '}
                               {usedSeats && (
                                 <>
+                                  {/* eslint-disable-next-line no-nested-ternary */}
                                   {overSeats &&
                                   (!verifySeatsLimit || !autoSeats) ? (
                                     <strong>
@@ -402,14 +399,9 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                 Anyone with link can join as a standard user,
                                 once they have joined you can edit their role
                                 from the team members panel.{' '}
-                                <Button
-                                  theme='text'
-                                  target='_blank'
-                                  href='https://docs.flagsmith.com/system-administration/rbac'
-                                  className='fw-normal'
-                                >
+                                <Link href='https://docs.flagsmith.com/system-administration/rbac'>
                                   Learn about User Roles.
-                                </Button>
+                                </Link>
                               </p>
                               <div className='text-right mt-2'>
                                 {error && <ErrorMessage error={error} />}

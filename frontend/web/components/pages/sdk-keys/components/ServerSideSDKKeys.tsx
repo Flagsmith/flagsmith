@@ -1,5 +1,6 @@
 import React, { FC } from 'react'
 import Button from 'components/base/forms/Button'
+import Link from 'components/Link'
 import Tooltip from 'components/Tooltip'
 import Constants from 'common/constants'
 import { useHasPermission } from 'common/providers/Permission'
@@ -63,13 +64,9 @@ const ServerSideSDKKeys: FC<ServerSideSDKKeysProps> = ({
         <p className='fs-small lh-sm mb-0'>
           Flags can be evaluated locally within your own Server environments
           using our{' '}
-          <Button
-            theme='text'
-            href='https://docs.flagsmith.com/clients/overview#server-side-sdks'
-            target='_blank'
-          >
+          <Link href='https://docs.flagsmith.com/clients/overview#server-side-sdks'>
             Server-side Environment Keys
-          </Button>
+          </Link>
           .
         </p>
         <p className='fs-small lh-sm mb-0'>
