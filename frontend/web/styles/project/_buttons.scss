@@ -91,7 +91,7 @@ button.btn {
 
   &--outline {
     background: transparent;
-    border: 1px solid var(--color-border-action) !important;
+    border: 1px solid var(--color-border-action);
     color: var(--color-text-action);
     line-height: calc($btn-line-height - 2px);
     &.btn-sm {
@@ -113,7 +113,7 @@ button.btn {
       color: var(--color-text-action);
     }
     &:disabled {
-      border-color: var(--color-border-disabled) !important;
+      border-color: var(--color-border-disabled);
       color: var(--color-text-disabled);
     }
 
@@ -153,7 +153,6 @@ button.btn {
     }
 
     &:disabled {
-      background-color: var(--color-surface-hover) !important;
       color: var(--color-text-disabled);
     }
   }
