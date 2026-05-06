@@ -152,12 +152,12 @@ button.btn {
       height: 18px;
     }
     path {
-      fill: $text-muted;
+      fill: var(--color-icon-secondary);
     }
     &:hover,&:focus {
       background-color: $bg-light300;
       path {
-        fill: $body-color;
+        fill: var(--color-icon-default);
       }
     }
   }
@@ -349,14 +349,8 @@ $add-btn-size: 34px;
     }
     &.btn-icon {
       color: $body-color-dark;
-      path {
-        fill: $text-muted;
-      }
       &:hover,&:focus {
         background-color: $bg-dark300;
-        path {
-          fill: $body-color-dark;
-        }
       }
     }
     &.btn-secondary {
