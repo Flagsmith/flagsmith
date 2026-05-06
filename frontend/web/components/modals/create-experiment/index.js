@@ -468,17 +468,8 @@ const Index = class extends Component {
                                 >
                                   <TabItem
                                     data-test='value'
-                                    tabLabelString='Value'
-                                    tabLabel={
-                                      <Row className='justify-content-center'>
-                                        Value{' '}
-                                        {this.state.valueChanged && (
-                                          <div className='unread ml-2 px-1'>
-                                            {'*'}
-                                          </div>
-                                        )}
-                                      </Row>
-                                    }
+                                    tabLabel='Value'
+                                    isDirty={this.state.valueChanged}
                                   >
                                     <FeatureValueTab
                                       error={error}
