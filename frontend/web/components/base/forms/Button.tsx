@@ -15,7 +15,6 @@ export const themeClassNames = {
   icon: 'btn-icon',
   outline: 'btn--outline',
   primary: 'btn-primary',
-  project: 'btn-project',
   secondary: 'btn btn-secondary',
   success: 'btn btn-success',
   tertiary: 'btn-tertiary',
