@@ -47,11 +47,14 @@ export const Button = React.forwardRef<
     },
     ref,
   ) => {
-    const content = (
-      <span className='d-flex h-100 align-items-center justify-content-center gap-2'>
-        {children}
-      </span>
-    )
+    const content =
+      React.Children.count(children) > 1 ? (
+        <span className='d-flex h-100 align-items-center justify-content-center gap-2'>
+          {children}
+        </span>
+      ) : (
+        children
+      )
     return href ? (
       <a
         onClick={rest.onClick as React.MouseEventHandler}
