@@ -357,6 +357,7 @@ export type IntegrationData = {
   project?: string
   isOauth?: boolean
   customUI?: boolean
+  linkedFeatures?: string[]
 }
 
 export type ActiveIntegration = {

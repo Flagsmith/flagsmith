@@ -6,6 +6,7 @@ import {
   FeatureState,
   FeatureStateValue,
   FlagsmithValue,
+  IntegrationData,
   MultivariateFeatureStateValue,
   MultivariateOption,
   Organisation,
@@ -387,6 +388,20 @@ const Utils = Object.assign({}, BaseUtils, {
       return true
     }
     return false
+  },
+  getLinkedIntegrations(
+    feature: string,
+  ): { key: string; integration: IntegrationData }[] {
+    const data = Utils.getIntegrationData() as
+      | Record<string, IntegrationData>
+      | null
+      | undefined
+    if (!data) return []
+    return Object.entries(data)
+      .filter(([, integration]) =>
+        integration?.linkedFeatures?.includes(feature),
+      )
+      .map(([key, integration]) => ({ integration, key }))
   },
   getManageFeaturePermission(isChangeRequest: boolean) {
     if (isChangeRequest) {

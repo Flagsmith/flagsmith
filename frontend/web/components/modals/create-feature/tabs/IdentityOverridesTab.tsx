@@ -157,10 +157,10 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
 
   return (
     <>
-      <FormGroup className='mb-4 mt-2'>
+      <FormGroup className='mb-4'>
         <PanelSearch
           id='users-list'
-          className='no-pad identity-overrides-title'
+          className='no-pad'
           title={
             <>
               <Tooltip

@@ -43,7 +43,7 @@ the platform. See the [flag reference below](#current-feature-flags) for the ful
 :::info Default Behaviour
 
 The self-hosted Flagsmith frontend ships with sensible defaults for most flags via a built-in
-[default configuration](https://github.com/Flagsmith/flagsmith/blob/main/frontend/common/stores/default-flags.ts). You
+[default configuration](https://github.com/Flagsmith/flagsmith/tree/main/frontend/common/stores). You
 only need to create flags in your Flagsmith on Flagsmith project if you want to **override** these defaults — for
 example, to enable OAuth login or disable certain UI features.
 
@@ -76,8 +76,8 @@ example, to enable OAuth login or disable certain UI features.
 
 | Flag Name           | Value | Description                                                                                                                                                                                                                                                                  |
 | ------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `integration_data`  | JSON  | Defines available third-party integrations and their configuration fields. The frontend includes a [comprehensive default](https://github.com/Flagsmith/flagsmith/blob/main/frontend/common/stores/default-flags.ts) — only override to customise which integrations appear. |
-| `segment_operators` | JSON  | Defines available segment rule operators. The frontend includes a [comprehensive default](https://github.com/Flagsmith/flagsmith/blob/main/frontend/common/stores/default-flags.ts) — override to remove operators you don't need from the segment rules UI.                 |
+| `integration_data`  | JSON  | Defines available third-party integrations and their configuration fields. The frontend includes a [comprehensive default](https://github.com/Flagsmith/flagsmith/blob/main/frontend/common/stores/integration-data.json) — only override to customise which integrations appear. |
+| `segment_operators` | JSON  | Defines available segment rule operators. The frontend includes a [comprehensive default](https://github.com/Flagsmith/flagsmith/blob/main/frontend/common/stores/segment-operators.json) — override to remove operators you don't need from the segment rules UI.                 |
 
 ### `oauth_github`
 

@@ -18,7 +18,6 @@ import { getStore } from 'common/store'
 import ExternalResourcesTable from 'components/ExternalResourcesTable'
 import GitHubLinkSection from 'components/GitHubLinkSection'
 import GitLabLinkSection from 'components/GitLabLinkSection'
-import type { ExternalResource } from 'common/types/responses'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import FeatureHistory from 'components/FeatureHistory'
 import { getChangeRequests } from 'common/services/useChangeRequest'
@@ -38,12 +37,50 @@ import FeatureUpdateSummary from './components/FeatureUpdateSummary'
 import FeatureNameInput from './components/FeatureNameInput'
 import IdentitySaveFooter from './components/IdentitySaveFooter'
 import { ProjectPermission } from 'common/types/permissions.types'
+import Utils from 'common/utils/utils'
+import IntegrationCallout from 'components/integrations/IntegrationCallout'
+import { openIntegrationModal } from 'components/integrations/openIntegrationModal'
 import type {
   ChangeRequest,
+  ExternalResource,
   FeatureState,
   MultivariateFeatureStateValue,
   ProjectFlag,
 } from 'common/types/responses'
+
+const LinksEmptyState: FC<{ projectId: number }> = ({ projectId }) => {
+  const available = Utils.getLinkedIntegrations('FEATURE_LINKS')
+  return (
+    <FormGroup className='mb-4'>
+      <h5 className='mb-2'>Links</h5>
+      <p className='fs-small lh-sm mb-3'>
+        Connect a source-control integration to attach GitHub issues, GitLab
+        merge requests and other external resources directly to this feature.
+        Linked items appear here so the team can see why a flag exists and what
+        work is associated with it.
+      </p>
+      {available.length === 0 ? (
+        <p className='fs-small lh-sm text-muted mb-0'>
+          No link-related integrations are available right now.
+        </p>
+      ) : (
+        <div className='d-flex flex-column gap-2'>
+          {available.map(({ integration, key }) => (
+            <IntegrationCallout
+              key={key}
+              integration={integration}
+              onClick={() =>
+                openIntegrationModal(key, {
+                  projectId: String(projectId),
+                })
+              }
+            />
+          ))}
+        </div>
+      )}
+    </FormGroup>
+  )
+}
 
 type CreateFeatureModalProps = {
   projectFlag?: ProjectFlag
@@ -353,8 +390,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   } = useHasGithubIntegration()
   const { hasIntegration: hasGitlabIntegration } =
     useHasGitLabIntegration(projectId)
-  const isLinksTabEnabled =
-    (hasIntegrationWithGithub || hasGitlabIntegration) && !!projectFlag?.id
+  const hasAnyLinkIntegration = hasIntegrationWithGithub || hasGitlabIntegration
+  const isLinksTabEnabled = !!projectFlag?.id
 
   const [linkedResources, setLinkedResources] = useState<ExternalResource[]>()
 
@@ -685,33 +722,41 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         <Row className='justify-content-center'>Links</Row>
                       }
                     >
-                      {hasIntegrationWithGithub && (
-                        <GitHubLinkSection
-                          githubId={githubId}
-                          organisationId={organisationId}
-                          featureId={projectFlag.id}
-                          projectId={projectId}
-                          environmentId={`${environment.id}`}
-                          linkedResources={linkedResources}
-                        />
+                      {hasAnyLinkIntegration ? (
+                        <>
+                          {hasIntegrationWithGithub && (
+                            <GitHubLinkSection
+                              githubId={githubId}
+                              organisationId={organisationId}
+                              featureId={projectFlag.id}
+                              projectId={projectId}
+                              environmentId={`${environment.id}`}
+                              linkedResources={linkedResources}
+                            />
+                          )}
+                          {hasGitlabIntegration && (
+                            <GitLabLinkSection
+                              projectId={projectId}
+                              featureId={projectFlag.id}
+                              featureName={projectFlag.name}
+                              environmentId={`${environment.id}`}
+                              linkedUrls={
+                                linkedResources?.map((r) => r.url) ?? []
+                              }
+                            />
+                          )}
+                          <ExternalResourcesTable
+                            featureId={`${projectFlag.id}`}
+                            projectId={`${projectId}`}
+                            organisationId={`${organisationId}`}
+                            setSelectedResources={(r: ExternalResource[]) =>
+                              setLinkedResources(r)
+                            }
+                          />
+                        </>
+                      ) : (
+                        <LinksEmptyState projectId={projectId} />
                       )}
-                      {hasGitlabIntegration && (
-                        <GitLabLinkSection
-                          projectId={projectId}
-                          featureId={projectFlag.id}
-                          featureName={projectFlag.name}
-                          environmentId={`${environment.id}`}
-                          linkedUrls={linkedResources?.map((r) => r.url) ?? []}
-                        />
-                      )}
-                      <ExternalResourcesTable
-                        featureId={`${projectFlag.id}`}
-                        projectId={`${projectId}`}
-                        organisationId={`${organisationId}`}
-                        setSelectedResources={(r: ExternalResource[]) =>
-                          setLinkedResources(r)
-                        }
-                      />
                     </TabItem>
                   )}
                   {!existingChangeRequest && flagId && isVersioned && (

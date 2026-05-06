@@ -21,6 +21,18 @@ export const openIntegrationModal = (
   const integration = integrationData?.[key]
   if (!integration) return
   API.trackEvent(Constants.events.VIEW_INTEGRATION(key))
+  // External-installation integrations (e.g. GitHub) need a child-window
+  // OAuth flow before the side modal can render anything useful. Open the
+  // integrations page in a new tab so the user can run the install flow
+  // without losing context in the current modal.
+  if (integration.isExternalInstallation && options.projectId) {
+    window.open(
+      `/project/${options.projectId}/integrations?configure=${key}`,
+      '_blank',
+      'noreferrer',
+    )
+    return
+  }
   openModal(
     `${integration.title || key} Integration`,
     <CreateEditIntegration
