@@ -8,6 +8,17 @@ button.btn {
     box-shadow: none;
   }
 
+  // Neutralise Bootstrap's .btn:disabled cascade. Bootstrap applies
+  // opacity: 0.65 globally, and per-theme :disabled colour overrides
+  // (.btn-{theme}:disabled). Both compound with our token-based colours
+  // and produce inconsistent contrast. Each theme below owns its
+  // disabled treatment explicitly via -muted bg + text-disabled.
+  &:disabled,
+  &.disabled {
+    opacity: 1;
+    cursor: not-allowed;
+  }
+
   // Explicit primary block — Bootstrap's .btn-primary:hover is at the
   // same specificity as .btn:hover (both 011), so cascade order isn't a
   // safe bet. .btn.btn-primary scopes our overrides to specificity 021,
@@ -23,6 +34,10 @@ button.btn {
     &:active {
       background-color: var(--color-surface-action-active);
       color: var(--color-text-inverse);
+    }
+    &:disabled {
+      background-color: var(--color-surface-action-muted);
+      color: var(--color-text-disabled);
     }
   }
 
@@ -51,7 +66,8 @@ button.btn {
       background-color: var(--color-surface-danger-active);
     }
     &:disabled {
-      color: var(--color-text-inverse);
+      background-color: var(--color-surface-danger-muted);
+      color: var(--color-text-disabled);
     }
   }
 
@@ -68,7 +84,8 @@ button.btn {
       background-color: var(--color-surface-success-active);
     }
     &:disabled {
-      color: var(--color-text-inverse);
+      background-color: var(--color-surface-success-muted);
+      color: var(--color-text-disabled);
     }
   }
 
@@ -86,9 +103,6 @@ button.btn {
     &.btn-lg {
       line-height: calc($btn-line-height-lg - 2px);
     }
-    &:disabled {
-      color: var(--color-text-action);
-    }
     &:hover,
     &:focus {
       background-color: var(--color-surface-action-subtle);
@@ -97,6 +111,10 @@ button.btn {
     &.btn:active {
       background-color: var(--color-surface-action-muted);
       color: var(--color-text-action);
+    }
+    &:disabled {
+      border-color: var(--color-border-disabled) !important;
+      color: var(--color-text-disabled);
     }
 
     &-danger {
@@ -135,7 +153,8 @@ button.btn {
     }
 
     &:disabled {
-      color: var(--color-text-secondary);
+      background-color: var(--color-surface-hover) !important;
+      color: var(--color-text-disabled);
     }
   }
 
