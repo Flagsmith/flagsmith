@@ -45,7 +45,7 @@
     "react-dom": "$react-dom",
     "@types/react": "$@types/react",
     "@types/react-dom": "$@types/react-dom",
-    "axios": "^1.15.0"
+    "axios": "^1.16.0"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.11.3",
