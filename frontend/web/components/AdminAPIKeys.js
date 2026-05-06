@@ -5,6 +5,7 @@ import data from 'common/data/base/_data'
 import Token from './Token'
 import JSONReference from './JSONReference'
 import Button from './base/forms/Button'
+import DocsLink from './DocsLink'
 import DateSelect from './DateSelect'
 import Icon from './icons/Icon'
 import Switch from './Switch'
@@ -431,14 +432,9 @@ export default class AdminAPIKeys extends PureComponent {
             {`API keys are used to authenticate with the Admin API.`}
           </p>
           <div className='mb-4 fs-small lh-sm'>
-            <Button
-              theme='text'
-              href='https://docs.flagsmith.com/integrations/terraform#terraform-api-key'
-              target='_blank'
-              className='fw-normal'
-            >
+            <DocsLink href='https://docs.flagsmith.com/integrations/terraform#terraform-api-key'>
               {`Learn about API Keys.`}
-            </Button>
+            </DocsLink>
           </div>
           <Button onClick={this.createAPIKey} disabled={this.state.isLoading}>
             {`Create API Key`}

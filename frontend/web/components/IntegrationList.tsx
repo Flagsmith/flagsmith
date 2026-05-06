@@ -14,6 +14,7 @@ import {
 } from 'common/types/responses'
 import map from 'lodash/map'
 import Button from './base/forms/Button'
+import DocsLink from './DocsLink'
 import DropdownMenu from './base/DropdownMenu'
 import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
@@ -277,17 +278,7 @@ const Integration: FC<IntegrationProps> = (props) => {
         <div className='flex-1 flex-column'>
           <h4 className='mb-0'>{title}</h4>
           <div className='subtitle'>
-            {description}{' '}
-            {docs && (
-              <Button
-                theme='text'
-                href={docs}
-                target='_blank'
-                className='fw-normal'
-              >
-                View docs
-              </Button>
-            )}
+            {description} {docs && <DocsLink href={docs}>View docs</DocsLink>}
           </div>
         </div>
         <div className='d-flex align-items-center'>{renderActions()}</div>
