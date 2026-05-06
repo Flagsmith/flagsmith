@@ -314,7 +314,7 @@ $add-btn-size: 34px;
   cursor: pointer;
   width: 20px;
   height: 20px;
-  border: 1px solid $basic-alpha-24;
+  border: 1px solid var(--color-border-strong);
   border-radius: 50%;
   &:hover {
     border-color: var(--color-border-action);
@@ -359,10 +359,6 @@ $add-btn-size: 34px;
         background-color: $btn-secondary-active-bg-dark !important;
       }
     }
-    .btn-radio {
-      border-color: $white-alpha-24;
-    }
-
     &-project {
       background-color: $bg-dark200;
       color: $text-icon-light;
