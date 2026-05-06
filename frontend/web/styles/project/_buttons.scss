@@ -103,25 +103,30 @@ button.btn {
     &:hover,
     &:focus {
       background-color: var(--color-surface-action-subtle);
+      border-color: var(--color-border-action);
       color: var(--color-text-action);
     }
     &.btn:active {
       background-color: var(--color-surface-action-muted);
+      border-color: var(--color-border-action);
       color: var(--color-text-action);
     }
     &:disabled {
+      border-color: var(--color-border-action);
       color: var(--color-text-action);
     }
 
     &-danger {
-      border-color: var(--color-border-danger) !important;
-      color: var(--color-text-danger) !important;
+      border-color: var(--color-border-danger);
+      color: var(--color-text-danger);
       &:hover,
       &:focus {
         background-color: var(--color-surface-danger-subtle);
+        border-color: var(--color-border-danger);
       }
       &.btn:active {
         background-color: var(--color-surface-danger-muted);
+        border-color: var(--color-border-danger);
       }
     }
   }
