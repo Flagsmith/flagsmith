@@ -600,16 +600,25 @@ def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(
     )
 
 
-def test_add_single_seat__scale_up_v4_plan__uses_v4_addon(
+@pytest.mark.parametrize(
+    "plan_id,expected_addon_id",
+    [
+        ("Scale-Up-v4-USD-Monthly", "Additional-Team-Members-Scale-Up-v4-USD-Monthly"),
+        ("Scale-Up-v4-USD-Yearly", "Additional-Team-Members-Scale-Up-v4-USD-Yearly"),
+        ("Scale-Up-v4", "Additional-Team-Members-Scale-Up-v4"),
+    ],
+)
+def test_add_single_seat__scale_up_v4_plan__uses_addon_derived_from_plan_id(
     mocker: MockerFixture,
+    plan_id: str,
+    expected_addon_id: str,
 ) -> None:
     # Given
     subscription_id = "subscription-id"
-    expected_addon_id = "Additional-Team-Members-Scale-Up-v4"
 
     mocked_subscription = mocker.MagicMock(
         id=subscription_id,
-        plan_id="Scale-Up-v4",
+        plan_id=plan_id,
         addons=[],
         billing_period=1,
     )
