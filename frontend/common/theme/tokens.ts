@@ -152,18 +152,42 @@ export const colorSurfaceActive =
   'var(--color-surface-active, rgba(0, 0, 0, 0.16))'
 export const colorSurfaceDanger =
   'var(--color-surface-danger, rgba(239, 77, 86, 0.08))'
+export const colorSurfaceDangerStrong =
+  'var(--color-surface-danger-strong, #ef4d56)'
+export const colorSurfaceDangerStrongActive =
+  'var(--color-surface-danger-strong-active, #bb1720)'
+export const colorSurfaceDangerStrongHover =
+  'var(--color-surface-danger-strong-hover, #e61b26)'
 export const colorSurfaceDefault = 'var(--color-surface-default, #ffffff)'
 export const colorSurfaceEmphasis = 'var(--color-surface-emphasis, #e0e3e9)'
 export const colorSurfaceHover =
   'var(--color-surface-hover, rgba(0, 0, 0, 0.08))'
 export const colorSurfaceInfo =
   'var(--color-surface-info, rgba(10, 173, 223, 0.08))'
+export const colorSurfaceInfoStrong =
+  'var(--color-surface-info-strong, #0aaddf)'
+export const colorSurfaceInfoStrongActive =
+  'var(--color-surface-info-strong-active, #0b7190)'
+export const colorSurfaceInfoStrongHover =
+  'var(--color-surface-info-strong-hover, #0b8bb2)'
 export const colorSurfaceMuted = 'var(--color-surface-muted, #eff1f4)'
 export const colorSurfaceSubtle = 'var(--color-surface-subtle, #fafafb)'
 export const colorSurfaceSuccess =
   'var(--color-surface-success, rgba(39, 171, 149, 0.08))'
+export const colorSurfaceSuccessStrong =
+  'var(--color-surface-success-strong, #27ab95)'
+export const colorSurfaceSuccessStrongActive =
+  'var(--color-surface-success-strong-active, #116163)'
+export const colorSurfaceSuccessStrongHover =
+  'var(--color-surface-success-strong-hover, #13787b)'
 export const colorSurfaceWarning =
   'var(--color-surface-warning, rgba(255, 159, 67, 0.08))'
+export const colorSurfaceWarningStrong =
+  'var(--color-surface-warning-strong, #ff9f43)'
+export const colorSurfaceWarningStrongActive =
+  'var(--color-surface-warning-strong-active, #d06907)'
+export const colorSurfaceWarningStrongHover =
+  'var(--color-surface-warning-strong-hover, #fa810c)'
 
 // Text
 export const colorTextAction = 'var(--color-text-action, #6837fc)'
