@@ -4,16 +4,26 @@
 button.btn {
   white-space: nowrap;
   color: var(--color-text-inverse);
-  &:hover,
-  &:focus {
-    background-color: var(--color-surface-action-hover);
-  }
   &:focus-visible {
     box-shadow: none;
   }
 
-  &.btn:active {
-    background-color: var(--color-surface-action-active);
+  // Explicit primary block — Bootstrap's .btn-primary:hover is at the
+  // same specificity as .btn:hover (both 011), so cascade order isn't a
+  // safe bet. .btn.btn-primary scopes our overrides to specificity 021,
+  // beating Bootstrap's defaults reliably.
+  &.btn-primary {
+    background-color: var(--color-surface-action);
+    color: var(--color-text-inverse);
+    &:hover,
+    &:focus {
+      background-color: var(--color-surface-action-hover);
+      color: var(--color-text-inverse);
+    }
+    &:active {
+      background-color: var(--color-surface-action-active);
+      color: var(--color-text-inverse);
+    }
   }
 
   &-link {
