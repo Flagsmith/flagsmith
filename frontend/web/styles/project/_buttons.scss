@@ -96,23 +96,25 @@ button.btn {
     }
   }
 
-  // TODO: secondary's resting bg is 8%-α neutral; the realigned neutral
-  // surface tokens (--color-surface-hover=16%, --color-surface-active=24%)
-  // don't have an 8% level. Decide whether to bump secondary's resting bg
-  // to 16% (use --color-surface-hover) or add a new --color-surface-base
-  // token. Until then, secondary keeps the SCSS variable bypass.
+  // Secondary's three-tier neutral state machine maps to:
+  //   resting  → --color-surface-hover   (16% — bumped from 8%)
+  //   hover    → --color-surface-active  (24% — bumped from 16%)
+  //   active   → --color-surface-active  (24% — same as hover; 32% has no token)
+  // Visible diff vs current: resting bg darker by one tier. Acceptable
+  // tradeoff to drop the .dark block dependency and the $btn-secondary-*
+  // SCSS variable family.
   &-secondary {
     color: var(--color-text-default);
-    background-color: $btn-secondary-bg !important;
+    background-color: var(--color-surface-hover) !important;
 
     &:hover,
     &:focus {
-      background-color: $btn-secondary-hover-bg !important;
+      background-color: var(--color-surface-active) !important;
       color: var(--color-text-default);
     }
 
     &.btn:active {
-      background-color: $btn-secondary-active-bg !important;
+      background-color: var(--color-surface-active) !important;
       color: var(--color-text-default);
     }
   }
@@ -165,6 +167,9 @@ button.btn {
     svg path {
       fill: var(--color-icon-secondary);
     }
+    &.btn-remove {
+      background-color: var(--color-surface-danger-subtle);
+    }
     &:hover,
     &:active,
     &:disabled {
@@ -190,12 +195,15 @@ button.btn {
       line-height: $btn-line-height-lg;
     }
   }
-  // TODO: project tile uses very specific layout/colors (letter avatar,
-  // dashed-border create state). Probably becomes a separate Tile
-  // component (see BUTTON_LINK_DESIGN_PLAN.md). Until then keeps SCSS
-  // variable bypasses.
+  // Project tile (letter avatar + dashed-border create state). Likely
+  // becomes a separate Tile component (see BUTTON_LINK_DESIGN_PLAN.md);
+  // until then it lives here on semantic tokens.
+  // Tile bg uses --color-surface-subtle (slightly darker in dark mode
+  // than the previous $bg-dark200; visible diff). Letter avatar bg
+  // remains $primary400 (purple-400 in both modes — no semantic token
+  // at this exact value; closest would be expanding the action family).
   &-project {
-    background-color: $bg-light200;
+    background-color: var(--color-surface-subtle);
     color: var(--color-text-default);
     padding: 0px 8px;
     width: 100%;
@@ -217,7 +225,7 @@ button.btn {
         }
       }
       .btn-project-icon {
-        background-color: $bg-light300;
+        background-color: var(--color-surface-muted);
         padding: 6px 14px;
         margin-right: 12px;
         border-radius: $border-radius;
@@ -226,7 +234,7 @@ button.btn {
     &.btn:hover,
     &.btn:active,
     &.btn:focus {
-      background-color: $bg-light200;
+      background-color: var(--color-surface-subtle);
       color: var(--color-text-default);
       & .btn-project-letter {
         background-color: var(--color-surface-action);
@@ -342,38 +350,3 @@ $add-btn-size: 34px;
   }
 }
 
-// Dark-mode overrides — only for the bg values that don't have a clean
-// semantic-token equivalent in dark mode. Everything else (text colors,
-// action-tinted hover bgs, action-tinted icon paths) auto-adapts via
-// CSS vars and lives in the light blocks above.
-.dark {
-  .btn {
-    &.btn-secondary {
-      background-color: $btn-secondary-bg-dark !important;
-      &:hover,
-      &:focus {
-        background-color: $btn-secondary-hover-bg-dark !important;
-      }
-      &:active {
-        background-color: $btn-secondary-active-bg-dark !important;
-      }
-    }
-    &-project {
-      background-color: $bg-dark200;
-      &.btn-project-create {
-        & .btn-project-icon {
-          background-color: $basic-alpha-8;
-        }
-      }
-      &.btn:hover,
-      &.btn:focus,&.btn:active {
-        background-color: $bg-dark200;
-      }
-    }
-    &.btn-with-icon {
-      &.btn-remove {
-        background-color: var(--color-surface-danger-subtle);
-      }
-    }
-  }
-}
