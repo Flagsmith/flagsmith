@@ -7,6 +7,7 @@ import {
   sizeClassNames,
 } from 'components/base/forms/Button'
 import type { ButtonType } from 'components/base/forms/Button'
+import { Icon } from 'components/icons'
 
 const themeOptions = Object.keys(themeClassNames) as Array<
   keyof typeof themeClassNames
@@ -19,7 +20,7 @@ const meta: Meta<ButtonType> = {
   argTypes: {
     children: {
       control: 'text',
-      description: 'Button label content.',
+      description: 'Button label content. Compose icons via `<Icon>` children.',
     },
     disabled: {
       control: 'boolean',
@@ -73,8 +74,8 @@ export const Variants: Story = {
       <Button theme='success'>Success</Button>
       <Button theme='tertiary'>Tertiary</Button>
       <Button theme='text'>Text</Button>
-      <Button theme='icon' iconLeft='copy'>
-        {''}
+      <Button theme='icon'>
+        <Icon name='copy' />
       </Button>
       <Button theme='project'>Project</Button>
     </div>
@@ -130,20 +131,47 @@ export const WithIcons: Story = {
     docs: {
       description: {
         story:
-          'Buttons support `iconLeft` and `iconRight` props. Pass any `IconName` from the icon system.',
+          'Icons compose via children — pass `<Icon>` JSX directly. Spacing between icon and label is handled by the button wrapper (`display: flex; gap: 0.5rem`).',
       },
     },
   },
   render: () => (
     <div className='d-flex align-items-center flex-wrap gap-2'>
-      <Button theme='primary' iconLeft='plus'>
+      <Button theme='primary'>
+        <Icon name='plus' />
         Add Item
       </Button>
-      <Button theme='danger' iconLeft='trash-2'>
+      <Button theme='danger'>
+        <Icon name='trash-2' />
         Delete
       </Button>
-      <Button theme='outline' iconRight='chevron-right'>
+      <Button theme='outline'>
         Next
+        <Icon name='chevron-right' />
+      </Button>
+    </div>
+  ),
+}
+
+export const IconOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Icon-only buttons via `theme="icon"` (32×32) or `className="btn-with-icon"` (table-row affordances). Pass the icon as children.',
+      },
+    },
+  },
+  render: () => (
+    <div className='d-flex align-items-center flex-wrap gap-2'>
+      <Button theme='icon'>
+        <Icon name='copy' />
+      </Button>
+      <Button className='btn btn-with-icon' type='button'>
+        <Icon name='trash-2' width={20} />
+      </Button>
+      <Button className='btn btn-with-icon' type='button'>
+        <Icon name='edit' width={20} />
       </Button>
     </div>
   ),

@@ -5,7 +5,7 @@ import Highlight from './Highlight'
 import Button from './base/forms/Button'
 import Switch from './Switch'
 import flagsmith from '@flagsmith/flagsmith'
-import Icon from './icons/Icon'
+import { Icon } from './icons'
 import Utils from 'common/utils/utils'
 
 type JSONReferenceType = {
@@ -146,9 +146,8 @@ const JSONReference: FC<JSONReferenceType> = ({
                   Utils.copyToClipboard(condensed ? idsOnly : value)
                 }}
                 size='xSmall'
-                iconLeft='copy'
-                iconLeftColour='white'
               >
+                <Icon name='copy' />
                 Copy JSON
               </Button>
             </Row>
