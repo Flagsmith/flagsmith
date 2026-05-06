@@ -2,6 +2,9 @@ import React, { FC } from 'react'
 import TryIt from 'components/TryIt'
 import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
 import Constants from 'common/constants'
+import Utils from 'common/utils/utils'
+import CalloutBar from 'components/CalloutBar'
+import { openIntegrationModal } from 'components/integrations/openIntegrationModal'
 
 type FeaturesSDKIntegrationProps = {
   projectId: number
@@ -12,6 +15,7 @@ export const FeaturesSDKIntegration: FC<FeaturesSDKIntegrationProps> = ({
   environmentId,
   projectId,
 }) => {
+  const hasMcp = Utils.hasIntegration('mcp')
   return (
     <>
       <FormGroup className='mt-5'>
@@ -28,6 +32,17 @@ export const FeaturesSDKIntegration: FC<FeaturesSDKIntegrationProps> = ({
           projectId={projectId}
           environmentId={environmentId}
         />
+        {hasMcp && (
+          <CalloutBar
+            theme='dark'
+            icon={<span style={{ color: '#ffffff' }}>{'<>'}</span>}
+            prefix='Integration:'
+            label='Manage flags with AI using our MCP'
+            onClick={() =>
+              openIntegrationModal('mcp', { projectId: String(projectId) })
+            }
+          />
+        )}
       </FormGroup>
       <FormGroup className='pb-4'>
         <TryIt

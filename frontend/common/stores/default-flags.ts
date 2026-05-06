@@ -159,6 +159,17 @@ const defaultFlags = {
       'perEnvironment': false,
       'title': 'Jira',
     },
+    'mcp': {
+      'customUI': true,
+      'description':
+        'Connect Flagsmith to AI agents via the Model Context Protocol.',
+      'docs':
+        'https://docs.flagsmith.com/integrating-with-flagsmith/mcp-server',
+      'image': '/static/images/integrations/mcp.svg',
+      'perEnvironment': false,
+      'tags': ['developer-tools'],
+      'title': 'MCP Server',
+    },
     'mixpanel': {
       'description': 'Sends data on what flags served to each identity.',
       'docs': 'https://docs.flagsmith.com/integrations/analytics/mixpanel',

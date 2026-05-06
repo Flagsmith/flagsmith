@@ -14,7 +14,7 @@ export const themeClassNames = {
   danger: 'btn btn-danger',
   icon: 'btn-icon',
   outline: 'btn--outline',
-  primary: 'btn-primary',
+  primary: 'btn btn-primary',
   project: 'btn-project',
   secondary: 'btn btn-secondary',
   success: 'btn btn-success',

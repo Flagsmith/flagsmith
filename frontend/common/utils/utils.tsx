@@ -221,7 +221,11 @@ const Utils = Object.assign({}, BaseUtils, {
   flagsmithFeatureExists(flag: string) {
     return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
   },
-  getContentType(contentTypes: ContentType[] | undefined, model: string, type: string) {
+  getContentType(
+    contentTypes: ContentType[] | undefined,
+    model: string,
+    type: string,
+  ) {
     return contentTypes?.find((c: ContentType) => c[model] === type) || null
   },
   getCreateProjectPermission(organisation: Organisation) {
@@ -396,7 +400,6 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return EnvironmentPermissionDescriptions.UPDATE_FEATURE_STATE
   },
-
   getNextPlan: () => {
     const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
     if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
@@ -417,6 +420,7 @@ const Utils = Object.assign({}, BaseUtils, {
       }
     }
   },
+
   getOrganisationHomePage(id?: string) {
     const orgId = id || AccountStore.getOrganisation()?.id
     if (!orgId) {
@@ -424,11 +428,11 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return `/organisation/${orgId}/projects`
   },
-
   getOrganisationIdFromUrl(match: any) {
     const organisationId = match?.params?.organisationId
     return organisationId ? parseInt(organisationId) : null
   },
+
   getOverridePermission: (
     level: 'identity' | 'segment',
   ): {
@@ -646,6 +650,13 @@ const Utils = Object.assign({}, BaseUtils, {
     return !!entityPermissions?.permissions?.find(
       (permission) => permission.permission_key === key,
     )
+  },
+  hasIntegration(key: string) {
+    const data = Utils.getIntegrationData() as
+      | Record<string, unknown>
+      | null
+      | undefined
+    return !!data && !!data[key]
   },
   //todo: Remove when migrating to RTK
   isEnterpriseImage: () =>

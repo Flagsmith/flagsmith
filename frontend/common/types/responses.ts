@@ -356,6 +356,7 @@ export type IntegrationData = {
   organisation?: string
   project?: string
   isOauth?: boolean
+  customUI?: boolean
 }
 
 export type ActiveIntegration = {
