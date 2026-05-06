@@ -269,7 +269,7 @@ def _get_additional_seat_addon_id(subscription: SubscriptionOps) -> str:
     normalised_plan = SubscriptionPlanFamily.normalise_plan_id(plan_id)
     for prefix, addon_name_prefix in SEAT_ADDON_NAME_PREFIX_BY_PLAN_PREFIX.items():
         if normalised_plan.startswith(prefix):
-            return f"{addon_name_prefix}{plan_id}"
+            return f"{addon_name_prefix}-{plan_id}"
 
     v2_addon_id = SEAT_SCALE_UP_V2_ADDON_BY_BILLING_PERIOD.get(
         subscription.billing_period
