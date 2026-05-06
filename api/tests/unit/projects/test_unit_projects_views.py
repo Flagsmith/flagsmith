@@ -1055,3 +1055,35 @@ def test_list_projects__default_enforce_feature_owners__returns_false(
     assert len(response.json()) > 0
     assert "enforce_feature_owners" in response.json()[0]
     assert response.json()[0]["enforce_feature_owners"] is False
+
+
+def test_list_projects__non_numeric_organisation_parameter__returns_empty_list(
+    admin_client: APIClient,
+    project: Project,
+) -> None:
+    # Given - a request with non-numeric organisation query parameter
+    url = reverse("api-v1:projects:project-list") + "?organisation=invalid_string"
+
+    # When
+    response = admin_client.get(url)
+
+    # Then - should return 200 with empty list, not crash with 500
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == []
+
+
+def test_list_projects__non_numeric_organisation_parameter_with_valid_projects__returns_empty_list(
+    admin_client: APIClient,
+    project: Project,
+    organisation: Organisation,
+) -> None:
+    # Given - a request with non-numeric organisation query parameter
+    # even though there are projects in the system
+    url = reverse("api-v1:projects:project-list") + f"?organisation=invalid_id_{organisation.id}"
+
+    # When
+    response = admin_client.get(url)
+
+    # Then - should return 200 with empty list, not crash with 500
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == []
