@@ -7,24 +7,24 @@ button.btn {
   // Project button, to remove with project select bar
   &:hover,
   &:focus {
-    background-color: $btn-hover-bg;
+    background-color: var(--color-surface-action-hover);
   }
   &:focus-visible {
     box-shadow: none;
   }
 
   &.btn:active {
-    background-color: $btn-active-bg;
+    background-color: var(--color-surface-action-active);
   }
 
   &-link {
-    color: $primary;
+    color: var(--color-text-action);
     &:hover,
     &:focus {
       background: transparent;
     }
     &.btn:active {
-      color: $link-color;
+      color: var(--color-text-action);
       background: transparent;
     }
   }
@@ -34,11 +34,11 @@ button.btn {
     &:hover,
     &:focus {
       color: white;
-      background-color: $btn-danger-hover;
+      background-color: var(--color-surface-danger-strong-hover);
     }
     &.btn:active {
       color: white;
-      background-color: $btn-danger-active;
+      background-color: var(--color-surface-danger-strong-active);
     }
   }
 
@@ -47,18 +47,18 @@ button.btn {
     &:hover,
     &:focus {
       color: white;
-      background-color: $btn-success-hover;
+      background-color: var(--color-surface-success-strong-hover);
     }
     &.btn:active {
       color: white;
-      background-color: $btn-success-active;
+      background-color: var(--color-surface-success-strong-active);
     }
   }
 
   &--outline {
     background: white;
-    border: 1px solid $primary !important;
-    color: $primary;
+    border: 1px solid var(--color-border-action) !important;
+    color: var(--color-text-action);
     line-height: calc($btn-line-height - 2px);
     &.btn-sm {
       line-height: calc($btn-line-height-sm - 2px);
@@ -70,24 +70,24 @@ button.btn {
       line-height: calc($btn-line-height-lg - 2px);
     }
     &:disabled {
-      color: $primary;
+      color: var(--color-text-action);
     }
     &:hover,
     &:focus {
-      background-color: $btn-outline-hover-bg;
-      color: $primary;
+      background-color: var(--color-surface-action-subtle);
+      color: var(--color-text-action);
     }
     &.btn:active {
-      background-color: $btn-outline-active-bg;
-      color: $primary;
+      background-color: var(--color-surface-action-muted);
+      color: var(--color-text-action);
     }
 
     &-danger {
-      border-color: $alert-danger-border-color !important;
-      color: $danger !important;
+      border-color: var(--color-border-danger) !important;
+      color: var(--color-text-danger) !important;
       &:hover,
       &:focus {
-        background-color: $danger-alfa-8;
+        background-color: var(--color-surface-danger);
       }
       &.btn:active {
         background-color: $danger-alfa-16;
@@ -96,18 +96,18 @@ button.btn {
   }
 
   &-secondary {
-    color: $body-color;
+    color: var(--color-text-default);
     background-color: $btn-secondary-bg !important;
 
     &:hover,
     &:focus {
       background-color: $btn-secondary-hover-bg !important;
-      color: $body-color;
+      color: var(--color-text-default);
     }
 
     &.btn:active {
       background-color: $btn-secondary-active-bg !important;
-      color: $body-color;
+      color: var(--color-text-default);
     }
   }
   &-tertiary {
@@ -117,25 +117,25 @@ button.btn {
     &:hover,
     &:focus {
       background-color: $btn-tertiary-hover-bg;
-      color: $body-color;
+      color: var(--color-text-default);
     }
 
     &.btn:active {
       background-color: $btn-tertiary-active-bg;
-      color: $body-color;
+      color: var(--color-text-default);
     }
   }
   &-success {
-    background-color: $success;
+    background-color: var(--color-surface-success-strong);
     &:hover,
     &:focus {
-      background-color: $success400;
-      color: $text-icon-light;
+      background-color: var(--color-surface-success-strong-hover);
+      color: white;
     }
 
     &.btn:active {
-      background-color: $success600;
-      color: $text-icon-light;
+      background-color: var(--color-surface-success-strong-active);
+      color: white;
     }
   }
 
@@ -146,18 +146,18 @@ button.btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: $body-color;
+    color: var(--color-text-default);
     svg {
       width: 18px;
       height: 18px;
     }
     path {
-      fill: $text-muted;
+      fill: var(--color-icon-secondary);
     }
     &:hover,&:focus {
       background-color: $bg-light300;
       path {
-        fill: $body-color;
+        fill: var(--color-icon-default);
       }
     }
   }
@@ -171,7 +171,7 @@ button.btn {
       background-color: $basic-alpha-8 !important;
       svg {
         path {
-          fill: $primary;
+          fill: var(--color-icon-action);
         }
       }
     }
@@ -179,7 +179,7 @@ button.btn {
       background-color: $basic-alpha-8 !important;
       svg {
         path {
-          fill: $body-color;
+          fill: var(--color-icon-default);
         }
       }
     }
@@ -191,8 +191,8 @@ button.btn {
     }
   }
   &-project {
-    background-color: $bg-light200;
-    color: $body-color;
+    background-color: var(--color-surface-emphasis);
+    color: var(--color-text-default);
     padding: 0px 8px;
     width: 100%;
     height: 76px;
@@ -201,14 +201,14 @@ button.btn {
       background-color: transparent;
       border: 1px dashed $basic-alpha-24;
       &:disabled {
-        color: $body-color;
+        color: var(--color-text-default);
       }
       &:hover {
         background-color: transparent;
         & .btn-project-icon {
-          background-color: $primary-alfa-8;
+          background-color: var(--color-surface-action-subtle);
           path {
-            fill: $primary;
+            fill: var(--color-icon-action);
           }
         }
       }
@@ -222,10 +222,10 @@ button.btn {
     &.btn:hover,
     &.btn:active,
     &.btn:focus {
-      background-color: $bg-light200;
-      color: $body-color;
+      background-color: var(--color-surface-emphasis);
+      color: var(--color-text-default);
       & .btn-project-letter {
-        background-color: $primary;
+        background-color: var(--color-text-action);
       }
     }
     &-letter {
@@ -233,7 +233,7 @@ button.btn {
       height: 60px;
       background-color: $primary400;
       border-radius: $border-radius;
-      color: $text-icon-light;
+      color: white;
       text-transform: uppercase;
       margin-right: 12px;
       display: flex;
@@ -277,7 +277,7 @@ button.btn {
   vertical-align: baseline;
   font-family: $font-family;
   background: transparent;
-  color: $link-color;
+  color: var(--color-text-action);
   @include transition(all 200ms);
   border: none;
   box-shadow: none;
@@ -287,7 +287,7 @@ button.btn {
   font-weight: 500;
   &:hover,
   &:focus {
-    color: $link-color;
+    color: var(--color-text-action);
     background: transparent;
     text-decoration: underline;
     border: none;
@@ -313,18 +313,18 @@ $add-btn-size: 34px;
   border: 1px solid $basic-alpha-24;
   border-radius: 50%;
   &:hover {
-    border-color: $primary;
+    border-color: var(--color-text-action);
   }
 
   &.btn-radio-on {
-    border-color: $primary;
+    border-color: var(--color-text-action);
     display: flex;
     justify-content: center;
     &::before {
       content: '';
       display: block;
       border-radius: 50%;
-      background-color: $primary;
+      background-color: var(--color-text-action);
       width: 12px;
       height: 12px;
       align-self: center;
@@ -338,116 +338,3 @@ $add-btn-size: 34px;
   }
 }
 
-.dark {
-  .btn {
-    &:hover,
-    &:focus {
-      background-color: $btn-hover-bg-dark;
-    }
-    &:active {
-      background-color: $primary;
-    }
-    &.btn-icon {
-      color: $body-color-dark;
-      path {
-        fill: $text-muted;
-      }
-      &:hover,&:focus {
-        background-color: $bg-dark300;
-        path {
-          fill: $body-color-dark;
-        }
-      }
-    }
-    &.btn-secondary {
-      color: white;
-      background-color: $btn-secondary-bg-dark !important;
-      &:hover,
-      &:focus {
-        background-color: $btn-secondary-hover-bg-dark !important;
-      }
-      &:active {
-        color: white;
-        background-color: $btn-secondary-active-bg-dark !important;
-      }
-    }
-    &.btn-success {
-      &:hover,
-      &:focus {
-        background-color: $success400;
-        color: $text-icon-light;
-      }
-    }
-
-    &--outline {
-      background: transparent;
-      border-color: $primary400;
-      color: $primary400;
-      &:disabled {
-        color: $primary400;
-      }
-      &:hover {
-        color: $primary400;
-        border-color: $primary400;
-        background-color: $btn-outline-hover-bg-dark;
-      }
-      &:focus {
-        background-color: $btn-outline-focus-bg-dark;
-      }
-
-      &-danger {
-        border-color: $danger400 !important;
-        color: $danger400 !important;
-      }
-    }
-    &.btn-link {
-      background-color: transparent;
-      &:hover,
-      &:active,
-      &:focus {
-        background-color: transparent;
-        color: $dark-highlight-color;
-      }
-    }
-    .btn-radio {
-      border-color: $white-alpha-24;
-    }
-
-    &-project {
-      background-color: $bg-dark200;
-      color: $text-icon-light;
-      &.btn-project-create {
-        &:hover {
-          background-color: transparent;
-          & .btn-project-icon {
-            background-color: $primary-alfa-8;
-            path {
-              fill: $primary;
-            }
-          }
-        }
-        & .btn-project-icon {
-          background-color: $basic-alpha-8;
-        }
-      }
-
-      &.btn:hover,
-      &.btn:focus,&.btn:active {
-        background-color: $bg-dark200;
-        color: $text-icon-light;
-        & .btn-project-letter {
-          background-color: $primary;
-        }
-      }
-    }
-    &.btn-with-icon {
-      background-color: $basic-alpha-8;
-      &.btn-remove {
-        background-color: $danger-alfa-8;
-      }
-    }
-  }
-  .btn-link {
-    color: $primary;
-  }
-}
