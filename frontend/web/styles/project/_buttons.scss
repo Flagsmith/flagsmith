@@ -127,6 +127,10 @@ button.btn {
       background-color: var(--color-surface-active) !important;
       color: var(--color-text-default);
     }
+
+    &:disabled {
+      color: var(--color-text-disabled);
+    }
   }
 
   // TODO: tertiary uses gold-scale primitives ($secondary500/600/700).
