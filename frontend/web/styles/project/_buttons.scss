@@ -61,6 +61,12 @@ button.btn {
       color: var(--color-text-inverse);
       background-color: var(--color-surface-danger-active);
     }
+    // Defensive — Bootstrap's .btn-danger:disabled overrides our
+    // resting colour at higher specificity. Re-apply the same value
+    // so opacity (not colour) handles the disabled feel.
+    &:disabled {
+      color: var(--color-text-inverse);
+    }
   }
 
   &-success {
@@ -74,6 +80,9 @@ button.btn {
     &.btn:active {
       color: var(--color-text-inverse);
       background-color: var(--color-surface-success-active);
+    }
+    &:disabled {
+      color: var(--color-text-inverse);
     }
   }
 
@@ -98,6 +107,9 @@ button.btn {
     }
     &.btn:active {
       background-color: var(--color-surface-action-muted);
+      color: var(--color-text-action);
+    }
+    &:disabled {
       color: var(--color-text-action);
     }
 
