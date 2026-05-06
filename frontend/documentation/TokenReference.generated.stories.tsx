@@ -127,10 +127,58 @@ export const AllTokens: StoryObj = {
           </tr>
           <tr>
             <td>
+              <code>--color-surface-danger-strong</code>
+            </td>
+            <td>
+              <code>var(--red-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-danger-strong-hover</code>
+            </td>
+            <td>
+              <code>var(--red-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-danger-strong-active</code>
+            </td>
+            <td>
+              <code>var(--red-700)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
               <code>--color-surface-success</code>
             </td>
             <td>
               <code>oklch(from var(--green-500) l c h / 0.08)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-success-strong</code>
+            </td>
+            <td>
+              <code>var(--green-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-success-strong-hover</code>
+            </td>
+            <td>
+              <code>var(--green-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-success-strong-active</code>
+            </td>
+            <td>
+              <code>var(--green-700)</code>
             </td>
           </tr>
           <tr>
@@ -143,10 +191,58 @@ export const AllTokens: StoryObj = {
           </tr>
           <tr>
             <td>
+              <code>--color-surface-warning-strong</code>
+            </td>
+            <td>
+              <code>var(--orange-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-warning-strong-hover</code>
+            </td>
+            <td>
+              <code>var(--orange-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-warning-strong-active</code>
+            </td>
+            <td>
+              <code>var(--orange-700)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
               <code>--color-surface-info</code>
             </td>
             <td>
               <code>oklch(from var(--blue-500) l c h / 0.08)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-info-strong</code>
+            </td>
+            <td>
+              <code>var(--blue-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-info-strong-hover</code>
+            </td>
+            <td>
+              <code>var(--blue-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-info-strong-active</code>
+            </td>
+            <td>
+              <code>var(--blue-700)</code>
             </td>
           </tr>
         </tbody>
