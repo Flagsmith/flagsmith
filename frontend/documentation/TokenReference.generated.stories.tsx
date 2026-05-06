@@ -66,7 +66,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-hover</code>
             </td>
             <td>
-              <code>oklch(from var(--slate-1000) l c h / 0.08)</code>
+              <code>oklch(from var(--slate-1000) l c h / 0.16)</code>
             </td>
           </tr>
           <tr>
@@ -74,7 +74,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-active</code>
             </td>
             <td>
-              <code>oklch(from var(--slate-1000) l c h / 0.16)</code>
+              <code>oklch(from var(--slate-1000) l c h / 0.24)</code>
             </td>
           </tr>
           <tr>
@@ -122,7 +122,39 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-danger</code>
             </td>
             <td>
+              <code>var(--red-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-danger-hover</code>
+            </td>
+            <td>
+              <code>var(--red-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-danger-active</code>
+            </td>
+            <td>
+              <code>var(--red-700)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-danger-subtle</code>
+            </td>
+            <td>
               <code>oklch(from var(--red-500) l c h / 0.08)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-danger-muted</code>
+            </td>
+            <td>
+              <code>oklch(from var(--red-500) l c h / 0.16)</code>
             </td>
           </tr>
           <tr>
@@ -130,7 +162,39 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-success</code>
             </td>
             <td>
+              <code>var(--green-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-success-hover</code>
+            </td>
+            <td>
+              <code>var(--green-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-success-active</code>
+            </td>
+            <td>
+              <code>var(--green-700)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-success-subtle</code>
+            </td>
+            <td>
               <code>oklch(from var(--green-500) l c h / 0.08)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-success-muted</code>
+            </td>
+            <td>
+              <code>oklch(from var(--green-500) l c h / 0.16)</code>
             </td>
           </tr>
           <tr>
@@ -138,7 +202,39 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-warning</code>
             </td>
             <td>
+              <code>var(--orange-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-warning-hover</code>
+            </td>
+            <td>
+              <code>var(--orange-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-warning-active</code>
+            </td>
+            <td>
+              <code>var(--orange-700)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-warning-subtle</code>
+            </td>
+            <td>
               <code>oklch(from var(--orange-500) l c h / 0.08)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-warning-muted</code>
+            </td>
+            <td>
+              <code>oklch(from var(--orange-500) l c h / 0.16)</code>
             </td>
           </tr>
           <tr>
@@ -146,7 +242,39 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-info</code>
             </td>
             <td>
+              <code>var(--blue-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-info-hover</code>
+            </td>
+            <td>
+              <code>var(--blue-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-info-active</code>
+            </td>
+            <td>
+              <code>var(--blue-700)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-info-subtle</code>
+            </td>
+            <td>
               <code>oklch(from var(--blue-500) l c h / 0.08)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-surface-info-muted</code>
+            </td>
+            <td>
+              <code>oklch(from var(--blue-500) l c h / 0.16)</code>
             </td>
           </tr>
         </tbody>
@@ -230,6 +358,14 @@ export const AllTokens: StoryObj = {
             </td>
             <td>
               <code>var(--blue-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-text-inverse</code>
+            </td>
+            <td>
+              <code>var(--slate-0)</code>
             </td>
           </tr>
         </tbody>
@@ -380,6 +516,14 @@ export const AllTokens: StoryObj = {
             </td>
             <td>
               <code>var(--blue-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-icon-inverse</code>
+            </td>
+            <td>
+              <code>var(--slate-0)</code>
             </td>
           </tr>
         </tbody>

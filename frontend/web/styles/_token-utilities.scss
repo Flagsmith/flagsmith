@@ -13,14 +13,30 @@
 .bg-surface-action-subtle { background-color: var(--color-surface-action-subtle); }
 .bg-surface-active { background-color: var(--color-surface-active); }
 .bg-surface-danger { background-color: var(--color-surface-danger); }
+.bg-surface-danger-active { background-color: var(--color-surface-danger-active); }
+.bg-surface-danger-hover { background-color: var(--color-surface-danger-hover); }
+.bg-surface-danger-muted { background-color: var(--color-surface-danger-muted); }
+.bg-surface-danger-subtle { background-color: var(--color-surface-danger-subtle); }
 .bg-surface-default { background-color: var(--color-surface-default); }
 .bg-surface-emphasis { background-color: var(--color-surface-emphasis); }
 .bg-surface-hover { background-color: var(--color-surface-hover); }
 .bg-surface-info { background-color: var(--color-surface-info); }
+.bg-surface-info-active { background-color: var(--color-surface-info-active); }
+.bg-surface-info-hover { background-color: var(--color-surface-info-hover); }
+.bg-surface-info-muted { background-color: var(--color-surface-info-muted); }
+.bg-surface-info-subtle { background-color: var(--color-surface-info-subtle); }
 .bg-surface-muted { background-color: var(--color-surface-muted); }
 .bg-surface-subtle { background-color: var(--color-surface-subtle); }
 .bg-surface-success { background-color: var(--color-surface-success); }
+.bg-surface-success-active { background-color: var(--color-surface-success-active); }
+.bg-surface-success-hover { background-color: var(--color-surface-success-hover); }
+.bg-surface-success-muted { background-color: var(--color-surface-success-muted); }
+.bg-surface-success-subtle { background-color: var(--color-surface-success-subtle); }
 .bg-surface-warning { background-color: var(--color-surface-warning); }
+.bg-surface-warning-active { background-color: var(--color-surface-warning-active); }
+.bg-surface-warning-hover { background-color: var(--color-surface-warning-hover); }
+.bg-surface-warning-muted { background-color: var(--color-surface-warning-muted); }
+.bg-surface-warning-subtle { background-color: var(--color-surface-warning-subtle); }
 
 // Text
 .text-action { color: var(--color-text-action); }
@@ -28,6 +44,7 @@
 .text-default { color: var(--color-text-default); }
 .text-disabled { color: var(--color-text-disabled); }
 .text-info { color: var(--color-text-info); }
+.text-inverse { color: var(--color-text-inverse); }
 .text-secondary { color: var(--color-text-secondary); }
 .text-success { color: var(--color-text-success); }
 .text-tertiary { color: var(--color-text-tertiary); }
@@ -49,6 +66,7 @@
 .icon-default { color: var(--color-icon-default); fill: var(--color-icon-default); }
 .icon-disabled { color: var(--color-icon-disabled); fill: var(--color-icon-disabled); }
 .icon-info { color: var(--color-icon-info); fill: var(--color-icon-info); }
+.icon-inverse { color: var(--color-icon-inverse); fill: var(--color-icon-inverse); }
 .icon-secondary { color: var(--color-icon-secondary); fill: var(--color-icon-secondary); }
 .icon-success { color: var(--color-icon-success); fill: var(--color-icon-success); }
 .icon-warning { color: var(--color-icon-warning); fill: var(--color-icon-warning); }

@@ -30,28 +30,30 @@ button.btn {
   }
 
   &-danger {
-    color: white;
+    background-color: var(--color-surface-danger);
+    color: var(--color-text-inverse);
     &:hover,
     &:focus {
-      color: white;
-      background-color: $btn-danger-hover;
+      color: var(--color-text-inverse);
+      background-color: var(--color-surface-danger-hover);
     }
     &.btn:active {
-      color: white;
-      background-color: $btn-danger-active;
+      color: var(--color-text-inverse);
+      background-color: var(--color-surface-danger-active);
     }
   }
 
   &-success {
-    color: white;
+    background-color: var(--color-surface-success);
+    color: var(--color-text-inverse);
     &:hover,
     &:focus {
-      color: white;
-      background-color: $btn-success-hover;
+      color: var(--color-text-inverse);
+      background-color: var(--color-surface-success-hover);
     }
     &.btn:active {
-      color: white;
-      background-color: $btn-success-active;
+      color: var(--color-text-inverse);
+      background-color: var(--color-surface-success-active);
     }
   }
 
@@ -125,20 +127,6 @@ button.btn {
       color: $body-color;
     }
   }
-  &-success {
-    background-color: $success;
-    &:hover,
-    &:focus {
-      background-color: $success400;
-      color: $text-icon-light;
-    }
-
-    &.btn:active {
-      background-color: $success600;
-      color: $text-icon-light;
-    }
-  }
-
   &.btn-icon {
     padding:0;
     height: 32px;
@@ -371,14 +359,6 @@ $add-btn-size: 34px;
         background-color: $btn-secondary-active-bg-dark !important;
       }
     }
-    &.btn-success {
-      &:hover,
-      &:focus {
-        background-color: $success400;
-        color: $text-icon-light;
-      }
-    }
-
     &--outline {
       background: transparent;
       border-color: $primary400;

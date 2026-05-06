@@ -134,6 +134,7 @@ export const colorIconDanger = 'var(--color-icon-danger, #ef4d56)'
 export const colorIconDefault = 'var(--color-icon-default, #1a2634)'
 export const colorIconDisabled = 'var(--color-icon-disabled, #9da4ae)'
 export const colorIconInfo = 'var(--color-icon-info, #0aaddf)'
+export const colorIconInverse = 'var(--color-icon-inverse, #ffffff)'
 export const colorIconSecondary = 'var(--color-icon-secondary, #656d7b)'
 export const colorIconSuccess = 'var(--color-icon-success, #27ab95)'
 export const colorIconWarning = 'var(--color-icon-warning, #ff9f43)'
@@ -149,21 +150,48 @@ export const colorSurfaceActionMuted =
 export const colorSurfaceActionSubtle =
   'var(--color-surface-action-subtle, rgba(104, 55, 252, 0.08))'
 export const colorSurfaceActive =
-  'var(--color-surface-active, rgba(0, 0, 0, 0.16))'
-export const colorSurfaceDanger =
-  'var(--color-surface-danger, rgba(239, 77, 86, 0.08))'
+  'var(--color-surface-active, rgba(0, 0, 0, 0.24))'
+export const colorSurfaceDanger = 'var(--color-surface-danger, #ef4d56)'
+export const colorSurfaceDangerActive =
+  'var(--color-surface-danger-active, #bb1720)'
+export const colorSurfaceDangerHover =
+  'var(--color-surface-danger-hover, #e61b26)'
+export const colorSurfaceDangerMuted =
+  'var(--color-surface-danger-muted, rgba(239, 77, 86, 0.16))'
+export const colorSurfaceDangerSubtle =
+  'var(--color-surface-danger-subtle, rgba(239, 77, 86, 0.08))'
 export const colorSurfaceDefault = 'var(--color-surface-default, #ffffff)'
 export const colorSurfaceEmphasis = 'var(--color-surface-emphasis, #e0e3e9)'
 export const colorSurfaceHover =
-  'var(--color-surface-hover, rgba(0, 0, 0, 0.08))'
-export const colorSurfaceInfo =
-  'var(--color-surface-info, rgba(10, 173, 223, 0.08))'
+  'var(--color-surface-hover, rgba(0, 0, 0, 0.16))'
+export const colorSurfaceInfo = 'var(--color-surface-info, #0aaddf)'
+export const colorSurfaceInfoActive =
+  'var(--color-surface-info-active, #0b7190)'
+export const colorSurfaceInfoHover = 'var(--color-surface-info-hover, #0b8bb2)'
+export const colorSurfaceInfoMuted =
+  'var(--color-surface-info-muted, rgba(10, 173, 223, 0.16))'
+export const colorSurfaceInfoSubtle =
+  'var(--color-surface-info-subtle, rgba(10, 173, 223, 0.08))'
 export const colorSurfaceMuted = 'var(--color-surface-muted, #eff1f4)'
 export const colorSurfaceSubtle = 'var(--color-surface-subtle, #fafafb)'
-export const colorSurfaceSuccess =
-  'var(--color-surface-success, rgba(39, 171, 149, 0.08))'
-export const colorSurfaceWarning =
-  'var(--color-surface-warning, rgba(255, 159, 67, 0.08))'
+export const colorSurfaceSuccess = 'var(--color-surface-success, #27ab95)'
+export const colorSurfaceSuccessActive =
+  'var(--color-surface-success-active, #116163)'
+export const colorSurfaceSuccessHover =
+  'var(--color-surface-success-hover, #13787b)'
+export const colorSurfaceSuccessMuted =
+  'var(--color-surface-success-muted, rgba(39, 171, 149, 0.16))'
+export const colorSurfaceSuccessSubtle =
+  'var(--color-surface-success-subtle, rgba(39, 171, 149, 0.08))'
+export const colorSurfaceWarning = 'var(--color-surface-warning, #ff9f43)'
+export const colorSurfaceWarningActive =
+  'var(--color-surface-warning-active, #d06907)'
+export const colorSurfaceWarningHover =
+  'var(--color-surface-warning-hover, #fa810c)'
+export const colorSurfaceWarningMuted =
+  'var(--color-surface-warning-muted, rgba(255, 159, 67, 0.16))'
+export const colorSurfaceWarningSubtle =
+  'var(--color-surface-warning-subtle, rgba(255, 159, 67, 0.08))'
 
 // Text
 export const colorTextAction = 'var(--color-text-action, #6837fc)'
@@ -171,6 +199,7 @@ export const colorTextDanger = 'var(--color-text-danger, #ef4d56)'
 export const colorTextDefault = 'var(--color-text-default, #1a2634)'
 export const colorTextDisabled = 'var(--color-text-disabled, #9da4ae)'
 export const colorTextInfo = 'var(--color-text-info, #0aaddf)'
+export const colorTextInverse = 'var(--color-text-inverse, #ffffff)'
 export const colorTextSecondary = 'var(--color-text-secondary, #656d7b)'
 export const colorTextSuccess = 'var(--color-text-success, #27ab95)'
 export const colorTextTertiary = 'var(--color-text-tertiary, #9da4ae)'
