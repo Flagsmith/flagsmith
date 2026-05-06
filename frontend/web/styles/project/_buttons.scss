@@ -165,6 +165,9 @@ button.btn {
     padding: 0 14px;
     background-color: $basic-alpha-8;
     border-radius: $border-radius;
+    svg path {
+      fill: var(--color-icon-secondary);
+    }
     &:hover,
     &:active,
     &:disabled {
