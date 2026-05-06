@@ -50,6 +50,9 @@ button.btn {
       color: var(--color-text-inverse);
       background-color: var(--color-surface-danger-active);
     }
+    &:disabled {
+      color: var(--color-text-inverse);
+    }
   }
 
   &-success {
@@ -63,6 +66,9 @@ button.btn {
     &.btn:active {
       color: var(--color-text-inverse);
       background-color: var(--color-surface-success-active);
+    }
+    &:disabled {
+      color: var(--color-text-inverse);
     }
   }
 
@@ -129,7 +135,7 @@ button.btn {
     }
 
     &:disabled {
-      color: var(--color-text-disabled);
+      color: var(--color-text-secondary);
     }
   }
 
