@@ -240,7 +240,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     for (const topRule of newRules) {
       topRule.type = newType
       topRule.rules = topRule.rules.map((subRule) => {
-        if (subRule.delete) return subRule
+        if (subRule.delete || subRule.type === 'NONE') return subRule
         return { ...subRule, type: subRuleType as SegmentRule['type'] }
       })
     }
