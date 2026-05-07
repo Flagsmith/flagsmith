@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.232.1](https://github.com/Flagsmith/flagsmith/compare/v2.232.0...v2.232.1) (2026-05-07)
+
+
+### Bug Fixes
+
+* **breadcrumb:** align current-page item with links and separators ([#7401](https://github.com/Flagsmith/flagsmith/issues/7401)) ([8321d61](https://github.com/Flagsmith/flagsmith/commit/8321d61a6e41a4a6348e391ddf0d8caaaed81aa8))
+* **versioning:** scope scheduled-FS query by feature in v2 enable ([#7449](https://github.com/Flagsmith/flagsmith/issues/7449)) ([18d6ea8](https://github.com/Flagsmith/flagsmith/commit/18d6ea8c5e8402285bf436aedeb26cd7d82b431f))
+
 ## [2.232.0](https://github.com/Flagsmith/flagsmith/compare/v2.231.1...v2.232.0) (2026-05-06)
 
 
