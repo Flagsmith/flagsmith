@@ -131,7 +131,7 @@ export const WithIcons: Story = {
     docs: {
       description: {
         story:
-          'Icons compose via children — pass `<Icon>` JSX directly. Spacing between icon and label is handled by the button wrapper (`display: flex; gap: 0.5rem`).',
+          'Icons compose via children — pass `<Icon>` JSX directly alongside the label. Button handles icon+label spacing internally.',
       },
     },
   },
