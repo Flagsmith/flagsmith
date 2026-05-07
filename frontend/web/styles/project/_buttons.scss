@@ -190,6 +190,9 @@ button.btn {
     }
   }
   &-project {
+    // Opt out of .btn's inline-flex/gap/44px-height — this is a tile-shaped
+    // surface, layout of letter+title is handled by the inner <Row>.
+    display: inline-block;
     background-color: $bg-light200;
     color: $body-color;
     padding: 0px 8px;
