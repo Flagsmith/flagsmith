@@ -140,18 +140,18 @@ button.btn {
   // black-α to darken. In dark mode resting is slate-800 and the
   // overlays are white-α — which makes hover/active LIGHTER than
   // resting in dark, matching the saturated-theme direction rule.
-  &-secondary {
+  &.btn-secondary {
     color: var(--color-text-default);
-    background-color: var(--color-surface-emphasis) !important;
+    background-color: var(--color-surface-emphasis);
 
     &:hover,
     &:focus {
-      background-color: var(--color-surface-hover) !important;
+      background-color: var(--color-surface-hover);
       color: var(--color-text-default);
     }
 
-    &.btn:active {
-      background-color: var(--color-surface-active) !important;
+    &:active {
+      background-color: var(--color-surface-active);
       color: var(--color-text-default);
     }
   }
