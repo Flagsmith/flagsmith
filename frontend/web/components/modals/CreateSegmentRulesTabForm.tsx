@@ -208,8 +208,8 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
               data-test='top-level-rule-type'
               size='medium'
               options={[
-                { label: 'ALL', value: 'ALL' as const },
-                { label: 'ANY', value: 'ANY' as const },
+                { label: 'ALL', value: 'ALL' },
+                { label: 'ANY', value: 'ANY' },
               ]}
               value={topLevelRuleType}
               onChange={setTopLevelRuleType}
