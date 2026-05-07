@@ -258,7 +258,7 @@ const InviteUsers: FC = () => {
                         onClick={() => deleteInvite(invite.temporaryId)}
                         className='btn btn-with-icon mb-2'
                       >
-                        <Icon name='trash-2' width={20} fill='#656D7B' />
+                        <Icon name='trash-2' width={20} />
                       </Button>
                     </div>
                   ) : (
