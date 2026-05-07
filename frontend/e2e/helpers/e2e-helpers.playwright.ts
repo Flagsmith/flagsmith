@@ -518,7 +518,10 @@ export class E2EHelpers {
   ) {
     await this.click(byId('show-create-segment-btn'));
     await this.setText(byId('segmentID'), name);
-    await this.click(byId(`top-level-rule-type-${topLevelRuleType}`));
+    const flagsmith = await getFlagsmith();
+    if (flagsmith.hasFeature('segment_any_rule_type')) {
+      await this.click(byId(`top-level-rule-type-${topLevelRuleType}`));
+    }
     if (rules && rules.length > 0) {
       for (let x = 0; x < rules.length; x++) {
         const rule = rules[x];
