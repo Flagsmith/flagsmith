@@ -61,7 +61,7 @@ export const Variants: Story = {
     docs: {
       description: {
         story:
-          'All available button themes. Use `primary` for main actions, `secondary` for alternatives, `outline` for low-emphasis actions, `danger` for destructive actions, and `success` for positive confirmations. `icon` is for icon-only buttons (copy, action triggers in tables).',
+          'All available button themes. Use `primary` for main actions, `secondary` for alternatives, `outline` for low-emphasis actions, `danger` for destructive actions, and `success` for positive confirmations.',
       },
     },
   },
@@ -85,7 +85,7 @@ export const Sizes: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Button sizes from large to extra small.',
+        story: 'Button sizes from large to extra-extra small.',
       },
     },
   },
@@ -95,6 +95,7 @@ export const Sizes: Story = {
       <Button size='default'>Default</Button>
       <Button size='small'>Small</Button>
       <Button size='xSmall'>Extra Small</Button>
+      <Button size='xxSmall'>XX Small</Button>
     </div>
   ),
 }
@@ -147,30 +148,6 @@ export const WithIcons: Story = {
       <Button theme='outline'>
         Next
         <Icon name='chevron-right' />
-      </Button>
-    </div>
-  ),
-}
-
-export const IconOnly: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Icon-only buttons via `theme="icon"` (32×32) or `className="btn-with-icon"` (table-row affordances). Pass the icon as children.',
-      },
-    },
-  },
-  render: () => (
-    <div className='d-flex align-items-center flex-wrap gap-2'>
-      <Button theme='icon'>
-        <Icon name='copy' />
-      </Button>
-      <Button className='btn btn-with-icon' type='button'>
-        <Icon name='trash-2' width={20} />
-      </Button>
-      <Button className='btn btn-with-icon' type='button'>
-        <Icon name='edit' width={20} />
       </Button>
     </div>
   ),
