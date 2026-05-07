@@ -265,9 +265,7 @@ def add_single_seat(subscription_id: str, organisation_id: int) -> None:
 
 def _get_additional_seat_addon_id(subscription: SubscriptionOps) -> str:
     # By design, Scale-Up-v4 subscriptions reuse the v2 seat addons.
-    addon_id = SEAT_SCALE_UP_V2_ADDON_BY_BILLING_PERIOD.get(
-        subscription.billing_period
-    )
+    addon_id = SEAT_SCALE_UP_V2_ADDON_BY_BILLING_PERIOD.get(subscription.billing_period)
     if addon_id:
         return addon_id
 
