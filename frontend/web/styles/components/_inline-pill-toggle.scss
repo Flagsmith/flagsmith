@@ -1,7 +1,7 @@
 .inline-pill-toggle {
   display: inline-flex;
-  background-color: $pill-bg;
-  border-radius: $border-radius-lg;
+  background-color: var(--color-surface-muted);
+  border-radius: var(--radius-lg);
   vertical-align: middle;
 
   &--small {
@@ -21,9 +21,9 @@
 
   &__option {
     border: none;
-    border-radius: calc(#{$border-radius-lg} - 2px);
+    border-radius: var(--radius-md);
     background: transparent;
-    color: $text-icon-grey;
+    color: var(--color-text-secondary);
     font-weight: 700;
     font-family: inherit;
     letter-spacing: 0.3px;
@@ -50,8 +50,8 @@
     }
 
     &--active {
-      background-color: $primary;
-      color: $text-icon-light;
+      background-color: var(--color-surface-action);
+      color: var(--slate-0);
     }
   }
 }
