@@ -131,20 +131,22 @@ button.btn {
     }
   }
 
-  // Secondary's three-tier neutral state machine maps to:
-  //   resting  → --color-surface-hover   (16% — bumped from 8%)
-  //   hover    → --color-surface-active  (24% — bumped from 16%)
-  //   active   → --color-surface-active  (24% — same as hover; 32% has no token)
-  // Visible diff vs current: resting bg darker by one tier. Acceptable
-  // tradeoff to drop the .dark block dependency and the $btn-secondary-*
-  // SCSS variable family.
+  // Secondary's three-tier state machine using semantic tokens:
+  //   resting  → --color-surface-emphasis  (solid neutral fill)
+  //   hover    → --color-surface-hover     (16% α overlay)
+  //   active   → --color-surface-active    (24% α overlay)
+  // Each step is visually distinct in both modes. In light mode the
+  // resting fill is light grey (slate-200) and hover/active overlay
+  // black-α to darken. In dark mode resting is slate-800 and the
+  // overlays are white-α — which makes hover/active LIGHTER than
+  // resting in dark, matching the saturated-theme direction rule.
   &-secondary {
     color: var(--color-text-default);
-    background-color: var(--color-surface-hover) !important;
+    background-color: var(--color-surface-emphasis) !important;
 
     &:hover,
     &:focus {
-      background-color: var(--color-surface-active) !important;
+      background-color: var(--color-surface-hover) !important;
       color: var(--color-text-default);
     }
 
