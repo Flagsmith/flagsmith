@@ -36,6 +36,9 @@ button.btn {
       color: white;
       background-color: $btn-danger-active;
     }
+    &:disabled {
+      color: white;
+    }
   }
 
   &-success {
@@ -131,6 +134,9 @@ button.btn {
 
     &.btn:active {
       background-color: $btn-success-active;
+      color: $text-icon-light;
+    }
+    &:disabled {
       color: $text-icon-light;
     }
   }
