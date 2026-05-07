@@ -241,9 +241,7 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
                 </Row>
                 <Row>
                   <div className='table-column' style={{ width: '188px' }}>
-                    {feature_state_value !== null && (
-                      <FeatureValue value={feature_state_value} />
-                    )}
+                    <FeatureValue value={feature_state_value} />
                   </div>
                   <div className='table-column' style={{ width: '65px' }}>
                     <Switch

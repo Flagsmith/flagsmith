@@ -7,26 +7,37 @@ import classNames from 'classnames'
 
 type FeatureValueType = {
   value: FlagsmithValue
-  includeEmpty?: boolean // whether to show empty values
   className?: string
   onClick?: () => void
   'data-test'?: string
 }
 
 const FeatureValue: FC<FeatureValueType> = (props) => {
-  if (props.value === null || props.value === undefined) {
-    return null
-  }
-  const type = typeof props.value
-  if (type === 'string' && props.value === '' && !props.includeEmpty) {
-    return null
-  }
   const isCompact = getViewMode() === 'compact'
+  const chipClassName = classNames(
+    `chip flex-row no-wrap ${props.className || ''}`,
+    {
+      'chip--sm justify-content-start': isCompact,
+    },
+  )
+
+  if (props.value === null || props.value === undefined) {
+    return (
+      <div
+        className={chipClassName}
+        onClick={props.onClick}
+        data-test={props['data-test']}
+        style={{ maxWidth: 'fit-content' }}
+      >
+        <span className='feature-value text-muted'>[no value]</span>
+      </div>
+    )
+  }
+
+  const type = typeof props.value
   return (
     <div
-      className={classNames(`chip flex-row no-wrap ${props.className || ''}`, {
-        'chip--sm justify-content-start': isCompact,
-      })}
+      className={chipClassName}
       onClick={props.onClick}
       data-test={props['data-test']}
       style={{ maxWidth: 'fit-content' }}

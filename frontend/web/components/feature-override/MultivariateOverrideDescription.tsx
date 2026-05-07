@@ -12,11 +12,7 @@ const Multivariate: FC<MultivariateType> = ({ controlValue }) => {
       <span className='flex-row'>
         This feature is being overridden by a % variation in the environment,
         the control value of this feature is{' '}
-        <FeatureValue
-          className='ml-1 chip--xs'
-          includeEmpty
-          value={controlValue}
-        />
+        <FeatureValue className='ml-1 chip--xs' value={controlValue} />
       </span>
     </div>
   )
