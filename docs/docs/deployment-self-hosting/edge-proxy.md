@@ -495,13 +495,14 @@ a 1 vCPU / 2 GB AWS Fargate task, with endpoint caches **disabled** (worst case 
 Use them as starting-point sizing; real throughput depends on project shape, segment complexity, and trait counts.
 
 Project profile: 50 features, 15 segments, every feature overridden by every segment (750 segment overrides total), each
-segment matching on 15 trait conditions.
+segment matching on 15 trait conditions. The "Concurrency at peak" column is the client concurrency level at which the
+peak RPS was observed — past that point, extra concurrency adds queueing without raising throughput.
 
-| Endpoint                           | Peak RPS | Sweet spot (concurrency) |
-| ---------------------------------- | -------: | -----------------------: |
-| `POST /api/v1/identities/`         |      ~72 |                       25 |
-| `GET /api/v1/flags/`               |      ~63 |                       10 |
-| `GET /api/v1/environment-document` |     ~570 |                       25 |
+| Endpoint                           | Peak RPS | Concurrency at peak |
+| ---------------------------------- | -------: | ------------------: |
+| `POST /api/v1/identities/`         |      ~72 |                  25 |
+| `GET /api/v1/flags/`               |      ~63 |                  10 |
+| `GET /api/v1/environment-document` |     ~570 |                  25 |
 
 To raise per-instance throughput, run more containers behind the load balancer with `WEB_CONCURRENCY=1` per container,
 or increase `WEB_CONCURRENCY` and the container's CPU allocation when running a single container per node.
