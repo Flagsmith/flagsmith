@@ -312,7 +312,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                 )
                 segment_feature_states = get_environment_flags_list(
                     environment=self.environment,
-                        additional_filters=segment_query,
+                    additional_filters=segment_query,
                     additional_select_related_args=["feature_state_value", "feature"],
                 )
                 self._segment_feature_states = {
@@ -335,12 +335,10 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                     except (Identity.DoesNotExist, ValueError):
                         self._identity_feature_states = {}
                 else:
-                    
                     # TODO: Implement Edge identity state retrieval if needed
                     self._identity_feature_states = {}
 
         return queryset
-
 
     def paginate_queryset(self, queryset: QuerySet[Feature]) -> list[Feature]:  # type: ignore[override]
         if getattr(self, "_page", None):

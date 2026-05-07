@@ -423,9 +423,9 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
     def get_identity_feature_state(  # type: ignore[return]
         self, instance: Feature
     ) -> dict[str, Any] | None:
-        if (identity_feature_states := self.context.get("identity_feature_states")) and (
-            identity_feature_state := identity_feature_states.get(instance.id)
-        ):
+        if (
+            identity_feature_states := self.context.get("identity_feature_states")
+        ) and (identity_feature_state := identity_feature_states.get(instance.id)):
             return FeatureStateSerializerSmall(instance=identity_feature_state).data
 
     def get_num_segment_overrides(self, instance: Feature) -> int:

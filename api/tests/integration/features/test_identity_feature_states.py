@@ -1,10 +1,12 @@
 import json
+
 import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from environments.models import Environment
+
 from environments.identities.models import Identity
+from environments.models import Environment
 from features.models import Feature
 from projects.models import Project
 
@@ -43,7 +45,10 @@ def test_list_features__with_identity__returns_identity_feature_state(
     assert feature_data["id"] == feature.id
     assert feature_data["identity_feature_state"] is not None
     assert feature_data["identity_feature_state"]["enabled"] is True
-    assert feature_data["identity_feature_state"]["feature_state_value"] == "identity-override"
+    assert (
+        feature_data["identity_feature_state"]["feature_state_value"]
+        == "identity-override"
+    )
 
 
 @pytest.mark.django_db
@@ -125,7 +130,9 @@ def test_list_features__with_identity_from_different_environment__identity_featu
     )
 
     features_url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    list_url = f"{features_url}?environment={other_environment.id}&identity={identity.id}"
+    list_url = (
+        f"{features_url}?environment={other_environment.id}&identity={identity.id}"
+    )
 
     # When
     list_response = admin_client_new.get(list_url)
