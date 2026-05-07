@@ -402,13 +402,6 @@ def test_enable_v2_versioning__multi_feature_scheduled_changes__each_efv_matches
     feature: Feature,
     staff_user: FFAdminUser,
 ) -> None:
-    # Regression for `_create_initial_feature_versions`' scheduled-FS query
-    # at `api/features/versioning/tasks.py:112-118`: it is missing a
-    # `feature=feature` filter, so scheduled FSes get bound to an EFV of the
-    # wrong feature. The fixture's `feature` anchors the first iteration so
-    # the bug binds the scheduled FSes to its EFV instead of feature_b /
-    # feature_c.
-
     # Given
     now = timezone.now()
     one_hour_from_now = now + timedelta(hours=1)
