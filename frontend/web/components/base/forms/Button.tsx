@@ -3,12 +3,12 @@ import cn from 'classnames'
 import { ButtonHTMLAttributes, HTMLAttributeAnchorTarget } from 'react'
 
 export const themeClassNames = {
-  danger: 'btn btn-danger',
+  danger: 'btn-danger',
   icon: 'btn-icon',
   outline: 'btn--outline',
   primary: 'btn-primary',
-  secondary: 'btn btn-secondary',
-  success: 'btn btn-success',
+  secondary: 'btn-secondary',
+  success: 'btn-success',
   tertiary: 'btn-tertiary',
   text: 'btn-link',
 }
@@ -46,39 +46,32 @@ export const Button = React.forwardRef<
     },
     ref,
   ) => {
-    const content =
-      React.Children.count(children) > 1 ? (
-        <span className='d-flex h-100 align-items-center justify-content-center gap-2'>
-          {children}
-        </span>
-      ) : (
-        children
-      )
+    const classes = cn(
+      'btn',
+      className,
+      themeClassNames[theme],
+      sizeClassNames[size],
+    )
     return href ? (
       <a
         onClick={rest.onClick as React.MouseEventHandler}
-        className={cn(className, themeClassNames[theme], sizeClassNames[size])}
+        className={classes}
         target={target}
         href={href}
         rel='noreferrer'
         ref={ref as React.RefObject<HTMLAnchorElement>}
       >
-        {content}
+        {children}
       </a>
     ) : (
       <button
         {...rest}
         type={type}
         onMouseUp={onMouseUp}
-        className={cn(
-          { btn: true },
-          className,
-          themeClassNames[theme],
-          sizeClassNames[size],
-        )}
+        className={classes}
         ref={ref as React.RefObject<HTMLButtonElement>}
       >
-        {content}
+        {children}
       </button>
     )
   },

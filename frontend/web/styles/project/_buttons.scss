@@ -2,19 +2,15 @@
 
 .btn,
 button.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: $btn-line-height;
   white-space: nowrap;
   color: white;
-  // Project button, to remove with project select bar
-  &:hover,
-  &:focus {
-    background-color: $btn-hover-bg;
-  }
   &:focus-visible {
     box-shadow: none;
-  }
-
-  &.btn:active {
-    background-color: $btn-active-bg;
   }
 
   &-link {
@@ -343,13 +339,6 @@ $add-btn-size: 34px;
 
 .dark {
   .btn {
-    &:hover,
-    &:focus {
-      background-color: $btn-hover-bg-dark;
-    }
-    &:active {
-      background-color: $primary;
-    }
     &.btn-icon {
       color: $body-color-dark;
       &:hover,&:focus {
