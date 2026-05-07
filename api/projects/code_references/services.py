@@ -1,4 +1,3 @@
-from datetime import timedelta
 from urllib.parse import urljoin
 
 from django.contrib.postgres.expressions import ArraySubquery
@@ -12,12 +11,8 @@ from django.db.models import (
     Value,
 )
 from django.db.models.functions import JSONObject
-from django.utils import timezone
 
 from features.models import Feature
-from projects.code_references.constants import (
-    FEATURE_FLAG_CODE_REFERENCES_RETENTION_DAYS,
-)
 from projects.code_references.models import FeatureFlagCodeReferencesScan
 from projects.code_references.types import (
     CodeReference,
@@ -34,7 +29,6 @@ def annotate_feature_queryset_with_code_references_summary(
     NOTE: This adds compatibility with `CodeReferenceRepositoryCountSerializer`
     while preventing N+1 queries from the serializer.
     """
-    history_delta = timedelta(days=FEATURE_FLAG_CODE_REFERENCES_RETENTION_DAYS)
     last_feature_found_at = (
         FeatureFlagCodeReferencesScan.objects.annotate(
             feature_name=OuterRef("feature_name"),
@@ -48,7 +42,6 @@ def annotate_feature_queryset_with_code_references_summary(
         )
         .filter(
             project=OuterRef("project_id"),
-            created_at__gte=timezone.now() - history_delta,
             repository_url=OuterRef("repository_url"),
             contains_feature_name=True,
         )
@@ -73,7 +66,6 @@ def annotate_feature_queryset_with_code_references_summary(
         )
         # Only from the latest scans of each repository
         .filter(
-            created_at__gte=timezone.now() - history_delta,
             project_id=OuterRef("project_id"),
         )
         .order_by("repository_url", "-created_at")
@@ -101,11 +93,9 @@ def get_code_references_for_feature_flag(
     Only query from the latest scans of each repository_url. This is used to
     populate `FeatureFlagCodeReferencesSerializer`.
     """
-    history_delta = timedelta(days=FEATURE_FLAG_CODE_REFERENCES_RETENTION_DAYS)
     last_feature_found_at = (
         FeatureFlagCodeReferencesScan.objects.filter(
             project=feature.project,
-            created_at__gte=timezone.now() - history_delta,
             repository_url=OuterRef("repository_url"),
             code_references__contains=[{"feature_name": feature.name}],
         )
