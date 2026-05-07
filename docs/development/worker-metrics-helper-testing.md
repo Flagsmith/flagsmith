@@ -3,9 +3,14 @@
 This note covers how to test the Story #1 RSS helper.
 
 The helper under test is `get_current_process_max_rss_bytes()`. It reads the
-current worker process max RSS high-water mark with
-`resource.getrusage(resource.RUSAGE_SELF).ru_maxrss`, converts the Linux KiB
-value to bytes, and returns `None` when RSS data cannot be read safely.
+current worker process RSS high-water mark from `VmHWM` in `/proc/self/status`,
+converts the Linux `kB` value to bytes, and returns `None` when RSS data cannot
+be read safely.
+
+The helper avoids `resource.getrusage(resource.RUSAGE_SELF).ru_maxrss` because
+Linux can preserve that value across `execve`. Reading `VmHWM` from
+`/proc/self/status` keeps the high-water mark scoped to the current worker
+process, which is the value the 10-second worker metrics updater should export.
 
 ## Run The Focused Unit Tests
 
@@ -40,10 +45,12 @@ DEBUG=false .venv/bin/pytest tests/unit/metrics/test_unit_worker_metrics.py -n0
 
 The unit tests cover:
 
-- successful max-RSS collection
-- KiB-to-byte conversion
-- use of `resource.RUSAGE_SELF`
-- unavailable `resource` module
-- missing `ru_maxrss`
+- successful `VmHWM` collection
+- `kB`-to-byte conversion
+- leading and trailing whitespace in `/proc/self/status`
+- unavailable `/proc/self/status`
+- missing `VmHWM`
 - invalid negative RSS values
-- unexpected resource errors
+- non-integer RSS values
+- unexpected RSS units
+- unexpected status-file read errors
