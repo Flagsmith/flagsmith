@@ -24,11 +24,7 @@ from projects.code_references.types import (
 def annotate_feature_queryset_with_code_references_summary(
     queryset: QuerySet[Feature],
 ) -> QuerySet[Feature]:
-    """Extend feature objects with a `code_references_counts`
-
-    NOTE: This adds compatibility with `CodeReferenceRepositoryCountSerializer`
-    while preventing N+1 queries from the serializer.
-    """
+    """Annotate each `Feature` with `code_references_counts: list[CodeReferencesRepositoryCount]`."""
     last_feature_found_at = (
         FeatureFlagCodeReferencesScan.objects.annotate(
             feature_name=OuterRef("feature_name"),
