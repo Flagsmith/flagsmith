@@ -116,7 +116,7 @@ export const easing: Record<string, TokenEntry> = {
 // =============================================================================
 
 // Border
-export const colorBorderAction = 'var(--color-border-action, #6837fc)'
+export const colorBorderAction = 'var(--color-border-action, var(--purple-600))'
 export const colorBorderDanger = 'var(--color-border-danger, #ef4d56)'
 export const colorBorderDefault =
   'var(--color-border-default, rgba(101, 109, 123, 0.16))'
@@ -129,7 +129,7 @@ export const colorBorderSuccess = 'var(--color-border-success, #27ab95)'
 export const colorBorderWarning = 'var(--color-border-warning, #ff9f43)'
 
 // Icon
-export const colorIconAction = 'var(--color-icon-action, #6837fc)'
+export const colorIconAction = 'var(--color-icon-action, var(--purple-600))'
 export const colorIconDanger = 'var(--color-icon-danger, #ef4d56)'
 export const colorIconDefault = 'var(--color-icon-default, #1a2634)'
 export const colorIconDisabled = 'var(--color-icon-disabled, #9da4ae)'
@@ -198,7 +198,7 @@ export const colorSurfaceWarningSubtle =
   'var(--color-surface-warning-subtle, rgba(255, 159, 67, 0.08))'
 
 // Text
-export const colorTextAction = 'var(--color-text-action, #6837fc)'
+export const colorTextAction = 'var(--color-text-action, var(--purple-600))'
 export const colorTextDanger = 'var(--color-text-danger, #ef4d56)'
 export const colorTextDefault = 'var(--color-text-default, #1a2634)'
 export const colorTextDisabled = 'var(--color-text-disabled, #9da4ae)'

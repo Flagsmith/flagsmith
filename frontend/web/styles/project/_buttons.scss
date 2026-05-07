@@ -156,25 +156,25 @@ button.btn {
     }
   }
 
-  // TODO: tertiary uses gold-scale primitives ($secondary500/600/700)
+  // TODO: tertiary still uses gold-scale primitives ($btn-tertiary-*)
   // for bg. No semantic surface family for "tertiary" intent. Decide
   // whether to add --color-surface-tertiary tokens or extract tertiary
-  // from the Button theme map entirely. Text colour now references
-  // var(--purple-900) directly from the palette, and the higher
-  // specificity (.btn.btn-tertiary) lets us drop the !important.
+  // from the Button theme map entirely. Text colour uses
+  // var(--color-text-action) — brand purple, mode-stable after
+  // text-action was anchored to purple-600 in both modes.
   &.btn-tertiary {
-    color: var(--purple-900);
+    color: var(--color-text-action);
     background-color: $btn-tertiary-bg;
     box-shadow: 0 10px 20px rgba(247, 213, 110, .2);
     &:hover,
     &:focus {
       background-color: $btn-tertiary-hover-bg;
-      color: var(--purple-900);
+      color: var(--color-text-action);
     }
 
     &:active {
       background-color: $btn-tertiary-active-bg;
-      color: var(--purple-900);
+      color: var(--color-text-action);
     }
   }
   &.btn-icon {
