@@ -308,8 +308,8 @@ Some Edge Proxy settings can only be set using environment variables:
   [recommended when running multiple Edge Proxy containers behind a load balancer](https://fastapi.tiangolo.com/deployment/docker/#one-load-balancer-multiple-worker-containers).
   If running on a single node, set this
   [based on your number of CPU cores and threads](https://docs.gunicorn.org/en/latest/design.html#how-many-workers).
-- `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, `NO_PROXY`: These variables let you configure an HTTP proxy that the Edge
-  Proxy should use for all its outgoing HTTP requests. [Learn more](https://www.python-httpx.org/environment_variables)
+- `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, `NO_PROXY`: Configure an HTTP proxy for the Edge Proxy's outgoing requests,
+  with `NO_PROXY` exempting matching hosts. [Learn more](https://www.python-httpx.org/environment_variables)
 - `FORWARDED_ALLOW_IPS`: Which IPs to trust for determining client IP addresses when using the `proxy_headers` option.
   For more details, see the [Uvicorn documentation](https://www.uvicorn.org/settings/#http).
 
