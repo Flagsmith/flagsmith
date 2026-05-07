@@ -122,15 +122,15 @@ button.btn {
     }
   }
   &-success {
-    background-color: $success;
+    background-color: $btn-success;
     &:hover,
     &:focus {
-      background-color: $success400;
+      background-color: $btn-success-hover;
       color: $text-icon-light;
     }
 
     &.btn:active {
-      background-color: $success600;
+      background-color: $btn-success-active;
       color: $text-icon-light;
     }
   }
@@ -363,9 +363,14 @@ $add-btn-size: 34px;
       }
     }
     &.btn-success {
+      background-color: $btn-success;
       &:hover,
       &:focus {
-        background-color: $success400;
+        background-color: $btn-success-hover;
+        color: $text-icon-light;
+      }
+      &:active {
+        background-color: $btn-success-active;
         color: $text-icon-light;
       }
     }
@@ -384,6 +389,10 @@ $add-btn-size: 34px;
       }
       &:focus {
         background-color: $btn-outline-focus-bg-dark;
+      }
+      &:active {
+        background-color: $btn-outline-active-bg;
+        color: $primary400;
       }
 
       &-danger {
