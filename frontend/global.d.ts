@@ -10,11 +10,6 @@ export type OpenConfirm = {
   noText?: string
 }
 import { TooltipProps } from './web/components/Tooltip'
-type CrispCommand = [command: string, ...args: any[]]
-type Crisp = {
-  // The push method accepts a CrispCommand array.
-  push: (command: CrispCommand) => void
-}
 declare namespace UniversalAnalytics {
   interface PageviewFieldsObject {
     hitType: 'pageview' | 'event'
@@ -30,7 +25,6 @@ declare global {
     command: 'send',
     fields: UniversalAnalytics.PageviewFieldsObject,
   ): void
-  const $crisp: Crisp
   const delighted: {
     survey: (opts: {
       createdAt: string
@@ -98,7 +92,6 @@ declare global {
 
   interface Window {
     E2E: boolean
-    $crisp: Crisp
     engagement: {
       init(apiKey: string, options?: InitOptions): void
       plugin(): unknown

@@ -141,15 +141,12 @@
 
 .btn-tab {
   position: relative;
-  .unread {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    width: 16px;
-    height: 16px;
-    line-height: 15px;
-    display: flex;
-    justify-content: center;
+
+  .btn-tab__label {
+    display: inline-flex;
     align-items: center;
+    flex-wrap: nowrap;
+    gap: 4px;
   }
 
   &.btn-no-focus {
@@ -159,9 +156,4 @@
       background-color: transparent !important;
     }
   }
-}
-
-.pill .btn-tab .unread {
-  margin-left: calc($spacer / 2);
-  position: static;
 }

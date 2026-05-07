@@ -462,7 +462,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         if not self.can_auto_upgrade_seats:
             raise SubscriptionDoesNotSupportSeatUpgrade()
 
-        add_single_seat(self.subscription_id)  # type: ignore[arg-type]
+        add_single_seat(self.subscription_id, organisation_id=self.organisation_id)  # type: ignore[arg-type]
 
     def is_in_trial(self) -> bool:
         return self.subscription_id == TRIAL_SUBSCRIPTION_ID

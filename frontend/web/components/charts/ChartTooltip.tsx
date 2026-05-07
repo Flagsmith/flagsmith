@@ -22,10 +22,17 @@ type ChartTooltipProps = TooltipProps<ValueType, NameType> & {
    * a seriesLabels map to render human-readable names instead.
    */
   seriesLabels?: Record<string, string>
+  /**
+   * Hide the total row at the bottom. Useful for single-entry payloads
+   * (e.g. a pie-slice hover) where the total just repeats the entry value.
+   * Default: false.
+   */
+  hideTotal?: boolean
 }
 
 const ChartTooltip: FC<ChartTooltipProps> = ({
   active,
+  hideTotal = false,
   label,
   payload,
   seriesLabels,
@@ -35,13 +42,21 @@ const ChartTooltip: FC<ChartTooltipProps> = ({
     (sum, entry) => sum + numericValue(entry.value),
     0,
   )
+  const hasLabel =
+    label !== null && label !== undefined && String(label).length > 0
 
   return (
     <div className='bg-surface-default border-default rounded-md shadow-md py-2'>
-      <div className='px-3 py-1 fs-small fw-semibold text-default'>{label}</div>
-      <hr className='border-default my-0 mb-2' />
-      {payload.map((entry: SeriesPayload) => {
-        const key = String(entry.dataKey)
+      {hasLabel && (
+        <>
+          <div className='px-3 py-1 fs-small fw-semibold text-default'>
+            {label}
+          </div>
+          <hr className='border-default my-0 mb-2' />
+        </>
+      )}
+      {payload.map((entry: SeriesPayload, i) => {
+        const key = String(entry.name ?? entry.dataKey ?? i)
         const displayName = seriesLabels?.[key] ?? key
         return (
           <div
@@ -56,9 +71,11 @@ const ChartTooltip: FC<ChartTooltipProps> = ({
           </div>
         )
       })}
-      <div className='border-top border-default mt-2 pt-2 px-3 fs-small fw-semibold'>
-        Total: {formatNumber(total)}
-      </div>
+      {!hideTotal && (
+        <div className='border-top border-default mt-2 pt-2 px-3 fs-small fw-semibold'>
+          Total: {formatNumber(total)}
+        </div>
+      )}
     </div>
   )
 }

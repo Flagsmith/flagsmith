@@ -7,9 +7,7 @@ type BindChargebeeButtonsParams = {
   isPaymentsEnabled: boolean
 }
 
-const initChargebee = ({
-  isPaymentsEnabled,
-}: BindChargebeeButtonsParams) => {
+const initChargebee = ({ isPaymentsEnabled }: BindChargebeeButtonsParams) => {
   Chargebee.init({ site: Project.chargebee.site })
   firstpromoter()
   Chargebee.getInstance().setCheckoutCallbacks?.(() => ({

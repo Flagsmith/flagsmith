@@ -2017,18 +2017,18 @@ files = [
 
 [[package]]
 name = "flagsmith"
-version = "5.1.1"
+version = "5.3.0"
 description = "Flagsmith Python SDK"
 optional = false
 python-versions = "<4,>=3.9"
 groups = ["main"]
 files = [
-    {file = "flagsmith-5.1.1-py3-none-any.whl", hash = "sha256:220943ff42bb631d4fad0f7d9ce89f56738d480657ce4aeb4b2cc779dcaea66a"},
-    {file = "flagsmith-5.1.1.tar.gz", hash = "sha256:42fc5ad3eaa578777e4f6b955a44349e974f6d79ee004b220847a9b0ca778d91"},
+    {file = "flagsmith-5.3.0-py3-none-any.whl", hash = "sha256:47a589a6e55cf9151f03092c11aa344e68df44d9b081d83716ca44cf79fc8be1"},
+    {file = "flagsmith-5.3.0.tar.gz", hash = "sha256:79befb381fb759d13402ae471fe00c0539ba7799a93edea4b7fa82b7835d0f41"},
 ]
 
 [package.dependencies]
-flagsmith-flag-engine = ">=10.0.3,<11.0.0"
+flagsmith-flag-engine = ">=10.0.4,<11.0.0"
 requests = ">=2.32.3,<3.0.0"
 requests-futures = ">=1.0.1,<2.0.0"
 sseclient-py = ">=1.8.0,<2.0.0"
@@ -2055,14 +2055,14 @@ resolved_reference = "b7fa1f42c333b443763548ea1fe0054f07cdf641"
 
 [[package]]
 name = "flagsmith-common"
-version = "3.8.2"
+version = "3.9.0"
 description = "Flagsmith's common library"
 optional = false
 python-versions = "<4.0,>=3.11"
 groups = ["main", "dev", "licensing", "workflows"]
 files = [
-    {file = "flagsmith_common-3.8.2-py3-none-any.whl", hash = "sha256:4b1921ec874da52ce7dfa8a248677153a57bda5e607be892f5b5c9dddcbf5c73"},
-    {file = "flagsmith_common-3.8.2.tar.gz", hash = "sha256:0612a14858c0e56f5d51dba6be9e4b1f82741b17aced24367a7ad6bccba3d7a8"},
+    {file = "flagsmith_common-3.9.0-py3-none-any.whl", hash = "sha256:782183d05b891ed5f19bebad2f281a2ebd6f69728c3d3f524c4bebc25a654cf6"},
+    {file = "flagsmith_common-3.9.0.tar.gz", hash = "sha256:b47b141d366a6714285a0768e08e24adbc9849400294d6fc4e6030087928d8e6"},
 ]
 
 [package.dependencies]
@@ -2073,7 +2073,7 @@ djangorestframework = {version = "*", optional = true, markers = "extra == \"com
 djangorestframework-recursive = {version = "*", optional = true, markers = "extra == \"common-core\""}
 drf-spectacular = {version = ">=0.28.0,<1", optional = true, markers = "extra == \"common-core\""}
 drf-writable-nested = {version = "*", optional = true, markers = "extra == \"common-core\""}
-environs = {version = "<15", optional = true, markers = "extra == \"common-core\""}
+environs = {version = "<16", optional = true, markers = "extra == \"common-core\""}
 flagsmith-flag-engine = {version = ">6", optional = true, markers = "extra == \"flagsmith-schemas\""}
 gunicorn = {version = ">=19.1", optional = true, markers = "extra == \"common-core\""}
 inflection = {version = "*", optional = true, markers = "extra == \"common-core\""}
@@ -2095,21 +2095,21 @@ structlog = {version = ">=24.4,<26", optional = true, markers = "extra == \"comm
 typing-extensions = {version = "*", optional = true, markers = "extra == \"common-core\" or extra == \"flagsmith-schemas\""}
 
 [package.extras]
-common-core = ["django (>4,<6)", "django-health-check", "djangorestframework", "djangorestframework-recursive", "drf-spectacular (>=0.28.0,<1)", "drf-writable-nested", "environs (<15)", "gunicorn (>=19.1)", "inflection", "opentelemetry-api (>=1.25,<2)", "opentelemetry-exporter-otlp-proto-http (>=1.25,<2)", "opentelemetry-instrumentation-django (>=0.46b0,<1)", "opentelemetry-instrumentation-psycopg2 (>=0.46b0,<1)", "opentelemetry-instrumentation-redis (>=0.46b0,<1)", "opentelemetry-sdk (>=1.25,<2)", "prometheus-client (>=0.0.16)", "psycopg2-binary (>=2.9,<3)", "redis (>=5,<6)", "requests", "sentry-sdk (>=2.0.0,<3.0.0)", "simplejson (>=3,<4)", "structlog (>=24.4,<26)", "typing-extensions"]
+common-core = ["django (>4,<6)", "django-health-check", "djangorestframework", "djangorestframework-recursive", "drf-spectacular (>=0.28.0,<1)", "drf-writable-nested", "environs (<16)", "gunicorn (>=19.1)", "inflection", "opentelemetry-api (>=1.25,<2)", "opentelemetry-exporter-otlp-proto-http (>=1.25,<2)", "opentelemetry-instrumentation-django (>=0.46b0,<1)", "opentelemetry-instrumentation-psycopg2 (>=0.46b0,<1)", "opentelemetry-instrumentation-redis (>=0.46b0,<1)", "opentelemetry-sdk (>=1.25,<2)", "prometheus-client (>=0.0.16)", "psycopg2-binary (>=2.9,<3)", "redis (>=5,<6)", "requests", "sentry-sdk (>=2.0.0,<3.0.0)", "simplejson (>=3,<4)", "structlog (>=24.4,<26)", "typing-extensions"]
 flagsmith-schemas = ["flagsmith-flag-engine (>6)", "simplejson", "typing-extensions"]
 task-processor = ["backoff (>=2.2.1,<3.0.0)", "django (>4,<6)", "django-health-check", "opentelemetry-api (>=1.25,<2)", "prometheus-client (>=0.0.16)"]
 test-tools = ["pyfakefs (>=5,<6)", "pytest-django (>=4,<5)"]
 
 [[package]]
 name = "flagsmith-flag-engine"
-version = "10.0.3"
+version = "10.1.0"
 description = "Flag engine for the Flagsmith API."
 optional = false
 python-versions = "*"
 groups = ["main", "workflows"]
 files = [
-    {file = "flagsmith_flag_engine-10.0.3-py3-none-any.whl", hash = "sha256:aed9009377fc1a6322483277f971f06d542668a69d93cbe4a3efd4baae78dfc1"},
-    {file = "flagsmith_flag_engine-10.0.3.tar.gz", hash = "sha256:0aa449bb87bee54fc67b5c7ca25eca78246a7bbb5a6cc229260c3f262d58ac54"},
+    {file = "flagsmith_flag_engine-10.1.0-py3-none-any.whl", hash = "sha256:767dcf2f32586948eaa7816b5cbdae272d76d89e30c4642cbd74894c89a2d469"},
+    {file = "flagsmith_flag_engine-10.1.0.tar.gz", hash = "sha256:fcb7e6833a874001c4ad3b91a66a4c31f050d53d94b116f88ad5c7ecd9650e8a"},
 ]
 
 [package.dependencies]
@@ -3198,29 +3198,30 @@ signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 
 [[package]]
 name = "openfeature-provider-flagsmith"
-version = "0.1.6"
+version = "0.2.0"
 description = "Openfeature provider for Flagsmith"
 optional = false
-python-versions = "<4.0,>=3.9"
+python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "openfeature_provider_flagsmith-0.1.6.tar.gz", hash = "sha256:49fe9f779dd83f3e73ce1480dd16e8a2cd332e237e48a4d08e200282a4c3f206"},
+    {file = "openfeature_provider_flagsmith-0.2.0-py3-none-any.whl", hash = "sha256:5a87df0ddaf0efaa664f0a71a9422733ac4ab7bd47782503039022c9c3206d8e"},
+    {file = "openfeature_provider_flagsmith-0.2.0.tar.gz", hash = "sha256:b5411613fa24efde96356d987b15c3efbb0455c4771306c26d73d526a0021a73"},
 ]
 
 [package.dependencies]
-flagsmith = ">=3.6.0,<6.0.0"
-openfeature-sdk = ">=0.6.0,<0.9.0"
+flagsmith = ">=5.2.0,<7.0.0"
+openfeature-sdk = ">=0.9.0,<0.10.0"
 
 [[package]]
 name = "openfeature-sdk"
-version = "0.8.4"
+version = "0.9.0"
 description = "Standardizing Feature Flagging for Everyone"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "openfeature_sdk-0.8.4-py3-none-any.whl", hash = "sha256:805ba090669798fc343ca9fdcbc56ff0f4b57bf6757533f0854d2021192e620a"},
-    {file = "openfeature_sdk-0.8.4.tar.gz", hash = "sha256:66abf71f928ec8c0db1111072bb0ef2635dfbd09510f77f4b548e5d0ea0e6c1a"},
+    {file = "openfeature_sdk-0.9.0-py3-none-any.whl", hash = "sha256:511fd66fe66807e95ea5a18074b559bc18657fe8294be0de4668201e297e98ad"},
+    {file = "openfeature_sdk-0.9.0.tar.gz", hash = "sha256:d65ca82c3f1abc5005b0b54bb4c729db04d7a70595f05dd373b47477b6b176bf"},
 ]
 
 [[package]]
@@ -6022,4 +6023,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.14"
-content-hash = "3887d5db2a2c09afcc53b6bdda606a15226230b49c0e1712346099b7a3a71d52"
+content-hash = "13c3c174bc913f77b4998499cc0e1d8feea33c521e5cd747d77743bb8fc422ed"

@@ -580,15 +580,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                 >
                   <TabItem
                     data-test='value'
-                    tabLabelString='Value'
-                    tabLabel={
-                      <Row className='justify-content-center'>
-                        Value{' '}
-                        {valueChanged && (
-                          <div className='unread ml-2 px-1'>{'*'}</div>
-                        )}
-                      </Row>
-                    }
+                    tabLabel='Value'
+                    isDirty={valueChanged}
                   >
                     <FeatureValueTab
                       error={error}
@@ -624,19 +617,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                     updateSegments && (
                       <TabItem
                         data-test='segment_overrides'
-                        tabLabelString='Segment Overrides'
-                        tabLabel={
-                          <Row
-                            className={`justify-content-center ${
-                              segmentsChanged ? 'pr-1' : ''
-                            }`}
-                          >
-                            Segment Overrides{' '}
-                            {segmentsChanged && (
-                              <div className='unread ml-2 px-2'>*</div>
-                            )}
-                          </Row>
-                        }
+                        tabLabel='Segment Overrides'
+                        isDirty={segmentsChanged}
                       >
                         <SegmentOverridesTab
                           projectId={projectId}
@@ -745,15 +727,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   {!existingChangeRequest && (
                     <TabItem
                       data-test='settings'
-                      tabLabelString='Settings'
-                      tabLabel={
-                        <Row className='justify-content-center'>
-                          Settings{' '}
-                          {settingsChanged && (
-                            <div className='unread ml-2 px-1'>{'*'}</div>
-                          )}
-                        </Row>
-                      }
+                      tabLabel='Settings'
+                      isDirty={settingsChanged}
                     >
                       <FeatureSettings
                         identity={identity}

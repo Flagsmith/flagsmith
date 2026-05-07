@@ -46,6 +46,13 @@ const config = {
       common: path.resolve(__dirname, '../common'),
       components: path.resolve(__dirname, '../web/components'),
       project: path.resolve(__dirname, '../web/project'),
+      // Stub CommonJS modules that break Storybook's ESM bundler.
+      // code-help contains SDK snippets using module.exports — not needed for component rendering.
+      'common/code-help': path.resolve(__dirname, 'mocks/code-help.js'),
+      // Stub CommonJS data layer that breaks ESM bundler
+      [path.resolve(__dirname, '../common/data/base/_data.js')]: path.resolve(__dirname, 'mocks/_data.js'),
+      // Mock dompurify (CJS/ESM export mismatch)
+      'dompurify': path.resolve(__dirname, 'mocks/dompurify.js'),
     }
 
     config.module = config.module || {}
@@ -77,8 +84,11 @@ const config = {
       ),
       '@stencil/core/internal/client': false,
       '@stencil/core': false,
-      '@ionic/react': false,
-      'ionicons/icons': false,
+      // Mock IonIcon so components that still use it (ClearFilters,
+      // NavSubLink, BreadcrumbSeparator, etc.) can render in stories
+      // without forcing each one to migrate to our Icon component.
+      '@ionic/react': path.resolve(__dirname, 'mocks/ionic-react.js'),
+      'ionicons/icons': path.resolve(__dirname, 'mocks/ionicons-icons.js'),
     }
 
     config.plugins = config.plugins || []
