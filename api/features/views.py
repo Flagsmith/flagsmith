@@ -312,14 +312,35 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                 )
                 segment_feature_states = get_environment_flags_list(
                     environment=self.environment,
-                    additional_filters=segment_query,
+                        additional_filters=segment_query,
                     additional_select_related_args=["feature_state_value", "feature"],
                 )
                 self._segment_feature_states = {
                     fs.feature_id: fs for fs in segment_feature_states
                 }
 
+            if identity_id := query_data.get("identity"):
+                if not project.enable_dynamo_db:
+                    try:
+                        identity_obj = Identity.objects.get(
+                            id=identity_id,
+                            environment=self.environment,
+                        )
+                        all_identity_states = identity_obj.get_all_feature_states()
+                        self._identity_feature_states = {
+                            fs.feature_id: fs
+                            for fs in all_identity_states
+                            if fs.feature_id in self.feature_ids
+                        }
+                    except (Identity.DoesNotExist, ValueError):
+                        self._identity_feature_states = {}
+                else:
+                    
+                    # TODO: Implement Edge identity state retrieval if needed
+                    self._identity_feature_states = {}
+
         return queryset
+
 
     def paginate_queryset(self, queryset: QuerySet[Feature]) -> list[Feature]:  # type: ignore[override]
         if getattr(self, "_page", None):
@@ -354,6 +375,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             user=self.request.user,
             feature_states=feature_states,
             segment_feature_states=segment_feature_states,
+            identity_feature_states=getattr(self, "_identity_feature_states", {}),
         )
 
         if self.action == "list" and "environment" in self.request.query_params:

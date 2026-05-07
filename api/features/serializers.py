@@ -193,6 +193,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
 
     environment_feature_state = serializers.SerializerMethodField()
     segment_feature_state = serializers.SerializerMethodField()
+    identity_feature_state = serializers.SerializerMethodField()
 
     num_segment_overrides = serializers.SerializerMethodField(
         help_text="Number of segment overrides that exist for the given feature "
@@ -240,6 +241,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             "project",
             "environment_feature_state",
             "segment_feature_state",
+            "identity_feature_state",
             "num_segment_overrides",
             "num_identity_overrides",
             "is_num_identity_overrides_complete",
@@ -416,6 +418,15 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             segment_feature_state := segment_feature_states.get(instance.id)
         ):
             return FeatureStateSerializerSmall(instance=segment_feature_state).data
+
+    @extend_schema_field(FeatureStateSerializerSmall(allow_null=True))
+    def get_identity_feature_state(  # type: ignore[return]
+        self, instance: Feature
+    ) -> dict[str, Any] | None:
+        if (identity_feature_states := self.context.get("identity_feature_states")) and (
+            identity_feature_state := identity_feature_states.get(instance.id)
+        ):
+            return FeatureStateSerializerSmall(instance=identity_feature_state).data
 
     def get_num_segment_overrides(self, instance: Feature) -> int:
         try:

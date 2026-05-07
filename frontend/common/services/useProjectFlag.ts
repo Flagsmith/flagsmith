@@ -84,11 +84,12 @@ export const projectFlagService = service
           { id: 'LIST', type: 'FeatureList' },
         ],
         query: (query: Req['getFeatureList']) => {
-          const { environmentId, projectId, ...params } = query
+          const { environmentId, identity, projectId, ...params } = query
           return {
             params: {
               ...params,
               environment: parseInt(environmentId),
+              identity,
               page: params.page || 1,
               page_size: params.page_size || FEATURES_PAGE_SIZE,
             },
@@ -115,6 +116,12 @@ export const projectFlagService = service
             }
             return acc
           }, {} as Res['featureList']['environmentStates']),
+          identityStates: response.results.reduce((acc, feature) => {
+            if (feature.identity_feature_state) {
+              acc[feature.id] = feature.identity_feature_state
+            }
+            return acc
+          }, {} as Res['featureList']['identityStates']),
           pagination: {
             count: response.count,
             currentPage: arg.page || 1,
