@@ -362,8 +362,6 @@ Diagnose in this order:
 4. **`api_url`.** When self-hosting, [`api_url`](#api_url) must point at your Flagsmith API (e.g.
    `https://flagsmith.example.com/api/v1`). Pointing a self-hosted proxy at `edge.api.flagsmith.com` will 403 because
    the key does not exist on Flagsmith's hosted Edge.
-5. **Edge enablement.** On self-hosted deployments where Edge is enabled per-project, ensure the project the environment
-   belongs to is permitted to serve environment documents.
 
 ### Restart loops in ECS, Kubernetes, or other orchestrators
 
@@ -473,7 +471,6 @@ Store `config.json` in a `Secret` (it contains server-side keys). Scale with `re
   GCP Secret Manager, Kubernetes `Secret`, etc.).
 - If a static-analysis tool flags committed keys, rotate them in the dashboard immediately and move the new keys into
   your secrets store.
-- An empty `client_side_key` is a configuration error — both keys are required for the pair to be usable.
 
 ## Architecture and scaling
 
@@ -484,8 +481,7 @@ When sizing a fleet:
 
 - Each proxy instance polls the upstream API once per environment per
   [`api_poll_frequency_seconds`](#api_poll_frequency_seconds), so adding instances multiplies the polling load on the
-  upstream API. With `If-Modified-Since` (Edge Proxy v2.19.0+, Flagsmith API v2.176.0+) most polls return 304 and cost
-  very little.
+  upstream API.
 - Enable [`endpoint_caches`](#endpoint_caches) for `flags` and `identities` if you have many repeating requests. Caches
   are scoped per-process and cleared whenever the environment document changes, so they cannot serve stale data after a
   dashboard change.
