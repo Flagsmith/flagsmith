@@ -167,7 +167,7 @@ const IdentityPage: FC = () => {
                         />
                       </span>
                       {showAliases && (
-                        <h6 className='d-flex mb-0 align-items-end gap-1'>
+                        <h6 className='d-flex mb-0 align-items-baseline gap-1'>
                           <Tooltip
                             title={
                               <span className='user-select-none'>Alias: </span>

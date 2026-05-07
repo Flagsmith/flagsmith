@@ -190,8 +190,6 @@ button.btn {
     }
   }
   &-project {
-    // Opt out of .btn's inline-flex/gap/44px-height — this is a tile-shaped
-    // surface, layout of letter+title is handled by the inner <Row>.
     display: inline-block;
     background-color: $bg-light200;
     color: $body-color;
@@ -273,8 +271,11 @@ button.btn {
   }
 }
 
-.btn-link {
-  display: inline-block;
+.btn-link,
+button.btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
   text-decoration: none !important;
   vertical-align: baseline;
   font-family: $font-family;
@@ -284,6 +285,7 @@ button.btn {
   border: none;
   box-shadow: none;
   padding: 0;
+  height: auto;
   line-height: $line-height-base;
   text-transform: inherit;
   font-weight: 500;
