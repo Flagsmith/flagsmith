@@ -52,6 +52,14 @@ const SetupStep: FC<SetupStepProps> = ({
   const hasInsufficientVariations =
     !!featureFlagId && variations.length < MIN_VARIATIONS_FOR_EXPERIMENT
 
+  const collidingVariations = useMemo(
+    () =>
+      variations.filter(
+        (v) => v.value.trim().length > 0 && v.value === controlValue,
+      ),
+    [variations, controlValue],
+  )
+
   const segmentOverrides = selectedFlag?.existingSegmentOverrides ?? []
 
   return (
@@ -155,6 +163,30 @@ const SetupStep: FC<SetupStepProps> = ({
                   Experiments need at least {MIN_VARIATIONS_FOR_EXPERIMENT}{' '}
                   variation to run — add one on the flag page to make it
                   eligible.
+                </span>
+              </Banner>
+            )}
+
+            {collidingVariations.length > 0 && (
+              <Banner variant='warning'>
+                <span>
+                  {collidingVariations.length === 1 ? (
+                    <>
+                      Variation <strong>{collidingVariations[0].name}</strong>{' '}
+                      serves the same value as control (
+                      <code>{controlValue}</code>).
+                    </>
+                  ) : (
+                    <>
+                      <strong>{collidingVariations.length} variations</strong>{' '}
+                      serve the same value as control (
+                      <code>{controlValue}</code>).
+                    </>
+                  )}{' '}
+                  Identities bucketed into{' '}
+                  {collidingVariations.length === 1 ? 'it' : 'them'} will be
+                  indistinguishable from control at evaluation time — fix the
+                  values on the flag before launching.
                 </span>
               </Banner>
             )}
