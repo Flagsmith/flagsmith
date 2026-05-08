@@ -101,6 +101,7 @@
     "js-cookie": "2.2.1",
     "lodash": "^4.18.1",
     "moment": "2.29.4",
+    "motion": "^12.38.0",
     "node-fetch": "2.6.7",
     "polyfill-react-native": "1.0.5",
     "prismjs": "^1.30.0",
