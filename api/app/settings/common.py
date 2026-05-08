@@ -152,6 +152,7 @@ INSTALLED_APPS = [
     "integrations.webhook",
     "integrations.dynatrace",
     "integrations.flagsmith",
+    "integrations.flagd",
     "integrations.launch_darkly",
     "integrations.github",
     "integrations.gitlab",

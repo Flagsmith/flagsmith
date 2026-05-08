@@ -73,6 +73,7 @@ urlpatterns = [
         SDKEnvironmentAPIView.as_view(),
         name="environment-document",
     ),
+    path("flagd/", include("integrations.flagd.urls", namespace="flagd")),
     re_path("", include("features.versioning.urls", namespace="versioning")),
     # API documentation
     path(
