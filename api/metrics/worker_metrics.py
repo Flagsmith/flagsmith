@@ -9,7 +9,7 @@ MAX_RSS_STATUS_FIELD = "VmHWM"
 
 flagsmith_worker_rss_bytes = prometheus_client.Gauge(
     "flagsmith_worker_rss_bytes",
-    "Resident Set Size (RSS) of the worker process in bytes.",
+    "Maximum RSS (high-water mark) of the worker process in bytes, read from VmHWM in /proc/self/status.",
     ["pid"],
     multiprocess_mode="liveall"
 )
