@@ -24,6 +24,17 @@ def update_worker_metrics():
     if rss_value is not None:
         flagsmith_worker_rss_bytes.labels(pid=str(current_pid)).set(rss_value)
 
+def clear_worker_metrics():
+    """
+    Clear the RSS memory usage metric for the current worker process.
+    This should be called when a worker process is shutting down to prevent stale metrics.
+    """
+    current_pid = os.getpid()
+    try:
+        flagsmith_worker_rss_bytes.remove(pid=str(current_pid))
+    except (KeyError, ValueError):
+        pass
+
 def get_current_process_max_rss_bytes() -> int | None:
     try:
         proc_status_lines = PROC_SELF_STATUS_PATH.read_text(
@@ -70,13 +81,3 @@ def _parse_proc_status_memory_kb(value: str) -> int | None:
 
     return memory_kb
 
-def clear_worker_metrics():
-    """
-    Clear the RSS memory usage metric for the current worker process.
-    This should be called when a worker process is shutting down to prevent stale metrics.
-    """
-    current_pid = os.getpid()
-    try:
-        flagsmith_worker_rss_bytes.remove(pid=str(current_pid))
-    except (KeyError, ValueError):
-        pass
