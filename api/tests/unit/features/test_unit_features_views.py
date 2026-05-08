@@ -57,7 +57,7 @@ from metadata.models import (
 )
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
-from projects.code_references.models import FeatureFlagCodeReferencesScan
+from projects.code_references.models import ScannedCodeReferences, VCSRepository
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import Segment
@@ -3674,9 +3674,15 @@ def test_list_features__with_code_references__returns_counts(
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     enable_features("code_references_ui_stats")
     with freeze_time("2099-01-01T10:00:00-0300"):
-        FeatureFlagCodeReferencesScan.objects.create(
+        github_repository = VCSRepository.objects.create(
             project=project,
-            repository_url="https://github.flagsmith.com/backend/",
+            url="https://github.flagsmith.com/backend/",
+            vcs_provider="github",
+            last_scanned_at=timezone.now(),
+        )
+        ScannedCodeReferences.objects.create(
+            feature=feature,
+            repository=github_repository,
             revision="backend-1",
             code_references=[
                 {
@@ -3685,35 +3691,20 @@ def test_list_features__with_code_references__returns_counts(
                     "line_number": 42,
                 },
             ],
-        )
-        FeatureFlagCodeReferencesScan.objects.create(
-            project=project,
-            repository_url="https://gitlab.flagsmith.com/frontend/",
-            revision="frontend-1",
-            code_references=[
-                {
-                    "feature_name": feature.name,
-                    "file_path": "path/to/file.js",
-                    "line_number": 23,
-                },
-            ],
+            code_references_hash="hash-backend-1",
         )
     with freeze_time("2099-01-02T11:00:00-0300"):
-        FeatureFlagCodeReferencesScan.objects.create(
+        github_repository.last_scanned_at = timezone.now()
+        github_repository.save()
+        gitlab_repository = VCSRepository.objects.create(
             project=project,
-            repository_url="https://github.flagsmith.com/backend/",
-            revision="backend-2",
-            code_references=[
-                {
-                    "feature_name": f"Another {feature.name}",
-                    "file_path": "path/to/another/file.py",
-                    "line_number": 11,
-                },
-            ],
+            url="https://gitlab.flagsmith.com/frontend/",
+            vcs_provider="github",
+            last_scanned_at=timezone.now(),
         )
-        FeatureFlagCodeReferencesScan.objects.create(
-            project=project,
-            repository_url="https://gitlab.flagsmith.com/frontend/",
+        ScannedCodeReferences.objects.create(
+            feature=feature,
+            repository=gitlab_repository,
             revision="frontend-2",
             code_references=[
                 {
@@ -3727,6 +3718,7 @@ def test_list_features__with_code_references__returns_counts(
                     "line_number": 50,
                 },
             ],
+            code_references_hash="hash-frontend-2",
         )
 
     # When
@@ -3786,9 +3778,15 @@ def test_list_features__code_references_ui_stats_disabled__returns_empty_counts(
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     enable_features()  # code_references_ui_stats not enabled
-    FeatureFlagCodeReferencesScan.objects.create(
+    repository = VCSRepository.objects.create(
         project=project,
-        repository_url="https://github.flagsmith.com/backend/",
+        url="https://github.flagsmith.com/backend/",
+        vcs_provider="github",
+        last_scanned_at=timezone.now(),
+    )
+    ScannedCodeReferences.objects.create(
+        feature=feature,
+        repository=repository,
         revision="rev-1",
         code_references=[
             {
@@ -3797,6 +3795,7 @@ def test_list_features__code_references_ui_stats_disabled__returns_empty_counts(
                 "line_number": 42,
             },
         ],
+        code_references_hash="hash-1",
     )
 
     # When

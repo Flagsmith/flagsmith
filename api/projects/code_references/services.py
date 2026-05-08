@@ -1,137 +1,162 @@
+import hashlib
+import json
+from collections import defaultdict
 from urllib.parse import urljoin
 
 from django.contrib.postgres.expressions import ArraySubquery
-from django.db.models import (
-    BooleanField,
-    F,
-    Func,
-    OuterRef,
-    QuerySet,
-    Subquery,
-    Value,
-)
-from django.db.models.functions import JSONObject
+from django.db.models import F, Func, OuterRef, QuerySet, Subquery
+from django.db.models.functions import Coalesce, JSONObject
+from django.utils import timezone
 
 from features.models import Feature
-from projects.code_references.models import FeatureFlagCodeReferencesScan
+from projects.code_references.models import ScannedCodeReferences, VCSRepository
 from projects.code_references.types import (
     CodeReference,
     FeatureFlagCodeReferencesRepositorySummary,
+    FeatureFlagCodeReferencesScan,
+    JSONCodeReference,
     VCSProvider,
 )
+from projects.models import Project
 
 
 def annotate_feature_queryset_with_code_references_summary(
     queryset: QuerySet[Feature],
 ) -> QuerySet[Feature]:
-    """Annotate each `Feature` with `code_references_counts: list[CodeReferencesRepositoryCount]`."""
-    last_feature_found_at = (
-        FeatureFlagCodeReferencesScan.objects.annotate(
-            feature_name=OuterRef("feature_name"),
-            contains_feature_name=Func(
-                F("code_references"),
-                Value("$[*] ? (@.feature_name == $feature_name)"),
-                JSONObject(feature_name=F("feature_name")),
-                function="jsonb_path_exists",
-                output_field=BooleanField(),
-            ),
+    """Annotate `queryset` with `code_references_counts: list[CodeReferencesRepositoryCount]`."""
+
+    count_from_last_scan = (
+        ScannedCodeReferences.objects.filter(
+            feature_id=OuterRef("feature_id"),
+            repository_id=OuterRef("repository_id"),
+            created_at=F("repository__last_scanned_at"),
         )
-        .filter(
-            project=OuterRef("project_id"),
-            repository_url=OuterRef("repository_url"),
-            contains_feature_name=True,
-        )
-        .values("created_at")
-        .order_by("-created_at")[:1]
-    )
-    counts_by_repository = (
-        FeatureFlagCodeReferencesScan.objects
-        # Count code references from JSON matching the feature name
+        .order_by("-created_at")
         .annotate(
-            feature_name=OuterRef("name"),
-            last_feature_found_at=Subquery(last_feature_found_at),
-            count=Func(
-                Func(
-                    F("code_references"),
-                    Value("$[*] ? (@.feature_name == $feature_name)"),
-                    JSONObject(feature_name=F("feature_name")),
-                    function="jsonb_path_query_array",
-                ),
-                function="jsonb_array_length",
-            ),
+            count=Func(F("code_references"), function="jsonb_array_length"),
         )
-        # Only from the latest scans of each repository
-        .filter(
-            project_id=OuterRef("project_id"),
-        )
-        .order_by("repository_url", "-created_at")
-        .distinct("repository_url")
-        .values(
-            json=JSONObject(
-                repository_url=F("repository_url"),
-                count=F("count"),
-                last_successful_repository_scanned_at=F("created_at"),
-                last_feature_found_at=F("last_feature_found_at"),
-            ),
-        )
+        .values("count")[:1]
     )
 
-    return queryset.annotate(
-        code_references_counts=ArraySubquery(counts_by_repository),
+    counts_by_repository = (
+        ScannedCodeReferences.objects.filter(
+            feature_id=OuterRef("pk"),
+        )
+        .order_by("repository__url", "-created_at")
+        .distinct("repository__url")
+        .annotate(
+            summary=JSONObject(
+                repository_url=F("repository__url"),
+                last_successful_repository_scanned_at=F("repository__last_scanned_at"),
+                last_feature_found_at=F("created_at"),
+                count=Coalesce(Subquery(count_from_last_scan), 0),
+            ),
+        )
+        .values("summary")
     )
+
+    return queryset.annotate(code_references_counts=ArraySubquery(counts_by_repository))
 
 
 def get_code_references_for_feature_flag(
     feature: Feature,
 ) -> list[FeatureFlagCodeReferencesRepositorySummary]:
-    """Obtain a summary of latest code references for a feature
+    """Return the latest known code references for `feature` per repository."""
 
-    Only query from the latest scans of each repository_url. This is used to
-    populate `FeatureFlagCodeReferencesSerializer`.
-    """
-    last_feature_found_at = (
-        FeatureFlagCodeReferencesScan.objects.filter(
-            project=feature.project,
-            repository_url=OuterRef("repository_url"),
-            code_references__contains=[{"feature_name": feature.name}],
+    latest_scanned_code_references = (
+        ScannedCodeReferences.objects.filter(
+            feature=feature,
+            created_at=F("repository__last_scanned_at"),
         )
-        .values("created_at")
-        .order_by("-created_at")[:1]
-    )
-
-    last_scans_of_each_repository = (
-        FeatureFlagCodeReferencesScan.objects.filter(project=feature.project)
-        .annotate(last_feature_found_at=Subquery(last_feature_found_at))
-        .order_by("repository_url", "-created_at")
-        .distinct("repository_url")
+        .order_by("repository__url")
+        .select_related("repository")
     )
 
     return [
         FeatureFlagCodeReferencesRepositorySummary(
-            repository_url=scan.repository_url,
-            vcs_provider=VCSProvider(scan.vcs_provider),
-            revision=scan.revision,
-            last_successful_repository_scanned_at=scan.created_at,
-            last_feature_found_at=scan.last_feature_found_at,
+            repository_url=r.repository.url,
+            vcs_provider=(provider := VCSProvider(r.repository.vcs_provider)),
+            revision=r.revision,
+            last_successful_repository_scanned_at=r.repository.last_scanned_at,  # type: ignore[arg-type]
+            last_feature_found_at=r.created_at,
             code_references=[
                 CodeReference(
                     feature_name=feature.name,
-                    file_path=reference["file_path"],
-                    line_number=reference["line_number"],
+                    file_path=ref["file_path"],
+                    line_number=ref["line_number"],
                     permalink=_get_permalink(
-                        provider=VCSProvider(scan.vcs_provider),
-                        repository_url=scan.repository_url,
-                        revision=scan.revision,
-                        file_path=reference["file_path"],
-                        line_number=reference["line_number"],
+                        provider=provider,
+                        repository_url=r.repository.url,
+                        revision=r.revision,
+                        file_path=ref["file_path"],
+                        line_number=ref["line_number"],
                     ),
                 )
-                for reference in scan.code_references
-                if reference["feature_name"] == feature.name
+                for ref in r.code_references
             ],
         )
-        for scan in last_scans_of_each_repository
+        for r in latest_scanned_code_references
     ]
+
+
+def record_scan(
+    project: Project,
+    repository_url: str,
+    vcs_provider: VCSProvider,
+    revision: str,
+    code_references: list[JSONCodeReference],
+) -> FeatureFlagCodeReferencesScan:
+    """Persist a code references scan and return its summary."""
+    scanned_at = timezone.now()
+    repository, _ = VCSRepository.objects.update_or_create(
+        project=project,
+        url=repository_url,
+        defaults={"vcs_provider": vcs_provider, "last_scanned_at": scanned_at},
+    )
+
+    references_by_feature_name: defaultdict[str, list[JSONCodeReference]] = defaultdict(
+        list
+    )
+    for reference in code_references:
+        references_by_feature_name[reference["feature_name"]].append(reference)
+
+    features_by_name = {
+        feature.name: feature
+        for feature in Feature.objects.filter(
+            project=project,
+            name__in=references_by_feature_name,
+        )
+    }
+
+    ScannedCodeReferences.objects.bulk_create(
+        [
+            ScannedCodeReferences(
+                feature=feature,
+                repository=repository,
+                revision=revision,
+                code_references=references,
+                code_references_hash=_hash_references(references),
+            )
+            for feature_name, references in references_by_feature_name.items()
+            if (feature := features_by_name.get(feature_name)) is not None
+        ],
+        ignore_conflicts=True,
+    )
+
+    return FeatureFlagCodeReferencesScan(
+        created_at=scanned_at,
+        repository_url=repository_url,
+        vcs_provider=vcs_provider,
+        revision=revision,
+        code_references=code_references,
+        project=project,
+    )
+
+
+def _hash_references(references: list[JSONCodeReference]) -> str:
+    return hashlib.md5(
+        json.dumps(references, sort_keys=True).encode(),
+    ).hexdigest()
 
 
 def _get_permalink(
