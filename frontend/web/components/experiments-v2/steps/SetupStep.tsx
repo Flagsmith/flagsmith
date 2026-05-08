@@ -52,6 +52,8 @@ const SetupStep: FC<SetupStepProps> = ({
   const hasInsufficientVariations =
     !!featureFlagId && variations.length < MIN_VARIATIONS_FOR_EXPERIMENT
 
+  const segmentOverrides = selectedFlag?.existingSegmentOverrides ?? []
+
   return (
     <div className='setup-step'>
       <section className='setup-step__section'>
@@ -153,6 +155,26 @@ const SetupStep: FC<SetupStepProps> = ({
                   Experiments need at least {MIN_VARIATIONS_FOR_EXPERIMENT}{' '}
                   variation to run — add one on the flag page to make it
                   eligible.
+                </span>
+              </Banner>
+            )}
+
+            {segmentOverrides.length > 0 && (
+              <Banner variant='warning'>
+                <span>
+                  This flag has{' '}
+                  <strong>
+                    {segmentOverrides.length} segment override
+                    {segmentOverrides.length === 1 ? '' : 's'}
+                  </strong>
+                  :{' '}
+                  {segmentOverrides.map((o) => `${o.segmentLabel}`).join(', ')}.
+                  Users matching{' '}
+                  {segmentOverrides.length === 1
+                    ? 'this segment'
+                    : 'these segments'}{' '}
+                  will continue receiving their override variant and{' '}
+                  <strong>will not enter the experiment</strong>.
                 </span>
               </Banner>
             )}

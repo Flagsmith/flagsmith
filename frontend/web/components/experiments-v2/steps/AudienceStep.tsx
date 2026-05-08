@@ -29,7 +29,7 @@ type Arm = {
 
 type AudienceStepProps = {
   audience: AudienceConfig
-  /** Used by Phase 5 (eval-hierarchy banners) to surface flag-level overrides. */
+  /** Used to compute the override-excluded user count. */
   flag: FlagOption | null
   controlValue: string
   variations: Variation[]
@@ -81,7 +81,7 @@ const AudienceStep: FC<AudienceStepProps> = ({
   audience,
   controlValue,
   environmentName,
-  flag: _flag,
+  flag,
   layerId,
   onChange,
   onLayerIdChange,
@@ -174,8 +174,23 @@ const AudienceStep: FC<AudienceStepProps> = ({
     return Math.round(MOCK_ENVIRONMENT_USER_COUNT * dampener)
   }, [audience.conditions.length])
 
+  // Approximate users excluded by flag-level segment overrides. In production
+  // we'd intersect each override's segment with the audience to get the real
+  // overlap; here we use a fixed mock factor per override.
+  const overrideExcludedUsers = useMemo(() => {
+    const overrideCount = flag?.existingSegmentOverrides.length ?? 0
+    if (overrideCount === 0) return 0
+    const excludedFraction = Math.min(0.5, overrideCount * 0.1)
+    return Math.round(eligibleUsers * excludedFraction)
+  }, [flag, eligibleUsers])
+
+  const effectiveAudienceUsers = Math.max(
+    0,
+    eligibleUsers - overrideExcludedUsers,
+  )
+
   const sampledUsers = Math.round(
-    (eligibleUsers * audience.samplePercentage) / 100,
+    (effectiveAudienceUsers * audience.samplePercentage) / 100,
   )
 
   const armEstimates = arms.map((a) => ({
@@ -429,6 +444,13 @@ const AudienceStep: FC<AudienceStepProps> = ({
             <>
               {eligibleUsers.toLocaleString()} eligible users in this
               environment.{' '}
+            </>
+          )}
+          {overrideExcludedUsers > 0 && (
+            <>
+              ~{overrideExcludedUsers.toLocaleString()} excluded by flag-level
+              segment overrides; effective audience ~
+              {effectiveAudienceUsers.toLocaleString()}.{' '}
             </>
           )}
           Sampling {audience.samplePercentage}% (~
