@@ -29,11 +29,6 @@ const INITIAL_ARMS = buildExperimentArms(
   INITIAL_FLAG.variations,
 )
 
-const toISODate = (d: Date) => d.toISOString().slice(0, 10)
-const DEFAULT_START = new Date()
-const DEFAULT_END = new Date(DEFAULT_START)
-DEFAULT_END.setDate(DEFAULT_END.getDate() + 14)
-
 const INITIAL_STATE: ExperimentWizardState = {
   audience: {
     conditions: [],
@@ -43,11 +38,9 @@ const INITIAL_STATE: ExperimentWizardState = {
   controlValue: INITIAL_FLAG.controlValue,
   currentStep: 0,
   details: {
-    endDate: toISODate(DEFAULT_END),
     hypothesis:
       'Redesigning the checkout button with a clearer CTA will increase conversion rates by at least 15% within 30 days',
     name: 'Checkout Button Redesign',
-    startDate: toISODate(DEFAULT_START),
   },
   featureFlagId: INITIAL_FLAG.value,
   metrics: [

@@ -25,8 +25,6 @@ export const MOCK_ENVIRONMENT_USER_COUNT = 100000
 export type ExperimentDetails = {
   name: string
   hypothesis: string
-  startDate: string
-  endDate: string
 }
 
 export type MeasurementType = 'count' | 'occurrence' | 'value'

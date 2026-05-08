@@ -102,29 +102,6 @@ const SetupStep: FC<SetupStepProps> = ({
             magnitude, and the timeframe.
           </span>
         </div>
-
-        <div className='setup-step__date-row'>
-          <div className='setup-step__field'>
-            <label className='setup-step__label'>Start date</label>
-            <Input
-              type='date'
-              value={details.startDate}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                onDetailsChange({ ...details, startDate: e.target.value })
-              }
-            />
-          </div>
-          <div className='setup-step__field'>
-            <label className='setup-step__label'>End date</label>
-            <Input
-              type='date'
-              value={details.endDate}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                onDetailsChange({ ...details, endDate: e.target.value })
-              }
-            />
-          </div>
-        </div>
       </section>
 
       <section className='setup-step__section'>
