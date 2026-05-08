@@ -118,7 +118,7 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = ">3.11,<3.14"
-django = ">=5,<6"
+django = ">=5.2.14,<6"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
 backoff = "~2.2.1"
