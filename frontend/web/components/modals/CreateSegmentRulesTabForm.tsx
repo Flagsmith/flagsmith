@@ -202,27 +202,35 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
         {!readOnly &&
         setTopLevelRuleType &&
         Utils.getFlagsmithHasFeature('segment_any_rule_type') ? (
-          <Row className='mb-3 align-items-center gap-2'>
-            <label className='control-label mb-0'>Include users when</label>
-            <InlinePillToggle
-              data-test='top-level-rule-type'
-              size='medium'
-              options={[
-                { label: 'ALL', value: 'ALL' },
-                { label: 'ANY', value: 'ANY' },
-              ]}
-              value={topLevelRuleType}
-              onChange={setTopLevelRuleType}
-            />
-            <label className='control-label mb-0'>
-              of the following rules apply:
-            </label>
-          </Row>
+          <>
+            <Row className='mb-2 align-items-center gap-2'>
+              <label className='control-label mb-0'>Include users when</label>
+              <InlinePillToggle
+                data-test='top-level-rule-type'
+                size='medium'
+                options={[
+                  { label: 'ALL', value: 'ALL' },
+                  { label: 'ANY', value: 'ANY' },
+                ]}
+                value={topLevelRuleType}
+                onChange={setTopLevelRuleType}
+              />
+              <label className='control-label mb-0'>
+                of the following rules apply
+              </label>
+            </Row>
+            {topLevelRuleType === 'ANY' &&
+              Utils.getFlagsmithValue('segment_any_rule_type') && (
+                <div className='fs-small fst-italic text-muted mb-3'>
+                  {Utils.getFlagsmithValue('segment_any_rule_type')}
+                </div>
+              )}
+          </>
         ) : (
           <Flex className='mb-3'>
             <label className='cols-sm-2 control-label mb-1'>
               Include users when {topLevelRuleType === 'ANY' ? 'any' : 'all'} of
-              the following rules apply:
+              the following rules apply
             </label>
           </Flex>
         )}
