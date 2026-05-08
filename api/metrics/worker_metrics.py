@@ -1,6 +1,9 @@
 from pathlib import Path
 from typing import Iterable
+from pathlib import Path
+from typing import Iterable
 import prometheus_client
+import os
 
 PROC_SELF_STATUS_PATH = Path("/proc/self/status")
 MAX_RSS_KB_TO_BYTES = 1024
@@ -12,6 +15,16 @@ flagsmith_worker_rss_bytes = prometheus_client.Gauge(
     ["pid"],
     multiprocess_mode="liveall"
 )
+
+def update_worker_metrics():
+    """
+    Background loop that runs inside each worker process to update the RSS memory usage metric.
+    """
+    current_pid = os.getpid()
+
+    rss_value = get_current_process_max_rss_bytes()
+    if rss_value is not None:
+        flagsmith_worker_rss_bytes.labels(pid=str(current_pid)).set(rss_value)
 
 def get_current_process_max_rss_bytes() -> int | None:
     try:
@@ -58,3 +71,14 @@ def _parse_proc_status_memory_kb(value: str) -> int | None:
         return None
 
     return memory_kb
+
+def clear_worker_metrics():
+    """
+    Clear the RSS memory usage metric for the current worker process.
+    This should be called when a worker process is shutting down to prevent stale metrics.
+    """
+    current_pid = os.getpid()
+    try:
+        flagsmith_worker_rss_bytes.remove(pid=str(current_pid))
+    except (KeyError, ValueError):
+        pass
