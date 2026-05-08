@@ -39,47 +39,11 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
 
   return (
     <div className='review-launch-step'>
-      {/* Step 1: Flag & Variations */}
+      {/* Step 1: Setup (details + flag + variations) */}
       <div className='review-launch-step__section'>
         <div className='review-launch-step__section-header'>
-          <span className='review-launch-step__section-title'>
-            Flag & Variations
-          </span>
+          <span className='review-launch-step__section-title'>Setup</span>
           <Button theme='text' size='xSmall' onClick={() => onEditStep(0)}>
-            Edit
-          </Button>
-        </div>
-        <div className='review-launch-step__row'>
-          <span className='review-launch-step__label'>Feature Flag</span>
-          <span className='review-launch-step__value review-launch-step__value--mono'>
-            {flagLabel}
-          </span>
-        </div>
-        <div className='review-launch-step__variations'>
-          {arms.map((v) => (
-            <div key={v.id} className='review-launch-step__variation'>
-              <span
-                className='review-launch-step__variation-dot'
-                style={{ background: v.colour }}
-              />
-              <span className='review-launch-step__variation-name'>
-                {v.name}
-              </span>
-              <span className='review-launch-step__variation-value'>
-                {v.value}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Step 2: Experiment Details */}
-      <div className='review-launch-step__section'>
-        <div className='review-launch-step__section-header'>
-          <span className='review-launch-step__section-title'>
-            Experiment Details
-          </span>
-          <Button theme='text' size='xSmall' onClick={() => onEditStep(1)}>
             Edit
           </Button>
         </div>
@@ -106,46 +70,37 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
             </span>
           </div>
         )}
+        <div className='review-launch-step__row'>
+          <span className='review-launch-step__label'>Feature Flag</span>
+          <span className='review-launch-step__value review-launch-step__value--mono'>
+            {flagLabel}
+          </span>
+        </div>
+        <div className='review-launch-step__variations'>
+          {arms.map((v) => (
+            <div key={v.id} className='review-launch-step__variation'>
+              <span
+                className='review-launch-step__variation-dot'
+                style={{ background: v.colour }}
+              />
+              <span className='review-launch-step__variation-name'>
+                {v.name}
+              </span>
+              <span className='review-launch-step__variation-value'>
+                {v.value}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Step 3: Metrics */}
+      {/* Step 2: Audience & Traffic */}
       <div className='review-launch-step__section'>
         <div className='review-launch-step__section-header'>
           <span className='review-launch-step__section-title'>
-            Metrics ({wizardState.metrics.length})
+            Audience & Traffic
           </span>
-          <Button theme='text' size='xSmall' onClick={() => onEditStep(2)}>
-            Edit
-          </Button>
-        </div>
-        {wizardState.metrics.length > 0 ? (
-          wizardState.metrics.map((m) => (
-            <div key={m.id} className='review-launch-step__metric-row'>
-              <div className='review-launch-step__metric-info'>
-                <span className='review-launch-step__metric-name'>
-                  {m.name}
-                </span>
-                <span className='review-launch-step__metric-desc'>
-                  {m.description}
-                </span>
-              </div>
-              <span
-                className={`review-launch-step__badge review-launch-step__badge--${m.role}`}
-              >
-                {m.role}
-              </span>
-            </div>
-          ))
-        ) : (
-          <span className='review-launch-step__empty'>No metrics selected</span>
-        )}
-      </div>
-
-      {/* Step 4: Audience */}
-      <div className='review-launch-step__section'>
-        <div className='review-launch-step__section-header'>
-          <span className='review-launch-step__section-title'>Audience</span>
-          <Button theme='text' size='xSmall' onClick={() => onEditStep(3)}>
+          <Button theme='text' size='xSmall' onClick={() => onEditStep(1)}>
             Edit
           </Button>
         </div>
@@ -188,6 +143,40 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Step 3: Measurement */}
+      <div className='review-launch-step__section'>
+        <div className='review-launch-step__section-header'>
+          <span className='review-launch-step__section-title'>
+            Measurement ({wizardState.metrics.length}{' '}
+            {wizardState.metrics.length === 1 ? 'metric' : 'metrics'})
+          </span>
+          <Button theme='text' size='xSmall' onClick={() => onEditStep(2)}>
+            Edit
+          </Button>
+        </div>
+        {wizardState.metrics.length > 0 ? (
+          wizardState.metrics.map((m) => (
+            <div key={m.id} className='review-launch-step__metric-row'>
+              <div className='review-launch-step__metric-info'>
+                <span className='review-launch-step__metric-name'>
+                  {m.name}
+                </span>
+                <span className='review-launch-step__metric-desc'>
+                  {m.description}
+                </span>
+              </div>
+              <span
+                className={`review-launch-step__badge review-launch-step__badge--${m.role}`}
+              >
+                {m.role}
+              </span>
+            </div>
+          ))
+        ) : (
+          <span className='review-launch-step__empty'>No metrics selected</span>
+        )}
       </div>
     </div>
   )

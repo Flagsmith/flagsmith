@@ -1,11 +1,29 @@
-.experiment-details-step {
+.setup-step {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 20px;
-  background: var(--color-surface-subtle);
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-xl);
+  gap: 28px;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    background: var(--color-surface-subtle);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-xl);
+  }
+
+  &__section-title {
+    font-size: var(--font-body-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-default);
+    margin: 0;
+  }
+
+  &__section-hint {
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
 
   &__field {
     display: flex;
@@ -50,14 +68,15 @@
     }
   }
 
-  &__type-cards {
-    display: flex;
-    gap: 12px;
-  }
-
   &__date-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
+  }
+
+  &__no-variations {
+    padding: 24px;
+    border: 1px dashed var(--color-border-default);
+    border-radius: var(--radius-lg);
   }
 }

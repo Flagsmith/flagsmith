@@ -604,20 +604,16 @@ export const MOCK_LINKED_EXPERIMENT: LinkedExperiment = {
 
 export const EXPERIMENT_WIZARD_STEPS: WizardStepDef[] = [
   {
-    subtitle: 'Name your experiment and describe your hypothesis',
-    title: 'Experiment Details',
+    subtitle: 'Name, hypothesis, and the flag to experiment on',
+    title: 'Setup',
   },
   {
-    subtitle: 'Select the multi-variant flag to experiment on',
-    title: 'Flag & Variations',
+    subtitle: 'Choose who is exposed and how traffic is split',
+    title: 'Audience & Traffic',
   },
   {
-    subtitle: 'Choose primary and secondary metrics to measure',
-    title: 'Select Metrics',
-  },
-  {
-    subtitle: 'Choose the audience and how to split traffic',
-    title: 'Audience',
+    subtitle: 'Pick the metrics that determine success',
+    title: 'Measurement',
   },
   {
     subtitle: 'Review your configuration and launch',

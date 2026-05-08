@@ -4,9 +4,8 @@ import WizardLayout from './wizard/WizardLayout'
 import WizardSidebar from './wizard/WizardSidebar'
 import WizardHeader from './wizard/WizardHeader'
 import WizardNavButtons from './wizard/WizardNavButtons'
-import ExperimentDetailsStep from './steps/ExperimentDetailsStep'
+import SetupStep from './steps/SetupStep'
 import SelectMetricsStep from './steps/SelectMetricsStep'
-import FlagVariationsStep from './steps/FlagVariationsStep'
 import AudienceStep from './steps/AudienceStep'
 import ReviewLaunchStep from './steps/ReviewLaunchStep'
 import { buildExperimentArms, splitEvenly } from './steps/AudienceStep'
@@ -147,18 +146,16 @@ const CreateExperimentPage: FC = () => {
 
   const isCurrentStepValid = useMemo(() => {
     if (state.currentStep === 0) {
+      // Setup: name + hypothesis + flag picked + flag has enough variations
       return (
         state.details.name.trim().length > 0 &&
-        state.details.hypothesis.trim().length > 0
-      )
-    }
-    if (state.currentStep === 1) {
-      return (
+        state.details.hypothesis.trim().length > 0 &&
         !!state.featureFlagId &&
         state.variations.length >= MIN_VARIATIONS_FOR_EXPERIMENT
       )
     }
-    if (state.currentStep === 3) {
+    if (state.currentStep === 1) {
+      // Audience & Traffic: weights sum to 100, sample > 0
       const sum = (state.audience.weights ?? []).reduce(
         (s, w) => s + w.weight,
         0,
@@ -181,31 +178,21 @@ const CreateExperimentPage: FC = () => {
 
     let completeSummary: string | undefined
     switch (i) {
-      case 0:
-        completeSummary = state.details.name || undefined
-        break
-      case 1: {
+      case 0: {
+        // Setup: name + arm count
         const armCount = state.variations.length + 1
-        completeSummary = `${armCount} arm${armCount === 1 ? '' : 's'}`
-        break
-      }
-      case 2: {
-        const pCount = state.metrics.filter((m) => m.role === 'primary').length
-        const sCount = state.metrics.filter(
-          (m) => m.role === 'secondary',
-        ).length
-        const gCount = state.metrics.filter(
-          (m) => m.role === 'guardrail',
-        ).length
+        const flag = MOCK_FLAGS.find((f) => f.value === state.featureFlagId)
+        const flagLabel = flag?.label ?? 'flag'
         const parts = [
-          `${pCount} primary`,
-          `${sCount} secondary`,
-          gCount > 0 ? `${gCount} guardrail` : null,
+          state.details.name || null,
+          `${flagLabel}`,
+          `${armCount} arm${armCount === 1 ? '' : 's'}`,
         ].filter(Boolean)
         completeSummary = parts.join(' · ')
         break
       }
-      case 3: {
+      case 1: {
+        // Audience & Traffic
         const splitParts = (state.audience.weights ?? [])
           .filter((w) => w.weight > 0)
           .map((w) => `${w.weight}%`)
@@ -222,6 +209,23 @@ const CreateExperimentPage: FC = () => {
         completeSummary = summaryParts.join(' · ')
         break
       }
+      case 2: {
+        // Measurement
+        const pCount = state.metrics.filter((m) => m.role === 'primary').length
+        const sCount = state.metrics.filter(
+          (m) => m.role === 'secondary',
+        ).length
+        const gCount = state.metrics.filter(
+          (m) => m.role === 'guardrail',
+        ).length
+        const parts = [
+          `${pCount} primary`,
+          `${sCount} secondary`,
+          gCount > 0 ? `${gCount} guardrail` : null,
+        ].filter(Boolean)
+        completeSummary = parts.join(' · ')
+        break
+      }
       default:
         break
     }
@@ -232,17 +236,14 @@ const CreateExperimentPage: FC = () => {
     switch (state.currentStep) {
       case 0:
         return (
-          <ExperimentDetailsStep
+          <SetupStep
             details={state.details}
-            onChange={(details) => setState((prev) => ({ ...prev, details }))}
-          />
-        )
-      case 1:
-        return (
-          <FlagVariationsStep
             featureFlagId={state.featureFlagId}
             controlValue={state.controlValue}
             variations={state.variations}
+            onDetailsChange={(details) =>
+              setState((prev) => ({ ...prev, details }))
+            }
             onFlagChange={(flagId) =>
               setState((prev) => ({ ...prev, featureFlagId: flagId }))
             }
@@ -264,15 +265,7 @@ const CreateExperimentPage: FC = () => {
             }
           />
         )
-      case 2:
-        return (
-          <SelectMetricsStep
-            selectedMetrics={state.metrics}
-            onToggleMetric={handleToggleMetric}
-            onSetRole={handleSetMetricRole}
-          />
-        )
-      case 3: {
+      case 1: {
         const flag =
           MOCK_FLAGS.find((f) => f.value === state.featureFlagId) ?? null
         return (
@@ -286,7 +279,15 @@ const CreateExperimentPage: FC = () => {
           />
         )
       }
-      case 4:
+      case 2:
+        return (
+          <SelectMetricsStep
+            selectedMetrics={state.metrics}
+            onToggleMetric={handleToggleMetric}
+            onSetRole={handleSetMetricRole}
+          />
+        )
+      case 3:
         return <ReviewLaunchStep wizardState={state} onEditStep={goToStep} />
       default:
         return null
