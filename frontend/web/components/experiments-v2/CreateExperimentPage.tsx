@@ -50,16 +50,11 @@ const INITIAL_STATE: ExperimentWizardState = {
     startDate: toISODate(DEFAULT_START),
   },
   featureFlagId: INITIAL_FLAG.value,
-  inclusionCriteria: 'flag-evaluated',
-  inclusionEventName: '',
   metrics: [
     MOCK_METRICS[0],
     { ...MOCK_METRICS[1], role: 'secondary' },
     { ...MOCK_METRICS[2], role: 'guardrail' },
   ],
-  multiVariantHandling: 'exclude',
-  sequentialTesting: false,
-  statsEngine: 'bayesian',
   variations: MOCK_VARIATIONS,
 }
 
@@ -294,26 +289,6 @@ const CreateExperimentPage: FC = () => {
             selectedMetrics={state.metrics}
             onToggleMetric={handleToggleMetric}
             onSetRole={handleSetMetricRole}
-            inclusionCriteria={state.inclusionCriteria}
-            inclusionEventName={state.inclusionEventName}
-            statsEngine={state.statsEngine}
-            multiVariantHandling={state.multiVariantHandling}
-            sequentialTesting={state.sequentialTesting}
-            onInclusionCriteriaChange={(inclusionCriteria) =>
-              setState((prev) => ({ ...prev, inclusionCriteria }))
-            }
-            onInclusionEventNameChange={(inclusionEventName) =>
-              setState((prev) => ({ ...prev, inclusionEventName }))
-            }
-            onStatsEngineChange={(statsEngine) =>
-              setState((prev) => ({ ...prev, statsEngine }))
-            }
-            onMultiVariantHandlingChange={(multiVariantHandling) =>
-              setState((prev) => ({ ...prev, multiVariantHandling }))
-            }
-            onSequentialTestingChange={(sequentialTesting) =>
-              setState((prev) => ({ ...prev, sequentialTesting }))
-            }
           />
         )
       case 3:

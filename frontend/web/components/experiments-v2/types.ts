@@ -161,38 +161,6 @@ export type ExistingSegmentOverride = {
   weights: ArmWeight[]
 }
 
-// -----------------------------------------------------------------------------
-// Measurement settings
-// -----------------------------------------------------------------------------
-
-/** When does a user count as "exposed" for analysis purposes? */
-export type InclusionCriteria = 'flag-evaluated' | 'custom-event'
-
-export const INCLUSION_CRITERIA_LABELS: Record<InclusionCriteria, string> = {
-  'custom-event': 'A custom event is triggered',
-  'flag-evaluated': 'The flag is evaluated',
-}
-
-/** Statistical engine used to compute experiment results. */
-export type StatsEngine = 'bayesian' | 'frequentist'
-
-export const STATS_ENGINE_LABELS: Record<StatsEngine, string> = {
-  bayesian: 'Bayesian',
-  frequentist: 'Frequentist',
-}
-
-/** Strategy for handling users who get assigned to multiple variants
- *  (device change, SDK bug, etc.). */
-export type MultiVariantHandling = 'exclude' | 'first-seen'
-
-export const MULTI_VARIANT_HANDLING_LABELS: Record<
-  MultiVariantHandling,
-  string
-> = {
-  exclude: 'Exclude from analysis (recommended)',
-  'first-seen': 'Use first-seen variant',
-}
-
 export type ExperimentWizardState = {
   currentStep: number
   details: ExperimentDetails
@@ -201,16 +169,6 @@ export type ExperimentWizardState = {
   controlValue: string
   variations: Variation[]
   audience: AudienceConfig
-  /** When does a user count as "exposed" for analysis? */
-  inclusionCriteria: InclusionCriteria
-  /** Custom event name when inclusionCriteria === 'custom-event'. */
-  inclusionEventName: string
-  /** Bayesian (default) or Frequentist. */
-  statsEngine: StatsEngine
-  /** How to handle users assigned to multiple variants. */
-  multiVariantHandling: MultiVariantHandling
-  /** Whether to apply sequential testing corrections (frequentist only). */
-  sequentialTesting: boolean
 }
 
 // -----------------------------------------------------------------------------

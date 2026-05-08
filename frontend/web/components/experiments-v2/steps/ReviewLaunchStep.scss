@@ -266,4 +266,9 @@
     color: var(--color-text-disabled);
     font-style: italic;
   }
+
+  &__policy {
+    margin-top: 8px;
+    line-height: 1.5;
+  }
 }
