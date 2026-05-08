@@ -6,12 +6,14 @@ sidebar_position: 55
 
 # flagd Sync Source
 
-Flagsmith exposes a [flagd](https://flagd.dev)-compatible HTTP sync endpoint, so you can use Flagsmith as the management UI and control plane for a flagd deployment. flagd polls the endpoint, loads the translated flag-definition document, and evaluates flags in-process — no Flagsmith SDK required at the call site.
+**Flagsmith is the management UI for your flagd deployment.** Authors create flags, segments, and identity overrides in Flagsmith; Flagsmith emits a [flagd](https://flagd.dev)-compatible flag-definition document on an HTTP sync endpoint; flagd polls it, loads the document, and evaluates flags in-process via OpenFeature.
 
-This is particularly useful when:
+The Flagsmith SDK is **not** part of this topology. In this mode the Flagsmith UI is a pure authoring surface — your services never call Flagsmith directly. They evaluate via flagd, which is the runtime source of truth.
+
+This is the right setup when:
 
 - You already run flagd in your platform and want a UI / audit log / segmentation tooling on top.
-- You want OpenFeature evaluation semantics without operating a Flagsmith SDK in every service.
+- You want OpenFeature-native evaluation across many services without operating a per-language SDK.
 
 ## Architecture
 
@@ -27,8 +29,6 @@ This is particularly useful when:
 │ your service │
 └──────────────┘
 ```
-
-Flagsmith is the **authoring UI**; flagd is the **runtime**. Clients evaluate via flagd, not via Flagsmith SDKs against the same data, so do not expect bit-identical results between the two evaluation paths (bucketing hashes differ; Flagsmith uses MD5, flagd uses MurmurHash3).
 
 ## Quick start
 
