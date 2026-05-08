@@ -14,4 +14,16 @@
     flex: 1;
     min-width: 0;
   }
+
+  &__preview {
+    flex-shrink: 0;
+    width: 320px;
+    align-self: flex-start;
+    position: sticky;
+    top: 24px;
+  }
+
+  &--with-preview {
+    gap: 32px;
+  }
 }

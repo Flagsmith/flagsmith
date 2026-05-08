@@ -1,0 +1,181 @@
+.live-preview-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  &__header-eyebrow {
+    font-size: var(--font-body-xs-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__header-title {
+    margin: 0;
+    font-size: var(--font-body-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-default);
+  }
+
+  &__header-hint {
+    font-size: var(--font-body-xs-size);
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+  }
+
+  &__nodes {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  &__node {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-base);
+    transition:
+      border-color var(--duration-fast) var(--easing-standard),
+      background var(--duration-fast) var(--easing-standard);
+
+    &--configured {
+      border-color: var(--color-border-action);
+      background: var(--color-surface-action-subtle);
+    }
+
+    &--pass-through {
+      opacity: 0.7;
+    }
+
+    &--pending {
+      border-style: dashed;
+      opacity: 0.6;
+    }
+  }
+
+  &__node-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-subtle);
+    color: var(--color-icon-action);
+  }
+
+  &__node-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__node-title {
+    font-size: var(--font-body-xs-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__node-summary {
+    font-size: var(--font-body-sm-size);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-default);
+    word-break: break-word;
+  }
+
+  &__node-detail {
+    font-size: var(--font-body-xs-size);
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+  }
+
+  &__connector {
+    width: 2px;
+    height: 12px;
+    margin: 0 auto;
+    background: var(--color-border-default);
+  }
+
+  &__variants {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--color-border-action);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-action-subtle);
+  }
+
+  &__variants-label {
+    font-size: var(--font-body-xs-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__variants-bar {
+    display: flex;
+    height: 8px;
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    background: var(--color-surface-emphasis);
+  }
+
+  &__variants-bar-segment {
+    height: 100%;
+    transition: width var(--duration-fast) var(--easing-standard);
+  }
+
+  &__variants-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__variants-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--font-body-sm-size);
+  }
+
+  &__variants-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+  }
+
+  &__variants-name {
+    flex: 1;
+    color: var(--color-text-default);
+  }
+
+  &__variants-weight {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+  }
+}

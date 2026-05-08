@@ -4,6 +4,7 @@ import WizardLayout from './wizard/WizardLayout'
 import WizardSidebar from './wizard/WizardSidebar'
 import WizardHeader from './wizard/WizardHeader'
 import WizardNavButtons from './wizard/WizardNavButtons'
+import LivePreviewPanel from './wizard/LivePreviewPanel'
 import SetupStep from './steps/SetupStep'
 import SelectMetricsStep from './steps/SelectMetricsStep'
 import AudienceStep from './steps/AudienceStep'
@@ -330,6 +331,7 @@ const CreateExperimentPage: FC = () => {
             onStepClick={goToStep}
           />
         }
+        preview={<LivePreviewPanel wizardState={state} />}
       >
         {renderStepContent()}
 
