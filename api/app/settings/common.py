@@ -118,6 +118,7 @@ INSTALLED_APPS = [
     "features.workflows.core",
     "features.release_pipelines.core",
     "segments",
+    "segment_membership",
     "app",
     "e2etests",
     "simple_history",
@@ -1429,3 +1430,16 @@ REQUIRE_AUTHENTICATION_FOR_API_DOCS = env.bool(
 PYLON_IDENTITY_VERIFICATION_SECRET = env.str("PYLON_IDENTITY_VERIFICATION_SECRET", None)
 
 OSIC_UPDATE_BATCH_SIZE = env.int("OSIC_UPDATE_BATCH_SIZE", default=500)
+
+# --- Snowflake (segment membership inspection) -------------------------------
+# All-None default disables the segment_membership backfill and refresh tasks.
+# When set, the api/segments/membership tasks open a Snowpark session and run
+# against this account. See docs/deployment/observability/segment-membership.md
+# for the operational shape.
+SNOWFLAKE_ACCOUNT = env.str("SNOWFLAKE_ACCOUNT", default=None)
+SNOWFLAKE_USER = env.str("SNOWFLAKE_USER", default=None)
+SNOWFLAKE_PRIVATE_KEY_PATH = env.str("SNOWFLAKE_PRIVATE_KEY_PATH", default=None)
+SNOWFLAKE_ROLE = env.str("SNOWFLAKE_ROLE", default=None)
+SNOWFLAKE_WAREHOUSE = env.str("SNOWFLAKE_WAREHOUSE", default=None)
+SNOWFLAKE_DATABASE = env.str("SNOWFLAKE_DATABASE", default=None)
+SNOWFLAKE_SCHEMA = env.str("SNOWFLAKE_SCHEMA", default=None)
