@@ -154,6 +154,62 @@ export type AudienceConfig = {
   weights: ArmWeight[]
 }
 
+// -----------------------------------------------------------------------------
+// Bucketing & mutual exclusion
+// -----------------------------------------------------------------------------
+
+/** What the SDK hashes on to bucket a user into a variation. The randomisation
+ *  unit must stay constant for a user across visits to keep assignments
+ *  sticky. */
+export type RandomisationUnit = 'identity' | 'device' | 'custom'
+
+export const RANDOMISATION_UNIT_LABELS: Record<RandomisationUnit, string> = {
+  custom: 'Custom attribute',
+  device: 'Device ID',
+  identity: 'User / Identity ID',
+}
+
+export const RANDOMISATION_UNIT_HINTS: Record<RandomisationUnit, string> = {
+  custom:
+    'Hash on a custom attribute (account ID, organisation ID, session ID).',
+  device:
+    'Best for anonymous users — bucketing survives across logged-out sessions on the same device.',
+  identity:
+    'Default. Best for logged-in users — bucketing follows the user across devices.',
+}
+
+/** A Layer groups experiments so a user is in at most one experiment per
+ *  layer. Prevents traffic overlap when several experiments target the same
+ *  audience. */
+export type Layer = {
+  value: string
+  label: string
+  description: string
+  /** Number of experiments currently using this layer (mock). */
+  experimentCount: number
+}
+
+export const MOCK_LAYERS: Layer[] = [
+  {
+    description: 'Experiments on the checkout and cart surfaces',
+    experimentCount: 2,
+    label: 'Checkout funnel',
+    value: 'layer-checkout',
+  },
+  {
+    description: 'Experiments on the home page hero',
+    experimentCount: 1,
+    label: 'Home page',
+    value: 'layer-home',
+  },
+  {
+    description: 'Pricing and upgrade-flow experiments',
+    experimentCount: 0,
+    label: 'Pricing & upgrade',
+    value: 'layer-pricing',
+  },
+]
+
 export type ExistingSegmentOverride = {
   segmentId: string
   segmentLabel: string
@@ -169,6 +225,13 @@ export type ExperimentWizardState = {
   controlValue: string
   variations: Variation[]
   audience: AudienceConfig
+  /** What the SDK hashes on to bucket users into variations. */
+  randomisationUnit: RandomisationUnit
+  /** When randomisation unit is `identity`, persist the bucketing through the
+   *  anonymous → logged-in transition so users don't switch variants on sign in. */
+  persistAcrossAuth: boolean
+  /** Layer ID for mutual exclusion, or null for an independent experiment. */
+  layerId: string | null
 }
 
 // -----------------------------------------------------------------------------

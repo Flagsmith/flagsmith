@@ -7,6 +7,8 @@ import {
   ExperimentWizardState,
   MOCK_AUDIENCE_ATTRIBUTES,
   MOCK_FLAGS,
+  MOCK_LAYERS,
+  RANDOMISATION_UNIT_LABELS,
   VALUELESS_OPERATORS,
   Variation,
 } from 'components/experiments-v2/types'
@@ -27,6 +29,7 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
   const attributeLabel = (property: string) =>
     MOCK_AUDIENCE_ATTRIBUTES.find((a) => a.value === property)?.label ??
     property
+  const selectedLayer = MOCK_LAYERS.find((l) => l.value === wizardState.layerId)
 
   const controlArm: Variation = {
     colour: CONTROL_COLOUR,
@@ -134,6 +137,23 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
               })}
             </ul>
           )}
+        </div>
+        <div className='review-launch-step__row'>
+          <span className='review-launch-step__label'>Randomisation unit</span>
+          <span className='review-launch-step__value'>
+            {RANDOMISATION_UNIT_LABELS[wizardState.randomisationUnit]}
+            {wizardState.randomisationUnit === 'identity' &&
+              wizardState.persistAcrossAuth &&
+              ' · persists across sign-in'}
+          </span>
+        </div>
+        <div className='review-launch-step__row'>
+          <span className='review-launch-step__label'>Mutual exclusion</span>
+          <span className='review-launch-step__value'>
+            {selectedLayer
+              ? `Layer: ${selectedLayer.label}`
+              : 'None — independent experiment'}
+          </span>
         </div>
         <div className='review-launch-step__row'>
           <span className='review-launch-step__label'>Sample size</span>
