@@ -327,10 +327,75 @@ Logged at `warning` from:
 
 Attributes:
 
+### `segment_membership.backfill.environment.completed`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:119`
+
+Attributes:
+ - `environment.id`
+ - `project.id`
+ - `rows.count`
+
+### `segment_membership.backfill.environment.failed`
+
+Logged at `exception` from:
+ - `api/segment_membership/tasks.py:113`
+
+Attributes:
+ - `environment.id`
+ - `project.id`
+
+### `segment_membership.backfill.skipped`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:78`
+ - `api/segment_membership/tasks.py:83`
+
+Attributes:
+ - `reason`
+
+### `segment_membership.compute.segment.skipped`
+
+Logged at `error` from:
+ - `api/segment_membership/services.py:129`
+
+Attributes:
+ - `project.id`
+ - `reason`
+ - `segment.id`
+
+### `segment_membership.refresh.project.completed`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:173`
+
+Attributes:
+ - `memberships.count`
+ - `project.id`
+
+### `segment_membership.refresh.project.failed`
+
+Logged at `exception` from:
+ - `api/segment_membership/tasks.py:161`
+
+Attributes:
+ - `project.id`
+
+### `segment_membership.refresh.project.skipped`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:141`
+ - `api/segment_membership/tasks.py:150`
+
+Attributes:
+ - `project.id`
+ - `reason`
+
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:142`
+ - `api/segments/serializers.py:157`
 
 Attributes:
  - `revision_id`

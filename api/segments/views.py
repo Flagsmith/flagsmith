@@ -108,6 +108,7 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             # TODO: at the moment, the UI only shows the name and description of the segment in the list view.
             #  we shouldn't return all of the rules and conditions in the list view.
             queryset = queryset.prefetch_related(
+                "memberships",
                 "rules",
                 "rules__conditions",
                 "rules__rules",
