@@ -1,7 +1,5 @@
 from pathlib import Path
 from typing import Iterable
-from pathlib import Path
-from typing import Iterable
 import prometheus_client
 import os
 
