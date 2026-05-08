@@ -51,22 +51,7 @@
   }
 
   &__select {
-    height: 36px;
-    padding: 0 10px;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-md);
-    background: var(--color-surface-base);
-    color: var(--color-text-default);
-    font-size: var(--font-body-sm-size);
-    font-family: inherit;
-    cursor: pointer;
-    appearance: none;
-    transition: border-color var(--duration-fast) var(--easing-standard);
-
-    &:focus {
-      outline: none;
-      border-color: var(--color-border-action);
-    }
+    min-width: 0;
   }
 
   &__value {

@@ -1,6 +1,9 @@
-import React, { FC, useCallback } from 'react'
+import React, { FC, useCallback, useMemo } from 'react'
 import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
+import SearchableSelect, {
+  OptionType,
+} from 'components/base/select/SearchableSelect'
 import Icon from 'components/icons/Icon'
 import {
   AUDIENCE_OPERATOR_LABELS,
@@ -26,10 +29,23 @@ const makeBlankCondition = (): AudienceCondition => ({
   value: '',
 })
 
+const operatorOptions: OptionType[] = (
+  Object.keys(AUDIENCE_OPERATOR_LABELS) as AudienceOperator[]
+).map((op) => ({ label: AUDIENCE_OPERATOR_LABELS[op], value: op }))
+
 const AudienceConditionBuilder: FC<AudienceConditionBuilderProps> = ({
   conditions,
   onChange,
 }) => {
+  const attributeOptions = useMemo<OptionType[]>(
+    () =>
+      MOCK_AUDIENCE_ATTRIBUTES.map((attr) => ({
+        label: attr.label,
+        value: attr.value,
+      })),
+    [],
+  )
+
   const handleAdd = useCallback(() => {
     onChange([...conditions, makeBlankCondition()])
   }, [conditions, onChange])
@@ -99,39 +115,36 @@ const AudienceConditionBuilder: FC<AudienceConditionBuilderProps> = ({
                 {index === 0 ? 'IF' : 'AND'}
               </span>
 
-              <select
-                className='audience-condition-builder__select'
-                value={condition.property}
-                onChange={(e) =>
-                  handleUpdate(condition.id, { property: e.target.value })
-                }
-                aria-label='Attribute'
-              >
-                {MOCK_AUDIENCE_ATTRIBUTES.map((attr) => (
-                  <option key={attr.value} value={attr.value}>
-                    {attr.label}
-                  </option>
-                ))}
-              </select>
+              <div className='audience-condition-builder__select'>
+                <SearchableSelect
+                  value={condition.property}
+                  displayedLabel={
+                    attributeOptions.find((a) => a.value === condition.property)
+                      ?.label
+                  }
+                  options={attributeOptions}
+                  onChange={(opt: OptionType) =>
+                    handleUpdate(condition.id, { property: opt.value })
+                  }
+                  isSearchable={false}
+                  placeholder='Attribute'
+                />
+              </div>
 
-              <select
-                className='audience-condition-builder__select'
-                value={condition.operator}
-                onChange={(e) =>
-                  handleUpdate(condition.id, {
-                    operator: e.target.value as AudienceOperator,
-                  })
-                }
-                aria-label='Operator'
-              >
-                {(
-                  Object.keys(AUDIENCE_OPERATOR_LABELS) as AudienceOperator[]
-                ).map((op) => (
-                  <option key={op} value={op}>
-                    {AUDIENCE_OPERATOR_LABELS[op]}
-                  </option>
-                ))}
-              </select>
+              <div className='audience-condition-builder__select'>
+                <SearchableSelect
+                  value={condition.operator}
+                  displayedLabel={AUDIENCE_OPERATOR_LABELS[condition.operator]}
+                  options={operatorOptions}
+                  onChange={(opt: OptionType) =>
+                    handleUpdate(condition.id, {
+                      operator: opt.value as AudienceOperator,
+                    })
+                  }
+                  isSearchable={false}
+                  placeholder='Operator'
+                />
+              </div>
 
               {isValueless ? (
                 <span className='audience-condition-builder__valueless'>—</span>
