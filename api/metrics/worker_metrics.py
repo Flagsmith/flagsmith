@@ -14,9 +14,9 @@ flagsmith_worker_rss_bytes = prometheus_client.Gauge(
     multiprocess_mode="liveall"
 )
 
-def update_worker_metrics():
+def update_worker_metrics() -> None:
     """
-    Background loop that runs inside each worker process to update the RSS memory usage metric.
+    Update the RSS gauge with the current worker process high-water mark.
     """
     current_pid = os.getpid()
 
@@ -24,7 +24,7 @@ def update_worker_metrics():
     if rss_value is not None:
         flagsmith_worker_rss_bytes.labels(pid=str(current_pid)).set(rss_value)
 
-def clear_worker_metrics():
+def clear_worker_metrics() -> None:
     """
     Clear the RSS memory usage metric for the current worker process.
     This should be called when a worker process is shutting down to prevent stale metrics.
