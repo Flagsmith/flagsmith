@@ -9,12 +9,7 @@ import {
   CONTROL_ARM_ID,
   CONTROL_COLOUR,
   FlagOption,
-  Layer,
   MOCK_ENVIRONMENT_USER_COUNT,
-  MOCK_LAYERS,
-  RANDOMISATION_UNIT_HINTS,
-  RANDOMISATION_UNIT_LABELS,
-  RandomisationUnit,
   SAMPLE_SIZE_PRESETS,
   Variation,
 } from 'components/experiments-v2/types'
@@ -34,13 +29,7 @@ type AudienceStepProps = {
   controlValue: string
   variations: Variation[]
   environmentName: string
-  randomisationUnit: RandomisationUnit
-  persistAcrossAuth: boolean
-  layerId: string | null
   onChange: (audience: AudienceConfig) => void
-  onRandomisationUnitChange: (unit: RandomisationUnit) => void
-  onPersistAcrossAuthChange: (persist: boolean) => void
-  onLayerIdChange: (layerId: string | null) => void
 }
 
 export const buildExperimentArms = (
@@ -82,18 +71,9 @@ const AudienceStep: FC<AudienceStepProps> = ({
   controlValue,
   environmentName,
   flag,
-  layerId,
   onChange,
-  onLayerIdChange,
-  onPersistAcrossAuthChange,
-  onRandomisationUnitChange,
-  persistAcrossAuth,
-  randomisationUnit,
   variations,
 }) => {
-  const selectedLayer: Layer | undefined = MOCK_LAYERS.find(
-    (l) => l.value === layerId,
-  )
   const arms = useMemo(
     () => buildExperimentArms(controlValue, variations),
     [controlValue, variations],
@@ -212,93 +192,6 @@ const AudienceStep: FC<AudienceStepProps> = ({
           <span className='audience-step__env-value'>{environmentName}</span>
         </div>
       </div>
-
-      <section className='audience-step__section'>
-        <div className='audience-step__section-header'>
-          <h4 className='audience-step__section-title'>
-            Bucketing &amp; exclusion
-          </h4>
-        </div>
-        <span className='audience-step__hint text-muted fs-small'>
-          How users are deterministically assigned to a variation, and whether
-          this experiment is exclusive with other experiments.
-        </span>
-
-        <div className='audience-step__bucketing-row'>
-          <div className='audience-step__bucketing-field'>
-            <label className='audience-step__bucketing-label'>
-              Randomisation unit
-            </label>
-            <select
-              className='audience-step__bucketing-select'
-              value={randomisationUnit}
-              onChange={(e) =>
-                onRandomisationUnitChange(e.target.value as RandomisationUnit)
-              }
-            >
-              {(
-                Object.keys(RANDOMISATION_UNIT_LABELS) as RandomisationUnit[]
-              ).map((unit) => (
-                <option key={unit} value={unit}>
-                  {RANDOMISATION_UNIT_LABELS[unit]}
-                </option>
-              ))}
-            </select>
-            <span className='audience-step__hint text-muted fs-small'>
-              {RANDOMISATION_UNIT_HINTS[randomisationUnit]}
-            </span>
-          </div>
-
-          <div className='audience-step__bucketing-field'>
-            <label className='audience-step__bucketing-label'>
-              Mutual exclusion layer
-              <span className='audience-step__optional-badge'>Optional</span>
-            </label>
-            <select
-              className='audience-step__bucketing-select'
-              value={layerId ?? ''}
-              onChange={(e) => onLayerIdChange(e.target.value || null)}
-            >
-              <option value=''>None — independent experiment</option>
-              {MOCK_LAYERS.map((layer) => (
-                <option key={layer.value} value={layer.value}>
-                  {layer.label} ({layer.experimentCount} active)
-                </option>
-              ))}
-            </select>
-            {selectedLayer && (
-              <span className='audience-step__hint text-muted fs-small'>
-                {selectedLayer.description}
-                {selectedLayer.experimentCount > 0 && (
-                  <>
-                    {' '}
-                    {selectedLayer.experimentCount} active experiment
-                    {selectedLayer.experimentCount === 1 ? '' : 's'} share this
-                    layer — users in those won&apos;t enter this one.
-                  </>
-                )}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {randomisationUnit === 'identity' && (
-          <label className='audience-step__checkbox-row'>
-            <input
-              type='checkbox'
-              checked={persistAcrossAuth}
-              onChange={(e) => onPersistAcrossAuthChange(e.target.checked)}
-            />
-            <span>
-              <strong>Persist across authentication</strong>
-              <span className='audience-step__hint text-muted fs-small d-block'>
-                Keep the same variation when an anonymous user signs in. Falls
-                back to the device ID before sign-in.
-              </span>
-            </span>
-          </label>
-        )}
-      </section>
 
       <section className='audience-step__section'>
         <div className='audience-step__section-header'>
@@ -430,6 +323,11 @@ const AudienceStep: FC<AudienceStepProps> = ({
             )
           })}
         </div>
+
+        <span className='audience-step__hint text-muted fs-small'>
+          Bucketing is deterministic on the SDK identifier — the same identity
+          always lands in the same variation.
+        </span>
       </section>
 
       <div className='audience-step__sample-estimate'>

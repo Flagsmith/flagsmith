@@ -4,8 +4,6 @@ import { buildExperimentArms } from 'components/experiments-v2/steps/AudienceSte
 import {
   ExperimentWizardState,
   MOCK_FLAGS,
-  MOCK_LAYERS,
-  RANDOMISATION_UNIT_LABELS,
 } from 'components/experiments-v2/types'
 import './LivePreviewPanel.scss'
 
@@ -67,7 +65,6 @@ const LivePreviewPanel: FC<LivePreviewPanelProps> = ({ wizardState }) => {
   const segmentOverrides = flag?.existingSegmentOverrides ?? []
 
   const conditionCount = wizardState.audience.conditions.length
-  const layer = MOCK_LAYERS.find((l) => l.value === wizardState.layerId)
   const samplePercentage = wizardState.audience.samplePercentage
 
   const weightFor = (armId: string) =>
@@ -144,25 +141,6 @@ const LivePreviewPanel: FC<LivePreviewPanelProps> = ({ wizardState }) => {
             conditionCount > 0
               ? `${conditionCount} condition${conditionCount === 1 ? '' : 's'}`
               : 'All users in environment'
-          }
-          detail={`Bucketed by ${RANDOMISATION_UNIT_LABELS[
-            wizardState.randomisationUnit
-          ].toLowerCase()}`}
-        />
-
-        <Connector />
-
-        <PreviewNode
-          icon='lock'
-          title='Layer check'
-          status={layer ? 'configured' : 'pass-through'}
-          summary={layer ? layer.label : 'No layer (independent)'}
-          detail={
-            layer && layer.experimentCount > 0
-              ? `${layer.experimentCount} concurrent experiment${
-                  layer.experimentCount === 1 ? '' : 's'
-                } in this layer`
-              : undefined
           }
         />
 

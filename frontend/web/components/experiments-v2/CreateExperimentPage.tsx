@@ -52,15 +52,12 @@ const INITIAL_STATE: ExperimentWizardState = {
   featureFlagId: INITIAL_FLAG.value,
   inclusionCriteria: 'flag-evaluated',
   inclusionEventName: '',
-  layerId: null,
   metrics: [
     MOCK_METRICS[0],
     { ...MOCK_METRICS[1], role: 'secondary' },
     { ...MOCK_METRICS[2], role: 'guardrail' },
   ],
   multiVariantHandling: 'exclude',
-  persistAcrossAuth: false,
-  randomisationUnit: 'identity',
   sequentialTesting: false,
   statsEngine: 'bayesian',
   variations: MOCK_VARIATIONS,
@@ -287,19 +284,7 @@ const CreateExperimentPage: FC = () => {
             controlValue={state.controlValue}
             variations={state.variations}
             environmentName='Development'
-            randomisationUnit={state.randomisationUnit}
-            persistAcrossAuth={state.persistAcrossAuth}
-            layerId={state.layerId}
             onChange={(audience) => setState((prev) => ({ ...prev, audience }))}
-            onRandomisationUnitChange={(randomisationUnit) =>
-              setState((prev) => ({ ...prev, randomisationUnit }))
-            }
-            onPersistAcrossAuthChange={(persistAcrossAuth) =>
-              setState((prev) => ({ ...prev, persistAcrossAuth }))
-            }
-            onLayerIdChange={(layerId) =>
-              setState((prev) => ({ ...prev, layerId }))
-            }
           />
         )
       }
