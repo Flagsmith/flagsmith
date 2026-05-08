@@ -6,12 +6,14 @@ from unittest.mock import ANY
 
 import freezegun
 import pytest
+from django.urls import reverse
 from pytest_structlog import StructuredLogCapture
 from responses import RequestsMock
 from rest_framework.test import APIClient
 
 from audit.tasks import create_feature_state_updated_by_change_request_audit_log
 from features.models import FeatureState
+from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
 from integrations.sentry.models import SentryChangeTrackingConfiguration
 from users.models import FFAdminUser
@@ -28,9 +30,21 @@ def sentry_configuration(environment: int) -> SentryChangeTrackingConfiguration:
     return configuration
 
 
+@pytest.fixture()
+def v2_versioned_environment(environment: int) -> int:
+    enable_v2_versioning(environment_id=environment)
+    return environment
+
+
+@pytest.mark.parametrize(
+    "use_v2_versioning",
+    [pytest.param(False, id="v1"), pytest.param(True, id="v2")],
+)
 def test_sentry_change_tracking__flag_created__sends_update_to_sentry(
+    use_v2_versioning: bool,
     admin_client: APIClient,
     admin_user: FFAdminUser,
+    environment: int,
     feature_name: str,
     log: StructuredLogCapture,
     project: int,
@@ -38,6 +52,8 @@ def test_sentry_change_tracking__flag_created__sends_update_to_sentry(
     sentry_configuration: SentryChangeTrackingConfiguration,
 ) -> None:
     # Given
+    if use_v2_versioning:
+        enable_v2_versioning(environment_id=environment)
     responses.post(sentry_configuration.webhook_url, status=200, body="")
 
     # When
@@ -148,6 +164,110 @@ def test_sentry_change_tracking__flag_state_change__sends_update_to_sentry(
     ]
 
 
+def test_sentry_change_tracking__flag_state_change__v2_versioning__sends_update_to_sentry(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    environment: int,
+    feature: int,
+    feature_name: str,
+    log: StructuredLogCapture,
+    responses: RequestsMock,
+    sentry_configuration: SentryChangeTrackingConfiguration,
+    v2_versioned_environment: int,
+) -> None:
+    # Given
+    responses.post(sentry_configuration.webhook_url, status=200, body="")
+
+    create_ef_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment, feature],
+    )
+    list_ef_version_fs_url_template = (
+        "api-v1:versioning:environment-feature-version-featurestates-list"
+    )
+    detail_ef_version_fs_url_template = (
+        "api-v1:versioning:environment-feature-version-featurestates-detail"
+    )
+
+    # When
+    with freezegun.freeze_time("2199-01-01T00:00:00.500000+00:00"):
+        # Create a new EFV draft
+        create_response = admin_client.post(create_ef_version_url)
+        assert create_response.status_code == 201, create_response.content
+        ef_version_uuid = create_response.json()["uuid"]
+
+        # Look up the cloned feature state on the new EFV
+        list_fs_response = admin_client.get(
+            reverse(
+                list_ef_version_fs_url_template,
+                args=[environment, feature, ef_version_uuid],
+            )
+        )
+        assert list_fs_response.status_code == 200, list_fs_response.content
+        new_feature_state_id = list_fs_response.json()[0]["id"]
+
+        # Toggle the flag enabled in the new version
+        update_response = admin_client.patch(
+            reverse(
+                detail_ef_version_fs_url_template,
+                args=[
+                    environment,
+                    feature,
+                    ef_version_uuid,
+                    new_feature_state_id,
+                ],
+            ),
+            data=json.dumps({"enabled": True}),
+            content_type="application/json",
+        )
+        assert update_response.status_code == 200, update_response.content
+
+        # Publish the new version
+        publish_response = admin_client.post(
+            reverse(
+                "api-v1:versioning:environment-feature-versions-publish",
+                args=[environment, feature, ef_version_uuid],
+            )
+        )
+        assert publish_response.status_code == 200, publish_response.content
+
+    # Then
+    assert len(responses.calls) == 1
+    update_request = responses.calls[0].request  # type: ignore[union-attr]
+    assert update_request.url == sentry_configuration.webhook_url
+    assert update_request.headers["Content-Type"] == "application/json"
+    assert re.match(r"^[0-9a-f]{64}$", update_request.headers["X-Sentry-Signature"])
+    assert json.loads(update_request.body) == {
+        "data": [
+            {
+                "action": "updated",
+                "created_at": "2199-01-01T00:00:00+00:00",
+                "created_by": {"id": admin_user.email, "type": "email"},
+                "change_id": str(new_feature_state_id),
+                "flag": feature_name,
+            },
+        ],
+        "meta": {"version": 1},
+    }
+    assert log.events == [
+        {
+            "event": "sending",
+            "feature_name": feature_name,
+            "headers": ANY,
+            "level": "debug",
+            "payload": ANY,
+            "sentry_action": "updated",
+            "url": sentry_configuration.webhook_url,
+        },
+        {
+            "event": "success",
+            "feature_name": feature_name,
+            "level": "info",
+            "sentry_action": "updated",
+        },
+    ]
+
+
 def test_sentry_change_tracking__flag_state_schedule__sends_update_to_sentry(
     admin_user: FFAdminUser,
     feature_name: str,
@@ -218,9 +338,93 @@ def test_sentry_change_tracking__flag_state_schedule__sends_update_to_sentry(
     ]
 
 
-def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
+def test_sentry_change_tracking__flag_state_schedule__v2_versioning__sends_update_to_sentry(
     admin_client: APIClient,
     admin_user: FFAdminUser,
+    environment: int,
+    feature: int,
+    feature_name: str,
+    log: StructuredLogCapture,
+    responses: RequestsMock,
+    sentry_configuration: SentryChangeTrackingConfiguration,
+    v2_versioned_environment: int,
+) -> None:
+    # Given
+    responses.post(sentry_configuration.webhook_url, status=200, body="")
+
+    create_ef_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment, feature],
+    )
+
+    # When — author + publish a scheduled v2 change with a future live_from
+    with freezegun.freeze_time("2199-01-01T00:00:00.500000+00:00"):
+        create_response = admin_client.post(create_ef_version_url)
+        assert create_response.status_code == 201, create_response.content
+        ef_version_uuid = create_response.json()["uuid"]
+
+        list_fs_response = admin_client.get(
+            reverse(
+                "api-v1:versioning:environment-feature-version-featurestates-list",
+                args=[environment, feature, ef_version_uuid],
+            )
+        )
+        assert list_fs_response.status_code == 200, list_fs_response.content
+        new_feature_state_id = list_fs_response.json()[0]["id"]
+
+        update_response = admin_client.patch(
+            reverse(
+                "api-v1:versioning:environment-feature-version-featurestates-detail",
+                args=[
+                    environment,
+                    feature,
+                    ef_version_uuid,
+                    new_feature_state_id,
+                ],
+            ),
+            data=json.dumps({"enabled": True}),
+            content_type="application/json",
+        )
+        assert update_response.status_code == 200, update_response.content
+
+        # Publish the version with a future live_from (one hour ahead)
+        publish_response = admin_client.post(
+            reverse(
+                "api-v1:versioning:environment-feature-versions-publish",
+                args=[environment, feature, ef_version_uuid],
+            ),
+            data=json.dumps({"live_from": "2199-01-01T01:00:00+00:00"}),
+            content_type="application/json",
+        )
+        assert publish_response.status_code == 200, publish_response.content
+
+    # Then — Sentry should be notified about the scheduled v2 change
+    # (timing relative to live_from is left to the implementation; this test
+    # asserts that the notification happens at all)
+    assert len(responses.calls) == 1
+    update_request = responses.calls[0].request  # type: ignore[union-attr]
+    assert update_request.url == sentry_configuration.webhook_url
+    assert update_request.headers["Content-Type"] == "application/json"
+    assert re.match(r"^[0-9a-f]{64}$", update_request.headers["X-Sentry-Signature"])
+    payload = json.loads(update_request.body)
+    assert payload["data"][0]["action"] == "updated"
+    assert payload["data"][0]["change_id"] == str(new_feature_state_id)
+    assert payload["data"][0]["flag"] == feature_name
+    assert payload["data"][0]["created_by"] == {
+        "id": admin_user.email,
+        "type": "email",
+    }
+
+
+@pytest.mark.parametrize(
+    "use_v2_versioning",
+    [pytest.param(False, id="v1"), pytest.param(True, id="v2")],
+)
+def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
+    use_v2_versioning: bool,
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    environment: int,
     environment_api_key: str,
     feature_name: str,
     feature_state: int,
@@ -229,6 +433,8 @@ def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
     sentry_configuration: SentryChangeTrackingConfiguration,
 ) -> None:
     # Given
+    if use_v2_versioning:
+        enable_v2_versioning(environment_id=environment)
     responses.post(sentry_configuration.webhook_url, status=200, body="")
     # When
     with freezegun.freeze_time("2199-01-01T00:00:00+00:00"):
