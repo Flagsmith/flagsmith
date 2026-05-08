@@ -10,7 +10,7 @@ export type ExperimentStatus = 'running' | 'paused' | 'completed' | 'draft'
 
 export type WizardStepStatus = 'done' | 'active' | 'upcoming'
 
-export type MetricRole = 'primary' | 'secondary' | 'guardrail'
+export type MetricRole = 'primary' | 'secondary'
 
 export type LiftDirection = 'positive' | 'negative' | 'neutral'
 
@@ -631,7 +631,7 @@ export const MOCK_EXPERIMENT_RESULT: ExperimentResultSummary = {
       liftDirection: 'neutral',
       liftValue: -4.2,
       name: 'Page Load Time',
-      role: 'guardrail',
+      role: 'secondary',
       significance: 'not significant',
       treatment: '2.3s',
     },

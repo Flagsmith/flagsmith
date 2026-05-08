@@ -194,11 +194,11 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
                   {m.description}
                 </span>
               </div>
-              <span
-                className={`review-launch-step__badge review-launch-step__badge--${m.role}`}
-              >
-                {m.role}
-              </span>
+              {m.role === 'primary' && (
+                <span className='review-launch-step__badge review-launch-step__badge--primary'>
+                  Primary
+                </span>
+              )}
             </div>
           ))
         ) : (

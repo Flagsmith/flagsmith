@@ -53,7 +53,7 @@ const INITIAL_STATE: ExperimentWizardState = {
   metrics: [
     MOCK_METRICS[0],
     { ...MOCK_METRICS[1], role: 'secondary' },
-    { ...MOCK_METRICS[2], role: 'guardrail' },
+    { ...MOCK_METRICS[2], role: 'secondary' },
   ],
   variations: MOCK_VARIATIONS,
 }
@@ -135,17 +135,15 @@ const CreateExperimentPage: FC = () => {
     })
   }, [])
 
-  const handleSetMetricRole = useCallback(
-    (metricId: string, role: MetricRole) => {
-      setState((prev) => ({
-        ...prev,
-        metrics: prev.metrics.map((m) =>
-          m.id === metricId ? { ...m, role } : m,
-        ),
-      }))
-    },
-    [],
-  )
+  const handleSetPrimaryMetric = useCallback((metricId: string) => {
+    setState((prev) => ({
+      ...prev,
+      metrics: prev.metrics.map((m) => ({
+        ...m,
+        role: m.id === metricId ? 'primary' : 'secondary',
+      })),
+    }))
+  }, [])
 
   const isCurrentStepValid = useMemo(() => {
     if (state.currentStep === 0) {
@@ -219,15 +217,7 @@ const CreateExperimentPage: FC = () => {
         const sCount = state.metrics.filter(
           (m) => m.role === 'secondary',
         ).length
-        const gCount = state.metrics.filter(
-          (m) => m.role === 'guardrail',
-        ).length
-        const parts = [
-          `${pCount} primary`,
-          `${sCount} secondary`,
-          gCount > 0 ? `${gCount} guardrail` : null,
-        ].filter(Boolean)
-        completeSummary = parts.join(' · ')
+        completeSummary = `${pCount} primary · ${sCount} secondary`
         break
       }
       default:
@@ -288,7 +278,7 @@ const CreateExperimentPage: FC = () => {
           <SelectMetricsStep
             selectedMetrics={state.metrics}
             onToggleMetric={handleToggleMetric}
-            onSetRole={handleSetMetricRole}
+            onSetPrimaryMetric={handleSetPrimaryMetric}
           />
         )
       case 3:

@@ -10,13 +10,11 @@ type MetricsComparisonTableProps = {
 type LiftBarStyle = CSSProperties & { '--lift-bar-width': string }
 
 const ROLE_ORDER: Record<MetricRole, number> = {
-  guardrail: 2,
   primary: 0,
   secondary: 1,
 }
 
 const ROLE_LABEL: Record<MetricRole, string> = {
-  guardrail: 'Guardrail',
   primary: 'Primary',
   secondary: 'Secondary',
 }

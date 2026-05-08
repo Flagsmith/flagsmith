@@ -8,7 +8,6 @@ import SelectableCard from 'components/experiments-v2/shared/SelectableCard'
 import {
   Metric,
   MetricDirection,
-  MetricRole,
   MOCK_METRICS,
 } from 'components/experiments-v2/types'
 import './SelectMetricsStep.scss'
@@ -23,12 +22,12 @@ type SelectMetricsStepProps = {
   availableMetrics?: Metric[]
   selectedMetrics: Metric[]
   onToggleMetric: (metric: Metric) => void
-  onSetRole?: (metricId: string, role: MetricRole) => void
+  onSetPrimaryMetric?: (metricId: string) => void
 }
 
 const SelectMetricsStep: FC<SelectMetricsStepProps> = ({
   availableMetrics: availableMetricsProp = MOCK_METRICS,
-  onSetRole,
+  onSetPrimaryMetric,
   onToggleMetric,
   selectedMetrics,
 }) => {
@@ -57,17 +56,11 @@ const SelectMetricsStep: FC<SelectMetricsStepProps> = ({
   const getRole = (metric: Metric) =>
     selectedMetrics.find((m) => m.id === metric.id)?.role
 
-  const getRoleSelector = (metric: Metric) => {
-    const role = getRole(metric)
-    if (!isSelected(metric) || !role || !onSetRole) return undefined
+  const getPrimaryToggle = (metric: Metric) => {
+    if (!isSelected(metric) || !onSetPrimaryMetric) return undefined
     return {
-      onChange: (v: MetricRole) => onSetRole(metric.id, v),
-      options: [
-        { label: 'Primary', value: 'primary' as MetricRole },
-        { label: 'Secondary', value: 'secondary' as MetricRole },
-        { label: 'Guardrail', value: 'guardrail' as MetricRole },
-      ],
-      value: role,
+      isPrimary: getRole(metric) === 'primary',
+      onSetPrimary: () => onSetPrimaryMetric(metric.id),
     }
   }
 
@@ -158,7 +151,7 @@ const SelectMetricsStep: FC<SelectMetricsStepProps> = ({
               title={metric.name}
               description={metric.description}
               selected={isSelected(metric)}
-              roleSelector={getRoleSelector(metric)}
+              primaryToggle={getPrimaryToggle(metric)}
               tags={[
                 `conversion: ${metric.measurementType}`,
                 directionTag(metric.direction),

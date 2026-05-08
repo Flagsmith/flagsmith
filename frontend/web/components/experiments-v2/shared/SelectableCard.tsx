@@ -2,11 +2,9 @@ import React from 'react'
 import Icon, { IconName } from 'components/icons/Icon'
 import './SelectableCard.scss'
 
-type BadgeVariant = 'primary' | 'secondary' | 'guardrail'
+type BadgeVariant = 'primary' | 'secondary'
 
-type RoleOption<V extends string> = { label: string; value: V }
-
-type SelectableCardProps<V extends string = string> = {
+type SelectableCardProps = {
   selected: boolean
   onClick: () => void
   icon?: IconName
@@ -15,25 +13,24 @@ type SelectableCardProps<V extends string = string> = {
   badge?: { label: string; variant: BadgeVariant }
   /** Small info tags rendered under the title (e.g. measurement type). */
   tags?: string[]
-  /** Segmented role picker rendered on the right when selected. Mutually
+  /** Primary-metric toggle rendered when the card is selected. Mutually
    *  exclusive with `badge`. */
-  roleSelector?: {
-    value: V
-    options: RoleOption<V>[]
-    onChange: (value: V) => void
+  primaryToggle?: {
+    isPrimary: boolean
+    onSetPrimary: () => void
   }
 }
 
-const SelectableCard = <V extends string = string>({
+const SelectableCard: React.FC<SelectableCardProps> = ({
   badge,
   description,
   icon,
   onClick,
-  roleSelector,
+  primaryToggle,
   selected,
   tags,
   title,
-}: SelectableCardProps<V>) => {
+}) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
@@ -65,36 +62,29 @@ const SelectableCard = <V extends string = string>({
         )}
       </div>
       <div className='selectable-card__aside'>
-        {roleSelector ? (
-          <div className='selectable-card__role-group' role='radiogroup'>
-            {roleSelector.options.map((opt) => (
-              <button
-                key={opt.value}
-                type='button'
-                className={`selectable-card__role-pill ${
-                  roleSelector.value === opt.value
-                    ? 'selectable-card__role-pill--active'
-                    : ''
-                }`}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  roleSelector.onChange(opt.value)
-                }}
-                aria-checked={roleSelector.value === opt.value}
-                role='radio'
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        ) : (
-          badge && (
-            <span
-              className={`selectable-card__badge selectable-card__badge--${badge.variant}`}
-            >
-              {badge.label}
-            </span>
-          )
+        {primaryToggle?.isPrimary && (
+          <span className='selectable-card__badge selectable-card__badge--primary'>
+            Primary
+          </span>
+        )}
+        {primaryToggle && !primaryToggle.isPrimary && (
+          <button
+            type='button'
+            className='selectable-card__set-primary'
+            onClick={(e) => {
+              e.stopPropagation()
+              primaryToggle.onSetPrimary()
+            }}
+          >
+            Set as primary
+          </button>
+        )}
+        {!primaryToggle && badge && (
+          <span
+            className={`selectable-card__badge selectable-card__badge--${badge.variant}`}
+          >
+            {badge.label}
+          </span>
         )}
       </div>
     </div>

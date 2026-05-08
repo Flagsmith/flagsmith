@@ -195,9 +195,9 @@ const MetricsLibraryPage: FC = () => {
         <div>
           <h3 className='metrics-library-page__title'>Metrics</h3>
           <p className='metrics-library-page__subtitle text-muted'>
-            Metrics track the outcomes you measure across experiments. Primary
-            and secondary metrics drive experiment verdicts; guardrails flag
-            regressions.
+            Metrics track the outcomes you measure across experiments. Each
+            experiment picks one as its primary; the rest are observed for
+            context.
           </p>
         </div>
       </div>
