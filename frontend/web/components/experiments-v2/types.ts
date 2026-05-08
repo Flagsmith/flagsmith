@@ -88,11 +88,64 @@ export type ArmWeight = {
  *  the experiment). 100 means the full eligible audience is in. */
 export const SAMPLE_SIZE_PRESETS = [5, 10, 25, 50, 100] as const
 
+/** Operators for audience conditions. Mirrors the operator vocabulary used
+ *  by Flagsmith Segments today, narrowed to the set most useful for
+ *  experiment targeting. */
+export type AudienceOperator =
+  | 'EQUAL'
+  | 'NOT_EQUAL'
+  | 'CONTAINS'
+  | 'NOT_CONTAINS'
+  | 'GREATER_THAN'
+  | 'LESS_THAN'
+  | 'IS_SET'
+  | 'IS_NOT_SET'
+
+export const AUDIENCE_OPERATOR_LABELS: Record<AudienceOperator, string> = {
+  CONTAINS: 'contains',
+  EQUAL: 'is',
+  GREATER_THAN: 'is greater than',
+  IS_NOT_SET: 'is not set',
+  IS_SET: 'is set',
+  LESS_THAN: 'is less than',
+  NOT_CONTAINS: "doesn't contain",
+  NOT_EQUAL: 'is not',
+}
+
+/** Operators that don't take a value (the trait existence is the predicate). */
+export const VALUELESS_OPERATORS: AudienceOperator[] = ['IS_SET', 'IS_NOT_SET']
+
+/** A single attribute predicate. */
+export type AudienceCondition = {
+  id: string
+  property: string
+  operator: AudienceOperator
+  value: string
+}
+
+/** Mock list of attributes the experiment can target on. In production these
+ *  come from the environment's identity traits + reserved fields. */
+export type AudienceAttribute = {
+  value: string
+  label: string
+}
+
+export const MOCK_AUDIENCE_ATTRIBUTES: AudienceAttribute[] = [
+  { label: 'Identity ID', value: 'identity_id' },
+  { label: 'Email', value: 'email' },
+  { label: 'Country', value: 'country' },
+  { label: 'Plan', value: 'plan' },
+  { label: 'Signup date', value: 'signup_date' },
+  { label: 'Is beta user', value: 'is_beta_user' },
+  { label: 'Last seen at', value: 'last_seen_at' },
+]
+
 export type AudienceConfig = {
-  /** Optional targeting filter. null = all identities in the environment.
-   *  When set, only users matching the segment are eligible for the
-   *  experiment; everyone else sees the flag's environment default. */
-  segmentId: string | null
+  /** Inline attribute conditions (AND-joined) defining the experiment's
+   *  audience. Empty array = all identities in the environment. Frozen at
+   *  experiment launch — edits to existing Segments cannot drift the
+   *  experiment audience mid-flight. */
+  conditions: AudienceCondition[]
   /** Percentage of eligible identities sampled into the experiment.
    *  100 means the full eligible audience is in; lower values let you
    *  ramp without exposing every user. Defaulted to 100 in v1. */

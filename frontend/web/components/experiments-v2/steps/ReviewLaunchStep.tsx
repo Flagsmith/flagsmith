@@ -1,11 +1,13 @@
 import React, { FC } from 'react'
 import Button from 'components/base/forms/Button'
 import {
+  AUDIENCE_OPERATOR_LABELS,
   CONTROL_ARM_ID,
   CONTROL_COLOUR,
   ExperimentWizardState,
+  MOCK_AUDIENCE_ATTRIBUTES,
   MOCK_FLAGS,
-  MOCK_SEGMENTS,
+  VALUELESS_OPERATORS,
   Variation,
 } from 'components/experiments-v2/types'
 import './ReviewLaunchStep.scss'
@@ -21,10 +23,10 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
 }) => {
   const flagLabel =
     MOCK_FLAGS.find((f) => f.value === wizardState.featureFlagId)?.label ?? '—'
-  const targetingLabel = wizardState.audience.segmentId
-    ? MOCK_SEGMENTS.find((s) => s.value === wizardState.audience.segmentId)
-        ?.label ?? '—'
-    : 'All users in this environment'
+  const conditions = wizardState.audience.conditions
+  const attributeLabel = (property: string) =>
+    MOCK_AUDIENCE_ATTRIBUTES.find((a) => a.value === property)?.label ??
+    property
 
   const controlArm: Variation = {
     colour: CONTROL_COLOUR,
@@ -104,9 +106,34 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
             Edit
           </Button>
         </div>
-        <div className='review-launch-step__row'>
+        <div className='review-launch-step__row review-launch-step__row--block'>
           <span className='review-launch-step__label'>Targeting</span>
-          <span className='review-launch-step__value'>{targetingLabel}</span>
+          {conditions.length === 0 ? (
+            <span className='review-launch-step__value'>
+              All users in this environment
+            </span>
+          ) : (
+            <ul className='review-launch-step__conditions'>
+              {conditions.map((c, i) => {
+                const isValueless = VALUELESS_OPERATORS.includes(c.operator)
+                return (
+                  <li key={c.id} className='review-launch-step__condition'>
+                    <span className='review-launch-step__condition-joiner'>
+                      {i === 0 ? 'IF' : 'AND'}
+                    </span>
+                    <strong>{attributeLabel(c.property)}</strong>{' '}
+                    {AUDIENCE_OPERATOR_LABELS[c.operator]}
+                    {!isValueless && (
+                      <>
+                        {' '}
+                        <code>{c.value || '(empty)'}</code>
+                      </>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
         </div>
         <div className='review-launch-step__row'>
           <span className='review-launch-step__label'>Sample size</span>

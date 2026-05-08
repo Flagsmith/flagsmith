@@ -17,7 +17,6 @@ import {
   MIN_VARIATIONS_FOR_EXPERIMENT,
   MOCK_FLAGS,
   MOCK_METRICS,
-  MOCK_SEGMENTS,
   MOCK_VARIATIONS,
   Variation,
 } from './types'
@@ -36,8 +35,8 @@ DEFAULT_END.setDate(DEFAULT_END.getDate() + 14)
 
 const INITIAL_STATE: ExperimentWizardState = {
   audience: {
+    conditions: [],
     samplePercentage: 100,
-    segmentId: 'seg-3',
     weights: splitEvenly(INITIAL_ARMS.map((a) => a.id)),
   },
   controlValue: INITIAL_FLAG.controlValue,
@@ -81,11 +80,14 @@ const CreateExperimentPage: FC = () => {
   }, [state.currentStep, goToStep])
 
   const handleLaunch = useCallback(() => {
-    const segment = MOCK_SEGMENTS.find(
-      (s) => s.value === state.audience.segmentId,
-    )
     const flag = MOCK_FLAGS.find((f) => f.value === state.featureFlagId)
-    const audienceLabel = segment?.label ?? 'all users in the environment'
+    const conditionCount = state.audience.conditions.length
+    const audienceLabel =
+      conditionCount === 0
+        ? 'all users in the environment'
+        : `users matching ${conditionCount} condition${
+            conditionCount === 1 ? '' : 's'
+          }`
     openConfirm({
       body: (
         <span>
@@ -197,10 +199,11 @@ const CreateExperimentPage: FC = () => {
           .filter((w) => w.weight > 0)
           .map((w) => `${w.weight}%`)
         const split = splitParts.length > 0 ? splitParts.join('/') : null
-        const audienceLabel = state.audience.segmentId
-          ? MOCK_SEGMENTS.find((s) => s.value === state.audience.segmentId)
-              ?.label ?? 'segment'
-          : 'All users'
+        const conditionCount = state.audience.conditions.length
+        const audienceLabel =
+          conditionCount === 0
+            ? 'All users'
+            : `${conditionCount} condition${conditionCount === 1 ? '' : 's'}`
         const summaryParts = [
           audienceLabel,
           `${state.audience.samplePercentage}%`,

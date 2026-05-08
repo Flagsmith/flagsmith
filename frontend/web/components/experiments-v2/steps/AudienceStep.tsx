@@ -1,18 +1,15 @@
 import React, { FC, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
-import Banner from 'components/Banner/Banner'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
-import SearchableSelect from 'components/base/select/SearchableSelect'
-import { OptionType } from 'components/base/select/SearchableSelect'
+import AudienceConditionBuilder from 'components/experiments-v2/shared/AudienceConditionBuilder'
 import {
   ArmWeight,
+  AudienceCondition,
   AudienceConfig,
   CONTROL_ARM_ID,
   CONTROL_COLOUR,
   FlagOption,
   MOCK_ENVIRONMENT_USER_COUNT,
-  MOCK_SEGMENTS,
   SAMPLE_SIZE_PRESETS,
   Variation,
 } from 'components/experiments-v2/types'
@@ -27,6 +24,7 @@ type Arm = {
 
 type AudienceStepProps = {
   audience: AudienceConfig
+  /** Used by Phase 5 (eval-hierarchy banners) to surface flag-level overrides. */
   flag: FlagOption | null
   controlValue: string
   variations: Variation[]
@@ -72,24 +70,17 @@ const AudienceStep: FC<AudienceStepProps> = ({
   audience,
   controlValue,
   environmentName,
-  flag,
+  flag: _flag,
   onChange,
   variations,
 }) => {
-  const { projectId } = useParams<{ projectId?: string }>()
-  const segmentsUrl = projectId ? `/project/${projectId}/segments` : undefined
-
   const arms = useMemo(
     () => buildExperimentArms(controlValue, variations),
     [controlValue, variations],
   )
 
-  const selectedSegment = MOCK_SEGMENTS.find(
-    (s) => s.value === audience.segmentId,
-  )
-
-  const handleSegmentChange = (segmentId: string | null) => {
-    onChange({ ...audience, segmentId })
+  const handleConditionsChange = (conditions: AudienceCondition[]) => {
+    onChange({ ...audience, conditions })
   }
 
   const handleSamplePercentageChange = (next: number) => {
@@ -154,8 +145,15 @@ const AudienceStep: FC<AudienceStepProps> = ({
     })
   }
 
-  const eligibleUsers =
-    selectedSegment?.estimatedUsers ?? MOCK_ENVIRONMENT_USER_COUNT
+  // Mock estimate: if there are no conditions we use the full environment;
+  // otherwise we apply a deterministic dampener so the number changes as
+  // conditions grow. In production this would come from a real query.
+  const eligibleUsers = useMemo(() => {
+    if (audience.conditions.length === 0) return MOCK_ENVIRONMENT_USER_COUNT
+    const dampener = Math.pow(0.55, audience.conditions.length)
+    return Math.round(MOCK_ENVIRONMENT_USER_COUNT * dampener)
+  }, [audience.conditions.length])
+
   const sampledUsers = Math.round(
     (eligibleUsers * audience.samplePercentage) / 100,
   )
@@ -165,15 +163,11 @@ const AudienceStep: FC<AudienceStepProps> = ({
     users: Math.round((sampledUsers * getWeight(audience.weights, a.id)) / 100),
   }))
 
-  const conflictingOverride = audience.segmentId
-    ? flag?.existingSegmentOverrides.find(
-        (o) => o.segmentId === audience.segmentId,
-      )
-    : undefined
-
   const isCustomSamplePercentage = !SAMPLE_SIZE_PRESETS.includes(
     audience.samplePercentage as (typeof SAMPLE_SIZE_PRESETS)[number],
   )
+
+  const hasConditions = audience.conditions.length > 0
 
   return (
     <div className='audience-step'>
@@ -195,51 +189,26 @@ const AudienceStep: FC<AudienceStepProps> = ({
             Targeting
             <span className='audience-step__optional-badge'>Optional</span>
           </h4>
-          {audience.segmentId && (
+          {hasConditions && (
             <Button
               theme='text'
               size='xSmall'
-              onClick={() => handleSegmentChange(null)}
+              onClick={() => handleConditionsChange([])}
             >
-              Clear filter
+              Clear all
             </Button>
           )}
         </div>
         <span className='audience-step__hint text-muted fs-small'>
-          Filter the experiment to a specific segment of users. Leave empty to
-          run on all identities in the environment.
+          Define who is eligible for the experiment using attribute conditions.
+          Conditions are AND-joined. Leave empty to run on all identities in the
+          environment. Conditions are frozen at launch &mdash; later edits to
+          existing Segments cannot drift the experiment audience.
         </span>
-        <SearchableSelect
-          value={audience.segmentId ?? ''}
-          displayedLabel={selectedSegment?.label ?? 'All users'}
-          onChange={(opt: OptionType) => handleSegmentChange(opt.value)}
-          options={MOCK_SEGMENTS}
-          placeholder='All users in this environment'
+        <AudienceConditionBuilder
+          conditions={audience.conditions}
+          onChange={handleConditionsChange}
         />
-        {segmentsUrl && (
-          <span className='audience-step__hint text-muted fs-small'>
-            Need a different filter (combination of traits, geography, plan)?{' '}
-            <a
-              className='audience-step__segment-link'
-              href={segmentsUrl}
-              target='_blank'
-              rel='noopener noreferrer'
-            >
-              Create a new segment on the Segments page
-            </a>
-            .
-          </span>
-        )}
-        {conflictingOverride && flag && (
-          <Banner variant='danger'>
-            <span>
-              <strong>{conflictingOverride.segmentLabel}</strong> already has an
-              override on <strong>{flag.label}</strong>. Pick a different
-              segment, or remove the existing override on the Features page
-              first.
-            </span>
-          </Banner>
-        )}
       </section>
 
       <section className='audience-step__section'>
@@ -349,10 +318,10 @@ const AudienceStep: FC<AudienceStepProps> = ({
       <div className='audience-step__sample-estimate'>
         <Icon name='people' width={20} />
         <span>
-          {selectedSegment ? (
+          {hasConditions ? (
             <>
-              <strong>{selectedSegment.label}</strong> has{' '}
-              {eligibleUsers.toLocaleString()} eligible users.{' '}
+              ~{eligibleUsers.toLocaleString()} users match the targeting
+              conditions.{' '}
             </>
           ) : (
             <>
