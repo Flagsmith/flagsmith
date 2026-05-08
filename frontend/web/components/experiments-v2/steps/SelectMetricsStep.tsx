@@ -3,13 +3,20 @@ import Banner from 'components/Banner/Banner'
 import Input from 'components/base/forms/Input'
 import Button from 'components/base/forms/Button'
 import EmptyState from 'components/EmptyState'
+import Icon from 'components/icons/Icon'
 import CreateMetricForm from 'components/experiments-v2/shared/CreateMetricForm'
 import SelectableCard from 'components/experiments-v2/shared/SelectableCard'
 import {
+  INCLUSION_CRITERIA_LABELS,
+  InclusionCriteria,
+  MULTI_VARIANT_HANDLING_LABELS,
   Metric,
   MetricDirection,
   MetricRole,
   MOCK_METRICS,
+  MultiVariantHandling,
+  STATS_ENGINE_LABELS,
+  StatsEngine,
 } from 'components/experiments-v2/types'
 
 const directionTag = (d: MetricDirection): string => {
@@ -24,17 +31,38 @@ type SelectMetricsStepProps = {
   selectedMetrics: Metric[]
   onToggleMetric: (metric: Metric) => void
   onSetRole?: (metricId: string, role: MetricRole) => void
+  inclusionCriteria: InclusionCriteria
+  inclusionEventName: string
+  statsEngine: StatsEngine
+  multiVariantHandling: MultiVariantHandling
+  sequentialTesting: boolean
+  onInclusionCriteriaChange: (criteria: InclusionCriteria) => void
+  onInclusionEventNameChange: (eventName: string) => void
+  onStatsEngineChange: (engine: StatsEngine) => void
+  onMultiVariantHandlingChange: (handling: MultiVariantHandling) => void
+  onSequentialTestingChange: (enabled: boolean) => void
 }
 
 const SelectMetricsStep: FC<SelectMetricsStepProps> = ({
   availableMetrics: availableMetricsProp = MOCK_METRICS,
+  inclusionCriteria,
+  inclusionEventName,
+  multiVariantHandling,
+  onInclusionCriteriaChange,
+  onInclusionEventNameChange,
+  onMultiVariantHandlingChange,
+  onSequentialTestingChange,
   onSetRole,
+  onStatsEngineChange,
   onToggleMetric,
   selectedMetrics,
+  sequentialTesting,
+  statsEngine,
 }) => {
   const [search, setSearch] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const [createdMetrics, setCreatedMetrics] = useState<Metric[]>([])
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   const availableMetrics = useMemo(
     () => [...availableMetricsProp, ...createdMetrics],
@@ -181,6 +209,147 @@ const SelectMetricsStep: FC<SelectMetricsStepProps> = ({
           }
         />
       )}
+
+      {/* Inclusion criteria + Advanced settings */}
+      <section className='select-metrics-step__settings'>
+        <h4 className='select-metrics-step__settings-title'>
+          How to count exposure
+        </h4>
+        <span className='select-metrics-step__hint text-muted fs-small'>
+          Decide which users count as exposed for the analysis. Narrowing
+          inclusion to a specific event reduces dilution when many users never
+          reach the surface where the flag matters.
+        </span>
+
+        <div className='select-metrics-step__field'>
+          <label className='select-metrics-step__label'>
+            Include people when
+          </label>
+          <select
+            className='select-metrics-step__select'
+            value={inclusionCriteria}
+            onChange={(e) =>
+              onInclusionCriteriaChange(e.target.value as InclusionCriteria)
+            }
+          >
+            {(
+              Object.keys(INCLUSION_CRITERIA_LABELS) as InclusionCriteria[]
+            ).map((c) => (
+              <option key={c} value={c}>
+                {INCLUSION_CRITERIA_LABELS[c]}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {inclusionCriteria === 'custom-event' && (
+          <div className='select-metrics-step__field'>
+            <label className='select-metrics-step__label'>Event name</label>
+            <Input
+              value={inclusionEventName}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                onInclusionEventNameChange(e.target.value)
+              }
+              placeholder='e.g. checkout_viewed'
+            />
+            <span className='select-metrics-step__hint text-muted fs-small'>
+              Only users who triggered this event will count as exposed.
+            </span>
+          </div>
+        )}
+
+        <button
+          type='button'
+          className='select-metrics-step__advanced-toggle'
+          onClick={() => setShowAdvanced((s) => !s)}
+          aria-expanded={showAdvanced}
+        >
+          <Icon
+            name={showAdvanced ? 'chevron-down' : 'chevron-right'}
+            width={14}
+          />
+          Advanced settings
+        </button>
+
+        {showAdvanced && (
+          <div className='select-metrics-step__advanced'>
+            <div className='select-metrics-step__field'>
+              <label className='select-metrics-step__label'>
+                Statistical engine
+              </label>
+              <select
+                className='select-metrics-step__select'
+                value={statsEngine}
+                onChange={(e) =>
+                  onStatsEngineChange(e.target.value as StatsEngine)
+                }
+              >
+                {(Object.keys(STATS_ENGINE_LABELS) as StatsEngine[]).map(
+                  (engine) => (
+                    <option key={engine} value={engine}>
+                      {STATS_ENGINE_LABELS[engine]}
+                      {engine === 'bayesian' ? ' (default)' : ''}
+                    </option>
+                  ),
+                )}
+              </select>
+              <span className='select-metrics-step__hint text-muted fs-small'>
+                {statsEngine === 'bayesian'
+                  ? 'Reports "% chance variant beats control" with credible intervals. More intuitive for non-stats audiences.'
+                  : 'Reports p-values and confidence intervals. Pairs with sequential testing if you need to peek before the planned end date.'}
+              </span>
+            </div>
+
+            <div className='select-metrics-step__field'>
+              <label className='select-metrics-step__label'>
+                Multi-variant exposure handling
+              </label>
+              <select
+                className='select-metrics-step__select'
+                value={multiVariantHandling}
+                onChange={(e) =>
+                  onMultiVariantHandlingChange(
+                    e.target.value as MultiVariantHandling,
+                  )
+                }
+              >
+                {(
+                  Object.keys(
+                    MULTI_VARIANT_HANDLING_LABELS,
+                  ) as MultiVariantHandling[]
+                ).map((h) => (
+                  <option key={h} value={h}>
+                    {MULTI_VARIANT_HANDLING_LABELS[h]}
+                  </option>
+                ))}
+              </select>
+              <span className='select-metrics-step__hint text-muted fs-small'>
+                What to do when one user gets bucketed into multiple variants
+                (device change, SDK upgrade, etc.). Excluding is the
+                conservative default.
+              </span>
+            </div>
+
+            {statsEngine === 'frequentist' && (
+              <label className='select-metrics-step__checkbox-row'>
+                <input
+                  type='checkbox'
+                  checked={sequentialTesting}
+                  onChange={(e) => onSequentialTestingChange(e.target.checked)}
+                />
+                <span>
+                  <strong>Sequential testing</strong>
+                  <span className='select-metrics-step__hint text-muted fs-small d-block'>
+                    Allow valid peeking before the experiment hits its target
+                    sample size. Adjusts p-values to control false-positive
+                    rate.
+                  </span>
+                </span>
+              </label>
+            )}
+          </div>
+        )}
+      </section>
     </div>
   )
 }

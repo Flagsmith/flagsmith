@@ -55,4 +55,110 @@
     font-size: var(--font-caption-size);
     color: var(--color-text-secondary);
   }
+
+  &__settings {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface-default);
+  }
+
+  &__settings-title {
+    margin: 0;
+    font-size: var(--font-body-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-default);
+  }
+
+  &__hint {
+    color: var(--color-text-secondary);
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__label {
+    font-size: var(--font-body-sm-size);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-default);
+  }
+
+  &__select {
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-base);
+    color: var(--color-text-default);
+    font-size: var(--font-body-sm-size);
+    font-family: inherit;
+    cursor: pointer;
+    appearance: none;
+    transition: border-color var(--duration-fast) var(--easing-standard);
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-border-action);
+    }
+  }
+
+  &__advanced-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    padding: 4px 8px;
+    margin-left: -8px;
+    background: transparent;
+    border: 0;
+    color: var(--color-text-action);
+    font-size: var(--font-body-sm-size);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+
+    &:hover {
+      background: var(--color-surface-subtle);
+    }
+  }
+
+  &__advanced {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 4px;
+  }
+
+  &__checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-subtle);
+    cursor: pointer;
+    transition: border-color var(--duration-fast) var(--easing-standard);
+
+    &:hover {
+      border-color: var(--color-border-strong);
+    }
+
+    input[type='checkbox'] {
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    > span {
+      font-size: var(--font-body-sm-size);
+      color: var(--color-text-default);
+      line-height: 1.4;
+    }
+  }
 }

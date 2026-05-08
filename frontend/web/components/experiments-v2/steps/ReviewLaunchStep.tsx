@@ -5,10 +5,13 @@ import {
   CONTROL_ARM_ID,
   CONTROL_COLOUR,
   ExperimentWizardState,
+  INCLUSION_CRITERIA_LABELS,
   MOCK_AUDIENCE_ATTRIBUTES,
   MOCK_FLAGS,
   MOCK_LAYERS,
+  MULTI_VARIANT_HANDLING_LABELS,
   RANDOMISATION_UNIT_LABELS,
+  STATS_ENGINE_LABELS,
   VALUELESS_OPERATORS,
   Variation,
 } from 'components/experiments-v2/types'
@@ -224,6 +227,32 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
         ) : (
           <span className='review-launch-step__empty'>No metrics selected</span>
         )}
+        <div className='review-launch-step__row'>
+          <span className='review-launch-step__label'>Inclusion</span>
+          <span className='review-launch-step__value'>
+            {INCLUSION_CRITERIA_LABELS[wizardState.inclusionCriteria]}
+            {wizardState.inclusionCriteria === 'custom-event' &&
+              wizardState.inclusionEventName &&
+              ` · ${wizardState.inclusionEventName}`}
+          </span>
+        </div>
+        <div className='review-launch-step__row'>
+          <span className='review-launch-step__label'>Stats engine</span>
+          <span className='review-launch-step__value'>
+            {STATS_ENGINE_LABELS[wizardState.statsEngine]}
+            {wizardState.statsEngine === 'frequentist' &&
+              wizardState.sequentialTesting &&
+              ' · sequential testing'}
+          </span>
+        </div>
+        <div className='review-launch-step__row'>
+          <span className='review-launch-step__label'>
+            Multi-variant handling
+          </span>
+          <span className='review-launch-step__value'>
+            {MULTI_VARIANT_HANDLING_LABELS[wizardState.multiVariantHandling]}
+          </span>
+        </div>
       </div>
     </div>
   )
