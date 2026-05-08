@@ -1,9 +1,9 @@
 import React, { FC, useMemo, useState } from 'react'
-import Banner from 'components/Banner/Banner'
 import Input from 'components/base/forms/Input'
 import Button from 'components/base/forms/Button'
 import EmptyState from 'components/EmptyState'
 import Icon from 'components/icons/Icon'
+import WarningMessage from 'components/WarningMessage'
 import CreateMetricForm from 'components/experiments-v2/shared/CreateMetricForm'
 import SelectableCard from 'components/experiments-v2/shared/SelectableCard'
 import {
@@ -166,14 +166,16 @@ const SelectMetricsStep: FC<SelectMetricsStepProps> = ({
       </div>
 
       {primaryCount > 1 && (
-        <Banner variant='warning'>
-          <span>
-            You have {primaryCount} primary metrics. Best practice is{' '}
-            <strong>one primary metric</strong> to avoid multiple-comparisons
-            issues — pick the single metric you most want to move and demote the
-            rest to secondary.
-          </span>
-        </Banner>
+        <WarningMessage
+          warningMessage={
+            <span>
+              You have {primaryCount} primary metrics. Best practice is{' '}
+              <strong>one primary metric</strong> to avoid multiple-comparisons
+              issues — pick the single metric you most want to move and demote
+              the rest to secondary.
+            </span>
+          }
+        />
       )}
 
       {filteredMetrics.length > 0 ? (

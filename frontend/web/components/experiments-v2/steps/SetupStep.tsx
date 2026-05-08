@@ -1,6 +1,6 @@
 import React, { FC, useMemo } from 'react'
-import Banner from 'components/Banner/Banner'
 import EmptyState from 'components/EmptyState'
+import WarningMessage from 'components/WarningMessage'
 import Input from 'components/base/forms/Input'
 import SearchableSelect, {
   OptionType,
@@ -157,58 +157,67 @@ const SetupStep: FC<SetupStepProps> = ({
             </div>
 
             {hasInsufficientVariations && (
-              <Banner variant='warning'>
-                <span>
-                  This flag has no variations beyond the control value.
-                  Experiments need at least {MIN_VARIATIONS_FOR_EXPERIMENT}{' '}
-                  variation to run — add one on the flag page to make it
-                  eligible.
-                </span>
-              </Banner>
+              <WarningMessage
+                warningMessage={
+                  <span>
+                    This flag has no variations beyond the control value.
+                    Experiments need at least {MIN_VARIATIONS_FOR_EXPERIMENT}{' '}
+                    variation to run — add one on the flag page to make it
+                    eligible.
+                  </span>
+                }
+              />
             )}
 
             {collidingVariations.length > 0 && (
-              <Banner variant='warning'>
-                <span>
-                  {collidingVariations.length === 1 ? (
-                    <>
-                      Variation <strong>{collidingVariations[0].name}</strong>{' '}
-                      serves the same value as control (
-                      <code>{controlValue}</code>).
-                    </>
-                  ) : (
-                    <>
-                      <strong>{collidingVariations.length} variations</strong>{' '}
-                      serve the same value as control (
-                      <code>{controlValue}</code>).
-                    </>
-                  )}{' '}
-                  Identities bucketed into{' '}
-                  {collidingVariations.length === 1 ? 'it' : 'them'} will be
-                  indistinguishable from control at evaluation time — fix the
-                  values on the flag before launching.
-                </span>
-              </Banner>
+              <WarningMessage
+                warningMessage={
+                  <span>
+                    {collidingVariations.length === 1 ? (
+                      <>
+                        Variation <strong>{collidingVariations[0].name}</strong>{' '}
+                        serves the same value as control (
+                        <code>{controlValue}</code>
+                        ).
+                      </>
+                    ) : (
+                      <>
+                        <strong>{collidingVariations.length} variations</strong>{' '}
+                        serve the same value as control (
+                        <code>{controlValue}</code>).
+                      </>
+                    )}{' '}
+                    Identities bucketed into{' '}
+                    {collidingVariations.length === 1 ? 'it' : 'them'} will be
+                    indistinguishable from control at evaluation time — fix the
+                    values on the flag before launching.
+                  </span>
+                }
+              />
             )}
 
             {segmentOverrides.length > 0 && (
-              <Banner variant='warning'>
-                <span>
-                  This flag has{' '}
-                  <strong>
-                    {segmentOverrides.length} segment override
-                    {segmentOverrides.length === 1 ? '' : 's'}
-                  </strong>
-                  :{' '}
-                  {segmentOverrides.map((o) => `${o.segmentLabel}`).join(', ')}.
-                  Users matching{' '}
-                  {segmentOverrides.length === 1
-                    ? 'this segment'
-                    : 'these segments'}{' '}
-                  will continue receiving their override variant and{' '}
-                  <strong>will not enter the experiment</strong>.
-                </span>
-              </Banner>
+              <WarningMessage
+                warningMessage={
+                  <span>
+                    This flag has{' '}
+                    <strong>
+                      {segmentOverrides.length} segment override
+                      {segmentOverrides.length === 1 ? '' : 's'}
+                    </strong>
+                    :{' '}
+                    {segmentOverrides
+                      .map((o) => `${o.segmentLabel}`)
+                      .join(', ')}
+                    . Users matching{' '}
+                    {segmentOverrides.length === 1
+                      ? 'this segment'
+                      : 'these segments'}{' '}
+                    will continue receiving their override variant and{' '}
+                    <strong>will not enter the experiment</strong>.
+                  </span>
+                }
+              />
             )}
 
             <div className='setup-step__field'>
