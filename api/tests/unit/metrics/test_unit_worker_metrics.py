@@ -4,6 +4,7 @@ import pytest
 
 from metrics import worker_metrics
 
+
 class MockGaugeLabels:
     def __init__(self):
         self.set_called_with = None
@@ -146,6 +147,7 @@ def test_get_current_process_max_rss_bytes__status_file_read_error__returns_none
     # Then
     assert result is None
 
+
 def test_update_worker_metrics__rss_available__updates_gauge(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -154,7 +156,9 @@ def test_update_worker_metrics__rss_available__updates_gauge(
     mock_pid = 12345
     mock_gauge = MockGauge()
 
-    monkeypatch.setattr(worker_metrics, "get_current_process_max_rss_bytes", lambda: mock_rss)
+    monkeypatch.setattr(
+        worker_metrics, "get_current_process_max_rss_bytes", lambda: mock_rss
+    )
     monkeypatch.setattr(worker_metrics.os, "getpid", lambda: mock_pid)
     monkeypatch.setattr(worker_metrics, "flagsmith_worker_rss_bytes", mock_gauge)
 
@@ -165,6 +169,7 @@ def test_update_worker_metrics__rss_available__updates_gauge(
     assert mock_gauge.labels_called_with == str(mock_pid)
     assert mock_gauge.mock_labels.set_called_with == mock_rss
 
+
 def test_update_worker_metrics__rss_none__does_not_update_gauge(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -172,7 +177,9 @@ def test_update_worker_metrics__rss_none__does_not_update_gauge(
     mock_pid = 12345
     mock_gauge = MockGauge()
 
-    monkeypatch.setattr(worker_metrics, "get_current_process_max_rss_bytes", lambda: None)
+    monkeypatch.setattr(
+        worker_metrics, "get_current_process_max_rss_bytes", lambda: None
+    )
     monkeypatch.setattr(worker_metrics.os, "getpid", lambda: mock_pid)
     monkeypatch.setattr(worker_metrics, "flagsmith_worker_rss_bytes", mock_gauge)
 
@@ -181,6 +188,7 @@ def test_update_worker_metrics__rss_none__does_not_update_gauge(
 
     # Then
     assert mock_gauge.labels_called_with is None
+
 
 def test_clear_worker_metrics__removes_gauge_label(
     monkeypatch: pytest.MonkeyPatch,
