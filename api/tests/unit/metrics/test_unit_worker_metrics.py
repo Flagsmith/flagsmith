@@ -19,11 +19,11 @@ class MockGauge:
         self.mock_labels = MockGaugeLabels()
         self.should_raise_on_remove = None
 
-    def labels(self, pid):
+    def labels(self, *, pid):
         self.labels_called_with = pid
         return self.mock_labels
 
-    def remove(self, pid):
+    def remove(self, *, pid):
         self.remove_called_with = pid
         if self.should_raise_on_remove:
             raise self.should_raise_on_remove
