@@ -71,7 +71,7 @@ def test_backfill_identities_to_snowflake__happy_path__deletes_then_inserts(
     wrapper.iter_all_items_paginated.return_value = iter(
         [
             {
-                "identity_uuid": "u-1",
+                "identity_uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
                 "identifier": "a",
                 "composite_key": "k1",
                 "environment_api_key": environment.api_key,
@@ -79,7 +79,7 @@ def test_backfill_identities_to_snowflake__happy_path__deletes_then_inserts(
                 "identity_traits": [],
             },
             {
-                "identity_uuid": "u-2",
+                "identity_uuid": "550e8400-e29b-41d4-a716-446655440000",
                 "identifier": "b",
                 "composite_key": "k2",
                 "environment_api_key": environment.api_key,
@@ -140,7 +140,7 @@ def test_backfill_identities_to_snowflake__insert_fails__logs_and_continues(
     wrapper.iter_all_items_paginated.return_value = iter(
         [
             {
-                "identity_uuid": "u-1",
+                "identity_uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
                 "identifier": "a",
                 "composite_key": "k1",
                 "environment_api_key": environment.api_key,

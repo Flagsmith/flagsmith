@@ -30,6 +30,12 @@ from task_processor.decorators import (
 from environments.dynamodb.wrappers.identity_wrapper import DynamoIdentityWrapper
 from projects.models import Project
 from segment_membership.mappers import map_identity_document_to_snowflake_row
+from segment_membership.metrics import (
+    flagsmith_segment_membership_backfill_duration_seconds,
+    flagsmith_segment_membership_backfill_identities_total,
+    flagsmith_segment_membership_refresh_duration_seconds,
+    flagsmith_segment_membership_refresh_failures_total,
+)
 from segment_membership.models import SegmentMembership
 from segment_membership.services import (
     compute_segment_counts_for_project,
@@ -90,25 +96,31 @@ def backfill_identities_to_snowflake() -> None:
             for env in project.environments.all():
                 env_key = env.api_key
                 row_count = 0
+                sess.query_tag = (
+                    "flagsmith:segment_membership:backfill"
+                    f":org_{project.organisation_id}"
+                    f":project_{project.id}"
+                )
                 try:
-                    sess.sql(
-                        "DELETE FROM IDENTITIES WHERE environment_id = ?",
-                        params=[env_key],
-                    ).collect()
-                    for batch in batched(
-                        wrapper.iter_all_items_paginated(env_key),
-                        _INSERT_BATCH_SIZE,
-                    ):
-                        rows = [
-                            map_identity_document_to_snowflake_row(
-                                env_key, cast(DynamoIdentity, doc)
-                            )
-                            for doc in batch
-                        ]
-                        sess.create_dataframe(
-                            rows, schema=_IDENTITIES_SCHEMA
-                        ).write.mode("append").save_as_table("IDENTITIES")
-                        row_count += len(rows)
+                    with flagsmith_segment_membership_backfill_duration_seconds.time():
+                        sess.sql(
+                            "DELETE FROM IDENTITIES WHERE environment_id = ?",
+                            params=[env_key],
+                        ).collect()
+                        for batch in batched(
+                            wrapper.iter_all_items_paginated(env_key),
+                            _INSERT_BATCH_SIZE,
+                        ):
+                            rows = [
+                                map_identity_document_to_snowflake_row(
+                                    env_key, cast(DynamoIdentity, doc)
+                                )
+                                for doc in batch
+                            ]
+                            sess.create_dataframe(
+                                rows, schema=_IDENTITIES_SCHEMA
+                            ).write.mode("append").save_as_table("IDENTITIES")
+                            row_count += len(rows)
                 except Exception:
                     logger.exception(
                         "backfill.environment.failed",
@@ -116,6 +128,7 @@ def backfill_identities_to_snowflake() -> None:
                         environment__id=env.id,
                     )
                     continue
+                flagsmith_segment_membership_backfill_identities_total.inc(row_count)
                 logger.info(
                     "backfill.environment.completed",
                     project__id=project.id,
@@ -154,10 +167,19 @@ def refresh_project_segment_counts(project_id: int) -> None:
         )
         return
 
-    with open_snowflake_session() as sess:
+    with (
+        flagsmith_segment_membership_refresh_duration_seconds.time(),
+        open_snowflake_session() as sess,
+    ):
+        sess.query_tag = (
+            "flagsmith:segment_membership:refresh"
+            f":org_{project.organisation_id}"
+            f":project_{project.id}"
+        )
         try:
             memberships = compute_segment_counts_for_project(project, sess)
         except Exception:
+            flagsmith_segment_membership_refresh_failures_total.inc()
             logger.exception("refresh.project.failed", project__id=project_id)
             return
 

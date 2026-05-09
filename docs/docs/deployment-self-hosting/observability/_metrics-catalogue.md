@@ -70,6 +70,38 @@ Labels:
  - `method`
  - `response_status`
 
+### `flagsmith_segment_membership_backfill_duration_seconds`
+
+Histogram.
+
+Duration of a segment-membership backfill for one environment.
+
+Labels:
+
+### `flagsmith_segment_membership_backfill_identities`
+
+Counter.
+
+Total identities mirrored from Dynamo to Snowflake by the segment-membership backfill task across all environments.
+
+Labels:
+
+### `flagsmith_segment_membership_refresh_duration_seconds`
+
+Histogram.
+
+Duration of a single segment-membership count-refresh run for one project.
+
+Labels:
+
+### `flagsmith_segment_membership_refresh_failures`
+
+Counter.
+
+Total segment-membership refresh runs that failed for any reason.
+
+Labels:
+
 ### `flagsmith_task_processor_enqueued_tasks`
 
 Counter.
