@@ -2,7 +2,7 @@ name: API Pull Request with Private Packages
 
 permissions:
   contents: read # For actions/checkout
-  id-token: write # For Codecov OIDC
+  id-token: write # For Codecov and CodeArtifact OIDC
 
 on:
   pull_request:
@@ -50,6 +50,9 @@ jobs:
 
       - name: Install SAML Dependencies
         run: sudo apt-get install -y xmlsec1
+
+      - name: Authenticate with CodeArtifact
+        uses: ./.github/actions/codeartifact-login
 
       - name: Install packages and Tests
         shell: bash

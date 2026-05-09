@@ -2,7 +2,7 @@ name: API Pull Request
 
 permissions:
   contents: read # For actions/checkout
-  id-token: write # For Codecov OIDC
+  id-token: write # For Codecov and CodeArtifact OIDC
 
 on:
   pull_request:
@@ -49,6 +49,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: poetry
+
+      - name: Authenticate with CodeArtifact
+        uses: ./.github/actions/codeartifact-login
 
       - name: Install Dependencies
         run: make install-packages

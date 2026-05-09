@@ -1,0 +1,29 @@
+name: CodeArtifact login
+description: Assume the staging CodeArtifact role via OIDC, fetch an authorisation token, and export Poetry HTTP basic auth env vars
+
+outputs:
+  token:
+    description: CodeArtifact authorisation token
+    value: ${{ steps.codeartifact.outputs.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Configure AWS credentials for CodeArtifact
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::302456015006:role/codeartifact-github-actions-staging
+        aws-region: eu-west-2
+
+    - name: Fetch CodeArtifact authorisation token
+      id: codeartifact
+      shell: bash
+      run: |
+        token=$(aws codeartifact get-authorization-token \
+          --domain flagsmith-staging \
+          --domain-owner 302456015006 \
+          --query authorizationToken --output text)
+        echo "::add-mask::$token"
+        echo "token=$token" >> "$GITHUB_OUTPUT"
+        echo "POETRY_HTTP_BASIC_FLAGSMITH_PYPI_STAGING_USERNAME=aws" >> "$GITHUB_ENV"
+        echo "POETRY_HTTP_BASIC_FLAGSMITH_PYPI_STAGING_PASSWORD=$token" >> "$GITHUB_ENV"

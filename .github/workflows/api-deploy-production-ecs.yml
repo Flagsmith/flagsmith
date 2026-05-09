@@ -24,6 +24,9 @@ jobs:
     needs: deploy-ecs
     name: Push MCP Schema to Gram
     runs-on: depot-ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # For CodeArtifact OIDC
     defaults:
       run:
         working-directory: api
@@ -38,6 +41,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: poetry
+
+      - name: Authenticate with CodeArtifact
+        uses: ./.github/actions/codeartifact-login
 
       - name: Install dependencies
         run: |

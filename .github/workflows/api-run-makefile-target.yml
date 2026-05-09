@@ -21,6 +21,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write # For CodeArtifact OIDC
 
 defaults:
   run:
@@ -40,6 +41,9 @@ jobs:
         with:
           python-version: 3.13
           cache: poetry
+
+      - name: Authenticate with CodeArtifact
+        uses: ./.github/actions/codeartifact-login
 
       - name: Install Dependencies
         run: make install-packages
