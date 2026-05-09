@@ -27,7 +27,7 @@
 .chip {
   display: flex;
   align-items: center;
-  align-self: flex-start !important;
+  align-self: flex-start;
   background-color: $primary-alfa-8;
   border: 1px solid $primary-alfa-24;
   padding: 5px 12px;

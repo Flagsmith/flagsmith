@@ -92,6 +92,15 @@ global.ToggleChip = ToggleChip
 
 // Custom Option component to show the tick mark next to selected option in the dropdown
 const Option = (props) => {
+  const { formatOptionLabel } = props.selectProps
+  const labelContent = formatOptionLabel
+    ? formatOptionLabel(props.data, { context: 'menu' })
+    : (
+        <>
+          {props.data.label}
+          <div className='text-small'>{props.data.description}</div>
+        </>
+      )
   return (
     <components.Option {...props}>
       <div
@@ -99,10 +108,7 @@ const Option = (props) => {
           props.data.isDisabled ? 'text-muted cursor-not-allowed' : ''
         }`}
       >
-        <div>
-          {props.data.label}
-          <div className='text-small'>{props.data.description}</div>
-        </div>
+        <div>{labelContent}</div>
         {props.isSelected && (
           <IonIcon icon={checkmarkCircle} className='text-primary' />
         )}
