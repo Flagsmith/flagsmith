@@ -14,16 +14,27 @@
 
 # Build an Open Source Unified image:
 # (`oss-unified` stage is the default one, so there's no need to specify a target stage)
-# $ docker build -t flagsmith:dev .
+# $ CODEARTIFACT_TOKEN=$(aws codeartifact get-authorization-token \
+#       --domain flagsmith-staging --domain-owner 302456015006 \
+#       --query authorizationToken --output text) \
+#   docker build -t flagsmith:dev \
+#     --secret="id=codeartifact_token,env=CODEARTIFACT_TOKEN" .
 
 # Build a SaaS API image:
 # $ GH_TOKEN=$(gh auth token) docker build -t flagsmith-saas-api:dev --target saas-api \
 #     --secret="id=sse_pgp_pkey,src=./sse_pgp_pkey.key"\
-#     --secret="id=github_private_cloud_token,env=GH_TOKEN" .
+#     --secret="id=github_private_cloud_token,env=GH_TOKEN" \
+#     --secret="id=codeartifact_token,env=CODEARTIFACT_TOKEN" .
 
 # Build a Private Cloud Unified image:
 # $ GH_TOKEN=$(gh auth token) docker build -t flagsmith-private-cloud:dev --target private-cloud-unified \
-#     --secret="id=github_private_cloud_token,env=GH_TOKEN" .
+#     --secret="id=github_private_cloud_token,env=GH_TOKEN" \
+#     --secret="id=codeartifact_token,env=CODEARTIFACT_TOKEN" .
+
+# `codeartifact_token` is required for any target that runs `poetry install`,
+# since the `flagsmith-sql-flag-engine` dep is hosted on Flagsmith's
+# private CodeArtifact PyPI. See the `[[tool.poetry.source]]` block in
+# `api/pyproject.toml`.
 
 # Table of Contents
 # Stages are described as stage-name [dependencies]
@@ -100,7 +111,10 @@ ENV POETRY_VIRTUALENVS_IN_PROJECT=true \
   POETRY_VIRTUALENVS_OPTIONS_NO_SETUPTOOLS=true \
   POETRY_HOME=/opt/poetry \
   PATH="/opt/poetry/bin:$PATH"
-RUN make install opts='--without dev'
+RUN --mount=type=secret,id=codeartifact_token \
+  POETRY_HTTP_BASIC_FLAGSMITH_PYPI_STAGING_USERNAME=aws \
+  POETRY_HTTP_BASIC_FLAGSMITH_PYPI_STAGING_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
+  make install opts='--without dev'
 
 # * build-python-private [build-python]
 FROM build-python AS build-python-private
@@ -111,8 +125,11 @@ ARG SAML_REVISION
 ARG RBAC_REVISION
 ARG WITH="saml,auth-controller,ldap,workflows,licensing,release-pipelines"
 RUN --mount=type=secret,id=github_private_cloud_token \
+  --mount=type=secret,id=codeartifact_token \
   echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
   git config --global credential.helper store && \
+  POETRY_HTTP_BASIC_FLAGSMITH_PYPI_STAGING_USERNAME=aws \
+  POETRY_HTTP_BASIC_FLAGSMITH_PYPI_STAGING_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
   make install-packages opts='--without dev --with ${WITH}' && \
   make install-private-modules
 
@@ -161,7 +178,10 @@ FROM build-python AS api-test
 
 COPY api /build/
 
-RUN make install-packages opts='--with dev'
+RUN --mount=type=secret,id=codeartifact_token \
+  POETRY_HTTP_BASIC_FLAGSMITH_PYPI_STAGING_USERNAME=aws \
+  POETRY_HTTP_BASIC_FLAGSMITH_PYPI_STAGING_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
+  make install-packages opts='--with dev'
 
 CMD ["make", "test"]
 
@@ -170,7 +190,10 @@ FROM build-python-private AS api-private-test
 
 COPY api /build/
 
-RUN make install-packages opts='--with dev' && \
+RUN --mount=type=secret,id=codeartifact_token \
+  POETRY_HTTP_BASIC_FLAGSMITH_PYPI_STAGING_USERNAME=aws \
+  POETRY_HTTP_BASIC_FLAGSMITH_PYPI_STAGING_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
+  make install-packages opts='--with dev' && \
   make integrate-private-tests && \
   git config --global --unset credential.helper && \
   rm -f ${HOME}/.git-credentials

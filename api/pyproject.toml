@@ -116,6 +116,11 @@ enabled = true
 [tool.poetry]
 package-mode = false
 
+[[tool.poetry.source]]
+name = "flagsmith-pypi-staging"
+url = "https://flagsmith-staging-302456015006.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-staging/simple/"
+priority = "explicit"
+
 [tool.poetry.dependencies]
 python = ">3.11,<3.14"
 django = ">=5,<6"
@@ -151,7 +156,7 @@ django-lifecycle = "~1.2.4"
 drf-writable-nested = "~0.6.2"
 django-filter = "~2.4.0"
 flagsmith-flag-engine = "^10.1.0"
-flagsmith-sql-flag-engine = { git = "https://github.com/Flagsmith/flagsmith-sql-flag-engine.git", branch = "initial-scaffold" }
+flagsmith-sql-flag-engine = { version = "0.1.0a1", source = "flagsmith-pypi-staging", allow-prereleases = true }
 snowflake-snowpark-python = "^1.20"
 boto3 = "~1.35.95"
 slack-sdk = "~3.9.0"

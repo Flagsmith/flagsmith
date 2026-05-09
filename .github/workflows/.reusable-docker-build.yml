@@ -97,6 +97,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Configure AWS credentials for CodeArtifact
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::302456015006:role/codeartifact-github-actions-staging
+          aws-region: eu-west-2
+
+      - name: Fetch CodeArtifact authorisation token
+        id: codeartifact
+        run: |
+          token=$(aws codeartifact get-authorization-token \
+            --domain flagsmith-staging \
+            --domain-owner 302456015006 \
+            --query authorizationToken --output text)
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -113,7 +129,9 @@ jobs:
           save: ${{ inputs.ephemeral }}
           push: ${{ !inputs.ephemeral }}
           platforms: linux/amd64,linux/arm64
-          secrets: ${{ secrets.secrets }}
+          secrets: |
+            ${{ secrets.secrets }}
+            codeartifact_token=${{ steps.codeartifact.outputs.token }}
           target: ${{ inputs.target }}
           build-args: |
             CI_COMMIT_SHA=${{ github.sha }}

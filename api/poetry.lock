@@ -2178,23 +2178,24 @@ resolved_reference = "a5318e69b5712307e3204a57ecebb64995526200"
 
 [[package]]
 name = "flagsmith-sql-flag-engine"
-version = "0.1.0"
+version = "0.1.0a1"
 description = "SQL translator for Flagsmith segment predicates."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
-files = []
-develop = false
+files = [
+    {file = "flagsmith_sql_flag_engine-0.1.0a1-py3-none-any.whl", hash = "sha256:3a721a9f053846550f43633285209e1112b4507b38ed2aeddc063b53f73e5fe0"},
+    {file = "flagsmith_sql_flag_engine-0.1.0a1.tar.gz", hash = "sha256:09d9b3c8bdf5699f35676213a5795b2facd1564bb1cf3c0a75fcda1e1bb0c2e4"},
+]
 
 [package.dependencies]
 flagsmith-flag-engine = ">=10"
 jsonpath-rfc9535 = ">=0.2"
 
 [package.source]
-type = "git"
-url = "https://github.com/Flagsmith/flagsmith-sql-flag-engine.git"
-reference = "initial-scaffold"
-resolved_reference = "6adc18658191c5bca585b0e92818f59602098b25"
+type = "legacy"
+url = "https://flagsmith-staging-302456015006.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-staging/simple"
+reference = "flagsmith-pypi-staging"
 
 [[package]]
 name = "freezegun"
@@ -6204,4 +6205,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.14"
-content-hash = "0264d6d2716ad7cb62756b1ef485de3811e0f7c24555160233ac39b0b40f9bcf"
+content-hash = "6157c6d2b9fbe99251623a5b057719df4445e94760c890b02cbf606f72a0aa99"
