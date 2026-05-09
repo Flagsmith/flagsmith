@@ -12,15 +12,15 @@ from segment_membership.mappers import (
 
 def test_identity_id__same_uuid__produces_same_id() -> None:
     # Given the same identity_uuid
-    uuid = "abc-123"
+    uuid = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 
     # When the helper runs twice
     a = _identity_id(uuid)
     b = _identity_id(uuid)
 
-    # Then the result is identical and fits in a non-negative 64-bit int
+    # Then the result is identical and fits in a signed 64-bit int
     assert a == b
-    assert 0 <= a < 2**64
+    assert -(2**63) <= a < 2**63
 
 
 def test_coerce_trait_value__decimal_int__narrows_to_int() -> None:
@@ -69,7 +69,7 @@ def test_flatten_traits__list__returns_dict_dropping_empty_keys() -> None:
 def test_map_identity_document_to_snowflake_row__with_traits__returns_tuple() -> None:
     # Given a Dynamo identity document with traits
     doc: DynamoIdentity = {
-        "identity_uuid": "uuid-1",
+        "identity_uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
         "identifier": "alice",
         "environment_api_key": "env-key",
         "composite_key": "env_x_alice",
@@ -84,7 +84,7 @@ def test_map_identity_document_to_snowflake_row__with_traits__returns_tuple() ->
 
     # Then the columns line up positionally with the IDENTITIES schema
     assert env_id == "env-key"
-    assert _id == _identity_id("uuid-1")
+    assert _id == _identity_id("f47ac10b-58cc-4372-a567-0e02b2c3d479")
     assert identifier == "alice"
     assert identity_key == "env_x_alice"
     assert traits == {"plan": "growth"}
@@ -95,7 +95,7 @@ def test_map_identity_document_to_snowflake_row__no_traits__returns_none_for_tra
 ):
     # Given a Dynamo identity document with no trait entries
     doc: DynamoIdentity = {
-        "identity_uuid": "uuid-1",
+        "identity_uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
         "identifier": "alice",
         "environment_api_key": "env-key",
         "composite_key": "env_x_alice",
@@ -115,7 +115,7 @@ def test_map_identity_document_to_snowflake_row__no_composite_key__falls_back_to
 ):
     # Given an identity document missing the composite_key
     doc: DynamoIdentity = {  # type: ignore[typeddict-item]
-        "identity_uuid": "uuid-1",
+        "identity_uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
         "identifier": "alice",
         "environment_api_key": "env-key",
         "created_date": "2026-05-08T00:00:00Z",
@@ -126,4 +126,4 @@ def test_map_identity_document_to_snowflake_row__no_composite_key__falls_back_to
     *_, identity_key, _traits = map_identity_document_to_snowflake_row("env-key", doc)
 
     # Then identity_key falls back to identity_uuid
-    assert identity_key == "uuid-1"
+    assert identity_key == "f47ac10b-58cc-4372-a567-0e02b2c3d479"

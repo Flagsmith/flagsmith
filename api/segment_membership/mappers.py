@@ -1,4 +1,4 @@
-import hashlib
+import uuid
 from decimal import Decimal
 
 from flagsmith_schemas.dynamodb import Identity as DynamoIdentity
@@ -28,11 +28,8 @@ def map_identity_document_to_snowflake_row(
 
 
 def _identity_id(identity_uuid: str) -> int:
-    """Stable 64-bit IDENTITIES.id derived from `identity_uuid`. Same
-    uuid always produces the same id, so re-runs of the backfill are
-    idempotent on the (environment_id, id) primary key."""
-    digest = hashlib.md5(identity_uuid.encode("utf-8")).digest()
-    return int.from_bytes(digest[:8], "big", signed=False)
+    """Project a UUID onto a stable signed 64-bit IDENTITIES.id."""
+    return int.from_bytes(uuid.UUID(identity_uuid).bytes[:8], "big", signed=True)
 
 
 def _coerce_trait_value(value: object) -> object:
