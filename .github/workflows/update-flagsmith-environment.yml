@@ -9,6 +9,10 @@ defaults:
   run:
     working-directory: api
 
+permissions:
+  contents: read
+  id-token: write # For CodeArtifact OIDC
+
 jobs:
   update_server_defaults:
     runs-on: depot-ubuntu-latest
@@ -24,6 +28,9 @@ jobs:
         uses: ./.github/actions/install-uv
         with:
           python-version: 3.12
+
+      - name: Authenticate with CodeArtifact
+        uses: ./.github/actions/codeartifact-login
 
       - name: Install Dependencies
         run: make install-packages
