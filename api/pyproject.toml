@@ -10,7 +10,443 @@ description = "The API component for the Flagsmith application."
 authors = [{ name = "Flagsmith", email = "support@flagsmith.com" }]
 readme = "README.md"
 requires-python = ">=3.11, <3.14"
-dynamic = ["dependencies"]
+dependencies = [
+    "django>=5,<6",
+    "rudder-sdk-python>=2.0.2,<2.1.0",
+    "segment-analytics-python>=2.2.3,<2.3.0",
+    "backoff>=2.2.1,<2.3.0",
+    "appdirs>=1.4.4,<1.5.0",
+    "django-cors-headers>=3.5.0,<3.6.0",
+    "djangorestframework>=3.15.2,<3.16.0",
+    "gunicorn>=23.0.0,<23.1.0",
+    "pyparsing>=2.4.7,<2.5.0",
+    "requests>=2.32.4,<2.33.0",
+    "six>=1.16.0,<1.17.0",
+    "whitenoise>=6.0.0,<6.1.0",
+    "dj-database-url>=3.0.1,<3.1.0",
+    "drf-nested-routers>=0.92.1,<0.93.0",
+    "shortuuid>=1.0.1,<1.1.0",
+    "sendgrid-django>=4.2.0,<4.3.0",
+    "psycopg2-binary>=2.9.5,<2.10.0",
+    "coreapi>=2.3.3,<2.4.0",
+    "django-simple-history>=2.12.0,<2.13.0",
+    "google-api-python-client>=1.12.5,<1.13.0",
+    "oauth2client>=4.1.3,<4.2.0",
+    "djangorestframework-recursive>=0.1.2,<0.2.0",
+    "chargebee>=3.10.0,<4.0.0",
+    "python-http-client>=3.3.7,<3.4.0",
+    "django-health-check>=3.18.2,<3.19.0",
+    "django-admin-sso>=5.2.0,<5.3.0",
+    "drf-spectacular>=0.28.0,<0.29.0",
+    "sentry-sdk>=2.24.1,<3",
+    "environs>=14.1.1,<15.0.0",
+    "django-lifecycle>=1.2.4,<1.3.0",
+    "drf-writable-nested>=0.6.2,<0.7.0",
+    "django-filter>=2.4.0,<2.5.0",
+    "flagsmith-flag-engine>=10.1.0,<11.0.0",
+    "boto3>=1.35.95,<1.36.0",
+    "slack-sdk>=3.9.0,<3.10.0",
+    "asgiref>=3.8.1,<3.9.0",
+    "djangorestframework-api-key>=2.2.0,<2.3.0",
+    "pymemcache>=4.0.0,<4.1.0",
+    "google-re2>=1.0,<2.0.0",
+    "django-softdelete>=0.11.5,<0.12.0",
+    "simplejson>=3.19.1,<3.20.0",
+    "djoser>=2.3.0,<3.0.0",
+    "django-storages>=1.10.1,<1.11.0",
+    "django-environ>=0.4.5,<0.5.0",
+    "influxdb-client>=1.50.0,<1.51.0",
+    "django-ordered-model>=3.4.1,<3.5.0",
+    "django-ses>=3.5.0,<3.6.0",
+    "django-axes>=8.1.0,<9.0.0",
+    "pydantic>=2.12.0,<3.0.0",
+    "pydantic-collections>=0.6.0,<0.7.0",
+    "pyngo>=2.4.1,<2.5.0",
+    "flagsmith>=5.3.0,<6.0.0",
+    "openfeature-sdk>=0.9.0,<0.10.0",
+    "openfeature-provider-flagsmith>=0.2.0",
+    "python-gnupg>=0.5.1,<0.6.0",
+    "django-redis>=5.4.0,<6.0.0",
+    "pygithub>=2.8,<2.9.0",
+    "hubspot-api-client>=12.0.0,<13.0.0",
+    "djangorestframework-dataclasses>=1.3.1,<2.0.0",
+    "pyotp>=2.9.0,<3.0.0",
+    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.9.0,<4",
+    "django-stubs>=5.1.3,<6.0.0",
+    "tzdata>=2024.1,<2025.0.0",
+    "djangorestframework-simplejwt>=5.5.1,<6.0.0",
+    "structlog>=24.4.0,<25.0.0",
+    "prometheus-client>=0.21.1,<0.22.0",
+    "django-cockroachdb>=4.2,<4.3.0",
+    "django-oauth-toolkit>=3.0.1,<4.0.0",
+]
+
+[project.optional-dependencies]
+# Optional groups historically pulled in as git deps from the original
+# poetry config. The dist names below match what each upstream project
+# actually publishes via its current build backend (setuptools fallback
+# for repos without [build-system], poetry-core where present).
+#
+# Several upstream repos declare deps via `[tool.poetry.dependencies]`
+# without a PEP 517 `[build-system]` table, so setuptools fallback drops
+# them from the built wheel. We re-declare those transitive deps here so
+# the resolution matches what poetry produced on main.
+auth-controller = [
+    "auth-controller",
+    "django-multiselectfield>=1.0.1,<2",
+]
+saml = [
+    "pysaml2>=7.4.2,<8.0.0",
+]
+ldap = [
+    "flagsmith-ldap",
+    "django-python3-ldap>=0.15.6,<1",
+]
+workflows = [
+    "workflows-logic",
+]
+licensing = [
+    "licensing",
+    "cryptography>=44.0.1",
+]
+release-pipelines = [
+    "flagsmith-private",
+]
+dev = [
+    "django-test-migrations>=1.2.0,<2.0.0",
+    "responses>=0.22.0,<0.23.0",
+    "pre-commit>=4.0.1,<5.0.0",
+    "pytest-mock>=3.10.0,<3.11.0",
+    "pytest-lazy-fixture>=0.6.3,<0.7.0",
+    "moto>=4.1.3,<4.2.0",
+    # TODO: move to https://github.com/adamchainz/time-machine
+    "pytest-freezegun>=0.4.2,<0.5.0",
+    # setuptools only exists because pytest-freezegun fails without it
+    "setuptools",
+    "pytest-xdist>=3.6.1,<3.7.0",
+    "pylint>=2.16.2,<2.17.0",
+    "pep8>=1.7.1,<1.8.0",
+    "autopep8>=2.0.1,<2.1.0",
+    "pytest>=7.2.1,<7.3.0",
+    "pytest-django>=4.8.0,<5.0.0",
+    "pytest-cov>=4.1.0,<4.2.0",
+    "datamodel-code-generator>=0.25,<0.26.0",
+    "requests-mock>=1.11.0,<2.0.0",
+    "django-extensions>=3.2.3,<4.0.0",
+    "pdbpp>=0.10.3,<0.11.0",
+    "mypy-boto3-dynamodb>=1.33.0,<2.0.0",
+    "pytest-structlog>=1.1,<2.0.0",
+    "pyfakefs>=5.7.4,<6.0.0",
+    "mypy>=1.15.0,<2.0.0",
+    "djangorestframework-stubs>=3.15.2,<4.0.0",
+    "boto3-stubs>=1.36.20,<2.0.0",
+    "types-requests>=2.32.0.20241016,<3.0.0",
+    "types-markdown>=3.7.0.20241204,<4.0.0",
+    "types-pygments>=2.19.0.20250107,<3.0.0",
+    "types-influxdb-client>=1.45.0.20241221,<2.0.0",
+    "types-psycopg2>=2.9.21.20250121,<3.0.0",
+    "types-python-dateutil>=2.9.0.20241206,<3.0.0",
+    "types-pytz>=2025.1.0.20250204,<2026.0.0",
+    "ruff>=0.9.7,<0.10.0",
+    "flagsmith-common[test-tools]",
+    "pytest-responses>=0.5.1,<0.6.0",
+    "diff-cover>=10.1.0,<11.0.0",
+    "django-debug-toolbar",
+    "ipython>=9.10.0,<10.0.0",
+    # datamodel-code-generator requires `pydantic[email]`, but our
+    # override-dependencies on pydantic strips the email extra. Re-add
+    # the transitive deps so poetry.lock parity is preserved.
+    "email-validator>=2.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+# Exclude things that aren't Python packages and avoid sweeping in build dirs
+exclude = ["build*", "dist*", "static*", "staticfiles*", "venv*", ".venv*", "scripts*"]
+
+[tool.setuptools]
+# Include the api-root conftest.py + manage.py as top-level modules so the
+# installed wheel still provides the pytest fixtures defined there.
+py-modules = ["conftest", "manage"]
+
+[tool.setuptools.package-data]
+"*" = ["*.*"]
+
+[tool.uv.sources]
+auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.2.0" }
+flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.1.2" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.4.0" }
+licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.3.0" }
+flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private", tag = "v0.4.4" }
+
+[tool.uv]
+# Pin every resolved package to the exact version that api/poetry.lock used on
+# main before this migration, so the poetry -> uv switch is dependency-neutral.
+# Keep this list in sync with poetry.lock until the lockfile churn settles.
+override-dependencies = [
+    "annotated-types==0.6.0",
+    "anyio==4.12.1",
+    "appdirs==1.4.4",
+    "argcomplete==3.1.2",
+    "asgiref==3.8.1",
+    "astroid==2.15.8",
+    "asttokens==3.0.1",
+    "async-timeout==4.0.3",
+    "attrs==23.1.0",
+    "autopep8==2.0.4",
+    "backoff==2.2.1",
+    "black==26.3.1",
+    "boto3==1.35.95",
+    "boto3-stubs==1.36.20",
+    "botocore==1.35.95",
+    "botocore-stubs==1.36.20",
+    "cachetools==5.3.1",
+    "certifi==2024.7.4",
+    "cffi==2.0.0",
+    "cfgv==3.4.0",
+    "chardet==5.2.0",
+    "chargebee==3.18.2",
+    "charset-normalizer==3.2.0",
+    "click==8.1.6",
+    "colorama==0.4.6",
+    "coreapi==2.3.3",
+    "coreschema==0.0.4",
+    "coverage==7.10.6",
+    "cryptography==46.0.7",
+    "datamodel-code-generator==0.25.8",
+    "decorator==5.2.1",
+    "defusedxml==0.7.1",
+    "deprecation==2.0.7",
+    "diff-cover==10.1.0",
+    "dill==0.3.8",
+    "distlib==0.3.9",
+    "dj-database-url==3.0.1",
+    "django==5.2.13",
+    "django-admin-sso==5.2.0",
+    "django-axes==8.1.0",
+    "django-cockroachdb==4.2",
+    "django-cors-headers==3.5.0",
+    "django-debug-toolbar==6.2.0",
+    "django-environ==0.4.5",
+    "django-extensions==3.2.3",
+    "django-filter==2.4.0",
+    "django-health-check==3.18.2",
+    "django-lifecycle==1.2.4",
+    "django-multiselectfield==1.0.1",
+    "django-oauth-toolkit==3.1.0",
+    "django-ordered-model==3.4.3",
+    "django-python3-ldap==0.16.1",
+    "django-redis==5.4.0",
+    "django-ses==3.5.0",
+    "django-simple-history==2.12.0",
+    "django-softdelete==0.11.5",
+    "django-storages==1.10.1",
+    "django-stubs==5.2.8",
+    "django-stubs-ext==5.2.8",
+    "django-test-migrations==1.5.0",
+    "djangorestframework==3.15.2",
+    "djangorestframework-api-key==2.2.0",
+    "djangorestframework-dataclasses==1.3.1",
+    "djangorestframework-recursive==0.1.2",
+    "djangorestframework-simplejwt==5.5.1",
+    "djangorestframework-stubs==3.15.2",
+    "djoser==2.3.3",
+    "dnspython==2.6.1",
+    "drf-nested-routers==0.92.5",
+    "drf-spectacular==0.28.0",
+    "drf-writable-nested==0.6.4",
+    "elementpath==4.1.5",
+    "email-validator==2.0.0.post2",
+    "environs==14.1.1",
+    "execnet==2.1.1",
+    "executing==2.2.1",
+    "fancycompleter==0.9.1",
+    "filelock==3.20.3",
+    "flagsmith==5.3.0",
+    # flagsmith-common version is set via the [project] dependency spec which
+    # also carries the extras; an override here would strip the extras.
+    "flagsmith-flag-engine==10.1.0",
+    "freezegun==1.5.5",
+    "genson==1.2.2",
+    "google-api-core==2.29.0",
+    "google-api-python-client==1.12.11",
+    "google-auth==2.38.0",
+    "google-auth-httplib2==0.1.0",
+    "google-re2==1.1.20251105",
+    "googleapis-common-protos==1.72.0",
+    "gunicorn==23.0.0",
+    "h11==0.16.0",
+    "httpcore==1.0.9",
+    "httplib2==0.22.0",
+    "httpx==0.28.1",
+    "hubspot-api-client==12.0.0",
+    "identify==2.6.3",
+    "idna==3.7",
+    "importlib-metadata==8.7.1",
+    "inflect==5.6.2",
+    "inflection==0.5.1",
+    "influxdb-client==1.50.0",
+    "iniconfig==2.0.0",
+    "ipython==9.10.0",
+    "ipython-pygments-lexers==1.1.1",
+    "iregexp-check==0.1.4",
+    "isort==5.12.0",
+    "itypes==1.2.0",
+    "jedi==0.19.2",
+    "jinja2==3.1.6",
+    "jmespath==1.0.1",
+    "jsonpath-rfc9535==0.2.0",
+    "jsonschema==4.25.1",
+    "jsonschema-specifications==2025.9.1",
+    "jwcrypto==1.5.6",
+    "lazy-object-proxy==1.10.0",
+    "ldap3==2.9.1",
+    "markupsafe==2.1.3",
+    "marshmallow==3.26.2",
+    "matplotlib-inline==0.2.1",
+    "mccabe==0.7.0",
+    "monotonic==1.6",
+    "moto==4.1.14",
+    "mypy==1.15.0",
+    "mypy-boto3-dynamodb==1.33.0",
+    "mypy-extensions==1.0.0",
+    "nodeenv==1.9.1",
+    "oauth2client==4.1.3",
+    "oauthlib==3.2.2",
+    "openfeature-provider-flagsmith==0.2.0",
+    "openfeature-sdk==0.9.0",
+    "opentelemetry-api==1.40.0",
+    "opentelemetry-exporter-otlp-proto-common==1.40.0",
+    "opentelemetry-exporter-otlp-proto-http==1.40.0",
+    "opentelemetry-instrumentation==0.61b0",
+    "opentelemetry-instrumentation-dbapi==0.61b0",
+    "opentelemetry-instrumentation-django==0.61b0",
+    "opentelemetry-instrumentation-psycopg2==0.61b0",
+    "opentelemetry-instrumentation-redis==0.61b0",
+    "opentelemetry-instrumentation-wsgi==0.61b0",
+    "opentelemetry-proto==1.40.0",
+    "opentelemetry-sdk==1.40.0",
+    "opentelemetry-semantic-conventions==0.61b0",
+    "opentelemetry-util-http==0.61b0",
+    "packaging==25.0",
+    "parso==0.8.5",
+    "pathspec==1.0.4",
+    "pdbpp==0.10.3",
+    "pep8==1.7.1",
+    "pexpect==4.9.0",
+    "platformdirs==3.10.0",
+    "pluggy==1.2.0",
+    "pre-commit==4.0.1",
+    "prometheus-client==0.21.1",
+    "prompt-toolkit==3.0.52",
+    "proto-plus==1.27.1",
+    "protobuf==6.33.5",
+    "psycopg2-binary==2.9.11",
+    "ptyprocess==0.7.0",
+    "pure-eval==0.2.3",
+    "pyasn1==0.6.3",
+    "pyasn1-modules==0.4.2",
+    "pycodestyle==2.12.0",
+    "pycparser==2.21",
+    "pydantic==2.12.5",
+    "pydantic-collections==0.6.0",
+    "pydantic-core==2.41.5",
+    "pyfakefs==5.7.4",
+    "pygithub==2.8.1",
+    "pygments==2.19.2",
+    "pyjwt==2.12.0",
+    "pylint==2.16.4",
+    "pymemcache==4.0.0",
+    "pynacl==1.6.2",
+    "pyngo==2.4.1",
+    "pyopenssl==26.0.0",
+    "pyotp==2.9.0",
+    "pyparsing==2.4.7",
+    "pyreadline==2.1",
+    "pyrepl==0.9.0",
+    "pysaml2==7.4.2",
+    "pytest==7.2.2",
+    "pytest-cov==4.1.0",
+    "pytest-django==4.8.0",
+    "pytest-freezegun==0.4.2",
+    "pytest-lazy-fixture==0.6.3",
+    "pytest-mock==3.10.0",
+    "pytest-responses==0.5.1",
+    "pytest-structlog==1.1",
+    "pytest-xdist==3.6.1",
+    "python-dateutil==2.8.2",
+    "python-dotenv==0.21.1",
+    "python-gnupg==0.5.1",
+    "python-http-client==3.3.7",
+    "python3-openid==3.2.0",
+    "pytokens==0.4.1",
+    "pytz==2023.4",
+    "pyyaml==6.0.1",
+    "reactivex==4.1.0",
+    "redis==5.0.1",
+    "referencing==0.37.0",
+    "regex==2026.2.19",
+    "requests==2.32.5",
+    "requests-futures==1.0.1",
+    "requests-mock==1.11.0",
+    "requests-oauthlib==1.3.1",
+    "responses==0.22.0",
+    "rpds-py==0.30.0",
+    "rsa==4.9",
+    "rudder-sdk-python==2.0.2",
+    "ruff==0.9.7",
+    "s3transfer==0.10.4",
+    "segment-analytics-python==2.2.3",
+    "semver==3.0.4",
+    "sendgrid==3.6.5",
+    "sendgrid-django==4.2.0",
+    "sentry-sdk==2.53.0",
+    "setuptools==80.10.2",
+    "shortuuid==1.0.11",
+    "simplejson==3.19.1",
+    "six==1.16.0",
+    "slack-sdk==3.9.1",
+    "social-auth-app-django==5.6.0",
+    "social-auth-core==4.4.2",
+    "sqlparse==0.5.4",
+    "sseclient-py==1.8.0",
+    "stack-data==0.6.3",
+    "structlog==24.4.0",
+    "toml==0.10.2",
+    "tomlkit==0.13.0",
+    "traitlets==5.14.3",
+    "types-awscrt==0.23.10",
+    "types-docutils==0.21.0.20241128",
+    "types-influxdb-client==1.45.0.20241221",
+    "types-markdown==3.7.0.20241204",
+    "types-psycopg2==2.9.21.20250121",
+    "types-pygments==2.19.0.20250107",
+    "types-python-dateutil==2.9.0.20241206",
+    "types-pytz==2025.1.0.20250204",
+    "types-pyyaml==6.0.12.20241230",
+    "types-requests==2.32.0.20241016",
+    "types-s3transfer==0.11.2",
+    "types-setuptools==75.8.0.20250210",
+    "types-toml==0.10.8.7",
+    "typing-extensions==4.15.0",
+    "typing-inspection==0.4.2",
+    "tzdata==2024.1",
+    "uritemplate==3.0.1",
+    "urllib3==2.6.3",
+    "virtualenv==20.36.1",
+    "wcwidth==0.5.3",
+    "werkzeug==3.1.6",
+    "whitenoise==6.0.0",
+    "wmctrl==0.5",
+    "wrapt==1.15.0",
+    "xmlschema==2.4.0",
+    "xmltodict==0.13.0",
+    "zipp==3.23.0",
+]
 
 [tool.ruff]
 line-length = 88
@@ -112,163 +548,3 @@ django_settings_module = "app.settings.local"
 
 [tool.drf-stubs]
 enabled = true
-
-[tool.poetry]
-package-mode = false
-
-[tool.poetry.dependencies]
-python = ">3.11,<3.14"
-django = ">=5,<6"
-rudder-sdk-python = "~2.0.2"
-segment-analytics-python = "~2.2.3"
-backoff = "~2.2.1"
-appdirs = "~1.4.4"
-django-cors-headers = "~3.5.0"
-djangorestframework = "~3.15.2"
-gunicorn = "~23.0.0"
-pyparsing = "~2.4.7"
-requests = "~2.32.4"
-six = "~1.16.0"
-whitenoise = "~6.0.0"
-dj-database-url = "~3.0.1"
-drf-nested-routers = "~0.92.1"
-shortuuid = "~1.0.1"
-sendgrid-django = "~4.2.0"
-psycopg2-binary = "~2.9.5"
-coreapi = "~2.3.3"
-django-simple-history = "~2.12.0"
-google-api-python-client = "~1.12.5"
-oauth2client = "~4.1.3"
-djangorestframework-recursive = "~0.1.2"
-chargebee = "^3.10.0"
-python-http-client = "~3.3.7"
-django-health-check = "~3.18.2"
-django-admin-sso = "~5.2.0"
-drf-spectacular = "~0.28.0"
-sentry-sdk = ">=2.24.1,<3"
-environs = "^14.1.1"
-django-lifecycle = "~1.2.4"
-drf-writable-nested = "~0.6.2"
-django-filter = "~2.4.0"
-flagsmith-flag-engine = "^10.1.0"
-boto3 = "~1.35.95"
-slack-sdk = "~3.9.0"
-asgiref = "~3.8.1"
-djangorestframework-api-key = "~2.2.0"
-pymemcache = "~4.0.0"
-google-re2 = "^1.0"
-django-softdelete = "^0.11.5"
-simplejson = "~3.19.1"
-djoser = "^2.3.0"
-django-storages = "~1.10.1"
-django-environ = "~0.4.5"
-influxdb-client = "~1.50.0"
-django-ordered-model = "~3.4.1"
-django-ses = "~3.5.0"
-django-axes = "^8.1.0"
-pydantic = "^2.12.0"
-pydantic-collections = "^0.6.0"
-pyngo = "~2.4.1"
-flagsmith = "^5.3.0"
-openfeature-sdk = ">=0.9.0,<0.10.0"
-openfeature-provider-flagsmith = ">=0.2.0"
-python-gnupg = "^0.5.1"
-django-redis = "^5.4.0"
-pygithub = "~2.8"
-hubspot-api-client = "^12.0.0"
-djangorestframework-dataclasses = "^1.3.1"
-pyotp = "^2.9.0"
-flagsmith-common = { version = ">=3.9.0,<4", extras = [
-  "common-core",
-  "flagsmith-schemas",
-  "task-processor",
-] }
-django-stubs = "^5.1.3"
-tzdata = "^2024.1"
-djangorestframework-simplejwt = "^5.5.1"
-structlog = "^24.4.0"
-prometheus-client = "^0.21.1"
-django_cockroachdb = "~4.2"
-django-oauth-toolkit = "^3.0.1"
-
-[tool.poetry.group.auth-controller]
-optional = true
-
-[tool.poetry.group.auth-controller.dependencies]
-flagsmith-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.2.0" }
-
-[tool.poetry.group.saml]
-optional = true
-
-[tool.poetry.group.saml.dependencies]
-pysaml2 = "^7.4.2"
-
-[tool.poetry.group.ldap]
-optional = true
-
-[tool.poetry.group.ldap.dependencies]
-flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.1.2" }
-
-[tool.poetry.group.workflows]
-optional = true
-
-[tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.4.0" }
-
-[tool.poetry.group.licensing]
-optional = true
-
-[tool.poetry.group.licensing.dependencies]
-licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.3.0" }
-
-[tool.poetry.group.release-pipelines]
-optional = true
-
-[tool.poetry.group.release-pipelines.dependencies]
-flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.4.4" }
-
-
-[tool.poetry.group.dev.dependencies]
-django-test-migrations = "^1.2.0"
-responses = "~0.22.0"
-pre-commit = "^4.0.1"
-pytest-mock = "~3.10.0"
-pytest-lazy-fixture = "~0.6.3"
-moto = "~4.1.3"
-# TODO: move to https://github.com/adamchainz/time-machine
-pytest-freezegun = "^0.4.2"
-setuptools = "*"                                              # this only exists because pytest-freezegun fails without it
-pytest-xdist = "~3.6.1"
-pylint = "~2.16.2"
-pep8 = "~1.7.1"
-autopep8 = "~2.0.1"
-pytest = "~7.2.1"
-pytest-django = "^4.8.0"
-pytest-cov = "~4.1.0"
-datamodel-code-generator = "~0.25"
-requests-mock = "^1.11.0"
-django-extensions = "^3.2.3"
-pdbpp = "^0.10.3"
-mypy-boto3-dynamodb = "^1.33.0"
-pytest-structlog = "^1.1"
-pyfakefs = "^5.7.4"
-mypy = "^1.15.0"
-djangorestframework-stubs = "^3.15.2"
-boto3-stubs = "^1.36.20"
-types-requests = "^2.32.0.20241016"
-types-markdown = "^3.7.0.20241204"
-types-pygments = "^2.19.0.20250107"
-types-influxdb-client = "^1.45.0.20241221"
-types-psycopg2 = "^2.9.21.20250121"
-types-python-dateutil = "^2.9.0.20241206"
-types-pytz = "^2025.1.0.20250204"
-ruff = "^0.9.7"
-flagsmith-common = { version = "*", extras = ["test-tools"] }
-pytest-responses = "^0.5.1"
-diff-cover = "^10.1.0"
-django-debug-toolbar = "*"
-ipython = "^9.10.0"
-
-[build-system]
-requires = ["poetry>=2.0.0"]
-build-backend = "poetry.core.masonry.api"
