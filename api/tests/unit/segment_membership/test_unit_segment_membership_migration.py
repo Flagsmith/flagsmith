@@ -1,8 +1,12 @@
 import importlib
 from unittest.mock import MagicMock
 
+from flagsmith_sql_flag_engine.dialects import SnowflakeDialect
 from pytest_mock import MockerFixture
+from snowflake.snowpark import Session
 
+# Migration module names start with a digit, which `import` can't parse;
+# `importlib.import_module` is the only way in.
 migration_module = importlib.import_module(
     "segment_membership.migrations.0002_setup_snowflake_identities_schema"
 )
@@ -35,7 +39,7 @@ def test_setup_snowflake_identities_schema__configured__runs_dialect_ddl(
         "is_snowflake_configured",
         return_value=True,
     )
-    sess = MagicMock()
+    sess = MagicMock(spec=Session)
     open_sess = mocker.patch.object(migration_module, "open_snowflake_session")
     open_sess.return_value.__enter__.return_value = sess
 
@@ -43,5 +47,5 @@ def test_setup_snowflake_identities_schema__configured__runs_dialect_ddl(
     migration_module.setup_snowflake_identities_schema(MagicMock(), MagicMock())
 
     # Then the dialect's schema DDL was executed against the session
-    sess.sql.assert_called_once()
+    sess.sql.assert_called_once_with(SnowflakeDialect.schema_ddl)
     sess.sql.return_value.collect.assert_called_once_with()

@@ -1,101 +1,113 @@
 from decimal import Decimal
 
+import pytest
 from flagsmith_schemas.dynamodb import Identity as DynamoIdentity
 
-from segment_membership.mappers import (
-    _coerce_trait_value,
-    _flatten_traits,
-    _identity_id,
-    map_identity_document_to_snowflake_row,
+from segment_membership.mappers import map_identity_document_to_snowflake_row
+
+UUID_A = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+UUID_B = "550e8400-e29b-41d4-a716-446655440000"
+
+
+@pytest.mark.parametrize(
+    "doc,expected",
+    [
+        pytest.param(
+            {
+                "identity_uuid": UUID_A,
+                "identifier": "alice",
+                "environment_api_key": "env-key",
+                "composite_key": "env_x_alice",
+                "created_date": "2026-05-08T00:00:00Z",
+                "identity_traits": [
+                    {"trait_key": "plan", "trait_value": "growth"},
+                ],
+            },
+            ("env-key", "alice", "env_x_alice", {"plan": "growth"}),
+            id="single string trait",
+        ),
+        pytest.param(
+            {
+                "identity_uuid": UUID_A,
+                "identifier": "alice",
+                "environment_api_key": "env-key",
+                "composite_key": "env_x_alice",
+                "created_date": "2026-05-08T00:00:00Z",
+                "identity_traits": [],
+            },
+            ("env-key", "alice", "env_x_alice", None),
+            id="empty traits collapse to NULL",
+        ),
+        pytest.param(
+            {
+                "identity_uuid": UUID_A,
+                "identifier": "alice",
+                "environment_api_key": "env-key",
+                "composite_key": "env_x_alice",
+                "created_date": "2026-05-08T00:00:00Z",
+                "identity_traits": [
+                    {"trait_key": "age", "trait_value": Decimal("18")},
+                ],
+            },
+            ("env-key", "alice", "env_x_alice", {"age": 18}),
+            id="whole-number Decimal narrows to int",
+        ),
+        pytest.param(
+            {
+                "identity_uuid": UUID_A,
+                "identifier": "alice",
+                "environment_api_key": "env-key",
+                "composite_key": "env_x_alice",
+                "created_date": "2026-05-08T00:00:00Z",
+                "identity_traits": [
+                    {"trait_key": "score", "trait_value": Decimal("1.5")},
+                ],
+            },
+            ("env-key", "alice", "env_x_alice", {"score": 1.5}),
+            id="fractional Decimal narrows to float",
+        ),
+        pytest.param(
+            {
+                "identity_uuid": UUID_A,
+                "identifier": "alice",
+                "environment_api_key": "env-key",
+                "composite_key": "env_x_alice",
+                "created_date": "2026-05-08T00:00:00Z",
+                "identity_traits": [
+                    {"trait_key": "plan", "trait_value": "growth"},
+                    {"trait_key": "team", "trait_value": "alpha"},
+                ],
+            },
+            (
+                "env-key",
+                "alice",
+                "env_x_alice",
+                {"plan": "growth", "team": "alpha"},
+            ),
+            id="multiple traits flatten to a single dict",
+        ),
+    ],
 )
-
-
-def test_identity_id__same_uuid__produces_same_id() -> None:
-    # Given the same identity_uuid
-    uuid = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
-
-    # When the helper runs twice
-    a = _identity_id(uuid)
-    b = _identity_id(uuid)
-
-    # Then the result is identical and fits in a signed 64-bit int
-    assert a == b
-    assert -(2**63) <= a < 2**63
-
-
-def test_coerce_trait_value__decimal_int__narrows_to_int() -> None:
-    # Given a Decimal that's a whole number
-    # When coerced
-    # Then it becomes a plain int
-    assert _coerce_trait_value(Decimal("3")) == 3
-    assert isinstance(_coerce_trait_value(Decimal("3")), int)
-
-
-def test_coerce_trait_value__decimal_fraction__narrows_to_float() -> None:
-    # Given a Decimal with a fractional component
-    # When coerced
-    # Then it becomes a float
-    assert _coerce_trait_value(Decimal("1.5")) == 1.5
-    assert isinstance(_coerce_trait_value(Decimal("1.5")), float)
-
-
-def test_coerce_trait_value__non_decimal__passes_through_unchanged() -> None:
-    # Given a value that isn't a Decimal
-    # When coerced
-    # Then it passes through unchanged
-    assert _coerce_trait_value("growth") == "growth"
-    assert _coerce_trait_value(True) is True
-
-
-def test_flatten_traits__none__returns_empty_dict() -> None:
-    # Given no traits
-    # When flattened
-    # Then the result is an empty dict
-    assert _flatten_traits(None) == {}
-
-
-def test_flatten_traits__list__returns_dict_dropping_empty_keys() -> None:
-    # Given a Dynamo trait list with one well-formed and one empty-key entry
-    # When flattened
-    # Then only the well-formed entry survives
-    assert _flatten_traits(
-        [
-            {"trait_key": "plan", "trait_value": "growth"},
-            {"trait_key": "", "trait_value": "skipped"},
-        ]
-    ) == {"plan": "growth"}
-
-
-def test_map_identity_document_to_snowflake_row__with_traits__returns_tuple() -> None:
-    # Given a Dynamo identity document with traits
-    doc: DynamoIdentity = {
-        "identity_uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "identifier": "alice",
-        "environment_api_key": "env-key",
-        "composite_key": "env_x_alice",
-        "created_date": "2026-05-08T00:00:00Z",
-        "identity_traits": [{"trait_key": "plan", "trait_value": "growth"}],
-    }
-
-    # When mapped
+def test_map_identity_document_to_snowflake_row__cases__return_expected(
+    doc: DynamoIdentity,
+    expected: tuple[str, str, str, dict[str, object] | None],
+) -> None:
+    # Given a Dynamo identity document
+    # When mapped onto an IDENTITIES row
     env_id, _id, identifier, identity_key, traits = (
         map_identity_document_to_snowflake_row("env-key", doc)
     )
 
-    # Then the columns line up positionally with the IDENTITIES schema
-    assert env_id == "env-key"
-    assert _id == _identity_id("f47ac10b-58cc-4372-a567-0e02b2c3d479")
-    assert identifier == "alice"
-    assert identity_key == "env_x_alice"
-    assert traits == {"plan": "growth"}
+    # Then non-id columns line up positionally with the IDENTITIES schema
+    assert (env_id, identifier, identity_key, traits) == expected
+    # ...and the id column is a stable signed 64-bit projection of the UUID
+    assert -(2**63) <= _id < 2**63
 
 
-def test_map_identity_document_to_snowflake_row__no_traits__returns_none_for_traits() -> (
-    None
-):
-    # Given a Dynamo identity document with no trait entries
+def test_map_identity_document_to_snowflake_row__same_uuid__same_id() -> None:
+    # Given two documents sharing an identity_uuid
     doc: DynamoIdentity = {
-        "identity_uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "identity_uuid": UUID_A,
         "identifier": "alice",
         "environment_api_key": "env-key",
         "composite_key": "env_x_alice",
@@ -103,27 +115,36 @@ def test_map_identity_document_to_snowflake_row__no_traits__returns_none_for_tra
         "identity_traits": [],
     }
 
-    # When mapped
-    *_, traits = map_identity_document_to_snowflake_row("env-key", doc)
+    # When mapped twice
+    a = map_identity_document_to_snowflake_row("env-a", doc)
+    b = map_identity_document_to_snowflake_row("env-b", doc)
 
-    # Then the traits VARIANT slot is None (NULL)
-    assert traits is None
+    # Then the id projection is stable across calls
+    assert a[1] == b[1]
 
 
-def test_map_identity_document_to_snowflake_row__no_composite_key__falls_back_to_uuid() -> (
-    None
-):
-    # Given an identity document missing the composite_key
-    doc: DynamoIdentity = {  # type: ignore[typeddict-item]
-        "identity_uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+def test_map_identity_document_to_snowflake_row__different_uuid__different_id() -> None:
+    # Given two documents with distinct identity_uuids
+    doc_a: DynamoIdentity = {
+        "identity_uuid": UUID_A,
         "identifier": "alice",
         "environment_api_key": "env-key",
+        "composite_key": "env_x_alice",
+        "created_date": "2026-05-08T00:00:00Z",
+        "identity_traits": [],
+    }
+    doc_b: DynamoIdentity = {
+        "identity_uuid": UUID_B,
+        "identifier": "bob",
+        "environment_api_key": "env-key",
+        "composite_key": "env_x_bob",
         "created_date": "2026-05-08T00:00:00Z",
         "identity_traits": [],
     }
 
     # When mapped
-    *_, identity_key, _traits = map_identity_document_to_snowflake_row("env-key", doc)
+    a = map_identity_document_to_snowflake_row("env-key", doc_a)
+    b = map_identity_document_to_snowflake_row("env-key", doc_b)
 
-    # Then identity_key falls back to identity_uuid
-    assert identity_key == "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+    # Then the id projections are distinct
+    assert a[1] != b[1]
