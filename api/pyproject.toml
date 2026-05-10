@@ -163,15 +163,13 @@ dev = [
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
+[project.entry-points.pytest11]
+flagsmith-api-test = "tests.plugin"
+
 [tool.setuptools.packages.find]
 where = ["."]
 # Exclude things that aren't Python packages and avoid sweeping in build dirs
 exclude = ["build*", "dist*", "static*", "staticfiles*", "venv*", ".venv*", "scripts*"]
-
-[tool.setuptools]
-# Include the api-root conftest.py + manage.py as top-level modules so the
-# installed wheel still provides the pytest fixtures defined there.
-py-modules = ["conftest", "manage"]
 
 [tool.setuptools.package-data]
 "*" = ["*.*"]
