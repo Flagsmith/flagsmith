@@ -37,7 +37,7 @@ repos:
       - id: python-typecheck
         name: python-typecheck
         language: system
-        entry: poetry -C api run mypy .
+        entry: bash -c 'cd api && uv run mypy .'
         require_serial: true
         pass_filenames: false
         types: [python]
@@ -48,11 +48,11 @@ repos:
     hooks:
       - id: flagsmith-lint-tests
 
-  - repo: https://github.com/python-poetry/poetry
-    rev: 2.3.2
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.8.14
     hooks:
-      - id: poetry-check
-        args: ["-C", "api"]
+      - id: uv-lock
+        args: ["--project", "api", "--check"]
 
 default_install_hook_types: [pre-commit, pre-push]
 default_stages: [pre-commit]
