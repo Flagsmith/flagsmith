@@ -28,7 +28,7 @@ import {
 } from 'common/services/useSegment'
 import Utils from 'common/utils/utils'
 import AssociatedSegmentOverrides from 'components/segments/AssociatedSegmentOverrides'
-import { SegmentMembershipTotalBadge } from 'components/segments/SegmentMembershipBadge'
+import { SegmentMembershipTabCount } from 'components/segments/SegmentMembershipBadge'
 import Button from 'components/base/forms/Button'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -588,10 +588,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             tabLabel={
               <>
                 Identities
-                <SegmentMembershipTotalBadge
-                  compact
-                  memberships={segment.memberships}
-                />
+                <SegmentMembershipTabCount memberships={segment.memberships} />
               </>
             }
           >

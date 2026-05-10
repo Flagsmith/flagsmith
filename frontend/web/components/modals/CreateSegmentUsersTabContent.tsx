@@ -11,9 +11,9 @@ import {
   identitySegmentService,
   useGetIdentitySegmentsQuery,
 } from 'common/services/useIdentitySegment'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { getStore } from 'common/store'
-import ProjectStore from 'common/stores/project-store'
-import { SegmentMembershipEnvBadge } from 'components/segments/SegmentMembershipBadge'
+import { SegmentMembershipEnvCount } from 'components/segments/SegmentMembershipBadge'
 
 interface CreateSegmentUsersTabContentProps {
   projectId: string | number
@@ -99,6 +99,10 @@ const CreateSegmentUsersTabContent: React.FC<
   setPage,
   setSearchInput,
 }) => {
+  const { data: envsData } = useGetEnvironmentsQuery({
+    projectId: `${projectId}`,
+  })
+
   const membershipByEnvId = React.useMemo(() => {
     const map = new Map<number, SegmentMembership>()
     ;(memberships ?? []).forEach((m) => map.set(m.environment, m))
@@ -111,12 +115,12 @@ const CreateSegmentUsersTabContent: React.FC<
       ? membershipByEnvId.get(environment.id)
       : undefined
     return (
-      <span className='d-flex align-items-center'>
+      <span className='d-flex align-items-center justify-content-between flex-grow-1'>
         <span>{label}</span>
         {environment && membership && (
-          <SegmentMembershipEnvBadge
+          <SegmentMembershipEnvCount
             membership={membership}
-            environment={environment}
+            envApiKey={environment.api_key}
           />
         )}
       </span>
@@ -125,10 +129,9 @@ const CreateSegmentUsersTabContent: React.FC<
 
   const selectedMembership = React.useMemo(() => {
     if (!environmentId) return null
-    const envs = (ProjectStore.getEnvs() as Environment[] | null) || []
-    const env = envs.find((e) => e.api_key === environmentId)
+    const env = envsData?.results.find((e) => e.api_key === environmentId)
     return env ? membershipByEnvId.get(env.id) ?? null : null
-  }, [environmentId, membershipByEnvId])
+  }, [environmentId, envsData?.results, membershipByEnvId])
 
   return (
     <>

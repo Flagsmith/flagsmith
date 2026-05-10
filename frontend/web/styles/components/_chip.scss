@@ -27,7 +27,7 @@
 .chip {
   display: flex;
   align-items: center;
-  align-self: flex-start;
+  align-self: flex-start !important;
   background-color: $primary-alfa-8;
   border: 1px solid $primary-alfa-24;
   padding: 5px 12px;
@@ -38,6 +38,11 @@
   font-weight: normal;
   text-wrap: nowrap;
   color: $primary600;
+  &--filled {
+    background-color: $primary;
+    border-color: $primary;
+    color: $white;
+  }
   &-secondary {
     background-color: $bg-light300;
     color: $text-icon-grey;
