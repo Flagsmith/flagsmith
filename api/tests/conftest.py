@@ -201,7 +201,9 @@ def fs(fs: FakeFilesystem) -> FakeFilesystem:
     even if they do not use this fixture. Because we can't fix this issue now,
     it's safer to allow site-packages [read-only] access from tests.
     """
-    app_path = os.path.dirname(os.path.abspath(__file__))
+    # tests/conftest.py is one level below the api root; jump up to api/ so the
+    # fake FS still mounts api/app/templates/, api/users/templates/, etc.
+    app_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     site_packages = site.getsitepackages()  # Allow files within dependencies
     paths_to_add = [app_path]
     for site_package_path in site_packages:
