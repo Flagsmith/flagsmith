@@ -106,6 +106,30 @@ django-collect-static:
 serve: docker-up wait-for-db
 	uv run flagsmith start --reload api
 
+.PHONY: smoke-test-segment-membership-up
+smoke-test-segment-membership-up:
+	docker rm -f flagsmith-dynamodb-smoke 2>/dev/null || true
+	docker run -d --name flagsmith-dynamodb-smoke -p 8002:8000 amazon/dynamodb-local
+
+.PHONY: smoke-test-segment-membership-down
+smoke-test-segment-membership-down:
+	docker rm -f flagsmith-dynamodb-smoke 2>/dev/null || true
+
+.PHONY: smoke-test-segment-membership
+# Drives the segment-membership pipeline against DynamoDB Local + the
+# Snowflake account configured via SNOWFLAKE_* env vars in .env. Requires
+# `make docker-up django-migrate` to have run first so core Postgres and
+# the Snowflake IDENTITIES schema are in place.
+smoke-test-segment-membership: AWS_ENDPOINT_URL_DYNAMODB=http://localhost:8002
+smoke-test-segment-membership: IDENTITIES_TABLE_NAME_DYNAMO=flagsmith_smoke_identities
+smoke-test-segment-membership: AWS_ACCESS_KEY_ID=local
+smoke-test-segment-membership: AWS_SECRET_ACCESS_KEY=local
+smoke-test-segment-membership: AWS_DEFAULT_REGION=us-east-1
+smoke-test-segment-membership: smoke-test-segment-membership-up
+	@sleep 2
+	-poetry run python manage.py smoke_test_segment_membership $(opts)
+	$(MAKE) smoke-test-segment-membership-down
+
 .PHONY: run-task-processor
 run-task-processor: docker-up wait-for-db
 	uv run flagsmith start --reload --bind 0.0.0.0:8001 task-processor
