@@ -42,16 +42,18 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v5
 
-      - name: Install Poetry
-        run: make install-poetry
-
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: poetry
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: api/uv.lock
 
       - name: Install Dependencies
-        run: make install-packages
+        run: make install-packages opts='--extra dev'
 
       - name: Check for missing migrations
         env:
