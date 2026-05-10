@@ -163,9 +163,6 @@ dev = [
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-[project.entry-points.pytest11]
-flagsmith-api-test = "tests.plugin"
-
 [tool.setuptools.packages.find]
 where = ["."]
 # Exclude things that aren't Python packages and avoid sweeping in build dirs
