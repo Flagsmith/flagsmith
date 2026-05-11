@@ -137,7 +137,7 @@ def test_flagd_sync__etag_matches__returns_304(
     assert len(second_response.content) == 0
 
 
-def test_flagd_sync__feature_with_segment_override__document_contains_evaluator(
+def test_flagd_sync__feature_with_single_use_segment_override__inlined(
     server_side_sdk_client: APIClient,
     environment: int,
     feature: int,
@@ -146,7 +146,9 @@ def test_flagd_sync__feature_with_segment_override__document_contains_evaluator(
     segment_name: str,
     segment_featurestate: int,
 ) -> None:
-    # Given - a feature with a segment override
+    # Given - a feature with a segment override that's only referenced
+    # by this one feature, so it should be inlined rather than
+    # extracted to ``$evaluators``.
     url = reverse("api-v1:flagd:sync")
 
     # When
@@ -156,18 +158,14 @@ def test_flagd_sync__feature_with_segment_override__document_contains_evaluator(
     assert response.status_code == status.HTTP_200_OK
     body = response.json()
 
-    # The slugified key for "Test Segment" is "Test-Segment"
-    expected_segment_key = "Test-Segment"
-    assert "$evaluators" in body
-    assert expected_segment_key in body["$evaluators"]
+    # No $evaluators block — the single-use segment is inlined.
+    assert "$evaluators" not in body
 
     flag = body["flags"][feature_name]
     targeting = flag["targeting"]
     assert targeting is not None
-    # The targeting expression should reference the segment evaluator.
-    serialised = json.dumps(targeting)
-    assert "$ref" in serialised
-    assert expected_segment_key in serialised
+    # And the targeting carries the segment's JsonLogic directly.
+    assert "$ref" not in json.dumps(targeting)
 
 
 def test_flagd_sync__multivariate_flag__variants_and_fractional(

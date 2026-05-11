@@ -171,18 +171,21 @@ def test_build_flagd_document__segment_with_mixed_rules__validates_against_schem
     project: Project,
     flagd_validator: Draft7Validator,
 ) -> None:
-    # Given a segment with mixed-operator rules
-    Feature.objects.create(
-        name="segmented_flag", project=project, initial_value="default"
+    # Given a segment with mixed-operator rules referenced by two
+    # features (so it qualifies for ``$evaluators`` extraction)
+    from features.models import FeatureSegment, FeatureState
+
+    feature_a = Feature.objects.create(
+        name="segmented_flag_a", project=project, initial_value="default"
+    )
+    feature_b = Feature.objects.create(
+        name="segmented_flag_b", project=project, initial_value="default"
     )
     segment = Segment.objects.create(name="Premium Customers", project=project)
     parent_rule = SegmentRule.objects.create(segment=segment, type="ALL")
     child_rule = SegmentRule.objects.create(rule=parent_rule, type="ALL")
     Condition.objects.create(
-        rule=child_rule,
-        operator="EQUAL",
-        property="tier",
-        value="premium",
+        rule=child_rule, operator="EQUAL", property="tier", value="premium"
     )
     Condition.objects.create(
         rule=child_rule,
@@ -190,6 +193,17 @@ def test_build_flagd_document__segment_with_mixed_rules__validates_against_schem
         property="age",
         value="18",
     )
+    for feature in (feature_a, feature_b):
+        feature_segment = FeatureSegment.objects.create(
+            feature=feature, segment=segment, environment=environment
+        )
+        FeatureState.objects.create(
+            feature=feature,
+            environment=environment,
+            feature_segment=feature_segment,
+            enabled=True,
+        )
+
     # When the document is built
     document = build_flagd_document(environment)
     # Then it validates and exposes the segment under $evaluators

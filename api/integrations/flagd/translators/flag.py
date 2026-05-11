@@ -279,9 +279,16 @@ def _build_targeting(
         targeting = segment_targeting.get(segment.id)
         if targeting is None:
             continue
-        segment_branches.append(
-            ({"$ref": segment_keys[segment.id]}, variant)
+        # Single-use segments are inlined; multi-use segments are
+        # referenced via $ref into the document's $evaluators block.
+        # The orchestrator decides which: when ``segment_keys`` has an
+        # entry for this segment, the segment is shared and we route
+        # through $ref.
+        shared_key = segment_keys.get(segment.id)
+        segment_logic: JsonLogic = (
+            {"$ref": shared_key} if shared_key is not None else targeting
         )
+        segment_branches.append((segment_logic, variant))
 
     fallback: Any = control_target
 

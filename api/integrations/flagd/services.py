@@ -6,6 +6,16 @@ The service is a thin orchestrator over the per-feature, per-segment
 translators. It deliberately consumes the engine document
 (``EnvironmentModel``) so that the data shape stays aligned with what
 SDK local evaluation already operates on.
+
+Segment placement: segments referenced by **two or more** features in
+the environment are extracted to the top-level ``$evaluators`` block
+and referenced via ``$ref`` from each flag's targeting. Segments used
+by exactly one feature are **inlined** directly into that flag's
+``targeting`` expression — they're not shared, so promoting them to a
+global keyspace would only invite name collisions across the
+feature-scoped segment kinds Flagsmith allows (two different
+features can both define a feature-scoped segment named "mail"). The
+segment's database id, not its display name, drives this decision.
 """
 
 import json
@@ -30,6 +40,7 @@ from integrations.flagd.translators.segment import (
 )
 from integrations.flagd.types import JsonLogic, TranslationWarning
 from util.engine_models.environments.models import EnvironmentModel
+from util.engine_models.segments.models import SegmentModel
 from util.mappers.engine import map_environment_to_engine
 
 logger = structlog.get_logger("flagd_sync")
@@ -68,21 +79,27 @@ def _build_from_engine(
         DEFAULT_IDENTITY_OVERRIDE_LIMIT,
     )
 
-    # Translate segments once. Each segment yields a JsonLogic expression
-    # to be referenced from flag targeting via $evaluators / $ref.
     segments = engine_environment.project.segments
+    segment_usage = _count_segment_usage(segments)
+
+    # Translate every segment once. Single-use segments stay in
+    # ``segment_targeting`` (to be inlined into the one flag that
+    # references them) but never make it to ``segment_keys`` or
+    # ``evaluators``. Multi-use segments are promoted to ``$evaluators``
+    # and referenced by ``$ref``.
     segment_keys: dict[int, str] = {}
     segment_targeting: dict[int, JsonLogic | None] = {}
     used_keys: set[str] = set()
     evaluators: dict[str, JsonLogic] = {}
     for segment in segments:
+        targeting = segment_to_jsonlogic(segment, warnings=warnings)
+        segment_targeting[segment.id] = targeting
+        if segment_usage.get(segment.id, 0) < 2 or targeting is None:
+            continue
         key = slugify_segment_name(segment.name, taken=used_keys)
         used_keys.add(key)
         segment_keys[segment.id] = key
-        targeting = segment_to_jsonlogic(segment, warnings=warnings)
-        segment_targeting[segment.id] = targeting
-        if targeting is not None:
-            evaluators[key] = targeting
+        evaluators[key] = targeting
 
     # Default feature states are those without a feature_segment and
     # without an identity. The engine document carries them on
@@ -137,6 +154,22 @@ def _build_from_engine(
     document["metadata"] = metadata
 
     return document
+
+
+def _count_segment_usage(segments: list[SegmentModel]) -> dict[int, int]:
+    """
+    Return ``{segment_id: distinct_feature_count}``. A segment is
+    "used" by a feature when at least one of the segment's
+    ``feature_states`` carries that feature's id. Distinct features
+    are what matter — multiple overrides on the same feature still
+    count as a single usage.
+    """
+    counts: dict[int, int] = {}
+    for segment in segments:
+        features = {fs.feature.id for fs in segment.feature_states}
+        if features:
+            counts[segment.id] = len(features)
+    return counts
 
 
 __all__ = ("build_flagd_document",)
