@@ -50,5 +50,8 @@
   },
   "devDependencies": {
     "prettier": "3.3.3"
+  },
+  "overrides": {
+    "postman-code-generators": "1.14.0"
   }
 }
