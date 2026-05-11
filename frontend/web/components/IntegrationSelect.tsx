@@ -6,7 +6,7 @@ import {
 } from './pages/IntegrationsPage'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'
-import { sortBy } from 'lodash'
+import { sortBy, uniqBy } from 'lodash'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Button from './base/forms/Button'
 import classNames from 'classnames'
@@ -36,9 +36,12 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
     if (!integrationsData) {
       return [] as typeof Constants.integrationSummaries
     }
-    const parsedCategories = Object.values(JSON.parse(integrationsData)).concat(
-      Constants.integrationSummaries,
-    ) as IntegrationSummary[]
+    const parsedCategories = uniqBy(
+      Object.values(JSON.parse(integrationsData)).concat(
+        Constants.integrationSummaries,
+      ) as IntegrationSummary[],
+      (v) => v.title.toLowerCase(),
+    )
 
     const filtered = parsedCategories.filter((v) => {
       const matchesCategory =

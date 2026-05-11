@@ -42,7 +42,7 @@ Attributes:
 ### `billing.seat.added`
 
 Logged at `info` from:
- - `api/organisations/chargebee/chargebee.py:240`
+ - `api/organisations/chargebee/chargebee.py:239`
 
 Attributes:
  - `addon.id`

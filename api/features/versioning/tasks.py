@@ -110,6 +110,7 @@ def _create_initial_feature_versions(environment: "Environment"):  # type: ignor
         related_feature_segments.update(environment_feature_version=ef_version)
 
         scheduled_feature_states = FeatureState.objects.filter(
+            feature=feature,
             live_from__gt=now,
             change_request__isnull=False,
             change_request__committed_at__isnull=False,

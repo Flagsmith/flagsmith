@@ -32,11 +32,10 @@ from organisations.chargebee.client import chargebee_client
 from organisations.chargebee.constants import (
     ADDITIONAL_API_SCALE_UP_ADDON_ID,
     ADDITIONAL_API_START_UP_ADDON_ID,
-    SEAT_ADDON_BY_PLAN_PREFIX,
     SEAT_SCALE_UP_V2_ADDON_BY_BILLING_PERIOD,
 )
 from organisations.chargebee.metadata import ChargebeeObjMetadata
-from organisations.subscriptions.constants import CHARGEBEE, SubscriptionPlanFamily
+from organisations.subscriptions.constants import CHARGEBEE
 from organisations.subscriptions.exceptions import (
     CannotCancelChargebeeSubscription,
     UpgradeAPIUsageError,
@@ -265,18 +264,10 @@ def add_single_seat(subscription_id: str, organisation_id: int) -> None:
 
 
 def _get_additional_seat_addon_id(subscription: SubscriptionOps) -> str:
-    normalised_plan = SubscriptionPlanFamily.normalise_plan_id(
-        str(getattr(subscription, "plan_id", ""))
-    )
-    for prefix, addon_id in SEAT_ADDON_BY_PLAN_PREFIX.items():
-        if normalised_plan.startswith(prefix):
-            return addon_id
-
-    v2_addon_id = SEAT_SCALE_UP_V2_ADDON_BY_BILLING_PERIOD.get(
-        subscription.billing_period
-    )
-    if v2_addon_id:
-        return v2_addon_id
+    # By design, Scale-Up-v4 subscriptions reuse the v2 seat addons.
+    addon_id = SEAT_SCALE_UP_V2_ADDON_BY_BILLING_PERIOD.get(subscription.billing_period)
+    if addon_id:
+        return addon_id
 
     logger.warning(
         "Unexpected billing period for subscription ID %s",
