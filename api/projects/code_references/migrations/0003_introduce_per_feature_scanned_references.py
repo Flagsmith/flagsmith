@@ -1,9 +1,123 @@
+import hashlib
+import json
+from itertools import groupby
+from operator import attrgetter
+from typing import TypedDict
+
 import django.db.models.deletion
+from django.apps.registry import Apps
 from django.db import migrations, models
+from django.db.models import Max
+
+
+class LegacyCodeReference(TypedDict):
+    feature_name: str
+    file_path: str
+    line_number: int
+
+
+class StoredCodeReference(TypedDict):
+    file_path: str
+    line_number: int
+
+
+def _hash_references(references: list[StoredCodeReference]) -> str:
+    return hashlib.md5(json.dumps(references, sort_keys=True).encode()).hexdigest()
+
+
+def migrate_scans_forward(apps: Apps, _: object) -> None:
+    """Split each legacy scan into new cardinality (per-repository and per-feature)"""
+
+    LegacyScan = apps.get_model("code_references", "FeatureFlagCodeReferencesScan")
+    PerFeatureScan = apps.get_model("code_references", "ScannedCodeReferences")
+    Repository = apps.get_model("code_references", "VCSRepository")
+    Feature = apps.get_model("features", "Feature")
+    PerFeatureScan._meta.get_field("created_at").auto_now_add = False
+
+    legacy_scans_summaries = LegacyScan.objects.values(
+        "project_id",
+        "repository_url",
+        "vcs_provider",
+    ).annotate(last_scanned_at=Max("created_at"))
+
+    repositories = {
+        (summary["project_id"], summary["repository_url"]): Repository.objects.create(
+            project_id=summary["project_id"],
+            url=summary["repository_url"],
+            vcs_provider=summary["vcs_provider"],
+            last_scanned_at=summary["last_scanned_at"],
+        )
+        for summary in legacy_scans_summaries
+    }
+
+    # Oldest-first per project so the newest scan wins on hash collisions
+    legacy_scans = LegacyScan.objects.order_by("project_id", "created_at").iterator()
+    grouped_scans = groupby(legacy_scans, key=attrgetter("project_id"))
+    for project_id, project_scans in grouped_scans:
+        features = {
+            (feature.project_id, feature.name): feature
+            for feature in Feature.objects.filter(
+                project_id=project_id,
+                deleted_at__isnull=True,  # Historical models drop SoftDeleteManager
+            )
+        }
+        for legacy_scan in project_scans:
+            repository_url = legacy_scan.repository_url
+            repository = repositories[project_id, repository_url]
+
+            references_by_feature: dict[str, list[StoredCodeReference]] = {}
+            for reference in legacy_scan.code_references:
+                feature_name = reference["feature_name"]
+                references_by_feature.setdefault(feature_name, []).append(
+                    StoredCodeReference(
+                        file_path=reference["file_path"],
+                        line_number=reference["line_number"],
+                    )
+                )
+
+            for feature_name, references in references_by_feature.items():
+                if not (feature := features.get((project_id, feature_name))):
+                    continue
+                PerFeatureScan.objects.update_or_create(
+                    feature=feature,
+                    repository=repository,
+                    code_references_hash=_hash_references(references),
+                    defaults={
+                        "revision": legacy_scan.revision,
+                        "code_references": references,
+                        "created_at": legacy_scan.created_at,
+                    },
+                )
+
+
+def migrate_scans_backward(apps: Apps, _: object) -> None:
+    """Mirror each per-feature row back into the legacy single-table layout."""
+    LegacyScan = apps.get_model("code_references", "FeatureFlagCodeReferencesScan")
+    PerFeatureScan = apps.get_model("code_references", "ScannedCodeReferences")
+    LegacyScan._meta.get_field("created_at").auto_now_add = False
+
+    per_feature_scans = PerFeatureScan.objects.select_related(
+        "repository",
+        "feature",
+    ).iterator(chunk_size=200)
+
+    for per_feature_scan in per_feature_scans:
+        repository = per_feature_scan.repository
+        feature_name = per_feature_scan.feature.name
+        LegacyScan.objects.create(
+            project_id=repository.project_id,
+            repository_url=repository.url,
+            vcs_provider=repository.vcs_provider,
+            revision=per_feature_scan.revision,
+            code_references=[
+                {"feature_name": feature_name, **reference}
+                for reference in per_feature_scan.code_references
+            ],
+            created_at=per_feature_scan.created_at,
+        )
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("code_references", "0002_add_project_repo_created_index"),
         ("features", "0066_constrain_feature_type"),
@@ -90,6 +204,10 @@ class Migration(migrations.Migration):
                 fields=("feature", "repository", "code_references_hash"),
                 name="unique_scanned_code_references",
             ),
+        ),
+        migrations.RunPython(
+            code=migrate_scans_forward,
+            reverse_code=migrate_scans_backward,
         ),
         migrations.DeleteModel(
             name="FeatureFlagCodeReferencesScan",
