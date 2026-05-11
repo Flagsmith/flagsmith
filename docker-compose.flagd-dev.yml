@@ -43,11 +43,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health/"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
+    # Healthcheck is baked into the image (HEALTHCHECK CMD flagsmith
+    # healthcheck tcp). Don't override it from here.
 
   # Idempotent: creates a default org/project/env on first run, reuses
   # them thereafter. Writes the resulting server-side key to a shared

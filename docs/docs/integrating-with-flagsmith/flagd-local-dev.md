@@ -60,10 +60,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health/"]
-      interval: 5s
-      retries: 30
+    # Healthcheck is baked into the image; don't override it.
 
   # One-shot init: ensures a default org/project/env exists and writes
   # the resulting server-side key to a file flagd can source.
