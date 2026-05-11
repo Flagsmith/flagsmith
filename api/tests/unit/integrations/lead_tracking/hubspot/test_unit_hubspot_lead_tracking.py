@@ -15,7 +15,10 @@ from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
 )
-from integrations.lead_tracking.hubspot.lead_tracker import HubspotLeadTracker
+from integrations.lead_tracking.hubspot.lead_tracker import (
+    HubspotLeadTracker,
+    _company_domain_from_email,
+)
 from integrations.lead_tracking.hubspot.services import (
     register_hubspot_tracker_and_track_user,
 )
@@ -281,6 +284,13 @@ def test_create_user_hubspot_contact__get_contact_retries__returns_expected_id(
         is hubspot_leads_exists
     )
     assert mock_client.get_contact.call_count == expected_call_count
+
+
+@pytest.mark.parametrize("email", ["", "no-at-symbol", None])
+def test_company_domain_from_email__malformed_input__returns_none(email: str | None) -> None:
+    """Defensive return-None on empty/malformed email - protects against
+    callers that bypass the Django EmailField validation."""
+    assert _company_domain_from_email(email) is None  # type: ignore[arg-type]
 
 
 def test_create_lead__corporate_email_with_matching_company__writes_orgid_only(
