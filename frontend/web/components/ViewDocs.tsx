@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import Button, { ButtonType } from './base/forms/Button'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 
 type ViewDocsType = ButtonType & {}
 

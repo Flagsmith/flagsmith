@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-export type UsageBarProps = {
+type UsageBarProps = {
   label: string
   limit: number
   usage: number

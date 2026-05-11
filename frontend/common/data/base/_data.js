@@ -6,7 +6,7 @@ const getQueryString = (params) => {
     .join('&')
 }
 
-module.exports = {
+export default {
   _request(method, _url, data, headers = {}) {
     const options = {
       credentials: Project.cookieAuthEnabled ? 'include' : undefined,

@@ -4,7 +4,7 @@ import { FeatureCodeReferences } from 'common/types/responses'
 import moment from 'moment'
 import CodeReferenceItem from './CodeReferenceItem'
 import RepoSectionHeader from './RepoSectionHeader'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import CodeReferenceScanIndicator from './CodeReferenceScanIndicator'
 
 interface RepoCodeReferencesSectionProps {

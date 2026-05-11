@@ -70,6 +70,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
     handleFilterChange,
     hasFilters,
     page,
+    searchResetKey,
   } = useFeatureFilters(history)
 
   const {
@@ -208,6 +209,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
         onClearFilters={clearFilters}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
+        searchResetKey={searchResetKey}
       />
     ),
     [
@@ -220,6 +222,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
       clearFilters,
       viewMode,
       handleViewModeChange,
+      searchResetKey,
     ],
   )
 

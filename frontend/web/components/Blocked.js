@@ -50,4 +50,4 @@ const Blocked = class extends React.Component {
   )
 }
 
-module.exports = ConfigProvider(Blocked)
+export default ConfigProvider(Blocked)

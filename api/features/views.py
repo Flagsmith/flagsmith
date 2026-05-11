@@ -110,8 +110,7 @@ from .versioning.versioning_service import (
     get_environment_flags_queryset,
 )
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
 
 flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 

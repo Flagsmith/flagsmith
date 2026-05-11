@@ -139,23 +139,6 @@ button.btn {
     }
   }
 
-  &--transparent {
-    background-color: transparent;
-    justify-content: center;
-    align-items: center;
-    display: flex;
-    height: 38px;
-    width: 38px;
-    padding: 19px 0 18px 0;
-    line-height: inherit;
-    a {
-      line-height: 1;
-    }
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.1);
-      box-shadow: none;
-    }
-  }
   &.btn-icon {
     padding:0;
     height: 32px;
@@ -178,20 +161,7 @@ button.btn {
       }
     }
   }
-  &--remove:hover {
-    svg path {
-      fill: #d93939;
-    }
-  }
   &-with-icon {
-    &.btn-xs{
-      padding: 0;
-      height: 28px;
-      width: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
     padding: 0 14px;
     background-color: $basic-alpha-8;
     border-radius: $border-radius;
@@ -218,55 +188,6 @@ button.btn {
     }
     &.btn-lg {
       line-height: $btn-line-height-lg;
-    }
-    &.btn-remove {
-      background-color: $danger-alfa-8;
-      &:hover,
-      &:active,
-      &:disabled,
-      &:focus {
-        background-color: $danger-alfa-8 !important;
-        svg {
-          path {
-            fill: $danger;
-          }
-        }
-      }
-    }
-  }
-  &--with-icon {
-    background: none !important;
-    &.primary {
-      color: $primary;
-      path {
-        fill: $primary;
-      }
-    }
-    box-shadow: none;
-    height: auto;
-    line-height: 1;
-    padding: 0 5px;
-
-    &:hover,
-    &:focus {
-      background: none !important;
-      color: darken($success, 10) !important;
-      path {
-        fill: darken($success, 10) !important;
-      }
-      box-shadow: none !important;
-    }
-  }
-
-  &__icon {
-    pointer-events: none;
-    height: 25px;
-    width: auto;
-    margin-left: 5px;
-
-    &--small {
-      position: relative;
-      height: 20px;
     }
   }
   &-project {
@@ -375,10 +296,6 @@ button.btn {
   &:active {
     background: transparent;
   }
-  &.dark-link {
-    color: $body-color;
-    font-weight: bold;
-  }
   &.btn-with-icon {
     padding: 0 14px;
     background-color: $basic-alpha-8;
@@ -417,14 +334,6 @@ $add-btn-size: 34px;
       &::before {
         background-color: $primary600;
       }
-    }
-  }
-}
-
-@include media-breakpoint-down(sm) {
-  .btn {
-    &__md-full {
-      width: 100%;
     }
   }
 }
@@ -489,25 +398,6 @@ $add-btn-size: 34px;
       &-danger {
         border-color: $danger400 !important;
         color: $danger400 !important;
-      }
-    }
-    &--with-icon {
-      background: none !important;
-
-      &.primary {
-        color: $dark-highlight-color;
-
-        path {
-          fill: $dark-highlight-color;
-        }
-      }
-      &:hover,
-      &:focus {
-        background: none !important;
-        color: $bg-light200 !important;
-        path {
-          fill: $bg-light200 !important;
-        }
       }
     }
     &.btn-link {

@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import InputGroup from 'components/base/forms/InputGroup'
 import Tooltip from 'components/Tooltip'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import InfoMessage from 'components/InfoMessage'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'

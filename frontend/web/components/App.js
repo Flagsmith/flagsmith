@@ -1,4 +1,6 @@
 import React, { Component } from 'react'
+import get from 'lodash/get'
+import find from 'lodash/find'
 import { matchPath, withRouter } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
 import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
@@ -12,7 +14,6 @@ import AccountSettingsPage from './pages/AccountSettingsPage'
 import ProjectStore from 'common/stores/project-store'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
-import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import AccountStore from 'common/stores/account-store'
 import OrganisationLimit from './OrganisationLimit'
@@ -24,7 +25,6 @@ import { getBuildVersion } from 'common/services/useBuildVersion'
 import AccountProvider from 'common/providers/AccountProvider'
 import Nav from './navigation/Nav'
 import 'project/darkMode'
-import GramChat from './GramChat'
 const App = class extends Component {
   static propTypes = {
     children: propTypes.element.isRequired,
@@ -56,7 +56,7 @@ const App = class extends Component {
       strict: false,
     })
     const projectId =
-      _.get(match, 'params.projectId') || _.get(match2, 'params.projectId')
+      get(match, 'params.projectId') || get(match2, 'params.projectId')
     return !!projectId && parseInt(projectId)
   }
   getEnvironmentId = (props) => {
@@ -69,7 +69,7 @@ const App = class extends Component {
       strict: false,
     })
 
-    const environmentId = _.get(match, 'params.environmentId')
+    const environmentId = get(match, 'params.environmentId')
     return environmentId
   }
 
@@ -118,10 +118,6 @@ const App = class extends Component {
   }
 
   onLogin = () => {
-    resolveAuthFlow({
-      isAuthenticated: true,
-    })
-
     let redirect = API.getRedirect()
     const invite = API.getInvite()
     if (invite) {
@@ -150,7 +146,8 @@ const App = class extends Component {
       this.props.location.pathname === '/' ||
       this.props.location.pathname === '/widget' ||
       this.props.location.pathname === '/saml' ||
-      this.props.location.pathname.includes('/oauth') ||
+      (this.props.location.pathname.includes('/oauth') &&
+        !this.props.location.pathname.startsWith('/oauth/authorize')) ||
       this.props.location.pathname === '/login' ||
       this.props.location.pathname === '/signup'
     ) {
@@ -167,7 +164,7 @@ const App = class extends Component {
           }
           if (res) {
             const lastEnv = JSON.parse(res)
-            const lastOrg = _.find(AccountStore.getUser().organisations, {
+            const lastOrg = find(AccountStore.getUser().organisations, {
               id: lastEnv.orgId,
             })
             if (!lastOrg) {
@@ -210,9 +207,6 @@ const App = class extends Component {
   }
 
   onLogout = () => {
-    resolveAuthFlow({
-      isAuthenticated: false,
-    })
     if (document.location.href.includes('saml?')) {
       return
     }
@@ -238,7 +232,12 @@ const App = class extends Component {
     ) {
       return <Blocked />
     }
-    if (Project.maintenance || this.props.error || !window.projectOverrides) {
+    if (
+      Project.maintenance ||
+      Utils.getFlagsmithHasFeature('maintenance_mode') ||
+      this.props.error ||
+      !window.projectOverrides
+    ) {
       return <Maintenance />
     }
     const activeProject = OrganisationStore.getProject(projectId)
@@ -338,9 +337,6 @@ const App = class extends Component {
           }}
         </AccountProvider>
         <ScrollToTop />
-        {AccountStore.getUser() &&
-          Project.gramProjectSlug &&
-          Utils.getFlagsmithHasFeature('gram_chat') && <GramChat />}
       </Provider>
     )
   }

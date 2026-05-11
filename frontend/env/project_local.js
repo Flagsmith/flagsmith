@@ -1,5 +1,5 @@
-const globalThis = typeof window === 'undefined' ? global : window
-module.exports = global.Project = {
+const _globalThis = typeof window === 'undefined' ? global : window
+const Project = {
   api: 'http://localhost:8000/api/v1/',
   chargebee: {
     site: 'flagsmith-test',
@@ -17,9 +17,11 @@ module.exports = global.Project = {
   // This is used for Sentry tracking
   maintenance: false,
   plans: {
-    scaleUp: { annual: 'scale-up-annual-v2', monthly: 'scale-up-v2' },
+    scaleUp: { annual: 'Scale-Up-v4-USD-Yearly', monthly: 'Scale-Up-v4-USD-Monthly' },
     startup: { annual: 'startup-annual-v2', monthly: 'startup-v2' },
   },
   useSecureCookies: false,
-  ...(globalThis.projectOverrides || {}),
+  ...(_globalThis.projectOverrides || {}),
 }
+_globalThis.Project = Project
+export default Project

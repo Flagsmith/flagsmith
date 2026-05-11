@@ -21,7 +21,6 @@ from core.models import SoftDeleteExportableModel
 from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_lead_v2,
-    update_hubspot_active_subscription,
 )
 from organisations.chargebee import (  # type: ignore[attr-defined]
     get_customer_id_from_subscription_id,
@@ -42,6 +41,7 @@ from organisations.subscriptions.constants import (
     FREE_PLAN_SUBSCRIPTION_METADATA,
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
+    MAX_SEATS_IN_SCALE_UP_PLAN,
     SUBSCRIPTION_BILLING_STATUSES,
     SUBSCRIPTION_PAYMENT_METHODS,
     TRIAL_SUBSCRIPTION_ID,
@@ -272,6 +272,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         return (
             is_saas()
             and self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
+            and self.organisation.num_seats < MAX_SEATS_IN_SCALE_UP_PLAN
         )
 
     @property
@@ -302,13 +303,6 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         self.organisation.stop_serving_flags = False
         self.organisation.block_access_to_admin = False
         self.organisation.save()
-
-    @hook(AFTER_SAVE, when="plan", has_changed=True)
-    def update_hubspot_active_subscription(self):  # type: ignore[no-untyped-def]
-        if not settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            return
-
-        update_hubspot_active_subscription.delay(args=(self.id,))
 
     def save_as_free_subscription(self):  # type: ignore[no-untyped-def]
         """
@@ -468,7 +462,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         if not self.can_auto_upgrade_seats:
             raise SubscriptionDoesNotSupportSeatUpgrade()
 
-        add_single_seat(self.subscription_id)  # type: ignore[arg-type]
+        add_single_seat(self.subscription_id, organisation_id=self.organisation_id)  # type: ignore[arg-type]
 
     def is_in_trial(self) -> bool:
         return self.subscription_id == TRIAL_SUBSCRIPTION_ID

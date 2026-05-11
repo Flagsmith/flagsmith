@@ -1,7 +1,7 @@
 import React, { FC, useEffect } from 'react'
 import PanelSearch from './PanelSearch'
 import Button from './base/forms/Button'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import {
   useGetExternalResourcesQuery,
   useDeleteExternalResourceMutation,
@@ -16,7 +16,7 @@ export type ExternalResourcesTableBase = {
   organisationId: string
 }
 
-export type ExternalResourcesTableType = ExternalResourcesTableBase & {
+type ExternalResourcesTableType = ExternalResourcesTableBase & {
   setSelectedResources: (r: ExternalResource[]) => void
 }
 
@@ -36,12 +36,12 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
 
   useEffect(() => {
     if (isDeleted) {
-      toast('External resources was deleted')
+      toast('Link deleted')
     }
   }, [isDeleted])
   return (
     <Row className='list-item' key={externalResource?.id}>
-      <div className='table-column text-left' style={{ width: '100px' }}>
+      <div className='table-column text-start' style={{ width: '100px' }}>
         <div className='font-weight-medium mb-1'>
           {
             Constants.resourceTypes[
@@ -61,10 +61,11 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
             <Tooltip
               title={
                 <Row>
-                  {`${
-                    externalResource?.metadata?.title
-                  } (#${externalResource?.url.replace(/\D/g, '')})`}{' '}
-                  <div className='ml-1 mb-1'>
+                  <span>{externalResource?.metadata?.title}</span>
+                  <span className='ml-2'>
+                    {`(#${externalResource?.url.replace(/\D/g, '')})`}
+                  </span>
+                  <div className='ml-2 mb-1'>
                     <Icon name='open-external-link' width={14} fill='#6837fc' />
                   </div>
                 </Row>
@@ -77,7 +78,7 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
         </Row>
       </Flex>
       <div className='table-column text-center' style={{ width: '80px' }}>
-        <div className='font-weight-medium mb-1'>
+        <div className='font-weight-medium mb-1 text-capitalize'>
           {externalResource?.metadata?.state}
         </div>
       </div>
@@ -115,7 +116,7 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
                       })
                     }}
                   >
-                    Delete
+                    Unlink
                   </Button>
                 </div>
               </div>,

@@ -20,7 +20,7 @@ import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import Constants from 'common/constants'
 import EnvironmentNavbar from './navbars/EnvironmentNavbar'
 import OverflowNav from './OverflowNav'
-import { ProjectPermission } from 'common/types/permissions.types';
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type HomeAsideType = {
   environmentId: string

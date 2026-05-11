@@ -1,7 +1,7 @@
 import React from 'react'
 import cn from 'classnames'
 import { ButtonHTMLAttributes, HTMLAttributeAnchorTarget } from 'react'
-import Icon, { IconName } from 'components/Icon'
+import Icon, { IconName } from 'components/icons/Icon'
 
 const iconColours = {
   primary: '#6837fc',

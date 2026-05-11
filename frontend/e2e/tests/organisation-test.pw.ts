@@ -1,9 +1,9 @@
 import { test, expect } from '../test-setup';
-import { byId, log, createHelpers, LONG_TIMEOUT } from '../helpers'
+import { byId, log, createHelpers, LONG_TIMEOUT, visualSnapshot } from '../helpers'
 import { E2E_SEPARATE_TEST_USER, PASSWORD } from '../config'
 
 test.describe('Organisation Tests', () => {
-  test('Organisations can be created, renamed, and deleted with name validation @oss', async ({ page }) => {
+  test('Organisations can be created, renamed, and deleted with name validation @oss', async ({ page }, testInfo) => {
     const {
       assertTextContent,
       click,
@@ -40,6 +40,8 @@ test.describe('Organisation Tests', () => {
     await waitForElementVisible(byId('org-settings-link'))
     await click(byId('org-settings-link'))
     await waitForElementVisible("[data-test='organisation-name']")
+
+    await visualSnapshot(page, 'organisation-settings', testInfo)
 
     log('Test 2: Create and Delete Organisation, Verify Next Org in Nav')
     log('Navigate to create organisation')

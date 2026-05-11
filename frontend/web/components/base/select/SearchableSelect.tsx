@@ -1,4 +1,4 @@
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import React from 'react'
 export interface OptionType {
   disabled?: boolean
@@ -6,7 +6,7 @@ export interface OptionType {
   value: string
 }
 
-export interface GroupedOptionType {
+interface GroupedOptionType {
   label: React.ReactNode
   options: OptionType[]
 }

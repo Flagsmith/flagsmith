@@ -18,6 +18,7 @@ export function useFeatureFilters(history: History): {
   filters: FilterState
   page: number
   hasFilters: boolean
+  searchResetKey: number
   handleFilterChange: (updates: Partial<FilterState>) => void
   clearFilters: () => void
   goToPage: (newPage: number) => void
@@ -29,6 +30,10 @@ export function useFeatureFilters(history: History): {
 
   const [filters, setFilters] = useState<FilterState>(initialFilters)
   const [page, setPage] = useState<number>(initialFilters.page)
+  // Bumped whenever `filters.search` is reset externally (e.g. Clear Filters),
+  // so the search input can remount to the fresh value rather than syncing
+  // state on every keystroke echo.
+  const [searchResetKey, setSearchResetKey] = useState(0)
 
   const updateURLParams = useCallback(() => {
     const currentParams = Utils.fromParam()
@@ -59,6 +64,7 @@ export function useFeatureFilters(history: History): {
     const newFilters = getFiltersFromParams({})
     setFilters(newFilters)
     setPage(1)
+    setSearchResetKey((k) => k + 1)
   }, [history])
 
   const goToPage = (newPage: number) => {
@@ -72,5 +78,6 @@ export function useFeatureFilters(history: History): {
     handleFilterChange,
     hasFilters: hasActiveFilters(filters),
     page,
+    searchResetKey,
   }
 }

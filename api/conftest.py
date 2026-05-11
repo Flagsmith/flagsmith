@@ -1,4 +1,3 @@
-import logging
 import os
 import site
 import typing
@@ -1254,33 +1253,34 @@ def superuser_client(superuser: FFAdminUser, client: APIClient):  # type: ignore
 
 
 @pytest.fixture
-def inspecting_handler() -> logging.Handler:
-    """
-    Fixture used to test the output of logger related output.
-    """
-
-    class InspectingHandler(logging.Handler):
-        def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
-            super().__init__(*args, **kwargs)
-            self.messages = []  # type: ignore[var-annotated]
-
-        def handle(self, record: logging.LogRecord) -> None:  # type: ignore[override]
-            self.messages.append(self.format(record))
-
-    return InspectingHandler()
-
-
-@pytest.fixture
 def set_github_webhook_secret() -> None:
     from django.conf import settings
 
     settings.GITHUB_WEBHOOK_SECRET = "secret-key"
 
 
+@pytest.fixture(autouse=True)
+def _openfeature_no_flags_by_default() -> typing.Generator[None, None, None]:
+    """
+    Bind an empty `InMemoryProvider` to the Flagsmith domain for every test.
+
+    Without this, `get_openfeature_client` would fall through to a real
+    `FlagsmithProvider` reading the bundled environment JSON, leaking
+    production-shaped flag state into unit tests. Tests that need flags on
+    should use the `enable_features` fixture.
+    """
+    openfeature_api.set_provider(
+        InMemoryProvider({}),
+        domain=DEFAULT_OPENFEATURE_DOMAIN,
+    )
+    yield
+    openfeature_api.clear_providers()
+
+
 @pytest.fixture()
 def enable_features(
     mocker: MockerFixture,
-) -> typing.Generator[EnableFeaturesFixture, None, None]:
+) -> EnableFeaturesFixture:
     """
     This fixture returns a callable that allows us to enable any Flagsmith feature flag(s) in tests.
 
@@ -1301,9 +1301,7 @@ def enable_features(
             domain=DEFAULT_OPENFEATURE_DOMAIN,
         )
 
-    yield _enable_features
-
-    openfeature_api.clear_providers()
+    return _enable_features
 
 
 @pytest.fixture(autouse=True)

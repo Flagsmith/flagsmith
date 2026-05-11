@@ -117,7 +117,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                 id={mobile ? undefined : 'users-link'}
                 exact
                 icon='people'
-                to={`/project/${projectId}/environment/${environmentId}/users`}
+                to={`/project/${projectId}/environment/${environmentId}/identities`}
               >
                 Identities
               </SidebarLink>

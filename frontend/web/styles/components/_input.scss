@@ -10,12 +10,6 @@ textarea {
   line-height: $line-height-lg;
   padding: $input-padding;
   font-weight: $input-font-weight;
-  &.borderless {
-    border-left: none !important;
-    border-top: none !important;
-    border-right: none !important;
-    border-radius: 0;
-  }
   &::placeholder {
     color: $input-placeholder-color !important;
     font-weight: normal;
@@ -26,28 +20,9 @@ textarea {
   &:focus {
     border-color: $primary;
   }
-  &.textarea-sm {
-    padding: $input-padding-sm;
-    line-height: $line-height-sm;
-    height: $textarea-height-sm;
-  }
-  &.textarea-xsm {
-    padding: $input-padding-xsm;
-    line-height: $line-height-sm;
-    height: $textarea-height-xsm;
-    font-size: $font-sm;
-  }
   &.textarea-lg {
     padding: $input-padding-lg;
     height: $textarea-height-lg;
-  }
-  &.textarea-container {
-    resize: none;
-    overflow: hidden;
-    min-height: 50px;
-    &.invalid {
-      border-color: $danger;
-    }
   }
 }
 
@@ -242,37 +217,6 @@ textarea {
     &::-webkit-calendar-picker-indicator {
       filter: invert(48%) sepia(13%) saturate(0%) hue-rotate(130deg)
         brightness(200%) contrast(80%);
-    }
-  }
-}
-
-.dark {
-  .MuiFormControl-root > div {
-    &:hover:before {
-      border-color: $input-bg-dark !important;
-    }
-    &:before {
-      border-color: $input-bg-dark;
-    }
-    &:before {
-      border-color: $input-bg-dark;
-    }
-  }
-  .MuiInputBase-input {
-    color: $body-color-dark;
-  }
-  .MuiChip-root {
-    color: $dark-highlight-color;
-    background: $panel-bg-dark;
-
-    &:hover {
-      background: $panel-bg-dark;
-      svg {
-        color: $hr-border-color;
-      }
-    }
-    svg {
-      color: $primary900;
     }
   }
 }

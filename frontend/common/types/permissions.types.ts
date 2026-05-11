@@ -72,7 +72,7 @@ export const EnvironmentPermissionDescriptions: Record<
   [EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES]: 'Manage segment overrides',
 } as const
 
-export type Permission =
+type Permission =
   | OrganisationPermission
   | ProjectPermission
   | EnvironmentPermission

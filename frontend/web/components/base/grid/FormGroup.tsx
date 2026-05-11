@@ -1,6 +1,6 @@
 import React, { FC, ReactNode } from 'react'
 
-export type FormGroupProps = {
+type FormGroupProps = {
   children?: ReactNode
   className?: string
 }

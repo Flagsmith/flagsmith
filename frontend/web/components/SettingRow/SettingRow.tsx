@@ -3,7 +3,7 @@ import cn from 'classnames'
 import Switch from 'components/Switch'
 import './setting-row.scss'
 
-type SettingRowProps = HTMLAttributes<HTMLDivElement> & {
+type SettingRowProps = Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> & {
   title: ReactNode
   description: ReactNode
   checked: boolean

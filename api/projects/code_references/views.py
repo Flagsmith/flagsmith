@@ -1,5 +1,6 @@
 from typing import Any
 
+import structlog
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, response
@@ -19,6 +20,8 @@ from projects.code_references.types import (
     FeatureFlagCodeReferencesRepositorySummary,
 )
 
+logger = structlog.get_logger("code_references")
+
 
 class FeatureFlagCodeReferencesScanCreateAPIView(
     generics.CreateAPIView[FeatureFlagCodeReferencesScan]
@@ -33,7 +36,14 @@ class FeatureFlagCodeReferencesScanCreateAPIView(
     def perform_create(  # type: ignore[override]
         self, serializer: FeatureFlagCodeReferencesScanSerializer
     ) -> None:
-        serializer.save(project_id=self.kwargs["project_pk"])
+        instance = serializer.save(project_id=self.kwargs["project_pk"])
+        feature_names = {ref["feature_name"] for ref in instance.code_references}
+        logger.info(
+            "scan.created",
+            organisation__id=instance.project.organisation_id,
+            code_references__count=len(instance.code_references),
+            feature__count=len(feature_names),
+        )
 
 
 @extend_schema(

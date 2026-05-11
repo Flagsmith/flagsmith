@@ -24,6 +24,7 @@ from features.serializers import (
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.github.constants import GITHUB_API_URL, GITHUB_API_VERSION
 from integrations.github.models import GithubConfiguration, GitHubRepository
+from organisations.models import Organisation
 from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import Segment
@@ -283,7 +284,8 @@ def test_create_feature_external_resource__incorrect_github_type__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == "Incorrect GitHub type"
+    assert "type" in response.json()
+    assert "is not a valid choice" in response.json()["type"][0]
 
 
 def test_create_feature_external_resource__no_github_integration__returns_400(
@@ -316,6 +318,8 @@ def test_create_feature_external_resource__no_project_permissions__returns_403(
     feature: Feature,
 ) -> None:
     # Given
+    new_org = Organisation.objects.create(name="New Org")
+    new_project = Project.objects.create(name="New Project", organisation=new_org)
     feature_external_resource_data = {
         "type": "GITHUB_ISSUE",
         "url": "https://example.com?item=create",
@@ -323,7 +327,8 @@ def test_create_feature_external_resource__no_project_permissions__returns_403(
         "metadata": {"status": "open"},
     }
     url = reverse(
-        "api-v1:projects:feature-external-resources-list", args=[2, feature.id]
+        "api-v1:projects:feature-external-resources-list",
+        args=[new_project.id, feature.id],
     )
 
     # When

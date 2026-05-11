@@ -161,6 +161,10 @@
                     "value": "True"
                 },
                 {
+                    "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
+                    "value": "http://adot-collector.metrics.local:4318"
+                },
+                {
                     "name": "TASK_PROCESSOR_SLEEP_INTERVAL_MS",
                     "value": "1000"
                 },
@@ -171,6 +175,10 @@
                 {
                     "name": "LOG_LEVEL",
                     "value": "INFO"
+                },
+                {
+                    "name": "LOG_FORMAT",
+                    "value": "json"
                 }
             ],
             "secrets": [

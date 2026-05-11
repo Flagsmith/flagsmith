@@ -8,7 +8,7 @@ import { TagStrategy } from 'common/types/responses'
  * Function type for resolving environment API keys to numeric IDs.
  * Used to bridge routing layer (API keys) with API layer (numeric IDs).
  */
-export type EnvironmentIdResolver = (apiKey: string) => number | undefined
+type EnvironmentIdResolver = (apiKey: string) => number | undefined
 
 /** Converts array to comma-separated string, or undefined if empty */
 function joinArrayOrUndefined(

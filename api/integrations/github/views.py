@@ -6,6 +6,7 @@ from typing import Any, Callable
 from urllib.parse import urlparse
 
 import requests
+import structlog
 from django.conf import settings
 from django.db.utils import IntegrityError
 from rest_framework import status, viewsets
@@ -54,6 +55,7 @@ from organisations.permissions.permissions import GithubIsAdminOrganisation
 from projects.code_references.services import get_code_references_for_feature_flag
 
 logger = logging.getLogger(__name__)
+code_references_logger = structlog.get_logger("code_references")
 
 
 def github_auth_required(func):  # type: ignore[no-untyped-def]
@@ -382,6 +384,12 @@ def create_cleanup_issue(request, organisation_pk: int) -> Response:  # type: ig
             )
         except IntegrityError:
             pass
+
+    code_references_logger.info(
+        "cleanup_issues.created",
+        organisation__id=organisation_pk,
+        issues_created__count=len(summaries),
+    )
 
     return Response(status=status.HTTP_204_NO_CONTENT)
 

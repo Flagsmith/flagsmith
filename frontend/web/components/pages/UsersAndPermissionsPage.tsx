@@ -30,7 +30,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import PanelSearch from 'components/PanelSearch'
 import moment from 'moment'
 import sortBy from 'lodash/sortBy'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import RolesTable from 'components/RolesTable'
 import PlanBasedBanner, { getPlanBasedOption } from 'components/PlanBasedAccess'
 import { useHasPermission } from 'common/providers/Permission'
@@ -280,7 +280,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                   ) : (
                                     <strong>
                                       You will automatically be charged
-                                      $20/month for each additional member that
+                                      $60/month for each additional member that
                                       joins your organisation.
                                     </strong>
                                   )}

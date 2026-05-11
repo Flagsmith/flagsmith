@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 
 import useOutsideClick from 'common/useOutsideClick'
 import Button from './base/forms/Button'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import ActionButton from './ActionButton'
 
 interface UserActionProps {
@@ -109,7 +109,7 @@ const ActionDropdown = ({
   )
 }
 
-export const UserAction: FC<UserActionProps> = ({
+const UserAction: FC<UserActionProps> = ({
   canEdit,
   canInspectPermissions,
   canRemove,

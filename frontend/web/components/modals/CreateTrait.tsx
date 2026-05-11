@@ -12,7 +12,7 @@ import Format from 'common/utils/format'
 import ErrorMessage from 'components/ErrorMessage'
 import ModalHR from './ModalHR'
 import IdentityProvider from 'common/providers/IdentityProvider'
-import _ from 'lodash'
+import find from 'lodash/find'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import Button from 'components/base/forms/Button'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -164,7 +164,7 @@ const CreateTrait: FC<CreateTraitProps> = ({
               <strong>
                 {' '}
                 {
-                  _.find(project.environments, {
+                  find(project.environments, {
                     api_key: environmentId,
                   })?.name
                 }

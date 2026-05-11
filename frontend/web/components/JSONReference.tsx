@@ -5,7 +5,7 @@ import Highlight from './Highlight'
 import Button from './base/forms/Button'
 import Switch from './Switch'
 import flagsmith from '@flagsmith/flagsmith'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Utils from 'common/utils/utils'
 
 type JSONReferenceType = {

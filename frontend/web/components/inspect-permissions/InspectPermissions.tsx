@@ -111,5 +111,4 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
   )
 }
 
-export type { InspectPermissionsType }
 export default InspectPermissions

@@ -1,7 +1,7 @@
 import { FC, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import ActionButton from 'components/ActionButton'
 import ActionItem from 'components/shared/ActionItem'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import useOutsideClick from 'common/useOutsideClick'
 import { calculateListPosition } from 'common/utils/calculateListPosition'
 

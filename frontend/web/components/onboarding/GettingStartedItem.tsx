@@ -3,7 +3,7 @@ import { useGetProfileQuery } from 'common/services/useProfile'
 import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
 import API from 'project/api'
 import classNames from 'classnames'
-import Icon, { IconName } from 'components/Icon'
+import Icon, { IconName } from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
 import { Link } from 'react-router-dom'
 

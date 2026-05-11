@@ -17,7 +17,7 @@ import DiffEnabled from './DiffEnabled'
 import DiffSegmentOverrides from './DiffSegmentOverrides'
 import DiffVariations from './DiffVariations'
 import InfoMessage from 'components/InfoMessage'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import WarningMessage from 'components/WarningMessage'
 import { Link } from 'react-router-dom'
 

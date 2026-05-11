@@ -11,6 +11,8 @@ from pydantic import TypeAdapter
 from rest_framework.request import Request
 from typing_extensions import is_typeddict
 
+from oauth2_metadata.dataclasses import OAuthConfig
+
 
 def append_meta(schema: dict[str, Any], meta: dict[str, Any]) -> dict[str, Any]:
     """
@@ -73,21 +75,21 @@ class MCPSchemaGenerator(SchemaGenerator):
     """
 
     MCP_TAG = "mcp"
-    MCP_SERVER_URL = "https://api.flagsmith.com"
 
     def get_schema(
         self, request: Request | None = None, public: bool = False
     ) -> dict[str, Any]:
+        oauth = OAuthConfig.from_settings()
         schema = super().get_schema(request, public)
         schema["paths"] = self._filter_paths(schema.get("paths", {}))
-        schema = self._update_security_for_mcp(schema)
+        schema = self._update_security_for_mcp(schema, oauth)
         schema.pop("$schema", None)
         info = schema.pop("info").copy()
         info["title"] = "mcp_openapi"
         return {
             "openapi": schema.pop("openapi"),
             "info": info,
-            "servers": [{"url": self.MCP_SERVER_URL}],
+            "servers": [{"url": oauth.api_url}],
             **schema,
         }
 
@@ -121,11 +123,23 @@ class MCPSchemaGenerator(SchemaGenerator):
         operation.pop("security", None)
         return operation
 
-    def _update_security_for_mcp(self, schema: dict[str, Any]) -> dict[str, Any]:
-        """Update security schemes for MCP (Organisation API Key)."""
+    def _update_security_for_mcp(
+        self, schema: dict[str, Any], oauth: OAuthConfig
+    ) -> dict[str, Any]:
+        """Update security schemes for MCP (OAuth + API Key fallback)."""
         schema = schema.copy()
         schema["components"] = schema.get("components", {}).copy()
         schema["components"]["securitySchemes"] = {
+            "oauth2": {
+                "type": "oauth2",
+                "flows": {
+                    "authorizationCode": {
+                        "authorizationUrl": f"{oauth.frontend_url}/oauth/authorize/",
+                        "tokenUrl": f"{oauth.api_url}/o/token/",
+                        "scopes": oauth.scopes,
+                    },
+                },
+            },
             "TOKEN_AUTH": {
                 "type": "apiKey",
                 "in": "header",
@@ -133,7 +147,10 @@ class MCPSchemaGenerator(SchemaGenerator):
                 "description": "Organisation API Key. Format: Api-Key <key>",
             },
         }
-        schema["security"] = [{"TOKEN_AUTH": []}]
+        schema["security"] = [
+            {"oauth2": list(oauth.scopes.keys())},
+            {"TOKEN_AUTH": []},
+        ]
         return schema
 
 

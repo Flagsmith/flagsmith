@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import InlineModal from './InlineModal'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import classNames from 'classnames'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'
@@ -15,7 +15,7 @@ interface UserSelectProps {
   onChange?: (value: any[]) => void
 }
 
-export const UserSelect: React.FC<UserSelectProps> = ({
+const UserSelect: React.FC<UserSelectProps> = ({
   disabled = false,
   isOpen,
   onAdd,

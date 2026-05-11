@@ -171,6 +171,7 @@ def test_create_segment__max_segments_limit_reached__returns_400(  # type: ignor
     project, client, settings
 ):
     # Given
+    settings.EDGE_ENABLED = True
     # let's reduce the max segments allowed to 1
     project.max_segments_allowed = 1
     project.save()
@@ -204,15 +205,56 @@ def test_create_segment__max_segments_limit_reached__returns_400(  # type: ignor
     assert project.segments.count() == 1
 
 
+def test_create_segment__edge_disabled_max_limit_reached__returns_201(
+    project: Project,
+    admin_client: APIClient,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.EDGE_ENABLED = False
+    project.max_segments_allowed = 1
+    project.save()
+
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    data = {
+        "name": "Second segment",
+        "project": project.id,
+        "rules": [
+            {
+                "type": "ALL",
+                "rules": [],
+                "conditions": [{"operator": EQUAL, "property": "test-property"}],
+            }
+        ],
+    }
+
+    # Create the first segment (at the limit)
+    res = admin_client.post(
+        url,
+        data=json.dumps({**data, "name": "First segment"}),
+        content_type="application/json",
+    )
+    assert res.status_code == status.HTTP_201_CREATED
+
+    # When - second segment exceeds the limit but edge is off
+    res = admin_client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert res.status_code == status.HTTP_201_CREATED
+    assert project.segments.count() == 2
+
+
 def test_create_segment__old_segment_versions_exist__ignores_old_versions_in_limit(
     project: Project,
     segment: Segment,
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     with_project_permissions([MANAGE_SEGMENTS, VIEW_PROJECT])  # type: ignore[call-arg]
 
+    settings.EDGE_ENABLED = True
     # let's reduce the max segments allowed to 2
     project.max_segments_allowed = 2
     project.save()

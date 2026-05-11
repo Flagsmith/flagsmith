@@ -1,7 +1,7 @@
 import React from 'react'
 import ValueEditor from 'components/ValueEditor'
 import Constants from 'common/constants'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import shallowEqual from 'fbjs/lib/shallowEqual'
@@ -104,7 +104,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
         />
       </div>
       {!!onRemove && !readOnly && (
-        <div style={{ position: 'relative', top: '27px' }} className='ml-2'>
+        <div style={{ top: '27px' }} className='ml-2 position-relative'>
           <button
             onClick={onRemove}
             id='delete-multivariate'

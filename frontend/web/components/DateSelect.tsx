@@ -1,5 +1,5 @@
 import DatePicker, { DatePickerProps } from 'react-datepicker'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import { useState, FC } from 'react'
 
 export interface DateSelectProps
@@ -27,7 +27,7 @@ const DateSelect: FC<DateSelectProps> = ({
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <Flex style={{ position: 'relative' }}>
+    <Flex className='position-relative'>
       <DatePicker
         className={`${className} ${!isValid && touched ? 'invalid' : ''}`}
         dateFormat={dateFormat}

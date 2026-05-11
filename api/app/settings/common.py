@@ -87,6 +87,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     # Used for managing api keys
     "rest_framework_api_key",
+    "oauth2_provider",
     "rest_framework_simplejwt.token_blacklist",
     "djoser",
     "django.contrib.sites",
@@ -153,7 +154,9 @@ INSTALLED_APPS = [
     "integrations.flagsmith",
     "integrations.launch_darkly",
     "integrations.github",
+    "integrations.gitlab",
     "integrations.grafana",
+    "integrations.vcs",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -164,6 +167,7 @@ INSTALLED_APPS = [
     "softdelete",
     "metadata",
     "app_analytics",
+    "oauth2_metadata",
 ]
 
 SILENCED_SYSTEM_CHECKS = ["axes.W002"]
@@ -173,12 +177,16 @@ SITE_ID = 1
 db_conn_max_age = env.int("DJANGO_DB_CONN_MAX_AGE", 60)
 DJANGO_DB_CONN_MAX_AGE = 0 if db_conn_max_age == -1 else db_conn_max_age
 
+DJANGO_DB_CONN_HEALTH_CHECKS = env.bool("DJANGO_DB_CONN_HEALTH_CHECKS", False)
+
 DATABASE_ROUTERS: list[str] = []
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
     DATABASES = {
         "default": dj_database_url.parse(
-            env("DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
+            env("DATABASE_URL"),
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+            conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         ),
     }
     REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
@@ -219,17 +227,23 @@ if "DATABASE_URL" in os.environ:
 
     for i, db_url in enumerate(REPLICA_DATABASE_URLS, start=1):
         DATABASES[f"replica_{i}"] = dj_database_url.parse(
-            db_url, conn_max_age=DJANGO_DB_CONN_MAX_AGE
+            db_url,
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+            conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         )
 
     for i, db_url in enumerate(CROSS_REGION_REPLICA_DATABASE_URLS, start=1):
         DATABASES[f"cross_region_replica_{i}"] = dj_database_url.parse(
-            db_url, conn_max_age=DJANGO_DB_CONN_MAX_AGE
+            db_url,
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+            conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         )
 
     if "ANALYTICS_DATABASE_URL" in os.environ:
         DATABASES["analytics"] = dj_database_url.parse(
-            env("ANALYTICS_DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
+            env("ANALYTICS_DATABASE_URL"),
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+            conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         )
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
 elif "DJANGO_DB_NAME" in os.environ:
@@ -243,6 +257,7 @@ elif "DJANGO_DB_NAME" in os.environ:
             "HOST": os.environ["DJANGO_DB_HOST"],
             "PORT": os.environ["DJANGO_DB_PORT"],
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
+            "CONN_HEALTH_CHECKS": DJANGO_DB_CONN_HEALTH_CHECKS,
         },
     }
     if "DJANGO_DB_NAME_ANALYTICS" in os.environ:
@@ -254,6 +269,7 @@ elif "DJANGO_DB_NAME" in os.environ:
             "HOST": os.environ["DJANGO_DB_HOST_ANALYTICS"],
             "PORT": os.environ["DJANGO_DB_PORT_ANALYTICS"],
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
+            "CONN_HEALTH_CHECKS": DJANGO_DB_CONN_HEALTH_CHECKS,
         }
 
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
@@ -301,6 +317,7 @@ TASK_PROCESSOR_DATABASES = env.list(
 
 
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
+DCR_THROTTLE_RATE = env("DCR_THROTTLE_RATE", "500/month")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", default=None)
 MASTER_API_KEY_THROTTLE_RATE = env("MASTER_API_KEY_THROTTLE_RATE", default=None)
@@ -311,6 +328,7 @@ REST_FRAMEWORK = {
         "custom_auth.jwt_cookie.authentication.JWTCookieAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         "api_keys.authentication.MasterAPIKeyAuthentication",
+        "oauth2_metadata.authentication.OAuth2BearerTokenAuthentication",
     ),
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
@@ -318,6 +336,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": DEFAULT_THROTTLE_CLASSES,
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
+        "dcr_register": DCR_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
         "master_api_key": MASTER_API_KEY_THROTTLE_RATE,
         "mfa_code": "5/min",
@@ -582,6 +601,9 @@ E2E_NON_ADMIN_USER_WITH_A_ROLE = (
     f"e2e_non_admin_user_with_a_role@{E2E_TEST_EMAIL_DOMAIN}"
 )
 E2E_SEPARATE_TEST_USER = f"e2e_separate_test_user@{E2E_TEST_EMAIL_DOMAIN}"
+# User on a Free-plan organisation, used by the Billing tab E2E tests
+# that need to exercise the "no active subscription" payment flow.
+E2E_BILLING_USER = f"e2e_billing_user@{E2E_TEST_EMAIL_DOMAIN}"
 #  Identity for E2E segment tests
 E2E_IDENTITY = "test-identity"
 
@@ -887,6 +909,26 @@ SIMPLE_JWT = {
     "SIGNING_KEY": env.str("COOKIE_AUTH_JWT_SIGNING_KEY", default=SECRET_KEY),
 }
 
+# OAuth 2.1 Provider (django-oauth-toolkit)
+FLAGSMITH_API_URL = env.str("FLAGSMITH_API_URL", default="http://localhost:8000")
+FLAGSMITH_FRONTEND_URL = env.str(
+    "FLAGSMITH_FRONTEND_URL", default="http://localhost:8080"
+)
+
+OAUTH2_PROVIDER = {
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 60 * 15,  # 15 minutes
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 60 * 60 * 24 * 30,  # 30 days
+    "ROTATE_REFRESH_TOKEN": True,
+    "PKCE_REQUIRED": True,
+    "ALLOWED_CODE_CHALLENGE_METHODS": ["S256"],
+    "SCOPES": {"mcp": "MCP access"},
+    "DEFAULT_SCOPES": ["mcp"],
+    "ALLOWED_GRANT_TYPES": [
+        "authorization_code",
+        "refresh_token",
+    ],
+}
+
 # Github OAuth credentials
 GITHUB_CLIENT_ID = env.str("GITHUB_CLIENT_ID", default="")
 GITHUB_CLIENT_SECRET = env.str("GITHUB_CLIENT_SECRET", default="")
@@ -1149,17 +1191,6 @@ CORS_ALLOW_HEADERS = list(
 # Hubspot settings
 HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
 ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
-HUBSPOT_IGNORE_DOMAINS = env.list(
-    "HUBSPOT_IGNORE_DOMAINS",
-    subcast=str,
-    default=[],
-)
-HUBSPOT_IGNORE_DOMAINS_REGEX = env.str("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
-HUBSPOT_IGNORE_ORGANISATION_DOMAINS = env.list(
-    "HUBSPOT_IGNORE_ORGANISATION_DOMAINS",
-    subcast=str,
-    default=[],
-)
 
 # Number of minutes to wait for a user that has signed up to
 # join or create an organisation before creating a lead in

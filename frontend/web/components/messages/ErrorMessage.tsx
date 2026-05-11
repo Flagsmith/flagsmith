@@ -1,5 +1,5 @@
 import React from 'react'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 import Format from 'common/utils/format'
 import Constants from 'common/constants'

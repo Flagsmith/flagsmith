@@ -1,11 +1,10 @@
 import React, { FC } from 'react'
-import AccountStore from 'common/stores/account-store'
 import { Link, NavLink } from 'react-router-dom'
 import BreadcrumbSeparator from 'components/BreadcrumbSeparator'
 import classNames from 'classnames'
 import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
-import { useGetOrganisationQuery } from 'common/services/useOrganisation'
+import useSelectedOrganisation from 'common/hooks/useSelectedOrganisation'
 import { appLevelPaths } from './constants'
 
 type SelectOrgAndProjectType = {
@@ -18,12 +17,7 @@ const SelectOrgAndProject: FC<SelectOrgAndProjectType> = ({
   projectId,
 }) => {
   const isAppLevelPage = appLevelPaths.includes(document.location.pathname)
-
-  const organisationId = AccountStore.getOrganisation()?.id
-  const { data: organisation } = useGetOrganisationQuery(
-    { id: organisationId as number },
-    { skip: !organisationId },
-  )
+  const organisation = useSelectedOrganisation()
 
   return (
     <Row className='gap-2'>
@@ -57,9 +51,7 @@ const SelectOrgAndProject: FC<SelectOrgAndProjectType> = ({
                 })}
                 to={Utils.getOrganisationHomePage()}
               >
-                <div>
-                  {organisation?.name || AccountStore.getOrganisation()?.name}
-                </div>
+                <div>{organisation?.name}</div>
               </NavLink>
             </BreadcrumbSeparator>
           </div>

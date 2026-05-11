@@ -25,7 +25,7 @@ import UserGroupList from './UserGroupList'
 import { PermissionLevel, Req, PermissionRoleType } from 'common/types/requests'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import {
   useCreateRolePermissionsMutation,
   useGetRoleEnvironmentPermissionsQuery,
@@ -67,7 +67,7 @@ import RemoveViewPermissionModal from './RemoveViewPermissionModal'
 import { useHistory } from 'react-router-dom'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 
-const Project = require('common/project')
+import Project from 'common/project'
 
 type EditPermissionModalType = {
   group?: UserGroupSummary

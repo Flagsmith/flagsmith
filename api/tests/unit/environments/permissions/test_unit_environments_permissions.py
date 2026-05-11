@@ -1,5 +1,6 @@
 from unittest import mock
 
+import pytest
 from common.projects.permissions import (
     CREATE_ENVIRONMENT,
 )
@@ -146,6 +147,59 @@ def test_environment_permissions__user_without_create_permission__returns_false(
 
     # Then
     assert result is False
+
+
+@pytest.mark.parametrize(
+    "request_data, expected",
+    [
+        ({"project": "<Project ID>", "name": "Test environment"}, False),
+        ({"name": "Test environment"}, False),
+    ],
+)
+def test_environment_permissions__create_with_invalid_project__returns_false(
+    staff_user: FFAdminUser,
+    request_data: dict[str, str],
+    expected: bool,
+) -> None:
+    # Given
+    view = mock.MagicMock()
+    request = mock.MagicMock()
+    view.action = "create"
+    view.detail = False
+    request.user = staff_user
+    request.data = request_data
+
+    # When
+    result = environment_permissions.has_permission(request, view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is expected
+
+
+def test_environment_permissions__create_with_string_integer_project__returns_true(
+    staff_user: FFAdminUser,
+    project: Project,
+) -> None:
+    # Given
+    create_environment_permission = ProjectPermissionModel.objects.get(
+        key=CREATE_ENVIRONMENT
+    )
+    user_project_permission = UserProjectPermission.objects.create(
+        user=staff_user, project=project
+    )
+    user_project_permission.permissions.set([create_environment_permission])
+    view = mock.MagicMock()
+    request = mock.MagicMock()
+    view.action = "create"
+    view.detail = False
+    request.user = staff_user
+    request.data = {"project": str(project.id), "name": "Test environment"}
+
+    # When
+    result = environment_permissions.has_permission(request, view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is True
 
 
 def test_environment_permissions__list_action__returns_true(

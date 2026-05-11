@@ -531,6 +531,8 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
       return `${matchingUser.first_name} ${matchingUser.last_name}`
     })
   const approved = !!approval && !!approval.approved_at
+  // Locks the CR UI once any reviewer has approved.
+  const hasApprovals = changeRequest.approvals.some((v) => !!v.approved_at)
   const isYourChangeRequest = changeRequest.user === AccountStore.getUser().id
 
   const user =
@@ -548,7 +550,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
               <Button theme='secondary' onClick={deleteChangeRequest}>
                 Delete
               </Button>
-              {editChangeRequest && (
+              {editChangeRequest && !hasApprovals && (
                 <Button onClick={editChangeRequest} className='ml-2'>
                   Edit
                 </Button>
@@ -562,6 +564,14 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
         by {user ? `${user.first_name} ${user.last_name}` : 'Unknown user'}
       </PageTitle>
       <p className='mt-2'>{changeRequest.description}</p>
+      {hasApprovals && isYours && !changeRequest.committed_at && (
+        <div className='col-md-6 mb-4'>
+          <InfoMessage>
+            This change request has been approved and can no longer be edited.
+            Delete it and create a new change request to make further changes.
+          </InfoMessage>
+        </div>
+      )}
       {isScheduled && (
         <div className='col-md-6 mb-4'>
           <InfoMessage icon='calendar' title='Scheduled Change'>
@@ -584,15 +594,21 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
           <>
             {!Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (
               <div className='mb-4'>
-                <SettingsButton onClick={() => setShowUsers(true)}>
-                  Assigned users
-                </SettingsButton>
+                {hasApprovals ? (
+                  <div className='font-weight-medium mb-2'>Assigned users</div>
+                ) : (
+                  <SettingsButton onClick={() => setShowUsers(true)}>
+                    Assigned users
+                  </SettingsButton>
+                )}
                 <Row className='mt-2'>
                   {ownerUsers.length !== 0 &&
                     ownerUsers.map((u) => (
                       <Row
                         key={u.id}
-                        onClick={() => removeOwner(u.id)}
+                        onClick={
+                          hasApprovals ? undefined : () => removeOwner(u.id)
+                        }
                         className='chip'
                         style={{
                           marginBottom: 4,
@@ -602,32 +618,42 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                         <span className='font-weight-bold'>
                           {u.first_name} {u.last_name}
                         </span>
-                        <span className='chip-icon ion'>
-                          <IonIcon icon={close} />
-                        </span>
+                        {!hasApprovals && (
+                          <span className='chip-icon ion'>
+                            <IonIcon icon={close} />
+                          </span>
+                        )}
                       </Row>
                     ))}
                 </Row>
-                <UserSelect
-                  users={orgUsers}
-                  value={ownerUsers && ownerUsers.map((v) => v.id)}
-                  onAdd={addOwner}
-                  onRemove={removeOwner}
-                  isOpen={showUsers}
-                  onToggle={() => setShowUsers(!showUsers)}
-                />
+                {!hasApprovals && (
+                  <UserSelect
+                    users={orgUsers}
+                    value={ownerUsers && ownerUsers.map((v) => v.id)}
+                    onAdd={addOwner}
+                    onRemove={removeOwner}
+                    isOpen={showUsers}
+                    onToggle={() => setShowUsers(!showUsers)}
+                  />
+                )}
               </div>
             )}
             <div className='mb-4'>
-              <SettingsButton onClick={() => setShowGroups(true)}>
-                Assigned groups
-              </SettingsButton>
+              {hasApprovals ? (
+                <div className='font-weight-medium mb-2'>Assigned groups</div>
+              ) : (
+                <SettingsButton onClick={() => setShowGroups(true)}>
+                  Assigned groups
+                </SettingsButton>
+              )}
               <Row className='mt-2'>
                 {!!ownerGroups?.length &&
                   ownerGroups.map((g) => (
                     <Row
                       key={g.id}
-                      onClick={() => removeOwner(g.id, false)}
+                      onClick={
+                        hasApprovals ? undefined : () => removeOwner(g.id, false)
+                      }
                       className='chip'
                       style={{
                         marginBottom: 4,
@@ -635,20 +661,24 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                       }}
                     >
                       <span className='font-weight-bold'>{g.name}</span>
-                      <span className='chip-icon ion'>
-                        <IonIcon icon={close} />
-                      </span>
+                      {!hasApprovals && (
+                        <span className='chip-icon ion'>
+                          <IonIcon icon={close} />
+                        </span>
+                      )}
                     </Row>
                   ))}
               </Row>
-              <MyGroupsSelect
-                orgId={AccountStore.getOrganisation().id}
-                value={ownerGroups && ownerGroups.map((v) => v.id)}
-                onAdd={addOwner}
-                onRemove={removeOwner}
-                isOpen={showGroups}
-                onToggle={() => setShowGroups(!showGroups)}
-              />
+              {!hasApprovals && (
+                <MyGroupsSelect
+                  orgId={AccountStore.getOrganisation().id}
+                  value={ownerGroups && ownerGroups.map((v) => v.id)}
+                  onAdd={addOwner}
+                  onRemove={removeOwner}
+                  isOpen={showGroups}
+                  onToggle={() => setShowGroups(!showGroups)}
+                />
+              )}
             </div>
           </>
         }

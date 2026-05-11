@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useRef, useState } from 'react'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import classNames from 'classnames'
 import useOutsideClick from 'common/useOutsideClick'
 import { createPortal } from 'react-dom'
@@ -56,7 +56,7 @@ const AccountDropdown: React.FC = () => {
   return (
     <div className='feature-action' tabIndex={-1}>
       <button
-        className='btn btn-link p-0 d-flex ps-3 lh-1 align-items-center'
+        className='account-dropdown-trigger d-flex ps-3 lh-1 align-items-center text-default'
         onClick={(e) => {
           e.stopPropagation()
           setIsOpen(!isOpen)
@@ -65,8 +65,8 @@ const AccountDropdown: React.FC = () => {
         id='account-settings-link'
         data-test='account-settings-link'
       >
-        <span className='mr-1'>
-          <Icon name='person' width={20} fill='#9DA4AE' />
+        <span className='mr-1 icon-secondary'>
+          <Icon name='person' width={20} />
         </span>
         <span className='d-none d-md-block'>Account</span>
       </button>

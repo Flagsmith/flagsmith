@@ -32,4 +32,4 @@ const Skeleton: FC<SkeletonProps> = ({
 Skeleton.displayName = 'Skeleton'
 
 export default Skeleton
-export type { SkeletonProps, SkeletonVariant }
+export type { SkeletonProps }

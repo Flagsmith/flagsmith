@@ -5,7 +5,7 @@ import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import { Res } from 'common/types/responses'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import {
   identitySegmentService,
   useGetIdentitySegmentsQuery,

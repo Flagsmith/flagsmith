@@ -1,5 +1,5 @@
 import React, { FC, forwardRef, Ref, useState } from 'react'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import { EditPermissionsModal } from './EditPermissions'
 import {
   useGetRoleEnvironmentPermissionsQuery,
@@ -27,7 +27,7 @@ type RolePermissionsListProps = {
   group?: UserGroupSummary
 }
 
-export type PermissionsSummaryType = {
+type PermissionsSummaryType = {
   level: PermissionLevel
   levelId: number
   organisationId: number

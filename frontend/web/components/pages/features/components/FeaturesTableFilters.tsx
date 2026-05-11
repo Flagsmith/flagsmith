@@ -43,6 +43,7 @@ type FeaturesTableFiltersProps = {
   viewMode?: ViewMode
   onViewModeChange?: (value: ViewMode) => void
   excludeTag?: (tag: { type: string; is_permanent: boolean }) => boolean
+  searchResetKey?: number
 }
 
 export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
@@ -55,6 +56,7 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
   onViewModeChange,
   orgId,
   projectId,
+  searchResetKey,
   viewMode,
 }) => {
   const {
@@ -107,6 +109,7 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
     <Row className='table-header'>
       <div className='table-column flex-row flex-fill'>
         <TableSearchFilter
+          key={searchResetKey}
           onChange={(v) => onFilterChange({ search: v || null })}
           value={search}
         />

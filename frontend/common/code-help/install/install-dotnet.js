@@ -1,6 +1,6 @@
 import Utils from 'common/utils/utils'
 
-module.exports = () => `// Package Manager
+export default () => `// Package Manager
 PM> Install-Package Flagsmith -Version 4.0.0
 
 // .NET CLI

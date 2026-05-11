@@ -24,7 +24,7 @@ const Breadcrumb: FC<BreadcrumbType> = ({
       ))}
       {isCurrentPageMuted ? (
         <div
-          className='active h6 text-muted lh-sm '
+          className='active h6 text-muted mb-0'
           aria-current='page'
           style={{ opacity: 0.6 }}
         >

@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react'
 import Constants from 'common/constants'
 import CodeHelp from './CodeHelp'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Tabs from './navigation/TabMenu/Tabs'
 import TabItem from './navigation/TabMenu/TabItem'
 import InfoMessage from './InfoMessage'

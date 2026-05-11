@@ -3,7 +3,7 @@ import { HealthProvider } from 'common/types/responses'
 import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
 
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 
 import Utils from 'common/utils/utils'
 import {

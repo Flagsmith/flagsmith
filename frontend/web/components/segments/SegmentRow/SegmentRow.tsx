@@ -16,11 +16,7 @@ interface SegmentRowProps {
   projectId: string
 }
 
-export const SegmentRow: FC<SegmentRowProps> = ({
-  index,
-  projectId,
-  segment,
-}) => {
+const SegmentRow: FC<SegmentRowProps> = ({ index, projectId, segment }) => {
   const history = useHistory()
   const { description, feature, id, name } = segment
 
@@ -103,5 +99,4 @@ export const SegmentRow: FC<SegmentRowProps> = ({
   )
 }
 
-export type { SegmentRowProps }
 export default SegmentRow

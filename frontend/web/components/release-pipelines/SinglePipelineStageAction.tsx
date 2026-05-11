@@ -2,7 +2,7 @@ import { StageActionRequest } from 'common/types/requests'
 import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
 import { FLAG_ACTION_OPTIONS } from './constants'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import { StageActionBody, StageActionType } from 'common/types/responses'
 import PhasedRolloutAction from './PhasedRolloutAction'
 import { useMemo } from 'react'
@@ -166,5 +166,4 @@ const SinglePipelineStageAction = ({
   )
 }
 
-export type { SinglePipelineStageActionProps }
 export default SinglePipelineStageAction

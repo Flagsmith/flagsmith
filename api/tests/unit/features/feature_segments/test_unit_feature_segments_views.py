@@ -572,9 +572,10 @@ def test_create_segment_override__correct_feature_for_feature_based_segment__ret
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_create_segment_override__max_limit_reached__returns_400(  # type: ignore[no-untyped-def]
-    client, segment, environment, project, feature, feature_based_segment
+    client, segment, environment, project, feature, feature_based_segment, settings
 ):
     # Given
+    settings.EDGE_ENABLED = True
     project.max_segment_overrides_allowed = 1
     project.save()
 

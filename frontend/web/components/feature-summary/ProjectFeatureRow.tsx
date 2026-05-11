@@ -6,7 +6,7 @@ import FeatureDescription from './FeatureDescription'
 import TagValues from 'components/tags/TagValues'
 import VCSProviderTag from 'components/tags/VCSProviderTag'
 
-export interface ProjectFeatureRowProps {
+interface ProjectFeatureRowProps {
   projectFlag: ProjectFlag
   index: number
   isSelected?: boolean

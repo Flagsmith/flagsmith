@@ -17,5 +17,4 @@ const StageCard = ({ children }: StageCardProps) => {
   )
 }
 
-export type { StageCardProps }
 export default StageCard

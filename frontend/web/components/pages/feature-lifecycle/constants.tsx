@@ -1,5 +1,5 @@
 import React from 'react'
-import type { IconName } from 'components/Icon'
+import type { IconName } from 'components/icons/Icon'
 import type { FilterState } from 'common/types/featureFilters'
 import type { Section } from './types'
 import { SortOrder } from 'common/types/requests'

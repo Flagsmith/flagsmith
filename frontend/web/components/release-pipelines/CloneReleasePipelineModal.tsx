@@ -80,5 +80,4 @@ const CloneReleasePipelineModal = ({
   )
 }
 
-export type { CloneReleasePipelineModalProps }
 export default CloneReleasePipelineModal

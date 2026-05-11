@@ -510,11 +510,14 @@ def test_get_subscription_metadata_from_id__addons_is_none__returns_plan_metadat
     assert subscription_metadata.projects == chargebee_object_metadata.projects  # type: ignore[union-attr]
 
 
-def test_add_single_seat__existing_addon__increments_quantity(mocker) -> None:  # type: ignore[no-untyped-def]
+def test_add_single_seat__existing_addon__increments_quantity(  # type: ignore[no-untyped-def]
+    mocker, log
+) -> None:
     # Given
     plan_id = "plan-id"
     addon_id = "additional-team-members-scale-up-v2-monthly"
     subscription_id = "subscription-id"
+    organisation_id = 42
     addon_quantity = 1
 
     # Let's create a (mocked) subscription object
@@ -534,7 +537,7 @@ def test_add_single_seat__existing_addon__increments_quantity(mocker) -> None:  
     )
 
     # When
-    add_single_seat(subscription_id)
+    add_single_seat(subscription_id, organisation_id=organisation_id)
 
     # Then
     mocked_chargebee.Subscription.update.assert_called_once_with(
@@ -549,6 +552,17 @@ def test_add_single_seat__existing_addon__increments_quantity(mocker) -> None:  
             invoice_immediately=True,
         ),
     )
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "seat.added",
+            "organisation__id": organisation_id,
+            "subscription__id": subscription_id,
+            "addon__id": addon_id,
+            "seats__previous": addon_quantity,
+            "seats__new": addon_quantity + 1,
+        }
+    ]
 
 
 @pytest.mark.parametrize(
@@ -585,7 +599,7 @@ def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(
     )
 
     # When
-    add_single_seat(subscription_id)
+    add_single_seat(subscription_id, organisation_id=1)
 
     # Then
     mocked_chargebee.Subscription.update.assert_called_once_with(
@@ -636,7 +650,7 @@ def test_add_single_seat__api_error__raises_upgrade_seats_error(  # type: ignore
 
     # When
     with pytest.raises(UpgradeSeatsError):
-        add_single_seat(subscription_id)
+        add_single_seat(subscription_id, organisation_id=1)
 
     # Then
     mocked_chargebee.Subscription.update.assert_called_once_with(

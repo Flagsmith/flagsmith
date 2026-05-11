@@ -3,7 +3,7 @@ import InlineModal from './InlineModal'
 import { Role } from 'common/types/responses'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 
 export type RoleSelectType = {
   disabled?: boolean

@@ -153,6 +153,9 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
             return self.is_approved_via_environment()
         return self.is_approved_via_project()
 
+    def has_approvals(self) -> bool:
+        return self.approvals.filter(approved_at__isnull=False).exists()
+
     def is_approved_via_project(self) -> bool:
         return self.project.minimum_change_request_approvals is None or (
             self.approvals.filter(approved_at__isnull=False).count()

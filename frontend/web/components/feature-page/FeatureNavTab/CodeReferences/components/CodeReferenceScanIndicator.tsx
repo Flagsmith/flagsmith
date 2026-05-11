@@ -1,4 +1,4 @@
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import { Moment } from 'moment'
 import React from 'react'
 

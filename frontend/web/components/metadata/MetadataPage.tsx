@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react'
 import Button from 'components/base/forms/Button'
 import PanelSearch from 'components/PanelSearch'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Panel from 'components/base/grid/Panel'
 import CreateMetadataField from 'components/modals/CreateMetadataField'
 import ContentTypesValues from './ContentTypesValues'

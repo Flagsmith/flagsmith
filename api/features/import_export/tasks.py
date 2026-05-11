@@ -1,6 +1,6 @@
 import json
 from datetime import timedelta
-from typing import Optional, Union
+from typing import Optional
 
 from django.conf import settings
 from django.db.models import Q
@@ -10,19 +10,22 @@ from task_processor.decorators import (
     register_task_handler,
 )
 
-from environments.models import Environment
-from features.models import Feature, FeatureStateValue
-from features.multivariate.models import MultivariateFeatureOption
-from features.value_types import BOOLEAN, INTEGER, STRING
-from features.versioning.versioning_service import get_environment_flags_list
-from projects.models import Project
-
-from .constants import FAILED, OVERWRITE_DESTRUCTIVE, PROCESSING, SKIP, SUCCESS
-from .models import (
+from features.import_export.constants import (
+    FAILED,
+    PROCESSING,
+    SKIP,
+    SUCCESS,
+)
+from features.import_export.mappers import map_feature_export_data_to_feature
+from features.import_export.models import (
     FeatureExport,
     FeatureImport,
     FlagsmithOnFlagsmithFeatureExport,
 )
+from features.import_export.services import overwrite_feature_for_environment
+from features.import_export.types import FeatureExportData
+from features.models import Feature
+from features.versioning.versioning_service import get_environment_flags_list
 
 
 @register_recurring_task(
@@ -141,7 +144,7 @@ def import_features_for_environment(feature_import_id: int) -> None:
 
 def _import_features_for_environment(feature_import: FeatureImport) -> None:
     environment = feature_import.environment
-    input_data = json.loads(feature_import.data)
+    input_data: list[FeatureExportData] = json.loads(feature_import.data)
     project = environment.project
 
     for feature_data in input_data:
@@ -150,98 +153,17 @@ def _import_features_for_environment(feature_import: FeatureImport) -> None:
             project=project,
         ).first()
 
-        if existing_feature:
-            # Leave existing features completely alone.
-            if feature_import.strategy == SKIP:
-                continue
+        if existing_feature and feature_import.strategy == SKIP:
+            continue
 
-            # First destroy existing features that overlap.
-            if feature_import.strategy == OVERWRITE_DESTRUCTIVE:
-                existing_feature.delete()
+        if existing_feature is None:
+            existing_feature = map_feature_export_data_to_feature(feature_data, project)
+            existing_feature.save()
 
-        _create_new_feature(feature_data, project, environment)
+        overwrite_feature_for_environment(feature_data, existing_feature, environment)
 
     feature_import.status = SUCCESS
     feature_import.save()
-
-
-def _save_feature_state_value_with_type(
-    value: Optional[Union[int, bool, str]],
-    type: str,
-    feature_state_value: FeatureStateValue,
-) -> None:
-    feature_state_value.type = type
-    if feature_state_value.type == INTEGER:
-        feature_state_value.integer_value = value
-    elif feature_state_value.type == BOOLEAN:
-        feature_state_value.boolean_value = value  # type: ignore[assignment]
-    else:
-        assert feature_state_value.type == STRING
-        feature_state_value.string_value = value
-
-    feature_state_value.save()
-
-
-def _create_multivariate_feature_option(
-    value: Optional[Union[int, bool, str]],
-    type: str,
-    feature: Feature,
-    default_percentage_allocation: Union[int, float],
-) -> MultivariateFeatureOption:
-    mvfo = MultivariateFeatureOption(
-        feature=feature,
-        default_percentage_allocation=default_percentage_allocation,
-        type=type,
-    )
-    if mvfo.type == INTEGER:
-        mvfo.integer_value = value
-    elif mvfo.type == BOOLEAN:
-        mvfo.boolean_value = value  # type: ignore[assignment]
-    else:
-        assert mvfo.type == STRING
-        mvfo.string_value = value
-
-    mvfo.save()
-    return mvfo
-
-
-def _create_new_feature(
-    feature_data: dict[str, Optional[Union[bool, str, int]]],
-    project: Project,
-    environment: Environment,
-) -> None:
-    feature = Feature.objects.create(
-        name=feature_data["name"],
-        project=project,
-        initial_value=feature_data["initial_value"],
-        is_server_key_only=feature_data["is_server_key_only"],
-        default_enabled=feature_data["default_enabled"],
-    )
-    feature_state = feature.feature_states.get(
-        environment=environment,
-    )
-
-    for mv_data in feature_data["multivariate"]:  # type: ignore[union-attr]
-        mv_feature_option = _create_multivariate_feature_option(
-            value=mv_data["value"],  # type: ignore[index]
-            type=mv_data["type"],  # type: ignore[index]
-            feature=feature,
-            default_percentage_allocation=mv_data["default_percentage_allocation"],  # type: ignore[arg-type,index]
-        )
-        mv_feature_state_value = feature_state.multivariate_feature_state_values.filter(
-            multivariate_feature_option=mv_feature_option
-        ).first()
-        mv_feature_state_value.percentage_allocation = mv_data["percentage_allocation"]  # type: ignore[index]
-        mv_feature_state_value.save()
-
-    feature_state_value = feature_state.feature_state_value
-    _save_feature_state_value_with_type(
-        value=feature_data["value"],
-        type=feature_data["type"],  # type: ignore[arg-type]
-        feature_state_value=feature_state_value,
-    )
-    feature_state.enabled = feature_data["enabled"]
-    feature_state.save()
 
 
 # Should only run on official flagsmith instance.

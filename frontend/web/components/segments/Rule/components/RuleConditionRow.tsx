@@ -1,5 +1,5 @@
 import React from 'react'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 import {
   Operator,
@@ -31,10 +31,12 @@ interface RuleConditionRowProps {
   addRule: () => void
   rules: SegmentCondition[]
   projectId: number
+  conditionLabel?: string
 }
 
 const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
   addRule,
+  conditionLabel = 'Or',
   'data-test': dataTest,
   errors: ruleErrors,
   operators,
@@ -75,7 +77,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
         <Row className='or-divider my-1'>
           <Row>
             <div className='or-divider__up' />
-            Or
+            {conditionLabel}
             <div className='or-divider__down' />
           </Row>
           <Flex className='or-divider__line' />
@@ -141,7 +143,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
               type='button'
               onClick={addRule}
             >
-              Or
+              {conditionLabel}
             </Button>
           ) : (
             <div style={{ width: 64 }} />

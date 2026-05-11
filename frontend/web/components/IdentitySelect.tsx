@@ -49,7 +49,7 @@ const IdentitySelect: FC<IdentitySelectType> = ({
       .slice(0, 10)
   }, [ignoreIds, data])
   return (
-    <Flex className='text-left'>
+    <Flex className='text-start'>
       <Select
         onInputChange={(e: InputEvent) => {
           searchItems(Utils.safeParseEventValue(e))

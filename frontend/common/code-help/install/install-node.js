@@ -1,4 +1,4 @@
-module.exports = ({ NPM_NODE_CLIENT }) => `// npm
+export default ({ NPM_NODE_CLIENT }) => `// npm
 npm i ${NPM_NODE_CLIENT} --save
 
 // yarn

@@ -1,12 +1,10 @@
-const Dispatcher = require('../dispatcher/dispatcher')
-const BaseStore = require('./base/_store')
-const data = require('../data/base/_data')
-const {
-  addFeatureSegmentsToFeatureStates,
-} = require('../services/useFeatureState')
-const { getStore } = require('common/store')
-const { changeRequestService } = require('common/services/useChangeRequest')
-const { featureStateService } = require('common/services/useFeatureState')
+import Dispatcher from 'common/dispatcher/dispatcher'
+import BaseStore from './base/_store'
+import data from 'common/data/base/_data'
+import { addFeatureSegmentsToFeatureStates } from 'common/services/useFeatureState'
+import { getStore } from 'common/store'
+import { changeRequestService } from 'common/services/useChangeRequest'
+import { featureStateService } from 'common/services/useFeatureState'
 const transformChangeRequest = async (changeRequest) => {
   const feature_states = await Promise.all(
     changeRequest.feature_states.map(addFeatureSegmentsToFeatureStates),
@@ -149,4 +147,4 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   }
 })
 controller.store = store
-module.exports = controller.store
+export default controller.store
