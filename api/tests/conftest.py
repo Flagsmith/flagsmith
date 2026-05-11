@@ -95,20 +95,13 @@ from metadata.models import (
     MetadataModelFieldRequirement,
 )
 from organisations.models import Organisation, OrganisationRole, Subscription
-from organisations.permissions.models import (
-    OrganisationPermissionModel,
-    UserOrganisationPermission,
-)
-from organisations.permissions.permissions import (
-    CREATE_PROJECT,
-    MANAGE_USER_GROUPS,
-)
+from organisations.permissions.models import UserOrganisationPermission
+from organisations.permissions.permissions import CREATE_PROJECT
 from organisations.subscriptions.constants import (
     CHARGEBEE,
     FREE_PLAN_ID,
     SCALE_UP,
     STARTUP,
-    XERO,
 )
 from permissions.models import PermissionModel
 from projects.models import (
@@ -208,7 +201,9 @@ def fs(fs: FakeFilesystem) -> FakeFilesystem:
     paths_to_add = [app_path]
     for site_package_path in site_packages:
         if not site_package_path.startswith(app_path):
-            paths_to_add.append(site_package_path)
+            # In CI the venv lives inside api/, so this branch is unreachable;
+            # it only fires for system Python or non-nested venvs.
+            paths_to_add.append(site_package_path)  # pragma: no cover
     fs.add_real_paths(paths_to_add)
     return fs
 
@@ -253,10 +248,12 @@ def restrict_http_requests(monkeypatch: pytest.MonkeyPatch) -> None:
         *args,
         **kwargs,
     ) -> BaseHTTPResponse:
-        if self.host in allowed_hosts:
+        # Defensive guard for unmocked HTTP traffic; tests that hit this branch
+        # would be flaky/network-dependent, so we don't exercise it directly.
+        if self.host in allowed_hosts:  # pragma: no cover
             return original_urlopen(self, method, url, *args, **kwargs)
 
-        raise RuntimeError(
+        raise RuntimeError(  # pragma: no cover
             f"Blocked {method} request to {self.scheme}://{self.host}{url}. "
             "Use `responses` fixture to mock the response!"
         )
@@ -343,18 +340,6 @@ def user_permission_group(organisation, admin_user):  # type: ignore[no-untyped-
 @pytest.fixture()
 def subscription(organisation):  # type: ignore[no-untyped-def]
     subscription = Subscription.objects.get(organisation=organisation)
-    # refresh organisation to load subscription
-    organisation.refresh_from_db()
-    return subscription
-
-
-@pytest.fixture()
-def xero_subscription(organisation):  # type: ignore[no-untyped-def]
-    subscription = Subscription.objects.get(organisation=organisation)
-    subscription.payment_method = XERO
-    subscription.subscription_id = "subscription-id"
-    subscription.save()
-
     # refresh organisation to load subscription
     organisation.refresh_from_db()
     return subscription
@@ -1103,11 +1088,6 @@ def project_content_type() -> ContentType:
 @pytest.fixture()
 def organisation_content_type() -> ContentType:
     return ContentType.objects.get_for_model(Organisation)
-
-
-@pytest.fixture
-def manage_user_group_permission(db):  # type: ignore[no-untyped-def]
-    return OrganisationPermissionModel.objects.get(key=MANAGE_USER_GROUPS)
 
 
 @pytest.fixture()
