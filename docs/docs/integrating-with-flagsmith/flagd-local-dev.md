@@ -104,7 +104,7 @@ The `oss-unified` target bundles the API + frontend into a single image. Builds 
 Key things to note about the compose file:
 
 - **Postgres-backed**: Flagsmith requires Postgres (some migrations use `NOW()`). The `flagsmith-pgdata` volume keeps your flags around across `docker compose down && up`.
-- **Static local-dev key**: `FLAGSMITH_SERVER_KEY` defaults to `ser.local-dev-flagd-sync-not-secret` via compose interpolation. The bootstrap container *pins* the Flagsmith `EnvironmentAPIKey` to that value, and flagd uses the same one in its `--sync-provider-args`. To use a different key (e.g. on shared machines), set the env var: `FLAGSMITH_SERVER_KEY=ser.your-key docker compose -f docker-compose.flagd-dev.yml up`.
+- **Static local-dev key**: `FLAGSMITH_SERVER_KEY` defaults to `ser.local-dev-flagd-sync-not-secret` via compose interpolation. The bootstrap container *pins* the Flagsmith `EnvironmentAPIKey` to that value, and flagd uses the same one in the `authHeader` field of its `--sources` JSON. To use a different key (e.g. on shared machines), set the env var: `FLAGSMITH_SERVER_KEY=ser.your-key docker compose -f docker-compose.flagd-dev.yml up`.
 - **`flagsmith-bootstrap` init container**: runs the `bootstrap_flagd_local` Django management command. Idempotent — first run creates `local-dev` / `local-dev` / `development` and an `EnvironmentAPIKey` with the chosen key; subsequent runs update the key if it has changed.
 - **flagd uses the upstream image**: no launcher / shell wrapping needed because the key is known at compose-parse time.
 - **Short poll interval (5 s)**: nice for development; set to 30–60 s in real deployments.
@@ -244,7 +244,7 @@ The named `flagsmith-pgdata` volume is the only persistent state. Delete it if y
 
 ## Troubleshooting
 
-- **flagd logs `unauthorized`** — the `FLAGSMITH_SERVER_KEY` doesn't start with `ser.` or doesn't match an environment. Mint a new server-side key in the UI.
+- **flagd logs `unauthorized` / `403`** — the `FLAGSMITH_SERVER_KEY` must start with `ser.`. The bootstrap container pins the Flagsmith `EnvironmentAPIKey` to whatever value you provide, so override + restart should be all you need: `FLAGSMITH_SERVER_KEY=ser.your-key docker compose -f docker-compose.flagd-dev.yml up`.
 - **flagd logs `404`** — the URL is wrong; the compose example uses `flagsmith:8000` as the in-network hostname.
 - **Flag changes don't show up** — check `pollInterval`; the example uses 5 s. Also confirm the response: `curl -s -H "X-Environment-Key: ser.…" http://localhost:8000/api/v1/flagd/flags.json | jq '.metadata'` should show a fresh `version` after each change.
 - **`metadata.flagsmith.warnings` present** — the environment has rules that don't translate cleanly (typically REGEX). Consult the [compatibility matrix](./flagd-sync.md#compatibility-matrix).

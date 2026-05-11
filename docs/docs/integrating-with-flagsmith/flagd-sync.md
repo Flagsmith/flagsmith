@@ -44,13 +44,18 @@ The endpoint URL is:
 GET /api/v1/flagd/flags.json
 ```
 
-Authenticate via the `X-Environment-Key` header. Configure flagd to poll over HTTP:
+The endpoint accepts the key either as an `X-Environment-Key` header (for `curl` / direct HTTP clients) or as a bearer token in the `Authorization` header (for flagd, which exposes only `Authorization` via its `authHeader` config field).
+
+Configure flagd to poll over HTTP using its `--sources` JSON:
 
 ```bash
 flagd start \
-  --uri https://api.flagsmith.com/api/v1/flagd/flags.json \
-  --sync-provider http \
-  --sync-provider-args headers=X-Environment-Key:ser.your-server-key,pollInterval=30
+  --sources='[{
+    "uri": "https://api.flagsmith.com/api/v1/flagd/flags.json",
+    "provider": "http",
+    "authHeader": "Bearer ser.your-server-key",
+    "interval": 30
+  }]'
 ```
 
 ### 3. Evaluate flags via OpenFeature
@@ -110,15 +115,13 @@ The `targetingKey` is what flagd hashes for `fractional` (multivariate) evaluati
 ```yaml
 services:
   flagd:
-    image: ghcr.io/open-feature/flagd:latest
+    image: ghcr.io/open-feature/flagd:v0.13.2
     ports:
       - "8013:8013"   # gRPC
       - "8016:8016"   # OFREP
     command:
       - start
-      - --uri=https://api.flagsmith.com/api/v1/flagd/flags.json
-      - --sync-provider=http
-      - --sync-provider-args=headers=X-Environment-Key:${FLAGSMITH_SERVER_KEY},pollInterval=30
+      - --sources=[{"uri":"https://api.flagsmith.com/api/v1/flagd/flags.json","provider":"http","authHeader":"Bearer ${FLAGSMITH_SERVER_KEY}","interval":30}]
 ```
 
 ### Kubernetes (flagd Helm chart values)
@@ -129,8 +132,7 @@ flagd:
     - uri: https://api.flagsmith.com/api/v1/flagd/flags.json
       provider: http
       interval: 30
-      headers:
-        X-Environment-Key: ser.your-server-key
+      authHeader: "Bearer ser.your-server-key"
 ```
 
 For self-hosted Flagsmith deployments, replace the host with your own.
@@ -223,13 +225,14 @@ A successful response body looks like:
 
 `GET /api/v1/flagd/flags.json`
 
-| Header               | Direction | Notes                                                         |
-|----------------------|-----------|---------------------------------------------------------------|
-| `X-Environment-Key`  | request   | Required. Must be a server-side key (prefix `ser.`).          |
-| `If-Modified-Since`  | request   | Optional. Returns `304` when the environment hasn't changed.  |
-| `If-None-Match`      | request   | Optional. Same effect; matched against the response `ETag`.   |
-| `Last-Modified`      | response  | The environment's `updated_at`.                               |
-| `ETag`               | response  | Strong tag covering content + translator version.             |
+| Header               | Direction | Notes                                                                                  |
+|----------------------|-----------|----------------------------------------------------------------------------------------|
+| `X-Environment-Key`  | request   | Server-side key (prefix `ser.`). Required *unless* `Authorization` is provided.        |
+| `Authorization`      | request   | Alternative to `X-Environment-Key`. Accepts a bare token or `Bearer <token>` form; this is what flagd's HTTP sync `authHeader` field sets. |
+| `If-Modified-Since`  | request   | Optional. Returns `304` when the environment hasn't changed.                           |
+| `If-None-Match`      | request   | Optional. Same effect; matched against the response `ETag`.                            |
+| `Last-Modified`      | response  | The environment's `updated_at`.                                                        |
+| `ETag`               | response  | Strong tag covering content + translator version.                                      |
 
 Status codes:
 
