@@ -98,8 +98,10 @@ ENV UV_PROJECT_ENVIRONMENT=/build/.venv \
   UV_PYTHON_PREFERENCE=only-system \
   UV_PYTHON=python${PYTHON_VERSION} \
   UV_LINK_MODE=copy \
-  UV_NO_SYNC=1
-RUN make install opts='--no-install-project'
+  UV_NO_SYNC=1 \
+  UV_CACHE_DIR=/root/.cache/uv
+RUN --mount=type=cache,target=/root/.cache/uv \
+  make install opts='--no-install-project'
 
 # * build-python-private [build-python]
 FROM build-python AS build-python-private
@@ -110,6 +112,7 @@ ARG SAML_REVISION
 ARG RBAC_REVISION
 ARG EXTRAS="--extra saml --extra auth-controller --extra ldap --extra workflows --extra licensing --extra release-pipelines"
 RUN --mount=type=secret,id=github_private_cloud_token \
+  --mount=type=cache,target=/root/.cache/uv \
   echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
   git config --global credential.helper store && \
   make install-packages opts="--no-install-project ${EXTRAS}" && \
@@ -160,7 +163,8 @@ FROM build-python AS api-test
 
 COPY api /build/
 
-RUN make install-packages opts='--extra dev'
+RUN --mount=type=cache,target=/root/.cache/uv \
+  make install-packages opts='--extra dev'
 
 CMD ["make", "test"]
 
@@ -169,7 +173,8 @@ FROM build-python-private AS api-private-test
 
 COPY api /build/
 
-RUN make install-packages opts='--extra dev --extra saml --extra auth-controller --extra ldap --extra workflows --extra licensing --extra release-pipelines' && \
+RUN --mount=type=cache,target=/root/.cache/uv \
+  make install-packages opts='--extra dev --extra saml --extra auth-controller --extra ldap --extra workflows --extra licensing --extra release-pipelines' && \
   make integrate-private-tests && \
   git config --global --unset credential.helper && \
   rm -f ${HOME}/.git-credentials
