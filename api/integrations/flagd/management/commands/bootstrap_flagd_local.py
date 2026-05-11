@@ -17,6 +17,7 @@ from typing import Any
 from django.core.management.base import BaseCommand
 
 from environments.models import Environment, EnvironmentAPIKey
+from integrations.flagd.models import FlagdProjectConfiguration
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from users.models import FFAdminUser
@@ -87,6 +88,10 @@ class Command(BaseCommand):
         )
         environment, _ = Environment.objects.get_or_create(
             name=options["environment"], project=project
+        )
+        # Local-dev expects flagd to be reachable out of the box.
+        FlagdProjectConfiguration.objects.update_or_create(
+            project=project, defaults={"enabled": True}
         )
 
         # Create or refresh the local admin user so the operator can
