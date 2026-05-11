@@ -47,6 +47,15 @@ class Command(BaseCommand):
             help="EnvironmentAPIKey label (default: flagd-local).",
         )
         parser.add_argument(
+            "--api-key",
+            default=None,
+            help=(
+                "Force the EnvironmentAPIKey value to a specific server-side "
+                "key (must start with `ser.`). Useful for local-dev where the "
+                "key must be known at compose-parse time. Default: auto-generate."
+            ),
+        )
+        parser.add_argument(
             "--admin-email",
             default="admin@example.com",
             help="Email for the local admin user (default: admin@example.com).",
@@ -102,6 +111,13 @@ class Command(BaseCommand):
         if not admin.belongs_to(organisation.id):
             admin.add_organisation(organisation, role=OrganisationRole.ADMIN)
 
+        forced_key: str | None = options.get("api_key")
+        if forced_key and not forced_key.startswith("ser."):
+            raise ValueError(
+                "--api-key must start with 'ser.' to be accepted by the flagd "
+                f"sync endpoint; got {forced_key!r}."
+            )
+
         api_key = (
             EnvironmentAPIKey.objects.filter(
                 environment=environment, name=options["api_key_name"]
@@ -110,9 +126,16 @@ class Command(BaseCommand):
             .first()
         )
         if api_key is None:
-            api_key = EnvironmentAPIKey.objects.create(
-                environment=environment, name=options["api_key_name"]
-            )
+            create_kwargs: dict[str, Any] = {
+                "environment": environment,
+                "name": options["api_key_name"],
+            }
+            if forced_key:
+                create_kwargs["key"] = forced_key
+            api_key = EnvironmentAPIKey.objects.create(**create_kwargs)
+        elif forced_key and api_key.key != forced_key:
+            api_key.key = forced_key
+            api_key.save()
 
         line = f"FLAGSMITH_SERVER_KEY={api_key.key}"
         self.stdout.write(line)

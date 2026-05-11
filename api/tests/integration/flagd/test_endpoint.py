@@ -59,6 +59,43 @@ def test_flagd_sync__client_side_key__returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
+def test_flagd_sync__authorization_bearer_header__returns_200(
+    admin_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+) -> None:
+    # Given - a server-side key supplied via Authorization: Bearer <key>
+    # (used by the flagd HTTP sync source, which exposes `authHeader`)
+    url = reverse("api-v1:environments:api-keys-list", args=[environment_api_key])
+    key = admin_client.post(url, data={"name": "flagd"}).json()["key"]
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {key}")
+
+    # When
+    response = client.get(reverse("api-v1:flagd:sync"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
+def test_flagd_sync__authorization_raw_token__returns_200(
+    admin_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+) -> None:
+    # Given - a server-side key supplied as a raw Authorization header value
+    url = reverse("api-v1:environments:api-keys-list", args=[environment_api_key])
+    key = admin_client.post(url, data={"name": "flagd"}).json()["key"]
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=key)
+
+    # When
+    response = client.get(reverse("api-v1:flagd:sync"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
 def test_flagd_sync__if_modified_since_matches__returns_304(
     server_side_sdk_client: APIClient,
     environment: int,

@@ -23,6 +23,17 @@ class EnvironmentKeyAuthentication(BaseAuthentication):
 
     def authenticate(self, request):  # type: ignore[no-untyped-def]
         api_key = request.META.get("HTTP_X_ENVIRONMENT_KEY")
+        if not api_key:
+            # Fall back to the Authorization header so HTTP clients that
+            # only expose a generic auth field (e.g. the flagd HTTP sync
+            # source, which sets `authHeader`) can authenticate without a
+            # custom header. We accept either a bare token or the
+            # conventional `Bearer <token>` form.
+            auth_header = request.META.get("HTTP_AUTHORIZATION", "").strip()
+            if auth_header.lower().startswith("bearer "):
+                api_key = auth_header[7:].strip()
+            elif auth_header:
+                api_key = auth_header
         if not (api_key and api_key.startswith(self.required_key_prefix)):
             raise AuthenticationFailed("Invalid or missing Environment key")
 

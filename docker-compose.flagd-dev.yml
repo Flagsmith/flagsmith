@@ -5,6 +5,12 @@
 # Then bring everything up:
 #   docker compose -f docker-compose.flagd-dev.yml up
 #
+# The local-dev server-side key is intentionally hard-coded; override it
+# via `FLAGSMITH_SERVER_KEY=ser.your-key docker compose up`. The
+# bootstrap step pins the Flagsmith EnvironmentAPIKey to whatever value
+# you provide, so flagd and Flagsmith stay in sync without any runtime
+# file ferrying.
+#
 # See docs/docs/integrating-with-flagsmith/flagd-local-dev.md for details.
 
 x-flagsmith-env: &flagsmith-env
@@ -18,19 +24,8 @@ x-flagsmith-env: &flagsmith-env
 
 volumes:
   flagsmith-pgdata:
-  flagd-config:
 
 services:
-  # The Flagsmith image runs as `nobody` (uid 65534); the fresh
-  # flagd-config volume is created root-owned. This one-shot service
-  # fixes the ownership so the bootstrap container can write the env
-  # file into it.
-  init-volumes:
-    image: busybox
-    command: ["sh", "-c", "chown -R 65534:65534 /shared"]
-    volumes:
-      - flagd-config:/shared
-
   postgres:
     image: postgres:15.5-alpine
     environment:
@@ -41,7 +36,6 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d flagsmith -U postgres"]
       interval: 2s
-      timeout: 2s
       retries: 20
 
   flagsmith:
@@ -53,44 +47,31 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # Healthcheck is baked into the image (HEALTHCHECK CMD flagsmith
-    # healthcheck tcp). Don't override it from here.
+    # Healthcheck is baked into the image; don't override it.
 
   # Idempotent: creates a default org/project/env on first run, reuses
-  # them thereafter. Writes the resulting server-side key to a shared
-  # volume that flagd then sources.
+  # them thereafter. Pins the EnvironmentAPIKey to FLAGSMITH_SERVER_KEY
+  # so flagd can consume the same value via compose interpolation.
   flagsmith-bootstrap:
     image: flagsmith-flagd-dev:local
     depends_on:
       flagsmith:
         condition: service_healthy
-      init-volumes:
-        condition: service_completed_successfully
     environment:
       <<: *flagsmith-env
-    volumes:
-      - flagd-config:/shared
     entrypoint: ["python", "manage.py"]
     command:
       - bootstrap_flagd_local
-      - --output=/shared/flagd.env
+      - --api-key=${FLAGSMITH_SERVER_KEY:-ser.local-dev-flagd-sync-not-secret}
 
   flagd:
-    build:
-      context: ./docker/flagd-launcher
-    image: flagsmith-flagd-launcher:local
+    image: ghcr.io/open-feature/flagd:v0.13.2
     depends_on:
       flagsmith-bootstrap:
         condition: service_completed_successfully
     ports:
       - "8013:8013"   # gRPC
       - "8016:8016"   # OFREP
-    volumes:
-      - flagd-config:/shared:ro
     command:
-      - |
-        . /shared/flagd.env && \
-        exec flagd start \
-          --uri=http://flagsmith:8000/api/v1/flagd/flags.json \
-          --sync-provider=http \
-          --sync-provider-args=headers=X-Environment-Key:$$FLAGSMITH_SERVER_KEY,pollInterval=5
+      - start
+      - --sources=[{"uri":"http://flagsmith:8000/api/v1/flagd/flags.json","provider":"http","authHeader":"Bearer ${FLAGSMITH_SERVER_KEY:-ser.local-dev-flagd-sync-not-secret}","interval":5}]

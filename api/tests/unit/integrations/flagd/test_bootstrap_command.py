@@ -119,6 +119,59 @@ def test_bootstrap_flagd_local__existing_admin_with_old_password__refreshes_pass
 
 
 @pytest.mark.django_db
+def test_bootstrap_flagd_local__api_key_option__pins_environment_key_to_value() -> None:
+    # Given a desired well-known local-dev key
+    chosen = "ser.local-dev-pinned"
+
+    # When the command runs with --api-key
+    out = StringIO()
+    call_command("bootstrap_flagd_local", "--api-key", chosen, stdout=out)
+
+    # Then the EnvironmentAPIKey carries that value
+    environment = Environment.objects.get(name="development")
+    api_key = EnvironmentAPIKey.objects.get(
+        environment=environment, name="flagd-local"
+    )
+    assert api_key.key == chosen
+    assert out.getvalue().strip().splitlines()[0] == f"FLAGSMITH_SERVER_KEY={chosen}"
+
+
+@pytest.mark.django_db
+def test_bootstrap_flagd_local__api_key_option__rotates_existing_value() -> None:
+    # Given an existing env + auto-generated key
+    call_command("bootstrap_flagd_local", stdout=StringIO())
+    environment = Environment.objects.get(name="development")
+    original_key = EnvironmentAPIKey.objects.get(
+        environment=environment, name="flagd-local"
+    ).key
+    assert original_key.startswith("ser.")
+
+    # When the command runs again with --api-key
+    chosen = "ser.local-dev-rotated"
+    call_command(
+        "bootstrap_flagd_local", "--api-key", chosen, stdout=StringIO()
+    )
+
+    # Then the existing record is updated to the chosen value
+    api_key = EnvironmentAPIKey.objects.get(
+        environment=environment, name="flagd-local"
+    )
+    assert api_key.key == chosen
+
+
+@pytest.mark.django_db
+def test_bootstrap_flagd_local__api_key_without_ser_prefix__raises() -> None:
+    # Given a bogus key without the required prefix
+    # When the command runs
+    # Then it raises before touching the database
+    with pytest.raises(ValueError, match="must start with 'ser.'"):
+        call_command(
+            "bootstrap_flagd_local", "--api-key", "client-side-key",
+            stdout=StringIO(),
+        )
+
+
+@pytest.mark.django_db
 def test_bootstrap_flagd_local__custom_names__honours_options() -> None:
     # Given custom org/project/env names
     out = StringIO()

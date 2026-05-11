@@ -64,6 +64,8 @@ services:
 
   # One-shot init: ensures a default org/project/env exists and writes
   # the resulting server-side key to a file flagd can source.
+  # Idempotent: pins the EnvironmentAPIKey to FLAGSMITH_SERVER_KEY so
+  # flagd can use the same value via compose interpolation.
   flagsmith-bootstrap:
     image: flagsmith-flagd-dev:local
     depends_on:
@@ -71,32 +73,22 @@ services:
         condition: service_healthy
     environment:
       <<: *flagsmith-env
-    volumes:
-      - flagd-config:/shared
     entrypoint: ["python", "manage.py"]
     command:
       - bootstrap_flagd_local
-      - --output=/shared/flagd.env
+      - --api-key=${FLAGSMITH_SERVER_KEY:-ser.local-dev-flagd-sync-not-secret}
 
   flagd:
-    build:
-      context: ./docker/flagd-launcher    # alpine + flagd binary — needs a shell
-    image: flagsmith-flagd-launcher:local
+    image: ghcr.io/open-feature/flagd:v0.13.2
     depends_on:
       flagsmith-bootstrap:
         condition: service_completed_successfully
     ports:
-      - "8013:8013"   # gRPC (default flagd provider transport)
-      - "8016:8016"   # OFREP (HTTP-based OpenFeature Remote Evaluation Protocol)
-    volumes:
-      - flagd-config:/shared:ro
+      - "8013:8013"   # gRPC
+      - "8016:8016"   # OFREP
     command:
-      - |
-        . /shared/flagd.env && \
-        exec flagd start \
-          --uri=http://flagsmith:8000/api/v1/flagd/flags.json \
-          --sync-provider=http \
-          --sync-provider-args=headers=X-Environment-Key:$$FLAGSMITH_SERVER_KEY,pollInterval=5
+      - start
+      - --sources=[{"uri":"http://flagsmith:8000/api/v1/flagd/flags.json","provider":"http","authHeader":"Bearer ${FLAGSMITH_SERVER_KEY:-ser.local-dev-flagd-sync-not-secret}","interval":5}]
 ```
 
 ## First boot — build the Flagsmith image
@@ -112,8 +104,9 @@ The `oss-unified` target bundles the API + frontend into a single image. Builds 
 Key things to note about the compose file:
 
 - **Postgres-backed**: Flagsmith requires Postgres (some migrations use `NOW()`). The `flagsmith-pgdata` volume keeps your flags around across `docker compose down && up`.
-- **`flagsmith-bootstrap` init container**: runs the `bootstrap_flagd_local` Django management command. It is idempotent — first run creates `local-dev` / `local-dev` / `development` and an `EnvironmentAPIKey`; subsequent runs reuse them. Output is written to a shared volume as `FLAGSMITH_SERVER_KEY=ser.…`.
-- **flagd entrypoint sources the file**: no `.env` ferrying, no manual UI clicks, no per-user state.
+- **Static local-dev key**: `FLAGSMITH_SERVER_KEY` defaults to `ser.local-dev-flagd-sync-not-secret` via compose interpolation. The bootstrap container *pins* the Flagsmith `EnvironmentAPIKey` to that value, and flagd uses the same one in its `--sync-provider-args`. To use a different key (e.g. on shared machines), set the env var: `FLAGSMITH_SERVER_KEY=ser.your-key docker compose -f docker-compose.flagd-dev.yml up`.
+- **`flagsmith-bootstrap` init container**: runs the `bootstrap_flagd_local` Django management command. Idempotent — first run creates `local-dev` / `local-dev` / `development` and an `EnvironmentAPIKey` with the chosen key; subsequent runs update the key if it has changed.
+- **flagd uses the upstream image**: no launcher / shell wrapping needed because the key is known at compose-parse time.
 - **Short poll interval (5 s)**: nice for development; set to 30–60 s in real deployments.
 
 ## 2. Bring it all up
