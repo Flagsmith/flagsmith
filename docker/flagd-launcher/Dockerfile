@@ -4,5 +4,5 @@
 # This image copies the flagd binary into an alpine base.
 FROM ghcr.io/open-feature/flagd:v0.13.2 AS flagd
 FROM alpine:3.20
-COPY --from=flagd /flagd /usr/local/bin/flagd
+COPY --from=flagd /flagd-build /usr/local/bin/flagd
 ENTRYPOINT ["/bin/sh", "-c"]
