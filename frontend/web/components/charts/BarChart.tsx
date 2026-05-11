@@ -11,10 +11,7 @@ import {
 } from 'recharts'
 import { colorTextSecondary } from 'common/theme/tokens'
 import ChartTooltip from './ChartTooltip'
-
-export type ChartDataPoint = {
-  day: string
-} & Record<string, number>
+import { ChartDataPoint } from './types'
 
 type BarChartProps = {
   data: ChartDataPoint[]

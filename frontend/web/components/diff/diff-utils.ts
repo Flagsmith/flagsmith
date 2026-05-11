@@ -215,8 +215,8 @@ export function getSegmentDiff(
 ): TSegmentDiff {
   const oldRules = oldSegment?.rules || []
   const newRules = newSegment?.rules || []
-  const oldString = getRulesDiff(oldRules, 0)
-  const newString = getRulesDiff(newRules, 0)
+  const oldString = getRulesDiff(oldRules, 0, '', oldRules[0]?.type)
+  const newString = getRulesDiff(newRules, 0, '', newRules[0]?.type)
   return { newString, oldString, totalChanges: newString === oldString ? 0 : 1 }
 }
 
@@ -224,21 +224,25 @@ function getRulesDiff(
   rules: SegmentRule[],
   level: number,
   currentString = '',
+  parentType: SegmentRule['type'] = 'ALL',
 ): string {
   const indent = '  '.repeat(level)
   let str = currentString || `${indent}\n`
+  const connector = parentType === 'ANY' ? 'Or' : 'And'
 
   rules.forEach((rule, i) => {
-    const prepend = i > 0 ? 'And ' : ''
+    const prepend = i > 0 ? `${connector} ` : ''
 
     if (rule.type === 'ANY') {
       str += `${indent}------ ${prepend}Any of the following ------\n`
+    } else if (rule.type === 'ALL') {
+      str += `${indent}------ ${prepend}All of the following ------\n`
     } else if (rule.type === 'NONE') {
       str += `${indent}------  ${prepend}None of the following ------\n`
     }
     str = getConditionsDiff(rule.conditions, level + 1, str)
     if (rule.rules) {
-      str = getRulesDiff(rule.rules, level + 1, str)
+      str = getRulesDiff(rule.rules, level + 1, str, rule.type)
     }
   })
 

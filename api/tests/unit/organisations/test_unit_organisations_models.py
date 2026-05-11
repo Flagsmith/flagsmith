@@ -503,7 +503,9 @@ def test_add_single_seat__upgradable_plan__calls_chargebee_add_single_seat(
     subscription.add_single_seat()  # type: ignore[no-untyped-call]
 
     # Then
-    mocked_add_single_seat.assert_called_once_with(subscription_id)
+    mocked_add_single_seat.assert_called_once_with(
+        subscription_id, organisation_id=subscription.organisation_id
+    )
 
 
 def test_add_single_seat__non_upgradable_plan__raises_error(

@@ -508,11 +508,6 @@ const Constants = {
     },
     {
       categories: ['CI/CD'],
-      image: '/static/images/integrations/gitlab.svg',
-      title: 'GitLab',
-    },
-    {
-      categories: ['CI/CD'],
       image: '/static/images/integrations/azure-devops.svg',
       title: 'Azure DevOps',
     },

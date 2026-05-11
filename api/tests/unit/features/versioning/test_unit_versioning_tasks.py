@@ -396,6 +396,72 @@ def test_enable_v2_versioning__scheduled_changes_exist__converts_published_sched
     )
 
 
+def test_enable_v2_versioning__multi_feature_scheduled_changes__each_efv_matches_feature(
+    environment: Environment,
+    project: Project,
+    feature: Feature,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    now = timezone.now()
+    one_hour_from_now = now + timedelta(hours=1)
+    two_hours_from_now = now + timedelta(hours=2)
+
+    feature_b = Feature.objects.create(name="feature_b", project=project)
+    feature_c = Feature.objects.create(name="feature_c", project=project)
+
+    cr_b = ChangeRequest.objects.create(
+        environment=environment,
+        title="Scheduled change for feature_b",
+        user=staff_user,
+    )
+    scheduled_fs_b = FeatureState.objects.create(
+        feature=feature_b,
+        enabled=True,
+        environment=environment,
+        live_from=one_hour_from_now,
+        change_request=cr_b,
+        version=None,
+    )
+    cr_b.commit(staff_user)
+
+    cr_c = ChangeRequest.objects.create(
+        environment=environment,
+        title="Scheduled change for feature_c",
+        user=staff_user,
+    )
+    scheduled_fs_c = FeatureState.objects.create(
+        feature=feature_c,
+        enabled=True,
+        environment=environment,
+        live_from=two_hours_from_now,
+        change_request=cr_c,
+        version=None,
+    )
+    cr_c.commit(staff_user)
+
+    # When
+    enable_v2_versioning(environment.id)
+
+    # Then
+    scheduled_fs_b.refresh_from_db()
+    scheduled_fs_c.refresh_from_db()
+
+    assert scheduled_fs_b.environment_feature_version is not None
+    assert scheduled_fs_b.environment_feature_version.feature_id == feature_b.id, (
+        f"scheduled FS for feature_b is bound to an EFV for "
+        f"feature_id={scheduled_fs_b.environment_feature_version.feature_id}; "
+        f"expected {feature_b.id}"
+    )
+
+    assert scheduled_fs_c.environment_feature_version is not None
+    assert scheduled_fs_c.environment_feature_version.feature_id == feature_c.id, (
+        f"scheduled FS for feature_c is bound to an EFV for "
+        f"feature_id={scheduled_fs_c.environment_feature_version.feature_id}; "
+        f"expected {feature_c.id}"
+    )
+
+
 def test_publish_version_change_set__conflict_with_scheduled_change__sends_conflict_email_to_owner(
     feature: Feature,
     environment_v2_versioning: Environment,

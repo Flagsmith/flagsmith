@@ -27,9 +27,11 @@ interface RuleProps {
   'data-test'?: string
   errors: SegmentConditionsError[]
   projectId: number
+  conditionLabel?: string
 }
 
 const Rule: React.FC<RuleProps> = ({
+  conditionLabel,
   'data-test': dataTest,
   errors,
   onChange,
@@ -201,6 +203,7 @@ const Rule: React.FC<RuleProps> = ({
             rules={rules}
             data-test={`${dataTest}`}
             projectId={projectId}
+            conditionLabel={conditionLabel}
           />
         ))}
       </div>

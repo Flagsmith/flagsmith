@@ -59,9 +59,13 @@ class SubscriptionPlanFamily(Enum):
     SCALE_UP = "SCALE_UP"
     ENTERPRISE = "ENTERPRISE"
 
+    @staticmethod
+    def normalise_plan_id(plan_id: str) -> str:
+        return str(plan_id).replace("-", "").lower()
+
     @classmethod
     def get_by_plan_id(cls, plan_id: str) -> "SubscriptionPlanFamily":
-        match str(plan_id).replace("-", "").lower():
+        match cls.normalise_plan_id(plan_id):
             case p if p.startswith("scaleup"):
                 return cls.SCALE_UP
             case p if p.startswith("startup"):

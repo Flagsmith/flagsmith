@@ -23,7 +23,12 @@ jobs:
   chromatic:
     name: Chromatic
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event.pull_request.draft == false
+    # Dependabot PRs use a separate secrets store, so they can't read
+    # CHROMATIC_PROJECT_TOKEN. main's post-merge push runs Chromatic
+    # with full secrets, so coverage isn't lost.
+    if: |
+      github.actor != 'dependabot[bot]'
+      && (github.event_name == 'push' || github.event.pull_request.draft == false)
 
     defaults:
       run:
@@ -45,10 +50,14 @@ jobs:
         run: npm ci
 
       - name: Publish to Chromatic
-        uses: chromaui/action@v11
+        uses: chromaui/action@v16
         with:
           workingDir: frontend
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          # Dev-mode build keeps React's act() in the bundle —
+          # production strips it and breaks play function synthetic
+          # events (Storybook #19758).
+          buildScriptName: build-storybook:dev
           exitZeroOnChanges: true
           exitOnceUploaded: true
           onlyChanged: true

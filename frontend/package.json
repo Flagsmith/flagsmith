@@ -33,6 +33,7 @@
     "bundledjango": "npx rspack build -c ./rspack/rspack.config.django.prod.js",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "build-storybook:dev": "STORYBOOK_DISABLE_TELEMETRY=1 NODE_ENV=development storybook build",
     "generate:tokens": "node scripts/generate-tokens.mjs"
   },
   "engines": {
@@ -40,11 +41,11 @@
     "npm": "10.x"
   },
   "overrides": {
-    "react": "$react",
-    "react-dom": "$react-dom",
-    "@types/react": "$@types/react",
-    "@types/react-dom": "$@types/react-dom",
-    "axios": "^1.15.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "axios": "^1.16.0"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.11.3",
@@ -67,8 +68,8 @@
     "@ionic/react": "^7.5.3",
     "@react-oauth/google": "^0.2.8",
     "@reduxjs/toolkit": "1.9.1",
-    "@rspack/cli": "^2.0.1",
-    "@rspack/core": "^1.7.11",
+    "@rspack/cli": "^2.0.2",
+    "@rspack/core": "^2.0.2",
     "@rspack/dev-server": "^2.0.1",
     "@rspack/plugin-react-refresh": "^1.6.2",
     "@sentry/browser": "^7.119.1",
@@ -128,7 +129,7 @@
     "refractor": "^4.8.1",
     "reodotdev": "^1.0.0",
     "sass": "1.54.8",
-    "sass-loader": "16.0.1",
+    "sass-loader": "^16.0.8",
     "semver": "^7.5.2",
     "style-loader": "1.3.0",
     "toml": "^3.0.0",
