@@ -4,7 +4,7 @@ sidebar_label: Feature Versioning
 sidebar_position: 5
 ---
 
-Feature Versioning records each published change to a flag as a version of that flag in an environment. You can browse the history of a flag, review which version is currently live, schedule a future version, and roll back by publishing an earlier one. It is also the foundation that [Release Pipelines](/managing-flags/release-pipeline) and segment-override diffs in [Change Requests](/administration-and-security/governance-and-compliance/change-requests) build on.
+Feature Versioning attaches versions to feature value and segment override updates. You can browse past versions, schedule future ones, and roll back to an earlier version.
 
 This page explains what changes when you enable Feature Versioning v2 on an environment — for your dashboard users, your webhook consumers, your audit-log pipeline, and your scripts that talk to the Admin API.
 
@@ -28,7 +28,7 @@ Enabling Feature Versioning v2 on an environment is irreversible.
 To produce a new published version on a v2 environment, use one of:
 
 - **The experimental [update-flag endpoints](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/updating-flags)** (`update-flag-v1`, `update-flag-v2`, `delete-segment-override`). These accept the same payloads as on v1 environments and publish a new version per call on v2 environments.
-- **The new versioning endpoint family** — gives you explicit control to compose multiple changes into a single published version, or to read flag history programmatically:
+- **The new versioning endpoint family**:
   - `GET /environments/{env}/features/{feature}/versions/` — list versions for a feature.
   - `POST /environments/{env}/features/{feature}/versions/` — create a draft version.
   - `POST /environments/{env}/features/{feature}/versions/{uuid}/publish/` — publish a draft.
@@ -45,7 +45,7 @@ The legacy `POST` / `PUT` / `PATCH` endpoints on `/environments/{api_key}/featur
 
 The shape of `FLAG_UPDATED` events does not change, but the cadence and the event mix do.
 
-- A new event type, `NEW_VERSION_PUBLISHED`, fires once per published version. The payload contains the version UUID, the feature, the `published_by` user (or API key), and the list of feature states in the version. Add this event to your consumer's schema if you want to know when a version is published.
+- A new event type, `NEW_VERSION_PUBLISHED`, fires once per published version. The payload contains the version UUID, the feature, the `published_by` user (or API key), and the list of feature states in the version.
 - `FLAG_UPDATED` continues to fire on each changed feature state. Where v1 fires once per save, v2 fires once per *changed* feature state inside the new version, alongside the `NEW_VERSION_PUBLISHED` summary. A single published version that changes the environment default plus three segment overrides triggers four `FLAG_UPDATED` events (per destination, see below) plus one `NEW_VERSION_PUBLISHED`.
 - Scheduled changes deliver their webhooks at the scheduled `live_from`, not at change-request commit time.
 
@@ -97,7 +97,7 @@ The dashboard gains a few affordances on v2 environments:
 - A **History** tab on each feature shows the published versions, who published them and when, and the values they contained.
 - **Change Request** diffs include changes to segment overrides as well as to environment defaults.
 - **Release Pipelines** can target this environment as a stage.
-- The flag toggle behaviour switches from updating a single feature state to publishing a new version — invisible to dashboard users in practice.
+- The flag toggle behaviour switches from updating a single feature state to publishing a new version.
 
 ---
 
@@ -112,8 +112,6 @@ The dashboard gains a few affordances on v2 environments:
 ## Migration
 
 Migration runs per environment, in the background, when you flip the **Feature Versioning** toggle in Environment Settings. The dashboard polls the environment while the migration completes. Existing flag values are preserved — each feature in the environment gets one initial published version representing its current state at the moment of migration. Any committed scheduled changes that have not yet gone live are also preserved as future-dated versions, set to publish at their original scheduled time.
-
-You can enable Feature Versioning v2 on a non-production environment first to verify your webhook handlers, audit pipeline and integration consumers behave as expected before rolling out to production.
 
 ---
 
