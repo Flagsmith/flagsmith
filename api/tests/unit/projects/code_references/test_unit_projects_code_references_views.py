@@ -57,23 +57,11 @@ def test_create_code_reference__valid_payload__returns_201_with_accepted_referen
         for scan in ScannedCodeReferences.objects.all()
     } == {
         "feature-1": [
-            {
-                "feature_name": "feature-1",
-                "file_path": "path/to/file1.py",
-                "line_number": 10,
-            },
-            {
-                "feature_name": "feature-1",
-                "file_path": "path/to/file2.py",
-                "line_number": 20,
-            },
+            {"file_path": "path/to/file1.py", "line_number": 10},
+            {"file_path": "path/to/file2.py", "line_number": 20},
         ],
         "feature-2": [
-            {
-                "feature_name": "feature-2",
-                "file_path": "path/to/file3.py",
-                "line_number": 30,
-            },
+            {"file_path": "path/to/file3.py", "line_number": 30},
         ],
     }
 
@@ -248,11 +236,7 @@ def test_get_feature_code_references__multiple_scans_exist__returns_latest_per_r
             repository=backend_repository,
             revision="backend-1",
             code_references=[
-                {
-                    "feature_name": feature.name,
-                    "file_path": "backend/file1.py",
-                    "line_number": 20,
-                },
+                {"file_path": "backend/file1.py", "line_number": 20},
             ],
             code_references_hash="hash-backend-1",
         )
@@ -268,16 +252,8 @@ def test_get_feature_code_references__multiple_scans_exist__returns_latest_per_r
             repository=frontend_repository,
             revision="frontend-2",
             code_references=[
-                {
-                    "feature_name": feature.name,
-                    "file_path": "frontend/file1.js",
-                    "line_number": 12,
-                },
-                {
-                    "feature_name": feature.name,
-                    "file_path": "frontend/file2.js",
-                    "line_number": 5,
-                },
+                {"file_path": "frontend/file1.js", "line_number": 12},
+                {"file_path": "frontend/file2.js", "line_number": 5},
             ],
             code_references_hash="hash-frontend-2",
         )
@@ -353,11 +329,7 @@ def test_get_feature_code_references__feature_flag_removed__returns_no_entry(
             repository=repository,
             revision="revision-hash-1",
             code_references=[
-                {
-                    "feature_name": feature.name,
-                    "file_path": "path/to/file1.py",
-                    "line_number": 10,
-                },
+                {"file_path": "path/to/file1.py", "line_number": 10},
             ],
             code_references_hash="hash-1",
         )

@@ -1,6 +1,6 @@
 from django.db import models
 
-from projects.code_references.types import JSONCodeReference, VCSProvider
+from projects.code_references.types import StoredCodeReference, VCSProvider
 
 
 class VCSRepository(models.Model):
@@ -56,7 +56,7 @@ class ScannedCodeReferences(models.Model):
 
     revision = models.CharField(max_length=100)
 
-    code_references = models.JSONField[list[JSONCodeReference]](default=list)
+    code_references = models.JSONField[list[StoredCodeReference]](default=list)
 
     code_references_hash = models.CharField(max_length=32)
 

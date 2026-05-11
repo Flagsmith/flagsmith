@@ -14,7 +14,8 @@ from projects.code_references.types import (
     CodeReference,
     FeatureFlagCodeReferencesRepositorySummary,
     FeatureFlagCodeReferencesScan,
-    JSONCodeReference,
+    StoredCodeReference,
+    SubmittedCodeReference,
     VCSProvider,
 )
 from projects.models import Project
@@ -55,7 +56,9 @@ def annotate_feature_queryset_with_code_references_summary(
         .values("summary")
     )
 
-    return queryset.annotate(code_references_counts=ArraySubquery(counts_by_repository))
+    return queryset.annotate(
+        code_references_counts=ArraySubquery(counts_by_repository),
+    )
 
 
 def get_code_references_for_feature_flag(
@@ -104,7 +107,7 @@ def record_scan(
     repository_url: str,
     vcs_provider: VCSProvider,
     revision: str,
-    code_references: list[JSONCodeReference],
+    code_references: list[SubmittedCodeReference],
 ) -> FeatureFlagCodeReferencesScan:
     """Persist a code references scan and return its summary."""
     scanned_at = timezone.now()
@@ -114,17 +117,19 @@ def record_scan(
         defaults={"vcs_provider": vcs_provider, "last_scanned_at": scanned_at},
     )
 
-    references_by_feature_name: defaultdict[str, list[JSONCodeReference]] = defaultdict(
-        list
-    )
-    for reference in code_references:
-        references_by_feature_name[reference["feature_name"]].append(reference)
+    references_by_feature: dict[str, list[StoredCodeReference]] = defaultdict(list)
+    for submitted in code_references:
+        new_reference: StoredCodeReference = {
+            "file_path": submitted["file_path"],
+            "line_number": submitted["line_number"],
+        }
+        references_by_feature[submitted["feature_name"]].append(new_reference)
 
     features_by_name = {
         feature.name: feature
         for feature in Feature.objects.filter(
             project=project,
-            name__in=references_by_feature_name,
+            name__in=references_by_feature,
         )
     }
 
@@ -137,7 +142,7 @@ def record_scan(
                 code_references=references,
                 code_references_hash=_hash_references(references),
             )
-            for feature_name, references in references_by_feature_name.items()
+            for feature_name, references in references_by_feature.items()
             if (feature := features_by_name.get(feature_name)) is not None
         ],
         ignore_conflicts=True,
@@ -153,7 +158,7 @@ def record_scan(
     )
 
 
-def _hash_references(references: list[JSONCodeReference]) -> str:
+def _hash_references(references: list[StoredCodeReference]) -> str:
     return hashlib.md5(
         json.dumps(references, sort_keys=True).encode(),
     ).hexdigest()

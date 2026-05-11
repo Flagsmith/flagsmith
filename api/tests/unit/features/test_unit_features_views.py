@@ -3685,11 +3685,7 @@ def test_list_features__with_code_references__returns_counts(
             repository=github_repository,
             revision="backend-1",
             code_references=[
-                {
-                    "feature_name": feature.name,
-                    "file_path": "path/to/file.py",
-                    "line_number": 42,
-                },
+                {"file_path": "path/to/file.py", "line_number": 42},
             ],
             code_references_hash="hash-backend-1",
         )
@@ -3707,16 +3703,8 @@ def test_list_features__with_code_references__returns_counts(
             repository=gitlab_repository,
             revision="frontend-2",
             code_references=[
-                {
-                    "feature_name": feature.name,
-                    "file_path": "path/to/file.js",
-                    "line_number": 23,
-                },
-                {
-                    "feature_name": feature.name,
-                    "file_path": "path/to/another/file.js",
-                    "line_number": 50,
-                },
+                {"file_path": "path/to/file.js", "line_number": 23},
+                {"file_path": "path/to/another/file.js", "line_number": 50},
             ],
             code_references_hash="hash-frontend-2",
         )
@@ -3789,11 +3777,7 @@ def test_list_features__code_references_ui_stats_disabled__returns_empty_counts(
         repository=repository,
         revision="rev-1",
         code_references=[
-            {
-                "feature_name": feature.name,
-                "file_path": "path/to/file.py",
-                "line_number": 42,
-            },
+            {"file_path": "path/to/file.py", "line_number": 42},
         ],
         code_references_hash="hash-1",
     )

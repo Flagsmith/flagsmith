@@ -11,10 +11,13 @@ class VCSProvider(TextChoices):
     GITHUB = "github", "GitHub"
 
 
-class JSONCodeReference(TypedDict):
-    feature_name: str
+class StoredCodeReference(TypedDict):
     file_path: str
     line_number: int
+
+
+class SubmittedCodeReference(StoredCodeReference):
+    feature_name: str
 
 
 @dataclass
@@ -49,5 +52,5 @@ class FeatureFlagCodeReferencesScan:
     repository_url: str
     vcs_provider: VCSProvider
     revision: str
-    code_references: list[JSONCodeReference]
+    code_references: list[SubmittedCodeReference]
     project: Project
