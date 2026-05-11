@@ -15,7 +15,7 @@ This page explains what changes when you enable Feature Versioning v2 on an envi
 
 :::caution
 
-Enabling Feature Versioning v2 on an environment is effectively one-way. The disable action exists but it discards the version history for that environment — only the latest live state is preserved. Treat the change as permanent.
+Enabling Feature Versioning v2 on an environment is irreversible. You cannot return an environment to v1 once the migration has run. To "roll back" a flag value, publish a new version of that flag with the earlier value.
 
 :::
 
