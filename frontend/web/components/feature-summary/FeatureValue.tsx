@@ -34,6 +34,19 @@ const FeatureValue: FC<FeatureValueType> = (props) => {
     )
   }
 
+  if (props.value === '') {
+    return (
+      <div
+        className={chipClassName}
+        onClick={props.onClick}
+        data-test={props['data-test']}
+        style={{ maxWidth: 'fit-content' }}
+      >
+        <code className='feature-value text-info'>""</code>
+      </div>
+    )
+  }
+
   const type = typeof props.value
   return (
     <div
