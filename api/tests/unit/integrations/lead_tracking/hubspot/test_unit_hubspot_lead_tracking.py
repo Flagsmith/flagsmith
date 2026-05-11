@@ -287,7 +287,9 @@ def test_create_user_hubspot_contact__get_contact_retries__returns_expected_id(
 
 
 @pytest.mark.parametrize("email", ["", "no-at-symbol", None])
-def test_company_domain_from_email__malformed_input__returns_none(email: str | None) -> None:
+def test_company_domain_from_email__malformed_input__returns_none(
+    email: str | None,
+) -> None:
     """Defensive return-None on empty/malformed email - protects against
     callers that bypass the Django EmailField validation."""
     assert _company_domain_from_email(email) is None  # type: ignore[arg-type]
