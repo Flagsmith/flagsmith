@@ -1,7 +1,10 @@
 import React, { FC, useEffect } from 'react'
+import flagsmith from '@flagsmith/flagsmith'
+import { useFlags } from '@flagsmith/flagsmith/react'
 import TableFilter from './TableFilter'
 import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
+import Checkbox from 'components/base/forms/Checkbox'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 
 type TableFilterType = {
@@ -37,6 +40,8 @@ const TableTagFilter: FC<TableFilterType> = ({
   const { search, searchInput, setSearchInput } = useDebouncedSearch(
     value?.valueSearch || '',
   )
+  const flags = useFlags(['display_feature_null_values'])
+  const isNullDisplayEnabled = !!flags.display_feature_null_values?.enabled
   useEffect(() => {
     if ((search || '') !== (value.valueSearch || '')) {
       onChange({
@@ -44,6 +49,7 @@ const TableTagFilter: FC<TableFilterType> = ({
         valueSearch: search,
       })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, value])
   return (
     <div className={isLoading ? 'disabled' : ''}>
@@ -59,11 +65,13 @@ const TableTagFilter: FC<TableFilterType> = ({
           </Row>
         }
       >
-        <div className='inline-modal__list d-flex flex-column mx-0 py-0'>
-          <div className='px-2 mt-2'>
+        <div
+          className='inline-modal__list d-flex flex-column mx-0'
+          style={{ maxHeight: 'none' }}
+        >
+          <div className='p-3' style={{ minWidth: 320 }}>
             <InputGroup
               title='Enabled State'
-              className='mt-2'
               component={
                 <Select
                   size='select-xxsm'
@@ -101,6 +109,18 @@ const TableTagFilter: FC<TableFilterType> = ({
               placeholder='Enter a feature value'
               search
             />
+            <div className='mt-3'>
+              <Checkbox
+                label='Show null and empty values'
+                checked={isNullDisplayEnabled}
+                onChange={(checked) => {
+                  flagsmith.setTrait(
+                    'opt_in_null_feature_values',
+                    checked ? true : null,
+                  )
+                }}
+              />
+            </div>
           </div>
         </div>
       </TableFilter>

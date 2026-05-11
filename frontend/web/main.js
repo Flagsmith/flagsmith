@@ -6,6 +6,8 @@ import './styles/styles.scss'
 import { BrowserRouter as Router } from 'react-router-dom'
 import { createBrowserHistory } from 'history'
 import { createRoot } from 'react-dom/client'
+import flagsmith from '@flagsmith/flagsmith'
+import { FlagsmithProvider } from '@flagsmith/flagsmith/react'
 import ToastMessages from './project/toast'
 import routes from './routes'
 import Utils from 'common/utils/utils'
@@ -100,7 +102,11 @@ setTimeout(() => {
   }
 
   const root = createRoot(rootElement)
-  root.render(<Router basename={Project.basename || ''}>{routes}</Router>)
+  root.render(
+    <FlagsmithProvider flagsmith={flagsmith}>
+      <Router basename={Project.basename || ''}>{routes}</Router>
+    </FlagsmithProvider>,
+  )
 }, 1)
 
 // Setup for toast messages
