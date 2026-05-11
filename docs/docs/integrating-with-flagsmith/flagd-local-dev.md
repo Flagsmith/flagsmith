@@ -32,9 +32,6 @@ x-flagsmith-env: &flagsmith-env
   DJANGO_ALLOWED_HOSTS: "*"
   DJANGO_SECRET_KEY: dev-only-secret-not-for-prod
   ENVIRONMENT: local
-  ALLOW_ADMIN_INITIATION_VIA_CLI: "true"
-  ADMIN_EMAIL: admin@example.com
-  DJANGO_ADMIN_PASSWORD: admin
   PREVENT_SIGNUP: "true"
   TASK_RUN_METHOD: SYNCHRONOUSLY
 
@@ -143,7 +140,7 @@ You should see flagd reporting it loaded a flag set.
 
 ## 3. Log into the Flagsmith UI
 
-The UI at <http://localhost:8000> still wants you to authenticate (the management command only creates the org/project/env, not your user account). Log in with `admin@example.com` / the password you set via `DJANGO_ADMIN_PASSWORD` (or follow the password-reset link printed in the Flagsmith logs).
+The bootstrap container creates a local admin alongside the org/project/env, with the credentials it prints to stdout (default: `admin@example.com` / `admin`). Log in at <http://localhost:8000> with those, or override via `--admin-email` / `--admin-password` on the bootstrap command if you want different ones.
 
 You'll land in the `local-dev` organisation, with the `local-dev` project and `development` environment already there — start authoring flags.
 

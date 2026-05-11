@@ -17,8 +17,9 @@ from typing import Any
 from django.core.management.base import BaseCommand
 
 from environments.models import Environment, EnvironmentAPIKey
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
+from users.models import FFAdminUser
 
 
 class Command(BaseCommand):
@@ -46,6 +47,20 @@ class Command(BaseCommand):
             help="EnvironmentAPIKey label (default: flagd-local).",
         )
         parser.add_argument(
+            "--admin-email",
+            default="admin@example.com",
+            help="Email for the local admin user (default: admin@example.com).",
+        )
+        parser.add_argument(
+            "--admin-password",
+            default="admin",
+            help=(
+                "Password to set on the local admin user. Always overwritten "
+                "on each run so the local dev experience stays predictable. "
+                "Default: admin."
+            ),
+        )
+        parser.add_argument(
             "--output",
             type=Path,
             help=(
@@ -65,6 +80,28 @@ class Command(BaseCommand):
             name=options["environment"], project=project
         )
 
+        # Create or refresh the local admin user so the operator can
+        # log into the Flagsmith UI without juggling password-reset
+        # links. The user is attached to the organisation so they land
+        # straight in the bootstrapped project on login.
+        admin_email = options["admin_email"]
+        admin_password = options["admin_password"]
+        admin = FFAdminUser.objects.filter(email=admin_email).first()
+        if admin is None:
+            admin = FFAdminUser.objects.create_superuser(  # type: ignore[no-untyped-call]
+                email=admin_email,
+                is_active=True,
+                password=admin_password,
+            )
+        else:
+            admin.set_password(admin_password)
+            admin.is_active = True
+            admin.is_staff = True
+            admin.is_superuser = True
+            admin.save()
+        if not admin.belongs_to(organisation.id):
+            admin.add_organisation(organisation, role=OrganisationRole.ADMIN)
+
         api_key = (
             EnvironmentAPIKey.objects.filter(
                 environment=environment, name=options["api_key_name"]
@@ -79,6 +116,11 @@ class Command(BaseCommand):
 
         line = f"FLAGSMITH_SERVER_KEY={api_key.key}"
         self.stdout.write(line)
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Admin user: {admin_email} / {admin_password}"
+            )
+        )
 
         output: Path | None = options.get("output")
         if output is not None:

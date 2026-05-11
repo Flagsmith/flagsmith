@@ -15,6 +15,7 @@ from django.core.management import call_command
 from environments.models import Environment, EnvironmentAPIKey
 from organisations.models import Organisation
 from projects.models import Project
+from users.models import FFAdminUser
 
 
 @pytest.mark.django_db
@@ -82,6 +83,39 @@ def test_bootstrap_flagd_local__output_path__writes_env_file(
     assert output.exists()
     content = output.read_text().strip()
     assert content.startswith("FLAGSMITH_SERVER_KEY=ser.")
+
+
+@pytest.mark.django_db
+def test_bootstrap_flagd_local__fresh_database__creates_logged_in_admin() -> None:
+    # Given an empty database
+    # When the command runs
+    call_command("bootstrap_flagd_local", stdout=StringIO())
+
+    # Then the admin user is created with a working password and attached
+    # to the bootstrapped organisation
+    admin = FFAdminUser.objects.get(email="admin@example.com")
+    assert admin.check_password("admin")
+    assert admin.is_active and admin.is_superuser and admin.is_staff
+    organisation = Organisation.objects.get(name="local-dev")
+    assert admin.belongs_to(organisation.id)
+
+
+@pytest.mark.django_db
+def test_bootstrap_flagd_local__existing_admin_with_old_password__refreshes_password() -> None:
+    # Given an existing admin with a stale password
+    admin = FFAdminUser.objects.create_superuser(  # type: ignore[no-untyped-call]
+        email="admin@example.com", is_active=True, password="old-password"
+    )
+
+    # When the command runs with a new password
+    call_command(
+        "bootstrap_flagd_local", "--admin-password", "new-password",
+        stdout=StringIO(),
+    )
+
+    # Then the new password works
+    admin.refresh_from_db()
+    assert admin.check_password("new-password")
 
 
 @pytest.mark.django_db

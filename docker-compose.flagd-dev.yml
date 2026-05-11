@@ -13,9 +13,6 @@ x-flagsmith-env: &flagsmith-env
   DJANGO_ALLOWED_HOSTS: "*"
   DJANGO_SECRET_KEY: dev-only-secret-not-for-prod
   ENVIRONMENT: local
-  ALLOW_ADMIN_INITIATION_VIA_CLI: "true"
-  ADMIN_EMAIL: admin@example.com
-  DJANGO_ADMIN_PASSWORD: admin
   PREVENT_SIGNUP: "true"
   TASK_RUN_METHOD: SYNCHRONOUSLY
 
