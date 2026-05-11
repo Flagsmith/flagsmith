@@ -32,11 +32,24 @@ This is the right setup when:
 
 ## Quick start
 
-### 1. Mint a server-side environment key
+### 1. Enable the integration for the project
+
+The flagd endpoints are **opt-in per Flagsmith project**. Until enabled, the sync and diagnostics URLs return `404`. Toggle it on with a single PATCH from a project admin:
+
+```bash
+curl -X PATCH https://api.flagsmith.com/api/v1/projects/<project_id>/integrations/flagd/<config_id>/ \
+  -H 'Authorization: Token <admin-api-key>' \
+  -H 'Content-Type: application/json' \
+  -d '{"enabled": true}'
+```
+
+A GET on `…/integrations/flagd/` lists the current configuration (creating a disabled default row on first access if needed).
+
+### 2. Mint a server-side environment key
 
 The endpoint requires a server-side key (prefix `ser.`). In Flagsmith, go to **Environment Settings → SDK Keys** and create one.
 
-### 2. Point flagd at the endpoint
+### 3. Point flagd at the endpoint
 
 The endpoint URL is:
 
@@ -58,7 +71,7 @@ flagd start \
   }]'
 ```
 
-### 3. Evaluate flags via OpenFeature
+### 4. Evaluate flags via OpenFeature
 
 flagd exposes evaluation through gRPC, OFREP, and in-process providers. Pick the OpenFeature [flagd provider](https://flagd.dev/reference/providers/) for your language:
 
@@ -151,24 +164,38 @@ A successful response body looks like:
   "flags": {
     "my_flag": {
       "state": "ENABLED",
-      "variants": { "on": true, "off": false },
-      "defaultVariant": "on"
+      "variants": { "control": true },
+      "defaultVariant": "control"
     },
     "experiment": {
       "state": "ENABLED",
       "variants": {
-        "on": "control",
+        "control": "default",
         "variant_1": "treatment_a",
-        "variant_2": "treatment_b",
-        "off": ""
+        "variant_2": "treatment_b"
       },
-      "defaultVariant": "on",
+      "defaultVariant": "control",
       "targeting": {
         "fractional": [
           { "cat": [{ "var": "targetingKey" }, "experiment"] },
           ["variant_1", 30],
           ["variant_2", 30],
-          ["on", 40]
+          ["control", 40]
+        ]
+      }
+    },
+    "premium_feature": {
+      "state": "ENABLED",
+      "variants": {
+        "control": "free-tier",
+        "override_Premium-Customers": "premium-tier"
+      },
+      "defaultVariant": "control",
+      "targeting": {
+        "if": [
+          { "$ref": "Premium-Customers" },
+          "override_Premium-Customers",
+          "control"
         ]
       }
     }
@@ -185,6 +212,18 @@ A successful response body looks like:
 }
 ```
 
+### Variant naming
+
+- **`control`** — the flag's typed value, served when no targeting branch matches. Always present; always the `defaultVariant`.
+- **`variant_1`, `variant_2`, …** — multivariate options in declaration order.
+- **`override_<segment-or-identity-slug>`** — synthesised when a segment or identity override carries a value distinct from `control`. The override's typed value lives in the variant; targeting routes to it. (flagd targeting can only return a variant *key*, never a literal value — so override values must be expressed as variants.)
+
+There is no `off` variant. flagd's `state: DISABLED` carries the disabled signal; what a consumer receives in that case is determined by `defaultVariant` (always `"control"`) and the consumer's caller-supplied default. Override `enabled` flags are decorative for flagd consumers — operators encode "off for this segment" by setting the override's value explicitly (e.g. `false` for boolean flags).
+
+### Segment placement
+
+Segments referenced by **two or more** features are extracted to the top-level `$evaluators` block and referenced via `$ref` from each flag. Segments referenced by **exactly one** feature are inlined directly into that flag's `targeting`. This keeps `$evaluators` for genuinely shared definitions and avoids name collisions between feature-scoped segments that happen to share a display name.
+
 ### Metadata fields
 
 - **`flagSetId`** — `"<project-slug>/<environment-slug>"`. Stable across renames within Flagsmith only if you don't rename; consumer-side caches keyed on this should expect changes.
@@ -198,9 +237,11 @@ A successful response body looks like:
 | Flagsmith concept                      | flagd translation                                         | Notes                                  |
 |----------------------------------------|-----------------------------------------------------------|----------------------------------------|
 | Boolean flag (`enabled`)               | `state: ENABLED`/`DISABLED`                               | Always emitted.                        |
-| Typed value (`value`)                  | Variant `"on"` (typed) and `"off"` (type-zero)            | `defaultVariant` follows `enabled`.    |
-| Multivariate options                   | `fractional` over generated variants                      | Residual % maps to `"on"`.             |
-| Segment                                | `$evaluators` entry, slugified key                        | Referenced from `targeting` via `$ref`.|
+| Typed value (`value`)                  | `control` variant                                         | `defaultVariant` is always `"control"`.|
+| Multivariate options                   | `fractional` over generated `variant_N` variants          | Residual % maps to `"control"`.        |
+| Segment override with distinct value   | `override_<slug>` variant carrying the override's value   | Routed via inline JsonLogic or `$ref`. |
+| Project segment used by ≥2 features    | `$evaluators` entry, slugified key, `$ref` from each flag |                                        |
+| Segment used by 1 feature              | Inlined JsonLogic in that flag's `targeting`              | No `$evaluators` entry; no name leakage.|
 | Segment rule type ALL                  | JsonLogic `and`                                           |                                        |
 | Segment rule type ANY                  | JsonLogic `or`                                            |                                        |
 | Segment rule type NONE                 | JsonLogic `!` over `or`                                   |                                        |
@@ -231,13 +272,65 @@ A successful response body looks like:
 | `Authorization`      | request   | Alternative to `X-Environment-Key`. Accepts a bare token or `Bearer <token>` form; this is what flagd's HTTP sync `authHeader` field sets. |
 | `If-Modified-Since`  | request   | Optional. Returns `304` when the environment hasn't changed.                           |
 | `If-None-Match`      | request   | Optional. Same effect; matched against the response `ETag`.                            |
-| `Last-Modified`      | response  | The environment's `updated_at`.                                                        |
-| `ETag`               | response  | Strong tag covering content + translator version.                                      |
+| `Last-Modified`      | response  | Max of `environment.updated_at` and the most recent live `FeatureState.live_from` / `EnvironmentFeatureVersion.live_from`, so scheduled-change activations invalidate flagd's conditional cache. |
+| `ETag`               | response  | Strong tag covering content + translator version + the same `Last-Modified` signal.    |
 
 Status codes:
 
 - `200` — body is the flagd document.
 - `304` — short-circuit; body empty.
 - `401` / `403` — missing or non-`ser.` key.
+- `404` — the flagd integration isn't enabled for the project owning this environment.
 
 For self-hosted setups behind a proxy, ensure both `Last-Modified` and `ETag` headers are forwarded so flagd can short-circuit polls efficiently.
+
+## Diagnostics endpoint
+
+`GET /api/v1/flagd/diagnostics.json` — same authentication as the sync endpoint, same per-project gate. Returns a structured report of translation warnings instead of a flagd document:
+
+```json
+{
+  "flagSetId": "my-project/production",
+  "translatorVersion": "v1",
+  "environmentWarnings": [],
+  "features": [
+    {
+      "name": "my_flag",
+      "warnings": [
+        {
+          "reason": "regex_unsupported",
+          "detail": "operator=REGEX, property=email"
+        },
+        {
+          "reason": "type_mismatch",
+          "detail": "feature=my_flag, types=[number, string]"
+        }
+      ]
+    }
+  ],
+  "summary": { "featuresWithWarnings": 1, "totalWarnings": 2 }
+}
+```
+
+Curl this to audit an environment before consumers depend on it. Useful in CI: fail the pipeline when `summary.totalWarnings > 0` on an environment promoted to production.
+
+### Warning reasons
+
+| Reason                            | What it means                                                                 |
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `regex_unsupported`               | A segment condition uses `REGEX`; flagd has no equivalent. Condition skipped. |
+| `unknown_operator`                | Internal — flagd translator hit an operator it doesn't know.                  |
+| `malformed_value`                 | Value for an operator couldn't be parsed (e.g. `MODULO` value not `D|R`).     |
+| `identity_override_limit_exceeded`| More identity overrides on a flag than the per-flag cap; extras dropped.     |
+| `disabled_override_no_op`         | An override is `enabled=False` with value matching control — invisible to flagd. Set the override value explicitly to make it visible. |
+| `type_mismatch`                   | A flag's control / multivariate / override values land in different flagd typed-flag schemas. Will fail schema validation. |
+
+## Admin REST endpoint
+
+`/api/v1/projects/<project_id>/integrations/flagd/` — uses Flagsmith's standard project-admin permissions, follows the same convention as every other integration toggle (Datadog, Grafana, etc.).
+
+| Method | Effect                                                        |
+|--------|---------------------------------------------------------------|
+| `GET`  | List the project's flagd configuration (one row per project). |
+| `POST` | Create the configuration row (body: `{"enabled": true}`).     |
+| `PATCH`| Flip `enabled` on the existing row.                           |

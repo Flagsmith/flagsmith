@@ -105,7 +105,7 @@ Key things to note about the compose file:
 
 - **Postgres-backed**: Flagsmith requires Postgres (some migrations use `NOW()`). The `flagsmith-pgdata` volume keeps your flags around across `docker compose down && up`.
 - **Static local-dev key**: `FLAGSMITH_SERVER_KEY` defaults to `ser.local-dev-flagd-sync-not-secret` via compose interpolation. The bootstrap container *pins* the Flagsmith `EnvironmentAPIKey` to that value, and flagd uses the same one in the `authHeader` field of its `--sources` JSON. To use a different key (e.g. on shared machines), set the env var: `FLAGSMITH_SERVER_KEY=ser.your-key docker compose -f docker-compose.flagd-dev.yml up`.
-- **`flagsmith-bootstrap` init container**: runs the `bootstrap_flagd_local` Django management command. Idempotent — first run creates `local-dev` / `local-dev` / `development` and an `EnvironmentAPIKey` with the chosen key; subsequent runs update the key if it has changed.
+- **`flagsmith-bootstrap` init container**: runs the `bootstrap_flagd_local` Django management command. Idempotent — first run creates `local-dev` / `local-dev` / `development`, an `EnvironmentAPIKey` with the chosen key, **enables the flagd integration on the project** (required since flagd endpoints are opt-in per project), and creates / refreshes an admin user. Subsequent runs reconcile each piece.
 - **flagd uses the upstream image**: no launcher / shell wrapping needed because the key is known at compose-parse time.
 - **Short poll interval (5 s)**: nice for development; set to 30–60 s in real deployments.
 
