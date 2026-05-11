@@ -64,7 +64,7 @@ def _translate(
 # ---------------------------------------------------------------------------
 
 
-def test_feature_state_to_flagd_flag__boolean_enabled__emits_on_default() -> None:
+def test_feature_state_to_flagd_flag__boolean_enabled__emits_control_default() -> None:
     # Given a boolean-only enabled feature state
     feature = _feature(name="bool_flag")
     fs = FeatureStateModel(feature=feature, enabled=True, feature_state_value=None)
@@ -72,14 +72,17 @@ def test_feature_state_to_flagd_flag__boolean_enabled__emits_on_default() -> Non
     # When we translate it
     flag = _translate(fs)
 
-    # Then the flag is ENABLED, defaults to "on", and exposes both variants
+    # Then the flag is ENABLED, defaults to "control", and exposes only the
+    # control variant (no disabled overrides means no "off" variant)
     assert flag["state"] == "ENABLED"
-    assert flag["defaultVariant"] == "on"
-    assert flag["variants"] == {"on": True, "off": False}
+    assert flag["defaultVariant"] == "control"
+    assert flag["variants"] == {"control": True}
     assert "targeting" not in flag
 
 
-def test_feature_state_to_flagd_flag__boolean_disabled__emits_off_default() -> None:
+def test_feature_state_to_flagd_flag__boolean_disabled__state_disabled_default_control() -> (
+    None
+):
     # Given a boolean-only disabled feature state
     feature = _feature(name="bool_flag")
     fs = FeatureStateModel(feature=feature, enabled=False, feature_state_value=None)
@@ -87,10 +90,11 @@ def test_feature_state_to_flagd_flag__boolean_disabled__emits_off_default() -> N
     # When we translate it
     flag = _translate(fs)
 
-    # Then the flag is DISABLED, defaults to "off", and still exposes variants
+    # Then the flag is DISABLED, defaults to "control" (flagd's state field
+    # carries the disabled semantic), and only the control variant is emitted
     assert flag["state"] == "DISABLED"
-    assert flag["defaultVariant"] == "off"
-    assert flag["variants"] == {"on": True, "off": False}
+    assert flag["defaultVariant"] == "control"
+    assert flag["variants"] == {"control": True}
     assert "targeting" not in flag
 
 
@@ -100,20 +104,14 @@ def test_feature_state_to_flagd_flag__boolean_disabled__emits_off_default() -> N
 
 
 @pytest.mark.parametrize(
-    "control_value,expected_off",
-    [
-        ("hello", ""),
-        (42, 0),
-        (3.14, 0),
-        ({"key": "value"}, {}),
-        ([1, 2, 3], []),
-    ],
+    "control_value",
+    ["hello", 42, 3.14, {"key": "value"}, [1, 2, 3]],
     ids=["string", "integer", "float", "json-object", "json-array"],
 )
-def test_feature_state_to_flagd_flag__typed_value__off_variant_is_type_zero(
-    control_value: Any, expected_off: Any
+def test_feature_state_to_flagd_flag__typed_value__variants_just_control(
+    control_value: Any,
 ) -> None:
-    # Given a feature state with a typed value
+    # Given a feature state with a typed value and no disabled overrides
     feature = _feature(name="typed_flag")
     fs = FeatureStateModel(
         feature=feature, enabled=True, feature_state_value=control_value
@@ -122,10 +120,11 @@ def test_feature_state_to_flagd_flag__typed_value__off_variant_is_type_zero(
     # When we translate it
     flag = _translate(fs)
 
-    # Then the "on" variant carries the value and "off" is the type-zero
-    assert flag["variants"] == {"on": control_value, "off": expected_off}
+    # Then only the "control" variant is emitted (no "off" without a disabled
+    # override that needs it)
+    assert flag["variants"] == {"control": control_value}
     assert flag["state"] == "ENABLED"
-    assert flag["defaultVariant"] == "on"
+    assert flag["defaultVariant"] == "control"
 
 
 # ---------------------------------------------------------------------------
@@ -133,7 +132,9 @@ def test_feature_state_to_flagd_flag__typed_value__off_variant_is_type_zero(
 # ---------------------------------------------------------------------------
 
 
-def test_feature_state_to_flagd_flag__multivariate_under_100__residual_routes_to_on() -> None:
+def test_feature_state_to_flagd_flag__multivariate_under_100__residual_routes_to_on() -> (
+    None
+):
     # Given a multivariate feature state with allocations summing to <100
     feature = _feature(name="mv_flag")
     fs = FeatureStateModel(
@@ -161,12 +162,12 @@ def test_feature_state_to_flagd_flag__multivariate_under_100__residual_routes_to
     # When we translate it
     flag = _translate(fs)
 
-    # Then variants include the control "on" plus both options
+    # Then variants are indexed (variant_1, variant_2, ...) and no "off" is
+    # emitted because there are no disabled overrides
     assert flag["variants"] == {
-        "on": "control",
+        "control": "control",
         "variant_1": "A",
         "variant_2": "B",
-        "off": "",
     }
     # And the targeting carries the fractional bucket so flagd resolves
     # to one of the multivariate variants rather than the static default.
@@ -175,11 +176,11 @@ def test_feature_state_to_flagd_flag__multivariate_under_100__residual_routes_to
             {"cat": [{"var": "targetingKey"}, "mv_flag"]},
             ["variant_1", 30.0],
             ["variant_2", 20.0],
-            ["on", 50.0],
+            ["control", 50.0],
         ]
     }
     assert flag["state"] == "ENABLED"
-    assert flag["defaultVariant"] == "on"
+    assert flag["defaultVariant"] == "control"
 
 
 def test_feature_state_to_flagd_flag__multivariate_full_100__no_residual() -> None:
@@ -217,7 +218,7 @@ def test_feature_state_to_flagd_flag__multivariate_full_100__no_residual() -> No
     # When we translate it
     flag = _translate(fs)
 
-    # Then variants include all options and targeting carries the fractional
+    # Then variants are indexed (variant_N) and there's no residual
     assert flag["targeting"] == {
         "fractional": [
             {"cat": [{"var": "targetingKey"}, "mv_flag"]},
@@ -227,11 +228,49 @@ def test_feature_state_to_flagd_flag__multivariate_full_100__no_residual() -> No
         ]
     }
     assert flag["variants"] == {
-        "on": "control",
+        "control": "control",
         "variant_1": "A",
         "variant_2": "B",
         "variant_3": "C",
-        "off": "",
+    }
+
+
+def test_feature_state_to_flagd_flag__multivariate_with_non_string_values__indexed_variant_names() -> (
+    None
+):
+    # Given a multivariate flag whose option values aren't strings
+    feature = _feature(name="numeric_mv")
+    fs = FeatureStateModel(
+        feature=feature,
+        enabled=True,
+        feature_state_value=0,
+        multivariate_feature_state_values=[
+            MultivariateFeatureStateValueModel(
+                id=31,
+                multivariate_feature_option=MultivariateFeatureOptionModel(
+                    id=311, value=1
+                ),
+                percentage_allocation=50,
+            ),
+            MultivariateFeatureStateValueModel(
+                id=32,
+                multivariate_feature_option=MultivariateFeatureOptionModel(
+                    id=312, value={"foo": "bar"}
+                ),
+                percentage_allocation=30,
+            ),
+        ],
+    )
+
+    # When we translate it
+    flag = _translate(fs)
+
+    # Then variant names are indexed regardless of value type, and no "off"
+    # variant is emitted (no disabled overrides)
+    assert flag["variants"] == {
+        "control": 0,
+        "variant_1": 1,
+        "variant_2": {"foo": "bar"},
     }
 
 
@@ -240,7 +279,9 @@ def test_feature_state_to_flagd_flag__multivariate_full_100__no_residual() -> No
 # ---------------------------------------------------------------------------
 
 
-def test_feature_state_to_flagd_flag__no_segments_no_overrides__targeting_none() -> None:
+def test_feature_state_to_flagd_flag__no_segments_no_overrides__targeting_none() -> (
+    None
+):
     # Given a plain feature state
     feature = _feature(name="plain")
     fs = FeatureStateModel(feature=feature, enabled=True, feature_state_value="x")
@@ -296,17 +337,22 @@ def test_feature_state_to_flagd_flag__one_segment_override__emits_if_with_ref() 
         segment_keys=seg_keys,
     )
 
-    # Then targeting wraps the override in an "if" with a $ref to the segment
+    # Then targeting wraps the override in an "if" with a $ref to the segment;
+    # because the segment override is disabled, both "off" and "control" are
+    # available variants.
+    assert flag["variants"] == {"control": "control", "off": ""}
     assert flag["targeting"] == {
         "if": [
             {"$ref": seg_key},
             "off",
-            "on",
+            "control",
         ]
     }
 
 
-def test_feature_state_to_flagd_flag__disabled_with_targeting__keeps_variants_and_targeting() -> None:
+def test_feature_state_to_flagd_flag__disabled_with_targeting__keeps_variants_and_targeting() -> (
+    None
+):
     # Given a disabled feature state with a segment override
     feature = _feature(id_=7, name="disabled_flag")
     default_fs = FeatureStateModel(
@@ -348,20 +394,24 @@ def test_feature_state_to_flagd_flag__disabled_with_targeting__keeps_variants_an
         segment_keys=seg_keys,
     )
 
-    # Then state is DISABLED but variants and targeting are still emitted
+    # Then state is DISABLED, but defaultVariant is still "control" (flagd's
+    # state field carries the disabled semantic). The override is enabled=True
+    # so no "off" variant is needed.
     assert flag["state"] == "DISABLED"
-    assert flag["variants"] == {"on": "ctrl", "off": ""}
-    assert flag["defaultVariant"] == "off"
+    assert flag["variants"] == {"control": "ctrl"}
+    assert flag["defaultVariant"] == "control"
     assert flag["targeting"] == {
         "if": [
             {"$ref": seg_key},
-            "on",
-            "off",
+            "control",
+            "control",
         ]
     }
 
 
-def test_feature_state_to_flagd_flag__name_with_special_chars__feature_key_preserved() -> None:
+def test_feature_state_to_flagd_flag__name_with_special_chars__feature_key_preserved() -> (
+    None
+):
     # Given a feature key containing characters that segment slugification
     # would mangle (translator should leave them untouched). We also set an
     # identity override so targeting is built and the bucket seed is
@@ -385,7 +435,9 @@ def test_feature_state_to_flagd_flag__name_with_special_chars__feature_key_prese
         identifier="alice",
         environment_api_key="ser.test",
         identity_features=[
-            FeatureStateModel(feature=feature, enabled=True, feature_state_value="ctrl"),
+            FeatureStateModel(
+                feature=feature, enabled=True, feature_state_value="ctrl"
+            ),
         ],
     )
 
@@ -400,7 +452,7 @@ def test_feature_state_to_flagd_flag__name_with_special_chars__feature_key_prese
     assert flag["targeting"] == {
         "if": [
             {"==": [{"var": "targetingKey"}, "alice"]},
-            "on",
+            "control",
             {
                 "fractional": [
                     {"cat": [{"var": "targetingKey"}, "My Flag/With Spaces!"]},

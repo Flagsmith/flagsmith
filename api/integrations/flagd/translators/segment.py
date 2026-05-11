@@ -115,9 +115,7 @@ def _rules_to_jsonlogic(
 ) -> JsonLogic | None:
     expressions: list[JsonLogic] = []
     for rule in rules:
-        translated = rule_to_jsonlogic(
-            rule, feature_key=feature_key, warnings=warnings
-        )
+        translated = rule_to_jsonlogic(rule, feature_key=feature_key, warnings=warnings)
         if translated is not None:
             expressions.append(translated)
     if not expressions:

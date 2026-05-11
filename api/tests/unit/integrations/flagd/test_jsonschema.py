@@ -38,12 +38,8 @@ FIXTURE_DIR = (
 
 @pytest.fixture(scope="session")
 def flagd_validator() -> Draft7Validator:
-    main_schema = json.loads(
-        (FIXTURE_DIR / "flagd-schema-v0.json").read_text()
-    )
-    targeting_schema = json.loads(
-        (FIXTURE_DIR / "flagd-targeting-v0.json").read_text()
-    )
+    main_schema = json.loads((FIXTURE_DIR / "flagd-schema-v0.json").read_text())
+    targeting_schema = json.loads((FIXTURE_DIR / "flagd-targeting-v0.json").read_text())
     registry = Registry().with_resources(
         [
             (
@@ -60,13 +56,9 @@ def flagd_validator() -> Draft7Validator:
     return Draft7Validator(main_schema, registry=registry)
 
 
-def _assert_valid(
-    document: dict[str, Any], validator: Draft7Validator
-) -> None:
+def _assert_valid(document: dict[str, Any], validator: Draft7Validator) -> None:
     errors = sorted(validator.iter_errors(document), key=lambda e: list(e.path))
-    assert not errors, "\n".join(
-        f"{list(e.path)}: {e.message}" for e in errors
-    )
+    assert not errors, "\n".join(f"{list(e.path)}: {e.message}" for e in errors)
 
 
 @pytest.mark.django_db
@@ -99,9 +91,9 @@ def test_build_flagd_document__boolean_only_flag__validates_against_schema(
     # Then it validates and the flag exposes boolean variants
     _assert_valid(document, flagd_validator)
     assert document["flags"][feature.name]["variants"] == {
-        "on": True,
-        "off": False,
+        "control": True,
     }
+    assert document["flags"][feature.name]["defaultVariant"] == "control"
 
 
 @pytest.mark.django_db
@@ -153,12 +145,8 @@ def test_build_flagd_document__multivariate_flag__validates_against_schema(
         type="unicode",
         default_percentage_allocation=20,
     )
-    feature_state = FeatureState.objects.get(
-        environment=environment, feature=feature
-    )
-    MultivariateFeatureStateValue.objects.filter(
-        feature_state=feature_state
-    ).delete()
+    feature_state = FeatureState.objects.get(environment=environment, feature=feature)
+    MultivariateFeatureStateValue.objects.filter(feature_state=feature_state).delete()
     MultivariateFeatureStateValue.objects.create(
         feature_state=feature_state,
         multivariate_feature_option=option_a,

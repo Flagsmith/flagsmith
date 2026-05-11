@@ -108,6 +108,24 @@ Logged at `warning` from:
 Attributes:
  - `path`
 
+### `flagd_sync.document.served`
+
+Logged at `info` from:
+ - `api/integrations/flagd/views.py:72`
+
+Attributes:
+ - `environment.id`
+ - `warnings.count`
+
+### `flagd_sync.translation.warnings`
+
+Logged at `info` from:
+ - `api/integrations/flagd/services.py:132`
+
+Attributes:
+ - `environment.id`
+ - `warnings.count`
+
 ### `gitlab.api_call.failed`
 
 Logged at `error` from:

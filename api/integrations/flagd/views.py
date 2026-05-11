@@ -66,13 +66,9 @@ class FlagdSyncAPIView(APIView):
         start = time.perf_counter()
         document = build_flagd_document(environment)
         flagsmith_flagd_document_build_seconds.observe(time.perf_counter() - start)
-        warnings_count = len(
-            document.get("metadata", {}).get("flagsmith.warnings", [])
-        )
+        warnings_count = len(document.get("metadata", {}).get("flagsmith.warnings", []))
         flagsmith_flagd_sync_requests_total.labels(status="200").inc()
-        flagsmith_flagd_document_size_bytes.observe(
-            len(json.dumps(document).encode())
-        )
+        flagsmith_flagd_document_size_bytes.observe(len(json.dumps(document).encode()))
         logger.info(
             "document.served",
             environment__id=environment.id,

@@ -61,6 +61,11 @@ def collect_variants(
       flagd's ``variants`` block.
     - ``variant_keys`` maps the multivariate option id (or uuid) → the
       generated variant name.
+
+    Variant names follow A/B-testing convention: the default is
+    ``control`` (the flag's typed value) and additional options are
+    indexed as ``variant_1``, ``variant_2``, … in the order Flagsmith
+    stores them. Stable across renames; predictable for tooling.
     """
     variants: dict[str, Any] = {control_variant: control_value}
     variant_keys: dict[Any, str] = {}

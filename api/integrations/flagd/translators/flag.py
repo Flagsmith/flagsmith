@@ -2,19 +2,26 @@
 Translate a Flagsmith feature (with all its environment-level state,
 segment overrides, and identity overrides) into a flagd flag entry.
 
-flagd resolves a flag to a single variant; Flagsmith carries
-``enabled`` (boolean) and a typed ``value`` simultaneously. We collapse
-the two by emitting variants ``"on"`` (the value when enabled) and
-``"off"`` (a type-appropriate zero), then pick the default and override
-variants accordingly.
+flagd resolves a flag to a single variant. Flagsmith carries
+``enabled`` (boolean) and a typed ``value`` simultaneously, plus
+optional multivariate options. We map that to:
+
+- ``control`` variant carrying the typed value (always present).
+- ``variant_1``, ``variant_2``, … for multivariate options.
+- ``off`` variant carrying a type-zero, **only** emitted when at
+  least one segment or identity override has ``enabled=False`` and
+  therefore needs a destination distinct from ``control``.
+
+``defaultVariant`` is always ``"control"``; flagd's ``state`` field
+carries the enabled/disabled signal independently.
 """
 
 from collections.abc import Iterable
 from typing import Any
 
 from integrations.flagd.constants import (
+    VARIANT_CONTROL,
     VARIANT_OFF,
-    VARIANT_ON,
     WARNING_IDENTITY_OVERRIDE_LIMIT,
 )
 from integrations.flagd.translators.multivariate import (
@@ -56,31 +63,29 @@ def feature_state_to_flagd_flag(
     if has_multivariate:
         variants, variant_keys = collect_variants(
             feature_state,
-            control_variant=VARIANT_ON,
+            control_variant=VARIANT_CONTROL,
             control_value=control_value,
         )
-        # The off-state needs a type-appropriate zero distinct from any
-        # variant value. ``None`` is sufficient because flagd treats it
-        # as JSON null at evaluation time.
-        variants[VARIANT_OFF] = _off_value_for(control_value)
     else:
-        variants = {
-            VARIANT_ON: control_value,
-            VARIANT_OFF: _off_value_for(control_value),
-        }
+        variants = {VARIANT_CONTROL: control_value}
         variant_keys = {}
 
-    enabled = feature_state.enabled
-    on_default: Any
+    needs_off_variant = _has_disabled_override(
+        feature_state.feature.id, segments, identity_overrides
+    )
+    if needs_off_variant:
+        variants[VARIANT_OFF] = _off_value_for(control_value)
+
+    control_target: Any
     if has_multivariate:
-        on_default = fractional_jsonlogic(
+        control_target = fractional_jsonlogic(
             feature_state,
             feature_key=feature_key,
             variant_keys=variant_keys,
-            control_variant=VARIANT_ON,
+            control_variant=VARIANT_CONTROL,
         )
     else:
-        on_default = VARIANT_ON
+        control_target = VARIANT_CONTROL
 
     targeting = _build_targeting(
         feature_state=feature_state,
@@ -91,18 +96,34 @@ def feature_state_to_flagd_flag(
         identity_overrides=identity_overrides,
         identity_override_limit=identity_override_limit,
         variant_keys=variant_keys,
-        on_variant=on_default,
+        control_target=control_target,
         warnings=warnings,
     )
 
     flag: FlagdFlag = {
-        "state": "ENABLED" if enabled else "DISABLED",
+        "state": "ENABLED" if feature_state.enabled else "DISABLED",
         "variants": variants,
-        "defaultVariant": VARIANT_ON if enabled else VARIANT_OFF,
+        "defaultVariant": VARIANT_CONTROL,
     }
     if targeting is not None:
         flag["targeting"] = targeting
     return flag
+
+
+def _has_disabled_override(
+    feature_id: int,
+    segments: Iterable[SegmentModel],
+    identity_overrides: Iterable[IdentityModel],
+) -> bool:
+    for segment in segments:
+        for fs in segment.feature_states:
+            if fs.feature.id == feature_id and not fs.enabled:
+                return True
+    for identity in identity_overrides:
+        for fs in identity.identity_features:
+            if fs.feature.id == feature_id and not fs.enabled:
+                return True
+    return False
 
 
 def _build_targeting(
@@ -115,7 +136,7 @@ def _build_targeting(
     identity_overrides: Iterable[IdentityModel],
     identity_override_limit: int,
     variant_keys: dict[Any, str],
-    on_variant: Any,
+    control_target: Any,
     warnings: list[TranslationWarning],
 ) -> JsonLogic | None:
     feature_id = feature_state.feature.id
@@ -163,7 +184,11 @@ def _build_targeting(
             )
         )
 
-    fallback: Any = on_variant if feature_state.enabled else VARIANT_OFF
+    # When no overrides apply, the flag resolves via the control path:
+    # either the static `control` variant or the multivariate fractional
+    # expression. The disabled-state semantic is conveyed by flagd's
+    # `state` field, not by routing here.
+    fallback: Any = control_target
 
     if not identity_branches and not segment_branches:
         # Static-default flags don't need targeting at all; the
@@ -232,7 +257,7 @@ def _resolve_override_variant(feature_state: FeatureStateModel) -> Any:
     """
     if not feature_state.enabled:
         return VARIANT_OFF
-    return VARIANT_ON
+    return VARIANT_CONTROL
 
 
 def _off_value_for(control_value: Any) -> Any:

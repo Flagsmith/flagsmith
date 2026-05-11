@@ -32,7 +32,7 @@ from typing import Any
 
 import pytest
 
-from integrations.flagd.constants import VARIANT_OFF, VARIANT_ON
+from integrations.flagd.constants import VARIANT_CONTROL, VARIANT_OFF
 
 FLAGD_VERSION = "v0.13.2"
 _CACHE_DIR = Path.home() / ".cache" / "flagsmith-tests"
@@ -89,9 +89,7 @@ def _free_port() -> int:
 
 
 @pytest.fixture
-def run_flagd(
-    flagd_binary: Path, tmp_path: Path
-) -> Iterator[Any]:
+def run_flagd(flagd_binary: Path, tmp_path: Path) -> Iterator[Any]:
     """
     Yield a callable ``run(document) -> evaluator``. Evaluator exposes
     ``resolve(flag_key, ctx, default)`` returning the resolved value.
@@ -135,9 +133,7 @@ def run_flagd(
                 time.sleep(0.1)
 
         class _Evaluator:
-            def resolve(
-                self, flag_key: str, ctx: dict[str, Any], default: Any
-            ) -> Any:
+            def resolve(self, flag_key: str, ctx: dict[str, Any], default: Any) -> Any:
                 req = urllib.request.Request(
                     f"http://127.0.0.1:{port + 1}/ofrep/v1/evaluate/flags/{flag_key}",
                     data=json.dumps({"context": ctx}).encode(),
@@ -176,8 +172,8 @@ def test_flagd_evaluation__boolean_flag_enabled__resolves_value(
         "flags": {
             "feature_a": {
                 "state": "ENABLED",
-                "variants": {VARIANT_ON: True, VARIANT_OFF: False},
-                "defaultVariant": VARIANT_ON,
+                "variants": {VARIANT_CONTROL: True},
+                "defaultVariant": VARIANT_CONTROL,
                 "targeting": None,
             }
         },
@@ -196,12 +192,13 @@ def test_flagd_evaluation__disabled_flag__resolves_off(run_flagd: Any) -> None:
         "flags": {
             "feature_a": {
                 "state": "DISABLED",
-                "variants": {VARIANT_ON: "yes", VARIANT_OFF: ""},
-                "defaultVariant": VARIANT_OFF,
+                "variants": {VARIANT_CONTROL: "yes"},
+                "defaultVariant": VARIANT_CONTROL,
                 "targeting": None,
             }
         },
     }
+    # When flagd evaluates it
     flagd = run_flagd(document)
     # Then disabled flags resolve to the default ("" for strings)
     assert flagd.resolve("feature_a", {"targetingKey": "user-1"}, None) == ""
@@ -218,12 +215,12 @@ def test_flagd_evaluation__multivariate_fractional__deterministic_and_reachable(
             "experiment": {
                 "state": "ENABLED",
                 "variants": {
+                    VARIANT_CONTROL: "",
                     "variant_1": "A",
                     "variant_2": "B",
                     "variant_3": "C",
-                    VARIANT_OFF: "",
                 },
-                "defaultVariant": VARIANT_ON,
+                "defaultVariant": VARIANT_CONTROL,
                 "targeting": {
                     "fractional": [
                         {"cat": [{"var": "targetingKey"}, "experiment"]},
@@ -242,7 +239,9 @@ def test_flagd_evaluation__multivariate_fractional__deterministic_and_reachable(
     # Then results are deterministic
     assert first == second
     # And every variant is reachable across many keys
-    seen = {flagd.resolve("experiment", {"targetingKey": f"u-{i}"}, "") for i in range(50)}
+    seen = {
+        flagd.resolve("experiment", {"targetingKey": f"u-{i}"}, "") for i in range(50)
+    }
     assert seen >= {"A", "B", "C"}
 
 
@@ -259,13 +258,13 @@ def test_flagd_evaluation__segment_evaluator_reference__resolves_correctly(
         "flags": {
             "feature_a": {
                 "state": "ENABLED",
-                "variants": {VARIANT_ON: "premium-value", VARIANT_OFF: ""},
-                "defaultVariant": VARIANT_ON,
+                "variants": {VARIANT_CONTROL: "premium-value", VARIANT_OFF: ""},
+                "defaultVariant": VARIANT_CONTROL,
                 "targeting": {
                     "if": [
                         {"$ref": "premium"},
                         VARIANT_OFF,
-                        VARIANT_ON,
+                        VARIANT_CONTROL,
                     ]
                 },
             }
@@ -273,9 +272,7 @@ def test_flagd_evaluation__segment_evaluator_reference__resolves_correctly(
     }
     flagd = run_flagd(document)
     # When an identity matches the segment
-    matched = flagd.resolve(
-        "feature_a", {"targetingKey": "u-1", "tier": "premium"}, ""
-    )
+    matched = flagd.resolve("feature_a", {"targetingKey": "u-1", "tier": "premium"}, "")
     not_matched = flagd.resolve(
         "feature_a", {"targetingKey": "u-2", "tier": "free"}, ""
     )

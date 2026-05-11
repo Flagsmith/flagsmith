@@ -140,15 +140,11 @@ class Command(BaseCommand):
         line = f"FLAGSMITH_SERVER_KEY={api_key.key}"
         self.stdout.write(line)
         self.stdout.write(
-            self.style.SUCCESS(
-                f"Admin user: {admin_email} / {admin_password}"
-            )
+            self.style.SUCCESS(f"Admin user: {admin_email} / {admin_password}")
         )
 
         output: Path | None = options.get("output")
         if output is not None:
             output.parent.mkdir(parents=True, exist_ok=True)
             output.write_text(line + "\n")
-            self.stdout.write(
-                self.style.SUCCESS(f"Wrote {output}")
-            )
+            self.stdout.write(self.style.SUCCESS(f"Wrote {output}"))

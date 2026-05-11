@@ -20,7 +20,6 @@ from util.engine_models.segments.models import (
     SegmentRuleModel,
 )
 
-
 # ---------------------------------------------------------------------------
 # Single-rule ALL / ANY / NONE
 # ---------------------------------------------------------------------------
@@ -265,7 +264,9 @@ def test_segment_to_jsonlogic__rule_with_only_empty_children__returns_none() -> 
 # ---------------------------------------------------------------------------
 
 
-def test_segment_to_jsonlogic__percentage_split_condition__translates_with_feature_key() -> None:
+def test_segment_to_jsonlogic__percentage_split_condition__translates_with_feature_key() -> (
+    None
+):
     # Given
     segment = SegmentModel(
         id=9,
@@ -274,9 +275,7 @@ def test_segment_to_jsonlogic__percentage_split_condition__translates_with_featu
             SegmentRuleModel(
                 type="ALL",
                 conditions=[
-                    SegmentConditionModel(
-                        operator=op.PERCENTAGE_SPLIT, value="42"
-                    )
+                    SegmentConditionModel(operator=op.PERCENTAGE_SPLIT, value="42")
                 ],
             )
         ],

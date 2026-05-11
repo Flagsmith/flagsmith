@@ -53,14 +53,10 @@ def condition_to_jsonlogic(
         return {"==": [_var(property_name), None]}
 
     if operator == op.REGEX:
-        raise UntranslatableConditionError(
-            WARNING_REGEX_UNSUPPORTED, operator=operator
-        )
+        raise UntranslatableConditionError(WARNING_REGEX_UNSUPPORTED, operator=operator)
 
     if raw_value is None:
-        raise UntranslatableConditionError(
-            WARNING_MALFORMED_VALUE, operator=operator
-        )
+        raise UntranslatableConditionError(WARNING_MALFORMED_VALUE, operator=operator)
 
     if _is_semver_value(raw_value):
         return _semver_jsonlogic(property_name, operator, raw_value)
@@ -139,9 +135,7 @@ def condition_to_jsonlogic(
             ]
         }
 
-    raise UntranslatableConditionError(
-        WARNING_UNKNOWN_OPERATOR, operator=operator
-    )
+    raise UntranslatableConditionError(WARNING_UNKNOWN_OPERATOR, operator=operator)
 
 
 def _var(property_name: str | None) -> JsonLogic:
@@ -179,14 +173,10 @@ def _semver_jsonlogic(
     raw_value: str,
 ) -> JsonLogic:
     if operator not in _SEMVER_OPERATOR_MAP:
-        raise UntranslatableConditionError(
-            WARNING_MALFORMED_VALUE, operator=operator
-        )
+        raise UntranslatableConditionError(WARNING_MALFORMED_VALUE, operator=operator)
     version = raw_value[: -len(_SEMVER_SUFFIX)].strip()
     if not version:
-        raise UntranslatableConditionError(
-            WARNING_MALFORMED_VALUE, operator=operator
-        )
+        raise UntranslatableConditionError(WARNING_MALFORMED_VALUE, operator=operator)
     return {
         "sem_ver": [
             _var(property_name),

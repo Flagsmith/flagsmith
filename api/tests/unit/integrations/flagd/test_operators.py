@@ -24,7 +24,6 @@ from integrations.flagd.exceptions import UntranslatableConditionError
 from integrations.flagd.translators.operators import condition_to_jsonlogic
 from util.engine_models.segments.models import SegmentConditionModel
 
-
 # ---------------------------------------------------------------------------
 # EQUAL / NOT_EQUAL
 # ---------------------------------------------------------------------------
@@ -108,9 +107,7 @@ def test_condition_to_jsonlogic__numeric_comparator__produces_expected_logic(
     expected_value: Any,
 ) -> None:
     # Given
-    condition = SegmentConditionModel(
-        operator=operator, property_="age", value=raw
-    )
+    condition = SegmentConditionModel(operator=operator, property_="age", value=raw)
 
     # When
     result = condition_to_jsonlogic(condition)
@@ -282,9 +279,7 @@ def test_condition_to_jsonlogic__modulo__produces_modulo_equality() -> None:
     logic = condition_to_jsonlogic(condition)
 
     # Then
-    assert logic == {
-        "==": [{"%": [{"var": "user_id"}, 3.0]}, 0.0]
-    }
+    assert logic == {"==": [{"%": [{"var": "user_id"}, 3.0]}, 0.0]}
 
 
 # ---------------------------------------------------------------------------
@@ -294,9 +289,7 @@ def test_condition_to_jsonlogic__modulo__produces_modulo_equality() -> None:
 
 def test_condition_to_jsonlogic__percentage_split__without_feature_key() -> None:
     # Given
-    condition = SegmentConditionModel(
-        operator=op.PERCENTAGE_SPLIT, value="25"
-    )
+    condition = SegmentConditionModel(operator=op.PERCENTAGE_SPLIT, value="25")
 
     # When
     logic = condition_to_jsonlogic(condition)
@@ -318,9 +311,7 @@ def test_condition_to_jsonlogic__percentage_split__without_feature_key() -> None
 
 def test_condition_to_jsonlogic__percentage_split__with_feature_key() -> None:
     # Given
-    condition = SegmentConditionModel(
-        operator=op.PERCENTAGE_SPLIT, value="10"
-    )
+    condition = SegmentConditionModel(operator=op.PERCENTAGE_SPLIT, value="10")
 
     # When
     logic = condition_to_jsonlogic(condition, feature_key="my-feature")
@@ -340,11 +331,11 @@ def test_condition_to_jsonlogic__percentage_split__with_feature_key() -> None:
     }
 
 
-def test_condition_to_jsonlogic__percentage_split__threshold_above_100_clamps_out_bucket() -> None:
+def test_condition_to_jsonlogic__percentage_split__threshold_above_100_clamps_out_bucket() -> (
+    None
+):
     # Given
-    condition = SegmentConditionModel(
-        operator=op.PERCENTAGE_SPLIT, value="150"
-    )
+    condition = SegmentConditionModel(operator=op.PERCENTAGE_SPLIT, value="150")
 
     # When
     logic = condition_to_jsonlogic(condition)

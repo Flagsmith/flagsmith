@@ -1,10 +1,8 @@
 import json
 
 from django.urls import reverse
-from django.utils.http import http_date
 from rest_framework import status
 from rest_framework.test import APIClient
-
 
 FLAGD_URL = "/api/v1/flagd/flags.json"
 
@@ -225,10 +223,11 @@ def test_flagd_sync__multivariate_flag__variants_and_fractional(
     body = response.json()
     flag = body["flags"][mv_feature_name]
 
-    # The default `on`/`off` variants are always present, plus a variant for
-    # the multivariate option value.
-    assert "on" in flag["variants"]
-    assert "off" in flag["variants"]
+    # The "control" variant is always present; multivariate options appear as
+    # indexed variant_N keys. "off" is only emitted when there is a disabled
+    # override, which this fixture set does not have.
+    assert "control" in flag["variants"]
+    assert "off" not in flag["variants"]
     assert mv_feature_option_value in flag["variants"].values()
 
     # Targeting should be a fractional expression for the enabled flag.

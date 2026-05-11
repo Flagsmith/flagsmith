@@ -52,12 +52,12 @@ def test_segment_to_jsonlogic__regex_condition__emits_regex_warning() -> None:
     ]
 
 
-def test_segment_to_jsonlogic__unknown_operator__emits_unknown_operator_warning() -> None:
+def test_segment_to_jsonlogic__unknown_operator__emits_unknown_operator_warning() -> (
+    None
+):
     # Given -- bypass pydantic validation by constructing then mutating, since
     # ConditionOperator is a constrained enum-like type.
-    condition = SegmentConditionModel(
-        operator=op.EQUAL, property_="trait", value="x"
-    )
+    condition = SegmentConditionModel(operator=op.EQUAL, property_="trait", value="x")
     object.__setattr__(condition, "operator", "TOTALLY_UNKNOWN")
     segment = _wrap(condition)
     warnings: list[TranslationWarning] = []
@@ -75,7 +75,9 @@ def test_segment_to_jsonlogic__unknown_operator__emits_unknown_operator_warning(
     ]
 
 
-def test_segment_to_jsonlogic__malformed_modulo_value__emits_malformed_warning() -> None:
+def test_segment_to_jsonlogic__malformed_modulo_value__emits_malformed_warning() -> (
+    None
+):
     # Given
     condition = SegmentConditionModel(
         operator=op.MODULO, property_="user_id", value="abc"
@@ -117,7 +119,9 @@ def test_segment_to_jsonlogic__semver_suffix_only__emits_malformed_warning() -> 
     ]
 
 
-def test_segment_to_jsonlogic__warning_alongside_translatable_condition__keeps_translatable() -> None:
+def test_segment_to_jsonlogic__warning_alongside_translatable_condition__keeps_translatable() -> (
+    None
+):
     # Given -- one regex (skipped) plus one valid equality (kept).
     segment = SegmentModel(
         id=2,
@@ -151,11 +155,11 @@ def test_segment_to_jsonlogic__warning_alongside_translatable_condition__keeps_t
     assert warnings[0]["reason"] == WARNING_REGEX_UNSUPPORTED
 
 
-def test_segment_to_jsonlogic__no_warnings_list__silently_skips_untranslatable() -> None:
+def test_segment_to_jsonlogic__no_warnings_list__silently_skips_untranslatable() -> (
+    None
+):
     # Given -- caller passes None for warnings, indicating they don't care.
-    condition = SegmentConditionModel(
-        operator=op.REGEX, property_="email", value=".*"
-    )
+    condition = SegmentConditionModel(operator=op.REGEX, property_="email", value=".*")
     segment = _wrap(condition)
 
     # When

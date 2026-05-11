@@ -40,12 +40,16 @@ def _identity(
         identifier=identifier,
         environment_api_key="ser.test",
         identity_features=[
-            FeatureStateModel(feature=feature, enabled=enabled, feature_state_value=value),
+            FeatureStateModel(
+                feature=feature, enabled=enabled, feature_state_value=value
+            ),
         ],
     )
 
 
-def test_feature_state_to_flagd_flag__one_identity_override__targeting_wraps_in_if() -> None:
+def test_feature_state_to_flagd_flag__one_identity_override__targeting_wraps_in_if() -> (
+    None
+):
     # Given a feature with a single identity override (enabled=False)
     feature = _feature(name="id_flag")
     default_fs = FeatureStateModel(
@@ -71,13 +75,15 @@ def test_feature_state_to_flagd_flag__one_identity_override__targeting_wraps_in_
         "if": [
             {"==": [{"var": "targetingKey"}, "alice"]},
             "off",
-            "on",
+            "control",
         ]
     }
     assert warnings == []
 
 
-def test_feature_state_to_flagd_flag__two_identity_overrides__nested_if_first_wins() -> None:
+def test_feature_state_to_flagd_flag__two_identity_overrides__nested_if_first_wins() -> (
+    None
+):
     # Given a feature with two identity overrides
     feature = _feature(name="id_flag")
     default_fs = FeatureStateModel(
@@ -103,12 +109,12 @@ def test_feature_state_to_flagd_flag__two_identity_overrides__nested_if_first_wi
     assert flag["targeting"] == {
         "if": [
             {"==": [{"var": "targetingKey"}, "alice"]},
-            "on",
+            "control",
             {
                 "if": [
                     {"==": [{"var": "targetingKey"}, "bob"]},
                     "off",
-                    "on",
+                    "control",
                 ]
             },
         ]
@@ -116,7 +122,9 @@ def test_feature_state_to_flagd_flag__two_identity_overrides__nested_if_first_wi
     assert warnings == []
 
 
-def test_feature_state_to_flagd_flag__identity_override_with_multivariate__fallback_is_fractional() -> None:
+def test_feature_state_to_flagd_flag__identity_override_with_multivariate__fallback_is_fractional() -> (
+    None
+):
     # Given a multivariate feature with one identity override
     feature = _feature(id_=2, name="mv_id_flag")
     default_fs = FeatureStateModel(
@@ -153,19 +161,21 @@ def test_feature_state_to_flagd_flag__identity_override_with_multivariate__fallb
         "fractional": [
             {"cat": [{"var": "targetingKey"}, "mv_id_flag"]},
             ["variant_1", 60.0],
-            ["on", 40.0],
+            ["control", 40.0],
         ]
     }
     assert flag["targeting"] == {
         "if": [
             {"==": [{"var": "targetingKey"}, "alice"]},
-            "on",
+            "control",
             expected_fractional,
         ]
     }
 
 
-def test_feature_state_to_flagd_flag__identity_and_segment_override__identity_is_outermost() -> None:
+def test_feature_state_to_flagd_flag__identity_and_segment_override__identity_is_outermost() -> (
+    None
+):
     # Given a feature with both a segment override and an identity override
     feature = _feature(id_=3, name="combo_flag")
     default_fs = FeatureStateModel(
@@ -217,12 +227,12 @@ def test_feature_state_to_flagd_flag__identity_and_segment_override__identity_is
     assert flag["targeting"] == {
         "if": [
             {"==": [{"var": "targetingKey"}, "alice"]},
-            "on",
+            "control",
             {
                 "if": [
                     {"$ref": seg_key},
                     "off",
-                    "on",
+                    "control",
                 ]
             },
         ]
@@ -230,7 +240,9 @@ def test_feature_state_to_flagd_flag__identity_and_segment_override__identity_is
     assert warnings == []
 
 
-def test_feature_state_to_flagd_flag__identity_overrides_exceed_limit__warning_emitted() -> None:
+def test_feature_state_to_flagd_flag__identity_overrides_exceed_limit__warning_emitted() -> (
+    None
+):
     # Given more identity overrides than the configured limit
     feature = _feature(id_=4, name="capped_flag")
     default_fs = FeatureStateModel(
@@ -265,7 +277,7 @@ def test_feature_state_to_flagd_flag__identity_overrides_exceed_limit__warning_e
                 "if": [
                     {"==": [{"var": "targetingKey"}, "bob"]},
                     "off",
-                    "on",
+                    "control",
                 ]
             },
         ]

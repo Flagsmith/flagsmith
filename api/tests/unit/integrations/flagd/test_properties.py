@@ -42,7 +42,11 @@ _SAFE_STRING_OPERATORS = [
 def conditions(draw: st.DrawFn) -> SegmentConditionModel:
     operator = draw(st.sampled_from(_SAFE_STRING_OPERATORS))
     property_name = draw(
-        st.text(alphabet=st.characters(min_codepoint=33, max_codepoint=126), min_size=1, max_size=20)
+        st.text(
+            alphabet=st.characters(min_codepoint=33, max_codepoint=126),
+            min_size=1,
+            max_size=20,
+        )
     )
     if operator in (op.IS_SET, op.IS_NOT_SET):
         value = None

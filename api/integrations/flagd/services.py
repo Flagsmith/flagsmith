@@ -28,7 +28,7 @@ from integrations.flagd.translators.segment import (
     slugify_name,
     slugify_segment_name,
 )
-from integrations.flagd.types import FlagdDocument, JsonLogic, TranslationWarning
+from integrations.flagd.types import JsonLogic, TranslationWarning
 from util.engine_models.environments.models import EnvironmentModel
 from util.mappers.engine import map_environment_to_engine
 
@@ -45,9 +45,7 @@ def build_flagd_document(environment: Any) -> dict[str, Any]:
     )
     project = environment.project
     flag_set_id = f"{slugify_name(project.name)}/{slugify_name(environment.name)}"
-    version = (
-        environment.updated_at.isoformat() if environment.updated_at else "0"
-    )
+    version = environment.updated_at.isoformat() if environment.updated_at else "0"
     return _build_from_engine(
         engine_environment,
         environment_id=environment.id,
@@ -91,9 +89,7 @@ def _build_from_engine(
     # environment.feature_states; per-segment overrides live on
     # segment.feature_states (already separate).
     default_feature_states = [
-        fs
-        for fs in engine_environment.feature_states
-        if fs.feature_segment is None
+        fs for fs in engine_environment.feature_states if fs.feature_segment is None
     ]
 
     flags: dict[str, Any] = {}

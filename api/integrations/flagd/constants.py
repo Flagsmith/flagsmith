@@ -1,7 +1,7 @@
 FLAGD_TRANSLATOR_VERSION = "v1"
 FLAGD_SCHEMA_URL = "https://flagd.dev/schema/v0/flags.json"
 
-VARIANT_ON = "on"
+VARIANT_CONTROL = "control"
 VARIANT_OFF = "off"
 
 DEFAULT_IDENTITY_OVERRIDE_LIMIT = 100
