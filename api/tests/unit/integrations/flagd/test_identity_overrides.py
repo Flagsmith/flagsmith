@@ -105,18 +105,15 @@ def test_feature_state_to_flagd_flag__two_identity_overrides__nested_if_first_wi
         warnings=warnings,
     )
 
-    # Then the outermost branch checks alice first, falling through to bob
+    # Then only bob's branch survives — alice's override is a no-op
+    # (enabled=True, value identical to control), so it's pruned. Bob
+    # remains because his override is disabled and therefore routes to
+    # the distinct ``off`` variant.
     assert flag["targeting"] == {
         "if": [
-            {"==": [{"var": "targetingKey"}, "alice"]},
+            {"==": [{"var": "targetingKey"}, "bob"]},
+            "off",
             "control",
-            {
-                "if": [
-                    {"==": [{"var": "targetingKey"}, "bob"]},
-                    "off",
-                    "control",
-                ]
-            },
         ]
     }
     assert warnings == []
@@ -223,18 +220,15 @@ def test_feature_state_to_flagd_flag__identity_and_segment_override__identity_is
         warnings=warnings,
     )
 
-    # Then the identity branch is outermost and wraps the segment branch
+    # Then only the segment branch survives — alice's override is a
+    # no-op (enabled=True with value identical to control) so it's
+    # pruned. The segment override is disabled and therefore still
+    # routes to ``off``.
     assert flag["targeting"] == {
         "if": [
-            {"==": [{"var": "targetingKey"}, "alice"]},
+            {"$ref": seg_key},
+            "off",
             "control",
-            {
-                "if": [
-                    {"$ref": seg_key},
-                    "off",
-                    "control",
-                ]
-            },
         ]
     }
     assert warnings == []

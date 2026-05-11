@@ -394,19 +394,14 @@ def test_feature_state_to_flagd_flag__disabled_with_targeting__keeps_variants_an
         segment_keys=seg_keys,
     )
 
-    # Then state is DISABLED, but defaultVariant is still "control" (flagd's
-    # state field carries the disabled semantic). The override is enabled=True
-    # so no "off" variant is needed.
+    # Then state is DISABLED, defaultVariant is still "control" (flagd's
+    # state field carries the disabled semantic), and the targeting is
+    # absent — the override is enabled=True with value == control, so
+    # routing collapses to a no-op and is pruned.
     assert flag["state"] == "DISABLED"
     assert flag["variants"] == {"control": "ctrl"}
     assert flag["defaultVariant"] == "control"
-    assert flag["targeting"] == {
-        "if": [
-            {"$ref": seg_key},
-            "control",
-            "control",
-        ]
-    }
+    assert "targeting" not in flag
 
 
 def test_feature_state_to_flagd_flag__name_with_special_chars__feature_key_preserved() -> (

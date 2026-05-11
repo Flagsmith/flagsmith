@@ -4,13 +4,18 @@ segment overrides, and identity overrides) into a flagd flag entry.
 
 flagd resolves a flag to a single variant. Flagsmith carries
 ``enabled`` (boolean) and a typed ``value`` simultaneously, plus
-optional multivariate options. We map that to:
+optional multivariate options and per-segment/identity overrides
+that can each set their own typed value. We map that to:
 
 - ``control`` variant carrying the typed value (always present).
 - ``variant_1``, ``variant_2``, … for multivariate options.
-- ``off`` variant carrying a type-zero, **only** emitted when at
-  least one segment or identity override has ``enabled=False`` and
-  therefore needs a destination distinct from ``control``.
+- ``off`` variant carrying a type-zero, emitted **only** when at
+  least one segment or identity override has ``enabled=False``.
+- ``override_<segment-or-identity-slug>`` variants for each enabled
+  override whose value differs from the control. flagd targeting can
+  only return a *variant key* (never a literal value), so the
+  override's typed value has to live in a variant of its own to be
+  preserved at evaluation time.
 
 ``defaultVariant`` is always ``"control"``; flagd's ``state`` field
 carries the enabled/disabled signal independently.
@@ -28,6 +33,7 @@ from integrations.flagd.translators.multivariate import (
     collect_variants,
     fractional_jsonlogic,
 )
+from integrations.flagd.translators.segment import slugify_name
 from integrations.flagd.types import FlagdFlag, JsonLogic, TranslationWarning
 from util.engine_models.features.models import FeatureStateModel
 from util.engine_models.identities.models import IdentityModel
@@ -76,6 +82,20 @@ def feature_state_to_flagd_flag(
     if needs_off_variant:
         variants[VARIANT_OFF] = _off_value_for(control_value)
 
+    # Pre-compute synthesised variants for overrides whose value
+    # differs from the control. Mutates ``variants`` in place and
+    # returns lookup tables the targeting builder consults later.
+    segment_override_variants, identity_override_variants = (
+        _register_override_variants(
+            feature_state.feature.id,
+            control_value=control_value,
+            segments=segments,
+            segment_keys=segment_keys,
+            identity_overrides=identity_overrides,
+            variants=variants,
+        )
+    )
+
     control_target: Any
     if has_multivariate:
         control_target = fractional_jsonlogic(
@@ -95,8 +115,9 @@ def feature_state_to_flagd_flag(
         segment_keys=segment_keys,
         identity_overrides=identity_overrides,
         identity_override_limit=identity_override_limit,
-        variant_keys=variant_keys,
         control_target=control_target,
+        segment_override_variants=segment_override_variants,
+        identity_override_variants=identity_override_variants,
         warnings=warnings,
     )
 
@@ -108,6 +129,69 @@ def feature_state_to_flagd_flag(
     if targeting is not None:
         flag["targeting"] = targeting
     return flag
+
+
+def _register_override_variants(
+    feature_id: int,
+    *,
+    control_value: Any,
+    segments: Iterable[SegmentModel],
+    segment_keys: dict[int, str],
+    identity_overrides: Iterable[IdentityModel],
+    variants: dict[str, Any],
+) -> tuple[dict[int, str], dict[str, str]]:
+    """
+    Walk the overrides on ``feature_id``. For each one that is
+    ``enabled=True`` and carries a typed value that differs from the
+    control, mint a unique ``override_<slug>`` variant and add it to
+    ``variants``. Returns lookup tables segment-id → variant-name and
+    identity-identifier → variant-name; absent keys mean "route to
+    control".
+    """
+    taken: set[str] = set(variants.keys())
+    segment_override_variants: dict[int, str] = {}
+    identity_override_variants: dict[str, str] = {}
+
+    for segment in segments:
+        override_fs = _find_segment_override(segment, feature_id)
+        if override_fs is None or not override_fs.enabled:
+            continue
+        if override_fs.feature_state_value == control_value:
+            continue
+        slug_base = segment_keys.get(segment.id) or slugify_name(
+            segment.name, fallback=f"segment-{segment.id}"
+        )
+        name = _unique_variant_name(f"override_{slug_base}", taken)
+        taken.add(name)
+        variants[name] = override_fs.feature_state_value
+        segment_override_variants[segment.id] = name
+
+    for identity in identity_overrides:
+        override_fs = _find_identity_override(identity, feature_id)
+        if override_fs is None or not override_fs.enabled:
+            continue
+        if override_fs.feature_state_value == control_value:
+            continue
+        slug_base = slugify_name(
+            identity.identifier, fallback="identity"
+        )
+        name = _unique_variant_name(f"override_{slug_base}", taken)
+        taken.add(name)
+        variants[name] = override_fs.feature_state_value
+        identity_override_variants[identity.identifier] = name
+
+    return segment_override_variants, identity_override_variants
+
+
+def _unique_variant_name(candidate: str, taken: set[str]) -> str:
+    if candidate not in taken:
+        return candidate
+    counter = 2
+    while True:
+        suffixed = f"{candidate}-{counter}"
+        if suffixed not in taken:
+            return suffixed
+        counter += 1
 
 
 def _has_disabled_override(
@@ -135,8 +219,9 @@ def _build_targeting(
     segment_keys: dict[int, str],
     identity_overrides: Iterable[IdentityModel],
     identity_override_limit: int,
-    variant_keys: dict[Any, str],
     control_target: Any,
+    segment_override_variants: dict[int, str],
+    identity_override_variants: dict[str, str],
     warnings: list[TranslationWarning],
 ) -> JsonLogic | None:
     feature_id = feature_state.feature.id
@@ -152,7 +237,15 @@ def _build_targeting(
             overflow += 1
             continue
         identity_branches.append(
-            (identity.identifier, _resolve_override_variant(override_fs))
+            (
+                identity.identifier,
+                _resolve_override_variant(
+                    override_fs,
+                    synthesised_variant=identity_override_variants.get(
+                        identity.identifier
+                    ),
+                ),
+            )
         )
     if overflow:
         warnings.append(
@@ -180,7 +273,12 @@ def _build_targeting(
         segment_branches.append(
             (
                 {"$ref": segment_keys[segment.id]},
-                _resolve_override_variant(override_fs),
+                _resolve_override_variant(
+                    override_fs,
+                    synthesised_variant=segment_override_variants.get(
+                        segment.id
+                    ),
+                ),
             )
         )
 
@@ -189,6 +287,20 @@ def _build_targeting(
     # expression. The disabled-state semantic is conveyed by flagd's
     # `state` field, not by routing here.
     fallback: Any = control_target
+
+    # Prune no-op override branches whose variant equals the fallback.
+    # These can arise when an override sets the same value as control
+    # (and is enabled); leaving them in produces dead JsonLogic.
+    segment_branches = [
+        (ref, variant)
+        for ref, variant in segment_branches
+        if variant != fallback
+    ]
+    identity_branches = [
+        (identifier, variant)
+        for identifier, variant in identity_branches
+        if variant != fallback
+    ]
 
     if not identity_branches and not segment_branches:
         # Static-default flags don't need targeting at all; the
@@ -242,21 +354,27 @@ def _segment_override_priority(segment: SegmentModel, feature_id: int) -> int:
     return 0
 
 
-def _resolve_override_variant(feature_state: FeatureStateModel) -> Any:
+def _resolve_override_variant(
+    feature_state: FeatureStateModel,
+    *,
+    synthesised_variant: str | None,
+) -> Any:
     """
     Pick the variant an override should resolve to.
 
-    For now we resolve the override inline as the literal value rather
-    than synthesising additional variants — flagd permits a JsonLogic
-    branch to return the resolved value directly via a string variant
-    name OR a nested object. We keep things simple by returning the
-    parent flag's ``"on"``/``"off"`` based on the override's enabled
-    flag. Multivariate overrides resolve to the override's
-    ``feature_state_value`` directly (no per-identity bucketing for
-    overrides).
+    Resolution order:
+    1. ``enabled=False`` → ``off`` (the disabled semantic always wins,
+       regardless of the override's typed value).
+    2. ``enabled=True`` with a value distinct from the flag's control —
+       route to the caller-supplied ``synthesised_variant`` so the
+       override's typed value is actually returned.
+    3. Otherwise (same value as control) → ``control`` (no extra
+       variant needed; the override is essentially a no-op).
     """
     if not feature_state.enabled:
         return VARIANT_OFF
+    if synthesised_variant is not None:
+        return synthesised_variant
     return VARIANT_CONTROL
 
 
