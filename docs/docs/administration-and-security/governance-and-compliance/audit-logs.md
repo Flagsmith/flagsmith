@@ -46,9 +46,14 @@ Flagsmith will send a `POST` request to your webhook URL with the following payl
   "organisation": 1
  },
  "related_object_id": 6,
+ "related_object_uuid": null,
  "related_object_type": "FEATURE"
 }
 ```
+
+`related_object_type` is one of: `FEATURE`, `FEATURE_STATE`, `SEGMENT`, `ENVIRONMENT`, `CHANGE_REQUEST`, `EDGE_IDENTITY`, `IMPORT_REQUEST`, `EF_VERSION`, `FEATURE_HEALTH`, `RELEASE_PIPELINE`.
+
+`related_object_id` is the integer primary key of the related object; `related_object_uuid` is its UUID. Which field is populated depends on the audit type. `EF_VERSION` and `EDGE_IDENTITY` entries populate only `related_object_uuid`. `SEGMENT` deletion entries populate both. Other entries populate `related_object_id`. When parsing, check both fields.
 
 ### Webhook Signature
 
@@ -91,6 +96,7 @@ The following sections describe the types of events that are recorded in the Aud
 - Flag state changed
 - Flag deleted
 - Multivariate flag state changed
+- New version published — on environments with [Feature Versioning v2](/managing-flags/feature-versioning) enabled, per-feature-state changes are recorded as a single per-version entry (`related_object_type: EF_VERSION`) rather than one entry per changed feature state. Identity-override changes keep the v1 shape (`FEATURE_STATE`).
 
 ### Segments
 
