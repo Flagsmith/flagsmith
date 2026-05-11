@@ -79,7 +79,9 @@ services:
       - --output=/shared/flagd.env
 
   flagd:
-    image: ghcr.io/open-feature/flagd:v0.13.2
+    build:
+      context: ./docker/flagd-launcher    # alpine + flagd binary — needs a shell
+    image: flagsmith-flagd-launcher:local
     depends_on:
       flagsmith-bootstrap:
         condition: service_completed_successfully
@@ -88,11 +90,10 @@ services:
       - "8016:8016"   # OFREP (HTTP-based OpenFeature Remote Evaluation Protocol)
     volumes:
       - flagd-config:/shared:ro
-    entrypoint: ["/bin/sh", "-c"]
     command:
       - |
         . /shared/flagd.env && \
-        exec /flagd start \
+        exec flagd start \
           --uri=http://flagsmith:8000/api/v1/flagd/flags.json \
           --sync-provider=http \
           --sync-provider-args=headers=X-Environment-Key:$$FLAGSMITH_SERVER_KEY,pollInterval=5
