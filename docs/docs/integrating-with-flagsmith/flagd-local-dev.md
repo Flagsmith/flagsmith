@@ -6,7 +6,7 @@ sidebar_position: 56
 
 # Local Development with Flagsmith and flagd
 
-This guide spins up a self-contained stack for OpenFeature work: Flagsmith as the management UI, flagd as the runtime, and your service evaluating flags through an OpenFeature provider — all on your laptop, with flag state persisted in a SQLite volume so you keep your work between restarts.
+This guide spins up a self-contained stack for OpenFeature work: Flagsmith as the management UI, flagd as the runtime, and your service evaluating flags through an OpenFeature provider — all on your laptop, with flag state persisted in a Postgres volume so you keep your work between restarts.
 
 The whole thing is `docker compose up` and done — no UI clicks to mint keys, no env vars to fill in. A small bootstrap container provisions a default `local-dev` organisation / project / environment on first boot, writes the resulting server-side key to a shared volume, and flagd reads it from there. You don't think about org/project/env locally; you just author flags in the UI and they show up in flagd within seconds.
 
@@ -15,7 +15,7 @@ The whole thing is `docker compose up` and done — no UI clicks to mint keys, n
 │  Flagsmith API  │ ◄────────────── │      flagd       │ ◄──────────────┐
 │  + UI :8000     │                 │  :8013 (gRPC)    │                │
 │  ─────────────  │                 │  :8016 (OFREP)   │      ┌─────────┴─────────┐
-│  SQLite volume  │                 └──────────────────┘      │   your service    │
+│  Postgres vol.  │                 └──────────────────┘      │   your service    │
 └─────────────────┘                                           └───────────────────┘
 ```
 
@@ -23,55 +23,69 @@ The walkthrough below assumes Docker, Docker Compose, and `curl`. About 5 minute
 
 ## 1. The compose file
 
-Create `docker-compose.flagd-dev.yml`:
+A ready-to-use compose file lives at the repo root as `docker-compose.flagd-dev.yml`. Its shape:
 
 ```yaml
 x-flagsmith-env: &flagsmith-env
-  DATABASE_URL: sqlite:////data/flagsmith.db
-  USE_POSTGRES_FOR_ANALYTICS: "false"
+  DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+  USE_POSTGRES_FOR_ANALYTICS: "true"
   DJANGO_ALLOWED_HOSTS: "*"
   DJANGO_SECRET_KEY: dev-only-secret-not-for-prod
-  ENVIRONMENT: development
+  ENVIRONMENT: local
   ALLOW_ADMIN_INITIATION_VIA_CLI: "true"
   ADMIN_EMAIL: admin@example.com
   DJANGO_ADMIN_PASSWORD: admin
+  PREVENT_SIGNUP: "true"
+  TASK_RUN_METHOD: SYNCHRONOUSLY
 
 volumes:
-  flagsmith-data:
+  flagsmith-pgdata:
   flagd-config:
 
 services:
+  postgres:
+    image: postgres:15.5-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flagsmith
+    volumes:
+      - flagsmith-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d flagsmith -U postgres"]
+      interval: 2s
+      retries: 20
+
   flagsmith:
-    image: docker.flagsmith.com/flagsmith/flagsmith:latest
+    image: flagsmith-flagd-dev:local        # built locally — see "First boot"
     ports: ["8000:8000"]
     environment:
       <<: *flagsmith-env
-    volumes:
-      - flagsmith-data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8000/health/"]
       interval: 5s
-      timeout: 3s
-      retries: 20
+      retries: 30
 
-  # One-shot init container: ensures a default org/project/env exists
-  # and writes the server-side key to a file flagd can source.
+  # One-shot init: ensures a default org/project/env exists and writes
+  # the resulting server-side key to a file flagd can source.
   flagsmith-bootstrap:
-    image: docker.flagsmith.com/flagsmith/flagsmith:latest
+    image: flagsmith-flagd-dev:local
     depends_on:
       flagsmith:
         condition: service_healthy
     environment:
       <<: *flagsmith-env
     volumes:
-      - flagsmith-data:/data
       - flagd-config:/shared
+    entrypoint: ["python", "manage.py"]
     command:
       - bootstrap_flagd_local
       - --output=/shared/flagd.env
 
   flagd:
-    image: ghcr.io/open-feature/flagd:latest
+    image: ghcr.io/open-feature/flagd:v0.13.2
     depends_on:
       flagsmith-bootstrap:
         condition: service_completed_successfully
@@ -84,15 +98,25 @@ services:
     command:
       - |
         . /shared/flagd.env && \
-        exec flagd start \
+        exec /flagd start \
           --uri=http://flagsmith:8000/api/v1/flagd/flags.json \
           --sync-provider=http \
           --sync-provider-args=headers=X-Environment-Key:$$FLAGSMITH_SERVER_KEY,pollInterval=5
 ```
 
-Key things to note:
+## First boot — build the Flagsmith image
 
-- **SQLite-backed Flagsmith**: `DATABASE_URL=sqlite:////data/flagsmith.db` plus a named volume keeps your flags around across `docker compose down && up`.
+Until this PR lands in a published image, build it once from your branch:
+
+```bash
+docker build -t flagsmith-flagd-dev:local --target oss-unified .
+```
+
+The `oss-unified` target bundles the API + frontend into a single image. Builds take ~5 minutes the first time and are cached after that.
+
+Key things to note about the compose file:
+
+- **Postgres-backed**: Flagsmith requires Postgres (some migrations use `NOW()`). The `flagsmith-pgdata` volume keeps your flags around across `docker compose down && up`.
 - **`flagsmith-bootstrap` init container**: runs the `bootstrap_flagd_local` Django management command. It is idempotent — first run creates `local-dev` / `local-dev` / `development` and an `EnvironmentAPIKey`; subsequent runs reuse them. Output is written to a shared volume as `FLAGSMITH_SERVER_KEY=ser.…`.
 - **flagd entrypoint sources the file**: no `.env` ferrying, no manual UI clicks, no per-user state.
 - **Short poll interval (5 s)**: nice for development; set to 30–60 s in real deployments.
@@ -105,7 +129,7 @@ docker compose -f docker-compose.flagd-dev.yml up -d
 
 That's it. Within a few seconds:
 
-1. Flagsmith starts (creates the SQLite DB on first boot).
+1. Flagsmith starts (creates the Postgres DB on first boot).
 2. `flagsmith-bootstrap` ensures a default org/project/env and emits the server key to `/shared/flagd.env`.
 3. flagd reads the key, starts polling Flagsmith.
 
@@ -225,10 +249,10 @@ So one env key = one environment = one flagd flag-set. To target multiple Flagsm
 
 ```bash
 docker compose -f docker-compose.flagd-dev.yml down       # keep data
-docker compose -f docker-compose.flagd-dev.yml down -v    # wipe SQLite volume
+docker compose -f docker-compose.flagd-dev.yml down -v    # wipe Postgres volume
 ```
 
-The named `flagsmith-data` volume is the only persistent state. Delete it if you want a fresh org/project tree.
+The named `flagsmith-pgdata` volume is the only persistent state. Delete it if you want a fresh org/project tree.
 
 ## Troubleshooting
 

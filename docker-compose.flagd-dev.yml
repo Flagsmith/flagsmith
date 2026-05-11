@@ -1,0 +1,89 @@
+# Local-dev stack: Flagsmith UI + flagd runtime + Postgres for persistence.
+#
+# Build the Flagsmith image once with:
+#   docker build -t flagsmith-flagd-dev:local --target oss-unified .
+# Then bring everything up:
+#   docker compose -f docker-compose.flagd-dev.yml up
+#
+# See docs/docs/integrating-with-flagsmith/flagd-local-dev.md for details.
+
+x-flagsmith-env: &flagsmith-env
+  DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+  USE_POSTGRES_FOR_ANALYTICS: "true"
+  DJANGO_ALLOWED_HOSTS: "*"
+  DJANGO_SECRET_KEY: dev-only-secret-not-for-prod
+  ENVIRONMENT: local
+  ALLOW_ADMIN_INITIATION_VIA_CLI: "true"
+  ADMIN_EMAIL: admin@example.com
+  DJANGO_ADMIN_PASSWORD: admin
+  PREVENT_SIGNUP: "true"
+  TASK_RUN_METHOD: SYNCHRONOUSLY
+
+volumes:
+  flagsmith-pgdata:
+  flagd-config:
+
+services:
+  postgres:
+    image: postgres:15.5-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flagsmith
+    volumes:
+      - flagsmith-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d flagsmith -U postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  flagsmith:
+    image: flagsmith-flagd-dev:local
+    ports:
+      - "8000:8000"
+    environment:
+      <<: *flagsmith-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health/"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  # Idempotent: creates a default org/project/env on first run, reuses
+  # them thereafter. Writes the resulting server-side key to a shared
+  # volume that flagd then sources.
+  flagsmith-bootstrap:
+    image: flagsmith-flagd-dev:local
+    depends_on:
+      flagsmith:
+        condition: service_healthy
+    environment:
+      <<: *flagsmith-env
+    volumes:
+      - flagd-config:/shared
+    entrypoint: ["python", "manage.py"]
+    command:
+      - bootstrap_flagd_local
+      - --output=/shared/flagd.env
+
+  flagd:
+    image: ghcr.io/open-feature/flagd:v0.13.2
+    depends_on:
+      flagsmith-bootstrap:
+        condition: service_completed_successfully
+    ports:
+      - "8013:8013"   # gRPC
+      - "8016:8016"   # OFREP
+    volumes:
+      - flagd-config:/shared:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        . /shared/flagd.env && \
+        exec /flagd start \
+          --uri=http://flagsmith:8000/api/v1/flagd/flags.json \
+          --sync-provider=http \
+          --sync-provider-args=headers=X-Environment-Key:$$FLAGSMITH_SERVER_KEY,pollInterval=5
