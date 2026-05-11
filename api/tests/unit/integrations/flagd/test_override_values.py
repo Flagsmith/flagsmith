@@ -195,9 +195,11 @@ def test_feature_state_to_flagd_flag__override_value_equals_control__no_extra_va
     assert "targeting" not in flag
 
 
-def test_feature_state_to_flagd_flag__disabled_override__still_routes_to_off() -> None:
-    # Given a segment override that's disabled with a different value
-    feature = _feature(name="seg_off")
+def test_feature_state_to_flagd_flag__disabled_override_with_distinct_value__routes_to_value() -> None:
+    # Given a segment override that's disabled but carries a distinct
+    # value. The new model treats override.enabled as decorative for
+    # flagd consumers; only the typed value flows through.
+    feature = _feature(name="seg_disabled_value")
     default_fs = FeatureStateModel(
         feature=feature, enabled=True, feature_state_value="A"
     )
@@ -206,22 +208,67 @@ def test_feature_state_to_flagd_flag__disabled_override__still_routes_to_off() -
         segment_name="BlockedUsers",
         feature=feature,
         enabled=False,
-        value="should-not-matter",
+        value="blocked-value",
     )
 
     # When we translate it
     flag = _translate(default_fs, segments=[segment])
 
-    # Then an "off" variant is emitted (because the override is disabled)
-    # but NO override_BlockedUsers variant (disabled wins over value).
-    assert flag["variants"] == {"control": "A", "off": ""}
+    # Then a per-override variant carrying the override's value is
+    # minted and the targeting routes to it. No ``off`` variant.
+    assert flag["variants"] == {
+        "control": "A",
+        "override_BlockedUsers": "blocked-value",
+    }
     assert flag["targeting"] == {
         "if": [
             {"$ref": "BlockedUsers"},
-            "off",
+            "override_BlockedUsers",
             "control",
         ]
     }
+
+
+def test_feature_state_to_flagd_flag__disabled_override_value_equals_control__warns() -> None:
+    # Given a disabled override whose value equals the control —
+    # invisible to flagd consumers, so we emit a translation warning.
+    from integrations.flagd.constants import WARNING_DISABLED_OVERRIDE_NO_OP
+
+    feature = _feature(name="seg_no_op")
+    default_fs = FeatureStateModel(
+        feature=feature, enabled=True, feature_state_value="A"
+    )
+    segment = _segment_with_override(
+        segment_id=13,
+        segment_name="Misconfigured",
+        feature=feature,
+        enabled=False,
+        value="A",
+    )
+    used: set[str] = set()
+    seg_key = slugify_segment_name(segment.name, taken=used)
+    seg_targeting = {segment.id: segment_to_jsonlogic(segment)}
+    seg_keys = {segment.id: seg_key}
+    warnings: list[TranslationWarning] = []
+
+    # When we translate it
+    feature_state_to_flagd_flag(
+        default_fs,
+        feature_key="seg_no_op",
+        segments=[segment],
+        segment_targeting=seg_targeting,
+        segment_keys=seg_keys,
+        identity_overrides=[],
+        identity_override_limit=100,
+        warnings=warnings,
+    )
+
+    # Then we get a no-op warning naming the segment
+    assert any(
+        w["reason"] == WARNING_DISABLED_OVERRIDE_NO_OP
+        and "Misconfigured" in w["detail"]
+        for w in warnings
+    )
 
 
 @pytest.mark.parametrize(

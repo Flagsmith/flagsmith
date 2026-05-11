@@ -50,12 +50,13 @@ def _identity(
 def test_feature_state_to_flagd_flag__one_identity_override__targeting_wraps_in_if() -> (
     None
 ):
-    # Given a feature with a single identity override (enabled=False)
+    # Given a feature with a single identity override carrying a
+    # distinct value
     feature = _feature(name="id_flag")
     default_fs = FeatureStateModel(
         feature=feature, enabled=True, feature_state_value="ctrl"
     )
-    identity = _identity("alice", feature, enabled=False, value="ctrl")
+    identity = _identity("alice", feature, enabled=True, value="override-val")
     warnings: list[TranslationWarning] = []
 
     # When we translate it
@@ -70,27 +71,28 @@ def test_feature_state_to_flagd_flag__one_identity_override__targeting_wraps_in_
         warnings=warnings,
     )
 
-    # Then the targeting expression is an "if" comparing targetingKey to alice
+    # Then the targeting routes alice to the override's synthesised variant
     assert flag["targeting"] == {
         "if": [
             {"==": [{"var": "targetingKey"}, "alice"]},
-            "off",
+            "override_alice",
             "control",
         ]
     }
+    assert flag["variants"]["override_alice"] == "override-val"
     assert warnings == []
 
 
 def test_feature_state_to_flagd_flag__two_identity_overrides__nested_if_first_wins() -> (
     None
 ):
-    # Given a feature with two identity overrides
+    # Given a feature with two identity overrides carrying distinct values
     feature = _feature(name="id_flag")
     default_fs = FeatureStateModel(
         feature=feature, enabled=True, feature_state_value="ctrl"
     )
-    alice = _identity("alice", feature, enabled=True, value="ctrl")
-    bob = _identity("bob", feature, enabled=False, value="ctrl")
+    alice = _identity("alice", feature, enabled=True, value="alice-val")
+    bob = _identity("bob", feature, enabled=True, value="bob-val")
     warnings: list[TranslationWarning] = []
 
     # When we translate it
@@ -105,15 +107,18 @@ def test_feature_state_to_flagd_flag__two_identity_overrides__nested_if_first_wi
         warnings=warnings,
     )
 
-    # Then only bob's branch survives — alice's override is a no-op
-    # (enabled=True, value identical to control), so it's pruned. Bob
-    # remains because his override is disabled and therefore routes to
-    # the distinct ``off`` variant.
+    # Then the outermost branch checks alice first, falling through to bob
     assert flag["targeting"] == {
         "if": [
-            {"==": [{"var": "targetingKey"}, "bob"]},
-            "off",
-            "control",
+            {"==": [{"var": "targetingKey"}, "alice"]},
+            "override_alice",
+            {
+                "if": [
+                    {"==": [{"var": "targetingKey"}, "bob"]},
+                    "override_bob",
+                    "control",
+                ]
+            },
         ]
     }
     assert warnings == []
@@ -138,7 +143,7 @@ def test_feature_state_to_flagd_flag__identity_override_with_multivariate__fallb
             ),
         ],
     )
-    identity = _identity("alice", feature, enabled=True, value="ctrl")
+    identity = _identity("alice", feature, enabled=True, value="alice-val")
     warnings: list[TranslationWarning] = []
 
     # When we translate it
@@ -164,10 +169,11 @@ def test_feature_state_to_flagd_flag__identity_override_with_multivariate__fallb
     assert flag["targeting"] == {
         "if": [
             {"==": [{"var": "targetingKey"}, "alice"]},
-            "control",
+            "override_alice",
             expected_fractional,
         ]
     }
+    assert flag["variants"]["override_alice"] == "alice-val"
 
 
 def test_feature_state_to_flagd_flag__identity_and_segment_override__identity_is_outermost() -> (
@@ -180,8 +186,8 @@ def test_feature_state_to_flagd_flag__identity_and_segment_override__identity_is
     )
     seg_override = FeatureStateModel(
         feature=feature,
-        enabled=False,
-        feature_state_value="ctrl",
+        enabled=True,
+        feature_state_value="premium-val",
         feature_segment=FeatureSegmentModel(priority=0),
     )
     segment = SegmentModel(
@@ -205,7 +211,7 @@ def test_feature_state_to_flagd_flag__identity_and_segment_override__identity_is
     seg_key = slugify_segment_name(segment.name, taken=used)
     seg_targeting = {segment.id: segment_to_jsonlogic(segment)}
     seg_keys = {segment.id: seg_key}
-    identity = _identity("alice", feature, enabled=True, value="ctrl")
+    identity = _identity("alice", feature, enabled=True, value="alice-val")
     warnings: list[TranslationWarning] = []
 
     # When we translate it
@@ -220,15 +226,19 @@ def test_feature_state_to_flagd_flag__identity_and_segment_override__identity_is
         warnings=warnings,
     )
 
-    # Then only the segment branch survives — alice's override is a
-    # no-op (enabled=True with value identical to control) so it's
-    # pruned. The segment override is disabled and therefore still
-    # routes to ``off``.
+    # Then alice is checked outermost and falls through to the segment
+    # branch which routes to the segment's override variant.
     assert flag["targeting"] == {
         "if": [
-            {"$ref": seg_key},
-            "off",
-            "control",
+            {"==": [{"var": "targetingKey"}, "alice"]},
+            "override_alice",
+            {
+                "if": [
+                    {"$ref": seg_key},
+                    "override_Premium",
+                    "control",
+                ]
+            },
         ]
     }
     assert warnings == []
@@ -243,10 +253,10 @@ def test_feature_state_to_flagd_flag__identity_overrides_exceed_limit__warning_e
         feature=feature, enabled=True, feature_state_value="ctrl"
     )
     identities = [
-        _identity("alice", feature, enabled=False, value="ctrl"),
-        _identity("bob", feature, enabled=False, value="ctrl"),
-        _identity("carol", feature, enabled=False, value="ctrl"),
-        _identity("dave", feature, enabled=False, value="ctrl"),
+        _identity("alice", feature, enabled=True, value="alice-val"),
+        _identity("bob", feature, enabled=True, value="bob-val"),
+        _identity("carol", feature, enabled=True, value="carol-val"),
+        _identity("dave", feature, enabled=True, value="dave-val"),
     ]
     warnings: list[TranslationWarning] = []
 
@@ -262,15 +272,16 @@ def test_feature_state_to_flagd_flag__identity_overrides_exceed_limit__warning_e
         warnings=warnings,
     )
 
-    # Then only the first two identities show up in targeting
+    # Then only the first two identities show up in targeting, each
+    # routing to their own synthesised override variant.
     assert flag["targeting"] == {
         "if": [
             {"==": [{"var": "targetingKey"}, "alice"]},
-            "off",
+            "override_alice",
             {
                 "if": [
                     {"==": [{"var": "targetingKey"}, "bob"]},
-                    "off",
+                    "override_bob",
                     "control",
                 ]
             },

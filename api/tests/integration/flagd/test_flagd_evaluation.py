@@ -32,7 +32,7 @@ from typing import Any
 
 import pytest
 
-from integrations.flagd.constants import VARIANT_CONTROL, VARIANT_OFF
+from integrations.flagd.constants import VARIANT_CONTROL
 
 FLAGD_VERSION = "v0.13.2"
 _CACHE_DIR = Path.home() / ".cache" / "flagsmith-tests"
@@ -258,12 +258,15 @@ def test_flagd_evaluation__segment_evaluator_reference__resolves_correctly(
         "flags": {
             "feature_a": {
                 "state": "ENABLED",
-                "variants": {VARIANT_CONTROL: "premium-value", VARIANT_OFF: ""},
+                "variants": {
+                    VARIANT_CONTROL: "default-value",
+                    "override_premium": "premium-value",
+                },
                 "defaultVariant": VARIANT_CONTROL,
                 "targeting": {
                     "if": [
                         {"$ref": "premium"},
-                        VARIANT_OFF,
+                        "override_premium",
                         VARIANT_CONTROL,
                     ]
                 },
@@ -276,6 +279,7 @@ def test_flagd_evaluation__segment_evaluator_reference__resolves_correctly(
     not_matched = flagd.resolve(
         "feature_a", {"targetingKey": "u-2", "tier": "free"}, ""
     )
-    # Then the segment branch resolves to off and the default branch to on
-    assert matched == ""
-    assert not_matched == "premium-value"
+    # Then the segment branch resolves to the override variant and the
+    # default branch to control.
+    assert matched == "premium-value"
+    assert not_matched == "default-value"

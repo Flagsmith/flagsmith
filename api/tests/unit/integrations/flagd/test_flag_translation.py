@@ -302,8 +302,8 @@ def test_feature_state_to_flagd_flag__one_segment_override__emits_if_with_ref() 
     )
     override_fs = FeatureStateModel(
         feature=feature,
-        enabled=False,
-        feature_state_value="control",
+        enabled=True,
+        feature_state_value="premium-value",
         feature_segment=FeatureSegmentModel(priority=0),
     )
     segment = SegmentModel(
@@ -337,14 +337,14 @@ def test_feature_state_to_flagd_flag__one_segment_override__emits_if_with_ref() 
         segment_keys=seg_keys,
     )
 
-    # Then targeting wraps the override in an "if" with a $ref to the segment;
-    # because the segment override is disabled, both "off" and "control" are
-    # available variants.
-    assert flag["variants"] == {"control": "control", "off": ""}
+    # Then the override's value lives in a synthesised variant and the
+    # targeting branches to it when the segment matches.
+    expected_variant = f"override_{seg_key}"
+    assert flag["variants"] == {"control": "control", expected_variant: "premium-value"}
     assert flag["targeting"] == {
         "if": [
             {"$ref": seg_key},
-            "off",
+            expected_variant,
             "control",
         ]
     }
@@ -443,16 +443,12 @@ def test_feature_state_to_flagd_flag__name_with_special_chars__feature_key_prese
         identity_overrides=[identity],
     )
 
-    # Then the feature key flows verbatim into the bucket seed
+    # Then alice's override is a no-op (enabled=True, value == control)
+    # and gets pruned. Targeting collapses to the bare fractional, which
+    # uses the feature key verbatim in the bucket seed.
     assert flag["targeting"] == {
-        "if": [
-            {"==": [{"var": "targetingKey"}, "alice"]},
-            "control",
-            {
-                "fractional": [
-                    {"cat": [{"var": "targetingKey"}, "My Flag/With Spaces!"]},
-                    ["variant_1", 100.0],
-                ]
-            },
+        "fractional": [
+            {"cat": [{"var": "targetingKey"}, "My Flag/With Spaces!"]},
+            ["variant_1", 100.0],
         ]
     }
