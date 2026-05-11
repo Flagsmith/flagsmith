@@ -21,6 +21,16 @@ volumes:
   flagd-config:
 
 services:
+  # The Flagsmith image runs as `nobody` (uid 65534); the fresh
+  # flagd-config volume is created root-owned. This one-shot service
+  # fixes the ownership so the bootstrap container can write the env
+  # file into it.
+  init-volumes:
+    image: busybox
+    command: ["sh", "-c", "chown -R 65534:65534 /shared"]
+    volumes:
+      - flagd-config:/shared
+
   postgres:
     image: postgres:15.5-alpine
     environment:
@@ -54,6 +64,8 @@ services:
     depends_on:
       flagsmith:
         condition: service_healthy
+      init-volumes:
+        condition: service_completed_successfully
     environment:
       <<: *flagsmith-env
     volumes:
