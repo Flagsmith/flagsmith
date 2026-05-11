@@ -15,7 +15,7 @@ This page explains what changes when you enable Feature Versioning v2 on an envi
 
 :::caution
 
-Enabling Feature Versioning v2 on an environment is irreversible. You cannot return an environment to v1 once the migration has run. To "roll back" a flag value, publish a new version of that flag with the earlier value.
+Enabling Feature Versioning v2 on an environment is irreversible.
 
 :::
 
