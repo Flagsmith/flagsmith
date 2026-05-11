@@ -5,13 +5,23 @@ from typing import Any
 from django.conf import settings
 
 from integrations.lead_tracking.lead_tracking import LeadTracker
-from organisations.models import Organisation
+from organisations.models import HubspotOrganisation, Organisation
 from users.models import FFAdminUser, HubspotLead, HubspotTracker
 
 from .client import HubspotClient
-from .constants import HUBSPOT_FORM_ID_SAAS
+from .constants import GENERIC_EMAIL_DOMAINS, HUBSPOT_FORM_ID_SAAS
 
 logger = logging.getLogger(__name__)
+
+
+def _company_domain_from_email(email: str) -> str | None:
+    """Return the corporate domain from a user email, or None if generic/personal."""
+    if not email or "@" not in email:
+        return None
+    domain = email.split("@", 1)[1].lower()
+    if domain in GENERIC_EMAIL_DOMAINS:
+        return None
+    return domain
 
 
 class HubspotLeadTracker(LeadTracker):
@@ -49,9 +59,49 @@ class HubspotLeadTracker(LeadTracker):
         return hubspot_contact_id
 
     def create_lead(self, user: FFAdminUser, organisation: Organisation) -> None:
-        # Only create the contact. HubSpot handles company creation and
-        # association automatically from the contact's email domain.
+        # Create the contact. HubSpot handles company creation and association
+        # automatically from the contact's email domain.
         self._get_or_create_user_hubspot_id(user)
+        # Stamp the Flagsmith organisation id onto the (auto-created) HubSpot
+        # company. This is the only company-level write we do; name and
+        # subscription data are owned by HubSpot enrichment and the
+        # ChargeBee -> HubSpot sync respectively.
+        self._link_organisation_to_hubspot_company(user, organisation)
+
+    def _link_organisation_to_hubspot_company(
+        self, user: FFAdminUser, organisation: Organisation
+    ) -> None:
+        """Write the Flagsmith organisation id onto the HubSpot company matched
+        by the user's email domain. Idempotent: once a HubspotOrganisation row
+        exists for this Flagsmith organisation we skip subsequent writes."""
+        if HubspotOrganisation.objects.filter(organisation=organisation).exists():
+            return
+
+        domain = _company_domain_from_email(user.email)
+        if not domain:
+            return
+
+        company = self.client.get_company_by_domain(domain)
+        if not company:
+            logger.info(
+                "No HubSpot company found for domain %s; skipping orgid write for organisation %s",
+                domain,
+                organisation.id,
+            )
+            return
+
+        # Passing only flagsmith_organisation_id ensures the payload contains
+        # only orgid_unique - no name overwrite, no subscription writes. This
+        # is the constraint that PR #7147 removed for the wrong reasons; this
+        # restores the orgid sync without bringing back the original problems.
+        self.client.update_company(
+            hubspot_company_id=company["id"],
+            flagsmith_organisation_id=organisation.id,
+        )
+        HubspotOrganisation.objects.get_or_create(
+            organisation=organisation,
+            defaults={"hubspot_id": company["id"]},
+        )
 
     def _get_new_contact_with_retry(
         self, user: FFAdminUser, max_retries: int = 3

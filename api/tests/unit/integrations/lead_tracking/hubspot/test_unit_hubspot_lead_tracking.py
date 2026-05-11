@@ -52,6 +52,9 @@ def mock_client_existing_contact(mocker: MockerFixture) -> MagicMock:
     mock_client.create_company.return_value = {
         "id": HUBSPOT_COMPANY_ID,
     }
+    # Default to no company match - tests that need a matched company should
+    # override this on the returned mock.
+    mock_client.get_company_by_domain.return_value = None
     mocker.patch(
         "integrations.lead_tracking.hubspot.lead_tracker.HubspotClient",
         return_value=mock_client,
@@ -278,6 +281,157 @@ def test_create_user_hubspot_contact__get_contact_retries__returns_expected_id(
         is hubspot_leads_exists
     )
     assert mock_client.get_contact.call_count == expected_call_count
+
+
+def test_create_lead__corporate_email_with_matching_company__writes_orgid_only(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    """The orgid_unique write must contain ONLY the org id - no name, no
+    subscription. This is the regression guard for PR #7147 which bundled
+    these together and was later reverted because the bundle was wrong."""
+    # Given
+    user = FFAdminUser.objects.create(
+        email="user@example.com",
+        first_name="Frank",
+        last_name="Louis",
+        marketing_consent_given=True,
+    )
+    HubspotLead.objects.create(user=user, hubspot_id=HUBSPOT_USER_ID)
+
+    mock_client = mocker.MagicMock()
+    mock_client.get_company_by_domain.return_value = {"id": HUBSPOT_COMPANY_ID}
+    mocker.patch(
+        "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker._get_client",
+        return_value=mock_client,
+    )
+
+    # When
+    tracker = HubspotLeadTracker()
+    tracker.create_lead(user=user, organisation=organisation)
+
+    # Then
+    mock_client.get_company_by_domain.assert_called_once_with("example.com")
+    mock_client.update_company.assert_called_once_with(
+        hubspot_company_id=HUBSPOT_COMPANY_ID,
+        flagsmith_organisation_id=organisation.id,
+    )
+    # Regression: must NOT pass a name or subscription - these were the two
+    # things that made the previous integration overwrite enriched data.
+    call_kwargs = mock_client.update_company.call_args.kwargs
+    assert "name" not in call_kwargs
+    assert "active_subscription" not in call_kwargs
+    # The HubspotOrganisation row should be persisted so we do not re-write.
+    assert HubspotOrganisation.objects.filter(
+        organisation=organisation, hubspot_id=HUBSPOT_COMPANY_ID
+    ).exists()
+
+
+def test_create_lead__existing_hubspot_organisation__skips_company_lookup(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    """Once a Flagsmith organisation is linked to a HubSpot company we do not
+    re-write the orgid (which would burn API calls and risk overwriting if
+    multiple Flagsmith orgs share a company)."""
+    # Given
+    user = FFAdminUser.objects.create(
+        email="user@example.com",
+        first_name="Frank",
+        last_name="Louis",
+        marketing_consent_given=True,
+    )
+    HubspotLead.objects.create(user=user, hubspot_id=HUBSPOT_USER_ID)
+    HubspotOrganisation.objects.create(
+        organisation=organisation, hubspot_id=HUBSPOT_COMPANY_ID
+    )
+
+    mock_client = mocker.MagicMock()
+    mocker.patch(
+        "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker._get_client",
+        return_value=mock_client,
+    )
+
+    # When
+    tracker = HubspotLeadTracker()
+    tracker.create_lead(user=user, organisation=organisation)
+
+    # Then
+    mock_client.get_company_by_domain.assert_not_called()
+    mock_client.update_company.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "email",
+    [
+        "user@gmail.com",
+        "user@yahoo.com",
+        "user@hotmail.com",
+        "user@outlook.com",
+        "user@proton.me",
+    ],
+)
+def test_create_lead__generic_email_domain__skips_orgid_write(
+    organisation: Organisation,
+    mocker: MockerFixture,
+    email: str,
+) -> None:
+    """Personal email domains do not identify a unique company so we skip
+    the company lookup entirely."""
+    # Given
+    user = FFAdminUser.objects.create(
+        email=email,
+        first_name="Frank",
+        last_name="Louis",
+        marketing_consent_given=True,
+    )
+    HubspotLead.objects.create(user=user, hubspot_id=HUBSPOT_USER_ID)
+
+    mock_client = mocker.MagicMock()
+    mocker.patch(
+        "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker._get_client",
+        return_value=mock_client,
+    )
+
+    # When
+    tracker = HubspotLeadTracker()
+    tracker.create_lead(user=user, organisation=organisation)
+
+    # Then
+    mock_client.get_company_by_domain.assert_not_called()
+    mock_client.update_company.assert_not_called()
+    assert not HubspotOrganisation.objects.filter(organisation=organisation).exists()
+
+
+def test_create_lead__no_hubspot_company_for_domain__skips_update(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    """If HubSpot has not yet auto-created a company for the user's domain we
+    skip the update silently - the next user joining the same org will retry."""
+    # Given
+    user = FFAdminUser.objects.create(
+        email="user@example.com",
+        first_name="Frank",
+        last_name="Louis",
+        marketing_consent_given=True,
+    )
+    HubspotLead.objects.create(user=user, hubspot_id=HUBSPOT_USER_ID)
+
+    mock_client = mocker.MagicMock()
+    mock_client.get_company_by_domain.return_value = None
+    mocker.patch(
+        "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker._get_client",
+        return_value=mock_client,
+    )
+
+    # When
+    tracker = HubspotLeadTracker()
+    tracker.create_lead(user=user, organisation=organisation)
+
+    # Then
+    mock_client.update_company.assert_not_called()
+    assert not HubspotOrganisation.objects.filter(organisation=organisation).exists()
 
 
 def test_register_hubspot_tracker_and_track_user__no_explicit_user__falls_back_to_request_user(
