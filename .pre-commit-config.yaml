@@ -44,7 +44,7 @@ repos:
         stages: [pre-push]
 
   - repo: https://github.com/Flagsmith/flagsmith-common
-    rev: v3.8.2
+    rev: v3.9.0
     hooks:
       - id: flagsmith-lint-tests
 
