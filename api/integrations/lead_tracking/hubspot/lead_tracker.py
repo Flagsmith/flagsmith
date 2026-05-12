@@ -91,9 +91,7 @@ class HubspotLeadTracker(LeadTracker):
             return
 
         # Passing only flagsmith_organisation_id ensures the payload contains
-        # only orgid_unique - no name overwrite, no subscription writes. This
-        # is the constraint that PR #7147 removed for the wrong reasons; this
-        # restores the orgid sync without bringing back the original problems.
+        # only orgid_unique - no name overwrite, no subscription writes.
         self.client.update_company(
             hubspot_company_id=company["id"],
             flagsmith_organisation_id=organisation.id,

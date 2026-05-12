@@ -295,13 +295,12 @@ def test_company_domain_from_email__malformed_input__returns_none(
     assert _company_domain_from_email(email) is None  # type: ignore[arg-type]
 
 
-def test_create_lead__corporate_email_with_matching_company__writes_orgid_only(
+def test_create_lead__matching_hubspot_company__links_organisation(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
-    """The orgid_unique write must contain ONLY the org id - no name, no
-    subscription. This is the regression guard for PR #7147 which bundled
-    these together and was later reverted because the bundle was wrong."""
+    """The orgid_unique write must contain only the org id - no name, no
+    subscription - so it does not overwrite HubSpot-enriched company data."""
     # Given
     user = FFAdminUser.objects.create(
         email="user@example.com",
@@ -328,8 +327,6 @@ def test_create_lead__corporate_email_with_matching_company__writes_orgid_only(
         hubspot_company_id=HUBSPOT_COMPANY_ID,
         flagsmith_organisation_id=organisation.id,
     )
-    # Regression: must NOT pass a name or subscription - these were the two
-    # things that made the previous integration overwrite enriched data.
     call_kwargs = mock_client.update_company.call_args.kwargs
     assert "name" not in call_kwargs
     assert "active_subscription" not in call_kwargs
