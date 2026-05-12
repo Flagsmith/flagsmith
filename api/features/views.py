@@ -829,7 +829,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         extensions={
             "x-gram": {
                 "name": "update_environment_feature_state",
-                "description": "Updates a feature state in an environment, including enabled status and value. Use this for environments without v2 feature versioning.",
+                "description": "Updates a feature state in an environment, including enabled status and value. Use this tool for environments without v2 feature versioning (use_v2_feature_versioning: false).",
             },
         },
     ),
@@ -918,6 +918,18 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
                 type=int,
             ),
         ]
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "update_feature_state",
+                "description": "Updates a feature state, including its enabled status and value. Use this tool to update a segment override's value for environments without v2 feature versioning (use_v2_feature_versioning: false).",
+            },
+        },
     ),
 )
 class SimpleFeatureStateViewSet(
@@ -1155,8 +1167,15 @@ def organisation_has_got_feature(request, organisation):  # type: ignore[no-unty
 
 
 @extend_schema(
+    tags=["mcp"],
     request=CustomCreateSegmentOverrideFeatureStateSerializer(),
     responses={201: CustomCreateSegmentOverrideFeatureStateSerializer()},
+    extensions={
+        "x-gram": {
+            "name": "create_segment_override",
+            "description": "Creates a segment override for a feature in an environment in a single call, setting both the segment binding and its value. Use this tool for environments without v2 feature versioning (use_v2_feature_versioning: false).",
+        },
+    },
 )
 @api_view(["POST"])
 @permission_classes([CreateSegmentOverridePermissions])
