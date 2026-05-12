@@ -58,6 +58,7 @@ interface FeatureRowProps {
   onCloseEditModal?: () => void
   isCompact?: boolean
   experimentMode?: boolean
+  isCompareEnv?: boolean
 }
 
 const width = [220, 50, 55, 70, 450]
@@ -76,6 +77,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     hideRemove = false,
     index,
     isCompact = false,
+    isCompareEnv = false,
     onCloseEditModal,
     permission,
     projectFlag,
@@ -312,6 +314,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         style={style}
         className={className}
         isCompact={isCompact}
+        isCompareEnv={isCompareEnv}
         fadeEnabled={fadeEnabled}
         fadeValue={fadeValue}
         index={index}
@@ -384,6 +387,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
               <FeatureValue
                 onClick={() => !isReadOnly && editFeature()}
                 value={environmentFlags?.[id]?.feature_state_value ?? null}
+                includeEmpty={isCompareEnv}
                 data-test={`feature-value-${index}`}
               />
             </div>
