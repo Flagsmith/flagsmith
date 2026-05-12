@@ -392,9 +392,7 @@ def test_trigger_update_version_webhooks__multivariate_feature__includes_mv_valu
 
     # NEW_VERSION_PUBLISHED summary event should also carry mv values.
     new_version_body = json.loads(responses.calls[1].request.body)  # type: ignore[union-attr]
-    assert (
-        new_version_body["event_type"] == WebhookEventType.NEW_VERSION_PUBLISHED.name
-    )
+    assert new_version_body["event_type"] == WebhookEventType.NEW_VERSION_PUBLISHED.name
     summary_mv_payload = new_version_body["data"]["feature_states"][0][
         "multivariate_feature_state_values"
     ]
