@@ -695,6 +695,20 @@ def test_list_projects__uuid_filter__returns_matching_project(  # type: ignore[n
     assert response.json()[0]["uuid"] == str(project.uuid)
 
 
+def test_list_projects__non_numeric_organisation__returns_400(  # type: ignore[no-untyped-def]
+    admin_client,
+):
+    # Given
+    base_url = reverse("api-v1:projects:project-list")
+    url = f"{base_url}?organisation=A60ZG9cp5WC53RRZHDkIlUiWuAL57Jhi"
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
 @pytest.mark.parametrize(
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
