@@ -2856,7 +2856,7 @@ def test_update_feature_state__no_fsv_history__returns_200(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_update_feature_state__v2_versioning_env__simple_endpoint__returns_400(
+def test_update_feature_state__v2_env_via_simple_endpoint__returns_400(
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -2887,7 +2887,7 @@ def test_update_feature_state__v2_versioning_env__simple_endpoint__returns_400(
     assert "v2 feature versioning" in response.json()["detail"]
 
 
-def test_update_feature_state__v2_versioning_env__nested_endpoint__returns_400(
+def test_update_feature_state__v2_env_via_nested_endpoint__returns_400(
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -2923,7 +2923,7 @@ def test_update_feature_state__v2_versioning_env__nested_endpoint__returns_400(
     assert "v2 feature versioning" in response.json()["detail"]
 
 
-def test_update_feature_state__v2_versioning_env__identity_override__allowed(
+def test_update_feature_state__v2_env_identity_override__returns_200(
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -2955,7 +2955,7 @@ def test_update_feature_state__v2_versioning_env__identity_override__allowed(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_create_feature_state__v2_versioning_env__simple_endpoint__returns_400(
+def test_create_feature_state__v2_env_via_simple_endpoint__returns_400(
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -2979,7 +2979,7 @@ def test_create_feature_state__v2_versioning_env__simple_endpoint__returns_400(
     assert "v2 feature versioning" in response.json()["detail"]
 
 
-def test_create_feature_state__v2_versioning_env__nested_endpoint__returns_400(
+def test_create_feature_state__v2_env_via_nested_endpoint__returns_400(
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -3008,7 +3008,7 @@ def test_create_feature_state__v2_versioning_env__nested_endpoint__returns_400(
     assert "v2 feature versioning" in response.json()["detail"]
 
 
-def test_create_feature_state__v2_versioning_env__identity_override__allowed(
+def test_create_feature_state__v2_env_identity_override__returns_201(
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -3034,7 +3034,7 @@ def test_create_feature_state__v2_versioning_env__identity_override__allowed(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_delete_feature_state__v2_versioning_env__nested_endpoint__returns_400(
+def test_delete_feature_state__v2_env_via_nested_endpoint__returns_400(
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -3060,7 +3060,7 @@ def test_delete_feature_state__v2_versioning_env__nested_endpoint__returns_400(
     assert FeatureState.objects.filter(id=live_fs.id).exists()
 
 
-def test_delete_feature_state__v2_versioning_env__identity_override__allowed(
+def test_delete_feature_state__v2_env_identity_override__returns_204(
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
