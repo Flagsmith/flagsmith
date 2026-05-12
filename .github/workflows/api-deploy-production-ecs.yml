@@ -45,6 +45,7 @@ jobs:
 
       - name: Generate MCP schema
         env:
+          DJANGO_SETTINGS_MODULE: app.settings.production
           FLAGSMITH_API_URL: 'https://api.flagsmith.com'
           FLAGSMITH_FRONTEND_URL: 'https://app.flagsmith.com'
         run: make generate-mcp-spec
