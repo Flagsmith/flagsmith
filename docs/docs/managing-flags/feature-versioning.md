@@ -55,9 +55,9 @@ The shape of `FLAG_UPDATED` events does not change, but the cadence and the even
 
 :::
 
-### 3. Audit log
+### 3. Audit log and Audit Log Webhooks
 
-The shape of audit entries for flag edits changes.
+The shape of audit entries for flag edits changes. Entries delivered via [Audit Log Webhooks](/administration-and-security/governance-and-compliance/audit-logs#audit-log-webhooks) carry the same change.
 
 | Field | v1 environment | v2 environment |
 | --- | --- | --- |
@@ -65,17 +65,14 @@ The shape of audit entries for flag edits changes.
 | `related_object_id` | `FeatureState` id | `null` |
 | `related_object_uuid` | `null` | The version UUID |
 | `log` (message text) | `Flag state updated for feature: <name>` and variants | `New version published for feature: <name>` |
-| Rows per change request | One per changed feature state | One per published version |
+| Webhook calls per change request | One per changed feature state | One per published version |
 
 Identity-override edits keep the v1 shape — they remain `FEATURE_STATE`-typed regardless of whether the environment is on v2.
 
-If you ingest the audit log into your own systems:
+If you have an Audit Log Webhook configured:
 
-- Update parsers to handle `EF_VERSION` as a valid `related_object_type`.
-- Read the version UUID from `related_object_uuid` rather than `related_object_id`.
-- Expect the volume of rows for flag changes to drop. A change request that touched ten feature states across two features produces two `EF_VERSION` audit entries on v2 — one per feature, regardless of how many feature states inside each feature were changed.
-
-The same change applies to the [Audit Log Webhook](/administration-and-security/governance-and-compliance/audit-logs#audit-log-webhooks).
+- Update your handler to accept `EF_VERSION` as a valid `related_object_type`.
+- Read the version UUID from `related_object_uuid`; `related_object_id` is `null` on these entries.
 
 ### 4. Change requests
 
