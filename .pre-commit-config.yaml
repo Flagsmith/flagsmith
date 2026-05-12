@@ -37,7 +37,7 @@ repos:
       - id: python-typecheck
         name: python-typecheck
         language: system
-        entry: bash -c 'cd api && uv run mypy .'
+        entry: uv run --directory api mypy .
         require_serial: true
         pass_filenames: false
         types: [python]
