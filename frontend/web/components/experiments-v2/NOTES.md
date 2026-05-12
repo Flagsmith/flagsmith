@@ -154,21 +154,30 @@ expectations.
 infra for (1) + (2) and a new wizard input for (3). Worth a separate
 sprint once the rest of Experiments v2 ships.
 
-## Deferred: guardrail semantic-flip on the results page
+## V1.1: guardrail role + results-page semantic flip
 
-**Context:** metric roles (primary / secondary / guardrail) are now rendered
-on the Experiment Results page via `MetricsComparisonTable`. Primary and
-secondary metrics use the existing lift/significance colouring — positive
-lift renders green, negative renders red.
+**Context:** V1 ships with `MetricRole = 'primary' | 'secondary'`.
+Guardrail is deferred to V1.1 — see `EXPERIMENTATION_DESIGN.md` § *Metric
+roles* for the rationale. This note captures the V1.1 implementation
+shape so future-us doesn't have to re-derive it.
 
-Guardrails should flip this: a **significant regression** on a guardrail
-(positive lift on a lower-better metric, negative lift on a higher-better
-metric) is a **failure** and should render as danger/warning, not neutral.
-Example: page-load-time goes up 8% with p<0.01 — today that'd render as
-"positive" because the lift bar only looks at `liftValue`'s sign; it should
-render as a red "regression" warning.
+**What V1.1 adds:**
 
-**What's needed:**
+1. Extend `MetricRole` to include `'guardrail'`.
+2. Surface guardrail as a third option in the Measurement step's role
+   selector (segmented control or dropdown).
+3. **Results-page semantic flip.** Primary/secondary metrics use
+   lift-sign colouring — positive lift renders green, negative renders
+   red. Guardrails should flip this: a **significant regression** on a
+   guardrail (positive lift on a lower-better metric, negative lift on
+   a higher-better metric) is a **failure** and should render as
+   danger/warning, not neutral. Example: page-load-time goes up 8% with
+   p<0.01 — today's logic would render as "positive" because the lift
+   bar only looks at `liftValue`'s sign; it should render as a red
+   "regression" warning.
+
+**For the semantic flip specifically:**
+
 1. Propagate `MetricDirection` ('higher-better' | 'lower-better' | 'neither')
    from `Metric` onto `MetricComparison` (it stops at the wizard today).
 2. Compute "is this a regression?" per metric:
@@ -176,7 +185,3 @@ render as a red "regression" warning.
 3. When true, override the lift-bar colour and significance label to a
    danger tone, and consider adding a warning icon in the significance
    column.
-
-**Why not built yet:** demo showed guardrails as a distinct visual category
-which is the main UX win; the semantic-flip is a correctness refinement that
-needs extra type work and would stretch tomorrow's scope.

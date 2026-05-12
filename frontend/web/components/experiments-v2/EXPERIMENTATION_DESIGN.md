@@ -21,7 +21,7 @@ engine. See `NOTES.md` for the deferred items that require backend work
 
 The prototype covers:
 
-- Create Experiment wizard (5 steps)
+- Create Experiment wizard (4 steps)
 - Experiments list + Metrics library (tabs)
 - Experiment results page (comparison table + trend chart)
 
@@ -40,11 +40,12 @@ Segments stay a Flagsmith primitive — they just stop pulling double duty.
 | Term we use | What it means | Notes |
 |---|---|---|
 | **Audience** | The whole step / concept: who's eligible, how many of them are in, and how they split | LD calls this "Audience allocation" |
-| **Targeting** (optional **Segment** filter) | Eligibility filter. Users matching the segment are eligible; everyone else is excluded. Empty = all identities in the environment | Segments stay a normal Flagsmith primitive — they just don't define the experiment audience by themselves |
+| **Targeting** (optional inline conditions) | Eligibility filter. Users matching the conditions are eligible; everyone else is excluded. Empty = all identities in the environment | Distinct from Flagsmith Segments — conditions live on the experiment record, frozen at launch |
 | **Sample size** | Percentage of eligible users actually sampled into the experiment. The rest see the flag's environment default | LD: "Percent of users in this experiment" |
 | **Variation split** | Among the sampled users, the per-arm weight distribution. Control takes a slot. Sum to 100 | LD: "Variation split" |
 | **Variation** / **Control value** | Variation = an entry in the flag's variation list; control value = a field on the flag itself | Existing Flagsmith concepts |
-| **Guardrail metric** | A safety-check role separate from primary/secondary | See [Metric roles](#metric-roles) |
+
+*Guardrail metric is deferred to V1.1 — see [Metric roles](#metric-roles).*
 
 Internally we use `arm` as jargon for "control or variation" when doing
 weight math, but user-facing copy stays as "variation".
@@ -71,14 +72,16 @@ own knob*, and split is *just the variation distribution*.
 
 An experiment is a **first-class record** that holds the audience
 configuration plus the variation weights. The audience is layered —
-optional segment filter, sample percentage, and per-arm weights — and
+optional inline conditions, sample percentage, and per-arm weights — and
 each layer has a backend equivalent.
 
 ```
 Experiment {
   // Audience
-  targeting_segment: <segment id> | null   // null = all identities in the environment
-  sample_percentage: 0–100                 // fraction of eligible users sampled in
+  audience_conditions: [                    // [] = all identities in the environment
+    { property, operator, value }
+  ]                                         // AND-joined, frozen at launch
+  sample_percentage: 0–100                  // fraction of eligible users sampled in
   weights: [
     { value: <control_value>, weight: X },
     { value: <variation_1.value>, weight: Y },
@@ -93,7 +96,7 @@ Experiment {
 
 **Implications:**
 
-1. **Targeting is optional.** No segment selected = the eligible pool is
+1. **Targeting is optional.** No conditions set = the eligible pool is
    every identity in the environment. This is the default.
 2. **Sample size is independent of variation split.** Setting sample_size
    to 10% means 10% of eligible identities are in the experiment, and the
@@ -102,10 +105,13 @@ Experiment {
 3. **Weights must sum to 100% across the sampled pool**, including
    control. Control is still a field on the flag, not a variation —
    the wizard treats it as one of the weight slots.
-4. **One experiment per (segment, flag) pair.** If the chosen segment
-   already has an override on the flag, the wizard shows a conflict
-   banner. Existing overrides on other segments are unaffected; priority
-   ordering decides who wins for users matching multiple segments.
+4. **Audience conditions are frozen at launch.** Once an experiment
+   starts, the conditions are snapshotted onto the experiment record —
+   edits to flag-level segments or identity overrides won't drift the
+   experiment audience mid-flight. Identity overrides and flag-level
+   segment overrides still win in the eval hierarchy (they pre-empt the
+   experiment), but they don't *change* who the experiment thought it was
+   targeting.
 5. **Assignment requires two hash dimensions.** Hash 1 (`experiment_id +
    identity`) decides "in or out of the experiment". Hash 2
    (`experiment_id + identity` with a salt) decides which variation. This
@@ -126,26 +132,31 @@ avoids a future schema migration on a live data model.
 
 ## Wizard flow
 
-Five steps, in this order:
+Four steps, in this order:
 
-1. **Experiment Details** — name, hypothesis (required), start and end dates
-2. **Flag & Variations** — pick a multi-variant flag, view its variations (read-only)
-3. **Select Metrics** — primary, secondary, guardrail roles
-4. **Audience** — optional segment filter, sample size, variation split
-5. **Review & Launch** — full summary with edit shortcuts
+1. **Setup** — name, hypothesis (required), flag pick, read-only variations preview
+2. **Audience & Traffic** — inline targeting conditions, sample %, variation split
+3. **Measurement** — primary and secondary metric roles
+4. **Review & Launch** — full summary with edit shortcuts
 
-### Why Details first, not Flag first
+### Why Setup first (intent before config)
 
-Writing the hypothesis before picking the flag forces users to think about
-*what they're trying to learn* before getting lost in config. This is the
-LaunchDarkly pattern and Kohavi's recommendation in *Trustworthy Online
-Controlled Experiments*.
+Writing the hypothesis and naming the experiment before getting deep in
+config forces users to think about *what they're trying to learn* before
+they start picking metrics or audiences. This is the LaunchDarkly pattern
+and Kohavi's recommendation in *Trustworthy Online Controlled Experiments*.
 
-**Counter-argument:** the wizard's shape depends on the flag (variation
-count → arm weights), so Flag-first could feel more natural. We went
-Details-first for the intent-setting benefit; the downside is users
-occasionally edit back when they realise their flag choice changes the arm
-count.
+Setup combines what earlier prototypes split into separate "Details" and
+"Flag" steps. Combining them lets the user name the experiment with the
+flag's variations visible — fewer step transitions, fewer chances to
+back-edit when the flag choice changes the arm count.
+
+### Why Audience before Measurement
+
+Audience defines who's in. Measurement defines how you'll judge it.
+Audience-first matches the natural order of thought ("who am I testing this
+on?" → "what am I measuring?") and lets the live preview panel show
+realistic sample sizes before the user invests in metric choices.
 
 ### Why variations are read-only
 
@@ -157,15 +168,17 @@ the flag has fewer than one (the minimum for a two-arm experiment: control
 
 ## Metric roles
 
-We support three roles:
+V1 ships two roles:
 
 | Role | Purpose | Stat question |
 |---|---|---|
 | **Primary** | The metric the experiment's verdict is based on | "Did the change improve this?" |
 | **Secondary** | Other effects we want to observe | "What else moved?" |
-| **Guardrail** | Metrics we must not regress, even if primary wins | "Did anything I care about break?" |
 
-### Why three roles, not two
+### Guardrail role — V1.1, not V1
+
+A third role — **guardrail** — is deferred to V1.1, first thing back in.
+The case for it is strong:
 
 **Guardrails are a distinct axis** — not a ranking of importance, but a
 different question entirely. A guardrail can be a metric that has nothing
@@ -181,8 +194,14 @@ This is the convention in rigorous experimentation platforms:
 - **Airbnb, Netflix, Microsoft ExP** — internal platforms all surface
   guardrails (sometimes called "tripwires" or "health metrics")
 
-LaunchDarkly rolls this into secondary metrics today. We're taking the more
-rigorous convention — backed by the industry textbook.
+LaunchDarkly rolls this into secondary metrics today. Long-term we'll take
+the more rigorous convention — backed by Kohavi's textbook. **V1 ships
+without it to keep scope tight; V1.1 adds it back.**
+
+Retrofitting cost is real but bounded: `MetricRole` extends from
+`'primary' | 'secondary'` to include `'guardrail'`, plus the results-page
+semantic flip (a significant regression on a guardrail is a *failure*, not
+a neutral outcome — captured in `NOTES.md`).
 
 ### Soft warning on multi-primary
 
@@ -296,13 +315,20 @@ by intent"). Users hit **Split evenly** to reset.
 
 ## Safety & conflict detection
 
-- **Conflict banner** — when the selected segment already has an override
-  on the target flag, we surface a red banner directly under the segment
-  dropdown with resolution paths ("pick a different segment, or remove the
-  existing override on the Features page first").
-- **Guardrail metrics** — see above.
+V1:
+
 - **Launch confirmation modal** — no accidental launches. The modal names
-  both the flag and segment explicitly.
+  both the flag and the audience explicitly.
+
+V1.1 (see Notion proposal for full spec):
+
+- **Eval-hierarchy pre-flight banner** on Setup when the chosen flag has
+  identity or segment overrides — explains those users won't enter the
+  experiment.
+- **Effective-population callout** on Audience & Traffic showing realistic
+  post-override sample size.
+- **Hard error** when the audience is structurally covered by flag-level
+  override segments (the experiment can never receive traffic).
 
 ## Presentation walkthrough
 
@@ -351,25 +377,24 @@ Back to the experiments nav → **Metrics**. Point out:
 
 ### 4 — Create Experiment wizard (90s)
 
-From the Experiments list, **Create Experiment**. Walk the 5 steps:
+From the Experiments list, **Create Experiment**. Walk the 4 steps:
 
-1. **Details** — name, hypothesis (required, with a real-example
-   placeholder), default dates (+14 days from today)
-2. **Flag** — multi-variant flag picker; read-only variations table.
-   Optional detour: pick `homepage_hero_redesign` (0 variations) to
-   show the blocking banner
-3. **Metrics** — pre-selected Conversion Rate (primary) + Revenue per
-   User (secondary) + Page Load Time (guardrail). Click one to show
-   the three-role segmented control. Add a second primary to surface
-   the soft multi-primary warning
-4. **Audience** — three sub-blocks: Targeting (leave empty for "all
-   users", or pick Premium Tier on flag-1 to trigger the inline
-   conflict banner), Sample size (toggle 100 → 10 to show the dial
-   independently from the variation split), Variation split (play
-   with the auto-balancing weights — change one, watch the others
-   rebalance proportionally)
-5. **Review & Launch** — full summary with per-section edit links.
-   Click **Launch** → confirmation modal → toast + redirect to list
+1. **Setup** — name, hypothesis (required, with a real-example
+   placeholder), multi-variant flag picker, read-only variations preview.
+   Optional detour: pick `homepage_hero_redesign` (0 variations) to show
+   the blocking message.
+2. **Audience & Traffic** — three sub-blocks: Targeting (leave conditions
+   empty for "all users", or add `country = US` to show the inline
+   condition builder), Sample size (toggle 100 → 10 to show the dial is
+   independent from the variation split), Variation split (play with the
+   auto-balancing weights — change one, watch the others rebalance
+   proportionally). Note the live preview panel updating on the right.
+3. **Measurement** — pre-selected Conversion Rate (primary) + Revenue per
+   User (secondary) + Page Load Time (secondary). Add a second primary to
+   surface the soft multi-primary warning. Call out that guardrail role
+   is V1.1, first thing back in.
+4. **Review & Launch** — full summary with per-section edit links. Click
+   **Launch** → confirmation modal → toast + redirect to list.
 
 ### 5 — Results page (45s)
 
@@ -392,7 +417,27 @@ platform. Backend work is the next sprint.
 
 ## What we're deferring
 
-Captured in `NOTES.md`:
+The Notion proposal *Suggested experiment creation flow* has the full V1.1
+fast-follow + V2+ deferred lists with explainers. Summary:
+
+**V1.1 fast-follow** (first iteration back, mostly UI work on the existing
+data model):
+
+- Guardrail metric role + results-page semantic flip (see `NOTES.md`)
+- Tracking Key field on Setup
+- Activation event control on Measurement
+- Eval-hierarchy pre-flight banner on Setup
+- Effective-population callout on Audience & Traffic
+- Hard error when audience is structurally covered by override segments
+- Inline flag creation, soft warning when first variant isn't `control`
+
+**V2+ deferred** (need real architecture / backend work):
+
+- Bayesian/frequentist toggle, CUPED, holdouts, mutual exclusion (layers),
+  multi-variant exposure handling, sequential testing, A/A mode,
+  stratified sampling, mid-flight metric add
+
+Local-only deferred items, captured in `NOTES.md`:
 
 - **Sample-size / duration calculator** — needs backend infra (cached
   segment counts + metric baseline data) and a new MDE input
