@@ -7,7 +7,7 @@ import { PricingToggle } from './PricingToggle'
 import { PricingPanel } from './PricingPanel'
 import {
   STARTUP_FEATURES,
-  SCALE_UP_FEATURES,
+  getScaleUpFeatures,
   ENTERPRISE_FEATURES,
 } from './pricingFeatures'
 import {
@@ -121,7 +121,7 @@ export const Payment: FC<PaymentProps> = ({
             }
             isPurchased={plan.includes('scale-up')}
             isDisableAccount={isDisableAccountText}
-            features={SCALE_UP_FEATURES}
+            features={getScaleUpFeatures(yearly)}
             hasActiveSubscription={hasActiveSubscription}
             organisationId={organisation.id}
             includesFrom='Start-Up'
