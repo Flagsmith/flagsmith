@@ -3034,6 +3034,75 @@ def test_create_feature_state__v2_env_identity_override__returns_201(
     assert response.status_code == status.HTTP_201_CREATED
 
 
+def test_create_feature_state__v2_env_targets_version__returns_201(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    project: Project,
+) -> None:
+    # Given - a draft EFV plus a feature_segment attached to it
+    draft_version = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+    segment = Segment.objects.create(name="seg_targets_version", project=project)
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_v2_versioning,
+        environment_feature_version=draft_version,
+        priority=1,
+    )
+    url = reverse("api-v1:features:featurestates-list")
+    data = {
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "override"},
+        "environment": environment_v2_versioning.id,
+        "feature": feature.id,
+        "feature_segment": feature_segment.id,
+        "environment_feature_version": str(draft_version.uuid),
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_update_feature_state__v2_env_draft_version__returns_200(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given - a new draft EFV (post_save clones the previous version's FSes)
+    draft_version = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+    draft_fs = FeatureState.objects.get(
+        environment_feature_version=draft_version,
+        identity=None,
+        feature_segment=None,
+    )
+    url = reverse("api-v1:features:featurestates-detail", args=[draft_fs.id])
+    data = {
+        "id": draft_fs.id,
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "draft-update"},
+        "environment": environment_v2_versioning.id,
+        "feature": feature.id,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
 def test_delete_feature_state__v2_env_via_nested_endpoint__returns_400(
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,

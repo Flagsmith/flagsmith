@@ -944,7 +944,8 @@ class SimpleFeatureStateViewSet(
 
     def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         environment_id = request.data.get("environment")
-        if environment_id:
+        targets_version = bool(request.data.get("environment_feature_version"))
+        if environment_id and not targets_version:
             environment = get_object_or_404(Environment, id=environment_id)
             require_direct_state_write(
                 environment=environment,

@@ -26,6 +26,11 @@ def require_direct_state_write(
 
 
 def require_direct_state_write_for_state(feature_state: FeatureState) -> None:
+    # FS rows attached to an unpublished EFV are a draft, so direct mutation is
+    # part of the versioning flow rather than a bypass of it.
+    efv = feature_state.environment_feature_version
+    if efv is not None and not efv.published:
+        return
     require_direct_state_write(
         environment=feature_state.environment,  # type: ignore[arg-type]
         is_identity_override=feature_state.identity_id is not None,
