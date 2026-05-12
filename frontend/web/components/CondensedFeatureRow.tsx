@@ -21,7 +21,6 @@ interface CondensedFeatureRowProps {
   fadeValue?: boolean
   hasUnhealthyEvents?: boolean
   index: number
-  isCompareEnv?: boolean
 }
 
 const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
@@ -34,7 +33,6 @@ const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
   hasUnhealthyEvents,
   index,
   isCompact,
-  isCompareEnv,
   onChange,
   permission,
   projectFlag,
@@ -98,7 +96,6 @@ const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
           >
             <FeatureValue
               value={environmentFlags?.[id]?.feature_state_value ?? null}
-              includeEmpty={isCompareEnv}
               data-test={`feature-value-${index}`}
             />
           </div>
