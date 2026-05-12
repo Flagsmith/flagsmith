@@ -431,11 +431,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         # cache values.
         is_scale_up = self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
         is_scale_up_v4 = (self.plan or "").startswith("scale-up-v4")
-        if (
-            is_scale_up
-            and not is_scale_up_v4
-            and self.is_sub_before_versioning_release
-        ):
+        if is_scale_up and not is_scale_up_v4 and self.is_sub_before_versioning_release:
             cb_metadata.audit_log_visibility_days = None
             cb_metadata.feature_history_visibility_days = None
 
