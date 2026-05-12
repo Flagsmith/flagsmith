@@ -39,13 +39,13 @@ logger = logging.getLogger(__name__)
     ),
 )
 @method_decorator(
-    name="create",
+    name="destroy",
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
             "x-gram": {
-                "name": "create_feature_segment",
-                "description": "Creates a segment override binding for a feature in an environment. Use this tool for environments without v2 feature versioning (use_v2_feature_versioning: false), then create a feature state referencing the returned id to set its value.",
+                "name": "delete_feature_segment",
+                "description": "Deletes a segment override. Use this tool for environments without v2 feature versioning (use_v2_feature_versioning: false).",
             },
         },
     ),
