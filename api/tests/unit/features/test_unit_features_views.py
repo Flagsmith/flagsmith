@@ -1364,6 +1364,38 @@ def test_create_segment_override__admin_user__creates_override(
     assert created_override.get_feature_state_value() == string_value
 
 
+def test_create_segment_override__v2_versioning_environment__returns_400(
+    admin_client_new: APIClient,
+    feature: Feature,
+    segment: Segment,
+    environment_v2_versioning: Environment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment_v2_versioning.api_key, feature.id],
+    )
+    data = {
+        "feature_state_value": {"string_value": "foo"},
+        "enabled": True,
+        "feature_segment": {"segment": segment.id},
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
+    assert not FeatureState.objects.filter(
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment__segment=segment,
+    ).exists()
+
+
 def test_get_flags__user_throttle_set__is_not_throttled(  # type: ignore[no-untyped-def]
     api_client: APIClient,
     environment: Environment,

@@ -1193,6 +1193,8 @@ def create_segment_override(  # type: ignore[no-untyped-def]
     environment = get_object_or_404(Environment, api_key=environment_api_key)
     feature = get_object_or_404(Feature, project=environment.project, pk=feature_pk)
 
+    require_direct_state_write(environment=environment, is_identity_override=False)
+
     serializer = CustomCreateSegmentOverrideFeatureStateSerializer(
         data=request.data, context={"environment": environment, "feature": feature}
     )

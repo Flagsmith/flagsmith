@@ -60,8 +60,11 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
 
         priority: int | None = self.validated_data.get("priority", None)
 
-        if kwargs["environment"].use_v2_feature_versioning:  # pragma: no cover
-            assert kwargs["environment_feature_version"] is not None, (
+        if (
+            kwargs["environment"].use_v2_feature_versioning
+            and kwargs.get("environment_feature_version") is None
+        ):
+            raise serializers.ValidationError(
                 "Must provide environment_feature_version for environment using v2 versioning"
             )
 
