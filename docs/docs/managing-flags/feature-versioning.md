@@ -37,7 +37,7 @@ To produce a new published version on a v2 environment, use one of:
 
 :::caution
 
-The legacy `POST` / `PUT` / `PATCH` endpoints on `/environments/{api_key}/featurestates/` are intended for v1 environments. On a v2 environment they mutate the live feature state in place and do **not** create a new version. If your automation calls them on a v2 environment, switch to one of the paths above.
+The legacy `POST` / `PUT` / `PATCH` endpoints on `/environments/{api_key}/featurestates/` return `400 Bad Request` on environments with Feature Versioning enabled. Use one of the paths above instead.
 
 :::
 
