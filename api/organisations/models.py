@@ -419,15 +419,19 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         else:
             cb_metadata = get_subscription_metadata_from_id(self.subscription_id)  # type: ignore[assignment,arg-type]
 
-        if self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP and (
+        # Grandfather old Scale-Up customers with unlimited audit log and
+        # feature history. Scale-Up v4 (and later) plans always honour the
+        # cache values.
+        is_scale_up = self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
+        is_scale_up_v4 = (self.plan or "").startswith("scale-up-v4")
+        is_sub_before_versioning_release = (
             settings.VERSIONING_RELEASE_DATE is None
             or (
                 self.subscription_date is not None
                 and self.subscription_date < settings.VERSIONING_RELEASE_DATE
             )
-        ):
-            # Logic to grandfather old scale up plan customers to give them
-            # full access to audit log and feature history.
+        )
+        if is_scale_up and not is_scale_up_v4 and is_sub_before_versioning_release:
             cb_metadata.audit_log_visibility_days = None
             cb_metadata.feature_history_visibility_days = None
 

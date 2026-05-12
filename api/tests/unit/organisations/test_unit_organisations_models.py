@@ -381,6 +381,52 @@ def test_get_subscription_metadata__after_versioning_release__returns_unlimited_
     assert subscription_metadata == expected_metadata
 
 
+def test_get_subscription_metadata__scale_up_v4_plan__returns_cache_visibility_values(  # type: ignore[no-untyped-def]
+    organisation: Organisation,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+):
+    # Given
+    seats = 10
+    api_calls = 50000000
+    projects = 10
+    audit_log_visibility_days = 14
+    feature_history_visibility_days = 14
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=seats,
+        allowed_30d_api_calls=api_calls,
+        allowed_projects=projects,
+        audit_log_visibility_days=audit_log_visibility_days,
+        feature_history_visibility_days=feature_history_visibility_days,
+    )
+    expected_metadata = ChargebeeObjMetadata(
+        seats=seats,
+        api_calls=api_calls,
+        projects=projects,
+        audit_log_visibility_days=audit_log_visibility_days,
+        feature_history_visibility_days=feature_history_visibility_days,
+    )
+    mocker.patch("organisations.models.is_saas", return_value=True)
+    Subscription.objects.filter(organisation=organisation).update(
+        plan="scale-up-v4-monthly",
+        subscription_id="subscription-id",
+        payment_method=CHARGEBEE,
+    )
+    organisation.subscription.refresh_from_db()
+
+    # VERSIONING_RELEASE_DATE unset would normally grandfather a Scale-Up
+    # subscription; v4 plans must bypass that and honour the cache values.
+    settings.VERSIONING_RELEASE_DATE = None
+
+    # When
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata == expected_metadata
+
+
 def test_get_subscription_metadata__xero_subscription__returns_xero_metadata(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
 ):
