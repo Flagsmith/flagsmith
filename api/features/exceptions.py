@@ -19,9 +19,7 @@ class FeatureStateV2VersioningRequiredError(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_code = "v2_feature_versioning_required"
 
-    def __init__(
-        self, environment_api_key: str, feature_id: int | None = None
-    ) -> None:
+    def __init__(self, environment_api_key: str, feature_id: int | None = None) -> None:
         feature_path = str(feature_id) if feature_id is not None else "<feature-id>"
         super().__init__(
             detail=(
