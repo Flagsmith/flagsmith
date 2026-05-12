@@ -416,8 +416,6 @@ def test_get_subscription_metadata__scale_up_v4_plan__returns_cache_visibility_v
     )
     organisation.subscription.refresh_from_db()
 
-    # VERSIONING_RELEASE_DATE unset would normally grandfather a Scale-Up
-    # subscription; v4 plans must bypass that and honour the cache values.
     settings.VERSIONING_RELEASE_DATE = None
 
     # When
