@@ -13,5 +13,3 @@ class FeatureStateVersionAlreadyExistsError(FeatureStateVersionError):
         super(FeatureStateVersionAlreadyExistsError, self).__init__(
             f"Version {version} already exists for FeatureState."
         )
-
-

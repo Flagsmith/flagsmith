@@ -106,10 +106,10 @@ from .serializers import (  # type: ignore[attr-defined]
 )
 from .tasks import trigger_feature_state_change_webhooks
 from .versioning.versioning_service import (
-    require_direct_state_write,
-    require_direct_state_write_for_state,
     get_environment_flags_list,
     get_environment_flags_queryset,
+    require_direct_state_write,
+    require_direct_state_write_for_state,
 )
 
 logger = logging.getLogger(__name__)
