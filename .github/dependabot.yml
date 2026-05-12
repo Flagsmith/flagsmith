@@ -3,7 +3,7 @@
 
 version: 2
 updates:
-  - package-ecosystem: "pip"
+  - package-ecosystem: "uv"
     # we only want security updates from dependabot, so we set the limit to 0
     # for regular updates. See documentation for further information here:
     # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#open-pull-requests-limit-
