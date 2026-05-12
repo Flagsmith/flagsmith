@@ -82,14 +82,6 @@ A new email also fires when a scheduled change request fails to publish at its s
 
 ---
 
-## What doesn't change
-
-- **SDK behaviour.** The environment document served to client-side and server-side SDKs is the same shape on v1 and v2. A flag that returns `true` on v1 returns `true` on v2 for the same logical state. No SDK upgrade is required.
-- **Identity overrides.** Identity-scoped flag states live outside the version graph in both modes. Setting, reading and deleting identity overrides behaves identically, and identity-override audit and webhook events keep their v1 shape.
-- **The flag-state evaluation rules.** Priority between environment defaults, segment overrides and identity overrides is unchanged.
-
----
-
 ## Migration
 
 Migration runs per environment, in the background, when you flip the **Feature Versioning** toggle in Environment Settings. The dashboard polls the environment while the migration completes. Existing flag values are preserved — each feature in the environment gets one initial published version representing its current state at the moment of migration. Any committed scheduled changes that have not yet gone live are also preserved as future-dated versions, set to publish at their original scheduled time.
