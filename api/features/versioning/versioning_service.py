@@ -20,9 +20,6 @@ from features.versioning.models import EnvironmentFeatureVersion
 def require_direct_state_write(
     environment: Environment, *, is_identity_override: bool
 ) -> None:
-    # Direct writes against an environment or segment-override FeatureState on a
-    # v2 environment bypass the version graph and are silently lost on rollback.
-    # Identity overrides are not part of the version graph, so allow them.
     if is_identity_override or not environment.use_v2_feature_versioning:
         return
     raise DirectFeatureStateWriteNotAllowedError()

@@ -2920,6 +2920,7 @@ def test_update_feature_state__v2_versioning_env__nested_endpoint__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
 
 
 def test_update_feature_state__v2_versioning_env__identity_override__allowed(
@@ -3004,6 +3005,7 @@ def test_create_feature_state__v2_versioning_env__nested_endpoint__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
 
 
 def test_create_feature_state__v2_versioning_env__identity_override__allowed(
@@ -3054,6 +3056,7 @@ def test_delete_feature_state__v2_versioning_env__nested_endpoint__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
     assert FeatureState.objects.filter(id=live_fs.id).exists()
 
 
