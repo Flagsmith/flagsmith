@@ -229,6 +229,25 @@ const CreateSegment: FC<CreateSegmentType> = ({
     setRules(newRules)
   }
 
+  const topLevelRuleType: 'ALL' | 'ANY' =
+    rules[0]?.type === 'ANY' ? 'ANY' : 'ALL'
+  const hasMixedTopLevelRuleTypes =
+    rules.length > 1 && rules.some((r) => r.type !== rules[0]?.type)
+
+  const setTopLevelRuleType = (newType: 'ALL' | 'ANY') => {
+    const subRuleType = newType === 'ANY' ? 'ALL' : 'ANY'
+    const newRules = cloneDeep(rules)
+    for (const topRule of newRules) {
+      topRule.type = newType
+      topRule.rules = topRule.rules.map((subRule) => {
+        if (subRule.delete || subRule.type === 'NONE') return subRule
+        return { ...subRule, type: subRuleType as SegmentRule['type'] }
+      })
+    }
+    setRules(newRules)
+    setValueChanged(true)
+  }
+
   const save = async (e: FormEvent) => {
     try {
       Utils.preventDefault(e)
@@ -405,6 +424,12 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const rulesEl = (
     <div className='overflow-visible'>
       <div>
+        {hasMixedTopLevelRuleTypes && (
+          <InfoMessage className='mb-4'>
+            This segment has top-level rules with mixed types. Changing the rule
+            type will normalise all top-level rules to the same type.
+          </InfoMessage>
+        )}
         <div className='mb-4'>
           {rules.map((topRule, rulesIndex) =>
             topRule.rules.map((rule, i) => {
@@ -414,7 +439,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
               const displayIndex = rulesToShow.indexOf(rule)
               return (
                 <div key={`${rulesIndex}-${i}`}>
-                  <SegmentRuleDivider rule={rule} index={displayIndex} />
+                  <SegmentRuleDivider
+                    rule={rule}
+                    index={displayIndex}
+                    topLevelRuleType={topLevelRuleType}
+                  />
                   <Rule
                     showDescription={showDescriptions}
                     readOnly={readOnly}
@@ -422,6 +451,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     rule={rule}
                     index={i}
                     operators={operators}
+                    conditionLabel={rule.type === 'ALL' ? 'And' : 'Or'}
                     onChange={(v: SegmentRule) => {
                       setValueChanged(true)
                       updateRule(rulesIndex, i, v)
@@ -438,27 +468,38 @@ const CreateSegment: FC<CreateSegmentType> = ({
         </div>
         {hasNoRules && (
           <InfoMessage>
-            Add at least one AND/NOT rule to create a segment.
+            {topLevelRuleType === 'ANY'
+              ? 'Add at least one OR rule to create a segment.'
+              : 'Add at least one AND/NOT rule to create a segment.'}
           </InfoMessage>
         )}
         <Row className='justify-content-end'>
           {!readOnly && (
-            <div onClick={() => addRule('ANY')} className='text-center'>
+            <div
+              onClick={() =>
+                addRule(topLevelRuleType === 'ANY' ? 'ALL' : 'ANY')
+              }
+              className='text-center'
+            >
               <Button theme='outline' data-test='add-rule' type='button'>
-                Add AND Condition
+                {topLevelRuleType === 'ANY'
+                  ? 'Add OR Condition'
+                  : 'Add AND Condition'}
               </Button>
             </div>
           )}
-          <div onClick={() => addRule('NONE')} className='text-center'>
-            <Button
-              theme='outline'
-              className='ml-2 btn--outline-danger'
-              data-test='add-rule'
-              type='button'
-            >
-              Add AND NOT Condition
-            </Button>
-          </div>
+          {topLevelRuleType !== 'ANY' && (
+            <div onClick={() => addRule('NONE')} className='text-center'>
+              <Button
+                theme='outline'
+                className='ml-2 btn--outline-danger'
+                data-test='add-rule'
+                type='button'
+              >
+                Add AND NOT Condition
+              </Button>
+            </div>
+          )}
         </Row>
       </div>
     </div>
@@ -528,6 +569,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 isValid={isValid}
                 isLimitReached={isLimitReached}
                 onCancel={onCancel}
+                topLevelRuleType={topLevelRuleType}
+                setTopLevelRuleType={setTopLevelRuleType}
               />
             </div>
           </TabItem>
@@ -592,6 +635,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 isValid={isValid}
                 isLimitReached={isLimitReached}
                 onCancel={onCancel}
+                topLevelRuleType={topLevelRuleType}
+                setTopLevelRuleType={setTopLevelRuleType}
               />
             </div>
           </TabItem>
@@ -629,6 +674,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
               isValid={isValid}
               isLimitReached={isLimitReached}
               onCancel={onCancel}
+              topLevelRuleType={topLevelRuleType}
+              setTopLevelRuleType={setTopLevelRuleType}
             />
           </div>
         )}

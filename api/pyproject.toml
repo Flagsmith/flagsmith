@@ -118,7 +118,7 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = ">3.11,<3.14"
-django = ">=5,<6"
+django = ">=5.2.14,<6"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
 backoff = "~2.2.1"
@@ -127,7 +127,7 @@ django-cors-headers = "~3.5.0"
 djangorestframework = "~3.15.2"
 gunicorn = "~23.0.0"
 pyparsing = "~2.4.7"
-requests = "~2.32.4"
+requests = "~2.33.0"
 six = "~1.16.0"
 whitenoise = "~6.0.0"
 dj-database-url = "~3.0.1"

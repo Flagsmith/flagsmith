@@ -44,12 +44,12 @@ repos:
         stages: [pre-push]
 
   - repo: https://github.com/Flagsmith/flagsmith-common
-    rev: v3.8.2
+    rev: v3.9.0
     hooks:
       - id: flagsmith-lint-tests
 
   - repo: https://github.com/python-poetry/poetry
-    rev: 2.3.2
+    rev: 2.4.0
     hooks:
       - id: poetry-check
         args: ["-C", "api"]
