@@ -216,6 +216,16 @@ def test_trigger_update_version_webhooks__version_with_changes__triggers_flag_up
         flag_updated_env_body["data"]["previous_state"]["feature_state_value"]
         == v1_fs.get_feature_state_value()
     )
+    assert (
+        flag_updated_env_body["data"]["new_state"]["multivariate_feature_state_values"]
+        == []
+    )
+    assert (
+        flag_updated_env_body["data"]["previous_state"][
+            "multivariate_feature_state_values"
+        ]
+        == []
+    )
     assert flag_updated_env_body["data"]["changed_by"] == staff_user.email
     assert "timestamp" in flag_updated_env_body["data"]
 
@@ -235,6 +245,7 @@ def test_trigger_update_version_webhooks__version_with_changes__triggers_flag_up
                 {
                     "enabled": v2_fs.enabled,
                     "value": v2_fs.get_feature_state_value(),
+                    "multivariate_feature_state_values": [],
                 }
             ],
         },
@@ -284,10 +295,116 @@ def test_trigger_update_version_webhooks__version_without_changes__triggers_only
                 {
                     "enabled": v2.feature_states.first().enabled,
                     "value": v2.feature_states.first().get_feature_state_value(),
+                    "multivariate_feature_state_values": [],
                 }
             ],
         },
     }
+
+
+@responses.activate
+def test_trigger_update_version_webhooks__multivariate_feature__includes_mv_values_in_payloads(
+    multivariate_feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    v1 = EnvironmentFeatureVersion.objects.get(
+        feature=multivariate_feature, environment=environment_v2_versioning
+    )
+    v1_fs = v1.feature_states.first()
+
+    # Bump one option's allocation in v2 so we count as a change and so
+    # previous/new mv values differ.
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=multivariate_feature
+    )
+    v2_fs = v2.feature_states.first()
+    v2_mv_values = list(
+        v2_fs.multivariate_feature_state_values.select_related(
+            "multivariate_feature_option"
+        ).order_by("multivariate_feature_option_id")
+    )
+    bumped_mv_value = v2_mv_values[0]
+    original_allocation = bumped_mv_value.percentage_allocation
+    bumped_mv_value.percentage_allocation = original_allocation + 5
+    bumped_mv_value.save()
+    v2.publish(published_by=staff_user)
+
+    environment_webhook_url = "https://example.com/env-webhook/"
+    Webhook.objects.create(
+        environment=environment_v2_versioning,
+        url=environment_webhook_url,
+        enabled=True,
+    )
+    responses.post(url=environment_webhook_url, status=200)
+
+    # When
+    trigger_update_version_webhooks(str(v2.uuid))
+
+    # Then
+    flag_updated_body = json.loads(responses.calls[0].request.body)  # type: ignore[union-attr]
+    assert flag_updated_body["event_type"] == WebhookEventType.FLAG_UPDATED.name
+
+    expected_new_mv_payload = [
+        {
+            "id": mv.id,
+            "multivariate_feature_option": {
+                "id": mv.multivariate_feature_option_id,
+                "value": mv.multivariate_feature_option.value,
+            },
+            "percentage_allocation": mv.percentage_allocation,
+        }
+        for mv in v2_fs.multivariate_feature_state_values.select_related(
+            "multivariate_feature_option"
+        ).order_by("multivariate_feature_option_id")
+    ]
+    assert (
+        sorted(
+            flag_updated_body["data"]["new_state"]["multivariate_feature_state_values"],
+            key=lambda mv: mv["multivariate_feature_option"]["id"],
+        )
+        == expected_new_mv_payload
+    )
+
+    expected_previous_mv_payload = [
+        {
+            "id": mv.id,
+            "multivariate_feature_option": {
+                "id": mv.multivariate_feature_option_id,
+                "value": mv.multivariate_feature_option.value,
+            },
+            "percentage_allocation": mv.percentage_allocation,
+        }
+        for mv in v1_fs.multivariate_feature_state_values.select_related(
+            "multivariate_feature_option"
+        ).order_by("multivariate_feature_option_id")
+    ]
+    assert (
+        sorted(
+            flag_updated_body["data"]["previous_state"][
+                "multivariate_feature_state_values"
+            ],
+            key=lambda mv: mv["multivariate_feature_option"]["id"],
+        )
+        == expected_previous_mv_payload
+    )
+
+    # NEW_VERSION_PUBLISHED summary event should also carry mv values.
+    new_version_body = json.loads(responses.calls[1].request.body)  # type: ignore[union-attr]
+    assert (
+        new_version_body["event_type"] == WebhookEventType.NEW_VERSION_PUBLISHED.name
+    )
+    summary_mv_payload = new_version_body["data"]["feature_states"][0][
+        "multivariate_feature_state_values"
+    ]
+    assert (
+        sorted(
+            summary_mv_payload,
+            key=lambda mv: mv["multivariate_feature_option"]["id"],
+        )
+        == expected_new_mv_payload
+    )
 
 
 def test_enable_v2_versioning__scheduled_changes_exist__converts_published_scheduled_changes(
