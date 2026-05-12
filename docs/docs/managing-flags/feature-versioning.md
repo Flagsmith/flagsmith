@@ -6,7 +6,7 @@ sidebar_position: 5
 
 Feature Versioning attaches versions to feature value and segment override updates. You can browse past versions, schedule future ones, and roll back to an earlier version.
 
-This page explains what changes when you enable Feature Versioning v2 on an environment — for your dashboard users, your webhook consumers, your audit-log pipeline, and your scripts that talk to the Admin API.
+This page explains what changes when you enable Feature Versioning v2 on an environment — for your webhook consumers, your audit-log pipeline, and your scripts that talk to the Admin API.
 
 ## Prerequisites
 
@@ -79,25 +79,9 @@ The same change applies to the [Audit Log Webhook](/administration-and-security/
 
 ### 4. Change requests
 
-Change requests on a v2 environment carry their content on `change_sets` and `environment_feature_versions` rather than on `feature_states`. If your scripts read the `feature_states` array off a change-request payload, read the new fields instead. The dashboard handles this transparently.
+Change requests on a v2 environment carry their content on `change_sets` and `environment_feature_versions` rather than on `feature_states`. If your scripts read the `feature_states` array off a change-request payload, read the new fields instead.
 
 A new email also fires when a scheduled change request fails to publish at its scheduled time due to a conflict with a more recent change.
-
-### 5. Plan-limit accounting
-
-Two existing limits change how they count once Feature Versioning v2 is enabled:
-
-- **Maximum segment overrides per environment** — under v1, this counts every `FeatureSegment` row. Under v2, it counts only segment overrides on the latest published version of each feature. Customers near the cap can drop under it after enabling v2.
-- **Feature history visibility days** — this plan limit becomes load-bearing under v2. Versions older than the configured window are not returned by the versions list endpoint. The dashboard's History tab respects the same window.
-
-### 6. Dashboard
-
-The dashboard gains a few affordances on v2 environments:
-
-- A **History** tab on each feature shows the published versions, who published them and when, and the values they contained.
-- **Change Request** diffs include changes to segment overrides as well as to environment defaults.
-- **Release Pipelines** can target this environment as a stage.
-- The flag toggle behaviour switches from updating a single feature state to publishing a new version.
 
 ---
 
@@ -112,11 +96,3 @@ The dashboard gains a few affordances on v2 environments:
 ## Migration
 
 Migration runs per environment, in the background, when you flip the **Feature Versioning** toggle in Environment Settings. The dashboard polls the environment while the migration completes. Existing flag values are preserved — each feature in the environment gets one initial published version representing its current state at the moment of migration. Any committed scheduled changes that have not yet gone live are also preserved as future-dated versions, set to publish at their original scheduled time.
-
----
-
-## What's next?
-
-- Configure environment-level [Change Requests](/administration-and-security/governance-and-compliance/change-requests) to require approval before a version is published.
-- Schedule a flag change with [Scheduled Flags](/managing-flags/scheduled-flags). Under v2, the scheduled change becomes a version with a future `live_from`.
-- Set up a [Release Pipeline](/managing-flags/release-pipeline) to promote versions through a chain of environments.
