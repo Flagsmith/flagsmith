@@ -62,7 +62,6 @@ from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import Segment
 from tests.types import (
-    EnableFeaturesFixture,
     WithEnvironmentPermissionsCallable,
     WithProjectPermissionsCallable,
 )
@@ -3200,7 +3199,7 @@ def test_list_features__without_rbac__no_n_plus_1(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=18,
+        num_queries=17,
     )
 
 
@@ -3225,7 +3224,7 @@ def test_list_features__with_rbac__no_n_plus_1(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=19,
+        num_queries=18,
     )
 
 
@@ -3664,7 +3663,6 @@ def test_list_features__value_search_boolean__returns_matching(
 
 
 def test_list_features__with_code_references__returns_counts(
-    enable_features: EnableFeaturesFixture,
     feature: Feature,
     project: Project,
     staff_client: APIClient,
@@ -3672,7 +3670,6 @@ def test_list_features__with_code_references__returns_counts(
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    enable_features("code_references_ui_stats")
     with freeze_time("2099-01-01T10:00:00-0300"):
         github_repository = VCSRepository.objects.create(
             project=project,
@@ -3732,7 +3729,6 @@ def test_list_features__with_code_references__returns_counts(
 
 @pytest.mark.usefixtures("feature")
 def test_list_features__without_code_references__returns_empty_counts(
-    enable_features: EnableFeaturesFixture,
     environment: Environment,
     project: Project,
     staff_client: APIClient,
@@ -3740,47 +3736,6 @@ def test_list_features__without_code_references__returns_empty_counts(
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    enable_features("code_references_ui_stats")
-
-    # When
-    response = staff_client.get(
-        f"/api/v1/projects/{project.id}/features/?environment={environment.id}"
-    )
-
-    # Then
-    assert response.status_code == 200
-    results = response.json()["results"]
-    assert len(results) == 1
-    assert results[0]["code_references_counts"] == []
-
-
-# TODO: Delete this after https://github.com/flagsmith/flagsmith/issues/6832 is resolved
-def test_list_features__code_references_ui_stats_disabled__returns_empty_counts(
-    enable_features: EnableFeaturesFixture,
-    environment: Environment,
-    feature: Feature,
-    project: Project,
-    staff_client: APIClient,
-    with_project_permissions: WithProjectPermissionsCallable,
-) -> None:
-    # Given
-    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    enable_features()  # code_references_ui_stats not enabled
-    repository = VCSRepository.objects.create(
-        project=project,
-        url="https://github.flagsmith.com/backend/",
-        vcs_provider="github",
-        last_scanned_at=timezone.now(),
-    )
-    ScannedCodeReferences.objects.create(
-        feature=feature,
-        repository=repository,
-        revision="rev-1",
-        code_references=[
-            {"file_path": "path/to/file.py", "line_number": 42},
-        ],
-        code_references_hash="hash-1",
-    )
 
     # When
     response = staff_client.get(
@@ -3869,7 +3824,7 @@ def test_list_features__last_modified_without_rbac__returns_expected(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=20,
+        num_queries=19,
     )
 
 
@@ -3897,7 +3852,7 @@ def test_list_features__last_modified_with_rbac__returns_expected(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=21,
+        num_queries=20,
     )
 
 
