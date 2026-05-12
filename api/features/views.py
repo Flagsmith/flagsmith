@@ -829,7 +829,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         extensions={
             "x-gram": {
                 "name": "update_environment_feature_state",
-                "description": "Updates a feature state in an environment, including enabled status and value. Use this for environments without v2 feature versioning.",
+                "description": "Updates a feature state in an environment, including enabled status and value. Use this tool for environments without v2 feature versioning (use_v2_feature_versioning: false).",
             },
         },
     ),
@@ -918,6 +918,30 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
                 type=int,
             ),
         ]
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "create_feature_state",
+                "description": "Creates a feature state in an environment. Pass `feature_segment` to set a segment override value. Use this tool for environments without v2 feature versioning (use_v2_feature_versioning: false).",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "update_feature_state",
+                "description": "Updates a feature state, including its enabled status and value. Use this tool for environments without v2 feature versioning (use_v2_feature_versioning: false).",
+            },
+        },
     ),
 )
 class SimpleFeatureStateViewSet(
