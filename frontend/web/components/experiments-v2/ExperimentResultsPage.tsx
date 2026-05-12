@@ -8,11 +8,12 @@ import MetricsTrendChart from './shared/MetricsTrendChart'
 import { MOCK_EXPERIMENT_RESULT } from './types'
 import './ExperimentResultsPage.scss'
 
+const formatTargeting = (conditions: string[]): string =>
+  conditions.length === 0 ? 'All identities' : conditions.join(' AND ')
+
 const ExperimentResultsPage: FC = () => {
   const result = MOCK_EXPERIMENT_RESULT
-  const progressPercent = Math.round(
-    (result.daysCurrent / result.daysTotal) * 100,
-  )
+  const { config } = result
 
   return (
     <div className='experiment-results-page'>
@@ -28,27 +29,13 @@ const ExperimentResultsPage: FC = () => {
             {result.lastUpdated}
           </span>
           <div className='experiment-results-page__actions'>
-            <Button theme='danger' size='small'>
-              Stop Experiment
+            <Button
+              theme='danger'
+              size='small'
+              title='Conclude this experiment and choose which variant to keep'
+            >
+              End Experiment
             </Button>
-          </div>
-        </div>
-
-        {/* Timeline progress */}
-        <div className='experiment-results-page__timeline'>
-          <div className='experiment-results-page__timeline-header'>
-            <span className='experiment-results-page__timeline-label'>
-              Experiment Timeline
-            </span>
-            <span className='experiment-results-page__timeline-value'>
-              Day {result.daysCurrent} of {result.daysTotal}
-            </span>
-          </div>
-          <div className='experiment-results-page__timeline-track'>
-            <div
-              className='experiment-results-page__timeline-fill'
-              style={{ width: `${progressPercent}%` }}
-            />
           </div>
         </div>
       </div>
@@ -83,9 +70,10 @@ const ExperimentResultsPage: FC = () => {
             Recommendation
           </span>
           <span className='experiment-results-page__recommendation-text'>
-            Treatment B is outperforming Control with 94.2% probability of being
-            the best variant. Consider rolling out Treatment B to 100% of
-            traffic after the experiment concludes on day {result.daysTotal}.
+            {result.winningVariation} is outperforming Control with{' '}
+            {result.probabilityToBest}% probability of being the best variant.
+            Consider concluding the experiment and rolling{' '}
+            {result.winningVariation} out to 100% of traffic.
           </span>
         </div>
       </div>
@@ -102,41 +90,59 @@ const ExperimentResultsPage: FC = () => {
         <MetricsTrendChart trends={result.metricTrends} />
       </div>
 
-      {/* Experiment config summary */}
+      {/* Experiment config summary — mirrors the wizard's Setup + Audience steps */}
       <div className='experiment-results-page__config'>
         <h2 className='experiment-results-page__section-title'>
           Experiment Configuration
         </h2>
         <div className='experiment-results-page__config-grid'>
           <div className='experiment-results-page__config-item'>
-            <span className='experiment-results-page__config-label'>Type</span>
-            <span className='experiment-results-page__config-value'>
-              A/B Test
-            </span>
-          </div>
-          <div className='experiment-results-page__config-item'>
             <span className='experiment-results-page__config-label'>
               Feature Flag
             </span>
             <span className='experiment-results-page__config-value experiment-results-page__config-value--mono'>
-              checkout_button_redesign
+              {config.featureFlag}
             </span>
           </div>
           <div className='experiment-results-page__config-item'>
             <span className='experiment-results-page__config-label'>
-              Segments
+              Targeting
             </span>
             <span className='experiment-results-page__config-value'>
-              All Users
+              {formatTargeting(config.targeting)}
             </span>
           </div>
           <div className='experiment-results-page__config-item'>
             <span className='experiment-results-page__config-label'>
-              Traffic
+              Sample Size
             </span>
             <span className='experiment-results-page__config-value'>
-              50% / 50%
+              {config.samplePercentage}% of eligible users
             </span>
+          </div>
+          <div className='experiment-results-page__config-item'>
+            <span className='experiment-results-page__config-label'>
+              Variation Split
+            </span>
+            <div className='experiment-results-page__split'>
+              {config.arms.map((arm) => (
+                <div
+                  key={arm.label}
+                  className='experiment-results-page__split-arm'
+                >
+                  <span
+                    className='experiment-results-page__split-swatch'
+                    style={{ background: arm.colour }}
+                  />
+                  <span className='experiment-results-page__split-label'>
+                    {arm.label}
+                  </span>
+                  <span className='experiment-results-page__split-weight'>
+                    {arm.weight}%
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

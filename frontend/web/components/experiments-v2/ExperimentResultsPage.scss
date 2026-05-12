@@ -43,48 +43,6 @@
     }
   }
 
-  // Timeline progress
-  &__timeline {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 16px;
-    background: var(--color-surface-subtle);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-lg);
-  }
-
-  &__timeline-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  &__timeline-label {
-    font-size: var(--font-caption-size);
-    color: var(--color-text-secondary);
-  }
-
-  &__timeline-value {
-    font-size: var(--font-caption-size);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text-default);
-  }
-
-  &__timeline-track {
-    height: 6px;
-    background: var(--color-surface-muted);
-    border-radius: var(--radius-full);
-    overflow: hidden;
-  }
-
-  &__timeline-fill {
-    height: 100%;
-    background: var(--color-surface-action);
-    border-radius: var(--radius-full);
-    transition: width var(--duration-slow) var(--easing-standard);
-  }
-
   // Stat cards
   &__cards {
     display: flex;
@@ -183,5 +141,36 @@
     &--mono {
       font-family: var(--font-family);
     }
+  }
+
+  &__split {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__split-arm {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__split-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+  }
+
+  &__split-label {
+    font-size: var(--font-body-sm-size);
+    color: var(--color-text-default);
+    flex: 1;
+  }
+
+  &__split-weight {
+    font-size: var(--font-body-sm-size);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-default);
   }
 }

@@ -207,12 +207,31 @@ export type MetricTrend = {
   data: MetricTrendPoint[]
 }
 
+/** A single arm in the results-page configuration summary. */
+export type ResultArmSummary = {
+  label: string
+  /** Hex/CSS colour token for the swatch. */
+  colour: string
+  weight: number
+  /** True when this is the control arm (the flag's control value). */
+  isControl: boolean
+}
+
+/** Snapshot of the audience + traffic config the experiment was launched
+ *  with. Mirrors the wizard's `AudienceConfig` plus the flag context, in
+ *  a shape that's flat enough to render directly in the results page. */
+export type ResultConfigSummary = {
+  featureFlag: string
+  /** Human-readable targeting summary. Empty array = "All identities". */
+  targeting: string[]
+  samplePercentage: number
+  arms: ResultArmSummary[]
+}
+
 export type ExperimentResultSummary = {
   id: string
   name: string
   status: ExperimentStatus
-  daysCurrent: number
-  daysTotal: number
   primaryMetric: string
   lastUpdated: string
   usersEnrolled: number
@@ -221,6 +240,7 @@ export type ExperimentResultSummary = {
   liftVsControl: number
   metrics: MetricComparison[]
   metricTrends: MetricTrend[]
+  config: ResultConfigSummary
 }
 
 // -----------------------------------------------------------------------------
@@ -593,8 +613,25 @@ const buildMockTrends = (): MetricTrend[] => [
 ]
 
 export const MOCK_EXPERIMENT_RESULT: ExperimentResultSummary = {
-  daysCurrent: 23,
-  daysTotal: 30,
+  config: {
+    arms: [
+      {
+        colour: CONTROL_COLOUR,
+        isControl: true,
+        label: 'Control',
+        weight: 50,
+      },
+      {
+        colour: 'var(--purple-500)',
+        isControl: false,
+        label: 'Treatment B',
+        weight: 50,
+      },
+    ],
+    featureFlag: 'checkout_button_redesign',
+    samplePercentage: 100,
+    targeting: [],
+  },
   id: 'exp-1',
   lastUpdated: '2 min ago',
   liftVsControl: 18.3,
