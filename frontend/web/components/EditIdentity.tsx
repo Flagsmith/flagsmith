@@ -2,6 +2,7 @@ import React, { FC, useEffect, useRef, useState } from 'react'
 import { Identity } from 'common/types/responses'
 import { useUpdateIdentityMutation } from 'common/services/useIdentity'
 import Button from './base/forms/Button'
+import { Icon } from './icons'
 import ErrorMessage from './ErrorMessage'
 import GhostInput from './base/forms/GhostInput'
 
@@ -62,15 +63,12 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
       />
       <Button
         disabled={!data}
-        iconSize={16}
         theme='text'
-        style={{ lineHeight: 'inherit' }}
-        className='text-primary d-flex align-items-center'
-        iconRightColour='primary'
-        iconRight={'edit'}
+        className='text-primary'
         onClick={handleFocus}
       >
         Edit
+        <Icon name='edit' width={16} />
       </Button>
       <ErrorMessage>{error}</ErrorMessage>
     </>

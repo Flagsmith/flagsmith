@@ -54,7 +54,7 @@ from users.models import FFAdminUser
         extensions={
             "x-gram": {
                 "name": "get_environment_feature_versions",
-                "description": "Retrieves version information for a feature flag in a specific environment. Use this for environments with v2 feature versioning.",
+                "description": "Retrieves version information for a feature flag in a specific environment. Use this tool for environments with v2 feature versioning (use_v2_feature_versioning: true).",
             },
         },
     ),
@@ -66,7 +66,7 @@ from users.models import FFAdminUser
         extensions={
             "x-gram": {
                 "name": "create_environment_feature_version",
-                "description": "Creates a new version for a feature flag in a specific environment. Use this for environments with v2 feature versioning.",
+                "description": "Creates a new version for a feature flag in a specific environment. Use this tool for environments with v2 feature versioning (use_v2_feature_versioning: true).",
             },
         },
     ),
@@ -163,7 +163,7 @@ class EnvironmentFeatureVersionViewSet(
         extensions={
             "x-gram": {
                 "name": "publish_environment_feature_version",
-                "description": "Publishes a feature version to make it live in the environment. Use this for environments with v2 feature versioning.",
+                "description": "Publishes a feature version to make it live in the environment. Use this tool for environments with v2 feature versioning (use_v2_feature_versioning: true).",
             },
         },
     )
@@ -226,7 +226,7 @@ class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):  # type: ignore
         extensions={
             "x-gram": {
                 "name": "get_environment_feature_version_states",
-                "description": "Retrieves feature state information for a specific version in an environment. Use this for environments with v2 feature versioning.",
+                "description": "Retrieves feature state information for a specific version in an environment. Use this tool for environments with v2 feature versioning (use_v2_feature_versioning: true).",
             },
         },
     ),
@@ -238,7 +238,7 @@ class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):  # type: ignore
         extensions={
             "x-gram": {
                 "name": "create_environment_feature_version_state",
-                "description": "Creates a new feature state for a specific version in an environment. Use this for environments with v2 feature versioning.",
+                "description": "Creates a new feature state for a specific version in an environment. Use this tool for environments with v2 feature versioning (use_v2_feature_versioning: true).",
             },
         },
     ),
@@ -250,7 +250,7 @@ class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):  # type: ignore
         extensions={
             "x-gram": {
                 "name": "update_environment_feature_version_state",
-                "description": "Updates an existing feature state for a specific version in an environment. Use this for environments with v2 feature versioning.",
+                "description": "Updates an existing feature state for a specific version in an environment. Use this tool for environments with v2 feature versioning (use_v2_feature_versioning: true).",
             },
         },
     ),

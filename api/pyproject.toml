@@ -432,7 +432,7 @@ override-dependencies = [
     "typing-inspection==0.4.2",
     "tzdata==2024.1",
     "uritemplate==3.0.1",
-    "urllib3==2.6.3",
+    "urllib3==2.7.0",
     "virtualenv==20.36.1",
     "wcwidth==0.5.3",
     "werkzeug==3.1.6",

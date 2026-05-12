@@ -3,7 +3,6 @@ import Button from 'components/base/forms/Button'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import Icon from 'components/icons/Icon'
-import { add } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import { getPlanBasedOption } from 'components/PlanBasedAccess'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -259,7 +258,7 @@ const InviteUsers: FC = () => {
                         onClick={() => deleteInvite(invite.temporaryId)}
                         className='btn btn-with-icon mb-2'
                       >
-                        <Icon name='trash-2' width={20} fill='#656D7B' />
+                        <Icon name='trash-2' width={20} />
                       </Button>
                     </div>
                   ) : (
@@ -282,14 +281,8 @@ const InviteUsers: FC = () => {
                     ])
                   }
                 >
-                  <Row>
-                    <span className='pl-2 icon'>
-                      <IonIcon icon={add} style={{ fontSize: '13px' }} />
-                    </span>
-                    <span>
-                      {isSaving ? 'Sending' : 'Invite additional member'}
-                    </span>
-                  </Row>
+                  <Icon name='plus' width={16} />
+                  {isSaving ? 'Sending' : 'Invite additional member'}
                 </Button>
               </div>
 
