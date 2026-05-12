@@ -832,6 +832,10 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         """
         return self.update(request, *args, **kwargs)  # type: ignore[no-untyped-call]
 
+    def destroy(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        _ensure_feature_state_legacy_write_allowed(self.get_object())
+        return super().destroy(request, *args, **kwargs)
+
     def update_feature_state_value(self, value, feature_state):  # type: ignore[no-untyped-def]
         feature_state_value_dict = feature_state.generate_feature_state_value_data(
             value

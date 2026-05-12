@@ -3035,6 +3035,57 @@ def test_create_feature_state__v2_versioning_env__identity_override__allowed(
     assert response.status_code == status.HTTP_201_CREATED
 
 
+def test_delete_feature_state__v2_versioning_env__nested_endpoint__returns_400(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given - the live env-default FS attached to the current EFV
+    live_fs = FeatureState.objects.get(
+        environment=environment_v2_versioning,
+        feature=feature,
+        identity=None,
+        feature_segment=None,
+    )
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment_v2_versioning.api_key, live_fs.id],
+    )
+
+    # When
+    response = admin_client_new.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert FeatureState.objects.filter(id=live_fs.id).exists()
+
+
+def test_delete_feature_state__v2_versioning_env__identity_override__allowed(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    identity: Identity,
+) -> None:
+    # Given - identity overrides live outside the version graph
+    identity_fs = FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        identity=identity,
+        enabled=False,
+    )
+    url = reverse(
+        "api-v1:environments:identity-featurestates-detail",
+        args=[environment_v2_versioning.api_key, identity.id, identity_fs.id],
+    )
+
+    # When
+    response = admin_client_new.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not FeatureState.objects.filter(id=identity_fs.id).exists()
+
+
 def test_update_feature_state__change_feature__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
