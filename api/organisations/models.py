@@ -294,6 +294,13 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     def is_enterprise(self) -> bool:
         return self.subscription_plan_family == SubscriptionPlanFamily.ENTERPRISE
 
+    @property
+    def is_sub_before_versioning_release(self) -> bool:
+        return settings.VERSIONING_RELEASE_DATE is None or (
+            self.subscription_date is not None
+            and self.subscription_date < settings.VERSIONING_RELEASE_DATE
+        )
+
     @hook(AFTER_SAVE, when="plan", has_changed=True)
     def update_api_limit_access_block(self):  # type: ignore[no-untyped-def]
         if not getattr(self.organisation, "api_limit_access_block", None):
@@ -424,14 +431,11 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         # cache values.
         is_scale_up = self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
         is_scale_up_v4 = (self.plan or "").startswith("scale-up-v4")
-        is_sub_before_versioning_release = (
-            settings.VERSIONING_RELEASE_DATE is None
-            or (
-                self.subscription_date is not None
-                and self.subscription_date < settings.VERSIONING_RELEASE_DATE
-            )
-        )
-        if is_scale_up and not is_scale_up_v4 and is_sub_before_versioning_release:
+        if (
+            is_scale_up
+            and not is_scale_up_v4
+            and self.is_sub_before_versioning_release
+        ):
             cb_metadata.audit_log_visibility_days = None
             cb_metadata.feature_history_visibility_days = None
 
