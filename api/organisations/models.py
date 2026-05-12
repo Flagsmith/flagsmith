@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 from typing import Any
 
@@ -294,12 +295,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     def is_enterprise(self) -> bool:
         return self.subscription_plan_family == SubscriptionPlanFamily.ENTERPRISE
 
-    @property
-    def is_sub_before_versioning_release(self) -> bool:
-        return settings.VERSIONING_RELEASE_DATE is None or (
-            self.subscription_date is not None
-            and self.subscription_date < settings.VERSIONING_RELEASE_DATE
-        )
+    def get_scaleup_plan_version(self) -> int:
+        if match := re.match(r"scale-up-v(\d+)", self.plan or ""):
+            return int(match.group(1))
+        return 1
 
     @hook(AFTER_SAVE, when="plan", has_changed=True)
     def update_api_limit_access_block(self):  # type: ignore[no-untyped-def]
@@ -426,14 +425,11 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         else:
             cb_metadata = get_subscription_metadata_from_id(self.subscription_id)  # type: ignore[assignment,arg-type]
 
-        # Grandfather old Scale-Up customers with unlimited audit log and
-        # feature history. Scale-Up v4 (and later) plans always honour the
-        # cache values.
+        # Pre-v4 Scale-Up customers keep unlimited audit log. Feature
+        # history always honours the cache value.
         is_scale_up = self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
-        is_scale_up_v4 = (self.plan or "").startswith("scale-up-v4")
-        if is_scale_up and not is_scale_up_v4 and self.is_sub_before_versioning_release:
+        if is_scale_up and self.get_scaleup_plan_version() < 4:
             cb_metadata.audit_log_visibility_days = None
-            cb_metadata.feature_history_visibility_days = None
 
         return cb_metadata
 
