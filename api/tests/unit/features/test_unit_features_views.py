@@ -2884,10 +2884,7 @@ def test_update_feature_state__v2_versioning_env__simple_endpoint__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    detail = response.json()["detail"]
-    assert "v2 feature versioning" in detail
-    assert environment_v2_versioning.api_key in detail
-    assert f"/features/{feature.id}/versions/" in detail
+    assert "v2 feature versioning" in response.json()["detail"]
 
 
 def test_update_feature_state__v2_versioning_env__nested_endpoint__returns_400(

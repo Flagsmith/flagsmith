@@ -71,7 +71,6 @@ from users.models import FFAdminUser, UserPermissionGroup
 from webhooks.webhooks import WebhookEventType
 
 from .constants import INTERSECTION, UNION
-from .exceptions import FeatureStateV2VersioningRequiredError
 from .features_service import get_overrides_data
 from .models import Feature, FeatureSegment, FeatureState
 from .multivariate.serializers import (
@@ -107,6 +106,8 @@ from .serializers import (  # type: ignore[attr-defined]
 )
 from .tasks import trigger_feature_state_change_webhooks
 from .versioning.versioning_service import (
+    require_direct_state_write,
+    require_direct_state_write_for_state,
     get_environment_flags_list,
     get_environment_flags_queryset,
 )
@@ -630,33 +631,6 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return queryset
 
 
-def _ensure_legacy_write_allowed(
-    environment: Environment,
-    *,
-    is_identity_override: bool,
-    feature_id: int | None = None,
-) -> None:
-    # Direct writes against an environment or segment-override FeatureState on a
-    # v2 environment bypass the version graph and are silently lost on rollback.
-    # Identity overrides are not part of the version graph, so allow them.
-    if is_identity_override or not environment.use_v2_feature_versioning:
-        return
-    raise FeatureStateV2VersioningRequiredError(
-        environment_api_key=environment.api_key,
-        feature_id=feature_id,
-    )
-
-
-def _ensure_feature_state_legacy_write_allowed(
-    feature_state: FeatureState,
-) -> None:
-    _ensure_legacy_write_allowed(
-        environment=feature_state.environment,  # type: ignore[arg-type]
-        is_identity_override=feature_state.identity_id is not None,
-        feature_id=feature_state.feature_id,
-    )
-
-
 @method_decorator(
     name="list",
     decorator=extend_schema(
@@ -768,10 +742,9 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         if identity_pk:
             data["identity"] = identity_pk
 
-        _ensure_legacy_write_allowed(
+        require_direct_state_write(
             environment=environment,
             is_identity_override=bool(identity_pk),
-            feature_id=data.get("feature"),
         )
 
         serializer = self.get_serializer(data=data)
@@ -797,7 +770,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         feature state value.
         """
         feature_state_to_update = self.get_object()
-        _ensure_feature_state_legacy_write_allowed(feature_state_to_update)
+        require_direct_state_write_for_state(feature_state_to_update)
         feature_state_data = request.data
 
         # Check if feature state value was provided with request data. If so, create / update
@@ -833,7 +806,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return self.update(request, *args, **kwargs)  # type: ignore[no-untyped-call]
 
     def destroy(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        _ensure_feature_state_legacy_write_allowed(self.get_object())
+        require_direct_state_write_for_state(self.get_object())
         return super().destroy(request, *args, **kwargs)
 
     def update_feature_state_value(self, value, feature_state):  # type: ignore[no-untyped-def]
@@ -973,15 +946,14 @@ class SimpleFeatureStateViewSet(
         environment_id = request.data.get("environment")
         if environment_id:
             environment = get_object_or_404(Environment, id=environment_id)
-            _ensure_legacy_write_allowed(
+            require_direct_state_write(
                 environment=environment,
                 is_identity_override=bool(request.data.get("identity")),
-                feature_id=request.data.get("feature"),
             )
         return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        _ensure_feature_state_legacy_write_allowed(self.get_object())
+        require_direct_state_write_for_state(self.get_object())
         return super().update(request, *args, **kwargs)
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
