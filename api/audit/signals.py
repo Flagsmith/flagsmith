@@ -365,6 +365,15 @@ def send_v2_initial_feature_state_event_to_sentry(  # type: ignore[no-untyped-de
     if efv is None or efv.get_previous_version() is not None:
         return
 
+    # Mirror v1's suppression rule from FeatureState.get_create_log_message:
+    # env-create / env-clone (where the env didn't exist when the feature was
+    # created) doesn't notify Sentry in v1, so don't introduce divergence here.
+    if (
+        instance.environment is None
+        or instance.environment.created_date > instance.feature.created_date
+    ):
+        return
+
     if not (config := _get_sentry_config_or_none(instance.environment)):
         return
 
