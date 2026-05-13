@@ -164,7 +164,7 @@ def test_sentry_change_tracking__flag_state_change__sends_update_to_sentry(
     ]
 
 
-def test_sentry_change_tracking__flag_state_change__v2_versioning__sends_update_to_sentry(
+def test_sentry_change_tracking__flag_state_change_in_v2_environment__sends_update_to_sentry(
     admin_client: APIClient,
     admin_user: FFAdminUser,
     environment: int,
@@ -338,7 +338,7 @@ def test_sentry_change_tracking__flag_state_schedule__sends_update_to_sentry(
     ]
 
 
-def test_sentry_change_tracking__flag_state_schedule__v2_versioning__sends_update_to_sentry(
+def test_sentry_change_tracking__flag_state_schedule_in_v2_environment__sends_update_to_sentry(
     admin_client: APIClient,
     admin_user: FFAdminUser,
     environment: int,
