@@ -24,6 +24,9 @@ jobs:
     needs: deploy-ecs
     name: Push MCP Schema to Gram
     runs-on: depot-ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     defaults:
       run:
         working-directory: api
@@ -35,11 +38,14 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Authenticate with CodeArtifact
+        uses: ./.github/actions/codeartifact-login
+
       - name: Install dependencies
         run: |
           echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials
           git config --global credential.helper store
-          make install-packages opts="--extra saml --extra auth-controller --extra workflows --extra release-pipelines"
+          make install-packages opts="--extra saml --extra auth-controller --extra workflows --extra release-pipelines --extra scim"
           make install-private-modules
           rm -rf ${HOME}/.git-credentials
 

@@ -54,6 +54,10 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
 
+      - name: Authenticate with CodeArtifact
+        id: codeartifact
+        uses: ./.github/actions/codeartifact-login
+
       - name: Build saas-api image
         uses: depot/build-push-action@v1
         with:
@@ -62,6 +66,7 @@ jobs:
           build-args: CI_COMMIT_SHA=${{ github.sha }}
           secrets: |
             github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+            codeartifact_token=${{ steps.codeartifact.outputs.token }}
             "sse_pgp_pkey=${{ secrets.SSE_PGP_PRIVATE_KEY }}"
           push: true
           tags: ${{ steps.meta.outputs.tags }}
