@@ -140,7 +140,7 @@ def compute_segment_counts_for_project(
         select_clauses.append(
             f"SELECT {seg.id} AS segment_id, "
             f"i.environment_id AS env_key, count() AS c "
-            f"FROM IDENTITIES FINAL i "
+            f"FROM IDENTITIES AS i FINAL "
             f"WHERE i.environment_id IN {{env_keys:Array(String)}} AND ({predicate}) "
             f"GROUP BY i.environment_id"
         )

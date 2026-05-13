@@ -229,7 +229,7 @@ def test_compute_segment_counts_for_project__one_segment__returns_membership_ins
     # The PoC's refresh query forces ReplacingMergeTree dedup at read
     # time — without FINAL the most-recent backfill might not be visible
     # until a merge pass runs.
-    assert "FROM IDENTITIES FINAL i" in sql
+    assert "FROM IDENTITIES AS i FINAL" in sql
     assert "GROUP BY i.environment_id" in sql
 
 

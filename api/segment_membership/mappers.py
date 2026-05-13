@@ -34,8 +34,10 @@ def map_identity_document_to_clickhouse_row(
 
 
 def _identity_id(identity_uuid: str) -> int:
-    """Project a UUID onto a stable signed 64-bit IDENTITIES.id."""
-    return int.from_bytes(uuid.UUID(identity_uuid).bytes[:8], "big", signed=True)
+    """Project a UUID onto a stable unsigned 64-bit IDENTITIES.id.
+    Matches the `id UInt64` column; signed would refuse negatives on
+    the way into ClickHouse."""
+    return int.from_bytes(uuid.UUID(identity_uuid).bytes[:8], "big", signed=False)
 
 
 def _coerce_trait_value(value: object) -> object:

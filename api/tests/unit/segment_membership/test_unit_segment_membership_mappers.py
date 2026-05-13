@@ -100,8 +100,8 @@ def test_map_identity_document_to_clickhouse_row__cases__return_expected(
 
     # Then non-id columns line up positionally with the IDENTITIES schema
     assert (env_id, identifier, identity_key, traits) == expected
-    # ...and the id column is a stable signed 64-bit projection of the UUID
-    assert -(2**63) <= _id < 2**63
+    # ...and the id column is a stable unsigned 64-bit projection of the UUID
+    assert 0 <= _id < 2**64
 
 
 def test_map_identity_document_to_clickhouse_row__same_uuid__same_id() -> None:
