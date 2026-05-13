@@ -243,9 +243,7 @@ def _get_sentry_config_or_none(
 
 
 @receiver(feature_state_change_went_live)
-def send_audit_log_event_to_sentry(
-    sender: FeatureState, **kwargs: Any
-) -> None:
+def send_audit_log_event_to_sentry(sender: FeatureState, **kwargs: Any) -> None:
     if not (config := _get_sentry_config_or_none(sender.environment)):
         return
     sentry = SentryChangeTracking(

@@ -56,7 +56,6 @@ from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE, STANDARD
 from features.helpers import get_correctly_typed_value
 from features.managers import (
-
     FeatureManager,
     FeatureSegmentManager,
     FeatureStateManager,
