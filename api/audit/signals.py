@@ -309,7 +309,10 @@ def send_efv_audit_log_event_to_sentry(sender, instance, **kwargs):  # type: ign
 
     previous_version = efv.get_previous_version()
     previous_fs_keys = (
-        {get_feature_state_match_key(fs) for fs in previous_version.feature_states.all()}
+        {
+            get_feature_state_match_key(fs)
+            for fs in previous_version.feature_states.all()
+        }
         if previous_version
         else set()
     )
