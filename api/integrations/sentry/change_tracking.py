@@ -141,9 +141,7 @@ def _process_feature_audit_log(audit_log: AuditLog) -> None:
         if not fs:
             continue
 
-        timestamp = (
-            max(fs.live_from, fs.updated_at) if fs.live_from else fs.updated_at
-        )
+        timestamp = max(fs.live_from, fs.updated_at) if fs.live_from else fs.updated_at
         events = [
             SentryChangeTracking.build_payload_entry(
                 action="created",
