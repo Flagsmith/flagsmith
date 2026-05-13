@@ -292,7 +292,11 @@ def test_company_domain_from_email__malformed_input__returns_none(
 ) -> None:
     """Defensive return-None on empty/malformed email - protects against
     callers that bypass the Django EmailField validation."""
-    assert _company_domain_from_email(email) is None  # type: ignore[arg-type]
+    # Given / When
+    result = _company_domain_from_email(email)  # type: ignore[arg-type]
+
+    # Then
+    assert result is None
 
 
 def test_create_lead__matching_hubspot_company__links_organisation(
