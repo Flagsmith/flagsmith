@@ -296,7 +296,7 @@ def send_efv_audit_log_event_to_sentry(sender, instance, **kwargs):  # type: ign
             for fs in previous_version.feature_states.all()
         }
 
-    timestamp = (efv.live_from or efv.published_at or instance.created_date)
+    timestamp = efv.live_from or efv.published_at or instance.created_date
     author_email = getattr(instance.author, "email", "app@flagsmith.com")
 
     events: list[dict[str, Any]] = []
