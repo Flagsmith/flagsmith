@@ -56,12 +56,14 @@ from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE, STANDARD
 from features.helpers import get_correctly_typed_value
 from features.managers import (
+
     FeatureManager,
     FeatureSegmentManager,
     FeatureStateManager,
     FeatureStateValueManager,
 )
 from features.multivariate.models import MultivariateFeatureStateValue
+from features.signals import feature_state_change_went_live
 from features.utils import (
     get_boolean_from_string,
     get_integer_from_string,
@@ -904,7 +906,18 @@ class FeatureState(
                 )
             )
 
-        cls.objects.create(**kwargs)
+        feature_state = cls.objects.create(**kwargs)
+
+        # v2 suppresses the FS audit row that v1 uses to drive
+        # `feature_state_change_went_live` (see get_skip_create_audit_log).
+        # For the flag-create case (env existed when the feature was created
+        # — env-create / env-clone are excluded by the date check below),
+        # fire the signal directly so consumers like Sentry are notified.
+        if (
+            environment.use_v2_feature_versioning
+            and environment.created_date <= feature.created_date
+        ):
+            feature_state_change_went_live.send(feature_state)
 
     @classmethod
     def get_next_version_number(  # type: ignore[no-untyped-def]

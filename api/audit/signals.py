@@ -36,7 +36,6 @@ AuditLogIntegrationAttrName = Literal[
     "dynatrace_config",
     "grafana_config",
     "new_relic_config",
-    "sentry_change_tracking_configuration",
     "slack_config",
 ]
 
@@ -196,19 +195,6 @@ def send_audit_log_event_to_grafana(sender, instance, **kwargs):  # type: ignore
 
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
-def send_audit_log_event_to_sentry_v2(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
-    """
-    v2 Sentry receiver. Single entry point for all feature-related audit rows
-    in v2-versioning environments. Delegates all Sentry-side processing to
-    ``integrations.sentry.change_tracking.process_audit_log``.
-    """
-    from integrations.sentry.change_tracking import process_audit_log
-
-    process_audit_log(instance)
-
-
-@receiver(post_save, sender=AuditLog)
-@track_only_feature_related_events
 def send_audit_log_event_to_slack(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
     slack_project_config = _get_integration_config(instance, "slack_config")
     if not slack_project_config:
@@ -241,7 +227,7 @@ def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ign
     if feature_state.is_scheduled:
         return  # This is handled by audit.tasks.create_feature_state_went_live_audit_log
 
-    feature_state_change_went_live.send(feature_state, audit_log=instance)
+    feature_state_change_went_live.send(feature_state)
 
 
 def _get_sentry_config_or_none(
@@ -258,15 +244,16 @@ def _get_sentry_config_or_none(
 
 @receiver(feature_state_change_went_live)
 def send_audit_log_event_to_sentry(
-    sender: FeatureState, audit_log: AuditLog, **kwargs: Any
+    sender: FeatureState, **kwargs: Any
 ) -> None:
-    if not (config := _get_sentry_config_or_none(audit_log.environment)):
+    if not (config := _get_sentry_config_or_none(sender.environment)):
         return
-    sentry_change_tracking = SentryChangeTracking(
+    sentry = SentryChangeTracking(
         webhook_url=config.webhook_url,
         secret=config.secret,
     )
-    _track_event_async(audit_log, sentry_change_tracking)  # type: ignore[no-untyped-call]
+    if event_data := sentry.generate_event_data(sender):
+        sentry.track_event_async(event=event_data)
 
 
 @receiver(feature_state_change_went_live)
