@@ -455,16 +455,24 @@ def _delete_segment_override_v2(
     new_version.publish(published_by=author.user, published_by_api_key=author.api_key)
 
 
+def get_feature_state_match_key(
+    fs: FeatureState,
+) -> tuple[int | None, int | None]:
+    """
+    Stable identity for a feature state within a version: the (identity_id,
+    segment_id) tuple that distinguishes env-default, segment-override, and
+    identity-override states for the same (feature, environment).
+    """
+    segment_id = fs.feature_segment.segment_id if fs.feature_segment else None
+    return (fs.identity_id, segment_id)
+
+
 def get_updated_feature_states_for_version(
     version: EnvironmentFeatureVersion,
 ) -> list[FeatureState]:
     """
     Returns feature states that changed compared to the previous version.
     """
-
-    def get_match_key(fs: FeatureState) -> tuple[int | None, int | None]:
-        segment_id = fs.feature_segment.segment_id if fs.feature_segment else None
-        return (fs.identity_id, segment_id)
 
     def multivariate_values_changed(
         fs: FeatureState, previous_fs: FeatureState
@@ -481,14 +489,19 @@ def get_updated_feature_states_for_version(
 
     previous_version = version.get_previous_version()
     previous_feature_states_map = (
-        {get_match_key(fs): fs for fs in previous_version.feature_states.all()}
+        {
+            get_feature_state_match_key(fs): fs
+            for fs in previous_version.feature_states.all()
+        }
         if previous_version
         else {}
     )
 
     changed_feature_states = []
     for feature_state in version.feature_states.all():
-        previous_fs = previous_feature_states_map.get(get_match_key(feature_state))
+        previous_fs = previous_feature_states_map.get(
+            get_feature_state_match_key(feature_state)
+        )
 
         if previous_fs is None or (
             feature_state.enabled != previous_fs.enabled
