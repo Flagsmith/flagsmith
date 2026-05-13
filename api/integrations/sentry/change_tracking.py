@@ -10,6 +10,7 @@ from audit.services import get_audited_instance_from_audit_log_record
 from core.signing import sign_payload
 from features.models import FeatureState
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
+from util.util import postpone
 
 logger = structlog.get_logger("sentry_change_tracking")
 
@@ -65,8 +66,20 @@ class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
         return inner_payload
 
     def _track_event(self, event: dict[str, Any]) -> None:
-        action = event["action"]
-        feature_name = event["flag"]
+        self._send_events([event])
+
+    @postpone  # type: ignore[misc]
+    def track_events_async(self, events: list[dict[str, Any]]) -> None:
+        self._send_events(events)
+
+    def _send_events(self, events: list[dict[str, Any]]) -> None:
+        if not events:
+            return
+
+        # All entries in a batched payload share the same flag (one EFV = one feature).
+        first_event = events[0]
+        action = first_event["action"]
+        feature_name = first_event["flag"]
 
         log = logger.bind(
             sentry_action=action,
@@ -74,7 +87,7 @@ class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
         )
 
         payload = {
-            "data": [event],
+            "data": events,
             "meta": {"version": 1},
         }
         json_payload = json.dumps(payload, sort_keys=True, cls=DjangoJSONEncoder)

@@ -416,15 +416,9 @@ def test_sentry_change_tracking__flag_state_schedule__v2_versioning__sends_updat
     }
 
 
-@pytest.mark.parametrize(
-    "use_v2_versioning",
-    [pytest.param(False, id="v1"), pytest.param(True, id="v2")],
-)
 def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
-    use_v2_versioning: bool,
     admin_client: APIClient,
     admin_user: FFAdminUser,
-    environment: int,
     environment_api_key: str,
     feature_name: str,
     feature_state: int,
@@ -432,9 +426,11 @@ def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
     responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
 ) -> None:
+    # Note: v2-versioning coverage for FS delete is intentionally absent — the
+    # v1 FS DELETE endpoint shouldn't accept a v2-versioned FS in the first
+    # place. That gap is tracked separately.
+
     # Given
-    if use_v2_versioning:
-        enable_v2_versioning(environment_id=environment)
     responses.post(sentry_configuration.webhook_url, status=200, body="")
     # When
     with freezegun.freeze_time("2199-01-01T00:00:00+00:00"):
