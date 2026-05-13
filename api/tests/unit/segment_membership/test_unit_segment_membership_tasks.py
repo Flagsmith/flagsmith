@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
 
+from clickhouse_connect.driver import Client
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
@@ -8,35 +9,35 @@ from projects.models import Project
 from segment_membership import tasks
 from segment_membership.models import SegmentMembership
 from segment_membership.tasks import (
-    backfill_identities_to_snowflake,
+    backfill_identities_to_clickhouse,
     refresh_project_segment_counts,
 )
 from segments.models import Segment
 from tests.types import EnableFeaturesFixture
 
 
-def test_backfill_identities_to_snowflake__no_snowflake_creds__skips(
+def test_backfill_identities_to_clickhouse__no_clickhouse_creds__skips(
     mocker: MockerFixture,
     log: StructuredLogCapture,
 ) -> None:
-    # Given Snowflake settings unconfigured
-    mocker.patch.object(tasks, "is_snowflake_configured", return_value=False)
-    spy = mocker.patch.object(tasks, "open_snowflake_session")
+    # Given ClickHouse settings unconfigured
+    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=False)
+    spy = mocker.patch.object(tasks, "open_clickhouse_client")
 
     # When the task runs
-    backfill_identities_to_snowflake()
+    backfill_identities_to_clickhouse()
 
-    # Then it short-circuits without opening a session
+    # Then it short-circuits without opening a client
     spy.assert_not_called()
     assert any(e["event"] == "backfill.skipped" for e in log.events)
 
 
-def test_backfill_identities_to_snowflake__dynamo_disabled__skips(
+def test_backfill_identities_to_clickhouse__dynamo_disabled__skips(
     mocker: MockerFixture,
 ) -> None:
-    # Given Snowflake configured but Dynamo wrapper disabled
-    mocker.patch.object(tasks, "is_snowflake_configured", return_value=True)
-    spy = mocker.patch.object(tasks, "open_snowflake_session")
+    # Given ClickHouse configured but Dynamo wrapper disabled
+    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=True)
+    spy = mocker.patch.object(tasks, "open_clickhouse_client")
     mocker.patch.object(
         tasks,
         "DynamoIdentityWrapper",
@@ -44,13 +45,13 @@ def test_backfill_identities_to_snowflake__dynamo_disabled__skips(
     )
 
     # When the task runs
-    backfill_identities_to_snowflake()
+    backfill_identities_to_clickhouse()
 
-    # Then it skips without opening a session
+    # Then it skips without opening a client
     spy.assert_not_called()
 
 
-def test_backfill_identities_to_snowflake__happy_path__deletes_then_inserts(
+def test_backfill_identities_to_clickhouse__happy_path__bulk_inserts(
     mocker: MockerFixture,
     project: Project,
     environment: Environment,
@@ -61,11 +62,11 @@ def test_backfill_identities_to_snowflake__happy_path__deletes_then_inserts(
     # Given a project with a canonical segment and a Dynamo wrapper
     # yielding two identities for its environment
     enable_features("segment_membership_inspection")
-    mocker.patch.object(tasks, "is_snowflake_configured", return_value=True)
-    sess = MagicMock()
+    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=True)
+    client = MagicMock(spec=Client)
     mocker.patch.object(
-        tasks, "open_snowflake_session"
-    ).return_value.__enter__.return_value = sess
+        tasks, "open_clickhouse_client"
+    ).return_value.__enter__.return_value = client
     refresh_dispatch = mocker.patch.object(tasks, "refresh_project_segment_counts")
     wrapper = MagicMock(is_enabled=True)
     wrapper.iter_all_items_paginated.return_value = iter(
@@ -91,26 +92,31 @@ def test_backfill_identities_to_snowflake__happy_path__deletes_then_inserts(
     mocker.patch.object(tasks, "DynamoIdentityWrapper", return_value=wrapper)
 
     # When the task runs
-    backfill_identities_to_snowflake()
+    backfill_identities_to_clickhouse()
 
-    # Then DELETE binds the env api key as a parameter and the identities
-    # are written via the Snowpark DataFrame writer
-    delete_calls = [
-        call
-        for call in sess.sql.call_args_list
-        if call.args and call.args[0].startswith("DELETE FROM IDENTITIES")
-    ]
-    assert len(delete_calls) == 1
-    assert delete_calls[0].kwargs == {"params": [environment.api_key]}
-
-    sess.create_dataframe.assert_called_once()
-    rows_arg = sess.create_dataframe.call_args.args[0]
+    # Then ReplacingMergeTree handles dedup — no DELETE, just one bulk
+    # INSERT for the two identities, tagged with the per-(org, project)
+    # log_comment for spend attribution.
+    client.insert.assert_called_once()
+    args = client.insert.call_args
+    assert args.args[0] == "IDENTITIES"
+    rows_arg = args.args[1]
     assert {row[0] for row in rows_arg} == {environment.api_key}
     assert {row[2] for row in rows_arg} == {"a", "b"}
-    sess.create_dataframe.return_value.write.mode.assert_called_once_with("append")
-    sess.create_dataframe.return_value.write.mode.return_value.save_as_table.assert_called_once_with(
-        "IDENTITIES"
-    )
+    assert args.kwargs["column_names"] == [
+        "environment_id",
+        "id",
+        "identifier",
+        "identity_key",
+        "traits",
+    ]
+    assert args.kwargs["settings"] == {
+        "log_comment": (
+            f"flagsmith:segment_membership:backfill"
+            f":org_{project.organisation_id}"
+            f":project_{project.id}"
+        )
+    }
     assert any(
         e["event"] == "backfill.environment.completed" and e["rows__count"] == 2
         for e in log.events
@@ -120,7 +126,7 @@ def test_backfill_identities_to_snowflake__happy_path__deletes_then_inserts(
     refresh_dispatch.delay.assert_called_once_with(args=(project.id,))
 
 
-def test_backfill_identities_to_snowflake__insert_fails__logs_and_continues(
+def test_backfill_identities_to_clickhouse__insert_fails__logs_and_continues(
     mocker: MockerFixture,
     project: Project,
     environment: Environment,
@@ -128,14 +134,14 @@ def test_backfill_identities_to_snowflake__insert_fails__logs_and_continues(
     enable_features: EnableFeaturesFixture,
     log: StructuredLogCapture,
 ) -> None:
-    # Given the DataFrame write blows up mid-batch
+    # Given the bulk insert blows up mid-batch
     enable_features("segment_membership_inspection")
-    mocker.patch.object(tasks, "is_snowflake_configured", return_value=True)
-    sess = MagicMock()
-    sess.create_dataframe.side_effect = RuntimeError("boom")
+    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=True)
+    client = MagicMock(spec=Client)
+    client.insert.side_effect = RuntimeError("boom")
     mocker.patch.object(
-        tasks, "open_snowflake_session"
-    ).return_value.__enter__.return_value = sess
+        tasks, "open_clickhouse_client"
+    ).return_value.__enter__.return_value = client
     wrapper = MagicMock(is_enabled=True)
     wrapper.iter_all_items_paginated.return_value = iter(
         [
@@ -152,13 +158,13 @@ def test_backfill_identities_to_snowflake__insert_fails__logs_and_continues(
     mocker.patch.object(tasks, "DynamoIdentityWrapper", return_value=wrapper)
 
     # When the task runs
-    backfill_identities_to_snowflake()
+    backfill_identities_to_clickhouse()
 
     # Then the failure is logged and the loop continues
     assert any(e["event"] == "backfill.environment.failed" for e in log.events)
 
 
-def test_backfill_identities_to_snowflake__multiple_projects__fans_out_refresh_per_project(
+def test_backfill_identities_to_clickhouse__multiple_projects__fans_out_refresh_per_project(
     mocker: MockerFixture,
     project: Project,
     project_b: Project,
@@ -168,18 +174,18 @@ def test_backfill_identities_to_snowflake__multiple_projects__fans_out_refresh_p
     # Given two FoF-enabled projects with canonical segments
     enable_features("segment_membership_inspection")
     Segment.objects.create(name="seg-b", project=project_b)
-    mocker.patch.object(tasks, "is_snowflake_configured", return_value=True)
-    sess = MagicMock()
+    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=True)
+    client = MagicMock(spec=Client)
     mocker.patch.object(
-        tasks, "open_snowflake_session"
-    ).return_value.__enter__.return_value = sess
+        tasks, "open_clickhouse_client"
+    ).return_value.__enter__.return_value = client
     refresh_dispatch = mocker.patch.object(tasks, "refresh_project_segment_counts")
     wrapper = MagicMock(is_enabled=True)
     wrapper.iter_all_items_paginated.return_value = iter([])
     mocker.patch.object(tasks, "DynamoIdentityWrapper", return_value=wrapper)
 
     # When the backfill runs
-    backfill_identities_to_snowflake()
+    backfill_identities_to_clickhouse()
 
     # Then a per-project refresh is dispatched for each project we
     # actually processed (deduped) — once per project, not once per env
@@ -189,23 +195,23 @@ def test_backfill_identities_to_snowflake__multiple_projects__fans_out_refresh_p
     assert dispatched_ids == {project.id, project_b.id}
 
 
-def test_refresh_project_segment_counts__no_snowflake_creds__skips(
+def test_refresh_project_segment_counts__no_clickhouse_creds__skips(
     mocker: MockerFixture,
     project: Project,
     log: StructuredLogCapture,
 ) -> None:
-    # Given Snowflake unconfigured
-    mocker.patch.object(tasks, "is_snowflake_configured", return_value=False)
-    spy = mocker.patch.object(tasks, "open_snowflake_session")
+    # Given ClickHouse unconfigured
+    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=False)
+    spy = mocker.patch.object(tasks, "open_clickhouse_client")
 
     # When the per-project task runs
     refresh_project_segment_counts(project.id)
 
-    # Then it short-circuits without opening a session
+    # Then it short-circuits without opening a client
     spy.assert_not_called()
     assert any(
         e["event"] == "refresh.project.skipped"
-        and e["reason"] == "snowflake_not_configured"
+        and e["reason"] == "clickhouse_not_configured"
         for e in log.events
     )
 
@@ -215,14 +221,14 @@ def test_refresh_project_segment_counts__ff_disabled__skips(
     project: Project,
     log: StructuredLogCapture,
 ) -> None:
-    # Given Snowflake configured but FoF flag off (default)
-    mocker.patch.object(tasks, "is_snowflake_configured", return_value=True)
-    spy = mocker.patch.object(tasks, "open_snowflake_session")
+    # Given ClickHouse configured but FoF flag off (default)
+    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=True)
+    spy = mocker.patch.object(tasks, "open_clickhouse_client")
 
     # When the per-project task runs
     refresh_project_segment_counts(project.id)
 
-    # Then it skips without opening a session
+    # Then it skips without opening a client
     spy.assert_not_called()
     assert any(
         e["event"] == "refresh.project.skipped" and e["reason"] == "ff_disabled"
@@ -239,11 +245,11 @@ def test_refresh_project_segment_counts__compute_fails__logs(
 ) -> None:
     # Given a project where count compute throws
     enable_features("segment_membership_inspection")
-    mocker.patch.object(tasks, "is_snowflake_configured", return_value=True)
-    sess = MagicMock()
+    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=True)
+    client = MagicMock(spec=Client)
     mocker.patch.object(
-        tasks, "open_snowflake_session"
-    ).return_value.__enter__.return_value = sess
+        tasks, "open_clickhouse_client"
+    ).return_value.__enter__.return_value = client
     mocker.patch.object(
         tasks, "compute_segment_counts_for_project", side_effect=RuntimeError("boom")
     )
@@ -264,11 +270,10 @@ def test_refresh_project_segment_counts__counts_returned__upserts_per_env_rows(
 ) -> None:
     # Given a project with a canonical segment and stubbed compute
     enable_features("segment_membership_inspection")
-    mocker.patch.object(tasks, "is_snowflake_configured", return_value=True)
-    sess = MagicMock()
-    mocker.patch.object(
-        tasks, "open_snowflake_session"
-    ).return_value.__enter__.return_value = sess
+    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=True)
+    client = MagicMock(spec=Client)
+    open_client = mocker.patch.object(tasks, "open_clickhouse_client")
+    open_client.return_value.__enter__.return_value = client
     mocker.patch.object(
         tasks,
         "compute_segment_counts_for_project",
@@ -288,3 +293,13 @@ def test_refresh_project_segment_counts__counts_returned__upserts_per_env_rows(
     membership = SegmentMembership.objects.get(segment=segment, environment=environment)
     assert membership.count == 42
     assert membership.last_synced_at is not None
+
+    # ...and the client was opened with a per-(org, project) log_comment so
+    # the refresh's CH spend attributes cleanly.
+    open_client.assert_called_once_with(
+        log_comment=(
+            f"flagsmith:segment_membership:refresh"
+            f":org_{project.organisation_id}"
+            f":project_{project.id}"
+        )
+    )

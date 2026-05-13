@@ -1426,15 +1426,16 @@ PYLON_IDENTITY_VERIFICATION_SECRET = env.str("PYLON_IDENTITY_VERIFICATION_SECRET
 
 OSIC_UPDATE_BATCH_SIZE = env.int("OSIC_UPDATE_BATCH_SIZE", default=500)
 
-# --- Snowflake (segment membership inspection) -------------------------------
-# All-None default disables the segment_membership backfill and refresh tasks.
-# When set, the api/segments/membership tasks open a Snowpark session and run
-# against this account. See docs/deployment/observability/segment-membership.md
-# for the operational shape.
-SNOWFLAKE_ACCOUNT = env.str("SNOWFLAKE_ACCOUNT", default=None)
-SNOWFLAKE_USER = env.str("SNOWFLAKE_USER", default=None)
-SNOWFLAKE_PRIVATE_KEY_PATH = env.str("SNOWFLAKE_PRIVATE_KEY_PATH", default=None)
-SNOWFLAKE_ROLE = env.str("SNOWFLAKE_ROLE", default=None)
-SNOWFLAKE_WAREHOUSE = env.str("SNOWFLAKE_WAREHOUSE", default=None)
-SNOWFLAKE_DATABASE = env.str("SNOWFLAKE_DATABASE", default=None)
-SNOWFLAKE_SCHEMA = env.str("SNOWFLAKE_SCHEMA", default=None)
+# --- ClickHouse (segment membership inspection) ------------------------------
+# All-None CLICKHOUSE_HOST disables the segment_membership backfill and refresh
+# tasks. When set, the api/segments/membership tasks open a clickhouse-connect
+# client and run against this account. See
+# docs/deployment/observability/segment-membership.md for the operational shape.
+CLICKHOUSE_HOST = env.str("CLICKHOUSE_HOST", default=None)
+CLICKHOUSE_PORT = env.int("CLICKHOUSE_PORT", default=8443)
+CLICKHOUSE_USER = env.str("CLICKHOUSE_USER", default="default")
+CLICKHOUSE_PASSWORD = env.str("CLICKHOUSE_PASSWORD", default="")
+CLICKHOUSE_DATABASE = env.str("CLICKHOUSE_DATABASE", default="default")
+# ClickHouse Cloud uses HTTPS on 8443; OSS deployments typically run HTTP on
+# 8123. Set CLICKHOUSE_SECURE=1 for HTTPS.
+CLICKHOUSE_SECURE = env.bool("CLICKHOUSE_SECURE", default=True)

@@ -44,6 +44,8 @@ dependencies = [
     "drf-writable-nested>=0.6.2,<0.7.0",
     "django-filter>=2.4.0,<2.5.0",
     "flagsmith-flag-engine>=10.1.0,<11.0.0",
+    "flagsmith-sql-flag-engine==0.1.0a2",
+    "clickhouse-connect>=0.15,<1.0",
     "boto3>=1.35.95,<1.36.0",
     "slack-sdk>=3.9.0,<3.10.0",
     "asgiref>=3.8.1,<3.9.0",
@@ -177,6 +179,15 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.4.0" }
 licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.3.0" }
 flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private", tag = "v0.4.4" }
+flagsmith-sql-flag-engine = { index = "flagsmith-pypi-staging" }
+
+# CodeArtifact-hosted private index for pre-release Flagsmith packages.
+# Auth token is fetched at install time via `aws codeartifact get-authorization-token`
+# (see Makefile `install-packages` target).
+[[tool.uv.index]]
+name = "flagsmith-pypi-staging"
+url = "https://flagsmith-staging-302456015006.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-staging/simple/"
+explicit = true
 
 [tool.uv]
 required-version = "==0.8.14"
@@ -537,6 +548,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["openfeature_flagsmith.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["clickhouse_connect.*"]
 ignore_missing_imports = true
 
 [tool.django-stubs]

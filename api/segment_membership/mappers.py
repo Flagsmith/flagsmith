@@ -4,16 +4,21 @@ from decimal import Decimal
 from flagsmith_schemas import dynamodb
 
 # (environment_id, id, identifier, identity_key, traits)
-SnowflakeIdentityRow = tuple[str, int, str, str, dict[str, object] | None]
+ClickHouseIdentityRow = tuple[str, int, str, str, dict[str, object] | None]
 
 
-def map_identity_document_to_snowflake_row(
+def map_identity_document_to_clickhouse_row(
     env_key: str,
     identity_doc: dynamodb.Identity,
-) -> SnowflakeIdentityRow:
+) -> ClickHouseIdentityRow:
     """Project a Dynamo identity document onto the canonical IDENTITIES
     row tuple. The returned tuple aligns positionally with the schema
-    `(environment_id, id, identifier, identity_key, traits)`."""
+    `(environment_id, id, identifier, identity_key, traits)`.
+
+    ClickHouse's `JSON` column accepts Python dicts directly via
+    `clickhouse-connect`'s bulk insert — clickhouse-connect serialises
+    on the way out; CH stores each top-level key as a typed subcolumn.
+    """
     identity_uuid = identity_doc["identity_uuid"]
     identifier = identity_doc["identifier"]
     composite_key = identity_doc["composite_key"]
@@ -34,9 +39,10 @@ def _identity_id(identity_uuid: str) -> int:
 
 
 def _coerce_trait_value(value: object) -> object:
-    """Coerce Dynamo-decoded values for VARIANT serialisation. boto3
+    """Coerce Dynamo-decoded values for JSON serialisation. boto3
     returns `Decimal` for numbers; we narrow to int when whole, float
-    otherwise, so the VARIANT keeps a useful numeric type."""
+    otherwise, so the JSON column stores a meaningful numeric subcolumn
+    type (Int64 / UInt64 / Float64) rather than failing to serialise."""
     if isinstance(value, Decimal):
         if value == value.to_integral_value():
             return int(value)

@@ -1,12 +1,17 @@
-"""Tasks: backfill IDENTITIES from Dynamo to Snowflake daily, then
+"""Tasks: backfill IDENTITIES from Dynamo to ClickHouse daily, then
 refresh per-segment counts in the `SegmentMembership` cache.
 
 The backfill recurs daily and, once it finishes, fans out one
 `refresh_project_segment_counts` per project — guarantees the refresh
 always reads the freshly backfilled snapshot rather than racing a
-separate schedule. Both tasks short-circuit when SNOWFLAKE_* settings
-are unset, and skip per-organisation when the
+separate schedule. Both tasks short-circuit when `CLICKHOUSE_HOST` is
+unset, and skip per-organisation when the
 `segment_membership_inspection` FoF flag is False.
+
+ClickHouse's `IDENTITIES` table is `ReplacingMergeTree(inserted_at)
+ORDER BY (environment_id, id)`. Daily re-inserts keep "most-recent
+wins" semantics at merge time; `compute_segment_counts_for_project`
+emits `FROM IDENTITIES FINAL` to dedupe at read time.
 """
 
 from datetime import timedelta
@@ -15,13 +20,6 @@ from typing import cast
 import structlog
 from django.utils import timezone
 from flagsmith_schemas.dynamodb import Identity as DynamoIdentity
-from snowflake.snowpark.types import (
-    LongType,
-    StringType,
-    StructField,
-    StructType,
-    VariantType,
-)
 from task_processor.decorators import (
     register_recurring_task,
     register_task_handler,
@@ -29,7 +27,7 @@ from task_processor.decorators import (
 
 from environments.dynamodb.wrappers.identity_wrapper import DynamoIdentityWrapper
 from projects.models import Project
-from segment_membership.mappers import map_identity_document_to_snowflake_row
+from segment_membership.mappers import map_identity_document_to_clickhouse_row
 from segment_membership.metrics import (
     flagsmith_segment_membership_backfill_duration_seconds,
     flagsmith_segment_membership_backfill_identities_total,
@@ -40,9 +38,9 @@ from segment_membership.models import SegmentMembership
 from segment_membership.services import (
     compute_segment_counts_for_project,
     get_projects_to_process,
+    is_clickhouse_configured,
     is_membership_enabled,
-    is_snowflake_configured,
-    open_snowflake_session,
+    open_clickhouse_client,
 )
 from util.util import batched
 
@@ -51,14 +49,12 @@ logger = structlog.get_logger("segment_membership")
 # Per-INSERT row count; bounds memory while loading large environments.
 _INSERT_BATCH_SIZE = 1000
 
-_IDENTITIES_SCHEMA = StructType(
-    [
-        StructField("environment_id", StringType()),
-        StructField("id", LongType()),
-        StructField("identifier", StringType()),
-        StructField("identity_key", StringType()),
-        StructField("traits", VariantType()),
-    ]
+_IDENTITIES_COLUMN_NAMES = (
+    "environment_id",
+    "id",
+    "identifier",
+    "identity_key",
+    "traits",
 )
 
 
@@ -70,18 +66,17 @@ _IDENTITIES_SCHEMA = StructType(
     # truncating the task processor's lease.
     timeout=timedelta(hours=4),
 )
-def backfill_identities_to_snowflake() -> None:
-    """Replace Snowflake's IDENTITIES rows for every relevant
-    environment with the current Dynamo state. Once the backfill
-    finishes, fans out one `refresh_project_segment_counts` task per
-    project so the count refresh always sees fresh data.
-
-    Per-statement implicit commits leave a brief window where readers
-    see an empty partition mid-refresh — a PoC tradeoff later fixed
-    by CDC.
+def backfill_identities_to_clickhouse() -> None:
+    """Insert the current Dynamo state for every relevant environment
+    into ClickHouse's IDENTITIES table. The table is a
+    `ReplacingMergeTree` keyed on `(environment_id, id)` — duplicates
+    from prior runs are deduplicated at merge time (most-recent
+    `inserted_at` wins). Once the backfill finishes, fans out one
+    `refresh_project_segment_counts` task per project so the count
+    refresh always sees fresh data.
     """
-    if not is_snowflake_configured():
-        logger.info("backfill.skipped", reason="snowflake_not_configured")
+    if not is_clickhouse_configured():
+        logger.info("backfill.skipped", reason="clickhouse_not_configured")
         return
 
     wrapper = DynamoIdentityWrapper()
@@ -90,36 +85,35 @@ def backfill_identities_to_snowflake() -> None:
         return
 
     refreshable_project_ids: list[int] = []
-    with open_snowflake_session() as sess:
+    with open_clickhouse_client() as client:
         for project in get_projects_to_process():
             refreshable_project_ids.append(project.id)
+            log_comment = (
+                "flagsmith:segment_membership:backfill"
+                f":org_{project.organisation_id}"
+                f":project_{project.id}"
+            )
             for env in project.environments.all():
                 env_key = env.api_key
                 row_count = 0
-                sess.query_tag = (
-                    "flagsmith:segment_membership:backfill"
-                    f":org_{project.organisation_id}"
-                    f":project_{project.id}"
-                )
                 try:
                     with flagsmith_segment_membership_backfill_duration_seconds.time():
-                        sess.sql(
-                            "DELETE FROM IDENTITIES WHERE environment_id = ?",
-                            params=[env_key],
-                        ).collect()
                         for batch in batched(
                             wrapper.iter_all_items_paginated(env_key),
                             _INSERT_BATCH_SIZE,
                         ):
                             rows = [
-                                map_identity_document_to_snowflake_row(
+                                map_identity_document_to_clickhouse_row(
                                     env_key, cast(DynamoIdentity, doc)
                                 )
                                 for doc in batch
                             ]
-                            sess.create_dataframe(
-                                rows, schema=_IDENTITIES_SCHEMA
-                            ).write.mode("append").save_as_table("IDENTITIES")
+                            client.insert(
+                                "IDENTITIES",
+                                rows,
+                                column_names=list(_IDENTITIES_COLUMN_NAMES),
+                                settings={"log_comment": log_comment},
+                            )
                             row_count += len(rows)
                 except Exception:
                     logger.exception(
@@ -150,11 +144,11 @@ def refresh_project_segment_counts(project_id: int) -> None:
     """Compute per-segment match counts for a single project and upsert
     into `SegmentMembership`. Re-checks the FoF flag at execution time
     so a stale fan-out skips orgs that have since been disabled."""
-    if not is_snowflake_configured():
+    if not is_clickhouse_configured():
         logger.info(
             "refresh.project.skipped",
             project__id=project_id,
-            reason="snowflake_not_configured",
+            reason="clickhouse_not_configured",
         )
         return
 
@@ -167,17 +161,17 @@ def refresh_project_segment_counts(project_id: int) -> None:
         )
         return
 
+    log_comment = (
+        "flagsmith:segment_membership:refresh"
+        f":org_{project.organisation_id}"
+        f":project_{project.id}"
+    )
     with (
         flagsmith_segment_membership_refresh_duration_seconds.time(),
-        open_snowflake_session() as sess,
+        open_clickhouse_client(log_comment=log_comment) as client,
     ):
-        sess.query_tag = (
-            "flagsmith:segment_membership:refresh"
-            f":org_{project.organisation_id}"
-            f":project_{project.id}"
-        )
         try:
-            memberships = compute_segment_counts_for_project(project, sess)
+            memberships = compute_segment_counts_for_project(project, client)
         except Exception:
             flagsmith_segment_membership_refresh_failures_total.inc()
             logger.exception("refresh.project.failed", project__id=project_id)

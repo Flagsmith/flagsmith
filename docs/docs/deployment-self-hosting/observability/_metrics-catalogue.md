@@ -82,7 +82,7 @@ Labels:
 
 Counter.
 
-Total identities mirrored from Dynamo to Snowflake by the segment-membership backfill task across all environments.
+Total identities mirrored from Dynamo to ClickHouse by the segment-membership backfill task across all environments.
 
 Labels:
 

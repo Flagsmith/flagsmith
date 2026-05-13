@@ -1,12 +1,13 @@
 from contextlib import contextmanager
 from typing import Iterator
 
+import clickhouse_connect
 import structlog
+from clickhouse_connect.driver import Client
 from django.conf import settings
 from flag_engine.context.types import EvaluationContext
 from flagsmith_sql_flag_engine import TranslateContext, translate_segment
-from flagsmith_sql_flag_engine.dialects import SnowflakeDialect
-from snowflake.snowpark import Session
+from flagsmith_sql_flag_engine.dialects import ClickHouseDialect
 
 from integrations.flagsmith.client import get_openfeature_client
 from organisations.models import Organisation
@@ -29,40 +30,41 @@ def is_membership_enabled(organisation: Organisation) -> bool:
     )
 
 
-def is_snowflake_configured() -> bool:
-    """All SNOWFLAKE_* settings required to open a session must be
-    populated. Tasks short-circuit when this returns False."""
-    return all(
-        getattr(settings, name)
-        for name in (
-            "SNOWFLAKE_ACCOUNT",
-            "SNOWFLAKE_USER",
-            "SNOWFLAKE_PRIVATE_KEY_PATH",
-            "SNOWFLAKE_DATABASE",
-            "SNOWFLAKE_SCHEMA",
-            "SNOWFLAKE_WAREHOUSE",
-        )
-    )
+def is_clickhouse_configured() -> bool:
+    """`CLICKHOUSE_HOST` is the gate — every other CLICKHOUSE_* setting
+    has a sensible default. Tasks short-circuit when this returns False."""
+    return bool(settings.CLICKHOUSE_HOST)
 
 
 @contextmanager
-def open_snowflake_session() -> Iterator[Session]:
-    """Open a Snowpark session from `SNOWFLAKE_*` settings."""
-    config: dict[str, str | None] = {
-        "account": settings.SNOWFLAKE_ACCOUNT,
-        "user": settings.SNOWFLAKE_USER,
-        "warehouse": settings.SNOWFLAKE_WAREHOUSE,
-        "database": settings.SNOWFLAKE_DATABASE,
-        "schema": settings.SNOWFLAKE_SCHEMA,
-        "private_key_file": settings.SNOWFLAKE_PRIVATE_KEY_PATH,
+def open_clickhouse_client(*, log_comment: str | None = None) -> Iterator[Client]:
+    """Open a clickhouse-connect client from `CLICKHOUSE_*` settings.
+
+    `log_comment` lands on every query the client runs as a
+    `log_comment` session setting; it's our spend-attribution analogue
+    of Snowflake's `QUERY_TAG` and shows up in `system.query_log` for
+    per-org / per-project rollups.
+    """
+    client_settings: dict[str, str | int] = {
+        # Required for `JSON`-column DDL on ClickHouse Cloud as of 25.12.
+        # No-op on OSS builds where the type is already GA.
+        "allow_experimental_json_type": 1,
     }
-    if settings.SNOWFLAKE_ROLE:
-        config["role"] = settings.SNOWFLAKE_ROLE
-    sess = Session.builder.configs(config).create()
+    if log_comment:
+        client_settings["log_comment"] = log_comment
+    client = clickhouse_connect.get_client(
+        host=settings.CLICKHOUSE_HOST,
+        port=settings.CLICKHOUSE_PORT,
+        username=settings.CLICKHOUSE_USER,
+        password=settings.CLICKHOUSE_PASSWORD,
+        database=settings.CLICKHOUSE_DATABASE,
+        secure=settings.CLICKHOUSE_SECURE,
+        settings=client_settings,
+    )
     try:
-        yield sess
+        yield client
     finally:
-        sess.close()
+        client.close()
 
 
 def get_projects_to_process() -> Iterator[Project]:
@@ -79,7 +81,7 @@ def get_projects_to_process() -> Iterator[Project]:
 
 
 def compute_segment_counts_for_project(
-    project: Project, session: Session
+    project: Project, client: Client
 ) -> list[SegmentMembership]:
     """Run one batched `SELECT ... UNION ALL` counting identity matches
     for every (canonical-segment, environment) pair in `project`.
@@ -98,9 +100,14 @@ def compute_segment_counts_for_project(
     regex pattern unsupported by the active dialect — are skipped
     entirely.
 
-    Environment keys are bound as parameters, not f-string-spliced;
-    the predicate from `translate_segment` is already escape-safe per
-    the SQL flag engine's contract.
+    Environment keys are bound as a named array parameter; the
+    predicate from `translate_segment` is already escape-safe per the
+    SQL flag engine's contract.
+
+    The `FROM IDENTITIES FINAL` keyword forces ReplacingMergeTree to
+    dedupe rows at query time. Counts are read strictly against the
+    most-recent backfill, regardless of how many merge passes have
+    happened since.
     """
     segments = list(Segment.live_objects.filter(project=project))
     env_id_by_key: dict[str, int] = dict(
@@ -109,10 +116,7 @@ def compute_segment_counts_for_project(
     if not segments or not env_id_by_key:
         return []
 
-    env_keys = list(env_id_by_key)
-    env_placeholders = ",".join("?" * len(env_keys))
-    dialect = SnowflakeDialect()
-
+    dialect = ClickHouseDialect()
     select_clauses: list[str] = []
     for seg in segments:
         translate_ctx = TranslateContext(
@@ -135,9 +139,9 @@ def compute_segment_counts_for_project(
             continue
         select_clauses.append(
             f"SELECT {seg.id} AS segment_id, "
-            f"i.environment_id AS env_key, COUNT(*) AS c "
-            f"FROM IDENTITIES i "
-            f"WHERE i.environment_id IN ({env_placeholders}) AND ({predicate}) "
+            f"i.environment_id AS env_key, count() AS c "
+            f"FROM IDENTITIES FINAL i "
+            f"WHERE i.environment_id IN {{env_keys:Array(String)}} AND ({predicate}) "
             f"GROUP BY i.environment_id"
         )
 
@@ -145,17 +149,17 @@ def compute_segment_counts_for_project(
         return []
 
     sql = "\nUNION ALL\n".join(select_clauses)
-    rows = session.sql(sql, params=env_keys * len(select_clauses)).collect()
+    result = client.query(sql, parameters={"env_keys": list(env_id_by_key)})
     memberships: list[SegmentMembership] = []
-    for row in rows:
-        env_id = env_id_by_key.get(str(row["ENV_KEY"]))
+    for row in result.result_rows:
+        env_id = env_id_by_key.get(str(row[1]))
         if env_id is None:
             continue
         memberships.append(
             SegmentMembership(
-                segment_id=int(row["SEGMENT_ID"]),
+                segment_id=int(row[0]),
                 environment_id=env_id,
-                count=int(row["C"]),
+                count=int(row[2]),
             )
         )
     return memberships
