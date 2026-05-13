@@ -1047,9 +1047,11 @@ def test_get_subscription_metadata__cache_exists__returns_cached_data(
     expected_api_calls = 100
     expected_chargebee_email = "test@example.com"
 
-    settings.VERSIONING_RELEASE_DATE = timezone.now() - timedelta(days=1)
     expected_feature_history_visibility_days = 30
     expected_audit_log_visibility_days = 30
+
+    chargebee_subscription.plan = "scale-up-v4-monthly"
+    chargebee_subscription.save()
 
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
@@ -1084,6 +1086,55 @@ def test_get_subscription_metadata__cache_exists__returns_cached_data(
     }
 
 
+def test_get_subscription_metadata__scale_up_v2_with_cache__preserves_old_plan_audit_log(
+    organisation: Organisation,
+    admin_client: APIClient,
+    chargebee_subscription: Subscription,
+    mocker: MagicMock,
+) -> None:
+    # Given
+    expected_seats = 10
+    expected_projects = 3
+    expected_api_calls = 100
+    expected_chargebee_email = "test@example.com"
+    expected_feature_history_visibility_days = 14
+
+    chargebee_subscription.plan = "scale-up-v2"
+    chargebee_subscription.save()
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=expected_seats,
+        allowed_projects=expected_projects,
+        allowed_30d_api_calls=expected_api_calls,
+        chargebee_email=expected_chargebee_email,
+        feature_history_visibility_days=expected_feature_history_visibility_days,
+        audit_log_visibility_days=30,
+    )
+
+    url = reverse(
+        "api-v1:organisations:organisation-get-subscription-metadata",
+        args=[organisation.pk],
+    )
+
+    mocker.patch("organisations.models.is_saas", return_value=True)
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "max_seats": expected_seats,
+        "max_projects": expected_projects,
+        "max_api_calls": expected_api_calls,
+        "payment_source": CHARGEBEE,
+        "chargebee_email": expected_chargebee_email,
+        "feature_history_visibility_days": expected_feature_history_visibility_days,
+        "audit_log_visibility_days": None,
+    }
+
+
 def test_get_subscription_metadata__no_cache__fetches_from_chargebee(
     mocker: MockerFixture,
     organisation: Organisation,
@@ -1096,9 +1147,11 @@ def test_get_subscription_metadata__no_cache__fetches_from_chargebee(
     expected_api_calls = 100
     expected_chargebee_email = "test@example.com"
 
-    settings.VERSIONING_RELEASE_DATE = timezone.now() - timedelta(days=1)
     expected_feature_history_visibility_days = DEFAULT_VERSION_LIMIT_DAYS
     expected_audit_log_visibility_days = 0
+
+    chargebee_subscription.plan = "scale-up-v4-monthly"
+    chargebee_subscription.save()
 
     mocker.patch("organisations.models.is_saas", return_value=True)
     get_subscription_metadata = mocker.patch(

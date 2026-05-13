@@ -242,6 +242,35 @@ def test_is_auto_seat_upgrade_available__given_plan_and_seat_count__returns_expe
     assert result is expected
 
 
+@pytest.mark.parametrize(
+    "plan, expected_version",
+    [
+        ("scale-up-v4-monthly", 4),
+        ("scale-up-v4", 4),
+        ("scale-up-v2", 2),
+        ("scale-up-v10-annual", 10),
+        ("scale-up", 1),
+        ("startup-v2", 1),
+        (None, 1),
+    ],
+)
+def test_get_scaleup_plan_version__given_plan__returns_expected(
+    organisation: Organisation,
+    plan: str | None,
+    expected_version: int,
+) -> None:
+    # Given
+    subscription = organisation.subscription
+    subscription.plan = plan
+    subscription.save()
+
+    # When
+    version = subscription.get_scaleup_plan_version()
+
+    # Then
+    assert version == expected_version
+
+
 def test_is_auto_seat_upgrade_available__not_saas__returns_false(
     organisation: Organisation,
 ) -> None:
@@ -299,14 +328,11 @@ def test_is_paid__cancelled_subscription__returns_false(  # type: ignore[no-unty
 def test_get_subscription_metadata__chargebee_subscription__returns_chargebee_metadata(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     mocker: MockerFixture,
-    settings: SettingsWrapper,
 ):
     # Given
     seats = 10
     api_calls = 50000000
     projects = 10
-
-    settings.VERSIONING_RELEASE_DATE = timezone.now() - timedelta(days=1)
 
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
@@ -316,6 +342,46 @@ def test_get_subscription_metadata__chargebee_subscription__returns_chargebee_me
     )
     expected_metadata = ChargebeeObjMetadata(
         seats=seats, api_calls=api_calls, projects=projects
+    )
+    mocker.patch("organisations.models.is_saas", return_value=True)
+    Subscription.objects.filter(organisation=organisation).update(
+        plan="scale-up-v4-monthly",
+        subscription_id="subscription-id",
+        payment_method=CHARGEBEE,
+    )
+    organisation.subscription.refresh_from_db()
+
+    # When
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata == expected_metadata
+
+
+def test_get_subscription_metadata__scale_up_v2_plan__keeps_unlimited_audit_log_only(  # type: ignore[no-untyped-def]  # noqa: E501
+    organisation: Organisation,
+    mocker: MockerFixture,
+):
+    # Given
+    seats = 10
+    api_calls = 50000000
+    projects = 10
+    feature_history_visibility_days = 14
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=seats,
+        allowed_30d_api_calls=api_calls,
+        allowed_projects=projects,
+        audit_log_visibility_days=30,
+        feature_history_visibility_days=feature_history_visibility_days,
+    )
+    expected_metadata = ChargebeeObjMetadata(
+        seats=seats,
+        api_calls=api_calls,
+        projects=projects,
+        audit_log_visibility_days=None,
+        feature_history_visibility_days=feature_history_visibility_days,
     )
     mocker.patch("organisations.models.is_saas", return_value=True)
     Subscription.objects.filter(organisation=organisation).update(
@@ -332,47 +398,39 @@ def test_get_subscription_metadata__chargebee_subscription__returns_chargebee_me
     assert subscription_metadata == expected_metadata
 
 
-def test_get_subscription_metadata__after_versioning_release__returns_unlimited_audit_and_versions(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_get_subscription_metadata__scale_up_v4_plan__returns_cache_visibility_values(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     mocker: MockerFixture,
-    settings: SettingsWrapper,
 ):
     # Given
     seats = 10
     api_calls = 50000000
     projects = 10
-    now = timezone.now()
-    yesterday = now - timedelta(days=1)
-    two_days_ago = now - timedelta(days=2)
+    audit_log_visibility_days = 14
+    feature_history_visibility_days = 14
 
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=seats,
         allowed_30d_api_calls=api_calls,
         allowed_projects=projects,
-        # values from here should be overridden
-        audit_log_visibility_days=30,
-        feature_history_visibility_days=30,
+        audit_log_visibility_days=audit_log_visibility_days,
+        feature_history_visibility_days=feature_history_visibility_days,
     )
     expected_metadata = ChargebeeObjMetadata(
         seats=seats,
         api_calls=api_calls,
         projects=projects,
-        # the following values are patched on based on the
-        # VERSIONING_RELEASE_DATE setting
-        audit_log_visibility_days=None,
-        feature_history_visibility_days=None,
+        audit_log_visibility_days=audit_log_visibility_days,
+        feature_history_visibility_days=feature_history_visibility_days,
     )
     mocker.patch("organisations.models.is_saas", return_value=True)
     Subscription.objects.filter(organisation=organisation).update(
-        plan="scale-up-v2",
+        plan="scale-up-v4-monthly",
         subscription_id="subscription-id",
         payment_method=CHARGEBEE,
-        subscription_date=two_days_ago,
     )
     organisation.subscription.refresh_from_db()
-
-    settings.VERSIONING_RELEASE_DATE = yesterday
 
     # When
     subscription_metadata = organisation.subscription.get_subscription_metadata()
