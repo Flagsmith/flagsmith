@@ -108,6 +108,8 @@ from .tasks import trigger_feature_state_change_webhooks
 from .versioning.versioning_service import (
     get_environment_flags_list,
     get_environment_flags_queryset,
+    require_direct_state_write,
+    require_direct_state_write_for_state,
 )
 
 logger = logging.getLogger(__name__)
@@ -740,6 +742,11 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         if identity_pk:
             data["identity"] = identity_pk
 
+        require_direct_state_write(
+            environment=environment,
+            is_identity_override=bool(identity_pk),
+        )
+
         serializer = self.get_serializer(data=data)
 
         if serializer.is_valid(raise_exception=True):
@@ -763,6 +770,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         feature state value.
         """
         feature_state_to_update = self.get_object()
+        require_direct_state_write_for_state(feature_state_to_update)
         feature_state_data = request.data
 
         # Check if feature state value was provided with request data. If so, create / update
@@ -796,6 +804,10 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         Override partial_update as overridden update method assumes partial True for all requests.
         """
         return self.update(request, *args, **kwargs)  # type: ignore[no-untyped-call]
+
+    def destroy(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        require_direct_state_write_for_state(self.get_object())
+        return super().destroy(request, *args, **kwargs)
 
     def update_feature_state_value(self, value, feature_state):  # type: ignore[no-untyped-def]
         feature_state_value_dict = feature_state.generate_feature_state_value_data(
@@ -941,6 +953,21 @@ class SimpleFeatureStateViewSet(
     serializer_class = WritableNestedFeatureStateSerializer
     permission_classes = [FeatureStatePermissions]
     filterset_fields = ["environment", "feature", "feature_segment"]
+
+    def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        environment_id = request.data.get("environment")
+        targets_version = bool(request.data.get("environment_feature_version"))
+        if environment_id and not targets_version:
+            environment = get_object_or_404(Environment, id=environment_id)
+            require_direct_state_write(
+                environment=environment,
+                is_identity_override=bool(request.data.get("identity")),
+            )
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        require_direct_state_write_for_state(self.get_object())
+        return super().update(request, *args, **kwargs)
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
