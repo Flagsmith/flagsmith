@@ -36,6 +36,7 @@ AuditLogIntegrationAttrName = Literal[
     "dynatrace_config",
     "grafana_config",
     "new_relic_config",
+    "sentry_change_tracking_configuration",
     "slack_config",
 ]
 
@@ -195,6 +196,19 @@ def send_audit_log_event_to_grafana(sender, instance, **kwargs):  # type: ignore
 
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
+def send_audit_log_event_to_sentry_v2(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
+    """
+    v2 Sentry receiver. Single entry point for all feature-related audit rows
+    in v2-versioning environments. Delegates all Sentry-side processing to
+    ``integrations.sentry.change_tracking.process_audit_log``.
+    """
+    from integrations.sentry.change_tracking import process_audit_log
+
+    process_audit_log(instance)
+
+
+@receiver(post_save, sender=AuditLog)
+@track_only_feature_related_events
 def send_audit_log_event_to_slack(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
     slack_project_config = _get_integration_config(instance, "slack_config")
     if not slack_project_config:
@@ -230,9 +244,6 @@ def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ign
     feature_state_change_went_live.send(feature_state, audit_log=instance)
 
 
-_DEFAULT_SENTRY_AUTHOR_EMAIL = "app@flagsmith.com"
-
-
 def _get_sentry_config_or_none(
     environment: Any,
 ) -> SentryChangeTrackingConfiguration | None:
@@ -243,24 +254,6 @@ def _get_sentry_config_or_none(
         ).first()
     )
     return config
-
-
-def _audit_log_author_email(audit_log: AuditLog | None) -> str:
-    if audit_log is None:
-        return _DEFAULT_SENTRY_AUTHOR_EMAIL
-    return getattr(audit_log.author, "email", _DEFAULT_SENTRY_AUTHOR_EMAIL)
-
-
-def _send_sentry_events(
-    config: SentryChangeTrackingConfiguration,
-    events: list[dict[str, Any]],
-) -> None:
-    if not events:
-        return
-    SentryChangeTracking(
-        webhook_url=config.webhook_url,
-        secret=config.secret,
-    ).track_events_async(events)
 
 
 @receiver(feature_state_change_went_live)
@@ -274,134 +267,6 @@ def send_audit_log_event_to_sentry(
         secret=config.secret,
     )
     _track_event_async(audit_log, sentry_change_tracking)  # type: ignore[no-untyped-call]
-
-
-@receiver(post_save, sender=AuditLog)
-@track_only([RelatedObjectType.EF_VERSION])
-def send_efv_audit_log_event_to_sentry(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
-    """
-    Sentry's flag-log API needs per-FS payloads. v2 EFV publish emits a single
-    EF_VERSION-typed audit row representing N feature state changes, so expand
-    it into per-FS Sentry entries and send them as a single batched payload.
-    """
-    from features.versioning.models import EnvironmentFeatureVersion
-    from features.versioning.versioning_service import (
-        get_feature_state_match_key,
-        get_updated_feature_states_for_version,
-    )
-
-    if not (config := _get_sentry_config_or_none(instance.environment)):
-        return
-
-    if not instance.related_object_uuid:
-        return
-
-    try:
-        efv = EnvironmentFeatureVersion.objects.select_related("feature").get(
-            uuid=instance.related_object_uuid,
-        )
-    except EnvironmentFeatureVersion.DoesNotExist:
-        return
-
-    changed_feature_states = get_updated_feature_states_for_version(efv)
-    if not changed_feature_states:
-        return
-
-    previous_version = efv.get_previous_version()
-    previous_fs_keys = (
-        {
-            get_feature_state_match_key(fs)
-            for fs in previous_version.feature_states.all()
-        }
-        if previous_version
-        else set()
-    )
-
-    timestamp = efv.live_from or efv.published_at or instance.created_date
-    author_email = _audit_log_author_email(instance)
-    flag_name = efv.feature.name
-
-    events = [
-        SentryChangeTracking.build_payload_entry(
-            action=(
-                "updated"
-                if get_feature_state_match_key(fs) in previous_fs_keys
-                else "created"
-            ),
-            flag_name=flag_name,
-            change_id=fs.pk,
-            timestamp=timestamp,
-            author_email=author_email,
-        )
-        for fs in changed_feature_states
-    ]
-    _send_sentry_events(config, events)
-
-
-@receiver(post_save, sender=FeatureState)
-def send_v2_initial_feature_state_event_to_sentry(  # type: ignore[no-untyped-def]
-    sender,
-    instance: FeatureState,
-    created: bool,
-    **kwargs: Any,
-) -> None:
-    """
-    v2 envs suppress FS-typed audit rows for auto-created initial FeatureStates,
-    and `create_initial_version` doesn't fire `environment_feature_version_published`,
-    so Sentry has no audit row to latch onto for flag-create in v2 envs.
-    Listen directly to FS post_save for v2 env-default FSes that belong to an
-    initial (no-previous-version) EFV and emit a Sentry "created" event with the
-    FS pk as change_id. The author is recovered from the FEATURE audit row
-    written moments earlier in the same flow.
-    """
-    if not created:
-        return
-    if instance.environment_feature_version_id is None:
-        return
-    if instance.feature_segment_id or instance.identity_id:
-        return
-
-    efv = instance.environment_feature_version
-    if efv is None or efv.get_previous_version() is not None:
-        return
-
-    # Mirror v1's suppression rule from FeatureState.get_create_log_message:
-    # env-create / env-clone (where the env didn't exist when the feature was
-    # created) doesn't notify Sentry in v1, so don't introduce divergence here.
-    if (
-        instance.environment is None
-        or instance.environment.created_date > instance.feature.created_date
-    ):
-        return
-
-    if not (config := _get_sentry_config_or_none(instance.environment)):
-        return
-
-    feature_audit_log = (
-        AuditLog.objects.filter(
-            related_object_type=RelatedObjectType.FEATURE.name,
-            related_object_id=instance.feature_id,
-        )
-        .order_by("-id")
-        .first()
-    )
-
-    timestamp = (
-        max(instance.live_from, instance.updated_at)
-        if instance.live_from
-        else instance.updated_at
-    )
-
-    events = [
-        SentryChangeTracking.build_payload_entry(
-            action="created",
-            flag_name=instance.feature.name,
-            change_id=instance.pk,
-            timestamp=timestamp,
-            author_email=_audit_log_author_email(feature_audit_log),
-        )
-    ]
-    _send_sentry_events(config, events)
 
 
 @receiver(feature_state_change_went_live)
