@@ -9,7 +9,7 @@ This API is designed for automation, integrations, and building custom workflows
 
 ## API Explorer
 
-You can explore the full Admin API via Swagger at [https://api.flagsmith.com/api/v1/docs/](https://api.flagsmith.com/api/v1/docs/). You can also get the OpenAPI specification in [JSON](https://api.flagsmith.com/api/v1/docs/?format=.json) or [YAML](https://api.flagsmith.com/api/v1/docs/?format=.yaml) format.
+You can explore the full Admin API via Swagger at [https://api.flagsmith.com/api/v1/docs/](https://api.flagsmith.com/api/v1/docs/). You can also get the OpenAPI specification in [JSON](https://api.flagsmith.com/api/v1/swagger.json) or [YAML](https://api.flagsmith.com/api/v1/swagger.yaml) format.
 
 We also have a [Postman Collection](https://www.postman.com/flagsmith/workspace/flagsmith/overview) that you can use to experiment with the API.
 
