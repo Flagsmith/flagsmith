@@ -14,6 +14,9 @@ const sanitiseDiffString = (value: FlagsmithValue) => {
   if (value === undefined || value === null) {
     return ''
   }
+  if (value === '') {
+    return '""'
+  }
   return `${value}`
 }
 const DiffString: FC<DiffType> = ({

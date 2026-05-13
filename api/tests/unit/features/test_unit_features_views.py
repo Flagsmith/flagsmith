@@ -1364,6 +1364,38 @@ def test_create_segment_override__admin_user__creates_override(
     assert created_override.get_feature_state_value() == string_value
 
 
+def test_create_segment_override__v2_versioning_environment__returns_400(
+    admin_client_new: APIClient,
+    feature: Feature,
+    segment: Segment,
+    environment_v2_versioning: Environment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment_v2_versioning.api_key, feature.id],
+    )
+    data = {
+        "feature_state_value": {"string_value": "foo"},
+        "enabled": True,
+        "feature_segment": {"segment": segment.id},
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
+    assert not FeatureState.objects.filter(
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment__segment=segment,
+    ).exists()
+
+
 def test_get_flags__user_throttle_set__is_not_throttled(  # type: ignore[no-untyped-def]
     api_client: APIClient,
     environment: Environment,
@@ -2854,6 +2886,305 @@ def test_update_feature_state__no_fsv_history__returns_200(
     )
     # Then
     assert response.status_code == status.HTTP_200_OK
+
+
+def test_update_feature_state__v2_env_via_simple_endpoint__returns_400(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    live_fs = FeatureState.objects.get(
+        environment=environment_v2_versioning,
+        feature=feature,
+        identity=None,
+        feature_segment=None,
+    )
+    url = reverse("api-v1:features:featurestates-detail", args=[live_fs.id])
+    data = {
+        "id": live_fs.id,
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "should-be-blocked"},
+        "environment": environment_v2_versioning.id,
+        "feature": feature.id,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
+
+
+def test_update_feature_state__v2_env_via_nested_endpoint__returns_400(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    live_fs = FeatureState.objects.get(
+        environment=environment_v2_versioning,
+        feature=feature,
+        identity=None,
+        feature_segment=None,
+    )
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment_v2_versioning.api_key, live_fs.id],
+    )
+    data = {
+        "id": live_fs.id,
+        "enabled": True,
+        "feature_state_value": "should-be-blocked",
+        "environment": environment_v2_versioning.id,
+        "feature": feature.id,
+        "identity": None,
+        "feature_segment": None,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
+
+
+def test_update_feature_state__v2_env_identity_override__returns_200(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    identity: Identity,
+) -> None:
+    # Given - identity overrides live outside the version graph in v2
+    identity_fs = FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        identity=identity,
+        enabled=False,
+    )
+    url = reverse("api-v1:features:featurestates-detail", args=[identity_fs.id])
+    data = {
+        "id": identity_fs.id,
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "identity-override"},
+        "environment": environment_v2_versioning.id,
+        "feature": feature.id,
+        "identity": identity.id,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
+def test_create_feature_state__v2_env_via_simple_endpoint__returns_400(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    url = reverse("api-v1:features:featurestates-list")
+    data = {
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "blocked"},
+        "environment": environment_v2_versioning.id,
+        "feature": feature.id,
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
+
+
+def test_create_feature_state__v2_env_via_nested_endpoint__returns_400(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    project: Project,
+) -> None:
+    # Given - create a feature_segment so the create has somewhere to go
+    segment = Segment.objects.create(name="new_override_segment", project=project)
+    url = reverse(
+        "api-v1:environments:environment-featurestates-list",
+        args=[environment_v2_versioning.api_key],
+    )
+    data = {
+        "enabled": True,
+        "feature_state_value": "blocked",
+        "feature": feature.id,
+        "feature_segment": {"segment": segment.id, "priority": 1},
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
+
+
+def test_create_feature_state__v2_env_identity_override__returns_201(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    identity: Identity,
+) -> None:
+    # Given - identity FS creates are not part of the version graph
+    url = reverse(
+        "api-v1:environments:identity-featurestates-list",
+        args=[environment_v2_versioning.api_key, identity.id],
+    )
+    data = {
+        "enabled": True,
+        "feature_state_value": "identity-create",
+        "feature": feature.id,
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_create_feature_state__v2_env_targets_version__returns_201(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    project: Project,
+) -> None:
+    # Given - a draft EFV plus a feature_segment attached to it
+    draft_version = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+    segment = Segment.objects.create(name="seg_targets_version", project=project)
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_v2_versioning,
+        environment_feature_version=draft_version,
+        priority=1,
+    )
+    url = reverse("api-v1:features:featurestates-list")
+    data = {
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "override"},
+        "environment": environment_v2_versioning.id,
+        "feature": feature.id,
+        "feature_segment": feature_segment.id,
+        "environment_feature_version": str(draft_version.uuid),
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_update_feature_state__v2_env_draft_version__returns_200(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given - a new draft EFV (post_save clones the previous version's FSes)
+    draft_version = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+    draft_fs = FeatureState.objects.get(
+        environment_feature_version=draft_version,
+        identity=None,
+        feature_segment=None,
+    )
+    url = reverse("api-v1:features:featurestates-detail", args=[draft_fs.id])
+    data = {
+        "id": draft_fs.id,
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "draft-update"},
+        "environment": environment_v2_versioning.id,
+        "feature": feature.id,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
+def test_delete_feature_state__v2_env_via_nested_endpoint__returns_400(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given - the live env-default FS attached to the current EFV
+    live_fs = FeatureState.objects.get(
+        environment=environment_v2_versioning,
+        feature=feature,
+        identity=None,
+        feature_segment=None,
+    )
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment_v2_versioning.api_key, live_fs.id],
+    )
+
+    # When
+    response = admin_client_new.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
+    assert FeatureState.objects.filter(id=live_fs.id).exists()
+
+
+def test_delete_feature_state__v2_env_identity_override__returns_204(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    identity: Identity,
+) -> None:
+    # Given - identity overrides live outside the version graph
+    identity_fs = FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        identity=identity,
+        enabled=False,
+    )
+    url = reverse(
+        "api-v1:environments:identity-featurestates-detail",
+        args=[environment_v2_versioning.api_key, identity.id, identity_fs.id],
+    )
+
+    # When
+    response = admin_client_new.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not FeatureState.objects.filter(id=identity_fs.id).exists()
 
 
 def test_update_feature_state__change_feature__returns_400(

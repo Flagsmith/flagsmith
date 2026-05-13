@@ -7,7 +7,6 @@ import classNames from 'classnames'
 
 type FeatureValueType = {
   value: FlagsmithValue
-  includeEmpty?: boolean // whether to show empty values
   className?: string
   onClick?: () => void
   'data-test'?: string
@@ -18,9 +17,6 @@ const FeatureValue: FC<FeatureValueType> = (props) => {
     return null
   }
   const type = typeof props.value
-  if (type === 'string' && props.value === '' && !props.includeEmpty) {
-    return null
-  }
   const isCompact = getViewMode() === 'compact'
   return (
     <div
@@ -31,7 +27,7 @@ const FeatureValue: FC<FeatureValueType> = (props) => {
       data-test={props['data-test']}
       style={{ maxWidth: 'fit-content' }}
     >
-      {type == 'string' && <span className='quot'>"</span>}
+      {type === 'string' && <span className='quot'>"</span>}
       <span
         className='feature-value'
         style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
@@ -41,7 +37,7 @@ const FeatureValue: FC<FeatureValueType> = (props) => {
           isCompact ? 24 : 20,
         )}
       </span>
-      {type == 'string' && <span className='quot'>"</span>}
+      {type === 'string' && <span className='quot'>"</span>}
     </div>
   )
 }

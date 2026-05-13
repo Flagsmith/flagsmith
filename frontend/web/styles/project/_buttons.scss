@@ -2,19 +2,15 @@
 
 .btn,
 button.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: $btn-line-height;
   white-space: nowrap;
   color: white;
-  // Project button, to remove with project select bar
-  &:hover,
-  &:focus {
-    background-color: $btn-hover-bg;
-  }
   &:focus-visible {
     box-shadow: none;
-  }
-
-  &.btn:active {
-    background-color: $btn-active-bg;
   }
 
   &-link {
@@ -39,6 +35,9 @@ button.btn {
     &.btn:active {
       color: white;
       background-color: $btn-danger-active;
+    }
+    &:disabled {
+      color: white;
     }
   }
 
@@ -126,15 +125,18 @@ button.btn {
     }
   }
   &-success {
-    background-color: $success;
+    background-color: $btn-success;
     &:hover,
     &:focus {
-      background-color: $success400;
+      background-color: $btn-success-hover;
       color: $text-icon-light;
     }
 
     &.btn:active {
-      background-color: $success600;
+      background-color: $btn-success-active;
+      color: $text-icon-light;
+    }
+    &:disabled {
       color: $text-icon-light;
     }
   }
@@ -152,12 +154,12 @@ button.btn {
       height: 18px;
     }
     path {
-      fill: $text-muted;
+      fill: var(--color-icon-secondary);
     }
     &:hover,&:focus {
       background-color: $bg-light300;
       path {
-        fill: $body-color;
+        fill: var(--color-icon-default);
       }
     }
   }
@@ -165,6 +167,9 @@ button.btn {
     padding: 0 14px;
     background-color: $basic-alpha-8;
     border-radius: $border-radius;
+    svg path {
+      fill: var(--color-icon-secondary);
+    }
     &:hover,
     &:active,
     &:disabled {
@@ -191,6 +196,7 @@ button.btn {
     }
   }
   &-project {
+    display: inline-block;
     background-color: $bg-light200;
     color: $body-color;
     padding: 0px 8px;
@@ -271,8 +277,11 @@ button.btn {
   }
 }
 
-.btn-link {
-  display: inline-block;
+.btn-link,
+button.btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
   text-decoration: none !important;
   vertical-align: baseline;
   font-family: $font-family;
@@ -282,6 +291,7 @@ button.btn {
   border: none;
   box-shadow: none;
   padding: 0;
+  height: auto;
   line-height: $line-height-base;
   text-transform: inherit;
   font-weight: 500;
@@ -340,23 +350,10 @@ $add-btn-size: 34px;
 
 .dark {
   .btn {
-    &:hover,
-    &:focus {
-      background-color: $btn-hover-bg-dark;
-    }
-    &:active {
-      background-color: $primary;
-    }
     &.btn-icon {
       color: $body-color-dark;
-      path {
-        fill: $text-muted;
-      }
       &:hover,&:focus {
         background-color: $bg-dark300;
-        path {
-          fill: $body-color-dark;
-        }
       }
     }
     &.btn-secondary {
@@ -372,9 +369,14 @@ $add-btn-size: 34px;
       }
     }
     &.btn-success {
+      background-color: $btn-success;
       &:hover,
       &:focus {
-        background-color: $success400;
+        background-color: $btn-success-hover;
+        color: $text-icon-light;
+      }
+      &:active {
+        background-color: $btn-success-active;
         color: $text-icon-light;
       }
     }
@@ -393,6 +395,10 @@ $add-btn-size: 34px;
       }
       &:focus {
         background-color: $btn-outline-focus-bg-dark;
+      }
+      &:active {
+        background-color: $btn-outline-active-bg;
+        color: $primary400;
       }
 
       &-danger {

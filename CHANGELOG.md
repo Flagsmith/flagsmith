@@ -1,5 +1,49 @@
 # Changelog
 
+## [2.233.0](https://github.com/Flagsmith/flagsmith/compare/v2.232.1...v2.233.0) (2026-05-12)
+
+
+### Features
+
+* Add created_by to MasterAPIKey model ([#6845](https://github.com/Flagsmith/flagsmith/issues/6845)) ([2e3942b](https://github.com/Flagsmith/flagsmith/commit/2e3942b39c8d8c51c5fd5dd4cb03092738d3d006))
+* added v1 versioning segment updates tools ([#7489](https://github.com/Flagsmith/flagsmith/issues/7489)) ([7a17c35](https://github.com/Flagsmith/flagsmith/commit/7a17c358458d243b585d198070e43c18b7361271))
+* allow any operator in segment top rule ([#7427](https://github.com/Flagsmith/flagsmith/issues/7427)) ([53fc1bf](https://github.com/Flagsmith/flagsmith/commit/53fc1bf7a9e075b8a51d0bbab7235c064f28f7e9))
+* use flag value to display sdk message ([#7458](https://github.com/Flagsmith/flagsmith/issues/7458)) ([938b609](https://github.com/Flagsmith/flagsmith/commit/938b609bca502fc9c9ff9d42ed708c941d302776))
+
+
+### Bug Fixes
+
+* added currency and frequency in ids resolution ([#7442](https://github.com/Flagsmith/flagsmith/issues/7442)) ([e4651d1](https://github.com/Flagsmith/flagsmith/commit/e4651d16196bbe89ffbe3223d26fbaef64e9607e))
+* **button:** centre icons natively, fix hover and disabled states ([#7402](https://github.com/Flagsmith/flagsmith/issues/7402)) ([90e92d9](https://github.com/Flagsmith/flagsmith/commit/90e92d9d3473de0a63998f0f80d144a2becc1b1d))
+* dedupe integration list in onboarding select ([#7445](https://github.com/Flagsmith/flagsmith/issues/7445)) ([9d21ed6](https://github.com/Flagsmith/flagsmith/commit/9d21ed610edea481d515df72d69111c699e4afda))
+* removed api logout call ([#7448](https://github.com/Flagsmith/flagsmith/issues/7448)) ([bff665f](https://github.com/Flagsmith/flagsmith/commit/bff665f8cd19e883517654d376b9a01e68768a42))
+
+
+### Dependency Updates
+
+* bump @babel/plugin-transform-modules-systemjs from 7.25.9 to 7.29.4 in /docs ([#7466](https://github.com/Flagsmith/flagsmith/issues/7466)) ([74d2a2a](https://github.com/Flagsmith/flagsmith/commit/74d2a2a33d2056095d10515f62723f0d0910b6e6))
+* bump @babel/plugin-transform-modules-systemjs from 7.29.0 to 7.29.4 in /frontend ([#7465](https://github.com/Flagsmith/flagsmith/issues/7465)) ([bf70fde](https://github.com/Flagsmith/flagsmith/commit/bf70fde26f4dafbbd99d7befb6b373fce8e02e62))
+* bump django from 5.2.13 to 5.2.14 in /api ([#7462](https://github.com/Flagsmith/flagsmith/issues/7462)) ([8907b18](https://github.com/Flagsmith/flagsmith/commit/8907b189f065e03138379e5f3441179cd36e254b))
+* bump fast-uri from 3.0.6 to 3.1.2 in /frontend ([#7461](https://github.com/Flagsmith/flagsmith/issues/7461)) ([e165fa6](https://github.com/Flagsmith/flagsmith/commit/e165fa6517c0276471974e88f8baea51ea604f47))
+* bump fast-uri from 3.1.0 to 3.1.2 in /docs ([#7459](https://github.com/Flagsmith/flagsmith/issues/7459)) ([37f446b](https://github.com/Flagsmith/flagsmith/commit/37f446b9c177b297c3504d8045dba4392a33b711))
+* bump lodash-es and langium in /docs ([#7395](https://github.com/Flagsmith/flagsmith/issues/7395)) ([9ea8890](https://github.com/Flagsmith/flagsmith/commit/9ea8890fb57e69575a87097f2d25ea43c515e3b9))
+* bump mermaid from 11.12.3 to 11.15.0 in /docs ([#7484](https://github.com/Flagsmith/flagsmith/issues/7484)) ([1afa70d](https://github.com/Flagsmith/flagsmith/commit/1afa70df8a7ef3b0b88653585da0aa5158bcd61d))
+* bump postcss from 8.5.6 to 8.5.14 in /frontend ([#7375](https://github.com/Flagsmith/flagsmith/issues/7375)) ([86de803](https://github.com/Flagsmith/flagsmith/commit/86de803148ed59d793f64c4f07b487b72c0d4b5e))
+* bump requests from 2.32.5 to 2.33.0 in /api ([#7376](https://github.com/Flagsmith/flagsmith/issues/7376)) ([f9472da](https://github.com/Flagsmith/flagsmith/commit/f9472da070705feb38cc74a3aacefafcb4477e08))
+* bump urllib3 from 2.6.3 to 2.7.0 in /api ([#7481](https://github.com/Flagsmith/flagsmith/issues/7481)) ([fbb1052](https://github.com/Flagsmith/flagsmith/commit/fbb1052266881876ea01b3c415d0af5b5971bc87))
+* **docs:** Bump qs to fix CVE-2026-2391 ([#7479](https://github.com/Flagsmith/flagsmith/issues/7479)) ([bc08f59](https://github.com/Flagsmith/flagsmith/commit/bc08f59a395beba9892c4e785213d78d1fd4de42))
+
+
+### CI
+
+* Migrate to uv ([#6546](https://github.com/Flagsmith/flagsmith/issues/6546)) ([bcdcf25](https://github.com/Flagsmith/flagsmith/commit/bcdcf259f8d9d4648db11399217dc0c4bd22b49a))
+* pre-commit autoupdate ([#7422](https://github.com/Flagsmith/flagsmith/issues/7422)) ([8c47ce0](https://github.com/Flagsmith/flagsmith/commit/8c47ce013a0f07c297177a4115e5d4938c5f03a5))
+
+
+### Docs
+
+* Edge Proxy operational guide ([#7397](https://github.com/Flagsmith/flagsmith/issues/7397)) ([6e9d160](https://github.com/Flagsmith/flagsmith/commit/6e9d16077d3c094ef02e0e0eb4e78e4d96dfaa1b))
+
 ## [2.232.1](https://github.com/Flagsmith/flagsmith/compare/v2.232.0...v2.232.1) (2026-05-07)
 
 
