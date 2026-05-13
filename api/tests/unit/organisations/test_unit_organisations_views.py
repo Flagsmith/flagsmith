@@ -1086,7 +1086,7 @@ def test_get_subscription_metadata__cache_exists__returns_cached_data(
     }
 
 
-def test_get_subscription_metadata__cache_exists__scale_up_v2__preserves_old_plan_audit_log(
+def test_get_subscription_metadata__scale_up_v2_with_cache__preserves_old_plan_audit_log(
     organisation: Organisation,
     admin_client: APIClient,
     chargebee_subscription: Subscription,
