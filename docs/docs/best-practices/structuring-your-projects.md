@@ -16,6 +16,19 @@ Before diving into recommendations, it's helpful to understand how Flagsmith org
 
 For more details, see the [Data Model](/flagsmith-concepts/data-model) documentation.
 
+## Decision tree: pick a structure by topology
+
+Most decisions land cleanly when you look at how your business products and teams map to Flagsmith.
+
+| Your topology | Recommended structure |
+|---|---|
+| Single business product, multiple surfaces (web + mobile + backend) | **Single project** — one shared source of truth across surfaces. Use tags, naming conventions, and tag-based RBAC to manage scope within it. |
+| Multiple distinct business products under one organisation | **One project per business product.** Each product gets its own list of features and its own access boundary. |
+| Independent service teams with no shared product context | **Split by team ownership.** Easy to refactor later via flag export between projects. |
+| Default when uncertain | **Bias toward fewer projects.** Splitting later is reversible. Merging is harder. |
+
+The sections below explore the trade-offs in more depth.
+
 ## When to create separate projects
 
 Consider creating separate projects when:
