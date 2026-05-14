@@ -6,7 +6,7 @@ sidebar_position: 5
 
 Feature Versioning attaches versions to feature value and segment override updates. You can browse past versions, schedule future ones, and roll back to an earlier version.
 
-This page explains what changes when you enable Feature Versioning v2 on an environment — for your webhook consumers, your audit-log pipeline, and your scripts that talk to the Admin API.
+Editing flags through the dashboard is unchanged. This page describes what changes when you enable Feature Versioning v2 on an environment for your webhook consumers, your audit-log pipeline, and your scripts that talk to the Admin API.
 
 ## Prerequisites
 
