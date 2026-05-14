@@ -208,6 +208,13 @@ class Migration(migrations.Migration):
                 name="unique_scanned_code_references",
             ),
         ),
+        migrations.AddIndex(
+            model_name="scannedcodereferences",
+            index=models.Index(
+                fields=("feature", "repository", "created_at"),
+                name="cr_feature_repo_created_idx",
+            ),
+        ),
         migrations.RunPython(
             code=migrate_scans_forward,
             reverse_code=migrate_scans_backward,

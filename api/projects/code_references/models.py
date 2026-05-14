@@ -62,8 +62,14 @@ class ScannedCodeReferences(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(
+            models.UniqueConstraint(  # Supports batch-insert with ignore-conflicts
                 fields=["feature", "repository", "code_references_hash"],
                 name="unique_scanned_code_references",
+            ),
+        ]
+        indexes = [
+            models.Index(  # Supports finding the latest scan for a feature/repository
+                fields=["feature", "repository", "created_at"],
+                name="cr_feature_repo_created_idx",
             ),
         ]
