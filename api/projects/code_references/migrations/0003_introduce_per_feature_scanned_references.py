@@ -22,7 +22,10 @@ class StoredCodeReference(TypedDict):
 
 
 def _hash_references(references: list[StoredCodeReference]) -> str:
-    return hashlib.md5(json.dumps(references, sort_keys=True).encode()).hexdigest()
+    return hashlib.md5(
+        json.dumps(references, sort_keys=True).encode(),
+        usedforsecurity=False,
+    ).hexdigest()
 
 
 def migrate_scans_forward(apps: Apps, _: object) -> None:
