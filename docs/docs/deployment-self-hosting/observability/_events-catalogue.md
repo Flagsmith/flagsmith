@@ -339,7 +339,7 @@ Attributes:
 ### `sentry_change_tracking.integration_error`
 
 Logged at `warning` from:
- - `api/integrations/sentry/change_tracking.py:138`
+ - `api/integrations/sentry/change_tracking.py:125`
 
 Attributes:
  - `feature_name`
@@ -350,7 +350,7 @@ Attributes:
 ### `sentry_change_tracking.request_failure`
 
 Logged at `warning` from:
- - `api/integrations/sentry/change_tracking.py:128`
+ - `api/integrations/sentry/change_tracking.py:115`
 
 Attributes:
  - `error`
@@ -360,7 +360,7 @@ Attributes:
 ### `sentry_change_tracking.sending`
 
 Logged at `debug` from:
- - `api/integrations/sentry/change_tracking.py:113`
+ - `api/integrations/sentry/change_tracking.py:100`
 
 Attributes:
  - `feature_name`
@@ -372,7 +372,7 @@ Attributes:
 ### `sentry_change_tracking.success`
 
 Logged at `info` from:
- - `api/integrations/sentry/change_tracking.py:135`
+ - `api/integrations/sentry/change_tracking.py:122`
 
 Attributes:
  - `feature_name`
