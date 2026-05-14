@@ -30,12 +30,6 @@ def sentry_configuration(environment: int) -> SentryChangeTrackingConfiguration:
     return configuration
 
 
-@pytest.fixture()
-def v2_versioned_environment(environment: int) -> int:
-    enable_v2_versioning(environment_id=environment)
-    return environment
-
-
 @pytest.mark.parametrize(
     "use_v2_versioning",
     [pytest.param(False, id="v1"), pytest.param(True, id="v2")],
@@ -173,7 +167,7 @@ def test_sentry_change_tracking__flag_state_change_in_v2_environment__sends_upda
     log: StructuredLogCapture,
     responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
-    v2_versioned_environment: int,
+    environment_v2_versioning: int,
 ) -> None:
     # Given
     responses.post(sentry_configuration.webhook_url, status=200, body="")
@@ -347,7 +341,7 @@ def test_sentry_change_tracking__flag_state_schedule_in_v2_environment__sends_up
     log: StructuredLogCapture,
     responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
-    v2_versioned_environment: int,
+    environment_v2_versioning: int,
 ) -> None:
     # Given
     responses.post(sentry_configuration.webhook_url, status=200, body="")
@@ -426,10 +420,6 @@ def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
     responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
 ) -> None:
-    # Note: v2-versioning coverage for FS delete is intentionally absent — the
-    # v1 FS DELETE endpoint shouldn't accept a v2-versioned FS in the first
-    # place. That gap is tracked separately.
-
     # Given
     responses.post(sentry_configuration.webhook_url, status=200, body="")
     # When

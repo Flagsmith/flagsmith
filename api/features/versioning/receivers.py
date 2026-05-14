@@ -69,7 +69,7 @@ def create_environment_feature_version_published_audit_log(  # type: ignore[no-u
 
 
 @receiver(environment_feature_version_published, sender=EnvironmentFeatureVersion)
-def fire_feature_state_change_went_live(  # type: ignore[no-untyped-def]
+def trigger_feature_state_change_went_live_signal(  # type: ignore[no-untyped-def]
     instance: EnvironmentFeatureVersion, **kwargs
 ) -> None:
     """

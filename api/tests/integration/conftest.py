@@ -105,6 +105,14 @@ def environment(
 
 
 @pytest.fixture()
+def environment_v2_versioning(environment: int) -> int:
+    from features.versioning.tasks import enable_v2_versioning
+
+    enable_v2_versioning(environment_id=environment)
+    return environment
+
+
+@pytest.fixture()
 def dynamo_enabled_environment(
     admin_client: APIClient,
     dynamo_enabled_project: int,
