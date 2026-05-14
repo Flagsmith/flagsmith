@@ -105,7 +105,7 @@ Labels:
 
 Gauge.
 
-Resident Set Size (RSS) of the worker process in bytes. Used to track memory usage of each worker process. The `pid` label identifies which process the measurement belongs to.
+Maximum RSS (high-water mark) of the worker process in bytes, read from VmHWM in /proc/self/status.
 
 Labels:
  - `pid`
