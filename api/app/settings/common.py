@@ -1067,10 +1067,7 @@ if IS_RBAC_INSTALLED:
 
 SCIM_INSTALLED = importlib.util.find_spec("scim") is not None
 if SCIM_INSTALLED:
-    from urllib.parse import urlsplit
-
     INSTALLED_APPS += ["django_scim", "scim"]
-    _flagsmith_api_url = urlsplit(FLAGSMITH_API_URL)
     SCIM_SERVICE_PROVIDER = {
         "BULK": {"SUPPORTED": False},
         "CHANGE_PASSWORD": {"SUPPORTED": False},
@@ -1078,8 +1075,6 @@ if SCIM_INSTALLED:
         "FILTER": {"SUPPORTED": True, "MAX_RESULTS": 100},
         "SORT": {"SUPPORTED": False},
         "PATCH": {"SUPPORTED": True},
-        "SCHEME": _flagsmith_api_url.scheme or "https",
-        "NETLOC": _flagsmith_api_url.netloc,
         "AUTHENTICATION_SCHEMES": [
             {
                 "type": "oauthbearertoken",
@@ -1088,6 +1083,7 @@ if SCIM_INSTALLED:
             },
         ],
         "AUTH_CHECK_MIDDLEWARE": "scim.middleware.ScimAuthenticationMiddleware",
+        "BASE_LOCATION_GETTER": "core.helpers.get_request_base_url",
     }
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

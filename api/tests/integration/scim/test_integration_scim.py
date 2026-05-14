@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 from django.conf import settings
 from django.urls import resolve
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -115,3 +116,28 @@ def test_scim_protocol_endpoint__valid_bearer_for_non_enterprise_org__returns_40
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_scim_service_provider_config__custom_host__uses_request_host_for_location(
+    scim_client: "APIClient",
+    scim_bearer_for_enterprise_org: str,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ALLOWED_HOSTS = ["scim.example.com", "testserver"]
+    scim_client.credentials(
+        HTTP_AUTHORIZATION=f"Bearer {scim_bearer_for_enterprise_org}"
+    )
+
+    # When
+    response = scim_client.get(
+        "/api/v1/scim/v2/ServiceProviderConfig",
+        HTTP_HOST="scim.example.com",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        response.json()["meta"]["location"]
+        == "http://scim.example.com/api/v1/scim/v2/ServiceProviderConfig"
+    )
