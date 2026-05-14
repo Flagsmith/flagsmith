@@ -230,21 +230,13 @@ def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ign
     feature_state_change_went_live.send(feature_state)
 
 
-def _get_sentry_config_or_none(
-    environment: Any,
-) -> SentryChangeTrackingConfiguration | None:
-    config: SentryChangeTrackingConfiguration | None = (
-        SentryChangeTrackingConfiguration.objects.filter(
-            environment=environment,
-            deleted_at__isnull=True,
-        ).first()
-    )
-    return config
-
-
 @receiver(feature_state_change_went_live)
 def send_audit_log_event_to_sentry(sender: FeatureState, **kwargs: Any) -> None:
-    if not (config := _get_sentry_config_or_none(sender.environment)):
+    config = SentryChangeTrackingConfiguration.objects.filter(
+        environment=sender.environment,
+        deleted_at__isnull=True,
+    ).first()
+    if not config:
         return
     sentry = SentryChangeTracking(
         webhook_url=config.webhook_url,

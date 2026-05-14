@@ -906,17 +906,21 @@ class FeatureState(
             )
 
         feature_state = cls.objects.create(**kwargs)
+        feature_state._send_change_went_live_for_v2_feature_create()
 
-        # v2 suppresses the FS audit row that v1 uses to drive
-        # `feature_state_change_went_live` (see get_skip_create_audit_log).
-        # For the flag-create case (env existed when the feature was created
-        # — env-create / env-clone are excluded by the date check below),
-        # fire the signal directly so consumers like Sentry are notified.
+    def _send_change_went_live_for_v2_feature_create(self) -> None:
+        """
+        v2 suppresses the FS audit row that v1 uses to drive
+        `feature_state_change_went_live` (see get_skip_create_audit_log).
+        For the feature-create case (env existed when the feature was
+        created — env-create / env-clone are excluded by the date check),
+        fire the signal directly so consumers like Sentry are notified.
+        """
         if (
-            environment.use_v2_feature_versioning
-            and environment.created_date <= feature.created_date
+            self.environment.use_v2_feature_versioning
+            and self.environment.created_date <= self.feature.created_date
         ):
-            feature_state_change_went_live.send(feature_state)
+            feature_state_change_went_live.send(self)
 
     @classmethod
     def get_next_version_number(  # type: ignore[no-untyped-def]
