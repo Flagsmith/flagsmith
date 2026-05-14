@@ -15,7 +15,16 @@ RBAC_REVISION ?= v0.13.0
 OPENAPI_FORMAT_VERSION ?= 1.23.0
 
 -include .env-local
+-include .env-codeartifact
 -include $(DOTENV_OVERRIDE_FILE)
+
+.PHONY: codeartifact-login
+codeartifact-login:
+	@token=$$(aws codeartifact get-authorization-token \
+		--domain flagsmith-production --domain-owner 084060095745 \
+		--region eu-west-2 \
+		--query authorizationToken --output text) && \
+	printf 'UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws\nUV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD=%s\n' "$$token" > .env-codeartifact
 
 .PHONY: install-pip
 install-pip:

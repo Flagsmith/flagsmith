@@ -109,6 +109,15 @@ if settings.SAML_INSTALLED:  # pragma: no cover
         path("api/v1/auth/saml/", include("saml.urls")),
     ]
 
+if settings.SCIM_INSTALLED:  # pragma: no cover
+    urlpatterns += [
+        path("api/v1/scim/v2/", include("django_scim.urls")),
+        path(
+            "api/v1/organisations/<int:organisation_pk>/scim/",
+            include("scim.urls"),
+        ),
+    ]
+
 if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover
     workflow_views = importlib.import_module("workflows_logic.views")
     urlpatterns += [
