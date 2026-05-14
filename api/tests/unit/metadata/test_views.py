@@ -1007,7 +1007,7 @@ def test_create_model_metadata_field__project_admin__returns_201(
     assert response.json()["field"] == project_field.id
 
 
-def test_create_model_metadata_field__project_admin__org_scoped_field__returns_403(
+def test_create_model_metadata_field__project_admin_org_scoped_field__returns_403(
     staff_user: FFAdminUser,
     staff_client: APIClient,
     organisation: Organisation,
