@@ -22,12 +22,6 @@ def test_scim_settings__scim_installed__wires_apps_and_service_provider() -> Non
     assert "django_scim" in settings.INSTALLED_APPS
     assert "scim" in settings.INSTALLED_APPS
     service_provider: dict[str, Any] = settings.SCIM_SERVICE_PROVIDER
-    assert service_provider["BULK"] == {"SUPPORTED": False}
-    assert service_provider["CHANGE_PASSWORD"] == {"SUPPORTED": False}
-    assert service_provider["ETAG"] == {"SUPPORTED": False}
-    assert service_provider["FILTER"] == {"SUPPORTED": True, "MAX_RESULTS": 100}
-    assert service_provider["SORT"] == {"SUPPORTED": False}
-    assert service_provider["PATCH"] == {"SUPPORTED": True}
     assert (
         service_provider["AUTH_CHECK_MIDDLEWARE"]
         == "scim.middleware.ScimAuthenticationMiddleware"

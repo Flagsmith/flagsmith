@@ -1069,12 +1069,6 @@ SCIM_INSTALLED = importlib.util.find_spec("scim") is not None
 if SCIM_INSTALLED:
     INSTALLED_APPS += ["django_scim", "scim"]
     SCIM_SERVICE_PROVIDER = {
-        "BULK": {"SUPPORTED": False},
-        "CHANGE_PASSWORD": {"SUPPORTED": False},
-        "ETAG": {"SUPPORTED": False},
-        "FILTER": {"SUPPORTED": True, "MAX_RESULTS": 100},
-        "SORT": {"SUPPORTED": False},
-        "PATCH": {"SUPPORTED": True},
         "AUTHENTICATION_SCHEMES": [
             {
                 "type": "oauthbearertoken",
