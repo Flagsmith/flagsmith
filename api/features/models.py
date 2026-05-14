@@ -917,7 +917,8 @@ class FeatureState(
         fire the signal directly so consumers like Sentry are notified.
         """
         if (
-            self.environment.use_v2_feature_versioning
+            self.environment is not None
+            and self.environment.use_v2_feature_versioning
             and self.environment.created_date <= self.feature.created_date
         ):
             feature_state_change_went_live.send(self)
