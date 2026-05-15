@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 from typing import Any
 
 import requests
@@ -32,24 +31,6 @@ class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
         self.secret = secret
 
     @staticmethod
-    def build_payload_entry(
-        *,
-        action: str,
-        flag_name: str,
-        change_id: Any,
-        timestamp: datetime,
-        author_email: str,
-    ) -> dict[str, Any]:
-        """Shared shape for a single `data[]` entry in a Sentry flag-log payload."""
-        return {
-            "action": action,
-            "flag": flag_name,
-            "created_at": timestamp.isoformat(timespec="seconds"),
-            "created_by": {"id": author_email, "type": "email"},
-            "change_id": str(change_id),
-        }
-
-    @staticmethod
     def generate_event_data(feature_state: FeatureState) -> dict[str, Any]:
         timestamp = feature_state.deleted_at or (
             max(feature_state.live_from, feature_state.updated_at)
@@ -67,15 +48,18 @@ class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
             "~": "updated",
         }[history_record.history_type]
 
-        return SentryChangeTracking.build_payload_entry(
-            action=action,
-            flag_name=feature_state.feature.name,
-            change_id=feature_state.pk,
-            timestamp=timestamp,
-            author_email=getattr(
-                history_record.history_user, "email", _DEFAULT_AUTHOR_EMAIL
-            ),
-        )
+        return {
+            "action": action,
+            "flag": feature_state.feature.name,
+            "created_at": timestamp.isoformat(timespec="seconds"),
+            "created_by": {
+                "id": getattr(
+                    history_record.history_user, "email", _DEFAULT_AUTHOR_EMAIL
+                ),
+                "type": "email",
+            },
+            "change_id": str(feature_state.pk),
+        }
 
     def _track_event(self, event: dict[str, Any]) -> None:
         action = event["action"]
