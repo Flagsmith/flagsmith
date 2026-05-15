@@ -1606,7 +1606,7 @@ requires-dist = [
     { name = "email-validator", marker = "extra == 'dev'", specifier = ">=2.0.0" },
     { name = "environs", specifier = ">=14.1.1,<15.0.0" },
     { name = "flagsmith", specifier = ">=5.3.0,<6.0.0" },
-    { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.9.0,<4" },
+    { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.9.1,<4" },
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
     { name = "flagsmith-flag-engine", specifier = ">=10.1.0,<11.0.0" },
     { name = "flagsmith-ldap", marker = "extra == 'ldap'", git = "https://github.com/flagsmith/flagsmith-ldap?tag=v0.1.2" },
@@ -1681,11 +1681,11 @@ provides-extras = ["auth-controller", "saml", "ldap", "workflows", "licensing", 
 
 [[package]]
 name = "flagsmith-common"
-version = "3.9.0"
+version = "3.9.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f3/a8/c65b2989644c1a0acf45e63692b112be2b5f13a37753aba26460553cdc0d/flagsmith_common-3.9.0.tar.gz", hash = "sha256:b47b141d366a6714285a0768e08e24adbc9849400294d6fc4e6030087928d8e6", size = 59007, upload-time = "2026-05-01T11:02:08.999Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/77/02/6db44d9089832b0267f9b8bac73cf57eeb3769364e6a523112273ee5cbea/flagsmith_common-3.9.1.tar.gz", hash = "sha256:2b78015b290c571d20e2ba59ee621346cf7ec8340bfc01acf3620af3725d9318", size = 59166, upload-time = "2026-05-11T16:46:29.797Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e2/7e/ddf4be1f0cbd3c53a78c44e7aa78226949f8e290e5e9cc6fb873b00bbb70/flagsmith_common-3.9.0-py3-none-any.whl", hash = "sha256:782183d05b891ed5f19bebad2f281a2ebd6f69728c3d3f524c4bebc25a654cf6", size = 96586, upload-time = "2026-05-01T11:02:07.19Z" },
+    { url = "https://files.pythonhosted.org/packages/06/fd/67f602c3859eba1baf30fc1916d0997cb3541b71acea5964d47c2b4b5a3e/flagsmith_common-3.9.1-py3-none-any.whl", hash = "sha256:32bd530a32ecd0ff7a6e868341b60d7e778d56ebf0a7ed0623ecdfcabd87fef8", size = 96771, upload-time = "2026-05-11T16:46:28.271Z" },
 ]
 
 [package.optional-dependencies]

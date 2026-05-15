@@ -73,7 +73,7 @@ dependencies = [
     "hubspot-api-client>=12.0.0,<13.0.0",
     "djangorestframework-dataclasses>=1.3.1,<2.0.0",
     "pyotp>=2.9.0,<3.0.0",
-    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.9.0,<4",
+    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.9.1,<4",
     "django-stubs>=5.1.3,<6.0.0",
     "tzdata>=2024.1,<2025.0.0",
     "djangorestframework-simplejwt>=5.5.1,<6.0.0",
@@ -189,9 +189,6 @@ licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.3.0" }
 flagsmith-private = { index = "flagsmith-pypi-production" }
 flagsmith-sql-flag-engine = { index = "flagsmith-pypi-staging" }
 
-# CodeArtifact-hosted private index for pre-release Flagsmith packages.
-# Auth token is fetched at install time via `aws codeartifact get-authorization-token`
-# (see Makefile `install-packages` target).
 [[tool.uv.index]]
 name = "flagsmith-pypi-staging"
 url = "https://flagsmith-staging-302456015006.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-staging/simple/"
