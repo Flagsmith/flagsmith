@@ -468,6 +468,56 @@ def test_sdk_identities_get__feature_specified__returns_single_flag(
     assert response.data["feature"]["name"] == feature_1.name
 
 
+def test_sdk_identities_get__identity_in_segment__feature_segment_returns_priority(
+    identity: Identity,
+    api_client: APIClient,
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    trait_key = "trait_key"
+    trait_value = "trait_value"
+    Trait.objects.create(
+        identity=identity,
+        trait_key=trait_key,
+        value_type=STRING,
+        string_value=trait_value,
+    )
+    segment_rule = SegmentRule.objects.create(
+        segment=segment, type=SegmentRule.ALL_RULE
+    )
+    Condition.objects.create(
+        operator="EQUAL", property=trait_key, value=trait_value, rule=segment_rule
+    )
+    feature = Feature.objects.create(
+        project=environment.project, name="segment_priority_feature"
+    )
+    feature_segment = FeatureSegment.objects.create(
+        segment=segment,
+        feature=feature,
+        environment=environment,
+        priority=1,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        feature_segment=feature_segment,
+        environment=environment,
+        enabled=True,
+    )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    url = reverse("api-v1:sdk-identities") + "?identifier=" + identity.identifier
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    segment_flag = next(
+        f for f in response.data["flags"] if f["feature_segment"] is not None
+    )
+    assert segment_flag["feature_segment"] == {"priority": 1}
+
+
 @mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
 def test_sdk_identities_get__identity_in_segment__returns_segment_override(
     mock_amplitude_wrapper: mock.MagicMock,
