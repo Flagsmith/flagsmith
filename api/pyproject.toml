@@ -112,7 +112,10 @@ licensing = [
     "cryptography>=44.0.1",
 ]
 release-pipelines = [
-    "flagsmith-private",
+    "flagsmith-private>=0.5.1,<1",
+]
+scim = [
+    "flagsmith-private>=0.5.1,<1",
 ]
 dev = [
     "django-test-migrations>=1.2.0,<2.0.0",
@@ -173,12 +176,17 @@ exclude = ["build*", "dist*", "static*", "staticfiles*", "venv*", ".venv*", "scr
 [tool.setuptools.package-data]
 "*" = ["*.*"]
 
+[[tool.uv.index]]
+name = "flagsmith-pypi-production"
+url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/"
+explicit = true
+
 [tool.uv.sources]
 auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.2.0" }
 flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.1.2" }
 workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.4.0" }
 licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.3.0" }
-flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private", tag = "v0.4.4" }
+flagsmith-private = { index = "flagsmith-pypi-production" }
 flagsmith-sql-flag-engine = { index = "flagsmith-pypi-staging" }
 
 # CodeArtifact-hosted private index for pre-release Flagsmith packages.
@@ -553,6 +561,17 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["clickhouse_connect.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["scim.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Suppresses `no-any-return` when the `scim` package isn't installed (which
+# happens on the public PR workflow that runs mypy without the `--extra scim`
+# extra). With the extra installed, the bearer fixtures return the real `str`.
+module = ["tests.integration.scim.conftest"]
+warn_return_any = false
 
 [tool.django-stubs]
 django_settings_module = "app.settings.local"

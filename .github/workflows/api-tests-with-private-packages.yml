@@ -2,7 +2,7 @@ name: API Pull Request with Private Packages
 
 permissions:
   contents: read # For actions/checkout
-  id-token: write # For Codecov and CodeArtifact OIDC
+  id-token: write # For Codecov + CodeArtifact OIDC
 
 on:
   pull_request:
@@ -48,15 +48,23 @@ jobs:
       - name: Install SAML Dependencies
         run: sudo apt-get install -y xmlsec1
 
-      - name: Authenticate with CodeArtifact
+      - name: Authenticate with CodeArtifact (production)
         uses: ./.github/actions/codeartifact-login
+
+      - name: Authenticate with CodeArtifact (staging)
+        uses: ./.github/actions/codeartifact-login
+        with:
+          account-id: "302456015006"
+          role-name: codeartifact-github-actions-staging
+          domain: flagsmith-staging
+          index-name: flagsmith-pypi-staging
 
       - name: Install packages and Tests
         shell: bash
         run: |
           echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials
           git config --global credential.helper store
-          make install-packages opts="--extra dev --extra saml --extra auth-controller --extra workflows"
+          make install-packages opts="--extra dev --extra saml --extra auth-controller --extra workflows --extra scim"
           make install-private-modules
           make integrate-private-tests
           rm -rf ${HOME}/.git-credentials

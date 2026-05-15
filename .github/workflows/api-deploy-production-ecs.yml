@@ -38,14 +38,22 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Authenticate with CodeArtifact
+      - name: Authenticate with CodeArtifact (production)
         uses: ./.github/actions/codeartifact-login
+
+      - name: Authenticate with CodeArtifact (staging)
+        uses: ./.github/actions/codeartifact-login
+        with:
+          account-id: "302456015006"
+          role-name: codeartifact-github-actions-staging
+          domain: flagsmith-staging
+          index-name: flagsmith-pypi-staging
 
       - name: Install dependencies
         run: |
           echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials
           git config --global credential.helper store
-          make install-packages opts="--extra saml --extra auth-controller --extra workflows --extra release-pipelines"
+          make install-packages opts="--extra saml --extra auth-controller --extra workflows --extra release-pipelines --extra scim"
           make install-private-modules
           rm -rf ${HOME}/.git-credentials
 

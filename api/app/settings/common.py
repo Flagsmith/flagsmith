@@ -1066,6 +1066,21 @@ IS_RBAC_INSTALLED = importlib.util.find_spec("rbac") is not None
 if IS_RBAC_INSTALLED:
     INSTALLED_APPS.append("rbac")
 
+SCIM_INSTALLED = importlib.util.find_spec("scim") is not None
+if SCIM_INSTALLED:
+    INSTALLED_APPS += ["django_scim", "scim"]
+    SCIM_SERVICE_PROVIDER = {
+        "AUTHENTICATION_SCHEMES": [
+            {
+                "type": "oauthbearertoken",
+                "name": "OAuth Bearer Token",
+                "description": "Per-organisation bearer token issued via the SCIM configuration API.",
+            },
+        ],
+        "AUTH_CHECK_MIDDLEWARE": "scim.middleware.ScimAuthenticationMiddleware",
+        "BASE_LOCATION_GETTER": "core.helpers.get_request_base_url",
+    }
+
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Used to keep edge identities in sync by forwarding the http requests

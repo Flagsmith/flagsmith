@@ -7,7 +7,7 @@ The project assumes the following tools installed:
 - [GNU Make](https://www.gnu.org/software/make/).
 - Docker or a compatible tool like [Podman](https://podman.io/). We recommend [OrbStack](https://orbstack.dev/) for macOS.
 
-To install dev dependencies, run `make install`.
+To install dev dependencies, run `make install`. Only Flagsmith maintainers can run `uv lock` due to private dependencies.
 
 To run linters, run `make lint`.
 

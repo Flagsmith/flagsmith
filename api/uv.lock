@@ -1076,6 +1076,19 @@ wheels = [
 ]
 
 [[package]]
+name = "django-scim2"
+version = "0.19.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "scim2-filter-parser" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/07/59/da3061607de7be41d7e5bf484acb13510d631f8fcfcecd9f5e02dc5bf4f1/django_scim2-0.19.1.tar.gz", hash = "sha256:8126111160e76a880f6699babc5259f0345c9316c8018ce5dcc3f7579ccb9e89", size = 26988, upload-time = "2023-05-18T01:13:04.017Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a3/24/ca2cab008049239585434f7451a42757d7d258bf741316fd16587e564b74/django_scim2-0.19.1-py3-none-any.whl", hash = "sha256:845eaa64e72e4ddfe2aa54d21865721f8c1d59ecd9c06e72341eeb03ed6ba94e", size = 32072, upload-time = "2023-05-18T01:13:01.751Z" },
+]
+
+[[package]]
 name = "django-ses"
 version = "3.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1535,6 +1548,9 @@ release-pipelines = [
 saml = [
     { name = "pysaml2" },
 ]
+scim = [
+    { name = "flagsmith-private" },
+]
 workflows = [
     { name = "workflows-logic" },
 ]
@@ -1594,7 +1610,8 @@ requires-dist = [
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
     { name = "flagsmith-flag-engine", specifier = ">=10.1.0,<11.0.0" },
     { name = "flagsmith-ldap", marker = "extra == 'ldap'", git = "https://github.com/flagsmith/flagsmith-ldap?tag=v0.1.2" },
-    { name = "flagsmith-private", marker = "extra == 'release-pipelines'", git = "https://github.com/Flagsmith/flagsmith-private?tag=v0.4.4" },
+    { name = "flagsmith-private", marker = "extra == 'release-pipelines'", specifier = ">=0.5.1,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
+    { name = "flagsmith-private", marker = "extra == 'scim'", specifier = ">=0.5.1,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
     { name = "flagsmith-sql-flag-engine", specifier = "==0.1.0a2", index = "https://flagsmith-staging-302456015006.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-staging/simple/" },
     { name = "google-api-python-client", specifier = ">=1.12.5,<1.13.0" },
     { name = "google-re2", specifier = ">=1.0,<2.0.0" },
@@ -1660,7 +1677,7 @@ requires-dist = [
     { name = "whitenoise", specifier = ">=6.0.0,<6.1.0" },
     { name = "workflows-logic", marker = "extra == 'workflows'", git = "https://github.com/flagsmith/flagsmith-workflows?tag=v3.4.0" },
 ]
-provides-extras = ["auth-controller", "saml", "ldap", "workflows", "licensing", "release-pipelines", "dev"]
+provides-extras = ["auth-controller", "saml", "ldap", "workflows", "licensing", "release-pipelines", "scim", "dev"]
 
 [[package]]
 name = "flagsmith-common"
@@ -1735,8 +1752,15 @@ source = { git = "https://github.com/flagsmith/flagsmith-ldap?tag=v0.1.2#2456465
 
 [[package]]
 name = "flagsmith-private"
-version = "0.1.0"
-source = { git = "https://github.com/Flagsmith/flagsmith-private?tag=v0.4.4#a5318e69b5712307e3204a57ecebb64995526200" }
+version = "0.5.1"
+source = { registry = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" }
+dependencies = [
+    { name = "django-scim2" },
+]
+sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.5.1/flagsmith_private-0.5.1.tar.gz", hash = "sha256:5f9a69f0b9f692c34ebfc6f3357026b803e1922d8f37f6291cbd2e43d82fd385" }
+wheels = [
+    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.5.1/flagsmith_private-0.5.1-py3-none-any.whl", hash = "sha256:45e157ce9322480e3b706261b6ada5b0ab2a1c0d3155e2772fc728789ef8dc19" },
+]
 
 [[package]]
 name = "flagsmith-sql-flag-engine"
@@ -3722,6 +3746,18 @@ wheels = [
 ]
 
 [[package]]
+name = "scim2-filter-parser"
+version = "0.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "sly" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/25/c0/2f4d5caee8faa8f0d0979584c4aab95fa69d626d6f9d211dd6bb7089bc2f/scim2_filter_parser-0.7.0.tar.gz", hash = "sha256:1e11dbe2e186fc1be6d93732b467a3bbaa9deff272dfeb3a0540394cfab7030c", size = 21358, upload-time = "2024-07-20T16:38:23.2Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/57/54/b54961bfc5018fa593758c439fe0d4a22fbadfabff49a7559850af9a79e1/scim2_filter_parser-0.7.0-py3-none-any.whl", hash = "sha256:a74f90a2d52a77e0f1bc4d77e84b79f88749469f6f7192d64a4f92e4fe50ab69", size = 23409, upload-time = "2024-07-20T16:38:21.525Z" },
+]
+
+[[package]]
 name = "segment-analytics-python"
 version = "2.2.3"
 source = { registry = "https://pypi.org/simple" }
@@ -3835,6 +3871,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/24/4f/b1c5ef4ca6f619212e56739d0c97e0fdcf30c342c890f3f80bbe3fbde3a7/slack_sdk-3.9.1.tar.gz", hash = "sha256:a14e76cd237c501e1aca8cd510a11ed63a3ba8bfa323a3c655906dd099ad9afe", size = 192631, upload-time = "2021-08-17T11:05:27.547Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/46/74/7ba1e759c091e302eb48894efad853076936144777fc05f0baa851794de4/slack_sdk-3.9.1-py2.py3-none-any.whl", hash = "sha256:8c4b553d63ee18d72e67b80bec3257bab4feef17653374dbd877fa59f5b5aa2f", size = 250593, upload-time = "2021-08-17T11:05:25.526Z" },
+]
+
+[[package]]
+name = "sly"
+version = "0.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/41/8a/59e943f7b27904c7756a7b565ffbd55f3841f5cd3d2da2b2b0713c49e488/sly-0.5.tar.gz", hash = "sha256:251d42015e8507158aec2164f06035df4a82b0314ce6450f457d7125e7649024", size = 66702, upload-time = "2022-10-25T14:35:30.592Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8e/4d/c96d807295183f2360329cd8d8bf5e8072c53d664125b3858c04153f026e/sly-0.5-py3-none-any.whl", hash = "sha256:20485483259eec7f6ba85ff4d2e96a4e50c6621902667fc2695cc8bc2a3e5133", size = 28864, upload-time = "2022-10-25T14:35:28.054Z" },
 ]
 
 [[package]]

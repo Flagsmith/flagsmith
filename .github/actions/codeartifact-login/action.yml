@@ -1,5 +1,28 @@
 name: CodeArtifact login
-description: Assume the staging CodeArtifact role via OIDC, fetch an authorisation token, and export Poetry HTTP basic auth env vars
+description: |
+  Assume a CodeArtifact role via OIDC, fetch an authorisation token,
+  and export uv credentials for the named index.
+
+inputs:
+  account-id:
+    description: AWS account hosting the CodeArtifact domain
+    required: false
+    default: "084060095745"
+  role-name:
+    description: Name of the IAM role to assume for CodeArtifact access
+    required: false
+    default: codeartifact-github-actions-production
+  domain:
+    description: CodeArtifact domain name
+    required: false
+    default: flagsmith-production
+  index-name:
+    description: |
+      Logical uv index name (matching `[[tool.uv.index]].name` in pyproject.toml).
+      The action exports UV_INDEX_<NAME>_USERNAME and UV_INDEX_<NAME>_PASSWORD
+      env vars, where NAME is the upper-snake-cased index name.
+    required: false
+    default: flagsmith-pypi-production
 
 outputs:
   token:
@@ -12,18 +35,23 @@ runs:
     - name: Configure AWS credentials for CodeArtifact
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        role-to-assume: arn:aws:iam::302456015006:role/codeartifact-github-actions-staging
+        role-to-assume: arn:aws:iam::${{ inputs.account-id }}:role/${{ inputs.role-name }}
         aws-region: eu-west-2
 
     - name: Fetch CodeArtifact authorisation token
       id: codeartifact
       shell: bash
+      env:
+        DOMAIN: ${{ inputs.domain }}
+        ACCOUNT_ID: ${{ inputs.account-id }}
+        INDEX_NAME: ${{ inputs.index-name }}
       run: |
         token=$(aws codeartifact get-authorization-token \
-          --domain flagsmith-staging \
-          --domain-owner 302456015006 \
+          --domain "$DOMAIN" \
+          --domain-owner "$ACCOUNT_ID" \
           --query authorizationToken --output text)
         echo "::add-mask::$token"
         echo "token=$token" >> "$GITHUB_OUTPUT"
-        echo "POETRY_HTTP_BASIC_FLAGSMITH_PYPI_STAGING_USERNAME=aws" >> "$GITHUB_ENV"
-        echo "POETRY_HTTP_BASIC_FLAGSMITH_PYPI_STAGING_PASSWORD=$token" >> "$GITHUB_ENV"
+        env_prefix="UV_INDEX_$(echo "$INDEX_NAME" | tr '[:lower:]-' '[:upper:]_')"
+        echo "${env_prefix}_USERNAME=aws" >> "$GITHUB_ENV"
+        echo "${env_prefix}_PASSWORD=$token" >> "$GITHUB_ENV"
