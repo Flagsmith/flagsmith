@@ -12,7 +12,7 @@ import { LicensingTab } from './tabs/LicensingTab'
 import { CustomFieldsTab } from './tabs/CustomFieldsTab'
 import { APIKeysTab } from './tabs/APIKeysTab'
 import { WebhooksTab } from './tabs/WebhooksTab'
-import { SAMLTab } from './tabs/SAMLTab'
+import { SSOTab } from './tabs/SSOTab'
 
 type OrganisationSettingsTab = {
   component: ReactNode
@@ -111,10 +111,10 @@ const OrganisationSettingsPage: FC = () => {
       label: 'Webhooks',
     },
     {
-      component: <SAMLTab organisationId={organisation.id} />,
+      component: <SSOTab organisationId={organisation.id} />,
       isVisible: true,
-      key: 'saml',
-      label: 'SAML',
+      key: 'sso',
+      label: 'SSO',
     },
   ].filter(({ isVisible }) => isVisible)
 

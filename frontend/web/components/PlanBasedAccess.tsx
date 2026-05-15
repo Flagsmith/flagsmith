@@ -93,6 +93,12 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     docs: 'https://docs.flagsmith.com/advanced-use/scheduled-flags',
     title: 'Scheduled Flags',
   },
+  'SCIM': {
+    description:
+      'Provision and de-provision users and groups automatically from your identity provider.',
+    docs: 'https://docs.flagsmith.com/system-administration/authentication/',
+    title: 'SCIM user provisioning',
+  },
   'STALE_FLAGS': {
     description:
       'Add automatic stale flag detection, prompting your team to clean up old flags.',
