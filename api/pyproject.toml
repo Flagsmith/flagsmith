@@ -96,7 +96,7 @@ auth-controller = [
     "django-multiselectfield>=1.0.1,<2",
 ]
 saml = [
-    "pysaml2>=7.4.2,<8.0.0",
+    "flagsmith-private>=0.6.0,<1",
 ]
 ldap = [
     "flagsmith-ldap",
@@ -113,7 +113,7 @@ release-pipelines = [
     "flagsmith-private>=0.5.1,<1",
 ]
 scim = [
-    "flagsmith-private>=0.5.1,<1",
+    "flagsmith-private>=0.6.0,<1",
 ]
 dev = [
     "django-test-migrations>=1.2.0,<2.0.0",
