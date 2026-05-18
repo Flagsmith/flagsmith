@@ -1,13 +1,12 @@
 import React, { FC } from 'react'
 import moment from 'moment'
-
-import Button from './base/forms/Button'
-import CopyField from './CopyField'
-import EmptyState from './EmptyState'
-import Icon from './icons/Icon'
-import PageTitle from './PageTitle'
+import Button from 'components/base/forms/Button'
+import CopyField from 'components/CopyField'
+import EmptyState from 'components/EmptyState'
+import Icon from 'components/icons/Icon'
+import PageTitle from 'components/PageTitle'
+import Skeleton from 'components/Skeleton/Skeleton'
 import ScimTokenModal from './modals/ScimTokenModal'
-import Skeleton from './Skeleton/Skeleton'
 import {
   useCreateScimConfigurationMutation,
   useDeleteScimConfigurationMutation,

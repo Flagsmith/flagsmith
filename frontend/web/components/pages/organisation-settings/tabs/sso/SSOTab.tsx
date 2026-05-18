@@ -1,7 +1,7 @@
 import React from 'react'
 import PlanBasedBanner from 'components/PlanBasedAccess'
-import SamlSection from 'components/SamlSection'
-import ScimSection from 'components/ScimSection'
+import SamlSection from './saml/SamlSection'
+import ScimSection from './scim/ScimSection'
 
 type SSOTabProps = {
   organisationId: number

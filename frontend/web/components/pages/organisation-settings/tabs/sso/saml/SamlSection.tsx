@@ -1,16 +1,14 @@
 import React, { FC } from 'react'
-import Button from './base/forms/Button'
-
-import Icon from './icons/Icon'
-import PanelSearch from './PanelSearch'
-import PageTitle from './PageTitle'
-
+import Button from 'components/base/forms/Button'
+import Icon from 'components/icons/Icon'
+import PanelSearch from 'components/PanelSearch'
+import PageTitle from 'components/PageTitle'
+import Switch from 'components/Switch'
 import {
   useDeleteSamlConfigurationMutation,
   useGetSamlConfigurationsQuery,
 } from 'common/services/useSamlConfiguration'
 import CreateSAML from './modals/CreateSAML'
-import Switch from './Switch'
 
 type SamlSectionProps = {
   organisationId: number
