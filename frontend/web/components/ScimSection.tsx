@@ -2,12 +2,12 @@ import React, { FC } from 'react'
 import moment from 'moment'
 
 import Button from './base/forms/Button'
+import CopyField from './CopyField'
 import EmptyState from './EmptyState'
 import Icon from './icons/Icon'
-import Loader from './Loader'
 import PageTitle from './PageTitle'
 import ScimTokenModal from './modals/ScimTokenModal'
-import Utils from 'common/utils/utils'
+import Skeleton from './Skeleton/Skeleton'
 import {
   useCreateScimConfigurationMutation,
   useDeleteScimConfigurationMutation,
@@ -98,19 +98,35 @@ const ScimSection: FC<ScimSectionProps> = ({ organisationId }) => {
     })
   }
 
-  const onCopyBaseUrl = () => {
-    if (data?.base_url) {
-      Utils.copyToClipboard(data.base_url)
-    }
-  }
-
   if (isLoading) {
+    // Skeleton mirrors the configured-state layout so the page doesn't jump
+    // when the data arrives. Reuses the project's shimmer skeleton primitives.
     return (
       <div className='mt-4 mb-4'>
         <PageTitle title='SCIM Configuration' />
-        <div className='py-4 text-center'>
-          <Loader />
+        <Row className='gap-4 mb-3'>
+          <div>
+            <Skeleton variant='text' width={70} className='mb-1' />
+            <Skeleton variant='text' width={180} />
+          </div>
+          <div>
+            <Skeleton variant='text' width={140} className='mb-1' />
+            <Skeleton variant='text' width={180} />
+          </div>
+        </Row>
+        <div className='mb-3'>
+          <Skeleton variant='text' width={120} className='mb-1' />
+          <Row className='gap-2 align-items-center'>
+            <Flex>
+              <Skeleton variant='text' width='100%' height={36} />
+            </Flex>
+            <Skeleton variant='badge' width={70} height={36} />
+          </Row>
         </div>
+        <Row className='gap-2'>
+          <Skeleton variant='badge' width={160} height={36} />
+          <Skeleton variant='badge' width={100} height={36} />
+        </Row>
       </div>
     )
   }
@@ -140,7 +156,7 @@ const ScimSection: FC<ScimSectionProps> = ({ organisationId }) => {
               disabled={isCreating}
               data-test='scim-create'
             >
-              {isCreating ? 'Creating…' : 'Create SCIM configuration'}
+              {isCreating ? 'Creating…' : 'Create a SCIM configuration'}
             </Button>
           }
         />
@@ -176,18 +192,7 @@ const ScimSection: FC<ScimSectionProps> = ({ organisationId }) => {
         <div className='text-muted text-uppercase fs-caption mb-1'>
           SCIM base URL
         </div>
-        <Row className='gap-2 align-items-center'>
-          <Flex>
-            <Input
-              value={data.base_url}
-              inputProps={{ readOnly: true }}
-              data-test='scim-base-url'
-            />
-          </Flex>
-          <Button theme='secondary' onClick={onCopyBaseUrl}>
-            Copy
-          </Button>
-        </Row>
+        <CopyField value={data.base_url} data-test='scim-base-url' />
       </div>
 
       <Row className='gap-2'>
@@ -205,7 +210,7 @@ const ScimSection: FC<ScimSectionProps> = ({ organisationId }) => {
           disabled={isDeleting}
           data-test='scim-delete'
         >
-          <Icon name='trash-2' width={16} fill='#fff' />
+          <Icon name='trash-2' width={16} />
           <span className='ms-1'>Delete</span>
         </Button>
       </Row>
