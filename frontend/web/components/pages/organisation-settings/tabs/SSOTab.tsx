@@ -1,6 +1,6 @@
 import React from 'react'
 import PlanBasedBanner from 'components/PlanBasedAccess'
-import SamlTab from 'components/SamlTab'
+import SamlSection from 'components/SamlSection'
 import ScimSection from 'components/ScimSection'
 
 type SSOTabProps = {
@@ -11,7 +11,7 @@ export const SSOTab = ({ organisationId }: SSOTabProps) => {
   return (
     <>
       <PlanBasedBanner feature='SAML' theme='page' className='mt-4'>
-        <SamlTab organisationId={organisationId} />
+        <SamlSection organisationId={organisationId} />
       </PlanBasedBanner>
       <PlanBasedBanner feature='SCIM' theme='page' className='mt-4'>
         <ScimSection organisationId={organisationId} />

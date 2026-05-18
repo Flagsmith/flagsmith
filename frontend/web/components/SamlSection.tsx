@@ -12,11 +12,11 @@ import {
 import CreateSAML from './modals/CreateSAML'
 import Switch from './Switch'
 
-type SamlTabType = {
+type SamlSectionProps = {
   organisationId: number
 }
 
-const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
+const SamlSection: FC<SamlSectionProps> = ({ organisationId }) => {
   const { data } = useGetSamlConfigurationsQuery({
     organisation_id: organisationId,
   })
@@ -151,4 +151,4 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
   )
 }
 
-export default SamlTab
+export default SamlSection
