@@ -138,7 +138,7 @@ const SamlSection: FC<SamlSectionProps> = ({ organisationId }) => {
                   }}
                   className='btn btn-with-icon'
                 >
-                  <Icon name='trash-2' width={20} fill='#656D7B' />
+                  <Icon name='trash-2' width={20} />
                 </Button>
               </div>
             </Row>

@@ -239,7 +239,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
               }}
               className='me-2 btn-with-icon'
             >
-              <Icon name='copy' width={20} fill='#656D7B' />
+              <Icon name='copy' width={20} />
             </Button>
           </div>
         </div>
