@@ -11,6 +11,7 @@ defaults:
 
 permissions:
   contents: read
+  # TODO: remove once flagsmith-sql-flag-engine is public
   id-token: write # For CodeArtifact OIDC
 
 jobs:
@@ -29,6 +30,7 @@ jobs:
         with:
           python-version: 3.12
 
+      # TODO: remove once flagsmith-sql-flag-engine is public
       - name: Authenticate with CodeArtifact
         uses: ./.github/actions/codeartifact-login
 

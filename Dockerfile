@@ -100,6 +100,8 @@ ENV UV_PROJECT_ENVIRONMENT=/build/.venv \
   UV_LINK_MODE=copy \
   UV_NO_SYNC=1 \
   UV_CACHE_DIR=/root/.cache/uv
+# TODO: drop the codeartifact_token mount and UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_*
+# exports once flagsmith-sql-flag-engine is public.
 RUN --mount=type=secret,id=codeartifact_token \
   --mount=type=cache,target=/root/.cache/uv \
   UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws \
@@ -169,6 +171,8 @@ FROM build-python AS api-test
 
 COPY api /build/
 
+# TODO: drop the codeartifact_token mount and UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_*
+# exports once flagsmith-sql-flag-engine is public.
 RUN --mount=type=secret,id=codeartifact_token \
   --mount=type=cache,target=/root/.cache/uv \
   UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws \
