@@ -1442,10 +1442,18 @@ PYLON_IDENTITY_VERIFICATION_SECRET = env.str("PYLON_IDENTITY_VERIFICATION_SECRET
 OSIC_UPDATE_BATCH_SIZE = env.int("OSIC_UPDATE_BATCH_SIZE", default=500)
 
 # --- ClickHouse (segment membership inspection) ------------------------------
-# All-None CLICKHOUSE_HOST disables the segment_membership backfill and refresh
-# tasks. When set, the api/segments/membership tasks open a clickhouse-connect
-# client and run against this account. See
+# Unsetting both CLICKHOUSE_URL and CLICKHOUSE_HOST disables the
+# segment_membership backfill and refresh tasks. When set, the
+# api/segments/membership tasks open a clickhouse-connect client and run
+# against this account. See
 # docs/deployment/observability/segment-membership.md for the operational shape.
+#
+# CLICKHOUSE_URL is the preferred form for 12-factor deploys — a single DSN
+# like `https://user:pass@ch.example.com:8443/segment_membership?secure=true`
+# that clickhouse-connect parses end-to-end. The discrete CLICKHOUSE_*
+# settings below remain as the fallback path for deployments that prefer
+# per-field overrides.
+CLICKHOUSE_URL = env.str("CLICKHOUSE_URL", default=None)
 CLICKHOUSE_HOST = env.str("CLICKHOUSE_HOST", default=None)
 CLICKHOUSE_PORT = env.int("CLICKHOUSE_PORT", default=8443)
 CLICKHOUSE_USER = env.str("CLICKHOUSE_USER", default="default")

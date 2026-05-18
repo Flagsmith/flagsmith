@@ -43,7 +43,8 @@ def test_is_membership_enabled__flag_on__returns_true(
 def test_is_clickhouse_configured__host_set__returns_true(
     settings: SettingsWrapper,
 ) -> None:
-    # Given CLICKHOUSE_HOST is populated
+    # Given CLICKHOUSE_HOST is populated and no DSN is set
+    settings.CLICKHOUSE_URL = None
     settings.CLICKHOUSE_HOST = "ch.example.com"
 
     # When checked
@@ -51,10 +52,23 @@ def test_is_clickhouse_configured__host_set__returns_true(
     assert is_clickhouse_configured() is True
 
 
-def test_is_clickhouse_configured__host_unset__returns_false(
+def test_is_clickhouse_configured__url_set__returns_true(
     settings: SettingsWrapper,
 ) -> None:
-    # Given CLICKHOUSE_HOST is unset
+    # Given CLICKHOUSE_URL is populated (DSN form) and HOST is unset
+    settings.CLICKHOUSE_URL = "https://default:secret@ch.example.com:8443/default"
+    settings.CLICKHOUSE_HOST = None
+
+    # When checked
+    # Then the helper reports the feature configured
+    assert is_clickhouse_configured() is True
+
+
+def test_is_clickhouse_configured__neither_set__returns_false(
+    settings: SettingsWrapper,
+) -> None:
+    # Given neither URL nor HOST is set
+    settings.CLICKHOUSE_URL = None
     settings.CLICKHOUSE_HOST = None
 
     # When checked
@@ -66,7 +80,9 @@ def test_open_clickhouse_client__no_log_comment__yields_client_and_closes(
     mocker: MockerFixture,
     settings: SettingsWrapper,
 ) -> None:
-    # Given populated CLICKHOUSE_* settings and a mocked client factory
+    # Given no DSN set, populated discrete CLICKHOUSE_* settings, and a
+    # mocked client factory
+    settings.CLICKHOUSE_URL = None
     settings.CLICKHOUSE_HOST = "ch.example.com"
     settings.CLICKHOUSE_PORT = 8443
     settings.CLICKHOUSE_USER = "default"
@@ -100,11 +116,44 @@ def test_open_clickhouse_client__no_log_comment__yields_client_and_closes(
     fake_client.close.assert_called_once_with()
 
 
+def test_open_clickhouse_client__url_set__hands_dsn_to_client(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given CLICKHOUSE_URL is set — clickhouse-connect's per-field args
+    # take precedence over the DSN when both are passed, so the discrete
+    # CLICKHOUSE_* settings must NOT leak through.
+    settings.CLICKHOUSE_URL = "https://default:secret@ch.example.com:8443/segments?secure=true"
+    settings.CLICKHOUSE_HOST = "should-not-be-used"
+    settings.CLICKHOUSE_PORT = 9999
+    settings.CLICKHOUSE_USER = "should-not-be-used"
+    settings.CLICKHOUSE_PASSWORD = "should-not-be-used"
+    settings.CLICKHOUSE_DATABASE = "should-not-be-used"
+    settings.CLICKHOUSE_SECURE = False
+
+    fake_client = MagicMock(spec=Client)
+    get_client = mocker.patch(
+        "clickhouse_connect.get_client",
+        return_value=fake_client,
+    )
+
+    # When the context manager is entered
+    with open_clickhouse_client():
+        pass
+
+    # Then the DSN is handed off exclusively
+    get_client.assert_called_once_with(
+        dsn="https://default:secret@ch.example.com:8443/segments?secure=true",
+        settings={"allow_experimental_json_type": 1},
+    )
+
+
 def test_open_clickhouse_client__with_log_comment__sets_session_attribution(
     mocker: MockerFixture,
     settings: SettingsWrapper,
 ) -> None:
     # Given a log_comment passed through (the per-task attribution string)
+    settings.CLICKHOUSE_URL = None
     settings.CLICKHOUSE_HOST = "ch.example.com"
     settings.CLICKHOUSE_PORT = 8443
     settings.CLICKHOUSE_USER = "default"
