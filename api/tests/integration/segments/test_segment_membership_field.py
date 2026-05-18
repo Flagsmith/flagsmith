@@ -14,8 +14,6 @@ def test_get_segment__no_memberships__returns_empty_list(
     segment: int,
 ) -> None:
     # Given a segment with no materialised SegmentMembership rows
-    # (the daily refresh has not yet run for this org, or the FoF flag
-    # is off so the refresh task skips it)
     # When the segment is fetched
     response = admin_client.get(
         reverse(

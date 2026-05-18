@@ -1,10 +1,7 @@
 import prometheus_client
 
-# All metrics are global — refresh and backfill cardinality scales with
-# project + environment counts, which would blow up Prometheus storage.
-# Drill-down lives in ClickHouse's `system.query_log` (tagged via per-query
-# `log_comment` settings) and in structlog events that carry per-project/env
-# IDs.
+# Metrics are global. Per-project / per-env drill-down lives in CH's
+# `system.query_log` (via `log_comment`) and in the structlog events.
 
 flagsmith_segment_membership_backfill_identities_total = prometheus_client.Counter(
     "flagsmith_segment_membership_backfill_identities_total",

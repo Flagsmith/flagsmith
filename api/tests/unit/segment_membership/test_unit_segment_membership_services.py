@@ -64,10 +64,8 @@ def test_open_clickhouse_client__no_log_comment__yields_client_and_closes(
         # Then it yields the underlying clickhouse-connect client...
         assert client is fake_client
 
-    # ...connects with the settings from `CLICKHOUSE_*` and the experimental
-    # JSON-type flag flipped, with no log_comment override. clickhouse-connect
-    # is handed both the DSN slot (None here) and the discrete fields so it
-    # can merge them via its `arg or parsed.<field>` precedence.
+    # ...wired from the discrete CLICKHOUSE_* settings with the JSON-type
+    # flag flipped on, no log_comment override.
     get_client.assert_called_once_with(
         dsn=None,
         host="ch.example.com",
@@ -105,9 +103,7 @@ def test_open_clickhouse_client__url_only__hands_dsn_to_client(
     with open_clickhouse_client():
         pass
 
-    # Then the DSN drives every field — discrete kwargs are passed as None
-    # so clickhouse-connect's `arg or parsed.<field>` resolution falls
-    # through to the URL.
+    # Then the DSN is handed off; discrete kwargs pass as None.
     get_client.assert_called_once_with(
         dsn="https://default:secret@ch.example.com:8443/segments?secure=true",
         host=None,
@@ -143,9 +139,8 @@ def test_open_clickhouse_client__url_with_overrides__merges_both(
     with open_clickhouse_client():
         pass
 
-    # Then both the DSN and the override land on clickhouse-connect, which
-    # resolves the database via `database or parsed.path`. The override
-    # wins because it's truthy.
+    # Then both DSN and override are passed; clickhouse-connect picks the
+    # override where set.
     get_client.assert_called_once_with(
         dsn="https://default:secret@ch.example.com:8443/default",
         host=None,
@@ -273,9 +268,8 @@ def test_compute_segment_counts_for_project__one_segment__returns_membership_ins
     # When counts are computed
     result = compute_segment_counts_for_project(project, client)
 
-    # Then ClickHouse was queried once, the predicate landed in the SQL,
-    # and the row decodes into an unsaved SegmentMembership keyed by
-    # (segment, environment) — last_synced_at left for the caller
+    # Then the row decodes into an unsaved SegmentMembership keyed by
+    # (segment, environment); last_synced_at left for the caller.
     assert len(result) == 1
     [membership] = result
     assert membership.segment_id == segment.id
@@ -285,9 +279,7 @@ def test_compute_segment_counts_for_project__one_segment__returns_membership_ins
     client.query.assert_called_once()
     sql = client.query.call_args.args[0]
     assert f"SELECT {segment.id} AS segment_id" in sql
-    # The PoC's refresh query forces ReplacingMergeTree dedup at read
-    # time — without FINAL the most-recent backfill might not be visible
-    # until a merge pass runs.
+    # FINAL forces ReplacingMergeTree dedup at read time.
     assert "FROM IDENTITIES AS i FINAL" in sql
     assert "GROUP BY i.environment_id" in sql
 

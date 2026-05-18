@@ -1441,27 +1441,15 @@ PYLON_IDENTITY_VERIFICATION_SECRET = env.str("PYLON_IDENTITY_VERIFICATION_SECRET
 
 OSIC_UPDATE_BATCH_SIZE = env.int("OSIC_UPDATE_BATCH_SIZE", default=500)
 
-# --- ClickHouse (segment membership inspection) ------------------------------
-# CLICKHOUSE_ENABLED gates the segment_membership backfill and refresh tasks;
-# leaving both CLICKHOUSE_URL and CLICKHOUSE_HOST unset keeps the feature off.
-# When enabled, the api/segments/membership tasks open a clickhouse-connect
-# client and run against this account. See
-# docs/deployment/observability/segment-membership.md for the operational shape.
-#
-# CLICKHOUSE_URL is the preferred form for 12-factor deploys — a single DSN
-# like `https://user:pass@ch.example.com:8443/segment_membership?secure=true`
-# that clickhouse-connect parses end-to-end. The discrete CLICKHOUSE_*
-# settings below override individual fields parsed from the URL (clickhouse-
-# connect resolves each field as `arg or parsed.<field>`), and remain the
-# sole path for deployments that prefer per-field config.
+# ClickHouse backs the segment_membership backfill and refresh tasks. Set
+# CLICKHOUSE_URL (DSN form) or any CLICKHOUSE_HOST + discrete fields to enable.
+# Discrete settings override the matching field parsed from the URL.
 CLICKHOUSE_URL = env.str("CLICKHOUSE_URL", default=None)
 CLICKHOUSE_HOST = env.str("CLICKHOUSE_HOST", default=None)
 CLICKHOUSE_PORT = env.int("CLICKHOUSE_PORT", default=None)
 CLICKHOUSE_USER = env.str("CLICKHOUSE_USER", default=None)
 CLICKHOUSE_PASSWORD = env.str("CLICKHOUSE_PASSWORD", default=None)
 CLICKHOUSE_DATABASE = env.str("CLICKHOUSE_DATABASE", default=None)
-# ClickHouse Cloud uses HTTPS on 8443; OSS deployments typically run HTTP on
-# 8123. Set CLICKHOUSE_SECURE=1 for HTTPS.
 CLICKHOUSE_SECURE = env.bool("CLICKHOUSE_SECURE", default=None)
 
 CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)

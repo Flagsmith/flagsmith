@@ -19,10 +19,6 @@ DictList = list[dict[str, Any]]
 
 
 class SegmentMembershipSerializer(serializers.ModelSerializer[SegmentMembership]):
-    """One materialised count of identities matching a canonical
-    segment within an environment, refreshed daily by
-    `segment_membership.tasks.refresh_project_segment_counts`."""
-
     class Meta:
         model = SegmentMembership
         fields = ["environment", "count", "last_synced_at"]

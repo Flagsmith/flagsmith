@@ -1,17 +1,11 @@
-"""Create the canonical IDENTITIES table the SQL flag engine emits
-against when a ClickHouse cluster is configured.
+"""Create the IDENTITIES table the SQL flag engine reads against.
 
-The engine's published `ClickHouseDialect.schema_ddl` is `MergeTree`
-with five columns — the "simplest correct shape" for any consumer.
-The PoC overrides to `ReplacingMergeTree(inserted_at)` over
-`(environment_id, id)` plus an `inserted_at` version column: daily
-backfill INSERTs into the same primary key get deduplicated at merge
-time (most-recent `inserted_at` wins), and the refresh task adds
-`FROM IDENTITIES FINAL` for strict reads. The translator's emitted
-predicates are engine-agnostic and work unchanged.
-
-No-op when `CLICKHOUSE_ENABLED` is False, so self-hosted installs
-without ClickHouse (and the test suite) migrate cleanly.
+Overrides the engine's published `MergeTree` schema with
+`ReplacingMergeTree(inserted_at)` over `(environment_id, id)` so daily
+re-INSERTs dedupe by most-recent `inserted_at` at merge time, with
+`FROM IDENTITIES FINAL` covering reads in between merges. No-op when
+`CLICKHOUSE_ENABLED` is False so installs without ClickHouse migrate
+cleanly.
 """
 
 from django.conf import settings
@@ -23,25 +17,14 @@ from segment_membership.services import open_clickhouse_client
 
 _SCHEMA_DDL = """\
 CREATE TABLE IF NOT EXISTS IDENTITIES (
-    -- environment.key from EnvironmentContext; used as the env partition
     environment_id String,
-
-    -- stable per-identity row id derived from identity_uuid bytes (signed 64-bit)
+    -- UInt64 because we derive from UUID bytes; signed would refuse negatives.
     id UInt64,
-
-    -- the identity's external identifier, exposed as $.identity.identifier
     identifier String,
-
-    -- the composite identity key, exposed as $.identity.key
     identity_key String,
-
-    -- the identity's full trait map. ClickHouse's `JSON` type stores each
-    -- path as a typed subcolumn so trait lookups are columnar reads, not
-    -- per-row JSON parses. SQL NULL for an identity with no traits.
+    -- Stored per top-level key as typed subcolumns; SQL NULL for empty traits.
     traits JSON,
-
-    -- version column for ReplacingMergeTree dedup. Defaults to insert time
-    -- so the most-recent backfill of a given (environment_id, id) wins.
+    -- ReplacingMergeTree version column; most-recent insert wins per PK.
     inserted_at DateTime DEFAULT now()
 )
 ENGINE = ReplacingMergeTree(inserted_at)
@@ -59,9 +42,7 @@ def setup_clickhouse_identities_schema(
 
 
 class Migration(migrations.Migration):
-    # The ClickHouse DDL talks to a remote service; running it inside
-    # Django's default-atomic migration block would couple this Postgres
-    # migration to a ClickHouse transaction we don't actually need.
+    # Disable Django's atomic wrapper — the DDL runs against a remote service.
     atomic = False
 
     dependencies = [

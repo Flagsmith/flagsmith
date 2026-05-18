@@ -5,10 +5,7 @@ from segments.models import Segment
 
 
 class SegmentMembership(models.Model):
-    """
-    Cached count of identities matching a canonical segment within a
-    single environment. One row per (segment, environment) pair.
-    """
+    """Cached identity-match count for one (segment, environment) pair."""
 
     segment = models.ForeignKey(
         Segment,

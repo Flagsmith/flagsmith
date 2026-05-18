@@ -1,17 +1,8 @@
-"""Tasks: backfill IDENTITIES from Dynamo to ClickHouse daily, then
-refresh per-segment counts in the `SegmentMembership` cache.
-
-The backfill recurs daily and, once it finishes, fans out one
-`refresh_project_segment_counts` per project — guarantees the refresh
-always reads the freshly backfilled snapshot rather than racing a
-separate schedule. Both tasks short-circuit when `CLICKHOUSE_ENABLED`
-is False, and skip per-organisation when the
-`segment_membership_inspection` FoF flag is False.
-
-ClickHouse's `IDENTITIES` table is `ReplacingMergeTree(inserted_at)
-ORDER BY (environment_id, id)`. Daily re-inserts keep "most-recent
-wins" semantics at merge time; `compute_segment_counts_for_project`
-emits `FROM IDENTITIES FINAL` to dedupe at read time.
+"""Daily backfill of IDENTITIES from Dynamo to ClickHouse, then per-project
+refresh of `SegmentMembership` counts. Each backfill fans out the refresh so
+the count read always sees the fresh snapshot. Both tasks short-circuit when
+`CLICKHOUSE_ENABLED` is False or the org's `segment_membership_inspection`
+flag is off.
 """
 
 from datetime import timedelta
@@ -60,21 +51,13 @@ _IDENTITIES_COLUMN_NAMES = (
 
 @register_recurring_task(
     run_every=timedelta(days=1),
-    # The default timeout doesn't fit the per-environment
-    # backfill at SaaS scale; 4 hours leaves
-    # headroom for several large environments back-to-back without
-    # truncating the task processor's lease.
+    # 4h fits several large environments back-to-back at SaaS scale.
     timeout=timedelta(hours=4),
 )
 def backfill_identities_to_clickhouse() -> None:
-    """Insert the current Dynamo state for every relevant environment
-    into ClickHouse's IDENTITIES table. The table is a
-    `ReplacingMergeTree` keyed on `(environment_id, id)` — duplicates
-    from prior runs are deduplicated at merge time (most-recent
-    `inserted_at` wins). Once the backfill finishes, fans out one
-    `refresh_project_segment_counts` task per project so the count
-    refresh always sees fresh data.
-    """
+    """Insert each relevant environment's current Dynamo state into
+    IDENTITIES, then dispatch one refresh per project so counts read
+    against the fresh snapshot."""
     if not settings.CLICKHOUSE_ENABLED:
         logger.info("backfill.skipped", reason="clickhouse_not_configured")
         return
@@ -135,15 +118,13 @@ def backfill_identities_to_clickhouse() -> None:
 
 
 @register_task_handler(
-    # One project's predicate matrix at SaaS scale takes seconds to a
-    # few minutes; 30 minutes bounds runaway queries without cutting
-    # legitimate ones short.
+    # 30m bounds runaway queries; legitimate runs are seconds to minutes.
     timeout=timedelta(minutes=30),
 )
 def refresh_project_segment_counts(project_id: int) -> None:
-    """Compute per-segment match counts for a single project and upsert
-    into `SegmentMembership`. Re-checks the FoF flag at execution time
-    so a stale fan-out skips orgs that have since been disabled."""
+    """Compute per-segment match counts for one project and upsert into
+    `SegmentMembership`. Re-checks the org flag so a stale fan-out
+    skips orgs disabled since dispatch."""
     if not settings.CLICKHOUSE_ENABLED:
         logger.info(
             "refresh.project.skipped",
