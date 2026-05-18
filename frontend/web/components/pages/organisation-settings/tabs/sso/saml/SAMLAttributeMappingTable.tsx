@@ -1,14 +1,13 @@
 import React, { FC } from 'react'
-
+import PanelSearch from 'components/PanelSearch'
+import Button from 'components/base/forms/Button'
+import Icon from 'components/icons/Icon'
+import Tooltip from 'components/Tooltip'
+import Format from 'common/utils/format'
 import {
   useDeleteSamlAttributeMappingMutation,
   useGetSamlAttributeMappingQuery,
 } from 'common/services/useSamlAttributeMapping'
-import PanelSearch from './PanelSearch'
-import Button from './base/forms/Button'
-import Icon from './icons/Icon'
-import Format from 'common/utils/format'
-import Tooltip from './Tooltip'
 
 type SAMLAttributeMappingTableType = {
   samlConfigurationId: number
