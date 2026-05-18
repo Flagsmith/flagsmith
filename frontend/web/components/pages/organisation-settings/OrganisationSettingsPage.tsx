@@ -1,4 +1,5 @@
 import { FC, ReactNode, useEffect } from 'react'
+import { useHistory, useLocation } from 'react-router-dom'
 import { useGetOrganisationQuery } from 'common/services/useOrganisation'
 import { useRouteContext } from 'components/providers/RouteContext'
 import Utils from 'common/utils/utils'
@@ -38,6 +39,19 @@ const OrganisationSettingsPage: FC = () => {
   useEffect(() => {
     API.trackPage(Constants.pages.ORGANISATION_SETTINGS)
   }, [])
+
+  // Back-compat: the SAML tab was renamed to SSO. Existing bookmarks and
+  // links pointing at ?tab=saml redirect to ?tab=sso so users land in the
+  // right place.
+  const history = useHistory()
+  const location = useLocation()
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    if (params.get('tab') === 'saml') {
+      params.set('tab', 'sso')
+      history.replace(`${location.pathname}?${params.toString()}`)
+    }
+  }, [history, location])
 
   if (isLoading) {
     return (
