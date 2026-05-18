@@ -213,6 +213,4 @@ const ScimSection: FC<ScimSectionProps> = ({ organisationId }) => {
   )
 }
 
-ScimSection.displayName = 'ScimSection'
-
 export default ScimSection

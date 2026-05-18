@@ -44,6 +44,4 @@ const CopyField: FC<CopyFieldProps> = ({
   )
 }
 
-CopyField.displayName = 'CopyField'
-
 export default CopyField

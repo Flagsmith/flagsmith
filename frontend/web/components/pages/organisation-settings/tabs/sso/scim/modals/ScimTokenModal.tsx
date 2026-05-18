@@ -63,6 +63,4 @@ const ScimTokenModal: FC<ScimTokenModalProps> = ({ token }) => {
   )
 }
 
-ScimTokenModal.displayName = 'ScimTokenModal'
-
 export default ScimTokenModal
