@@ -85,7 +85,9 @@ def test_open_clickhouse_client__url_only__hands_dsn_to_client(
     settings: SettingsWrapper,
 ) -> None:
     # Given CLICKHOUSE_URL is set and no discrete overrides are
-    settings.CLICKHOUSE_URL = "https://default:secret@ch.example.com:8443/segments?secure=true"
+    settings.CLICKHOUSE_URL = (
+        "https://default:secret@ch.example.com:8443/segments?secure=true"
+    )
     settings.CLICKHOUSE_HOST = None
     settings.CLICKHOUSE_PORT = None
     settings.CLICKHOUSE_USER = None
