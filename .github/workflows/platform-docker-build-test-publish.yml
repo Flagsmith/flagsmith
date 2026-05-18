@@ -15,6 +15,7 @@ jobs:
     with:
       target: oss-api
       image-name: flagsmith-api
+      codeartifact-login: true
 
   docker-build-frontend:
     name: Build Frontend Image
@@ -29,6 +30,7 @@ jobs:
     with:
       target: oss-unified
       image-name: flagsmith
+      codeartifact-login: true
 
   docker-build-private-cloud-api:
     name: Build Private Cloud API Image
@@ -59,6 +61,7 @@ jobs:
       target: api-test
       image-name: flagsmith-api-test
       scan: false
+      codeartifact-login: true
 
   docker-build-api-private-test:
     name: Build API Enterprise Test Image

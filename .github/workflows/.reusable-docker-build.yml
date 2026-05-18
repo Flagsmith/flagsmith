@@ -110,20 +110,10 @@ jobs:
             ${{ inputs.registry-url }}/flagsmith/${{ inputs.image-name }}
           tags: ${{ inputs.tags }}
 
-      - name: Authenticate with CodeArtifact (production)
+      - name: Authenticate with CodeArtifact
         if: inputs.codeartifact-login
         id: codeartifact
         uses: ./.github/actions/codeartifact-login
-
-      - name: Authenticate with CodeArtifact (staging)
-        if: inputs.codeartifact-login
-        id: codeartifact-staging
-        uses: ./.github/actions/codeartifact-login
-        with:
-          account-id: "302456015006"
-          role-name: codeartifact-github-actions-staging
-          domain: flagsmith-staging
-          index-name: flagsmith-pypi-staging
 
       - name: Build and push image
         id: build
@@ -136,7 +126,6 @@ jobs:
           secrets: |
             ${{ secrets.secrets }}
             ${{ inputs.codeartifact-login && format('codeartifact_token={0}', steps.codeartifact.outputs.token) || '' }}
-            ${{ inputs.codeartifact-login && format('codeartifact_token_staging={0}', steps.codeartifact-staging.outputs.token) || '' }}
           target: ${{ inputs.target }}
           build-args: |
             CI_COMMIT_SHA=${{ github.sha }}

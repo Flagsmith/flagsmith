@@ -20,15 +20,11 @@ OPENAPI_FORMAT_VERSION ?= 1.23.0
 
 .PHONY: codeartifact-login
 codeartifact-login:
-	@prod_token=$$(aws codeartifact get-authorization-token \
+	@token=$$(aws codeartifact get-authorization-token \
 		--domain flagsmith-production --domain-owner 084060095745 \
 		--region eu-west-2 \
 		--query authorizationToken --output text) && \
-	staging_token=$$(aws codeartifact get-authorization-token \
-		--domain flagsmith-staging --domain-owner 302456015006 \
-		--region eu-west-2 \
-		--query authorizationToken --output text) && \
-	printf 'UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws\nUV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD=%s\nUV_INDEX_FLAGSMITH_PYPI_STAGING_USERNAME=aws\nUV_INDEX_FLAGSMITH_PYPI_STAGING_PASSWORD=%s\n' "$$prod_token" "$$staging_token" > .env-codeartifact
+	printf 'UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws\nUV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD=%s\n' "$$token" > .env-codeartifact
 
 .PHONY: install-pip
 install-pip:

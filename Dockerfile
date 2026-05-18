@@ -100,10 +100,10 @@ ENV UV_PROJECT_ENVIRONMENT=/build/.venv \
   UV_LINK_MODE=copy \
   UV_NO_SYNC=1 \
   UV_CACHE_DIR=/root/.cache/uv
-RUN --mount=type=secret,id=codeartifact_token_staging \
+RUN --mount=type=secret,id=codeartifact_token \
   --mount=type=cache,target=/root/.cache/uv \
-  UV_INDEX_FLAGSMITH_PYPI_STAGING_USERNAME=aws \
-  UV_INDEX_FLAGSMITH_PYPI_STAGING_PASSWORD="$(cat /run/secrets/codeartifact_token_staging)" \
+  UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws \
+  UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
   make install opts='--no-install-project'
 
 # * build-python-private [build-python]
@@ -116,14 +116,11 @@ ARG RBAC_REVISION
 ARG EXTRAS="--extra saml --extra auth-controller --extra ldap --extra workflows --extra licensing --extra release-pipelines --extra scim"
 RUN --mount=type=secret,id=github_private_cloud_token \
   --mount=type=secret,id=codeartifact_token \
-  --mount=type=secret,id=codeartifact_token_staging \
   --mount=type=cache,target=/root/.cache/uv \
   echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
   git config --global credential.helper store && \
   UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws \
   UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
-  UV_INDEX_FLAGSMITH_PYPI_STAGING_USERNAME=aws \
-  UV_INDEX_FLAGSMITH_PYPI_STAGING_PASSWORD="$(cat /run/secrets/codeartifact_token_staging)" \
   make install-packages opts="--no-install-project ${EXTRAS}" && \
   make install-private-modules
 
@@ -172,10 +169,10 @@ FROM build-python AS api-test
 
 COPY api /build/
 
-RUN --mount=type=secret,id=codeartifact_token_staging \
+RUN --mount=type=secret,id=codeartifact_token \
   --mount=type=cache,target=/root/.cache/uv \
-  UV_INDEX_FLAGSMITH_PYPI_STAGING_USERNAME=aws \
-  UV_INDEX_FLAGSMITH_PYPI_STAGING_PASSWORD="$(cat /run/secrets/codeartifact_token_staging)" \
+  UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws \
+  UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
   make install-packages opts='--extra dev'
 
 CMD ["make", "test"]
@@ -186,12 +183,9 @@ FROM build-python-private AS api-private-test
 COPY api /build/
 
 RUN --mount=type=secret,id=codeartifact_token \
-  --mount=type=secret,id=codeartifact_token_staging \
   --mount=type=cache,target=/root/.cache/uv \
   UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws \
   UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
-  UV_INDEX_FLAGSMITH_PYPI_STAGING_USERNAME=aws \
-  UV_INDEX_FLAGSMITH_PYPI_STAGING_PASSWORD="$(cat /run/secrets/codeartifact_token_staging)" \
   make install-packages opts='--extra dev --extra saml --extra auth-controller --extra ldap --extra workflows --extra licensing --extra release-pipelines --extra scim' && \
   make integrate-private-tests && \
   git config --global --unset credential.helper && \

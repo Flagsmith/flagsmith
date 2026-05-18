@@ -1612,7 +1612,7 @@ requires-dist = [
     { name = "flagsmith-ldap", marker = "extra == 'ldap'", git = "https://github.com/flagsmith/flagsmith-ldap?tag=v0.1.2" },
     { name = "flagsmith-private", marker = "extra == 'release-pipelines'", specifier = ">=0.5.1,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
     { name = "flagsmith-private", marker = "extra == 'scim'", specifier = ">=0.5.1,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
-    { name = "flagsmith-sql-flag-engine", specifier = "==0.1.0a2", index = "https://flagsmith-staging-302456015006.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-staging/simple/" },
+    { name = "flagsmith-sql-flag-engine", specifier = "==0.1.0a2", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
     { name = "google-api-python-client", specifier = ">=1.12.5,<1.13.0" },
     { name = "google-re2", specifier = ">=1.0,<2.0.0" },
     { name = "gunicorn", specifier = ">=23.0.0,<23.1.0" },
@@ -1765,14 +1765,14 @@ wheels = [
 [[package]]
 name = "flagsmith-sql-flag-engine"
 version = "0.1.0a2"
-source = { registry = "https://flagsmith-staging-302456015006.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-staging/simple/" }
+source = { registry = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" }
 dependencies = [
     { name = "flagsmith-flag-engine" },
     { name = "jsonpath-rfc9535" },
 ]
-sdist = { url = "https://flagsmith-staging-302456015006.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-staging/simple/flagsmith-sql-flag-engine/0.1.0a2/flagsmith_sql_flag_engine-0.1.0a2.tar.gz", hash = "sha256:822779efd32c2b55a279603f93c9cceceafeb449bf688308b74881f7eff8dbdd" }
+sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-sql-flag-engine/0.1.0a2/flagsmith_sql_flag_engine-0.1.0a2.tar.gz", hash = "sha256:c99ff82f08608345e2a1677c341d822520a583f6f64708735cae61d76bcafcf3" }
 wheels = [
-    { url = "https://flagsmith-staging-302456015006.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-staging/simple/flagsmith-sql-flag-engine/0.1.0a2/flagsmith_sql_flag_engine-0.1.0a2-py3-none-any.whl", hash = "sha256:82bbc592d31e430f2423d5928adedf243c5317a5fc2046e3590492e05bbfb836" },
+    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-sql-flag-engine/0.1.0a2/flagsmith_sql_flag_engine-0.1.0a2-py3-none-any.whl", hash = "sha256:53b20724f4b334d7f4c098ddf1f1a54627fdb4a6ceaeadaa9002a04c1354993d" },
 ]
 
 [[package]]

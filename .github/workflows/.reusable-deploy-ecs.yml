@@ -54,18 +54,9 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
 
-      - name: Authenticate with CodeArtifact (production)
+      - name: Authenticate with CodeArtifact
         id: codeartifact
         uses: ./.github/actions/codeartifact-login
-
-      - name: Authenticate with CodeArtifact (staging)
-        id: codeartifact-staging
-        uses: ./.github/actions/codeartifact-login
-        with:
-          account-id: "302456015006"
-          role-name: codeartifact-github-actions-staging
-          domain: flagsmith-staging
-          index-name: flagsmith-pypi-staging
 
       - name: Build saas-api image
         uses: depot/build-push-action@v1
@@ -76,7 +67,6 @@ jobs:
           secrets: |
             github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
             codeartifact_token=${{ steps.codeartifact.outputs.token }}
-            codeartifact_token_staging=${{ steps.codeartifact-staging.outputs.token }}
             "sse_pgp_pkey=${{ secrets.SSE_PGP_PRIVATE_KEY }}"
           push: true
           tags: ${{ steps.meta.outputs.tags }}

@@ -187,12 +187,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.4.0" }
 licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.3.0" }
 flagsmith-private = { index = "flagsmith-pypi-production" }
-flagsmith-sql-flag-engine = { index = "flagsmith-pypi-staging" }
-
-[[tool.uv.index]]
-name = "flagsmith-pypi-staging"
-url = "https://flagsmith-staging-302456015006.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-staging/simple/"
-explicit = true
+flagsmith-sql-flag-engine = { index = "flagsmith-pypi-production" }
 
 [tool.uv]
 required-version = "==0.8.14"

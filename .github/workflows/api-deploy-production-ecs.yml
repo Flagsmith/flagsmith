@@ -25,8 +25,8 @@ jobs:
     name: Push MCP Schema to Gram
     runs-on: depot-ubuntu-latest
     permissions:
+      id-token: write
       contents: read
-      id-token: write # For CodeArtifact OIDC
     defaults:
       run:
         working-directory: api
@@ -38,16 +38,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Authenticate with CodeArtifact (production)
+      - name: Authenticate with CodeArtifact
         uses: ./.github/actions/codeartifact-login
-
-      - name: Authenticate with CodeArtifact (staging)
-        uses: ./.github/actions/codeartifact-login
-        with:
-          account-id: "302456015006"
-          role-name: codeartifact-github-actions-staging
-          domain: flagsmith-staging
-          index-name: flagsmith-pypi-staging
 
       - name: Install dependencies
         run: |

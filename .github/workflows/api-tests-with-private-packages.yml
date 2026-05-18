@@ -48,16 +48,8 @@ jobs:
       - name: Install SAML Dependencies
         run: sudo apt-get install -y xmlsec1
 
-      - name: Authenticate with CodeArtifact (production)
+      - name: Authenticate with CodeArtifact
         uses: ./.github/actions/codeartifact-login
-
-      - name: Authenticate with CodeArtifact (staging)
-        uses: ./.github/actions/codeartifact-login
-        with:
-          account-id: "302456015006"
-          role-name: codeartifact-github-actions-staging
-          domain: flagsmith-staging
-          index-name: flagsmith-pypi-staging
 
       - name: Install packages and Tests
         shell: bash

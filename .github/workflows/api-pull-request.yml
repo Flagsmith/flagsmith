@@ -47,13 +47,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Authenticate with CodeArtifact (staging)
+      - name: Authenticate with CodeArtifact
         uses: ./.github/actions/codeartifact-login
-        with:
-          account-id: "302456015006"
-          role-name: codeartifact-github-actions-staging
-          domain: flagsmith-staging
-          index-name: flagsmith-pypi-staging
 
       - name: Install Dependencies
         run: make install-packages opts='--extra dev'
