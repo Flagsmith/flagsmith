@@ -96,7 +96,7 @@ export const featureDescriptions: Record<PaidFeature, any> = {
   'SCIM': {
     description:
       'Provision and de-provision users and groups automatically from your identity provider.',
-    docs: 'https://docs.flagsmith.com/system-administration/authentication/',
+    docs: 'https://docs.flagsmith.com/administration-and-security/access-control/scim/',
     title: 'SCIM user provisioning',
   },
   'STALE_FLAGS': {

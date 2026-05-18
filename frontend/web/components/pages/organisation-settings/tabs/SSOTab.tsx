@@ -9,9 +9,13 @@ type SSOTabProps = {
 
 export const SSOTab = ({ organisationId }: SSOTabProps) => {
   return (
-    <PlanBasedBanner feature='SAML' theme='page'>
-      <SamlTab organisationId={organisationId} />
-      <ScimSection organisationId={organisationId} />
-    </PlanBasedBanner>
+    <div className='d-flex flex-column gap-4 mt-4'>
+      <PlanBasedBanner feature='SAML' theme='page'>
+        <SamlTab organisationId={organisationId} />
+      </PlanBasedBanner>
+      <PlanBasedBanner feature='SCIM' theme='page'>
+        <ScimSection organisationId={organisationId} />
+      </PlanBasedBanner>
+    </div>
   )
 }
