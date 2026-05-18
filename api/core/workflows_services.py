@@ -86,18 +86,6 @@ class ChangeRequestCommitService:
             )
 
             for environment_feature_version in environment_feature_versions:
-                trigger_update_version_webhooks.delay(
-                    kwargs={
-                        "environment_feature_version_uuid": str(
-                            environment_feature_version.uuid
-                        )
-                    },
-                    delay_until=environment_feature_version.live_from,
-                )
-                rebuild_environment_document.delay(
-                    kwargs={"environment_id": self.change_request.environment_id},
-                    delay_until=environment_feature_version.live_from,
-                )
                 environment_feature_version_published.send(
                     EnvironmentFeatureVersion, instance=environment_feature_version
                 )
