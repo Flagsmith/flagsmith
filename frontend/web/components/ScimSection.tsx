@@ -173,15 +173,13 @@ const ScimSection: FC<ScimSectionProps> = ({ organisationId }) => {
       <PageTitle title='SCIM Configuration' />
       <Row className='gap-4 mb-3'>
         <div>
-          <div className='text-muted text-uppercase fs-caption'>Created</div>
+          <div className='text-muted text-uppercase'>Created</div>
           <div className='font-weight-medium'>
             {moment(data.created_at).format(DATE_FORMAT)}
           </div>
         </div>
         <div>
-          <div className='text-muted text-uppercase fs-caption'>
-            Token last rotated
-          </div>
+          <div className='text-muted text-uppercase'>Token last rotated</div>
           <div className='font-weight-medium'>
             {moment(data.token_rotated_at).format(DATE_FORMAT)}
           </div>
@@ -189,9 +187,7 @@ const ScimSection: FC<ScimSectionProps> = ({ organisationId }) => {
       </Row>
 
       <div className='mb-3'>
-        <div className='text-muted text-uppercase fs-caption mb-1'>
-          SCIM base URL
-        </div>
+        <div className='text-muted text-uppercase mb-1'>SCIM base URL</div>
         <CopyField value={data.base_url} data-test='scim-base-url' />
       </div>
 

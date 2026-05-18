@@ -3,7 +3,6 @@ import Button from 'components/base/forms/Button'
 import CopyField from 'components/CopyField'
 import InputGroup from 'components/base/forms/InputGroup'
 import WarningMessage from 'components/WarningMessage'
-import './ScimTokenModal.scss'
 
 type ScimTokenModalProps = {
   token: string
@@ -32,7 +31,7 @@ const ScimTokenModal: FC<ScimTokenModalProps> = ({ token }) => {
         }
       />
       {isConfirming ? (
-        <div className='scim-confirm-row mt-4 d-flex align-items-center justify-content-end gap-2'>
+        <div className='mt-4 d-flex align-items-center justify-content-end gap-2'>
           <span className='me-auto text-muted'>
             Have you saved the token? It cannot be retrieved later.
           </span>
