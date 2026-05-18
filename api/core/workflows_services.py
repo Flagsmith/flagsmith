@@ -4,10 +4,8 @@ import structlog
 from django.db import transaction
 from django.utils import timezone
 
-from environments.tasks import rebuild_environment_document
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
-from features.versioning.tasks import trigger_update_version_webhooks
 from features.workflows.core.exceptions import ChangeRequestNotApprovedError
 
 if TYPE_CHECKING:
