@@ -3,6 +3,7 @@ import Button from 'components/base/forms/Button'
 import CopyField from 'components/CopyField'
 import InputGroup from 'components/base/forms/InputGroup'
 import WarningMessage from 'components/WarningMessage'
+import './ScimTokenModal.scss'
 
 type ScimTokenModalProps = {
   token: string
