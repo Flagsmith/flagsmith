@@ -14,10 +14,12 @@
 
       &.in-stage {
         border-color: var(--color-border-action);
+        color: var(--color-icon-action);
       }
 
       &.completed {
         border-color: var(--color-border-success);
+        color: var(--color-icon-success);
       }
 
   }
