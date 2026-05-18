@@ -45,7 +45,7 @@ jobs:
         run: |
           echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials
           git config --global credential.helper store
-          make install-packages opts="--extra saml --extra auth-controller --extra workflows --extra release-pipelines --extra scim"
+          make install-packages opts="--extra private --extra auth-controller --extra workflows"
           make install-private-modules
           rm -rf ${HOME}/.git-credentials
 

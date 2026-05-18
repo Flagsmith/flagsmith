@@ -95,7 +95,7 @@ auth-controller = [
     "auth-controller",
     "django-multiselectfield>=1.0.1,<2",
 ]
-saml = [
+private = [
     "flagsmith-private>=0.6.0,<1",
 ]
 ldap = [
@@ -108,12 +108,6 @@ workflows = [
 licensing = [
     "licensing",
     "cryptography>=44.0.1",
-]
-release-pipelines = [
-    "flagsmith-private>=0.5.1,<1",
-]
-scim = [
-    "flagsmith-private>=0.6.0,<1",
 ]
 dev = [
     "django-test-migrations>=1.2.0,<2.0.0",
@@ -553,7 +547,7 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 # Suppresses `no-any-return` when the `scim` package isn't installed (which
-# happens on the public PR workflow that runs mypy without the `--extra scim`
+# happens on the public PR workflow that runs mypy without the `--extra private`
 # extra). With the extra installed, the bearer fixtures return the real `str`.
 module = ["tests.integration.scim.conftest"]
 warn_return_any = false

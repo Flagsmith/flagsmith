@@ -1501,13 +1501,7 @@ licensing = [
     { name = "cryptography" },
     { name = "licensing" },
 ]
-release-pipelines = [
-    { name = "flagsmith-private" },
-]
-saml = [
-    { name = "flagsmith-private" },
-]
-scim = [
+private = [
     { name = "flagsmith-private" },
 ]
 workflows = [
@@ -1568,9 +1562,7 @@ requires-dist = [
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
     { name = "flagsmith-flag-engine", specifier = ">=10.1.0,<11.0.0" },
     { name = "flagsmith-ldap", marker = "extra == 'ldap'", git = "https://github.com/flagsmith/flagsmith-ldap?tag=v0.1.2" },
-    { name = "flagsmith-private", marker = "extra == 'release-pipelines'", specifier = ">=0.5.1,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
-    { name = "flagsmith-private", marker = "extra == 'saml'", specifier = ">=0.6.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
-    { name = "flagsmith-private", marker = "extra == 'scim'", specifier = ">=0.6.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
+    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.6.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
     { name = "google-api-python-client", specifier = ">=1.12.5,<1.13.0" },
     { name = "google-re2", specifier = ">=1.0,<2.0.0" },
     { name = "gunicorn", specifier = ">=23.0.0,<23.1.0" },
@@ -1634,7 +1626,7 @@ requires-dist = [
     { name = "whitenoise", specifier = ">=6.0.0,<6.1.0" },
     { name = "workflows-logic", marker = "extra == 'workflows'", git = "https://github.com/flagsmith/flagsmith-workflows?tag=v3.4.0" },
 ]
-provides-extras = ["auth-controller", "saml", "ldap", "workflows", "licensing", "release-pipelines", "scim", "dev"]
+provides-extras = ["auth-controller", "private", "ldap", "workflows", "licensing", "dev"]
 
 [[package]]
 name = "flagsmith-common"
