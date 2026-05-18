@@ -187,7 +187,7 @@ licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.3.0" }
 flagsmith-private = { index = "flagsmith-pypi-production" }
 
 [tool.uv]
-required-version = ">=0.8,<1"
+required-version = "0.11.14"
 # Pin every resolved package to the exact version that api/poetry.lock used on
 # main before this migration, so the poetry -> uv switch is dependency-neutral.
 # Keep this list in sync with poetry.lock until the lockfile churn settles.
