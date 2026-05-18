@@ -13,7 +13,7 @@ import { LicensingTab } from './tabs/LicensingTab'
 import { CustomFieldsTab } from './tabs/CustomFieldsTab'
 import { APIKeysTab } from './tabs/APIKeysTab'
 import { WebhooksTab } from './tabs/WebhooksTab'
-import { SSOTab } from './tabs/sso/SSOTab'
+import { SSOTab } from './tabs/sso'
 
 type OrganisationSettingsTab = {
   component: ReactNode
