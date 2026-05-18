@@ -10,7 +10,6 @@ from projects.models import Project
 from segment_membership.services import (
     compute_segment_counts_for_project,
     get_projects_to_process,
-    is_clickhouse_configured,
     is_membership_enabled,
     open_clickhouse_client,
 )
@@ -40,47 +39,11 @@ def test_is_membership_enabled__flag_on__returns_true(
     assert is_membership_enabled(organisation) is True
 
 
-def test_is_clickhouse_configured__host_set__returns_true(
-    settings: SettingsWrapper,
-) -> None:
-    # Given CLICKHOUSE_HOST is populated and no DSN is set
-    settings.CLICKHOUSE_URL = None
-    settings.CLICKHOUSE_HOST = "ch.example.com"
-
-    # When checked
-    # Then the helper reports the feature configured
-    assert is_clickhouse_configured() is True
-
-
-def test_is_clickhouse_configured__url_set__returns_true(
-    settings: SettingsWrapper,
-) -> None:
-    # Given CLICKHOUSE_URL is populated (DSN form) and HOST is unset
-    settings.CLICKHOUSE_URL = "https://default:secret@ch.example.com:8443/default"
-    settings.CLICKHOUSE_HOST = None
-
-    # When checked
-    # Then the helper reports the feature configured
-    assert is_clickhouse_configured() is True
-
-
-def test_is_clickhouse_configured__neither_set__returns_false(
-    settings: SettingsWrapper,
-) -> None:
-    # Given neither URL nor HOST is set
-    settings.CLICKHOUSE_URL = None
-    settings.CLICKHOUSE_HOST = None
-
-    # When checked
-    # Then the helper reports the feature unconfigured
-    assert is_clickhouse_configured() is False
-
-
 def test_open_clickhouse_client__no_log_comment__yields_client_and_closes(
     mocker: MockerFixture,
     settings: SettingsWrapper,
 ) -> None:
-    # Given no DSN set, populated discrete CLICKHOUSE_* settings, and a
+    # Given populated discrete CLICKHOUSE_* settings (no DSN), and a
     # mocked client factory
     settings.CLICKHOUSE_URL = None
     settings.CLICKHOUSE_HOST = "ch.example.com"
@@ -102,8 +65,11 @@ def test_open_clickhouse_client__no_log_comment__yields_client_and_closes(
         assert client is fake_client
 
     # ...connects with the settings from `CLICKHOUSE_*` and the experimental
-    # JSON-type flag flipped, with no log_comment override
+    # JSON-type flag flipped, with no log_comment override. clickhouse-connect
+    # is handed both the DSN slot (None here) and the discrete fields so it
+    # can merge them via its `arg or parsed.<field>` precedence.
     get_client.assert_called_once_with(
+        dsn=None,
         host="ch.example.com",
         port=8443,
         username="default",
@@ -116,20 +82,18 @@ def test_open_clickhouse_client__no_log_comment__yields_client_and_closes(
     fake_client.close.assert_called_once_with()
 
 
-def test_open_clickhouse_client__url_set__hands_dsn_to_client(
+def test_open_clickhouse_client__url_only__hands_dsn_to_client(
     mocker: MockerFixture,
     settings: SettingsWrapper,
 ) -> None:
-    # Given CLICKHOUSE_URL is set — clickhouse-connect's per-field args
-    # take precedence over the DSN when both are passed, so the discrete
-    # CLICKHOUSE_* settings must NOT leak through.
+    # Given CLICKHOUSE_URL is set and no discrete overrides are
     settings.CLICKHOUSE_URL = "https://default:secret@ch.example.com:8443/segments?secure=true"
-    settings.CLICKHOUSE_HOST = "should-not-be-used"
-    settings.CLICKHOUSE_PORT = 9999
-    settings.CLICKHOUSE_USER = "should-not-be-used"
-    settings.CLICKHOUSE_PASSWORD = "should-not-be-used"
-    settings.CLICKHOUSE_DATABASE = "should-not-be-used"
-    settings.CLICKHOUSE_SECURE = False
+    settings.CLICKHOUSE_HOST = None
+    settings.CLICKHOUSE_PORT = None
+    settings.CLICKHOUSE_USER = None
+    settings.CLICKHOUSE_PASSWORD = None
+    settings.CLICKHOUSE_DATABASE = None
+    settings.CLICKHOUSE_SECURE = None
 
     fake_client = MagicMock(spec=Client)
     get_client = mocker.patch(
@@ -141,9 +105,55 @@ def test_open_clickhouse_client__url_set__hands_dsn_to_client(
     with open_clickhouse_client():
         pass
 
-    # Then the DSN is handed off exclusively
+    # Then the DSN drives every field — discrete kwargs are passed as None
+    # so clickhouse-connect's `arg or parsed.<field>` resolution falls
+    # through to the URL.
     get_client.assert_called_once_with(
         dsn="https://default:secret@ch.example.com:8443/segments?secure=true",
+        host=None,
+        port=None,
+        username=None,
+        password=None,
+        database=None,
+        secure=None,
+        settings={"allow_experimental_json_type": 1},
+    )
+
+
+def test_open_clickhouse_client__url_with_overrides__merges_both(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given CLICKHOUSE_URL and a discrete CLICKHOUSE_DATABASE override
+    settings.CLICKHOUSE_URL = "https://default:secret@ch.example.com:8443/default"
+    settings.CLICKHOUSE_HOST = None
+    settings.CLICKHOUSE_PORT = None
+    settings.CLICKHOUSE_USER = None
+    settings.CLICKHOUSE_PASSWORD = None
+    settings.CLICKHOUSE_DATABASE = "segment_membership"
+    settings.CLICKHOUSE_SECURE = None
+
+    fake_client = MagicMock(spec=Client)
+    get_client = mocker.patch(
+        "clickhouse_connect.get_client",
+        return_value=fake_client,
+    )
+
+    # When the context manager is entered
+    with open_clickhouse_client():
+        pass
+
+    # Then both the DSN and the override land on clickhouse-connect, which
+    # resolves the database via `database or parsed.path`. The override
+    # wins because it's truthy.
+    get_client.assert_called_once_with(
+        dsn="https://default:secret@ch.example.com:8443/default",
+        host=None,
+        port=None,
+        username=None,
+        password=None,
+        database="segment_membership",
+        secure=None,
         settings={"allow_experimental_json_type": 1},
     )
 

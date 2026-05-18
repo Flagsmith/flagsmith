@@ -30,13 +30,6 @@ def is_membership_enabled(organisation: Organisation) -> bool:
     )
 
 
-def is_clickhouse_configured() -> bool:
-    """Either `CLICKHOUSE_URL` (DSN) or `CLICKHOUSE_HOST` gates the
-    feature — every other CLICKHOUSE_* setting has a sensible default.
-    Tasks short-circuit when this returns False."""
-    return bool(settings.CLICKHOUSE_URL or settings.CLICKHOUSE_HOST)
-
-
 @contextmanager
 def open_clickhouse_client(*, log_comment: str | None = None) -> Iterator[Client]:
     """Open a clickhouse-connect client from `CLICKHOUSE_*` settings.
@@ -45,6 +38,11 @@ def open_clickhouse_client(*, log_comment: str | None = None) -> Iterator[Client
     `log_comment` session setting; it's our spend-attribution analogue
     of Snowflake's `QUERY_TAG` and shows up in `system.query_log` for
     per-org / per-project rollups.
+
+    Both `CLICKHOUSE_URL` and the discrete `CLICKHOUSE_*` fields are
+    handed to clickhouse-connect; it resolves each field as
+    `arg or parsed.<field>`, so explicit env vars override their DSN
+    counterparts and unset ones fall back to whatever the URL carried.
     """
     client_settings: dict[str, str | int] = {
         # Required for `JSON`-column DDL on ClickHouse Cloud as of 25.12.
@@ -53,24 +51,16 @@ def open_clickhouse_client(*, log_comment: str | None = None) -> Iterator[Client
     }
     if log_comment:
         client_settings["log_comment"] = log_comment
-    # clickhouse-connect's per-field args take precedence over the DSN's
-    # parsed values (`port = port or parsed.port`), so when CLICKHOUSE_URL
-    # is set we hand off the DSN exclusively and let it drive every field.
-    if settings.CLICKHOUSE_URL:
-        client = clickhouse_connect.get_client(
-            dsn=settings.CLICKHOUSE_URL,
-            settings=client_settings,
-        )
-    else:
-        client = clickhouse_connect.get_client(
-            host=settings.CLICKHOUSE_HOST,
-            port=settings.CLICKHOUSE_PORT,
-            username=settings.CLICKHOUSE_USER,
-            password=settings.CLICKHOUSE_PASSWORD,
-            database=settings.CLICKHOUSE_DATABASE,
-            secure=settings.CLICKHOUSE_SECURE,
-            settings=client_settings,
-        )
+    client = clickhouse_connect.get_client(
+        dsn=settings.CLICKHOUSE_URL,
+        host=settings.CLICKHOUSE_HOST,
+        port=settings.CLICKHOUSE_PORT,
+        username=settings.CLICKHOUSE_USER,
+        password=settings.CLICKHOUSE_PASSWORD,
+        database=settings.CLICKHOUSE_DATABASE,
+        secure=settings.CLICKHOUSE_SECURE,
+        settings=client_settings,
+    )
     try:
         yield client
     finally:

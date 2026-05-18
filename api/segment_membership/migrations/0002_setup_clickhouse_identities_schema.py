@@ -10,18 +10,16 @@ time (most-recent `inserted_at` wins), and the refresh task adds
 `FROM IDENTITIES FINAL` for strict reads. The translator's emitted
 predicates are engine-agnostic and work unchanged.
 
-No-op when `CLICKHOUSE_HOST` is unset, so self-hosted installs
+No-op when `CLICKHOUSE_ENABLED` is False, so self-hosted installs
 without ClickHouse (and the test suite) migrate cleanly.
 """
 
+from django.conf import settings
 from django.db import migrations
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.migrations.state import StateApps
 
-from segment_membership.services import (
-    is_clickhouse_configured,
-    open_clickhouse_client,
-)
+from segment_membership.services import open_clickhouse_client
 
 _SCHEMA_DDL = """\
 CREATE TABLE IF NOT EXISTS IDENTITIES (
@@ -54,7 +52,7 @@ ORDER BY (environment_id, id)
 def setup_clickhouse_identities_schema(
     apps: StateApps, schema_editor: BaseDatabaseSchemaEditor
 ) -> None:
-    if not is_clickhouse_configured():
+    if not settings.CLICKHOUSE_ENABLED:
         return
     with open_clickhouse_client() as client:
         client.command(_SCHEMA_DDL)

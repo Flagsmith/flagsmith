@@ -2,6 +2,7 @@ import importlib
 from unittest.mock import MagicMock
 
 from clickhouse_connect.driver import Client
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 # Migration module names start with a digit, which `import` can't parse;
@@ -13,13 +14,10 @@ migration_module = importlib.import_module(
 
 def test_setup_clickhouse_identities_schema__unconfigured__skips(
     mocker: MockerFixture,
+    settings: SettingsWrapper,
 ) -> None:
     # Given ClickHouse settings unconfigured
-    mocker.patch.object(
-        migration_module,
-        "is_clickhouse_configured",
-        return_value=False,
-    )
+    settings.CLICKHOUSE_ENABLED = False
     open_client = mocker.patch.object(migration_module, "open_clickhouse_client")
 
     # When the migration's RunPython entry runs
@@ -31,13 +29,10 @@ def test_setup_clickhouse_identities_schema__unconfigured__skips(
 
 def test_setup_clickhouse_identities_schema__configured__runs_ddl(
     mocker: MockerFixture,
+    settings: SettingsWrapper,
 ) -> None:
     # Given ClickHouse configured and a mocked client
-    mocker.patch.object(
-        migration_module,
-        "is_clickhouse_configured",
-        return_value=True,
-    )
+    settings.CLICKHOUSE_ENABLED = True
     client = MagicMock(spec=Client)
     open_client = mocker.patch.object(migration_module, "open_clickhouse_client")
     open_client.return_value.__enter__.return_value = client

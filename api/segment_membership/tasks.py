@@ -4,8 +4,8 @@ refresh per-segment counts in the `SegmentMembership` cache.
 The backfill recurs daily and, once it finishes, fans out one
 `refresh_project_segment_counts` per project — guarantees the refresh
 always reads the freshly backfilled snapshot rather than racing a
-separate schedule. Both tasks short-circuit when `CLICKHOUSE_HOST` is
-unset, and skip per-organisation when the
+separate schedule. Both tasks short-circuit when `CLICKHOUSE_ENABLED`
+is False, and skip per-organisation when the
 `segment_membership_inspection` FoF flag is False.
 
 ClickHouse's `IDENTITIES` table is `ReplacingMergeTree(inserted_at)
@@ -18,6 +18,7 @@ from datetime import timedelta
 from typing import cast
 
 import structlog
+from django.conf import settings
 from django.utils import timezone
 from flagsmith_schemas.dynamodb import Identity as DynamoIdentity
 from task_processor.decorators import (
@@ -38,7 +39,6 @@ from segment_membership.models import SegmentMembership
 from segment_membership.services import (
     compute_segment_counts_for_project,
     get_projects_to_process,
-    is_clickhouse_configured,
     is_membership_enabled,
     open_clickhouse_client,
 )
@@ -75,7 +75,7 @@ def backfill_identities_to_clickhouse() -> None:
     `refresh_project_segment_counts` task per project so the count
     refresh always sees fresh data.
     """
-    if not is_clickhouse_configured():
+    if not settings.CLICKHOUSE_ENABLED:
         logger.info("backfill.skipped", reason="clickhouse_not_configured")
         return
 
@@ -144,7 +144,7 @@ def refresh_project_segment_counts(project_id: int) -> None:
     """Compute per-segment match counts for a single project and upsert
     into `SegmentMembership`. Re-checks the FoF flag at execution time
     so a stale fan-out skips orgs that have since been disabled."""
-    if not is_clickhouse_configured():
+    if not settings.CLICKHOUSE_ENABLED:
         logger.info(
             "refresh.project.skipped",
             project__id=project_id,

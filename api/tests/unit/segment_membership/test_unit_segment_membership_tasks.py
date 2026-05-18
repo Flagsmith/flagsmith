@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 from clickhouse_connect.driver import Client
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
@@ -18,10 +19,11 @@ from tests.types import EnableFeaturesFixture
 
 def test_backfill_identities_to_clickhouse__no_clickhouse_creds__skips(
     mocker: MockerFixture,
+    settings: SettingsWrapper,
     log: StructuredLogCapture,
 ) -> None:
     # Given ClickHouse settings unconfigured
-    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=False)
+    settings.CLICKHOUSE_ENABLED = False
     spy = mocker.patch.object(tasks, "open_clickhouse_client")
 
     # When the task runs
@@ -34,9 +36,10 @@ def test_backfill_identities_to_clickhouse__no_clickhouse_creds__skips(
 
 def test_backfill_identities_to_clickhouse__dynamo_disabled__skips(
     mocker: MockerFixture,
+    settings: SettingsWrapper,
 ) -> None:
     # Given ClickHouse configured but Dynamo wrapper disabled
-    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=True)
+    settings.CLICKHOUSE_ENABLED = True
     spy = mocker.patch.object(tasks, "open_clickhouse_client")
     mocker.patch.object(
         tasks,
@@ -53,6 +56,7 @@ def test_backfill_identities_to_clickhouse__dynamo_disabled__skips(
 
 def test_backfill_identities_to_clickhouse__happy_path__bulk_inserts(
     mocker: MockerFixture,
+    settings: SettingsWrapper,
     project: Project,
     environment: Environment,
     segment: Segment,
@@ -62,7 +66,7 @@ def test_backfill_identities_to_clickhouse__happy_path__bulk_inserts(
     # Given a project with a canonical segment and a Dynamo wrapper
     # yielding two identities for its environment
     enable_features("segment_membership_inspection")
-    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=True)
+    settings.CLICKHOUSE_ENABLED = True
     client = MagicMock(spec=Client)
     mocker.patch.object(
         tasks, "open_clickhouse_client"
@@ -128,6 +132,7 @@ def test_backfill_identities_to_clickhouse__happy_path__bulk_inserts(
 
 def test_backfill_identities_to_clickhouse__insert_fails__logs_and_continues(
     mocker: MockerFixture,
+    settings: SettingsWrapper,
     project: Project,
     environment: Environment,
     segment: Segment,
@@ -136,7 +141,7 @@ def test_backfill_identities_to_clickhouse__insert_fails__logs_and_continues(
 ) -> None:
     # Given the bulk insert blows up mid-batch
     enable_features("segment_membership_inspection")
-    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=True)
+    settings.CLICKHOUSE_ENABLED = True
     client = MagicMock(spec=Client)
     client.insert.side_effect = RuntimeError("boom")
     mocker.patch.object(
@@ -166,6 +171,7 @@ def test_backfill_identities_to_clickhouse__insert_fails__logs_and_continues(
 
 def test_backfill_identities_to_clickhouse__multiple_projects__fans_out_refresh_per_project(
     mocker: MockerFixture,
+    settings: SettingsWrapper,
     project: Project,
     project_b: Project,
     segment: Segment,
@@ -174,7 +180,7 @@ def test_backfill_identities_to_clickhouse__multiple_projects__fans_out_refresh_
     # Given two FoF-enabled projects with canonical segments
     enable_features("segment_membership_inspection")
     Segment.objects.create(name="seg-b", project=project_b)
-    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=True)
+    settings.CLICKHOUSE_ENABLED = True
     client = MagicMock(spec=Client)
     mocker.patch.object(
         tasks, "open_clickhouse_client"
@@ -197,11 +203,12 @@ def test_backfill_identities_to_clickhouse__multiple_projects__fans_out_refresh_
 
 def test_refresh_project_segment_counts__no_clickhouse_creds__skips(
     mocker: MockerFixture,
+    settings: SettingsWrapper,
     project: Project,
     log: StructuredLogCapture,
 ) -> None:
     # Given ClickHouse unconfigured
-    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=False)
+    settings.CLICKHOUSE_ENABLED = False
     spy = mocker.patch.object(tasks, "open_clickhouse_client")
 
     # When the per-project task runs
@@ -218,11 +225,12 @@ def test_refresh_project_segment_counts__no_clickhouse_creds__skips(
 
 def test_refresh_project_segment_counts__ff_disabled__skips(
     mocker: MockerFixture,
+    settings: SettingsWrapper,
     project: Project,
     log: StructuredLogCapture,
 ) -> None:
     # Given ClickHouse configured but FoF flag off (default)
-    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=True)
+    settings.CLICKHOUSE_ENABLED = True
     spy = mocker.patch.object(tasks, "open_clickhouse_client")
 
     # When the per-project task runs
@@ -238,6 +246,7 @@ def test_refresh_project_segment_counts__ff_disabled__skips(
 
 def test_refresh_project_segment_counts__compute_fails__logs(
     mocker: MockerFixture,
+    settings: SettingsWrapper,
     project: Project,
     segment: Segment,
     enable_features: EnableFeaturesFixture,
@@ -245,7 +254,7 @@ def test_refresh_project_segment_counts__compute_fails__logs(
 ) -> None:
     # Given a project where count compute throws
     enable_features("segment_membership_inspection")
-    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=True)
+    settings.CLICKHOUSE_ENABLED = True
     client = MagicMock(spec=Client)
     mocker.patch.object(
         tasks, "open_clickhouse_client"
@@ -263,6 +272,7 @@ def test_refresh_project_segment_counts__compute_fails__logs(
 
 def test_refresh_project_segment_counts__counts_returned__upserts_per_env_rows(
     mocker: MockerFixture,
+    settings: SettingsWrapper,
     project: Project,
     environment: Environment,
     segment: Segment,
@@ -270,7 +280,7 @@ def test_refresh_project_segment_counts__counts_returned__upserts_per_env_rows(
 ) -> None:
     # Given a project with a canonical segment and stubbed compute
     enable_features("segment_membership_inspection")
-    mocker.patch.object(tasks, "is_clickhouse_configured", return_value=True)
+    settings.CLICKHOUSE_ENABLED = True
     client = MagicMock(spec=Client)
     open_client = mocker.patch.object(tasks, "open_clickhouse_client")
     open_client.return_value.__enter__.return_value = client
