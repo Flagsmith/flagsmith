@@ -648,7 +648,7 @@ if ENABLE_DB_LOGGING:
 CACHE_FLAGS_SECONDS = env.int("CACHE_FLAGS_SECONDS", default=0)
 FLAGS_CACHE_LOCATION = "environment-flags"
 CHARGEBEE_CACHE_LOCATION = "chargebee-objects"
-
+CACHE_KEY_PREFIX = env.str("CACHE_KEY_PREFIX", default="")
 ENVIRONMENT_CACHE_SECONDS = env.int("ENVIRONMENT_CACHE_SECONDS", default=60)
 ENVIRONMENT_CACHE_BACKEND = env.str(
     "ENVIRONMENT_CACHE_BACKEND",
@@ -1037,7 +1037,11 @@ if SAML_INSTALLED:
         subcast=str,
         default=[],
     )
-
+# Apply key prefix to all Redis-backed caches to support
+# ACL-based multi-tenancy on shared Redis instances.
+for _cache_config in CACHES.values():
+    if "redis" in _cache_config.get("BACKEND", "").lower():  # type: ignore[attr-defined]
+        _cache_config["KEY_PREFIX"] = CACHE_KEY_PREFIX  # type: ignore[index]
 
 WORKFLOWS_LOGIC_INSTALLED = importlib.util.find_spec("workflows_logic") is not None
 
