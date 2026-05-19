@@ -54,6 +54,7 @@ export type PaidFeature =
   | 'CREATE_ADDITIONAL_PROJECT'
   | '2FA'
   | 'RELEASE_PIPELINES'
+  | 'WAREHOUSE'
 
 export type AppFeature = PaidFeature | 'FEATURE_HEALTH'
 
@@ -221,7 +222,11 @@ const Utils = Object.assign({}, BaseUtils, {
   flagsmithFeatureExists(flag: string) {
     return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
   },
-  getContentType(contentTypes: ContentType[] | undefined, model: string, type: string) {
+  getContentType(
+    contentTypes: ContentType[] | undefined,
+    model: string,
+    type: string,
+  ) {
     return contentTypes?.find((c: ContentType) => c[model] === type) || null
   },
   getCreateProjectPermission(organisation: Organisation) {
@@ -531,6 +536,17 @@ const Utils = Object.assign({}, BaseUtils, {
       case 'METADATA':
       case 'RELEASE_PIPELINES': {
         plan = 'enterprise'
+        break
+      }
+      case 'WAREHOUSE': {
+        const remotePlans: string[] = Utils.getFlagsmithJSONValue(
+          'experimentation_warehouse_connection',
+          [],
+        )
+        const allowedPlans = [...remotePlans, 'enterprise']
+        const planHierarchy: Plan[] = ['start-up', 'scale-up', 'enterprise']
+        plan =
+          planHierarchy.find((p) => allowedPlans.includes(p)) || 'enterprise'
         break
       }
 

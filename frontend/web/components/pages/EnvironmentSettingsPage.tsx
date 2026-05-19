@@ -46,6 +46,7 @@ import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import { useRouteContext } from 'components/providers/RouteContext'
 import SettingTitle from 'components/SettingTitle'
 import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
+import WarehouseTab from 'components/WarehouseTab'
 
 const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
   { label: 'Inherit from Project', value: null },
@@ -900,6 +901,15 @@ const EnvironmentSettingsPage: React.FC = () => {
                       )}
                     </FormGroup>
                   </TabItem>
+                  {Utils.getPlansPermission('WAREHOUSE') && (
+                    <TabItem tabLabel='Warehouse'>
+                      <div className='mt-4'>
+                        <WarehouseTab
+                          environmentId={match.params.environmentId}
+                        />
+                      </div>
+                    </TabItem>
+                  )}
                   {metadataEnable && environmentContentType?.id && (
                     <TabItem tabLabel='Custom Fields'>
                       <FormGroup className='mt-5 setting'>
