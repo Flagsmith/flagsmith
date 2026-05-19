@@ -12,11 +12,10 @@ def test_get_segment__no_memberships__returns_empty_list(
     project: int,
     segment: int,
 ) -> None:
-    # Given a segment with no materialised SegmentMembershipCount rows
-    # When the segment is fetched
+    # Given / When
     response = admin_client.get(f"/api/v1/projects/{project}/segments/{segment}/")
 
-    # Then the membership_counts field is present and empty
+    # Then
     assert response.status_code == status.HTTP_200_OK
     body: dict[str, Any] = response.json()
     assert body["membership_counts"] == []
@@ -28,7 +27,7 @@ def test_get_segment__one_membership_per_environment__returns_per_env_counts(
     segment: int,
     environment: int,
 ) -> None:
-    # Given one SegmentMembershipCount row in this segment's environment
+    # Given
     synced_at = datetime(2026, 5, 1, tzinfo=timezone.utc)
     SegmentMembershipCount.objects.create(
         segment_id=segment,
@@ -37,10 +36,10 @@ def test_get_segment__one_membership_per_environment__returns_per_env_counts(
         last_synced_at=synced_at,
     )
 
-    # When the segment is fetched
+    # When
     response = admin_client.get(f"/api/v1/projects/{project}/segments/{segment}/")
 
-    # Then the membership_counts field carries one entry keyed by environment id
+    # Then
     assert response.status_code == status.HTTP_200_OK
     body: dict[str, Any] = response.json()
     assert body["membership_counts"] == [

@@ -21,14 +21,14 @@ def test_backfill_identities_to_clickhouse__no_clickhouse_creds__skips(
     settings: SettingsWrapper,
     log: StructuredLogCapture,
 ) -> None:
-    # Given ClickHouse settings unconfigured
+    # Given
     settings.CLICKHOUSE_ENABLED = False
     spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
 
-    # When the task runs
+    # When
     backfill_identities_to_clickhouse()
 
-    # Then it short-circuits without opening a cursor
+    # Then
     spy.assert_not_called()
     assert any(e["event"] == "backfill.skipped" for e in log.events)
 
@@ -37,7 +37,7 @@ def test_backfill_identities_to_clickhouse__dynamo_disabled__skips(
     mocker: MockerFixture,
     settings: SettingsWrapper,
 ) -> None:
-    # Given ClickHouse configured but Dynamo wrapper disabled
+    # Given
     settings.CLICKHOUSE_ENABLED = True
     spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
     mocker.patch.object(
@@ -46,10 +46,10 @@ def test_backfill_identities_to_clickhouse__dynamo_disabled__skips(
         return_value=MagicMock(is_enabled=False),
     )
 
-    # When the task runs
+    # When
     backfill_identities_to_clickhouse()
 
-    # Then it skips without opening a cursor
+    # Then
     spy.assert_not_called()
 
 
@@ -62,8 +62,7 @@ def test_backfill_identities_to_clickhouse__happy_path__bulk_inserts(
     enable_features: EnableFeaturesFixture,
     log: StructuredLogCapture,
 ) -> None:
-    # Given a project with a canonical segment and a Dynamo wrapper
-    # yielding two identities for its environment
+    # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     cursor = MagicMock()
@@ -93,12 +92,10 @@ def test_backfill_identities_to_clickhouse__happy_path__bulk_inserts(
     )
     mocker.patch.object(tasks, "DynamoIdentityWrapper", return_value=wrapper)
 
-    # When the task runs
+    # When
     backfill_identities_to_clickhouse()
 
-    # Then ReplacingMergeTree handles dedup — no DELETE, just one bulk
-    # INSERT for the two identities. The cursor is opened with the
-    # per-(org, project) log_comment for spend attribution.
+    # Then
     open_cursor.assert_called_with(
         log_comment=(
             f"flagsmith:segment_membership:backfill"
@@ -106,7 +103,6 @@ def test_backfill_identities_to_clickhouse__happy_path__bulk_inserts(
             f":project_{project.id}"
         )
     )
-    cursor.executemany.assert_called_once()
     sql, rows_arg = cursor.executemany.call_args.args
     assert sql == (
         "INSERT INTO IDENTITIES "
@@ -118,8 +114,6 @@ def test_backfill_identities_to_clickhouse__happy_path__bulk_inserts(
         e["event"] == "backfill.environment.completed" and e["rows__count"] == 2
         for e in log.events
     )
-    # And a per-project count refresh is dispatched once the backfill
-    # finishes.
     refresh_dispatch.delay.assert_called_once_with(args=(project.id,))
 
 
@@ -132,7 +126,7 @@ def test_backfill_identities_to_clickhouse__insert_fails__logs_and_continues(
     enable_features: EnableFeaturesFixture,
     log: StructuredLogCapture,
 ) -> None:
-    # Given the bulk insert blows up mid-batch
+    # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     cursor = MagicMock()
@@ -154,10 +148,10 @@ def test_backfill_identities_to_clickhouse__insert_fails__logs_and_continues(
     )
     mocker.patch.object(tasks, "DynamoIdentityWrapper", return_value=wrapper)
 
-    # When the task runs
+    # When
     backfill_identities_to_clickhouse()
 
-    # Then the failure is logged and the loop continues
+    # Then
     assert any(e["event"] == "backfill.environment.failed" for e in log.events)
 
 
@@ -169,7 +163,7 @@ def test_backfill_identities_to_clickhouse__multiple_projects__fans_out_refresh_
     segment: Segment,
     enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given two FoF-enabled projects with canonical segments
+    # Given
     enable_features("segment_membership_inspection")
     Segment.objects.create(name="seg-b", project=project_b)
     settings.CLICKHOUSE_ENABLED = True
@@ -181,11 +175,10 @@ def test_backfill_identities_to_clickhouse__multiple_projects__fans_out_refresh_
     wrapper.iter_all_items_paginated.return_value = iter([])
     mocker.patch.object(tasks, "DynamoIdentityWrapper", return_value=wrapper)
 
-    # When the backfill runs
+    # When
     backfill_identities_to_clickhouse()
 
-    # Then a per-project refresh is dispatched for each project we
-    # actually processed (deduped) — once per project, not once per env
+    # Then
     dispatched_ids = {
         call.kwargs["args"][0] for call in refresh_dispatch.delay.call_args_list
     }
@@ -198,14 +191,14 @@ def test_refresh_project_segment_counts__no_clickhouse_creds__skips(
     project: Project,
     log: StructuredLogCapture,
 ) -> None:
-    # Given ClickHouse unconfigured
+    # Given
     settings.CLICKHOUSE_ENABLED = False
     spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
 
-    # When the per-project task runs
+    # When
     refresh_project_segment_counts(project.id)
 
-    # Then it short-circuits without opening a cursor
+    # Then
     spy.assert_not_called()
     assert any(
         e["event"] == "refresh.project.skipped"
@@ -220,14 +213,14 @@ def test_refresh_project_segment_counts__ff_disabled__skips(
     project: Project,
     log: StructuredLogCapture,
 ) -> None:
-    # Given ClickHouse configured but FoF flag off (default)
+    # Given
     settings.CLICKHOUSE_ENABLED = True
     spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
 
-    # When the per-project task runs
+    # When
     refresh_project_segment_counts(project.id)
 
-    # Then it skips without opening a cursor
+    # Then
     spy.assert_not_called()
     assert any(
         e["event"] == "refresh.project.skipped" and e["reason"] == "ff_disabled"
@@ -243,7 +236,7 @@ def test_refresh_project_segment_counts__compute_fails__logs(
     enable_features: EnableFeaturesFixture,
     log: StructuredLogCapture,
 ) -> None:
-    # Given a project where count compute throws
+    # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     cursor = MagicMock()
@@ -253,10 +246,10 @@ def test_refresh_project_segment_counts__compute_fails__logs(
         tasks, "compute_segment_counts_for_project", side_effect=RuntimeError("boom")
     )
 
-    # When the per-project task runs
+    # When
     refresh_project_segment_counts(project.id)
 
-    # Then the failure is logged
+    # Then
     assert any(e["event"] == "refresh.project.failed" for e in log.events)
 
 
@@ -268,7 +261,7 @@ def test_refresh_project_segment_counts__counts_returned__upserts_per_env_rows(
     segment: Segment,
     enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given a project with a canonical segment and stubbed compute
+    # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     cursor = MagicMock()
@@ -286,18 +279,15 @@ def test_refresh_project_segment_counts__counts_returned__upserts_per_env_rows(
         ],
     )
 
-    # When the per-project task runs
+    # When
     refresh_project_segment_counts(project.id)
 
-    # Then a SegmentMembershipCount row exists keyed by (segment, environment)
+    # Then
     membership = SegmentMembershipCount.objects.get(
         segment=segment, environment=environment
     )
     assert membership.count == 42
     assert membership.last_synced_at is not None
-
-    # ...and the cursor was opened with a per-(org, project) log_comment so
-    # the refresh's CH spend attributes cleanly.
     open_cursor.assert_called_once_with(
         log_comment=(
             f"flagsmith:segment_membership:refresh"
