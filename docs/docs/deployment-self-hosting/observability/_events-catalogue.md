@@ -166,15 +166,15 @@ Attributes:
 ### `gitlab.external_resource.metadata.refreshed`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services/metadata.py:51`
+ - `api/integrations/gitlab/services/metadata.py:54`
 
 Attributes:
+ - `changed`
  - `external_resource.id`
  - `feature.id`
  - `object_kind`
  - `organisation.id`
  - `project.id`
- - `state`
 
 ### `gitlab.feature.tagged`
 

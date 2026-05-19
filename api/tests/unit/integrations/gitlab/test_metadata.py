@@ -35,6 +35,7 @@ def test_update_resource_metadata__issue_state_changed__updates_metadata_and_log
                 "url": "https://gitlab.example.com/testorg/testrepo/-/issues/1",
                 "state": "closed",
                 "action": "close",
+                "title": "Bug",
             },
         },
     )
@@ -52,7 +53,52 @@ def test_update_resource_metadata__issue_state_changed__updates_metadata_and_log
             "feature__id": feature.id,
             "external_resource__id": resource.id,
             "object_kind": "issue",
-            "state": "closed",
+            "changed": ["state"],
+        },
+    ]
+
+
+@pytest.mark.django_db
+def test_update_resource_metadata__issue_title_changed__updates_metadata_and_logs(
+    feature: Feature,
+    gitlab_webhook: GitLabWebhook,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    resource = FeatureExternalResource.objects.create(
+        feature=feature,
+        url="https://gitlab.example.com/testorg/testrepo/-/issues/1",
+        type=ResourceType.GITLAB_ISSUE.value,
+        metadata='{"state": "opened", "title": "Old name"}',
+    )
+
+    # When
+    update_resource_metadata(
+        webhook=gitlab_webhook,
+        payload={
+            "object_kind": "issue",
+            "object_attributes": {
+                "url": "https://gitlab.example.com/testorg/testrepo/-/issues/1",
+                "state": "opened",
+                "title": "New name",
+            },
+        },
+    )
+
+    # Then
+    resource.refresh_from_db()
+    assert resource.metadata is not None
+    assert json.loads(resource.metadata) == {"state": "opened", "title": "New name"}
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "external_resource.metadata.refreshed",
+            "organisation__id": gitlab_webhook.gitlab_configuration.project.organisation_id,
+            "project__id": gitlab_webhook.gitlab_configuration.project_id,
+            "feature__id": feature.id,
+            "external_resource__id": resource.id,
+            "object_kind": "issue",
+            "changed": ["title"],
         },
     ]
 
@@ -190,7 +236,7 @@ def test_update_resource_metadata__merge_request_work_in_progress_only__updates_
 
 
 @pytest.mark.django_db
-def test_update_resource_metadata__no_state_change__skips_write_and_log(
+def test_update_resource_metadata__nothing_changed__skips_write_and_log(
     feature: Feature,
     gitlab_webhook: GitLabWebhook,
     log: StructuredLogCapture,

@@ -96,6 +96,7 @@ def map_gitlab_webhook_payload_to_resource_metadata(
     attrs = payload.get("object_attributes") or {}
     object_kind = payload.get("object_kind")
     state = attrs.get("state")
+    title = attrs.get("title")
     metadata: GitLabResourceMetadata = {}
     if object_kind == "issue" and state:
         metadata["state"] = state
@@ -108,4 +109,8 @@ def map_gitlab_webhook_payload_to_resource_metadata(
             metadata["draft"] = bool(
                 attrs.get("draft") or attrs.get("work_in_progress")
             )
+    else:
+        return metadata
+    if title:
+        metadata["title"] = title
     return metadata

@@ -44,7 +44,10 @@ def update_resource_metadata(
     for resource in resources:
         current = json.loads(resource.metadata) if resource.metadata else {}
         merged: GitLabResourceMetadata = {**current, **new_fields}
-        if merged == current:
+        changed = sorted(
+            name for name, value in new_fields.items() if current.get(name) != value
+        )
+        if not changed:
             continue
         resource.metadata = json.dumps(merged)
         resource.save(update_fields=["metadata"])
@@ -53,5 +56,5 @@ def update_resource_metadata(
             feature__id=resource.feature_id,
             external_resource__id=resource.id,
             object_kind=payload.get("object_kind"),
-            state=merged.get("state"),
+            changed=changed,
         )
