@@ -2,7 +2,7 @@ import React, { FC } from 'react'
 import {
   useCreateWarehouseConnectionMutation,
   useDeleteWarehouseConnectionMutation,
-  useGetWarehouseConnectionQuery,
+  useGetWarehouseConnectionsQuery,
 } from 'common/services/useWarehouseConnection'
 import Setting from './Setting'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
@@ -12,11 +12,7 @@ type WarehouseTabProps = {
 }
 
 const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
-  const {
-    data: connection,
-    error,
-    isLoading,
-  } = useGetWarehouseConnectionQuery(
+  const { data: connections, isLoading } = useGetWarehouseConnectionsQuery(
     { environmentId },
     { skip: !environmentId },
   )
@@ -25,9 +21,9 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
   const [deleteConnection] = useDeleteWarehouseConnectionMutation()
 
   const hasNoConnection =
-    !connection && !isLoading && (error as { status?: number })?.status === 404
+    !isLoading && (!connections || connections.length === 0)
 
-  if (hasNoConnection || (!connection && !isLoading)) {
+  if (hasNoConnection) {
     return (
       <div className='mt-4 col-md-12'>
         <Setting
@@ -56,23 +52,26 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     )
   }
 
-  if (!connection) {
+  if (!connections || connections.length === 0) {
     return null
   }
 
   return (
     <div className='mt-4 col-md-12'>
-      <WarehouseConnectionCard
-        connection={connection}
-        onDelete={() =>
-          deleteConnection({ environmentId })
-            .unwrap()
-            .then(() => toast('Warehouse connection removed'))
-            .catch(() =>
-              toast('Failed to remove warehouse connection', 'danger'),
-            )
-        }
-      />
+      {connections.map((connection) => (
+        <WarehouseConnectionCard
+          key={connection.uuid}
+          connection={connection}
+          onDelete={() =>
+            deleteConnection({ environmentId })
+              .unwrap()
+              .then(() => toast('Warehouse connection removed'))
+              .catch(() =>
+                toast('Failed to remove warehouse connection', 'danger'),
+              )
+          }
+        />
+      ))}
     </div>
   )
 }
