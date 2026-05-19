@@ -368,7 +368,7 @@ Attributes:
 ### `segment_membership.refresh.project.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:169`
+ - `api/segment_membership/tasks.py:170`
 
 Attributes:
  - `membership_counts.count`
@@ -377,7 +377,7 @@ Attributes:
 ### `segment_membership.refresh.project.failed`
 
 Logged at `exception` from:
- - `api/segment_membership/tasks.py:157`
+ - `api/segment_membership/tasks.py:158`
 
 Attributes:
  - `project.id`
@@ -385,8 +385,8 @@ Attributes:
 ### `segment_membership.refresh.project.skipped`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:128`
- - `api/segment_membership/tasks.py:137`
+ - `api/segment_membership/tasks.py:129`
+ - `api/segment_membership/tasks.py:138`
 
 Attributes:
  - `project.id`

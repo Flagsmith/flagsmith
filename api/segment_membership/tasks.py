@@ -117,7 +117,8 @@ def backfill_identities_to_clickhouse() -> None:
 
 
 @register_task_handler(
-    # 30m bounds runaway queries; legitimate runs are seconds to minutes.
+    # 30m backstop so a stuck CH client or dispatcher releases the task
+    # processor slot; legitimate runs are seconds to minutes.
     timeout=timedelta(minutes=30),
 )
 def refresh_project_segment_counts(project_id: int) -> None:
