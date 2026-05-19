@@ -8,6 +8,6 @@ urlpatterns = [
     path(
         "",
         WarehouseConnectionView.as_view(),
-        name="warehouse-connection",
+        name="warehouse-connections",
     ),
 ]

@@ -21,15 +21,8 @@ class WarehouseConnectionView(APIView):
 
     def get(self, request: Request, environment_api_key: str) -> Response:
         environment = get_object_or_404(Environment, api_key=environment_api_key)
-        connection = WarehouseConnection.objects.filter(
-            environment=environment,
-        ).first()
-        if connection is None:
-            return Response(
-                {"detail": "Not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        return Response(WarehouseConnectionSerializer(connection).data)
+        connections = WarehouseConnection.objects.filter(environment=environment)
+        return Response(WarehouseConnectionSerializer(connections, many=True).data)
 
     def post(self, request: Request, environment_api_key: str) -> Response:
         environment = get_object_or_404(Environment, api_key=environment_api_key)

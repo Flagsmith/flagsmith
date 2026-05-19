@@ -22,6 +22,6 @@ def reverse_warehouse_connection_url(environment_api_key: str) -> str:
     from django.urls import reverse
 
     return reverse(
-        "api-v1:environments:experimentation:warehouse-connection",
+        "api-v1:environments:experimentation:warehouse-connections",
         args=[environment_api_key],
     )
