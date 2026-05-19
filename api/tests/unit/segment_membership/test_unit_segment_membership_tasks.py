@@ -1,6 +1,5 @@
 from unittest.mock import MagicMock
 
-from clickhouse_connect.driver import Client
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
@@ -24,12 +23,12 @@ def test_backfill_identities_to_clickhouse__no_clickhouse_creds__skips(
 ) -> None:
     # Given ClickHouse settings unconfigured
     settings.CLICKHOUSE_ENABLED = False
-    spy = mocker.patch.object(tasks, "open_clickhouse_client")
+    spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
 
     # When the task runs
     backfill_identities_to_clickhouse()
 
-    # Then it short-circuits without opening a client
+    # Then it short-circuits without opening a cursor
     spy.assert_not_called()
     assert any(e["event"] == "backfill.skipped" for e in log.events)
 
@@ -40,7 +39,7 @@ def test_backfill_identities_to_clickhouse__dynamo_disabled__skips(
 ) -> None:
     # Given ClickHouse configured but Dynamo wrapper disabled
     settings.CLICKHOUSE_ENABLED = True
-    spy = mocker.patch.object(tasks, "open_clickhouse_client")
+    spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
     mocker.patch.object(
         tasks,
         "DynamoIdentityWrapper",
@@ -50,7 +49,7 @@ def test_backfill_identities_to_clickhouse__dynamo_disabled__skips(
     # When the task runs
     backfill_identities_to_clickhouse()
 
-    # Then it skips without opening a client
+    # Then it skips without opening a cursor
     spy.assert_not_called()
 
 
@@ -67,10 +66,9 @@ def test_backfill_identities_to_clickhouse__happy_path__bulk_inserts(
     # yielding two identities for its environment
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
-    client = MagicMock(spec=Client)
-    mocker.patch.object(
-        tasks, "open_clickhouse_client"
-    ).return_value.__enter__.return_value = client
+    cursor = MagicMock()
+    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    open_cursor.return_value.__enter__.return_value = cursor
     refresh_dispatch = mocker.patch.object(tasks, "refresh_project_segment_counts")
     wrapper = MagicMock(is_enabled=True)
     wrapper.iter_all_items_paginated.return_value = iter(
@@ -99,28 +97,23 @@ def test_backfill_identities_to_clickhouse__happy_path__bulk_inserts(
     backfill_identities_to_clickhouse()
 
     # Then ReplacingMergeTree handles dedup — no DELETE, just one bulk
-    # INSERT for the two identities, tagged with the per-(org, project)
-    # log_comment for spend attribution.
-    client.insert.assert_called_once()
-    args = client.insert.call_args
-    assert args.args[0] == "IDENTITIES"
-    rows_arg = args.args[1]
-    assert {row[0] for row in rows_arg} == {environment.api_key}
-    assert {row[2] for row in rows_arg} == {"a", "b"}
-    assert args.kwargs["column_names"] == [
-        "environment_id",
-        "id",
-        "identifier",
-        "identity_key",
-        "traits",
-    ]
-    assert args.kwargs["settings"] == {
-        "log_comment": (
+    # INSERT for the two identities. The cursor is opened with the
+    # per-(org, project) log_comment for spend attribution.
+    open_cursor.assert_called_with(
+        log_comment=(
             f"flagsmith:segment_membership:backfill"
             f":org_{project.organisation_id}"
             f":project_{project.id}"
         )
-    }
+    )
+    cursor.executemany.assert_called_once()
+    sql, rows_arg = cursor.executemany.call_args.args
+    assert sql == (
+        "INSERT INTO IDENTITIES "
+        "(environment_id, id, identifier, identity_key, traits) VALUES"
+    )
+    assert {row[0] for row in rows_arg} == {environment.api_key}
+    assert {row[2] for row in rows_arg} == {"a", "b"}
     assert any(
         e["event"] == "backfill.environment.completed" and e["rows__count"] == 2
         for e in log.events
@@ -142,11 +135,10 @@ def test_backfill_identities_to_clickhouse__insert_fails__logs_and_continues(
     # Given the bulk insert blows up mid-batch
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
-    client = MagicMock(spec=Client)
-    client.insert.side_effect = RuntimeError("boom")
-    mocker.patch.object(
-        tasks, "open_clickhouse_client"
-    ).return_value.__enter__.return_value = client
+    cursor = MagicMock()
+    cursor.executemany.side_effect = RuntimeError("boom")
+    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    open_cursor.return_value.__enter__.return_value = cursor
     wrapper = MagicMock(is_enabled=True)
     wrapper.iter_all_items_paginated.return_value = iter(
         [
@@ -181,10 +173,9 @@ def test_backfill_identities_to_clickhouse__multiple_projects__fans_out_refresh_
     enable_features("segment_membership_inspection")
     Segment.objects.create(name="seg-b", project=project_b)
     settings.CLICKHOUSE_ENABLED = True
-    client = MagicMock(spec=Client)
-    mocker.patch.object(
-        tasks, "open_clickhouse_client"
-    ).return_value.__enter__.return_value = client
+    cursor = MagicMock()
+    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    open_cursor.return_value.__enter__.return_value = cursor
     refresh_dispatch = mocker.patch.object(tasks, "refresh_project_segment_counts")
     wrapper = MagicMock(is_enabled=True)
     wrapper.iter_all_items_paginated.return_value = iter([])
@@ -209,12 +200,12 @@ def test_refresh_project_segment_counts__no_clickhouse_creds__skips(
 ) -> None:
     # Given ClickHouse unconfigured
     settings.CLICKHOUSE_ENABLED = False
-    spy = mocker.patch.object(tasks, "open_clickhouse_client")
+    spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
 
     # When the per-project task runs
     refresh_project_segment_counts(project.id)
 
-    # Then it short-circuits without opening a client
+    # Then it short-circuits without opening a cursor
     spy.assert_not_called()
     assert any(
         e["event"] == "refresh.project.skipped"
@@ -231,12 +222,12 @@ def test_refresh_project_segment_counts__ff_disabled__skips(
 ) -> None:
     # Given ClickHouse configured but FoF flag off (default)
     settings.CLICKHOUSE_ENABLED = True
-    spy = mocker.patch.object(tasks, "open_clickhouse_client")
+    spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
 
     # When the per-project task runs
     refresh_project_segment_counts(project.id)
 
-    # Then it skips without opening a client
+    # Then it skips without opening a cursor
     spy.assert_not_called()
     assert any(
         e["event"] == "refresh.project.skipped" and e["reason"] == "ff_disabled"
@@ -255,10 +246,9 @@ def test_refresh_project_segment_counts__compute_fails__logs(
     # Given a project where count compute throws
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
-    client = MagicMock(spec=Client)
-    mocker.patch.object(
-        tasks, "open_clickhouse_client"
-    ).return_value.__enter__.return_value = client
+    cursor = MagicMock()
+    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    open_cursor.return_value.__enter__.return_value = cursor
     mocker.patch.object(
         tasks, "compute_segment_counts_for_project", side_effect=RuntimeError("boom")
     )
@@ -281,9 +271,9 @@ def test_refresh_project_segment_counts__counts_returned__upserts_per_env_rows(
     # Given a project with a canonical segment and stubbed compute
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
-    client = MagicMock(spec=Client)
-    open_client = mocker.patch.object(tasks, "open_clickhouse_client")
-    open_client.return_value.__enter__.return_value = client
+    cursor = MagicMock()
+    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    open_cursor.return_value.__enter__.return_value = cursor
     mocker.patch.object(
         tasks,
         "compute_segment_counts_for_project",
@@ -306,9 +296,9 @@ def test_refresh_project_segment_counts__counts_returned__upserts_per_env_rows(
     assert membership.count == 42
     assert membership.last_synced_at is not None
 
-    # ...and the client was opened with a per-(org, project) log_comment so
+    # ...and the cursor was opened with a per-(org, project) log_comment so
     # the refresh's CH spend attributes cleanly.
-    open_client.assert_called_once_with(
+    open_cursor.assert_called_once_with(
         log_comment=(
             f"flagsmith:segment_membership:refresh"
             f":org_{project.organisation_id}"

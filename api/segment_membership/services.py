@@ -1,10 +1,9 @@
 from contextlib import contextmanager
-from typing import Iterator
+from typing import Any, Iterator
 
-import clickhouse_connect
 import structlog
-from clickhouse_connect.driver import Client
-from django.conf import settings
+from django.db import connections
+from django.db.backends.utils import CursorWrapper
 from flag_engine.context.types import EvaluationContext
 from flagsmith_sql_flag_engine import TranslateContext, translate_segment
 from flagsmith_sql_flag_engine.dialects import ClickHouseDialect
@@ -30,32 +29,19 @@ def is_membership_enabled(organisation: Organisation) -> bool:
 
 
 @contextmanager
-def open_clickhouse_client(*, log_comment: str | None = None) -> Iterator[Client]:
-    """Open a clickhouse-connect client from `CLICKHOUSE_*` settings.
+def open_clickhouse_cursor(
+    *, log_comment: str | None = None
+) -> Iterator[CursorWrapper]:
+    """Yield a cursor bound to the `clickhouse` database alias.
 
     `log_comment` lands on every query as a session setting so CH's
     `system.query_log` carries per-org / per-project attribution.
     """
-    client_settings: dict[str, str | int] = {
-        # ClickHouse Cloud 25.12 requires this for `JSON`-column DDL.
-        "allow_experimental_json_type": 1,
-    }
-    if log_comment:
-        client_settings["log_comment"] = log_comment
-    client = clickhouse_connect.get_client(
-        dsn=settings.CLICKHOUSE_URL,
-        host=settings.CLICKHOUSE_HOST,
-        port=settings.CLICKHOUSE_PORT,
-        username=settings.CLICKHOUSE_USER,
-        password=settings.CLICKHOUSE_PASSWORD,
-        database=settings.CLICKHOUSE_DATABASE,
-        secure=settings.CLICKHOUSE_SECURE,
-        settings=client_settings,
-    )
-    try:
-        yield client
-    finally:
-        client.close()
+    with connections["clickhouse"].cursor() as cursor:
+        if log_comment:
+            # Underlying clickhouse-driver cursor exposes set_settings(...).
+            cursor.cursor.set_settings({"log_comment": log_comment})
+        yield cursor
 
 
 def get_projects_to_process() -> Iterator[Project]:
@@ -71,15 +57,15 @@ def get_projects_to_process() -> Iterator[Project]:
 
 
 def compute_segment_counts_for_project(
-    project: Project, client: Client
+    project: Project, cursor: CursorWrapper
 ) -> list[SegmentMembershipCount]:
     """Count identity matches per (canonical-segment, environment) for
     `project` in one `UNION ALL` query.
 
-    Returns unsaved `SegmentMembershipCount` instances with `count` and keys
-    populated; the caller stamps `last_synced_at` consistently across
-    the batch. Untranslatable segments and pairs with zero matches are
-    absent from the result. `FROM IDENTITIES FINAL` forces
+    Returns unsaved `SegmentMembershipCount` instances with `count` and
+    keys populated; the caller stamps `last_synced_at` consistently
+    across the batch. Untranslatable segments and pairs with zero
+    matches are absent from the result. `FROM IDENTITIES FINAL` forces
     ReplacingMergeTree to dedupe at read time so counts reflect the
     most-recent backfill regardless of merge state.
     """
@@ -115,7 +101,7 @@ def compute_segment_counts_for_project(
             f"SELECT {seg.id} AS segment_id, "
             f"i.environment_id AS env_key, count() AS c "
             f"FROM IDENTITIES AS i FINAL "
-            f"WHERE i.environment_id IN {{env_keys:Array(String)}} AND ({predicate}) "
+            f"WHERE i.environment_id IN %(env_keys)s AND ({predicate}) "
             f"GROUP BY i.environment_id"
         )
 
@@ -123,9 +109,10 @@ def compute_segment_counts_for_project(
         return []
 
     sql = "\nUNION ALL\n".join(select_clauses)
-    result = client.query(sql, parameters={"env_keys": list(env_id_by_key)})
+    cursor.execute(sql, {"env_keys": tuple(env_id_by_key)})
+    rows: list[tuple[Any, ...]] = cursor.fetchall()
     membership_counts: list[SegmentMembershipCount] = []
-    for row in result.result_rows:
+    for row in rows:
         env_id = env_id_by_key.get(str(row[1]))
         if env_id is None:
             continue

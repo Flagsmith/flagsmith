@@ -1,7 +1,7 @@
 """Daily backfill of IDENTITIES from Dynamo to ClickHouse, then per-project
-refresh of `SegmentMembershipCount` counts. Each backfill fans out the refresh so
-the count read always sees the fresh snapshot. Both tasks short-circuit when
-`CLICKHOUSE_ENABLED` is False or the org's `segment_membership_inspection`
+refresh of `SegmentMembershipCount` rows. Each backfill fans out the refresh
+so the count read always sees the fresh snapshot. Both tasks short-circuit
+when `CLICKHOUSE_ENABLED` is False or the org's `segment_membership_inspection`
 flag is off.
 """
 
@@ -31,7 +31,7 @@ from segment_membership.services import (
     compute_segment_counts_for_project,
     get_projects_to_process,
     is_membership_enabled,
-    open_clickhouse_client,
+    open_clickhouse_cursor,
 )
 from util.util import batched
 
@@ -46,6 +46,10 @@ _IDENTITIES_COLUMN_NAMES = (
     "identifier",
     "identity_key",
     "traits",
+)
+
+_INSERT_IDENTITIES_SQL = (
+    f"INSERT INTO IDENTITIES ({', '.join(_IDENTITIES_COLUMN_NAMES)}) VALUES"
 )
 
 
@@ -68,14 +72,14 @@ def backfill_identities_to_clickhouse() -> None:
         return
 
     refreshable_project_ids: list[int] = []
-    with open_clickhouse_client() as client:
-        for project in get_projects_to_process():
-            refreshable_project_ids.append(project.id)
-            log_comment = (
-                "flagsmith:segment_membership:backfill"
-                f":org_{project.organisation_id}"
-                f":project_{project.id}"
-            )
+    for project in get_projects_to_process():
+        refreshable_project_ids.append(project.id)
+        log_comment = (
+            "flagsmith:segment_membership:backfill"
+            f":org_{project.organisation_id}"
+            f":project_{project.id}"
+        )
+        with open_clickhouse_cursor(log_comment=log_comment) as cursor:
             for env in project.environments.all():
                 env_key = env.api_key
                 row_count = 0
@@ -91,12 +95,10 @@ def backfill_identities_to_clickhouse() -> None:
                                 )
                                 for doc in batch
                             ]
-                            client.insert(
-                                "IDENTITIES",
-                                rows,
-                                column_names=list(_IDENTITIES_COLUMN_NAMES),
-                                settings={"log_comment": log_comment},
-                            )
+                            # Django's CursorWrapper stub forbids dicts in
+                            # the params sequence; clickhouse-driver accepts
+                            # them as JSON-column payloads.
+                            cursor.executemany(_INSERT_IDENTITIES_SQL, rows)  # type: ignore[arg-type]
                             row_count += len(rows)
                 except Exception:
                     logger.exception(
@@ -149,10 +151,10 @@ def refresh_project_segment_counts(project_id: int) -> None:
     )
     with (
         flagsmith_segment_membership_refresh_duration_seconds.time(),
-        open_clickhouse_client(log_comment=log_comment) as client,
+        open_clickhouse_cursor(log_comment=log_comment) as cursor,
     ):
         try:
-            membership_counts = compute_segment_counts_for_project(project, client)
+            membership_counts = compute_segment_counts_for_project(project, cursor)
         except Exception:
             flagsmith_segment_membership_refresh_failures_total.inc()
             logger.exception("refresh.project.failed", project__id=project_id)

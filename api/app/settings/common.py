@@ -119,6 +119,7 @@ INSTALLED_APPS = [
     "features.release_pipelines.core",
     "segments",
     "segment_membership",
+    "clickhouse",
     "app",
     "e2etests",
     "simple_history",
@@ -1453,3 +1454,26 @@ CLICKHOUSE_DATABASE = env.str("CLICKHOUSE_DATABASE", default=None)
 CLICKHOUSE_SECURE = env.bool("CLICKHOUSE_SECURE", default=None)
 
 CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
+
+# Always installed: the router fences the `clickhouse` app's migrations off
+# the default Postgres database whether or not a CH alias is configured.
+DATABASE_ROUTERS.append("app.routers.ClickHouseRouter")
+
+if CLICKHOUSE_ENABLED:
+    _clickhouse_db: dict[str, Any] = {
+        "ENGINE": "clickhouse_backend.backend",
+        "HOST": CLICKHOUSE_HOST,
+        "PORT": CLICKHOUSE_PORT,
+        "USER": CLICKHOUSE_USER,
+        "PASSWORD": CLICKHOUSE_PASSWORD,
+        "NAME": CLICKHOUSE_DATABASE,
+        "OPTIONS": {
+            "dsn": CLICKHOUSE_URL,
+            "secure": CLICKHOUSE_SECURE,
+            "settings": {
+                # ClickHouse Cloud 25.12 requires this for `JSON`-column DDL.
+                "allow_experimental_json_type": 1,
+            },
+        },
+    }
+    DATABASES["clickhouse"] = _clickhouse_db  # type: ignore[assignment]

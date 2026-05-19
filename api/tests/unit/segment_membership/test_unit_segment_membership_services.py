@@ -1,7 +1,5 @@
 from unittest.mock import MagicMock
 
-from clickhouse_connect.driver import Client
-from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from environments.models import Environment
@@ -11,7 +9,7 @@ from segment_membership.services import (
     compute_segment_counts_for_project,
     get_projects_to_process,
     is_membership_enabled,
-    open_clickhouse_client,
+    open_clickhouse_cursor,
 )
 from segments.models import Segment, SegmentRule
 from tests.types import EnableFeaturesFixture
@@ -39,154 +37,45 @@ def test_is_membership_enabled__flag_on__returns_true(
     assert is_membership_enabled(organisation) is True
 
 
-def test_open_clickhouse_client__no_log_comment__yields_client_and_closes(
+def test_open_clickhouse_cursor__no_log_comment__yields_cursor(
     mocker: MockerFixture,
-    settings: SettingsWrapper,
 ) -> None:
-    # Given populated discrete CLICKHOUSE_* settings (no DSN), and a
-    # mocked client factory
-    settings.CLICKHOUSE_URL = None
-    settings.CLICKHOUSE_HOST = "ch.example.com"
-    settings.CLICKHOUSE_PORT = 8443
-    settings.CLICKHOUSE_USER = "default"
-    settings.CLICKHOUSE_PASSWORD = "secret"
-    settings.CLICKHOUSE_DATABASE = "default"
-    settings.CLICKHOUSE_SECURE = True
-
-    fake_client = MagicMock(spec=Client)
-    get_client = mocker.patch(
-        "clickhouse_connect.get_client",
-        return_value=fake_client,
+    # Given the `clickhouse` connection alias yields a mocked cursor
+    cursor = MagicMock()
+    connections = mocker.patch("segment_membership.services.connections")
+    connections.__getitem__.return_value.cursor.return_value.__enter__.return_value = (
+        cursor
     )
 
-    # When the context manager is entered and exited
-    with open_clickhouse_client() as client:
-        # Then it yields the underlying clickhouse-connect client...
-        assert client is fake_client
+    # When the context manager is entered without a log_comment
+    with open_clickhouse_cursor() as opened:
+        assert opened is cursor
 
-    # ...wired from the discrete CLICKHOUSE_* settings with the JSON-type
-    # flag flipped on, no log_comment override.
-    get_client.assert_called_once_with(
-        dsn=None,
-        host="ch.example.com",
-        port=8443,
-        username="default",
-        password="secret",
-        database="default",
-        secure=True,
-        settings={"allow_experimental_json_type": 1},
-    )
-    # ...and closes the client on exit
-    fake_client.close.assert_called_once_with()
+    # Then no session settings are applied (log_comment not set)
+    cursor.cursor.set_settings.assert_not_called()
 
 
-def test_open_clickhouse_client__url_only__hands_dsn_to_client(
+def test_open_clickhouse_cursor__with_log_comment__sets_session_attribution(
     mocker: MockerFixture,
-    settings: SettingsWrapper,
 ) -> None:
-    # Given CLICKHOUSE_URL is set and no discrete overrides are
-    settings.CLICKHOUSE_URL = (
-        "https://default:secret@ch.example.com:8443/segments?secure=true"
-    )
-    settings.CLICKHOUSE_HOST = None
-    settings.CLICKHOUSE_PORT = None
-    settings.CLICKHOUSE_USER = None
-    settings.CLICKHOUSE_PASSWORD = None
-    settings.CLICKHOUSE_DATABASE = None
-    settings.CLICKHOUSE_SECURE = None
-
-    fake_client = MagicMock(spec=Client)
-    get_client = mocker.patch(
-        "clickhouse_connect.get_client",
-        return_value=fake_client,
-    )
-
-    # When the context manager is entered
-    with open_clickhouse_client():
-        pass
-
-    # Then the DSN is handed off; discrete kwargs pass as None.
-    get_client.assert_called_once_with(
-        dsn="https://default:secret@ch.example.com:8443/segments?secure=true",
-        host=None,
-        port=None,
-        username=None,
-        password=None,
-        database=None,
-        secure=None,
-        settings={"allow_experimental_json_type": 1},
-    )
-
-
-def test_open_clickhouse_client__url_with_overrides__merges_both(
-    mocker: MockerFixture,
-    settings: SettingsWrapper,
-) -> None:
-    # Given CLICKHOUSE_URL and a discrete CLICKHOUSE_DATABASE override
-    settings.CLICKHOUSE_URL = "https://default:secret@ch.example.com:8443/default"
-    settings.CLICKHOUSE_HOST = None
-    settings.CLICKHOUSE_PORT = None
-    settings.CLICKHOUSE_USER = None
-    settings.CLICKHOUSE_PASSWORD = None
-    settings.CLICKHOUSE_DATABASE = "segment_membership"
-    settings.CLICKHOUSE_SECURE = None
-
-    fake_client = MagicMock(spec=Client)
-    get_client = mocker.patch(
-        "clickhouse_connect.get_client",
-        return_value=fake_client,
-    )
-
-    # When the context manager is entered
-    with open_clickhouse_client():
-        pass
-
-    # Then both DSN and override are passed; clickhouse-connect picks the
-    # override where set.
-    get_client.assert_called_once_with(
-        dsn="https://default:secret@ch.example.com:8443/default",
-        host=None,
-        port=None,
-        username=None,
-        password=None,
-        database="segment_membership",
-        secure=None,
-        settings={"allow_experimental_json_type": 1},
-    )
-
-
-def test_open_clickhouse_client__with_log_comment__sets_session_attribution(
-    mocker: MockerFixture,
-    settings: SettingsWrapper,
-) -> None:
-    # Given a log_comment passed through (the per-task attribution string)
-    settings.CLICKHOUSE_URL = None
-    settings.CLICKHOUSE_HOST = "ch.example.com"
-    settings.CLICKHOUSE_PORT = 8443
-    settings.CLICKHOUSE_USER = "default"
-    settings.CLICKHOUSE_PASSWORD = ""
-    settings.CLICKHOUSE_DATABASE = "default"
-    settings.CLICKHOUSE_SECURE = True
-
-    fake_client = MagicMock(spec=Client)
-    get_client = mocker.patch(
-        "clickhouse_connect.get_client",
-        return_value=fake_client,
+    # Given the `clickhouse` connection alias yields a mocked cursor
+    cursor = MagicMock()
+    connections = mocker.patch("segment_membership.services.connections")
+    connections.__getitem__.return_value.cursor.return_value.__enter__.return_value = (
+        cursor
     )
 
     # When the context manager opens with a log_comment
-    with open_clickhouse_client(
+    with open_clickhouse_cursor(
         log_comment="flagsmith:segment_membership:refresh:org_1:project_2"
     ):
         pass
 
-    # Then the comment lands in the session-level `log_comment` setting so
-    # every query the client issues is attributable in CH's query_log.
-    _, kwargs = get_client.call_args
-    assert kwargs["settings"] == {
-        "allow_experimental_json_type": 1,
-        "log_comment": "flagsmith:segment_membership:refresh:org_1:project_2",
-    }
+    # Then the comment lands as a clickhouse-driver session setting so
+    # every query the cursor issues is attributable in CH's query_log.
+    cursor.cursor.set_settings.assert_called_once_with(
+        {"log_comment": "flagsmith:segment_membership:refresh:org_1:project_2"}
+    )
 
 
 def test_get_projects_to_process__no_canonical_segments__yields_nothing(
@@ -225,14 +114,14 @@ def test_compute_segment_counts_for_project__no_segments__returns_empty(
     project: Project,
 ) -> None:
     # Given a project with no canonical segments
-    client = MagicMock(spec=Client)
+    cursor = MagicMock()
 
     # When counts are computed
-    result = compute_segment_counts_for_project(project, client)
+    result = compute_segment_counts_for_project(project, cursor)
 
     # Then the result is empty and ClickHouse was not queried
     assert result == []
-    client.query.assert_not_called()
+    cursor.execute.assert_not_called()
 
 
 def test_compute_segment_counts_for_project__no_environments__returns_empty(
@@ -241,14 +130,14 @@ def test_compute_segment_counts_for_project__no_environments__returns_empty(
 ) -> None:
     # Given a project with a segment but no environments
     project.environments.all().delete()
-    client = MagicMock(spec=Client)
+    cursor = MagicMock()
 
     # When counts are computed
-    result = compute_segment_counts_for_project(project, client)
+    result = compute_segment_counts_for_project(project, cursor)
 
     # Then the result is empty and ClickHouse was not queried
     assert result == []
-    client.query.assert_not_called()
+    cursor.execute.assert_not_called()
 
 
 def test_compute_segment_counts_for_project__one_segment__returns_membership_instances(
@@ -264,11 +153,11 @@ def test_compute_segment_counts_for_project__one_segment__returns_membership_ins
         "segment_membership.services.translate_segment",
         return_value="TRUE",
     )
-    client = MagicMock(spec=Client)
-    client.query.return_value.result_rows = [(segment.id, environment.api_key, 7)]
+    cursor = MagicMock()
+    cursor.fetchall.return_value = [(segment.id, environment.api_key, 7)]
 
     # When counts are computed
-    result = compute_segment_counts_for_project(project, client)
+    result = compute_segment_counts_for_project(project, cursor)
 
     # Then the row decodes into an unsaved SegmentMembershipCount keyed by
     # (segment, environment); last_synced_at left for the caller.
@@ -278,8 +167,8 @@ def test_compute_segment_counts_for_project__one_segment__returns_membership_ins
     assert membership.environment_id == environment.id
     assert membership.count == 7
     assert membership.last_synced_at is None
-    client.query.assert_called_once()
-    sql = client.query.call_args.args[0]
+    cursor.execute.assert_called_once()
+    sql = cursor.execute.call_args.args[0]
     assert f"SELECT {segment.id} AS segment_id" in sql
     # FINAL forces ReplacingMergeTree dedup at read time.
     assert "FROM IDENTITIES AS i FINAL" in sql
@@ -299,11 +188,11 @@ def test_compute_segment_counts_for_project__unknown_env_key_in_row__skips(
         "segment_membership.services.translate_segment",
         return_value="TRUE",
     )
-    client = MagicMock(spec=Client)
-    client.query.return_value.result_rows = [(segment.id, "ghost-env", 99)]
+    cursor = MagicMock()
+    cursor.fetchall.return_value = [(segment.id, "ghost-env", 99)]
 
     # When counts are computed
-    result = compute_segment_counts_for_project(project, client)
+    result = compute_segment_counts_for_project(project, cursor)
 
     # Then the unknown-env row is skipped, no spurious membership emitted
     assert result == []
@@ -321,12 +210,12 @@ def test_compute_segment_counts_for_project__untranslatable_segment__skips(
         "segment_membership.services.translate_segment",
         return_value=None,
     )
-    client = MagicMock(spec=Client)
+    cursor = MagicMock()
 
     # When counts are computed
-    result = compute_segment_counts_for_project(project, client)
+    result = compute_segment_counts_for_project(project, cursor)
 
     # Then the segment is skipped entirely (no row, not even count = 0)
     # and ClickHouse is not queried at all
     assert result == []
-    client.query.assert_not_called()
+    cursor.execute.assert_not_called()
