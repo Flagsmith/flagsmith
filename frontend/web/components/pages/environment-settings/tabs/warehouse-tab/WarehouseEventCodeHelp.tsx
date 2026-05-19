@@ -1,5 +1,5 @@
 import React, { FC } from 'react'
-import CodeHelp from './CodeHelp'
+import CodeHelp from 'components/CodeHelp'
 
 type SnippetEntry = {
   code: string
