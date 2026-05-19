@@ -8,6 +8,7 @@ import Tooltip from './Tooltip'
 import Icon from './icons/Icon'
 import Button from './base/forms/Button'
 import WarehouseEventCodeHelp from './WarehouseEventCodeHelp'
+import WarehouseStats from './WarehouseStats'
 import useCollapsibleHeight from 'common/hooks/useCollapsibleHeight'
 
 type WarehouseConnectionCardProps = {
@@ -80,11 +81,20 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
       </div>
       <div ref={contentRef} style={collapsibleStyle}>
         <div className='mt-3 mb-2 d-flex flex-column gap-3'>
-          <WarehouseEventCodeHelp />
-          {connection.status === 'pending_connection' && (
-            <Button className='align-self-end' theme='primary'>
-              Send your first event
-            </Button>
+          {connection.status === 'pending_connection' ? (
+            <>
+              <WarehouseEventCodeHelp />
+              <Button className='align-self-end' theme='primary'>
+                Send your first event
+              </Button>
+            </>
+          ) : (
+            <WarehouseStats
+              errored={connection.status === 'errored'}
+              lastEventReceived='19 May 2026, 14:32'
+              totalEventsReceived={1247}
+              uniqueEventsCount={38}
+            />
           )}
         </div>
       </div>
