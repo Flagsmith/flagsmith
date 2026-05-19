@@ -336,7 +336,10 @@ def test_publish_feature_version__unpublished_version__publishes_and_creates_aud
         related_object_uuid=environment_feature_version.uuid,
     ).first()
     assert record
-    assert record.log == ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE % feature.name
+    assert record.log == (
+        f"{ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE % feature.name}\n"
+        f"- Environment default: disabled"
+    )
 
 
 @pytest.mark.parametrize("live_from", (None, tomorrow))
