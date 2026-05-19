@@ -15,7 +15,7 @@ jobs:
     with:
       target: oss-api
       image-name: flagsmith-api
-      # TODO: remove once flagsmith-sql-flag-engine is public
+      # TODO: remove once flagsmith-sql-flag-engine is public (https://github.com/Flagsmith/flagsmith-sql-flag-engine/issues/6)
       codeartifact-login: true
 
   docker-build-frontend:
@@ -31,7 +31,7 @@ jobs:
     with:
       target: oss-unified
       image-name: flagsmith
-      # TODO: remove once flagsmith-sql-flag-engine is public
+      # TODO: remove once flagsmith-sql-flag-engine is public (https://github.com/Flagsmith/flagsmith-sql-flag-engine/issues/6)
       codeartifact-login: true
 
   docker-build-private-cloud-api:
@@ -63,7 +63,7 @@ jobs:
       target: api-test
       image-name: flagsmith-api-test
       scan: false
-      # TODO: remove once flagsmith-sql-flag-engine is public
+      # TODO: remove once flagsmith-sql-flag-engine is public (https://github.com/Flagsmith/flagsmith-sql-flag-engine/issues/6)
       codeartifact-login: true
 
   docker-build-api-private-test:

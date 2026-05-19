@@ -69,7 +69,7 @@ jobs:
       image-name: flagsmith
       ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
-      # TODO: remove once flagsmith-sql-flag-engine is public
+      # TODO: remove once flagsmith-sql-flag-engine is public (https://github.com/Flagsmith/flagsmith-sql-flag-engine/issues/6)
       codeartifact-login: true
 
   docker-build-api:
@@ -82,7 +82,7 @@ jobs:
       image-name: flagsmith-api
       ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
-      # TODO: remove once flagsmith-sql-flag-engine is public
+      # TODO: remove once flagsmith-sql-flag-engine is public (https://github.com/Flagsmith/flagsmith-sql-flag-engine/issues/6)
       codeartifact-login: true
 
   docker-build-frontend:
@@ -107,7 +107,7 @@ jobs:
       ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
       scan: false
-      # TODO: remove once flagsmith-sql-flag-engine is public
+      # TODO: remove once flagsmith-sql-flag-engine is public (https://github.com/Flagsmith/flagsmith-sql-flag-engine/issues/6)
       codeartifact-login: true
 
   docker-build-api-private-test:

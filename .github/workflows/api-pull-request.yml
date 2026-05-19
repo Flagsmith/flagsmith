@@ -2,7 +2,7 @@ name: API Pull Request
 
 permissions:
   contents: read # For actions/checkout
-  # TODO: drop CodeArtifact OIDC suffix once flagsmith-sql-flag-engine is public
+  # TODO: drop CodeArtifact OIDC suffix once flagsmith-sql-flag-engine is public (https://github.com/Flagsmith/flagsmith-sql-flag-engine/issues/6)
   id-token: write # For Codecov and CodeArtifact OIDC
 
 on:
@@ -48,7 +48,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # TODO: remove once flagsmith-sql-flag-engine is public
+      # TODO: remove once flagsmith-sql-flag-engine is public (https://github.com/Flagsmith/flagsmith-sql-flag-engine/issues/6)
       - name: Authenticate with CodeArtifact
         uses: ./.github/actions/codeartifact-login
 
