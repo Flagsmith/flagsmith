@@ -2,8 +2,20 @@
 
 
 version: 2
+registries:
+  flagsmith-pypi-production:
+    type: python-index
+    url: https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/
+    aws-region: eu-west-2
+    account-id: '084060095745'
+    role-name: codeartifact-github-actions-production
+    domain: flagsmith-production
+    domain-owner: '084060095745'
+
 updates:
   - package-ecosystem: "uv"
+    registries:
+      - flagsmith-pypi-production
     # we only want security updates from dependabot, so we set the limit to 0
     # for regular updates. See documentation for further information here:
     # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#open-pull-requests-limit-

@@ -50,6 +50,7 @@ export type PaidFeature =
   | 'METADATA'
   | 'REALTIME'
   | 'SAML'
+  | 'SCIM'
   | 'SCHEDULE_FLAGS'
   | 'CREATE_ADDITIONAL_PROJECT'
   | '2FA'
@@ -221,7 +222,11 @@ const Utils = Object.assign({}, BaseUtils, {
   flagsmithFeatureExists(flag: string) {
     return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
   },
-  getContentType(contentTypes: ContentType[] | undefined, model: string, type: string) {
+  getContentType(
+    contentTypes: ContentType[] | undefined,
+    model: string,
+    type: string,
+  ) {
     return contentTypes?.find((c: ContentType) => c[model] === type) || null
   },
   getCreateProjectPermission(organisation: Organisation) {
@@ -522,7 +527,8 @@ const Utils = Object.assign({}, BaseUtils, {
       case 'AUDIT':
       case '4_EYES_PROJECT':
       case '4_EYES':
-      case 'SAML': {
+      case 'SAML':
+      case 'SCIM': {
         plan = 'scale-up'
         break
       }
