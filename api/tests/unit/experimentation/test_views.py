@@ -106,7 +106,7 @@ def test_post__non_admin__returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_post__creates_audit_log(
+def test_post__valid_data__creates_audit_log(
     admin_client: APIClient,
     environment: Environment,
     enable_features: EnableFeaturesFixture,
@@ -210,7 +210,7 @@ def test_delete__not_exists__returns_404(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_delete__creates_audit_log(
+def test_delete__exists__creates_audit_log(
     admin_client: APIClient,
     environment: Environment,
     enable_features: EnableFeaturesFixture,
