@@ -1087,6 +1087,21 @@ export type ExperimentResults = {
   statistics: ExperimentStatistics
 }
 
+export type WarehouseConnectionStatus =
+  | 'pending_connection'
+  | 'connected'
+  | 'errored'
+
+export type WarehouseType = 'flagsmith' | 'snowflake' | 'clickhouse'
+
+export type WarehouseConnection = {
+  uuid: string
+  warehouse_type: WarehouseType
+  status: WarehouseConnectionStatus
+  name: string
+  created_at: string
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -1309,5 +1324,6 @@ export type Res = {
   gitlabProjects: PagedResponse<GitLabProject>
   gitlabIssues: PagedResponse<GitLabIssue>
   gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
+  warehouseConnection: WarehouseConnection
   // END OF TYPES
 }

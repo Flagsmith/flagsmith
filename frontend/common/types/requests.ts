@@ -966,5 +966,8 @@ export type Req = {
     project_id: number
     gitlab_project_id: number
   }>
+  getWarehouseConnection: { environmentId: string }
+  createWarehouseConnection: { environmentId: string; warehouse_type: string }
+  deleteWarehouseConnection: { environmentId: string }
   // END OF TYPES
 }
