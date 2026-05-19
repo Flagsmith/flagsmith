@@ -17,7 +17,8 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
         read_only_fields = ("uuid", "status", "name", "created_at")
 
     def create(
-        self, validated_data: dict[str, Any],
+        self,
+        validated_data: dict[str, Any],
     ) -> WarehouseConnection:
         environment: Environment = validated_data["environment"]
         warehouse_type: str = validated_data["warehouse_type"]

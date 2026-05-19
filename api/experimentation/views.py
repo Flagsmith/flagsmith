@@ -41,7 +41,9 @@ class WarehouseConnectionView(APIView):
             )
 
         connection = serializer.save(environment=environment)
-        create_warehouse_audit_log(connection, self._get_user(request), action="created")
+        create_warehouse_audit_log(
+            connection, self._get_user(request), action="created"
+        )
         return Response(
             WarehouseConnectionSerializer(connection).data,
             status=status.HTTP_201_CREATED,
@@ -57,6 +59,8 @@ class WarehouseConnectionView(APIView):
                 {"detail": "Not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        create_warehouse_audit_log(connection, self._get_user(request), action="deleted")
+        create_warehouse_audit_log(
+            connection, self._get_user(request), action="deleted"
+        )
         connection.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

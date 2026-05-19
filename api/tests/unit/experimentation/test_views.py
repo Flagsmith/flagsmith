@@ -85,7 +85,6 @@ def test_post__soft_deleted_exists__resurrects_and_returns_201(
     assert response.json()["status"] == "pending_connection"
 
 
-
 def test_post__non_admin__returns_403(
     staff_client: APIClient,
     environment: Environment,
@@ -123,9 +122,12 @@ def test_post__valid_data__creates_audit_log(
     )
 
     # Then
-    assert AuditLog.objects.filter(
-        related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
-    ).count() == 1
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
+        ).count()
+        == 1
+    )
     audit_log = AuditLog.objects.get(
         related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
     )
@@ -224,9 +226,12 @@ def test_delete__exists__creates_audit_log(
     admin_client.delete(warehouse_connection_url)
 
     # Then
-    assert AuditLog.objects.filter(
-        related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
-    ).count() == 1
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
+        ).count()
+        == 1
+    )
     audit_log = AuditLog.objects.get(
         related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
     )
