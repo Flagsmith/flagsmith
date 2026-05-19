@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from typing import Any
 
 from rest_framework import status
@@ -28,12 +27,11 @@ def test_get_segment__one_membership_per_environment__returns_per_env_counts(
     environment: int,
 ) -> None:
     # Given
-    synced_at = datetime(2026, 5, 1, tzinfo=timezone.utc)
     SegmentMembershipCount.objects.create(
         segment_id=segment,
         environment_id=environment,
         count=42,
-        last_synced_at=synced_at,
+        last_synced_at="2026-05-01T00:00:00Z",
     )
 
     # When
@@ -46,6 +44,6 @@ def test_get_segment__one_membership_per_environment__returns_per_env_counts(
         {
             "environment": environment,
             "count": 42,
-            "last_synced_at": synced_at.isoformat().replace("+00:00", "Z"),
+            "last_synced_at": "2026-05-01T00:00:00Z",
         }
     ]
