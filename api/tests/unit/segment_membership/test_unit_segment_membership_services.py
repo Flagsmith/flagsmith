@@ -110,6 +110,20 @@ def test_get_projects_to_process__ff_enabled__yields_project(
     assert list(get_projects_to_process()) == [project]
 
 
+def test_get_projects_to_process__multiple_segments_per_project__yields_project_once(
+    project: Project,
+    segment: Segment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a project with multiple canonical segments
+    enable_features("segment_membership_inspection")
+    Segment.objects.create(name="another", project=project)
+
+    # When iterating projects to process
+    # Then the project is yielded once, not once per segment
+    assert list(get_projects_to_process()) == [project]
+
+
 def test_compute_segment_counts_for_project__no_segments__returns_empty(
     project: Project,
 ) -> None:

@@ -47,10 +47,13 @@ def open_clickhouse_cursor(
 def get_projects_to_process() -> Iterator[Project]:
     """Yield projects with at least one canonical segment whose org has
     the segment-membership flag on."""
-    project_ids = Segment.live_objects.values_list("project_id", flat=True).distinct()
-    for project in Project.objects.filter(id__in=project_ids).select_related(
-        "organisation"
-    ):
+    project_ids = Segment.live_objects.values_list("project_id", flat=True)
+    projects_with_live_segments = (
+        Project.objects.filter(id__in=project_ids)
+        .select_related("organisation")
+        .iterator()
+    )
+    for project in projects_with_live_segments:
         if not is_membership_enabled(project.organisation):
             continue
         yield project
