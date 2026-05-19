@@ -1,10 +1,9 @@
-import uuid
 from decimal import Decimal
 
 from flagsmith_schemas import dynamodb
 
-# (environment_id, id, identifier, identity_key, traits)
-ClickHouseIdentityRow = tuple[str, int, str, str, dict[str, object] | None]
+# (environment_id, identifier, identity_key, traits)
+ClickHouseIdentityRow = tuple[str, str, str, dict[str, object] | None]
 
 
 def map_identity_document_to_clickhouse_row(
@@ -12,24 +11,17 @@ def map_identity_document_to_clickhouse_row(
     identity_doc: dynamodb.Identity,
 ) -> ClickHouseIdentityRow:
     """Project a Dynamo identity document onto an IDENTITIES row tuple
-    `(environment_id, id, identifier, identity_key, traits)`."""
-    identity_uuid = identity_doc["identity_uuid"]
+    `(environment_id, identifier, identity_key, traits)`."""
     identifier = identity_doc["identifier"]
     composite_key = identity_doc["composite_key"]
     raw_traits = identity_doc.get("identity_traits")
     traits = _flatten_traits(raw_traits) if raw_traits else None
     return (
         env_key,
-        _identity_id(identity_uuid),
         identifier,
         composite_key,
         traits,
     )
-
-
-def _identity_id(identity_uuid: str) -> int:
-    # UInt64 column refuses negatives.
-    return int.from_bytes(uuid.UUID(identity_uuid).bytes[:8], "big", signed=False)
 
 
 def _coerce_trait_value(value: object) -> object:

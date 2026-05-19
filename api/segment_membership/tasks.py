@@ -42,7 +42,6 @@ _INSERT_BATCH_SIZE = 1000
 
 _IDENTITIES_COLUMN_NAMES = (
     "environment_id",
-    "id",
     "identifier",
     "identity_key",
     "traits",

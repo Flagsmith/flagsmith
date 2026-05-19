@@ -4,8 +4,8 @@ from django.db import migrations
 _SCHEMA_DDL = """\
 CREATE TABLE IF NOT EXISTS IDENTITIES (
     environment_id String,
-    -- UInt64 because we derive from UUID bytes; signed would refuse negatives.
-    id UInt64,
+    -- (environment_id, identifier) is the natural unique key in Flagsmith's
+    -- identity model — dedupes ReplacingMergeTree without a synthetic id.
     identifier String,
     identity_key String,
     -- Stored per top-level key as typed subcolumns; SQL NULL for empty traits.
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS IDENTITIES (
     inserted_at DateTime DEFAULT now()
 )
 ENGINE = ReplacingMergeTree(inserted_at)
-ORDER BY (environment_id, id)
+ORDER BY (environment_id, identifier)
 """
 
 

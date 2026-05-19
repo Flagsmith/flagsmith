@@ -110,10 +110,10 @@ def test_backfill_identities_to_clickhouse__happy_path__bulk_inserts(
     sql, rows_arg = cursor.executemany.call_args.args
     assert sql == (
         "INSERT INTO IDENTITIES "
-        "(environment_id, id, identifier, identity_key, traits) VALUES"
+        "(environment_id, identifier, identity_key, traits) VALUES"
     )
     assert {row[0] for row in rows_arg} == {environment.api_key}
-    assert {row[2] for row in rows_arg} == {"a", "b"}
+    assert {row[1] for row in rows_arg} == {"a", "b"}
     assert any(
         e["event"] == "backfill.environment.completed" and e["rows__count"] == 2
         for e in log.events
