@@ -59,8 +59,10 @@ _INSERT_IDENTITIES_SQL = (
 )
 def backfill_identities_to_clickhouse() -> None:
     """Insert each relevant environment's current Dynamo state into
-    IDENTITIES, then dispatch one refresh per project so counts read
-    against the fresh snapshot."""
+    IDENTITIES, dispatching one refresh per project as its backfill
+    completes so the refresh enqueue rate tracks the backfill rate
+    rather than spiking in one burst at the end.
+    """
     if not settings.CLICKHOUSE_ENABLED:
         logger.info("backfill.skipped", reason="clickhouse_not_configured")
         return
@@ -70,9 +72,7 @@ def backfill_identities_to_clickhouse() -> None:
         logger.info("backfill.skipped", reason="dynamo_disabled")
         return
 
-    refreshable_project_ids: list[int] = []
     for project in get_projects_to_process():
-        refreshable_project_ids.append(project.id)
         log_comment = (
             "flagsmith:segment_membership:backfill"
             f":org_{project.organisation_id}"
@@ -113,9 +113,7 @@ def backfill_identities_to_clickhouse() -> None:
                     environment__id=env.id,
                     rows__count=row_count,
                 )
-
-    for project_id in refreshable_project_ids:
-        refresh_project_segment_counts.delay(args=(project_id,))
+        refresh_project_segment_counts.delay(args=(project.id,))
 
 
 @register_task_handler(

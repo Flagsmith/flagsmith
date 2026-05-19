@@ -349,8 +349,8 @@ Attributes:
 ### `segment_membership.backfill.skipped`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:65`
- - `api/segment_membership/tasks.py:70`
+ - `api/segment_membership/tasks.py:67`
+ - `api/segment_membership/tasks.py:72`
 
 Attributes:
  - `reason`
@@ -368,7 +368,7 @@ Attributes:
 ### `segment_membership.refresh.project.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:171`
+ - `api/segment_membership/tasks.py:169`
 
 Attributes:
  - `membership_counts.count`
@@ -377,7 +377,7 @@ Attributes:
 ### `segment_membership.refresh.project.failed`
 
 Logged at `exception` from:
- - `api/segment_membership/tasks.py:159`
+ - `api/segment_membership/tasks.py:157`
 
 Attributes:
  - `project.id`
@@ -385,8 +385,8 @@ Attributes:
 ### `segment_membership.refresh.project.skipped`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:130`
- - `api/segment_membership/tasks.py:139`
+ - `api/segment_membership/tasks.py:128`
+ - `api/segment_membership/tasks.py:137`
 
 Attributes:
  - `project.id`
