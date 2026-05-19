@@ -113,9 +113,8 @@ FROM build-python AS build-python-private
 
 # Authenticate git with token, install private Python dependencies,
 # and integrate private modules
-ARG SAML_REVISION
 ARG RBAC_REVISION
-ARG EXTRAS="--extra saml --extra auth-controller --extra ldap --extra workflows --extra licensing --extra release-pipelines --extra scim"
+ARG EXTRAS="--extra private --extra auth-controller --extra ldap --extra workflows --extra licensing"
 RUN --mount=type=secret,id=github_private_cloud_token \
   --mount=type=secret,id=codeartifact_token \
   --mount=type=cache,target=/root/.cache/uv \
@@ -190,7 +189,7 @@ RUN --mount=type=secret,id=codeartifact_token \
   --mount=type=cache,target=/root/.cache/uv \
   UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws \
   UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
-  make install-packages opts='--extra dev --extra saml --extra auth-controller --extra ldap --extra workflows --extra licensing --extra release-pipelines --extra scim' && \
+  make install-packages opts='--extra dev --extra private --extra auth-controller --extra ldap --extra workflows --extra licensing' && \
   make integrate-private-tests && \
   git config --global --unset credential.helper && \
   rm -f ${HOME}/.git-credentials
