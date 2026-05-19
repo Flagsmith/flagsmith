@@ -84,6 +84,7 @@ def annotate_feature_queryset_with_code_references_summary(
                 count=F("count"),
                 last_successful_repository_scanned_at=F("created_at"),
                 last_feature_found_at=F("last_feature_found_at"),
+                vcs_provider=F("vcs_provider"),
             ),
         )
     )
@@ -161,6 +162,11 @@ def _get_permalink(
             return urljoin(
                 f"{repository_url}/",
                 f"blob/{revision}/{file_path}#L{line_number}",
+            )
+        case VCSProvider.GITLAB:
+            return urljoin(
+                f"{repository_url}/",
+                f"-/blob/{revision}/{file_path}#L{line_number}",
             )
     raise NotImplementedError(  # pragma: no cover
         f"Permalink generation for {provider} is not implemented."

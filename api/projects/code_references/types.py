@@ -7,6 +7,7 @@ from django.db.models import TextChoices
 
 class VCSProvider(TextChoices):
     GITHUB = "github", "GitHub"
+    GITLAB = "gitlab", "GitLab"
 
 
 class JSONCodeReference(TypedDict):
@@ -37,5 +38,6 @@ class FeatureFlagCodeReferencesRepositorySummary:
 class CodeReferencesRepositoryCount:
     repository_url: str
     count: int
+    vcs_provider: str
     last_successful_repository_scanned_at: datetime
     last_feature_found_at: datetime | None
