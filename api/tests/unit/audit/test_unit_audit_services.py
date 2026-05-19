@@ -98,6 +98,88 @@ def test_get_audited_instance_from_audit_log_record__historical_record__return_e
     assert instance == change_request
 
 
+def test_create_environment_feature_version_published_audit_log_task__no_changes__uses_header_only(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    version = EnvironmentFeatureVersion.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+    )
+
+    # When
+    create_environment_feature_version_published_audit_log_task(str(version.uuid))
+
+    # Then
+    audit_log = AuditLog.objects.get(
+        related_object_type=RelatedObjectType.EF_VERSION.name,
+        related_object_uuid=version.uuid,
+    )
+    assert audit_log.log == f"New version published for feature: {feature.name}"
+
+
+def test_create_environment_feature_version_published_audit_log_task__environment_default_changed__includes_detail(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    version = EnvironmentFeatureVersion.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+    )
+    fs = version.feature_states.filter(feature=feature).first()
+    assert fs is not None
+    fs.enabled = not fs.enabled
+    fs.save()
+
+    # When
+    create_environment_feature_version_published_audit_log_task(str(version.uuid))
+
+    # Then
+    audit_log = AuditLog.objects.get(
+        related_object_type=RelatedObjectType.EF_VERSION.name,
+        related_object_uuid=version.uuid,
+    )
+    assert f"New version published for feature: {feature.name}" in audit_log.log
+    assert "Environment default:" in audit_log.log
+
+
+def test_create_environment_feature_version_published_audit_log_task__segment_override_changed__includes_segment_name(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given
+    version = EnvironmentFeatureVersion.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+    )
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_v2_versioning,
+        environment_feature_version=version,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment=feature_segment,
+        environment_feature_version=version,
+        enabled=True,
+    )
+
+    # When
+    create_environment_feature_version_published_audit_log_task(str(version.uuid))
+
+    # Then
+    audit_log = AuditLog.objects.get(
+        related_object_type=RelatedObjectType.EF_VERSION.name,
+        related_object_uuid=version.uuid,
+    )
+    assert f"Segment override ({segment.name})" in audit_log.log
+
+
 def test_get_audited_instance_from_audit_log_record__unexpected_audit_log__return_none(
     change_request: ChangeRequest,
 ) -> None:
