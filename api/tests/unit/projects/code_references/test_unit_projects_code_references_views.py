@@ -239,6 +239,7 @@ def test_get_feature_code_references__multiple_scans_exist__returns_latest_per_r
                 {"file_path": "backend/file1.py", "line_number": 20},
             ],
             code_references_hash="hash-backend-1",
+            created_at=timezone.now(),
         )
     with freezegun.freeze_time("2099-01-02T11:00:00-0300"):
         frontend_repository = VCSRepository.objects.create(
@@ -256,6 +257,7 @@ def test_get_feature_code_references__multiple_scans_exist__returns_latest_per_r
                 {"file_path": "frontend/file2.js", "line_number": 5},
             ],
             code_references_hash="hash-frontend-2",
+            created_at=timezone.now(),
         )
 
     # When
@@ -332,6 +334,7 @@ def test_get_feature_code_references__feature_flag_removed__returns_no_entry(
                 {"file_path": "path/to/file1.py", "line_number": 10},
             ],
             code_references_hash="hash-1",
+            created_at=timezone.now(),
         )
     with freezegun.freeze_time("2099-01-02T11:00:00-0300"):
         repository.last_scanned_at = timezone.now()

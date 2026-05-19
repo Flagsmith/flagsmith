@@ -141,6 +141,7 @@ def record_scan(
                 revision=revision,
                 code_references=references,
                 code_references_hash=_hash_references(references),
+                created_at=scanned_at,
             )
             for feature_name, references in references_by_feature.items()
             if (feature := features_by_name.get(feature_name)) is not None

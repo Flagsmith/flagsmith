@@ -374,6 +374,7 @@ def test_introduce_per_feature_scanned_references_backward__per_feature_row__reb
             revision="rev-1",
             code_references=[{"file_path": file_path, "line_number": 1}],
             code_references_hash=hash_id,
+            created_at=timezone.now(),
         )
 
     # When
@@ -428,14 +429,14 @@ def test_introduce_per_feature_scanned_references_backward__legacy_row__preserve
         url="https://github.flagsmith.com/backend",
         vcs_provider="github",
     )
-    with freezegun.freeze_time("2099-01-01T10:00:00+00:00"):
-        PerFeatureScan.objects.create(
-            feature=feature,
-            repository=repository,
-            revision="rev-1",
-            code_references=[{"file_path": "a.py", "line_number": 1}],
-            code_references_hash="hash-1",
-        )
+    PerFeatureScan.objects.create(
+        feature=feature,
+        repository=repository,
+        revision="rev-1",
+        code_references=[{"file_path": "a.py", "line_number": 1}],
+        code_references_hash="hash-1",
+        created_at="2099-01-01T10:00:00+00:00",
+    )
 
     # When
     reverted_state = migrator.apply_tested_migration(_INITIAL)

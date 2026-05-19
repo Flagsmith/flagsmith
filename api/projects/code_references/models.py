@@ -40,7 +40,7 @@ class ScannedCodeReferences(models.Model):
     A list of code references for a feature scanned from a VCS repository
     """
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField()
 
     feature = models.ForeignKey(
         "features.Feature",

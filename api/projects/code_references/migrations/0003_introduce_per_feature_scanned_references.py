@@ -35,7 +35,6 @@ def migrate_scans_forward(apps: Apps, _: object) -> None:
     PerFeatureScan = apps.get_model("code_references", "ScannedCodeReferences")
     Repository = apps.get_model("code_references", "VCSRepository")
     Feature = apps.get_model("features", "Feature")
-    PerFeatureScan._meta.get_field("created_at").auto_now_add = False
 
     legacy_scans_summaries = LegacyScan.objects.values(
         "project_id",
@@ -179,7 +178,7 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("created_at", models.DateTimeField()),
                 ("revision", models.CharField(max_length=100)),
                 ("code_references", models.JSONField(default=list)),
                 ("code_references_hash", models.CharField(max_length=32)),

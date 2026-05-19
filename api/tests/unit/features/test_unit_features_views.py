@@ -3670,41 +3670,39 @@ def test_list_features__with_code_references__returns_counts(
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    with freeze_time("2099-01-01T10:00:00-0300"):
-        github_repository = VCSRepository.objects.create(
-            project=project,
-            url="https://github.flagsmith.com/backend/",
-            vcs_provider="github",
-            last_scanned_at=timezone.now(),
-        )
-        ScannedCodeReferences.objects.create(
-            feature=feature,
-            repository=github_repository,
-            revision="backend-1",
-            code_references=[
-                {"file_path": "path/to/file.py", "line_number": 42},
-            ],
-            code_references_hash="hash-backend-1",
-        )
-    with freeze_time("2099-01-02T11:00:00-0300"):
-        github_repository.last_scanned_at = timezone.now()
-        github_repository.save()
-        gitlab_repository = VCSRepository.objects.create(
-            project=project,
-            url="https://gitlab.flagsmith.com/frontend/",
-            vcs_provider="github",
-            last_scanned_at=timezone.now(),
-        )
-        ScannedCodeReferences.objects.create(
-            feature=feature,
-            repository=gitlab_repository,
-            revision="frontend-2",
-            code_references=[
-                {"file_path": "path/to/file.js", "line_number": 23},
-                {"file_path": "path/to/another/file.js", "line_number": 50},
-            ],
-            code_references_hash="hash-frontend-2",
-        )
+    github_repository = VCSRepository.objects.create(
+        project=project,
+        url="https://github.flagsmith.com/backend/",
+        vcs_provider="github",
+        last_scanned_at="2099-01-02T14:00:00+00:00",
+    )
+    ScannedCodeReferences.objects.create(
+        feature=feature,
+        repository=github_repository,
+        revision="backend-1",
+        code_references=[
+            {"file_path": "path/to/file.py", "line_number": 42},
+        ],
+        code_references_hash="hash-backend-1",
+        created_at="2099-01-01T13:00:00+00:00",
+    )
+    gitlab_repository = VCSRepository.objects.create(
+        project=project,
+        url="https://gitlab.flagsmith.com/frontend/",
+        vcs_provider="github",
+        last_scanned_at="2099-01-02T14:00:00+00:00",
+    )
+    ScannedCodeReferences.objects.create(
+        feature=feature,
+        repository=gitlab_repository,
+        revision="frontend-2",
+        code_references=[
+            {"file_path": "path/to/file.js", "line_number": 23},
+            {"file_path": "path/to/another/file.js", "line_number": 50},
+        ],
+        code_references_hash="hash-frontend-2",
+        created_at="2099-01-02T14:00:00+00:00",
+    )
 
     # When
     response = staff_client.get(f"/api/v1/projects/{project.pk}/features/")
@@ -3725,6 +3723,42 @@ def test_list_features__with_code_references__returns_counts(
             "last_feature_found_at": "2099-01-02T14:00:00+00:00",
         },
     ]
+
+
+def test_list_features__scan_recorded_via_api__count_reflects_references(
+    feature: Feature,
+    project: Project,
+    admin_client_new: APIClient,
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    admin_client_new.post(
+        f"/api/v1/projects/{project.pk}/code-references/",
+        data={
+            "repository_url": "https://github.flagsmith.com/backend/",
+            "revision": "rev-1",
+            "code_references": [
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/file.py",
+                    "line_number": 42,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # When
+    response = staff_client.get(f"/api/v1/projects/{project.pk}/features/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    counts = response.json()["results"][0]["code_references_counts"]
+    assert len(counts) == 1
+    assert counts[0]["repository_url"] == "https://github.flagsmith.com/backend/"
+    assert counts[0]["count"] == 1
 
 
 @pytest.mark.usefixtures("feature")
