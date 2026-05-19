@@ -1,7 +1,9 @@
-import pytest
 from unittest import mock
+
+import pytest
 from django.db import models
 from django.db.models.options import Options
+
 from app import routers
 
 
