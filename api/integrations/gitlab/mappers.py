@@ -88,3 +88,24 @@ def map_gitlab_webhook_payload_to_tag_label(
             is_draft=bool(attrs.get("draft") or attrs.get("work_in_progress")),
         )
     return None
+
+
+def map_gitlab_webhook_payload_to_resource_metadata(
+    payload: GitLabWebhookPayload,
+) -> GitLabResourceMetadata:
+    attrs = payload.get("object_attributes") or {}
+    object_kind = payload.get("object_kind")
+    state = attrs.get("state")
+    metadata: GitLabResourceMetadata = {}
+    if object_kind == "issue" and state:
+        metadata["state"] = state
+    elif object_kind == "merge_request":
+        if attrs.get("action") == "merge":
+            metadata["state"] = "merged"
+        elif state:
+            metadata["state"] = state
+        if "draft" in attrs or "work_in_progress" in attrs:
+            metadata["draft"] = bool(
+                attrs.get("draft") or attrs.get("work_in_progress")
+            )
+    return metadata
