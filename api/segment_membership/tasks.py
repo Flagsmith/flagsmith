@@ -117,9 +117,9 @@ def backfill_identities_to_clickhouse() -> None:
 
 
 @register_task_handler(
-    # 30m backstop so a stuck CH client or dispatcher releases the task
-    # processor slot; legitimate runs are seconds to minutes.
-    timeout=timedelta(minutes=30),
+    # ~2x the expected legitimate ceiling (a single UNION ALL aggregation
+    # against IDENTITIES); widen on real data if this starts false-firing.
+    timeout=timedelta(minutes=10),
 )
 def refresh_project_segment_counts(project_id: int) -> None:
     """Compute per-segment match counts for one project and upsert into
