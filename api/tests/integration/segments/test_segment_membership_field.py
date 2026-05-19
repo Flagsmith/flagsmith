@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from typing import Any
 
-from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -15,12 +14,7 @@ def test_get_segment__no_memberships__returns_empty_list(
 ) -> None:
     # Given a segment with no materialised SegmentMembershipCount rows
     # When the segment is fetched
-    response = admin_client.get(
-        reverse(
-            "api-v1:projects:project-segments-detail",
-            args=[project, segment],
-        )
-    )
+    response = admin_client.get(f"/api/v1/projects/{project}/segments/{segment}/")
 
     # Then the membership_counts field is present and empty
     assert response.status_code == status.HTTP_200_OK
@@ -44,12 +38,7 @@ def test_get_segment__one_membership_per_environment__returns_per_env_counts(
     )
 
     # When the segment is fetched
-    response = admin_client.get(
-        reverse(
-            "api-v1:projects:project-segments-detail",
-            args=[project, segment],
-        )
-    )
+    response = admin_client.get(f"/api/v1/projects/{project}/segments/{segment}/")
 
     # Then the membership_counts field carries one entry keyed by environment id
     assert response.status_code == status.HTTP_200_OK
