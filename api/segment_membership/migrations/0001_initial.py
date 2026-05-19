@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="SegmentMembership",
+            name="SegmentMembershipCount",
             fields=[
                 (
                     "id",
@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
                     "segment",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="memberships",
+                        related_name="membership_counts",
                         to="segments.segment",
                     ),
                 ),
@@ -49,7 +49,7 @@ class Migration(migrations.Migration):
                 "constraints": [
                     models.UniqueConstraint(
                         fields=("segment", "environment"),
-                        name="segment_membership_unique_segment_environment",
+                        name="segment_membership_count_unique_segment_environment",
                     )
                 ],
             },

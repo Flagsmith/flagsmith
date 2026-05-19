@@ -8,7 +8,7 @@ from pytest_structlog import StructuredLogCapture
 from environments.models import Environment
 from projects.models import Project
 from segment_membership import tasks
-from segment_membership.models import SegmentMembership
+from segment_membership.models import SegmentMembershipCount
 from segment_membership.tasks import (
     backfill_identities_to_clickhouse,
     refresh_project_segment_counts,
@@ -288,7 +288,7 @@ def test_refresh_project_segment_counts__counts_returned__upserts_per_env_rows(
         tasks,
         "compute_segment_counts_for_project",
         return_value=[
-            SegmentMembership(
+            SegmentMembershipCount(
                 segment_id=segment.id,
                 environment_id=environment.id,
                 count=42,
@@ -299,8 +299,10 @@ def test_refresh_project_segment_counts__counts_returned__upserts_per_env_rows(
     # When the per-project task runs
     refresh_project_segment_counts(project.id)
 
-    # Then a SegmentMembership row exists keyed by (segment, environment)
-    membership = SegmentMembership.objects.get(segment=segment, environment=environment)
+    # Then a SegmentMembershipCount row exists keyed by (segment, environment)
+    membership = SegmentMembershipCount.objects.get(
+        segment=segment, environment=environment
+    )
     assert membership.count == 42
     assert membership.last_synced_at is not None
 

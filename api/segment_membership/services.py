@@ -12,7 +12,7 @@ from flagsmith_sql_flag_engine.dialects import ClickHouseDialect
 from integrations.flagsmith.client import get_openfeature_client
 from organisations.models import Organisation
 from projects.models import Project
-from segment_membership.models import SegmentMembership
+from segment_membership.models import SegmentMembershipCount
 from segments.models import Segment
 from util.engine_models.context.mappers import map_segment_to_segment_context
 from util.mappers.engine import map_segment_to_engine
@@ -72,11 +72,11 @@ def get_projects_to_process() -> Iterator[Project]:
 
 def compute_segment_counts_for_project(
     project: Project, client: Client
-) -> list[SegmentMembership]:
+) -> list[SegmentMembershipCount]:
     """Count identity matches per (canonical-segment, environment) for
     `project` in one `UNION ALL` query.
 
-    Returns unsaved `SegmentMembership` instances with `count` and keys
+    Returns unsaved `SegmentMembershipCount` instances with `count` and keys
     populated; the caller stamps `last_synced_at` consistently across
     the batch. Untranslatable segments and pairs with zero matches are
     absent from the result. `FROM IDENTITIES FINAL` forces
@@ -124,16 +124,16 @@ def compute_segment_counts_for_project(
 
     sql = "\nUNION ALL\n".join(select_clauses)
     result = client.query(sql, parameters={"env_keys": list(env_id_by_key)})
-    memberships: list[SegmentMembership] = []
+    membership_counts: list[SegmentMembershipCount] = []
     for row in result.result_rows:
         env_id = env_id_by_key.get(str(row[1]))
         if env_id is None:
             continue
-        memberships.append(
-            SegmentMembership(
+        membership_counts.append(
+            SegmentMembershipCount(
                 segment_id=int(row[0]),
                 environment_id=env_id,
                 count=int(row[2]),
             )
         )
-    return memberships
+    return membership_counts

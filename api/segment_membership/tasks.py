@@ -1,5 +1,5 @@
 """Daily backfill of IDENTITIES from Dynamo to ClickHouse, then per-project
-refresh of `SegmentMembership` counts. Each backfill fans out the refresh so
+refresh of `SegmentMembershipCount` counts. Each backfill fans out the refresh so
 the count read always sees the fresh snapshot. Both tasks short-circuit when
 `CLICKHOUSE_ENABLED` is False or the org's `segment_membership_inspection`
 flag is off.
@@ -26,7 +26,7 @@ from segment_membership.metrics import (
     flagsmith_segment_membership_refresh_duration_seconds,
     flagsmith_segment_membership_refresh_failures_total,
 )
-from segment_membership.models import SegmentMembership
+from segment_membership.models import SegmentMembershipCount
 from segment_membership.services import (
     compute_segment_counts_for_project,
     get_projects_to_process,
@@ -123,7 +123,7 @@ def backfill_identities_to_clickhouse() -> None:
 )
 def refresh_project_segment_counts(project_id: int) -> None:
     """Compute per-segment match counts for one project and upsert into
-    `SegmentMembership`. Re-checks the org flag so a stale fan-out
+    `SegmentMembershipCount`. Re-checks the org flag so a stale fan-out
     skips orgs disabled since dispatch."""
     if not settings.CLICKHOUSE_ENABLED:
         logger.info(
@@ -152,17 +152,17 @@ def refresh_project_segment_counts(project_id: int) -> None:
         open_clickhouse_client(log_comment=log_comment) as client,
     ):
         try:
-            memberships = compute_segment_counts_for_project(project, client)
+            membership_counts = compute_segment_counts_for_project(project, client)
         except Exception:
             flagsmith_segment_membership_refresh_failures_total.inc()
             logger.exception("refresh.project.failed", project__id=project_id)
             return
 
         now = timezone.now()
-        for m in memberships:
+        for m in membership_counts:
             m.last_synced_at = now
-        SegmentMembership.objects.bulk_create(
-            memberships,
+        SegmentMembershipCount.objects.bulk_create(
+            membership_counts,
             update_conflicts=True,
             unique_fields=["segment", "environment"],
             update_fields=["count", "last_synced_at"],
@@ -170,5 +170,5 @@ def refresh_project_segment_counts(project_id: int) -> None:
         logger.info(
             "refresh.project.completed",
             project__id=project_id,
-            memberships__count=len(memberships),
+            membership_counts__count=len(membership_counts),
         )

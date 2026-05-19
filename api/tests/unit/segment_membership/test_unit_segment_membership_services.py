@@ -270,7 +270,7 @@ def test_compute_segment_counts_for_project__one_segment__returns_membership_ins
     # When counts are computed
     result = compute_segment_counts_for_project(project, client)
 
-    # Then the row decodes into an unsaved SegmentMembership keyed by
+    # Then the row decodes into an unsaved SegmentMembershipCount keyed by
     # (segment, environment); last_synced_at left for the caller.
     assert len(result) == 1
     [membership] = result

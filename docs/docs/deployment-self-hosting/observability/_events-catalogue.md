@@ -371,7 +371,7 @@ Logged at `info` from:
  - `api/segment_membership/tasks.py:170`
 
 Attributes:
- - `memberships.count`
+ - `membership_counts.count`
  - `project.id`
 
 ### `segment_membership.refresh.project.failed`
@@ -395,7 +395,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:153`
+ - `api/segments/serializers.py:155`
 
 Attributes:
  - `revision_id`
