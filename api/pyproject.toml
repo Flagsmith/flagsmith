@@ -95,8 +95,8 @@ auth-controller = [
     "auth-controller",
     "django-multiselectfield>=1.0.1,<2",
 ]
-saml = [
-    "pysaml2>=7.4.2,<8.0.0",
+private = [
+    "flagsmith-private>=0.6.0,<1",
 ]
 ldap = [
     "flagsmith-ldap",
@@ -108,12 +108,6 @@ workflows = [
 licensing = [
     "licensing",
     "cryptography>=44.0.1",
-]
-release-pipelines = [
-    "flagsmith-private>=0.5.1,<1",
-]
-scim = [
-    "flagsmith-private>=0.5.1,<1",
 ]
 dev = [
     "django-test-migrations>=1.2.0,<2.0.0",
@@ -187,7 +181,7 @@ licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.3.0" }
 flagsmith-private = { index = "flagsmith-pypi-production" }
 
 [tool.uv]
-required-version = "==0.8.14"
+required-version = "0.11.14"  # Ensure this matches the version in .pre-commit-config.yaml
 # Pin every resolved package to the exact version that api/poetry.lock used on
 # main before this migration, so the poetry -> uv switch is dependency-neutral.
 # Keep this list in sync with poetry.lock until the lockfile churn settles.
@@ -553,7 +547,7 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 # Suppresses `no-any-return` when the `scim` package isn't installed (which
-# happens on the public PR workflow that runs mypy without the `--extra scim`
+# happens on the public PR workflow that runs mypy without the `--extra private`
 # extra). With the extra installed, the bearer fixtures return the real `str`.
 module = ["tests.integration.scim.conftest"]
 warn_return_any = false
