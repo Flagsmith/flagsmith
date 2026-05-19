@@ -286,9 +286,7 @@ def create_environment_feature_version_published_audit_log_task(
         % environment_feature_version.feature.name
     )
 
-    changed_states = get_updated_feature_states_for_version(
-        environment_feature_version
-    )
+    changed_states = get_updated_feature_states_for_version(environment_feature_version)
 
     if changed_states:
         changed_states = list(
@@ -297,8 +295,7 @@ def create_environment_feature_version_published_audit_log_task(
             ).select_related("feature_segment__segment", "identity")
         )
         change_lines = "\n".join(
-            f"- {_build_feature_state_change_summary(fs)}"
-            for fs in changed_states
+            f"- {_build_feature_state_change_summary(fs)}" for fs in changed_states
         )
         log = f"{header}\n{change_lines}"
     else:
