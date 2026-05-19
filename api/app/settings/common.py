@@ -167,6 +167,7 @@ INSTALLED_APPS = [
     "softdelete",
     "metadata",
     "app_analytics",
+    "experimentation",
     "oauth2_metadata",
 ]
 
