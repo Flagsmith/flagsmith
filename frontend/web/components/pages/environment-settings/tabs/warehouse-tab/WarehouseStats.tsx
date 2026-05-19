@@ -1,5 +1,5 @@
 import React, { FC } from 'react'
-import Icon from './icons/Icon'
+import Icon from 'components/icons/Icon'
 
 type WarehouseStatsProps = {
   errored: boolean

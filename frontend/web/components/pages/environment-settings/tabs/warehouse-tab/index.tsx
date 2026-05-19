@@ -4,7 +4,7 @@ import {
   useDeleteWarehouseConnectionMutation,
   useGetWarehouseConnectionsQuery,
 } from 'common/services/useWarehouseConnection'
-import Setting from './Setting'
+import Setting from 'components/Setting'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
 
 type WarehouseTabProps = {

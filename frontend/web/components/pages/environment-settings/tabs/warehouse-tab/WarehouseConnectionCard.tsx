@@ -3,10 +3,10 @@ import {
   WarehouseConnection,
   WarehouseConnectionStatus,
 } from 'common/types/responses'
-import ColorSwatch from './ColorSwatch'
-import Tooltip from './Tooltip'
-import Icon from './icons/Icon'
-import Button from './base/forms/Button'
+import ColorSwatch from 'components/ColorSwatch'
+import Tooltip from 'components/Tooltip'
+import Icon from 'components/icons/Icon'
+import Button from 'components/base/forms/Button'
 import WarehouseEventCodeHelp from './WarehouseEventCodeHelp'
 import WarehouseStats from './WarehouseStats'
 import useCollapsibleHeight from 'common/hooks/useCollapsibleHeight'

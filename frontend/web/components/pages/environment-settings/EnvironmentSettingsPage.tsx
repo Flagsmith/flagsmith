@@ -46,7 +46,7 @@ import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import { useRouteContext } from 'components/providers/RouteContext'
 import SettingTitle from 'components/SettingTitle'
 import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
-import WarehouseTab from 'components/WarehouseTab'
+import WarehouseTab from './tabs/warehouse-tab'
 
 const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
   { label: 'Inherit from Project', value: null },
