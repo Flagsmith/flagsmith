@@ -1,57 +1,101 @@
 import React, { FC } from 'react'
 import CodeHelp from './CodeHelp'
 
-const helloWorldSnippets = {
-  '.NET': `using Flagsmith;
+type SnippetEntry = {
+  code: string
+  enabled: boolean
+}
+
+const helloWorldSnippets: Record<string, SnippetEntry> = {
+  '.NET': {
+    code: `using Flagsmith;
 
 var client = new FlagsmithClient("YOUR_ENVIRONMENT_KEY");
 Console.WriteLine("Hello, Flagsmith Warehouse!");`,
-  'Flutter': `import 'package:flagsmith/flagsmith.dart';
+    enabled: false,
+  },
+  'Flutter': {
+    code: `import 'package:flagsmith/flagsmith.dart';
 
 final flagsmith = FlagsmithClient(apiKey: 'YOUR_ENVIRONMENT_KEY');
 print('Hello, Flagsmith Warehouse!');`,
-  'Go': `import (
+    enabled: false,
+  },
+  'Go': {
+    code: `import (
     flagsmith "github.com/Flagsmith/flagsmith-go-client/v5"
 )
 
 client := flagsmith.NewClient("YOUR_ENVIRONMENT_KEY")
 fmt.Println("Hello, Flagsmith Warehouse!")`,
-  'Java': `import com.flagsmith.FlagsmithClient;
+    enabled: false,
+  },
+  'Java': {
+    code: `import com.flagsmith.FlagsmithClient;
 
 FlagsmithClient client = FlagsmithClient
     .newBuilder()
     .setApiKey("YOUR_ENVIRONMENT_KEY")
     .build();
 System.out.println("Hello, Flagsmith Warehouse!");`,
-  'JavaScript': `import flagsmith from 'flagsmith';
+    enabled: false,
+  },
+  'JavaScript': {
+    code: `import flagsmith from 'flagsmith';
 
 flagsmith.init({ environmentID: 'YOUR_ENVIRONMENT_KEY' });
 console.log('Hello, Flagsmith Warehouse!');`,
-  'Node JS': `import Flagsmith from 'flagsmith-nodejs';
+    enabled: true,
+  },
+  'Node JS': {
+    code: `import Flagsmith from 'flagsmith-nodejs';
 
 const flagsmith = new Flagsmith({ environmentKey: 'YOUR_ENVIRONMENT_KEY' });
 console.log('Hello, Flagsmith Warehouse!');`,
-  'PHP': `use Flagsmith\\Flagsmith;
+    enabled: false,
+  },
+  'PHP': {
+    code: `use Flagsmith\\Flagsmith;
 
 $flagsmith = new Flagsmith('YOUR_ENVIRONMENT_KEY');
 echo "Hello, Flagsmith Warehouse!";`,
-  'Python': `from flagsmith import Flagsmith
+    enabled: false,
+  },
+  'Python': {
+    code: `from flagsmith import Flagsmith
 
 flagsmith = Flagsmith(environment_key="YOUR_ENVIRONMENT_KEY")
 print("Hello, Flagsmith Warehouse!")`,
-  'Ruby': `require "flagsmith"
+    enabled: true,
+  },
+  'Ruby': {
+    code: `require "flagsmith"
 
 flagsmith = Flagsmith::Client.new(environment_key: "YOUR_ENVIRONMENT_KEY")
 puts "Hello, Flagsmith Warehouse!"`,
-  'Rust': `use flagsmith::Flagsmith;
+    enabled: false,
+  },
+  'Rust': {
+    code: `use flagsmith::Flagsmith;
 
 let flagsmith = Flagsmith::new("YOUR_ENVIRONMENT_KEY".to_string());
 println!("Hello, Flagsmith Warehouse!");`,
-  'iOS': `import FlagsmithClient
+    enabled: false,
+  },
+  'iOS': {
+    code: `import FlagsmithClient
 
 Flagsmith.shared.apiKey = "YOUR_ENVIRONMENT_KEY"
 print("Hello, Flagsmith Warehouse!")`,
+    enabled: false,
+  },
 }
+
+const enabledSnippets = Object.fromEntries(
+  Object.entries(helloWorldSnippets)
+    .filter(([, entry]) => entry.enabled)
+    .map(([name, entry]) => [name, entry.code]),
+)
 
 const WarehouseEventCodeHelp: FC = () => (
   <div>
@@ -61,7 +105,7 @@ const WarehouseEventCodeHelp: FC = () => (
     </p>
     <CodeHelp
       title='Send your first event'
-      snippets={helloWorldSnippets}
+      snippets={enabledSnippets}
       showInitially
       hideHeader
     />

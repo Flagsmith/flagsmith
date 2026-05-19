@@ -1324,6 +1324,6 @@ export type Res = {
   gitlabProjects: PagedResponse<GitLabProject>
   gitlabIssues: PagedResponse<GitLabIssue>
   gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
-  warehouseConnection: WarehouseConnection
+  warehouseConnections: WarehouseConnection[]
   // END OF TYPES
 }

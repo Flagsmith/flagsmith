@@ -7,33 +7,33 @@ export const warehouseConnectionService = service
   .injectEndpoints({
     endpoints: (builder) => ({
       createWarehouseConnection: builder.mutation<
-        Res['warehouseConnection'],
+        Res['warehouseConnections'][number],
         Req['createWarehouseConnection']
       >({
-        invalidatesTags: [{ id: 'SINGLETON', type: 'WarehouseConnection' }],
+        invalidatesTags: [{ id: 'LIST', type: 'WarehouseConnection' }],
         query: ({ environmentId, ...body }) => ({
           body,
           method: 'POST',
-          url: `environments/${environmentId}/warehouse-connection/`,
+          url: `environments/${environmentId}/warehouse-connections/`,
         }),
       }),
       deleteWarehouseConnection: builder.mutation<
         void,
         Req['deleteWarehouseConnection']
       >({
-        invalidatesTags: [{ id: 'SINGLETON', type: 'WarehouseConnection' }],
+        invalidatesTags: [{ id: 'LIST', type: 'WarehouseConnection' }],
         query: ({ environmentId }) => ({
           method: 'DELETE',
-          url: `environments/${environmentId}/warehouse-connection/`,
+          url: `environments/${environmentId}/warehouse-connections/`,
         }),
       }),
-      getWarehouseConnection: builder.query<
-        Res['warehouseConnection'],
-        Req['getWarehouseConnection']
+      getWarehouseConnections: builder.query<
+        Res['warehouseConnections'],
+        Req['getWarehouseConnections']
       >({
-        providesTags: [{ id: 'SINGLETON', type: 'WarehouseConnection' }],
+        providesTags: [{ id: 'LIST', type: 'WarehouseConnection' }],
         query: ({ environmentId }) => ({
-          url: `environments/${environmentId}/warehouse-connection/`,
+          url: `environments/${environmentId}/warehouse-connections/`,
         }),
       }),
     }),
@@ -42,5 +42,5 @@ export const warehouseConnectionService = service
 export const {
   useCreateWarehouseConnectionMutation,
   useDeleteWarehouseConnectionMutation,
-  useGetWarehouseConnectionQuery,
+  useGetWarehouseConnectionsQuery,
 } = warehouseConnectionService
