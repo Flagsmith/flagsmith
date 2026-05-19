@@ -5,7 +5,7 @@ from django.test import Client, override_settings
 from prometheus_client import REGISTRY, generate_latest
 from pytest_mock import MockerFixture
 
-from metrics.worker_metrics import clear_worker_metrics, flagsmith_worker_rss_bytes
+from metrics.worker_metrics import clear_worker_metrics
 
 
 @override_settings(
