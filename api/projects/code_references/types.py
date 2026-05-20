@@ -4,15 +4,20 @@ from typing import TypedDict
 
 from django.db.models import TextChoices
 
+from projects.models import Project
+
 
 class VCSProvider(TextChoices):
     GITHUB = "github", "GitHub"
 
 
-class JSONCodeReference(TypedDict):
-    feature_name: str
+class StoredCodeReference(TypedDict):
     file_path: str
     line_number: int
+
+
+class SubmittedCodeReference(StoredCodeReference):
+    feature_name: str
 
 
 @dataclass
@@ -39,3 +44,13 @@ class CodeReferencesRepositoryCount:
     count: int
     last_successful_repository_scanned_at: datetime
     last_feature_found_at: datetime | None
+
+
+@dataclass
+class FeatureFlagCodeReferencesScan:
+    created_at: datetime
+    repository_url: str
+    vcs_provider: VCSProvider
+    revision: str
+    code_references: list[SubmittedCodeReference]
+    project: Project

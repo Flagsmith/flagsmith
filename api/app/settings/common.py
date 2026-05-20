@@ -1078,6 +1078,12 @@ if SCIM_INSTALLED:
         ],
         "AUTH_CHECK_MIDDLEWARE": "scim.middleware.ScimAuthenticationMiddleware",
         "BASE_LOCATION_GETTER": "core.helpers.get_request_base_url",
+        "GET_EXTRA_MODEL_FILTER_KWARGS_GETTER": "scim.filters.get_extra_model_filter_kwargs_getter",
+        "GROUP_ADAPTER": "scim.adapters.GroupAdapter",
+        "GROUP_FILTER_PARSER": "scim.filters.GroupFilterQuery",
+        "GROUP_MODEL": "users.models.UserPermissionGroup",
+        "USER_ADAPTER": "scim.adapters.UserAdapter",
+        "USER_FILTER_PARSER": "scim.filters.UserFilterQuery",
     }
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
