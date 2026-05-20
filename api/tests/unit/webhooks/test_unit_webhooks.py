@@ -361,9 +361,6 @@ def test_call_integration_webhook__backoff_give_up__does_not_raise_error(
 def test_send_test_webhook__200_response_from_webhook__returns_correct_response(
     mocker: MockerFixture,
     admin_client: APIClient,
-    external_api_response_status: int,
-    expected_final_status: int,
-    external_api_error_text: str,
     organisation: Organisation,
 ) -> None:
     # Given
@@ -388,7 +385,7 @@ def test_send_test_webhook__200_response_from_webhook__returns_correct_response(
     )
 
     # Then
-    assert response.status_code == expected_final_status
+    assert response.status_code == 200
     mock_post.assert_called_once()
     response_json = response.json()
     assert response_json["status"] == 200
