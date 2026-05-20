@@ -185,4 +185,3 @@ def test_delete_environment__transaction_management_error__raises_task_backoff_e
 
     # Then
     mock_get_environment.assert_called_once_with(id=1)
-
