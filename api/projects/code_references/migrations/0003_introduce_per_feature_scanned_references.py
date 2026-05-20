@@ -247,6 +247,11 @@ class Migration(migrations.Migration):
                     name="FeatureFlagCodeReferencesScan",
                 ),
             ],
-            database_operations=[],
+            database_operations=[
+                migrations.RunSQL(
+                    sql='TRUNCATE TABLE "code_references_featureflagcodereferencesscan"',
+                    reverse_sql=migrations.RunSQL.noop,  # Re-populated by migrate_scans_backward
+                ),
+            ],
         ),
     ]
