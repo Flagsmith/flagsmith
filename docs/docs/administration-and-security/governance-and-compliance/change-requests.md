@@ -6,7 +6,7 @@ sidebar_position: 10
 
 You can use Change Requests to add workflow control to the changing of flag values. Change Requests allow a user to propose a change to a flag value, and then require that change is approved by a number of other team members.
 
-You can use Change Requests to ensure that, for example, a change to a flag in Production has to be approved by another team member. They work in a similar way to Pull Requests in git. This guide explains how to use Change Requests to add workflow control to changing flag values. You will learn how to set up, create, approve, and publish Change Requests. 
+You can use Change Requests to ensure that, for example, a change to a flag in Production has to be approved by another team member. They work in a similar way to Pull Requests in git. This guide explains how to use Change Requests to add workflow control to changing flag values. You will learn how to set up, create, approve, and publish Change Requests.
 
 ## Prerequisites
 
@@ -20,9 +20,27 @@ Change Requests are configured at the environment level. To enable and set up Ch
 2.  Enable the **Change Request** setting.
 3.  Select the required number of approvals for each Change Request to be applied.
 
+## Scope of Change Requests
+
+Change Requests apply to **environment-level** and **segment-level** flag changes only. The workflow does not apply to identity-level overrides.
+
+| Feature state type | Scoped to | Requires a Change Request? |
+| ------------------ | --------- | -------------------------- |
+| Environment default | All users in an environment | ✅ Yes |
+| Segment override | Users matching a segment | ✅ Yes |
+| Identity override | A single specific identity | ❌ No — live immediately |
+
+**Identity overrides are intentionally excluded.** They do not participate in Flagsmith's versioning system, which is what the CR workflow is built on. Changes to an identity override take effect the moment they are saved, with no approval step.
+
+This behaviour is by design — identity overrides are primarily used for developer and QA targeting, where instant, individual-scoped changes are expected.
+
+:::tip
+If your team requires approval gates on all flag changes, prefer **segment-based targeting** (e.g. a `qa-team` segment) over individual identity overrides. Segment overrides are subject to the full Change Request workflow.
+:::
+
 ## Create a Change Request
 
-Once an environment is configured with Change Requests enabled, attempting to change a flag value will prompt you to create a new Change Request.
+Once an environment is configured with Change Requests enabled, attempting to change an environment default or segment override will prompt you to create a new Change Request.
 
 When creating a Change Request, you will need to provide the following:
 
@@ -51,3 +69,4 @@ When the required number of approvals have been made, you will be able to publis
 | Publish a Change Request| Update feature state     |
 
 These permissions can be configured at both the project level and the environment level. For example, you might allow all developers to create change requests in Production, but only senior engineers to approve and publish them. See [Role-based access control](/administration-and-security/access-control/rbac) for details on configuring permissions.
+
