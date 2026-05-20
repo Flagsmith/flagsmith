@@ -2,6 +2,7 @@ from rest_framework import mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import BaseSerializer
 
 from environments.views import NestedEnvironmentViewSet
 from experimentation.models import WarehouseConnection
@@ -25,7 +26,7 @@ class WarehouseConnectionViewSet(
     lookup_field = "uuid"
     lookup_url_kwarg = "connection_id"
 
-    def perform_create(self, serializer: WarehouseConnectionSerializer) -> None:
+    def perform_create(self, serializer: BaseSerializer[WarehouseConnection]) -> None:
         connection: WarehouseConnection = serializer.save(
             environment=self._get_environment()
         )
