@@ -137,7 +137,7 @@ def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
         extensions={
             "x-gram": {
                 "name": "list_project_features",
-                "description": "Retrieves all feature flags within the specified project with pagination.",
+                "description": "Lists a project's feature flags (paginated). Pass `environment=<id>` to also get each feature's live state for that environment in `environment_feature_state`, along with override counts. Works for both v1 and v2 versioned environments.",
             },
         },
     ),
