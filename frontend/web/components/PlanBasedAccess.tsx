@@ -102,6 +102,11 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     description: 'Access all of your feature versions.',
     title: 'Version History',
   },
+  'WAREHOUSE': {
+    description:
+      'Connect a data warehouse to collect experimentation and analytics data from your environments.',
+    title: 'Warehouse Connections',
+  },
 }
 
 const PlanBasedBanner: FC<PlanBasedBannerType> = ({ children, ...props }) => {
