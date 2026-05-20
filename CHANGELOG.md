@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.234.1](https://github.com/Flagsmith/flagsmith/compare/v2.234.0...v2.234.1) (2026-05-20)
+
+
+### Bug Fixes
+
+* **Code References:** Code references are slow to query ([#7463](https://github.com/Flagsmith/flagsmith/issues/7463)) ([3f74d46](https://github.com/Flagsmith/flagsmith/commit/3f74d46efc17bf98b363469f79975724084e17c2))
+* improved list features mcp description ([#7522](https://github.com/Flagsmith/flagsmith/issues/7522)) ([7c664b3](https://github.com/Flagsmith/flagsmith/commit/7c664b3a3bc24a8aefaa8b15c3366f5ac1233ce1))
+* pass django-settings-modules as make argument to override env local ([#7552](https://github.com/Flagsmith/flagsmith/issues/7552)) ([072a0b0](https://github.com/Flagsmith/flagsmith/commit/072a0b0801df15e4dc826f8af0ca49d1449531fc))
+* **SCIM:** Missing Django SCIM settings ([#7554](https://github.com/Flagsmith/flagsmith/issues/7554)) ([2d691eb](https://github.com/Flagsmith/flagsmith/commit/2d691eb3fe653e4bf279a37d5ea17b52fa87ffc8))
+
+
+### Dependency Updates
+
+* bump webpack-dev-server from 5.2.2 to 5.2.4 in /docs ([#7547](https://github.com/Flagsmith/flagsmith/issues/7547)) ([5f87b0e](https://github.com/Flagsmith/flagsmith/commit/5f87b0e1490382173e8a0ec4c6b5d4fc4bfa518b))
+
 ## [2.234.0](https://github.com/Flagsmith/flagsmith/compare/v2.233.0...v2.234.0) (2026-05-19)
 
 
