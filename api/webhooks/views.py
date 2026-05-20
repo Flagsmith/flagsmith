@@ -63,11 +63,11 @@ class WebhookViewSet(viewsets.ViewSet):
                 },
                 status=status.HTTP_200_OK,
             )
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.RequestException:
             return Response(
                 {
                     "detail": "Could not connect to webhook URL",
-                    "body": str(e),
+                    "body": "Please check the URL, and ensure it is valid and accessible from the server.",
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
