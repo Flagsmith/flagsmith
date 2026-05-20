@@ -64,7 +64,7 @@ def migrate_scans_forward(apps: Apps, _: object) -> None:
 
     # Iteration is oldest-first, so overwriting on key collision means the
     # newest legacy scan wins for a given (feature, repository, hash).
-    per_feature_rows: dict[PerFeatureScanKey, "PerFeatureScan"] = {}
+    per_feature_rows: dict[PerFeatureScanKey, models.Model] = {}
 
     legacy_scans = LegacyScan.objects.order_by("project_id", "created_at").iterator(
         chunk_size=200,
@@ -241,17 +241,7 @@ class Migration(migrations.Migration):
             code=migrate_scans_forward,
             reverse_code=migrate_scans_backward,
         ),
-        migrations.SeparateDatabaseAndState(
-            state_operations=[
-                migrations.DeleteModel(
-                    name="FeatureFlagCodeReferencesScan",
-                ),
-            ],
-            database_operations=[
-                migrations.RunSQL(
-                    sql='TRUNCATE TABLE "code_references_featureflagcodereferencesscan"',
-                    reverse_sql=migrations.RunSQL.noop,  # Re-populated by migrate_scans_backward
-                ),
-            ],
+        migrations.DeleteModel(
+            name="FeatureFlagCodeReferencesScan",
         ),
     ]
