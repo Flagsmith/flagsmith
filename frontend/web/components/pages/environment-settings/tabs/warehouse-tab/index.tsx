@@ -63,7 +63,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
           key={connection.uuid}
           connection={connection}
           onDelete={() =>
-            deleteConnection({ environmentId })
+            deleteConnection({ environmentId, uuid: connection.uuid })
               .unwrap()
               .then(() => toast('Warehouse connection removed'))
               .catch(() =>
