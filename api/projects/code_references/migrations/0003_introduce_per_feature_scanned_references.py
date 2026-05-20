@@ -241,7 +241,12 @@ class Migration(migrations.Migration):
             code=migrate_scans_forward,
             reverse_code=migrate_scans_backward,
         ),
-        migrations.DeleteModel(
-            name="FeatureFlagCodeReferencesScan",
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.DeleteModel(
+                    name="FeatureFlagCodeReferencesScan",
+                ),
+            ],
+            database_operations=[],
         ),
     ]
