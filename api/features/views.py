@@ -6,13 +6,11 @@ from functools import reduce
 from common.core.utils import is_database_replica_setup, using_database_replica
 from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField
 from django.core.cache import caches
 from django.db.models import (
     BooleanField,
     Case,
     Exists,
-    JSONField,
     Max,
     OuterRef,
     Q,
@@ -62,7 +60,6 @@ from environments.permissions.permissions import (
     NestedEnvironmentPermissions,
 )
 from features.value_types import BOOLEAN, INTEGER, STRING
-from integrations.flagsmith.client import get_openfeature_client
 from projects.code_references.services import (
     annotate_feature_queryset_with_code_references_summary,
 )
@@ -221,18 +218,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         query_serializer.is_valid(raise_exception=True)
         query_data = query_serializer.validated_data
 
-        # TODO: Delete this after https://github.com/flagsmith/flagsmith/issues/6832 is resolved
-        organisation = project.organisation
-        if get_openfeature_client().get_boolean_value(
-            "code_references_ui_stats",
-            default_value=False,
-            evaluation_context=organisation.openfeature_evaluation_context,
-        ):
-            queryset = annotate_feature_queryset_with_code_references_summary(queryset)
-        else:
-            queryset = queryset.annotate(
-                code_references_counts=Value([], output_field=ArrayField(JSONField()))
-            )
+        queryset = annotate_feature_queryset_with_code_references_summary(queryset)
 
         queryset = self._filter_queryset(queryset, query_serializer)
 
