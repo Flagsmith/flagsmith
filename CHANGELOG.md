@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.234.2](https://github.com/Flagsmith/flagsmith/compare/v2.234.1...v2.234.2) (2026-05-20)
+
+
+### Bug Fixes
+
+* **Code References:** Very slow data migration ([#7555](https://github.com/Flagsmith/flagsmith/issues/7555)) ([4f93bf6](https://github.com/Flagsmith/flagsmith/commit/4f93bf6cf0add9436a5bc16ed9a1d6fbc58f7a52))
+
 ## [2.234.1](https://github.com/Flagsmith/flagsmith/compare/v2.234.0...v2.234.1) (2026-05-20)
 
 
