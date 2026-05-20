@@ -57,7 +57,7 @@ def test_create__soft_deleted_exists__resurrects_record(
     assert connection.name == f"Flagsmith Warehouse - {environment.name}"
 
 
-def test_create__name_uses_warehouse_type_label(
+def test_create__valid_data__name_uses_warehouse_type_label(
     environment: Environment,
 ) -> None:
     # Given
