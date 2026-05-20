@@ -1,4 +1,5 @@
 import pytest
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -7,7 +8,6 @@ from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from experimentation.models import WarehouseConnection
 from tests.types import EnableFeaturesFixture
-from tests.unit.experimentation.conftest import reverse_warehouse_connection_url
 
 pytestmark = pytest.mark.django_db
 
@@ -92,7 +92,10 @@ def test_post__non_admin__returns_403(
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
-    url = reverse_warehouse_connection_url(environment.api_key)
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-list",
+        args=[environment.api_key],
+    )
 
     # When
     response = staff_client.post(
@@ -180,13 +183,16 @@ def test_delete__exists__returns_204(
     environment: Environment,
     enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
-    warehouse_connection_url: str,
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, str(warehouse_connection.uuid)],
+    )
 
     # When
-    response = admin_client.delete(warehouse_connection_url)
+    response = admin_client.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -199,14 +205,18 @@ def test_delete__exists__returns_204(
 
 def test_delete__not_exists__returns_404(
     admin_client: APIClient,
+    environment: Environment,
     enable_features: EnableFeaturesFixture,
-    warehouse_connection_url: str,
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, "00000000-0000-0000-0000-000000000000"],
+    )
 
     # When
-    response = admin_client.delete(warehouse_connection_url)
+    response = admin_client.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -217,13 +227,16 @@ def test_delete__exists__creates_audit_log(
     environment: Environment,
     enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
-    warehouse_connection_url: str,
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, str(warehouse_connection.uuid)],
+    )
 
     # When
-    admin_client.delete(warehouse_connection_url)
+    admin_client.delete(url)
 
     # Then
     assert (
@@ -237,3 +250,48 @@ def test_delete__exists__creates_audit_log(
     )
     assert "deleted" in audit_log.log
     assert environment.name in audit_log.log
+
+
+def test_get_detail__exists__returns_200(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, str(warehouse_connection.uuid)],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["uuid"] == str(warehouse_connection.uuid)
+    assert data["warehouse_type"] == "flagsmith"
+    assert data["status"] == "pending_connection"
+    assert data["name"] == f"Flagsmith Warehouse - {environment.name}"
+    assert "created_at" in data
+
+
+def test_get_detail__not_exists__returns_404(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, "00000000-0000-0000-0000-000000000000"],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND

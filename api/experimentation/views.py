@@ -1,11 +1,10 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import status
+from rest_framework import mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.serializers import BaseSerializer
 
-from environments.models import Environment
+from environments.views import NestedEnvironmentViewSet
 from experimentation.models import WarehouseConnection
 from experimentation.permissions import WarehouseConnectionPermission
 from experimentation.serializers import WarehouseConnectionSerializer
@@ -13,21 +12,37 @@ from experimentation.services import create_warehouse_audit_log
 from users.models import FFAdminUser
 
 
-class WarehouseConnectionView(APIView):
+class WarehouseConnectionViewSet(
+    NestedEnvironmentViewSet[WarehouseConnection],
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+):
+    serializer_class = WarehouseConnectionSerializer
+    pagination_class = None
     permission_classes = [IsAuthenticated, WarehouseConnectionPermission]
+    model_class = WarehouseConnection
+    lookup_field = "uuid"
+    lookup_url_kwarg = "connection_id"
 
-    def _get_user(self, request: Request) -> FFAdminUser:
-        return request.user  # type: ignore[return-value]
+    def perform_create(self, serializer: BaseSerializer[WarehouseConnection]) -> None:
+        connection: WarehouseConnection = serializer.save(
+            environment=self._get_environment()
+        )
+        create_warehouse_audit_log(
+            connection, self._get_user(self.request), action="created"
+        )
 
-    def get(self, request: Request, environment_api_key: str) -> Response:
-        environment = get_object_or_404(Environment, api_key=environment_api_key)
-        connections = WarehouseConnection.objects.filter(environment=environment)
-        return Response(WarehouseConnectionSerializer(connections, many=True).data)
+    def perform_destroy(self, instance: WarehouseConnection) -> None:
+        create_warehouse_audit_log(
+            instance, self._get_user(self.request), action="deleted"
+        )
+        instance.delete()
 
-    def post(self, request: Request, environment_api_key: str) -> Response:
-        environment = get_object_or_404(Environment, api_key=environment_api_key)
-
-        serializer = WarehouseConnectionSerializer(data=request.data)
+    def create(self, request: Request, *args: object, **kwargs: object) -> Response:
+        environment = self._get_environment()
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         warehouse_type = serializer.validated_data["warehouse_type"]
@@ -37,30 +52,12 @@ class WarehouseConnectionView(APIView):
         ).exists():
             return Response(
                 {"detail": "Warehouse connection already exists."},
-                status=status.HTTP_409_CONFLICT,
+                status=409,
             )
 
-        connection = serializer.save(environment=environment)
-        create_warehouse_audit_log(
-            connection, self._get_user(request), action="created"
-        )
-        return Response(
-            WarehouseConnectionSerializer(connection).data,
-            status=status.HTTP_201_CREATED,
-        )
+        self.perform_create(serializer)
+        return Response(serializer.data, status=201)
 
-    def delete(self, request: Request, environment_api_key: str) -> Response:
-        environment = get_object_or_404(Environment, api_key=environment_api_key)
-        connection = WarehouseConnection.objects.filter(
-            environment=environment,
-        ).first()
-        if connection is None:
-            return Response(
-                {"detail": "Not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        create_warehouse_audit_log(
-            connection, self._get_user(request), action="deleted"
-        )
-        connection.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    @staticmethod
+    def _get_user(request: Request) -> FFAdminUser:
+        return request.user  # type: ignore[return-value]

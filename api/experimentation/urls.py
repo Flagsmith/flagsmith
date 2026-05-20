@@ -1,13 +1,10 @@
-from django.urls import path
+from rest_framework.routers import DefaultRouter
 
-from experimentation.views import WarehouseConnectionView
+from experimentation.views import WarehouseConnectionViewSet
 
 app_name = "experimentation"
 
-urlpatterns = [
-    path(
-        "",
-        WarehouseConnectionView.as_view(),
-        name="warehouse-connections",
-    ),
-]
+router = DefaultRouter()
+router.register(r"", WarehouseConnectionViewSet, basename="warehouse-connections")
+
+urlpatterns = router.urls

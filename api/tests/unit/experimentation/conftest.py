@@ -1,4 +1,5 @@
 import pytest
+from django.urls import reverse
 
 from environments.models import Environment
 from experimentation.models import WarehouseConnection, WarehouseType
@@ -16,13 +17,7 @@ def warehouse_connection(environment: Environment) -> WarehouseConnection:
 
 @pytest.fixture()
 def warehouse_connection_url(environment: Environment) -> str:
-    return reverse_warehouse_connection_url(environment.api_key)
-
-
-def reverse_warehouse_connection_url(environment_api_key: str) -> str:
-    from django.urls import reverse
-
     return reverse(
-        "api-v1:environments:experimentation:warehouse-connections",
-        args=[environment_api_key],
+        "api-v1:environments:experimentation:warehouse-connections-list",
+        args=[environment.api_key],
     )
