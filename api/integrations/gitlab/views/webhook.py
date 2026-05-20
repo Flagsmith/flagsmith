@@ -32,4 +32,11 @@ def gitlab_webhook(request: Request, webhook_uuid: str) -> Response:
     payload = cast(GitLabWebhookPayload, request.data)
     apply_tag_for_event(webhook=webhook, payload=payload)
     update_resource_metadata(webhook=webhook, payload=payload)
+    logger.info(
+        "webhook.processed",
+        organisation__id=webhook.gitlab_configuration.project.organisation_id,
+        project__id=webhook.gitlab_configuration.project_id,
+        object_kind=payload.get("object_kind"),
+        action=(payload.get("object_attributes") or {}).get("action"),
+    )
     return Response(status=status.HTTP_200_OK)

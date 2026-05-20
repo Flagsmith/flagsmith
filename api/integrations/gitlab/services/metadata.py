@@ -1,7 +1,5 @@
 import json
 
-import structlog
-
 from features.feature_external_resources.models import (
     FeatureExternalResource,
     ResourceType,
@@ -12,8 +10,6 @@ from integrations.gitlab.mappers import (
 )
 from integrations.gitlab.models import GitLabWebhook
 from integrations.gitlab.types import GitLabResourceMetadata, GitLabWebhookPayload
-
-logger = structlog.get_logger("gitlab")
 
 _RESOURCE_TYPE_BY_OBJECT_KIND: dict[str, str] = {
     "issue": ResourceType.GITLAB_ISSUE.value,
@@ -37,10 +33,6 @@ def update_resource_metadata(
         url__in=map_resource_url_to_filter_value(resource_url),
     )
 
-    log = logger.bind(
-        organisation__id=webhook.gitlab_configuration.project.organisation_id,
-        project__id=webhook.gitlab_configuration.project_id,
-    )
     for resource in resources:
         current = json.loads(resource.metadata) if resource.metadata else {}
         merged: GitLabResourceMetadata = {**current, **new_fields}
@@ -51,10 +43,3 @@ def update_resource_metadata(
             continue
         resource.metadata = json.dumps(merged)
         resource.save(update_fields=["metadata"])
-        log.info(
-            "external_resource.metadata.refreshed",
-            feature__id=resource.feature_id,
-            external_resource__id=resource.id,
-            object_kind=payload.get("object_kind"),
-            changed=changed,
-        )

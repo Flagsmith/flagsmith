@@ -163,32 +163,6 @@ Attributes:
  - `organisation.id`
  - `project.id`
 
-### `gitlab.external_resource.metadata.refreshed`
-
-Logged at `info` from:
- - `api/integrations/gitlab/services/metadata.py:54`
-
-Attributes:
- - `changed`
- - `external_resource.id`
- - `feature.id`
- - `object_kind`
- - `organisation.id`
- - `project.id`
-
-### `gitlab.feature.tagged`
-
-Logged at `info` from:
- - `api/integrations/gitlab/services/tagging.py:89`
-
-Attributes:
- - `action`
- - `feature.id`
- - `object_kind`
- - `organisation.id`
- - `project.id`
- - `tag.label`
-
 ### `gitlab.label.created`
 
 Logged at `info` from:
@@ -281,6 +255,17 @@ Attributes:
  - `exc_info`
  - `gitlab.hook.id`
  - `gitlab.project.id`
+ - `organisation.id`
+ - `project.id`
+
+### `gitlab.webhook.processed`
+
+Logged at `info` from:
+ - `api/integrations/gitlab/views/webhook.py:35`
+
+Attributes:
+ - `action`
+ - `object_kind`
  - `organisation.id`
  - `project.id`
 

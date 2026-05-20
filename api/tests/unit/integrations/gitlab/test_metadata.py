@@ -1,7 +1,6 @@
 import json
 
 import pytest
-from pytest_structlog import StructuredLogCapture
 
 from features.feature_external_resources.models import (
     FeatureExternalResource,
@@ -13,10 +12,9 @@ from integrations.gitlab.services.metadata import update_resource_metadata
 
 
 @pytest.mark.django_db
-def test_update_resource_metadata__issue_state_changed__updates_metadata_and_logs(
+def test_update_resource_metadata__issue_state_changed__updates_metadata(
     feature: Feature,
     gitlab_webhook: GitLabWebhook,
-    log: StructuredLogCapture,
 ) -> None:
     # Given
     resource = FeatureExternalResource.objects.create(
@@ -44,25 +42,12 @@ def test_update_resource_metadata__issue_state_changed__updates_metadata_and_log
     resource.refresh_from_db()
     assert resource.metadata is not None
     assert json.loads(resource.metadata) == {"state": "closed", "title": "Bug"}
-    assert log.events == [
-        {
-            "level": "info",
-            "event": "external_resource.metadata.refreshed",
-            "organisation__id": gitlab_webhook.gitlab_configuration.project.organisation_id,
-            "project__id": gitlab_webhook.gitlab_configuration.project_id,
-            "feature__id": feature.id,
-            "external_resource__id": resource.id,
-            "object_kind": "issue",
-            "changed": ["state"],
-        },
-    ]
 
 
 @pytest.mark.django_db
-def test_update_resource_metadata__issue_title_changed__updates_metadata_and_logs(
+def test_update_resource_metadata__issue_title_changed__updates_metadata(
     feature: Feature,
     gitlab_webhook: GitLabWebhook,
-    log: StructuredLogCapture,
 ) -> None:
     # Given
     resource = FeatureExternalResource.objects.create(
@@ -89,18 +74,6 @@ def test_update_resource_metadata__issue_title_changed__updates_metadata_and_log
     resource.refresh_from_db()
     assert resource.metadata is not None
     assert json.loads(resource.metadata) == {"state": "opened", "title": "New name"}
-    assert log.events == [
-        {
-            "level": "info",
-            "event": "external_resource.metadata.refreshed",
-            "organisation__id": gitlab_webhook.gitlab_configuration.project.organisation_id,
-            "project__id": gitlab_webhook.gitlab_configuration.project_id,
-            "feature__id": feature.id,
-            "external_resource__id": resource.id,
-            "object_kind": "issue",
-            "changed": ["title"],
-        },
-    ]
 
 
 @pytest.mark.django_db
@@ -236,10 +209,9 @@ def test_update_resource_metadata__merge_request_work_in_progress_only__updates_
 
 
 @pytest.mark.django_db
-def test_update_resource_metadata__nothing_changed__skips_write_and_log(
+def test_update_resource_metadata__nothing_changed__skips_write(
     feature: Feature,
     gitlab_webhook: GitLabWebhook,
-    log: StructuredLogCapture,
 ) -> None:
     # Given
     resource = FeatureExternalResource.objects.create(
@@ -265,13 +237,11 @@ def test_update_resource_metadata__nothing_changed__skips_write_and_log(
     resource.refresh_from_db()
     assert resource.metadata is not None
     assert json.loads(resource.metadata) == {"state": "opened"}
-    assert log.events == []
 
 
 @pytest.mark.django_db
 def test_update_resource_metadata__no_linked_resource__noop(
     gitlab_webhook: GitLabWebhook,
-    log: StructuredLogCapture,
 ) -> None:
     # Given / When
     update_resource_metadata(
@@ -285,15 +255,14 @@ def test_update_resource_metadata__no_linked_resource__noop(
         },
     )
 
-    # Then
-    assert log.events == []
+    # Then — no exception raised
+    assert not FeatureExternalResource.objects.exists()
 
 
 @pytest.mark.django_db
 def test_update_resource_metadata__unsupported_object_kind__noop(
     feature: Feature,
     gitlab_webhook: GitLabWebhook,
-    log: StructuredLogCapture,
 ) -> None:
     # Given
     resource = FeatureExternalResource.objects.create(
@@ -319,4 +288,3 @@ def test_update_resource_metadata__unsupported_object_kind__noop(
     resource.refresh_from_db()
     assert resource.metadata is not None
     assert json.loads(resource.metadata) == {"state": "opened"}
-    assert log.events == []
