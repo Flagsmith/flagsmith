@@ -2,7 +2,7 @@ import hashlib
 import json
 from itertools import groupby
 from operator import attrgetter
-from typing import TypedDict
+from typing import NamedTuple, TypedDict
 
 import django.db.models.deletion
 from django.apps.registry import Apps
@@ -42,18 +42,33 @@ def migrate_scans_forward(apps: Apps, _: object) -> None:
         "vcs_provider",
     ).annotate(last_scanned_at=Max("created_at"))
 
-    repositories = {
-        (summary["project_id"], summary["repository_url"]): Repository.objects.create(
+    repositories_to_create = [
+        Repository(
             project_id=summary["project_id"],
             url=summary["repository_url"],
             vcs_provider=summary["vcs_provider"],
             last_scanned_at=summary["last_scanned_at"],
         )
         for summary in legacy_scans_summaries
+    ]
+    Repository.objects.bulk_create(repositories_to_create)
+    repositories = {
+        (repository.project_id, repository.url): repository
+        for repository in repositories_to_create
     }
 
-    # Oldest-first per project so the newest scan wins on hash collisions
-    legacy_scans = LegacyScan.objects.order_by("project_id", "created_at").iterator()
+    class PerFeatureScanKey(NamedTuple):
+        feature_id: int
+        repository_id: int
+        code_references_hash: str
+
+    # Iteration is oldest-first, so overwriting on key collision means the
+    # newest legacy scan wins for a given (feature, repository, hash).
+    per_feature_rows: dict[PerFeatureScanKey, models.Model] = {}
+
+    legacy_scans = LegacyScan.objects.order_by("project_id", "created_at").iterator(
+        chunk_size=200,
+    )
     grouped_scans = groupby(legacy_scans, key=attrgetter("project_id"))
     for project_id, project_scans in grouped_scans:
         features = {
@@ -64,8 +79,7 @@ def migrate_scans_forward(apps: Apps, _: object) -> None:
             )
         }
         for legacy_scan in project_scans:
-            repository_url = legacy_scan.repository_url
-            repository = repositories[project_id, repository_url]
+            repository = repositories[project_id, legacy_scan.repository_url]
 
             references_by_feature: dict[str, list[StoredCodeReference]] = {}
             for reference in legacy_scan.code_references:
@@ -80,16 +94,25 @@ def migrate_scans_forward(apps: Apps, _: object) -> None:
             for feature_name, references in references_by_feature.items():
                 if not (feature := features.get((project_id, feature_name))):
                     continue
-                PerFeatureScan.objects.update_or_create(
+                references_hash = _hash_references(references)
+                key = PerFeatureScanKey(
+                    feature_id=feature.id,
+                    repository_id=repository.id,
+                    code_references_hash=references_hash,
+                )
+                per_feature_rows[key] = PerFeatureScan(
                     feature=feature,
                     repository=repository,
-                    code_references_hash=_hash_references(references),
-                    defaults={
-                        "revision": legacy_scan.revision,
-                        "code_references": references,
-                        "created_at": legacy_scan.created_at,
-                    },
+                    code_references_hash=references_hash,
+                    revision=legacy_scan.revision,
+                    code_references=references,
+                    created_at=legacy_scan.created_at,
                 )
+
+    PerFeatureScan.objects.bulk_create(
+        per_feature_rows.values(),
+        batch_size=1000,
+    )
 
 
 def migrate_scans_backward(apps: Apps, _: object) -> None:
