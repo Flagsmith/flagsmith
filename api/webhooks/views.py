@@ -51,7 +51,7 @@ class WebhookViewSet(viewsets.ViewSet):
                 return Response(
                     {
                         "detail": "Webhook returned invalid status",
-                        "body": response.text,
+                        "body": "Please check the webhook endpoint to validate it returns a 200 OK.",
                         "status": response.status_code,
                     },
                     status=status.HTTP_400_BAD_REQUEST,

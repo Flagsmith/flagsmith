@@ -427,7 +427,10 @@ def test_send_test_webhook__various_status_codes__returns_correct_response(
     # Then
     assert response.status_code == expected_final_status
     mock_post.assert_called_once()
-    assert response.json() == expected_response_body
+    assert (
+        response.json()
+        == "Please check the webhook endpoint to validate it returns a 200 OK."
+    )
 
 
 @pytest.mark.parametrize(
