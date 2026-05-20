@@ -1,5 +1,6 @@
 import pytest
-from django.db import OperationalError
+from django.db import IntegrityError, OperationalError
+from django.db.transaction import TransactionManagementError
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 from task_processor.exceptions import TaskBackoffError
@@ -190,6 +191,38 @@ def test_delete_feature__database_deadlock__raises_task_backoff_error(
     # Given
     mock_get_feature = mocker.patch("features.tasks.Feature.objects.get")
     mock_get_feature.side_effect = OperationalError
+
+    # When
+    with pytest.raises(TaskBackoffError):
+        delete_feature(feature_id=1)
+
+    # Then
+    mock_get_feature.assert_called_once_with(pk=1)
+
+
+@pytest.mark.django_db
+def test_delete_feature__integrity_error__raises_task_backoff_error(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_get_feature = mocker.patch("features.tasks.Feature.objects.get")
+    mock_get_feature.side_effect = IntegrityError
+
+    # When
+    with pytest.raises(TaskBackoffError):
+        delete_feature(feature_id=1)
+
+    # Then
+    mock_get_feature.assert_called_once_with(pk=1)
+
+
+@pytest.mark.django_db
+def test_delete_feature__transaction_management_error__raises_task_backoff_error(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_get_feature = mocker.patch("features.tasks.Feature.objects.get")
+    mock_get_feature.side_effect = TransactionManagementError
 
     # When
     with pytest.raises(TaskBackoffError):

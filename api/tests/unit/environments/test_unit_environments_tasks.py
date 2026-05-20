@@ -1,5 +1,6 @@
 import pytest
-from django.db import OperationalError
+from django.db import IntegrityError, OperationalError
+from django.db.transaction import TransactionManagementError
 from pytest_mock import MockerFixture
 from task_processor.exceptions import TaskBackoffError
 
@@ -123,6 +124,7 @@ def test_delete_environment_from_dynamo__valid_environment__calls_all_wrappers(
     )
 
 
+@pytest.mark.django_db
 def test_delete_environment__environment_does_not_exist__succeeds_silently(
     mocker: MockerFixture,
 ) -> None:
@@ -134,10 +136,10 @@ def test_delete_environment__environment_does_not_exist__succeeds_silently(
     delete_environment(environment_id=1)
 
     # Then
-    # No exception is raised, confirming silent success
     mock_get_environment.assert_called_once_with(id=1)
 
 
+@pytest.mark.django_db
 def test_delete_environment__database_deadlock__raises_task_backoff_error(
     mocker: MockerFixture,
 ) -> None:
@@ -150,15 +152,37 @@ def test_delete_environment__database_deadlock__raises_task_backoff_error(
         delete_environment(environment_id=1)
 
     # Then
-    # TaskBackoffError is raised to trigger the task-processor retry
-    mock_get_environment.assert_called_once_with(id=1)  # Given
+    mock_get_environment.assert_called_once_with(id=1)
+
+
+@pytest.mark.django_db
+def test_delete_environment__integrity_error__raises_task_backoff_error(
+    mocker: MockerFixture,
+) -> None:
+    # Given
     mock_get_environment = mocker.patch("environments.tasks.Environment.objects.get")
-    mock_get_environment.side_effect = OperationalError
+    mock_get_environment.side_effect = IntegrityError
 
     # When
     with pytest.raises(TaskBackoffError):
         delete_environment(environment_id=1)
 
     # Then
-    # TaskBackoffError is raised to trigger the task-processor retry
     mock_get_environment.assert_called_once_with(id=1)
+
+
+@pytest.mark.django_db
+def test_delete_environment__transaction_management_error__raises_task_backoff_error(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_get_environment = mocker.patch("environments.tasks.Environment.objects.get")
+    mock_get_environment.side_effect = TransactionManagementError
+
+    # When
+    with pytest.raises(TaskBackoffError):
+        delete_environment(environment_id=1)
+
+    # Then
+    mock_get_environment.assert_called_once_with(id=1)
+
