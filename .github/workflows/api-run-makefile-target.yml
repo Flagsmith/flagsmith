@@ -21,8 +21,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  # TODO: remove once flagsmith-sql-flag-engine is public (https://github.com/Flagsmith/flagsmith-sql-flag-engine/issues/6)
-  id-token: write # For CodeArtifact OIDC
 
 defaults:
   run:
@@ -39,10 +37,6 @@ jobs:
         uses: ./.github/actions/install-uv
         with:
           python-version: 3.13
-
-      # TODO: remove once flagsmith-sql-flag-engine is public (https://github.com/Flagsmith/flagsmith-sql-flag-engine/issues/6)
-      - name: Authenticate with CodeArtifact
-        uses: ./.github/actions/codeartifact-login
 
       - name: Install Dependencies
         run: make install-packages opts='--extra dev'
