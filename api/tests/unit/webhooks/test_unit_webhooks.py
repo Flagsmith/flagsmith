@@ -504,7 +504,9 @@ def test_send_test_webhook__request_exception__returns_error_response(
     # Given
     webhook_url = "http://test.webhook.com"
     mock_post = mocker.patch("requests.post")
-    mock_post.side_effect = requests.exceptions.RequestException("Connection refused")
+    mock_post.side_effect = requests.exceptions.RequestException(
+        "Some internal exception details that should not be exposed!"
+    )
 
     url = reverse("api-v1:webhooks:webhooks-test")
 
@@ -523,7 +525,7 @@ def test_send_test_webhook__request_exception__returns_error_response(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {
         "detail": "Could not connect to webhook URL",
-        "body": "Connection refused",
+        "body": "Please check the URL, and ensure it is valid and accessible from the server.",
     }
 
 
