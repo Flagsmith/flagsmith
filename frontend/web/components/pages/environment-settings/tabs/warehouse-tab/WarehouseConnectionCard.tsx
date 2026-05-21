@@ -18,15 +18,20 @@ type WarehouseConnectionCardProps = {
 
 const STATUS_COLOUR: Record<WarehouseConnectionStatus, string> = {
   connected: '#27AE60',
+  created: '#F2C94C',
   errored: '#EB5757',
   pending_connection: '#F2C94C',
 }
 
 const STATUS_LABEL: Record<WarehouseConnectionStatus, string> = {
   connected: 'Connected',
+  created: 'Created',
   errored: 'Errored',
   pending_connection: 'Pending Connection',
 }
+
+const isSetupStatus = (status: WarehouseConnectionStatus) =>
+  status === 'created' || status === 'pending_connection'
 
 const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   connection,
@@ -44,8 +49,36 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
     })
   }
 
+  const renderBody = () => {
+    if (isSetupStatus(connection.status)) {
+      if (connection.warehouse_type === 'flagsmith') {
+        return (
+          <>
+            <WarehouseEventCodeHelp />
+            <Button className='align-self-end' theme='primary'>
+              Send your first event
+            </Button>
+          </>
+        )
+      }
+      return (
+        <pre className='bg-dark text-white p-3 rounded'>
+          {'SELECT * FROM users'}
+        </pre>
+      )
+    }
+    return (
+      <WarehouseStats
+        errored={connection.status === 'errored'}
+        lastEventReceived='19 May 2026, 14:32'
+        totalEventsReceived={1247}
+        uniqueEventsCount={38}
+      />
+    )
+  }
+
   return (
-    <div className='d-flex flex-column px-3 py-3 accordion-card m-0'>
+    <div className='d-flex flex-column px-3 py-3 accordion-card m-0 mb-2'>
       <div
         className='d-flex flex-row align-items-center justify-content-between'
         style={{ cursor: 'pointer' }}
@@ -80,23 +113,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
         </div>
       </div>
       <div ref={contentRef} style={collapsibleStyle}>
-        <div className='mt-3 mb-2 d-flex flex-column gap-3'>
-          {connection.status === 'pending_connection' ? (
-            <>
-              <WarehouseEventCodeHelp />
-              <Button className='align-self-end' theme='primary'>
-                Send your first event
-              </Button>
-            </>
-          ) : (
-            <WarehouseStats
-              errored={connection.status === 'errored'}
-              lastEventReceived='19 May 2026, 14:32'
-              totalEventsReceived={1247}
-              uniqueEventsCount={38}
-            />
-          )}
-        </div>
+        <div className='mt-3 mb-2 d-flex flex-column gap-3'>{renderBody()}</div>
       </div>
     </div>
   )

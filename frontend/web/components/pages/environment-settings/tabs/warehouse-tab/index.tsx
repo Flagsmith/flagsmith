@@ -1,11 +1,13 @@
-import React, { FC } from 'react'
+import { FC } from 'react'
 import {
   useCreateWarehouseConnectionMutation,
   useDeleteWarehouseConnectionMutation,
   useGetWarehouseConnectionsQuery,
 } from 'common/services/useWarehouseConnection'
+import Button from 'components/base/forms/Button'
 import Setting from 'components/Setting'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
+import CreateWarehouseConnectionModal from './CreateWarehouseConnectionModal'
 
 type WarehouseTabProps = {
   environmentId: string
@@ -20,12 +22,28 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     useCreateWarehouseConnectionMutation()
   const [deleteConnection] = useDeleteWarehouseConnectionMutation()
 
-  const hasNoConnection =
-    !isLoading && (!connections || connections.length === 0)
+  const hasFlagsmithConnection = connections?.some(
+    (c) => c.warehouse_type === 'flagsmith',
+  )
 
-  if (hasNoConnection) {
-    return (
-      <div className='mt-4 col-md-12'>
+  const handleOpenDrawer = () => {
+    openModal(
+      'Connect Warehouse',
+      <CreateWarehouseConnectionModal
+        save={(data) => createConnection({ environmentId, ...data }).unwrap()}
+      />,
+      'side-modal side-modal--narrow',
+    )
+  }
+
+  return (
+    <div className='mt-4 col-md-12'>
+      <div className='d-flex justify-content-end mb-3'>
+        <Button onClick={handleOpenDrawer} size='small'>
+          Connect your private warehouse
+        </Button>
+      </div>
+      {!hasFlagsmithConnection && (
         <Setting
           title='Connect Flagsmith Warehouse'
           description='Enable a hosted warehouse connection for this environment to collect experimentation data.'
@@ -48,17 +66,8 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
             })
           }
         />
-      </div>
-    )
-  }
-
-  if (!connections || connections.length === 0) {
-    return null
-  }
-
-  return (
-    <div className='mt-4 col-md-12'>
-      {connections.map((connection) => (
+      )}
+      {connections?.map((connection) => (
         <WarehouseConnectionCard
           key={connection.uuid}
           connection={connection}
