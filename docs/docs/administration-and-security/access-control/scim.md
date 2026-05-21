@@ -108,16 +108,16 @@ You can view and manage SCIM configurations from **Organisation Settings** > **S
 
 :::note
 
-These guides were last verified in April 2026. If your identity provider's UI has changed, refer to their documentation
+These guides were last verified in May 2026. If your identity provider's UI has changed, refer to their documentation
 for the most up-to-date steps.
 
 :::
 
 ### Okta
 
-1. Open the Flagsmith application in the Okta admin dashboard.
+1. Go to the "Applications" page and open the Flagsmith application.
 2. Go to the "General" tab and click "Edit" under "App Settings".
-3. Enable "SCIM provisioning" and click "Save".
+3. Enable "Provisioning" and click "Save".
 4. A new "Provisioning" tab will appear. Open it and click "Edit" under "SCIM Connection".
 5. Set the SCIM connector base URL to your Flagsmith SCIM base URL.
 6. Set the unique identifier field to `email`.
