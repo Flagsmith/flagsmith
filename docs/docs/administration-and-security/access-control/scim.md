@@ -96,6 +96,14 @@ The exact steps depend on your identity provider. See the guides below for commo
 In your identity provider, assign users and groups to the Flagsmith SCIM application. Your identity provider will begin
 pushing these to Flagsmith immediately.
 
+## Managing SCIM tokens
+
+You can view and manage SCIM configurations from **Organisation Settings** > **SSO** > **SCIM**. From this page you can:
+
+- Regenerate a SCIM token. This invalidates the previous token immediately.
+- Delete the SCIM configuration. This stops all SCIM provisioning for the organisation. Existing users and groups are
+  not removed.
+
 ## Identity provider guides
 
 :::note
@@ -147,13 +155,6 @@ All SCIM endpoints are under `/api/v1/scim/v2/` and require a valid SCIM bearer 
 API supports filtering (e.g. `filter=userName eq "user@example.com"`) and pagination (`startIndex`, `count`) on list
 endpoints as defined by the SCIM 2.0 specification.
 
-## Managing SCIM tokens
-
-You can view and manage SCIM configurations from **Organisation Settings** > **SSO** > **SCIM**. From this page you can:
-
-- Regenerate a SCIM token. This invalidates the previous token immediately.
-- Delete the SCIM configuration. This stops all SCIM provisioning for the organisation. Existing users and groups are
-  not removed.
 
 ## Troubleshooting
 
