@@ -968,6 +968,6 @@ export type Req = {
   }>
   getWarehouseConnections: { environmentId: string }
   createWarehouseConnection: { environmentId: string; warehouse_type: string }
-  deleteWarehouseConnection: { environmentId: string; uuid: string }
+  deleteWarehouseConnection: { environmentId: string; id: number }
   // END OF TYPES
 }

@@ -1095,7 +1095,7 @@ export type WarehouseConnectionStatus =
 export type WarehouseType = 'flagsmith' | 'snowflake' | 'clickhouse'
 
 export type WarehouseConnection = {
-  uuid: string
+  id: number
   warehouse_type: WarehouseType
   status: WarehouseConnectionStatus
   name: string
