@@ -63,7 +63,7 @@ Attributes:
 ### `code_references.scan.created`
 
 Logged at `info` from:
- - `api/projects/code_references/views.py:41`
+ - `api/projects/code_references/views.py:61`
 
 Attributes:
  - `code_references.count`

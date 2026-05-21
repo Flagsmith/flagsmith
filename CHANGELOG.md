@@ -1,5 +1,71 @@
 # Changelog
 
+## [2.234.2](https://github.com/Flagsmith/flagsmith/compare/v2.234.1...v2.234.2) (2026-05-20)
+
+
+### Bug Fixes
+
+* **Code References:** Very slow data migration ([#7555](https://github.com/Flagsmith/flagsmith/issues/7555)) ([4f93bf6](https://github.com/Flagsmith/flagsmith/commit/4f93bf6cf0add9436a5bc16ed9a1d6fbc58f7a52))
+
+## [2.234.1](https://github.com/Flagsmith/flagsmith/compare/v2.234.0...v2.234.1) (2026-05-20)
+
+
+### Bug Fixes
+
+* **Code References:** Code references are slow to query ([#7463](https://github.com/Flagsmith/flagsmith/issues/7463)) ([3f74d46](https://github.com/Flagsmith/flagsmith/commit/3f74d46efc17bf98b363469f79975724084e17c2))
+* improved list features mcp description ([#7522](https://github.com/Flagsmith/flagsmith/issues/7522)) ([7c664b3](https://github.com/Flagsmith/flagsmith/commit/7c664b3a3bc24a8aefaa8b15c3366f5ac1233ce1))
+* pass django-settings-modules as make argument to override env local ([#7552](https://github.com/Flagsmith/flagsmith/issues/7552)) ([072a0b0](https://github.com/Flagsmith/flagsmith/commit/072a0b0801df15e4dc826f8af0ca49d1449531fc))
+* **SCIM:** Missing Django SCIM settings ([#7554](https://github.com/Flagsmith/flagsmith/issues/7554)) ([2d691eb](https://github.com/Flagsmith/flagsmith/commit/2d691eb3fe653e4bf279a37d5ea17b52fa87ffc8))
+
+
+### Dependency Updates
+
+* bump webpack-dev-server from 5.2.2 to 5.2.4 in /docs ([#7547](https://github.com/Flagsmith/flagsmith/issues/7547)) ([5f87b0e](https://github.com/Flagsmith/flagsmith/commit/5f87b0e1490382173e8a0ec4c6b5d4fc4bfa518b))
+
+## [2.234.0](https://github.com/Flagsmith/flagsmith/compare/v2.233.0...v2.234.0) (2026-05-19)
+
+
+### Features
+
+* bypass pre versioning scaleup unlimited audit and feature visibility ([#7497](https://github.com/Flagsmith/flagsmith/issues/7497)) ([f6be65e](https://github.com/Flagsmith/flagsmith/commit/f6be65e2aa65dbdc03a82c0ac00ece4a6f13944c))
+* compare empty string display ([#7498](https://github.com/Flagsmith/flagsmith/issues/7498)) ([7dbd28e](https://github.com/Flagsmith/flagsmith/commit/7dbd28eb3d1e25b88e6ce0e98c971ae661959ba2))
+* **SCIM:** SCIM configuration management UI ([#7528](https://github.com/Flagsmith/flagsmith/issues/7528)) ([396d871](https://github.com/Flagsmith/flagsmith/commit/396d871181f28484d2770e478a35cb789a0b9d71))
+* **SCIM:** Wire flagsmith-private SCIM app into the api ([#7512](https://github.com/Flagsmith/flagsmith/issues/7512)) ([0047a5f](https://github.com/Flagsmith/flagsmith/commit/0047a5f6492851b995601efe05b542f721b6aea4))
+* updated yearly price to be 50 per extra seat ([#7490](https://github.com/Flagsmith/flagsmith/issues/7490)) ([8f8b837](https://github.com/Flagsmith/flagsmith/commit/8f8b83775642ffea54551121f64f38978191b244))
+
+
+### Bug Fixes
+
+* **hubspot:** restore orgid_unique write on company ([#7478](https://github.com/Flagsmith/flagsmith/issues/7478)) ([70f25fa](https://github.com/Flagsmith/flagsmith/commit/70f25fa849e91c7a3631ba263aa934c2d7c39ae0))
+* **projects:** validate organisation query param is numeric ([#7486](https://github.com/Flagsmith/flagsmith/issues/7486)) ([4f04389](https://github.com/Flagsmith/flagsmith/commit/4f04389dd6cc5861749809c17d5667c80c844b38))
+* **SCIM:** drop service-provider settings django-scim2 ignores ([#7519](https://github.com/Flagsmith/flagsmith/issues/7519)) ([6168392](https://github.com/Flagsmith/flagsmith/commit/6168392e42e1435554ad9d0a4237c4b04263356c))
+* **sentry:** emit change-tracking events for v2-versioning environments ([#7503](https://github.com/Flagsmith/flagsmith/issues/7503)) ([82c5dfb](https://github.com/Flagsmith/flagsmith/commit/82c5dfbcf4b0ba6e339a22a53755c881176971fc))
+* **versioning:** include multivariate values in v2 webhook payloads ([#7496](https://github.com/Flagsmith/flagsmith/issues/7496)) ([913daeb](https://github.com/Flagsmith/flagsmith/commit/913daeb930339435083d5557667f43bbec1193cb))
+* **versioning:** reject create-segment-override on v2 environments ([#7494](https://github.com/Flagsmith/flagsmith/issues/7494)) ([64d909f](https://github.com/Flagsmith/flagsmith/commit/64d909fca18a8efe890fff734a3c18ef7d0f2017))
+* **versioning:** reject legacy feature-state writes on v2 environments ([#7488](https://github.com/Flagsmith/flagsmith/issues/7488)) ([131f284](https://github.com/Flagsmith/flagsmith/commit/131f28457f0150714fa3a80fd08185bb2ff17251))
+
+
+### Dependency Updates
+
+* **Enterprise:** Consolidate Release Pipelines, SAML, and SCIM dependencies ([#7515](https://github.com/Flagsmith/flagsmith/issues/7515)) ([a3dfe7c](https://github.com/Flagsmith/flagsmith/commit/a3dfe7c5bb6335ae27c313a221108f23966161e1))
+
+
+### CI
+
+* use production settings for mcp schema generation ([#7502](https://github.com/Flagsmith/flagsmith/issues/7502)) ([33f78a9](https://github.com/Flagsmith/flagsmith/commit/33f78a99306512f25a2c809187abba6d78e39e38))
+
+
+### Docs
+
+* add Feature Versioning v2 guide and EF_VERSION audit type ([#7477](https://github.com/Flagsmith/flagsmith/issues/7477)) ([1ac56d4](https://github.com/Flagsmith/flagsmith/commit/1ac56d41bf2cc7d29647f30ebcb88412514a1ac9))
+* fix broken OpenAPI spec links on Admin API page ([#7500](https://github.com/Flagsmith/flagsmith/issues/7500)) ([94e4416](https://github.com/Flagsmith/flagsmith/commit/94e4416b811b59bdd68426a76c9f6f4ae9522bfd))
+* note that Flagsmith groups must be pre-created for SAML group sync ([#7514](https://github.com/Flagsmith/flagsmith/issues/7514)) ([0eddccf](https://github.com/Flagsmith/flagsmith/commit/0eddccfb0bdbd6fb453d1b7d0c7804d34a233358))
+
+
+### Tests
+
+* Fix `test_unit_routers.py` ([#7530](https://github.com/Flagsmith/flagsmith/issues/7530)) ([24f4d1a](https://github.com/Flagsmith/flagsmith/commit/24f4d1ac46fe98c4a8f3e40c88422957415b86ea))
+
 ## [2.233.0](https://github.com/Flagsmith/flagsmith/compare/v2.232.1...v2.233.0) (2026-05-12)
 
 
