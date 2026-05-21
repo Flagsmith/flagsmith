@@ -190,7 +190,7 @@ def test_update_worker_metrics__rss_none__does_not_update_gauge(
     assert mock_gauge.labels_called_with is None
 
 
-def test_clear_worker_metrics__removes_gauge_label(
+def test_clear_worker_metrics__label_present__removes_gauge_label(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Given
