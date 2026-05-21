@@ -213,7 +213,7 @@ def test_delete__not_exists__returns_404(
     enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
-        args=[environment.api_key, "00000000-0000-0000-0000-000000000000"],
+        args=[environment.api_key, 999999],
     )
 
     # When
@@ -288,7 +288,7 @@ def test_get_detail__not_exists__returns_404(
     enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
-        args=[environment.api_key, "00000000-0000-0000-0000-000000000000"],
+        args=[environment.api_key, 999999],
     )
 
     # When
@@ -472,10 +472,10 @@ def test_post__snowflake_soft_deleted__resurrects_with_new_config(
         },
         format="json",
     )
-    original_uuid = create_response.json()["uuid"]
+    original_id = create_response.json()["id"]
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
-        args=[environment.api_key, original_uuid],
+        args=[environment.api_key, original_id],
     )
     admin_client.delete(url)
 
@@ -493,7 +493,7 @@ def test_post__snowflake_soft_deleted__resurrects_with_new_config(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
-    assert data["uuid"] == original_uuid
+    assert data["id"] == original_id
     assert data["status"] == "created"
     assert data["name"] == "Resurrected"
     assert data["config"]["account_identifier"] == "new.us-west-2"

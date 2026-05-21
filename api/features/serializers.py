@@ -443,6 +443,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
 class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerializer):
     metadata = MetadataSerializer(required=False, many=True)
 
+    # NOTE: This field is populated by `projects.code_references.services.annotate_feature_queryset_with_code_references_summary`.
     code_references_counts = FeatureFlagCodeReferencesRepositoryCountSerializer(
         many=True,
         read_only=True,

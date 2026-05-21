@@ -50,6 +50,7 @@ export type PaidFeature =
   | 'METADATA'
   | 'REALTIME'
   | 'SAML'
+  | 'SCIM'
   | 'SCHEDULE_FLAGS'
   | 'CREATE_ADDITIONAL_PROJECT'
   | '2FA'
@@ -531,6 +532,7 @@ const Utils = Object.assign({}, BaseUtils, {
         plan = 'scale-up'
         break
       }
+      case 'SCIM':
       case 'STALE_FLAGS':
       case 'REALTIME':
       case 'METADATA':
