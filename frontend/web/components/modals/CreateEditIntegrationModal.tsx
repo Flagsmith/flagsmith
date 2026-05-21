@@ -513,6 +513,11 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
               (!formData.flagsmithEnvironment && integration.perEnvironment) ||
               (requiresProjectSelection && !selectedProjectId)
             }
+            id={
+              integration.isOauth && !authorised
+                ? `integration-authorise-${id}`
+                : `integration-saved-${id}`
+            }
             type='submit'
           >
             {integration.isOauth && !authorised ? 'Authorise' : 'Save'}
