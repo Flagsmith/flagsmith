@@ -8,13 +8,33 @@ from experimentation.models import (
     WarehouseConnectionStatus,
     WarehouseType,
 )
+from experimentation.types import SNOWFLAKE_DEFAULTS, SnowflakeConfig
 
 
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    name = serializers.CharField(max_length=255, required=False)
+    config = serializers.JSONField(default=dict, required=False)
+
     class Meta:
         model = WarehouseConnection
-        fields = ("uuid", "warehouse_type", "status", "name", "created_at")
-        read_only_fields = ("uuid", "status", "name", "created_at")
+        fields = ("uuid", "warehouse_type", "status", "name", "config", "created_at")
+        read_only_fields = ("uuid", "status", "created_at")
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        warehouse_type: str = attrs.get(
+            "warehouse_type",
+            getattr(self.instance, "warehouse_type", ""),
+        )
+        config: dict[str, Any] = attrs.get("config", {})
+
+        if warehouse_type == WarehouseType.SNOWFLAKE:
+            attrs["config"] = self._validate_snowflake_config(config)
+        elif warehouse_type == WarehouseType.FLAGSMITH:
+            if config:
+                raise serializers.ValidationError(
+                    {"config": "Flagsmith warehouse does not accept configuration."}
+                )
+        return attrs
 
     def create(
         self,
@@ -22,6 +42,9 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
     ) -> WarehouseConnection:
         environment: Environment = validated_data["environment"]
         warehouse_type: str = validated_data["warehouse_type"]
+
+        if not validated_data.get("name"):
+            validated_data["name"] = self._generate_name(warehouse_type, environment)
 
         existing: WarehouseConnection | None = (
             WarehouseConnection.objects.all_with_deleted()
@@ -34,12 +57,12 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
         )
         if existing:
             existing.deleted_at = None
-            existing.status = WarehouseConnectionStatus.PENDING_CONNECTION
-            existing.name = self._generate_name(warehouse_type, environment)
+            existing.status = WarehouseConnectionStatus.CREATED
+            existing.name = validated_data["name"]
+            existing.config = validated_data.get("config", {})
             existing.save()
             return existing
 
-        validated_data["name"] = self._generate_name(warehouse_type, environment)
         result: WarehouseConnection = super().create(validated_data)
         return result
 
@@ -47,3 +70,16 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
     def _generate_name(warehouse_type: str, environment: Environment) -> str:
         label = WarehouseType(warehouse_type).label
         return f"{label} Warehouse - {environment.name}"
+
+    @staticmethod
+    def _validate_snowflake_config(config: dict[str, Any]) -> SnowflakeConfig:
+        account_identifier = config.get("account_identifier", "")
+        if not account_identifier:
+            raise serializers.ValidationError(
+                {"config": {"account_identifier": "This field is required."}}
+            )
+        merged: SnowflakeConfig = {
+            **SNOWFLAKE_DEFAULTS,
+            **config,  # type: ignore[typeddict-item]
+        }
+        return merged
