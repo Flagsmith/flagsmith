@@ -973,6 +973,12 @@ export type Req = {
     name?: string
     config?: Record<string, string>
   }
-  deleteWarehouseConnection: { environmentId: string; uuid: string }
+  deleteWarehouseConnection: { environmentId: string; id: number }
+  updateWarehouseConnection: {
+    environmentId: string
+    id: number
+    name?: string
+    config?: Record<string, string>
+  }
   // END OF TYPES
 }

@@ -1,11 +1,13 @@
-import { FC, FormEvent, useState } from 'react'
+import { FC, FormEvent, useMemo, useState } from 'react'
 import { Req } from 'common/types/requests'
+import { WarehouseConnection } from 'common/types/responses'
 import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
 import SearchableSelect from 'components/base/select/SearchableSelect'
 
 type CreateWarehouseConnectionModalProps = {
+  connection?: WarehouseConnection
   save: (
     data: Omit<Req['createWarehouseConnection'], 'environmentId'>,
   ) => Promise<unknown>
@@ -13,25 +15,63 @@ type CreateWarehouseConnectionModalProps = {
 
 const warehouseTypeOptions = [{ label: 'Snowflake', value: 'snowflake' }]
 
+const getButtonLabel = (isEdit: boolean, isSaving: boolean): string => {
+  if (isSaving) return isEdit ? 'Saving...' : 'Creating...'
+  return isEdit ? 'Save Changes' : 'Create Connection'
+}
+
 const CreateWarehouseConnectionModal: FC<
   CreateWarehouseConnectionModalProps
-> = ({ save }) => {
-  const [name, setName] = useState('')
-  const [warehouseType] = useState('snowflake')
-  const [accountIdentifier, setAccountIdentifier] = useState('')
-  const [warehouse, setWarehouse] = useState('COMPUTE_WH')
-  const [database, setDatabase] = useState('FLAGSMITH')
-  const [schema, setSchema] = useState('ANALYTICS')
-  const [role, setRole] = useState('FLAGSMITH_LOADER')
-  const [user, setUser] = useState('FLAGSMITH_SERVICE')
+> = ({ connection, save }) => {
+  const isEdit = !!connection
+  const initialConfig = connection?.config as Record<string, string> | null
+
+  const [name, setName] = useState(connection?.name ?? '')
+  const [warehouseType] = useState(connection?.warehouse_type ?? 'snowflake')
+  const [accountIdentifier, setAccountIdentifier] = useState(
+    initialConfig?.account_identifier ?? '',
+  )
+  const [warehouse, setWarehouse] = useState(
+    initialConfig?.warehouse ?? 'COMPUTE_WH',
+  )
+  const [database, setDatabase] = useState(
+    initialConfig?.database ?? 'FLAGSMITH',
+  )
+  const [schema, setSchema] = useState(initialConfig?.schema ?? 'ANALYTICS')
+  const [role, setRole] = useState(initialConfig?.role ?? 'FLAGSMITH_LOADER')
+  const [user, setUser] = useState(initialConfig?.user ?? 'FLAGSMITH_SERVICE')
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState(false)
 
   const isValid = !!name && !!accountIdentifier
 
+  const hasChanges = useMemo(() => {
+    if (!isEdit) return true
+    return (
+      name !== (connection?.name ?? '') ||
+      accountIdentifier !== (initialConfig?.account_identifier ?? '') ||
+      warehouse !== (initialConfig?.warehouse ?? '') ||
+      database !== (initialConfig?.database ?? '') ||
+      schema !== (initialConfig?.schema ?? '') ||
+      role !== (initialConfig?.role ?? '') ||
+      user !== (initialConfig?.user ?? '')
+    )
+  }, [
+    isEdit,
+    connection,
+    initialConfig,
+    name,
+    accountIdentifier,
+    warehouse,
+    database,
+    schema,
+    role,
+    user,
+  ])
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!isValid) return
+    if (!isValid || !hasChanges) return
 
     setIsSaving(true)
     setError(false)
@@ -49,7 +89,11 @@ const CreateWarehouseConnectionModal: FC<
         warehouse_type: warehouseType,
       })
       closeModal()
-      toast('Warehouse connection created')
+      toast(
+        isEdit
+          ? 'Warehouse connection updated'
+          : 'Warehouse connection created',
+      )
     } catch {
       setError(true)
       setIsSaving(false)
@@ -159,11 +203,15 @@ const CreateWarehouseConnectionModal: FC<
         placeholder='FLAGSMITH_SERVICE'
       />
       {error && (
-        <ErrorMessage error='Failed to create warehouse connection. Please try again.' />
+        <ErrorMessage
+          error={`Failed to ${
+            isEdit ? 'update' : 'create'
+          } warehouse connection. Please try again.`}
+        />
       )}
       <div className='text-right mt-2'>
-        <Button type='submit' disabled={isSaving || !isValid}>
-          {isSaving ? 'Creating...' : 'Create Connection'}
+        <Button type='submit' disabled={isSaving || !isValid || !hasChanges}>
+          {getButtonLabel(isEdit, isSaving)}
         </Button>
       </div>
     </form>
