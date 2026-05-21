@@ -60,10 +60,10 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     <div className='mt-4 col-md-12'>
       {connections.map((connection) => (
         <WarehouseConnectionCard
-          key={connection.uuid}
+          key={connection.id}
           connection={connection}
           onDelete={() =>
-            deleteConnection({ environmentId, uuid: connection.uuid })
+            deleteConnection({ environmentId, id: connection.id })
               .unwrap()
               .then(() => toast('Warehouse connection removed'))
               .catch(() =>
