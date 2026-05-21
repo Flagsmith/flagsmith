@@ -23,7 +23,7 @@ class WarehouseConnectionViewSet(
     pagination_class = None
     permission_classes = [IsAuthenticated, WarehouseConnectionPermission]
     model_class = WarehouseConnection
-    lookup_field = "uuid"
+    lookup_field = "id"
     lookup_url_kwarg = "connection_id"
 
     def perform_create(self, serializer: BaseSerializer[WarehouseConnection]) -> None:
