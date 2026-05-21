@@ -645,18 +645,10 @@ def test_retrieve_segment__without_rbac__expected_num_queries(
     expected_num_queries: int,
 ) -> None:
     # Given
-    # A segment with metadata and multiple rules and conditions to expose any N+1 issues.
-    segment = Segment.objects.create(project=project, name="test segment")
-    Metadata.objects.create(
-        object_id=segment.id,
-        content_type=ContentType.objects.get_for_model(segment),
-        model_field=required_a_segment_metadata_field,
-        field_value="test",
-    )
-    all_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
-    for _ in range(3):
-        any_rule = SegmentRule.objects.create(rule=all_rule, type=SegmentRule.ANY_RULE)
-        Condition.objects.create(property="foo", value="bar", rule=any_rule)
+    # A segment with multiple rules and conditions to expose any N+1 issues.
+    segment = _list_segment_setup_data(
+        project, required_a_segment_metadata_field, num_segments=1, num_rules=3
+    )[0]
 
     url = reverse(
         "api-v1:projects:project-segments-detail",
@@ -728,7 +720,9 @@ def _list_segment_setup_data(
     project: Project,
     required_a_segment_metadata_field: MetadataModelField,
     num_segments: int,
-) -> None:
+    num_rules: int = 1,
+) -> list[Segment]:
+    segments = []
     for i in range(num_segments):
         segment = Segment.objects.create(project=project, name=f"segment {i}")
         Metadata.objects.create(
@@ -740,10 +734,15 @@ def _list_segment_setup_data(
         all_rule = SegmentRule.objects.create(
             segment=segment, type=SegmentRule.ALL_RULE
         )
-        any_rule = SegmentRule.objects.create(rule=all_rule, type=SegmentRule.ANY_RULE)
-        Condition.objects.create(
-            property="foo", value=str(random.randint(0, 10)), rule=any_rule
-        )
+        for _ in range(num_rules):
+            any_rule = SegmentRule.objects.create(
+                rule=all_rule, type=SegmentRule.ANY_RULE
+            )
+            Condition.objects.create(
+                property="foo", value=str(random.randint(0, 10)), rule=any_rule
+            )
+        segments.append(segment)
+    return segments
 
 
 @pytest.mark.parametrize(
