@@ -4,6 +4,8 @@ sidebar_label: Audit Logs
 sidebar_position: 30
 ---
 
+import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
+
 Every action taken within the Flagsmith administration application is tracked and logged. This allows you to easily
 retrace the events and values that flags, identities and segments have taken over time.
 
@@ -102,7 +104,31 @@ values are:
 ## Audit Log Event Types
 
 The following sections describe the types of events that are recorded in the Audit Log (both in the Flagsmith
-application and via webhooks):
+application and via webhooks). Most categories are common to all deployments. Identity override events differ between
+SaaS and self-hosted/private cloud — select your deployment to view the relevant entries:
+
+<Tabs groupId="deployment" queryString>
+<TabItem value="self-hosted" label="Self-Hosted / Private Cloud">
+
+### Identity Overrides
+
+- Identity override created
+- Identity override updated (flag state / remote config value)
+- Identity override value updated (remote config)
+- Identity override deleted
+- Identity override scheduled
+
+</TabItem>
+<TabItem value="saas" label="SaaS (app.flagsmith.com)">
+
+### Identity Overrides
+
+- Feature override created for a feature and identity
+- Feature override updated for a feature and identity
+- Feature override deleted for a feature and identity
+
+</TabItem>
+</Tabs>
 
 ### Environments
 
@@ -131,15 +157,6 @@ application and via webhooks):
 - Scheduled change went live (via change request)
 - Flag state scheduled for update by a change request
 - Flag state / remote config updated by a change request
-
-### Identity Overrides
-
-- Identity override created
-- Identity override updated (flag state / remote config value)
-- Identity override value updated (remote config)
-- Identity override deleted
-- Identity override scheduled
-- Edge identity feature override created, updated, or deleted
 
 ### Segment Overrides
 
