@@ -33,7 +33,7 @@ def test_post__valid_data__returns_201_and_creates_connection(
     assert response.json()["warehouse_type"] == "flagsmith"
     assert response.json()["status"] == "pending_connection"
     assert response.json()["name"] == f"Flagsmith Warehouse - {environment.name}"
-    assert "uuid" in response.json()
+    assert "id" in response.json()
     assert "created_at" in response.json()
     assert WarehouseConnection.objects.filter(environment=environment).count() == 1
 
@@ -69,7 +69,7 @@ def test_post__soft_deleted_exists__resurrects_and_returns_201(
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
-    original_uuid = str(warehouse_connection.uuid)
+    original_id = warehouse_connection.id
     warehouse_connection.delete()
 
     # When
@@ -81,7 +81,7 @@ def test_post__soft_deleted_exists__resurrects_and_returns_201(
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["uuid"] == original_uuid
+    assert response.json()["id"] == original_id
     assert response.json()["status"] == "pending_connection"
 
 
@@ -158,7 +158,7 @@ def test_get__exists__returns_200_with_list(
     assert data[0]["warehouse_type"] == "flagsmith"
     assert data[0]["status"] == "pending_connection"
     assert data[0]["name"] == f"Flagsmith Warehouse - {environment.name}"
-    assert data[0]["uuid"] == str(warehouse_connection.uuid)
+    assert data[0]["id"] == warehouse_connection.id
     assert "created_at" in data[0]
 
 
@@ -188,7 +188,7 @@ def test_delete__exists__returns_204(
     enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
-        args=[environment.api_key, str(warehouse_connection.uuid)],
+        args=[environment.api_key, warehouse_connection.id],
     )
 
     # When
@@ -212,7 +212,7 @@ def test_delete__not_exists__returns_404(
     enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
-        args=[environment.api_key, "00000000-0000-0000-0000-000000000000"],
+        args=[environment.api_key, 999999],
     )
 
     # When
@@ -232,7 +232,7 @@ def test_delete__exists__creates_audit_log(
     enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
-        args=[environment.api_key, str(warehouse_connection.uuid)],
+        args=[environment.api_key, warehouse_connection.id],
     )
 
     # When
@@ -262,7 +262,7 @@ def test_get_detail__exists__returns_200(
     enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
-        args=[environment.api_key, str(warehouse_connection.uuid)],
+        args=[environment.api_key, warehouse_connection.id],
     )
 
     # When
@@ -271,7 +271,7 @@ def test_get_detail__exists__returns_200(
     # Then
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["uuid"] == str(warehouse_connection.uuid)
+    assert data["id"] == warehouse_connection.id
     assert data["warehouse_type"] == "flagsmith"
     assert data["status"] == "pending_connection"
     assert data["name"] == f"Flagsmith Warehouse - {environment.name}"
@@ -287,7 +287,7 @@ def test_get_detail__not_exists__returns_404(
     enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
-        args=[environment.api_key, "00000000-0000-0000-0000-000000000000"],
+        args=[environment.api_key, 999999],
     )
 
     # When

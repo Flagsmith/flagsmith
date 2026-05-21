@@ -13,8 +13,8 @@ from experimentation.models import (
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = WarehouseConnection
-        fields = ("uuid", "warehouse_type", "status", "name", "created_at")
-        read_only_fields = ("uuid", "status", "name", "created_at")
+        fields = ("id", "warehouse_type", "status", "name", "created_at")
+        read_only_fields = ("id", "status", "name", "created_at")
 
     def create(
         self,
