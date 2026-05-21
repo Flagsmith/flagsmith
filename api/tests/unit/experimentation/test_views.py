@@ -497,3 +497,181 @@ def test_post__snowflake_soft_deleted__resurrects_with_new_config(
     assert data["status"] == "created"
     assert data["name"] == "Resurrected"
     assert data["config"]["account_identifier"] == "new.us-west-2"
+
+
+def test_patch__snowflake_update_config__returns_200(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    create_response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "My Snowflake",
+            "config": {"account_identifier": "xy12345.us-east-1"},
+        },
+        format="json",
+    )
+    connection_id = create_response.json()["id"]
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, connection_id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"config": {"account_identifier": "new.us-west-2", "warehouse": "BIG_WH"}},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["config"]["account_identifier"] == "new.us-west-2"
+    assert data["config"]["warehouse"] == "BIG_WH"
+
+
+def test_patch__snowflake_update_name__returns_200(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    create_response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "Original Name",
+            "config": {"account_identifier": "xy12345.us-east-1"},
+        },
+        format="json",
+    )
+    connection_id = create_response.json()["id"]
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, connection_id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"name": "Updated Name"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["name"] == "Updated Name"
+
+
+def test_patch__flagsmith_update_name__returns_200(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"name": "New Flagsmith Name"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["name"] == "New Flagsmith Name"
+
+
+def test_patch__flagsmith_add_config__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"config": {"account_identifier": "nope"}},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_patch__non_admin__returns_403(
+    staff_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = staff_client.patch(
+        url,
+        data={"name": "Hacked"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_patch__exists__creates_audit_log(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    admin_client.patch(
+        url,
+        data={"name": "Renamed"},
+        format="json",
+    )
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.get(
+        related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
+    )
+    assert "updated" in audit_log.log

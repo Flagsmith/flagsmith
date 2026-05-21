@@ -25,6 +25,10 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             "warehouse_type",
             getattr(self.instance, "warehouse_type", ""),
         )
+
+        if "config" not in attrs and self.instance is not None:
+            return attrs
+
         config: dict[str, Any] | None = attrs.get("config")
 
         if warehouse_type == WarehouseType.SNOWFLAKE:
