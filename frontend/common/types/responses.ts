@@ -1088,17 +1088,28 @@ export type ExperimentResults = {
 }
 
 export type WarehouseConnectionStatus =
+  | 'created'
   | 'pending_connection'
   | 'connected'
   | 'errored'
 
 export type WarehouseType = 'flagsmith' | 'snowflake' | 'clickhouse'
 
+export type SnowflakeConfig = {
+  account_identifier: string
+  warehouse: string
+  database: string
+  schema: string
+  role: string
+  user: string
+}
+
 export type WarehouseConnection = {
   uuid: string
   warehouse_type: WarehouseType
   status: WarehouseConnectionStatus
   name: string
+  config: SnowflakeConfig | Record<string, never>
   created_at: string
 }
 
