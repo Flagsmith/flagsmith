@@ -115,6 +115,12 @@ for the most up-to-date steps.
 
 ### Okta
 
+:::note
+
+We're working with Okta to enable SCIM for our Flagsmith OIN application. We'll update the docs as soon as we confirm it's working.
+
+:::
+
 1. Go to the "Applications" page and open the Flagsmith application.
 2. Go to the "General" tab and click "Edit" under "App Settings".
 3. Enable "Provisioning" and click "Save".
