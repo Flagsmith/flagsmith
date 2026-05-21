@@ -864,16 +864,6 @@ export type SAMLAttributeMapping = {
   idp_attribute_name: string
 }
 
-export type ScimConfiguration = {
-  created_at: string
-  token_rotated_at: string
-  base_url: string
-}
-
-export type ScimConfigurationWithToken = ScimConfiguration & {
-  token: string
-}
-
 export type HealthEventType = 'HEALTHY' | 'UNHEALTHY'
 
 export type FeatureHealthEventReasonTextBlock = {
@@ -1098,17 +1088,28 @@ export type ExperimentResults = {
 }
 
 export type WarehouseConnectionStatus =
+  | 'created'
   | 'pending_connection'
   | 'connected'
   | 'errored'
 
 export type WarehouseType = 'flagsmith' | 'snowflake' | 'clickhouse'
 
+export type SnowflakeConfig = {
+  account_identifier: string
+  warehouse: string
+  database: string
+  schema: string
+  role: string
+  user: string
+}
+
 export type WarehouseConnection = {
-  id: number
+  uuid: string
   warehouse_type: WarehouseType
   status: WarehouseConnectionStatus
   name: string
+  config: SnowflakeConfig | Record<string, never>
   created_at: string
 }
 
@@ -1240,8 +1241,6 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
-  scimConfiguration: ScimConfiguration
-  scimConfigurationWithToken: ScimConfigurationWithToken
   identitySegments: PagedResponse<Segment>
   organisationWebhooks: PagedResponse<Webhook>
   projectChangeRequests: PagedResponse<ChangeRequestSummary>

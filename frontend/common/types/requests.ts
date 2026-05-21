@@ -734,10 +734,6 @@ export type Req = {
       idp_attribute_name: string
     }
   }
-  getScimConfiguration: { organisation_id: number }
-  createScimConfiguration: { organisation_id: number }
-  deleteScimConfiguration: { organisation_id: number }
-  regenerateScimToken: { organisation_id: number }
   updateIdentity: {
     environmentId: string
     data: Identity
@@ -971,7 +967,18 @@ export type Req = {
     gitlab_project_id: number
   }>
   getWarehouseConnections: { environmentId: string }
-  createWarehouseConnection: { environmentId: string; warehouse_type: string }
+  createWarehouseConnection: {
+    environmentId: string
+    warehouse_type: string
+    name?: string
+    config?: Record<string, string>
+  }
   deleteWarehouseConnection: { environmentId: string; id: number }
+  updateWarehouseConnection: {
+    environmentId: string
+    id: number
+    name?: string
+    config?: Record<string, string>
+  }
   // END OF TYPES
 }

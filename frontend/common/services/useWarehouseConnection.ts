@@ -22,9 +22,9 @@ export const warehouseConnectionService = service
         Req['deleteWarehouseConnection']
       >({
         invalidatesTags: [{ id: 'LIST', type: 'WarehouseConnection' }],
-        query: ({ environmentId, id }) => ({
+        query: ({ environmentId, uuid }) => ({
           method: 'DELETE',
-          url: `environments/${environmentId}/warehouse-connections/${id}/`,
+          url: `environments/${environmentId}/warehouse-connections/${uuid}/`,
         }),
       }),
       getWarehouseConnections: builder.query<
@@ -36,6 +36,17 @@ export const warehouseConnectionService = service
           url: `environments/${environmentId}/warehouse-connections/`,
         }),
       }),
+      updateWarehouseConnection: builder.mutation<
+        Res['warehouseConnections'][number],
+        Req['updateWarehouseConnection']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'WarehouseConnection' }],
+        query: ({ environmentId, id, ...body }) => ({
+          body,
+          method: 'PATCH',
+          url: `environments/${environmentId}/warehouse-connections/${id}/`,
+        }),
+      }),
     }),
   })
 
@@ -43,4 +54,5 @@ export const {
   useCreateWarehouseConnectionMutation,
   useDeleteWarehouseConnectionMutation,
   useGetWarehouseConnectionsQuery,
+  useUpdateWarehouseConnectionMutation,
 } = warehouseConnectionService
