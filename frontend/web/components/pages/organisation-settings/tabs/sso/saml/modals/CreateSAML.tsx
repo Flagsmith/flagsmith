@@ -20,7 +20,7 @@ import { cloudDownloadOutline } from 'ionicons/icons'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import { AttributeName } from 'common/types/responses'
-import SAMLAttributeMappingTable from 'components/SAMLAttributeMappingTable'
+import SAMLAttributeMappingTable from 'components/pages/organisation-settings/tabs/sso/saml/SAMLAttributeMappingTable'
 import Input from 'components/base/forms/Input'
 import Icon from 'components/icons/Icon'
 import Project from 'common/project'
@@ -239,7 +239,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
               }}
               className='me-2 btn-with-icon'
             >
-              <Icon name='copy' width={20} fill='#656D7B' />
+              <Icon name='copy' width={20} />
             </Button>
           </div>
         </div>

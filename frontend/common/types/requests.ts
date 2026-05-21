@@ -734,6 +734,10 @@ export type Req = {
       idp_attribute_name: string
     }
   }
+  getScimConfiguration: { organisation_id: number }
+  createScimConfiguration: { organisation_id: number }
+  deleteScimConfiguration: { organisation_id: number }
+  regenerateScimToken: { organisation_id: number }
   updateIdentity: {
     environmentId: string
     data: Identity

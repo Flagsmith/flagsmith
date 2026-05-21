@@ -45,16 +45,15 @@ jobs:
         run: |
           echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials
           git config --global credential.helper store
-          make install-packages opts="--extra saml --extra auth-controller --extra workflows --extra release-pipelines --extra scim"
+          make install-packages opts="--extra private --extra auth-controller --extra workflows"
           make install-private-modules
           rm -rf ${HOME}/.git-credentials
 
       - name: Generate MCP schema
         env:
-          DJANGO_SETTINGS_MODULE: app.settings.production
           FLAGSMITH_API_URL: 'https://api.flagsmith.com'
           FLAGSMITH_FRONTEND_URL: 'https://app.flagsmith.com'
-        run: make generate-mcp-spec
+        run: make generate-mcp-spec DJANGO_SETTINGS_MODULE=app.settings.production
 
       - name: Install Gram CLI
         run: curl -fsSL https://go.getgram.ai/cli.sh | bash
