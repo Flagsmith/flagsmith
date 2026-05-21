@@ -12,13 +12,27 @@ type WarehouseTabProps = {
 }
 
 const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
-  const { data: connections, isLoading } = useGetWarehouseConnectionsQuery(
+  const {
+    data: connections,
+    isError,
+    isLoading,
+  } = useGetWarehouseConnectionsQuery(
     { environmentId },
     { skip: !environmentId },
   )
   const [createConnection, { isLoading: isCreating }] =
     useCreateWarehouseConnectionMutation()
   const [deleteConnection] = useDeleteWarehouseConnectionMutation()
+
+  if (isError) {
+    return (
+      <div className='mt-4 col-md-12'>
+        <p className='text-danger'>
+          Failed to load warehouse connections. Please try again later.
+        </p>
+      </div>
+    )
+  }
 
   const hasNoConnection =
     !isLoading && (!connections || connections.length === 0)
