@@ -29,20 +29,24 @@ class NoSSRFURLField(serializers.URLField):
         hostname = urlparse(value).hostname or ""
 
         try:
-            ip = ipaddress.ip_address(hostname)
+            ips = [ipaddress.ip_address(hostname)]
         except ValueError:
             # hostname is a name rather than a literal IP — resolve it.
             try:
-                ip = ipaddress.ip_address(socket.gethostbyname(hostname))
+                results = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC)
+                ips = [
+                    ipaddress.ip_address(str(r[4][0]).split("%")[0]) for r in results
+                ]
             except socket.gaierror:
                 # Unresolvable hostname; leave it to the URL validator.
                 return
 
-        if (
-            ip.is_loopback
-            or ip.is_private
-            or ip.is_link_local
-            or ip.is_reserved
-            or ip.is_multicast
-        ):
-            self.fail("internal_address")
+        for ip in ips:
+            if (
+                ip.is_loopback
+                or ip.is_private
+                or ip.is_link_local
+                or ip.is_reserved
+                or ip.is_multicast
+            ):
+                self.fail("internal_address")
