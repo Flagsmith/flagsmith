@@ -34,9 +34,8 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
         default=WarehouseConnectionStatus.CREATED,
     )
     name = models.CharField(max_length=255)
-    config: models.JSONField[dict[str, object], dict[str, object]] = models.JSONField(
-        default=dict,
-        blank=True,
+    config: models.JSONField[dict[str, object] | None, dict[str, object] | None] = (
+        models.JSONField(null=True, blank=True)
     )
     created_at = models.DateTimeField(auto_now_add=True)
 

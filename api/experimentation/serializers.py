@@ -13,27 +13,28 @@ from experimentation.types import SNOWFLAKE_DEFAULTS, SnowflakeConfig
 
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     name = serializers.CharField(max_length=255, required=False)
-    config = serializers.JSONField(default=dict, required=False)
+    config = serializers.JSONField(default=None, required=False, allow_null=True)
 
     class Meta:
         model = WarehouseConnection
-        fields = ("uuid", "warehouse_type", "status", "name", "config", "created_at")
-        read_only_fields = ("uuid", "status", "created_at")
+        fields = ("id", "warehouse_type", "status", "name", "config", "created_at")
+        read_only_fields = ("id", "status", "created_at")
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         warehouse_type: str = attrs.get(
             "warehouse_type",
             getattr(self.instance, "warehouse_type", ""),
         )
-        config: dict[str, Any] = attrs.get("config", {})
+        config: dict[str, Any] | None = attrs.get("config")
 
         if warehouse_type == WarehouseType.SNOWFLAKE:
-            attrs["config"] = self._validate_snowflake_config(config)
+            attrs["config"] = self._validate_snowflake_config(config or {})
         elif warehouse_type == WarehouseType.FLAGSMITH:
             if config:
                 raise serializers.ValidationError(
                     {"config": "Flagsmith warehouse does not accept configuration."}
                 )
+            attrs["config"] = None
         return attrs
 
     def create(
@@ -59,7 +60,7 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             existing.deleted_at = None
             existing.status = WarehouseConnectionStatus.CREATED
             existing.name = validated_data["name"]
-            existing.config = validated_data.get("config", {})
+            existing.config = validated_data.get("config")
             existing.save()
             return existing
 
