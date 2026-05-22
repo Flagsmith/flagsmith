@@ -1105,7 +1105,7 @@ export type SnowflakeConfig = {
 }
 
 export type WarehouseConnection = {
-  uuid: string
+  id: number
   warehouse_type: WarehouseType
   status: WarehouseConnectionStatus
   name: string

@@ -22,9 +22,9 @@ export const warehouseConnectionService = service
         Req['deleteWarehouseConnection']
       >({
         invalidatesTags: [{ id: 'LIST', type: 'WarehouseConnection' }],
-        query: ({ environmentId, uuid }) => ({
+        query: ({ environmentId, id }) => ({
           method: 'DELETE',
-          url: `environments/${environmentId}/warehouse-connections/${uuid}/`,
+          url: `environments/${environmentId}/warehouse-connections/${id}/`,
         }),
       }),
       getWarehouseConnections: builder.query<

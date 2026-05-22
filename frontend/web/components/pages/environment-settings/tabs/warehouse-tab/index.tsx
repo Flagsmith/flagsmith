@@ -7,6 +7,7 @@ import {
 } from 'common/services/useWarehouseConnection'
 import { WarehouseConnection } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
+import Loader from 'components/Loader'
 import Setting from 'components/Setting'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
 import CreateWarehouseConnectionModal from './CreateWarehouseConnectionModal'
@@ -84,6 +85,14 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
       .unwrap()
       .then(() => toast('Warehouse connection removed'))
       .catch(() => toast('Failed to remove warehouse connection', 'danger'))
+  }
+
+  if (isLoading) {
+    return (
+      <div className='mt-4 col-md-12'>
+        <Loader />
+      </div>
+    )
   }
 
   if (isError) {

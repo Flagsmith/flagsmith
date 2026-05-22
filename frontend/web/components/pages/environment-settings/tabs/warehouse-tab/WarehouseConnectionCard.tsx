@@ -106,10 +106,11 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
 
   return (
     <div className='d-flex flex-column px-3 py-3 accordion-card m-0 mb-2'>
-      <div
-        className='d-flex flex-row align-items-center justify-content-between'
-        style={{ cursor: 'pointer' }}
+      <button
+        type='button'
+        className='d-flex flex-row align-items-center justify-content-between btn--accordion-header'
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
       >
         <div className='d-flex flex-row align-items-center gap-2'>
           <span className='font-weight-medium'>{displayName}</span>
@@ -172,11 +173,9 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
               </div>
             )}
           </div>
-          <span className='p-1' aria-label={open ? 'Collapse' : 'Expand'}>
-            <Icon name={open ? 'chevron-up' : 'chevron-down'} width={16} />
-          </span>
+          <Icon name={open ? 'chevron-up' : 'chevron-down'} width={16} />
         </div>
-      </div>
+      </button>
       <div ref={contentRef} style={collapsibleStyle}>
         <div className='mt-3 mb-2 d-flex flex-column gap-3'>{renderBody()}</div>
       </div>

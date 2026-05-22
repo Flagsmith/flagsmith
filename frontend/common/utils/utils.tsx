@@ -541,10 +541,13 @@ const Utils = Object.assign({}, BaseUtils, {
         break
       }
       case 'WAREHOUSE': {
-        const remotePlans: string[] = Utils.getFlagsmithJSONValue(
+        const remotePlansValue = Utils.getFlagsmithJSONValue(
           'experimentation_warehouse_connection',
           [],
         )
+        const remotePlans: string[] = Array.isArray(remotePlansValue)
+          ? remotePlansValue
+          : []
         const allowedPlans = [...remotePlans, 'enterprise']
         const planHierarchy: Plan[] = ['start-up', 'scale-up', 'enterprise']
         plan =
