@@ -110,9 +110,9 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
     <div className='create-feature-tab px-3 mt-3'>
       <InputGroup
         className='mt-2'
-        title='Name*'
+        title='Organisation Name*'
         data-test='saml-name'
-        tooltip='An URL-friendly name for this configuration, used as the input when selecting "Single Sign-On" at login. It determines the Assertion Consumer Service (ACS) URL that your identity provider must post SAML responses to. This cannot be changed after the SAML configuration is created.'
+        tooltip='This is the value your users will type into the Organisation Name field on the Single Sign-On login page. It determines the Assertion Consumer Service (ACS) URL that your identity provider must post SAML responses to. This cannot be changed after the SAML configuration is created.'
         tooltipPlace='right'
         value={name}
         disabled={isEdit}
