@@ -1,10 +1,30 @@
-from unittest import mock
+from collections.abc import Iterator
 
 import pytest
+from django.apps import apps
 from django.db import models
-from django.db.models.options import Options
 
 from app import routers
+
+
+@pytest.fixture(autouse=True)
+def isolate_apps_registry() -> Iterator[None]:
+    # Ad-hoc model subclasses defined in these tests register themselves
+    # in `apps.all_models` and would otherwise leak into later tests
+    # (e.g. makemigrations would propose phantom migrations for them).
+    snapshot = {
+        app_label: dict(app_models) for app_label, app_models in apps.all_models.items()
+    }
+    try:
+        yield
+    finally:
+        # Inner dicts must be restored in place: `AppConfig.models` is set to
+        # `apps.all_models[label]` by reference at import time, so swapping the
+        # outer entry leaves the app config pointing at the polluted dict.
+        for app_label, app_models in apps.all_models.items():
+            app_models.clear()
+            app_models.update(snapshot.get(app_label, {}))
+        apps.clear_cache()
 
 
 @pytest.mark.parametrize(
@@ -19,13 +39,14 @@ def test_analytics_router_db_for_read__given_app_label__returns_expected_db(
     expected_db: str | None,
 ) -> None:
     # Given
-    mock_model = mock.MagicMock(spec=models.Model)
-    mock_model._meta = mock.MagicMock(spec=Options)
-    mock_model._meta.app_label = given_app_label
+    class AnalyticsModel(models.Model):
+        class Meta:
+            app_label = given_app_label
+
     router = routers.AnalyticsRouter()
 
     # When
-    db = router.db_for_read(mock_model)
+    db = router.db_for_read(AnalyticsModel)
 
     # Then
     assert db == expected_db
@@ -43,13 +64,14 @@ def test_analytics_router_db_for_write__given_app_label__returns_expected_db(
     expected_db: str | None,
 ) -> None:
     # Given
-    mock_model = mock.MagicMock(spec=models.Model)
-    mock_model._meta = mock.MagicMock(spec=Options)
-    mock_model._meta.app_label = model_app_label
+    class AnalyticsModel(models.Model):
+        class Meta:
+            app_label = model_app_label
+
     router = routers.AnalyticsRouter()
 
     # When
-    db = router.db_for_write(mock_model)
+    db = router.db_for_write(AnalyticsModel)
 
     # Then
     assert db == expected_db
@@ -68,16 +90,18 @@ def test_analytics_router_allow_relation__given_app_labels__returns_expected(
     expected: bool | None,
 ) -> None:
     # Given
-    mock_instance1 = mock.MagicMock(spec=models.Model)
-    mock_instance1._meta = mock.MagicMock(spec=Options)
-    mock_instance1._meta.app_label = model1_app_label
-    mock_instance2 = mock.MagicMock(spec=models.Model)
-    mock_instance2._meta = mock.MagicMock(spec=Options)
-    mock_instance2._meta.app_label = model2_app_label
+    class AnalyticsModel1(models.Model):
+        class Meta:
+            app_label = model1_app_label
+
+    class AnalyticsModel2(models.Model):
+        class Meta:
+            app_label = model2_app_label
+
     router = routers.AnalyticsRouter()
 
     # When
-    result = router.allow_relation(mock_instance1, mock_instance2)
+    result = router.allow_relation(AnalyticsModel1(), AnalyticsModel2())
 
     # Then
     assert result == expected
@@ -144,14 +168,14 @@ def test_clickhouse_router_db_for_write__given_app_label__returns_expected_db(
     expected_db: str | None,
 ) -> None:
     # Given
-    class MyModel(models.Model):
+    class ClickHouseModel(models.Model):
         class Meta:
             app_label = model_app_label
 
     router = routers.ClickHouseRouter()
 
     # When
-    db = router.db_for_write(MyModel)
+    db = router.db_for_write(ClickHouseModel)
 
     # Then
     assert db == expected_db
@@ -172,18 +196,18 @@ def test_clickhouse_router_allow_relation__given_app_labels__returns_expected(
     expected: bool | None,
 ) -> None:
     # Given
-    class MyModel1(models.Model):
+    class ClickHouseModel1(models.Model):
         class Meta:
             app_label = model1_app_label
 
-    class MyModel2(models.Model):
+    class ClickHouseModel2(models.Model):
         class Meta:
             app_label = model2_app_label
 
     router = routers.ClickHouseRouter()
 
     # When
-    result = router.allow_relation(MyModel1(), MyModel2())
+    result = router.allow_relation(ClickHouseModel1(), ClickHouseModel2())
 
     # Then
     assert result is expected
