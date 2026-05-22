@@ -270,62 +270,63 @@ const CreateProject = ({ history, onSave }) => {
                     title='Assign administrators'
                     isOpen={showPicker}
                     onClose={() => setShowPicker(false)}
-                    className='inline-modal--sm'
                   >
-                    <Input
-                      disabled={disableCreate}
-                      value={pickerFilter}
-                      onChange={(e) =>
-                        setPickerFilter(Utils.safeParseEventValue(e))
-                      }
-                      className='full-width mb-2'
-                      placeholder='Search users, groups or roles'
-                      search
-                    />
-                    <div
-                      style={{
-                        maxHeight: 200,
-                        overflowX: 'hidden',
-                        overflowY: 'auto',
-                      }}
-                    >
-                      {filteredItems.map((item) => {
-                        const selected = isSelected(item)
-                        return (
-                          <div
-                            key={`${item.type}-${item.id}`}
-                            onClick={() => toggleItem(item)}
-                            className='assignees-list-item clickable'
-                          >
-                            <Row
-                              className='flex-nowrap w-100 overflow-hidden overflow-ellipsis'
-                              space
+                    <div style={{ width: 480 }}>
+                      <Input
+                        disabled={disableCreate}
+                        value={pickerFilter}
+                        onChange={(e) =>
+                          setPickerFilter(Utils.safeParseEventValue(e))
+                        }
+                        className='full-width mb-2'
+                        placeholder='Search users, groups or roles'
+                        search
+                      />
+                      <div
+                        style={{
+                          maxHeight: 320,
+                          overflowX: 'hidden',
+                          overflowY: 'auto',
+                        }}
+                      >
+                        {filteredItems.map((item) => {
+                          const selected = isSelected(item)
+                          return (
+                            <div
+                              key={`${item.type}-${item.id}`}
+                              onClick={() => toggleItem(item)}
+                              className='assignees-list-item clickable'
                             >
-                              <div
-                                className={classNames(
-                                  selected ? 'font-weight-bold' : '',
-                                  'overflow-ellipsis w-100',
-                                )}
+                              <Row
+                                className='flex-nowrap w-100 overflow-hidden overflow-ellipsis'
+                                space
                               >
-                                {item.label}
-                                <div className='text-muted text-small'>
-                                  {item.sublabel}
+                                <div
+                                  className={classNames(
+                                    selected ? 'font-weight-bold' : '',
+                                    'overflow-ellipsis w-100',
+                                  )}
+                                >
+                                  {item.label}
+                                  <div className='text-muted text-small'>
+                                    {item.sublabel}
+                                  </div>
                                 </div>
-                              </div>
-                              {selected && (
-                                <span className='mr-1'>
-                                  <Icon name='checkmark' fill='#6837FC' />
-                                </span>
-                              )}
-                            </Row>
+                                {selected && (
+                                  <span className='mr-1'>
+                                    <Icon name='checkmark' fill='#6837FC' />
+                                  </span>
+                                )}
+                              </Row>
+                            </div>
+                          )
+                        })}
+                        {!filteredItems.length && (
+                          <div className='text-muted text-center py-2'>
+                            No matches
                           </div>
-                        )
-                      })}
-                      {!filteredItems.length && (
-                        <div className='text-muted text-center py-2'>
-                          No matches
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </InlineModal>
                 </div>
