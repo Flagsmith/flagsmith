@@ -44,12 +44,10 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   onDelete,
   onEdit,
 }) => {
-  const displayName =
-    connection.warehouse_type === 'flagsmith'
-      ? connection.name
-      : `${connection.name} (${
-          TYPE_LABEL[connection.warehouse_type] ?? connection.warehouse_type
-        })`
+  const typeLabel =
+    connection.warehouse_type !== 'flagsmith'
+      ? TYPE_LABEL[connection.warehouse_type] ?? connection.warehouse_type
+      : null
 
   const handleDelete = () => {
     openConfirm({
@@ -62,20 +60,31 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   return (
     <div className='d-flex flex-column px-3 py-3 border rounded'>
       <div className='d-flex flex-row align-items-center justify-content-between'>
-        <div className='d-flex flex-row align-items-center gap-2'>
-          <span className='font-weight-medium'>{displayName}</span>
-          <Tooltip
-            title={
-              <ColorSwatch
-                color={STATUS_COLOUR[connection.status]}
-                size='sm'
-                shape='circle'
-              />
-            }
-            place='top'
-          >
-            {STATUS_LABEL[connection.status]}
-          </Tooltip>
+        <div className='d-flex flex-column'>
+          <div className='d-flex flex-row align-items-center gap-2'>
+            <span className='font-weight-medium'>{connection.name}</span>
+            <Tooltip
+              title={
+                <ColorSwatch
+                  color={STATUS_COLOUR[connection.status]}
+                  size='sm'
+                  shape='circle'
+                />
+              }
+              place='top'
+            >
+              {STATUS_LABEL[connection.status]}
+            </Tooltip>
+          </div>
+          {typeLabel && (
+            <span className='fst-italic text-muted' style={{ fontSize: 13 }}>
+              {typeLabel}
+              {connection.config &&
+                'account_identifier' in connection.config &&
+                connection.config.account_identifier &&
+                `: ${connection.config.account_identifier}`}
+            </span>
+          )}
         </div>
         <div className='d-flex flex-row align-items-center gap-2'>
           {onEdit && (

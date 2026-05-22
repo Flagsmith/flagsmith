@@ -1,14 +1,14 @@
 import { FC, useState } from 'react'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
-import { SnowflakeConfig } from 'common/types/responses'
+import { ConfigFormData } from './ConfigForm'
 import SelectableCard from './SelectableCard'
 import ConfigForm from './ConfigForm'
 import './WarehouseSetup.scss'
 
 type WarehouseSetupProps = {
   onEnableFlagsmith: () => void
-  onCreateSnowflake: (config: SnowflakeConfig) => Promise<unknown>
+  onCreateSnowflake: (data: ConfigFormData) => Promise<unknown>
   isCreating: boolean
 }
 
@@ -25,7 +25,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
   return (
     <div className='warehouse-setup'>
       <div>
-        <span className='warehouse-setup__section-label'>Warehouse Type</span>
+        <h5 className='mb-2'>Warehouse Type</h5>
         <div className='warehouse-setup__type-row'>
           <div className='warehouse-setup__type-card'>
             <SelectableCard
@@ -80,8 +80,8 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
       {selectedType === 'flagsmith' && (
         <div className='warehouse-setup__flagsmith-card'>
           <p className='warehouse-setup__flagsmith-description'>
-            Flagsmith manages and hosts the data warehouse for your environment
-            &mdash; no configuration required.
+            Flagsmith manages and hosts the data warehouse for your environment,
+            no configuration required.
           </p>
           <div>
             <Button

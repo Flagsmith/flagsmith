@@ -3,15 +3,9 @@
   flex-direction: column;
   gap: 20px;
 
-  &__section-label {
-    font-size: var(--font-caption-size);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-secondary);
-    letter-spacing: 0.5px;
-  }
-
   &__type-row {
     display: flex;
+    align-items: stretch;
     gap: 12px;
     margin-top: 8px;
   }
@@ -44,8 +38,8 @@
   }
 
   &__flagsmith-description {
-    font-size: var(--font-body-size);
-    font-weight: var(--font-weight-semibold);
+    font-size: 16px;
+    font-weight: 700;
     color: var(--color-text-secondary);
     margin: 0;
   }

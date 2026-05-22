@@ -5,11 +5,14 @@ import ErrorMessage from 'components/ErrorMessage'
 import { SnowflakeConfig } from 'common/types/responses'
 import './ConfigForm.scss'
 
+export type ConfigFormData = SnowflakeConfig & { name: string }
+
 type ConfigFormProps = {
-  onSave: (config: SnowflakeConfig) => Promise<unknown>
+  onSave: (data: ConfigFormData) => Promise<unknown>
   onCancel: () => void
   isEdit?: boolean
   initialConfig?: SnowflakeConfig
+  initialName?: string
 }
 
 const getButtonLabel = (isEdit: boolean, isSaving: boolean): string => {
@@ -28,11 +31,13 @@ const DEFAULTS: SnowflakeConfig = {
 
 const ConfigForm: FC<ConfigFormProps> = ({
   initialConfig,
+  initialName = '',
   isEdit = false,
   onCancel,
   onSave,
 }) => {
   const defaults = initialConfig ?? DEFAULTS
+  const [name, setName] = useState(initialName)
   const [accountIdentifier, setAccountIdentifier] = useState(
     defaults.account_identifier,
   )
@@ -44,7 +49,7 @@ const ConfigForm: FC<ConfigFormProps> = ({
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState(false)
 
-  const isValid = !!accountIdentifier
+  const isValid = !!name && !!accountIdentifier
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,6 +61,7 @@ const ConfigForm: FC<ConfigFormProps> = ({
       await onSave({
         account_identifier: accountIdentifier,
         database,
+        name,
         role,
         schema,
         user,
@@ -85,6 +91,17 @@ const ConfigForm: FC<ConfigFormProps> = ({
               ? "Identifier can't be changed. To use a different Snowflake account, disconnect and create a new connection."
               : 'The Snowflake account identifier — the part of your Snowflake URL before .snowflakecomputing.com.'}
           </span>
+        </div>
+
+        <div className='wh-config-form__field'>
+          <label className='wh-config-form__label'>Name</label>
+          <Input
+            value={name}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setName(e.target.value)
+            }
+            placeholder='e.g. Production Snowflake'
+          />
         </div>
 
         <div className='wh-config-form__row'>

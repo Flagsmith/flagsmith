@@ -46,22 +46,29 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     })
   }
 
-  const handleCreateSnowflake = (config: SnowflakeConfig) =>
+  const handleCreateSnowflake = ({
+    name,
+    ...config
+  }: SnowflakeConfig & { name: string }) =>
     createConnection({
       config,
       environmentId,
-      name: `Snowflake (${config.account_identifier})`,
+      name,
       warehouse_type: 'snowflake',
     })
       .unwrap()
       .then(() => toast('Warehouse connection created'))
 
-  const handleUpdateSnowflake = (config: SnowflakeConfig) => {
+  const handleUpdateSnowflake = ({
+    name,
+    ...config
+  }: SnowflakeConfig & { name: string }) => {
     if (!connection) return Promise.reject()
     return updateConnection({
       config,
       environmentId,
       id: connection.id,
+      name,
     })
       .unwrap()
       .then(() => {
@@ -117,6 +124,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
         <ConfigForm
           isEdit
           initialConfig={connection.config as SnowflakeConfig}
+          initialName={connection.name}
           onSave={handleUpdateSnowflake}
           onCancel={() => setEditing(false)}
         />

@@ -1,7 +1,8 @@
 .selectable-card {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  height: 100%;
   padding: 16px;
   border-radius: var(--radius-xl);
   border: 2px solid transparent;
