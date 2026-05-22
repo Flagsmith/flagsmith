@@ -161,7 +161,42 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
     return query
   }
 
+  const getErrorDetail = (e: any): string | null => {
+    const data = e?.data
+    if (!data) return null
+    if (typeof data === 'string') return data
+    if (typeof data?.detail === 'string') return data.detail
+    if (Array.isArray(data) && typeof data[0] === 'string') return data[0]
+    return null
+  }
+
+  const buildErrorMessage = (
+    e: any,
+    phase: 'field' | 'binding',
+    orphaned: boolean,
+  ): string => {
+    const status = e?.status
+    const detail = getErrorDetail(e)
+
+    if (status === 403) {
+      if (phase === 'binding' && orphaned) {
+        return "You don't have permission to assign this custom field to entities. The field was created but is not bound to anything — ask an organisation administrator to finish the setup or remove it."
+      }
+      return detail || "You don't have permission to perform this action."
+    }
+
+    if (phase === 'binding' && orphaned) {
+      return `Custom field was created but failed to bind to the selected entities${
+        detail ? `: ${detail}` : '.'
+      } Ask an organisation administrator to finish the setup or remove the orphaned field.`
+    }
+
+    return detail || 'Failed to save custom field'
+  }
+
   const save = async () => {
+    let orphanedField = false
+    let phase: 'field' | 'binding' = 'field'
     try {
       if (isEdit) {
         await updateMetadataField({
@@ -174,6 +209,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           },
           id: id!,
         }).unwrap()
+        phase = 'binding'
         if (metadataFieldSelectList.length) {
           await Promise.all(
             metadataFieldSelectList.map(async (m) => {
@@ -226,6 +262,8 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           },
         }).unwrap()
         if (res?.id) {
+          phase = 'binding'
+          orphanedField = true
           await Promise.all(
             metadataFieldSelectList.map(async (m) => {
               const query = generateDataQuery(
@@ -238,6 +276,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
               await createMetadataModelField(query).unwrap()
             }),
           )
+          orphanedField = false
         }
       }
       getStore().dispatch(
@@ -246,7 +285,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
       onComplete?.()
       closeModal()
     } catch (e) {
-      toast('Failed to save custom field', 'danger')
+      toast(buildErrorMessage(e, phase, orphanedField), 'danger')
     }
   }
 
