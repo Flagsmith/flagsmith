@@ -4,6 +4,7 @@ import {
   useDeleteWarehouseConnectionMutation,
   useGetWarehouseConnectionsQuery,
 } from 'common/services/useWarehouseConnection'
+import Loader from 'components/base/Loader'
 import Setting from 'components/Setting'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
 
@@ -24,6 +25,14 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     useCreateWarehouseConnectionMutation()
   const [deleteConnection] = useDeleteWarehouseConnectionMutation()
 
+  if (isLoading) {
+    return (
+      <div className='mt-4 col-md-12'>
+        <Loader />
+      </div>
+    )
+  }
+
   if (isError) {
     return (
       <div className='mt-4 col-md-12'>
@@ -34,8 +43,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     )
   }
 
-  const hasNoConnection =
-    !isLoading && (!connections || connections.length === 0)
+  const hasNoConnection = !connections || connections.length === 0
 
   if (hasNoConnection) {
     return (
@@ -64,10 +72,6 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
         />
       </div>
     )
-  }
-
-  if (!connections || connections.length === 0) {
-    return null
   }
 
   return (
