@@ -25,7 +25,7 @@ Most decisions land cleanly when you look at how your business products and team
 | Single business product, multiple surfaces (web + mobile + backend) | **Single project** — one shared source of truth across surfaces. Use tags, naming conventions, and tag-based RBAC to manage scope within it. |
 | Multiple distinct business products under one organisation | **One project per business product.** Each product gets its own list of features and its own access boundary. |
 | Independent service teams with no shared product context | **Split by team ownership.** Easy to refactor later via flag export between projects. |
-| Default when uncertain | **Bias toward fewer projects.** Splitting later is reversible. Merging is harder. |
+| Default when uncertain | **Bias toward fewer projects.** Expand as needed if you experience friction or confusion. |
 
 The sections below explore the trade-offs in more depth.
 
