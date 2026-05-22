@@ -106,7 +106,7 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
     return () => clearTimeout(focusTimeout)
   }, [history])
 
-  const assignProjectAdmins = (projectId: number) => {
+  const assignProjectAdmins = async (projectId: number) => {
     const userIds = adminIdsRef.current
     const roleIds = adminRoleIdsRef.current
     const userRequests = userIds.map((userId) =>
@@ -122,7 +122,8 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
         role_id: roleId,
       }).unwrap(),
     )
-    return Promise.all([...userRequests, ...roleRequests])
+    const results = await Promise.allSettled([...userRequests, ...roleRequests])
+    return results.filter((r) => r.status === 'rejected').length
   }
 
   const close = async (data?: CreateProjectSavedData | null) => {
@@ -132,12 +133,16 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
       adminIdsRef.current.length || adminRoleIdsRef.current.length
     if (projectId && hasAssignments) {
       setAssigningAdmins(true)
-      try {
-        await assignProjectAdmins(projectId)
-      } catch (e) {
-        toast('Failed to assign one or more project administrators', 'danger')
-      } finally {
-        setAssigningAdmins(false)
+      const failures = await assignProjectAdmins(projectId)
+      setAssigningAdmins(false)
+      if (failures) {
+        toast(
+          `Failed to assign ${failures} project administrator${
+            failures > 1 ? 's' : ''
+          }. Project Settings → Members lets you retry.`,
+          'danger',
+        )
+        return
       }
     }
     closeModal()
@@ -172,8 +177,9 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
                   return
                 }
                 e.preventDefault()
-                if (!busy && name) {
-                  createProject(name)
+                const trimmedName = name.trim()
+                if (!busy && trimmedName) {
+                  createProject(trimmedName)
                 }
               }}
             >
@@ -191,7 +197,7 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setName(Utils.safeParseEventValue(e))
                 }
-                isValid={!!name && !!name.length}
+                isValid={!!name.trim()}
                 type='text'
                 title='Project Name*'
                 placeholder='My Product Name'
@@ -318,7 +324,7 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
                   type='submit'
                   data-test='create-project-btn'
                   id='create-project-btn'
-                  disabled={!canCreate || busy || !name}
+                  disabled={!canCreate || busy || !name.trim()}
                   className='text-right'
                 >
                   {busy ? 'Creating' : 'Create Project'}
