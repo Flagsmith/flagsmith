@@ -105,16 +105,24 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
           </Button>
         </div>
       </div>
-      <div className='mt-3 d-flex flex-column gap-3'>
-        {isSetupStatus(connection.status) ? (
-          <WarehouseEventCodeHelp />
+      <hr className='my-4' />
+      <WarehouseStats
+        errored={connection.status === 'errored'}
+        lastEventReceived='-'
+        totalEventsReceived={0}
+        uniqueEventsCount={0}
+      />
+      <hr className='my-4' />
+      <WarehouseEventCodeHelp />
+      <div className='d-flex justify-content-end mt-3'>
+        {connection.warehouse_type === 'flagsmith' ? (
+          <Button theme='primary' size='small' disabled>
+            Send your first event
+          </Button>
         ) : (
-          <WarehouseStats
-            errored={connection.status === 'errored'}
-            lastEventReceived='19 May 2026, 14:32'
-            totalEventsReceived={1247}
-            uniqueEventsCount={38}
-          />
+          <Button theme='outline' size='small' disabled>
+            Test connection
+          </Button>
         )}
       </div>
     </div>
