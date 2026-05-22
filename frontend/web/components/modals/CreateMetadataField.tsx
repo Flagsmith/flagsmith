@@ -361,15 +361,12 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
         }}
         metadataModelFieldList={metadataModelFieldList!}
       />
-      {orphanedAfterCreate && (
-        <div className='alert alert-warning'>
-          The custom field was created but could not be bound to the selected
-          entities. Ask an organisation administrator to finish the setup or
-          remove the orphaned field.
-        </div>
-      )}
-      {(saveError || errorCreating) && (
-        <ErrorMessage error={saveError || errorCreating} />
+      {orphanedAfterCreate ? (
+        <ErrorMessage error='The custom field was created but could not be bound to the selected entities. Ask an organisation administrator to finish the setup or remove the orphaned field.' />
+      ) : (
+        (saveError || errorCreating) && (
+          <ErrorMessage error={saveError || errorCreating} />
+        )
       )}
       <Button
         disabled={!name || !typeValue || !metadataFieldSelectList}
