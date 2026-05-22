@@ -4,8 +4,6 @@ sidebar_label: Audit Logs
 sidebar_position: 30
 ---
 
-import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
-
 Every action taken within the Flagsmith administration application is tracked and logged. This allows you to easily
 retrace the events and values that flags, identities and segments have taken over time.
 
@@ -53,7 +51,7 @@ Flagsmith will send a `POST` request to your webhook URL with the following payl
 }
 ```
 
-`related_object_type` is one of: `FEATURE`, `FEATURE_STATE`, `SEGMENT`, `ENVIRONMENT`, `CHANGE_REQUEST`, `EDGE_IDENTITY`, `IMPORT_REQUEST`, `EF_VERSION`, `FEATURE_HEALTH`, `RELEASE_PIPELINE`.
+`related_object_type` is one of: `FEATURE`, `FEATURE_STATE`, `SEGMENT`, `ENVIRONMENT`, `CHANGE_REQUEST`, `EDGE_IDENTITY`, `IMPORT_REQUEST`, `EF_VERSION`, `FEATURE_HEALTH`.
 
 `related_object_id` is the integer primary key of the related object; `related_object_uuid` is its UUID. Which field is populated depends on the audit type. `EF_VERSION` and `EDGE_IDENTITY` entries populate only `related_object_uuid`. `SEGMENT` deletion entries populate both. Other entries populate `related_object_id`. When parsing, check both fields.
 
@@ -99,99 +97,125 @@ values are:
 | `IMPORT_REQUEST`    | Import request                 |
 | `EF_VERSION`        | Environment feature version    |
 | `FEATURE_HEALTH`    | Feature health status          |
-| `RELEASE_PIPELINE`  | Release pipeline               |
 
 ## Audit Log Event Types
 
-The following sections describe the types of events that are recorded in the Audit Log (both in the Flagsmith
-application and via webhooks). Most categories are common to all deployments. Identity override events differ between
-SaaS and self-hosted/private cloud — select your deployment to view the relevant entries:
+Each record carries a `related_object_type` and a `log` string. The tables below enumerate every event Flagsmith
+emits, grouped by `related_object_type`. Placeholders in angle brackets (e.g. `<name>`, `<identifier>`, `<datetime>`)
+are substituted with the affected resource's values at the time of the event.
 
-<Tabs groupId="deployment" queryString>
-<TabItem value="self-hosted" label="Self-Hosted / Private Cloud">
+The Deployment column indicates where each event is emitted:
 
-### Identity Overrides
+- **All**: emitted by every deployment (SaaS, self-hosted, private cloud).
+- **Self-Hosted**: emitted only by self-hosted and private cloud deployments.
+- **SaaS**: emitted only by SaaS (`app.flagsmith.com`).
 
-- Identity override created
-- Identity override updated (flag state / remote config value)
-- Identity override value updated (remote config)
-- Identity override deleted
-- Identity override scheduled
+### `FEATURE`
 
-</TabItem>
-<TabItem value="saas" label="SaaS (app.flagsmith.com)">
+| Event | `log` template | Deployment |
+| --- | --- | --- |
+| Flag / remote config created | `New Flag / Remote Config created: <name>` | All |
+| Flag / remote config updated | `Flag / Remote Config updated: <name>` | All |
+| Flag / remote config deleted | `Flag / Remote Config Deleted: <name>` | All |
+| Multivariate option added | `Multivariate option added to feature '<name>'.` | All |
+| Multivariate option removed | `Multivariate option removed from feature '<name>'.` | All |
+| Segment overrides re-ordered | `Segment overrides re-ordered for feature '<name>'.` | All |
 
-### Identity Overrides
+### `FEATURE_STATE`
 
-- Feature override created for a feature and identity
-- Feature override updated for a feature and identity
-- Feature override deleted for a feature and identity
+| Event | `log` template | Deployment |
+| --- | --- | --- |
+| Flag state updated | `Flag state updated for feature: <name>` | All |
+| Remote config value updated | `Remote config value updated for feature: <name>` | All |
+| Update scheduled | `Flag state / Remote Config value update scheduled for <datetime> for feature: <name>` | All |
+| Scheduled for update by change request | `Flag state for feature '<name>' scheduled for update by Change Request '<title>' at <datetime>.` | All |
+| Updated by change request | `Flag state / Remote config updated for feature: <name> by Change Request: <title>` | All |
+| Scheduled change went live | `Scheduled change to Flag state / Remote config value went live for feature: <name> by Change Request: <title>` | All |
+| Identity override scheduled | `Identity override scheduled for <datetime> for feature '<name>' and identity '<identifier>'` | Self-Hosted |
+| Identity override created or updated | `Flag state / Remote config value updated for feature '<name>' and identity '<identifier>'` | Self-Hosted |
+| Identity override value updated | `Remote config value updated for identity override on feature '<name>' and identity '<identifier>'.` | Self-Hosted |
+| Identity override deleted | `Flag state / Remote config value deleted for feature '<name>' and identity '<identifier>'` | Self-Hosted |
+| Segment override scheduled | `Segment override scheduled for <datetime> for feature '<name>' and segment '<segment>'` | All |
+| Segment override created or updated | `Flag state / Remote config value updated for feature '<name>' and segment '<segment>'` | All |
+| Segment override value updated | `Remote config updated for segment override on feature '<name>' and segment '<segment>'.` | All |
+| Segment override deleted | `Flag state / Remote config value deleted for feature '<name>' and segment '<segment>'` | All |
 
-</TabItem>
-</Tabs>
+### `SEGMENT`
 
-### Environments
+| Event | `log` template | Deployment |
+| --- | --- | --- |
+| Segment created | `New Segment created: <name>` | All |
+| Segment updated | `Segment updated: <name>` | All |
+| Segment deleted | `Segment deleted: <name>` | All |
 
-- New environment created
-- Environment updated
+### `ENVIRONMENT`
 
-### Flags
+| Event | `log` template | Deployment |
+| --- | --- | --- |
+| Environment created | `New Environment created: <name>` | All |
+| Environment updated | `Environment updated: <name>` | All |
 
-- New flag / remote config created
-- Flag / remote config updated
-- Flag / remote config deleted
-- Multivariate option added to or removed from a feature
-- Multivariate value changed for a feature
+### `CHANGE_REQUEST`
 
-### Segments
+| Event | `log` template | Deployment |
+| --- | --- | --- |
+| Change request created | `Change Request: <title> created` | All |
+| Change request approved | `Change Request: <title> approved` | All |
+| Change request committed | `Change Request: <title> committed` | All |
+| Change request deleted | `Change Request: <title> deleted` | All |
 
-- New segment created
-- Segment updated
-- Segment deleted
+### `EF_VERSION`
 
-### Flag State Changes
+Emitted on environments with [Feature Versioning v2](/managing-flags/feature-versioning) enabled. Per-feature-state
+changes are recorded as a single per-version entry rather than one entry per changed feature state.
+Identity-override changes still emit individual records with `related_object_type: FEATURE_STATE`.
 
-- Flag state updated for a feature
-- Remote config value updated for a feature
-- Flag state / remote config value update scheduled
-- Scheduled change went live (via change request)
-- Flag state scheduled for update by a change request
-- Flag state / remote config updated by a change request
+| Event | `log` template | Deployment |
+| --- | --- | --- |
+| New version published | `New version published for feature: <name>` | All |
 
-### Segment Overrides
+### `EDGE_IDENTITY`
 
-- Segment override created
-- Segment override updated (flag state / remote config value)
-- Segment override value updated (remote config)
-- Segment override deleted
-- Segment override scheduled
-- Segment rules updated for a flag in an environment
-- Segment overrides re-ordered for a feature
+Edge identity overrides emit one audit log record per affected feature, with `change_type` determining which template is used.
 
-### Change Requests
+| Event | `log` template | Deployment |
+| --- | --- | --- |
+| Feature override created | `Feature override created for feature '<name>' and identity '<identifier>'` | SaaS |
+| Feature override updated | `Feature override updated for feature '<name>' and identity '<identifier>'` | SaaS |
+| Feature override deleted | `Feature override deleted for feature '<name>' and identity '<identifier>'` | SaaS |
 
-- Change request created
-- Change request approved
-- Change request committed
-- Change request deleted
+### `IMPORT_REQUEST`
 
-### Feature Versioning
+Emitted when a customer triggers an import from a third-party provider (currently LaunchDarkly).
 
-- New version published for a feature
+| Event | `log` template | Deployment |
+| --- | --- | --- |
+| Import requested | `New LaunchDarkly import requested` | All |
+| Import succeeded | `LaunchDarkly import completed successfully` | All |
+| Import failed (with error detail) | `LaunchDarkly import failed with errors:` followed by a list of `- <error>` lines | All |
+| Import failed (no error detail) | `LaunchDarkly import failed` | All |
 
-### Release Pipelines
+### `FEATURE_HEALTH`
 
-- Release pipeline created
-- Release pipeline cloned
-- Release pipeline updated
-- Release pipeline published
-- Release pipeline converted to draft (unpublished)
-- Release pipeline deleted
-- Feature added to a release pipeline
-- Feature removed from a release pipeline
-- Flag state / remote config updated by a release pipeline
+See [Feature Health Metrics](/managing-flags/feature-health-metrics) for an overview of the feature and how to
+configure providers.
 
-### Phased Rollouts
+| Event | `log` template | Deployment |
+| --- | --- | --- |
+| Health provider added | `Health provider <name> set up for project <project>.` | All |
+| Health provider removed | `Health provider <name> removed from project <project>.` | All |
+| Status changed (project-wide) | `Health status changed to <status> for feature <name>.` | All |
+| Status changed (environment-scoped) | `Health status changed to <status> for feature <name> in environment <env>.` | All |
 
-- Phased rollout created for a feature by a release pipeline
-- Phased rollout split percentage changed
+Status-change records may include additional context in the `log` field. When the event came from a third-party
+provider, the provider name is appended; when the provider supplied a reason, that reason is appended too. The full
+`log` then has the shape:
+
+```
+Health status changed to <status> for feature <name> in environment <env>.
+
+Provided by <provider>
+
+Reason:
+<reason>
+```
