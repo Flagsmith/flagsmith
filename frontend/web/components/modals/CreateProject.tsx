@@ -1,57 +1,84 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  FC,
+  FormEvent,
+  ReactElement,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { IonIcon } from '@ionic/react'
 import { close as closeIcon } from 'ionicons/icons'
+import { RouteComponentProps } from 'react-router-dom'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
+import InputGroup from 'components/base/forms/InputGroup'
 import { setInterceptClose } from './base/ModalDefault'
 import PlanBasedAccess from 'components/PlanBasedAccess'
 import UserSelect from 'components/UserSelect'
 import MyRoleSelect from 'components/MyRoleSelect'
 import SettingsButton from 'components/SettingsButton'
+import OrganisationProvider from 'common/providers/OrganisationProvider'
 import { useGetUsersQuery } from 'common/services/useUser'
 import { useGetRolesQuery } from 'common/services/useRole'
 import { useCreateProjectUserPermissionMutation } from 'common/services/useUserPermissions'
 import { useCreateProjectRolePermissionMutation } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
+import { Role, User } from 'common/types/responses'
 
-const CreateProject = ({ history, onSave }) => {
-  const [name, setName] = useState('')
-  const [adminIds, setAdminIds] = useState([])
-  const [adminRoleIds, setAdminRoleIds] = useState([])
-  const [showUsers, setShowUsers] = useState(false)
-  const [showRoles, setShowRoles] = useState(false)
-  const [assigningAdmins, setAssigningAdmins] = useState(false)
-  const inputRef = useRef(null)
+type CreateProjectSavedData = {
+  environmentId: number
+  projectId: number
+}
+
+type CreateProjectProps = {
+  history: RouteComponentProps['history']
+  onSave?: (data: CreateProjectSavedData) => void
+}
+
+const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
+  const [name, setName] = useState<string>('')
+  const [adminIds, setAdminIds] = useState<number[]>([])
+  const [adminRoleIds, setAdminRoleIds] = useState<number[]>([])
+  const [showUsers, setShowUsers] = useState<boolean>(false)
+  const [showRoles, setShowRoles] = useState<boolean>(false)
+  const [assigningAdmins, setAssigningAdmins] = useState<boolean>(false)
+  // InputGroup is a class component (untyped JS) exposing a `focus()` method.
+  const inputRef = useRef<{ focus: () => void } | null>(null)
   // OrganisationProvider wires onSave into a Flux listener once on mount, so
   // any state we read in `close` is stale. Mirror selections into refs.
-  const adminIdsRef = useRef(adminIds)
-  const adminRoleIdsRef = useRef(adminRoleIds)
+  const adminIdsRef = useRef<number[]>(adminIds)
+  const adminRoleIdsRef = useRef<number[]>(adminRoleIds)
   adminIdsRef.current = adminIds
   adminRoleIdsRef.current = adminRoleIds
-  const onSaveRef = useRef(onSave)
+  const onSaveRef = useRef<CreateProjectProps['onSave']>(onSave)
   onSaveRef.current = onSave
 
-  const organisationId = AccountStore.getOrganisation()?.id
-  const currentUserId = AccountStore.getUser()?.id
+  const organisationId = AccountStore.getOrganisation()?.id as
+    | number
+    | undefined
+  const currentUserId = AccountStore.getUser()?.id as number | undefined
   const hasRbac = Utils.getPlansPermission('RBAC')
   const { data: users } = useGetUsersQuery(
-    { organisationId },
+    { organisationId: organisationId! },
     { skip: !organisationId },
   )
   const { data: rolesData } = useGetRolesQuery(
-    { organisation_id: organisationId },
+    { organisation_id: organisationId! },
     { skip: !organisationId || !hasRbac },
   )
-  const roles = useMemo(() => rolesData?.results ?? [], [rolesData])
+  const roles = useMemo<Role[]>(() => rolesData?.results ?? [], [rolesData])
   const [createUserPermission] = useCreateProjectUserPermissionMutation()
   const [createRolePermission] = useCreateProjectRolePermissionMutation()
 
   // Org administrators already have permissions on every project, and the
   // creator obviously has permissions on their own project — exclude both.
-  const eligibleAdmins = useMemo(
+  const eligibleAdmins = useMemo<User[]>(
     () =>
-      (users ?? []).filter((u) => u.role !== 'ADMIN' && u.id !== currentUserId),
+      (users ?? []).filter(
+        (u: User) => u.role !== 'ADMIN' && u.id !== currentUserId,
+      ),
     [users, currentUserId],
   )
 
@@ -70,7 +97,7 @@ const CreateProject = ({ history, onSave }) => {
     }, 500)
     setInterceptClose(
       () =>
-        new Promise((resolve) => {
+        new Promise<boolean>((resolve) => {
           history.push(document.location.pathname)
           setInterceptClose(null)
           resolve(true)
@@ -79,7 +106,7 @@ const CreateProject = ({ history, onSave }) => {
     return () => clearTimeout(focusTimeout)
   }, [history])
 
-  const assignProjectAdmins = (projectId) => {
+  const assignProjectAdmins = (projectId: number) => {
     const userIds = adminIdsRef.current
     const roleIds = adminRoleIdsRef.current
     const userRequests = userIds.map((userId) =>
@@ -91,16 +118,16 @@ const CreateProject = ({ history, onSave }) => {
     const roleRequests = roleIds.map((roleId) =>
       createRolePermission({
         body: { admin: true, permissions: [], project: projectId },
-        organisation_id: organisationId,
+        organisation_id: organisationId!,
         role_id: roleId,
       }).unwrap(),
     )
     return Promise.all([...userRequests, ...roleRequests])
   }
 
-  const close = async (data) => {
+  const close = async (data?: CreateProjectSavedData | null) => {
     setInterceptClose(null)
-    const { environmentId, projectId } = data || {}
+    const { environmentId, projectId } = data || ({} as CreateProjectSavedData)
     const hasAssignments =
       adminIdsRef.current.length || adminRoleIdsRef.current.length
     if (projectId && hasAssignments) {
@@ -131,25 +158,29 @@ const CreateProject = ({ history, onSave }) => {
         const disableCreate = !canCreate
         const busy = isSaving || assigningAdmins
         const showUserSelector = !!eligibleAdmins.length
-        const showRoleSelector = hasRbac && !!roles.length
+        const showRoleSelector = !!hasRbac && !!roles.length
         const showAdminSelector = showUserSelector || showRoleSelector
 
-        const inner = (
+        const inner: ReactElement = (
           <div className='p-4'>
             <form
               style={{ opacity: disableCreate ? 0.5 : 1 }}
               data-test='create-project-modal'
               id='create-project-modal'
-              onSubmit={(e) => {
+              onSubmit={(e: FormEvent<HTMLFormElement>) => {
                 if (disableCreate) {
                   return
                 }
                 e.preventDefault()
-                !busy && name && createProject(name)
+                if (!busy && name) {
+                  createProject(name)
+                }
               }}
             >
               <InputGroup
-                ref={(e) => (inputRef.current = e)}
+                ref={(e: { focus: () => void } | null) => {
+                  inputRef.current = e
+                }}
                 data-test='projectName'
                 disabled={disableCreate}
                 className='mb-0'
@@ -157,8 +188,10 @@ const CreateProject = ({ history, onSave }) => {
                   className: 'full-width',
                   name: 'projectName',
                 }}
-                onChange={(e) => setName(Utils.safeParseEventValue(e))}
-                isValid={name && name.length}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setName(Utils.safeParseEventValue(e))
+                }
+                isValid={!!name && !!name.length}
                 type='text'
                 title='Project Name*'
                 placeholder='My Product Name'
@@ -184,8 +217,10 @@ const CreateProject = ({ history, onSave }) => {
                           <UserSelect
                             users={eligibleAdmins}
                             value={adminIds}
-                            onAdd={(id) => setAdminIds([...adminIds, id])}
-                            onRemove={(id) =>
+                            onAdd={(id: number) =>
+                              setAdminIds([...adminIds, id])
+                            }
+                            onRemove={(id: number) =>
                               setAdminIds(adminIds.filter((v) => v !== id))
                             }
                             isOpen={showUsers}
@@ -230,12 +265,12 @@ const CreateProject = ({ history, onSave }) => {
                         }
                         dropdown={
                           <MyRoleSelect
-                            orgId={organisationId}
+                            orgId={organisationId!}
                             value={adminRoleIds}
-                            onAdd={(id) =>
+                            onAdd={(id: number) =>
                               setAdminRoleIds([...adminRoleIds, id])
                             }
-                            onRemove={(id) =>
+                            onRemove={(id: number) =>
                               setAdminRoleIds(
                                 adminRoleIds.filter((v) => v !== id),
                               )
