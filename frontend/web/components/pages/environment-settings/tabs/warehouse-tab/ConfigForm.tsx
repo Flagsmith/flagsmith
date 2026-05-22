@@ -36,7 +36,7 @@ const ConfigForm: FC<ConfigFormProps> = ({
   onCancel,
   onSave,
 }) => {
-  const defaults = initialConfig ?? DEFAULTS
+  const defaults = { ...DEFAULTS, ...initialConfig }
   const [name, setName] = useState(initialName)
   const [accountIdentifier, setAccountIdentifier] = useState(
     defaults.account_identifier,
@@ -49,7 +49,14 @@ const ConfigForm: FC<ConfigFormProps> = ({
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState(false)
 
-  const isValid = !!name && !!accountIdentifier
+  const isValid =
+    !!name &&
+    !!accountIdentifier &&
+    !!warehouse &&
+    !!database &&
+    !!schema &&
+    !!role &&
+    !!user
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

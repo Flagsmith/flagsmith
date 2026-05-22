@@ -36,9 +36,6 @@ const TYPE_LABEL: Partial<Record<WarehouseType, string>> = {
   snowflake: 'Snowflake',
 }
 
-const isSetupStatus = (status: WarehouseConnectionStatus) =>
-  status === 'created' || status === 'pending_connection'
-
 const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   connection,
   onDelete,

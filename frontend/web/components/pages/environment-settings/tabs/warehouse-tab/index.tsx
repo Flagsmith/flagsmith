@@ -118,7 +118,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     )
   }
 
-  if (editing && connection.warehouse_type !== 'flagsmith') {
+  if (editing && connection.warehouse_type === 'snowflake') {
     return (
       <div className='mt-4 col-md-12'>
         <ConfigForm

@@ -1,6 +1,7 @@
 import { FC, useState } from 'react'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
+import { WarehouseType } from 'common/types/responses'
 import { ConfigFormData } from './ConfigForm'
 import SelectableCard from './SelectableCard'
 import ConfigForm from './ConfigForm'
@@ -12,7 +13,9 @@ type WarehouseSetupProps = {
   isCreating: boolean
 }
 
-type WarehouseTypeOption = 'flagsmith' | 'snowflake' | 'bigquery' | 'databricks'
+type WarehouseTypeOption = WarehouseType | 'bigquery' | 'databricks'
+
+const CONFIGURABLE_TYPES: WarehouseTypeOption[] = ['flagsmith', 'snowflake']
 
 const WarehouseSetup: FC<WarehouseSetupProps> = ({
   isCreating,
@@ -101,6 +104,14 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
           onSave={onCreateSnowflake}
           onCancel={() => setSelectedType('flagsmith')}
         />
+      )}
+
+      {!CONFIGURABLE_TYPES.includes(selectedType) && (
+        <div className='warehouse-setup__flagsmith-card'>
+          <p className='warehouse-setup__flagsmith-description'>
+            Coming soon. This warehouse type is not yet available.
+          </p>
+        </div>
       )}
     </div>
   )
