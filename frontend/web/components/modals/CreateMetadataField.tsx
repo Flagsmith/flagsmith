@@ -162,11 +162,24 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   }
 
   const getErrorDetail = (e: any): string | null => {
+    if (typeof e === 'string') return e
     const data = e?.data
-    if (!data) return null
+    if (!data) return e?.message || e?.error || null
     if (typeof data === 'string') return data
     if (typeof data?.detail === 'string') return data.detail
+    if (
+      Array.isArray(data?.non_field_errors) &&
+      typeof data.non_field_errors[0] === 'string'
+    ) {
+      return data.non_field_errors[0]
+    }
     if (Array.isArray(data) && typeof data[0] === 'string') return data[0]
+    if (data && typeof data === 'object') {
+      const firstKey = Object.keys(data)[0]
+      const firstError = firstKey ? data[firstKey] : undefined
+      const errorMsg = Array.isArray(firstError) ? firstError[0] : firstError
+      if (typeof errorMsg === 'string') return errorMsg
+    }
     return null
   }
 
