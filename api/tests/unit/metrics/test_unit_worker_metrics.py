@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 import pytest
 
@@ -6,25 +7,25 @@ from metrics import worker_metrics
 
 
 class MockGaugeLabels:
-    def __init__(self):
-        self.set_called_with = None
+    def __init__(self) -> None:
+        self.set_called_with: Optional[int] = None
 
-    def set(self, value):
+    def set(self, value: int) -> None:
         self.set_called_with = value
 
 
 class MockGauge:
-    def __init__(self):
-        self.labels_called_with = None
-        self.remove_called_with = None
-        self.mock_labels = MockGaugeLabels()
-        self.should_raise_on_remove = None
+    def __init__(self) -> None:
+        self.labels_called_with: Optional[str] = None
+        self.remove_called_with: Optional[str] = None
+        self.mock_labels: MockGaugeLabels = MockGaugeLabels()
+        self.should_raise_on_remove: Optional[Exception] = None
 
-    def labels(self, *, pid):
+    def labels(self, *, pid: str) -> MockGaugeLabels:
         self.labels_called_with = pid
         return self.mock_labels
 
-    def remove(self, *, pid):
+    def remove(self, *, pid: str) -> None:
         self.remove_called_with = pid
         if self.should_raise_on_remove:
             raise self.should_raise_on_remove

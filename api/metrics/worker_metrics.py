@@ -1,4 +1,4 @@
-import os
+import os as os
 from pathlib import Path
 from typing import Iterable
 
@@ -34,7 +34,7 @@ def clear_worker_metrics() -> None:
     """
     current_pid = os.getpid()
     try:
-        flagsmith_worker_rss_bytes.remove(pid=str(current_pid))
+        flagsmith_worker_rss_bytes.remove(str(current_pid))
     except (KeyError, ValueError):
         pass
 
