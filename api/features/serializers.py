@@ -53,8 +53,14 @@ from .feature_segments.limits import (
 from .feature_segments.serializers import (
     CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
-from .models import Feature, FeatureState
+from .models import Feature, FeatureSegment, FeatureState
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
+
+
+class _FeatureSegmentPrioritySerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    class Meta:
+        model = FeatureSegment
+        fields = ("priority",)
 
 
 class FeatureStateSerializerSmall(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -538,6 +544,7 @@ class SDKFeatureSerializer(HideSensitiveFieldsSerializerMixin, FeatureSerializer
 class FeatureStateSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]
     feature = FeatureSerializer()
     feature_state_value = serializers.SerializerMethodField()
+    feature_segment = _FeatureSegmentPrioritySerializer(read_only=True)
 
     class Meta:
         model = FeatureState
