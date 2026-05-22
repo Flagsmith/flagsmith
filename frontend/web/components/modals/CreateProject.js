@@ -11,7 +11,6 @@ import Icon from 'components/icons/Icon'
 import classNames from 'classnames'
 import SettingsButton from 'components/SettingsButton'
 import { useGetUsersQuery } from 'common/services/useUser'
-import { useGetGroupsQuery } from 'common/services/useGroup'
 import { useGetRolesQuery } from 'common/services/useRole'
 import AccountStore from 'common/stores/account-store'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
@@ -21,7 +20,6 @@ import ProjectApi from 'common/project'
 const CreateProject = ({ history, onSave }) => {
   const [name, setName] = useState('')
   const [adminIds, setAdminIds] = useState([])
-  const [adminGroupIds, setAdminGroupIds] = useState([])
   const [adminRoleIds, setAdminRoleIds] = useState([])
   const [showPicker, setShowPicker] = useState(false)
   const [pickerFilter, setPickerFilter] = useState('')
@@ -36,15 +34,10 @@ const CreateProject = ({ history, onSave }) => {
     { organisationId },
     { skip: !organisationId },
   )
-  const { data: groupsData } = useGetGroupsQuery(
-    { orgId: organisationId, page: 1 },
-    { skip: !organisationId },
-  )
   const { data: rolesData } = useGetRolesQuery(
     { organisation_id: organisationId },
     { skip: !organisationId || !hasRbac },
   )
-  const groups = useMemo(() => groupsData?.results ?? [], [groupsData])
   const roles = useMemo(() => rolesData?.results ?? [], [rolesData])
 
   // Org administrators already have permissions on every project, and the
@@ -63,13 +56,6 @@ const CreateProject = ({ history, onSave }) => {
       type: 'user',
       typeLabel: 'User',
     }))
-    const groupItems = groups.map((g) => ({
-      id: g.id,
-      label: g.name,
-      sublabel: 'Group',
-      type: 'group',
-      typeLabel: 'Group',
-    }))
     const roleItems = hasRbac
       ? roles.map((r) => ({
           id: r.id,
@@ -79,12 +65,11 @@ const CreateProject = ({ history, onSave }) => {
           typeLabel: 'Role',
         }))
       : []
-    return [...userItems, ...groupItems, ...roleItems]
-  }, [eligibleAdmins, groups, roles, hasRbac])
+    return [...userItems, ...roleItems]
+  }, [eligibleAdmins, roles, hasRbac])
 
   const isSelected = (item) => {
     if (item.type === 'user') return adminIds.includes(item.id)
-    if (item.type === 'group') return adminGroupIds.includes(item.id)
     return adminRoleIds.includes(item.id)
   }
 
@@ -94,12 +79,6 @@ const CreateProject = ({ history, onSave }) => {
         isSelected(item)
           ? adminIds.filter((id) => id !== item.id)
           : [...adminIds, item.id],
-      )
-    } else if (item.type === 'group') {
-      setAdminGroupIds(
-        isSelected(item)
-          ? adminGroupIds.filter((id) => id !== item.id)
-          : [...adminGroupIds, item.id],
       )
     } else {
       setAdminRoleIds(
@@ -113,7 +92,7 @@ const CreateProject = ({ history, onSave }) => {
   const selectedItems = useMemo(
     () => pickerItems.filter(isSelected),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [pickerItems, adminIds, adminGroupIds, adminRoleIds],
+    [pickerItems, adminIds, adminRoleIds],
   )
 
   const filteredItems = useMemo(() => {
@@ -153,16 +132,6 @@ const CreateProject = ({ history, onSave }) => {
         user: userId,
       }),
     )
-    const groupRequests = adminGroupIds.map((groupId) =>
-      _data.post(
-        `${ProjectApi.api}projects/${projectId}/user-group-permissions/`,
-        {
-          admin: true,
-          group: groupId,
-          permissions: [],
-        },
-      ),
-    )
     const roleRequests = adminRoleIds.map((roleId) =>
       _data.post(
         `${ProjectApi.api}organisations/${organisationId}/roles/${roleId}/projects-permissions/`,
@@ -173,14 +142,13 @@ const CreateProject = ({ history, onSave }) => {
         },
       ),
     )
-    return Promise.all([...userRequests, ...groupRequests, ...roleRequests])
+    return Promise.all([...userRequests, ...roleRequests])
   }
 
   const close = async (data = {}) => {
     setInterceptClose(null)
     const { environmentId, projectId } = data
-    const hasAssignments =
-      adminIds.length || adminGroupIds.length || adminRoleIds.length
+    const hasAssignments = adminIds.length || adminRoleIds.length
     if (projectId && hasAssignments) {
       setAssigningAdmins(true)
       try {
@@ -244,7 +212,7 @@ const CreateProject = ({ history, onSave }) => {
                 <div className='mt-4'>
                   <SettingsButton
                     onClick={() => !disableCreate && setShowPicker(!showPicker)}
-                    description='Optionally grant other users, groups, or roles administrator access to this project. Organisation administrators already have full access to all projects.'
+                    description='Optionally grant other users or roles administrator access to this project. Organisation administrators already have full access to all projects.'
                     dropdown={
                       <InlineModal
                         title='Assign administrators'
@@ -260,7 +228,7 @@ const CreateProject = ({ history, onSave }) => {
                               setPickerFilter(Utils.safeParseEventValue(e))
                             }
                             className='full-width mb-2'
-                            placeholder='Search users, groups or roles'
+                            placeholder='Search users or roles'
                             search
                           />
                           <div
