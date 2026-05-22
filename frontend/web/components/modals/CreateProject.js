@@ -10,10 +10,10 @@ import MyRoleSelect from 'components/MyRoleSelect'
 import SettingsButton from 'components/SettingsButton'
 import { useGetUsersQuery } from 'common/services/useUser'
 import { useGetRolesQuery } from 'common/services/useRole'
+import { useCreateProjectUserPermissionMutation } from 'common/services/useProject'
+import { useCreateProjectRolePermissionMutation } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
-import _data from 'common/data/base/_data'
-import ProjectApi from 'common/project'
 
 const CreateProject = ({ history, onSave }) => {
   const [name, setName] = useState('')
@@ -42,6 +42,8 @@ const CreateProject = ({ history, onSave }) => {
     { skip: !organisationId || !hasRbac },
   )
   const roles = useMemo(() => rolesData?.results ?? [], [rolesData])
+  const [createUserPermission] = useCreateProjectUserPermissionMutation()
+  const [createRolePermission] = useCreateProjectRolePermissionMutation()
 
   // Org administrators already have permissions on every project, and the
   // creator obviously has permissions on their own project — exclude both.
@@ -79,21 +81,17 @@ const CreateProject = ({ history, onSave }) => {
     const userIds = adminIdsRef.current
     const roleIds = adminRoleIdsRef.current
     const userRequests = userIds.map((userId) =>
-      _data.post(`${ProjectApi.api}projects/${projectId}/user-permissions/`, {
-        admin: true,
-        permissions: [],
-        user: userId,
-      }),
+      createUserPermission({
+        body: { admin: true, permissions: [], user: userId },
+        projectId,
+      }).unwrap(),
     )
     const roleRequests = roleIds.map((roleId) =>
-      _data.post(
-        `${ProjectApi.api}organisations/${organisationId}/roles/${roleId}/projects-permissions/`,
-        {
-          admin: true,
-          permissions: [],
-          project: projectId,
-        },
-      ),
+      createRolePermission({
+        body: { admin: true, permissions: [], project: projectId },
+        organisation_id: organisationId,
+        role_id: roleId,
+      }).unwrap(),
     )
     return Promise.all([...userRequests, ...roleRequests])
   }

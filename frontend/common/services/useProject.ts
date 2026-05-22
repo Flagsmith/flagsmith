@@ -7,6 +7,16 @@ export const projectService = service
   .enhanceEndpoints({ addTagTypes: ['Project'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      createProjectUserPermission: builder.mutation<
+        Res['userPermissions'],
+        Req['createProjectUserPermission']
+      >({
+        query: ({ body, projectId }: Req['createProjectUserPermission']) => ({
+          body,
+          method: 'POST',
+          url: `projects/${projectId}/user-permissions/`,
+        }),
+      }),
       deleteProject: builder.mutation<void, Req['deleteProject']>({
         invalidatesTags: [{ id: 'LIST', type: 'Project' }],
         query: ({ id }: Req['deleteProject']) => ({
@@ -99,6 +109,7 @@ export async function getProject(
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useCreateProjectUserPermissionMutation,
   useDeleteProjectMutation,
   useGetProjectPermissionsQuery,
   useGetProjectQuery,
