@@ -12,6 +12,7 @@ class WarehouseType(models.TextChoices):
 
 
 class WarehouseConnectionStatus(models.TextChoices):
+    CREATED = "created", "Created"
     PENDING_CONNECTION = "pending_connection", "Pending Connection"
     CONNECTED = "connected", "Connected"
     ERRORED = "errored", "Errored"
@@ -30,9 +31,12 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
     status = models.CharField(
         max_length=50,
         choices=WarehouseConnectionStatus.choices,
-        default=WarehouseConnectionStatus.PENDING_CONNECTION,
+        default=WarehouseConnectionStatus.CREATED,
     )
     name = models.CharField(max_length=255)
+    config: models.JSONField[dict[str, object] | None, dict[str, object] | None] = (
+        models.JSONField(null=True, blank=True)
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
