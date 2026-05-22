@@ -21,7 +21,7 @@ test('Segment membership badges render in list, tab, and env select @oss', async
 
   const envs: Env[] = []
 
-  await page.route(/\/projects\/\d+\/environments\/\?/, async (route) => {
+  await page.route(/\/projects\/\d+\/environments\/(\?|$)/, async (route) => {
     const response = await route.fetch()
     const body = await response.json()
     if (!envs.length && Array.isArray(body?.results)) {
