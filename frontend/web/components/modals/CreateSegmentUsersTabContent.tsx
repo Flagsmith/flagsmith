@@ -1,6 +1,8 @@
 import React, { FC } from 'react'
 import moment from 'moment'
-import EnvironmentSelect from 'components/EnvironmentSelect'
+import EnvironmentSelect, {
+  EnvironmentSelectOption,
+} from 'components/EnvironmentSelect'
 import PanelSearch from 'components/PanelSearch'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -27,12 +29,6 @@ interface CreateSegmentUsersTabContentProps {
   searchInput: string
   setSearchInput: (input: string) => void
   memberships?: SegmentMembership[]
-}
-
-type EnvOption = {
-  value: string
-  label: string
-  environment: Environment
 }
 
 type UserRowType = {
@@ -105,8 +101,7 @@ const CreateSegmentUsersTabContent: React.FC<
     return map
   }, [memberships])
 
-  const renderEnvOption = (data: unknown) => {
-    const { environment, label } = data as Partial<EnvOption>
+  const renderEnvOption = ({ environment, label }: EnvironmentSelectOption) => {
     const membership = environment
       ? membershipByEnvId.get(environment.id)
       : undefined
