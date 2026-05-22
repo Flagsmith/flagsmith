@@ -129,6 +129,8 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   >([])
   const [metadataUpdatedSelectList, setMetadataFieldUpdatedSelectList] =
     useState<metadataFieldUpdatedSelectListType[]>([])
+  const [saveError, setSaveError] = useState<unknown>(null)
+  const [orphanedAfterCreate, setOrphanedAfterCreate] = useState(false)
 
   const generateDataQuery = (
     contentType: number,
@@ -161,55 +163,10 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
     return query
   }
 
-  const getErrorDetail = (e: any): string | null => {
-    if (typeof e === 'string') return e
-    const data = e?.data
-    if (!data) return e?.message || e?.error || null
-    if (typeof data === 'string') return data
-    if (typeof data?.detail === 'string') return data.detail
-    if (
-      Array.isArray(data?.non_field_errors) &&
-      typeof data.non_field_errors[0] === 'string'
-    ) {
-      return data.non_field_errors[0]
-    }
-    if (Array.isArray(data) && typeof data[0] === 'string') return data[0]
-    if (data && typeof data === 'object') {
-      const firstKey = Object.keys(data)[0]
-      const firstError = firstKey ? data[firstKey] : undefined
-      const errorMsg = Array.isArray(firstError) ? firstError[0] : firstError
-      if (typeof errorMsg === 'string') return errorMsg
-    }
-    return null
-  }
-
-  const buildErrorMessage = (
-    e: any,
-    phase: 'field' | 'binding',
-    orphaned: boolean,
-  ): string => {
-    const status = e?.status
-    const detail = getErrorDetail(e)
-
-    if (status === 403) {
-      if (phase === 'binding' && orphaned) {
-        return "You don't have permission to assign this custom field to entities. The field was created but is not bound to anything — ask an organisation administrator to finish the setup or remove it."
-      }
-      return detail || "You don't have permission to perform this action."
-    }
-
-    if (phase === 'binding' && orphaned) {
-      return `Custom field was created but failed to bind to the selected entities${
-        detail ? `: ${detail}` : '.'
-      } Ask an organisation administrator to finish the setup or remove the orphaned field.`
-    }
-
-    return detail || 'Failed to save custom field'
-  }
-
   const save = async () => {
     let orphanedField = false
-    let phase: 'field' | 'binding' = 'field'
+    setSaveError(null)
+    setOrphanedAfterCreate(false)
     try {
       if (isEdit) {
         await updateMetadataField({
@@ -222,7 +179,6 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           },
           id: id!,
         }).unwrap()
-        phase = 'binding'
         if (metadataFieldSelectList.length) {
           await Promise.all(
             metadataFieldSelectList.map(async (m) => {
@@ -275,7 +231,6 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           },
         }).unwrap()
         if (res?.id) {
-          phase = 'binding'
           orphanedField = true
           await Promise.all(
             metadataFieldSelectList.map(async (m) => {
@@ -298,7 +253,8 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
       onComplete?.()
       closeModal()
     } catch (e) {
-      toast(buildErrorMessage(e, phase, orphanedField), 'danger')
+      setSaveError(e)
+      setOrphanedAfterCreate(orphanedField)
     }
   }
 
@@ -405,7 +361,16 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
         }}
         metadataModelFieldList={metadataModelFieldList!}
       />
-      {errorCreating && <ErrorMessage error={errorCreating} />}
+      {orphanedAfterCreate && (
+        <div className='alert alert-warning'>
+          The custom field was created but could not be bound to the selected
+          entities. Ask an organisation administrator to finish the setup or
+          remove the orphaned field.
+        </div>
+      )}
+      {(saveError || errorCreating) && (
+        <ErrorMessage error={saveError || errorCreating} />
+      )}
       <Button
         disabled={!name || !typeValue || !metadataFieldSelectList}
         onClick={save}
