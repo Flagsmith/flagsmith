@@ -57,12 +57,11 @@ from metadata.models import (
 )
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
-from projects.code_references.models import FeatureFlagCodeReferencesScan
+from projects.code_references.models import ScannedCodeReferences, VCSRepository
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import Segment
 from tests.types import (
-    EnableFeaturesFixture,
     WithEnvironmentPermissionsCallable,
     WithProjectPermissionsCallable,
 )
@@ -1362,6 +1361,38 @@ def test_create_segment_override__admin_user__creates_override(
     assert created_override is not None
     assert created_override.enabled is enabled
     assert created_override.get_feature_state_value() == string_value
+
+
+def test_create_segment_override__v2_versioning_environment__returns_400(
+    admin_client_new: APIClient,
+    feature: Feature,
+    segment: Segment,
+    environment_v2_versioning: Environment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment_v2_versioning.api_key, feature.id],
+    )
+    data = {
+        "feature_state_value": {"string_value": "foo"},
+        "enabled": True,
+        "feature_segment": {"segment": segment.id},
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
+    assert not FeatureState.objects.filter(
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment__segment=segment,
+    ).exists()
 
 
 def test_get_flags__user_throttle_set__is_not_throttled(  # type: ignore[no-untyped-def]
@@ -2856,6 +2887,305 @@ def test_update_feature_state__no_fsv_history__returns_200(
     assert response.status_code == status.HTTP_200_OK
 
 
+def test_update_feature_state__v2_env_via_simple_endpoint__returns_400(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    live_fs = FeatureState.objects.get(
+        environment=environment_v2_versioning,
+        feature=feature,
+        identity=None,
+        feature_segment=None,
+    )
+    url = reverse("api-v1:features:featurestates-detail", args=[live_fs.id])
+    data = {
+        "id": live_fs.id,
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "should-be-blocked"},
+        "environment": environment_v2_versioning.id,
+        "feature": feature.id,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
+
+
+def test_update_feature_state__v2_env_via_nested_endpoint__returns_400(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    live_fs = FeatureState.objects.get(
+        environment=environment_v2_versioning,
+        feature=feature,
+        identity=None,
+        feature_segment=None,
+    )
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment_v2_versioning.api_key, live_fs.id],
+    )
+    data = {
+        "id": live_fs.id,
+        "enabled": True,
+        "feature_state_value": "should-be-blocked",
+        "environment": environment_v2_versioning.id,
+        "feature": feature.id,
+        "identity": None,
+        "feature_segment": None,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
+
+
+def test_update_feature_state__v2_env_identity_override__returns_200(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    identity: Identity,
+) -> None:
+    # Given - identity overrides live outside the version graph in v2
+    identity_fs = FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        identity=identity,
+        enabled=False,
+    )
+    url = reverse("api-v1:features:featurestates-detail", args=[identity_fs.id])
+    data = {
+        "id": identity_fs.id,
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "identity-override"},
+        "environment": environment_v2_versioning.id,
+        "feature": feature.id,
+        "identity": identity.id,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
+def test_create_feature_state__v2_env_via_simple_endpoint__returns_400(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    url = reverse("api-v1:features:featurestates-list")
+    data = {
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "blocked"},
+        "environment": environment_v2_versioning.id,
+        "feature": feature.id,
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
+
+
+def test_create_feature_state__v2_env_via_nested_endpoint__returns_400(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    project: Project,
+) -> None:
+    # Given - create a feature_segment so the create has somewhere to go
+    segment = Segment.objects.create(name="new_override_segment", project=project)
+    url = reverse(
+        "api-v1:environments:environment-featurestates-list",
+        args=[environment_v2_versioning.api_key],
+    )
+    data = {
+        "enabled": True,
+        "feature_state_value": "blocked",
+        "feature": feature.id,
+        "feature_segment": {"segment": segment.id, "priority": 1},
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
+
+
+def test_create_feature_state__v2_env_identity_override__returns_201(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    identity: Identity,
+) -> None:
+    # Given - identity FS creates are not part of the version graph
+    url = reverse(
+        "api-v1:environments:identity-featurestates-list",
+        args=[environment_v2_versioning.api_key, identity.id],
+    )
+    data = {
+        "enabled": True,
+        "feature_state_value": "identity-create",
+        "feature": feature.id,
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_create_feature_state__v2_env_targets_version__returns_201(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    project: Project,
+) -> None:
+    # Given - a draft EFV plus a feature_segment attached to it
+    draft_version = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+    segment = Segment.objects.create(name="seg_targets_version", project=project)
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_v2_versioning,
+        environment_feature_version=draft_version,
+        priority=1,
+    )
+    url = reverse("api-v1:features:featurestates-list")
+    data = {
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "override"},
+        "environment": environment_v2_versioning.id,
+        "feature": feature.id,
+        "feature_segment": feature_segment.id,
+        "environment_feature_version": str(draft_version.uuid),
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_update_feature_state__v2_env_draft_version__returns_200(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given - a new draft EFV (post_save clones the previous version's FSes)
+    draft_version = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+    draft_fs = FeatureState.objects.get(
+        environment_feature_version=draft_version,
+        identity=None,
+        feature_segment=None,
+    )
+    url = reverse("api-v1:features:featurestates-detail", args=[draft_fs.id])
+    data = {
+        "id": draft_fs.id,
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "draft-update"},
+        "environment": environment_v2_versioning.id,
+        "feature": feature.id,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
+def test_delete_feature_state__v2_env_via_nested_endpoint__returns_400(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given - the live env-default FS attached to the current EFV
+    live_fs = FeatureState.objects.get(
+        environment=environment_v2_versioning,
+        feature=feature,
+        identity=None,
+        feature_segment=None,
+    )
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment_v2_versioning.api_key, live_fs.id],
+    )
+
+    # When
+    response = admin_client_new.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "v2 feature versioning" in response.json()["detail"]
+    assert FeatureState.objects.filter(id=live_fs.id).exists()
+
+
+def test_delete_feature_state__v2_env_identity_override__returns_204(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    identity: Identity,
+) -> None:
+    # Given - identity overrides live outside the version graph
+    identity_fs = FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        identity=identity,
+        enabled=False,
+    )
+    url = reverse(
+        "api-v1:environments:identity-featurestates-detail",
+        args=[environment_v2_versioning.api_key, identity.id, identity_fs.id],
+    )
+
+    # When
+    response = admin_client_new.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not FeatureState.objects.filter(id=identity_fs.id).exists()
+
+
 def test_update_feature_state__change_feature__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
@@ -3200,7 +3530,7 @@ def test_list_features__without_rbac__no_n_plus_1(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=18,
+        num_queries=17,
     )
 
 
@@ -3225,7 +3555,7 @@ def test_list_features__with_rbac__no_n_plus_1(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=19,
+        num_queries=18,
     )
 
 
@@ -3664,7 +3994,6 @@ def test_list_features__value_search_boolean__returns_matching(
 
 
 def test_list_features__with_code_references__returns_counts(
-    enable_features: EnableFeaturesFixture,
     feature: Feature,
     project: Project,
     staff_client: APIClient,
@@ -3672,62 +4001,39 @@ def test_list_features__with_code_references__returns_counts(
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    enable_features("code_references_ui_stats")
-    with freeze_time("2099-01-01T10:00:00-0300"):
-        FeatureFlagCodeReferencesScan.objects.create(
-            project=project,
-            repository_url="https://github.flagsmith.com/backend/",
-            revision="backend-1",
-            code_references=[
-                {
-                    "feature_name": feature.name,
-                    "file_path": "path/to/file.py",
-                    "line_number": 42,
-                },
-            ],
-        )
-        FeatureFlagCodeReferencesScan.objects.create(
-            project=project,
-            repository_url="https://gitlab.flagsmith.com/frontend/",
-            revision="frontend-1",
-            code_references=[
-                {
-                    "feature_name": feature.name,
-                    "file_path": "path/to/file.js",
-                    "line_number": 23,
-                },
-            ],
-        )
-    with freeze_time("2099-01-02T11:00:00-0300"):
-        FeatureFlagCodeReferencesScan.objects.create(
-            project=project,
-            repository_url="https://github.flagsmith.com/backend/",
-            revision="backend-2",
-            code_references=[
-                {
-                    "feature_name": f"Another {feature.name}",
-                    "file_path": "path/to/another/file.py",
-                    "line_number": 11,
-                },
-            ],
-        )
-        FeatureFlagCodeReferencesScan.objects.create(
-            project=project,
-            repository_url="https://gitlab.flagsmith.com/frontend/",
-            revision="frontend-2",
-            code_references=[
-                {
-                    "feature_name": feature.name,
-                    "file_path": "path/to/file.js",
-                    "line_number": 23,
-                },
-                {
-                    "feature_name": feature.name,
-                    "file_path": "path/to/another/file.js",
-                    "line_number": 50,
-                },
-            ],
-        )
+    github_repository = VCSRepository.objects.create(
+        project=project,
+        url="https://github.flagsmith.com/backend/",
+        vcs_provider="github",
+        last_scanned_at="2099-01-02T14:00:00+00:00",
+    )
+    ScannedCodeReferences.objects.create(
+        feature=feature,
+        repository=github_repository,
+        revision="backend-1",
+        code_references=[
+            {"file_path": "path/to/file.py", "line_number": 42},
+        ],
+        code_references_hash="hash-backend-1",
+        created_at="2099-01-01T13:00:00+00:00",
+    )
+    gitlab_repository = VCSRepository.objects.create(
+        project=project,
+        url="https://gitlab.flagsmith.com/frontend/",
+        vcs_provider="github",
+        last_scanned_at="2099-01-02T14:00:00+00:00",
+    )
+    ScannedCodeReferences.objects.create(
+        feature=feature,
+        repository=gitlab_repository,
+        revision="frontend-2",
+        code_references=[
+            {"file_path": "path/to/file.js", "line_number": 23},
+            {"file_path": "path/to/another/file.js", "line_number": 50},
+        ],
+        code_references_hash="hash-frontend-2",
+        created_at="2099-01-02T14:00:00+00:00",
+    )
 
     # When
     response = staff_client.get(f"/api/v1/projects/{project.pk}/features/")
@@ -3750,54 +4056,51 @@ def test_list_features__with_code_references__returns_counts(
     ]
 
 
-@pytest.mark.usefixtures("feature")
-def test_list_features__without_code_references__returns_empty_counts(
-    enable_features: EnableFeaturesFixture,
-    environment: Environment,
-    project: Project,
-    staff_client: APIClient,
-    with_project_permissions: WithProjectPermissionsCallable,
-) -> None:
-    # Given
-    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    enable_features("code_references_ui_stats")
-
-    # When
-    response = staff_client.get(
-        f"/api/v1/projects/{project.id}/features/?environment={environment.id}"
-    )
-
-    # Then
-    assert response.status_code == 200
-    results = response.json()["results"]
-    assert len(results) == 1
-    assert results[0]["code_references_counts"] == []
-
-
-# TODO: Delete this after https://github.com/flagsmith/flagsmith/issues/6832 is resolved
-def test_list_features__code_references_ui_stats_disabled__returns_empty_counts(
-    enable_features: EnableFeaturesFixture,
-    environment: Environment,
+def test_list_features__scan_recorded_via_api__count_reflects_references(
     feature: Feature,
     project: Project,
+    admin_client_new: APIClient,
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    enable_features()  # code_references_ui_stats not enabled
-    FeatureFlagCodeReferencesScan.objects.create(
-        project=project,
-        repository_url="https://github.flagsmith.com/backend/",
-        revision="rev-1",
-        code_references=[
-            {
-                "feature_name": feature.name,
-                "file_path": "path/to/file.py",
-                "line_number": 42,
-            },
-        ],
+    admin_client_new.post(
+        f"/api/v1/projects/{project.pk}/code-references/",
+        data={
+            "repository_url": "https://github.flagsmith.com/backend/",
+            "revision": "rev-1",
+            "code_references": [
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/file.py",
+                    "line_number": 42,
+                },
+            ],
+        },
+        format="json",
     )
+
+    # When
+    response = staff_client.get(f"/api/v1/projects/{project.pk}/features/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    counts = response.json()["results"][0]["code_references_counts"]
+    assert len(counts) == 1
+    assert counts[0]["repository_url"] == "https://github.flagsmith.com/backend/"
+    assert counts[0]["count"] == 1
+
+
+@pytest.mark.usefixtures("feature")
+def test_list_features__without_code_references__returns_empty_counts(
+    environment: Environment,
+    project: Project,
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     # When
     response = staff_client.get(
@@ -3886,7 +4189,7 @@ def test_list_features__last_modified_without_rbac__returns_expected(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=20,
+        num_queries=19,
     )
 
 
@@ -3914,7 +4217,7 @@ def test_list_features__last_modified_with_rbac__returns_expected(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=21,
+        num_queries=20,
     )
 
 

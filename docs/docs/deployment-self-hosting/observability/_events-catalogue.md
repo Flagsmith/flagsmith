@@ -42,7 +42,7 @@ Attributes:
 ### `billing.seat.added`
 
 Logged at `info` from:
- - `api/organisations/chargebee/chargebee.py:240`
+ - `api/organisations/chargebee/chargebee.py:239`
 
 Attributes:
  - `addon.id`
@@ -63,7 +63,7 @@ Attributes:
 ### `code_references.scan.created`
 
 Logged at `info` from:
- - `api/projects/code_references/views.py:41`
+ - `api/projects/code_references/views.py:61`
 
 Attributes:
  - `code_references.count`
@@ -339,7 +339,7 @@ Attributes:
 ### `sentry_change_tracking.integration_error`
 
 Logged at `warning` from:
- - `api/integrations/sentry/change_tracking.py:112`
+ - `api/integrations/sentry/change_tracking.py:109`
 
 Attributes:
  - `feature_name`
@@ -350,7 +350,7 @@ Attributes:
 ### `sentry_change_tracking.request_failure`
 
 Logged at `warning` from:
- - `api/integrations/sentry/change_tracking.py:102`
+ - `api/integrations/sentry/change_tracking.py:99`
 
 Attributes:
  - `error`
@@ -360,7 +360,7 @@ Attributes:
 ### `sentry_change_tracking.sending`
 
 Logged at `debug` from:
- - `api/integrations/sentry/change_tracking.py:87`
+ - `api/integrations/sentry/change_tracking.py:84`
 
 Attributes:
  - `feature_name`
@@ -372,7 +372,7 @@ Attributes:
 ### `sentry_change_tracking.success`
 
 Logged at `info` from:
- - `api/integrations/sentry/change_tracking.py:109`
+ - `api/integrations/sentry/change_tracking.py:106`
 
 Attributes:
  - `feature_name`

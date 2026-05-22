@@ -100,6 +100,10 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         organisation_id = self.request.query_params.get("organisation")
         if organisation_id:
+            try:
+                int(organisation_id)
+            except (TypeError, ValueError):
+                raise ValidationError({"organisation": "Must be a valid integer."})
             queryset = queryset.filter(organisation__id=organisation_id)
 
         project_uuid = self.request.query_params.get("uuid")

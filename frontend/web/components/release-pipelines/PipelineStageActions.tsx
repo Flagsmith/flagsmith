@@ -4,6 +4,7 @@ import { StageActionBody, StageActionRequest } from 'common/types/requests'
 import { useMemo } from 'react'
 import SinglePipelineStageAction from './SinglePipelineStageAction'
 import Button from 'components/base/forms/Button'
+import { Icon } from 'components/icons'
 import { StageActionType } from 'common/types/responses'
 
 interface PipelineStageActionsProps {
@@ -60,7 +61,8 @@ const PipelineStageActions = ({
           onRemoveAction={index > 0 ? onRemoveAction : undefined}
         />
       ))}
-      <Button iconLeft='plus' className='w-100' onClick={onAddAction}>
+      <Button className='w-100' onClick={onAddAction}>
+        <Icon name='plus' />
         Add Flag Action
       </Button>
     </>

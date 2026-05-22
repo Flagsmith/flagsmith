@@ -254,6 +254,7 @@ const Integration: FC<IntegrationProps> = (props) => {
           onClick={action.onClick}
           disabled={action.disabled}
           data-test={action.dataTest}
+          id={`integration-setup-${props.id}`}
           size='xSmall'
           title={action.tooltip}
         >

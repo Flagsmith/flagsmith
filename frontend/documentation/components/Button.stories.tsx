@@ -7,6 +7,7 @@ import {
   sizeClassNames,
 } from 'components/base/forms/Button'
 import type { ButtonType } from 'components/base/forms/Button'
+import { Icon } from 'components/icons'
 
 const themeOptions = Object.keys(themeClassNames) as Array<
   keyof typeof themeClassNames
@@ -19,7 +20,7 @@ const meta: Meta<ButtonType> = {
   argTypes: {
     children: {
       control: 'text',
-      description: 'Button label content.',
+      description: 'Button label content. Compose icons via `<Icon>` children.',
     },
     disabled: {
       control: 'boolean',
@@ -60,7 +61,7 @@ export const Variants: Story = {
     docs: {
       description: {
         story:
-          'All available button themes. Use `primary` for main actions, `secondary` for alternatives, `outline` for low-emphasis actions, `danger` for destructive actions, and `success` for positive confirmations. `icon` is for icon-only buttons (copy, action triggers in tables); `project` is the avatar-style button used in the project picker.',
+          'All available button themes. Use `primary` for main actions, `secondary` for alternatives, `outline` for low-emphasis actions, `danger` for destructive actions, and `success` for positive confirmations.',
       },
     },
   },
@@ -73,10 +74,9 @@ export const Variants: Story = {
       <Button theme='success'>Success</Button>
       <Button theme='tertiary'>Tertiary</Button>
       <Button theme='text'>Text</Button>
-      <Button theme='icon' iconLeft='copy'>
-        {''}
+      <Button theme='icon'>
+        <Icon name='copy' />
       </Button>
-      <Button theme='project'>Project</Button>
     </div>
   ),
 }
@@ -85,7 +85,7 @@ export const Sizes: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Button sizes from large to extra small.',
+        story: 'Button sizes from large to extra-extra small.',
       },
     },
   },
@@ -95,6 +95,7 @@ export const Sizes: Story = {
       <Button size='default'>Default</Button>
       <Button size='small'>Small</Button>
       <Button size='xSmall'>Extra Small</Button>
+      <Button size='xxSmall'>XX Small</Button>
     </div>
   ),
 }
@@ -130,20 +131,23 @@ export const WithIcons: Story = {
     docs: {
       description: {
         story:
-          'Buttons support `iconLeft` and `iconRight` props. Pass any `IconName` from the icon system.',
+          'Icons compose via children — pass `<Icon>` JSX directly alongside the label. Button handles icon+label spacing internally.',
       },
     },
   },
   render: () => (
     <div className='d-flex align-items-center flex-wrap gap-2'>
-      <Button theme='primary' iconLeft='plus'>
+      <Button theme='primary'>
+        <Icon name='plus' />
         Add Item
       </Button>
-      <Button theme='danger' iconLeft='trash-2'>
+      <Button theme='danger'>
+        <Icon name='trash-2' />
         Delete
       </Button>
-      <Button theme='outline' iconRight='chevron-right'>
+      <Button theme='outline'>
         Next
+        <Icon name='chevron-right' />
       </Button>
     </div>
   ),

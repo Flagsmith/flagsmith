@@ -167,6 +167,7 @@ INSTALLED_APPS = [
     "softdelete",
     "metadata",
     "app_analytics",
+    "experimentation",
     "oauth2_metadata",
 ]
 
@@ -1065,6 +1066,27 @@ IS_RBAC_INSTALLED = importlib.util.find_spec("rbac") is not None
 if IS_RBAC_INSTALLED:
     INSTALLED_APPS.append("rbac")
 
+SCIM_INSTALLED = importlib.util.find_spec("scim") is not None
+if SCIM_INSTALLED:
+    INSTALLED_APPS += ["django_scim", "scim"]
+    SCIM_SERVICE_PROVIDER = {
+        "AUTHENTICATION_SCHEMES": [
+            {
+                "type": "oauthbearertoken",
+                "name": "OAuth Bearer Token",
+                "description": "Per-organisation bearer token issued via the SCIM configuration API.",
+            },
+        ],
+        "AUTH_CHECK_MIDDLEWARE": "scim.middleware.ScimAuthenticationMiddleware",
+        "BASE_LOCATION_GETTER": "core.helpers.get_request_base_url",
+        "GET_EXTRA_MODEL_FILTER_KWARGS_GETTER": "scim.filters.get_extra_model_filter_kwargs_getter",
+        "GROUP_ADAPTER": "scim.adapters.GroupAdapter",
+        "GROUP_FILTER_PARSER": "scim.filters.GroupFilterQuery",
+        "GROUP_MODEL": "users.models.UserPermissionGroup",
+        "USER_ADAPTER": "scim.adapters.UserAdapter",
+        "USER_FILTER_PARSER": "scim.filters.UserFilterQuery",
+    }
+
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Used to keep edge identities in sync by forwarding the http requests
@@ -1388,11 +1410,6 @@ ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = env.list(
     subcast=str,
     default=[],
 )
-
-# Date on which versioning is released. This is used to give any scale up
-# subscriptions created before this date full audit log and versioning
-# history.
-VERSIONING_RELEASE_DATE = env.date("VERSIONING_RELEASE_DATE", default=None)
 
 SUBSCRIPTION_LICENCE_PUBLIC_KEY = env.str(
     "SUBSCRIPTION_LICENCE_PUBLIC_KEY",

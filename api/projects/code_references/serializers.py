@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
 from projects.code_references.constants import MAX_FILE_PATH_LENGTH
-from projects.code_references.models import FeatureFlagCodeReferencesScan
 from projects.code_references.types import (
     CodeReference,
     CodeReferencesRepositoryCount,
     FeatureFlagCodeReferencesRepositorySummary,
+    FeatureFlagCodeReferencesScan,
     VCSProvider,
 )
 
@@ -28,25 +28,19 @@ class _CodeReferenceDetailSerializer(_BaseCodeReferenceSerializer):
 
 
 class FeatureFlagCodeReferencesScanSerializer(
-    serializers.ModelSerializer[FeatureFlagCodeReferencesScan],
+    serializers.Serializer[FeatureFlagCodeReferencesScan],
 ):
+    created_at = serializers.DateTimeField(read_only=True)
+    project = serializers.IntegerField(read_only=True, source="project.id")
+    repository_url = serializers.URLField()
+    vcs_provider = serializers.ChoiceField(
+        choices=VCSProvider.choices,
+        default=VCSProvider.GITHUB,
+    )
+    revision = serializers.CharField(max_length=100)
     code_references = _CodeReferenceSubmitSerializer(
         many=True, required=True, allow_empty=False
     )
-
-    class Meta:
-        model = FeatureFlagCodeReferencesScan
-        fields = [
-            "created_at",
-            "repository_url",
-            "project",
-            "revision",
-            "code_references",
-        ]
-        read_only_fields = [
-            "created_at",
-            "project",
-        ]
 
 
 class FeatureFlagCodeReferencesRepositorySummarySerializer(
