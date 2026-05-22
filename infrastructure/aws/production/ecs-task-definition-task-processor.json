@@ -192,6 +192,10 @@
                 {
                     "name": "LOG_FORMAT",
                     "value": "json"
+                },
+                {
+                    "name": "API_USAGE_ALERT_CC_RECIPIENT_LIST",
+                    "value": "customersuccess@flagsmith.com"
                 }
             ],
             "secrets": [
