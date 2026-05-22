@@ -23,6 +23,12 @@ const CreateProject = ({ history, onSave }) => {
   const [showRoles, setShowRoles] = useState(false)
   const [assigningAdmins, setAssigningAdmins] = useState(false)
   const inputRef = useRef(null)
+  // OrganisationProvider wires onSave into a Flux listener once on mount, so
+  // any state we read in `close` is stale. Mirror selections into refs.
+  const adminIdsRef = useRef(adminIds)
+  const adminRoleIdsRef = useRef(adminRoleIds)
+  adminIdsRef.current = adminIds
+  adminRoleIdsRef.current = adminRoleIds
 
   const organisationId = AccountStore.getOrganisation()?.id
   const currentUserId = AccountStore.getUser()?.id
@@ -70,14 +76,16 @@ const CreateProject = ({ history, onSave }) => {
   }, [history])
 
   const assignProjectAdmins = (projectId) => {
-    const userRequests = adminIds.map((userId) =>
+    const userIds = adminIdsRef.current
+    const roleIds = adminRoleIdsRef.current
+    const userRequests = userIds.map((userId) =>
       _data.post(`${ProjectApi.api}projects/${projectId}/user-permissions/`, {
         admin: true,
         permissions: [],
         user: userId,
       }),
     )
-    const roleRequests = adminRoleIds.map((roleId) =>
+    const roleRequests = roleIds.map((roleId) =>
       _data.post(
         `${ProjectApi.api}organisations/${organisationId}/roles/${roleId}/projects-permissions/`,
         {
@@ -93,7 +101,8 @@ const CreateProject = ({ history, onSave }) => {
   const close = async (data = {}) => {
     setInterceptClose(null)
     const { environmentId, projectId } = data
-    const hasAssignments = adminIds.length || adminRoleIds.length
+    const hasAssignments =
+      adminIdsRef.current.length || adminRoleIdsRef.current.length
     if (projectId && hasAssignments) {
       setAssigningAdmins(true)
       try {
