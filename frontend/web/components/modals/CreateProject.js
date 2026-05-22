@@ -60,12 +60,14 @@ const CreateProject = ({ history, onSave }) => {
       label: getUserDisplayName(u),
       sublabel: u.email,
       type: 'user',
+      typeLabel: 'User',
     }))
     const groupItems = groups.map((g) => ({
       id: g.id,
       label: g.name,
       sublabel: 'Group',
       type: 'group',
+      typeLabel: 'Group',
     }))
     const roleItems = hasRbac
       ? roles.map((r) => ({
@@ -73,6 +75,7 @@ const CreateProject = ({ history, onSave }) => {
           label: r.name,
           sublabel: 'Role',
           type: 'role',
+          typeLabel: 'Role',
         }))
       : []
     return [...userItems, ...groupItems, ...roleItems]
@@ -244,11 +247,10 @@ const CreateProject = ({ history, onSave }) => {
                             className='chip mr-2'
                           >
                             <span className='font-weight-bold'>
-                              {item.label}
+                              {item.typeLabel}
                             </span>
-                            <span className='text-muted ml-1 text-small'>
-                              {item.sublabel}
-                            </span>
+                            <span className='mx-1'>:</span>
+                            <span>{item.label}</span>
                             <span className='chip-icon ion'>
                               <IonIcon icon={closeIcon} />
                             </span>
