@@ -9,6 +9,7 @@ type SettingsButtonType = {
   children: ReactNode
   content?: ReactNode
   description?: ReactNode
+  dropdown?: ReactNode
   feature?: PaidFeature
 }
 
@@ -16,6 +17,7 @@ const SettingsButton: FC<SettingsButtonType> = ({
   children,
   content,
   description,
+  dropdown,
   feature,
   onClick,
 }) => {
@@ -42,6 +44,7 @@ const SettingsButton: FC<SettingsButtonType> = ({
           {!!feature && <PlanBasedBanner feature={feature} theme={'badge'} />}
         </Row>
       </Row>
+      {dropdown}
       {description && (
         <div className='text-muted text-small mb-2'>{description}</div>
       )}

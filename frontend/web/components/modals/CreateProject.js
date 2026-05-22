@@ -245,6 +245,72 @@ const CreateProject = ({ history, onSave }) => {
                   <SettingsButton
                     onClick={() => !disableCreate && setShowPicker(!showPicker)}
                     description='Optionally grant other users, groups, or roles administrator access to this project. Organisation administrators already have full access to all projects.'
+                    dropdown={
+                      <InlineModal
+                        title='Assign administrators'
+                        isOpen={showPicker}
+                        onClose={() => setShowPicker(false)}
+                      >
+                        <div style={{ width: 480 }}>
+                          <Input
+                            ref={(c) => (pickerSearchRef.current = c)}
+                            disabled={disableCreate}
+                            value={pickerFilter}
+                            onChange={(e) =>
+                              setPickerFilter(Utils.safeParseEventValue(e))
+                            }
+                            className='full-width mb-2'
+                            placeholder='Search users, groups or roles'
+                            search
+                          />
+                          <div
+                            style={{
+                              maxHeight: 320,
+                              overflowX: 'hidden',
+                              overflowY: 'auto',
+                            }}
+                          >
+                            {filteredItems.map((item) => {
+                              const selected = isSelected(item)
+                              return (
+                                <div
+                                  key={`${item.type}-${item.id}`}
+                                  onClick={() => toggleItem(item)}
+                                  className='assignees-list-item clickable'
+                                >
+                                  <Row
+                                    className='flex-nowrap w-100 overflow-hidden overflow-ellipsis'
+                                    space
+                                  >
+                                    <div
+                                      className={classNames(
+                                        selected ? 'font-weight-bold' : '',
+                                        'overflow-ellipsis w-100',
+                                      )}
+                                    >
+                                      {item.label}
+                                      <div className='text-muted text-small'>
+                                        {item.sublabel}
+                                      </div>
+                                    </div>
+                                    {selected && (
+                                      <span className='mr-1'>
+                                        <Icon name='checkmark' fill='#6837FC' />
+                                      </span>
+                                    )}
+                                  </Row>
+                                </div>
+                              )
+                            })}
+                            {!filteredItems.length && (
+                              <div className='text-muted text-center py-2'>
+                                No matches
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </InlineModal>
+                    }
                     content={
                       <Row style={{ rowGap: '12px' }}>
                         {selectedItems.map((item) => (
@@ -273,70 +339,6 @@ const CreateProject = ({ history, onSave }) => {
                   >
                     Project administrators
                   </SettingsButton>
-                  <InlineModal
-                    title='Assign administrators'
-                    isOpen={showPicker}
-                    onClose={() => setShowPicker(false)}
-                  >
-                    <div style={{ width: 480 }}>
-                      <Input
-                        ref={(c) => (pickerSearchRef.current = c)}
-                        disabled={disableCreate}
-                        value={pickerFilter}
-                        onChange={(e) =>
-                          setPickerFilter(Utils.safeParseEventValue(e))
-                        }
-                        className='full-width mb-2'
-                        placeholder='Search users, groups or roles'
-                        search
-                      />
-                      <div
-                        style={{
-                          maxHeight: 320,
-                          overflowX: 'hidden',
-                          overflowY: 'auto',
-                        }}
-                      >
-                        {filteredItems.map((item) => {
-                          const selected = isSelected(item)
-                          return (
-                            <div
-                              key={`${item.type}-${item.id}`}
-                              onClick={() => toggleItem(item)}
-                              className='assignees-list-item clickable'
-                            >
-                              <Row
-                                className='flex-nowrap w-100 overflow-hidden overflow-ellipsis'
-                                space
-                              >
-                                <div
-                                  className={classNames(
-                                    selected ? 'font-weight-bold' : '',
-                                    'overflow-ellipsis w-100',
-                                  )}
-                                >
-                                  {item.label}
-                                  <div className='text-muted text-small'>
-                                    {item.sublabel}
-                                  </div>
-                                </div>
-                                {selected && (
-                                  <span className='mr-1'>
-                                    <Icon name='checkmark' fill='#6837FC' />
-                                  </span>
-                                )}
-                              </Row>
-                            </div>
-                          )
-                        })}
-                        {!filteredItems.length && (
-                          <div className='text-muted text-center py-2'>
-                            No matches
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </InlineModal>
                 </div>
               )}
 
