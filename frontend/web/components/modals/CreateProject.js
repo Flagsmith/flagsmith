@@ -253,7 +253,7 @@ const CreateProject = ({ history, onSave }) => {
                             onClick={() => toggleItem(item)}
                             className='chip mr-2'
                           >
-                            <span className='font-weight-bold'>
+                            <span style={{ fontWeight: 600 }}>
                               {item.typeLabel}
                             </span>
                             <span className='mx-1'>:</span>
