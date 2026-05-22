@@ -29,6 +29,8 @@ const CreateProject = ({ history, onSave }) => {
   const adminRoleIdsRef = useRef(adminRoleIds)
   adminIdsRef.current = adminIds
   adminRoleIdsRef.current = adminRoleIds
+  const onSaveRef = useRef(onSave)
+  onSaveRef.current = onSave
 
   const organisationId = AccountStore.getOrganisation()?.id
   const currentUserId = AccountStore.getUser()?.id
@@ -96,9 +98,9 @@ const CreateProject = ({ history, onSave }) => {
     return Promise.all([...userRequests, ...roleRequests])
   }
 
-  const close = async (data = {}) => {
+  const close = async (data) => {
     setInterceptClose(null)
-    const { environmentId, projectId } = data
+    const { environmentId, projectId } = data || {}
     const hasAssignments =
       adminIdsRef.current.length || adminRoleIdsRef.current.length
     if (projectId && hasAssignments) {
@@ -116,7 +118,7 @@ const CreateProject = ({ history, onSave }) => {
       history.push(
         `/project/${projectId}/environment/${environmentId}/features?new=true`,
       )
-      onSave?.(data)
+      onSaveRef.current?.(data)
     }
   }
 
