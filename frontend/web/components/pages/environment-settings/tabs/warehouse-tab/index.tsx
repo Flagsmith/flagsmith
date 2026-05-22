@@ -4,7 +4,7 @@ import {
   useDeleteWarehouseConnectionMutation,
   useGetWarehouseConnectionsQuery,
 } from 'common/services/useWarehouseConnection'
-import Loader from 'components/base/Loader'
+import Loader from 'components/Loader'
 import Setting from 'components/Setting'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
 
