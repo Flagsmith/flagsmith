@@ -17,6 +17,7 @@ class WarehouseConnectionViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
     serializer_class = WarehouseConnectionSerializer
@@ -32,6 +33,12 @@ class WarehouseConnectionViewSet(
         )
         create_warehouse_audit_log(
             connection, self._get_user(self.request), action="created"
+        )
+
+    def perform_update(self, serializer: BaseSerializer[WarehouseConnection]) -> None:
+        connection: WarehouseConnection = serializer.save()
+        create_warehouse_audit_log(
+            connection, self._get_user(self.request), action="updated"
         )
 
     def perform_destroy(self, instance: WarehouseConnection) -> None:

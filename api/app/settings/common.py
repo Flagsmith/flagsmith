@@ -118,6 +118,8 @@ INSTALLED_APPS = [
     "features.workflows.core",
     "features.release_pipelines.core",
     "segments",
+    "segment_membership",
+    "clickhouse",
     "app",
     "e2etests",
     "simple_history",
@@ -560,6 +562,13 @@ SPECTACULAR_SETTINGS = {
         "api.openapi",
         "edge_api.identities.openapi",
         "environments.identities.traits.openapi",
+    ],
+    "PREPROCESSING_HOOKS": [
+        "api.openapi.preprocessing_filter_spec",
+    ],
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+        "api.openapi.postprocessing_assign_tags",
     ],
     "ENUM_NAME_OVERRIDES": {
         # Overrides to use specific schema names for fields named "type".
@@ -1449,3 +1458,39 @@ REQUIRE_AUTHENTICATION_FOR_API_DOCS = env.bool(
 PYLON_IDENTITY_VERIFICATION_SECRET = env.str("PYLON_IDENTITY_VERIFICATION_SECRET", None)
 
 OSIC_UPDATE_BATCH_SIZE = env.int("OSIC_UPDATE_BATCH_SIZE", default=500)
+
+# ClickHouse backs the segment_membership backfill and refresh tasks. Set
+# CLICKHOUSE_URL (DSN form) or any CLICKHOUSE_HOST + discrete fields to enable.
+# Discrete settings override the matching field parsed from the URL.
+CLICKHOUSE_URL = env.str("CLICKHOUSE_URL", default=None)
+CLICKHOUSE_HOST = env.str("CLICKHOUSE_HOST", default=None)
+CLICKHOUSE_PORT = env.int("CLICKHOUSE_PORT", default=None)
+CLICKHOUSE_USER = env.str("CLICKHOUSE_USER", default=None)
+CLICKHOUSE_PASSWORD = env.str("CLICKHOUSE_PASSWORD", default=None)
+CLICKHOUSE_DATABASE = env.str("CLICKHOUSE_DATABASE", default=None)
+CLICKHOUSE_SECURE = env.bool("CLICKHOUSE_SECURE", default=None)
+
+CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
+
+# Always installed: the router fences the `clickhouse` app's migrations off
+# the default Postgres database whether or not a CH alias is configured.
+DATABASE_ROUTERS.append("app.routers.ClickHouseRouter")
+
+if CLICKHOUSE_ENABLED:
+    _clickhouse_db: dict[str, Any] = {
+        "ENGINE": "clickhouse_backend.backend",
+        "HOST": CLICKHOUSE_HOST,
+        "PORT": CLICKHOUSE_PORT,
+        "USER": CLICKHOUSE_USER,
+        "PASSWORD": CLICKHOUSE_PASSWORD,
+        "NAME": CLICKHOUSE_DATABASE,
+        "OPTIONS": {
+            "dsn": CLICKHOUSE_URL,
+            "secure": CLICKHOUSE_SECURE,
+            "settings": {
+                # ClickHouse Cloud 25.12 requires this for `JSON`-column DDL.
+                "allow_experimental_json_type": 1,
+            },
+        },
+    }
+    DATABASES["clickhouse"] = _clickhouse_db  # type: ignore[assignment]
