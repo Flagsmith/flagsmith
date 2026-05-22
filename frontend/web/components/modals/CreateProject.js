@@ -27,6 +27,7 @@ const CreateProject = ({ history, onSave }) => {
   const [pickerFilter, setPickerFilter] = useState('')
   const [assigningAdmins, setAssigningAdmins] = useState(false)
   const inputRef = useRef(null)
+  const pickerSearchRef = useRef(null)
 
   const organisationId = AccountStore.getOrganisation()?.id
   const currentUserId = AccountStore.getUser()?.id
@@ -122,6 +123,12 @@ const CreateProject = ({ history, onSave }) => {
       `${item.label} ${item.sublabel}`.toLowerCase().includes(search),
     )
   }, [pickerItems, pickerFilter])
+
+  useEffect(() => {
+    if (!showPicker) return
+    const t = setTimeout(() => pickerSearchRef.current?.focus(), 50)
+    return () => clearTimeout(t)
+  }, [showPicker])
 
   useEffect(() => {
     const focusTimeout = setTimeout(() => {
@@ -273,6 +280,7 @@ const CreateProject = ({ history, onSave }) => {
                   >
                     <div style={{ width: 480 }}>
                       <Input
+                        ref={(c) => (pickerSearchRef.current = c)}
                         disabled={disableCreate}
                         value={pickerFilter}
                         onChange={(e) =>
