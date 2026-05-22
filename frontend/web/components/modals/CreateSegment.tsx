@@ -589,7 +589,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
               <>
                 Identities
                 <SegmentMembershipTotalBadge
-                  compact
                   memberships={segment.memberships}
                 />
               </>

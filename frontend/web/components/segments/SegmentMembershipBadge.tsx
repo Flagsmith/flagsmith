@@ -2,6 +2,7 @@ import React, { FC } from 'react'
 
 import { Environment, SegmentMembership } from 'common/types/responses'
 import ProjectStore from 'common/stores/project-store'
+import Tooltip from 'components/Tooltip'
 import UsersIcon from 'components/icons/UsersIcon'
 
 const shortAgo = (iso: string): string => {
@@ -14,40 +15,41 @@ const shortAgo = (iso: string): string => {
   return `${Math.round(diffHr / 24)}d ago`
 }
 
-type ChipProps = {
-  count: number
-  ago?: string
-  dataTest?: string
-  compact?: boolean
+const formatTooltip = (count: number, lastSyncedAt: string | undefined): string => {
+  const noun = count === 1 ? 'identity' : 'identities'
+  const base = `${count} ${noun}`
+  return lastSyncedAt ? `${base} — last synced ~${shortAgo(lastSyncedAt)}` : base
 }
 
-const Chip: FC<ChipProps> = ({ ago, compact, count, dataTest }) => {
-  const noun = count === 1 ? 'identity' : 'identities'
-  return (
-    <span
-      className='chip chip--xs bg-primary text-white ms-3'
-      style={{ border: 'none', alignSelf: 'center', verticalAlign: 'middle' }}
-      data-test={dataTest}
-    >
-      <UsersIcon className='chip-svg-icon' />
-      <span>
-        {count}
-        {compact ? '' : ` ${noun}`}
-        {ago ? ` ~${ago}` : ''}
-      </span>
-    </span>
-  )
+type ChipProps = {
+  count: number
+  dataTest?: string
+  tooltip: string
 }
+
+const Chip: FC<ChipProps> = ({ count, dataTest, tooltip }) => (
+  <Tooltip
+    plainText
+    title={
+      <span
+        className='chip chip--xs bg-primary text-white ms-3'
+        style={{ border: 'none', alignSelf: 'center', verticalAlign: 'middle' }}
+        data-test={dataTest}
+      >
+        <UsersIcon className='chip-svg-icon' />
+        <span>{count}</span>
+      </span>
+    }
+  >
+    {tooltip}
+  </Tooltip>
+)
 
 type TotalProps = {
   memberships: SegmentMembership[] | undefined
-  compact?: boolean
 }
 
-export const SegmentMembershipTotalBadge: FC<TotalProps> = ({
-  compact,
-  memberships,
-}) => {
+export const SegmentMembershipTotalBadge: FC<TotalProps> = ({ memberships }) => {
   if (!memberships?.length) {
     return null
   }
@@ -58,9 +60,8 @@ export const SegmentMembershipTotalBadge: FC<TotalProps> = ({
   )
   return (
     <Chip
-      compact={compact}
       count={total}
-      ago={latest ? shortAgo(latest) : undefined}
+      tooltip={formatTooltip(total, latest || undefined)}
       dataTest='segment-membership-total'
     />
   )
@@ -83,6 +84,7 @@ export const SegmentMembershipEnvBadge: FC<EnvProps> = ({
   return (
     <Chip
       count={membership.count}
+      tooltip={formatTooltip(membership.count, membership.last_synced_at)}
       dataTest={`segment-membership-${env.api_key}`}
     />
   )
