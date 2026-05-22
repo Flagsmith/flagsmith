@@ -29,6 +29,7 @@ type ChipProps = {
 const Chip: FC<ChipProps> = ({ count, dataTest, tooltip }) => (
   <Tooltip
     plainText
+    delayShow={100}
     title={
       <span
         className='chip chip--xs bg-primary text-white ms-3'
