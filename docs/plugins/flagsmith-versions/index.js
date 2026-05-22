@@ -88,7 +88,7 @@ export default async function fetchFlagsmithVersions(context, options) {
             const [js, nodejs, java, android, swiftpm, cocoapods, dotnet, rust, elixir, flutter] = await Promise.all(
                 [
                     fetchNpmVersions('@flagsmith/flagsmith'),
-                    fetchNpmVersions('@flagsmith/nodejs'),
+                    fetchNpmVersions('flagsmith-nodejs'),
                     fetchJavaVersions(),
                     fetchAndroidVersions(),
                     fetchSwiftPMVersions(),
