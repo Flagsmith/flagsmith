@@ -116,6 +116,9 @@ const EnvironmentSettingsPage: React.FC = () => {
 
   const has4EyesPermission = Utils.getPlansPermission('4_EYES')
   const metadataEnable = Utils.getPlansPermission('METADATA')
+  const warehouseEnabled = Utils.getFlagsmithHasFeature(
+    'experimentation_warehouse_connection',
+  )
 
   const getEnvironment = useCallback(async () => {
     if (!env) return
@@ -902,19 +905,21 @@ const EnvironmentSettingsPage: React.FC = () => {
                       )}
                     </FormGroup>
                   </TabItem>
-                  <TabItem tabLabel='Warehouse'>
-                    <PlanBasedBanner
-                      className='mt-4'
-                      feature='WAREHOUSE'
-                      theme='page'
-                    >
-                      <div className='mt-4'>
-                        <WarehouseTab
-                          environmentId={match.params.environmentId}
-                        />
-                      </div>
-                    </PlanBasedBanner>
-                  </TabItem>
+                  {warehouseEnabled && (
+                    <TabItem tabLabel='Warehouse'>
+                      <PlanBasedBanner
+                        className='mt-4'
+                        feature='WAREHOUSE'
+                        theme='page'
+                      >
+                        <div className='mt-4'>
+                          <WarehouseTab
+                            environmentId={match.params.environmentId}
+                          />
+                        </div>
+                      </PlanBasedBanner>
+                    </TabItem>
+                  )}
                   {metadataEnable && environmentContentType?.id && (
                     <TabItem tabLabel='Custom Fields'>
                       <FormGroup className='mt-5 setting'>
