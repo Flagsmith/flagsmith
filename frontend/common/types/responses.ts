@@ -864,6 +864,16 @@ export type SAMLAttributeMapping = {
   idp_attribute_name: string
 }
 
+export type ScimConfiguration = {
+  created_at: string
+  token_rotated_at: string
+  base_url: string
+}
+
+export type ScimConfigurationWithToken = ScimConfiguration & {
+  token: string
+}
+
 export type HealthEventType = 'HEALTHY' | 'UNHEALTHY'
 
 export type FeatureHealthEventReasonTextBlock = {
@@ -943,11 +953,6 @@ export type IdentityTrait = {
   id: number | string
   trait_key: string
   trait_value: FlagsmithValue
-}
-
-enum PipelineStatus {
-  DRAFT = 'DRAFT',
-  ACTIVE = 'ACTIVE',
 }
 
 export interface ReleasePipeline {
@@ -1241,6 +1246,8 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  scimConfiguration: ScimConfiguration
+  scimConfigurationWithToken: ScimConfigurationWithToken
   identitySegments: PagedResponse<Segment>
   organisationWebhooks: PagedResponse<Webhook>
   projectChangeRequests: PagedResponse<ChangeRequestSummary>

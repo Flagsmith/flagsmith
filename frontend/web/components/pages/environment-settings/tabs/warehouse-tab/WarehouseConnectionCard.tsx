@@ -106,10 +106,17 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
 
   return (
     <div className='d-flex flex-column px-3 py-3 accordion-card m-0 mb-2'>
-      <button
-        type='button'
+      <div
+        role='button'
+        tabIndex={0}
         className='d-flex flex-row align-items-center justify-content-between btn--accordion-header'
         onClick={() => setOpen(!open)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setOpen(!open)
+          }
+        }}
         aria-expanded={open}
       >
         <div className='d-flex flex-row align-items-center gap-2'>
@@ -175,7 +182,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
           </div>
           <Icon name={open ? 'chevron-up' : 'chevron-down'} width={16} />
         </div>
-      </button>
+      </div>
       <div ref={contentRef} style={collapsibleStyle}>
         <div className='mt-3 mb-2 d-flex flex-column gap-3'>{renderBody()}</div>
       </div>
