@@ -79,7 +79,7 @@ const keywords = {
   LIB_NAME: 'flagsmith',
   LIB_NAME_JAVA: 'FlagsmithClient',
   NPM_CLIENT: '@flagsmith/flagsmith',
-  NPM_NODE_CLIENT: 'flagsmith-nodejs',
+  NPM_NODE_CLIENT: '@flagsmith/nodejs',
   SEGMENT_NAME: 'superUsers',
   TRAIT_NAME: 'age',
   USER_FEATURE_FUNCTION: 'myEvenCoolerFeature',
