@@ -1,7 +1,6 @@
 import React, { FC } from 'react'
 
 import { Environment, SegmentMembership } from 'common/types/responses'
-import ProjectStore from 'common/stores/project-store'
 import Tooltip from 'components/Tooltip'
 import UsersIcon from 'components/icons/UsersIcon'
 
@@ -69,23 +68,16 @@ export const SegmentMembershipTotalBadge: FC<TotalProps> = ({ memberships }) => 
 
 type EnvProps = {
   membership: SegmentMembership
-  environment?: Environment
+  environment: Environment
 }
 
 export const SegmentMembershipEnvBadge: FC<EnvProps> = ({
   environment,
   membership,
-}) => {
-  const envs = (ProjectStore.getEnvs() as Environment[] | null) || []
-  const env = environment ?? envs.find((e) => e.id === membership.environment)
-  if (!env) {
-    return null
-  }
-  return (
-    <Chip
-      count={membership.count}
-      tooltip={formatTooltip(membership.count, membership.last_synced_at)}
-      dataTest={`segment-membership-${env.api_key}`}
-    />
-  )
-}
+}) => (
+  <Chip
+    count={membership.count}
+    tooltip={formatTooltip(membership.count, membership.last_synced_at)}
+    dataTest={`segment-membership-${environment.api_key}`}
+  />
+)
