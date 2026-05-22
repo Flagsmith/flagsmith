@@ -4,8 +4,6 @@ sidebar_label: Change Requests
 sidebar_position: 10
 ---
 
-You can use Change Requests to add workflow control to the changing of flag values. Change Requests allow a user to propose a change to a flag value, and then require that change is approved by a number of other team members.
-
 You can use Change Requests to ensure that, for example, a change to a flag in Production has to be approved by another team member. They work in a similar way to Pull Requests in git. This guide explains how to use Change Requests to add workflow control to changing flag values. You will learn how to set up, create, approve, and publish Change Requests.
 
 ## Prerequisites
@@ -79,6 +77,10 @@ Request lifecycle:
 | A Change Request is assigned to an individual | The assignee receives an email informing them that their approval is pending |
 | A Change Request is approved | The CR author receives an email confirming the approval |
 | A Change Request is assigned to a group | All members of the group receive a notification via background task |
+
+:::note
+**Self-hosting?** To ensure these email notifications are delivered correctly, you must configure the [self-hosted email setup](https://docs.flagsmith.com/deployment-self-hosting/core-configuration/email-setup).
+:::
 
 **What does not trigger a notification:**
 
