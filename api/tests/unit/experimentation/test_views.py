@@ -58,7 +58,39 @@ def test_post__already_exists__returns_409(
 
     # Then
     assert response.status_code == status.HTTP_409_CONFLICT
-    assert response.json()["detail"] == "Warehouse connection already exists."
+    assert (
+        response.json()["detail"]
+        == "This environment already has an active warehouse connection."
+    )
+
+
+def test_post__different_type_already_exists__returns_409(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection: WarehouseConnection,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "My Snowflake",
+            "config": {"account_identifier": "xy12345.us-east-1"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_409_CONFLICT
+    assert (
+        response.json()["detail"]
+        == "This environment already has an active warehouse connection."
+    )
 
 
 def test_post__soft_deleted_exists__resurrects_and_returns_201(
