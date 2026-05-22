@@ -8,12 +8,14 @@ type SettingsButtonType = {
   onClick: () => void
   children: ReactNode
   content?: ReactNode
+  description?: ReactNode
   feature?: PaidFeature
 }
 
 const SettingsButton: FC<SettingsButtonType> = ({
   children,
   content,
+  description,
   feature,
   onClick,
 }) => {
@@ -22,8 +24,9 @@ const SettingsButton: FC<SettingsButtonType> = ({
     <>
       <Row>
         <Row
-          className={classNames('gap-2 align-items-center mb-2', {
+          className={classNames('gap-2 align-items-center', {
             'cursor-pointer hover-color-primary': hasPlan,
+            'mb-2': !description,
           })}
           onClick={hasPlan ? onClick : undefined}
           data-test='assigned-users'
@@ -39,6 +42,9 @@ const SettingsButton: FC<SettingsButtonType> = ({
           {!!feature && <PlanBasedBanner feature={feature} theme={'badge'} />}
         </Row>
       </Row>
+      {description && (
+        <div className='text-muted text-small mb-2'>{description}</div>
+      )}
       {content}
     </>
   )
