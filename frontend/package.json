@@ -68,7 +68,7 @@
     "@ionic/react": "^7.5.3",
     "@react-oauth/google": "^0.2.8",
     "@reduxjs/toolkit": "1.9.1",
-    "@rspack/cli": "^1.7.11",
+    "@rspack/cli": "^2.0.4",
     "@rspack/core": "^1.7.11",
     "@rspack/dev-server": "^1.2.1",
     "@rspack/plugin-react-refresh": "^1.6.2",
