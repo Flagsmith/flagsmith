@@ -1,7 +1,9 @@
 import pytest
 from django.urls import reverse
+from pytest_mock import MockerFixture
 
 from environments.models import Environment
+from experimentation import ingestion_sync_service
 from experimentation.models import (
     Experiment,
     ExperimentStatus,
@@ -9,6 +11,12 @@ from experimentation.models import (
     WarehouseType,
 )
 from features.models import Feature
+
+
+@pytest.fixture(autouse=True)
+def mock_ingestion_redis_client(mocker: MockerFixture) -> None:
+    ingestion_sync_service._get_client.cache_clear()
+    mocker.patch("experimentation.ingestion_sync_service.RedisCluster.from_url")
 
 
 @pytest.fixture()
