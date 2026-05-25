@@ -24,7 +24,7 @@
     padding: 10px 14px;
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-lg);
-    background: transparent;
+    background: var(--color-surface-default, #fff);
     color: var(--color-text-default);
     font-size: var(--font-body-size);
     font-family: inherit;
