@@ -32,7 +32,6 @@ const ExperimentsPage: FC = () => {
         <CreateExperimentWizard
           environmentId={environmentId}
           projectId={projectId}
-          onCancel={() => setIsCreating(false)}
           onCreated={() => setIsCreating(false)}
         />
       </div>

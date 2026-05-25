@@ -14,13 +14,11 @@ const TOTAL_STEPS = 4
 type CreateExperimentWizardProps = {
   environmentId: string
   projectId: number
-  onCancel: () => void
   onCreated: () => void
 }
 
 const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
   environmentId,
-  onCancel: _onCancel,
   onCreated,
   projectId,
 }) => {
