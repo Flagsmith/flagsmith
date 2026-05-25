@@ -561,10 +561,7 @@ def test_handle_api_usage_notifications__no_admin_users__skips_notification(
 
     # Then - no email sent, warning logged
     assert len(mailoutbox) == 0
-    assert any(
-        e.get("event") == "notification.no_recipients"
-        for e in log.events
-    )
+    assert any(e.get("event") == "notification.no_recipients" for e in log.events)
     assert not OrganisationAPIUsageNotification.objects.filter(
         organisation=organisation,
     ).exists()
