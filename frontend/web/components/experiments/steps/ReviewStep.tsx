@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { ProjectFlag } from 'common/types/responses'
-import Panel from 'components/base/grid/Panel'
+import ContentCard from 'components/base/grid/ContentCard'
 
 type ReviewStepProps = {
   name: string
@@ -26,7 +26,7 @@ const ReviewStep: FC<ReviewStepProps> = ({
 
   return (
     <div className='d-flex flex-column gap-4'>
-      <Panel
+      <ContentCard
         title='Setup'
         action={
           <button
@@ -89,7 +89,7 @@ const ReviewStep: FC<ReviewStepProps> = ({
             </div>
           </>
         )}
-      </Panel>
+      </ContentCard>
     </div>
   )
 }

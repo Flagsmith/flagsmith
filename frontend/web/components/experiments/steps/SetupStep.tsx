@@ -3,7 +3,7 @@ import { ProjectFlag } from 'common/types/responses'
 import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import Utils from 'common/utils/utils'
-import Panel from 'components/base/grid/Panel'
+import ContentCard from 'components/base/grid/ContentCard'
 
 type SetupStepProps = {
   name: string
@@ -53,7 +53,7 @@ const SetupStep: FC<SetupStepProps> = ({
 
   return (
     <div className='d-flex flex-column gap-4'>
-      <Panel title='Experiment details'>
+      <ContentCard title='Experiment details'>
         <p className='text-muted mb-3'>
           Name the experiment and capture what you&#39;re trying to learn before
           picking a flag.
@@ -86,9 +86,9 @@ const SetupStep: FC<SetupStepProps> = ({
             magnitude, and the timeframe.
           </div>
         </FormGroup>
-      </Panel>
+      </ContentCard>
 
-      <Panel title='Feature flag'>
+      <ContentCard title='Feature flag'>
         <p className='text-muted mb-3'>
           The flag you&#39;re experimenting on. Variations are read-only &#8212;
           they&#39;re defined on the flag itself.
@@ -175,7 +175,7 @@ const SetupStep: FC<SetupStepProps> = ({
             </table>
           </div>
         )}
-      </Panel>
+      </ContentCard>
     </div>
   )
 }

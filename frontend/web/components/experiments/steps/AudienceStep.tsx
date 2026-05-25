@@ -1,24 +1,15 @@
 import { FC } from 'react'
 import { IonIcon } from '@ionic/react'
 import { peopleOutline } from 'ionicons/icons'
-import Panel from 'components/base/grid/Panel'
+import ContentCard from 'components/base/grid/ContentCard'
 
 const SAMPLE_PRESETS = [5, 10, 25, 50, 100]
 
 const AudienceStep: FC = () => {
   return (
     <div className='d-flex flex-column gap-4'>
-      <Panel title='Targeting'>
-        <div className='d-flex align-items-center mb-1'>
-          <span className='fw-bold'>Targeting</span>
-          <span
-            className='badge bg-light text-muted ms-2'
-            style={{ fontSize: 11 }}
-          >
-            OPTIONAL
-          </span>
-        </div>
-        <p className='text-muted mb-3' style={{ fontSize: 13 }}>
+      <ContentCard title='Targeting'>
+        <p className='text-muted mb-0' style={{ fontSize: 13 }}>
           Define who is eligible for the experiment using attribute conditions.
           Conditions are AND-joined. Leave empty to run on all identities in the
           environment. Conditions are frozen at launch — later edits to existing
@@ -38,9 +29,9 @@ const AudienceStep: FC = () => {
             </div>
           </div>
         </div>
-      </Panel>
+      </ContentCard>
 
-      <Panel title='Sample size'>
+      <ContentCard title='Sample size'>
         <p className='text-muted mb-3' style={{ fontSize: 13 }}>
           What percentage of eligible users enters the experiment? The rest keep
           the flag&#39;s environment default and aren&#39;t part of the result.
@@ -64,7 +55,7 @@ const AudienceStep: FC = () => {
             Custom
           </div>
         </div>
-      </Panel>
+      </ContentCard>
     </div>
   )
 }

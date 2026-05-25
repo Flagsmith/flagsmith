@@ -2,12 +2,12 @@ import { FC } from 'react'
 import Button from 'components/base/forms/Button'
 import { IonIcon } from '@ionic/react'
 import { addOutline, searchOutline } from 'ionicons/icons'
-import Panel from 'components/base/grid/Panel'
+import ContentCard from 'components/base/grid/ContentCard'
 
 const MeasurementStep: FC = () => {
   return (
     <div className='d-flex flex-column gap-4'>
-      <Panel title='Metrics'>
+      <ContentCard title='Metrics'>
         <div className='d-flex align-items-center gap-3 mb-3'>
           <div className='position-relative flex-fill'>
             <IonIcon
@@ -33,7 +33,7 @@ const MeasurementStep: FC = () => {
             Create Metric
           </Button>
         </div>
-      </Panel>
+      </ContentCard>
     </div>
   )
 }
