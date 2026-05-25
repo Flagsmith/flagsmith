@@ -1,7 +1,6 @@
 import { FC } from 'react'
-import { IonIcon } from '@ionic/react'
-import { checkmarkCircle } from 'ionicons/icons'
-import cn from 'classnames'
+import Icon from 'components/icons/Icon'
+import './WizardStepper.scss'
 
 type StepDef = {
   title: string
@@ -17,7 +16,10 @@ const STEPS: StepDef[] = [
     subtitle: 'Choose who is exposed and how traffic is split',
     title: 'Audience & Traffic',
   },
-  { subtitle: 'Pick the metrics that determine success', title: 'Measurement' },
+  {
+    subtitle: 'Pick the metrics that determine success',
+    title: 'Measurement',
+  },
   {
     subtitle: 'Review your configuration and launch',
     title: 'Review & Launch',
@@ -30,71 +32,69 @@ type WizardStepperProps = {
   onStepClick: (step: number) => void
 }
 
+type StepStatus = 'done' | 'active' | 'upcoming'
+
+const getStatus = (
+  index: number,
+  currentStep: number,
+  completedSteps: Set<number>,
+): StepStatus => {
+  if (completedSteps.has(index) && index !== currentStep) return 'done'
+  if (index === currentStep) return 'active'
+  return 'upcoming'
+}
+
 const WizardStepper: FC<WizardStepperProps> = ({
   completedSteps,
   currentStep,
   onStepClick,
 }) => {
   return (
-    <div
-      className='d-flex flex-column gap-3'
-      style={{ flexShrink: 0, width: 220 }}
-    >
+    <nav className='wizard-sidebar'>
       {STEPS.map((step, index) => {
-        const isActive = index === currentStep
-        const isCompleted = completedSteps.has(index)
-        const isClickable = isCompleted || index < currentStep
+        const status = getStatus(index, currentStep, completedSteps)
+        const isClickable = status === 'done'
+        const showConnector = index < STEPS.length - 1
 
         return (
-          <button
+          <div
             key={index}
-            type='button'
-            className={cn(
-              'd-flex align-items-start gap-2 bg-transparent border-0 p-0 text-start',
-              {
-                'cursor-pointer': isClickable,
-                'opacity-50': !isActive && !isCompleted,
-              },
-            )}
-            disabled={!isClickable && !isActive}
-            onClick={() => isClickable && onStepClick(index)}
+            className={`wizard-step wizard-step--${status}`}
+            onClick={isClickable ? () => onStepClick(index) : undefined}
+            role={isClickable ? 'button' : undefined}
+            tabIndex={isClickable ? 0 : undefined}
+            onKeyDown={
+              isClickable
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') onStepClick(index)
+                  }
+                : undefined
+            }
           >
-            <div className='flex-shrink-0 mt-1'>
-              {isCompleted ? (
-                <IonIcon
-                  icon={checkmarkCircle}
-                  className='text-success'
-                  style={{ fontSize: 24 }}
-                />
-              ) : (
-                <div
-                  className={cn(
-                    'd-flex align-items-center justify-content-center rounded-circle',
-                    isActive ? 'bg-primary text-white' : 'border text-muted',
-                  )}
-                  style={{ fontSize: 12, height: 24, width: 24 }}
-                >
-                  {index + 1}
-                </div>
-              )}
-            </div>
-            <div>
-              <div className={cn('fw-bold', { 'text-primary': isActive })}>
-                {step.title}
-                {isCompleted && (
-                  <span className='text-success ms-2' style={{ fontSize: 12 }}>
-                    Complete
-                  </span>
+            <div className='wizard-step__left'>
+              <div className='wizard-step__circle'>
+                {status === 'done' ? (
+                  <Icon name='checkmark-circle' width={16} />
+                ) : (
+                  <span className='wizard-step__number'>{index + 1}</span>
                 )}
               </div>
-              <div className='text-muted' style={{ fontSize: 12 }}>
-                {step.subtitle}
-              </div>
+              {showConnector && <div className='wizard-step__connector' />}
             </div>
-          </button>
+
+            <div className='wizard-step__right'>
+              <div className='wizard-step__header'>
+                <span className='wizard-step__title'>{step.title}</span>
+                {status === 'done' && (
+                  <span className='wizard-step__badge'>Complete</span>
+                )}
+              </div>
+              <span className='wizard-step__subtitle'>{step.subtitle}</span>
+            </div>
+          </div>
         )
       })}
-    </div>
+    </nav>
   )
 }
 
