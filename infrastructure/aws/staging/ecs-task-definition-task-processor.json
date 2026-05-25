@@ -179,6 +179,10 @@
                 {
                     "name": "LOG_FORMAT",
                     "value": "json"
+                },
+                {
+                    "name": "INGESTION_REDIS_URL",
+                    "value": "rediss://serverless-redis-cache-7u3xil.serverless.euw2.cache.amazonaws.com:6379"
                 }
             ],
             "secrets": [
