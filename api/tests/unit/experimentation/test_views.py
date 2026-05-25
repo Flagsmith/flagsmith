@@ -531,6 +531,44 @@ def test_post__snowflake_soft_deleted__resurrects_with_new_config(
     assert data["config"]["account_identifier"] == "new.us-west-2"
 
 
+def test_post__different_type_soft_deleted__creates_new_record(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    create_response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "Old Snowflake",
+            "config": {"account_identifier": "xy12345.us-east-1"},
+        },
+        format="json",
+    )
+    original_id = create_response.json()["id"]
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, original_id],
+    )
+    admin_client.delete(url)
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={"warehouse_type": "flagsmith"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    data = response.json()
+    assert data["id"] != original_id
+    assert data["warehouse_type"] == "flagsmith"
+
+
 def test_patch__snowflake_update_config__returns_200(
     admin_client: APIClient,
     environment: Environment,

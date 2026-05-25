@@ -55,14 +55,13 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             WarehouseConnection.objects.all_with_deleted()
             .filter(
                 environment=environment,
+                warehouse_type=warehouse_type,
                 deleted_at__isnull=False,
             )
-            .order_by("-deleted_at")
             .first()
         )
         if existing:
             existing.deleted_at = None
-            existing.warehouse_type = warehouse_type
             existing.status = WarehouseConnectionStatus.CREATED
             existing.name = validated_data["name"]
             existing.config = validated_data.get("config")
