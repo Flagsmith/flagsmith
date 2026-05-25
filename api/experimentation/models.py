@@ -1,8 +1,10 @@
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     AFTER_DELETE,
+    BEFORE_UPDATE,
     LifecycleModelMixin,
     hook,
 )
@@ -117,3 +119,21 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
                 name="unique_active_experiment_per_feature_env",
             ),
         ]
+
+    @hook(
+        BEFORE_UPDATE,
+        when="status",
+        was=ExperimentStatus.CREATED,
+        is_now=ExperimentStatus.RUNNING,
+    )  # type: ignore[misc]
+    def set_started_at(self) -> None:
+        if not self.started_at:
+            self.started_at = timezone.now()
+
+    @hook(
+        BEFORE_UPDATE,
+        when="status",
+        is_now=ExperimentStatus.COMPLETED,
+    )  # type: ignore[misc]
+    def set_ended_at(self) -> None:
+        self.ended_at = timezone.now()

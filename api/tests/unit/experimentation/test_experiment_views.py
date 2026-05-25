@@ -107,7 +107,7 @@ def test_post__feature_from_different_project__returns_400(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_post__active_experiment_exists__returns_400(
+def test_post__active_experiment_exists__returns_409(
     admin_client: APIClient,
     environment: Environment,
     experiment: Experiment,
@@ -129,7 +129,7 @@ def test_post__active_experiment_exists__returns_400(
     )
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_409_CONFLICT
 
 
 def test_post__completed_experiment_exists__returns_201(

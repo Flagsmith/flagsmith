@@ -119,7 +119,7 @@ class ExperimentViewSet(
         ):
             return Response(
                 {"detail": "An active experiment already exists for this feature."},
-                status=400,
+                status=409,
             )
 
         self.perform_create(serializer)

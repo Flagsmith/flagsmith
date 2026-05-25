@@ -1,6 +1,5 @@
 from typing import Any
 
-from django.utils import timezone
 from rest_framework import serializers
 
 from environments.models import Environment
@@ -156,16 +155,3 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
                 {"feature": "Cannot change the feature of an existing experiment."}
             )
         return attrs
-
-    def update(
-        self,
-        instance: Experiment,
-        validated_data: dict[str, Any],
-    ) -> Experiment:
-        new_status = validated_data.get("status")
-        if new_status == ExperimentStatus.RUNNING and instance.started_at is None:
-            validated_data["started_at"] = timezone.now()
-        elif new_status == ExperimentStatus.COMPLETED:
-            validated_data["ended_at"] = timezone.now()
-        result: Experiment = super().update(instance, validated_data)
-        return result
