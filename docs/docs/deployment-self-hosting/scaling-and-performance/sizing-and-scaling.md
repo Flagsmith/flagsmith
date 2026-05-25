@@ -194,7 +194,8 @@ doubt.
 | Component          | What it does                                                                                                                                                                         |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **API**            | Stateless Python web service. Serves SDK and dashboard requests. Each worker is a pod (Kubernetes) or task (ECS). Scaled horizontally with an autoscaler.                            |
-| **Database**       | PostgreSQL. Stores flags, segments, environments, identities, and audit data. Scaled vertically. Add a read replica at Large.                                                        |
+| **Frontend**       | Static admin dashboard. Stateless; not in the SDK hot path. Light load even at large deployments; one or two replicas behind a load balancer is enough. No sticky sessions required. |
+| **Database**       | PostgreSQL. Stores flags, segments, environments, identities, and audit data. Scaled vertically. Add a read replica at Large (see [Database replicas](#database-replicas)).          |
 | **Task processor** | Separate worker that runs background jobs (webhook delivery, audit log writes, scheduled tasks). Same image as the API, run with a different command. Sized similarly at every tier. |
 | **SSE** (optional) | Server-Sent Events service, pushes real-time flag updates to connected SDKs. Only deployed if you use Flagsmith's real-time updates feature.                                         |
 
@@ -250,6 +251,35 @@ configuration against your specific workload.
 | Database       | 16 vCPU / 64 GB+ · 10,000+ IOPS · Connection pool required (PgBouncer / RDS Proxy / Cloud SQL Auth Proxy) · 2+ read replicas; consider cross-region · HA mandatory |
 | Task processor | 2–4 workers at 1 vCPU / 2 GB                                                                                                                                       |
 | Load balancer  | Dedicated SSE pods (3+) · Consider CDN / Edge Proxy in front of API for read-heavy paths                                                                           |
+
+## Database replicas
+
+Required for Pattern B at the Large tier and above, optional at Medium. Flagsmith automatically routes the heaviest read
+paths (environment-document fetches, identity lookups) to a configured replica.
+
+Set the connection URLs via environment variables on the API:
+
+| Variable                                       | Purpose                                                                                                                                                                                          |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `REPLICA_DATABASE_URLS`                        | Comma-separated list of replica PostgreSQL URLs. Used for local (same-region) replicas.                                                                                                          |
+| `REPLICA_DATABASE_URLS_DELIMITER`              | Override the `,` delimiter if any of your passwords contain commas.                                                                                                                              |
+| `CROSS_REGION_REPLICA_DATABASE_URLS`           | Comma-separated list of replica URLs in other regions. Used only when all local replicas are offline (cross-region latency is unfavourable as a load-distribution choice).                       |
+| `CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER` | Override the cross-region delimiter for the same reason.                                                                                                                                         |
+| `REPLICA_READ_STRATEGY`                        | `DISTRIBUTED` (default) spreads reads evenly across replicas. `SEQUENTIAL` uses fallback order (primary first, then secondary, etc.) — a replica is only used if all preceding ones are offline. |
+
+`REPLICA_DATABASE_URLS` and `CROSS_REGION_REPLICA_DATABASE_URLS` can be set together or independently. Both strategies
+apply to both sets.
+
+Example:
+
+```
+REPLICA_DATABASE_URLS=postgres://user:password@replica1.host:5432/flagsmith,postgres://user:password@replica2.host:5432/flagsmith
+REPLICA_READ_STRATEGY=DISTRIBUTED
+```
+
+Once you reach the Extra-Large tier (or sustained > 70% of `max_connections`), also put a connection pool in front of
+the writer: [PgBouncer](https://www.pgbouncer.org/), AWS RDS Proxy, or Cloud SQL Auth Proxy. The pool absorbs connection
+churn from gunicorn worker recycles and SDK polling fan-out.
 
 ## Headroom rules
 
