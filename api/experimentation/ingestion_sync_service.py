@@ -5,7 +5,6 @@ from functools import lru_cache
 import structlog
 from django.conf import settings
 from redis.cluster import RedisCluster
-from redis.exceptions import RedisError
 
 INGESTION_ENVIRONMENT_KEY_PREFIX = "experimentation:environment_keys:"
 
@@ -26,27 +25,11 @@ def _get_client() -> RedisCluster:
 
 def set_environment_key(environment_api_key: str) -> None:
     key = f"{INGESTION_ENVIRONMENT_KEY_PREFIX}{environment_api_key}"
-    try:
-        _get_client().set(key, "")
-    except RedisError as exc:
-        logger.exception(
-            "ingestion_sync.environment_key.failed",
-            action="set",
-            exc_info=exc,
-        )
-        return
+    _get_client().set(key, "")
     logger.info("ingestion_sync.environment_key.set")
 
 
 def delete_environment_key(environment_api_key: str) -> None:
     key = f"{INGESTION_ENVIRONMENT_KEY_PREFIX}{environment_api_key}"
-    try:
-        _get_client().delete(key)
-    except RedisError as exc:
-        logger.exception(
-            "ingestion_sync.environment_key.failed",
-            action="delete",
-            exc_info=exc,
-        )
-        return
+    _get_client().delete(key)
     logger.info("ingestion_sync.environment_key.deleted")

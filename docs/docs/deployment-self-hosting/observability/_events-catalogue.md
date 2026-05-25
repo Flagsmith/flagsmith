@@ -79,6 +79,20 @@ Attributes:
  - `environment_api_key`
  - `environment_id`
 
+### `experimentation.ingestion_sync.environment_key.deleted`
+
+Logged at `info` from:
+ - `api/experimentation/ingestion_sync_service.py:35`
+
+Attributes:
+
+### `experimentation.ingestion_sync.environment_key.set`
+
+Logged at `info` from:
+ - `api/experimentation/ingestion_sync_service.py:29`
+
+Attributes:
+
 ### `feature_health.feature_health_event_dismissal_not_supported`
 
 Logged at `warning` from:
