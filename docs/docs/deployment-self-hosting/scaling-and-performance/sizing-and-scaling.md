@@ -281,6 +281,51 @@ Once you reach the Extra-Large tier (or sustained > 70% of `max_connections`), a
 the writer: [PgBouncer](https://www.pgbouncer.org/), AWS RDS Proxy, or Cloud SQL Auth Proxy. The pool absorbs connection
 churn from gunicorn worker recycles and SDK polling fan-out.
 
+## Worker tuning
+
+### API (gunicorn)
+
+Each API pod runs gunicorn. Tune worker count and timeout when the [decision tree](#scaling-decision-tree) says so, or
+when Pattern A responses run large (many segments / traits per identity) and the default 30 s timeout starts killing
+slow requests.
+
+| Variable              | Default | What it controls                                                                                                                              |
+| --------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GUNICORN_WORKERS`    | `3`     | Worker processes per pod. Raise to handle more concurrent requests.                                                                           |
+| `GUNICORN_THREADS`    | `2`     | Threads per worker.                                                                                                                           |
+| `GUNICORN_TIMEOUT`    | `30`    | Seconds a worker can spend on a single request before being killed. Raise for large-payload deployments to avoid LB-level 5xx during a spike. |
+| `GUNICORN_KEEP_ALIVE` | `2`     | HTTP keep-alive timeout in seconds.                                                                                                           |
+
+### Task processor
+
+| Variable                           | Default | What it controls                                                                               |
+| ---------------------------------- | ------- | ---------------------------------------------------------------------------------------------- |
+| `TASK_PROCESSOR_NUM_THREADS`       | `5`     | Concurrent task threads per pod. Raise if you see backlog growing.                             |
+| `TASK_PROCESSOR_QUEUE_POP_SIZE`    | `10`    | Batch size when claiming tasks. Larger = fewer DB round-trips, more latency per pickup.        |
+| `TASK_PROCESSOR_SLEEP_INTERVAL_MS` | `500`   | Poll interval between work checks (milliseconds). Lower = lower task latency but more DB load. |
+| `TASK_PROCESSOR_GRACE_PERIOD_MS`   | `20000` | How long a task can run before being considered abandoned and retried.                         |
+
+### Database connection lifetime
+
+| Variable                       | Default | What it controls                                                                                                                    |
+| ------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `DJANGO_DB_CONN_MAX_AGE`       | `60`    | Persistent connection lifetime in seconds. Higher = fewer reconnects, more idle connections held open against `max_connections`.    |
+| `DJANGO_DB_CONN_HEALTH_CHECKS` | `false` | Validate each persistent connection before use. Slight overhead per request; useful if your DB occasionally drops idle connections. |
+
+## Offloading analytics
+
+SDK analytics generates write traffic on the main database. At Large and above, these writes compete with workload
+tables for IOPS. Options:
+
+| Option                                                                             | Effect                                                                                                                                  |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `ANALYTICS_DATABASE_URL` (or `DJANGO_DB_NAME_ANALYTICS` + matching `_HOST` / etc.) | Sends analytics writes to a separate PostgreSQL database. Removes write contention from the main DB.                                    |
+| `INFLUXDB_URL` + `INFLUXDB_TOKEN` + `INFLUXDB_BUCKET` + `INFLUXDB_ORG`             | Sends analytics to InfluxDB instead of PostgreSQL. Best for very high SDK analytics throughput.                                         |
+| `RAW_ANALYTICS_DATA_RETENTION_DAYS` (default `30`)                                 | Reduce to shrink the raw analytics table size. Bucketed aggregates have their own retention (`BUCKETED_ANALYTICS_DATA_RETENTION_DAYS`). |
+
+At Extra-Large, also consider running the task processor on its own database (`TASK_PROCESSOR_DATABASE_URL`). Its
+recurring-task queries are a steady background load that needn't share IOPS with the workload writer.
+
 ## Headroom rules
 
 Apply on top of the tier you've chosen. These are the safety margins that absorb spikes.
