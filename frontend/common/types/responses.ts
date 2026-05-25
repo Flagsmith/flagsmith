@@ -160,6 +160,11 @@ export type SegmentRule = {
   conditions: SegmentCondition[]
   version_of: number | undefined
 }
+export type SegmentMembership = {
+  environment: number
+  count: number
+  last_synced_at: string
+}
 export type Segment = {
   id: number
   rules: SegmentRule[]
@@ -169,6 +174,7 @@ export type Segment = {
   project: string | number
   feature?: number
   metadata: Metadata[] | []
+  memberships?: SegmentMembership[]
 }
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
