@@ -29,6 +29,14 @@ def send_api_flags_blocked_notification(organisation: Organisation) -> None:
         userorganisation__organisation=organisation,
     )
 
+    recipient_emails = list(recipient_list.values_list("email", flat=True))
+    if not recipient_emails:
+        logger.warning(
+            "notification.no_recipients_for_blocked_notification",
+            organisation__id=organisation.id,
+        )
+        return
+
     url = get_current_site_url()
     context = {
         "organisation": organisation,
@@ -43,7 +51,7 @@ def send_api_flags_blocked_notification(organisation: Organisation) -> None:
         subject="Flagsmith API use has been blocked due to overuse",
         message=render_to_string(message, context),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=list(recipient_list.values_list("email", flat=True)),
+        recipient_list=recipient_emails,
         html_message=render_to_string(html_message, context),
         fail_silently=True,
     )
@@ -75,6 +83,16 @@ def _send_api_usage_notification(
         message = "organisations/api_usage_notification_limit.txt"
         html_message = "organisations/api_usage_notification_limit.html"
 
+    recipient_emails = list(recipient_list.values_list("email", flat=True))
+
+    if not recipient_emails:
+        logger.warning(
+            "notification.no_recipients",
+            organisation__id=organisation.id,
+            matched_threshold=matched_threshold,
+        )
+        return
+
     url = get_current_site_url()
     context = {
         "organisation": organisation,
@@ -87,7 +105,7 @@ def _send_api_usage_notification(
         subject=f"Flagsmith API use has reached {matched_threshold}%",
         message=render_to_string(message, context),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=list(recipient_list.values_list("email", flat=True)),
+        recipient_list=recipient_emails,
         html_message=render_to_string(html_message, context),
         fail_silently=True,
     )

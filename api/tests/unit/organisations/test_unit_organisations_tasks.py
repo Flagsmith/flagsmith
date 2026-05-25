@@ -531,6 +531,46 @@ def test_handle_api_usage_notifications__usage_below_100_percent__sends_90_perce
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_handle_api_usage_notifications__no_admin_users__skips_notification(
+    mocker: MockerFixture,
+    mailoutbox: list[EmailMultiAlternatives],
+    log: StructuredLogCapture,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given - an organisation with no users
+    organisation = Organisation.objects.create(name="No Users Org")
+    now = timezone.now()
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.save()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=100,
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+        api_calls_30d=91,
+    )
+    mock_api_usage = mocker.patch(
+        "organisations.task_helpers.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 91
+    enable_features("api_usage_alerting")
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then - no email sent, warning logged
+    assert len(mailoutbox) == 0
+    assert any(
+        e.get("event") == "notification.no_recipients"
+        for e in log.events
+    )
+    assert not OrganisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).exists()
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_handle_api_usage_notifications__usage_below_alert_thresholds__sends_no_email(
     mocker: MockerFixture,
     organisation: Organisation,
