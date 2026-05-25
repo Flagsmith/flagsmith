@@ -42,10 +42,11 @@ def experiment(
     environment: Environment,
     multivariate_feature: Feature,
 ) -> Experiment:
-    return Experiment.objects.create(
+    experiment: Experiment = Experiment.objects.create(
         environment=environment,
         feature=multivariate_feature,
         name="Test Experiment",
         hypothesis="Test hypothesis",
         status=ExperimentStatus.CREATED,
     )
+    return experiment
