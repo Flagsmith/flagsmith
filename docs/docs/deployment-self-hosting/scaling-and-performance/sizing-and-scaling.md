@@ -252,6 +252,56 @@ configuration against your specific workload.
 | Task processor | 2–4 workers at 1 vCPU / 2 GB                                                                                                                                       |
 | Load balancer  | Dedicated SSE pods (3+) · Consider CDN / Edge Proxy in front of API for read-heavy paths                                                                           |
 
+### Headroom rules
+
+Apply on top of the tier you've chosen. These are the safety margins that absorb spikes.
+
+-   **API: provision ≥ 2× your hourly peak RPS.** Per-minute spikes typically run 1–2× the hourly average peak. 2×
+    headroom covers them.
+-   **Database CPU: target ≤ 50% peak.** Leaves room for autovacuum, ad-hoc admin queries, and unexpected bursts.
+-   **IOPS: provision ≥ 2× your peak read+write IOPS.** IOPS ceilings throttle silently, better to overshoot.
+-   **Autoscale max: 4× the starting worker count is enough for most cases.** Wider range if you expect spikes.
+
+## Cache configuration
+
+Flagsmith ships with several caches, all **disabled by default**. Enabling them is the cheapest single change you can
+make to reduce database load, often by an order of magnitude.
+
+:::tip Day-1 setting for any production deployment
+
+```
+CACHE_ENVIRONMENT_DOCUMENT_SECONDS=60
+```
+
+With Pattern B traffic, this typically drops database load by ~10× without any other change.
+
+:::
+
+### Cache reference
+
+| Environment variable                    | Default    | Recommended (Medium+)                                        | What it does                                                                                                                                         |
+| --------------------------------------- | ---------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CACHE_ENVIRONMENT_DOCUMENT_SECONDS`    | `0` (off)  | `60`                                                         | Cache the heavy server-side SDK environment-document fetch. PostgreSQL hit at most once per TTL per environment.                                     |
+| `CACHE_ENVIRONMENT_DOCUMENT_BACKEND`    | Database   | `LocMemCache` at Small / Medium, Redis / Memcached at Large+ | Default keeps the cache in PostgreSQL, cheap hits but still touches the DB. Switch to pod-local memory or an external cache for true off-DB caching. |
+| `CACHE_ENVIRONMENT_DOCUMENT_MODE`       | `EXPIRING` | `PERSISTENT` at Large+                                       | Persistent mode survives pod restarts; warm-up cost amortised across the deployment.                                                                 |
+| `GET_IDENTITIES_ENDPOINT_CACHE_SECONDS` | `0` (off)  | `30–60`                                                      | Cache the personalised response from a _GET_ identity request. _POST_ identity (which updates traits) always bypasses the cache.                     |
+
+### Cache backend trade-offs
+
+-   **Database (default).** Shared across pods. Cache hits still touch PostgreSQL. Fine through Medium.
+-   **LocMemCache.** Pod-local. Zero DB round-trip, but each pod warms separately and memory cost scales with pod count.
+    Best at Small / Medium with a small number of pods.
+-   **Redis / Memcached.** Shared, fast, off-DB. Adds a service you operate. Right at Large+.
+
+### When to keep TTL short or skip the cache
+
+-   **Kill-switch flags.** Flagsmith invalidates the cache on flag changes, but TTL is the worst-case wait. For
+    incidents, use TTL ≤ 10 s.
+-   **Compliance / access-control flags.** Stale flags could expose protected functionality. Consider a non-cached path.
+-   **Apps mutating traits mid-session.** The GET-identity cache returns the same response per identifier until TTL
+    expires. Use POST identity (always fresh) or skip the cache.
+-   **SDKs polling slowly (5+ min).** Server cache rarely helps. The SDK won't ask within the TTL anyway.
+
 ## Database replicas
 
 Required for Pattern B at the Large tier and above, optional at Medium. Flagsmith automatically routes the heaviest read
@@ -325,56 +375,6 @@ tables for IOPS. Options:
 
 At Extra-Large, also consider running the task processor on its own database (`TASK_PROCESSOR_DATABASE_URL`). Its
 recurring-task queries are a steady background load that needn't share IOPS with the workload writer.
-
-## Headroom rules
-
-Apply on top of the tier you've chosen. These are the safety margins that absorb spikes.
-
--   **API: provision ≥ 2× your hourly peak RPS.** Per-minute spikes typically run 1–2× the hourly average peak. 2×
-    headroom covers them.
--   **Database CPU: target ≤ 50% peak.** Leaves room for autovacuum, ad-hoc admin queries, and unexpected bursts.
--   **IOPS: provision ≥ 2× your peak read+write IOPS.** IOPS ceilings throttle silently, better to overshoot.
--   **Autoscale max: 4× the starting worker count is enough for most cases.** Wider range if you expect spikes.
-
-## Cache configuration
-
-Flagsmith ships with several caches, all **disabled by default**. Enabling them is the cheapest single change you can
-make to reduce database load, often by an order of magnitude.
-
-:::tip Day-1 setting for any production deployment
-
-```
-CACHE_ENVIRONMENT_DOCUMENT_SECONDS=60
-```
-
-With Pattern B traffic, this typically drops database load by ~10× without any other change.
-
-:::
-
-### Cache reference
-
-| Environment variable                    | Default    | Recommended (Medium+)                                        | What it does                                                                                                                                         |
-| --------------------------------------- | ---------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CACHE_ENVIRONMENT_DOCUMENT_SECONDS`    | `0` (off)  | `60`                                                         | Cache the heavy server-side SDK environment-document fetch. PostgreSQL hit at most once per TTL per environment.                                     |
-| `CACHE_ENVIRONMENT_DOCUMENT_BACKEND`    | Database   | `LocMemCache` at Small / Medium, Redis / Memcached at Large+ | Default keeps the cache in PostgreSQL, cheap hits but still touches the DB. Switch to pod-local memory or an external cache for true off-DB caching. |
-| `CACHE_ENVIRONMENT_DOCUMENT_MODE`       | `EXPIRING` | `PERSISTENT` at Large+                                       | Persistent mode survives pod restarts; warm-up cost amortised across the deployment.                                                                 |
-| `GET_IDENTITIES_ENDPOINT_CACHE_SECONDS` | `0` (off)  | `30–60`                                                      | Cache the personalised response from a _GET_ identity request. _POST_ identity (which updates traits) always bypasses the cache.                     |
-
-### Cache backend trade-offs
-
--   **Database (default).** Shared across pods. Cache hits still touch PostgreSQL. Fine through Medium.
--   **LocMemCache.** Pod-local. Zero DB round-trip, but each pod warms separately and memory cost scales with pod count.
-    Best at Small / Medium with a small number of pods.
--   **Redis / Memcached.** Shared, fast, off-DB. Adds a service you operate. Right at Large+.
-
-### When to keep TTL short or skip the cache
-
--   **Kill-switch flags.** Flagsmith invalidates the cache on flag changes, but TTL is the worst-case wait. For
-    incidents, use TTL ≤ 10 s.
--   **Compliance / access-control flags.** Stale flags could expose protected functionality. Consider a non-cached path.
--   **Apps mutating traits mid-session.** The GET-identity cache returns the same response per identifier until TTL
-    expires. Use POST identity (always fresh) or skip the cache.
--   **SDKs polling slowly (5+ min).** Server cache rarely helps. The SDK won't ask within the TTL anyway.
 
 ## Metrics to monitor
 
