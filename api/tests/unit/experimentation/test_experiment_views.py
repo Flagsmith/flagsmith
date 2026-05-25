@@ -173,11 +173,20 @@ def test_post__completed_experiment_exists__returns_201(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_post__explicit_non_created_status__returns_400(
+@pytest.mark.parametrize(
+    "explicit_status, expected_status_code",
+    [
+        ("created", 201),
+        ("running", 400),
+    ],
+)
+def test_post__explicit_status__returns_expected(
     admin_client: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
     enable_features: EnableFeaturesFixture,
+    explicit_status: str,
+    expected_status_code: int,
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
@@ -187,15 +196,15 @@ def test_post__explicit_non_created_status__returns_400(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
-            "name": "Forced status",
-            "hypothesis": "Nope",
-            "status": "running",
+            "name": "Explicit status",
+            "hypothesis": "Testing",
+            "status": explicit_status,
         },
         format="json",
     )
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == expected_status_code
 
 
 @pytest.mark.parametrize(
@@ -436,16 +445,22 @@ def test_patch__change_feature__returns_400(
     admin_client: APIClient,
     environment: Environment,
     experiment: Experiment,
-    feature: Feature,
+    project: "Project",
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
+    other_feature = Feature.objects.create(
+        project=project,
+        name="other_mv_feature",
+        type=MULTIVARIATE,
+        initial_value="control",
+    )
 
     # When
     response = admin_client.patch(
         _detail_url(environment, experiment),
-        data={"feature": feature.id},
+        data={"feature": other_feature.id},
         format="json",
     )
 
