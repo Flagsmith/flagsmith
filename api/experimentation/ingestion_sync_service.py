@@ -2,13 +2,10 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-import structlog
 from django.conf import settings
 from redis.cluster import RedisCluster
 
 INGESTION_ENVIRONMENT_KEY_PREFIX = "experimentation:environment_keys:"
-
-logger = structlog.get_logger("experimentation")
 
 
 SOCKET_TIMEOUT = 1
@@ -26,10 +23,8 @@ def _get_client() -> RedisCluster:
 def set_environment_key(environment_api_key: str) -> None:
     key = f"{INGESTION_ENVIRONMENT_KEY_PREFIX}{environment_api_key}"
     _get_client().set(key, "")
-    logger.info("ingestion_sync.environment_key.set")
 
 
 def delete_environment_key(environment_api_key: str) -> None:
     key = f"{INGESTION_ENVIRONMENT_KEY_PREFIX}{environment_api_key}"
     _get_client().delete(key)
-    logger.info("ingestion_sync.environment_key.deleted")
