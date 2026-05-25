@@ -67,13 +67,16 @@ per flag check.
     requests the backend handles.
 -   Hardest on the database by default. [Enabling the cache](#cache-configuration) moves most of the cost.
 
-**SDK polling defaults:**
+<details>
+<summary>SDK polling defaults</summary>
 
 | SDK                                             | Default                                        |
 | ----------------------------------------------- | ---------------------------------------------- |
 | Python, Node.js, Java, Ruby, .NET, Elixir, Rust | 60 s                                           |
 | Go                                              | On-demand (no background poll unless opted in) |
 | PHP                                             | No local-evaluation polling                    |
+
+</details>
 
 ### C: Anonymous flag check
 
