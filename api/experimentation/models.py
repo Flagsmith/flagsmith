@@ -42,8 +42,8 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["warehouse_type", "environment"],
+                fields=["environment"],
                 condition=models.Q(deleted_at__isnull=True),
-                name="unique_active_warehouse_per_type_and_env",
+                name="unique_active_warehouse_per_env",
             ),
         ]
