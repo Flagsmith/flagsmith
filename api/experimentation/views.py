@@ -1,12 +1,20 @@
+from typing import Any
+
 from django.db.models import QuerySet
 from rest_framework import mixins
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 
 from environments.views import NestedEnvironmentViewSet
-from experimentation.models import Experiment, ExperimentStatus, WarehouseConnection
+from experimentation.models import (
+    VALID_STATUS_TRANSITIONS,
+    Experiment,
+    ExperimentStatus,
+    WarehouseConnection,
+)
 from experimentation.permissions import (
     ExperimentPermission,
     WarehouseConnectionPermission,
@@ -96,6 +104,11 @@ class ExperimentViewSet(
     lookup_url_kwarg = "experiment_id"
     filterset_fields: list[str] = []
 
+    def get_serializer_context(self) -> dict[str, Any]:
+        context = super().get_serializer_context()
+        context["environment"] = self._get_environment()
+        return context
+
     def get_queryset(self) -> "QuerySet[Experiment]":
         qs = super().get_queryset()
         status_filter = self.request.query_params.get("status")
@@ -142,6 +155,39 @@ class ExperimentViewSet(
             instance, self._get_user(self.request), action="deleted"
         )
         instance.delete()
+
+    @action(detail=True, methods=["post"])
+    def start(self, request: Request, **kwargs: object) -> Response:
+        return self._transition_status(ExperimentStatus.RUNNING)
+
+    @action(detail=True, methods=["post"])
+    def pause(self, request: Request, **kwargs: object) -> Response:
+        return self._transition_status(ExperimentStatus.PAUSED)
+
+    @action(detail=True, methods=["post"])
+    def complete(self, request: Request, **kwargs: object) -> Response:
+        return self._transition_status(ExperimentStatus.COMPLETED)
+
+    def _transition_status(self, target_status: str) -> Response:
+        experiment: Experiment = self.get_object()
+        valid_targets = VALID_STATUS_TRANSITIONS.get(experiment.status, set())
+        if target_status not in valid_targets:
+            return Response(
+                {
+                    "detail": (
+                        f"Cannot transition from '{experiment.status}' "
+                        f"to '{target_status}'."
+                    )
+                },
+                status=400,
+            )
+        experiment.status = target_status
+        experiment.save()
+        create_experiment_audit_log(
+            experiment, self._get_user(self.request), action=target_status
+        )
+        serializer = self.get_serializer(experiment)
+        return Response(serializer.data)
 
     @staticmethod
     def _get_user(request: Request) -> FFAdminUser:

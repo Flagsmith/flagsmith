@@ -4,9 +4,7 @@ from rest_framework import serializers
 
 from environments.models import Environment
 from experimentation.models import (
-    VALID_STATUS_TRANSITIONS,
     Experiment,
-    ExperimentStatus,
     WarehouseConnection,
     WarehouseConnectionStatus,
     WarehouseType,
@@ -110,6 +108,7 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
         )
         read_only_fields = (
             "id",
+            "status",
             "created_at",
             "updated_at",
             "started_at",
@@ -121,33 +120,12 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
             raise serializers.ValidationError(
                 "Experiments can only be created for multivariate flags."
             )
-        view = self.context.get("view")
-        if view:
-            environment: Environment = view._get_environment()
-            if feature.project_id != environment.project_id:
-                raise serializers.ValidationError(
-                    "Feature does not belong to this environment's project."
-                )
-        return feature
-
-    def validate_status(self, status: str) -> str:
-        if self.instance is None:
-            if status != ExperimentStatus.CREATED:
-                raise serializers.ValidationError(
-                    "Status must be 'created' when creating an experiment."
-                )
-            return status
-
-        current_status: str = self.instance.status  # type: ignore[union-attr]
-        if status == current_status:
-            return status
-
-        valid_targets = VALID_STATUS_TRANSITIONS.get(current_status, set())
-        if status not in valid_targets:
+        environment: Environment | None = self.context.get("environment")
+        if environment and feature.project_id != environment.project_id:
             raise serializers.ValidationError(
-                f"Cannot transition from '{current_status}' to '{status}'."
+                "Feature does not belong to this environment's project."
             )
-        return status
+        return feature
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         if self.instance is not None and "feature" in attrs:
