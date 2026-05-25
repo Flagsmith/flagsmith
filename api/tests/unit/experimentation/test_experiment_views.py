@@ -29,9 +29,6 @@ def _detail_url(environment: Environment, experiment: Experiment) -> str:
     )
 
 
-# -- Create ------------------------------------------------------------------
-
-
 def test_post__valid_multivariate_feature__returns_201(
     admin_client: APIClient,
     environment: Environment,
@@ -162,9 +159,6 @@ def test_post__completed_experiment_exists__returns_201(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-# -- Permissions --------------------------------------------------------------
-
-
 def test_post__non_admin__returns_403(
     staff_client: APIClient,
     environment: Environment,
@@ -194,7 +188,7 @@ def test_post__feature_flag_disabled__returns_403(
     environment: Environment,
     multivariate_feature: Feature,
 ) -> None:
-    # When
+    # Given / When
     response = admin_client.post(
         _list_url(environment),
         data={
@@ -207,9 +201,6 @@ def test_post__feature_flag_disabled__returns_403(
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-# -- List & Retrieve ---------------------------------------------------------
 
 
 def test_get_list__with_experiments__returns_all(
@@ -251,6 +242,8 @@ def test_get_list__empty__returns_200(
     [
         ("created", 1),
         ("running", 0),
+        ("paused", 0),
+        ("completed", 0),
     ],
 )
 def test_get_list__filter_by_status__returns_filtered(
@@ -265,9 +258,7 @@ def test_get_list__filter_by_status__returns_filtered(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    response = admin_client.get(
-        _list_url(environment), {"status": filter_status}
-    )
+    response = admin_client.get(_list_url(environment), {"status": filter_status})
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -289,9 +280,6 @@ def test_get_detail__exists__returns_200(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["id"] == experiment.id
-
-
-# -- Update -------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -325,22 +313,28 @@ def test_patch__update_field__returns_200(
 
 
 @pytest.mark.parametrize(
-    "from_status, to_status",
+    "from_status, to_status, expected_status_code",
     [
-        (ExperimentStatus.CREATED, ExperimentStatus.RUNNING),
-        (ExperimentStatus.RUNNING, ExperimentStatus.PAUSED),
-        (ExperimentStatus.RUNNING, ExperimentStatus.COMPLETED),
-        (ExperimentStatus.PAUSED, ExperimentStatus.RUNNING),
-        (ExperimentStatus.PAUSED, ExperimentStatus.COMPLETED),
+        (ExperimentStatus.CREATED, ExperimentStatus.RUNNING, 200),
+        (ExperimentStatus.RUNNING, ExperimentStatus.PAUSED, 200),
+        (ExperimentStatus.RUNNING, ExperimentStatus.COMPLETED, 200),
+        (ExperimentStatus.PAUSED, ExperimentStatus.RUNNING, 200),
+        (ExperimentStatus.PAUSED, ExperimentStatus.COMPLETED, 200),
+        (ExperimentStatus.CREATED, ExperimentStatus.PAUSED, 400),
+        (ExperimentStatus.CREATED, ExperimentStatus.COMPLETED, 400),
+        (ExperimentStatus.COMPLETED, ExperimentStatus.RUNNING, 400),
+        (ExperimentStatus.COMPLETED, ExperimentStatus.CREATED, 400),
+        (ExperimentStatus.RUNNING, ExperimentStatus.CREATED, 400),
     ],
 )
-def test_patch__valid_status_transition__returns_200(
+def test_patch__status_transition__returns_expected(
     admin_client: APIClient,
     environment: Environment,
     experiment: Experiment,
     enable_features: EnableFeaturesFixture,
     from_status: str,
     to_status: str,
+    expected_status_code: int,
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
@@ -355,41 +349,9 @@ def test_patch__valid_status_transition__returns_200(
     )
 
     # Then
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["status"] == to_status
-
-
-@pytest.mark.parametrize(
-    "from_status, to_status",
-    [
-        (ExperimentStatus.CREATED, ExperimentStatus.PAUSED),
-        (ExperimentStatus.CREATED, ExperimentStatus.COMPLETED),
-        (ExperimentStatus.COMPLETED, ExperimentStatus.RUNNING),
-        (ExperimentStatus.COMPLETED, ExperimentStatus.CREATED),
-    ],
-)
-def test_patch__invalid_status_transition__returns_400(
-    admin_client: APIClient,
-    environment: Environment,
-    experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
-    from_status: str,
-    to_status: str,
-) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-    experiment.status = from_status
-    experiment.save()
-
-    # When
-    response = admin_client.patch(
-        _detail_url(environment, experiment),
-        data={"status": to_status},
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == expected_status_code
+    if expected_status_code == 200:
+        assert response.json()["status"] == to_status
 
 
 def test_patch__change_feature__returns_400(
@@ -457,9 +419,6 @@ def test_patch__transition_to_completed__sets_ended_at(
     assert response.json()["ended_at"] is not None
 
 
-# -- Delete -------------------------------------------------------------------
-
-
 def test_delete__exists__returns_204_and_soft_deletes(
     admin_client: APIClient,
     environment: Environment,
@@ -475,12 +434,7 @@ def test_delete__exists__returns_204_and_soft_deletes(
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert not Experiment.objects.filter(id=experiment.id).exists()
-    assert (
-        Experiment.objects.all_with_deleted().filter(id=experiment.id).exists()
-    )
-
-
-# -- Audit -------------------------------------------------------------------
+    assert Experiment.objects.all_with_deleted().filter(id=experiment.id).exists()
 
 
 @pytest.mark.parametrize(
@@ -491,7 +445,7 @@ def test_delete__exists__returns_204_and_soft_deletes(
         ("delete", "deleted"),
     ],
 )
-def test_crud__creates_audit_log(
+def test_crud__any_method__creates_audit_log(
     admin_client: APIClient,
     environment: Environment,
     experiment: Experiment,
