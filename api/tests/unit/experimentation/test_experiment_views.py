@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 from django.urls import reverse
 from rest_framework import status
@@ -7,8 +11,12 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from experimentation.models import Experiment, ExperimentStatus
+from features.feature_types import MULTIVARIATE
 from features.models import Feature
 from tests.types import EnableFeaturesFixture
+
+if TYPE_CHECKING:
+    from projects.models import Project
 
 pytestmark = pytest.mark.django_db
 
@@ -87,16 +95,22 @@ def test_post__feature_from_different_project__returns_400(
     admin_client: APIClient,
     environment: Environment,
     enable_features: EnableFeaturesFixture,
-    organisation_one_project_one_feature_one: Feature,
+    organisation_one_project_one: "Project",
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
+    other_feature = Feature.objects.create(
+        project=organisation_one_project_one,
+        name="other_mv_feature",
+        type=MULTIVARIATE,
+        initial_value="control",
+    )
 
     # When
     response = admin_client.post(
         _list_url(environment),
         data={
-            "feature": organisation_one_project_one_feature_one.id,
+            "feature": other_feature.id,
             "name": "Wrong project",
             "hypothesis": "Nope",
         },
@@ -159,8 +173,8 @@ def test_post__completed_experiment_exists__returns_201(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_post__non_admin__returns_403(
-    staff_client: APIClient,
+def test_post__explicit_non_created_status__returns_400(
+    admin_client: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
     enable_features: EnableFeaturesFixture,
@@ -169,7 +183,44 @@ def test_post__non_admin__returns_403(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    response = staff_client.post(
+    response = admin_client.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "Forced status",
+            "hypothesis": "Nope",
+            "status": "running",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.parametrize(
+    "client_fixture, enable_flag, expected_status",
+    [
+        ("staff_client", True, status.HTTP_403_FORBIDDEN),
+        ("admin_client", False, status.HTTP_403_FORBIDDEN),
+    ],
+)
+def test_post__insufficient_permissions__returns_403(
+    request: pytest.FixtureRequest,
+    environment: Environment,
+    multivariate_feature: Feature,
+    enable_features: EnableFeaturesFixture,
+    client_fixture: str,
+    enable_flag: bool,
+    expected_status: int,
+) -> None:
+    # Given
+    api_client: APIClient = request.getfixturevalue(client_fixture)
+    if enable_flag:
+        enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = api_client.post(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
@@ -180,20 +231,26 @@ def test_post__non_admin__returns_403(
     )
 
     # Then
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == expected_status
 
 
-def test_post__feature_flag_disabled__returns_403(
+def test_post__nonexistent_environment__returns_403(
     admin_client: APIClient,
-    environment: Environment,
-    multivariate_feature: Feature,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given / When
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    url = reverse(
+        "api-v1:environments:experiments:experiments-list",
+        args=["bad_api_key"],
+    )
+
+    # When
     response = admin_client.post(
-        _list_url(environment),
+        url,
         data={
-            "feature": multivariate_feature.id,
-            "name": "No flag",
+            "feature": 999,
+            "name": "Bad env",
             "hypothesis": "Nope",
         },
         format="json",
@@ -352,6 +409,27 @@ def test_patch__status_transition__returns_expected(
     assert response.status_code == expected_status_code
     if expected_status_code == 200:
         assert response.json()["status"] == to_status
+
+
+def test_patch__same_status__returns_200(
+    admin_client: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client.patch(
+        _detail_url(environment, experiment),
+        data={"status": "created"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["status"] == "created"
 
 
 def test_patch__change_feature__returns_400(
