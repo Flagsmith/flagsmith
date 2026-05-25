@@ -7,14 +7,14 @@ import PanelSearch from 'components/PanelSearch'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
-import { Environment, Res, SegmentMembership } from 'common/types/responses'
+import { Res, SegmentMembership } from 'common/types/responses'
 import Icon from 'components/icons/Icon'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import {
   identitySegmentService,
   useGetIdentitySegmentsQuery,
 } from 'common/services/useIdentitySegment'
 import { getStore } from 'common/store'
-import ProjectStore from 'common/stores/project-store'
 import { SegmentMembershipEnvBadge } from 'components/segments/SegmentMembershipBadge'
 
 interface CreateSegmentUsersTabContentProps {
@@ -95,6 +95,12 @@ const CreateSegmentUsersTabContent: React.FC<
   setPage,
   setSearchInput,
 }) => {
+  const { data: environmentsData } = useGetEnvironmentsQuery(
+    { projectId: Number(projectId) },
+    { skip: !projectId },
+  )
+  const envs = environmentsData?.results ?? []
+
   const membershipByEnvId = React.useMemo(() => {
     const map = new Map<number, SegmentMembership>()
     ;(memberships ?? []).forEach((m) => map.set(m.environment, m))
@@ -120,10 +126,9 @@ const CreateSegmentUsersTabContent: React.FC<
 
   const selectedMembership = React.useMemo(() => {
     if (!environmentId) return null
-    const envs = (ProjectStore.getEnvs() as Environment[] | null) || []
     const env = envs.find((e) => e.api_key === environmentId)
     return env ? membershipByEnvId.get(env.id) ?? null : null
-  }, [environmentId, membershipByEnvId])
+  }, [environmentId, membershipByEnvId, envs])
 
   return (
     <>
