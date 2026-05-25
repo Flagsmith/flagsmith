@@ -1,0 +1,43 @@
+.wizard-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__label {
+    font-size: var(--font-body-sm-size);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-default);
+  }
+
+  &__required {
+    color: var(--color-text-danger);
+  }
+
+  &__hint {
+    color: var(--color-text-secondary);
+    font-size: var(--font-caption-size);
+  }
+
+  &__textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-lg);
+    background: transparent;
+    color: var(--color-text-default);
+    font-size: var(--font-body-size);
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color var(--duration-fast) var(--easing-standard);
+
+    &::placeholder {
+      color: var(--color-text-disabled);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-border-action);
+    }
+  }
+}

@@ -3,12 +3,13 @@ import Button from 'components/base/forms/Button'
 import { IonIcon } from '@ionic/react'
 import { addOutline, searchOutline } from 'ionicons/icons'
 import ContentCard from 'components/base/grid/ContentCard'
+import 'components/experiments/wizard.scss'
 
 const MeasurementStep: FC = () => {
   return (
     <div className='d-flex flex-column gap-4'>
       <ContentCard title='Metrics'>
-        <div className='d-flex align-items-center gap-3 mb-3'>
+        <div className='d-flex align-items-center gap-3'>
           <div className='position-relative flex-fill'>
             <IonIcon
               icon={searchOutline}

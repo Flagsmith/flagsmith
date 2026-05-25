@@ -4,6 +4,7 @@ import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import Utils from 'common/utils/utils'
 import ContentCard from 'components/base/grid/ContentCard'
+import 'components/experiments/wizard.scss'
 
 type SetupStepProps = {
   name: string
@@ -54,13 +55,14 @@ const SetupStep: FC<SetupStepProps> = ({
   return (
     <div className='d-flex flex-column gap-4'>
       <ContentCard title='Experiment details'>
-        <p className='text-muted mb-3'>
-          Name the experiment and capture what you&#39;re trying to learn before
-          picking a flag.
+        <p className='text-muted fs-small mb-0'>
+          Name the experiment and capture what you&apos;re trying to learn
+          before picking a flag.
         </p>
-        <FormGroup className='mb-3'>
-          <label className='fw-bold mb-1'>
-            Experiment Name <span className='text-danger'>*</span>
+
+        <div className='wizard-field'>
+          <label className='wizard-field__label'>
+            Experiment Name <span className='wizard-field__required'>*</span>
           </label>
           <Input
             value={name}
@@ -69,32 +71,34 @@ const SetupStep: FC<SetupStepProps> = ({
             }
             placeholder='e.g. Checkout Button Redesign'
           />
-        </FormGroup>
-        <FormGroup>
-          <label className='fw-bold mb-1'>
-            Hypothesis <span className='text-danger'>*</span>
+        </div>
+
+        <div className='wizard-field'>
+          <label className='wizard-field__label'>
+            Hypothesis <span className='wizard-field__required'>*</span>
           </label>
           <textarea
-            className='form-control'
-            rows={4}
+            className='wizard-field__textarea'
+            rows={3}
             value={hypothesis}
             onChange={(e) => onHypothesisChange(e.target.value)}
-            placeholder='e.g. Redesigning the checkout button will increase conversion rates by at least 15% within 30 days'
+            placeholder='e.g. Redesigning the checkout button with a clearer CTA will increase conversion rates by at least 15% within 30 days'
           />
-          <div className='text-muted mt-1' style={{ fontSize: 12 }}>
+          <span className='wizard-field__hint'>
             A good hypothesis names the change, the metric, the expected
             magnitude, and the timeframe.
-          </div>
-        </FormGroup>
+          </span>
+        </div>
       </ContentCard>
 
       <ContentCard title='Feature flag'>
-        <p className='text-muted mb-3'>
-          The flag you&#39;re experimenting on. Variations are read-only &#8212;
-          they&#39;re defined on the flag itself.
+        <p className='text-muted fs-small mb-0'>
+          The flag you&apos;re experimenting on. Variations are read-only
+          &mdash; they&apos;re defined on the flag itself.
         </p>
-        <FormGroup className='mb-2'>
-          <label className='fw-bold mb-1'>Feature Flag</label>
+
+        <div className='wizard-field'>
+          <label className='wizard-field__label'>Feature Flag</label>
           <Select
             value={
               selectedFeature
@@ -106,7 +110,7 @@ const SetupStep: FC<SetupStepProps> = ({
               value: f.id,
             }))}
             onInputChange={(val: string) => setSearchInput(val)}
-            onChange={(option: { value: number; label: string } | null) => {
+            onChange={(option: { label: string; value: number } | null) => {
               if (option) {
                 const feature = multivariateFeatures.find(
                   (f) => f.id === option.value,
@@ -118,15 +122,15 @@ const SetupStep: FC<SetupStepProps> = ({
             placeholder='Search for a multivariate feature...'
             isClearable={false}
           />
-          <div className='text-muted mt-1' style={{ fontSize: 12 }}>
+          <span className='wizard-field__hint'>
             Only multi-variant flags can be experimented on.
-          </div>
-        </FormGroup>
+          </span>
+        </div>
 
         {selectedFeature && selectedFeature.multivariate_options.length > 0 && (
-          <div className='mt-3'>
-            <label className='fw-bold mb-2'>Variations</label>
-            <table className='table table-sm'>
+          <div className='wizard-field'>
+            <label className='wizard-field__label'>Variations</label>
+            <table className='table table-sm mb-0'>
               <thead>
                 <tr>
                   <th>Name</th>

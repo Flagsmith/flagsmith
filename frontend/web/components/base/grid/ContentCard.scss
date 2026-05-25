@@ -14,8 +14,8 @@
   }
 
   &__title {
-    font-size: var(--font-body-size);
-    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-body-size, 0.875rem);
+    font-weight: var(--font-weight-bold, 700);
     color: var(--color-text-default);
     margin: 0;
   }
