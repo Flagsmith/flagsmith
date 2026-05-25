@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django_lifecycle import LifecycleModelMixin  # type: ignore[import-untyped]
 
 from core.models import SoftDeleteExportableModel
@@ -45,5 +46,53 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
                 fields=["environment"],
                 condition=models.Q(deleted_at__isnull=True),
                 name="unique_active_warehouse_per_env",
+            ),
+        ]
+
+
+class ExperimentStatus(models.TextChoices):
+    CREATED = "created", "Created"
+    RUNNING = "running", "Running"
+    PAUSED = "paused", "Paused"
+    COMPLETED = "completed", "Completed"
+
+
+VALID_STATUS_TRANSITIONS: dict[str, set[str]] = {
+    ExperimentStatus.CREATED: {ExperimentStatus.RUNNING},
+    ExperimentStatus.RUNNING: {ExperimentStatus.PAUSED, ExperimentStatus.COMPLETED},
+    ExperimentStatus.PAUSED: {ExperimentStatus.RUNNING, ExperimentStatus.COMPLETED},
+    ExperimentStatus.COMPLETED: set(),
+}
+
+
+class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[misc]
+    environment = models.ForeignKey(
+        Environment,
+        on_delete=models.CASCADE,
+        related_name="experiments",
+    )
+    feature = models.ForeignKey(
+        "features.Feature",
+        on_delete=models.CASCADE,
+        related_name="experiments",
+    )
+    name = models.CharField(max_length=255)
+    hypothesis = models.TextField()
+    status = models.CharField(
+        max_length=50,
+        choices=ExperimentStatus.choices,
+        default=ExperimentStatus.CREATED,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["feature", "environment"],
+                condition=Q(deleted_at__isnull=True) & ~Q(status="completed"),
+                name="unique_active_experiment_per_feature_env",
             ),
         ]
