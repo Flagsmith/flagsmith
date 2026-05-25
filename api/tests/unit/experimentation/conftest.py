@@ -1,8 +1,14 @@
 import pytest
 from django.urls import reverse
+from pytest_mock import MockerFixture
 
 from environments.models import Environment
 from experimentation.models import WarehouseConnection, WarehouseType
+
+
+@pytest.fixture(autouse=True)
+def mock_ingestion_redis_client(mocker: MockerFixture) -> None:
+    mocker.patch("experimentation.ingestion_sync_service._get_client")
 
 
 @pytest.fixture()

@@ -775,6 +775,9 @@ REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
     "REDIS_CLUSTER_READ_FROM_REPLICAS", default=True
 )
 
+# Redis Cluster URL used to communicate with the event ingestion server.
+INGESTION_REDIS_URL = env.str("INGESTION_REDIS_URL", default="")
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",

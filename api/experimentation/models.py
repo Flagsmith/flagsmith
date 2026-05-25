@@ -1,8 +1,17 @@
 from django.db import models
-from django_lifecycle import LifecycleModelMixin  # type: ignore[import-untyped]
+from django_lifecycle import (  # type: ignore[import-untyped]
+    AFTER_CREATE,
+    AFTER_DELETE,
+    LifecycleModelMixin,
+    hook,
+)
 
 from core.models import SoftDeleteExportableModel
 from environments.models import Environment
+from experimentation.tasks import (
+    add_environment_key_to_ingestion,
+    delete_environment_key_from_ingestion,
+)
 
 
 class WarehouseType(models.TextChoices):
@@ -47,3 +56,15 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
                 name="unique_active_warehouse_per_type_and_env",
             ),
         ]
+
+    @hook(AFTER_CREATE)  # type: ignore[misc]
+    def sync_to_ingestion_on_create(self) -> None:
+        add_environment_key_to_ingestion.delay(
+            kwargs={"environment_api_key": self.environment.api_key},
+        )
+
+    @hook(AFTER_DELETE)  # type: ignore[misc]
+    def sync_to_ingestion_on_delete(self) -> None:
+        delete_environment_key_from_ingestion.delay(
+            kwargs={"environment_api_key": self.environment.api_key},
+        )
