@@ -168,8 +168,11 @@ def refresh_project_segment_counts(project_id: int) -> None:
         # so the stale count would linger. Append explicit zeros for those
         # missing pairs so the next refresh writes them down to zero.
         new_pairs = {(m.segment_id, m.environment_id) for m in membership_counts}
+        # `count__gt=0` keeps steady-state refreshes off rows that are already
+        # zeroed -- writing zero over zero on every run is just churn.
         existing_pairs = SegmentMembershipCount.objects.filter(
             segment__project=project,
+            count__gt=0,
         ).values_list("segment_id", "environment_id")
         zeroed_counts = [
             SegmentMembershipCount(

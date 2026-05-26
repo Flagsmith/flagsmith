@@ -368,7 +368,7 @@ Attributes:
 ### `segment_membership.refresh.project.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:191`
+ - `api/segment_membership/tasks.py:194`
 
 Attributes:
  - `membership_counts.count`

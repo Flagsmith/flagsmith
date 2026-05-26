@@ -1,3 +1,4 @@
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 from django.utils import timezone
@@ -331,6 +332,40 @@ def test_refresh_project_segment_counts__previously_matching_pair_drops_to_zero_
     )
     assert membership.count == 0
     assert membership.last_synced_at is not None
+
+
+def test_refresh_project_segment_counts__already_zeroed_pair__not_rewritten(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a row that's already at zero from a previous refresh
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    zeroed_at = timezone.now() - timedelta(hours=1)
+    SegmentMembershipCount.objects.create(
+        segment=segment,
+        environment=environment,
+        count=0,
+        last_synced_at=zeroed_at,
+    )
+    cursor = MagicMock()
+    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    open_cursor.return_value.__enter__.return_value = cursor
+    mocker.patch.object(tasks, "compute_segment_counts_for_project", return_value=[])
+
+    # When a refresh runs that still produces zero matches
+    refresh_project_segment_counts(project.id)
+
+    # Then the row is left alone -- zeroing zero again is just write churn.
+    membership = SegmentMembershipCount.objects.get(
+        segment=segment, environment=environment
+    )
+    assert membership.count == 0
+    assert membership.last_synced_at == zeroed_at
 
 
 def test_refresh_project_segment_counts__never_matched_pair__no_row_written(
