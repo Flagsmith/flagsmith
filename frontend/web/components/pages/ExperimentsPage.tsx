@@ -1,20 +1,31 @@
 import { FC, useState } from 'react'
+import { useHistory } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
 import { useGetExperimentsQuery } from 'common/services/useExperiment'
+import { useGetWarehouseConnectionsQuery } from 'common/services/useWarehouseConnection'
 import Button from 'components/base/forms/Button'
 import PageTitle from 'components/PageTitle'
 import CreateExperimentWizard from 'components/experiments/CreateExperimentWizard'
 import { IonIcon } from '@ionic/react'
-import { addOutline, flaskOutline } from 'ionicons/icons'
+import { addOutline, flaskOutline, settingsOutline } from 'ionicons/icons'
 
 const ExperimentsPage: FC = () => {
   const { environmentId, projectId } = useRouteContext()
   const [isCreating, setIsCreating] = useState(false)
+  const history = useHistory()
 
   const { data: experiments, isLoading } = useGetExperimentsQuery(
     { environmentId: environmentId ?? '' },
     { skip: !environmentId },
   )
+
+  const { data: warehouseConnections, isLoading: isLoadingWarehouse } =
+    useGetWarehouseConnectionsQuery(
+      { environmentId: environmentId ?? '' },
+      { skip: !environmentId },
+    )
+
+  const hasWarehouse = (warehouseConnections?.length ?? 0) > 0
 
   if (!environmentId || !projectId) return null
 
@@ -40,11 +51,33 @@ const ExperimentsPage: FC = () => {
 
   const experimentCount = experiments?.length ?? 0
 
+  const settingsUrl = `/project/${projectId}/environment/${environmentId}/settings?tab=warehouse`
+
   const renderBody = () => {
-    if (isLoading) {
+    if (isLoading || isLoadingWarehouse) {
       return (
         <div className='text-center'>
           <Loader />
+        </div>
+      )
+    }
+    if (!hasWarehouse && experimentCount === 0) {
+      return (
+        <div className='text-center py-5'>
+          <IonIcon
+            icon={settingsOutline}
+            style={{ fontSize: 48 }}
+            className='text-muted mb-3 d-block mx-auto'
+          />
+          <h5>Data warehouse not configured</h5>
+          <p className='text-muted mb-4'>
+            Experiments require a data warehouse connection to collect and
+            analyse results. Configure one in your environment settings to get
+            started.
+          </p>
+          <Button onClick={() => history.push(settingsUrl)}>
+            Configure Warehouse
+          </Button>
         </div>
       )
     }
@@ -82,10 +115,12 @@ const ExperimentsPage: FC = () => {
       <PageTitle
         title='Experiments'
         cta={
-          <Button onClick={() => setIsCreating(true)}>
-            <IonIcon icon={addOutline} className='me-1' />
-            Create Experiment
-          </Button>
+          hasWarehouse ? (
+            <Button onClick={() => setIsCreating(true)}>
+              <IonIcon icon={addOutline} className='me-1' />
+              Create Experiment
+            </Button>
+          ) : undefined
         }
       />
       {renderBody()}
