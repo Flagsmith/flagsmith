@@ -161,8 +161,29 @@ def refresh_project_segment_counts(project_id: int) -> None:
         now = timezone.now()
         for m in membership_counts:
             m.last_synced_at = now
+
+        # Pairs that previously matched but no longer do (rule edited, traits
+        # drifted, identities deleted) won't appear in `membership_counts`.
+        # `bulk_create(update_conflicts=True)` only touches rows it's handed,
+        # so the stale count would linger. Append explicit zeros for those
+        # missing pairs so the next refresh writes them down to zero.
+        new_pairs = {(m.segment_id, m.environment_id) for m in membership_counts}
+        existing_pairs = SegmentMembershipCount.objects.filter(
+            segment__project=project,
+        ).values_list("segment_id", "environment_id")
+        zeroed_counts = [
+            SegmentMembershipCount(
+                segment_id=segment_id,
+                environment_id=environment_id,
+                count=0,
+                last_synced_at=now,
+            )
+            for segment_id, environment_id in existing_pairs
+            if (segment_id, environment_id) not in new_pairs
+        ]
+
         SegmentMembershipCount.objects.bulk_create(
-            membership_counts,
+            membership_counts + zeroed_counts,
             update_conflicts=True,
             unique_fields=["segment", "environment"],
             update_fields=["count", "last_synced_at"],
@@ -171,4 +192,5 @@ def refresh_project_segment_counts(project_id: int) -> None:
             "refresh.project.completed",
             project__id=project_id,
             membership_counts__count=len(membership_counts),
+            zeroed_counts__count=len(zeroed_counts),
         )

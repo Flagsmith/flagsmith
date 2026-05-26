@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
 
+from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
@@ -295,3 +296,64 @@ def test_refresh_project_segment_counts__counts_returned__upserts_per_env_rows(
             f":project_{project.id}"
         )
     )
+
+
+def test_refresh_project_segment_counts__previously_matching_pair_drops_to_zero__row_zeroed(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a prior refresh that landed a non-zero count for (segment, env)
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    SegmentMembershipCount.objects.create(
+        segment=segment,
+        environment=environment,
+        count=15,
+        last_synced_at=timezone.now(),
+    )
+    cursor = MagicMock()
+    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    open_cursor.return_value.__enter__.return_value = cursor
+    # ... and a new compute that returns no matches for the same pair (the
+    # rule was edited, the identity set drifted, etc.).
+    mocker.patch.object(tasks, "compute_segment_counts_for_project", return_value=[])
+
+    # When
+    refresh_project_segment_counts(project.id)
+
+    # Then the stale row is reset to zero rather than left at 15.
+    membership = SegmentMembershipCount.objects.get(
+        segment=segment, environment=environment
+    )
+    assert membership.count == 0
+    assert membership.last_synced_at is not None
+
+
+def test_refresh_project_segment_counts__never_matched_pair__no_row_written(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a project with no prior membership rows
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    cursor = MagicMock()
+    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    open_cursor.return_value.__enter__.return_value = cursor
+    mocker.patch.object(tasks, "compute_segment_counts_for_project", return_value=[])
+
+    # When
+    refresh_project_segment_counts(project.id)
+
+    # Then no row is written: the zero-fill only resets previously-matching
+    # pairs, it doesn't pre-populate every (segment, env) combination.
+    assert not SegmentMembershipCount.objects.filter(
+        segment=segment, environment=environment
+    ).exists()
