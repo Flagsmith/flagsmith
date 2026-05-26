@@ -530,6 +530,7 @@ def test_handle_api_usage_notifications__usage_below_100_percent__sends_90_perce
     )
 
 
+@pytest.mark.django_db
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_handle_api_usage_notifications__no_admin_users__skips_notification(
     mocker: MockerFixture,
