@@ -1,6 +1,7 @@
 import { FC, useMemo } from 'react'
 import { ProjectFlag } from 'common/types/responses'
 import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
+import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import Utils from 'common/utils/utils'
 import ContentCard from 'components/base/grid/ContentCard'
@@ -28,15 +29,20 @@ const SetupStep: FC<SetupStepProps> = ({
   selectedFeature,
 }) => {
   const { search, setSearchInput } = useDebouncedSearch('')
+  const { getEnvironmentIdFromKey } = useProjectEnvironments(projectId)
+  const numericEnvId = getEnvironmentIdFromKey(environmentId)
 
   const { data: featureList, isLoading: isFeaturesLoading } =
-    useGetFeatureListQuery({
-      environmentId,
-      page: 1,
-      page_size: 50,
-      projectId,
-      search: search || undefined,
-    })
+    useGetFeatureListQuery(
+      {
+        environmentId: String(numericEnvId ?? ''),
+        page: 1,
+        page_size: 50,
+        projectId,
+        search: search || undefined,
+      },
+      { skip: !numericEnvId },
+    )
 
   const multivariateFeatures = useMemo(() => {
     if (!featureList?.results) return []
