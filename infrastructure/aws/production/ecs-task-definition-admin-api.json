@@ -228,6 +228,10 @@
                 {
                     "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
                     "value": "0.5"
+                },
+                {
+                    "name": "INGESTION_REDIS_URL",
+                    "value": "rediss://serverless-redis-cache-c4q8sw.serverless.euw2.cache.amazonaws.com:6379"
                 }
             ],
             "secrets": [

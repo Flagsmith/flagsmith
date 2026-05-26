@@ -52,13 +52,13 @@ class WarehouseConnectionViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        warehouse_type = serializer.validated_data["warehouse_type"]
         if WarehouseConnection.objects.filter(
             environment=environment,
-            warehouse_type=warehouse_type,
         ).exists():
             return Response(
-                {"detail": "Warehouse connection already exists."},
+                {
+                    "detail": "This environment already has an active warehouse connection."
+                },
                 status=409,
             )
 
