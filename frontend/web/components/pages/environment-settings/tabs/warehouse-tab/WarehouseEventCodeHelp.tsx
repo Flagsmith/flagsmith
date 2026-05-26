@@ -99,9 +99,8 @@ const enabledSnippets = Object.fromEntries(
 
 const WarehouseEventCodeHelp: FC = () => (
   <div>
-    <p className='text-center fst-italic text-muted'>
-      Verify your connection by sending your first custom event using one of our
-      SDKs
+    <p className='text-muted fw-bold'>
+      Use our SDKs to send your first experimentation events.
     </p>
     <CodeHelp
       title='Send your first event'
