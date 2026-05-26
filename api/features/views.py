@@ -612,6 +612,9 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         if "is_archived" in query_serializer.initial_data:
             queryset = queryset.filter(is_archived=query_data["is_archived"])
 
+        if query_data.get("type"):
+            queryset = queryset.filter(type=query_data["type"])
+
         queryset = self.filter_owners_and_group_owners(queryset, query_data)
 
         return queryset

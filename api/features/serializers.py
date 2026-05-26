@@ -53,6 +53,7 @@ from .feature_segments.limits import (
 from .feature_segments.serializers import (
     CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
+from .feature_types import FEATURE_TYPE_CHOICES
 from .models import Feature, FeatureState
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
 
@@ -95,6 +96,11 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     )
 
     is_archived = serializers.BooleanField(required=False)
+    type = serializers.ChoiceField(
+        choices=FEATURE_TYPE_CHOICES,
+        required=False,
+        help_text="Feature type to filter on (STANDARD or MULTIVARIATE).",
+    )
     environment = serializers.IntegerField(
         required=False,
         help_text="Integer ID of the environment to view features in the context of.",

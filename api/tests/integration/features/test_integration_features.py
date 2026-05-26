@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from django.urls import reverse
 from rest_framework import status
 
@@ -203,3 +204,39 @@ def test_list_features__filter_by_archived_status__returns_matching_features(  #
         list_features_is_archived_true_response.json()["results"][0]["id"]
         == archived_feature_id
     )
+
+
+@pytest.mark.parametrize(
+    "type_filter, expected_feature_name",
+    [
+        ("STANDARD", "standard_feature"),
+        ("MULTIVARIATE", "multivariate_feature"),
+    ],
+)
+def test_list_features__filter_by_type__returns_matching_features(  # type: ignore[no-untyped-def]
+    admin_client, project, type_filter, expected_feature_name
+):
+    # Given
+    features_url = reverse("api-v1:projects:project-features-list", args=[project])
+    admin_client.post(
+        features_url,
+        data={"name": "standard_feature", "project": project},
+    )
+    admin_client.post(
+        features_url,
+        data={
+            "name": "multivariate_feature",
+            "project": project,
+            "type": "MULTIVARIATE",
+            "initial_value": "control",
+        },
+    )
+
+    # When
+    response = admin_client.get(f"{features_url}?type={type_filter}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["name"] == expected_feature_name
