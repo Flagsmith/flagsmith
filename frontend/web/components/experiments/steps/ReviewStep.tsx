@@ -47,7 +47,7 @@ const ReviewStep: FC<ReviewStepProps> = ({
               </span>
             </div>
             <VariationTable
-              controlValue={String(selectedFeature.initial_value)}
+              controlValue={selectedFeature.initial_value?.toString() ?? ''}
               variations={selectedFeature.multivariate_options}
             />
           </>
