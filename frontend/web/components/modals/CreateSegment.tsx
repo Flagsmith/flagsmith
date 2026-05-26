@@ -589,7 +589,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               <>
                 Identities
                 <SegmentMembershipTotalBadge
-                  memberships={segment.memberships}
+                  memberships={segment.membership_counts}
                 />
               </>
             }
@@ -606,7 +606,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 name={name}
                 searchInput={searchInput}
                 setSearchInput={setSearchInput}
-                memberships={segment.memberships}
+                memberships={segment.membership_counts}
               />
             </div>
           </TabItem>
