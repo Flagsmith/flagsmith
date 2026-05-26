@@ -162,8 +162,6 @@ def refresh_project_segment_counts(project_id: int) -> None:
         for m in membership_counts:
             m.last_synced_at = now
 
-        # Drop pairs that stopped matching this run so the next refresh
-        # doesn't carry stale counts forward.
         new_pairs = {(m.segment_id, m.environment_id) for m in membership_counts}
         stale_ids = [
             pk
@@ -174,11 +172,9 @@ def refresh_project_segment_counts(project_id: int) -> None:
             )
             if (segment_id, environment_id) not in new_pairs
         ]
-        stale_deleted, _ = (
-            SegmentMembershipCount.objects.filter(id__in=stale_ids).delete()
-            if stale_ids
-            else (0, {})
-        )
+        stale_deleted, _ = SegmentMembershipCount.objects.filter(
+            id__in=stale_ids,
+        ).delete()
 
         SegmentMembershipCount.objects.bulk_create(
             membership_counts,
