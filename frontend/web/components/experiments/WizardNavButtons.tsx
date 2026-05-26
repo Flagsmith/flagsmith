@@ -34,7 +34,7 @@ const WizardNavButtons: FC<WizardNavButtonsProps> = ({
       )}
       {isLastStep ? (
         <Button onClick={onLaunch} disabled={isSubmitting}>
-          Launch Experiment
+          Create Experiment
           <IonIcon icon={rocketOutline} className='ms-1' />
         </Button>
       ) : (

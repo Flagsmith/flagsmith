@@ -63,7 +63,11 @@
     font-size: var(--font-body-sm-size);
     font-weight: var(--font-weight-medium);
     color: var(--color-text-default);
-    text-align: right;
+
+    &--flag {
+      font-weight: var(--font-weight-bold, 700);
+      font-style: italic;
+    }
   }
 
   &__hypothesis {

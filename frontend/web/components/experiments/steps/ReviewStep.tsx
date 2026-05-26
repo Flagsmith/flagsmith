@@ -28,7 +28,7 @@ const ReviewStep: FC<ReviewStepProps> = ({
           </Button>
         }
       >
-        <div className='review-row'>
+        <div className='review-row review-row--block'>
           <span className='review-row__label'>Name</span>
           <span className='review-row__value'>{name}</span>
         </div>
@@ -40,9 +40,11 @@ const ReviewStep: FC<ReviewStepProps> = ({
         )}
         {selectedFeature && (
           <>
-            <div className='review-row'>
+            <div className='review-row review-row--block'>
               <span className='review-row__label'>Feature Flag</span>
-              <span className='review-row__value'>{selectedFeature.name}</span>
+              <span className='review-row__value review-row__value--flag'>
+                {selectedFeature.name}
+              </span>
             </div>
             <VariationTable
               controlValue={String(selectedFeature.initial_value)}

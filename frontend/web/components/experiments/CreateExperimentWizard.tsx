@@ -65,7 +65,7 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
     [completedSteps, currentStep],
   )
 
-  const handleLaunch = useCallback(async () => {
+  const doCreate = useCallback(async () => {
     if (!selectedFeature) return
     try {
       await createExperiment({
@@ -89,6 +89,24 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
     onCreated,
     selectedFeature,
   ])
+
+  const handleLaunch = useCallback(() => {
+    if (!selectedFeature) return
+    openConfirm({
+      body: (
+        <span>
+          This will start serving variations of{' '}
+          <strong>{selectedFeature.name}</strong> to{' '}
+          <strong>100% of all users in the environment</strong>. You can pause
+          or stop the experiment at any time.
+        </span>
+      ),
+      noText: 'Cancel',
+      onYes: doCreate,
+      title: 'Create experiment?',
+      yesText: 'Create',
+    })
+  }, [selectedFeature, doCreate])
 
   const renderStep = () => {
     switch (currentStep) {

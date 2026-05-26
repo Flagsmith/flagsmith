@@ -47,14 +47,18 @@
       align-items: center;
       gap: 8px;
       flex: 1;
+      min-width: 0;
     }
 
     &--desc {
       flex: 1;
+      min-width: 0;
+      word-break: break-word;
     }
 
     &--value {
-      width: 100px;
+      width: 120px;
+      flex-shrink: 0;
     }
   }
 
