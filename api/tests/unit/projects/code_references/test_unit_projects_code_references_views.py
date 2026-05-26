@@ -188,6 +188,7 @@ def test_create_code_reference__file_path_too_long__returns_400(
     assert not ScannedCodeReferences.objects.exists()
 
 
+@freezegun.freeze_time("2099-06-01T12:00:00+00:00")
 def test_create_code_reference__duplicate_payload__deduplicates_storage_and_references_remain_retrievable(
     admin_client_new: APIClient,
     project: Project,
@@ -220,10 +221,23 @@ def test_create_code_reference__duplicate_payload__deduplicates_storage_and_refe
         f"/api/v1/projects/{project.pk}/features/{feature.pk}/code-references/",
     )
     assert response.status_code == 200
-    data = response.json()
-    assert len(data) == 1
-    assert len(data[0]["code_references"]) == 1
-    assert data[0]["code_references"][0]["file_path"] == "path/to/file.py"
+    assert response.json() == [
+        {
+            "repository_url": "https://github.flagsmith.com/",
+            "vcs_provider": "github",
+            "revision": "rev-1",
+            "last_successful_repository_scanned_at": "2099-06-01T12:00:00+00:00",
+            "last_feature_found_at": "2099-06-01T12:00:00+00:00",
+            "code_references": [
+                {
+                    "feature_name": "feature-1",
+                    "file_path": "path/to/file.py",
+                    "line_number": 1,
+                    "permalink": "https://github.flagsmith.com/blob/rev-1/path/to/file.py#L1",
+                },
+            ],
+        },
+    ]
 
 
 def test_get_feature_code_references__multiple_scans_exist__returns_latest_per_repository(
