@@ -188,12 +188,12 @@ def test_create_code_reference__file_path_too_long__returns_400(
     assert not ScannedCodeReferences.objects.exists()
 
 
-def test_create_code_reference__duplicate_payload__deduplicates_storage(
+def test_create_code_reference__duplicate_payload__deduplicates_storage_and_references_remain_retrievable(
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
     # Given
-    Feature.objects.create(project=project, name="feature-1")
+    feature = Feature.objects.create(project=project, name="feature-1")
     payload = {
         "repository_url": "https://github.flagsmith.com/",
         "revision": "rev-1",
@@ -205,17 +205,25 @@ def test_create_code_reference__duplicate_payload__deduplicates_storage(
             },
         ],
     }
-
-    # When
     admin_client_new.post(
         f"/api/v1/projects/{project.pk}/code-references/", data=payload, format="json"
     )
+
+    # When
     admin_client_new.post(
         f"/api/v1/projects/{project.pk}/code-references/", data=payload, format="json"
     )
 
     # Then
     assert ScannedCodeReferences.objects.count() == 1
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.pk}/features/{feature.pk}/code-references/",
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert len(data[0]["code_references"]) == 1
+    assert data[0]["code_references"][0]["file_path"] == "path/to/file.py"
 
 
 def test_get_feature_code_references__multiple_scans_exist__returns_latest_per_repository(
