@@ -174,7 +174,7 @@ export type Segment = {
   project: string | number
   feature?: number
   metadata: Metadata[] | []
-  memberships?: SegmentMembership[]
+  membership_counts?: SegmentMembership[]
 }
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
