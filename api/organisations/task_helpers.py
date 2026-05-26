@@ -91,6 +91,11 @@ def _send_api_usage_notification(
             organisation__id=organisation.id,
             matched_threshold=matched_threshold,
         )
+        OrganisationAPIUsageNotification.objects.create(
+            organisation=organisation,
+            percent_usage=matched_threshold,
+            notified_at=timezone.now(),
+        )
         return
 
     url = get_current_site_url()

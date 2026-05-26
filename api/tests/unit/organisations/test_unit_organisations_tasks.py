@@ -39,6 +39,7 @@ from organisations.subscriptions.constants import (
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from organisations.task_helpers import (
     handle_api_usage_notification_for_organisation,
+    send_api_flags_blocked_notification,
 )
 from organisations.tasks import (  # type: ignore[attr-defined]
     ALERT_EMAIL_MESSAGE,
@@ -563,8 +564,9 @@ def test_handle_api_usage_notifications__no_admin_users__skips_notification(
     # Then - no email sent, warning logged
     assert len(mailoutbox) == 0
     assert any(e.get("event") == "notification.no_recipients" for e in log.events)
-    assert not OrganisationAPIUsageNotification.objects.filter(
+    assert OrganisationAPIUsageNotification.objects.filter(
         organisation=organisation,
+        percent_usage=91,
     ).exists()
 
 
@@ -2173,4 +2175,28 @@ def test_update_organisation_subscription_information_cache__called__calls_updat
         mocker.call(
             SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.API_USAGE
         )
+    ]
+
+
+@pytest.mark.django_db
+def test_send_api_flags_blocked_notification__no_recipients__skips_notification(
+    organisation: Organisation,
+    log: StructuredLogCapture,
+    mailoutbox: list[EmailMultiAlternatives],
+) -> None:
+    # Given
+    # Ensure no users are associated with the organisation
+    UserOrganisation.objects.filter(organisation=organisation).delete()
+
+    # When
+    send_api_flags_blocked_notification(organisation)
+
+    # Then
+    assert len(mailoutbox) == 0
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "notification.no_recipients_for_blocked_notification",
+            "organisation__id": organisation.id,
+        }
     ]
