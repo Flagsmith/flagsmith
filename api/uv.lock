@@ -616,7 +616,7 @@ wheels = [
 [[package]]
 name = "clickhouse-driver"
 version = "0.2.10"
-source = { git = "https://github.com/Flagsmith/clickhouse-driver?branch=newjson#11a9bee45efec2415c5987734778313ad318af4f" }
+source = { git = "https://github.com/Flagsmith/clickhouse-driver?branch=newjson#b33d5e74de2c320d02fa0793e45ed26b0b0d3911" }
 dependencies = [
     { name = "pytz" },
     { name = "tzlocal" },
