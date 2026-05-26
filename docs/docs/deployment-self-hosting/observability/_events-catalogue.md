@@ -368,11 +368,12 @@ Attributes:
 ### `segment_membership.refresh.project.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:170`
+ - `api/segment_membership/tasks.py:185`
 
 Attributes:
  - `membership_counts.count`
  - `project.id`
+ - `stale_counts.count`
 
 ### `segment_membership.refresh.project.failed`
 
