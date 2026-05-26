@@ -5,6 +5,7 @@ import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import Utils from 'common/utils/utils'
 import ContentCard from 'components/base/grid/ContentCard'
+import VariationTable from 'components/experiments/VariationTable'
 import 'components/experiments/wizard.scss'
 
 type SetupStepProps = {
@@ -48,15 +49,6 @@ const SetupStep: FC<SetupStepProps> = ({
     if (!featureList?.results) return []
     return featureList.results.filter((f) => f.type === 'MULTIVARIATE')
   }, [featureList])
-
-  const getVariationValue = (
-    mv: ProjectFlag['multivariate_options'][number],
-  ) => {
-    if (mv.type === 'unicode') return mv.string_value
-    if (mv.type === 'int') return String(mv.integer_value ?? '')
-    if (mv.type === 'bool') return String(mv.boolean_value ?? '')
-    return ''
-  }
 
   return (
     <div className='d-flex flex-column gap-4'>
@@ -136,53 +128,10 @@ const SetupStep: FC<SetupStepProps> = ({
         {selectedFeature && selectedFeature.multivariate_options.length > 0 && (
           <div className='wizard-field'>
             <label className='wizard-field__label'>Variations</label>
-            <table className='table table-sm mb-0'>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <span
-                      className='d-inline-block rounded-circle me-2'
-                      style={{
-                        backgroundColor: 'var(--success)',
-                        height: 10,
-                        width: 10,
-                      }}
-                    />
-                    Control
-                    <span className='badge bg-light text-muted ms-2'>
-                      control
-                    </span>
-                  </td>
-                  <td>
-                    <code>{selectedFeature.initial_value}</code>
-                  </td>
-                </tr>
-                {selectedFeature.multivariate_options.map((mv) => (
-                  <tr key={mv.id}>
-                    <td>
-                      <span
-                        className='d-inline-block rounded-circle me-2'
-                        style={{
-                          backgroundColor: 'var(--primary)',
-                          height: 10,
-                          width: 10,
-                        }}
-                      />
-                      {mv.string_value || `Variation ${mv.id}`}
-                    </td>
-                    <td>
-                      <code>{getVariationValue(mv)}</code>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <VariationTable
+              controlValue={String(selectedFeature.initial_value)}
+              variations={selectedFeature.multivariate_options}
+            />
           </div>
         )}
       </ContentCard>
