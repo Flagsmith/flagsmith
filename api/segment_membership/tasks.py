@@ -162,31 +162,26 @@ def refresh_project_segment_counts(project_id: int) -> None:
         for m in membership_counts:
             m.last_synced_at = now
 
-        # Pairs that previously matched but no longer do (rule edited, traits
-        # drifted, identities deleted) won't appear in `membership_counts`.
-        # `bulk_create(update_conflicts=True)` only touches rows it's handed,
-        # so the stale count would linger. Append explicit zeros for those
-        # missing pairs so the next refresh writes them down to zero.
+        # Drop pairs that stopped matching this run so the next refresh
+        # doesn't carry stale counts forward.
         new_pairs = {(m.segment_id, m.environment_id) for m in membership_counts}
-        # `count__gt=0` keeps steady-state refreshes off rows that are already
-        # zeroed -- writing zero over zero on every run is just churn.
-        existing_pairs = SegmentMembershipCount.objects.filter(
-            segment__project=project,
-            count__gt=0,
-        ).values_list("segment_id", "environment_id")
-        zeroed_counts = [
-            SegmentMembershipCount(
-                segment_id=segment_id,
-                environment_id=environment_id,
-                count=0,
-                last_synced_at=now,
+        stale_ids = [
+            pk
+            for pk, segment_id, environment_id in (
+                SegmentMembershipCount.objects.filter(
+                    segment__project=project
+                ).values_list("id", "segment_id", "environment_id")
             )
-            for segment_id, environment_id in existing_pairs
             if (segment_id, environment_id) not in new_pairs
         ]
+        stale_deleted, _ = (
+            SegmentMembershipCount.objects.filter(id__in=stale_ids).delete()
+            if stale_ids
+            else (0, {})
+        )
 
         SegmentMembershipCount.objects.bulk_create(
-            membership_counts + zeroed_counts,
+            membership_counts,
             update_conflicts=True,
             unique_fields=["segment", "environment"],
             update_fields=["count", "last_synced_at"],
@@ -195,5 +190,5 @@ def refresh_project_segment_counts(project_id: int) -> None:
             "refresh.project.completed",
             project__id=project_id,
             membership_counts__count=len(membership_counts),
-            zeroed_counts__count=len(zeroed_counts),
+            stale_counts__count=stale_deleted,
         )

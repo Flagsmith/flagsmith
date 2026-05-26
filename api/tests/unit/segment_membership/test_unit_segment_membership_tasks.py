@@ -1,4 +1,3 @@
-from datetime import timedelta
 from unittest.mock import MagicMock
 
 from django.utils import timezone
@@ -299,7 +298,7 @@ def test_refresh_project_segment_counts__counts_returned__upserts_per_env_rows(
     )
 
 
-def test_refresh_project_segment_counts__previously_matching_pair_drops_to_zero__row_zeroed(
+def test_refresh_project_segment_counts__previously_matching_pair_drops_to_zero__row_deleted(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     project: Project,
@@ -326,46 +325,11 @@ def test_refresh_project_segment_counts__previously_matching_pair_drops_to_zero_
     # When
     refresh_project_segment_counts(project.id)
 
-    # Then the stale row is reset to zero rather than left at 15.
-    membership = SegmentMembershipCount.objects.get(
+    # Then the stale row is gone -- pairs that no longer match drop out of
+    # the table entirely rather than lingering at the previous count.
+    assert not SegmentMembershipCount.objects.filter(
         segment=segment, environment=environment
-    )
-    assert membership.count == 0
-    assert membership.last_synced_at is not None
-
-
-def test_refresh_project_segment_counts__already_zeroed_pair__not_rewritten(
-    mocker: MockerFixture,
-    settings: SettingsWrapper,
-    project: Project,
-    environment: Environment,
-    segment: Segment,
-    enable_features: EnableFeaturesFixture,
-) -> None:
-    # Given a row that's already at zero from a previous refresh
-    enable_features("segment_membership_inspection")
-    settings.CLICKHOUSE_ENABLED = True
-    zeroed_at = timezone.now() - timedelta(hours=1)
-    SegmentMembershipCount.objects.create(
-        segment=segment,
-        environment=environment,
-        count=0,
-        last_synced_at=zeroed_at,
-    )
-    cursor = MagicMock()
-    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
-    open_cursor.return_value.__enter__.return_value = cursor
-    mocker.patch.object(tasks, "compute_segment_counts_for_project", return_value=[])
-
-    # When a refresh runs that still produces zero matches
-    refresh_project_segment_counts(project.id)
-
-    # Then the row is left alone -- zeroing zero again is just write churn.
-    membership = SegmentMembershipCount.objects.get(
-        segment=segment, environment=environment
-    )
-    assert membership.count == 0
-    assert membership.last_synced_at == zeroed_at
+    ).exists()
 
 
 def test_refresh_project_segment_counts__never_matched_pair__no_row_written(
@@ -387,8 +351,8 @@ def test_refresh_project_segment_counts__never_matched_pair__no_row_written(
     # When
     refresh_project_segment_counts(project.id)
 
-    # Then no row is written: the zero-fill only resets previously-matching
-    # pairs, it doesn't pre-populate every (segment, env) combination.
+    # Then no row is written: refresh upserts matches, drops misses, and
+    # leaves never-matched pairs untouched.
     assert not SegmentMembershipCount.objects.filter(
         segment=segment, environment=environment
     ).exists()
