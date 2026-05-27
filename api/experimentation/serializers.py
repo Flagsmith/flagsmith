@@ -6,7 +6,6 @@ from environments.models import Environment
 from experimentation.models import (
     Experiment,
     WarehouseConnection,
-    WarehouseConnectionStatus,
     WarehouseType,
 )
 from experimentation.types import SNOWFLAKE_DEFAULTS, SnowflakeConfig
@@ -52,23 +51,6 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
 
         if not validated_data.get("name"):
             validated_data["name"] = self._generate_name(warehouse_type, environment)
-
-        existing: WarehouseConnection | None = (
-            WarehouseConnection.objects.all_with_deleted()
-            .filter(
-                environment=environment,
-                warehouse_type=warehouse_type,
-                deleted_at__isnull=False,
-            )
-            .first()
-        )
-        if existing:
-            existing.deleted_at = None
-            existing.status = WarehouseConnectionStatus.CREATED
-            existing.name = validated_data["name"]
-            existing.config = validated_data.get("config")
-            existing.save()
-            return existing
 
         result: WarehouseConnection = super().create(validated_data)
         return result

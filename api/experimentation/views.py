@@ -1,7 +1,8 @@
+import logging
 from typing import Any
 
 from django.db.models import QuerySet
-from rest_framework import mixins
+from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -10,7 +11,6 @@ from rest_framework.serializers import BaseSerializer
 
 from environments.views import NestedEnvironmentViewSet
 from experimentation.models import (
-    VALID_STATUS_TRANSITIONS,
     Experiment,
     ExperimentStatus,
     WarehouseConnection,
@@ -26,8 +26,11 @@ from experimentation.serializers import (
 from experimentation.services import (
     create_experiment_audit_log,
     create_warehouse_audit_log,
+    transition_experiment_status,
 )
 from users.models import FFAdminUser
+
+logger = logging.getLogger(__name__)
 
 
 class WarehouseConnectionViewSet(
@@ -77,11 +80,11 @@ class WarehouseConnectionViewSet(
                 {
                     "detail": "This environment already has an active warehouse connection."
                 },
-                status=409,
+                status=status.HTTP_409_CONFLICT,
             )
 
         self.perform_create(serializer)
-        return Response(serializer.data, status=201)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @staticmethod
     def _get_user(request: Request) -> FFAdminUser:
@@ -102,7 +105,6 @@ class ExperimentViewSet(
     model_class = Experiment
     lookup_field = "id"
     lookup_url_kwarg = "experiment_id"
-    filterset_fields: list[str] = []
 
     def get_serializer_context(self) -> dict[str, Any]:
         context = super().get_serializer_context()
@@ -132,11 +134,11 @@ class ExperimentViewSet(
         ):
             return Response(
                 {"detail": "An active experiment already exists for this feature."},
-                status=409,
+                status=status.HTTP_409_CONFLICT,
             )
 
         self.perform_create(serializer)
-        return Response(serializer.data, status=201)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer: BaseSerializer[Experiment]) -> None:
         experiment: Experiment = serializer.save(environment=self._get_environment())
@@ -170,22 +172,22 @@ class ExperimentViewSet(
 
     def _transition_status(self, target_status: str) -> Response:
         experiment: Experiment = self.get_object()
-        valid_targets = VALID_STATUS_TRANSITIONS.get(experiment.status, set())
-        if target_status not in valid_targets:
-            return Response(
-                {
-                    "detail": (
-                        f"Cannot transition from '{experiment.status}' "
-                        f"to '{target_status}'."
-                    )
-                },
-                status=400,
+        try:
+            experiment = transition_experiment_status(
+                experiment, target_status, self._get_user(self.request)
             )
-        experiment.status = target_status
-        experiment.save()
-        create_experiment_audit_log(
-            experiment, self._get_user(self.request), action=target_status
-        )
+        except ValueError:
+            logger.warning(
+                "Invalid experiment status transition for "
+                "experiment_id=%s to status=%s",
+                experiment.id,
+                target_status,
+                exc_info=True,
+            )
+            return Response(
+                {"detail": "Unable to transition experiment status."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         serializer = self.get_serializer(experiment)
         return Response(serializer.data)
 
