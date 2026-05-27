@@ -1,15 +1,36 @@
-from rest_framework import mixins
+import logging
+from typing import Any
+
+from django.db.models import QuerySet
+from rest_framework import mixins, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 
 from environments.views import NestedEnvironmentViewSet
-from experimentation.models import WarehouseConnection
-from experimentation.permissions import WarehouseConnectionPermission
-from experimentation.serializers import WarehouseConnectionSerializer
-from experimentation.services import create_warehouse_audit_log
+from experimentation.models import (
+    Experiment,
+    ExperimentStatus,
+    WarehouseConnection,
+)
+from experimentation.permissions import (
+    ExperimentPermission,
+    WarehouseConnectionPermission,
+)
+from experimentation.serializers import (
+    ExperimentSerializer,
+    WarehouseConnectionSerializer,
+)
+from experimentation.services import (
+    create_experiment_audit_log,
+    create_warehouse_audit_log,
+    transition_experiment_status,
+)
 from users.models import FFAdminUser
+
+logger = logging.getLogger(__name__)
 
 
 class WarehouseConnectionViewSet(
@@ -59,11 +80,116 @@ class WarehouseConnectionViewSet(
                 {
                     "detail": "This environment already has an active warehouse connection."
                 },
-                status=409,
+                status=status.HTTP_409_CONFLICT,
             )
 
         self.perform_create(serializer)
-        return Response(serializer.data, status=201)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def _get_user(request: Request) -> FFAdminUser:
+        return request.user  # type: ignore[return-value]
+
+
+class ExperimentViewSet(
+    NestedEnvironmentViewSet[Experiment],
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    serializer_class = ExperimentSerializer
+    pagination_class = None
+    permission_classes = [IsAuthenticated, ExperimentPermission]
+    model_class = Experiment
+    lookup_field = "id"
+    lookup_url_kwarg = "experiment_id"
+
+    def get_serializer_context(self) -> dict[str, Any]:
+        context = super().get_serializer_context()
+        context["environment"] = self._get_environment()
+        return context
+
+    def get_queryset(self) -> "QuerySet[Experiment]":
+        qs = super().get_queryset()
+        status_filter = self.request.query_params.get("status")
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        return qs
+
+    def create(self, request: Request, *args: object, **kwargs: object) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        feature = serializer.validated_data["feature"]
+        environment = self._get_environment()
+        if (
+            Experiment.objects.filter(
+                feature=feature,
+                environment=environment,
+            )
+            .exclude(status=ExperimentStatus.COMPLETED)
+            .exists()
+        ):
+            return Response(
+                {"detail": "An active experiment already exists for this feature."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_create(self, serializer: BaseSerializer[Experiment]) -> None:
+        experiment: Experiment = serializer.save(environment=self._get_environment())
+        create_experiment_audit_log(
+            experiment, self._get_user(self.request), action="created"
+        )
+
+    def perform_update(self, serializer: BaseSerializer[Experiment]) -> None:
+        experiment: Experiment = serializer.save()
+        create_experiment_audit_log(
+            experiment, self._get_user(self.request), action="updated"
+        )
+
+    def perform_destroy(self, instance: Experiment) -> None:
+        create_experiment_audit_log(
+            instance, self._get_user(self.request), action="deleted"
+        )
+        instance.delete()
+
+    @action(detail=True, methods=["post"])
+    def start(self, request: Request, **kwargs: object) -> Response:
+        return self._transition_status(ExperimentStatus.RUNNING)
+
+    @action(detail=True, methods=["post"])
+    def pause(self, request: Request, **kwargs: object) -> Response:
+        return self._transition_status(ExperimentStatus.PAUSED)
+
+    @action(detail=True, methods=["post"])
+    def complete(self, request: Request, **kwargs: object) -> Response:
+        return self._transition_status(ExperimentStatus.COMPLETED)
+
+    def _transition_status(self, target_status: str) -> Response:
+        experiment: Experiment = self.get_object()
+        try:
+            experiment = transition_experiment_status(
+                experiment, target_status, self._get_user(self.request)
+            )
+        except ValueError:
+            logger.warning(
+                "Invalid experiment status transition for "
+                "experiment_id=%s to status=%s",
+                experiment.id,
+                target_status,
+                exc_info=True,
+            )
+            return Response(
+                {"detail": "Unable to transition experiment status."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer = self.get_serializer(experiment)
+        return Response(serializer.data)
 
     @staticmethod
     def _get_user(request: Request) -> FFAdminUser:

@@ -4,7 +4,13 @@ from pytest_mock import MockerFixture
 
 from environments.models import Environment
 from experimentation import ingestion_sync_service
-from experimentation.models import WarehouseConnection, WarehouseType
+from experimentation.models import (
+    Experiment,
+    ExperimentStatus,
+    WarehouseConnection,
+    WarehouseType,
+)
+from features.models import Feature
 
 
 @pytest.fixture(autouse=True)
@@ -29,3 +35,18 @@ def warehouse_connection_url(environment: Environment) -> str:
         "api-v1:environments:experimentation:warehouse-connections-list",
         args=[environment.api_key],
     )
+
+
+@pytest.fixture()
+def experiment(
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> Experiment:
+    experiment: Experiment = Experiment.objects.create(
+        environment=environment,
+        feature=multivariate_feature,
+        name="Test Experiment",
+        hypothesis="Test hypothesis",
+        status=ExperimentStatus.CREATED,
+    )
+    return experiment
