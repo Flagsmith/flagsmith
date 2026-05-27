@@ -71,6 +71,7 @@ import Utils from 'common/utils/utils'
 import RemoveViewPermissionModal from './RemoveViewPermissionModal'
 import { useHistory } from 'react-router-dom'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
+import Permissions from './inspect-permissions/Permissions'
 
 import Project from 'common/project'
 
@@ -1018,6 +1019,21 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
   } = props
 
   const [tab, setTab] = useState()
+  const hasRbac = !!Utils.getPlansPermission('RBAC')
+  const inspectUserPermissions = (user: User) => {
+    openModal(
+      getUserDisplayName(user),
+      <div className='p-4'>
+        <Permissions
+          level={level}
+          levelId={id}
+          userId={user.id}
+          projectId={level === 'environment' ? Number(parentId) : Number(id)}
+        />
+      </div>,
+      'p-0 side-modal',
+    )
+  }
   const editUserPermissions = (user: User) => {
     openModal(
       `Edit ${Format.camelCase(level)} Permissions`,
@@ -1213,11 +1229,28 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                     className='text-center'
                                   >
                                     {role !== 'ADMIN' && (
-                                      <Icon
-                                        name='setting'
-                                        width={20}
-                                        fill='#656D7B'
-                                      />
+                                      <Row className='justify-content-center'>
+                                        {hasRbac && (
+                                          <span
+                                            className='clickable mr-3'
+                                            onClick={(e) => {
+                                              e.stopPropagation()
+                                              inspectUserPermissions(user)
+                                            }}
+                                          >
+                                            <Icon
+                                              name='search'
+                                              width={20}
+                                              fill='#656D7B'
+                                            />
+                                          </span>
+                                        )}
+                                        <Icon
+                                          name='setting'
+                                          width={20}
+                                          fill='#656D7B'
+                                        />
+                                      </Row>
                                     )}
                                   </div>
                                 </Row>

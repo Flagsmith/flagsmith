@@ -18,7 +18,7 @@ const Permissions = ({
   userId,
 }: {
   level: PermissionLevel
-  levelId: number
+  levelId: number | string
   userId?: number
   projectId?: number
   className?: string
