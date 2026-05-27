@@ -22,12 +22,7 @@ import Switch from './Switch'
 import TabItem from './navigation/TabMenu/TabItem'
 import Tabs from './navigation/TabMenu/Tabs'
 import UserGroupList from './UserGroupList'
-import {
-  PermissionLevel,
-  Req,
-  PermissionRoleType,
-  SortOrder,
-} from 'common/types/requests'
+import { PermissionLevel, Req, PermissionRoleType } from 'common/types/requests'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './icons/Icon'
@@ -72,6 +67,10 @@ import RemoveViewPermissionModal from './RemoveViewPermissionModal'
 import { useHistory } from 'react-router-dom'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import Permissions from './inspect-permissions/Permissions'
+import {
+  decorateUsersForSort,
+  userTableSorting,
+} from './users-permissions/sortUsers'
 
 import Project from 'common/project'
 
@@ -1111,21 +1110,12 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
               const permissionsByUserId = new Map(
                 permissions?.map((p) => [p.user.id, p]),
               )
-              const sortableUsers = (users || []).map((user: User) => {
-                const matching = permissionsByUserId.get(user.id)
-                let sortRole = 'Regular User'
-                if (user.role === 'ADMIN') {
-                  sortRole = 'Organisation Administrator'
-                } else if (matching?.admin) {
-                  sortRole = `${Format.camelCase(level)} Administrator`
+              const sortableUsers = decorateUsersForSort(users, (user) => {
+                if (user.role === 'ADMIN') return 'Organisation Administrator'
+                if (permissionsByUserId.get(user.id)?.admin) {
+                  return `${Format.camelCase(level)} Administrator`
                 }
-                return {
-                  ...user,
-                  sortName: `${user.first_name} ${user.last_name}`
-                    .trim()
-                    .toLowerCase(),
-                  sortRole,
-                }
+                return 'Regular User'
               })
               return (
                 <div className='mt-4'>
@@ -1144,19 +1134,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                             className='panel--transparent'
                             items={sortableUsers}
                             itemHeight={64}
-                            sorting={[
-                              {
-                                default: true,
-                                label: 'Name',
-                                order: SortOrder.ASC,
-                                value: 'sortName',
-                              },
-                              {
-                                label: 'Role',
-                                order: SortOrder.ASC,
-                                value: 'sortRole',
-                              },
-                            ]}
+                            sorting={userTableSorting}
                             header={
                               <Row className='table-header'>
                                 <Flex className='table-column px-3'>User</Flex>
