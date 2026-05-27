@@ -1,6 +1,8 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
+import Utils from 'common/utils/utils'
+import transformCorePaging from 'common/transformCorePaging'
 
 export const experimentService = service
   .enhanceEndpoints({ addTagTypes: ['Experiment'] })
@@ -36,9 +38,12 @@ export const experimentService = service
       }),
       getExperiments: builder.query<Res['experiments'], Req['getExperiments']>({
         providesTags: [{ id: 'LIST', type: 'Experiment' }],
-        query: ({ environmentId }) => ({
-          url: `environments/${environmentId}/experiments/`,
+        query: ({ environmentId, ...rest }) => ({
+          url: `environments/${environmentId}/experiments/?${Utils.toParam(
+            rest,
+          )}`,
         }),
+        transformResponse: (res, _, req) => transformCorePaging(req, res),
       }),
       pauseExperiment: builder.mutation<
         Res['experiment'],

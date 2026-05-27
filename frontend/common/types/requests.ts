@@ -984,7 +984,7 @@ export type Req = {
     name?: string
     config?: Record<string, string>
   }
-  getExperiments: { environmentId: string }
+  getExperiments: PagedRequest<{ environmentId: string; status?: string }>
   createExperiment: {
     environmentId: string
     body: { name: string; hypothesis: string; feature: number }

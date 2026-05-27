@@ -1,11 +1,13 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
 import { useGetExperimentsQuery } from 'common/services/useExperiment'
 import { useGetWarehouseConnectionsQuery } from 'common/services/useWarehouseConnection'
-import { Experiment, ExperimentStatus } from 'common/types/responses'
+import { ExperimentStatus } from 'common/types/responses'
+import useDebouncedSearch from 'common/useDebouncedSearch'
 import Button from 'components/base/forms/Button'
 import PageTitle from 'components/PageTitle'
+import Paging from 'components/Paging'
 import CreateExperimentWizard from 'components/experiments/CreateExperimentWizard'
 import ExperimentsTable from 'components/experiments/ExperimentsTable'
 import { IonIcon } from '@ionic/react'
@@ -13,6 +15,8 @@ import { addOutline, flaskOutline, settingsOutline } from 'ionicons/icons'
 import 'components/experiments/ExperimentsListControls.scss'
 
 type FilterTab = 'all' | ExperimentStatus
+
+const PAGE_SIZE = 10
 
 const TABS: { label: string; value: FilterTab }[] = [
   { label: 'All', value: 'all' },
@@ -26,11 +30,22 @@ const ExperimentsPage: FC = () => {
   const { environmentId, projectId } = useRouteContext()
   const [isCreating, setIsCreating] = useState(false)
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
-  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const { search, searchInput, setSearchInput } = useDebouncedSearch()
   const history = useHistory()
 
-  const { data: experiments, isLoading } = useGetExperimentsQuery(
-    { environmentId: environmentId ?? '' },
+  useEffect(() => {
+    setPage(1)
+  }, [activeTab, search])
+
+  const { data: experimentsData, isLoading } = useGetExperimentsQuery(
+    {
+      environmentId: environmentId ?? '',
+      page,
+      page_size: PAGE_SIZE,
+      q: search || undefined,
+      status: activeTab !== 'all' ? activeTab : undefined,
+    },
     { skip: !environmentId },
   )
 
@@ -41,31 +56,8 @@ const ExperimentsPage: FC = () => {
     )
 
   const hasWarehouse = (warehouseConnections?.length ?? 0) > 0
-
-  const filtered = useMemo(() => {
-    if (!experiments) return []
-    let items: Experiment[] = experiments
-    if (activeTab !== 'all') {
-      items = items.filter((e) => e.status === activeTab)
-    }
-    if (search) {
-      const lower = search.toLowerCase()
-      items = items.filter(
-        (e) =>
-          e.name.toLowerCase().includes(lower) ||
-          e.feature.name.toLowerCase().includes(lower),
-      )
-    }
-    return items
-  }, [experiments, activeTab, search])
-
-  const counts = useMemo(() => {
-    const c = { completed: 0, created: 0, paused: 0, running: 0 }
-    experiments?.forEach((e) => {
-      c[e.status]++
-    })
-    return c
-  }, [experiments])
+  const experiments = experimentsData?.results
+  const experimentCount = experimentsData?.count ?? 0
 
   if (!environmentId || !projectId) return null
 
@@ -89,7 +81,7 @@ const ExperimentsPage: FC = () => {
     )
   }
 
-  const experimentCount = experiments?.length ?? 0
+  const hasActiveFilter = activeTab !== 'all' || !!search
   const settingsUrl = `/project/${projectId}/environment/${environmentId}/settings?tab=warehouse`
 
   const renderBody = () => {
@@ -100,7 +92,7 @@ const ExperimentsPage: FC = () => {
         </div>
       )
     }
-    if (!hasWarehouse && experimentCount === 0) {
+    if (!hasWarehouse && experimentCount === 0 && !hasActiveFilter) {
       return (
         <div className='text-center py-5'>
           <IonIcon
@@ -120,7 +112,7 @@ const ExperimentsPage: FC = () => {
         </div>
       )
     }
-    if (experimentCount === 0) {
+    if (experimentCount === 0 && !hasActiveFilter) {
       return (
         <div className='text-center py-5'>
           <IonIcon
@@ -161,9 +153,9 @@ const ExperimentsPage: FC = () => {
           </div>
           <div className='experiments-controls__search'>
             <Input
-              value={search}
+              value={searchInput}
               onChange={(e: InputEvent) =>
-                setSearch(Utils.safeParseEventValue(e))
+                setSearchInput(Utils.safeParseEventValue(e))
               }
               placeholder='Search experiments...'
               search
@@ -171,9 +163,9 @@ const ExperimentsPage: FC = () => {
             />
           </div>
         </div>
-        {filtered.length > 0 ? (
+        {experiments && experiments.length > 0 ? (
           <ExperimentsTable
-            experiments={filtered}
+            experiments={experiments}
             environmentId={environmentId}
           />
         ) : (
@@ -183,11 +175,17 @@ const ExperimentsPage: FC = () => {
             </p>
           </div>
         )}
-        <div className='experiments-footer'>
-          {experimentCount} experiment{experimentCount !== 1 ? 's' : ''}{' '}
-          &middot; {counts.running} running &middot; {counts.created} created
-          &middot; {counts.completed} completed
-        </div>
+        <Paging
+          paging={{
+            ...(experimentsData || {}),
+            page,
+            pageSize: PAGE_SIZE,
+          }}
+          nextPage={() => setPage(page + 1)}
+          prevPage={() => setPage(page - 1)}
+          goToPage={(p: number) => setPage(p)}
+          isLoading={isLoading}
+        />
       </>
     )
   }

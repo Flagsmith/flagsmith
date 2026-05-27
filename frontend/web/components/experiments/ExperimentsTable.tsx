@@ -39,7 +39,7 @@ const ExperimentsTable: FC<ExperimentsTableProps> = ({
             <td>
               <StatusBadge status={exp.status} />
             </td>
-            <td>{exp.feature.multivariate_options.length + 1}</td>
+            <td>{(exp.feature.multivariate_options?.length ?? 0) + 1}</td>
             <td className='text-muted'>&mdash;</td>
             <td className='text-muted'>{moment(exp.updated_at).fromNow()}</td>
             <td className='experiments-table__actions'>

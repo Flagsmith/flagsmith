@@ -1371,7 +1371,10 @@ export type Res = {
   gitlabIssues: PagedResponse<GitLabIssue>
   gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
   warehouseConnections: WarehouseConnection[]
-  experiments: Experiment[]
+  experiments: PagedResponse<Experiment> & {
+    currentPage: number
+    pageSize: number
+  }
   experiment: Experiment
   // END OF TYPES
 }
