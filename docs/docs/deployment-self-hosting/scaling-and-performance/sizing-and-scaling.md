@@ -53,6 +53,13 @@ the same whether the client is mobile, web, desktop, or a server acting for a us
 Backend polls Flagsmith every 60 seconds for the full environment snapshot, then evaluates flags locally. No round-trip
 per flag check.
 
+:::tip Local or remote evaluation?
+
+This pattern assumes _local evaluation_. Unsure which mode fits your application?
+[Learn more here](/integrating-with-flagsmith/integration-overview#local-evaluation-mode).
+
+:::
+
 **You're here if:**
 
 -   Node.js, Python, Java, Go, .NET, Ruby, Elixir, or Rust backend using the SDK in _local-evaluation_ mode
@@ -122,7 +129,7 @@ Flag check without a user identity: public pages, marketing experiments, default
 
 | If you change…                                  | New RPS | New tier |
 | ----------------------------------------------- | ------- | -------- |
-| Pods scale up to 300 (same one environment)     | 5 RPS   | Small    |
+| Pods scale up to 300 (same one environment)     | 5 RPS   | Medium   |
 | Poll interval dropped to 10 s (default is 60 s) | 3 RPS   | Medium   |
 | Both, 300 pods polling every 10 s               | 30 RPS  | Large    |
 
@@ -287,6 +294,10 @@ With Pattern B traffic, this typically drops database load by ~10× without any 
 | `GET_IDENTITIES_ENDPOINT_CACHE_SECONDS` | `0` (off)  | `30–60`                                                      | Cache the personalised response from a _GET_ identity request. _POST_ identity (which updates traits) always bypasses the cache.                     |
 
 ### Cache backend trade-offs
+
+These options set `CACHE_ENVIRONMENT_DOCUMENT_BACKEND`. See
+[Caching Strategies](/deployment-self-hosting/core-configuration/caching-strategies) for the backend / location
+configuration, including a worked Memcached example.
 
 -   **Database (default).** Shared across pods. Cache hits still touch PostgreSQL. Fine through Medium.
 -   **LocMemCache.** Pod-local. Zero DB round-trip, but each pod warms separately and memory cost scales with pod count.
