@@ -357,6 +357,15 @@ export type Req = {
       project: number
     }
   }
+  createEnvironmentRolePermission: {
+    organisation_id: number
+    role_id: number
+    body: {
+      admin?: boolean
+      permissions: RolePermission['permissions']
+      environment: number
+    }
+  }
   updateRolePermission: Req['createRolePermission'] & { id: number }
   deleteRolePermission: { organisation_id: number; role_id: number }
 
@@ -650,6 +659,14 @@ export type Req = {
   getProjectPermissions: { projectId: number }
   createProjectUserPermission: {
     projectId: number
+    body: {
+      admin?: boolean
+      permissions: string[]
+      user: number
+    }
+  }
+  createEnvironmentUserPermission: {
+    environmentId: string
     body: {
       admin?: boolean
       permissions: string[]
