@@ -14,7 +14,7 @@ from metadata.models import (
 )
 from metadata.views import SUPPORTED_REQUIREMENTS_MAPPING  # type: ignore[attr-defined]
 from organisations.models import Organisation
-from projects.models import Project
+from projects.models import Project, UserProjectPermission
 from users.models import FFAdminUser
 
 
@@ -511,8 +511,6 @@ def test_create_metadata_field__project_admin__returns_201(
     project: Project,
 ) -> None:
     # Given
-    from projects.models import UserProjectPermission
-
     UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
 
     url = reverse("api-v1:metadata:metadata-fields-list")
@@ -942,8 +940,6 @@ def test_modify_metadata_field__project_admin__permission_check(
     request: pytest.FixtureRequest,
 ) -> None:
     # Given
-    from projects.models import UserProjectPermission
-
     UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
     field_project = (
         request.getfixturevalue(field_project_attr) if field_project_attr else None
@@ -979,8 +975,6 @@ def test_create_model_metadata_field__project_admin__returns_201(
     feature_content_type: ContentType,
 ) -> None:
     # Given - a project-scoped MetadataField and a user who is project admin (not org admin)
-    from projects.models import UserProjectPermission
-
     UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
     project_field = MetadataField.objects.create(
         name="proj_field",
@@ -1015,8 +1009,6 @@ def test_create_model_metadata_field__project_admin_org_scoped_field__returns_40
     feature_content_type: ContentType,
 ) -> None:
     # Given - an org-scoped MetadataField (project=None) and a user who is project admin only
-    from projects.models import UserProjectPermission
-
     UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
     org_field = MetadataField.objects.create(
         name="org_field",
@@ -1042,25 +1034,19 @@ def test_create_model_metadata_field__project_admin_org_scoped_field__returns_40
 
 
 @pytest.mark.parametrize(
-    "field_project_attr, action, expected_status",
+    "field_project_attr, expected_status",
     [
-        ("project", "put", status.HTTP_200_OK),
-        ("project", "delete", status.HTTP_204_NO_CONTENT),
-        (None, "put", status.HTTP_403_FORBIDDEN),
-        (None, "delete", status.HTTP_403_FORBIDDEN),
-        ("project_b", "put", status.HTTP_403_FORBIDDEN),
-        ("project_b", "delete", status.HTTP_403_FORBIDDEN),
+        ("project", status.HTTP_200_OK),
+        (None, status.HTTP_403_FORBIDDEN),
+        ("project_b", status.HTTP_403_FORBIDDEN),
     ],
     ids=[
-        "own_project_field_update_allowed",
-        "own_project_field_delete_allowed",
-        "org_scoped_field_update_denied",
-        "org_scoped_field_delete_denied",
-        "other_project_field_update_denied",
-        "other_project_field_delete_denied",
+        "own_project_field_allowed",
+        "org_scoped_field_denied",
+        "other_project_field_denied",
     ],
 )
-def test_modify_model_metadata_field__project_admin__permission_check(
+def test_update_model_metadata_field__project_admin__returns_expected_status(
     staff_user: FFAdminUser,
     staff_client: APIClient,
     organisation: Organisation,
@@ -1068,14 +1054,66 @@ def test_modify_model_metadata_field__project_admin__permission_check(
     project_b: Project,
     feature_content_type: ContentType,
     field_project_attr: str | None,
-    action: str,
     expected_status: int,
     request: pytest.FixtureRequest,
 ) -> None:
     # Given - a project admin for `project`, and a MetadataModelField whose parent
     # MetadataField belongs to one of: `project`, `project_b`, or the org (None)
-    from projects.models import UserProjectPermission
+    UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
+    field_project = (
+        request.getfixturevalue(field_project_attr) if field_project_attr else None
+    )
+    field = MetadataField.objects.create(
+        name="model_field", type="int", organisation=organisation, project=field_project
+    )
+    model_field = MetadataModelField.objects.create(
+        field=field, content_type=feature_content_type
+    )
+    url = reverse(
+        "api-v1:organisations:metadata-model-fields-detail",
+        args=[organisation.id, model_field.id],
+    )
+    data = {
+        "field": field.id,
+        "content_type": feature_content_type.id,
+        "is_required_for": [],
+    }
 
+    # When
+    response = staff_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == expected_status
+
+
+@pytest.mark.parametrize(
+    "field_project_attr, expected_status",
+    [
+        ("project", status.HTTP_204_NO_CONTENT),
+        (None, status.HTTP_403_FORBIDDEN),
+        ("project_b", status.HTTP_403_FORBIDDEN),
+    ],
+    ids=[
+        "own_project_field_allowed",
+        "org_scoped_field_denied",
+        "other_project_field_denied",
+    ],
+)
+def test_delete_model_metadata_field__project_admin__returns_expected_status(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+    project_b: Project,
+    feature_content_type: ContentType,
+    field_project_attr: str | None,
+    expected_status: int,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given - a project admin for `project`, and a MetadataModelField whose parent
+    # MetadataField belongs to one of: `project`, `project_b`, or the org (None)
     UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
     field_project = (
         request.getfixturevalue(field_project_attr) if field_project_attr else None
@@ -1092,17 +1130,7 @@ def test_modify_model_metadata_field__project_admin__permission_check(
     )
 
     # When
-    if action == "put":
-        data = {
-            "field": field.id,
-            "content_type": feature_content_type.id,
-            "is_required_for": [],
-        }
-        response = staff_client.put(
-            url, data=json.dumps(data), content_type="application/json"
-        )
-    else:
-        response = staff_client.delete(url)
+    response = staff_client.delete(url)
 
     # Then
     assert response.status_code == expected_status

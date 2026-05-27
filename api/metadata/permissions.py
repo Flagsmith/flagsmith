@@ -74,14 +74,11 @@ class MetadataModelFieldPermissions(IsAuthenticated):
                 if view.action == "create":
                     field = MetadataField.objects.get(id=request.data.get("field"))
 
-                    if organisation_pk != field.organisation.id:
-                        return False
-
-                    if request.user.is_organisation_admin(organisation_pk):
-                        return True
-
-                    if field.project is not None:
-                        return request.user.is_project_admin(field.project)
+                    return (organisation_pk == field.organisation.id) and (
+                        request.user.is_organisation_admin(organisation_pk)
+                        or (project_id := field.project)
+                        and request.user.is_project_admin(project_id)
+                    )
 
         return False
 
@@ -90,10 +87,10 @@ class MetadataModelFieldPermissions(IsAuthenticated):
             return request.user.belongs_to(obj.field.organisation.id)
 
         if view.action in ("update", "destroy", "partial_update"):
-            if request.user.is_organisation_admin(obj.field.organisation):
-                return True
-
-            if obj.field.project is not None:
-                return request.user.is_project_admin(obj.field.project)
+            return (
+                request.user.is_organisation_admin(obj.field.organisation)
+                or (project_id := obj.field.project)
+                and request.user.is_project_admin(project_id)
+            )
 
         return False
