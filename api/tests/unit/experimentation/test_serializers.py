@@ -30,7 +30,7 @@ def test_create__no_existing__creates_new_connection(
     assert connection.name == f"Flagsmith Warehouse - {environment.name}"
 
 
-def test_create__soft_deleted_exists__resurrects_record(
+def test_create__soft_deleted_exists__creates_new_record(
     environment: Environment,
 ) -> None:
     # Given
@@ -51,7 +51,7 @@ def test_create__soft_deleted_exists__resurrects_record(
     connection = serializer.save(environment=environment)
 
     # Then
-    assert connection.pk == original_pk
+    assert connection.pk != original_pk
     assert connection.deleted_at is None
     assert connection.status == WarehouseConnectionStatus.CREATED
     assert connection.name == f"Flagsmith Warehouse - {environment.name}"
