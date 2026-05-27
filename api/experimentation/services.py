@@ -35,8 +35,8 @@ def _resolve_audit_log_author(
     user: FFAdminUser,
 ) -> dict[str, int | None]:
     if getattr(user, "is_master_api_key_user", False):
-        return {"author_id": None, "master_api_key_id": user.key.id}  # type: ignore[union-attr]
-    return {"author_id": user.pk, "master_api_key_id": None}  # type: ignore[union-attr]
+        return {"author_id": None, "master_api_key_id": user.key.id}
+    return {"author_id": user.pk, "master_api_key_id": None}
 
 
 def create_warehouse_audit_log(
