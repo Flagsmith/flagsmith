@@ -28,6 +28,7 @@ import {
 } from 'common/services/useSegment'
 import Utils from 'common/utils/utils'
 import AssociatedSegmentOverrides from 'components/segments/AssociatedSegmentOverrides'
+import { SegmentMembershipTotalBadge } from 'components/segments/SegmentMembershipBadge'
 import Button from 'components/base/forms/Button'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -582,7 +583,17 @@ const CreateSegment: FC<CreateSegmentType> = ({
               />
             </div>
           </TabItem>
-          <TabItem tabLabel='Identities'>
+          <TabItem
+            tabLabelString='Identities'
+            tabLabel={
+              <>
+                Identities
+                <SegmentMembershipTotalBadge
+                  memberships={segment.membership_counts}
+                />
+              </>
+            }
+          >
             <div className='my-4'>
               <CreateSegmentUsersTabContent
                 projectId={projectId}
@@ -595,6 +606,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 name={name}
                 searchInput={searchInput}
                 setSearchInput={setSearchInput}
+                memberships={segment.membership_counts}
               />
             </div>
           </TabItem>

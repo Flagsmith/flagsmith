@@ -93,7 +93,7 @@ def test_post__different_type_already_exists__returns_409(
     )
 
 
-def test_post__soft_deleted_exists__resurrects_and_returns_201(
+def test_post__soft_deleted_exists__creates_new_record_and_returns_201(
     admin_client: APIClient,
     environment: Environment,
     enable_features: EnableFeaturesFixture,
@@ -114,7 +114,7 @@ def test_post__soft_deleted_exists__resurrects_and_returns_201(
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["id"] == original_id
+    assert response.json()["id"] != original_id
     assert response.json()["status"] == "created"
 
 
@@ -487,7 +487,7 @@ def test_post__snowflake_no_name__auto_generates_name(
     assert response.json()["name"] == f"Snowflake Warehouse - {environment.name}"
 
 
-def test_post__snowflake_soft_deleted__resurrects_with_new_config(
+def test_post__snowflake_soft_deleted__creates_new_record_with_new_config(
     admin_client: APIClient,
     environment: Environment,
     enable_features: EnableFeaturesFixture,
@@ -516,7 +516,7 @@ def test_post__snowflake_soft_deleted__resurrects_with_new_config(
         warehouse_connection_url,
         data={
             "warehouse_type": "snowflake",
-            "name": "Resurrected",
+            "name": "Replacement",
             "config": {"account_identifier": "new.us-west-2"},
         },
         format="json",
@@ -525,9 +525,9 @@ def test_post__snowflake_soft_deleted__resurrects_with_new_config(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
-    assert data["id"] == original_id
+    assert data["id"] != original_id
     assert data["status"] == "created"
-    assert data["name"] == "Resurrected"
+    assert data["name"] == "Replacement"
     assert data["config"]["account_identifier"] == "new.us-west-2"
 
 
