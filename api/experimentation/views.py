@@ -1,14 +1,17 @@
 import logging
 from typing import Any
 
+from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
-from rest_framework import mixins, status
+from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 
+from app.pagination import CustomPagination
+from environments.models import Environment
 from environments.views import NestedEnvironmentViewSet
 from experimentation.models import (
     Experiment,
@@ -100,11 +103,16 @@ class ExperimentViewSet(
     mixins.DestroyModelMixin,
 ):
     serializer_class = ExperimentSerializer
-    pagination_class = None
+    pagination_class = CustomPagination
     permission_classes = [IsAuthenticated, ExperimentPermission]
     model_class = Experiment
     lookup_field = "id"
     lookup_url_kwarg = "experiment_id"
+
+    def _get_environment(self) -> Environment:
+        if not hasattr(self, "_environment"):
+            self._environment = super()._get_environment()
+        return self._environment
 
     def get_serializer_context(self) -> dict[str, Any]:
         context = super().get_serializer_context()
@@ -114,9 +122,13 @@ class ExperimentViewSet(
     def get_queryset(self) -> "QuerySet[Experiment]":
         qs = super().get_queryset()
         status_filter = self.request.query_params.get("status")
-        if status_filter:
-            qs = qs.filter(status=status_filter)
-        return qs
+        if not status_filter:
+            return qs
+        if status_filter not in ExperimentStatus.values:
+            raise serializers.ValidationError(
+                {"status": f"'{status_filter}' is not a valid status."}
+            )
+        return qs.filter(status=status_filter)
 
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         serializer = self.get_serializer(data=request.data)
@@ -137,26 +149,54 @@ class ExperimentViewSet(
                 status=status.HTTP_409_CONFLICT,
             )
 
-        self.perform_create(serializer)
+        try:
+            self.perform_create(serializer)
+        except IntegrityError:
+            return Response(
+                {"detail": "An active experiment already exists for this feature."},
+                status=status.HTTP_409_CONFLICT,
+            )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer: BaseSerializer[Experiment]) -> None:
-        experiment: Experiment = serializer.save(environment=self._get_environment())
-        create_experiment_audit_log(
-            experiment, self._get_user(self.request), action="created"
-        )
+        with transaction.atomic():
+            experiment: Experiment = serializer.save(
+                environment=self._get_environment()
+            )
+            create_experiment_audit_log(
+                experiment, self._get_user(self.request), action="created"
+            )
 
     def perform_update(self, serializer: BaseSerializer[Experiment]) -> None:
-        experiment: Experiment = serializer.save()
-        create_experiment_audit_log(
-            experiment, self._get_user(self.request), action="updated"
-        )
+        changed_fields = {
+            field
+            for field, value in serializer.validated_data.items()
+            if getattr(serializer.instance, field, None) != value
+        }
+        if not changed_fields:
+            serializer.save()
+            return
+        with transaction.atomic():
+            experiment: Experiment = serializer.save()
+            create_experiment_audit_log(
+                experiment, self._get_user(self.request), action="updated"
+            )
 
     def perform_destroy(self, instance: Experiment) -> None:
-        create_experiment_audit_log(
-            instance, self._get_user(self.request), action="deleted"
-        )
-        instance.delete()
+        if instance.status == ExperimentStatus.RUNNING:
+            raise serializers.ValidationError(
+                {
+                    "detail": (
+                        "Cannot delete a running experiment. "
+                        "Pause or complete it first."
+                    )
+                }
+            )
+        with transaction.atomic():
+            create_experiment_audit_log(
+                instance, self._get_user(self.request), action="deleted"
+            )
+            instance.delete()
 
     @action(detail=True, methods=["post"])
     def start(self, request: Request, **kwargs: object) -> Response:
