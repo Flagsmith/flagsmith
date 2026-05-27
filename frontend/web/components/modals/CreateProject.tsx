@@ -137,12 +137,11 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
       setAssigningAdmins(false)
       if (failures) {
         toast(
-          `Failed to assign ${failures} project administrator${
+          `Project created — ${failures} admin assignment${
             failures > 1 ? 's' : ''
-          }. Project Settings → Members lets you retry.`,
+          } failed. Retry in Project Settings → Members.`,
           'danger',
         )
-        return
       }
     }
     closeModal()
@@ -164,7 +163,8 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
         const busy = isSaving || assigningAdmins
         const showUserSelector = !!eligibleAdmins.length
         const showRoleSelector = !!hasRbac && !!roles.length
-        const showAdminSelector = showUserSelector || showRoleSelector
+        const showAdminSelector =
+          (showUserSelector || showRoleSelector) && !disableCreate
 
         const inner: ReactElement = (
           <div className='p-4'>
@@ -216,9 +216,7 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
                   {showUserSelector && (
                     <div className='mb-3'>
                       <SettingsButton
-                        onClick={() =>
-                          !disableCreate && setShowUsers(!showUsers)
-                        }
+                        onClick={() => setShowUsers(!showUsers)}
                         dropdown={
                           <UserSelect
                             users={eligibleAdmins}
@@ -234,7 +232,7 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
                           />
                         }
                         content={
-                          <Row style={{ rowGap: '12px' }}>
+                          <Row className='row-gap-3'>
                             {selectedAdmins.map((u) => (
                               <Row
                                 key={u.id}
@@ -266,9 +264,7 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
                   {showRoleSelector && (
                     <div className='mb-3'>
                       <SettingsButton
-                        onClick={() =>
-                          !disableCreate && setShowRoles(!showRoles)
-                        }
+                        onClick={() => setShowRoles(!showRoles)}
                         dropdown={
                           <MyRoleSelect
                             orgId={organisationId!}
@@ -286,7 +282,7 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
                           />
                         }
                         content={
-                          <Row style={{ rowGap: '12px' }}>
+                          <Row className='row-gap-3'>
                             {selectedRoles.map((r) => (
                               <Row
                                 key={r.id}
