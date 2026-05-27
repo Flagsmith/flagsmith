@@ -96,6 +96,7 @@ const CreateEnvironmentPage: React.FC = () => {
   const assignEnvironmentAdmins = async (environment: Environment) => {
     const userIds = adminIdsRef.current
     const roleIds = adminRoleIdsRef.current
+    const orgId = AccountStore.getOrganisation()?.id
     const userRequests = userIds.map((userId) =>
       createUserPermission({
         body: { admin: true, permissions: [], user: userId },
@@ -105,7 +106,7 @@ const CreateEnvironmentPage: React.FC = () => {
     const roleRequests = roleIds.map((roleId) =>
       createRolePermission({
         body: { admin: true, environment: environment.id, permissions: [] },
-        organisation_id: organisationId!,
+        organisation_id: orgId!,
         role_id: roleId,
       }).unwrap(),
     )
