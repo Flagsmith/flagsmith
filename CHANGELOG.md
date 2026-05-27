@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.236.0](https://github.com/Flagsmith/flagsmith/compare/v2.235.0...v2.236.0) (2026-05-27)
+
+
+### Features
+
+* added type filter on get feature endpoint ([#7598](https://github.com/Flagsmith/flagsmith/issues/7598)) ([18230bf](https://github.com/Flagsmith/flagsmith/commit/18230bf7bb8a8a3165522d5bd126774bb1fd6c98))
+
+
+### Bug Fixes
+
+* code references count returns 0 after unchanged rescan ([#7599](https://github.com/Flagsmith/flagsmith/issues/7599)) ([3fa3d9a](https://github.com/Flagsmith/flagsmith/commit/3fa3d9aad17183865485f1f94a387169b31e2f53))
+* **experimentation:** always insert new WarehouseConnection on create ([#7605](https://github.com/Flagsmith/flagsmith/issues/7605)) ([38e4a09](https://github.com/Flagsmith/flagsmith/commit/38e4a0939454969a3236e5bd7f7962fffeb0ed3f))
+* **Segment membership:** Read counts off segment.membership_counts ([#7601](https://github.com/Flagsmith/flagsmith/issues/7601)) ([b000f47](https://github.com/Flagsmith/flagsmith/commit/b000f47e629096b1e89d214be19fa5c962a18cbc))
+* **Segment membership:** Zero out (segment, env) pairs that stopped matching ([#7600](https://github.com/Flagsmith/flagsmith/issues/7600)) ([2a13539](https://github.com/Flagsmith/flagsmith/commit/2a135393d279224dc669010a8170f48aabdd579b))
+
 ## [2.235.0](https://github.com/Flagsmith/flagsmith/compare/v2.234.2...v2.235.0) (2026-05-26)
 
 
