@@ -1743,15 +1743,15 @@ wheels = [
 
 [[package]]
 name = "flagsmith-sql-flag-engine"
-version = "0.1.0"
+version = "0.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "flagsmith-flag-engine" },
     { name = "jsonpath-rfc9535" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/26/6f/9037e90f3b0cb16a25617422f6e1261eedbc3fbdb038c95a363c7a8aacaa/flagsmith_sql_flag_engine-0.1.0.tar.gz", hash = "sha256:bf6377b2d73edbe90f3bcfb8821301b58f0b9eca8a396882b39aea376cbb8c8e", size = 17853, upload-time = "2026-05-20T13:02:17.905Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b5/0f/e14afc677c1c74526057b40dabd17d701788b7e31b60bfbaca592d891b42/flagsmith_sql_flag_engine-0.1.1.tar.gz", hash = "sha256:faa10ae559766e142496964971b612a4ad6f463f92fce318380766aef4607c90", size = 17980, upload-time = "2026-05-27T14:45:32.01Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/df/68/7339fbfe64c3d1bfd35d942a8df68c712f81a266b7fb2a3e98283b84c08e/flagsmith_sql_flag_engine-0.1.0-py3-none-any.whl", hash = "sha256:4c5a0671ba73ec8daab7c21592c1df0dd56c839fdf8af1387322a93038b62fbd", size = 21617, upload-time = "2026-05-20T13:02:16.331Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/b9/b831078e3f4e10e2efdc8a42eb79395858a57d56a91c79c358d4f59b3c62/flagsmith_sql_flag_engine-0.1.1-py3-none-any.whl", hash = "sha256:66dae61a54bab6680562b7eccceb829f6661381a3af47eb38ffc110a707c794d", size = 21738, upload-time = "2026-05-27T14:45:30.763Z" },
 ]
 
 [[package]]
