@@ -989,5 +989,7 @@ export type Req = {
     environmentId: string
     body: { name: string; hypothesis: string; feature: number }
   }
+  experimentAction: { environmentId: string; experimentId: number }
+  deleteExperiment: { environmentId: string; experimentId: number }
   // END OF TYPES
 }

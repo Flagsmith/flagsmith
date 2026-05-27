@@ -573,11 +573,19 @@ export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
 
 export type ExperimentStatus = 'created' | 'running' | 'paused' | 'completed'
 
+export type ExperimentFeature = {
+  id: number
+  name: string
+  type: string
+  initial_value: string | null
+  multivariate_options: MultivariateOption[]
+}
+
 export type Experiment = {
   id: number
   name: string
   hypothesis: string
-  feature: number
+  feature: ExperimentFeature
   status: ExperimentStatus
   created_at: string
   updated_at: string

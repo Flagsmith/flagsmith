@@ -1,0 +1,49 @@
+.experiments-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+
+  th {
+    padding: 10px 16px;
+    font-size: var(--font-body-sm-size);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    background: var(--color-surface-subtle);
+    text-align: left;
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  td {
+    padding: 14px 16px;
+    font-size: var(--font-body-sm-size);
+    color: var(--color-text-default);
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  &__row {
+    transition: background var(--duration-fast) var(--easing-standard);
+
+    &:hover {
+      background: var(--color-surface-hover);
+    }
+  }
+
+  &__flag-name {
+    font-size: var(--font-body-sm-size);
+    color: var(--color-text-secondary);
+    background: var(--color-surface-subtle);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+  }
+
+  &__actions {
+    text-align: right;
+  }
+}
