@@ -10,6 +10,7 @@ from rest_framework.test import APIClient
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
+from experimentation.constants import EXPERIMENT_FLAG
 from experimentation.models import Experiment, ExperimentStatus
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
@@ -19,8 +20,6 @@ if TYPE_CHECKING:
     from projects.models import Project
 
 pytestmark = pytest.mark.django_db
-
-EXPERIMENT_FLAG = "experimental_flags"
 
 
 def _list_url(environment: Environment) -> str:
