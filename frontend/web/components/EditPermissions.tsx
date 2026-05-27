@@ -1092,8 +1092,11 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         <TabItem tabLabel='Users'>
           <OrganisationProvider>
             {({ isLoading, users }) => {
+              const permissionsByUserId = new Map(
+                permissions?.map((p) => [p.user.id, p]),
+              )
               const sortableUsers = (users || []).map((user: User) => {
-                const matching = permissions?.find((v) => v.user.id === user.id)
+                const matching = permissionsByUserId.get(user.id)
                 let sortRole = 'Regular User'
                 if (user.role === 'ADMIN') {
                   sortRole = 'Organisation Administrator'
