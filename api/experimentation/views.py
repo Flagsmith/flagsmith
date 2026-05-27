@@ -113,12 +113,16 @@ class ExperimentViewSet(
         return context
 
     def get_serializer_class(self) -> type[BaseSerializer[Experiment]]:
-        if self.action in ("list", "retrieve"):
+        if self.action in ("list", "retrieve", "start", "pause", "complete"):
             return ExperimentListSerializer
         return ExperimentSerializer
 
     def get_queryset(self) -> "QuerySet[Experiment]":
         qs = super().get_queryset()
+        if self.action in ("list", "retrieve"):
+            qs = qs.select_related("feature").prefetch_related(
+                "feature__multivariate_options"
+            )
         status_filter = self.request.query_params.get("status")
         if status_filter:
             qs = qs.filter(status=status_filter)
