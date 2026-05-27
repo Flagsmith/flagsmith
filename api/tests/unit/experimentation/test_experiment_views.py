@@ -3,7 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+from django.db import IntegrityError
 from django.urls import reverse
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -629,3 +631,32 @@ def test_patch__no_change__skips_audit_log(
         related_object_type=RelatedObjectType.EXPERIMENT.name
     ).count()
     assert audit_count_after == audit_count_before
+
+
+def test_post__concurrent_create_race__returns_409(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    mocker.patch(
+        "experimentation.views.ExperimentViewSet.perform_create",
+        side_effect=IntegrityError(),
+    )
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "Race",
+            "hypothesis": "Should 409",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_409_CONFLICT
