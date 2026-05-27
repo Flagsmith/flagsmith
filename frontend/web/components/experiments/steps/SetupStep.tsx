@@ -91,8 +91,8 @@ const SetupStep: FC<SetupStepProps> = ({
 
       <ContentCard title='Feature flag'>
         <p className='text-muted fs-small mb-0'>
-          The flag you&apos;re experimenting on. Variations are read-only
-          &mdash; they&apos;re defined on the flag itself.
+          The flag you&apos;re experimenting on. Variations are read-only,
+          defined on the flag itself.
         </p>
 
         <div className='wizard-field'>

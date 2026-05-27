@@ -46,7 +46,7 @@ const VariationTable: FC<VariationTableProps> = ({
         </div>
         <div className='variation-table__cell variation-table__cell--desc'>
           <span className='variation-table__desc-text'>
-            Flag&apos;s base value &mdash; the baseline for comparison
+            Flag&apos;s base value
           </span>
         </div>
         <div className='variation-table__cell variation-table__cell--value'>
