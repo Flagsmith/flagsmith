@@ -1,7 +1,7 @@
 import logging
 from typing import Any
 
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError
 from django.db.models import QuerySet
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
@@ -159,28 +159,22 @@ class ExperimentViewSet(
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer: BaseSerializer[Experiment]) -> None:
-        with transaction.atomic():
-            experiment: Experiment = serializer.save(
-                environment=self._get_environment()
-            )
-            create_experiment_audit_log(
-                experiment, self._get_user(self.request), action="created"
-            )
+        experiment: Experiment = serializer.save(environment=self._get_environment())
+        create_experiment_audit_log(
+            experiment, self._get_user(self.request), action="created"
+        )
 
     def perform_update(self, serializer: BaseSerializer[Experiment]) -> None:
-        changed_fields = {
-            field
+        has_changes = any(
+            getattr(serializer.instance, field, None) != value
             for field, value in serializer.validated_data.items()
-            if getattr(serializer.instance, field, None) != value
-        }
-        if not changed_fields:
-            serializer.save()
+        )
+        if not has_changes:
             return
-        with transaction.atomic():
-            experiment: Experiment = serializer.save()
-            create_experiment_audit_log(
-                experiment, self._get_user(self.request), action="updated"
-            )
+        experiment: Experiment = serializer.save()
+        create_experiment_audit_log(
+            experiment, self._get_user(self.request), action="updated"
+        )
 
     def perform_destroy(self, instance: Experiment) -> None:
         if instance.status == ExperimentStatus.RUNNING:
@@ -192,11 +186,10 @@ class ExperimentViewSet(
                     )
                 }
             )
-        with transaction.atomic():
-            create_experiment_audit_log(
-                instance, self._get_user(self.request), action="deleted"
-            )
-            instance.delete()
+        create_experiment_audit_log(
+            instance, self._get_user(self.request), action="deleted"
+        )
+        instance.delete()
 
     @action(detail=True, methods=["post"])
     def start(self, request: Request, **kwargs: object) -> Response:

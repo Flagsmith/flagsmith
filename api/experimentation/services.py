@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import typing
 
-from django.db import transaction
 from django.utils import timezone
 
 from audit.models import AuditLog
@@ -98,7 +97,6 @@ def transition_experiment_status(
     elif target_status == ExperimentStatus.COMPLETED:
         experiment.ended_at = timezone.now()
 
-    with transaction.atomic():
-        experiment.save()
-        create_experiment_audit_log(experiment, user, action=target_status)
+    experiment.save()
+    create_experiment_audit_log(experiment, user, action=target_status)
     return experiment
