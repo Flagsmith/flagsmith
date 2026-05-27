@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import typing
 
+from django.utils import timezone
+
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from experimentation.constants import EXPERIMENT_FLAG, WAREHOUSE_CONNECTION_FLAG
@@ -29,6 +31,14 @@ def is_experiment_feature_enabled(organisation: Organisation) -> bool:
     )
 
 
+def _resolve_audit_log_author(
+    user: FFAdminUser,
+) -> dict[str, int | None]:
+    if getattr(user, "is_master_api_key_user", False):
+        return {"author_id": None, "master_api_key_id": user.key.id}  # type: ignore[union-attr]
+    return {"author_id": user.pk, "master_api_key_id": None}  # type: ignore[union-attr]
+
+
 def create_warehouse_audit_log(
     connection: WarehouseConnection,
     user: FFAdminUser,
@@ -38,7 +48,7 @@ def create_warehouse_audit_log(
     AuditLog.objects.create(
         environment=connection.environment,
         project=connection.environment.project,
-        author=user,
+        **_resolve_audit_log_author(user),
         related_object_id=connection.id,
         related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
         log=(
@@ -57,7 +67,7 @@ def create_experiment_audit_log(
     AuditLog.objects.create(
         environment=experiment.environment,
         project=experiment.environment.project,
-        author=user,
+        **_resolve_audit_log_author(user),
         related_object_id=experiment.id,
         related_object_type=RelatedObjectType.EXPERIMENT.name,
         log=(
@@ -65,3 +75,28 @@ def create_experiment_audit_log(
             f"{experiment.environment.name}"
         ),
     )
+
+
+def transition_experiment_status(
+    experiment: Experiment,
+    target_status: str,
+    user: FFAdminUser,
+) -> Experiment:
+    from experimentation.models import VALID_STATUS_TRANSITIONS, ExperimentStatus
+
+    valid_targets = VALID_STATUS_TRANSITIONS.get(experiment.status, set())
+    if target_status not in valid_targets:
+        raise ValueError(
+            f"Cannot transition from '{experiment.status}' to '{target_status}'."
+        )
+
+    experiment.status = target_status
+
+    if target_status == ExperimentStatus.RUNNING and not experiment.started_at:
+        experiment.started_at = timezone.now()
+    elif target_status == ExperimentStatus.COMPLETED:
+        experiment.ended_at = timezone.now()
+
+    experiment.save()
+    create_experiment_audit_log(experiment, user, action=target_status)
+    return experiment

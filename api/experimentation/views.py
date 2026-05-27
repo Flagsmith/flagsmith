@@ -10,7 +10,6 @@ from rest_framework.serializers import BaseSerializer
 
 from environments.views import NestedEnvironmentViewSet
 from experimentation.models import (
-    VALID_STATUS_TRANSITIONS,
     Experiment,
     ExperimentStatus,
     WarehouseConnection,
@@ -26,6 +25,7 @@ from experimentation.serializers import (
 from experimentation.services import (
     create_experiment_audit_log,
     create_warehouse_audit_log,
+    transition_experiment_status,
 )
 from users.models import FFAdminUser
 
@@ -170,22 +170,12 @@ class ExperimentViewSet(
 
     def _transition_status(self, target_status: str) -> Response:
         experiment: Experiment = self.get_object()
-        valid_targets = VALID_STATUS_TRANSITIONS.get(experiment.status, set())
-        if target_status not in valid_targets:
-            return Response(
-                {
-                    "detail": (
-                        f"Cannot transition from '{experiment.status}' "
-                        f"to '{target_status}'."
-                    )
-                },
-                status=400,
+        try:
+            experiment = transition_experiment_status(
+                experiment, target_status, self._get_user(self.request)
             )
-        experiment.status = target_status
-        experiment.save()
-        create_experiment_audit_log(
-            experiment, self._get_user(self.request), action=target_status
-        )
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=400)
         serializer = self.get_serializer(experiment)
         return Response(serializer.data)
 
