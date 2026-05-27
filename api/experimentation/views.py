@@ -20,6 +20,7 @@ from experimentation.permissions import (
     WarehouseConnectionPermission,
 )
 from experimentation.serializers import (
+    ExperimentListSerializer,
     ExperimentSerializer,
     WarehouseConnectionSerializer,
 )
@@ -110,6 +111,11 @@ class ExperimentViewSet(
         context = super().get_serializer_context()
         context["environment"] = self._get_environment()
         return context
+
+    def get_serializer_class(self) -> type[BaseSerializer[Experiment]]:
+        if self.action in ("list", "retrieve"):
+            return ExperimentListSerializer
+        return ExperimentSerializer
 
     def get_queryset(self) -> "QuerySet[Experiment]":
         qs = super().get_queryset()

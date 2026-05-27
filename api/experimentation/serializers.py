@@ -11,6 +11,8 @@ from experimentation.models import (
 )
 from experimentation.types import SNOWFLAKE_DEFAULTS, SnowflakeConfig
 from features.feature_types import MULTIVARIATE
+from features.models import Feature
+from features.multivariate.serializers import NestedMultivariateFeatureOptionSerializer
 
 
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -133,3 +135,18 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
                 {"feature": "Cannot change the feature of an existing experiment."}
             )
         return attrs
+
+
+class ExperimentFeatureSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    multivariate_options = NestedMultivariateFeatureOptionSerializer(
+        many=True, read_only=True
+    )
+
+    class Meta:
+        model = Feature
+        fields = ("id", "name", "type", "initial_value", "multivariate_options")
+        read_only_fields = fields
+
+
+class ExperimentListSerializer(ExperimentSerializer):
+    feature = ExperimentFeatureSerializer(read_only=True)

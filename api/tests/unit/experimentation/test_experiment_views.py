@@ -269,6 +269,53 @@ def test_get_list__with_experiments__returns_all(
     assert response.json()[0]["id"] == experiment.id
 
 
+def test_get_list__with_experiments__returns_nested_feature(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    multivariate_feature: Feature,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(_list_url(environment))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert len(data) == 1
+    feature_data = data[0]["feature"]
+    assert isinstance(feature_data, dict)
+    assert feature_data["id"] == multivariate_feature.id
+    assert feature_data["name"] == multivariate_feature.name
+    assert feature_data["type"] == "MULTIVARIATE"
+    assert feature_data["initial_value"] == "control"
+    assert len(feature_data["multivariate_options"]) == 3
+
+
+def test_get_detail__exists__returns_nested_feature(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    multivariate_feature: Feature,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(_detail_url(environment, experiment))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    feature_data = response.json()["feature"]
+    assert isinstance(feature_data, dict)
+    assert feature_data["id"] == multivariate_feature.id
+    assert feature_data["name"] == multivariate_feature.name
+
+
 def test_get_list__empty__returns_200(
     admin_client_new: APIClient,
     environment: Environment,
