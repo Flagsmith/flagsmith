@@ -25,7 +25,6 @@ import UserGroupList from './UserGroupList'
 import { PermissionLevel, Req, PermissionRoleType } from 'common/types/requests'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Icon from './icons/Icon'
 import {
   useCreateRolePermissionsMutation,
   useGetRoleEnvironmentPermissionsQuery,
@@ -67,6 +66,7 @@ import RemoveViewPermissionModal from './RemoveViewPermissionModal'
 import { useHistory } from 'react-router-dom'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import Permissions from './inspect-permissions/Permissions'
+import UserAction from './UserAction'
 import {
   decorateUsersForSort,
   userTableSorting,
@@ -1204,31 +1204,19 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                   )}
                                   <div
                                     style={{ width: '80px' }}
-                                    className='text-center'
+                                    className='table-column d-flex justify-content-end'
                                   >
                                     {role !== 'ADMIN' && (
-                                      <Row className='justify-content-center'>
-                                        {hasRbac && (
-                                          <span
-                                            className='clickable mr-3'
-                                            onClick={(e) => {
-                                              e.stopPropagation()
-                                              inspectUserPermissions(user)
-                                            }}
-                                          >
-                                            <Icon
-                                              name='search'
-                                              width={20}
-                                              fill='#656D7B'
-                                            />
-                                          </span>
-                                        )}
-                                        <Icon
-                                          name='setting'
-                                          width={20}
-                                          fill='#656D7B'
-                                        />
-                                      </Row>
+                                      <UserAction
+                                        canEdit
+                                        canRemove={false}
+                                        canInspectPermissions={hasRbac}
+                                        onEdit={() => editUserPermissions(user)}
+                                        onRemove={() => {}}
+                                        onInspectPermissions={() =>
+                                          inspectUserPermissions(user)
+                                        }
+                                      />
                                     )}
                                   </div>
                                 </Row>
