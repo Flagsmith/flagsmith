@@ -45,7 +45,7 @@ def _action_url(environment: Environment, experiment: Experiment, action: str) -
 
 
 def test_post__valid_multivariate_feature__returns_201(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
     enable_features: EnableFeaturesFixture,
@@ -54,7 +54,7 @@ def test_post__valid_multivariate_feature__returns_201(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    response = admin_client.post(
+    response = admin_client_new.post(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
@@ -75,7 +75,7 @@ def test_post__valid_multivariate_feature__returns_201(
 
 
 def test_post__non_multivariate_feature__returns_400(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
     enable_features: EnableFeaturesFixture,
@@ -84,7 +84,7 @@ def test_post__non_multivariate_feature__returns_400(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    response = admin_client.post(
+    response = admin_client_new.post(
         _list_url(environment),
         data={
             "feature": feature.id,
@@ -99,7 +99,7 @@ def test_post__non_multivariate_feature__returns_400(
 
 
 def test_post__feature_from_different_project__returns_400(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     enable_features: EnableFeaturesFixture,
     organisation_one_project_one: Project,
@@ -114,7 +114,7 @@ def test_post__feature_from_different_project__returns_400(
     )
 
     # When
-    response = admin_client.post(
+    response = admin_client_new.post(
         _list_url(environment),
         data={
             "feature": other_feature.id,
@@ -129,7 +129,7 @@ def test_post__feature_from_different_project__returns_400(
 
 
 def test_post__active_experiment_exists__returns_409(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     multivariate_feature: Feature,
@@ -139,7 +139,7 @@ def test_post__active_experiment_exists__returns_409(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    response = admin_client.post(
+    response = admin_client_new.post(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
@@ -154,7 +154,7 @@ def test_post__active_experiment_exists__returns_409(
 
 
 def test_post__completed_experiment_exists__returns_201(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     multivariate_feature: Feature,
@@ -166,7 +166,7 @@ def test_post__completed_experiment_exists__returns_201(
     experiment.save()
 
     # When
-    response = admin_client.post(
+    response = admin_client_new.post(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
@@ -180,29 +180,17 @@ def test_post__completed_experiment_exists__returns_201(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-@pytest.mark.parametrize(
-    "client_fixture, enable_flag, expected_status",
-    [
-        ("staff_client", True, status.HTTP_403_FORBIDDEN),
-        ("admin_client", False, status.HTTP_403_FORBIDDEN),
-    ],
-)
-def test_post__insufficient_permissions__returns_403(
-    request: pytest.FixtureRequest,
+def test_post__staff_user_with_flag__returns_403(
+    staff_client: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
     enable_features: EnableFeaturesFixture,
-    client_fixture: str,
-    enable_flag: bool,
-    expected_status: int,
 ) -> None:
     # Given
-    api_client: APIClient = request.getfixturevalue(client_fixture)
-    if enable_flag:
-        enable_features(EXPERIMENT_FLAG)
+    enable_features(EXPERIMENT_FLAG)
 
     # When
-    response = api_client.post(
+    response = staff_client.post(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
@@ -213,11 +201,33 @@ def test_post__insufficient_permissions__returns_403(
     )
 
     # Then
-    assert response.status_code == expected_status
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_post__admin_without_flag__returns_403(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given — feature flag not enabled
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "No access",
+            "hypothesis": "Nope",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_post__nonexistent_environment__returns_403(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
@@ -228,7 +238,7 @@ def test_post__nonexistent_environment__returns_403(
     )
 
     # When
-    response = admin_client.post(
+    response = admin_client_new.post(
         url,
         data={
             "feature": 999,
@@ -243,7 +253,7 @@ def test_post__nonexistent_environment__returns_403(
 
 
 def test_get_list__with_experiments__returns_all(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     enable_features: EnableFeaturesFixture,
@@ -252,7 +262,7 @@ def test_get_list__with_experiments__returns_all(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    response = admin_client.get(_list_url(environment))
+    response = admin_client_new.get(_list_url(environment))
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -261,7 +271,7 @@ def test_get_list__with_experiments__returns_all(
 
 
 def test_get_list__empty__returns_200(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     enable_features: EnableFeaturesFixture,
 ) -> None:
@@ -269,7 +279,7 @@ def test_get_list__empty__returns_200(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    response = admin_client.get(_list_url(environment))
+    response = admin_client_new.get(_list_url(environment))
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -286,7 +296,7 @@ def test_get_list__empty__returns_200(
     ],
 )
 def test_get_list__filter_by_status__returns_filtered(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     enable_features: EnableFeaturesFixture,
@@ -297,7 +307,7 @@ def test_get_list__filter_by_status__returns_filtered(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    response = admin_client.get(_list_url(environment), {"status": filter_status})
+    response = admin_client_new.get(_list_url(environment), {"status": filter_status})
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -305,7 +315,7 @@ def test_get_list__filter_by_status__returns_filtered(
 
 
 def test_get_detail__exists__returns_200(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     enable_features: EnableFeaturesFixture,
@@ -314,7 +324,7 @@ def test_get_detail__exists__returns_200(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    response = admin_client.get(_detail_url(environment, experiment))
+    response = admin_client_new.get(_detail_url(environment, experiment))
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -329,7 +339,7 @@ def test_get_detail__exists__returns_200(
     ],
 )
 def test_patch__update_field__returns_200(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     enable_features: EnableFeaturesFixture,
@@ -340,7 +350,7 @@ def test_patch__update_field__returns_200(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         _detail_url(environment, experiment),
         data={field: value},
         format="json",
@@ -352,7 +362,7 @@ def test_patch__update_field__returns_200(
 
 
 def test_patch__change_feature__returns_400(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     project: Project,
@@ -368,7 +378,7 @@ def test_patch__change_feature__returns_400(
     )
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         _detail_url(environment, experiment),
         data={"feature": other_feature.id},
         format="json",
@@ -394,7 +404,7 @@ def test_patch__change_feature__returns_400(
     ],
 )
 def test_action__status_transition__returns_expected(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     enable_features: EnableFeaturesFixture,
@@ -408,14 +418,14 @@ def test_action__status_transition__returns_expected(
     experiment.save()
 
     # When
-    response = admin_client.post(_action_url(environment, experiment, action_name))
+    response = admin_client_new.post(_action_url(environment, experiment, action_name))
 
     # Then
     assert response.status_code == expected_status_code
 
 
 def test_action__start__sets_started_at(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     enable_features: EnableFeaturesFixture,
@@ -424,7 +434,7 @@ def test_action__start__sets_started_at(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    response = admin_client.post(_action_url(environment, experiment, "start"))
+    response = admin_client_new.post(_action_url(environment, experiment, "start"))
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -432,7 +442,7 @@ def test_action__start__sets_started_at(
 
 
 def test_action__complete__sets_ended_at(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     enable_features: EnableFeaturesFixture,
@@ -443,7 +453,7 @@ def test_action__complete__sets_ended_at(
     experiment.save()
 
     # When
-    response = admin_client.post(_action_url(environment, experiment, "complete"))
+    response = admin_client_new.post(_action_url(environment, experiment, "complete"))
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -451,7 +461,7 @@ def test_action__complete__sets_ended_at(
 
 
 def test_delete__exists__returns_204_and_soft_deletes(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     enable_features: EnableFeaturesFixture,
@@ -460,7 +470,7 @@ def test_delete__exists__returns_204_and_soft_deletes(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    response = admin_client.delete(_detail_url(environment, experiment))
+    response = admin_client_new.delete(_detail_url(environment, experiment))
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -469,7 +479,7 @@ def test_delete__exists__returns_204_and_soft_deletes(
 
 
 def test_post__valid_create__creates_audit_log(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
     enable_features: EnableFeaturesFixture,
@@ -478,7 +488,7 @@ def test_post__valid_create__creates_audit_log(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    admin_client.post(
+    admin_client_new.post(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
@@ -497,7 +507,7 @@ def test_post__valid_create__creates_audit_log(
 
 
 def test_patch__valid_update__creates_audit_log(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     enable_features: EnableFeaturesFixture,
@@ -506,7 +516,7 @@ def test_patch__valid_update__creates_audit_log(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    admin_client.patch(
+    admin_client_new.patch(
         _detail_url(environment, experiment),
         data={"name": "Renamed"},
         format="json",
@@ -521,7 +531,7 @@ def test_patch__valid_update__creates_audit_log(
 
 
 def test_action__start__creates_audit_log(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     enable_features: EnableFeaturesFixture,
@@ -530,7 +540,7 @@ def test_action__start__creates_audit_log(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    admin_client.post(_action_url(environment, experiment, "start"))
+    admin_client_new.post(_action_url(environment, experiment, "start"))
 
     # Then
     audit = AuditLog.objects.filter(
@@ -541,7 +551,7 @@ def test_action__start__creates_audit_log(
 
 
 def test_delete__valid_delete__creates_audit_log(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     enable_features: EnableFeaturesFixture,
@@ -550,7 +560,7 @@ def test_delete__valid_delete__creates_audit_log(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    admin_client.delete(_detail_url(environment, experiment))
+    admin_client_new.delete(_detail_url(environment, experiment))
 
     # Then
     audit = AuditLog.objects.filter(
