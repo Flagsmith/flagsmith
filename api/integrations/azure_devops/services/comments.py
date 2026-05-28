@@ -243,9 +243,7 @@ def post_state_change_comment_for_feature_state(
     so projects without ADO don't pay for a queue entry and a
     ``AzureDevOpsConfiguration`` lookup per feature-state save.
     """
-    # `integrations.azure_devops.tasks` lands in a later commit; defer the
-    # import so this module loads cleanly until it does.
-    from integrations.azure_devops.tasks import (  # type: ignore[import-not-found]
+    from integrations.azure_devops.tasks import (
         post_azure_devops_state_change_comment,
     )
 
