@@ -10,6 +10,7 @@ class TagType(models.Choices):
     GITHUB = "GITHUB"
     UNHEALTHY = "UNHEALTHY"
     GITLAB = "GITLAB"
+    AZURE_DEVOPS = "AZURE_DEVOPS"
 
 
 class Tag(AbstractBaseExportableModel):
