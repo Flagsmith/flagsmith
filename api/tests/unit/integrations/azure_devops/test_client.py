@@ -6,6 +6,7 @@ import responses
 
 from integrations.azure_devops.client import (
     list_projects,
+    list_pull_requests,
     list_repositories,
 )
 from integrations.azure_devops.client.exceptions import (
@@ -354,3 +355,103 @@ def test_list_repositories__missing_default_branch__defaults_to_empty_string() -
 
     # Then — ADO omits `defaultBranch` for repos with no commits yet
     assert repos[0]["default_branch"] == ""
+
+
+@responses.activate
+def test_list_pull_requests__default_params__filters_state_active() -> None:
+    # Given
+    ado_project_id = "00000000-0000-0000-0000-0000000000aa"
+    responses.get(
+        f"{ORG_URL}/{ado_project_id}/_apis/git/pullrequests",
+        json={
+            "value": [
+                {
+                    "pullRequestId": 42,
+                    "title": "Add feature X",
+                    "status": "active",
+                    "isDraft": False,
+                    "repository": {"name": "frontend"},
+                    "_links": {
+                        "web": {
+                            "href": "https://dev.azure.com/test-org/proj/_git/frontend/pullrequest/42"
+                        }
+                    },
+                },
+            ],
+            "count": 1,
+        },
+        match=[
+            responses.matchers.query_param_matcher(
+                {"searchCriteria.status": "active"},
+                strict_match=False,
+            )
+        ],
+    )
+
+    # When
+    page = list_pull_requests(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        ado_project_id=ado_project_id,
+    )
+
+    # Then
+    assert page["results"] == [
+        {
+            "id": 42,
+            "title": "Add feature X",
+            "state": "active",
+            "is_draft": False,
+            "web_url": "https://dev.azure.com/test-org/proj/_git/frontend/pullrequest/42",
+            "repository_name": "frontend",
+        },
+    ]
+    assert page["continuation_token"] is None
+
+
+@responses.activate
+def test_list_pull_requests__state_completed__sends_completed_in_query() -> None:
+    # Given
+    ado_project_id = "00000000-0000-0000-0000-0000000000aa"
+    responses.get(
+        f"{ORG_URL}/{ado_project_id}/_apis/git/pullrequests",
+        json={"value": [], "count": 0},
+        match=[
+            responses.matchers.query_param_matcher(
+                {"searchCriteria.status": "completed"},
+                strict_match=False,
+            )
+        ],
+    )
+
+    # When
+    list_pull_requests(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        ado_project_id=ado_project_id,
+        state="completed",
+    )
+
+    # Then — matched URL implies the right query
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_list_pull_requests__continuation_token_in_header__exposed_on_page() -> None:
+    # Given
+    ado_project_id = "00000000-0000-0000-0000-0000000000aa"
+    responses.get(
+        f"{ORG_URL}/{ado_project_id}/_apis/git/pullrequests",
+        json={"value": [], "count": 0},
+        headers={"x-ms-continuationtoken": "pr-next"},
+    )
+
+    # When
+    page = list_pull_requests(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        ado_project_id=ado_project_id,
+    )
+
+    # Then
+    assert page["continuation_token"] == "pr-next"

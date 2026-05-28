@@ -9,6 +9,8 @@ from integrations.azure_devops.client.exceptions import (
 from integrations.azure_devops.client.types import (
     AdoProject,
     AdoProjectsPage,
+    AdoPullRequest,
+    AdoPullRequestsPage,
     AdoRepository,
 )
 from integrations.azure_devops.constants import (
@@ -107,3 +109,41 @@ def list_repositories(
         )
         for item in payload.get("value", [])
     ]
+
+
+def list_pull_requests(
+    *,
+    organisation_url: str,
+    pat: str,
+    ado_project_id: str,
+    state: str = "active",
+    top: int | None = None,
+    continuation_token: str | None = None,
+) -> AdoPullRequestsPage:
+    params: dict[str, Any] = {"searchCriteria.status": state}
+    if top is not None:
+        params["$top"] = top
+    if continuation_token is not None:
+        params["continuationToken"] = continuation_token
+
+    response = _ado_request(
+        "GET",
+        organisation_url,
+        pat,
+        path=f"{ado_project_id}/_apis/git/pullrequests",
+        params=params,
+    )
+    payload = response.json()
+    results: list[AdoPullRequest] = [
+        AdoPullRequest(
+            id=item["pullRequestId"],
+            title=item["title"],
+            state=item["status"],
+            is_draft=item.get("isDraft", False),
+            web_url=item.get("_links", {}).get("web", {}).get("href", ""),
+            repository_name=item.get("repository", {}).get("name", ""),
+        )
+        for item in payload.get("value", [])
+    ]
+    next_token = response.headers.get("x-ms-continuationtoken")
+    return AdoPullRequestsPage(results=results, continuation_token=next_token)
