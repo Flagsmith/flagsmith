@@ -2,6 +2,7 @@ from integrations.azure_devops.client.api import (
     list_projects,
     list_pull_requests,
     list_repositories,
+    list_work_items,
 )
 from integrations.azure_devops.client.exceptions import (
     AzureDevOpsAuthError,
@@ -14,6 +15,8 @@ from integrations.azure_devops.client.types import (
     AdoPullRequest,
     AdoPullRequestsPage,
     AdoRepository,
+    AdoWorkItem,
+    AdoWorkItemsPage,
 )
 
 __all__ = [
@@ -22,10 +25,13 @@ __all__ = [
     "AdoPullRequest",
     "AdoPullRequestsPage",
     "AdoRepository",
+    "AdoWorkItem",
+    "AdoWorkItemsPage",
     "AzureDevOpsAuthError",
     "AzureDevOpsError",
     "AzureDevOpsNotFoundError",
     "list_projects",
     "list_pull_requests",
     "list_repositories",
+    "list_work_items",
 ]

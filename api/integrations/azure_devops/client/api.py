@@ -12,6 +12,8 @@ from integrations.azure_devops.client.types import (
     AdoPullRequest,
     AdoPullRequestsPage,
     AdoRepository,
+    AdoWorkItem,
+    AdoWorkItemsPage,
 )
 from integrations.azure_devops.constants import (
     AZURE_DEVOPS_API_VERSION,
@@ -147,3 +149,107 @@ def list_pull_requests(
     ]
     next_token = response.headers.get("x-ms-continuationtoken")
     return AdoPullRequestsPage(results=results, continuation_token=next_token)
+
+
+_WORK_ITEM_FIELDS = [
+    "System.Id",
+    "System.Title",
+    "System.State",
+    "System.WorkItemType",
+]
+
+
+def _escape_wiql_string(value: str) -> str:
+    # WIQL escapes single quotes by doubling them. There is no other
+    # escape character. We control the column names; only user-supplied
+    # values need this.
+    return value.replace("'", "''")
+
+
+def _wiql_query_for_work_items(
+    *,
+    search_text: str | None,
+    state: str | None,
+    work_item_type: str | None,
+) -> str:
+    clauses = ["[System.TeamProject] = @project"]
+    if state:
+        clauses.append(f"[System.State] = '{_escape_wiql_string(state)}'")
+    if work_item_type:
+        clauses.append(
+            f"[System.WorkItemType] = '{_escape_wiql_string(work_item_type)}'"
+        )
+    if search_text:
+        clauses.append(f"[System.Title] CONTAINS '{_escape_wiql_string(search_text)}'")
+    where = " AND ".join(clauses)
+    return (
+        "SELECT [System.Id] FROM WorkItems "
+        f"WHERE {where} "
+        "ORDER BY [System.ChangedDate] DESC"
+    )
+
+
+def list_work_items(
+    *,
+    organisation_url: str,
+    pat: str,
+    ado_project_id: str,
+    search_text: str | None = None,
+    state: str | None = None,
+    work_item_type: str | None = None,
+    top: int = 100,
+    continuation_token: str | None = None,
+) -> AdoWorkItemsPage:
+    """List ADO work items in a project, filterable by title text, state,
+    and work-item type. Implemented as a WIQL query for the IDs followed
+    by a batch fetch for the rows we want to display.
+
+    Pagination is offset-based on the WIQL ID list (ADO returns up to
+    20,000 IDs in one WIQL response per the docs). ``continuation_token``
+    encodes the offset into the WIQL ID list as a string integer; the
+    response's ``continuation_token`` is the offset to ask for next, or
+    ``None`` if no further pages remain.
+    """
+    query = _wiql_query_for_work_items(
+        search_text=search_text,
+        state=state,
+        work_item_type=work_item_type,
+    )
+    wiql_response = _ado_request(
+        "POST",
+        organisation_url,
+        pat,
+        path=f"{ado_project_id}/_apis/wit/wiql",
+        json_body={"query": query},
+    )
+    wiql_payload = wiql_response.json()
+    all_ids: list[int] = [item["id"] for item in wiql_payload.get("workItems", [])]
+    if not all_ids:
+        return AdoWorkItemsPage(results=[], continuation_token=None)
+
+    offset = int(continuation_token) if continuation_token is not None else 0
+    end = offset + top
+    page_ids = all_ids[offset:end]
+    if not page_ids:
+        return AdoWorkItemsPage(results=[], continuation_token=None)
+
+    batch_response = _ado_request(
+        "POST",
+        organisation_url,
+        pat,
+        path="wit/workitemsbatch",
+        json_body={"ids": page_ids, "fields": _WORK_ITEM_FIELDS},
+    )
+    batch_payload = batch_response.json()
+    results: list[AdoWorkItem] = [
+        AdoWorkItem(
+            id=item["id"],
+            title=item.get("fields", {}).get("System.Title", ""),
+            state=item.get("fields", {}).get("System.State", ""),
+            work_item_type=item.get("fields", {}).get("System.WorkItemType", ""),
+            web_url=item.get("_links", {}).get("html", {}).get("href", ""),
+        )
+        for item in batch_payload.get("value", [])
+    ]
+    next_token = str(end) if end < len(all_ids) else None
+    return AdoWorkItemsPage(results=results, continuation_token=next_token)

@@ -8,6 +8,7 @@ from integrations.azure_devops.client import (
     list_projects,
     list_pull_requests,
     list_repositories,
+    list_work_items,
 )
 from integrations.azure_devops.client.exceptions import (
     AzureDevOpsAuthError,
@@ -455,3 +456,337 @@ def test_list_pull_requests__continuation_token_in_header__exposed_on_page() -> 
 
     # Then
     assert page["continuation_token"] == "pr-next"
+
+
+@responses.activate
+def test_list_work_items__title_search_and_type__sends_wiql_and_hydrates() -> None:
+    # Given
+    ado_project_id = "00000000-0000-0000-0000-0000000000aa"
+    expected_wiql_query = (
+        "SELECT [System.Id] FROM WorkItems "
+        "WHERE [System.TeamProject] = @project "
+        "AND [System.State] = 'Active' "
+        "AND [System.WorkItemType] = 'Bug' "
+        "AND [System.Title] CONTAINS 'login' "
+        "ORDER BY [System.ChangedDate] DESC"
+    )
+    responses.post(
+        f"{ORG_URL}/{ado_project_id}/_apis/wit/wiql",
+        json={
+            "workItems": [{"id": 101}, {"id": 102}],
+        },
+        match=[
+            responses.matchers.json_params_matcher({"query": expected_wiql_query}),
+        ],
+    )
+    responses.post(
+        f"{ORG_URL}/_apis/wit/workitemsbatch",
+        json={
+            "value": [
+                {
+                    "id": 101,
+                    "fields": {
+                        "System.Title": "Login broken",
+                        "System.State": "Active",
+                        "System.WorkItemType": "Bug",
+                    },
+                    "_links": {
+                        "html": {
+                            "href": "https://dev.azure.com/test-org/proj/_workitems/edit/101"
+                        }
+                    },
+                },
+                {
+                    "id": 102,
+                    "fields": {
+                        "System.Title": "Login slow",
+                        "System.State": "Active",
+                        "System.WorkItemType": "Bug",
+                    },
+                    "_links": {
+                        "html": {
+                            "href": "https://dev.azure.com/test-org/proj/_workitems/edit/102"
+                        }
+                    },
+                },
+            ]
+        },
+        match=[
+            responses.matchers.json_params_matcher(
+                {
+                    "ids": [101, 102],
+                    "fields": [
+                        "System.Id",
+                        "System.Title",
+                        "System.State",
+                        "System.WorkItemType",
+                    ],
+                }
+            ),
+        ],
+    )
+
+    # When
+    page = list_work_items(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        ado_project_id=ado_project_id,
+        search_text="login",
+        state="Active",
+        work_item_type="Bug",
+    )
+
+    # Then
+    assert page["results"] == [
+        {
+            "id": 101,
+            "title": "Login broken",
+            "state": "Active",
+            "work_item_type": "Bug",
+            "web_url": "https://dev.azure.com/test-org/proj/_workitems/edit/101",
+        },
+        {
+            "id": 102,
+            "title": "Login slow",
+            "state": "Active",
+            "work_item_type": "Bug",
+            "web_url": "https://dev.azure.com/test-org/proj/_workitems/edit/102",
+        },
+    ]
+    assert page["continuation_token"] is None
+
+
+@responses.activate
+def test_list_work_items__no_filters__produces_minimal_wiql() -> None:
+    # Given
+    ado_project_id = "00000000-0000-0000-0000-0000000000aa"
+    expected_wiql_query = (
+        "SELECT [System.Id] FROM WorkItems "
+        "WHERE [System.TeamProject] = @project "
+        "ORDER BY [System.ChangedDate] DESC"
+    )
+    responses.post(
+        f"{ORG_URL}/{ado_project_id}/_apis/wit/wiql",
+        json={"workItems": []},
+        match=[
+            responses.matchers.json_params_matcher({"query": expected_wiql_query}),
+        ],
+    )
+
+    # When
+    page = list_work_items(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        ado_project_id=ado_project_id,
+    )
+
+    # Then — empty WIQL means no second call
+    assert page["results"] == []
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_list_work_items__search_text_with_quote__is_escaped() -> None:
+    # Given
+    ado_project_id = "00000000-0000-0000-0000-0000000000aa"
+    expected_wiql_query = (
+        "SELECT [System.Id] FROM WorkItems "
+        "WHERE [System.TeamProject] = @project "
+        "AND [System.Title] CONTAINS 'O''Brien' "
+        "ORDER BY [System.ChangedDate] DESC"
+    )
+    responses.post(
+        f"{ORG_URL}/{ado_project_id}/_apis/wit/wiql",
+        json={"workItems": []},
+        match=[
+            responses.matchers.json_params_matcher({"query": expected_wiql_query}),
+        ],
+    )
+
+    # When
+    list_work_items(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        ado_project_id=ado_project_id,
+        search_text="O'Brien",
+    )
+
+    # Then
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_list_work_items__pagination__slices_wiql_ids_by_top_and_returns_continuation() -> (
+    None
+):
+    # Given — WIQL returns 5 IDs; we ask for top=2
+    ado_project_id = "00000000-0000-0000-0000-0000000000aa"
+    responses.post(
+        f"{ORG_URL}/{ado_project_id}/_apis/wit/wiql",
+        json={
+            "workItems": [
+                {"id": 200},
+                {"id": 201},
+                {"id": 202},
+                {"id": 203},
+                {"id": 204},
+            ]
+        },
+    )
+    responses.post(
+        f"{ORG_URL}/_apis/wit/workitemsbatch",
+        json={
+            "value": [
+                {
+                    "id": 200,
+                    "fields": {
+                        "System.Title": "WI 200",
+                        "System.State": "Active",
+                        "System.WorkItemType": "Task",
+                    },
+                    "_links": {"html": {"href": "url-200"}},
+                },
+                {
+                    "id": 201,
+                    "fields": {
+                        "System.Title": "WI 201",
+                        "System.State": "Active",
+                        "System.WorkItemType": "Task",
+                    },
+                    "_links": {"html": {"href": "url-201"}},
+                },
+            ]
+        },
+        match=[
+            responses.matchers.json_params_matcher(
+                {
+                    "ids": [200, 201],
+                    "fields": [
+                        "System.Id",
+                        "System.Title",
+                        "System.State",
+                        "System.WorkItemType",
+                    ],
+                }
+            ),
+        ],
+    )
+
+    # When
+    page = list_work_items(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        ado_project_id=ado_project_id,
+        top=2,
+    )
+
+    # Then — first two IDs hydrated; continuation_token reflects offset of next batch
+    assert [r["id"] for r in page["results"]] == [200, 201]
+    assert page["continuation_token"] == "2"
+
+
+@responses.activate
+def test_list_work_items__continuation_token__starts_from_offset() -> None:
+    # Given — same WIQL set, paginating with continuation_token="2"
+    ado_project_id = "00000000-0000-0000-0000-0000000000aa"
+    responses.post(
+        f"{ORG_URL}/{ado_project_id}/_apis/wit/wiql",
+        json={
+            "workItems": [
+                {"id": 200},
+                {"id": 201},
+                {"id": 202},
+                {"id": 203},
+                {"id": 204},
+            ]
+        },
+    )
+    responses.post(
+        f"{ORG_URL}/_apis/wit/workitemsbatch",
+        json={
+            "value": [
+                {
+                    "id": 202,
+                    "fields": {
+                        "System.Title": "WI 202",
+                        "System.State": "Active",
+                        "System.WorkItemType": "Task",
+                    },
+                    "_links": {"html": {"href": "url-202"}},
+                },
+                {
+                    "id": 203,
+                    "fields": {
+                        "System.Title": "WI 203",
+                        "System.State": "Active",
+                        "System.WorkItemType": "Task",
+                    },
+                    "_links": {"html": {"href": "url-203"}},
+                },
+            ]
+        },
+        match=[
+            responses.matchers.json_params_matcher(
+                {
+                    "ids": [202, 203],
+                    "fields": [
+                        "System.Id",
+                        "System.Title",
+                        "System.State",
+                        "System.WorkItemType",
+                    ],
+                }
+            ),
+        ],
+    )
+
+    # When
+    page = list_work_items(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        ado_project_id=ado_project_id,
+        top=2,
+        continuation_token="2",
+    )
+
+    # Then
+    assert [r["id"] for r in page["results"]] == [202, 203]
+    assert page["continuation_token"] == "4"
+
+
+@responses.activate
+def test_list_work_items__last_page__omits_continuation_token() -> None:
+    # Given — only one item left; second batch returns it; no further pages
+    ado_project_id = "00000000-0000-0000-0000-0000000000aa"
+    responses.post(
+        f"{ORG_URL}/{ado_project_id}/_apis/wit/wiql",
+        json={"workItems": [{"id": 999}]},
+    )
+    responses.post(
+        f"{ORG_URL}/_apis/wit/workitemsbatch",
+        json={
+            "value": [
+                {
+                    "id": 999,
+                    "fields": {
+                        "System.Title": "Final",
+                        "System.State": "Closed",
+                        "System.WorkItemType": "Task",
+                    },
+                    "_links": {"html": {"href": "url-999"}},
+                },
+            ]
+        },
+    )
+
+    # When
+    page = list_work_items(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        ado_project_id=ado_project_id,
+        top=10,
+    )
+
+    # Then — single result, no more pages
+    assert page["results"][0]["id"] == 999
+    assert page["continuation_token"] is None
