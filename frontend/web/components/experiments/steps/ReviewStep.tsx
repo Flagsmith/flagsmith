@@ -3,7 +3,7 @@ import { ProjectFlag } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import ContentCard from 'components/base/grid/ContentCard'
 import VariationTable from 'components/experiments/VariationTable'
-import 'components/experiments/wizard.scss'
+import './ReviewStep.scss'
 
 type ReviewStepProps = {
   name: string
