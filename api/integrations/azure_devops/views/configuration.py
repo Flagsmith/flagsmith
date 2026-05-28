@@ -1,13 +1,33 @@
 import structlog
+from rest_framework.exceptions import ValidationError
 from structlog.typing import FilteringBoundLogger
 
+from integrations.azure_devops.client import list_projects
+from integrations.azure_devops.client.exceptions import AzureDevOpsAuthError
 from integrations.azure_devops.models import AzureDevOpsConfiguration
 from integrations.azure_devops.serializers import (
+    WRITE_ONLY_PLACEHOLDER,
     AzureDevOpsConfigurationSerializer,
 )
 from integrations.common.views import ProjectIntegrationBaseViewSet
 
 logger = structlog.get_logger("azure_devops")
+
+
+def _validate_pat_against_ado(*, organisation_url: str, pat: str) -> None:
+    """Probe ADO with a minimal request to confirm the PAT is valid.
+
+    Raises ``ValidationError`` on 401/403 from ADO. Other failures (5xx,
+    network) bubble up so the caller can decide whether to log-and-allow
+    or surface as an error.
+    """
+    try:
+        list_projects(organisation_url=organisation_url, pat=pat, top=1)
+    except AzureDevOpsAuthError:
+        raise ValidationError(
+            "Azure DevOps rejected the credentials. "
+            "Check the organisation URL and personal access token."
+        ) from None
 
 
 class AzureDevOpsConfigurationViewSet(ProjectIntegrationBaseViewSet):
@@ -22,6 +42,13 @@ class AzureDevOpsConfigurationViewSet(ProjectIntegrationBaseViewSet):
         )
 
     def perform_create(self, serializer: AzureDevOpsConfigurationSerializer) -> None:  # type: ignore[override]
+        # Surface the "already exists" error before making an external call.
+        if self.get_queryset().exists():
+            raise ValidationError("This integration already exists for this project.")
+        _validate_pat_against_ado(
+            organisation_url=serializer.validated_data["organisation_url"],
+            pat=serializer.validated_data["personal_access_token"],
+        )
         super().perform_create(serializer)
         instance: AzureDevOpsConfiguration = serializer.instance  # type: ignore[assignment]
         self._log_for(instance).info(
@@ -30,6 +57,18 @@ class AzureDevOpsConfigurationViewSet(ProjectIntegrationBaseViewSet):
         )
 
     def perform_update(self, serializer: AzureDevOpsConfigurationSerializer) -> None:  # type: ignore[override]
+        pat = serializer.validated_data.get("personal_access_token")
+        # Treat the masked placeholder as "no change" — the serializer drops
+        # it during ``update`` so it never reaches the database, and there is
+        # nothing meaningful to validate against ADO either.
+        if pat is not None and pat != WRITE_ONLY_PLACEHOLDER:
+            _validate_pat_against_ado(
+                organisation_url=serializer.validated_data.get(
+                    "organisation_url",
+                    serializer.instance.organisation_url,  # type: ignore[union-attr]
+                ),
+                pat=pat,
+            )
         super().perform_update(serializer)
         instance: AzureDevOpsConfiguration = serializer.instance  # type: ignore[assignment]
         self._log_for(instance).info(
