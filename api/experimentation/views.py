@@ -1,8 +1,9 @@
 import logging
 from typing import Any
 
+from django.db import IntegrityError
 from django.db.models import Count, Q, QuerySet
-from rest_framework import mixins, status
+from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -21,6 +22,7 @@ from experimentation.permissions import (
     WarehouseConnectionPermission,
 )
 from experimentation.serializers import (
+    ExperimentListSerializer,
     ExperimentSerializer,
     WarehouseConnectionSerializer,
 )
@@ -112,11 +114,29 @@ class ExperimentViewSet(
         context["environment"] = self._get_environment()
         return context
 
+    def get_serializer_class(self) -> type[BaseSerializer[Experiment]]:
+        if self.action in ("list", "retrieve", "start", "pause", "complete"):
+            return ExperimentListSerializer
+        return ExperimentSerializer
+
     def get_queryset(self) -> "QuerySet[Experiment]":
         qs = super().get_queryset()
+        if self.action in ("list", "retrieve"):
+            qs = qs.select_related("feature").prefetch_related(
+                "feature__multivariate_options"
+            )
         status_filter = self.request.query_params.get("status")
         if status_filter:
+            if status_filter not in ExperimentStatus.values:
+                raise serializers.ValidationError(
+                    {"status": f"Invalid status '{status_filter}'."}
+                )
             qs = qs.filter(status=status_filter)
+
+        q = self.request.query_params.get("q")
+        if q:
+            qs = qs.filter(Q(name__icontains=q) | Q(feature__name__icontains=q))
+
         return qs
 
     def list(self, request: Request, *args: object, **kwargs: object) -> Response:
@@ -150,7 +170,13 @@ class ExperimentViewSet(
                 status=status.HTTP_409_CONFLICT,
             )
 
-        self.perform_create(serializer)
+        try:
+            self.perform_create(serializer)
+        except IntegrityError:
+            return Response(
+                {"detail": "An active experiment already exists for this feature."},
+                status=status.HTTP_409_CONFLICT,
+            )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer: BaseSerializer[Experiment]) -> None:
@@ -160,12 +186,28 @@ class ExperimentViewSet(
         )
 
     def perform_update(self, serializer: BaseSerializer[Experiment]) -> None:
+        changed_fields = {
+            field
+            for field, value in serializer.validated_data.items()
+            if getattr(serializer.instance, field, None) != value
+        }
+        if not changed_fields:
+            return
         experiment: Experiment = serializer.save()
         create_experiment_audit_log(
             experiment, self._get_user(self.request), action="updated"
         )
 
     def perform_destroy(self, instance: Experiment) -> None:
+        if instance.status == ExperimentStatus.RUNNING:
+            raise serializers.ValidationError(
+                {
+                    "detail": (
+                        "Cannot delete a running experiment. "
+                        "Pause or complete it first."
+                    )
+                }
+            )
         create_experiment_audit_log(
             instance, self._get_user(self.request), action="deleted"
         )

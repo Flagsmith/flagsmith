@@ -83,7 +83,11 @@ const controller = {
   createFlag(projectId, environmentId, flag) {
     store.saving()
     API.trackEvent(Constants.events.CREATE_FEATURE)
-    if (
+    const featureType =
+      flag.multivariate_options && flag.multivariate_options.length
+        ? 'MULTIVARIATE'
+        : 'STANDARD'
+    const isFirstFeature =
       !createdFirstFeature &&
       !flagsmith.getTrait('first_feature') &&
       AccountStore.model &&
@@ -92,12 +96,6 @@ const controller = {
       OrganisationStore.model.projects.length === 1 &&
       store.model &&
       (!store.model.features || !store.model.features.length)
-    ) {
-      createdFirstFeature = true
-      flagsmith.setTrait('first_feature', 'true')
-      API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
-      window.lintrk?.('track', { conversion_id: 16798354 })
-    }
 
     createProjectFlag(getStore(), {
       body: Object.assign({}, flag, {
@@ -162,6 +160,22 @@ const controller = {
           )
 
           store.saved({ createdFlag: flag.name })
+          if (isFirstFeature) {
+            createdFirstFeature = true
+            flagsmith.setTrait('first_feature', 'true')
+            API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
+            flagsmith.trackEvent('first_feature_created', flag.name, {
+              feature_type: featureType,
+              project_id: projectId,
+            })
+            window.lintrk?.('track', { conversion_id: 16798354 })
+          } else {
+            flagsmith.trackEvent('feature_created', flag.name, {
+              feature_type: featureType,
+              project_id: projectId,
+              total_feature_count: store.model?.features?.length ?? 0,
+            })
+          }
         }),
       )
       .catch((e) => API.ajaxHandler(store, e))
@@ -393,8 +407,7 @@ const controller = {
                 `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
                 Object.assign({}, environmentFlag, {
                   enabled: flag.default_enabled,
-                  feature_state_value:
-                    typedValue === '' ? null : typedValue,
+                  feature_state_value: typedValue === '' ? null : typedValue,
                 }),
               )
             })
@@ -934,10 +947,7 @@ const controller = {
 
               store.model = {
                 features: features.results.map(controller.parseFlag),
-                keyedEnvironmentFeatures: keyBy(
-                  environmentFeatures,
-                  'feature',
-                ),
+                keyedEnvironmentFeatures: keyBy(environmentFeatures, 'feature'),
               }
               store.loaded()
             })
