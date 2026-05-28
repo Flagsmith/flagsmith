@@ -1,8 +1,6 @@
 import { FC } from 'react'
-import { IonIcon } from '@ionic/react'
-import { peopleOutline } from 'ionicons/icons'
+import Icon from 'components/icons/Icon'
 import ContentCard from 'components/base/grid/ContentCard'
-import 'components/experiments/wizard.scss'
 
 const AudienceStep: FC = () => {
   return (
@@ -15,9 +13,10 @@ const AudienceStep: FC = () => {
           Segments cannot drift the experiment audience.
         </p>
         <div className='d-flex align-items-start gap-3 p-3 border rounded'>
-          <IonIcon
-            icon={peopleOutline}
-            style={{ fontSize: 24 }}
+          <Icon
+            name='people'
+            width={24}
+            fill='currentColor'
             className='text-muted flex-shrink-0 mt-1'
           />
           <div>

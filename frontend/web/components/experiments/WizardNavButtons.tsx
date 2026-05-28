@@ -1,7 +1,6 @@
 import { FC } from 'react'
 import Button from 'components/base/forms/Button'
-import { IonIcon } from '@ionic/react'
-import { arrowBack, rocketOutline } from 'ionicons/icons'
+import Icon from 'components/icons/Icon'
 
 type WizardNavButtonsProps = {
   currentStep: number
@@ -28,14 +27,14 @@ const WizardNavButtons: FC<WizardNavButtonsProps> = ({
     <div className='d-flex justify-content-end gap-3 mt-4'>
       {currentStep > 0 && (
         <Button theme='outline' onClick={onBack}>
-          <IonIcon icon={arrowBack} className='me-1' />
+          <Icon name='arrow-left' width={16} />
           Back
         </Button>
       )}
       {isLastStep ? (
         <Button onClick={onLaunch} disabled={isSubmitting}>
           Create Experiment
-          <IonIcon icon={rocketOutline} className='ms-1' />
+          <Icon name='rocket' width={16} />
         </Button>
       ) : (
         <Button onClick={onContinue} disabled={!canContinue}>

@@ -1,36 +1,22 @@
 import { FC } from 'react'
 import Button from 'components/base/forms/Button'
-import { IonIcon } from '@ionic/react'
-import { addOutline, searchOutline } from 'ionicons/icons'
+import Icon from 'components/icons/Icon'
 import ContentCard from 'components/base/grid/ContentCard'
-import 'components/experiments/wizard.scss'
 
 const MeasurementStep: FC = () => {
   return (
     <div className='d-flex flex-column gap-4'>
       <ContentCard title='Metrics'>
         <div className='d-flex align-items-center gap-3'>
-          <div className='position-relative flex-fill'>
-            <IonIcon
-              icon={searchOutline}
-              className='position-absolute text-muted'
-              style={{
-                fontSize: 18,
-                left: 12,
-                top: '50%',
-                transform: 'translateY(-50%)',
-              }}
-            />
-            <input
-              type='text'
-              className='form-control'
-              placeholder='Search metrics...'
-              disabled
-              style={{ paddingLeft: 40 }}
-            />
-          </div>
+          <Input
+            type='text'
+            placeholder='Search metrics...'
+            disabled
+            search
+            size='small'
+          />
           <Button disabled theme='outline'>
-            <IonIcon icon={addOutline} className='me-1' />
+            <Icon name='plus' width={16} />
             Create Metric
           </Button>
         </div>
