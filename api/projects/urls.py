@@ -18,7 +18,13 @@ from features.import_export.views import (
 )
 from features.multivariate.views import MultivariateFeatureOptionViewSet
 from features.views import FeatureViewSet
-from integrations.azure_devops.views import AzureDevOpsConfigurationViewSet
+from integrations.azure_devops.views import (
+    AzureDevOpsConfigurationViewSet,
+    BrowseAdoProjects,
+    BrowseAdoPullRequests,
+    BrowseAdoRepositories,
+    BrowseAdoWorkItems,
+)
 from integrations.datadog.views import DataDogConfigurationViewSet
 from integrations.gitlab.views import (
     BrowseGitLabIssues,
@@ -170,5 +176,25 @@ urlpatterns = [
         "<int:project_pk>/gitlab/merge-requests/",
         BrowseGitLabMergeRequests.as_view(),
         name="get-gitlab-merge-requests",
+    ),
+    path(
+        "<int:project_pk>/azure-devops/projects/",
+        BrowseAdoProjects.as_view(),
+        name="get-azure-devops-projects",
+    ),
+    path(
+        "<int:project_pk>/azure-devops/repositories/",
+        BrowseAdoRepositories.as_view(),
+        name="get-azure-devops-repositories",
+    ),
+    path(
+        "<int:project_pk>/azure-devops/pull-requests/",
+        BrowseAdoPullRequests.as_view(),
+        name="get-azure-devops-pull-requests",
+    ),
+    path(
+        "<int:project_pk>/azure-devops/work-items/",
+        BrowseAdoWorkItems.as_view(),
+        name="get-azure-devops-work-items",
     ),
 ]
