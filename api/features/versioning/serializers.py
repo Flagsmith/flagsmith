@@ -161,7 +161,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
         return [
             fs["feature_segment"]["segment"]
             for fs in self.initial_data.get("feature_states_to_create", [])
-            if fs["feature_segment"] is not None
+            if fs.get("feature_segment") is not None
         ]
 
     @transaction.atomic
