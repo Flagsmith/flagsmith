@@ -118,7 +118,6 @@ const SetupStep: FC<SetupStepProps> = ({
             ) => {
               if (option) onFeatureSelect(option.feature)
             }}
-            filterOption={(options: unknown[]) => options}
             isLoading={isFeaturesLoading}
             placeholder='Search for a multivariate feature...'
             isClearable={false}
