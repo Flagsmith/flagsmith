@@ -39,6 +39,26 @@ Logged at `warning` from:
 Attributes:
  - `details`
 
+### `azure_devops.configuration.created`
+
+Logged at `info` from:
+ - `api/integrations/azure_devops/views/configuration.py:27`
+
+Attributes:
+ - `ado.organisation.url`
+ - `organisation.id`
+ - `project.id`
+
+### `azure_devops.configuration.updated`
+
+Logged at `info` from:
+ - `api/integrations/azure_devops/views/configuration.py:35`
+
+Attributes:
+ - `ado.organisation.url`
+ - `organisation.id`
+ - `project.id`
+
 ### `billing.seat.added`
 
 Logged at `info` from:

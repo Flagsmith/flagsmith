@@ -18,6 +18,7 @@ from features.import_export.views import (
 )
 from features.multivariate.views import MultivariateFeatureOptionViewSet
 from features.views import FeatureViewSet
+from integrations.azure_devops.views import AzureDevOpsConfigurationViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
 from integrations.gitlab.views import (
     BrowseGitLabIssues,
@@ -75,6 +76,11 @@ projects_router.register(
     r"integrations/gitlab",
     GitLabConfigurationViewSet,
     basename="integrations-gitlab",
+)
+projects_router.register(
+    r"integrations/azure-devops",
+    AzureDevOpsConfigurationViewSet,
+    basename="integrations-azure-devops",
 )
 projects_router.register(
     r"integrations/grafana",
