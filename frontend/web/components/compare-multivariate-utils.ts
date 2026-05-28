@@ -4,8 +4,8 @@ const normaliseMultivariate = (featureState?: FeatureState) => {
   const values = featureState?.multivariate_feature_state_values || []
   return values
     .map((v) => ({
-      multivariate_feature_option: v.multivariate_feature_option,
-      percentage_allocation: Number(v.percentage_allocation) || 0,
+      multivariate_feature_option: Number(v?.multivariate_feature_option) || 0,
+      percentage_allocation: Number(v?.percentage_allocation) || 0,
     }))
     .sort((a, b) => {
       if (a.multivariate_feature_option !== b.multivariate_feature_option) {
