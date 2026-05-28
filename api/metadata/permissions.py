@@ -76,8 +76,8 @@ class MetadataModelFieldPermissions(IsAuthenticated):
 
                     return (organisation_pk == field.organisation.id) and (
                         request.user.is_organisation_admin(organisation_pk)
-                        or (project_id := field.project)
-                        and request.user.is_project_admin(project_id)
+                        or (project := field.project)
+                        and request.user.is_project_admin(project)
                     )
 
         return False
@@ -89,8 +89,8 @@ class MetadataModelFieldPermissions(IsAuthenticated):
         if view.action in ("update", "destroy", "partial_update"):
             return (
                 request.user.is_organisation_admin(obj.field.organisation)
-                or (project_id := obj.field.project)
-                and request.user.is_project_admin(project_id)
+                or (project := obj.field.project)
+                and request.user.is_project_admin(project)
             )
 
         return False
