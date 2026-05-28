@@ -5,7 +5,10 @@ import Tooltip from 'components/Tooltip'
 import UsersIcon from 'components/icons/UsersIcon'
 
 const shortAgo = (iso: string): string => {
-  const diffSec = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000))
+  const diffSec = Math.max(
+    0,
+    Math.round((Date.now() - new Date(iso).getTime()) / 1000),
+  )
   if (diffSec < 60) return `${diffSec}s ago`
   const diffMin = Math.round(diffSec / 60)
   if (diffMin < 60) return `${diffMin}m ago`
@@ -14,10 +17,15 @@ const shortAgo = (iso: string): string => {
   return `${Math.round(diffHr / 24)}d ago`
 }
 
-const formatTooltip = (count: number, lastSyncedAt: string | undefined): string => {
+const formatTooltip = (
+  count: number,
+  lastSyncedAt: string | undefined,
+): string => {
   const noun = count === 1 ? 'identity' : 'identities'
   const base = `${count} ${noun}`
-  return lastSyncedAt ? `${base} — last synced ~${shortAgo(lastSyncedAt)}` : base
+  return lastSyncedAt
+    ? `${base} — last synced ~${shortAgo(lastSyncedAt)}`
+    : base
 }
 
 type ChipProps = {
@@ -33,7 +41,7 @@ const Chip: FC<ChipProps> = ({ count, dataTest, tooltip }) => (
     title={
       <span
         className='chip chip--xs bg-primary text-white ms-3'
-        style={{ border: 'none', alignSelf: 'center', verticalAlign: 'middle' }}
+        style={{ alignSelf: 'center', border: 'none', verticalAlign: 'middle' }}
         data-test={dataTest}
       >
         <UsersIcon className='chip-svg-icon' />
@@ -49,7 +57,9 @@ type TotalProps = {
   memberships: SegmentMembership[] | undefined
 }
 
-export const SegmentMembershipTotalBadge: FC<TotalProps> = ({ memberships }) => {
+export const SegmentMembershipTotalBadge: FC<TotalProps> = ({
+  memberships,
+}) => {
   if (!memberships?.length) {
     return null
   }

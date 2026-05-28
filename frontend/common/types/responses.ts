@@ -577,6 +577,20 @@ export type MultivariateOption = {
 
 export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
 
+export type ExperimentStatus = 'created' | 'running' | 'paused' | 'completed'
+
+export type Experiment = {
+  id: number
+  name: string
+  hypothesis: string
+  feature: number
+  status: ExperimentStatus
+  created_at: string
+  updated_at: string
+  started_at: string | null
+  ended_at: string | null
+}
+
 export enum TagStrategy {
   INTERSECTION = 'INTERSECTION',
   UNION = 'UNION',
@@ -1349,5 +1363,7 @@ export type Res = {
   gitlabIssues: PagedResponse<GitLabIssue>
   gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
   warehouseConnections: WarehouseConnection[]
+  experiments: Experiment[]
+  experiment: Experiment
   // END OF TYPES
 }

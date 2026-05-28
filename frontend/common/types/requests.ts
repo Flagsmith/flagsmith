@@ -984,5 +984,10 @@ export type Req = {
     name?: string
     config?: Record<string, string>
   }
+  getExperiments: { environmentId: string }
+  createExperiment: {
+    environmentId: string
+    body: { name: string; hypothesis: string; feature: number }
+  }
   // END OF TYPES
 }
