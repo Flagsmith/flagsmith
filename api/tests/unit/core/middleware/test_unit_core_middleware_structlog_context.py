@@ -121,7 +121,9 @@ def test_structlog_context_middleware__any_request__returns_response_unchanged(m
     assert result is expected_response
 
 
-def test_structlog_context_middleware__bindings_made_in_view__cleared_after_response(mocker):  # type: ignore[no-untyped-def]
+def test_structlog_context_middleware__bindings_made_in_view__cleared_after_response(
+    mocker,
+):  # type: ignore[no-untyped-def]
     # Given — a view that binds something onto contextvars
     def view_that_binds(_request):  # type: ignore[no-untyped-def]
         bind_contextvars(some_key="some_value")
@@ -136,7 +138,9 @@ def test_structlog_context_middleware__bindings_made_in_view__cleared_after_resp
     assert get_contextvars() == {}
 
 
-def test_structlog_context_middleware__view_exception__contextvars_still_cleared(mocker):  # type: ignore[no-untyped-def]
+def test_structlog_context_middleware__view_exception__contextvars_still_cleared(
+    mocker,
+):  # type: ignore[no-untyped-def]
     # Given — a view that binds then raises
     def faulty_view(_request):  # type: ignore[no-untyped-def]
         bind_contextvars(some_key="some_value")
@@ -151,7 +155,9 @@ def test_structlog_context_middleware__view_exception__contextvars_still_cleared
     assert get_contextvars() == {}
 
 
-def test_structlog_context_middleware__ffadmin_user__binds_user_id_and_organisation_id(mocker):  # type: ignore[no-untyped-def]
+def test_structlog_context_middleware__ffadmin_user__binds_user_id_and_organisation_id(
+    mocker,
+):  # type: ignore[no-untyped-def]
     # Given — an authenticated FFAdminUser with one organisation
     user = mocker.MagicMock(spec=FFAdminUser)
     user.is_authenticated = True
@@ -228,7 +234,9 @@ def test_structlog_context_middleware__anonymous_user__binds_nothing(mocker):  #
     assert captured == {}
 
 
-def test_structlog_context_middleware__ffadmin_user_with_no_organisations__binds_only_user_id(mocker):  # type: ignore[no-untyped-def]
+def test_structlog_context_middleware__ffadmin_user_with_no_organisations__binds_only_user_id(
+    mocker,
+):  # type: ignore[no-untyped-def]
     # Given — an FFAdminUser that belongs to no organisations
     user = mocker.MagicMock(spec=FFAdminUser)
     user.is_authenticated = True
@@ -253,7 +261,9 @@ def test_structlog_context_middleware__ffadmin_user_with_no_organisations__binds
     assert captured == {"user__id": "alice-uuid"}
 
 
-def test_structlog_context_middleware__process_view_with_project_pk__binds_project_id(mocker):  # type: ignore[no-untyped-def]
+def test_structlog_context_middleware__process_view_with_project_pk__binds_project_id(
+    mocker,
+):  # type: ignore[no-untyped-def]
     # Given
     middleware = StructlogContextMiddleware(lambda _r: HttpResponse())
 
@@ -269,7 +279,9 @@ def test_structlog_context_middleware__process_view_with_project_pk__binds_proje
     assert get_contextvars() == {"project__id": 42}
 
 
-def test_structlog_context_middleware__process_view_with_environment_api_key__binds_environment_id(mocker):  # type: ignore[no-untyped-def]
+def test_structlog_context_middleware__process_view_with_environment_api_key__binds_environment_id(
+    mocker,
+):  # type: ignore[no-untyped-def]
     # Given — Environment.get_from_cache returns a hit
     environment = mocker.MagicMock(id=99)
     mocker.patch(
@@ -290,7 +302,9 @@ def test_structlog_context_middleware__process_view_with_environment_api_key__bi
     assert get_contextvars() == {"environment__id": 99}
 
 
-def test_structlog_context_middleware__process_view_with_unknown_environment_key__binds_nothing(mocker):  # type: ignore[no-untyped-def]
+def test_structlog_context_middleware__process_view_with_unknown_environment_key__binds_nothing(
+    mocker,
+):  # type: ignore[no-untyped-def]
     # Given — get_from_cache returns None (invalid/unknown key)
     mocker.patch(
         "core.middleware.structlog_context.Environment.get_from_cache",
@@ -310,7 +324,9 @@ def test_structlog_context_middleware__process_view_with_unknown_environment_key
     assert get_contextvars() == {}
 
 
-def test_structlog_context_middleware__process_view_without_url_kwargs__binds_nothing(mocker):  # type: ignore[no-untyped-def]
+def test_structlog_context_middleware__process_view_without_url_kwargs__binds_nothing(
+    mocker,
+):  # type: ignore[no-untyped-def]
     # Given
     middleware = StructlogContextMiddleware(lambda _r: HttpResponse())
 
@@ -326,7 +342,9 @@ def test_structlog_context_middleware__process_view_without_url_kwargs__binds_no
     assert get_contextvars() == {}
 
 
-def test_structlog_context_middleware__sequential_requests_on_same_instance__no_leakage(mocker):  # type: ignore[no-untyped-def]
+def test_structlog_context_middleware__sequential_requests_on_same_instance__no_leakage(
+    mocker,
+):  # type: ignore[no-untyped-def]
     """
     Cross-request leakage test (Flagsmith #7298 acceptance criterion).
 
