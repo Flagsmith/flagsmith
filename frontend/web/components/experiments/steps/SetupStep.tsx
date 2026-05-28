@@ -7,7 +7,7 @@ import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
 import ContentCard from 'components/base/grid/ContentCard'
 import VariationTable from 'components/experiments/VariationTable'
-import 'components/experiments/wizard.scss'
+import './SetupStep.scss'
 
 type SetupStepProps = {
   name: string

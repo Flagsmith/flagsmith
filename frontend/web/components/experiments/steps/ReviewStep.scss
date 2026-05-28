@@ -1,34 +1,3 @@
-.wizard-main {
-  min-width: 0;
-}
-
-.wizard-preview-panel {
-  flex-shrink: 0;
-  width: 260px;
-}
-
-.wizard-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  &__label {
-    font-size: var(--font-body-sm-size);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text-default);
-  }
-
-  &__required {
-    color: var(--color-text-danger);
-  }
-
-  &__hint {
-    color: var(--color-text-secondary);
-    font-size: var(--font-caption-size);
-  }
-
-}
-
 .review-row {
   display: flex;
   align-items: center;
