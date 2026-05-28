@@ -287,9 +287,9 @@ def test_get_list__with_experiments__returns_nested_feature(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert len(data) == 1
-    feature_data = data[0]["feature"]
+    results = response.json()["results"]
+    assert len(results) == 1
+    feature_data = results[0]["feature"]
     assert isinstance(feature_data, dict)
     assert feature_data["id"] == multivariate_feature.id
     assert feature_data["name"] == multivariate_feature.name
@@ -377,8 +377,9 @@ def test_get_list__search_by_experiment_name__returns_matching(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == 1
-    assert response.json()[0]["id"] == experiment.id
+    results = response.json()["results"]
+    assert len(results) == 1
+    assert results[0]["id"] == experiment.id
 
 
 def test_get_list__search_by_feature_name__returns_matching(
@@ -398,8 +399,9 @@ def test_get_list__search_by_feature_name__returns_matching(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == 1
-    assert response.json()[0]["id"] == experiment.id
+    results = response.json()["results"]
+    assert len(results) == 1
+    assert results[0]["id"] == experiment.id
 
 
 def test_get_list__search_no_match__returns_empty(
@@ -416,7 +418,7 @@ def test_get_list__search_no_match__returns_empty(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == 0
+    assert len(response.json()["results"]) == 0
 
 
 def test_get_detail__exists__returns_200(
