@@ -1,9 +1,10 @@
-import { FC, useMemo } from 'react'
+import { ChangeEvent, FC, useMemo } from 'react'
 import { ProjectFlag } from 'common/types/responses'
 import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import Utils from 'common/utils/utils'
+import InputGroup from 'components/base/forms/InputGroup'
 import ContentCard from 'components/base/grid/ContentCard'
 import VariationTable from 'components/experiments/VariationTable'
 import 'components/experiments/wizard.scss'
@@ -71,16 +72,17 @@ const SetupStep: FC<SetupStepProps> = ({
           />
         </div>
 
-        <div className='wizard-field'>
-          <label className='wizard-field__label'>
-            Hypothesis <span className='wizard-field__required'>*</span>
-          </label>
-          <textarea
-            className='wizard-field__textarea'
-            rows={3}
+        <div>
+          <InputGroup
+            title='Hypothesis *'
+            textarea
+            inputProps={{ rows: 3 }}
             value={hypothesis}
-            onChange={(e) => onHypothesisChange(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+              onHypothesisChange(Utils.safeParseEventValue(e))
+            }
             placeholder='e.g. Redesigning the checkout button with a clearer CTA will increase conversion rates by at least 15% within 30 days'
+            noMargin
           />
           <span className='wizard-field__hint'>
             A good hypothesis names the change, the metric, the expected
@@ -91,8 +93,8 @@ const SetupStep: FC<SetupStepProps> = ({
 
       <ContentCard title='Feature flag'>
         <p className='text-muted fs-small mb-0'>
-          The flag you&apos;re experimenting on. Variations are read-only
-          &mdash; they&apos;re defined on the flag itself.
+          The flag you&apos;re experimenting on. Variations are read-only,
+          defined on the flag itself.
         </p>
 
         <div className='wizard-field'>

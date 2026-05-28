@@ -1,9 +1,8 @@
 import { FC } from 'react'
 import { MultivariateOption } from 'common/types/responses'
+import ColorSwatch from 'components/ColorSwatch'
+import { colorTextAction, colorTextSuccess } from 'common/theme/tokens'
 import './VariationTable.scss'
-
-const CONTROL_COLOUR = 'var(--green-500)'
-const VARIATION_COLOUR = 'var(--purple-500)'
 
 type VariationTableProps = {
   controlValue: string
@@ -37,16 +36,13 @@ const VariationTable: FC<VariationTableProps> = ({
 
       <div className='variation-table__row'>
         <div className='variation-table__cell variation-table__cell--name'>
-          <span
-            className='variation-table__dot'
-            style={{ background: CONTROL_COLOUR }}
-          />
+          <ColorSwatch color={colorTextSuccess} size='md' shape='circle' />
           <span className='variation-table__name-text'>Control</span>
           <span className='variation-table__control-tag'>control</span>
         </div>
         <div className='variation-table__cell variation-table__cell--desc'>
           <span className='variation-table__desc-text'>
-            Flag&apos;s base value &mdash; the baseline for comparison
+            Flag&apos;s base value
           </span>
         </div>
         <div className='variation-table__cell variation-table__cell--value'>
@@ -57,10 +53,7 @@ const VariationTable: FC<VariationTableProps> = ({
       {variations.map((mv) => (
         <div key={mv.id} className='variation-table__row'>
           <div className='variation-table__cell variation-table__cell--name'>
-            <span
-              className='variation-table__dot'
-              style={{ background: VARIATION_COLOUR }}
-            />
+            <ColorSwatch color={colorTextAction} size='md' shape='circle' />
             <span className='variation-table__name-text'>
               {mv.string_value || `Variation ${mv.id}`}
             </span>

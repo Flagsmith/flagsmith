@@ -93,14 +93,14 @@ global.ToggleChip = ToggleChip
 // Custom Option component to show the tick mark next to selected option in the dropdown
 const Option = (props) => {
   const { formatOptionLabel } = props.selectProps
-  const labelContent = formatOptionLabel
-    ? formatOptionLabel(props.data, { context: 'menu' })
-    : (
-        <>
-          {props.data.label}
-          <div className='text-small'>{props.data.description}</div>
-        </>
-      )
+  const labelContent = formatOptionLabel ? (
+    formatOptionLabel(props.data, { context: 'menu' })
+  ) : (
+    <>
+      {props.data.label}
+      <div className='text-small'>{props.data.description}</div>
+    </>
+  )
   return (
     <components.Option {...props}>
       <div

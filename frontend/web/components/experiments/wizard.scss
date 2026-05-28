@@ -18,28 +18,6 @@
     font-size: var(--font-caption-size);
   }
 
-  &__textarea {
-    width: 100%;
-    min-height: 80px;
-    padding: 10px 14px;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-lg);
-    background: var(--color-surface-default, #fff);
-    color: var(--color-text-default);
-    font-size: var(--font-body-size);
-    font-family: inherit;
-    resize: vertical;
-    transition: border-color var(--duration-fast) var(--easing-standard);
-
-    &::placeholder {
-      color: var(--color-text-disabled);
-    }
-
-    &:focus {
-      outline: none;
-      border-color: var(--color-border-action);
-    }
-  }
 }
 
 .review-row {

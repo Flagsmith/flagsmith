@@ -62,13 +62,6 @@
     }
   }
 
-  &__dot {
-    width: 10px;
-    height: 10px;
-    border-radius: var(--radius-full);
-    flex-shrink: 0;
-  }
-
   &__name-text {
     font-size: var(--font-body-size);
     font-weight: var(--font-weight-semibold);

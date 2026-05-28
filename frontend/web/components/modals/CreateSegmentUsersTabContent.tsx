@@ -99,7 +99,10 @@ const CreateSegmentUsersTabContent: React.FC<
     { projectId: Number(projectId) },
     { skip: !projectId },
   )
-  const envs = environmentsData?.results ?? []
+  const envs = React.useMemo(
+    () => environmentsData?.results ?? [],
+    [environmentsData?.results],
+  )
 
   const membershipByEnvId = React.useMemo(() => {
     const map = new Map<number, SegmentMembership>()
