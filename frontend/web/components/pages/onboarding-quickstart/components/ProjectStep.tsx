@@ -25,7 +25,16 @@ const ProjectStep: FC<ProjectStepProps> = ({
       body={
         <InputGroup
           title='Project name'
-          inputProps={{ className: 'w-50', name: 'projectName' }}
+          inputProps={{
+            className: 'w-50',
+            name: 'projectName',
+            onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === 'Enter' && isValid) {
+                e.preventDefault()
+                onNext()
+              }
+            },
+          }}
           value={value}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             onChange(e.target.value)

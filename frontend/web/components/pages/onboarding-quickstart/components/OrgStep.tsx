@@ -19,7 +19,16 @@ const OrgStep: FC<OrgStepProps> = ({ onChange, onNext, value }) => {
       body={
         <InputGroup
           title='Organisation name'
-          inputProps={{ className: 'w-50', name: 'orgName' }}
+          inputProps={{
+            className: 'w-50',
+            name: 'orgName',
+            onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === 'Enter' && isValid) {
+                e.preventDefault()
+                onNext()
+              }
+            },
+          }}
           value={value}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             onChange(e.target.value)

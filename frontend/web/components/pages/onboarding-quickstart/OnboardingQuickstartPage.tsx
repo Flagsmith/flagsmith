@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useState } from 'react'
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
 import { useGetProfileQuery } from 'common/services/useProfile'
@@ -53,8 +53,26 @@ const OnboardingQuickstartPage: FC = () => {
     setProjectName((existing) => existing || defaults.projectName)
   }, [defaults.orgName, defaults.projectName])
 
+  // Focus management — when the step changes, land focus on the first
+  // interactive element of the new step. Without this, focus stays on
+  // the now-invisible Next button and keyboard users have to Tab from
+  // the document body to find the next field/option.
+  const layoutRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const focusable = layoutRef.current?.querySelector<HTMLElement>(
+      'input:not([disabled]), button:not([disabled]):not([tabindex="-1"])',
+    )
+    focusable?.focus()
+  }, [step])
+
   const featureName =
     selectedPreset === PRESET_CUSTOM ? customFeature : selectedPreset
+
+  // Final-step label varies by role — the engineer path culminates in
+  // "see the SDK work", the PM path in connecting tools. Other never
+  // reaches this step.
+  const evaluationStepTitle =
+    selectedRole === 'pm' ? 'Connect your tools' : 'See it works'
 
   const steps: OnboardingStepDef[] = useMemo(
     () => [
@@ -62,9 +80,9 @@ const OnboardingQuickstartPage: FC = () => {
       { key: 'org', title: 'Organisation' },
       { key: 'project', title: 'Project' },
       { key: 'feature', title: 'First feature' },
-      { key: 'evaluation', title: 'See it works' },
+      { key: 'evaluation', title: evaluationStepTitle },
     ],
-    [],
+    [evaluationStepTitle],
   )
 
   // Post-onboarding destination. Real impl needs projectId + environmentKey
@@ -141,6 +159,7 @@ const OnboardingQuickstartPage: FC = () => {
 
         <div className='onboarding-quickstart__layout'>
           <div
+            ref={layoutRef}
             className={`onboarding-quickstart__layout-content${
               step === 'evaluation'
                 ? ' onboarding-quickstart__layout-content--wide'

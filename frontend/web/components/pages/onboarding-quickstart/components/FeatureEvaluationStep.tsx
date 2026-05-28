@@ -1,6 +1,9 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useMemo, useState } from 'react'
+import { uniqBy } from 'lodash'
 import Button from 'components/base/forms/Button'
 import Constants from 'common/constants'
+import Utils from 'common/utils/utils'
+import { IntegrationSummary } from 'components/pages/IntegrationsPage'
 import StatusPanel from 'web/components/pages/onboarding-quickstart/components/StatusPanel'
 import SuccessActions from 'web/components/pages/onboarding-quickstart/components/SuccessActions'
 import CodeSnippet from 'web/components/pages/onboarding-quickstart/components/CodeSnippet'
@@ -17,22 +20,6 @@ type FeatureEvaluationStepProps = {
   role: Exclude<OnboardingRoleKey, 'other'>
 }
 
-// Curated subset of integrations shown to PMs at the "see it work"
-// moment — the goal is a visual capability check ("Flagsmith plugs into
-// the tools we use"), not a full integration-selection wizard. The full
-// picker lives at `components/IntegrationSelect.tsx` for the post-onboarding
-// surface.
-const PM_INTEGRATION_TITLES = [
-  'Slack',
-  'GitHub',
-  'Datadog',
-  'Jira',
-  'Segment',
-  'Amplitude',
-  'New Relic',
-  'Google Analytics',
-]
-
 const FeatureEvaluationStep: FC<FeatureEvaluationStepProps> = ({
   environmentKey,
   featureName,
@@ -46,6 +33,28 @@ const FeatureEvaluationStep: FC<FeatureEvaluationStepProps> = ({
   const [toggleValue, setToggleValue] = useState(false)
   const isReceived = state === 'received'
 
+  // Same data merge as `components/IntegrationSelect.tsx` — Flagsmith
+  // remote-config flag (`integration_data`) concatenated with the
+  // hardcoded constants list, deduped by title. Read-only render here:
+  // PM AHA is a visual capability check, not an interactive picker.
+  // (`IntegrationSelect` itself currently lets users "select" tools
+  // but doesn't connect anything — separate product gap, tracked
+  // outside this work.)
+  const pmIntegrations = useMemo(() => {
+    if (role !== 'pm') return []
+    const remote = Utils.getFlagsmithValue('integration_data')
+    if (typeof remote !== 'string' || !remote) {
+      return Constants.integrationSummaries.slice(0, 12)
+    }
+    const merged = uniqBy(
+      Object.values(JSON.parse(remote)).concat(
+        Constants.integrationSummaries,
+      ) as IntegrationSummary[],
+      (v) => v.title.toLowerCase(),
+    )
+    return merged.slice(0, 12)
+  }, [role])
+
   useEffect(() => {
     if (state === 'received') {
       onFirstEvalReceived?.()
@@ -53,11 +62,6 @@ const FeatureEvaluationStep: FC<FeatureEvaluationStepProps> = ({
   }, [state, onFirstEvalReceived])
 
   if (role === 'pm') {
-    // PM path: skip the SDK install entirely. Show the integration grid
-    // as a visible capability check, then route through invite-an-engineer.
-    const integrations = Constants.integrationSummaries.filter((i) =>
-      PM_INTEGRATION_TITLES.includes(i.title),
-    )
     return (
       <div className='onboarding-quickstart__panel d-flex flex-column gap-3'>
         <div>
@@ -65,15 +69,15 @@ const FeatureEvaluationStep: FC<FeatureEvaluationStepProps> = ({
           <p className='mb-0'>
             <code className='text-default'>{projectName}</code> and{' '}
             <code className='text-default'>{featureName}</code> are set up.
-            Flagsmith plugs into the tools your team already uses — invite an
-            engineer to wire it into your codebase.
+            Flagsmith plugs into the tools your team already uses — invite a
+            teammate to wire it into your codebase.
           </p>
         </div>
 
         <div>
           <h4 className='mb-2'>Works with your stack</h4>
           <ul className='onboarding-quickstart__integrations list-unstyled m-0 p-0 d-grid gap-2'>
-            {integrations.map((integration) => (
+            {pmIntegrations.map((integration) => (
               <li
                 key={integration.title}
                 className='onboarding-quickstart__integration rounded-md border border-default bg-surface-default p-3 d-flex align-items-center gap-2'

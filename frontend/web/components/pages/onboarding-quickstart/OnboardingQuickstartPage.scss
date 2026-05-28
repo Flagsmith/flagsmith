@@ -409,10 +409,29 @@
   }
 }
 
-// PM path integrations grid — visual capability check, read-only.
-// Two columns on desktop, single column on mobile.
+// Restore visible focus on interactive elements within the onboarding
+// flow. The project-wide `.btn:focus-visible { box-shadow: none }` in
+// `web/styles/project/_buttons.scss` removes the focus indicator for
+// sighted keyboard users — scoping the restoration here keeps the
+// rest of the app unchanged.
+.onboarding-quickstart {
+  .btn:focus-visible,
+  &__radio-row:focus-visible {
+    outline: 2px solid var(--color-border-action);
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+}
+
+// PM path integrations grid — read-only visual capability check.
+// Three columns on desktop, two on tablet, one on mobile. Keeps the
+// list compact enough to scan at the AHA moment without scrolling.
 .onboarding-quickstart__integrations {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
   @media (max-width: 600px) {
     grid-template-columns: minmax(0, 1fr);

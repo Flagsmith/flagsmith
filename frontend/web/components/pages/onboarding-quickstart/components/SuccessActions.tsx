@@ -29,9 +29,9 @@ const COPY_BY_ROLE: Record<
 
   pm: {
     heading: 'Your dashboard is ready.',
-    inviteLabel: 'Invite an engineer',
+    inviteLabel: 'Invite a teammate',
     subtitle:
-      'Invite an engineer to wire Flagsmith into your codebase and ship the first flag.',
+      'Invite a teammate to wire Flagsmith into your codebase and ship the first flag.',
   },
 }
 

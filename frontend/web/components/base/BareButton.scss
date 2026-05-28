@@ -1,0 +1,26 @@
+// Reset for `<button>` primitives that need keyboard / screen-reader
+// semantics but don't want the project's `.btn` chrome. Composed with
+// utility classes for layout + appearance at the call site.
+.bare-button {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  // Accessible focus default. Consumers can override with their own
+  // focus-visible rules if they need a different indicator.
+  &:focus-visible {
+    outline: 2px solid var(--color-border-action);
+    outline-offset: 2px;
+  }
+}
