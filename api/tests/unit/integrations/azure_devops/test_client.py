@@ -5,6 +5,8 @@ import requests
 import responses
 
 from integrations.azure_devops.client import (
+    add_pull_request_comment,
+    add_work_item_comment,
     list_projects,
     list_pull_requests,
     list_repositories,
@@ -790,3 +792,104 @@ def test_list_work_items__last_page__omits_continuation_token() -> None:
     # Then — single result, no more pages
     assert page["results"][0]["id"] == 999
     assert page["continuation_token"] is None
+
+
+@responses.activate
+def test_add_pull_request_comment__valid_call__posts_thread_with_comment() -> None:
+    # Given
+    responses.post(
+        f"{ORG_URL}/proj/_apis/git/pullrequests/42/threads",
+        json={"id": 1},
+        match=[
+            responses.matchers.json_params_matcher(
+                {
+                    "comments": [{"content": "Hello"}],
+                    "status": 1,
+                }
+            ),
+        ],
+    )
+
+    # When
+    add_pull_request_comment(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        project="proj",
+        pull_request_id=42,
+        body="Hello",
+    )
+
+    # Then
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_add_pull_request_comment__500_response__raises_http_error() -> None:
+    # Given
+    responses.post(
+        f"{ORG_URL}/proj/_apis/git/pullrequests/42/threads",
+        json={},
+        status=500,
+    )
+
+    # When
+    def call_post() -> None:
+        add_pull_request_comment(
+            organisation_url=ORG_URL,
+            pat=PAT,
+            project="proj",
+            pull_request_id=42,
+            body="x",
+        )
+
+    # Then
+    with pytest.raises(requests.HTTPError):
+        call_post()
+
+
+@responses.activate
+def test_add_work_item_comment__valid_call__posts_comment_text() -> None:
+    # Given
+    responses.post(
+        f"{ORG_URL}/proj/_apis/wit/workItems/100/comments",
+        json={"id": 1},
+        match=[
+            responses.matchers.json_params_matcher({"text": "Hello world"}),
+        ],
+    )
+
+    # When
+    add_work_item_comment(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        project="proj",
+        work_item_id=100,
+        body="Hello world",
+    )
+
+    # Then
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_add_work_item_comment__500_response__raises_http_error() -> None:
+    # Given
+    responses.post(
+        f"{ORG_URL}/proj/_apis/wit/workItems/100/comments",
+        json={},
+        status=500,
+    )
+
+    # When
+    def call_post() -> None:
+        add_work_item_comment(
+            organisation_url=ORG_URL,
+            pat=PAT,
+            project="proj",
+            work_item_id=100,
+            body="x",
+        )
+
+    # Then
+    with pytest.raises(requests.HTTPError):
+        call_post()

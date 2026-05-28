@@ -253,3 +253,50 @@ def list_work_items(
     ]
     next_token = str(end) if end < len(all_ids) else None
     return AdoWorkItemsPage(results=results, continuation_token=next_token)
+
+
+def add_pull_request_comment(
+    *,
+    organisation_url: str,
+    pat: str,
+    project: str,
+    pull_request_id: int,
+    body: str,
+) -> None:
+    """Post a single-comment thread on an Azure DevOps pull request via
+    its project-scoped threads endpoint.
+
+    ``project`` is the ADO project name from the resource URL; the
+    project-scoped form sidesteps needing the repository GUID. ``status: 1``
+    is the ADO enum value for "Active".
+    """
+    _ado_request(
+        "POST",
+        organisation_url,
+        pat,
+        path=f"{project}/_apis/git/pullrequests/{pull_request_id}/threads",
+        json_body={
+            "comments": [{"content": body}],
+            "status": 1,
+        },
+    )
+
+
+def add_work_item_comment(
+    *,
+    organisation_url: str,
+    pat: str,
+    project: str,
+    work_item_id: int,
+    body: str,
+) -> None:
+    """Post a comment on an Azure DevOps work item via the modern Comments
+    API.
+    """
+    _ado_request(
+        "POST",
+        organisation_url,
+        pat,
+        path=f"{project}/_apis/wit/workItems/{work_item_id}/comments",
+        json_body={"text": body},
+    )

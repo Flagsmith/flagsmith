@@ -1,4 +1,6 @@
 from integrations.azure_devops.client.api import (
+    add_pull_request_comment,
+    add_work_item_comment,
     list_projects,
     list_pull_requests,
     list_repositories,
@@ -30,6 +32,8 @@ __all__ = [
     "AzureDevOpsAuthError",
     "AzureDevOpsError",
     "AzureDevOpsNotFoundError",
+    "add_pull_request_comment",
+    "add_work_item_comment",
     "list_projects",
     "list_pull_requests",
     "list_repositories",
