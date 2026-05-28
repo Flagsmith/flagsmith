@@ -1,7 +1,7 @@
 import logging
 from typing import Any
 
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -126,6 +126,11 @@ class ExperimentViewSet(
         status_filter = self.request.query_params.get("status")
         if status_filter:
             qs = qs.filter(status=status_filter)
+
+        q = self.request.query_params.get("q")
+        if q:
+            qs = qs.filter(Q(name__icontains=q) | Q(feature__name__icontains=q))
+
         return qs
 
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:

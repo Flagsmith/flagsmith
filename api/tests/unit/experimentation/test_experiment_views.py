@@ -360,6 +360,62 @@ def test_get_list__filter_by_status__returns_filtered(
     assert len(response.json()) == expected_count
 
 
+def test_get_list__search_by_experiment_name__returns_matching(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(_list_url(environment), {"q": experiment.name[:4]})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] == experiment.id
+
+
+def test_get_list__search_by_feature_name__returns_matching(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    multivariate_feature: Feature,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(
+        _list_url(environment), {"q": multivariate_feature.name}
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] == experiment.id
+
+
+def test_get_list__search_no_match__returns_empty(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(_list_url(environment), {"q": "nonexistent"})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 0
+
+
 def test_get_detail__exists__returns_200(
     admin_client_new: APIClient,
     environment: Environment,
