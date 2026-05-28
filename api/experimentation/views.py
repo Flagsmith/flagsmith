@@ -143,10 +143,7 @@ class ExperimentViewSet(
         response = super().list(request, *args, **kwargs)
         base_qs = super().get_queryset()
         counts = base_qs.aggregate(
-            **{
-                s.value: Count("id", filter=Q(status=s.value))
-                for s in ExperimentStatus
-            }
+            **{s.value: Count("id", filter=Q(status=s.value)) for s in ExperimentStatus}
         )
         response.data["status_counts"] = counts
         return response
