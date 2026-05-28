@@ -2,6 +2,7 @@ import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import ContentCard from 'components/base/grid/ContentCard'
+import Button from 'components/base/forms/Button'
 
 const meta: Meta<typeof ContentCard> = {
   component: ContentCard,
@@ -43,7 +44,11 @@ export const WithAction: Story = {
   render: () => (
     <ContentCard
       title='Feature flag'
-      action={<button className='btn btn-sm btn-primary'>Edit</button>}
+      action={
+        <Button theme='primary' size='small'>
+          Edit
+        </Button>
+      }
     >
       <p className='text-muted fs-small mb-0'>
         The flag you&apos;re experimenting on. Variations are read-only, defined
