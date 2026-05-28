@@ -1,5 +1,3 @@
-import uuid
-
 from django.db import models
 
 from core.models import SoftDeleteExportableModel
@@ -28,7 +26,6 @@ class AzureDevOpsServiceHook(SoftDeleteExportableModel):
     event_type = models.CharField(max_length=64)
     subscription_id = models.UUIDField()
     secret = models.CharField(max_length=128)
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -38,7 +35,4 @@ class AzureDevOpsServiceHook(SoftDeleteExportableModel):
                 name="unique_azure_devops_service_hook_per_event",
                 condition=models.Q(deleted_at__isnull=True),
             ),
-        ]
-        indexes = [
-            models.Index(fields=["uuid"]),
         ]

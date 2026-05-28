@@ -198,3 +198,39 @@ def test_list_configuration__unauthenticated__returns_unauthorised(
         status.HTTP_401_UNAUTHORIZED,
         status.HTTP_403_FORBIDDEN,
     )
+
+
+def test_create_configuration__non_admin__returns_403(
+    staff_client: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    url = f"/api/v1/projects/{project.id}/integrations/azure-devops/"
+    payload = {
+        "organisation_url": "https://dev.azure.com/test-org",
+        "personal_access_token": "ado-test-token",
+    }
+
+    # When
+    response = staff_client.post(url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_delete_configuration__non_admin__returns_403(
+    staff_client: APIClient,
+    project: Project,
+    azure_devops_configuration: AzureDevOpsConfiguration,
+) -> None:
+    # Given
+    detail_url = (
+        f"/api/v1/projects/{project.id}/integrations/azure-devops/"
+        f"{azure_devops_configuration.id}/"
+    )
+
+    # When
+    response = staff_client.delete(detail_url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
