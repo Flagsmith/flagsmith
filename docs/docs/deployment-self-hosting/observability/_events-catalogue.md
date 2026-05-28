@@ -39,6 +39,16 @@ Logged at `warning` from:
 Attributes:
  - `details`
 
+### `azure_devops.api_call.failed`
+
+Logged at `error` from:
+ - `api/integrations/azure_devops/views/browse_azure_devops.py:65`
+
+Attributes:
+ - `exc_info`
+ - `organisation.id`
+ - `project.id`
+
 ### `azure_devops.configuration.created`
 
 Logged at `info` from:
@@ -56,6 +66,45 @@ Logged at `info` from:
 
 Attributes:
  - `ado.organisation.url`
+ - `organisation.id`
+ - `project.id`
+
+### `azure_devops.projects.fetched`
+
+Logged at `info` from:
+ - `api/integrations/azure_devops/views/browse_azure_devops.py:121`
+
+Attributes:
+ - `organisation.id`
+ - `project.id`
+
+### `azure_devops.pull_requests.fetched`
+
+Logged at `info` from:
+ - `api/integrations/azure_devops/views/browse_azure_devops.py:165`
+
+Attributes:
+ - `ado.project.id`
+ - `organisation.id`
+ - `project.id`
+
+### `azure_devops.repositories.fetched`
+
+Logged at `info` from:
+ - `api/integrations/azure_devops/views/browse_azure_devops.py:141`
+
+Attributes:
+ - `ado.project.id`
+ - `organisation.id`
+ - `project.id`
+
+### `azure_devops.work_items.fetched`
+
+Logged at `info` from:
+ - `api/integrations/azure_devops/views/browse_azure_devops.py:193`
+
+Attributes:
+ - `ado.project.id`
  - `organisation.id`
  - `project.id`
 
