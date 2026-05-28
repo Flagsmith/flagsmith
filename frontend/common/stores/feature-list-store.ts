@@ -173,9 +173,9 @@ const controller = {
             })
           } else {
             flagsmith.trackEvent('feature_created', flag.name, {
-              feature_count: store.model?.features?.length ?? 0,
               feature_type: featureType,
               project_id: projectId,
+              total_feature_count: store.model?.features?.length ?? 0,
             })
           }
         }),
