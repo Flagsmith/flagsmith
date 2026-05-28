@@ -148,10 +148,7 @@ class ExperimentViewSet(
                 Q(name__icontains=q) | Q(feature__name__icontains=q)
             )
         counts = base_qs.aggregate(
-            **{
-                s.value: Count("id", filter=Q(status=s.value))
-                for s in ExperimentStatus
-            }
+            **{s.value: Count("id", filter=Q(status=s.value)) for s in ExperimentStatus}
         )
         response.data["status_counts"] = counts
         return response
