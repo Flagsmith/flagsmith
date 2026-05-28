@@ -96,12 +96,6 @@ const controller = {
       OrganisationStore.model.projects.length === 1 &&
       store.model &&
       (!store.model.features || !store.model.features.length)
-    if (isFirstFeature) {
-      createdFirstFeature = true
-      flagsmith.setTrait('first_feature', 'true')
-      API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
-      window.lintrk?.('track', { conversion_id: 16798354 })
-    }
 
     createProjectFlag(getStore(), {
       body: Object.assign({}, flag, {
@@ -167,10 +161,14 @@ const controller = {
 
           store.saved({ createdFlag: flag.name })
           if (isFirstFeature) {
+            createdFirstFeature = true
+            flagsmith.setTrait('first_feature', 'true')
+            API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
             flagsmith.trackEvent('first_feature_created', flag.name, {
               feature_type: featureType,
               project_id: projectId,
             })
+            window.lintrk?.('track', { conversion_id: 16798354 })
           } else {
             flagsmith.trackEvent('feature_created', flag.name, {
               feature_type: featureType,
