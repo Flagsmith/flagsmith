@@ -65,7 +65,7 @@ echo "Hello, Flagsmith Warehouse!";`,
     code: `from flagsmith import Flagsmith
 
 flagsmith = Flagsmith(environment_key="YOUR_ENVIRONMENT_KEY")
-print("Hello, Flagsmith Warehouse!")`,
+print("Hello, Flagsmith Ruby Warehouse!")`,
     enabled: true,
   },
   'Ruby': {
