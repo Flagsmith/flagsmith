@@ -197,3 +197,84 @@ def test_list_projects__continuation_token_param__sent_in_request_query() -> Non
 
     # Then — request landed on the matched URL with the expected query param
     assert len(responses.calls) == 1
+
+
+from integrations.azure_devops.client.types import (
+    AdoPullRequest,
+    AdoPullRequestsPage,
+    AdoRepository,
+    AdoWorkItem,
+    AdoWorkItemsPage,
+)
+
+
+def test_ado_repository__shape__has_required_keys() -> None:
+    # Given
+    repo: AdoRepository = {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "name": "my-repo",
+        "default_branch": "refs/heads/main",
+    }
+
+    # When
+    keys = set(repo.keys())
+
+    # Then
+    assert keys == {"id", "name", "default_branch"}
+
+
+def test_ado_pull_request__shape__has_required_keys() -> None:
+    # Given
+    pr: AdoPullRequest = {
+        "id": 42,
+        "title": "Add feature X",
+        "state": "active",
+        "is_draft": False,
+        "web_url": "https://dev.azure.com/test-org/proj/_git/repo/pullrequest/42",
+        "repository_name": "repo",
+    }
+
+    # When
+    keys = set(pr.keys())
+
+    # Then
+    assert keys == {"id", "title", "state", "is_draft", "web_url", "repository_name"}
+
+
+def test_ado_pull_requests_page__shape__has_required_keys() -> None:
+    # Given
+    page: AdoPullRequestsPage = {"results": [], "continuation_token": None}
+
+    # When
+    keys = set(page.keys())
+
+    # Then
+    assert keys == {"results", "continuation_token"}
+
+
+def test_ado_work_item__shape__has_required_keys() -> None:
+    # Given
+    work_item: AdoWorkItem = {
+        "id": 100,
+        "title": "Fix bug",
+        "state": "Active",
+        "work_item_type": "Bug",
+        "web_url": "https://dev.azure.com/test-org/proj/_workitems/edit/100",
+    }
+
+    # When
+    keys = set(work_item.keys())
+
+    # Then
+    assert keys == {"id", "title", "state", "work_item_type", "web_url"}
+
+
+def test_ado_work_items_page__shape__has_required_keys() -> None:
+    # Given
+    page: AdoWorkItemsPage = {"results": [], "continuation_token": None}
+
+    # When
+    keys = set(page.keys())
+
+    # Then
+    assert keys == {"results", "continuation_token"}
