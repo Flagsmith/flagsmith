@@ -28,7 +28,8 @@ def _ado_request(
     *,
     path: str,
     params: dict[str, Any] | None = None,
-    json_body: dict[str, Any] | None = None,
+    json_body: dict[str, Any] | list[Any] | None = None,
+    content_type: str | None = None,
 ) -> requests.Response:
     base = organisation_url.rstrip("/")
     # `path` may be either a bare segment ("projects") or already contain
@@ -41,12 +42,14 @@ def _ado_request(
     query: dict[str, Any] = {"api-version": AZURE_DEVOPS_API_VERSION}
     if params:
         query.update(params)
+    headers = {"Content-Type": content_type} if content_type else {}
     response = requests.request(
         method,
         url,
         auth=("", pat),
         params=query,
         json=json_body,
+        headers=headers,
         timeout=AZURE_DEVOPS_CLIENT_TIMEOUT_SECONDS,
     )
     if response.status_code in (401, 403):
@@ -342,3 +345,104 @@ def remove_tag_from_pull_request(
         )
     except AzureDevOpsNotFoundError:
         return
+
+
+def _get_work_item_tags(
+    *,
+    organisation_url: str,
+    pat: str,
+    project: str,
+    work_item_id: int,
+) -> list[str]:
+    """Fetch a work item's current System.Tags field, parsed as a list."""
+    response = _ado_request(
+        "GET",
+        organisation_url,
+        pat,
+        path=f"{project}/_apis/wit/workitems/{work_item_id}",
+        params={"fields": "System.Tags"},
+    )
+    payload = response.json()
+    raw = payload.get("fields", {}).get("System.Tags", "") or ""
+    return [t.strip() for t in raw.split(";") if t.strip()]
+
+
+def _patch_work_item_tags(
+    *,
+    organisation_url: str,
+    pat: str,
+    project: str,
+    work_item_id: int,
+    tags: list[str],
+) -> None:
+    """PATCH a work item's System.Tags field with the supplied tag list."""
+    _ado_request(
+        "PATCH",
+        organisation_url,
+        pat,
+        path=f"{project}/_apis/wit/workitems/{work_item_id}",
+        json_body=[
+            {
+                "op": "add",
+                "path": "/fields/System.Tags",
+                "value": "; ".join(tags),
+            }
+        ],
+        content_type="application/json-patch+json",
+    )
+
+
+def add_tag_to_work_item(
+    *,
+    organisation_url: str,
+    pat: str,
+    project: str,
+    work_item_id: int,
+    tag: str,
+) -> None:
+    """Append ``tag`` to the work item's System.Tags field, preserving
+    existing tags. No-op if the tag is already present.
+    """
+    current = _get_work_item_tags(
+        organisation_url=organisation_url,
+        pat=pat,
+        project=project,
+        work_item_id=work_item_id,
+    )
+    if tag in current:
+        return
+    _patch_work_item_tags(
+        organisation_url=organisation_url,
+        pat=pat,
+        project=project,
+        work_item_id=work_item_id,
+        tags=[*current, tag],
+    )
+
+
+def remove_tag_from_work_item(
+    *,
+    organisation_url: str,
+    pat: str,
+    project: str,
+    work_item_id: int,
+    tag: str,
+) -> None:
+    """Remove ``tag`` from the work item's System.Tags field, preserving
+    every other tag. No-op if the tag isn't present.
+    """
+    current = _get_work_item_tags(
+        organisation_url=organisation_url,
+        pat=pat,
+        project=project,
+        work_item_id=work_item_id,
+    )
+    if tag not in current:
+        return
+    _patch_work_item_tags(
+        organisation_url=organisation_url,
+        pat=pat,
+        project=project,
+        work_item_id=work_item_id,
+        tags=[t for t in current if t != tag],
+    )

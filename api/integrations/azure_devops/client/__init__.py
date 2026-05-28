@@ -1,12 +1,14 @@
 from integrations.azure_devops.client.api import (
     add_pull_request_comment,
     add_tag_to_pull_request,
+    add_tag_to_work_item,
     add_work_item_comment,
     list_projects,
     list_pull_requests,
     list_repositories,
     list_work_items,
     remove_tag_from_pull_request,
+    remove_tag_from_work_item,
 )
 from integrations.azure_devops.client.exceptions import (
     AzureDevOpsAuthError,
@@ -36,10 +38,12 @@ __all__ = [
     "AzureDevOpsNotFoundError",
     "add_pull_request_comment",
     "add_tag_to_pull_request",
+    "add_tag_to_work_item",
     "add_work_item_comment",
     "list_projects",
     "list_pull_requests",
     "list_repositories",
     "list_work_items",
     "remove_tag_from_pull_request",
+    "remove_tag_from_work_item",
 ]

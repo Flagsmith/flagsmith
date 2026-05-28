@@ -7,12 +7,14 @@ import responses
 from integrations.azure_devops.client import (
     add_pull_request_comment,
     add_tag_to_pull_request,
+    add_tag_to_work_item,
     add_work_item_comment,
     list_projects,
     list_pull_requests,
     list_repositories,
     list_work_items,
     remove_tag_from_pull_request,
+    remove_tag_from_work_item,
 )
 from integrations.azure_devops.client.exceptions import (
     AzureDevOpsAuthError,
@@ -963,3 +965,195 @@ def test_remove_tag_from_pull_request__missing_label__swallows_404() -> None:
 
     # Then
     assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_add_tag_to_work_item__no_existing_tags__patches_with_new_tag() -> None:
+    # Given
+    responses.get(
+        f"{ORG_URL}/proj/_apis/wit/workitems/100",
+        json={"id": 100, "fields": {}},
+        match=[
+            responses.matchers.query_param_matcher(
+                {"fields": "System.Tags"},
+                strict_match=False,
+            )
+        ],
+    )
+    responses.patch(
+        f"{ORG_URL}/proj/_apis/wit/workitems/100",
+        json={"id": 100, "fields": {"System.Tags": "flagsmith"}},
+        match=[
+            responses.matchers.json_params_matcher(
+                [
+                    {
+                        "op": "add",
+                        "path": "/fields/System.Tags",
+                        "value": "flagsmith",
+                    }
+                ]
+            ),
+        ],
+    )
+
+    # When
+    add_tag_to_work_item(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        project="proj",
+        work_item_id=100,
+        tag="flagsmith",
+    )
+
+    # Then
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_add_tag_to_work_item__tag_already_present__no_patch_call() -> None:
+    # Given
+    responses.get(
+        f"{ORG_URL}/proj/_apis/wit/workitems/100",
+        json={"id": 100, "fields": {"System.Tags": "existing; flagsmith"}},
+    )
+
+    # When
+    add_tag_to_work_item(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        project="proj",
+        work_item_id=100,
+        tag="flagsmith",
+    )
+
+    # Then — only the GET; no PATCH
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_add_tag_to_work_item__existing_other_tags__appends() -> None:
+    # Given
+    responses.get(
+        f"{ORG_URL}/proj/_apis/wit/workitems/100",
+        json={"id": 100, "fields": {"System.Tags": "alpha; beta"}},
+    )
+    responses.patch(
+        f"{ORG_URL}/proj/_apis/wit/workitems/100",
+        json={"id": 100, "fields": {"System.Tags": "alpha; beta; flagsmith"}},
+        match=[
+            responses.matchers.json_params_matcher(
+                [
+                    {
+                        "op": "add",
+                        "path": "/fields/System.Tags",
+                        "value": "alpha; beta; flagsmith",
+                    }
+                ]
+            ),
+        ],
+    )
+
+    # When
+    add_tag_to_work_item(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        project="proj",
+        work_item_id=100,
+        tag="flagsmith",
+    )
+
+    # Then
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_remove_tag_from_work_item__present__patches_with_filtered_tags() -> None:
+    # Given
+    responses.get(
+        f"{ORG_URL}/proj/_apis/wit/workitems/100",
+        json={"id": 100, "fields": {"System.Tags": "alpha; flagsmith; beta"}},
+    )
+    responses.patch(
+        f"{ORG_URL}/proj/_apis/wit/workitems/100",
+        json={"id": 100, "fields": {"System.Tags": "alpha; beta"}},
+        match=[
+            responses.matchers.json_params_matcher(
+                [
+                    {
+                        "op": "add",
+                        "path": "/fields/System.Tags",
+                        "value": "alpha; beta",
+                    }
+                ]
+            ),
+        ],
+    )
+
+    # When
+    remove_tag_from_work_item(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        project="proj",
+        work_item_id=100,
+        tag="flagsmith",
+    )
+
+    # Then
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_remove_tag_from_work_item__absent__no_patch_call() -> None:
+    # Given
+    responses.get(
+        f"{ORG_URL}/proj/_apis/wit/workitems/100",
+        json={"id": 100, "fields": {"System.Tags": "alpha; beta"}},
+    )
+
+    # When
+    remove_tag_from_work_item(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        project="proj",
+        work_item_id=100,
+        tag="flagsmith",
+    )
+
+    # Then — only the GET; no PATCH
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_remove_tag_from_work_item__last_tag__patches_to_empty_string() -> None:
+    # Given
+    responses.get(
+        f"{ORG_URL}/proj/_apis/wit/workitems/100",
+        json={"id": 100, "fields": {"System.Tags": "flagsmith"}},
+    )
+    responses.patch(
+        f"{ORG_URL}/proj/_apis/wit/workitems/100",
+        json={"id": 100, "fields": {"System.Tags": ""}},
+        match=[
+            responses.matchers.json_params_matcher(
+                [
+                    {
+                        "op": "add",
+                        "path": "/fields/System.Tags",
+                        "value": "",
+                    }
+                ]
+            ),
+        ],
+    )
+
+    # When
+    remove_tag_from_work_item(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        project="proj",
+        work_item_id=100,
+        tag="flagsmith",
+    )
+
+    # Then
+    assert len(responses.calls) == 2
