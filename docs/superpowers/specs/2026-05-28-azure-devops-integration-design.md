@@ -59,13 +59,13 @@ and `gitlab/` and follows the GitLab layout: `client/`, `services/`,
 Two new values are added to
 `features.feature_external_resources.models.ResourceType`:
 
-- `AZURE_PULL_REQUEST`
-- `AZURE_WORK_ITEM`
+- `AZURE_DEVOPS_PULL_REQUEST`
+- `AZURE_DEVOPS_WORK_ITEM`
 
-plus a module-level tuple `AZURE_RESOURCE_TYPES` mirroring
+plus a module-level tuple `AZURE_DEVOPS_RESOURCE_TYPES` mirroring
 `GITLAB_RESOURCE_TYPES`. The existing dispatcher in
 `api/integrations/vcs/services.py` gains a parallel
-`if resource.type in AZURE_RESOURCE_TYPES:` branch alongside the GitLab
+`if resource.type in AZURE_DEVOPS_RESOURCE_TYPES:` branch alongside the GitLab
 branch. The GitHub and GitLab integrations are not otherwise modified.
 
 The whole integration is gated by a Flagsmith-on-Flagsmith boolean flag
@@ -121,11 +121,11 @@ GitLab's one-hook-many-events model), so the table contains one row per
 `ResourceType` gains:
 
 ```python
-AZURE_PULL_REQUEST = "AZURE_PULL_REQUEST", "Azure Pull Request"
-AZURE_WORK_ITEM    = "AZURE_WORK_ITEM",    "Azure Work Item"
+AZURE_DEVOPS_PULL_REQUEST = "AZURE_DEVOPS_PULL_REQUEST", "Azure DevOps Pull Request"
+AZURE_DEVOPS_WORK_ITEM    = "AZURE_DEVOPS_WORK_ITEM",    "Azure DevOps Work Item"
 ```
 
-and a module-level tuple `AZURE_RESOURCE_TYPES = (ResourceType.AZURE_PULL_REQUEST, ResourceType.AZURE_WORK_ITEM)`.
+and a module-level tuple `AZURE_DEVOPS_RESOURCE_TYPES = (ResourceType.AZURE_DEVOPS_PULL_REQUEST, ResourceType.AZURE_DEVOPS_WORK_ITEM)`.
 
 The `metadata` JSON for ADO resources matches the `AzureDevOpsResourceMetadata`
 TypedDict declared in `azure_devops.client.types`:
@@ -345,7 +345,7 @@ Each metric has a complete `help` string explaining its meaning per
 ### `vcs/services.py` (modified)
 
 `dispatch_vcs_on_resource_create` and `dispatch_vcs_on_resource_destroy` gain
-an `AZURE_RESOURCE_TYPES` branch with the same shape as the existing GitLab
+an `AZURE_DEVOPS_RESOURCE_TYPES` branch with the same shape as the existing GitLab
 branch: register subscriptions, apply initial tag synchronously, dispatch
 label + linked-comment tasks; on destroy queue the unlinked/label-removal
 tasks and clear the tag, then deregister subscriptions if no more live
@@ -381,8 +381,8 @@ New TypeScript/React work mirroring the existing GitLab work:
    loads the project's `AzureDevOpsConfiguration`, calls the client with the
    stored PAT, and returns a paginated, mapped result.
 2. User selects a resource. Frontend POSTs to the existing
-   `FeatureExternalResource` create endpoint with `type=AZURE_WORK_ITEM` /
-   `AZURE_PULL_REQUEST`, the URL, and the metadata snapshot.
+   `FeatureExternalResource` create endpoint with `type=AZURE_DEVOPS_WORK_ITEM` /
+   `AZURE_DEVOPS_PULL_REQUEST`, the URL, and the metadata snapshot.
 3. The model's `AFTER_SAVE` hook for ADO types calls the `vcs` dispatcher
    create-branch, which:
    - calls `services.webhooks.register_subscriptions_for_resource` —
@@ -532,7 +532,7 @@ Under `api/tests/unit/integrations/azure_devops/`. Fixtures in a local
 - `test_models.py` — write-only PAT, unique constraints, soft-delete.
 - `test_metrics.py` — counters and histogram fire with the right labels.
 - `test_vcs_dispatcher.py` — link / unlink dispatch the expected azure
-  side-effects for `AZURE_*` types; GitLab branch regression guard.
+  side-effects for `AZURE_DEVOPS_*` types; GitLab branch regression guard.
 
 ### Integration tests
 
