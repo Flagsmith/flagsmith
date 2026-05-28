@@ -27,6 +27,10 @@ const trackEvent = (event: string, attributes: Record<string, unknown> = {}) =>
   // eslint-disable-next-line no-console
   console.info(`[onboarding.quickstart] ${event}`, attributes)
 
+// POC stub — replaced by the env key returned from the create-environment
+// API call once the backend chain is wired up.
+const DEMO_ENVIRONMENT_KEY = 'demo-environment-key-replace-me'
+
 const OnboardingQuickstartPage: FC = () => {
   const history = useHistory()
   const { data: profile } = useGetProfileQuery({})
@@ -74,24 +78,28 @@ const OnboardingQuickstartPage: FC = () => {
   const evaluationStepTitle =
     selectedRole === 'pm' ? 'Connect your tools' : 'See it works'
 
-  const steps: OnboardingStepDef[] = useMemo(
-    () => [
+  // Other role skips the evaluation step — drop it from the timeline so
+  // the stepper accurately reflects the flow they'll actually walk.
+  const steps: OnboardingStepDef[] = useMemo(() => {
+    const base: OnboardingStepDef[] = [
       { key: 'role', title: 'Your role' },
       { key: 'org', title: 'Organisation' },
       { key: 'project', title: 'Project' },
       { key: 'feature', title: 'First feature' },
-      { key: 'evaluation', title: evaluationStepTitle },
-    ],
-    [evaluationStepTitle],
-  )
+    ]
+    if (selectedRole === 'other') return base
+    return [...base, { key: 'evaluation', title: evaluationStepTitle }]
+  }, [evaluationStepTitle, selectedRole])
 
   // Post-onboarding destination. Real impl needs projectId + environmentKey
   // returned from the API-chain stub in handleFinish — both are currently
   // placeholders so the URL won't fully resolve until that lands.
-  const finishedDestination =
-    environmentKey && projectName
-      ? `/project/${projectName}/environment/${environmentKey}/features`
+  const featuresUrl = (envKey: string) =>
+    envKey && projectName
+      ? `/project/${projectName}/environment/${envKey}/features`
       : '/organisations'
+
+  const finishedDestination = featuresUrl(environmentKey)
 
   const handleFinish = async () => {
     setIsSubmitting(true)
@@ -103,13 +111,15 @@ const OnboardingQuickstartPage: FC = () => {
     })
     // POC stub — real impl would chain createOrganisation → createProject →
     // createFeature → fetch environment key here.
-    setEnvironmentKey('demo-environment-key-replace-me')
+    setEnvironmentKey(DEMO_ENVIRONMENT_KEY)
     setIsSubmitting(false)
 
     // 'other' role skips the AHA step entirely and lands on the features
     // page — per the per-role paths design, Other = "orient, don't commit".
+    // Build the URL inline because the freshly-set environmentKey isn't
+    // visible in this closure yet.
     if (selectedRole === 'other') {
-      history.push(finishedDestination)
+      history.push(featuresUrl(DEMO_ENVIRONMENT_KEY))
       return
     }
     setStep('evaluation')

@@ -8,5 +8,5 @@ export type OnboardingRole = {
 export const ONBOARDING_ROLES: OnboardingRole[] = [
   { key: 'engineer', title: 'Engineer' },
   { key: 'pm', title: 'Product manager' },
-  { key: 'other', title: 'Something else' },
+  { key: 'other', title: 'Other' },
 ]
