@@ -11,7 +11,7 @@ from integrations.azure_devops.services.tagging import (
     clear_tag_for_resource,
     refresh_tags_for_resource,
 )
-from projects.tags.models import TagType
+from projects.tags.models import Tag, TagType
 
 
 def _ado_labels_on(feature: Feature) -> list[str]:
@@ -191,13 +191,21 @@ def test_clear_tag_for_resource__different_kind__keeps_other_kinds_tag(
 
 
 @pytest.mark.django_db
-def test_clear_tag_for_resource__non_ado_resource__no_op(
+def test_clear_tag_for_resource__non_ado_resource__leaves_gitlab_tag_intact(
     azure_devops_configuration: AzureDevOpsConfiguration,
     feature: Feature,
 ) -> None:
     # Given
     azure_devops_configuration.tagging_enabled = True
     azure_devops_configuration.save()
+    gitlab_tag, _ = Tag.objects.get_or_create(
+        label="Issue Open",
+        project=feature.project,
+        is_system_tag=True,
+        type=TagType.GITLAB.value,
+        defaults={"color": "#FC6D26", "description": "GitLab issue open"},
+    )
+    feature.tags.add(gitlab_tag)
     gitlab_resource = FeatureExternalResource.objects.create(
         feature=feature,
         url="https://gitlab.com/foo/bar/-/issues/1",
@@ -208,8 +216,11 @@ def test_clear_tag_for_resource__non_ado_resource__no_op(
     # When
     clear_tag_for_resource(gitlab_resource)
 
-    # Then — no exception, no ADO tags created or removed
+    # Then — no ADO tags appear AND the pre-existing GitLab tag survives
     assert _ado_labels_on(feature) == []
+    assert sorted(
+        feature.tags.filter(type=TagType.GITLAB.value).values_list("label", flat=True)
+    ) == ["Issue Open"]
 
 
 @pytest.mark.django_db
@@ -222,9 +233,7 @@ def test_refresh_tags_for_resource__state_change__rotates_tag(
     azure_devops_configuration.save()
     apply_initial_tag(azure_devops_pr_resource_open)
     assert _ado_labels_on(azure_devops_pr_resource_open.feature) == ["PR Open"]
-    azure_devops_pr_resource_open.metadata = (
-        '{"state": "completed", "is_draft": false}'
-    )
+    azure_devops_pr_resource_open.metadata = '{"state": "completed", "is_draft": false}'
     azure_devops_pr_resource_open.save()
 
     # When

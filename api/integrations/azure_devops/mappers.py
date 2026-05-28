@@ -26,6 +26,7 @@ _WORK_ITEM_OPEN_STATES = {
     "approved",
     "committed",
     "open",
+    "proposed",
     "resolved",
 }
 _WORK_ITEM_CLOSED_STATES = {"closed", "done", "removed"}

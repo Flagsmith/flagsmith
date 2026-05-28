@@ -82,6 +82,7 @@ def test_map_pr_state__none_state__returns_none() -> None:
         ("Approved", AzureDevOpsTagLabel.WORK_ITEM_OPEN),
         ("Committed", AzureDevOpsTagLabel.WORK_ITEM_OPEN),
         ("Open", AzureDevOpsTagLabel.WORK_ITEM_OPEN),
+        ("Proposed", AzureDevOpsTagLabel.WORK_ITEM_OPEN),
         ("Resolved", AzureDevOpsTagLabel.WORK_ITEM_OPEN),
         ("Closed", AzureDevOpsTagLabel.WORK_ITEM_CLOSED),
         ("Done", AzureDevOpsTagLabel.WORK_ITEM_CLOSED),

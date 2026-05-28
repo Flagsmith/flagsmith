@@ -28,9 +28,10 @@ def _make_pr_resource(
         + ("true" if is_draft else "false")
         + "}"
     )
+    draft_suffix = "-draft" if is_draft else ""
     return FeatureExternalResource.objects.create(
         feature=feature,
-        url=f"https://dev.azure.com/test-org/proj/_git/repo/pullrequest/{state}",
+        url=f"https://dev.azure.com/test-org/proj/_git/repo/pullrequest/{state}{draft_suffix}",
         type=ResourceType.AZURE_DEVOPS_PULL_REQUEST.value,
         metadata=metadata,
     )
