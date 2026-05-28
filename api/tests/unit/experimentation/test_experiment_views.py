@@ -483,6 +483,26 @@ def test_get_list__filtered__status_counts_reflect_all(
     assert data["status_counts"]["running"] == 0
 
 
+def test_get_list__searched__status_counts_reflect_search(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(_list_url(environment), {"q": "nonexistent"})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert len(data["results"]) == 0
+    assert data["status_counts"]["created"] == 0
+    assert data["status_counts"]["running"] == 0
+
+
 def test_get_detail__exists__returns_200(
     admin_client_new: APIClient,
     environment: Environment,

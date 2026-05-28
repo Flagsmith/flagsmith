@@ -142,6 +142,11 @@ class ExperimentViewSet(
     def list(self, request: Request, *args: object, **kwargs: object) -> Response:
         response = super().list(request, *args, **kwargs)
         base_qs = super().get_queryset()
+        q = request.query_params.get("q")
+        if q:
+            base_qs = base_qs.filter(
+                Q(name__icontains=q) | Q(feature__name__icontains=q)
+            )
         counts = base_qs.aggregate(
             **{
                 s.value: Count("id", filter=Q(status=s.value))
