@@ -16,7 +16,10 @@ from integrations.azure_devops.client import (
     list_repositories,
     list_work_items,
 )
-from integrations.azure_devops.client.exceptions import AzureDevOpsAuthError
+from integrations.azure_devops.client.exceptions import (
+    AzureDevOpsAuthError,
+    AzureDevOpsNotFoundError,
+)
 from integrations.azure_devops.models import AzureDevOpsConfiguration
 from integrations.azure_devops.serializers.browse import (
     AdoBrowseQueryParamsSerializer,
@@ -60,6 +63,11 @@ class _AdoListView(ListAPIView, abc.ABC):  # type: ignore[type-arg]
             return Response(
                 data={"detail": "Azure DevOps rejected the credentials"},
                 status=status.HTTP_502_BAD_GATEWAY,
+            )
+        except AzureDevOpsNotFoundError:
+            return Response(
+                data={"detail": "Azure DevOps could not find the requested resource"},
+                status=status.HTTP_404_NOT_FOUND,
             )
         except requests.RequestException as exc:
             self._log_for(config).error("api_call.failed", exc_info=exc)
@@ -180,6 +188,7 @@ class BrowseAdoWorkItems(_AdoListView):
         config: AzureDevOpsConfiguration,
         validated_data: dict[str, Any],
     ) -> tuple[Sequence[dict[str, Any]], str | None]:
+        token_int = validated_data.get("continuation_token")
         page = list_work_items(
             organisation_url=config.organisation_url,
             pat=config.personal_access_token,
@@ -188,7 +197,7 @@ class BrowseAdoWorkItems(_AdoListView):
             state=validated_data.get("state") or None,
             work_item_type=validated_data.get("work_item_type") or None,
             top=validated_data["top"],
-            continuation_token=validated_data.get("continuation_token"),
+            continuation_token=str(token_int) if token_int is not None else None,
         )
         self._log_for(config).info(
             "work_items.fetched",

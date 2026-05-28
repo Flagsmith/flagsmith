@@ -174,8 +174,8 @@ username (the ADO PAT convention).
 
 - `list_projects(organisation_url, pat, *, continuation_token=None, top=100) -> AdoProjectsPage`
 - `list_repositories(organisation_url, pat, ado_project_id) -> list[AdoRepository]`
-- `list_pull_requests(organisation_url, pat, ado_project_id, *, search_text=None, state=None, continuation_token=None, top=100) -> AdoPullRequestsPage`
-- `list_work_items(organisation_url, pat, ado_project_id, *, search_text=None, state=None, work_item_type=None, continuation_token=None, top=100) -> AdoWorkItemsPage` — internally executes a WIQL `POST /wiql` then `GET /workitemsbatch` to hydrate fields. Continuation is emulated by offsetting into the WIQL id list.
+- `list_pull_requests(organisation_url, pat, ado_project_id, *, state=None, continuation_token=None, top=100) -> AdoPullRequestsPage`
+- `list_work_items(organisation_url, pat, ado_project_id, *, search_text=None, state=None, work_item_type=None, continuation_token=None, top=100) -> AdoWorkItemsPage` — internally executes a WIQL `POST /wiql` then `POST /workitemsbatch` to hydrate fields. Continuation is emulated by offsetting into the WIQL id list.
 - `create_pull_request_thread(organisation_url, pat, repository_id, pull_request_id, body)`
 - `add_work_item_comment(organisation_url, pat, ado_project_id, work_item_id, body)`
 - `add_tag_to_pull_request(...)` / `remove_tag_from_pull_request(...)`
@@ -285,10 +285,10 @@ PAT is write-only via a `WRITE_ONLY_PLACEHOLDER` pattern (matches GitLab).
 Read-only, paginated, all scoped to a Flagsmith project that has an
 `AzureDevOpsConfiguration`:
 
-- `GET /projects/{flagsmith_project_id}/integrations/azure-devops/ado-projects?page=...&page_size=...`
-- `GET /projects/{flagsmith_project_id}/integrations/azure-devops/repositories?ado_project_id=...`
-- `GET /projects/{flagsmith_project_id}/integrations/azure-devops/pull-requests?ado_project_id=...&search_text=...&state=...`
-- `GET /projects/{flagsmith_project_id}/integrations/azure-devops/work-items?ado_project_id=...&search_text=...&state=...&work_item_type=...`
+- `GET /projects/{flagsmith_project_id}/azure-devops/projects/?top=...&continuation_token=...`
+- `GET /projects/{flagsmith_project_id}/azure-devops/repositories/?ado_project_id=...`
+- `GET /projects/{flagsmith_project_id}/azure-devops/pull-requests/?ado_project_id=...&state=...`
+- `GET /projects/{flagsmith_project_id}/azure-devops/work-items/?ado_project_id=...&search_text=...&state=...&work_item_type=...`
 
 Pagination is by continuation token, surfaced to clients as a `next_page`
 cursor. ADO 4xx is surfaced to the frontend as a structured error;

@@ -226,3 +226,47 @@ def test_browse_projects__unauthenticated__returns_unauthorised(
         status.HTTP_401_UNAUTHORIZED,
         status.HTTP_403_FORBIDDEN,
     )
+
+
+@responses.activate
+def test_browse_projects__ado_auth_failure__returns_502(
+    admin_client_new: APIClient,
+    project: Project,
+    azure_devops_configuration: AzureDevOpsConfiguration,
+) -> None:
+    # Given
+    responses.get(f"{ORG_URL}/_apis/projects", json={}, status=401)
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/azure-devops/projects/"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_502_BAD_GATEWAY
+    assert "rejected the credentials" in str(response.json())
+
+
+@responses.activate
+def test_browse_repositories__unknown_ado_project_id__returns_404(
+    admin_client_new: APIClient,
+    project: Project,
+    azure_devops_configuration: AzureDevOpsConfiguration,
+) -> None:
+    # Given
+    bogus_project_id = "00000000-0000-0000-0000-000000000bad"
+    responses.get(
+        f"{ORG_URL}/{bogus_project_id}/_apis/git/repositories",
+        json={},
+        status=404,
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/azure-devops/repositories/"
+        f"?ado_project_id={bogus_project_id}"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert "could not find" in str(response.json())

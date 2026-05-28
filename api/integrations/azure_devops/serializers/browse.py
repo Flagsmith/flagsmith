@@ -17,6 +17,14 @@ class AdoPullRequestsQueryParamsSerializer(AdoRepositoriesQueryParamsSerializer)
 
 
 class AdoWorkItemsQueryParamsSerializer(AdoRepositoriesQueryParamsSerializer):
+    # Override the base CharField — the work-items client interprets the
+    # token as a non-negative integer offset into the WIQL ID list.
+    # Validating here prevents negative-slice leaks and ValueErrors.
+    # The ignore below is for the intentional field-type narrowing; DRF
+    # supports replacing inherited field types but Mypy flags the variance.
+    continuation_token = serializers.IntegerField(  # type: ignore[assignment]
+        required=False, min_value=0
+    )
     search_text = serializers.CharField(required=False, allow_blank=True)
     state = serializers.CharField(required=False, allow_blank=True)
     work_item_type = serializers.CharField(required=False, allow_blank=True)

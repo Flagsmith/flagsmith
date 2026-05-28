@@ -42,7 +42,7 @@ Attributes:
 ### `azure_devops.api_call.failed`
 
 Logged at `error` from:
- - `api/integrations/azure_devops/views/browse_azure_devops.py:65`
+ - `api/integrations/azure_devops/views/browse_azure_devops.py:73`
 
 Attributes:
  - `exc_info`
@@ -72,7 +72,7 @@ Attributes:
 ### `azure_devops.projects.fetched`
 
 Logged at `info` from:
- - `api/integrations/azure_devops/views/browse_azure_devops.py:121`
+ - `api/integrations/azure_devops/views/browse_azure_devops.py:129`
 
 Attributes:
  - `organisation.id`
@@ -81,7 +81,7 @@ Attributes:
 ### `azure_devops.pull_requests.fetched`
 
 Logged at `info` from:
- - `api/integrations/azure_devops/views/browse_azure_devops.py:165`
+ - `api/integrations/azure_devops/views/browse_azure_devops.py:173`
 
 Attributes:
  - `ado.project.id`
@@ -91,7 +91,7 @@ Attributes:
 ### `azure_devops.repositories.fetched`
 
 Logged at `info` from:
- - `api/integrations/azure_devops/views/browse_azure_devops.py:141`
+ - `api/integrations/azure_devops/views/browse_azure_devops.py:149`
 
 Attributes:
  - `ado.project.id`
@@ -101,7 +101,7 @@ Attributes:
 ### `azure_devops.work_items.fetched`
 
 Logged at `info` from:
- - `api/integrations/azure_devops/views/browse_azure_devops.py:193`
+ - `api/integrations/azure_devops/views/browse_azure_devops.py:202`
 
 Attributes:
  - `ado.project.id`
