@@ -6,11 +6,13 @@ import responses
 
 from integrations.azure_devops.client import (
     add_pull_request_comment,
+    add_tag_to_pull_request,
     add_work_item_comment,
     list_projects,
     list_pull_requests,
     list_repositories,
     list_work_items,
+    remove_tag_from_pull_request,
 )
 from integrations.azure_devops.client.exceptions import (
     AzureDevOpsAuthError,
@@ -893,3 +895,71 @@ def test_add_work_item_comment__500_response__raises_http_error() -> None:
     # Then
     with pytest.raises(requests.HTTPError):
         call_post()
+
+
+@responses.activate
+def test_add_tag_to_pull_request__valid_call__posts_label() -> None:
+    # Given
+    responses.post(
+        f"{ORG_URL}/proj/_apis/git/pullrequests/42/labels",
+        json={"id": "label-1", "name": "flagsmith"},
+        match=[
+            responses.matchers.json_params_matcher({"name": "flagsmith"}),
+        ],
+    )
+
+    # When
+    add_tag_to_pull_request(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        project="proj",
+        pull_request_id=42,
+        tag="flagsmith",
+    )
+
+    # Then
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_remove_tag_from_pull_request__existing_label__deletes() -> None:
+    # Given
+    responses.delete(
+        f"{ORG_URL}/proj/_apis/git/pullrequests/42/labels/flagsmith",
+        body="",
+        status=204,
+    )
+
+    # When
+    remove_tag_from_pull_request(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        project="proj",
+        pull_request_id=42,
+        tag="flagsmith",
+    )
+
+    # Then
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_remove_tag_from_pull_request__missing_label__swallows_404() -> None:
+    # Given
+    responses.delete(
+        f"{ORG_URL}/proj/_apis/git/pullrequests/42/labels/flagsmith",
+        json={},
+        status=404,
+    )
+
+    # When — must not raise
+    remove_tag_from_pull_request(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        project="proj",
+        pull_request_id=42,
+        tag="flagsmith",
+    )
+
+    # Then
+    assert len(responses.calls) == 1

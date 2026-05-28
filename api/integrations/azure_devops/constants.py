@@ -42,3 +42,5 @@ AZURE_DEVOPS_TAG_DESCRIPTION_BY_LABEL: dict[AzureDevOpsTagLabel, str] = {
     AzureDevOpsTagLabel.WORK_ITEM_OPEN: "Has a linked Azure DevOps work item open",
     AzureDevOpsTagLabel.WORK_ITEM_CLOSED: "Has a linked Azure DevOps work item closed",
 }
+
+AZURE_DEVOPS_FLAGSMITH_LABEL = "flagsmith"

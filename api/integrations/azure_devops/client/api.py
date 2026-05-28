@@ -300,3 +300,45 @@ def add_work_item_comment(
         path=f"{project}/_apis/wit/workItems/{work_item_id}/comments",
         json_body={"text": body},
     )
+
+
+def add_tag_to_pull_request(
+    *,
+    organisation_url: str,
+    pat: str,
+    project: str,
+    pull_request_id: int,
+    tag: str,
+) -> None:
+    """Add a label to a pull request. Idempotent on the ADO side — POSTing
+    a label that already exists returns 200 with the existing record.
+    """
+    _ado_request(
+        "POST",
+        organisation_url,
+        pat,
+        path=f"{project}/_apis/git/pullrequests/{pull_request_id}/labels",
+        json_body={"name": tag},
+    )
+
+
+def remove_tag_from_pull_request(
+    *,
+    organisation_url: str,
+    pat: str,
+    project: str,
+    pull_request_id: int,
+    tag: str,
+) -> None:
+    """Delete a label from a pull request. Swallows 404 (label-already-gone
+    is the desired terminal state).
+    """
+    try:
+        _ado_request(
+            "DELETE",
+            organisation_url,
+            pat,
+            path=f"{project}/_apis/git/pullrequests/{pull_request_id}/labels/{tag}",
+        )
+    except AzureDevOpsNotFoundError:
+        return
