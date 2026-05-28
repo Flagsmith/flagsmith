@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 
 from core.models import SoftDeleteExportableModel
@@ -13,3 +15,30 @@ class AzureDevOpsConfiguration(SoftDeleteExportableModel):
     personal_access_token = models.CharField(max_length=300)
     labeling_enabled = models.BooleanField(default=False)
     tagging_enabled = models.BooleanField(default=False)
+
+
+class AzureDevOpsServiceHook(SoftDeleteExportableModel):
+    configuration = models.ForeignKey(
+        AzureDevOpsConfiguration,
+        on_delete=models.CASCADE,
+        related_name="service_hooks",
+    )
+    ado_project_id = models.UUIDField()
+    ado_project_name = models.CharField(max_length=200)
+    event_type = models.CharField(max_length=64)
+    subscription_id = models.UUIDField()
+    secret = models.CharField(max_length=128)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["configuration", "ado_project_id", "event_type"],
+                name="unique_azure_devops_service_hook_per_event",
+                condition=models.Q(deleted_at__isnull=True),
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["uuid"]),
+        ]

@@ -1,7 +1,12 @@
+import uuid as uuid_module
+
 import pytest
 from django.db.utils import IntegrityError
 
-from integrations.azure_devops.models import AzureDevOpsConfiguration
+from integrations.azure_devops.models import (
+    AzureDevOpsConfiguration,
+    AzureDevOpsServiceHook,
+)
 from projects.models import Project
 
 
@@ -63,3 +68,90 @@ def test_azure_devops_configuration__soft_deleted__hidden_from_default_manager(
     assert not visible_qs.exists()
     assert all_qs.exists()
     assert all_qs.get().pk == azure_devops_configuration.pk
+
+
+@pytest.mark.django_db
+def test_azure_devops_service_hook__create__persists_fields(
+    azure_devops_configuration: AzureDevOpsConfiguration,
+) -> None:
+    # Given
+    ado_project_id = uuid_module.uuid4()
+    subscription_id = uuid_module.uuid4()
+
+    # When
+    hook = AzureDevOpsServiceHook.objects.create(
+        configuration=azure_devops_configuration,
+        ado_project_id=ado_project_id,
+        ado_project_name="My ADO Project",
+        event_type="git.pullrequest.merged",
+        subscription_id=subscription_id,
+        secret="rotation-pad-32-bytes-of-urlsafe-junk",
+    )
+
+    # Then
+    assert hook.configuration == azure_devops_configuration
+    assert hook.ado_project_id == ado_project_id
+    assert hook.event_type == "git.pullrequest.merged"
+    assert hook.uuid is not None
+
+
+@pytest.mark.django_db
+def test_azure_devops_service_hook__duplicate_event__raises_integrity_error(
+    azure_devops_configuration: AzureDevOpsConfiguration,
+) -> None:
+    # Given
+    ado_project_id = uuid_module.uuid4()
+    AzureDevOpsServiceHook.objects.create(
+        configuration=azure_devops_configuration,
+        ado_project_id=ado_project_id,
+        ado_project_name="Project",
+        event_type="git.pullrequest.merged",
+        subscription_id=uuid_module.uuid4(),
+        secret="secret-a",
+    )
+
+    duplicate_kwargs = {
+        "configuration": azure_devops_configuration,
+        "ado_project_id": ado_project_id,
+        "ado_project_name": "Project",
+        "event_type": "git.pullrequest.merged",
+        "subscription_id": uuid_module.uuid4(),
+        "secret": "secret-b",
+    }
+
+    # When
+    def create_duplicate() -> None:
+        AzureDevOpsServiceHook.objects.create(**duplicate_kwargs)
+
+    # Then
+    with pytest.raises(IntegrityError):
+        create_duplicate()
+
+
+@pytest.mark.django_db
+def test_azure_devops_service_hook__different_event_type__allowed(
+    azure_devops_configuration: AzureDevOpsConfiguration,
+) -> None:
+    # Given
+    ado_project_id = uuid_module.uuid4()
+    AzureDevOpsServiceHook.objects.create(
+        configuration=azure_devops_configuration,
+        ado_project_id=ado_project_id,
+        ado_project_name="Project",
+        event_type="git.pullrequest.merged",
+        subscription_id=uuid_module.uuid4(),
+        secret="s1",
+    )
+
+    # When
+    second = AzureDevOpsServiceHook.objects.create(
+        configuration=azure_devops_configuration,
+        ado_project_id=ado_project_id,
+        ado_project_name="Project",
+        event_type="workitem.updated",
+        subscription_id=uuid_module.uuid4(),
+        secret="s2",
+    )
+
+    # Then
+    assert second.event_type == "workitem.updated"
