@@ -31,10 +31,20 @@ class ResourceType(models.TextChoices):
     GITLAB_ISSUE = "GITLAB_ISSUE", "GitLab Issue"
     GITLAB_MR = "GITLAB_MR", "GitLab MR"
 
+    # Azure DevOps external resource types
+    AZURE_DEVOPS_PULL_REQUEST = "AZURE_DEVOPS_PULL_REQUEST", "Azure DevOps Pull Request"
+    AZURE_DEVOPS_WORK_ITEM = "AZURE_DEVOPS_WORK_ITEM", "Azure DevOps Work Item"
+
 
 GITLAB_RESOURCE_TYPES: tuple[ResourceType, ...] = (
     ResourceType.GITLAB_ISSUE,
     ResourceType.GITLAB_MR,
+)
+
+
+AZURE_DEVOPS_RESOURCE_TYPES: tuple[ResourceType, ...] = (
+    ResourceType.AZURE_DEVOPS_PULL_REQUEST,
+    ResourceType.AZURE_DEVOPS_WORK_ITEM,
 )
 
 
@@ -54,7 +64,7 @@ tag_by_type_and_state = {
 
 class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignore[misc]
     url = models.URLField()
-    type = models.CharField(max_length=20, choices=ResourceType.choices)
+    type = models.CharField(max_length=30, choices=ResourceType.choices)
 
     # JSON filed containing any metadata related to the external resource
     metadata = models.TextField(null=True)
