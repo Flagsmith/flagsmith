@@ -4,12 +4,23 @@ import pytest
 import requests
 import responses
 
-from integrations.azure_devops.client import list_projects
+from integrations.azure_devops.client import (
+    list_projects,
+    list_repositories,
+)
 from integrations.azure_devops.client.exceptions import (
     AzureDevOpsAuthError,
     AzureDevOpsNotFoundError,
 )
-from integrations.azure_devops.client.types import AdoProject, AdoProjectsPage
+from integrations.azure_devops.client.types import (
+    AdoProject,
+    AdoProjectsPage,
+    AdoPullRequest,
+    AdoPullRequestsPage,
+    AdoRepository,
+    AdoWorkItem,
+    AdoWorkItemsPage,
+)
 
 ORG_URL = "https://dev.azure.com/test-org"
 PAT = "ado-test-pat"
@@ -199,15 +210,6 @@ def test_list_projects__continuation_token_param__sent_in_request_query() -> Non
     assert len(responses.calls) == 1
 
 
-from integrations.azure_devops.client.types import (
-    AdoPullRequest,
-    AdoPullRequestsPage,
-    AdoRepository,
-    AdoWorkItem,
-    AdoWorkItemsPage,
-)
-
-
 def test_ado_repository__shape__has_required_keys() -> None:
     # Given
     repo: AdoRepository = {
@@ -278,3 +280,77 @@ def test_ado_work_items_page__shape__has_required_keys() -> None:
 
     # Then
     assert keys == {"results", "continuation_token"}
+
+
+@responses.activate
+def test_list_repositories__valid_response__returns_typed_list() -> None:
+    # Given
+    ado_project_id = "00000000-0000-0000-0000-0000000000aa"
+    responses.get(
+        f"{ORG_URL}/{ado_project_id}/_apis/git/repositories",
+        json={
+            "value": [
+                {
+                    "id": "00000000-0000-0000-0000-000000000bb1",
+                    "name": "frontend",
+                    "defaultBranch": "refs/heads/main",
+                    "extra": "ignored",
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000bb2",
+                    "name": "backend",
+                    "defaultBranch": "refs/heads/develop",
+                },
+            ],
+            "count": 2,
+        },
+    )
+
+    # When
+    repos = list_repositories(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        ado_project_id=ado_project_id,
+    )
+
+    # Then
+    assert repos == [
+        {
+            "id": "00000000-0000-0000-0000-000000000bb1",
+            "name": "frontend",
+            "default_branch": "refs/heads/main",
+        },
+        {
+            "id": "00000000-0000-0000-0000-000000000bb2",
+            "name": "backend",
+            "default_branch": "refs/heads/develop",
+        },
+    ]
+
+
+@responses.activate
+def test_list_repositories__missing_default_branch__defaults_to_empty_string() -> None:
+    # Given
+    ado_project_id = "00000000-0000-0000-0000-000000000aa1"
+    responses.get(
+        f"{ORG_URL}/{ado_project_id}/_apis/git/repositories",
+        json={
+            "value": [
+                {
+                    "id": "00000000-0000-0000-0000-000000000bb3",
+                    "name": "empty-repo",
+                },
+            ],
+            "count": 1,
+        },
+    )
+
+    # When
+    repos = list_repositories(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        ado_project_id=ado_project_id,
+    )
+
+    # Then — ADO omits `defaultBranch` for repos with no commits yet
+    assert repos[0]["default_branch"] == ""

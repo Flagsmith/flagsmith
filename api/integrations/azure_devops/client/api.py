@@ -6,7 +6,11 @@ from integrations.azure_devops.client.exceptions import (
     AzureDevOpsAuthError,
     AzureDevOpsNotFoundError,
 )
-from integrations.azure_devops.client.types import AdoProject, AdoProjectsPage
+from integrations.azure_devops.client.types import (
+    AdoProject,
+    AdoProjectsPage,
+    AdoRepository,
+)
 from integrations.azure_devops.constants import (
     AZURE_DEVOPS_API_VERSION,
     AZURE_DEVOPS_CLIENT_TIMEOUT_SECONDS,
@@ -23,12 +27,19 @@ def _ado_request(
     json_body: dict[str, Any] | None = None,
 ) -> requests.Response:
     base = organisation_url.rstrip("/")
+    # `path` may be either a bare segment ("projects") or already contain
+    # "_apis/" (for project-scoped endpoints like
+    # "{ado_project_id}/_apis/git/..."). Honour both.
+    if "_apis/" in path:
+        url = f"{base}/{path}"
+    else:
+        url = f"{base}/_apis/{path}"
     query: dict[str, Any] = {"api-version": AZURE_DEVOPS_API_VERSION}
     if params:
         query.update(params)
     response = requests.request(
         method,
-        f"{base}/_apis/{path}",
+        url,
         auth=("", pat),
         params=query,
         json=json_body,
@@ -73,3 +84,26 @@ def list_projects(
     ]
     next_token = response.headers.get("x-ms-continuationtoken")
     return AdoProjectsPage(results=results, continuation_token=next_token)
+
+
+def list_repositories(
+    *,
+    organisation_url: str,
+    pat: str,
+    ado_project_id: str,
+) -> list[AdoRepository]:
+    response = _ado_request(
+        "GET",
+        organisation_url,
+        pat,
+        path=f"{ado_project_id}/_apis/git/repositories",
+    )
+    payload = response.json()
+    return [
+        AdoRepository(
+            id=item["id"],
+            name=item["name"],
+            default_branch=item.get("defaultBranch", ""),
+        )
+        for item in payload.get("value", [])
+    ]
