@@ -15,8 +15,9 @@ class AuthorData:
 
     @classmethod
     def from_request(cls, request: "Request") -> "AuthorData":
-        from users.models import FFAdminUser
         from rest_framework.exceptions import ValidationError
+
+        from users.models import FFAdminUser
 
         if type(request.user) is FFAdminUser:
             return cls(user=request.user)
