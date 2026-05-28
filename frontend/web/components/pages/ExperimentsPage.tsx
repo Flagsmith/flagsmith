@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useState } from 'react'
+import { FC, useCallback, useEffect, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
 import { useGetExperimentsQuery } from 'common/services/useExperiment'
@@ -10,28 +10,15 @@ import PageTitle from 'components/PageTitle'
 import Paging from 'components/Paging'
 import CreateExperimentWizard from 'components/experiments/CreateExperimentWizard'
 import ExperimentsTable from 'components/experiments/ExperimentsTable'
+import ExperimentsListControls from 'components/experiments/ExperimentsListControls'
+import {
+  FilterTab,
+  TAB_LABELS,
+  TAB_ORDER,
+} from 'components/experiments/constants'
 import Icon from 'components/icons/Icon'
-import 'components/experiments/ExperimentsListControls.scss'
-
-type FilterTab = 'all' | ExperimentStatus
 
 const PAGE_SIZE = 10
-
-const TAB_LABELS: Record<FilterTab, string> = {
-  all: 'All',
-  completed: 'Completed',
-  created: 'Draft',
-  paused: 'Paused',
-  running: 'Running',
-}
-
-const TAB_ORDER: FilterTab[] = [
-  'all',
-  'running',
-  'created',
-  'paused',
-  'completed',
-]
 
 const ExperimentsPage: FC = () => {
   const { environmentId, projectId } = useRouteContext()
@@ -67,18 +54,22 @@ const ExperimentsPage: FC = () => {
   const experimentCount = experimentsData?.count ?? 0
   const statusCounts = experimentsData?.status_counts
 
-  const getTabLabel = useMemo(() => {
-    return (tab: FilterTab) => {
+  const getTabLabel = useCallback(
+    (tab: FilterTab) => {
       const label = TAB_LABELS[tab]
       if (!statusCounts) return label
       if (tab === 'all') {
-        const total = Object.values(statusCounts).reduce((a, b) => a + b, 0)
+        const total = Object.values(statusCounts).reduce(
+          (a, b) => a + (b ?? 0),
+          0,
+        )
         return total > 0 ? `${label} (${total})` : label
       }
-      const count = statusCounts[tab as ExperimentStatus]
+      const count = statusCounts[tab as ExperimentStatus] ?? 0
       return count > 0 ? `${label} (${count})` : label
-    }
-  }, [statusCounts])
+    },
+    [statusCounts],
+  )
 
   if (!environmentId || !projectId) return null
 
@@ -153,36 +144,21 @@ const ExperimentsPage: FC = () => {
         </div>
       )
     }
+    const tabs = TAB_ORDER.map((value) => ({
+      label: getTabLabel(value),
+      value,
+    }))
+    const hasResults = !!experiments?.length
     return (
       <>
-        <div className='experiments-controls'>
-          <div className='experiments-controls__tabs'>
-            {TAB_ORDER.map((tab) => (
-              <button
-                key={tab}
-                type='button'
-                className={`experiments-controls__tab ${
-                  activeTab === tab ? 'experiments-controls__tab--active' : ''
-                }`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {getTabLabel(tab)}
-              </button>
-            ))}
-          </div>
-          <div className='experiments-controls__search'>
-            <Input
-              value={searchInput}
-              onChange={(e: InputEvent) =>
-                setSearchInput(Utils.safeParseEventValue(e))
-              }
-              placeholder='Search experiments...'
-              search
-              size='small'
-            />
-          </div>
-        </div>
-        {experiments && experiments.length > 0 ? (
+        <ExperimentsListControls
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          searchInput={searchInput}
+          onSearchChange={setSearchInput}
+        />
+        {hasResults ? (
           <ExperimentsTable
             experiments={experiments}
             environmentId={environmentId}
@@ -194,17 +170,19 @@ const ExperimentsPage: FC = () => {
             </p>
           </div>
         )}
-        <Paging
-          paging={{
-            ...(experimentsData || {}),
-            page,
-            pageSize: PAGE_SIZE,
-          }}
-          nextPage={() => setPage(page + 1)}
-          prevPage={() => setPage(page - 1)}
-          goToPage={(p: number) => setPage(p)}
-          isLoading={isLoading}
-        />
+        {hasResults && (
+          <Paging
+            paging={{
+              ...(experimentsData || {}),
+              page,
+              pageSize: PAGE_SIZE,
+            }}
+            nextPage={() => setPage(page + 1)}
+            prevPage={() => setPage(page - 1)}
+            goToPage={(p: number) => setPage(p)}
+            isLoading={isLoading}
+          />
+        )}
       </>
     )
   }

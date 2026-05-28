@@ -584,7 +584,7 @@ export type ExperimentStatusCounts = Record<ExperimentStatus, number>
 export type ExperimentFeature = {
   id: number
   name: string
-  type: string
+  type: FeatureType
   initial_value: string | null
   multivariate_options: MultivariateOption[]
 }

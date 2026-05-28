@@ -115,7 +115,7 @@ Use Bootstrap classes for responsive behavior:
 
 ## Tabs Component
 
-**Location:** `components/base/forms/Tabs.tsx`
+**Location:** `components/navigation/TabMenu/Tabs.tsx`
 
 ### Basic Usage
 
@@ -208,11 +208,13 @@ openConfirm({
 ```
 
 ### Parameters
-- `title: string` - Dialog title
+- `title: ReactNode` - Dialog title
 - `body: ReactNode` - Dialog content (can be JSX)
 - `onYes: (closeModal: () => void) => void` - Callback when user confirms
 - `onNo?: () => void` - Optional callback when user cancels
-- `challenge?: string` - Optional challenge text user must type to confirm
+- `yesText?: string` - Label for the confirm button (default "Yes")
+- `noText?: string` - Label for the cancel button (default "No")
+- `destructive?: boolean` - Renders the confirm button in danger styling. Use for delete/discard actions.
 
 ### Key Points
 - The `onYes` callback receives a `closeModal` function

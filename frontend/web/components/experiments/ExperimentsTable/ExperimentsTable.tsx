@@ -1,8 +1,8 @@
 import { FC } from 'react'
 import moment from 'moment'
 import { Experiment } from 'common/types/responses'
-import StatusBadge from './StatusBadge'
-import ExperimentActionDropdown from './ExperimentActionDropdown'
+import StatusBadge from 'components/experiments/StatusBadge'
+import ExperimentActionDropdown from 'components/experiments/ExperimentActionDropdown'
 import './ExperimentsTable.scss'
 
 type ExperimentsTableProps = {
