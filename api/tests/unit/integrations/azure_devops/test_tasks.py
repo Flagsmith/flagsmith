@@ -18,9 +18,7 @@ def test_post_linked_task__valid_id__forwards_to_service(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    service_mock = mocker.patch(
-        "integrations.azure_devops.tasks.post_linked_comment"
-    )
+    service_mock = mocker.patch("integrations.azure_devops.tasks.post_linked_comment")
 
     # When
     post_azure_devops_linked_comment(azure_devops_pr_resource_open.id)
@@ -34,9 +32,7 @@ def test_post_linked_task__missing_resource__noop(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    service_mock = mocker.patch(
-        "integrations.azure_devops.tasks.post_linked_comment"
-    )
+    service_mock = mocker.patch("integrations.azure_devops.tasks.post_linked_comment")
 
     # When
     post_azure_devops_linked_comment(999999)
@@ -51,9 +47,7 @@ def test_post_unlinked_task__valid_args__forwards_to_service(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    service_mock = mocker.patch(
-        "integrations.azure_devops.tasks.post_unlinked_comment"
-    )
+    service_mock = mocker.patch("integrations.azure_devops.tasks.post_unlinked_comment")
 
     # When
     post_azure_devops_unlinked_comment(
