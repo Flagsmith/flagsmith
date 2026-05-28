@@ -323,7 +323,7 @@ def test_get_list__search_by_experiment_name__returns_matching(
     enable_features(EXPERIMENT_FLAG)
 
     # When
-    response = admin_client_new.get(_list_url(environment), {"q": "Test Exp"})
+    response = admin_client_new.get(_list_url(environment), {"q": experiment.name[:4]})
 
     # Then
     assert response.status_code == status.HTTP_200_OK
