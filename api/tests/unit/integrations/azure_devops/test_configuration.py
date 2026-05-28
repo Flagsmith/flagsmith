@@ -1,4 +1,3 @@
-import pytest
 from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -132,7 +131,9 @@ def test_update_configuration__valid_data__persists_and_masks_token(
     assert response.json()["personal_access_token"] == "write-only"
 
     azure_devops_configuration.refresh_from_db()
-    assert azure_devops_configuration.organisation_url == "https://dev.azure.com/updated"
+    assert (
+        azure_devops_configuration.organisation_url == "https://dev.azure.com/updated"
+    )
     assert azure_devops_configuration.personal_access_token == "ado-updated-token"
     assert azure_devops_configuration.labeling_enabled is True
     assert azure_devops_configuration.tagging_enabled is True
@@ -166,7 +167,11 @@ def test_delete_configuration__existing__soft_deletes_and_logs(
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert not AzureDevOpsConfiguration.objects.filter(project=project).exists()
-    assert AzureDevOpsConfiguration.objects.all_with_deleted().filter(project=project).exists()
+    assert (
+        AzureDevOpsConfiguration.objects.all_with_deleted()
+        .filter(project=project)
+        .exists()
+    )
 
     assert log.events == [
         {
