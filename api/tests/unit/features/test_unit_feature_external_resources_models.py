@@ -34,8 +34,11 @@ def test_resource_type__azure_devops_work_item__has_value_and_label() -> None:
 def test_azure_devops_resource_types__contains_pull_request_and_work_item__matches_expected_set() -> (
     None
 ):
-    # Given / When
-    members = set(AZURE_DEVOPS_RESOURCE_TYPES)
+    # Given
+    tuple_under_test = AZURE_DEVOPS_RESOURCE_TYPES
+
+    # When
+    members = set(tuple_under_test)
 
     # Then
     assert members == {
