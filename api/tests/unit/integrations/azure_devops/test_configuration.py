@@ -310,3 +310,29 @@ def test_update_configuration__placeholder_pat__skips_validation(
     assert azure_devops_configuration.personal_access_token == original_pat
     assert azure_devops_configuration.labeling_enabled is True
     assert azure_devops_configuration.tagging_enabled is True
+
+
+@responses.activate
+def test_create_configuration__ado_5xx__returns_400_with_retry_message(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    responses.get(
+        "https://dev.azure.com/test-org/_apis/projects",
+        json={},
+        status=503,
+    )
+    url = f"/api/v1/projects/{project.id}/integrations/azure-devops/"
+    payload = {
+        "organisation_url": "https://dev.azure.com/test-org",
+        "personal_access_token": "ado-test-token",
+    }
+
+    # When
+    response = admin_client_new.post(url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Azure DevOps could not be reached" in str(response.json())
+    assert not AzureDevOpsConfiguration.objects.filter(project=project).exists()

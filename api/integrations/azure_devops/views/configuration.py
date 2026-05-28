@@ -1,3 +1,4 @@
+import requests
 import structlog
 from rest_framework.exceptions import ValidationError
 from structlog.typing import FilteringBoundLogger
@@ -17,9 +18,11 @@ logger = structlog.get_logger("azure_devops")
 def _validate_pat_against_ado(*, organisation_url: str, pat: str) -> None:
     """Probe ADO with a minimal request to confirm the PAT is valid.
 
-    Raises ``ValidationError`` on 401/403 from ADO. Other failures (5xx,
-    network) bubble up so the caller can decide whether to log-and-allow
-    or surface as an error.
+    Raises ``ValidationError`` on 401/403 (bad credentials) and on any
+    other failure mode (5xx, network, malformed response). Surfacing a
+    user-facing 400 on transient failure is better than a 500 because the
+    user can act on the message; the persistence path should not silently
+    accept an unverified PAT either.
     """
     try:
         list_projects(organisation_url=organisation_url, pat=pat, top=1)
@@ -27,6 +30,11 @@ def _validate_pat_against_ado(*, organisation_url: str, pat: str) -> None:
         raise ValidationError(
             "Azure DevOps rejected the credentials. "
             "Check the organisation URL and personal access token."
+        ) from None
+    except requests.RequestException:
+        raise ValidationError(
+            "Azure DevOps could not be reached to validate the credentials. "
+            "Please try again."
         ) from None
 
 

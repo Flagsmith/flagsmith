@@ -172,3 +172,28 @@ def test_list_projects__trailing_slash_in_org_url__normalised_in_request() -> No
     # index returns a `Call`. Same workaround as other tests in this codebase.
     assert responses.calls[0].request.url is not None  # type: ignore[union-attr]
     assert "//_apis" not in responses.calls[0].request.url  # type: ignore[union-attr]
+
+
+@responses.activate
+def test_list_projects__continuation_token_param__sent_in_request_query() -> None:
+    # Given
+    responses.get(
+        f"{ORG_URL}/_apis/projects",
+        json={"value": [], "count": 0},
+        match=[
+            responses.matchers.query_param_matcher(
+                {"continuationToken": "ct-abc"},
+                strict_match=False,
+            )
+        ],
+    )
+
+    # When
+    list_projects(
+        organisation_url=ORG_URL,
+        pat=PAT,
+        continuation_token="ct-abc",
+    )
+
+    # Then — request landed on the matched URL with the expected query param
+    assert len(responses.calls) == 1
