@@ -4,7 +4,7 @@ import './StatusBadge.scss'
 
 const STATUS_LABELS: Record<ExperimentStatus, string> = {
   completed: 'Completed',
-  created: 'Created',
+  created: 'Draft',
   paused: 'Paused',
   running: 'Running',
 }

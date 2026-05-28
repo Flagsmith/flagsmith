@@ -1,3 +1,12 @@
+.wizard-main {
+  min-width: 0;
+}
+
+.wizard-preview-panel {
+  flex-shrink: 0;
+  width: 260px;
+}
+
 .wizard-field {
   display: flex;
   flex-direction: column;

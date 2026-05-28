@@ -28,6 +28,7 @@
   }
 
   &__row {
+    cursor: pointer;
     transition: background var(--duration-fast) var(--easing-standard);
 
     &:hover {

@@ -1,5 +1,50 @@
 # UI Patterns & Best Practices
 
+## Design Tokens & Primitives
+
+**Always use design tokens and existing primitive components instead of hardcoded values or custom implementations.**
+
+### Colour Tokens
+
+**Location:** `common/theme/tokens.ts` (auto-generated from `common/theme/tokens.json`)
+
+Never hardcode hex colours in TSX or SCSS. Use:
+- **In SCSS:** CSS variables directly — `var(--color-text-success)`, `var(--color-border-action)`, `var(--color-surface-muted)`
+- **In TSX (inline styles / chart props):** JS token constants — `colorTextSuccess`, `colorBorderAction`, `colorSurfaceMuted`
+
+Token categories: `colorText*`, `colorIcon*`, `colorBorder*`, `colorSurface*`, `colorChart*`, `radius*`, `shadow*`, `duration*`, `easing*`.
+
+### Primitive Components — Use Before Building
+
+Before creating a custom element, check if an existing primitive fits:
+
+| Need | Primitive | Location |
+|------|-----------|----------|
+| Coloured dot / swatch | `ColorSwatch` | `components/ColorSwatch.tsx` — accepts `color`, `size` (`sm`/`md`/`lg`), `shape` (`square`/`circle`) |
+| Text input | `Input` | `components/base/forms/Input.js` — has `search` prop for built-in search icon |
+| Labelled field (text, textarea) | `InputGroup` | `components/base/forms/InputGroup.js` — has `textarea` prop, `title`, handles label + layout |
+| Icons | `Icon` | `components/icons/Icon.tsx` — project's own icon set. **Never use external icon libraries** (ionicons, etc.) |
+| Confirm dialog | `openConfirm` | `components/base/Modal` — see Confirmation Dialogs section below |
+
+### Component File Structure
+
+Multi-file components (TSX + SCSS) use a folder structure:
+
+```
+ComponentName/
+├── ComponentName.tsx
+├── ComponentName.scss
+└── index.ts          ← barrel export
+```
+
+### Inline Styles
+
+Avoid inline `style={}` props. Acceptable exceptions:
+- Flex layout fixes (`minWidth: 0` for overflow prevention)
+- Dynamic values that genuinely vary at runtime (e.g. chart dimensions)
+
+For fixed dimensions (widths, padding), prefer SCSS classes.
+
 ## Storybook (Optional)
 
 When working on complex or unfamiliar components, you can query Storybook MCP (`list-all-documentation`, then `get-documentation`) to discover existing components, their props, and visual examples. This is optional — for simple changes, grepping the codebase is fine.

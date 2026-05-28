@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
 import { useGetExperimentsQuery } from 'common/services/useExperiment'
@@ -10,20 +10,27 @@ import PageTitle from 'components/PageTitle'
 import Paging from 'components/Paging'
 import CreateExperimentWizard from 'components/experiments/CreateExperimentWizard'
 import ExperimentsTable from 'components/experiments/ExperimentsTable'
-import { IonIcon } from '@ionic/react'
-import { addOutline, flaskOutline, settingsOutline } from 'ionicons/icons'
+import Icon from 'components/icons/Icon'
 import 'components/experiments/ExperimentsListControls.scss'
 
 type FilterTab = 'all' | ExperimentStatus
 
 const PAGE_SIZE = 10
 
-const TABS: { label: string; value: FilterTab }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Running', value: 'running' },
-  { label: 'Created', value: 'created' },
-  { label: 'Paused', value: 'paused' },
-  { label: 'Completed', value: 'completed' },
+const TAB_LABELS: Record<FilterTab, string> = {
+  all: 'All',
+  completed: 'Completed',
+  created: 'Draft',
+  paused: 'Paused',
+  running: 'Running',
+}
+
+const TAB_ORDER: FilterTab[] = [
+  'all',
+  'running',
+  'created',
+  'paused',
+  'completed',
 ]
 
 const ExperimentsPage: FC = () => {
@@ -58,6 +65,20 @@ const ExperimentsPage: FC = () => {
   const hasWarehouse = (warehouseConnections?.length ?? 0) > 0
   const experiments = experimentsData?.results
   const experimentCount = experimentsData?.count ?? 0
+  const statusCounts = experimentsData?.status_counts
+
+  const getTabLabel = useMemo(() => {
+    return (tab: FilterTab) => {
+      const label = TAB_LABELS[tab]
+      if (!statusCounts) return label
+      if (tab === 'all') {
+        const total = Object.values(statusCounts).reduce((a, b) => a + b, 0)
+        return total > 0 ? `${label} (${total})` : label
+      }
+      const count = statusCounts[tab as ExperimentStatus]
+      return count > 0 ? `${label} (${count})` : label
+    }
+  }, [statusCounts])
 
   if (!environmentId || !projectId) return null
 
@@ -95,9 +116,9 @@ const ExperimentsPage: FC = () => {
     if (!hasWarehouse && experimentCount === 0 && !hasActiveFilter) {
       return (
         <div className='text-center py-5'>
-          <IonIcon
-            icon={settingsOutline}
-            style={{ fontSize: 48 }}
+          <Icon
+            name='setting'
+            width={48}
             className='text-muted mb-3 d-block mx-auto'
           />
           <h5>Data warehouse not configured</h5>
@@ -115,9 +136,9 @@ const ExperimentsPage: FC = () => {
     if (experimentCount === 0 && !hasActiveFilter) {
       return (
         <div className='text-center py-5'>
-          <IonIcon
-            icon={flaskOutline}
-            style={{ fontSize: 48 }}
+          <Icon
+            name='flask'
+            width={48}
             className='text-muted mb-3 d-block mx-auto'
           />
           <h5>No experiments yet</h5>
@@ -126,7 +147,7 @@ const ExperimentsPage: FC = () => {
             feature flags.
           </p>
           <Button onClick={() => setIsCreating(true)}>
-            <IonIcon icon={addOutline} className='me-1' />
+            <Icon name='plus' width={16} />
             Create Experiment
           </Button>
         </div>
@@ -136,18 +157,16 @@ const ExperimentsPage: FC = () => {
       <>
         <div className='experiments-controls'>
           <div className='experiments-controls__tabs'>
-            {TABS.map((tab) => (
+            {TAB_ORDER.map((tab) => (
               <button
-                key={tab.value}
+                key={tab}
                 type='button'
                 className={`experiments-controls__tab ${
-                  activeTab === tab.value
-                    ? 'experiments-controls__tab--active'
-                    : ''
+                  activeTab === tab ? 'experiments-controls__tab--active' : ''
                 }`}
-                onClick={() => setActiveTab(tab.value)}
+                onClick={() => setActiveTab(tab)}
               >
-                {tab.label}
+                {getTabLabel(tab)}
               </button>
             ))}
           </div>
@@ -197,7 +216,7 @@ const ExperimentsPage: FC = () => {
         cta={
           hasWarehouse ? (
             <Button onClick={() => setIsCreating(true)}>
-              <IonIcon icon={addOutline} className='me-1' />
+              <Icon name='plus' width={16} />
               Create Experiment
             </Button>
           ) : undefined

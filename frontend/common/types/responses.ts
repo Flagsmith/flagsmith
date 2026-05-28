@@ -579,6 +579,8 @@ export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
 
 export type ExperimentStatus = 'created' | 'running' | 'paused' | 'completed'
 
+export type ExperimentStatusCounts = Record<ExperimentStatus, number>
+
 export type ExperimentFeature = {
   id: number
   name: string
@@ -1374,6 +1376,7 @@ export type Res = {
   experiments: PagedResponse<Experiment> & {
     currentPage: number
     pageSize: number
+    status_counts?: ExperimentStatusCounts
   }
   experiment: Experiment
   // END OF TYPES

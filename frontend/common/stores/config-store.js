@@ -48,6 +48,7 @@ flagsmith
       ? {
           evaluationAnalyticsConfig: {
             analyticsServerUrl: Project.evaluationAnalyticsServerUrl,
+            autoTrackEvaluations: false,
           },
         }
       : {}),

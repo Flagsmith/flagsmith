@@ -1,6 +1,7 @@
 import { FC, useCallback, useMemo, useState } from 'react'
 import { ProjectFlag } from 'common/types/responses'
 import { useCreateExperimentMutation } from 'common/services/useExperiment'
+import './wizard.scss'
 import WizardStepper from './WizardStepper'
 import WizardNavButtons from './WizardNavButtons'
 import LivePreviewPanel from './LivePreviewPanel'
@@ -148,7 +149,7 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
         completedSteps={completedSteps}
         onStepClick={handleStepClick}
       />
-      <div className='flex-fill' style={{ minWidth: 0 }}>
+      <div className='flex-fill wizard-main'>
         {renderStep()}
         <WizardNavButtons
           currentStep={currentStep}

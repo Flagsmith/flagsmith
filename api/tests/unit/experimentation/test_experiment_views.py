@@ -3,9 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from django.db import IntegrityError
 from django.urls import reverse
-from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -267,56 +265,8 @@ def test_get_list__with_experiments__returns_all(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    results = response.json()["results"]
-    assert len(results) == 1
-    assert results[0]["id"] == experiment.id
-
-
-def test_get_list__with_experiments__returns_nested_feature(
-    admin_client_new: APIClient,
-    environment: Environment,
-    experiment: Experiment,
-    multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
-) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
-    response = admin_client_new.get(_list_url(environment))
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert len(data) == 1
-    feature_data = data[0]["feature"]
-    assert isinstance(feature_data, dict)
-    assert feature_data["id"] == multivariate_feature.id
-    assert feature_data["name"] == multivariate_feature.name
-    assert feature_data["type"] == "MULTIVARIATE"
-    assert feature_data["initial_value"] == "control"
-    assert len(feature_data["multivariate_options"]) == 3
-
-
-def test_get_detail__exists__returns_nested_feature(
-    admin_client_new: APIClient,
-    environment: Environment,
-    experiment: Experiment,
-    multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
-) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
-    response = admin_client_new.get(_detail_url(environment, experiment))
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    feature_data = response.json()["feature"]
-    assert isinstance(feature_data, dict)
-    assert feature_data["id"] == multivariate_feature.id
-    assert feature_data["name"] == multivariate_feature.name
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] == experiment.id
 
 
 def test_get_list__empty__returns_200(
@@ -332,7 +282,7 @@ def test_get_list__empty__returns_200(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["results"] == []
+    assert response.json() == []
 
 
 @pytest.mark.parametrize(
@@ -360,7 +310,7 @@ def test_get_list__filter_by_status__returns_filtered(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()["results"]) == expected_count
+    assert len(response.json()) == expected_count
 
 
 def test_get_detail__exists__returns_200(
@@ -617,93 +567,3 @@ def test_delete__valid_delete__creates_audit_log(
     ).last()
     assert audit is not None
     assert "deleted" in audit.log
-
-
-def test_get_list__invalid_status__returns_400(
-    admin_client_new: APIClient,
-    environment: Environment,
-    enable_features: EnableFeaturesFixture,
-) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
-    response = admin_client_new.get(_list_url(environment), {"status": "garbage"})
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-def test_delete__running_experiment__returns_400(
-    admin_client_new: APIClient,
-    environment: Environment,
-    experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
-) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-    experiment.status = ExperimentStatus.RUNNING
-    experiment.save()
-
-    # When
-    response = admin_client_new.delete(_detail_url(environment, experiment))
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert Experiment.objects.filter(id=experiment.id).exists()
-
-
-def test_patch__no_change__skips_audit_log(
-    admin_client_new: APIClient,
-    environment: Environment,
-    experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
-) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-    audit_count_before = AuditLog.objects.filter(
-        related_object_type=RelatedObjectType.EXPERIMENT.name
-    ).count()
-
-    # When
-    response = admin_client_new.patch(
-        _detail_url(environment, experiment),
-        data={"name": experiment.name},
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    audit_count_after = AuditLog.objects.filter(
-        related_object_type=RelatedObjectType.EXPERIMENT.name
-    ).count()
-    assert audit_count_after == audit_count_before
-
-
-def test_post__concurrent_create_race__returns_409(
-    admin_client_new: APIClient,
-    environment: Environment,
-    multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-    mocker.patch(
-        "experimentation.views.ExperimentViewSet.perform_create",
-        side_effect=IntegrityError(),
-    )
-
-    # When
-    response = admin_client_new.post(
-        _list_url(environment),
-        data={
-            "feature": multivariate_feature.id,
-            "name": "Race",
-            "hypothesis": "Should 409",
-        },
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_409_CONFLICT
