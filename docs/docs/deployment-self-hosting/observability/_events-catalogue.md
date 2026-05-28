@@ -52,8 +52,8 @@ Attributes:
 ### `azure_devops.comment.post_failed`
 
 Logged at `warning` from:
- - `api/integrations/azure_devops/services/comments.py:57`
- - `api/integrations/azure_devops/services/comments.py:82`
+ - `api/integrations/azure_devops/services/comments.py:58`
+ - `api/integrations/azure_devops/services/comments.py:83`
 
 Attributes:
  - `ado.project`
@@ -66,8 +66,8 @@ Attributes:
 ### `azure_devops.comment.posted`
 
 Logged at `info` from:
- - `api/integrations/azure_devops/services/comments.py:59`
- - `api/integrations/azure_devops/services/comments.py:84`
+ - `api/integrations/azure_devops/services/comments.py:60`
+ - `api/integrations/azure_devops/services/comments.py:85`
 
 Attributes:
  - `ado.project`

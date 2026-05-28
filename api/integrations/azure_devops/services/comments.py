@@ -5,6 +5,7 @@ from django.template.loader import render_to_string
 
 from core.helpers import get_current_site_url
 from features.feature_external_resources.models import (
+    AZURE_DEVOPS_RESOURCE_TYPES,
     FeatureExternalResource,
     ResourceType,
 )
@@ -156,3 +157,79 @@ def post_linked_comment(resource: FeatureExternalResource) -> None:
         feature_id=feature.id,
         body=body,
     )
+
+
+def post_unlinked_comment(
+    feature_name: str,
+    feature_id: int,
+    resource_url: str,
+    resource_type: str,
+    project_id: int,
+) -> None:
+    """Post a comment on the ADO resource informing that the feature flag
+    has been unlinked.
+
+    All parameters are passed explicitly because the
+    ``FeatureExternalResource`` row no longer exists by the time this
+    runs asynchronously.
+    """
+    try:
+        config: AzureDevOpsConfiguration = AzureDevOpsConfiguration.objects.get(
+            project_id=project_id,
+        )
+    except AzureDevOpsConfiguration.DoesNotExist:
+        return
+
+    body = render_to_string(
+        "azure_devops/feature_unlinked_comment.md",
+        {"feature_name": feature_name},
+    )
+
+    _post_to_resource(
+        config=config,
+        resource_url=resource_url,
+        resource_type=resource_type,
+        feature_id=feature_id,
+        body=body,
+    )
+
+
+def post_feature_deleted_comment(
+    feature_name: str,
+    feature_id: int,
+    project_id: int,
+) -> None:
+    """Post a comment on every linked Azure DevOps resource informing that
+    the feature flag has been deleted.
+
+    All parameters are passed explicitly because the feature is being
+    soft-deleted and may no longer be fully usable as an ORM object by
+    the time this runs asynchronously.
+    """
+    try:
+        config: AzureDevOpsConfiguration = AzureDevOpsConfiguration.objects.get(
+            project_id=project_id,
+        )
+    except AzureDevOpsConfiguration.DoesNotExist:
+        return
+
+    resources = FeatureExternalResource.objects.filter(
+        feature_id=feature_id,
+        type__in=AZURE_DEVOPS_RESOURCE_TYPES,
+    )
+    if not resources.exists():
+        return
+
+    body = render_to_string(
+        "azure_devops/feature_deleted_comment.md",
+        {"feature_name": feature_name},
+    )
+
+    for resource in resources:
+        _post_to_resource(
+            config=config,
+            resource_url=resource.url,
+            resource_type=resource.type,
+            feature_id=feature_id,
+            body=body,
+        )

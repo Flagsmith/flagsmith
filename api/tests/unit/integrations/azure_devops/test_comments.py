@@ -4,7 +4,11 @@ import responses
 from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature
 from integrations.azure_devops.models import AzureDevOpsConfiguration
-from integrations.azure_devops.services.comments import post_linked_comment
+from integrations.azure_devops.services.comments import (
+    post_feature_deleted_comment,
+    post_linked_comment,
+    post_unlinked_comment,
+)
 
 ORG_URL = "https://dev.azure.com/test-org"
 
@@ -50,9 +54,7 @@ def test_post_linked_comment__work_item_resource__posts_comment(
     assert match is not None
     work_item_id = int(match.group(1))
 
-    expected_url = (
-        f"{ORG_URL}/proj/_apis/wit/workItems/{work_item_id}/comments"
-    )
+    expected_url = f"{ORG_URL}/proj/_apis/wit/workItems/{work_item_id}/comments"
     responses.post(expected_url, json={"id": 1})
 
     # When
@@ -116,4 +118,125 @@ def test_post_linked_comment__unparseable_url__noop(
     post_linked_comment(bogus)
 
     # Then — URL parsing returns None; no call attempted
+    assert len(responses.calls) == 0
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_post_unlinked_comment__pr_resource__posts_thread(
+    azure_devops_configuration: AzureDevOpsConfiguration,
+    feature: Feature,
+) -> None:
+    # Given
+    expected_url = f"{ORG_URL}/proj/_apis/git/pullrequests/77/threads"
+    responses.post(expected_url, json={"id": 1})
+
+    # When
+    post_unlinked_comment(
+        feature_name=feature.name,
+        feature_id=feature.id,
+        resource_url=("https://dev.azure.com/test-org/proj/_git/repo/pullrequest/77"),
+        resource_type="AZURE_DEVOPS_PULL_REQUEST",
+        project_id=feature.project_id,
+    )
+
+    # Then
+    [call] = responses.calls
+    body = call.request.body
+    assert body is not None
+    body_text = body.decode() if isinstance(body, bytes) else body
+    assert "Unlinked from Flagsmith" in body_text
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_post_unlinked_comment__no_configuration__noop(
+    feature: Feature,
+) -> None:
+    # Given — no AzureDevOpsConfiguration exists
+
+    # When
+    post_unlinked_comment(
+        feature_name=feature.name,
+        feature_id=feature.id,
+        resource_url=("https://dev.azure.com/test-org/proj/_git/repo/pullrequest/77"),
+        resource_type="AZURE_DEVOPS_PULL_REQUEST",
+        project_id=feature.project_id,
+    )
+
+    # Then
+    assert len(responses.calls) == 0
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_post_feature_deleted_comment__multiple_linked_resources__posts_to_each(
+    azure_devops_configuration: AzureDevOpsConfiguration,
+    azure_devops_pr_resource_open: FeatureExternalResource,
+    azure_devops_work_item_resource_open: FeatureExternalResource,
+    feature: Feature,
+) -> None:
+    # Given
+    responses.post(
+        f"{ORG_URL}/proj/_apis/git/pullrequests/1/threads",
+        json={"id": 1},
+    )
+    import re
+
+    match = re.search(
+        r"_workitems/edit/(\d+)",
+        azure_devops_work_item_resource_open.url,
+    )
+    assert match is not None
+    work_item_id = int(match.group(1))
+    responses.post(
+        f"{ORG_URL}/proj/_apis/wit/workItems/{work_item_id}/comments",
+        json={"id": 1},
+    )
+
+    # When
+    post_feature_deleted_comment(
+        feature_name=feature.name,
+        feature_id=feature.id,
+        project_id=feature.project_id,
+    )
+
+    # Then
+    assert len(responses.calls) == 2
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_post_feature_deleted_comment__no_linked_resources__noop(
+    azure_devops_configuration: AzureDevOpsConfiguration,
+    feature: Feature,
+) -> None:
+    # Given — no FeatureExternalResource rows of AZURE_DEVOPS_* type
+
+    # When
+    post_feature_deleted_comment(
+        feature_name=feature.name,
+        feature_id=feature.id,
+        project_id=feature.project_id,
+    )
+
+    # Then
+    assert len(responses.calls) == 0
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_post_feature_deleted_comment__no_configuration__noop(
+    feature: Feature,
+) -> None:
+    # Given — no AzureDevOpsConfiguration exists
+
+    # When
+    post_feature_deleted_comment(
+        feature_name=feature.name,
+        feature_id=feature.id,
+        project_id=feature.project_id,
+    )
+
+    # Then
     assert len(responses.calls) == 0
