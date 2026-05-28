@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useMemo } from 'react'
+import { ChangeEvent, FC } from 'react'
 import { ProjectFlag } from 'common/types/responses'
 import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
@@ -42,14 +42,12 @@ const SetupStep: FC<SetupStepProps> = ({
         page_size: 50,
         projectId,
         search: search || undefined,
+        type: 'MULTIVARIATE',
       },
       { skip: !numericEnvId },
     )
 
-  const multivariateFeatures = useMemo(() => {
-    if (!featureList?.results) return []
-    return featureList.results.filter((f) => f.type === 'MULTIVARIATE')
-  }, [featureList])
+  const multivariateFeatures = featureList?.results ?? []
 
   return (
     <div className='d-flex flex-column gap-4'>
@@ -106,18 +104,21 @@ const SetupStep: FC<SetupStepProps> = ({
                 : null
             }
             options={multivariateFeatures.map((f) => ({
+              feature: f,
               label: f.name,
               value: f.id,
             }))}
             onInputChange={(val: string) => setSearchInput(val)}
-            onChange={(option: { label: string; value: number } | null) => {
-              if (option) {
-                const feature = multivariateFeatures.find(
-                  (f) => f.id === option.value,
-                )
-                if (feature) onFeatureSelect(feature)
-              }
+            onChange={(
+              option: {
+                feature: ProjectFlag
+                label: string
+                value: number
+              } | null,
+            ) => {
+              if (option) onFeatureSelect(option.feature)
             }}
+            filterOption={(options: unknown[]) => options}
             isLoading={isFeaturesLoading}
             placeholder='Search for a multivariate feature...'
             isClearable={false}

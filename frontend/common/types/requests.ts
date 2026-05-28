@@ -26,6 +26,7 @@ import {
   ChangeRequest,
   FlagsmithValue,
   TagStrategy,
+  FeatureType,
 } from './responses'
 import { UtmsType } from './utms'
 
@@ -897,6 +898,7 @@ export type Req = {
     sort_field?: string
     sort_direction?: 'ASC' | 'DESC'
     identity?: string
+    type?: FeatureType
   }
   updateFeatureState: {
     environmentId: string
