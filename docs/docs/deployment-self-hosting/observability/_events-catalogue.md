@@ -42,7 +42,7 @@ Attributes:
 ### `azure_devops.configuration.created`
 
 Logged at `info` from:
- - `api/integrations/azure_devops/views/configuration.py:27`
+ - `api/integrations/azure_devops/views/configuration.py:54`
 
 Attributes:
  - `ado.organisation.url`
@@ -52,7 +52,7 @@ Attributes:
 ### `azure_devops.configuration.updated`
 
 Logged at `info` from:
- - `api/integrations/azure_devops/views/configuration.py:35`
+ - `api/integrations/azure_devops/views/configuration.py:74`
 
 Attributes:
  - `ado.organisation.url`

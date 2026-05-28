@@ -158,7 +158,7 @@ def test_azure_devops_service_hook__different_event_type__allowed(
 
 
 @pytest.mark.django_db
-def test_azure_devops_configuration__save__strips_single_trailing_slash(
+def test_organisation_url__trailing_slash__stripped_on_save(
     project: Project,
 ) -> None:
     # Given
@@ -176,7 +176,7 @@ def test_azure_devops_configuration__save__strips_single_trailing_slash(
 
 
 @pytest.mark.django_db
-def test_azure_devops_configuration__save__strips_multiple_trailing_slashes(
+def test_organisation_url__multiple_trailing_slashes__stripped_on_save(
     project: Project,
 ) -> None:
     # Given
@@ -194,7 +194,7 @@ def test_azure_devops_configuration__save__strips_multiple_trailing_slashes(
 
 
 @pytest.mark.django_db
-def test_azure_devops_configuration__save__no_trailing_slash__is_unchanged(
+def test_organisation_url__no_trailing_slash__unchanged_on_save(
     project: Project,
 ) -> None:
     # Given
