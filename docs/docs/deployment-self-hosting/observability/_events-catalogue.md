@@ -49,6 +49,33 @@ Attributes:
  - `organisation.id`
  - `project.id`
 
+### `azure_devops.comment.post_failed`
+
+Logged at `warning` from:
+ - `api/integrations/azure_devops/services/comments.py:57`
+ - `api/integrations/azure_devops/services/comments.py:82`
+
+Attributes:
+ - `ado.project`
+ - `ado.resource.id`
+ - `exc_info`
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+
+### `azure_devops.comment.posted`
+
+Logged at `info` from:
+ - `api/integrations/azure_devops/services/comments.py:59`
+ - `api/integrations/azure_devops/services/comments.py:84`
+
+Attributes:
+ - `ado.project`
+ - `ado.resource.id`
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+
 ### `azure_devops.configuration.created`
 
 Logged at `info` from:

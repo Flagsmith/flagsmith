@@ -19,7 +19,7 @@ def azure_devops_configuration(project: Project) -> AzureDevOpsConfiguration:
 
 
 def _make_pr_resource(
-    feature: Feature, *, state: str, is_draft: bool = False
+    feature: Feature, *, pr_id: int, state: str, is_draft: bool = False
 ) -> FeatureExternalResource:
     metadata = (
         '{"state": "'
@@ -28,10 +28,9 @@ def _make_pr_resource(
         + ("true" if is_draft else "false")
         + "}"
     )
-    draft_suffix = "-draft" if is_draft else ""
     return FeatureExternalResource.objects.create(
         feature=feature,
-        url=f"https://dev.azure.com/test-org/proj/_git/repo/pullrequest/{state}{draft_suffix}",
+        url=f"https://dev.azure.com/test-org/proj/_git/repo/pullrequest/{pr_id}",
         type=ResourceType.AZURE_DEVOPS_PULL_REQUEST.value,
         metadata=metadata,
     )
@@ -50,17 +49,17 @@ def _make_work_item_resource(
 
 @pytest.fixture()
 def azure_devops_pr_resource_open(feature: Feature) -> FeatureExternalResource:
-    return _make_pr_resource(feature, state="active", is_draft=False)
+    return _make_pr_resource(feature, pr_id=1, state="active", is_draft=False)
 
 
 @pytest.fixture()
 def azure_devops_pr_resource_draft(feature: Feature) -> FeatureExternalResource:
-    return _make_pr_resource(feature, state="active", is_draft=True)
+    return _make_pr_resource(feature, pr_id=2, state="active", is_draft=True)
 
 
 @pytest.fixture()
 def azure_devops_pr_resource_merged(feature: Feature) -> FeatureExternalResource:
-    return _make_pr_resource(feature, state="completed")
+    return _make_pr_resource(feature, pr_id=3, state="completed")
 
 
 @pytest.fixture()

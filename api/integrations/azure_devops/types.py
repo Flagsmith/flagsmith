@@ -16,3 +16,14 @@ class AzureDevOpsResourceMetadata(TypedDict, total=False):
     state: str
     work_item_type: str
     is_draft: bool
+
+
+class AzureDevOpsEnvironmentState(TypedDict):
+    """Per-environment feature-state row included in linked / state-change
+    comment templates. The mapping mirrors GitLab's GitLabEnvironmentState.
+    """
+
+    name: str
+    url: str
+    enabled: bool
+    value: str | int | bool | None
