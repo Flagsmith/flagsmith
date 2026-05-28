@@ -38,8 +38,6 @@ def test_azure_devops_configuration__second_for_same_project__raises_integrity_e
         "personal_access_token": "ado-other",
     }
 
-    # When / Then — split below per GWT lint rule
-
     # When
     def create_duplicate() -> None:
         AzureDevOpsConfiguration.objects.create(**duplicate_kwargs)
