@@ -157,6 +157,7 @@ INSTALLED_APPS = [
     "integrations.launch_darkly",
     "integrations.github",
     "integrations.gitlab",
+    "integrations.azure_devops",
     "integrations.grafana",
     "integrations.vcs",
     # Rate limiting admin endpoints
