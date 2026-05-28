@@ -96,6 +96,52 @@ Attributes:
  - `organisation.id`
  - `project.id`
 
+### `azure_devops.label.applied`
+
+Logged at `info` from:
+ - `api/integrations/azure_devops/services/labels.py:66`
+ - `api/integrations/azure_devops/services/labels.py:80`
+
+Attributes:
+ - `ado.resource.id`
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `resource.type`
+
+### `azure_devops.label.apply_failed`
+
+Logged at `exception` from:
+ - `api/integrations/azure_devops/services/labels.py:82`
+
+Attributes:
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `resource.type`
+
+### `azure_devops.label.removal_failed`
+
+Logged at `exception` from:
+ - `api/integrations/azure_devops/services/labels.py:133`
+
+Attributes:
+ - `organisation.id`
+ - `project.id`
+ - `resource.type`
+
+### `azure_devops.label.removed`
+
+Logged at `info` from:
+ - `api/integrations/azure_devops/services/labels.py:117`
+ - `api/integrations/azure_devops/services/labels.py:131`
+
+Attributes:
+ - `ado.resource.id`
+ - `organisation.id`
+ - `project.id`
+ - `resource.type`
+
 ### `azure_devops.projects.fetched`
 
 Logged at `info` from:

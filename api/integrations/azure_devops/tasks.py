@@ -9,6 +9,10 @@ from integrations.azure_devops.services.comments import (
     post_state_change_comment,
     post_unlinked_comment,
 )
+from integrations.azure_devops.services.labels import (
+    apply_flagsmith_label_to_resource,
+    remove_flagsmith_label_from_resource,
+)
 
 logger = structlog.get_logger("azure_devops")
 
@@ -78,4 +82,34 @@ def post_azure_devops_feature_deleted_comment(
         feature_name=feature_name,
         feature_id=feature_id,
         project_id=project_id,
+    )
+
+
+@register_task_handler()
+def apply_azure_devops_label(resource_id: int) -> None:
+    """Apply the "flagsmith" label/tag to the linked ADO resource.
+    Dispatched at link time. No-op if labelling is disabled.
+    """
+    try:
+        resource = FeatureExternalResource.objects.get(id=resource_id)
+    except FeatureExternalResource.DoesNotExist:
+        return
+    apply_flagsmith_label_to_resource(resource)
+
+
+@register_task_handler()
+def remove_azure_devops_label(
+    *,
+    project_id: int,
+    resource_url: str,
+    resource_type: str,
+) -> None:
+    """Remove the "flagsmith" label/tag from the ADO resource.
+    Dispatched at unlink time. Takes fields directly because the FER row
+    is gone.
+    """
+    remove_flagsmith_label_from_resource(
+        project_id=project_id,
+        resource_url=resource_url,
+        resource_type=resource_type,
     )

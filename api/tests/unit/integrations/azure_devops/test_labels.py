@@ -137,9 +137,7 @@ def test_remove_label__pr_resource_and_labeling_enabled__deletes(
     # When
     remove_flagsmith_label_from_resource(
         project_id=feature.project_id,
-        resource_url=(
-            "https://dev.azure.com/test-org/proj/_git/repo/pullrequest/77"
-        ),
+        resource_url=("https://dev.azure.com/test-org/proj/_git/repo/pullrequest/77"),
         resource_type="AZURE_DEVOPS_PULL_REQUEST",
     )
 
@@ -158,9 +156,7 @@ def test_remove_label__labeling_disabled__noop(
     # When
     remove_flagsmith_label_from_resource(
         project_id=feature.project_id,
-        resource_url=(
-            "https://dev.azure.com/test-org/proj/_git/repo/pullrequest/77"
-        ),
+        resource_url=("https://dev.azure.com/test-org/proj/_git/repo/pullrequest/77"),
         resource_type="AZURE_DEVOPS_PULL_REQUEST",
     )
 
@@ -178,9 +174,7 @@ def test_remove_label__no_configuration__noop(
     # When
     remove_flagsmith_label_from_resource(
         project_id=feature.project_id,
-        resource_url=(
-            "https://dev.azure.com/test-org/proj/_git/repo/pullrequest/77"
-        ),
+        resource_url=("https://dev.azure.com/test-org/proj/_git/repo/pullrequest/77"),
         resource_type="AZURE_DEVOPS_PULL_REQUEST",
     )
 

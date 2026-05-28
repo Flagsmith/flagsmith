@@ -5,10 +5,12 @@ from environments.models import Environment
 from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature, FeatureState
 from integrations.azure_devops.tasks import (
+    apply_azure_devops_label,
     post_azure_devops_feature_deleted_comment,
     post_azure_devops_linked_comment,
     post_azure_devops_state_change_comment,
     post_azure_devops_unlinked_comment,
+    remove_azure_devops_label,
 )
 
 
@@ -121,3 +123,61 @@ def test_post_feature_deleted_task__valid_args__forwards_to_service(
 
     # Then
     service_mock.assert_called_once()
+
+
+@pytest.mark.django_db
+def test_apply_label_task__valid_id__forwards_to_service(
+    azure_devops_pr_resource_open: FeatureExternalResource,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    service_mock = mocker.patch(
+        "integrations.azure_devops.tasks.apply_flagsmith_label_to_resource"
+    )
+
+    # When
+    apply_azure_devops_label(azure_devops_pr_resource_open.id)
+
+    # Then
+    service_mock.assert_called_once_with(azure_devops_pr_resource_open)
+
+
+@pytest.mark.django_db
+def test_apply_label_task__missing_resource__noop(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    service_mock = mocker.patch(
+        "integrations.azure_devops.tasks.apply_flagsmith_label_to_resource"
+    )
+
+    # When
+    apply_azure_devops_label(999999)
+
+    # Then
+    service_mock.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_remove_label_task__valid_args__forwards_to_service(
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    service_mock = mocker.patch(
+        "integrations.azure_devops.tasks.remove_flagsmith_label_from_resource"
+    )
+
+    # When
+    remove_azure_devops_label(
+        project_id=feature.project_id,
+        resource_url=("https://dev.azure.com/test-org/proj/_git/repo/pullrequest/1"),
+        resource_type="AZURE_DEVOPS_PULL_REQUEST",
+    )
+
+    # Then
+    service_mock.assert_called_once_with(
+        project_id=feature.project_id,
+        resource_url=("https://dev.azure.com/test-org/proj/_git/repo/pullrequest/1"),
+        resource_type="AZURE_DEVOPS_PULL_REQUEST",
+    )

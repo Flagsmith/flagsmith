@@ -25,9 +25,9 @@ def _config_for_project(project_id: int) -> AzureDevOpsConfiguration | None:
     """Load the AzureDevOpsConfiguration with labeling_enabled set, or
     return None.
     """
-    config: AzureDevOpsConfiguration | None = (
-        AzureDevOpsConfiguration.objects.filter(project_id=project_id).first()
-    )
+    config: AzureDevOpsConfiguration | None = AzureDevOpsConfiguration.objects.filter(
+        project_id=project_id
+    ).first()
     if not config or not config.labeling_enabled:
         return None
     return config
