@@ -1,0 +1,426 @@
+// Onboarding AHA-first flow
+// Inspired by the feat/experiments-v2 wizard idiom — vertical step
+// sidebar + content column. All colour/spacing values come from semantic
+// design tokens; this file only owns the layout geometry, the bespoke
+// status panel motion, and one literal-hex code-block surface that the
+// token set does not yet expose.
+
+.onboarding-quickstart {
+  background-color: var(--color-surface-subtle);
+  min-height: 100vh;
+
+  // Re-assert the semantic text-token utilities at the page scope.
+  // Bootstrap's theme maps `$secondary` to brand mustard (#F7D56E) and its
+  // `.text-secondary` is loaded after _token-utilities.scss, so without
+  // this scoping every `text-secondary` element inside onboarding renders
+  // yellow on the white surface. Resolving via the CSS custom properties
+  // also makes the flow dark-mode ready automatically — slate-500 in light
+  // theme, slate-300 in dark theme.
+  .text-default { color: var(--color-text-default); }
+  .text-secondary { color: var(--color-text-secondary); }
+  .text-tertiary { color: var(--color-text-tertiary); }
+  .text-disabled { color: var(--color-text-disabled); }
+  .text-action { color: var(--color-text-action); }
+  .text-info { color: var(--color-text-info); }
+  .text-success { color: var(--color-text-success); }
+  .text-warning { color: var(--color-text-warning); }
+  .text-danger { color: var(--color-text-danger); }
+
+  // Page is full-width — per-block constraints (heading, stepper, content)
+  // set their own max-widths so form steps stay readable while the AHA-step
+  // surfaces (status panel + code snippet) get the horizontal room they need.
+  &__page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 32px 48px;
+    width: 100%;
+  }
+
+  &__heading {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 1200px;
+    margin-inline: auto;
+  }
+
+  &__heading-crumb {
+    font-size: 0.75rem;
+    letter-spacing: 0.3px;
+  }
+
+  &__heading-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--color-text-default);
+  }
+
+  &__layout {
+    display: flex;
+    width: 100%;
+  }
+
+  &__layout-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    // Default narrow for form steps — single-input forms read better at
+    // ~800px than stretched across the viewport.
+    max-width: 800px;
+    margin-inline: auto;
+
+    // The AHA step shows a wider status panel and a multi-line code
+    // snippet that earn more horizontal room.
+    &--wide {
+      max-width: 1200px;
+    }
+  }
+
+  @media (max-width: 900px) {
+    &__page {
+      padding: 20px 16px;
+      gap: 16px;
+    }
+  }
+
+  &__step-label {
+    font-size: 0.6875rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  &__radio-row {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color var(--duration-fast) var(--easing-standard),
+      border-color var(--duration-fast) var(--easing-standard);
+
+    &:hover {
+      background-color: var(--color-surface-hover);
+    }
+  }
+
+  &__radio-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    border: 1.5px solid var(--color-border-strong);
+    background-color: var(--color-surface-default);
+    flex-shrink: 0;
+    transition: background-color var(--duration-fast) var(--easing-standard),
+      border-color var(--duration-fast) var(--easing-standard);
+
+    &--on {
+      background-color: var(--color-icon-action);
+      border-color: var(--color-icon-action);
+      box-shadow: inset 0 0 0 3px var(--color-surface-default);
+    }
+  }
+
+  // The semantic `text-warning` / `text-success` tokens map to the
+  // 500-weight brand colours, which fail contrast on their own tinted
+  // surfaces. Use the darker 700-weights here. When the design system
+  // adds `text-warning-strong` / `text-success-strong` semantic pairs
+  // (tracked under #6606), swap these for the semantic class.
+  &__status-text {
+    &--waiting {
+      color: var(--orange-700);
+    }
+    &--received {
+      color: var(--green-700);
+    }
+  }
+
+  &__status {
+    transition: background-color var(--duration-normal)
+        var(--easing-standard),
+      border-color var(--duration-normal) var(--easing-standard);
+
+    &-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 9999px;
+      background-color: currentColor;
+      position: relative;
+
+      &--solid {
+        color: var(--color-icon-success);
+      }
+
+      &--pulsing {
+        color: var(--color-icon-warning);
+
+        &::before,
+        &::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: 9999px;
+          background-color: currentColor;
+          opacity: 0.28;
+          animation: onboarding-quickstart-pulse 2s ease-out infinite;
+        }
+
+        &::after {
+          animation-delay: 1s;
+        }
+      }
+    }
+
+    &-grid {
+      row-gap: 0.5rem;
+    }
+  }
+
+  &__node {
+    font-family: var(--font-family-mono, monospace);
+    font-size: 0.875rem;
+  }
+
+  &__toggle {
+    width: 44px;
+    height: 24px;
+    border: 1px solid var(--color-border-default);
+    border-radius: 9999px;
+    background-color: var(--color-surface-muted);
+    position: relative;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &-track {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      position: relative;
+    }
+
+    &-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 9999px;
+      background-color: var(--color-surface-default);
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--duration-fast) var(--easing-standard);
+    }
+
+    &--enabled {
+      background-color: var(--color-surface-success);
+      border-color: var(--color-border-success);
+
+      .onboarding-quickstart__toggle-thumb {
+        transform: translateX(20px);
+      }
+    }
+  }
+
+  &__snippet-pre {
+    overflow-x: auto;
+    font-family: var(--font-family-mono, monospace);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  // Hi-fi doc spec: code blocks use dark navy bg + light blue mono text,
+  // matching the Flagsmith brand treatment for code surfaces. Literal
+  // values used because the semantic token set does not currently expose
+  // an "inverse code surface" pair.
+  &__code-block {
+    background-color: #1a2634;
+    color: #a0d4ff;
+    overflow-x: auto;
+    font-family: var(--font-family-mono, monospace);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+
+    code {
+      color: inherit;
+      background: transparent;
+    }
+  }
+}
+
+// Horizontal stepper — number/check circle + title, joined by connector
+// lines. Compact, fits a short linear flow better than a vertical timeline.
+.onboarding-stepper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+
+  &__step {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+
+    &:last-child {
+      flex: 0 0 auto;
+    }
+
+    &--done {
+      .onboarding-stepper__circle {
+        background: var(--color-surface-success);
+        border-color: var(--color-border-success);
+        // Same contrast fix as the status panel: green-500 on a green
+        // tint fails AA; the -700 weight reads cleanly.
+        color: var(--green-700);
+      }
+      .onboarding-stepper__title {
+        color: var(--color-text-default);
+      }
+      .onboarding-stepper__connector {
+        background: var(--color-border-success);
+      }
+    }
+
+    &--active {
+      .onboarding-stepper__circle {
+        border-color: var(--color-border-action);
+        color: var(--color-text-action);
+        background: var(--color-surface-default);
+        box-shadow: 0 0 0 4px var(--color-surface-action-subtle);
+      }
+      .onboarding-stepper__title {
+        color: var(--color-text-default);
+        font-weight: 600;
+      }
+    }
+
+    &--upcoming {
+      .onboarding-stepper__circle {
+        border-color: var(--color-border-default);
+        color: var(--color-text-disabled);
+        background: var(--color-surface-default);
+      }
+      .onboarding-stepper__title {
+        color: var(--color-text-disabled);
+      }
+    }
+  }
+
+  &__node {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 6px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    min-width: 0;
+
+    &:disabled {
+      cursor: default;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-border-action);
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+  }
+
+  &__circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 9999px;
+    border: 2px solid var(--color-border-default);
+    flex-shrink: 0;
+    transition: box-shadow var(--duration-fast) var(--easing-standard),
+      background-color var(--duration-fast) var(--easing-standard),
+      border-color var(--duration-fast) var(--easing-standard);
+  }
+
+  &__number {
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  &__title {
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__connector {
+    flex: 1;
+    height: 2px;
+    background: var(--color-border-default);
+    margin: 0 12px;
+    min-width: 24px;
+  }
+
+  @media (max-width: 720px) {
+    &__title {
+      display: none;
+    }
+    &__node {
+      gap: 0;
+    }
+  }
+}
+
+@keyframes onboarding-quickstart-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.28;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-quickstart__status-dot--pulsing {
+    &::before,
+    &::after {
+      animation: none;
+      opacity: 0;
+    }
+  }
+
+  .onboarding-quickstart__toggle-thumb,
+  .onboarding-quickstart__radio-row,
+  .onboarding-quickstart__radio-dot {
+    transition: none;
+  }
+}
+
+// PM path integrations grid — visual capability check, read-only.
+// Two columns on desktop, single column on mobile.
+.onboarding-quickstart__integrations {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  @media (max-width: 600px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.onboarding-quickstart__integration-logo {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}

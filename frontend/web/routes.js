@@ -40,7 +40,7 @@ import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPag
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
 import ProjectChangeRequestsPage from './components/pages/ProjectChangeRequestsPage'
 import ProjectChangeRequestPage from './components/pages/ProjectChangeRequestDetailPage'
-import GettingStartedPage from './components/pages/GettingStartedPage'
+import GettingStartedSwitch from './components/pages/onboarding-quickstart/GettingStartedSwitch'
 
 import ReleasePipelinesPage from './components/pages/ReleasePipelinesPage'
 import CreateReleasePipelinePage from './components/pages/CreateReleasePipelinePage'
@@ -268,7 +268,7 @@ export default (
         <ParameterizedRoute
           path={routes.gettingStarted}
           exact
-          component={GettingStartedPage}
+          component={GettingStartedSwitch}
         />
         <ParameterizedRoute
           path={routes['project-settings-in-environment']}

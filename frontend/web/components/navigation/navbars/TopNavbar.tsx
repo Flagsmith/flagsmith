@@ -7,6 +7,7 @@ import Icon from 'components/icons/Icon'
 import Headway from 'components/Headway'
 import { Project } from 'common/types/responses'
 import AccountDropdown from 'components/navigation/AccountDropdown'
+import OnboardingChipWithDrawer from 'web/components/onboarding-quickstart/OnboardingChipWithDrawer'
 
 type TopNavType = {
   activeProject: Project | undefined
@@ -25,15 +26,30 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
           <div className='me-3'>
             <GithubStar />
           </div>
+          {/* TEMP: forced on for local validation. Restore the flag check
+              (Utils.getFlagsmithHasFeature('onboarding_quickstart_flow')) before merge.
+              Original NavLink left below in a comment for easy revert.
+              <NavLink
+                activeClassName='active'
+                to={'/getting-started'}
+                className='d-flex gap-1 d-none d-md-flex text-end lh-1 align-items-center'
+              >
+                <span>
+                  <Icon name='rocket' width={20} fill='#9DA4AE' />
+                </span>
+                <span className='d-none d-md-block'>Getting Started</span>
+              </NavLink>
+          */}
+          <OnboardingChipWithDrawer />
+          {/* TEMP: test-only quick link to the AHA onboarding flow.
+              Remove before merge along with the FORCE_ON gates. */}
           <NavLink
-            activeClassName='active'
             to={'/getting-started'}
-            className='d-flex gap-1 d-none d-md-flex text-end lh-1 align-items-center'
+            className='d-flex gap-1 ps-3 text-end lh-1 align-items-center text-warning'
+            title='Open onboarding flow (test only)'
           >
-            <span>
-              <Icon name='rocket' width={20} fill='#9DA4AE' />
-            </span>
-            <span className='d-none d-md-block'>Getting Started</span>
+            <Icon name='rocket' width={16} />
+            <span className='d-none d-md-block'>Test onboarding</span>
           </NavLink>
           <a
             className='d-flex gap-1 ps-3 text-end lh-1 align-items-center'
