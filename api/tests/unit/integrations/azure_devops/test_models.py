@@ -155,3 +155,57 @@ def test_azure_devops_service_hook__different_event_type__allowed(
 
     # Then
     assert second.event_type == "workitem.updated"
+
+
+@pytest.mark.django_db
+def test_azure_devops_configuration__save__strips_single_trailing_slash(
+    project: Project,
+) -> None:
+    # Given
+    raw_url = "https://dev.azure.com/test-org/"
+
+    # When
+    config = AzureDevOpsConfiguration.objects.create(
+        project=project,
+        organisation_url=raw_url,
+        personal_access_token="ado-test-token",
+    )
+
+    # Then
+    assert config.organisation_url == "https://dev.azure.com/test-org"
+
+
+@pytest.mark.django_db
+def test_azure_devops_configuration__save__strips_multiple_trailing_slashes(
+    project: Project,
+) -> None:
+    # Given
+    raw_url = "https://dev.azure.com/test-org///"
+
+    # When
+    config = AzureDevOpsConfiguration.objects.create(
+        project=project,
+        organisation_url=raw_url,
+        personal_access_token="ado-test-token",
+    )
+
+    # Then
+    assert config.organisation_url == "https://dev.azure.com/test-org"
+
+
+@pytest.mark.django_db
+def test_azure_devops_configuration__save__no_trailing_slash__is_unchanged(
+    project: Project,
+) -> None:
+    # Given
+    raw_url = "https://dev.azure.com/test-org"
+
+    # When
+    config = AzureDevOpsConfiguration.objects.create(
+        project=project,
+        organisation_url=raw_url,
+        personal_access_token="ado-test-token",
+    )
+
+    # Then
+    assert config.organisation_url == raw_url

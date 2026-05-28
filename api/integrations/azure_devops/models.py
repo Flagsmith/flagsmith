@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.db import models
 
 from core.models import SoftDeleteExportableModel
@@ -13,6 +15,10 @@ class AzureDevOpsConfiguration(SoftDeleteExportableModel):
     personal_access_token = models.CharField(max_length=300)
     labeling_enabled = models.BooleanField(default=False)
     tagging_enabled = models.BooleanField(default=False)
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        self.organisation_url = self.organisation_url.rstrip("/")
+        super().save(*args, **kwargs)
 
 
 class AzureDevOpsServiceHook(SoftDeleteExportableModel):
