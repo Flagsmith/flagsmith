@@ -1,6 +1,6 @@
 // rspack.config.local.js (dev)
 const rspack = require('@rspack/core')
-const ReactRefreshPlugin = require('@rspack/plugin-react-refresh')
+const { ReactRefreshRspackPlugin: ReactRefreshPlugin } = require('@rspack/plugin-react-refresh')
 const path = require('path')
 
 const base = require('../rspack.config')
