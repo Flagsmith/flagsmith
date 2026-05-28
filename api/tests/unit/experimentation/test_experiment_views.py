@@ -472,7 +472,7 @@ def test_get_list__filtered__status_counts_reflect_all(
     # Given
     enable_features(EXPERIMENT_FLAG)
 
-    # When — filter to running (no results), but counts should still show all
+    # When
     response = admin_client_new.get(_list_url(environment), {"status": "running"})
 
     # Then
