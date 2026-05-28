@@ -306,6 +306,10 @@
                 {
                     "name": "PYLON_IDENTITY_VERIFICATION_SECRET",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:PYLON_IDENTITY_VERIFICATION_SECRET::"
+                },
+                {
+                    "name": "CLICKHOUSE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:clickhouse-url-kB2CK9"
                 }
             ],
             "logConfiguration": {

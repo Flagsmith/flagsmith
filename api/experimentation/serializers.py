@@ -4,11 +4,12 @@ from rest_framework import serializers
 
 from environments.models import Environment
 from experimentation.models import (
+    Experiment,
     WarehouseConnection,
-    WarehouseConnectionStatus,
     WarehouseType,
 )
 from experimentation.types import SNOWFLAKE_DEFAULTS, SnowflakeConfig
+from features.feature_types import MULTIVARIATE
 
 
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -51,23 +52,6 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
         if not validated_data.get("name"):
             validated_data["name"] = self._generate_name(warehouse_type, environment)
 
-        existing: WarehouseConnection | None = (
-            WarehouseConnection.objects.all_with_deleted()
-            .filter(
-                environment=environment,
-                warehouse_type=warehouse_type,
-                deleted_at__isnull=False,
-            )
-            .first()
-        )
-        if existing:
-            existing.deleted_at = None
-            existing.status = WarehouseConnectionStatus.CREATED
-            existing.name = validated_data["name"]
-            existing.config = validated_data.get("config")
-            existing.save()
-            return existing
-
         result: WarehouseConnection = super().create(validated_data)
         return result
 
@@ -88,3 +72,46 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             **config,  # type: ignore[typeddict-item]
         }
         return merged
+
+
+class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    class Meta:
+        model = Experiment
+        fields = (
+            "id",
+            "feature",
+            "name",
+            "hypothesis",
+            "status",
+            "created_at",
+            "updated_at",
+            "started_at",
+            "ended_at",
+        )
+        read_only_fields = (
+            "id",
+            "status",
+            "created_at",
+            "updated_at",
+            "started_at",
+            "ended_at",
+        )
+
+    def validate_feature(self, feature: Any) -> Any:
+        if feature.type != MULTIVARIATE:
+            raise serializers.ValidationError(
+                "Experiments can only be created for multivariate flags."
+            )
+        environment: Environment | None = self.context.get("environment")
+        if environment and feature.project_id != environment.project_id:
+            raise serializers.ValidationError(
+                "Feature does not belong to this environment's project."
+            )
+        return feature
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        if self.instance is not None and "feature" in attrs:
+            raise serializers.ValidationError(
+                {"feature": "Cannot change the feature of an existing experiment."}
+            )
+        return attrs

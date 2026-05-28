@@ -44,8 +44,7 @@
     "react": "$react",
     "react-dom": "$react-dom",
     "@types/react": "$@types/react",
-    "@types/react-dom": "$@types/react-dom",
-    "axios": "^1.16.0"
+    "@types/react-dom": "$@types/react-dom"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.11.3",
@@ -74,7 +73,6 @@
     "@rspack/plugin-react-refresh": "^1.6.2",
     "@sentry/browser": "^7.119.1",
     "@sentry/webpack-plugin": "2.22.7",
-    "@slack/web-api": "^6.9.1",
     "array-find-index": "^1.0.2",
     "body-parser": "^2.2.2",
     "bootstrap": "5.2.2",

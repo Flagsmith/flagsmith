@@ -82,7 +82,7 @@ const SegmentRow: FC<SegmentRowProps> = ({ index, projectId, segment }) => {
           {feature && (
             <div className='chip chip--xs ml-2'>Feature-Specific</div>
           )}
-          <SegmentMembershipTotalBadge memberships={segment.memberships} />
+          <SegmentMembershipTotalBadge memberships={segment.membership_counts} />
         </Row>
         <div className='list-item-subtitle mt-1'>
           {description || 'No description'}

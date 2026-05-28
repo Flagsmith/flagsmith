@@ -13,3 +13,4 @@ class RelatedObjectType(enum.Enum):
     FEATURE_HEALTH = "Feature health status"
     RELEASE_PIPELINE = "Release pipeline"
     WAREHOUSE_CONNECTION = "Warehouse connection"
+    EXPERIMENT = "Experiment"
