@@ -233,3 +233,83 @@ def post_feature_deleted_comment(
             feature_id=feature_id,
             body=body,
         )
+
+
+def post_state_change_comment_for_feature_state(
+    feature_state: FeatureState,
+) -> None:
+    """Dispatch a state-change comment task for ``feature_state`` when the
+    project has an Azure DevOps integration configured. No-op otherwise
+    so projects without ADO don't pay for a queue entry and a
+    ``AzureDevOpsConfiguration`` lookup per feature-state save.
+    """
+    # `integrations.azure_devops.tasks` lands in a later commit; defer the
+    # import so this module loads cleanly until it does.
+    from integrations.azure_devops.tasks import (  # type: ignore[import-not-found]
+        post_azure_devops_state_change_comment,
+    )
+
+    if not feature_state.environment:
+        return
+    if not hasattr(feature_state.environment.project, "azure_devops_config"):
+        return
+    post_azure_devops_state_change_comment.delay(args=(feature_state.id,))
+
+
+def post_state_change_comment(feature_state: FeatureState) -> None:
+    """Post a comment on every linked ADO resource when a feature flag's
+    state changes, covering environment-level, segment override, and
+    identity override scopes.
+    """
+    feature = feature_state.feature
+
+    try:
+        config: AzureDevOpsConfiguration = AzureDevOpsConfiguration.objects.get(
+            project=feature.project,
+        )
+    except AzureDevOpsConfiguration.DoesNotExist:
+        return
+
+    resources = feature.external_resources.filter(type__in=AZURE_DEVOPS_RESOURCE_TYPES)
+    if not resources.exists():
+        return
+
+    environment = feature_state.environment
+    if environment is None:
+        return
+
+    if feature_state.feature_segment_id is not None:
+        feature_segment = feature_state.feature_segment
+        scope = "segment"
+        scope_name: str | None = (
+            feature_segment.segment.name if feature_segment else None
+        )
+    elif feature_state.identity_id is not None:
+        identity = feature_state.identity
+        scope = "identity"
+        scope_name = identity.identifier if identity else None
+    else:
+        scope = "environment"
+        scope_name = None
+
+    value = feature_state.get_feature_state_value()
+    body = render_to_string(
+        "azure_devops/feature_state_changed_comment.md",
+        {
+            "feature_name": feature.name,
+            "environment_name": environment.name,
+            "enabled": feature_state.enabled,
+            "value": value if value not in (None, "") else None,
+            "scope": scope,
+            "scope_name": scope_name,
+        },
+    )
+
+    for resource in resources:
+        _post_to_resource(
+            config=config,
+            resource_url=resource.url,
+            resource_type=resource.type,
+            feature_id=feature.id,
+            body=body,
+        )

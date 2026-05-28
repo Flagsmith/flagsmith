@@ -1,12 +1,16 @@
 import pytest
 import responses
+from pytest_mock import MockerFixture
 
+from environments.models import Environment
 from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature
 from integrations.azure_devops.models import AzureDevOpsConfiguration
 from integrations.azure_devops.services.comments import (
     post_feature_deleted_comment,
     post_linked_comment,
+    post_state_change_comment,
+    post_state_change_comment_for_feature_state,
     post_unlinked_comment,
 )
 
@@ -240,3 +244,139 @@ def test_post_feature_deleted_comment__no_configuration__noop(
 
     # Then
     assert len(responses.calls) == 0
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_post_state_change_comment__environment_scope__posts_to_each_resource(
+    azure_devops_configuration: AzureDevOpsConfiguration,
+    azure_devops_pr_resource_open: FeatureExternalResource,
+    feature: Feature,
+    environment: Environment,
+) -> None:
+    # Given
+    from features.models import FeatureState
+
+    feature_state = (
+        FeatureState.objects.get_live_feature_states(environment=environment)
+        .filter(feature=feature, identity__isnull=True, feature_segment__isnull=True)
+        .first()
+    )
+    assert feature_state is not None
+    responses.post(
+        f"{ORG_URL}/proj/_apis/git/pullrequests/1/threads",
+        json={"id": 1},
+    )
+
+    # When
+    post_state_change_comment(feature_state)
+
+    # Then
+    [call] = responses.calls
+    body = call.request.body
+    assert body is not None
+    body_text = body.decode() if isinstance(body, bytes) else body
+    assert feature.name in body_text
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_post_state_change_comment__no_resources_linked__noop(
+    azure_devops_configuration: AzureDevOpsConfiguration,
+    feature: Feature,
+    environment: Environment,
+) -> None:
+    # Given — no FeatureExternalResource rows
+    from features.models import FeatureState
+
+    feature_state = (
+        FeatureState.objects.get_live_feature_states(environment=environment)
+        .filter(feature=feature, identity__isnull=True, feature_segment__isnull=True)
+        .first()
+    )
+    assert feature_state is not None
+
+    # When
+    post_state_change_comment(feature_state)
+
+    # Then
+    assert len(responses.calls) == 0
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_post_state_change_comment__no_configuration__noop(
+    azure_devops_pr_resource_open: FeatureExternalResource,
+    feature: Feature,
+    environment: Environment,
+) -> None:
+    # Given — no AzureDevOpsConfiguration
+    from features.models import FeatureState
+
+    feature_state = (
+        FeatureState.objects.get_live_feature_states(environment=environment)
+        .filter(feature=feature, identity__isnull=True, feature_segment__isnull=True)
+        .first()
+    )
+    assert feature_state is not None
+
+    # When
+    post_state_change_comment(feature_state)
+
+    # Then
+    assert len(responses.calls) == 0
+
+
+@pytest.mark.skip(reason="Awaits tasks.py from PR 6 Task 6")
+@pytest.mark.django_db
+def test_post_state_change_comment_for_feature_state__with_config__queues_task(
+    azure_devops_configuration: AzureDevOpsConfiguration,
+    feature: Feature,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    from features.models import FeatureState
+
+    feature_state = (
+        FeatureState.objects.get_live_feature_states(environment=environment)
+        .filter(feature=feature, identity__isnull=True, feature_segment__isnull=True)
+        .first()
+    )
+    assert feature_state is not None
+    delay_mock = mocker.patch(
+        "integrations.azure_devops.tasks.post_azure_devops_state_change_comment.delay"
+    )
+
+    # When
+    post_state_change_comment_for_feature_state(feature_state)
+
+    # Then
+    delay_mock.assert_called_once_with(args=(feature_state.id,))
+
+
+@pytest.mark.skip(reason="Awaits tasks.py from PR 6 Task 6")
+@pytest.mark.django_db
+def test_post_state_change_comment_for_feature_state__no_config__skips_dispatch(
+    feature: Feature,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given — no AzureDevOpsConfiguration
+    from features.models import FeatureState
+
+    feature_state = (
+        FeatureState.objects.get_live_feature_states(environment=environment)
+        .filter(feature=feature, identity__isnull=True, feature_segment__isnull=True)
+        .first()
+    )
+    assert feature_state is not None
+    delay_mock = mocker.patch(
+        "integrations.azure_devops.tasks.post_azure_devops_state_change_comment.delay"
+    )
+
+    # When
+    post_state_change_comment_for_feature_state(feature_state)
+
+    # Then
+    delay_mock.assert_not_called()
