@@ -147,12 +147,17 @@ When `tagging_enabled` is true, links and webhook state updates apply Flagsmith
 project tags from the following set, all created lazily with
 `Tag.objects.get_or_create(..., is_system_tag=True, type=TagType.AZURE_DEVOPS.value)`:
 
-- `Azure PR Open`
-- `Azure PR Merged`
-- `Azure PR Abandoned`
-- `Azure PR Draft`
-- `Azure Work Item Open`
-- `Azure Work Item Closed`
+- `PR Open`
+- `PR Merged`
+- `PR Abandoned`
+- `PR Draft`
+- `Work Item Open`
+- `Work Item Closed`
+
+Labels deliberately omit the "Azure DevOps" prefix to match the brevity
+convention the GitLab tags follow (`Issue Open`, `MR Merged`). The
+`TagType.AZURE_DEVOPS` enum value scopes them at the type layer, and
+"PR" / "Work Item" already disambiguate from GitLab's "MR" / "Issue".
 
 A new `TagType.AZURE_DEVOPS` value is added to
 `projects.tags.models.TagType` (mirroring `TagType.GITHUB`). Tag colour is
