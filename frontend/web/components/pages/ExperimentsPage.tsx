@@ -6,8 +6,7 @@ import { useGetWarehouseConnectionsQuery } from 'common/services/useWarehouseCon
 import Button from 'components/base/forms/Button'
 import PageTitle from 'components/PageTitle'
 import CreateExperimentWizard from 'components/experiments/CreateExperimentWizard'
-import { IonIcon } from '@ionic/react'
-import { addOutline, flaskOutline, settingsOutline } from 'ionicons/icons'
+import Icon from 'components/icons/Icon'
 
 const ExperimentsPage: FC = () => {
   const { environmentId, projectId } = useRouteContext()
@@ -64,9 +63,9 @@ const ExperimentsPage: FC = () => {
     if (!hasWarehouse && experimentCount === 0) {
       return (
         <div className='text-center py-5'>
-          <IonIcon
-            icon={settingsOutline}
-            style={{ fontSize: 48 }}
+          <Icon
+            name='setting'
+            width={48}
             className='text-muted mb-3 d-block mx-auto'
           />
           <h5>Data warehouse not configured</h5>
@@ -84,9 +83,9 @@ const ExperimentsPage: FC = () => {
     if (experimentCount === 0) {
       return (
         <div className='text-center py-5'>
-          <IonIcon
-            icon={flaskOutline}
-            style={{ fontSize: 48 }}
+          <Icon
+            name='flask'
+            width={48}
             className='text-muted mb-3 d-block mx-auto'
           />
           <h5>No experiments yet</h5>
@@ -95,7 +94,7 @@ const ExperimentsPage: FC = () => {
             feature flags.
           </p>
           <Button onClick={() => setIsCreating(true)}>
-            <IonIcon icon={addOutline} className='me-1' />
+            <Icon name='plus' width={16} />
             Create Experiment
           </Button>
         </div>
@@ -117,7 +116,7 @@ const ExperimentsPage: FC = () => {
         cta={
           hasWarehouse ? (
             <Button onClick={() => setIsCreating(true)}>
-              <IonIcon icon={addOutline} className='me-1' />
+              <Icon name='plus' width={16} />
               Create Experiment
             </Button>
           ) : undefined
