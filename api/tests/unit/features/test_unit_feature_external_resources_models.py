@@ -31,3 +31,17 @@ def test_azure_devops_resource_types__contains_pull_request_and_work_item__match
 def test_resource_type_groupings__azure_devops_and_gitlab__are_disjoint() -> None:
     # Given / When / Then
     assert set(AZURE_DEVOPS_RESOURCE_TYPES).isdisjoint(set(GITLAB_RESOURCE_TYPES))
+
+
+def test_resource_type_field__choices__include_azure_devops_values() -> None:
+    # Given
+    from features.feature_external_resources.models import FeatureExternalResource
+
+    # When
+    field = FeatureExternalResource._meta.get_field("type")
+    assert field.choices is not None
+    choice_values = {value for value, _label in field.choices}
+
+    # Then
+    assert "AZURE_DEVOPS_PULL_REQUEST" in choice_values
+    assert "AZURE_DEVOPS_WORK_ITEM" in choice_values
