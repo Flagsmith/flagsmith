@@ -11,7 +11,6 @@ from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 
 from app.pagination import CustomPagination
-
 from environments.views import NestedEnvironmentViewSet
 from experimentation.models import (
     Experiment,
