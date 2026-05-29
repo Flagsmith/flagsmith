@@ -59,18 +59,15 @@ const SetupStep: FC<SetupStepProps> = ({
           before picking a flag.
         </p>
 
-        <div className='wizard-field'>
-          <label className='wizard-field__label'>
-            Experiment Name <span className='wizard-field__required'>*</span>
-          </label>
-          <Input
-            value={name}
-            onChange={(e: InputEvent) =>
-              onNameChange(Utils.safeParseEventValue(e))
-            }
-            placeholder='e.g. Checkout Button Redesign'
-          />
-        </div>
+        <InputGroup
+          title='Experiment Name *'
+          value={name}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            onNameChange(Utils.safeParseEventValue(e))
+          }
+          placeholder='e.g. Checkout Button Redesign'
+          noMargin
+        />
 
         <div>
           <InputGroup

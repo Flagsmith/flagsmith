@@ -579,11 +579,21 @@ export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
 
 export type ExperimentStatus = 'created' | 'running' | 'paused' | 'completed'
 
+export type ExperimentStatusCounts = Record<ExperimentStatus, number>
+
+export type ExperimentFeature = {
+  id: number
+  name: string
+  type: FeatureType
+  initial_value: string | null
+  multivariate_options: MultivariateOption[]
+}
+
 export type Experiment = {
   id: number
   name: string
   hypothesis: string
-  feature: number
+  feature: ExperimentFeature
   status: ExperimentStatus
   created_at: string
   updated_at: string
@@ -1363,7 +1373,11 @@ export type Res = {
   gitlabIssues: PagedResponse<GitLabIssue>
   gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
   warehouseConnections: WarehouseConnection[]
-  experiments: Experiment[]
+  experiments: PagedResponse<Experiment> & {
+    currentPage: number
+    pageSize: number
+    status_counts?: ExperimentStatusCounts
+  }
   experiment: Experiment
   // END OF TYPES
 }

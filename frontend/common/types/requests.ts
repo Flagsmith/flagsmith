@@ -24,6 +24,7 @@ import {
   StageActionType,
   StageActionBody,
   ChangeRequest,
+  ExperimentStatus,
   FlagsmithValue,
   TagStrategy,
 } from './responses'
@@ -984,10 +985,15 @@ export type Req = {
     name?: string
     config?: Record<string, string>
   }
-  getExperiments: { environmentId: string }
+  getExperiments: PagedRequest<{
+    environmentId: string
+    status?: ExperimentStatus
+  }>
   createExperiment: {
     environmentId: string
     body: { name: string; hypothesis: string; feature: number }
   }
+  experimentAction: { environmentId: string; experimentId: number }
+  deleteExperiment: { environmentId: string; experimentId: number }
   // END OF TYPES
 }

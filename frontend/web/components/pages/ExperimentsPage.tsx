@@ -1,20 +1,45 @@
-import { FC, useState } from 'react'
+import { FC, useCallback, useEffect, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
 import { useGetExperimentsQuery } from 'common/services/useExperiment'
 import { useGetWarehouseConnectionsQuery } from 'common/services/useWarehouseConnection'
+import { ExperimentStatus } from 'common/types/responses'
+import useDebouncedSearch from 'common/useDebouncedSearch'
 import Button from 'components/base/forms/Button'
 import PageTitle from 'components/PageTitle'
+import Paging from 'components/Paging'
 import CreateExperimentWizard from 'components/experiments/CreateExperimentWizard'
+import ExperimentsTable from 'components/experiments/ExperimentsTable'
+import ExperimentsListControls from 'components/experiments/ExperimentsListControls'
+import {
+  FilterTab,
+  TAB_LABELS,
+  TAB_ORDER,
+} from 'components/experiments/constants'
 import Icon from 'components/icons/Icon'
+
+const PAGE_SIZE = 10
 
 const ExperimentsPage: FC = () => {
   const { environmentId, projectId } = useRouteContext()
   const [isCreating, setIsCreating] = useState(false)
+  const [activeTab, setActiveTab] = useState<FilterTab>('all')
+  const [page, setPage] = useState(1)
+  const { search, searchInput, setSearchInput } = useDebouncedSearch()
   const history = useHistory()
 
-  const { data: experiments, isLoading } = useGetExperimentsQuery(
-    { environmentId: environmentId ?? '' },
+  useEffect(() => {
+    setPage(1)
+  }, [activeTab, search])
+
+  const { data: experimentsData, isLoading } = useGetExperimentsQuery(
+    {
+      environmentId: environmentId ?? '',
+      page,
+      page_size: PAGE_SIZE,
+      q: search || undefined,
+      status: activeTab !== 'all' ? activeTab : undefined,
+    },
     { skip: !environmentId },
   )
 
@@ -25,6 +50,26 @@ const ExperimentsPage: FC = () => {
     )
 
   const hasWarehouse = (warehouseConnections?.length ?? 0) > 0
+  const experiments = experimentsData?.results
+  const experimentCount = experimentsData?.count ?? 0
+  const statusCounts = experimentsData?.status_counts
+
+  const getTabLabel = useCallback(
+    (tab: FilterTab) => {
+      const label = TAB_LABELS[tab]
+      if (!statusCounts) return label
+      if (tab === 'all') {
+        const total = Object.values(statusCounts).reduce(
+          (a, b) => a + (b ?? 0),
+          0,
+        )
+        return total > 0 ? `${label} (${total})` : label
+      }
+      const count = statusCounts[tab as ExperimentStatus] ?? 0
+      return count > 0 ? `${label} (${count})` : label
+    },
+    [statusCounts],
+  )
 
   if (!environmentId || !projectId) return null
 
@@ -48,8 +93,7 @@ const ExperimentsPage: FC = () => {
     )
   }
 
-  const experimentCount = experiments?.length ?? 0
-
+  const hasActiveFilter = activeTab !== 'all' || !!search
   const settingsUrl = `/project/${projectId}/environment/${environmentId}/settings?tab=warehouse`
 
   const renderBody = () => {
@@ -60,7 +104,7 @@ const ExperimentsPage: FC = () => {
         </div>
       )
     }
-    if (!hasWarehouse && experimentCount === 0) {
+    if (!hasWarehouse && experimentCount === 0 && !hasActiveFilter) {
       return (
         <div className='text-center py-5'>
           <Icon
@@ -80,7 +124,7 @@ const ExperimentsPage: FC = () => {
         </div>
       )
     }
-    if (experimentCount === 0) {
+    if (experimentCount === 0 && !hasActiveFilter) {
       return (
         <div className='text-center py-5'>
           <Icon
@@ -100,12 +144,46 @@ const ExperimentsPage: FC = () => {
         </div>
       )
     }
+    const tabs = TAB_ORDER.map((value) => ({
+      label: getTabLabel(value),
+      value,
+    }))
+    const hasResults = !!experiments?.length
     return (
-      <div className='mt-3'>
-        <p className='text-muted'>
-          {experimentCount} experiment{experimentCount !== 1 ? 's' : ''}
-        </p>
-      </div>
+      <>
+        <ExperimentsListControls
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          searchInput={searchInput}
+          onSearchChange={setSearchInput}
+        />
+        {hasResults ? (
+          <ExperimentsTable
+            experiments={experiments}
+            environmentId={environmentId}
+          />
+        ) : (
+          <div className='text-center py-5'>
+            <p className='text-muted'>
+              No experiments match your {search ? 'search' : 'filter'}.
+            </p>
+          </div>
+        )}
+        {hasResults && (
+          <Paging
+            paging={{
+              ...(experimentsData || {}),
+              page,
+              pageSize: PAGE_SIZE,
+            }}
+            nextPage={() => setPage(page + 1)}
+            prevPage={() => setPage(page - 1)}
+            goToPage={(p: number) => setPage(p)}
+            isLoading={isLoading}
+          />
+        )}
+      </>
     )
   }
 
