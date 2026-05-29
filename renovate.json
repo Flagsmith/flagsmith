@@ -1,0 +1,32 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "enabled": false,
+  "dependencyDashboard": false,
+  "osvVulnerabilityAlerts": true,
+  "semanticCommits": "enabled",
+  "semanticCommitType": "deps",
+  "semanticCommitScope": null,
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "matchManagers": ["uv"],
+      "reviewers": ["team:flagsmith-back-end"],
+      "addLabels": ["api", "dependencies"]
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchFileNames": ["frontend/**"],
+      "reviewers": ["team:flagsmith-front-end"],
+      "addLabels": ["front-end", "dependencies"]
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchFileNames": ["docs/**"],
+      "reviewers": ["team:flagsmith-docs"],
+      "addLabels": ["docs", "dependencies"]
+    }
+  ]
+}
