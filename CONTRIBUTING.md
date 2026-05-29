@@ -21,9 +21,9 @@ If you are prepared to contribute but are uncertain as to how, consider narrowin
 ## Submit a PR
 
 1. The target branch should always be set to `main`, unless otherwise asked in the respective issue.
-1. Feel free to open a draft pull request. If you open a regular PR, a reviewer will be assigned immediately and your PR will be considered ready for review, unless you specify otherwise in a PR comment. You're welcome to use a PR to run checks against unfinished code.
-1. Once you have addressed the review feedback, preferably in new commits, reply to review comments, ensure the checks are passing and re-request a review. It is okay to not address the nitpicks and notes.
 1. An approved PR is eventually merged into `main`. Documentation changes will get deployed immediately afterwards. Your frontend changes will get deployed to SaaS, and you can expect both backend and frontend changes to be included in the next release.
+
+For how we write PR titles and descriptions, structure reviews, and address feedback, see [PR_COLLABORATION.md](https://github.com/Flagsmith/AGENTS.md/blob/main/PR_COLLABORATION.md). It's the guide our team and review agents follow, and you're welcome to follow it too.
 
 ## Setup local development
 
