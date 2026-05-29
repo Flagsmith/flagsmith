@@ -4,12 +4,12 @@ import { useDispatch } from 'react-redux'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
 import { useGetProfileQuery } from 'common/services/useProfile'
-import { useCreateOrganisationMutation } from 'common/services/useOrganisation'
+import { organisationService } from 'common/services/useOrganisation'
 import { useCreateProjectMutation } from 'common/services/useProject'
 import { useCreateEnvironmentMutation } from 'common/services/useEnvironment'
 import { useCreateProjectFlagMutation } from 'common/services/useProjectFlag'
 import useSelectedOrganisation from 'common/hooks/useSelectedOrganisation'
-import { setSelectedOrganisationId } from 'common/selectedOrganisationSlice'
+import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
 import { Req } from 'common/types/requests'
 import { ProjectFlag } from 'common/types/responses'
@@ -38,6 +38,41 @@ const trackEvent = (event: string, attributes: Record<string, unknown> = {}) =>
   // eslint-disable-next-line no-console
   console.info(`[onboarding.quickstart] ${event}`, attributes)
 
+/**
+ * Create an organisation through the legacy account store rather than the RTK
+ * mutation. Much of the shell still reads the current organisation from
+ * `AccountStore`, and only this path populates it (adds to
+ * `AccountStore.model.organisations` and sets the selection). A pure-RTK create
+ * leaves `AccountStore.getOrganisation()` empty, which breaks org-scoped calls
+ * on the destination page. Resolves with the new organisation id. Mirrors the
+ * save/select handling in CreateOrganisationPage.
+ */
+const createOrganisationViaAccountStore = (name: string): Promise<number> =>
+  new Promise((resolve, reject) => {
+    const cleanup = () => {
+      AccountStore.off('saved', onSaved)
+      AccountStore.off('problem', onProblem)
+      clearTimeout(timer)
+    }
+    const onSaved = () => {
+      cleanup()
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore — savedId is set by the createOrganisation controller
+      resolve(AccountStore.savedId as number)
+    }
+    const onProblem = () => {
+      cleanup()
+      reject(AccountStore.error || new Error('Failed to create organisation'))
+    }
+    const timer = setTimeout(() => {
+      cleanup()
+      reject(new Error('Timed out creating organisation'))
+    }, 20000)
+    AccountStore.on('saved', onSaved)
+    AccountStore.on('problem', onProblem)
+    AppActions.createOrganisation(name)
+  })
+
 const OnboardingQuickstartPage: FC = () => {
   const history = useHistory()
   const dispatch = useDispatch()
@@ -53,7 +88,6 @@ const OnboardingQuickstartPage: FC = () => {
   const selectedOrganisation = useSelectedOrganisation()
   const hasExistingOrg = !!selectedOrganisation
 
-  const [createOrganisation] = useCreateOrganisationMutation()
   const [createProject] = useCreateProjectMutation()
   const [createEnvironment] = useCreateEnvironmentMutation()
   const [createProjectFlag] = useCreateProjectFlagMutation()
@@ -156,9 +190,15 @@ const OnboardingQuickstartPage: FC = () => {
       // 1. Organisation — reuse the selected one, otherwise create + select.
       let organisationId = selectedOrganisation?.id
       if (!organisationId) {
-        const org = await createOrganisation({ name: orgName }).unwrap()
-        organisationId = org.id
-        dispatch(setSelectedOrganisationId(org.id))
+        organisationId = await createOrganisationViaAccountStore(orgName)
+        // Select it (sets the cookie, the Redux slice and AccountStore's
+        // current org) and refresh the RTK organisation list.
+        AppActions.selectOrganisation(organisationId)
+        dispatch(
+          organisationService.util.invalidateTags([
+            { id: 'LIST', type: 'Organisation' },
+          ]),
+        )
       }
 
       // 2. Project.

@@ -136,8 +136,15 @@ const App = class extends Component {
     }
 
     if (!AccountStore.getOrganisation() && !invite) {
-      // If user has no organisation redirect to /create
-      this.props.history.replace(`/create${query}`)
+      // If user has no organisation redirect to /create — unless the new
+      // onboarding flow is enabled, which creates the organisation as its
+      // first step at /getting-started.
+      const noOrgDestination = Utils.getFlagsmithHasFeature(
+        'onboarding_quickstart_flow',
+      )
+        ? '/getting-started'
+        : '/create'
+      this.props.history.replace(`${noOrgDestination}${query}`)
       return
     }
 
