@@ -1,7 +1,18 @@
 import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useHistory } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
 import Button from 'components/base/forms/Button'
+import ErrorMessage from 'components/ErrorMessage'
 import { useGetProfileQuery } from 'common/services/useProfile'
+import { useCreateOrganisationMutation } from 'common/services/useOrganisation'
+import { useCreateProjectMutation } from 'common/services/useProject'
+import { useCreateEnvironmentMutation } from 'common/services/useEnvironment'
+import { useCreateProjectFlagMutation } from 'common/services/useProjectFlag'
+import useSelectedOrganisation from 'common/hooks/useSelectedOrganisation'
+import { setSelectedOrganisationId } from 'common/selectedOrganisationSlice'
+import AppActions from 'common/dispatcher/app-actions'
+import { Req } from 'common/types/requests'
+import { ProjectFlag } from 'common/types/responses'
 import OnboardingStepper, {
   OnboardingStepDef,
   OnboardingStepKey,
@@ -27,20 +38,29 @@ const trackEvent = (event: string, attributes: Record<string, unknown> = {}) =>
   // eslint-disable-next-line no-console
   console.info(`[onboarding.quickstart] ${event}`, attributes)
 
-// POC stub — replaced by the env key returned from the create-environment
-// API call once the backend chain is wired up.
-const DEMO_ENVIRONMENT_KEY = 'demo-environment-key-replace-me'
-
 const OnboardingQuickstartPage: FC = () => {
   const history = useHistory()
+  const dispatch = useDispatch()
   const { data: profile } = useGetProfileQuery({})
   const defaults = useSmartDefaults(
     profile?.email ?? '',
     profile?.first_name ?? '',
   )
 
+  // Self-serve signup creates and selects an organisation at registration, so
+  // most users reaching onboarding already have one — reuse it and skip the
+  // org step. Only when none exists do we create one (rare).
+  const selectedOrganisation = useSelectedOrganisation()
+  const hasExistingOrg = !!selectedOrganisation
+
+  const [createOrganisation] = useCreateOrganisationMutation()
+  const [createProject] = useCreateProjectMutation()
+  const [createEnvironment] = useCreateEnvironmentMutation()
+  const [createProjectFlag] = useCreateProjectFlagMutation()
+
   const [step, setStep] = useState<OnboardingStepKey>('role')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<unknown>(null)
   const [selectedRole, setSelectedRole] = useState<OnboardingRoleKey | null>(
     null,
   )
@@ -50,6 +70,9 @@ const OnboardingQuickstartPage: FC = () => {
     FEATURE_PRESETS[0]?.key ?? '',
   )
   const [customFeature, setCustomFeature] = useState('')
+  // Set from the created project + its Development environment, used to build
+  // the post-onboarding features URL and the evaluation step's snippet.
+  const [projectId, setProjectId] = useState<number | null>(null)
   const [environmentKey, setEnvironmentKey] = useState('')
 
   // Org name is pre-filled from the email domain — it's meaningful data the
@@ -84,51 +107,114 @@ const OnboardingQuickstartPage: FC = () => {
   const evaluationStepTitle =
     selectedRole === 'pm' ? 'Connect your tools' : 'See it works'
 
-  // Other role skips the evaluation step — drop it from the timeline so
-  // the stepper accurately reflects the flow they'll actually walk.
+  // The timeline adapts to the user: the org step is dropped when they
+  // already have one, and the evaluation step is dropped for the 'other'
+  // role (Other = "orient, don't commit"), so the stepper reflects the flow
+  // they'll actually walk.
   const steps: OnboardingStepDef[] = useMemo(() => {
-    const base: OnboardingStepDef[] = [
-      { key: 'role', title: 'Your role' },
-      { key: 'org', title: 'Organisation' },
+    const base: OnboardingStepDef[] = [{ key: 'role', title: 'Your role' }]
+    if (!hasExistingOrg) base.push({ key: 'org', title: 'Organisation' })
+    base.push(
       { key: 'project', title: 'Project' },
       { key: 'feature', title: 'First feature' },
-    ]
+    )
     if (selectedRole === 'other') return base
     return [...base, { key: 'evaluation', title: evaluationStepTitle }]
-  }, [evaluationStepTitle, selectedRole])
+  }, [evaluationStepTitle, hasExistingOrg, selectedRole])
 
-  // Post-onboarding destination. Real impl needs projectId + environmentKey
-  // returned from the API-chain stub in handleFinish — both are currently
-  // placeholders so the URL won't fully resolve until that lands.
-  const featuresUrl = (envKey: string) =>
-    envKey && effectiveProjectName
-      ? `/project/${effectiveProjectName}/environment/${envKey}/features`
+  // Step navigation is driven by the `steps` array so it stays correct as
+  // steps are added/removed (org skip, role branching) — no hardcoded
+  // next/previous keys to keep in sync.
+  const goToAdjacentStep = (offset: number) => {
+    const index = steps.findIndex((s) => s.key === step)
+    const target = steps[index + offset]
+    if (target) setStep(target.key)
+  }
+  const goNext = () => goToAdjacentStep(1)
+  const goBack = () => goToAdjacentStep(-1)
+
+  // Post-onboarding destination. The features route expects the numeric
+  // project id and the environment's api_key (not names).
+  const featuresUrl = (pid: number | null, envKey: string) =>
+    pid && envKey
+      ? `/project/${pid}/environment/${envKey}/features`
       : '/organisations'
 
-  const finishedDestination = featuresUrl(environmentKey)
+  const finishedDestination = featuresUrl(projectId, environmentKey)
 
   const handleFinish = async () => {
     setIsSubmitting(true)
+    setSubmitError(null)
     trackEvent('question_step.submitted', {
       featureName,
       orgName,
       projectName: effectiveProjectName,
       role: selectedRole,
     })
-    // POC stub — real impl would chain createOrganisation → createProject →
-    // createFeature → fetch environment key here.
-    setEnvironmentKey(DEMO_ENVIRONMENT_KEY)
-    setIsSubmitting(false)
 
-    // 'other' role skips the AHA step entirely and lands on the features
-    // page — per the per-role paths design, Other = "orient, don't commit".
-    // Build the URL inline because the freshly-set environmentKey isn't
-    // visible in this closure yet.
-    if (selectedRole === 'other') {
-      history.push(featuresUrl(DEMO_ENVIRONMENT_KEY))
-      return
+    try {
+      // 1. Organisation — reuse the selected one, otherwise create + select.
+      let organisationId = selectedOrganisation?.id
+      if (!organisationId) {
+        const org = await createOrganisation({ name: orgName }).unwrap()
+        organisationId = org.id
+        dispatch(setSelectedOrganisationId(org.id))
+      }
+
+      // 2. Project.
+      const project = await createProject({
+        name: effectiveProjectName,
+        organisation: organisationId,
+      }).unwrap()
+
+      // 3. Environments — Development (where we land) then Production, matching
+      // what normal project creation produces.
+      const devEnvironment = await createEnvironment({
+        name: 'Development',
+        project: project.id,
+      }).unwrap()
+      await createEnvironment({
+        name: 'Production',
+        project: project.id,
+      }).unwrap()
+
+      // 4. First feature flag. The create endpoint only needs a small subset
+      // of ProjectFlag; the request type models the full entity, so assert it.
+      const featureBody: Partial<ProjectFlag> = {
+        name: featureName,
+        project: project.id,
+        type: 'STANDARD',
+      }
+      await createProjectFlag({
+        body: featureBody as Req['createProjectFlag']['body'],
+        project_id: project.id,
+      }).unwrap()
+
+      // 5. Refresh the legacy organisation store so the shell (project list,
+      // switcher) picks up the freshly created project without a reload.
+      AppActions.refreshOrganisation()
+
+      setProjectId(project.id)
+      setEnvironmentKey(devEnvironment.api_key)
+      trackEvent('setup.completed', {
+        projectId: project.id,
+        role: selectedRole,
+      })
+
+      // 'other' role skips the AHA step entirely and lands on the features
+      // page. Build the URL inline because the freshly-set state isn't visible
+      // in this closure yet.
+      if (selectedRole === 'other') {
+        history.push(featuresUrl(project.id, devEnvironment.api_key))
+        return
+      }
+      setStep('evaluation')
+    } catch (error) {
+      trackEvent('setup.failed', { role: selectedRole })
+      setSubmitError(error)
+    } finally {
+      setIsSubmitting(false)
     }
-    setStep('evaluation')
   }
 
   const handleSkip = () => {
@@ -189,16 +275,12 @@ const OnboardingQuickstartPage: FC = () => {
                   setSelectedRole(role)
                   trackEvent('role.selected', { role })
                 }}
-                onNext={() => setStep('org')}
+                onNext={goNext}
               />
             )}
 
             {step === 'org' && (
-              <OrgStep
-                value={orgName}
-                onChange={setOrgName}
-                onNext={() => setStep('project')}
-              />
+              <OrgStep value={orgName} onChange={setOrgName} onNext={goNext} />
             )}
 
             {step === 'project' && (
@@ -206,21 +288,28 @@ const OnboardingQuickstartPage: FC = () => {
                 value={projectName}
                 placeholder={defaults.projectName}
                 onChange={setProjectName}
-                onBack={() => setStep('org')}
-                onNext={() => setStep('feature')}
+                onBack={goBack}
+                onNext={goNext}
               />
             )}
 
             {step === 'feature' && (
-              <FeatureStep
-                selectedPreset={selectedPreset}
-                customValue={customFeature}
-                isSubmitting={isSubmitting}
-                onPresetChange={setSelectedPreset}
-                onCustomChange={setCustomFeature}
-                onBack={() => setStep('project')}
-                onFinish={handleFinish}
-              />
+              <>
+                <FeatureStep
+                  selectedPreset={selectedPreset}
+                  customValue={customFeature}
+                  isSubmitting={isSubmitting}
+                  onPresetChange={setSelectedPreset}
+                  onCustomChange={setCustomFeature}
+                  onBack={goBack}
+                  onFinish={handleFinish}
+                />
+                {!!submitError && (
+                  <div className='mt-3'>
+                    <ErrorMessage error={submitError} />
+                  </div>
+                )}
+              </>
             )}
 
             {step === 'evaluation' &&
