@@ -227,7 +227,11 @@
                 },
                 {
                     "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.5"
+                    "value": "0.02"
+                },
+                {
+                    "name": "SENTRY_TRACE_SAMPLE_RATE",
+                    "value": "0"
                 },
                 {
                     "name": "INGESTION_REDIS_URL",
