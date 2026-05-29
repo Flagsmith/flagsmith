@@ -128,7 +128,11 @@ const SetupStep: FC<SetupStepProps> = ({
           <div className='wizard-field'>
             <label className='wizard-field__label'>Variations</label>
             <VariationTable
-              controlValue={selectedFeature.initial_value?.toString() ?? ''}
+              controlValue={
+                selectedFeature.environment_feature_state?.feature_state_value?.toString() ??
+                selectedFeature.initial_value?.toString() ??
+                ''
+              }
               variations={selectedFeature.multivariate_options}
             />
           </div>
