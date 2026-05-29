@@ -421,6 +421,88 @@ def test_get_list__search_no_match__returns_empty(
     assert len(response.json()["results"]) == 0
 
 
+def test_get_list__with_experiments__returns_status_counts(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    multivariate_feature: Feature,
+    enable_features: EnableFeaturesFixture,
+    project: Project,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    second_feature = Feature.objects.create(
+        project=project,
+        name="second_mv_feature",
+        type=MULTIVARIATE,
+        initial_value="control",
+    )
+    running_experiment = Experiment.objects.create(
+        environment=environment,
+        feature=second_feature,
+        name="Running experiment",
+        hypothesis="Test",
+        status=ExperimentStatus.RUNNING,
+    )
+
+    # When
+    response = admin_client_new.get(_list_url(environment))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["status_counts"] == {
+        "created": 1,
+        "running": 1,
+        "paused": 0,
+        "completed": 0,
+    }
+    assert len(data["results"]) == 2
+
+    # Clean up
+    running_experiment.delete()
+
+
+def test_get_list__filtered__status_counts_reflect_all(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(_list_url(environment), {"status": "running"})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert len(data["results"]) == 0
+    assert data["status_counts"]["created"] == 1
+    assert data["status_counts"]["running"] == 0
+
+
+def test_get_list__searched__status_counts_reflect_search(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(_list_url(environment), {"q": "nonexistent"})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert len(data["results"]) == 0
+    assert data["status_counts"]["created"] == 0
+    assert data["status_counts"]["running"] == 0
+
+
 def test_get_detail__exists__returns_200(
     admin_client_new: APIClient,
     environment: Environment,

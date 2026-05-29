@@ -13,6 +13,10 @@
     justify-content: space-between;
   }
 
+  .input-container {
+    display: block;
+  }
+
   &__title {
     font-size: var(--font-body-size, 0.875rem);
     font-weight: var(--font-weight-bold, 700);

@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useMemo } from 'react'
+import { ChangeEvent, FC } from 'react'
 import { ProjectFlag } from 'common/types/responses'
 import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
@@ -42,14 +42,12 @@ const SetupStep: FC<SetupStepProps> = ({
         page_size: 50,
         projectId,
         search: search || undefined,
+        type: 'MULTIVARIATE',
       },
       { skip: !numericEnvId },
     )
 
-  const multivariateFeatures = useMemo(() => {
-    if (!featureList?.results) return []
-    return featureList.results.filter((f) => f.type === 'MULTIVARIATE')
-  }, [featureList])
+  const multivariateFeatures = featureList?.results ?? []
 
   return (
     <div className='d-flex flex-column gap-4'>
@@ -59,18 +57,15 @@ const SetupStep: FC<SetupStepProps> = ({
           before picking a flag.
         </p>
 
-        <div className='wizard-field'>
-          <label className='wizard-field__label'>
-            Experiment Name <span className='wizard-field__required'>*</span>
-          </label>
-          <Input
-            value={name}
-            onChange={(e: InputEvent) =>
-              onNameChange(Utils.safeParseEventValue(e))
-            }
-            placeholder='e.g. Checkout Button Redesign'
-          />
-        </div>
+        <InputGroup
+          title='Experiment Name *'
+          value={name}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            onNameChange(Utils.safeParseEventValue(e))
+          }
+          placeholder='e.g. Checkout Button Redesign'
+          noMargin
+        />
 
         <div>
           <InputGroup
@@ -106,17 +101,19 @@ const SetupStep: FC<SetupStepProps> = ({
                 : null
             }
             options={multivariateFeatures.map((f) => ({
+              feature: f,
               label: f.name,
               value: f.id,
             }))}
             onInputChange={(val: string) => setSearchInput(val)}
-            onChange={(option: { label: string; value: number } | null) => {
-              if (option) {
-                const feature = multivariateFeatures.find(
-                  (f) => f.id === option.value,
-                )
-                if (feature) onFeatureSelect(feature)
-              }
+            onChange={(
+              option: {
+                feature: ProjectFlag
+                label: string
+                value: number
+              } | null,
+            ) => {
+              if (option) onFeatureSelect(option.feature)
             }}
             isLoading={isFeaturesLoading}
             placeholder='Search for a multivariate feature...'

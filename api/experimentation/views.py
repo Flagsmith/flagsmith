@@ -2,7 +2,7 @@ import logging
 from typing import Any
 
 from django.db import IntegrityError
-from django.db.models import Q, QuerySet
+from django.db.models import Count, Q, QuerySet
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -138,6 +138,20 @@ class ExperimentViewSet(
             qs = qs.filter(Q(name__icontains=q) | Q(feature__name__icontains=q))
 
         return qs
+
+    def list(self, request: Request, *args: object, **kwargs: object) -> Response:
+        response = super().list(request, *args, **kwargs)
+        base_qs = super().get_queryset()
+        q = request.query_params.get("q")
+        if q:
+            base_qs = base_qs.filter(
+                Q(name__icontains=q) | Q(feature__name__icontains=q)
+            )
+        counts = base_qs.aggregate(
+            **{s.value: Count("id", filter=Q(status=s.value)) for s in ExperimentStatus}
+        )
+        response.data["status_counts"] = counts
+        return response
 
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         serializer = self.get_serializer(data=request.data)

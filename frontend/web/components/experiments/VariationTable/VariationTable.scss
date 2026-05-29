@@ -24,7 +24,7 @@
     }
 
     &--value {
-      width: 100px;
+      min-width: 120px;
     }
   }
 
@@ -57,8 +57,9 @@
     }
 
     &--value {
-      width: 120px;
+      min-width: 120px;
       flex-shrink: 0;
+      word-break: break-word;
     }
   }
 
