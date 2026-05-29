@@ -1,5 +1,35 @@
 # Changelog
 
+## [2.237.0](https://github.com/Flagsmith/flagsmith/compare/v2.236.0...v2.237.0) (2026-05-29)
+
+
+### Features
+
+* added pagination and deletion guard ([#7615](https://github.com/Flagsmith/flagsmith/issues/7615)) ([588fa17](https://github.com/Flagsmith/flagsmith/commit/588fa174a14be308216b83a00326c2c9162038f8))
+* added search query to get experiment endpoints ([#7617](https://github.com/Flagsmith/flagsmith/issues/7617)) ([91efcff](https://github.com/Flagsmith/flagsmith/commit/91efcffd49f50b8e20a7ba4d20d976808d3123fd))
+* **experiment:** add experiments list page with filtering, pagination, and actions ([#7628](https://github.com/Flagsmith/flagsmith/issues/7628)) ([7ea1158](https://github.com/Flagsmith/flagsmith/commit/7ea1158ddabd4b8833ba3fa069ede8ef3230b4c6))
+* **experimentation:** add Experiment base model and CRUD endpoints ([#7591](https://github.com/Flagsmith/flagsmith/issues/7591)) ([d118da7](https://github.com/Flagsmith/flagsmith/commit/d118da7084fe4576b2c46dab089265a80bd018b0))
+* **experimentation:** add experiment creation wizard frontend ([#7596](https://github.com/Flagsmith/flagsmith/issues/7596)) ([cdda679](https://github.com/Flagsmith/flagsmith/commit/cdda679e2e2b47adb23f8abe21ef562add044442))
+* **experimentation:** return feature object along with experiment entity ([#7609](https://github.com/Flagsmith/flagsmith/issues/7609)) ([e5f2f7c](https://github.com/Flagsmith/flagsmith/commit/e5f2f7c40e63ece574b19ac34631895b3b757f0c))
+* return experiment status counts along paginated list ([#7625](https://github.com/Flagsmith/flagsmith/issues/7625)) ([aa85699](https://github.com/Flagsmith/flagsmith/commit/aa856995f517da77d17a22c07910528ab41f1424))
+* track custom event feature creation ([#7603](https://github.com/Flagsmith/flagsmith/issues/7603)) ([cac20ff](https://github.com/Flagsmith/flagsmith/commit/cac20ff76ae29cafec8adb7bf7f9e2bad3935c31))
+
+
+### Bug Fixes
+
+* allow project admins to create and manage project-scoped custom fields ([#7518](https://github.com/Flagsmith/flagsmith/issues/7518)) ([53b93ba](https://github.com/Flagsmith/flagsmith/commit/53b93bab5803a1e9afad3bf4f9d29d0d705e96d5))
+
+
+### Dependency Updates
+
+* bump flagsmith-sql-flag-engine to 0.1.1 ([#7616](https://github.com/Flagsmith/flagsmith/issues/7616)) ([482f0ff](https://github.com/Flagsmith/flagsmith/commit/482f0ff661c8629a0ab66016c2cfe31a94fab464))
+* Use uv supported by dependabot ([#7633](https://github.com/Flagsmith/flagsmith/issues/7633)) ([d844e1a](https://github.com/Flagsmith/flagsmith/commit/d844e1a6da605459260e26c82d63047eaa74b223))
+
+
+### Docs
+
+* **Sizing:** rewrite as workload-driven guide ([#7592](https://github.com/Flagsmith/flagsmith/issues/7592)) ([b34ef1f](https://github.com/Flagsmith/flagsmith/commit/b34ef1fa123a493c0aeff029dd4e7f0f22ab79f1))
+
 ## [2.236.0](https://github.com/Flagsmith/flagsmith/compare/v2.235.0...v2.236.0) (2026-05-27)
 
 
