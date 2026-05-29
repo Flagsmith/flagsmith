@@ -143,7 +143,11 @@ def _call_webhook(
 
     try:
         res = requests.post(
-            str(webhook.url), data=json_data, headers=headers, timeout=10
+            str(webhook.url),
+            data=json_data,
+            headers=headers,
+            timeout=10,
+            allow_redirects=False,
         )
         res.raise_for_status()
         return res
@@ -188,7 +192,11 @@ def call_webhook_with_failure_mail_after_retries(  # type: ignore[no-untyped-def
 
     try:
         res = requests.post(
-            str(webhook.url), data=json_data, headers=headers, timeout=10
+            str(webhook.url),
+            data=json_data,
+            headers=headers,
+            timeout=10,
+            allow_redirects=False,
         )
         if not res.ok:
             logger.warning(
