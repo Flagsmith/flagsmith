@@ -2,7 +2,8 @@ import React, { FC, useEffect, useMemo, useState } from 'react'
 import { uniqBy } from 'lodash'
 import Button from 'components/base/forms/Button'
 import Constants from 'common/constants'
-import Utils from 'common/utils/utils'
+import Utils, { planNames } from 'common/utils/utils'
+import AccountStore from 'common/stores/account-store'
 import { IntegrationSummary } from 'components/pages/IntegrationsPage'
 import StatusPanel from 'web/components/pages/onboarding-quickstart/components/StatusPanel'
 import SuccessActions from 'web/components/pages/onboarding-quickstart/components/SuccessActions'
@@ -32,6 +33,13 @@ const FeatureEvaluationStep: FC<FeatureEvaluationStepProps> = ({
   const { markReceived, state } = useFirstEvaluationPoll({ enabled: true })
   const [toggleValue, setToggleValue] = useState(false)
   const isReceived = state === 'received'
+
+  // Only surface "Invite a teammate" where it makes sense: self-hosted (any
+  // plan) or paid SaaS. On the free SaaS plan we hide it rather than nudge an
+  // upgrade, which would just be friction at this moment.
+  const canInvite =
+    !Utils.isSaas() ||
+    Utils.getPlanName(AccountStore.getActiveOrgPlan()) !== planNames.free
 
   // Same data merge as `components/IntegrationSelect.tsx` — Flagsmith
   // remote-config flag (`integration_data`) concatenated with the
@@ -69,8 +77,10 @@ const FeatureEvaluationStep: FC<FeatureEvaluationStepProps> = ({
           <p className='mb-0'>
             <code className='text-default'>{projectName}</code> and{' '}
             <code className='text-default'>{featureName}</code> are set up.
-            Flagsmith plugs into the tools your team already uses — invite a
-            teammate to wire it into your codebase.
+            Flagsmith plugs into the tools your team already uses
+            {canInvite
+              ? ' — invite a teammate to wire it into your codebase.'
+              : '.'}
           </p>
         </div>
 
@@ -95,7 +105,12 @@ const FeatureEvaluationStep: FC<FeatureEvaluationStepProps> = ({
           </ul>
         </div>
 
-        <SuccessActions onExplore={onExplore} onInvite={onInvite} role={role} />
+        <SuccessActions
+          canInvite={canInvite}
+          onExplore={onExplore}
+          onInvite={onInvite}
+          role={role}
+        />
       </div>
     )
   }
@@ -129,7 +144,12 @@ const FeatureEvaluationStep: FC<FeatureEvaluationStepProps> = ({
       </div>
 
       {isReceived && (
-        <SuccessActions onExplore={onExplore} onInvite={onInvite} role={role} />
+        <SuccessActions
+          canInvite={canInvite}
+          onExplore={onExplore}
+          onInvite={onInvite}
+          role={role}
+        />
       )}
 
       {!isReceived && (
