@@ -109,6 +109,18 @@ const OnboardingQuickstartPage: FC = () => {
   const [projectId, setProjectId] = useState<number | null>(null)
   const [environmentKey, setEnvironmentKey] = useState('')
 
+  // Tracks entities already created so a retry after a partial failure (e.g.
+  // project created but an environment call failed) reuses them rather than
+  // creating duplicates. A deliberate Back + rename after a step succeeded
+  // reuses the original — acceptable, since retries follow failures.
+  const createdRef = useRef<{
+    orgId?: number
+    projectId?: number
+    devKey?: string
+    prodDone?: boolean
+    featureDone?: boolean
+  }>({})
+
   // Org name is pre-filled from the email domain — it's meaningful data the
   // user can keep or edit. The project name is NOT pre-filled: 'My first
   // project' is shown as placeholder text only (see ProjectStep), so the user
@@ -186,9 +198,10 @@ const OnboardingQuickstartPage: FC = () => {
       role: selectedRole,
     })
 
+    const created = createdRef.current
     try {
       // 1. Organisation — reuse the selected one, otherwise create + select.
-      let organisationId = selectedOrganisation?.id
+      let organisationId = selectedOrganisation?.id ?? created.orgId
       if (!organisationId) {
         organisationId = await createOrganisationViaAccountStore(orgName)
         // Select it (sets the cookie, the Redux slice and AccountStore's
@@ -199,45 +212,62 @@ const OnboardingQuickstartPage: FC = () => {
             { id: 'LIST', type: 'Organisation' },
           ]),
         )
+        created.orgId = organisationId
       }
 
       // 2. Project.
-      const project = await createProject({
-        name: effectiveProjectName,
-        organisation: organisationId,
-      }).unwrap()
+      let newProjectId = created.projectId
+      if (!newProjectId) {
+        const project = await createProject({
+          name: effectiveProjectName,
+          organisation: organisationId,
+        }).unwrap()
+        newProjectId = project.id
+        created.projectId = project.id
+      }
 
       // 3. Environments — Development (where we land) then Production, matching
       // what normal project creation produces.
-      const devEnvironment = await createEnvironment({
-        name: 'Development',
-        project: project.id,
-      }).unwrap()
-      await createEnvironment({
-        name: 'Production',
-        project: project.id,
-      }).unwrap()
+      let devKey = created.devKey
+      if (!devKey) {
+        const devEnvironment = await createEnvironment({
+          name: 'Development',
+          project: newProjectId,
+        }).unwrap()
+        devKey = devEnvironment.api_key
+        created.devKey = devKey
+      }
+      if (!created.prodDone) {
+        await createEnvironment({
+          name: 'Production',
+          project: newProjectId,
+        }).unwrap()
+        created.prodDone = true
+      }
 
       // 4. First feature flag. The create endpoint only needs a small subset
       // of ProjectFlag; the request type models the full entity, so assert it.
-      const featureBody: Partial<ProjectFlag> = {
-        name: featureName,
-        project: project.id,
-        type: 'STANDARD',
+      if (!created.featureDone) {
+        const featureBody: Partial<ProjectFlag> = {
+          name: featureName,
+          project: newProjectId,
+          type: 'STANDARD',
+        }
+        await createProjectFlag({
+          body: featureBody as Req['createProjectFlag']['body'],
+          project_id: newProjectId,
+        }).unwrap()
+        created.featureDone = true
       }
-      await createProjectFlag({
-        body: featureBody as Req['createProjectFlag']['body'],
-        project_id: project.id,
-      }).unwrap()
 
       // 5. Refresh the legacy organisation store so the shell (project list,
       // switcher) picks up the freshly created project without a reload.
       AppActions.refreshOrganisation()
 
-      setProjectId(project.id)
-      setEnvironmentKey(devEnvironment.api_key)
+      setProjectId(newProjectId)
+      setEnvironmentKey(devKey)
       trackEvent('setup.completed', {
-        projectId: project.id,
+        projectId: newProjectId,
         role: selectedRole,
       })
 
@@ -245,7 +275,7 @@ const OnboardingQuickstartPage: FC = () => {
       // page. Build the URL inline because the freshly-set state isn't visible
       // in this closure yet.
       if (selectedRole === 'other') {
-        history.push(featuresUrl(project.id, devEnvironment.api_key))
+        history.push(featuresUrl(newProjectId, devKey))
         return
       }
       setStep('evaluation')
