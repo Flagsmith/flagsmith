@@ -147,6 +147,7 @@ const FeatureStep: FC<FeatureStepProps> = ({
             <div className='mt-2'>
               <InputGroup
                 title='Custom feature name'
+                placeholder='e.g. header_size'
                 inputProps={{
                   name: 'customFeatureName',
                   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -158,7 +159,10 @@ const FeatureStep: FC<FeatureStepProps> = ({
                 }}
                 value={customValue}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  onCustomChange(e.target.value)
+                  // Mirror the main app's feature-ID constraint: spaces are
+                  // not allowed in a flag name — replace them with underscores
+                  // as the user types (see FeatureNameInput in create-feature).
+                  onCustomChange(e.target.value.replace(/ /g, '_'))
                 }
                 isValid={!!customValue}
               />

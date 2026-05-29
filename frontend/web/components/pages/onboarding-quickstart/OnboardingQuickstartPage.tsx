@@ -52,10 +52,16 @@ const OnboardingQuickstartPage: FC = () => {
   const [customFeature, setCustomFeature] = useState('')
   const [environmentKey, setEnvironmentKey] = useState('')
 
+  // Org name is pre-filled from the email domain — it's meaningful data the
+  // user can keep or edit. The project name is NOT pre-filled: 'My first
+  // project' is shown as placeholder text only (see ProjectStep), so the user
+  // doesn't have to clear a generic default before typing their own. When left
+  // blank we fall back to the placeholder via `effectiveProjectName`.
   useEffect(() => {
     setOrgName((existing) => existing || defaults.orgName)
-    setProjectName((existing) => existing || defaults.projectName)
-  }, [defaults.orgName, defaults.projectName])
+  }, [defaults.orgName])
+
+  const effectiveProjectName = projectName.trim() || defaults.projectName
 
   // Focus management — when the step changes, land focus on the first
   // interactive element of the new step. Without this, focus stays on
@@ -95,8 +101,8 @@ const OnboardingQuickstartPage: FC = () => {
   // returned from the API-chain stub in handleFinish — both are currently
   // placeholders so the URL won't fully resolve until that lands.
   const featuresUrl = (envKey: string) =>
-    envKey && projectName
-      ? `/project/${projectName}/environment/${envKey}/features`
+    envKey && effectiveProjectName
+      ? `/project/${effectiveProjectName}/environment/${envKey}/features`
       : '/organisations'
 
   const finishedDestination = featuresUrl(environmentKey)
@@ -106,7 +112,7 @@ const OnboardingQuickstartPage: FC = () => {
     trackEvent('question_step.submitted', {
       featureName,
       orgName,
-      projectName,
+      projectName: effectiveProjectName,
       role: selectedRole,
     })
     // POC stub — real impl would chain createOrganisation → createProject →
@@ -198,6 +204,7 @@ const OnboardingQuickstartPage: FC = () => {
             {step === 'project' && (
               <ProjectStep
                 value={projectName}
+                placeholder={defaults.projectName}
                 onChange={setProjectName}
                 onBack={() => setStep('org')}
                 onNext={() => setStep('feature')}
@@ -223,7 +230,7 @@ const OnboardingQuickstartPage: FC = () => {
                   role={selectedRole}
                   environmentKey={environmentKey}
                   featureName={featureName}
-                  projectName={projectName}
+                  projectName={effectiveProjectName}
                   onExplore={handleExplore}
                   onFirstEvalReceived={handleFirstEvalReceived}
                   onInvite={handleInvite}
