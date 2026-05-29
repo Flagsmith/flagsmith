@@ -286,24 +286,36 @@ const App = class extends Component {
           onLogin={this.onLogin}
         >
           {({ isSaving, user }, { twoFactorLogin }) => {
-            return user && user.twoFactorPrompt ? (
-              <div className='col-md-6 push-md-3 mt-5'>
-                <TwoFactorPrompt
-                  pin={this.state.pin}
-                  error={this.state.error}
-                  onSubmit={() => {
-                    this.setState({ error: false })
-                    twoFactorLogin(this.state.pin, () => {
-                      this.setState({ error: true })
-                    })
-                  }}
-                  isLoading={isSaving}
-                  onChange={(e) =>
-                    this.setState({ pin: Utils.safeParseEventValue(e) })
-                  }
-                />
-              </div>
-            ) : (
+            if (user && user.twoFactorPrompt) {
+              return (
+                <div className='col-md-6 push-md-3 mt-5'>
+                  <TwoFactorPrompt
+                    pin={this.state.pin}
+                    error={this.state.error}
+                    onSubmit={() => {
+                      this.setState({ error: false })
+                      twoFactorLogin(this.state.pin, () => {
+                        this.setState({ error: true })
+                      })
+                    }}
+                    isLoading={isSaving}
+                    onChange={(e) =>
+                      this.setState({ pin: Utils.safeParseEventValue(e) })
+                    }
+                  />
+                </div>
+              )
+            }
+
+            // Chromeless onboarding: render only the flow — no nav, sidebar,
+            // or header links — so the customer can't navigate away mid-flow.
+            // The flow provides its own explicit "Skip — set up manually"
+            // escape.
+            if (isOnboardingFlow) {
+              return <div>{this.props.children}</div>
+            }
+
+            return (
               <Nav
                 header={
                   <>
@@ -322,14 +334,12 @@ const App = class extends Component {
                             AccountStore.getOrganisation()?.subscription.plan
                           }
                         />
-                        {!isOnboardingFlow && (
-                          <div className='container announcement-container'>
-                            <div>
-                              <Announcement />
-                              <AnnouncementPerPage pathname={pathname} />
-                            </div>
+                        <div className='container announcement-container'>
+                          <div>
+                            <Announcement />
+                            <AnnouncementPerPage pathname={pathname} />
                           </div>
-                        )}
+                        </div>
                       </>
                     )}
                   </>
