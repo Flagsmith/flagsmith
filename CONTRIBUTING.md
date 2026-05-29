@@ -23,7 +23,7 @@ If you are prepared to contribute but are uncertain as to how, consider narrowin
 1. The target branch should always be set to `main`, unless otherwise asked in the respective issue.
 1. An approved PR is eventually merged into `main`. Documentation changes will get deployed immediately afterwards. Your frontend changes will get deployed to SaaS, and you can expect both backend and frontend changes to be included in the next release.
 
-For how we write PR titles and descriptions, structure reviews, and address feedback, see [PR_COLLABORATION.md](https://github.com/Flagsmith/AGENTS.md/blob/main/PR_COLLABORATION.md). It's the guide our team and review agents follow, and you're welcome to follow it too.
+To learn how we write PR titles and descriptions, structure reviews, and address feedback, see [PR_COLLABORATION.md](https://github.com/Flagsmith/AGENTS.md/blob/main/PR_COLLABORATION.md). It's the guide our team and review agents follow, and we encourage you to follow it as well.
 
 ## Setup local development
 
