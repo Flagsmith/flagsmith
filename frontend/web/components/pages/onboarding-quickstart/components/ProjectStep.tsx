@@ -18,10 +18,9 @@ const ProjectStep: FC<ProjectStepProps> = ({
   placeholder,
   value,
 }) => {
-  const hasValue = !!value.trim()
-  // The placeholder ('My first project') is a real fallback — leaving the
-  // field blank uses it, so the user can advance without typing anything.
-  const canProceed = hasValue || !!placeholder
+  // A name is required. The placeholder ('My first project') is only a hint —
+  // it is not used as a fallback, so the user must type something to advance.
+  const isValid = !!value.trim()
 
   return (
     <StepShell
@@ -35,7 +34,7 @@ const ProjectStep: FC<ProjectStepProps> = ({
             className: 'w-50',
             name: 'projectName',
             onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
-              if (e.key === 'Enter' && canProceed) {
+              if (e.key === 'Enter' && isValid) {
                 e.preventDefault()
                 onNext()
               }
@@ -45,7 +44,7 @@ const ProjectStep: FC<ProjectStepProps> = ({
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             onChange(e.target.value)
           }
-          isValid={hasValue}
+          isValid={isValid}
         />
       }
       footer={
@@ -53,7 +52,7 @@ const ProjectStep: FC<ProjectStepProps> = ({
           <Button theme='text' onClick={onBack}>
             ← Back
           </Button>
-          <Button theme='primary' onClick={onNext} disabled={!canProceed}>
+          <Button theme='primary' onClick={onNext} disabled={!isValid}>
             Next →
           </Button>
         </>

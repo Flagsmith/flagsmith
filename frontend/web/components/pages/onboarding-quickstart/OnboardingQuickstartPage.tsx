@@ -124,8 +124,9 @@ const OnboardingQuickstartPage: FC = () => {
   // Org name is pre-filled from the email domain — it's meaningful data the
   // user can keep or edit. The project name is NOT pre-filled: 'My first
   // project' is shown as placeholder text only (see ProjectStep), so the user
-  // doesn't have to clear a generic default before typing their own. When left
-  // blank we fall back to the placeholder via `effectiveProjectName`.
+  // doesn't have to clear a generic default before typing their own. A name is
+  // required (ProjectStep disables Next until one is entered); the trim here is
+  // a defensive guard against a whitespace-only value.
   useEffect(() => {
     setOrgName((existing) => existing || defaults.orgName)
   }, [defaults.orgName])
