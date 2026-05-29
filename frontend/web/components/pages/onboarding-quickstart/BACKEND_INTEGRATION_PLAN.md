@@ -77,9 +77,20 @@ legacy `AccountStore`-reading surfaces coherent.
 - **Self-hosted / permissions**: org creation may be restricted; surface a
   clear message rather than a raw error.
 
-### Phase 5 — Flag + cleanup
-- Revert `GettingStartedSwitch` `FORCE_ON = true` to the real
-  `Utils.getFlagsmithHasFeature('onboarding_quickstart_flow')` gate.
+### Phase 5 — Flag + cleanup — DONE (flag must exist on FoF)
+- `GettingStartedSwitch` now gates on
+  `Utils.getFlagsmithHasFeature('onboarding_quickstart_flow')` — the
+  `FORCE_ON` override is removed. The no-org post-signup routing
+  (`App.js`) gates on the same flag.
+- **Still required:** create + enable `onboarding_quickstart_flow` on
+  Flagsmith-on-Flagsmith. Until it exists, the flag reads false and the
+  old `GettingStartedPage` + `/create` flow render (safe default).
+
+### Known follow-ups (not blockers for a flagged rollout)
+- No-org users landing on `/getting-started` trigger the shell's
+  `OrganisationStore.getOrganisation()` bootstrap with no org id, firing
+  harmless failed calls (`get-subscription-metadata` etc.). Dev-only red
+  overlay; silent in production. Fix would guard the shared store.
 
 ## Out of scope
 - First-eval signal (stays mocked — see `FIRST_EVAL_BACKEND_PLAN.md`).
