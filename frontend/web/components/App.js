@@ -232,6 +232,12 @@ const App = class extends Component {
     const projectId = this.getProjectId(this.props)
     const environmentId = this.getEnvironmentId(this.props)
 
+    // The quickstart onboarding flow is a focused, distraction-free surface —
+    // suppress the marketing announcement banners while the user is in it.
+    const isOnboardingFlow =
+      pathname === '/getting-started' &&
+      Utils.getFlagsmithHasFeature('onboarding_quickstart_flow')
+
     if (
       AccountStore.getOrganisation() &&
       AccountStore.getOrganisation().block_access_to_admin &&
@@ -316,12 +322,14 @@ const App = class extends Component {
                             AccountStore.getOrganisation()?.subscription.plan
                           }
                         />
-                        <div className='container announcement-container'>
-                          <div>
-                            <Announcement />
-                            <AnnouncementPerPage pathname={pathname} />
+                        {!isOnboardingFlow && (
+                          <div className='container announcement-container'>
+                            <div>
+                              <Announcement />
+                              <AnnouncementPerPage pathname={pathname} />
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </>
                     )}
                   </>
