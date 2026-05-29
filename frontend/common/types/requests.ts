@@ -172,6 +172,7 @@ export type Req = {
   }>
   getOrganisations: {}
   getOrganisation: { id: number }
+  createOrganisation: { name: string }
   updateOrganisation: { id: number; body: UpdateOrganisationBody }
   deleteOrganisation: { id: number }
   uploadOrganisationLicence: {
@@ -635,6 +636,7 @@ export type Req = {
     id: string
   }
   getProject: { id: number }
+  createProject: { name: string; organisation: number }
   updateProject: { id: number; body: UpdateProjectBody }
   deleteProject: { id: number }
   migrateProject: { id: number }
@@ -682,6 +684,7 @@ export type Req = {
     feature_id: number
     group_ids: number[]
   }
+  createEnvironment: { name: string; project: number }
   updateEnvironment: { id: number; body: Environment }
   createCloneIdentityFeatureStates: {
     environment_id: string
