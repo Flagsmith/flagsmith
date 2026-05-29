@@ -9,7 +9,15 @@ type VariationTableProps = {
   variations: MultivariateOption[]
 }
 
-const VARIANT_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+const getVariantLetter = (index: number): string => {
+  let result = ''
+  let n = index
+  do {
+    result = String.fromCharCode(65 + (n % 26)) + result
+    n = Math.floor(n / 26) - 1
+  } while (n >= 0)
+  return result
+}
 
 const getVariationValue = (mv: MultivariateOption) => {
   if (mv.type === 'unicode') return mv.string_value
@@ -58,7 +66,7 @@ const VariationTable: FC<VariationTableProps> = ({
 
       {variations.map((mv, index) => {
         const value = getVariationValue(mv)
-        const letter = VARIANT_LETTERS[index] ?? String(index + 1)
+        const letter = getVariantLetter(index)
         return (
           <div key={mv.id} className='variation-table__row'>
             <div className='variation-table__cell variation-table__cell--name'>
