@@ -18,6 +18,7 @@ class GitLabWebhookObjectAttributes(TypedDict, total=False):
     action: str
     draft: bool
     work_in_progress: bool
+    title: str
 
 
 class GitLabWebhookPayload(TypedDict, total=False):
