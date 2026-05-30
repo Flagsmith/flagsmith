@@ -66,7 +66,9 @@ const CreateOrganisationPage: React.FC = () => {
   useEffect(() => {
     API.trackPage(Constants.pages.CREATE_ORGANISATION)
     focusTimeout.current = setTimeout(() => {
-      inputRef.current?.focus()
+      if (inputRef.current && typeof inputRef.current.focus === 'function') {
+        inputRef.current.focus()
+      }
       focusTimeout.current = null
     }, 500)
 
