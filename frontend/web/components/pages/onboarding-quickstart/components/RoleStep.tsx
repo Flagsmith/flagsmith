@@ -59,7 +59,6 @@ const RoleStep: FC<RoleStepProps> = ({ onChange, onNext, value }) => {
   return (
     <StepShell
       title="What's your role?"
-      subtitle="We'll tailor what you see next based on what you're trying to do."
       body={
         <div
           role='radiogroup'
@@ -93,6 +92,7 @@ const RoleStep: FC<RoleStepProps> = ({ onChange, onNext, value }) => {
                   aria-hidden='true'
                 />
                 <span className='ms-2 text-default'>{role.title}</span>
+                <span className='ms-auto text-muted'>{role.focus}</span>
               </button>
             )
           })}

@@ -13,10 +13,10 @@ import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
 import { Req } from 'common/types/requests'
 import { ProjectFlag } from 'common/types/responses'
-import OnboardingStepper, {
+import OnboardingProgress, {
   OnboardingStepDef,
   OnboardingStepKey,
-} from 'web/components/pages/onboarding-quickstart/components/OnboardingStepper'
+} from 'web/components/pages/onboarding-quickstart/components/OnboardingProgress'
 import InviteUsersModal from 'components/modals/InviteUsers'
 import RoleStep from 'web/components/pages/onboarding-quickstart/components/RoleStep'
 import OrgStep from 'web/components/pages/onboarding-quickstart/components/OrgStep'
@@ -324,11 +324,7 @@ const OnboardingQuickstartPage: FC = () => {
           </div>
         </header>
 
-        <OnboardingStepper
-          currentStep={step}
-          onStepClick={(key) => setStep(key)}
-          steps={steps}
-        />
+        <OnboardingProgress currentStep={step} steps={steps} />
 
         <div className='onboarding-quickstart__layout'>
           <div

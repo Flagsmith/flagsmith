@@ -58,6 +58,38 @@
     color: var(--color-text-default);
   }
 
+  // Slim progress bar — shares the heading rail width so it lines up with the
+  // title above it.
+  &__progress {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 1200px;
+    margin-inline: auto;
+  }
+
+  &__progress-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
+  &__progress-track {
+    width: 100%;
+    height: 6px;
+    border-radius: 9999px;
+    background-color: var(--color-surface-muted);
+    overflow: hidden;
+  }
+
+  &__progress-fill {
+    width: var(--onboarding-progress, 0%);
+    height: 100%;
+    border-radius: inherit;
+    background-color: var(--color-icon-action);
+    transition: width var(--duration-normal) var(--easing-standard);
+  }
+
   &__layout {
     display: flex;
     width: 100%;
@@ -251,133 +283,6 @@
     code {
       color: inherit;
       background: transparent;
-    }
-  }
-}
-
-// Horizontal stepper — number/check circle + title, joined by connector
-// lines. Compact, fits a short linear flow better than a vertical timeline.
-.onboarding-stepper {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0;
-  list-style: none;
-
-  &__step {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    min-width: 0;
-
-    &:last-child {
-      flex: 0 0 auto;
-    }
-
-    &--done {
-      .onboarding-stepper__circle {
-        background: var(--color-surface-success);
-        border-color: var(--color-border-success);
-        // Same contrast fix as the status panel: green-500 on a green
-        // tint fails AA; the -700 weight reads cleanly.
-        color: var(--green-700);
-      }
-      .onboarding-stepper__title {
-        color: var(--color-text-default);
-      }
-      .onboarding-stepper__connector {
-        background: var(--color-border-success);
-      }
-    }
-
-    &--active {
-      .onboarding-stepper__circle {
-        border-color: var(--color-border-action);
-        color: var(--color-text-action);
-        background: var(--color-surface-default);
-        box-shadow: 0 0 0 4px var(--color-surface-action-subtle);
-      }
-      .onboarding-stepper__title {
-        color: var(--color-text-default);
-        font-weight: 600;
-      }
-    }
-
-    &--upcoming {
-      .onboarding-stepper__circle {
-        border-color: var(--color-border-default);
-        color: var(--color-text-disabled);
-        background: var(--color-surface-default);
-      }
-      .onboarding-stepper__title {
-        color: var(--color-text-disabled);
-      }
-    }
-  }
-
-  &__node {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 4px 6px;
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-    min-width: 0;
-
-    &:disabled {
-      cursor: default;
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--color-border-action);
-      outline-offset: 2px;
-      border-radius: 6px;
-    }
-  }
-
-  &__circle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 9999px;
-    border: 2px solid var(--color-border-default);
-    flex-shrink: 0;
-    transition: box-shadow var(--duration-fast) var(--easing-standard),
-      background-color var(--duration-fast) var(--easing-standard),
-      border-color var(--duration-fast) var(--easing-standard);
-  }
-
-  &__number {
-    font-size: 0.8125rem;
-    font-weight: 600;
-  }
-
-  &__title {
-    font-size: 0.875rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__connector {
-    flex: 1;
-    height: 2px;
-    background: var(--color-border-default);
-    margin: 0 12px;
-    min-width: 24px;
-  }
-
-  @media (max-width: 720px) {
-    &__title {
-      display: none;
-    }
-    &__node {
-      gap: 0;
     }
   }
 }
