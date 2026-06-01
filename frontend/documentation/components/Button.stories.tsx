@@ -7,6 +7,7 @@ import {
   sizeClassNames,
 } from 'components/base/forms/Button'
 import type { ButtonType } from 'components/base/forms/Button'
+import { Icon } from 'components/icons'
 
 const themeOptions = Object.keys(themeClassNames) as Array<
   keyof typeof themeClassNames
@@ -19,7 +20,7 @@ const meta: Meta<ButtonType> = {
   argTypes: {
     children: {
       control: 'text',
-      description: 'Button label content.',
+      description: 'Button label content. Compose icons via `<Icon>` children.',
     },
     disabled: {
       control: 'boolean',
@@ -53,15 +54,7 @@ export default meta
 
 type Story = StoryObj<ButtonType>
 
-// ---------------------------------------------------------------------------
-// Default — interactive playground
-// ---------------------------------------------------------------------------
-
 export const Default: Story = {}
-
-// ---------------------------------------------------------------------------
-// All Variants
-// ---------------------------------------------------------------------------
 
 export const Variants: Story = {
   parameters: {
@@ -73,14 +66,7 @@ export const Variants: Story = {
     },
   },
   render: () => (
-    <div
-      style={{
-        alignItems: 'center',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '12px',
-      }}
-    >
+    <div className='d-flex align-items-center flex-wrap gap-2'>
       <Button theme='primary'>Primary</Button>
       <Button theme='secondary'>Secondary</Button>
       <Button theme='outline'>Outline</Button>
@@ -88,42 +74,31 @@ export const Variants: Story = {
       <Button theme='success'>Success</Button>
       <Button theme='tertiary'>Tertiary</Button>
       <Button theme='text'>Text</Button>
+      <Button theme='icon'>
+        <Icon name='copy' />
+      </Button>
     </div>
   ),
 }
-
-// ---------------------------------------------------------------------------
-// Sizes
-// ---------------------------------------------------------------------------
 
 export const Sizes: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Button sizes from large to extra small.',
+        story: 'Button sizes from large to extra-extra small.',
       },
     },
   },
   render: () => (
-    <div
-      style={{
-        alignItems: 'center',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '12px',
-      }}
-    >
+    <div className='d-flex align-items-center flex-wrap gap-2'>
       <Button size='large'>Large</Button>
       <Button size='default'>Default</Button>
       <Button size='small'>Small</Button>
       <Button size='xSmall'>Extra Small</Button>
+      <Button size='xxSmall'>XX Small</Button>
     </div>
   ),
 }
-
-// ---------------------------------------------------------------------------
-// Disabled
-// ---------------------------------------------------------------------------
 
 export const Disabled: Story = {
   parameters: {
@@ -134,14 +109,7 @@ export const Disabled: Story = {
     },
   },
   render: () => (
-    <div
-      style={{
-        alignItems: 'center',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '12px',
-      }}
-    >
+    <div className='d-flex align-items-center flex-wrap gap-2'>
       <Button theme='primary' disabled>
         Primary
       </Button>
@@ -158,36 +126,28 @@ export const Disabled: Story = {
   ),
 }
 
-// ---------------------------------------------------------------------------
-// With Icons
-// ---------------------------------------------------------------------------
-
 export const WithIcons: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'Buttons support `iconLeft` and `iconRight` props. Pass any `IconName` from the icon system.',
+          'Icons compose via children — pass `<Icon>` JSX directly alongside the label. Button handles icon+label spacing internally.',
       },
     },
   },
   render: () => (
-    <div
-      style={{
-        alignItems: 'center',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '12px',
-      }}
-    >
-      <Button theme='primary' iconLeft='plus'>
+    <div className='d-flex align-items-center flex-wrap gap-2'>
+      <Button theme='primary'>
+        <Icon name='plus' />
         Add Item
       </Button>
-      <Button theme='danger' iconLeft='trash-2'>
+      <Button theme='danger'>
+        <Icon name='trash-2' />
         Delete
       </Button>
-      <Button theme='outline' iconRight='chevron-right'>
+      <Button theme='outline'>
         Next
+        <Icon name='chevron-right' />
       </Button>
     </div>
   ),

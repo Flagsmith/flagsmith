@@ -1,7 +1,7 @@
 /**
  * Created by kylejohnson on 25/07/2016.
  */
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import React, { Component } from 'react'
 
 const InputGroup = class extends Component {

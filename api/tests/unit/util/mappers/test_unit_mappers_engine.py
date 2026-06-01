@@ -425,6 +425,65 @@ def test_map_environment_to_engine__multiple_segments_and_versions__returns_expe
     assert segment_featurestate.uuid not in segment_feature_state_uuids
 
 
+def test_map_environment_to_engine__feature_specific_segment_not_in_env__excludes_segment(
+    environment: Environment,
+    feature: "Feature",
+    feature_specific_segment: Segment,
+) -> None:
+    # Given
+    # `feature_specific_segment` has no `FeatureSegment` pointing at it
+    # in this environment, so it has no evaluation path here.
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    segment_ids = [s.id for s in result.project.segments]
+    assert feature_specific_segment.id not in segment_ids
+
+
+def test_map_environment_to_engine__feature_specific_segment_in_env__includes_segment(
+    environment: Environment,
+    feature: "Feature",
+    feature_specific_segment: Segment,
+) -> None:
+    # Given
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=feature_specific_segment,
+        environment=environment,
+    )
+    FeatureState.objects.create(
+        feature_segment=feature_segment,
+        feature=feature,
+        environment=environment,
+    )
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    segment_ids = [s.id for s in result.project.segments]
+    assert feature_specific_segment.id in segment_ids
+
+
+def test_map_environment_to_engine__project_wide_segment_not_in_env__includes_segment(
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    # `segment` is a project-wide segment (Segment.feature_id IS NULL)
+    # with no `FeatureSegment` in this environment. Project-wide segments
+    # must remain in the environment document regardless.
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    segment_ids = [s.id for s in result.project.segments]
+    assert segment.id in segment_ids
+
+
 def test_map_environment_api_key_to_engine__valid_key__returns_expected_model(
     environment: Environment,
     environment_api_key: "EnvironmentAPIKey",

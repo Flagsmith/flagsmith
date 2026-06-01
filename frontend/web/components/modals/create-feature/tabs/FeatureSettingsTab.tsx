@@ -19,7 +19,7 @@ import {
 } from 'common/services/useProjectFlag'
 import Switch from 'components/Switch'
 import Tooltip from 'components/Tooltip'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import JSONReference from 'components/JSONReference'
 import ModalHR from 'components/modals/ModalHR'
 import Button from 'components/base/forms/Button'

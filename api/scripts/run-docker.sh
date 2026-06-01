@@ -3,7 +3,7 @@ set -e
 
 # common environment variables
 ACCESS_LOG_FORMAT=${ACCESS_LOG_FORMAT:-'%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %({origin}i)s %({access-control-allow-origin}o)s'}
-APPLICATION_LOGGERS=${APPLICATION_LOGGERS:-"common,features,task_processor,app_analytics,webhooks"}
+APPLICATION_LOGGERS=${APPLICATION_LOGGERS:-"app_analytics,audit,code_references,common,core,dynamodb,edge_api,environments,features,import_export,integrations,oauth2_metadata,organisations,projects,segments,task_processor,users,webhooks,workflows"}
 
 waitfordb() {
   if [ -z "${SKIP_WAIT_FOR_DB}" ]; then
@@ -45,6 +45,9 @@ run_task_processor() {
     if [ -n "$TASK_PROCESSOR_DATABASE_URL" ] || [ -n "$TASK_PROCESSOR_DATABASE_NAME" ]; then
         waitfordb --waitfor 30 --migrations --database task_processor
     fi
+    if [ -n "$CLICKHOUSE_URL" ] || [ -n "$CLICKHOUSE_HOST" ]; then
+        waitfordb --waitfor 30 --migrations --database clickhouse
+    fi
     exec flagsmith start \
              --bind 0.0.0.0:8000 \
              --access-logfile $ACCESS_LOG_LOCATION \
@@ -68,6 +71,12 @@ migrate_task_processor_db(){
     fi
     python manage.py migrate --database task_processor
 }
+migrate_clickhouse_db(){
+    if [ -z "$CLICKHOUSE_URL" ] && [ -z "$CLICKHOUSE_HOST" ]; then
+        return 0
+    fi
+    python manage.py migrate --database clickhouse
+}
 bootstrap(){
     python manage.py bootstrap
 }
@@ -81,17 +90,20 @@ if [ "$1" = "migrate" ]; then
     migrate
     migrate_analytics_db
     migrate_task_processor_db
+    migrate_clickhouse_db
 elif [ "$1" = "serve" ]; then
     serve
 elif [ "$1" = "run-task-processor" ]; then
     migrate
     migrate_analytics_db
     migrate_task_processor_db
+    migrate_clickhouse_db
     run_task_processor
 elif [ "$1" = "migrate-and-serve" ]; then
     migrate
     migrate_analytics_db
     migrate_task_processor_db
+    migrate_clickhouse_db
     bootstrap
     serve
 else

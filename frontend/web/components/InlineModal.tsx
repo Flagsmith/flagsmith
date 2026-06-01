@@ -1,7 +1,7 @@
 import React, { useRef, FC, useEffect } from 'react'
 import ModalClose from './modals/base/ModalClose'
 import ModalHR from './modals/ModalHR'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import classNames from 'classnames'
 import useOutsideClick from 'common/useOutsideClick'
 
@@ -51,7 +51,7 @@ const InlineModal: FC<InlineModalProps> = ({
   })
 
   return (
-    <div className={relativeToParent ? '' : 'relative'}>
+    <div className={relativeToParent ? '' : 'position-relative'}>
       {isOpen && (
         <div ref={modalRef} className={classNames('inline-modal', className)}>
           <div className='d-flex py-2 d-lg-none justify-content-end px-4'>

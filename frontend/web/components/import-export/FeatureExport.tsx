@@ -5,16 +5,8 @@ import { IonIcon } from '@ionic/react'
 import { informationCircle } from 'ionicons/icons'
 import TagFilter from 'components/tags/TagFilter'
 import PanelSearch from 'components/PanelSearch'
-import FeatureListStore from 'common/stores/feature-list-store'
-import FeatureListProvider from 'common/providers/FeatureListProvider'
-import AppActions from 'common/dispatcher/app-actions'
 import FeatureRow from 'components/feature-summary/FeatureRow'
-import {
-  FeatureListProviderData,
-  FeatureState,
-  ProjectFlag,
-  TagStrategy,
-} from 'common/types/responses'
+import { ProjectFlag, TagStrategy } from 'common/types/responses'
 import ProjectStore from 'common/stores/project-store'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
@@ -24,6 +16,8 @@ import {
 } from 'common/services/useFeatureExport'
 import InfoMessage from 'components/InfoMessage'
 import FeatureExportItem from './FeatureExportItem'
+import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
+import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 
 type FeatureExportType = {
   projectId: string
@@ -35,18 +29,37 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   )
   const [tags, setTags] = useState<(number | string)[]>([])
   const [search, setSearch] = useState()
-  const [page, setPage] = useState(0)
+  const [page, setPage] = useState(1)
   const [tagStrategy, setTagStrategy] = useState<TagStrategy>('UNION')
 
-  useEffect(() => {
-    if (environment) {
-      AppActions.getFeatures(projectId, environment, true, null, null, page, {
-        search,
-        tag_strategy: tagStrategy,
-        tags: tags?.length ? tags : undefined,
-      })
-    }
-  }, [environment, tagStrategy, tags, search, projectId, page])
+  const { getEnvironmentIdFromKey, isLoading: isLoadingEnvs } =
+    useProjectEnvironments(parseInt(projectId))
+
+  const environmentId = environment
+    ? getEnvironmentIdFromKey(environment)
+    : undefined
+
+  const { data: featureListData, isFetching: isLoadingFeatures } =
+    useGetFeatureListQuery(
+      environmentId
+        ? {
+            environmentId: String(environmentId),
+            page,
+            projectId: parseInt(projectId),
+            search: search || undefined,
+            sort_direction: 'ASC',
+            sort_field: 'name',
+            tag_strategy: tagStrategy,
+            tags: tags?.length ? tags.join(',') : undefined,
+          }
+        : ({} as any),
+      { skip: !environmentId },
+    )
+
+  const projectFlags = featureListData?.results
+  const environmentFlags = featureListData?.environmentStates
+  const paging = featureListData?.pagination
+
   const [createFeatureExport, { isLoading: isCreating, isSuccess }] =
     useCreateFeatureExportMutation({})
 
@@ -125,64 +138,57 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
         value={tags}
         onChange={setTags}
       />
-      <FeatureListProvider>
-        {({
-          environmentFlags,
-          projectFlags,
-        }: {
-          environmentFlags?: FeatureListProviderData['environmentFlags']
-          projectFlags: FeatureListProviderData['projectFlags']
-        }) => {
-          const isLoading = !FeatureListStore.hasLoaded
-
-          if (isLoading) {
-            return (
-              <div className='text-center'>
-                <Loader />
-              </div>
-            )
-          }
+      {(() => {
+        if (isLoadingEnvs || (isLoadingFeatures && !projectFlags)) {
           return (
-            <>
-              <div className='mt-4 mb-2'>
-                <strong>Features</strong>{' '}
-              </div>
-              <PanelSearch
-                className='no-pad'
-                id='features-list'
-                renderSearchWithNoResults
-                search={search}
-                items={projectFlags}
-                onChange={(e: InputEvent) => {
-                  setSearch(Utils.safeParseEventValue(e))
-                }}
-                isLoading={FeatureListStore.isLoading}
-                paging={FeatureListStore.paging}
-                nextPage={() => setPage(page + 1)}
-                renderRow={(projectFlag, i) => (
-                  <FeatureRow
-                    readOnly
-                    hideRemove
-                    hideAudit
-                    environmentFlags={environmentFlags}
-                    environmentId={environment}
-                    projectId={projectId}
-                    index={i}
-                    projectFlag={projectFlag}
-                  />
-                )}
-                prevPage={() => setPage(page - 1)}
-                goToPage={setPage}
-              />
-              <div className='mt-4 text-right'>
-                <Button disabled={isLoading || !environment} onClick={onSubmit}>
-                  Export Features
-                </Button>
-              </div>
-            </>
+            <div className='text-center'>
+              <Loader />
+            </div>
           )
-        }}
-      </FeatureListProvider>
+        }
+        return (
+          <>
+            <div className='mt-4 mb-2'>
+              <strong>Features</strong>{' '}
+            </div>
+            <PanelSearch
+              className='no-pad'
+              id='features-list'
+              renderSearchWithNoResults
+              search={search}
+              items={projectFlags}
+              onChange={(e: InputEvent) => {
+                setSearch(Utils.safeParseEventValue(e))
+              }}
+              isLoading={isLoadingFeatures}
+              paging={paging}
+              nextPage={() => setPage(page + 1)}
+              renderRow={(projectFlag: ProjectFlag, i: number) => (
+                <FeatureRow
+                  readOnly
+                  hideRemove
+                  hideAudit
+                  environmentFlags={environmentFlags}
+                  environmentId={environment}
+                  projectId={projectId}
+                  index={i}
+                  projectFlag={projectFlag}
+                />
+              )}
+              prevPage={() => setPage(page - 1)}
+              goToPage={setPage}
+            />
+            <div className='mt-4 text-right'>
+              <Button
+                disabled={isLoadingFeatures || !environment}
+                onClick={onSubmit}
+              >
+                Export Features
+              </Button>
+            </div>
+          </>
+        )
+      })()}
 
       {isCreating || !exports ? (
         <div className={'text-center'}>

@@ -1,6 +1,6 @@
 import React from 'react'
 import { FeatureHealthEventReasonUrlBlock } from 'common/types/responses'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 
 interface EventURLBlocksProps {

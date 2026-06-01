@@ -1,5 +1,5 @@
 import React from 'react'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import Button from 'components/base/forms/Button'

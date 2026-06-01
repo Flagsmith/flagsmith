@@ -11,6 +11,7 @@ from environments.sdk.views import SDKEnvironmentAPIView
 from features.feature_health.views import feature_health_webhook
 from features.views import SDKFeatureStates, get_multivariate_options
 from integrations.github.views import github_webhook
+from integrations.gitlab.views import gitlab_webhook
 from organisations.views import chargebee_webhook
 
 schema_view_permission_class = (  # pragma: no cover
@@ -42,6 +43,12 @@ urlpatterns = [
     re_path(r"cb-webhook/", chargebee_webhook, name="chargebee-webhook"),
     # GitHub integration webhook
     re_path(r"github-webhook/", github_webhook, name="github-webhook"),
+    # GitLab integration webhook
+    path(
+        "gitlab-webhook/<uuid:webhook_uuid>/",
+        gitlab_webhook,
+        name="gitlab-webhook",
+    ),
     re_path(r"cb-webhook/", chargebee_webhook, name="chargebee-webhook"),
     # Feature health webhook
     re_path(

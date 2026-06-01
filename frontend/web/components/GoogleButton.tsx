@@ -1,6 +1,7 @@
 import React, { FC } from 'react'
 import { TokenResponse, useGoogleLogin } from '@react-oauth/google'
 import Button from './base/forms/Button'
+import { Icon } from './icons'
 
 type GoogleButtonProps = {
   className?: string
@@ -22,10 +23,10 @@ const GoogleButton: FC<GoogleButtonProps> = ({ className, onSuccess }) => {
     <Button
       className={className}
       theme='secondary'
-      iconLeft='google'
       key='google'
       onClick={() => login()}
     >
+      <Icon name='google' />
       Google
     </Button>
   )

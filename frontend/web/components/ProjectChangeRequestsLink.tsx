@@ -1,5 +1,5 @@
 import React, { FC } from 'react'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import { useGetProjectChangeRequestsQuery } from 'common/services/useProjectChangeRequest'
 import Utils from 'common/utils/utils'
 import { useGetProjectQuery } from 'common/services/useProject'

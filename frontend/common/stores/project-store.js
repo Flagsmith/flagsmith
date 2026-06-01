@@ -1,5 +1,8 @@
-import { getIsWidget } from 'components/pages/WidgetPage'
 import OrganisationStore from './organisation-store'
+import filter from 'lodash/filter'
+import find from 'lodash/find'
+import findIndex from 'lodash/findIndex'
+import sortBy from 'lodash/sortBy'
 
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
@@ -7,10 +10,9 @@ import { getStore } from 'common/store'
 import { projectService } from 'common/services/useProject'
 import { environmentService } from 'common/services/useEnvironment'
 
-const Dispatcher = require('../dispatcher/dispatcher')
-const BaseStore = require('./base/_store')
-
-const data = require('../data/base/_data')
+import Dispatcher from 'common/dispatcher/dispatcher'
+import BaseStore from './base/_store'
+import data from 'common/data/base/_data'
 
 const controller = {
   createEnv: ({
@@ -79,7 +81,7 @@ const controller = {
   deleteEnv: (env) => {
     API.trackEvent(Constants.events.REMOVE_ENVIRONMENT)
     data.delete(`${Project.api}environments/${env.api_key}/`).then(() => {
-      store.model.environments = _.filter(
+      store.model.environments = filter(
         store.model.environments,
         (e) => e.id !== env.id,
       )
@@ -97,7 +99,7 @@ const controller = {
     data
       .put(`${Project.api}environments/${env.api_key}/`, env)
       .then((res) => {
-        const index = _.findIndex(store.model.environments, { id: env.id })
+        const index = findIndex(store.model.environments, { id: env.id })
         store.model.environments[index] = res
         store.saved()
         getStore().dispatch(
@@ -130,92 +132,51 @@ const controller = {
   },
   getProject: (id, cb, force) => {
     if (!id) {
-      if (!getIsWidget()) {
-        !force && AsyncStorage.removeItem('lastEnv')
-        document.location.href = '/404'
-      }
-    } else if (force) {
-      store.loading()
-
-      return Promise.all([
-        data.get(`${Project.api}projects/${id}/`),
-        data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
-      ])
-        .then(([project, environments]) => {
-          project.max_segments_allowed = project.max_segments_allowed
-          project.max_features_allowed = project.max_features_allowed
-          project.max_segment_overrides_allowed =
-            project.max_segment_overrides_allowed
-          project.total_features = project.total_features || 0
-          project.total_segments = project.total_segments || 0
-          store.model = Object.assign(project, {
-            environments: _.sortBy(environments.results, 'name'),
-          })
-          if (project.organisation !== OrganisationStore.id) {
-            AppActions.selectOrganisation(project.organisation)
-            AppActions.getOrganisation(project.organisation)
-          }
-          store.id = id
-          store.loaded()
-          if (cb) {
-            cb()
-          }
-        })
-        .catch(() => {
-          if (!getIsWidget()) {
-            document.location.href = '/404?entity=project'
-          }
-        })
-    } else if (!store.model || !store.model.environments || store.id !== id) {
-      store.loading()
-
-      Promise.all([
-        data.get(`${Project.api}projects/${id}/`),
-        data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
-      ])
-        .then(([project, environments]) => {
-          project.max_segments_allowed = project.max_segments_allowed
-          project.max_features_allowed = project.max_features_allowed
-          project.max_segment_overrides_allowed =
-            project.max_segment_overrides_allowed
-          project.total_features = project.total_features || 0
-          project.total_segments = project.total_segments || 0
-          store.model = Object.assign(project, {
-            environments: _.sortBy(environments.results, 'name'),
-          })
-          if (project.organisation !== OrganisationStore.id) {
-            AppActions.selectOrganisation(project.organisation)
-            AppActions.getOrganisation(project.organisation)
-          }
-          store.id = id
-          store.loaded()
-          if (cb) {
-            cb()
-          }
-        })
-        .catch(() => {
-          if (!getIsWidget()) {
-            AsyncStorage.removeItem('lastEnv')
-            document.location.href = '/404?entity=project'
-          }
-        })
+      !force && AsyncStorage.removeItem('lastEnv')
+      document.location.href = '/404'
+      return
     }
-  },
-  migrateProject: (id) => {
+
+    if (!force && store.model && store.model.environments && store.id === id) {
+      return
+    }
+
     store.loading()
-    data.post(`${Project.api}projects/${id}/migrate-to-edge/`).then(() => {
-      controller.getProject(id, () => store.saved(), true)
-    })
+
+    return Promise.all([
+      data.get(`${Project.api}projects/${id}/`),
+      data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
+    ])
+      .then(([project, environments]) => {
+        project.total_features = project.total_features || 0
+        project.total_segments = project.total_segments || 0
+        store.model = Object.assign(project, {
+          environments: sortBy(environments.results, 'name'),
+        })
+        if (project.organisation !== OrganisationStore.id) {
+          AppActions.selectOrganisation(project.organisation)
+          AppActions.getOrganisation(project.organisation)
+        }
+        store.id = id
+        store.loaded()
+        if (cb) {
+          cb()
+        }
+      })
+      .catch(() => {
+        AsyncStorage.removeItem('lastEnv')
+        document.location.href = '/404?entity=project'
+      })
   },
 }
 
 const store = Object.assign({}, BaseStore, {
   getEnvironment: (api_key) =>
-    store.model && _.find(store.model.environments, { api_key }),
+    store.model && find(store.model.environments, { api_key }),
   getEnvironmentById: (id) =>
-    store.model && _.find(store.model.environments, { id }),
+    store.model && find(store.model.environments, { id }),
   getEnvironmentIdFromKey: (api_key) => {
-    const env = _.find(store.model.environments, { api_key })
+    const env = find(store.model.environments, { api_key })
     return env && env.id
   },
   getEnvironmentIdFromKeyAsync: async (projectId, apiKey) => {
@@ -228,7 +189,7 @@ const store = Object.assign({}, BaseStore, {
   },
   getEnvs: () => store.model && store.model.environments,
   getIsVersioned: (api_key) => {
-    const env = _.find(store.model.environments, { api_key })
+    const env = find(store.model.environments, { api_key })
     return env && env.use_v2_feature_versioning
   },
   getMaxFeaturesAllowed: () => {
@@ -260,9 +221,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   const action = payload.action // this is our action from handleViewAction
 
   switch (action.actionType) {
-    case Actions.MIGRATE_PROJECT:
-      controller.migrateProject(parseInt(action.projectId))
-      break
     case Actions.GET_PROJECT:
       controller.getProject(parseInt(action.projectId))
       break

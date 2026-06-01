@@ -3,12 +3,12 @@ import cx from 'classnames'
 import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { Clipboard } from 'polyfill-react-native'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
 import { checkmarkCircle, warning } from 'ionicons/icons'
 
-const toml = require('toml')
-const yaml = require('yaml')
+import toml from 'toml'
+import yaml from 'yaml'
 
 function xmlIsInvalid(xmlStr) {
   const parser = new DOMParser()

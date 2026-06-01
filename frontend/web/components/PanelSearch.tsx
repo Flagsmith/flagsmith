@@ -11,24 +11,26 @@ import React, {
 import { AutoSizer, List } from 'react-virtualized'
 import Popover from './base/Popover'
 import Input from './base/forms/Input'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronUp } from 'ionicons/icons'
 import Button from './base/forms/Button'
 import Paging from './Paging'
-import _ from 'lodash'
+import lodashFilter from 'lodash/filter'
+import find from 'lodash/find'
+import orderBy from 'lodash/orderBy'
 import Panel from './base/grid/Panel'
 import Utils from 'common/utils/utils'
 import { SortOrder } from 'common/types/requests'
 
-export type SortOption = {
+type SortOption = {
   value: string
   order: SortOrder
   default?: boolean
   label: string
 }
 
-export interface PanelSearchProps<T> {
+interface PanelSearchProps<T> {
   actionButton?: ReactNode
   filterElement?: ReactNode
   filterRow?: (item: T, search: string, index: number) => boolean
@@ -83,7 +85,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
 
   const defaultSortingOption = useMemo(() => {
     return sorting
-      ? (_.find(sorting, { default: true }) as SortOption | undefined)
+      ? (find(sorting, { default: true }) as SortOption | undefined)
       : undefined
   }, [sorting])
 
@@ -102,7 +104,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
   const sortItems = useCallback(
     (itemsToSort: T[]): T[] => {
       if (!sortBy) return itemsToSort
-      return _.orderBy(
+      return orderBy(
         itemsToSort,
         [sortBy],
         [(sortOrder?.toLowerCase() || 'asc') as 'asc' | 'desc'],
@@ -117,7 +119,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
       search = search.replace(/^"+|"+$/g, '')
     }
     if (filterRow && (search || filter)) {
-      const filtered = _.filter(items, (item, index) =>
+      const filtered = lodashFilter(items, (item, index) =>
         filterRow(item, search.toLowerCase(), index),
       )
       return sortItems(filtered)
@@ -188,7 +190,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
   const filteredItems = filterItems()
 
   const currentSort: SortOption | undefined = useMemo(() => {
-    return sorting ? _.find(sorting, (v) => v.value === sortBy) : undefined
+    return sorting ? find(sorting, (v) => v.value === sortBy) : undefined
   }, [sorting, sortBy])
 
   let search = propSearch || internalSearch || ''
@@ -267,7 +269,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
             {props.filterElement && props.filterElement}
 
             {sorting && (
-              <Row className='mr-3 relative'>
+              <Row className='mr-3 position-relative'>
                 <Popover
                   renderTitle={(toggle: () => void, isActive: boolean) => (
                     <a

@@ -1,5 +1,5 @@
-const globalThis = typeof window === 'undefined' ? global : window
-module.exports = global.Project = {
+const _globalThis = typeof window === 'undefined' ? global : window
+const Project = {
   api: 'http://flagsmith-api:8000/api/v1/',
 
   chargebee: {
@@ -19,5 +19,7 @@ module.exports = global.Project = {
   // This is used for Sentry tracking
   maintenance: false,
   useSecureCookies: true,
-  ...(globalThis.projectOverrides || {}),
+  ...(_globalThis.projectOverrides || {}),
 }
+_globalThis.Project = Project
+export default Project

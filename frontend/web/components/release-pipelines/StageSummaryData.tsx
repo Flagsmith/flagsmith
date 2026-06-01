@@ -7,11 +7,11 @@ import {
   StageTriggerType,
 } from 'common/types/responses'
 
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 
 import { renderActionDetail } from './FlagActionDetail'
 
-export interface StageSummaryDataProps {
+interface StageSummaryDataProps {
   stageActions?: StageAction[]
   stageTrigger?: StageTrigger
   featureInStage?: Features[number]

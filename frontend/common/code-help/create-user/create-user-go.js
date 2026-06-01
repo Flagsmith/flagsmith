@@ -1,4 +1,4 @@
-module.exports = (
+export default (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID },
   userId,

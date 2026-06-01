@@ -59,19 +59,6 @@ def get_identity_flags_response_json(  # type: ignore[no-untyped-def]
     return _get_identity_flags_response_json  # type: ignore[return-value]
 
 
-@pytest.fixture()
-def environment_v2_versioning(
-    admin_client: "APIClient", environment: int, environment_api_key: str
-) -> int:
-    environment_update_url = reverse(
-        "api-v1:environments:environment-enable-v2-versioning",
-        args=[environment_api_key],
-    )
-    environment_update_response = admin_client.post(environment_update_url)
-    assert environment_update_response.status_code == status.HTTP_202_ACCEPTED
-    return environment
-
-
 def test_v2_versioning__publish_and_revert__returns_consistent_flags(  # type: ignore[no-untyped-def]  # noqa: FT004
     admin_client: "APIClient",
     environment: int,

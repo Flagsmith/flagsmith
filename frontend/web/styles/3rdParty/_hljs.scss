@@ -8,30 +8,6 @@
   -webkit-transition: $transition;
   transition: $transition;
 }
-@mixin transition-property($property...) {
-  -moz-transition-property: $property;
-  -o-transition-property: $property;
-  -webkit-transition-property: $property;
-  transition-property: $property;
-}
-@mixin transition-duration($duration...) {
-  -moz-transition-property: $duration;
-  -o-transition-property: $duration;
-  -webkit-transition-property: $duration;
-  transition-property: $duration;
-}
-@mixin transition-timing-function($timing...) {
-  -moz-transition-timing-function: $timing;
-  -o-transition-timing-function: $timing;
-  -webkit-transition-timing-function: $timing;
-  transition-timing-function: $timing;
-}
-@mixin transition-delay($delay...) {
-  -moz-transition-delay: $delay;
-  -o-transition-delay: $delay;
-  -webkit-transition-delay: $delay;
-  transition-delay: $delay;
-}
 .invalid .value-editor .hljs {
   border: 2px solid $danger;
 }
@@ -130,13 +106,7 @@
 .hljs-container {
   position: relative;
   &:hover {
-    .hljs-copy {
-      opacity: 1;
-    }
     .hljs-docs {
-      opacity: 1;
-    }
-    .hljs-github {
       opacity: 1;
     }
   }
@@ -149,23 +119,14 @@
   right: 12px;
   display: flex;
   gap: 6px;
-}
-
-.btn.hljs-copy {
-  border-radius: $border-radius;
-  opacity: 0;
-  position: absolute;
-  bottom: 45px;
-  right: 15px;
-  &.top-right {
-    top: 10px;
-    right: 10px;
-    bottom: auto;
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    > div {
+      justify-content: flex-start !important;
+    }
   }
-}
-.tabbed .hljs {
-  border-top-right-radius: 0px;
-  border-top-left-radius: 0px;
 }
 
 .hljs-header {

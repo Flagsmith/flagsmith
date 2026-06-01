@@ -1,7 +1,7 @@
 import React, { FC, HTMLAttributes, ReactNode } from 'react'
 import cn from 'classnames'
 
-export type RowProps = HTMLAttributes<HTMLDivElement> & {
+type RowProps = HTMLAttributes<HTMLDivElement> & {
   children?: ReactNode
   className?: string
   space?: boolean

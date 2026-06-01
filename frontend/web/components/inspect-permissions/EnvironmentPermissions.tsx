@@ -55,5 +55,4 @@ const EnvironmentPermissions = ({
   )
 }
 
-export type { EnvironmentPermissionsProps }
 export default EnvironmentPermissions

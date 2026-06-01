@@ -384,6 +384,108 @@ export const AllTokens: StoryObj = {
           </tr>
         </tbody>
       </table>
+      <h3>Chart colours</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--color-chart-1</code>
+            </td>
+            <td>
+              <code>#0aaddf</code>
+            </td>
+            <td>First series in charts. Blue.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-chart-2</code>
+            </td>
+            <td>
+              <code>#ef4d56</code>
+            </td>
+            <td>Second series. Red.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-chart-3</code>
+            </td>
+            <td>
+              <code>#27ab95</code>
+            </td>
+            <td>Third series. Green.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-chart-4</code>
+            </td>
+            <td>
+              <code>#ff9f43</code>
+            </td>
+            <td>Fourth series. Orange.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-chart-5</code>
+            </td>
+            <td>
+              <code>#7a4dfc</code>
+            </td>
+            <td>Fifth series. Purple.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-chart-6</code>
+            </td>
+            <td>
+              <code>#0b8bb2</code>
+            </td>
+            <td>Sixth series. Blue dark.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-chart-7</code>
+            </td>
+            <td>
+              <code>#e61b26</code>
+            </td>
+            <td>Seventh series. Red dark.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-chart-8</code>
+            </td>
+            <td>
+              <code>#13787b</code>
+            </td>
+            <td>Eighth series. Green dark.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-chart-9</code>
+            </td>
+            <td>
+              <code>#fa810c</code>
+            </td>
+            <td>Ninth series. Orange dark.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-chart-10</code>
+            </td>
+            <td>
+              <code>#6837fc</code>
+            </td>
+            <td>Tenth series. Purple dark.</td>
+          </tr>
+        </tbody>
+      </table>
       <h3>Radius</h3>
       <table className='docs-table'>
         <thead>

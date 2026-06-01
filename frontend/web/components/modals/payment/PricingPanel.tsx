@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react'
 import classNames from 'classnames'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 import { PricingFeaturesList } from './PricingFeaturesList'
 import { PaymentButton } from './PaymentButton'
@@ -11,6 +11,7 @@ export type PricingPanelProps = {
   title: string
   priceMonthly?: string
   priceYearly?: string
+  includesFrom: string
   isYearly: boolean
   chargebeePlanId?: string
   isPurchased?: boolean
@@ -27,6 +28,7 @@ export const PricingPanel = ({
   features,
   hasActiveSubscription,
   headerContent,
+  includesFrom,
   isDisableAccount,
   isEnterprise,
   isPurchased,
@@ -95,6 +97,7 @@ export const PricingPanel = ({
             <div>
               {!isEnterprise && chargebeePlanId && (
                 <PaymentButton
+                  key={chargebeePlanId}
                   data-cb-plan-id={chargebeePlanId}
                   className='btn btn-primary btn-lg full-width mt-3'
                   isDisableAccount={isDisableAccount}
@@ -125,7 +128,7 @@ export const PricingPanel = ({
           >
             All from{' '}
             <span className={isEnterprise ? 'text-secondary' : 'text-primary'}>
-              {isEnterprise ? 'Start-Up,' : 'Free,'}
+              {includesFrom},
             </span>{' '}
             plus
           </h5>

@@ -10,7 +10,7 @@ import RemoveFromReleasePipelineModal from 'components/release-pipelines/RemoveF
 import ButtonDropdown from 'components/base/forms/ButtonDropdown'
 import Button from 'components/base/forms/Button'
 
-export interface FlagValueFooterProps {
+interface FlagValueFooterProps {
   is4Eyes: boolean
   isVersioned: boolean
   projectId: number

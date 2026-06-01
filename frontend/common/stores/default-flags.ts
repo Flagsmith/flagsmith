@@ -87,6 +87,34 @@ const defaultFlags = {
       'tags': ['logging'],
       'title': 'Dynatrace',
     },
+    'gitlab': {
+      'categories': ['CI/CD'],
+      'description': 'Link GitLab issues and merge requests to feature flags.',
+      'docs':
+        'https://docs.flagsmith.com/third-party-integrations/project-management/gitlab',
+      'fields': [
+        {
+          'default': 'https://gitlab.com',
+          'key': 'gitlab_instance_url',
+          'label': 'GitLab Instance URL',
+        },
+        {
+          'hidden': true,
+          'key': 'access_token',
+          'label': 'Access Token',
+        },
+        {
+          'default': false,
+          'inputType': 'checkbox',
+          'key': 'labeling_enabled',
+          'label': 'Add "Flagsmith Feature" label to linked issues and MRs',
+        },
+      ],
+      'image': '/static/images/integrations/gitlab.svg',
+      'perEnvironment': false,
+      'project': true,
+      'title': 'GitLab',
+    },
     'grafana': {
       'description':
         'Receive Flagsmith annotations to your Grafana instance on feature flag and segment changes.',

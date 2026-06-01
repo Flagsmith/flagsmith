@@ -1,0 +1,53 @@
+.wh-config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    background: var(--color-surface-subtle);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-lg);
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+
+  &__label {
+    font-size: var(--font-caption-size);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+  }
+
+  &__row {
+    display: flex;
+    gap: 16px;
+  }
+
+  &__hint {
+    font-size: var(--font-caption-xs-size);
+    color: var(--color-text-tertiary);
+  }
+
+  &__note {
+    padding: 12px 14px;
+    background: var(--color-surface-info-subtle, var(--color-surface-muted));
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    font-size: var(--font-caption-size);
+    color: var(--color-text-secondary);
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+}

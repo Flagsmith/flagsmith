@@ -35,7 +35,7 @@ const GhostInput = forwardRef<HTMLInputElement, GhostInputProps>(
     }, [value])
 
     return (
-      <div style={{ display: 'inline-block', position: 'relative' }}>
+      <div className='d-inline-block position-relative'>
         <span
           ref={spanRef}
           style={{

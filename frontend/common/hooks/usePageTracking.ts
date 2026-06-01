@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 /**
  * Options for configuring page tracking behavior.
  */
-export type PageTrackingOptions = {
+type PageTrackingOptions = {
   /** The page constant name from Constants.pages */
   pageName: string
   /** Context data for tracking and storage persistence */

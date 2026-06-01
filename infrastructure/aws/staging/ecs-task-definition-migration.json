@@ -11,6 +11,14 @@
             ],
             "environment": [
                 {
+                    "name": "LOG_LEVEL",
+                    "value": "INFO"
+                },
+                {
+                    "name": "LOG_FORMAT",
+                    "value": "json"
+                },
+                {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
                 },
@@ -47,6 +55,10 @@
                 {
                     "name": "ANALYTICS_DATABASE_URL",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:ANALYTICS_DATABASE_URL::"
+                },
+                {
+                    "name": "CLICKHOUSE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:clickhouse-url-ns26gC"
                 }
             ],
             "logConfiguration": {

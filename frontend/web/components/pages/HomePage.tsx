@@ -3,7 +3,7 @@ import { useHistory, useLocation, withRouter } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import ForgotPasswordModal from 'components/modals/ForgotPasswordModal'
 import Card from 'components/Card'
-import NavIconSmall from 'components/svg/NavIconSmall'
+import NavIconSmall from 'components/icons/NavIconSmall'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
@@ -11,6 +11,7 @@ import Button from 'components/base/forms/Button'
 import PasswordRequirements from 'components/PasswordRequirements'
 import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import { Icon } from 'components/icons'
 import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
 import OnboardingPage from './OnboardingPage'
@@ -206,9 +207,9 @@ const HomePage: React.FC = () => {
           <Button
             theme='secondary'
             className='w-100'
-            iconLeft='github'
             href={JSON.parse(Utils.getFlagsmithValue('oauth_github')).url}
           >
+            <Icon name='github' />
             GitHub
           </Button>
         </div>,
@@ -422,7 +423,7 @@ const HomePage: React.FC = () => {
                                       !disableForgotPassword && (
                                         <Link
                                           tabIndex={-1}
-                                          className='float-right'
+                                          className='float-end'
                                           to={`/password-recovery${redirect}`}
                                           onClick={showForgotPassword}
                                         >

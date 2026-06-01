@@ -20,13 +20,49 @@ export const STARTUP_FEATURES: PricingFeature[] = [
     text: 'Unlimited projects',
   },
   {
-    text: 'Email technical support',
-  },
-  {
     text: 'Scheduled flags',
   },
   {
     text: 'Two-factor authentication (2FA)',
+  },
+  {
+    text: 'Email technical support',
+  },
+]
+
+export const getScaleUpFeatures = (isYearly: boolean): PricingFeature[] => [
+  {
+    text: (
+      <>
+        Up to
+        <strong> 5,000,000</strong> Requests per month
+      </>
+    ),
+  },
+  {
+    text: (
+      <>
+        <strong>5</strong> Team members
+      </>
+    ),
+  },
+  {
+    text: `Additional seats at ${isYearly ? '$50' : '$60'}/seat (up to 20)`,
+  },
+  {
+    text: 'SAML',
+  },
+  {
+    text: 'User roles and permissions',
+  },
+  {
+    text: 'Change requests',
+  },
+  {
+    text: 'Audit logs',
+  },
+  {
+    text: 'Real-time technical support via chat and Priority Email support',
   },
 ]
 

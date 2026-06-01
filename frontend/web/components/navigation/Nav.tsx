@@ -1,7 +1,7 @@
 import React, { FC, ReactNode, useEffect, useState } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import AccountStore from 'common/stores/account-store'
-import HomeAside from './EnvironmentAside'
+import EnvironmentAside from './EnvironmentAside'
 import { Project as ProjectType } from 'common/types/responses'
 import { AsyncStorage } from 'polyfill-react-native'
 import ProjectNavbar from './navbars/ProjectNavbar'
@@ -99,7 +99,7 @@ const Nav: FC<NavType> = ({
             <div className='d-block d-md-none'>{header}</div>
             <div className='d-md-flex'>
               <div>
-                <HomeAside
+                <EnvironmentAside
                   history={history}
                   environmentId={environmentId}
                   projectId={projectId}

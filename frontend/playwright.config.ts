@@ -22,6 +22,7 @@ export default defineConfig({
   maxFailures: process.env.E2E_RETRIES === '0' ? 1 : undefined,
   /* Output directory for test results */
   outputDir: './e2e/test-results',
+
   /* Configure projects for major browsers */
   projects: [
     {
@@ -51,6 +52,7 @@ export default defineConfig({
       },
     },
   ],
+
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     [
@@ -65,9 +67,15 @@ export default defineConfig({
     ['list', { printSteps: false }], // Only shows test names with pass/fail status
     ['./e2e/failed-tests-reporter.ts'], // Writes failed.json for CI
   ],
+
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
+
+  /* Visual regression baselines directory — used by the comparison test */
+  snapshotPathTemplate: './e2e/visual-regression-snapshots/{arg}{ext}',
+
   testDir: './e2e',
+  testIgnore: /.*_visual-regression-compare.*/,
   testMatch: /.*\.pw\.ts$/,
   /* Test timeout */
   timeout: 300000,

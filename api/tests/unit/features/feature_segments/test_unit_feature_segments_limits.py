@@ -1,3 +1,5 @@
+from pytest_django.fixtures import SettingsWrapper
+
 from environments.models import Environment
 from features.feature_segments.limits import exceeds_segment_override_limit
 from features.models import Feature, FeatureSegment
@@ -9,8 +11,10 @@ from segments.models import Segment
 def test_exceeds_segment_override_limit__shared_segment_across_features__returns_true(
     project: Project,
     environment: Environment,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.EDGE_ENABLED = True
     project.max_segment_overrides_allowed = 3
     project.save()
 
@@ -34,8 +38,10 @@ def test_exceeds_segment_override_limit__shared_segment_across_features__returns
 def test_exceeds_segment_override_limit__distinct_segments_per_feature__returns_true(
     project: Project,
     environment: Environment,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.EDGE_ENABLED = True
     project.max_segment_overrides_allowed = 3
     project.save()
 
@@ -61,8 +67,10 @@ def test_exceeds_segment_override_limit__distinct_segments_per_feature__returns_
 def test_exceeds_segment_override_limit__v2_delete_uses_unique_segment_ids__returns_true(
     project: Project,
     environment_v2_versioning: Environment,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.EDGE_ENABLED = True
     project.max_segment_overrides_allowed = 5
     project.save()
 
@@ -101,8 +109,10 @@ def test_exceeds_segment_override_limit__deleting_override_with_zero_limit__retu
     another_segment: Segment,
     environment_v2_versioning: Environment,
     project: Project,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.EDGE_ENABLED = True
     project.max_segment_overrides_allowed = 0
     project.save()
 
@@ -115,3 +125,29 @@ def test_exceeds_segment_override_limit__deleting_override_with_zero_limit__retu
 
     # Then
     assert result is True
+
+
+def test_exceeds_segment_override_limit__edge_disabled__returns_false(
+    project: Project,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.EDGE_ENABLED = False
+    project.max_segment_overrides_allowed = 1
+    project.save()
+
+    features = [
+        Feature.objects.create(name=f"feature_{i}", project=project) for i in range(3)
+    ]
+    segment = Segment.objects.create(name="segment", project=project)
+    for feature in features:
+        FeatureSegment.objects.create(
+            feature=feature, segment=segment, environment=environment
+        )
+
+    # When
+    result = exceeds_segment_override_limit(environment=environment)
+
+    # Then
+    assert result is False

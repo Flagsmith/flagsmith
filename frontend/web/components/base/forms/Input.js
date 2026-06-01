@@ -3,7 +3,7 @@
  */
 import MaskedInput from 'react-maskedinput'
 import cn from 'classnames'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Radio from './Radio'
 import Checkbox from './Checkbox'
 

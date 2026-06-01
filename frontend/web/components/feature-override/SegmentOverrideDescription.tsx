@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import SegmentsIcon from 'components/svg/SegmentsIcon'
+import SegmentsIcon from 'components/icons/SegmentsIcon'
 import FeatureValue from 'components/feature-summary/FeatureValue'
 import { FlagsmithValue } from 'common/types/responses'
 
@@ -56,11 +56,7 @@ const SegmentOverrideDescription: FC<SegmentOverrideDescriptionType> = ({
           {`This feature is being overridden by ${
             level === 'segment' ? 'this segment' : 'a segment'
           } and would normally be`}
-          <FeatureValue
-            className='ml-1 chip--xs'
-            includeEmpty
-            value={`${controlValue}`}
-          />
+          <FeatureValue className='ml-1 chip--xs' value={`${controlValue}`} />
           {level === 'identity' ? ' for this user' : ''}
         </span>
       )}

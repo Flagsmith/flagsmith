@@ -1,5 +1,5 @@
 import Constants from 'common/constants'
-module.exports = (envId, { TRAIT_NAME }, userId) => `use Flagsmith\\Flagsmith;
+export default (envId, { TRAIT_NAME }, userId) => `use Flagsmith\\Flagsmith;
 
 $flagsmith = new Flagsmith('${envId}'${
   Constants.isCustomFlagsmithUrl() &&

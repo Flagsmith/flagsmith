@@ -1,7 +1,7 @@
 import { FC, useEffect, useMemo } from 'react'
 import { useGetProjectsQuery } from 'common/services/useProject'
 
-export type ProjectFilterType = {
+type ProjectFilterType = {
   organisationId: number
   value?: string
   onChange: (id: string, name: string) => void

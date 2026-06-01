@@ -2,7 +2,7 @@ import { FC } from 'react'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import UsageBar from 'components/shared/UsageBar'
 
-export type EnvironmentOverrideUsageProps = {
+type EnvironmentOverrideUsageProps = {
   apiKey: string
   limit: number
   name: string

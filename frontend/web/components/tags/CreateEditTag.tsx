@@ -15,7 +15,7 @@ import Tag from './Tag'
 import InlineModal from 'components/InlineModal'
 import ErrorMessage from 'components/ErrorMessage'
 import Switch from 'components/Switch'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import { ProjectPermission } from 'common/types/permissions.types'
 
 type CreateEditTagType = {

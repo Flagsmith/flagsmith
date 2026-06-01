@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   login(details) {
     // refresh the entire app
     Dispatcher.handleViewAction({
@@ -12,24 +12,12 @@ module.exports = {
       actionType: Actions.LOGOUT,
     })
   },
-  refresh() {
-    // refresh the entire app
-    Dispatcher.handleViewAction({
-      actionType: Actions.REFRESH,
-    })
-  },
   register(details, isInvite) {
     // refresh the entire app
     Dispatcher.handleViewAction({
       actionType: Actions.REGISTER,
       details,
       isInvite,
-    })
-  },
-  registerNotifications(data) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.REGISTER_NOTIFICATIONS,
-      data,
     })
   },
   setToken(token) {

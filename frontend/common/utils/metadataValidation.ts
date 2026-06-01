@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { CustomMetadataField } from 'common/types/metadata-field'
 
-export type MetadataValidationState = {
+type MetadataValidationState = {
   hasUnfilledRequired: boolean
   totalRequired: number
   totalFilledRequired: number

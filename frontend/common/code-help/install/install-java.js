@@ -1,6 +1,6 @@
 import Utils from 'common/utils/utils'
 
-module.exports = () => `// Maven
+export default () => `// Maven
 ${Utils.escapeHtml('<dependency>')}
     ${Utils.escapeHtml('<groupId>com.flagsmith</groupId>')}
     ${Utils.escapeHtml('<artifactId>flagsmith-java-client</artifactId>')}

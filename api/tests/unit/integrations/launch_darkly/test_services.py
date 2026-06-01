@@ -77,6 +77,7 @@ def test_create_import_request__valid_project__returns_expected(
         (Timeout(), "Timeout when requesting /expected_path"),
     ],
 )
+@pytest.mark.django_db(transaction=True)
 def test_process_import_request__api_error__expected_status(
     ld_client_mock: MagicMock,
     ld_client_class_mock: MagicMock,
@@ -100,6 +101,7 @@ def test_process_import_request__api_error__expected_status(
     assert import_request.status["error_messages"] == [expected_error_message]
 
 
+@pytest.mark.django_db(transaction=True)
 def test_process_import_request__success__expected_status(  # type: ignore[no-untyped-def]
     project: Project,
     import_request: LaunchDarklyImportRequest,
@@ -259,6 +261,7 @@ def test_process_import_request__success__expected_status(  # type: ignore[no-un
     [tag.label for tag in tagged_feature.tags.all()] == ["testtag", "testtag2"]
 
 
+@pytest.mark.django_db(transaction=True)
 def test_process_import_request__valid_segments__imports_correctly(  # type: ignore[no-untyped-def]
     project: Project,
     import_request: LaunchDarklyImportRequest,
@@ -459,6 +462,7 @@ def test_process_import_request__valid_segments__imports_correctly(  # type: ign
         assert trait_value == identity.identifier
 
 
+@pytest.mark.django_db(transaction=True)
 def test_process_import_request__valid_rules__imports_correctly(  # type: ignore[no-untyped-def]
     project: Project,
     import_request: LaunchDarklyImportRequest,
@@ -555,6 +559,7 @@ def test_process_import_request__valid_rules__imports_correctly(  # type: ignore
     }
 
 
+@pytest.mark.django_db(transaction=True)
 def test_process_import_request__large_segments__correctly_imported(
     request: pytest.FixtureRequest,
     ld_client_class_mock: MagicMock,

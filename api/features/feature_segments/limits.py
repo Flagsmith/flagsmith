@@ -1,5 +1,6 @@
 from django.db.models import Q
 
+from edge_api.utils import is_edge_enabled
 from environments.models import Environment
 from features.versioning.models import EnvironmentFeatureVersion
 
@@ -14,6 +15,9 @@ def exceeds_segment_override_limit(
     segment_ids_to_delete_overrides: list[int] | None = None,
     exclusive: bool = False,
 ) -> bool:
+    if not is_edge_enabled():
+        return False
+
     q = Q()
 
     segment_ids_to_create_overrides = segment_ids_to_create_overrides or []

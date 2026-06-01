@@ -12,3 +12,5 @@ class RelatedObjectType(enum.Enum):
     EF_VERSION = "Environment feature version"
     FEATURE_HEALTH = "Feature health status"
     RELEASE_PIPELINE = "Release pipeline"
+    WAREHOUSE_CONNECTION = "Warehouse connection"
+    EXPERIMENT = "Experiment"

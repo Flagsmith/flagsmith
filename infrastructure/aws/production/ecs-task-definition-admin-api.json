@@ -34,6 +34,10 @@
                     "value": "INFO"
                 },
                 {
+                    "name": "LOG_FORMAT",
+                    "value": "json"
+                },
+                {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
                 },
@@ -202,8 +206,20 @@
                     "value": "True"
                 },
                 {
+                    "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
+                    "value": "http://adot-collector.metrics.local:4318"
+                },
+                {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",
                     "value": "https://edge.api.flagsmith.com/api/v1/"
+                },
+                {
+                    "name": "FLAGSMITH_API_URL",
+                    "value": "https://api.flagsmith.com"
+                },
+                {
+                    "name": "FLAGSMITH_FRONTEND_URL",
+                    "value": "https://app.flagsmith.com"
                 },
                 {
                     "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
@@ -211,7 +227,15 @@
                 },
                 {
                     "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.5"
+                    "value": "0.02"
+                },
+                {
+                    "name": "SENTRY_TRACE_SAMPLE_RATE",
+                    "value": "0"
+                },
+                {
+                    "name": "INGESTION_REDIS_URL",
+                    "value": "rediss://serverless-redis-cache-c4q8sw.serverless.euw2.cache.amazonaws.com:6379"
                 }
             ],
             "secrets": [
@@ -286,6 +310,10 @@
                 {
                     "name": "PYLON_IDENTITY_VERIFICATION_SECRET",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:PYLON_IDENTITY_VERIFICATION_SECRET::"
+                },
+                {
+                    "name": "CLICKHOUSE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:clickhouse-url-kB2CK9"
                 }
             ],
             "logConfiguration": {

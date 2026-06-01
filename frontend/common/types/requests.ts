@@ -24,8 +24,10 @@ import {
   StageActionType,
   StageActionBody,
   ChangeRequest,
+  ExperimentStatus,
   FlagsmithValue,
   TagStrategy,
+  FeatureType,
 } from './responses'
 import { UtmsType } from './utms'
 
@@ -405,7 +407,7 @@ export type Req = {
     role_id: number
   }
   getGetSubscriptionMetadata: { id: number }
-  getEnvironment: { id: number }
+  getEnvironment: { id: string }
   getSubscriptionMetadata: { id: number }
   getMetadataModelFields: { organisation_id: number }
   getMetadataModelField: { organisation_id: number; id: number }
@@ -734,6 +736,10 @@ export type Req = {
       idp_attribute_name: string
     }
   }
+  getScimConfiguration: { organisation_id: number }
+  createScimConfiguration: { organisation_id: number }
+  deleteScimConfiguration: { organisation_id: number }
+  regenerateScimToken: { organisation_id: number }
   updateIdentity: {
     environmentId: string
     data: Identity
@@ -892,6 +898,8 @@ export type Req = {
     tag_strategy?: TagStrategy
     sort_field?: string
     sort_direction?: 'ASC' | 'DESC'
+    identity?: string
+    type?: FeatureType
   }
   updateFeatureState: {
     environmentId: string
@@ -924,5 +932,70 @@ export type Req = {
     enabled: boolean
     feature_state_value: FlagsmithValue | null
   }
+  validateOAuthAuthorize: Record<string, string>
+  processOAuthConsent: {
+    allow: boolean
+    client_id: string
+    redirect_uri: string
+    response_type: string
+    scope: string
+    code_challenge: string
+    code_challenge_method: string
+    state?: string
+  }
+  getIntegration: {
+    integrationId: string
+    projectId?: string
+    environmentApiKey?: string
+  }
+  createIntegration: {
+    integrationId: string
+    projectId?: string
+    environmentApiKey?: string
+    organisationId?: string
+    body: Record<string, any>
+  }
+  updateIntegration: {
+    integrationId: string
+    id: string
+    projectId?: string
+    environmentApiKey?: string
+    organisationId?: string
+    body: Record<string, any>
+  }
+  getGitLabConfiguration: { project_id: number }
+  getGitLabProjects: PagedRequest<{ project_id: number }>
+  getGitLabIssues: PagedRequest<{
+    project_id: number
+    gitlab_project_id: number
+  }>
+  getGitLabMergeRequests: PagedRequest<{
+    project_id: number
+    gitlab_project_id: number
+  }>
+  getWarehouseConnections: { environmentId: string }
+  createWarehouseConnection: {
+    environmentId: string
+    warehouse_type: string
+    name?: string
+    config?: Record<string, string>
+  }
+  deleteWarehouseConnection: { environmentId: string; id: number }
+  updateWarehouseConnection: {
+    environmentId: string
+    id: number
+    name?: string
+    config?: Record<string, string>
+  }
+  getExperiments: PagedRequest<{
+    environmentId: string
+    status?: ExperimentStatus
+  }>
+  createExperiment: {
+    environmentId: string
+    body: { name: string; hypothesis: string; feature: number }
+  }
+  experimentAction: { environmentId: string; experimentId: number }
+  deleteExperiment: { environmentId: string; experimentId: number }
   // END OF TYPES
 }

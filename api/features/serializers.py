@@ -20,12 +20,16 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from app_analytics.serializers import LabelsQuerySerializerMixin, LabelsSerializer
+from edge_api.utils import is_edge_enabled
 from environments.identities.models import Identity
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
+from integrations.gitlab.services import (
+    post_gitlab_state_change_comment_for_feature_state,
+)
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.code_references.serializers import (
     FeatureFlagCodeReferencesRepositoryCountSerializer,
@@ -49,6 +53,7 @@ from .feature_segments.limits import (
 from .feature_segments.serializers import (
     CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
+from .feature_types import FEATURE_TYPE_CHOICES
 from .models import Feature, FeatureState
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
 
@@ -91,6 +96,11 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     )
 
     is_archived = serializers.BooleanField(required=False)
+    type = serializers.ChoiceField(
+        choices=FEATURE_TYPE_CHOICES,
+        required=False,
+        help_text="Feature type to filter on (STANDARD or MULTIVARIATE).",
+    )
     environment = serializers.IntegerField(
         required=False,
         help_text="Integer ID of the environment to view features in the context of.",
@@ -278,6 +288,8 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         return instance  # type: ignore[no-any-return]
 
     def validate_project_features_limit(self, project: Project) -> None:
+        if not is_edge_enabled():
+            return
         if project.features.count() >= project.max_features_allowed:
             raise serializers.ValidationError(
                 {
@@ -306,22 +318,32 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
 
     def validate_owners(self, owners: list[FFAdminUser]) -> list[FFAdminUser]:
         project: Project = self.context["project"]
-        for user in owners:
-            if not user.has_project_permission(VIEW_PROJECT, project):
-                raise serializers.ValidationError(
-                    "Some users do not have access to this project."
-                )
+        invalid_users = [
+            user
+            for user in owners
+            if not user.has_project_permission(VIEW_PROJECT, project)
+        ]
+        if invalid_users:
+            invalid_user_ids = [user.id for user in invalid_users]
+            raise serializers.ValidationError(
+                f"Users with ids {invalid_user_ids} do not have access to this project."
+            )
         return owners
 
     def validate_group_owners(
         self, group_owners: list[UserPermissionGroup]
     ) -> list[UserPermissionGroup]:
         project: Project = self.context["project"]
-        for group in group_owners:
-            if group.organisation_id != project.organisation_id:
-                raise serializers.ValidationError(
-                    "Some groups do not belong to this project's organisation."
-                )
+        invalid_groups = [
+            group
+            for group in group_owners
+            if group.organisation_id != project.organisation_id
+        ]
+        if invalid_groups:
+            invalid_group_ids = [group.id for group in invalid_groups]
+            raise serializers.ValidationError(
+                f"Groups with ids {invalid_group_ids} do not belong to this project's organisation."
+            )
         return group_owners
 
     def validate_name(self, name: str):  # type: ignore[no-untyped-def]
@@ -427,6 +449,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
 class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerializer):
     metadata = MetadataSerializer(required=False, many=True)
 
+    # NOTE: This field is populated by `projects.code_references.services.annotate_feature_queryset_with_code_references_summary`.
     code_references_counts = FeatureFlagCodeReferencesRepositoryCountSerializer(
         many=True,
         read_only=True,
@@ -652,6 +675,9 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
                     url=None,
                     feature_states=[feature_state],
                 )
+
+            if isinstance(feature_state, FeatureState):
+                post_gitlab_state_change_comment_for_feature_state(feature_state)
 
             return response
 

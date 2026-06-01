@@ -107,5 +107,4 @@ const ChangeReleasePipelineStatusModal = ({
   )
 }
 
-export type { ChangeReleasePipelineStatusModalProps }
 export default ChangeReleasePipelineStatusModal

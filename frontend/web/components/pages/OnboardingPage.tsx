@@ -55,7 +55,7 @@ const OnboardingPage: FC<OnboardingPageProps> = () => {
         }: { error?: any; isLoading: boolean; isSaving: boolean },
         { register }: { register: (data: any, isInvite: boolean) => void },
       ) => (
-        <div className='position-fixed overflow-auto top-0 bottom-0 left-0 w-100'>
+        <div className='position-fixed overflow-auto top-0 bottom-0 start-0 w-100'>
           <div className='min-vh-100 w-100 d-flex flex-1 flex-column justify-content-center align-items-center'>
             <div className='container'>
               {step ? (

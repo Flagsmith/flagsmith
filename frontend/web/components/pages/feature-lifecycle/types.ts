@@ -18,13 +18,13 @@ export type Pagination = {
 
 export type LifecycleCounts = Partial<Record<Section, number>>
 
-export type EvaluationResult = {
+type EvaluationResult = {
   featureId: number
   environmentId: string
   hasEvaluations: boolean
 }
 
-export type LifecycleData = {
+type LifecycleData = {
   newFlags: ProjectFlag[]
   liveFlags: ProjectFlag[]
   permanentFlags: ProjectFlag[]

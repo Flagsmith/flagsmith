@@ -1,16 +1,21 @@
 import React, { FC } from 'react'
-import EnvironmentSelect from 'components/EnvironmentSelect'
+import moment from 'moment'
+import EnvironmentSelect, {
+  EnvironmentSelectOption,
+} from 'components/EnvironmentSelect'
 import PanelSearch from 'components/PanelSearch'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
-import { Res } from 'common/types/responses'
-import Icon from 'components/Icon'
+import { Res, SegmentMembership } from 'common/types/responses'
+import Icon from 'components/icons/Icon'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import {
   identitySegmentService,
   useGetIdentitySegmentsQuery,
 } from 'common/services/useIdentitySegment'
 import { getStore } from 'common/store'
+import { SegmentMembershipEnvBadge } from 'components/segments/SegmentMembershipBadge'
 
 interface CreateSegmentUsersTabContentProps {
   projectId: string | number
@@ -23,6 +28,7 @@ interface CreateSegmentUsersTabContentProps {
   name: string
   searchInput: string
   setSearchInput: (input: string) => void
+  memberships?: SegmentMembership[]
 }
 
 type UserRowType = {
@@ -80,6 +86,7 @@ const CreateSegmentUsersTabContent: React.FC<
   environmentId,
   identities,
   identitiesLoading,
+  memberships,
   name,
   page,
   projectId,
@@ -88,6 +95,44 @@ const CreateSegmentUsersTabContent: React.FC<
   setPage,
   setSearchInput,
 }) => {
+  const { data: environmentsData } = useGetEnvironmentsQuery(
+    { projectId: Number(projectId) },
+    { skip: !projectId },
+  )
+  const envs = React.useMemo(
+    () => environmentsData?.results ?? [],
+    [environmentsData?.results],
+  )
+
+  const membershipByEnvId = React.useMemo(() => {
+    const map = new Map<number, SegmentMembership>()
+    ;(memberships ?? []).forEach((m) => map.set(m.environment, m))
+    return map
+  }, [memberships])
+
+  const renderEnvOption = ({ environment, label }: EnvironmentSelectOption) => {
+    const membership = environment
+      ? membershipByEnvId.get(environment.id)
+      : undefined
+    return (
+      <span className='d-flex align-items-center'>
+        <span>{label}</span>
+        {environment && membership && (
+          <SegmentMembershipEnvBadge
+            membership={membership}
+            environment={environment}
+          />
+        )}
+      </span>
+    )
+  }
+
+  const selectedMembership = React.useMemo(() => {
+    if (!environmentId) return null
+    const env = envs.find((e) => e.api_key === environmentId)
+    return env ? membershipByEnvId.get(env.id) ?? null : null
+  }, [environmentId, membershipByEnvId, envs])
+
   return (
     <>
       <InfoMessage collapseId={'random-identity-sample'}>
@@ -100,13 +145,24 @@ const CreateSegmentUsersTabContent: React.FC<
             title='Environment'
             className='col-4'
             component={
-              <EnvironmentSelect
-                projectId={`${projectId}`}
-                value={environmentId}
-                onChange={(environmentId: string) => {
-                  setEnvironmentId(environmentId)
-                }}
-              />
+              <>
+                <EnvironmentSelect
+                  projectId={`${projectId}`}
+                  value={environmentId}
+                  onChange={(environmentId: string) => {
+                    setEnvironmentId(environmentId)
+                  }}
+                  formatOptionLabel={renderEnvOption}
+                />
+                <div className='text-muted fs-small mt-2'>
+                  Last synced:{' '}
+                  {selectedMembership
+                    ? moment(selectedMembership.last_synced_at).format(
+                        'Do MMM YYYY HH:mm:ss',
+                      )
+                    : '—'}
+                </div>
+              </>
             }
           />
           <PanelSearch

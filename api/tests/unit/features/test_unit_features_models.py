@@ -12,6 +12,10 @@ from pytest_mock import MockerFixture
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
+from features.feature_external_resources.models import (
+    FeatureExternalResource,
+    ResourceType,
+)
 from features.models import (
     Feature,
     FeatureSegment,
@@ -20,6 +24,7 @@ from features.models import (
 )
 from features.versioning.models import EnvironmentFeatureVersion
 from features.workflows.core.models import ChangeRequest
+from integrations.gitlab.models import GitLabConfiguration
 from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import Segment
@@ -1267,3 +1272,36 @@ def test_feature_state_create__with_environment_feature_version__does_not_trigge
     # Then - Webhooks are not triggered for versioned environments
     # (handled by trigger_update_version_webhooks instead)
     mock_trigger_feature_state_change_webhooks.assert_not_called()
+
+
+def test_feature_delete__with_gitlab_resources__dispatches_deleted_comment_task(
+    feature: Feature,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    GitLabConfiguration.objects.create(
+        project=feature.project,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+    )
+    FeatureExternalResource.objects.create(
+        url="https://gitlab.example.com/testorg/testrepo/-/issues/42",
+        type=ResourceType.GITLAB_ISSUE.value,
+        feature=feature,
+    )
+    mock_task = mocker.patch(
+        "integrations.gitlab.tasks.post_gitlab_feature_deleted_comment",
+    )
+    expected_name = feature.name
+    expected_id = feature.id
+    expected_project_id = feature.project_id
+
+    # When
+    feature.delete()
+
+    # Then
+    assert mock_task.delay.call_count == 1
+    assert mock_task.delay.call_args_list == [
+        mocker.call(args=(expected_name, expected_id, expected_project_id)),
+    ]

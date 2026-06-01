@@ -1,4 +1,5 @@
 import pytest
+from pytest_mock import MockerFixture
 
 from core.constants import BOOLEAN, INTEGER, STRING
 from environments.models import Environment
@@ -145,3 +146,39 @@ def test_mv_options_values_response_serializer__without_feature_state__returns_n
     # Then
     assert serializer.data["control_value"] is None
     assert len(serializer.data["options"]) == 3
+
+
+@pytest.mark.django_db
+def test_feature_state_serializer_basic__save__dispatches_gitlab_state_change(
+    feature: Feature,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_dispatch = mocker.patch(
+        "features.serializers.post_gitlab_state_change_comment_for_feature_state",
+    )
+    feature_state = FeatureState.objects.get(
+        feature=feature,
+        environment=environment,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+    data = {
+        "id": feature_state.id,
+        "feature": feature.id,
+        "environment": environment.id,
+        "enabled": True,
+    }
+    serializer = FeatureStateSerializerBasic(
+        instance=feature_state,
+        data=data,
+        context={"environment": environment},
+    )
+    serializer.is_valid(raise_exception=True)
+
+    # When
+    serializer.save()  # type: ignore[no-untyped-call]
+
+    # Then
+    mock_dispatch.assert_called_once_with(feature_state)

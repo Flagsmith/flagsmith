@@ -1,2 +1,2 @@
-module.exports = () => `gem install flagsmith
+export default () => `gem install flagsmith
 `

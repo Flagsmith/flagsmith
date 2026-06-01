@@ -62,6 +62,7 @@ from features.managers import (
     FeatureStateValueManager,
 )
 from features.multivariate.models import MultivariateFeatureStateValue
+from features.signals import feature_state_change_went_live
 from features.utils import (
     get_boolean_from_string,
     get_integer_from_string,
@@ -156,6 +157,25 @@ class Feature(  # type: ignore[django-manager-missing]
                 segment_name=None,
                 url=None,
                 feature_states=None,
+            )
+
+    @hook(AFTER_SAVE)  # type: ignore[misc]
+    def create_gitlab_comment(self) -> None:
+        from features.feature_external_resources.models import (
+            GITLAB_RESOURCE_TYPES,
+        )
+        from integrations.gitlab.tasks import (
+            post_gitlab_feature_deleted_comment,
+        )
+
+        if (
+            self.deleted_at
+            and self.external_resources.filter(
+                type__in=GITLAB_RESOURCE_TYPES,
+            ).exists()
+        ):
+            post_gitlab_feature_deleted_comment.delay(
+                args=(self.name, self.id, self.project_id),
             )
 
     @hook(AFTER_CREATE)
@@ -885,7 +905,23 @@ class FeatureState(
                 )
             )
 
-        cls.objects.create(**kwargs)
+        feature_state = cls.objects.create(**kwargs)
+        feature_state._send_change_went_live_for_v2_feature_create()
+
+    def _send_change_went_live_for_v2_feature_create(self) -> None:
+        """
+        v2 suppresses the FS audit row that v1 uses to drive
+        `feature_state_change_went_live` (see get_skip_create_audit_log).
+        For the feature-create case (env existed when the feature was
+        created — env-create / env-clone are excluded by the date check),
+        fire the signal directly so consumers like Sentry are notified.
+        """
+        if (
+            self.environment is not None
+            and self.environment.use_v2_feature_versioning
+            and self.environment.created_date <= self.feature.created_date
+        ):
+            feature_state_change_went_live.send(self)
 
     @classmethod
     def get_next_version_number(  # type: ignore[no-untyped-def]

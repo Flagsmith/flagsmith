@@ -1,6 +1,6 @@
 import { OptionProps } from 'react-select'
 import { MultiSelectOption } from './MultiSelect'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import { useEffect, useRef } from 'react'
 import { getDarkMode } from 'project/darkMode'
 

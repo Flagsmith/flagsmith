@@ -3,7 +3,13 @@ import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { Props } from 'react-select'
 import { Environment } from 'common/types/responses'
 
-export type EnvironmentSelectType = Partial<Omit<Props, 'value'>> & {
+export type EnvironmentSelectOption = {
+  value: string
+  label: string
+  environment: Environment | null
+}
+
+type EnvironmentSelectType = Partial<Omit<Props, 'value'>> & {
   projectId: number
   value?: string
   label?: string
@@ -16,6 +22,7 @@ export type EnvironmentSelectType = Partial<Omit<Props, 'value'>> & {
 }
 
 const EnvironmentSelect: FC<EnvironmentSelectType> = ({
+  'data-test': dataTestProp,
   idField = 'api_key',
   ignore,
   label,
@@ -41,6 +48,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
         }
         return true
       })
+      .sort((a, b) => a.label.localeCompare(b.label))
   }, [data?.results, ignore, idField])
 
   const foundValue = useMemo(
@@ -53,7 +61,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
     return <div className='mb-2'>{foundValue?.label}</div>
   }
   return (
-    <div>
+    <div data-test={dataTestProp}>
       <Select
         {...rest}
         className='react-select select-xsm'
@@ -71,11 +79,9 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
           ? [{ environment: null, label: 'All Environments', value: '' }]
           : []
         ).concat(environments)}
-        onChange={(value: {
-          value: string
-          label: string
-          environment: Environment
-        }) => onChange(value?.value || '', value?.environment)}
+        onChange={(value: EnvironmentSelectOption) =>
+          onChange(value?.value || '', value?.environment)
+        }
       />
     </div>
   )

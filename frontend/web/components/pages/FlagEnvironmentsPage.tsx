@@ -6,7 +6,7 @@ import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { useGetFeatureStatesQuery } from 'common/services/useFeatureState'
 import { useGetProjectQuery } from 'common/services/useProject'
 import Panel from 'components/base/grid/Panel'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import TagValues from 'components/tags/TagValues'
 import Switch from 'components/Switch'
 import Button from 'components/base/forms/Button'
@@ -271,7 +271,8 @@ const FlagEnvironmentsPage: FC = () => {
                 : '',
             }}
           >
-            <Button theme='text' size='small' iconLeft='arrow-left'>
+            <Button theme='text' size='small'>
+              <Icon name='arrow-left' width={16} />
               Back to Release Manager
             </Button>
           </Link>

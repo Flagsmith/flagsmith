@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import sortBy from 'lodash/sortBy'
 import _data from 'common/data/base/_data'
 
 class FlagSelect extends Component {
@@ -27,14 +28,6 @@ class FlagSelect extends Component {
       .then((res) => this.setState({ data: res.results, isLoading: false }))
   }
 
-  // searchFeatures = _.throttle((search) => {
-  //     this.fetch()
-  // }, 1000)
-  //
-  // search = (e)=>{
-  //     this.setState({search:Utils.safeParseEventValue(e)}, this.searchFeatures)
-  // }
-
   render() {
     if (!this.state.data || this.state.isLoading) {
       return (
@@ -43,7 +36,7 @@ class FlagSelect extends Component {
         </div>
       )
     }
-    const options = _.sortBy(
+    const options = sortBy(
       this.state.data
         .map((v) => ({ flag: v, label: v.name, value: v.id }))
         .filter((v) => !(this.props.ignore || []).includes(v.value))

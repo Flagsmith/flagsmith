@@ -1,5 +1,5 @@
 import React from 'react'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import { Project } from 'common/types/responses'
 import { useMigrateProjectMutation } from 'common/services/useProject'
 import Utils from 'common/utils/utils'

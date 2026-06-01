@@ -1,7 +1,4 @@
 import React from 'react'
-import classNames from 'classnames'
-import ReactMarkdown from 'react-markdown'
-import className = ReactMarkdown.propTypes.className
 
 interface RadioProps {
   label: string
@@ -17,10 +14,10 @@ const Radio: React.FC<RadioProps> = ({ checked, label, onChange }) => {
   return (
     <label
       onClick={handleChange}
-      className='relative cursor-pointer flex-row align-items-center'
+      className='position-relative cursor-pointer flex-row align-items-center'
     >
       {checked && <CheckedSVG />} {!checked && <UncheckedSVG />}
-      {<span className={classNames('ml-2', className)}>{label}</span>}
+      {<span className='ml-2'>{label}</span>}
     </label>
   )
 }

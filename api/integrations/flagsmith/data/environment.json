@@ -80,29 +80,16 @@
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 1204874,
-      "enabled": false,
+      "django_id": 1207975,
+      "enabled": true,
       "feature": {
         "id": 189491,
         "name": "compress_dynamo_documents",
         "type": "STANDARD"
       },
       "feature_segment": null,
-      "feature_state_value": null,
-      "featurestate_uuid": "8cf41618-d392-4981-8f87-b60c5f3e8c79",
-      "multivariate_feature_state_values": []
-    },
-    {
-      "django_id": 1212320,
-      "enabled": false,
-      "feature": {
-        "id": 192793,
-        "name": "code_references_ui_stats",
-        "type": "STANDARD"
-      },
-      "feature_segment": null,
-      "feature_state_value": null,
-      "featurestate_uuid": "f976df2f-2341-4623-8425-d6eda23a2ebc",
+      "feature_state_value": "",
+      "featurestate_uuid": "e0d380a6-bdbc-4ad6-ae6f-b8b77d8beae6",
       "multivariate_feature_state_values": []
     },
     {
@@ -116,6 +103,19 @@
       "feature_segment": null,
       "feature_state_value": null,
       "featurestate_uuid": "e7ed0d54-b17c-4df1-ab98-5f8dc9597127",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1229328,
+      "enabled": true,
+      "feature": {
+        "id": 195394,
+        "name": "experimentation_warehouse_connection",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "fe8067b9-efef-4f02-a6d9-0d1ed901f7fa",
       "multivariate_feature_state_values": []
     }
   ],

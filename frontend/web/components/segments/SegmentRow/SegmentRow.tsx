@@ -5,6 +5,7 @@ import { useHasPermission } from 'common/providers/Permission'
 
 import { Segment } from 'common/types/responses'
 import SegmentAction from './components/SegmentAction'
+import { SegmentMembershipTotalBadge } from 'components/segments/SegmentMembershipBadge'
 import ConfirmCloneSegment from 'components/modals/ConfirmCloneSegment'
 import { useCloneSegmentMutation } from 'common/services/useSegment'
 import { handleRemoveSegment } from 'components/modals/ConfirmRemoveSegment'
@@ -16,11 +17,7 @@ interface SegmentRowProps {
   projectId: string
 }
 
-export const SegmentRow: FC<SegmentRowProps> = ({
-  index,
-  projectId,
-  segment,
-}) => {
+const SegmentRow: FC<SegmentRowProps> = ({ index, projectId, segment }) => {
   const history = useHistory()
   const { description, feature, id, name } = segment
 
@@ -85,6 +82,9 @@ export const SegmentRow: FC<SegmentRowProps> = ({
           {feature && (
             <div className='chip chip--xs ml-2'>Feature-Specific</div>
           )}
+          <SegmentMembershipTotalBadge
+            memberships={segment.membership_counts}
+          />
         </Row>
         <div className='list-item-subtitle mt-1'>
           {description || 'No description'}
@@ -103,5 +103,4 @@ export const SegmentRow: FC<SegmentRowProps> = ({
   )
 }
 
-export type { SegmentRowProps }
 export default SegmentRow

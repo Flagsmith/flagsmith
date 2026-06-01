@@ -12,6 +12,8 @@ SUBSCRIPTION_DEFAULT_LIMITS = (
     settings.MAX_PROJECTS_IN_FREE_PLAN,
 )
 
+MAX_SEATS_IN_SCALE_UP_PLAN = 20
+
 CHARGEBEE = "CHARGEBEE"
 XERO = "XERO"
 AWS_MARKETPLACE = "AWS_MARKETPLACE"
@@ -41,12 +43,7 @@ FREE_PLAN_SUBSCRIPTION_METADATA = BaseSubscriptionMetadata(
 FREE_PLAN_ID = "free"
 TRIAL_SUBSCRIPTION_ID = "trial"
 SCALE_UP = "scale-up"
-SCALE_UP_12_MONTHS_V2 = "scale-up-12-months-v2"
-SCALE_UP_QUARTERLY_V2_SEMIANNUAL = "scale-up-quarterly-v2-semiannual"
-SCALE_UP_V2 = "scale-up-v2"
 STARTUP = "startup"
-STARTUP_ANNUAL_V2 = "startup-annual-v2"
-STARTUP_V2 = "startup-v2"
 ENTERPRISE = "enterprise"
 
 
@@ -62,9 +59,13 @@ class SubscriptionPlanFamily(Enum):
     SCALE_UP = "SCALE_UP"
     ENTERPRISE = "ENTERPRISE"
 
+    @staticmethod
+    def normalise_plan_id(plan_id: str) -> str:
+        return str(plan_id).replace("-", "").lower()
+
     @classmethod
     def get_by_plan_id(cls, plan_id: str) -> "SubscriptionPlanFamily":
-        match str(plan_id).replace("-", "").lower():
+        match cls.normalise_plan_id(plan_id):
             case p if p.startswith("scaleup"):
                 return cls.SCALE_UP
             case p if p.startswith("startup"):

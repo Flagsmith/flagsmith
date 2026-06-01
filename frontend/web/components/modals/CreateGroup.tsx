@@ -9,7 +9,7 @@ import {
 } from 'common/services/useGroup'
 import { components } from 'react-select'
 import { setInterceptClose } from './base/ModalDefault'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
 import { IonIcon } from '@ionic/react'
 import { informationCircle } from 'ionicons/icons'
@@ -454,17 +454,10 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
   )
   return isEdit ? (
     <Tabs uncontrolled className='px-0'>
-      <TabItem
-        tabLabel={
-          <div>
-            General
-            {!!edited && <span className='unread'>*</span>}
-          </div>
-        }
-      >
+      <TabItem tabLabel='General' isDirty={!!edited}>
         {editGroupEl}
       </TabItem>
-      <TabItem tabLabel={<div>Permissions</div>}>{editPermissionsEl}</TabItem>
+      <TabItem tabLabel='Permissions'>{editPermissionsEl}</TabItem>
     </Tabs>
   ) : (
     editGroupEl

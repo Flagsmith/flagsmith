@@ -5,7 +5,11 @@ import BlockedOrgInfo from 'components/BlockedOrgInfo'
 import { Organisation } from 'common/types/responses'
 import { PricingToggle } from './PricingToggle'
 import { PricingPanel } from './PricingPanel'
-import { STARTUP_FEATURES, ENTERPRISE_FEATURES } from './pricingFeatures'
+import {
+  STARTUP_FEATURES,
+  getScaleUpFeatures,
+  ENTERPRISE_FEATURES,
+} from './pricingFeatures'
 import {
   CHARGEBEE_SCRIPT_URL,
   CONTACT_US_URL,
@@ -15,7 +19,7 @@ import {
 } from './constants'
 import { useScript } from 'common/hooks/useScript'
 import { usePaymentState } from './hooks'
-import { initChargebee } from './chargebee'
+import { bindChargebeeButtons } from './chargebee'
 
 export type PaymentProps = {
   isDisableAccountText?: string
@@ -38,9 +42,9 @@ export const Payment: FC<PaymentProps> = ({
 
   useEffect(() => {
     if (ready && !error) {
-      initChargebee({ isPaymentsEnabled })
+      bindChargebeeButtons({ isPaymentsEnabled })
     }
-  }, [ready, error, isPaymentsEnabled])
+  }, [ready, error, isPaymentsEnabled, yearly])
 
   if (isAWS) {
     return (
@@ -86,7 +90,7 @@ export const Payment: FC<PaymentProps> = ({
 
         <PricingToggle isYearly={yearly} onChange={setYearly} />
 
-        <Row className='pricing-container align-start'>
+        <Row className='pricing-container align-items-start'>
           <PricingPanel
             title='Start-Up'
             priceYearly='40'
@@ -102,6 +106,25 @@ export const Payment: FC<PaymentProps> = ({
             features={STARTUP_FEATURES}
             hasActiveSubscription={hasActiveSubscription}
             organisationId={organisation.id}
+            includesFrom='Free'
+          />
+
+          <PricingPanel
+            title='Scale-Up'
+            priceYearly='250'
+            priceMonthly='300'
+            isYearly={yearly}
+            chargebeePlanId={
+              yearly
+                ? Project.plans?.scaleUp?.annual
+                : Project.plans?.scaleUp?.monthly
+            }
+            isPurchased={plan.includes('scale-up')}
+            isDisableAccount={isDisableAccountText}
+            features={getScaleUpFeatures(yearly)}
+            hasActiveSubscription={hasActiveSubscription}
+            organisationId={organisation.id}
+            includesFrom='Start-Up'
           />
 
           <PricingPanel
@@ -111,6 +134,7 @@ export const Payment: FC<PaymentProps> = ({
             features={ENTERPRISE_FEATURES}
             hasActiveSubscription={hasActiveSubscription}
             organisationId={organisation.id}
+            includesFrom='Scale-Up'
             headerContent={
               <>
                 Optional{' '}
@@ -136,13 +160,6 @@ export const Payment: FC<PaymentProps> = ({
             }
           />
         </Row>
-        <div className='text-center mt-4'>
-          *Need something in-between our Enterprise plan for users or API
-          limits?
-          <div>
-            <a href={CONTACT_US_URL}>Reach out</a> to us and we'll help you out
-          </div>
-        </div>
       </div>
     </div>
   )

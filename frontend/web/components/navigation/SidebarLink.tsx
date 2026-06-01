@@ -1,7 +1,7 @@
 import React, { FC, ReactNode } from 'react'
 import { NavLink, NavLinkProps } from 'react-router-dom'
 import classNames from 'classnames'
-import Icon, { IconName } from 'components/Icon'
+import Icon, { IconName } from 'components/icons/Icon'
 
 type SidebarLinkType = Partial<NavLinkProps> & {
   icon?: IconName

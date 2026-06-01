@@ -73,30 +73,6 @@
   -webkit-animation-name: none;
   animation-name: none;
 }
-.rc-switch-label {
-  display: inline-block;
-  line-height: 20px;
-  font-size: 14px;
-  padding-left: 10px;
-  vertical-align: middle;
-  white-space: normal;
-  pointer-events: none;
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  user-select: text;
-}
-
-.widget-mode {
-  .rc-switch {
-    cursor: default;
-    opacity: 1;
-    @extend .rc-switch;
-    &.rc-switch-checked {
-      @extend .rc-switch-checked;
-    }
-  }
-}
 .dark {
   .rc-switch {
     background-color: $switch-bg-dark;

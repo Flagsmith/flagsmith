@@ -146,10 +146,6 @@
                     "value": "True"
                 },
                 {
-                    "name": "HUBSPOT_IGNORE_DOMAINS",
-                    "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
-                },
-                {
                     "name": "GITHUB_APP_ID",
                     "value": "811209"
                 },
@@ -164,6 +160,10 @@
                 {
                     "name": "PROMETHEUS_ENABLED",
                     "value": "True"
+                },
+                {
+                    "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
+                    "value": "http://adot-collector.metrics.local:4318"
                 },
                 {
                     "name": "ENABLE_API_USAGE_ALERTING",
@@ -184,6 +184,18 @@
                 {
                     "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
                     "value": "True"
+                },
+                {
+                    "name": "LOG_LEVEL",
+                    "value": "INFO"
+                },
+                {
+                    "name": "LOG_FORMAT",
+                    "value": "json"
+                },
+                {
+                    "name": "INGESTION_REDIS_URL",
+                    "value": "rediss://serverless-redis-cache-c4q8sw.serverless.euw2.cache.amazonaws.com:6379"
                 }
             ],
             "secrets": [
@@ -246,6 +258,10 @@
                 {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
+                },
+                {
+                    "name": "CLICKHOUSE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:clickhouse-url-kB2CK9"
                 }
             ],
             "logConfiguration": {

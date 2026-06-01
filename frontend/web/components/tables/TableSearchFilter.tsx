@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from 'react'
+import React, { FC, useState } from 'react'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 import useDebounce from 'common/useDebounce'
@@ -9,41 +9,26 @@ type TableFilterType = {
   onChange: (v: string) => void
 }
 
-const TableSearchFilter: FC<TableFilterType> = ({ exact, onChange, value }) => {
-  const [localValue, setLocalValue] = useState(value)
-  const searchItems = useDebounce(
-    useCallback((search: string) => {
-      if (value !== search) {
-        onChange(search)
-      }
-      //Adding onChange as a dependency here would make this prone to infinite recursion issues
-      //eslint-disable-next-line
-    }, []),
-    100,
+const TableSearchFilter: FC<TableFilterType> = ({ onChange, value }) => {
+  const [localValue, setLocalValue] = useState(
+    (value || '').replace(/^"+|"+$/g, ''),
   )
+  const debouncedOnChange = useDebounce((v: string) => onChange(v), 100)
 
-  useEffect(() => {
-    searchItems(localValue)
-  }, [localValue])
-
-  useEffect(() => {
-    setLocalValue(value || '')
-  }, [value])
   return (
-    <>
-      <Input
-        onChange={(e: InputEvent) => {
-          const v = Utils.safeParseEventValue(e)
-          setLocalValue(v)
-        }}
-        value={localValue?.replace(/^"+|"+$/g, '')}
-        type='text'
-        className='me-3'
-        size='xSmall'
-        placeholder='Search'
-        search
-      />
-    </>
+    <Input
+      onChange={(e: InputEvent) => {
+        const v = Utils.safeParseEventValue(e)
+        setLocalValue(v)
+        debouncedOnChange(v)
+      }}
+      value={localValue}
+      type='text'
+      className='me-3'
+      size='xSmall'
+      placeholder='Search'
+      search
+    />
   )
 }
 

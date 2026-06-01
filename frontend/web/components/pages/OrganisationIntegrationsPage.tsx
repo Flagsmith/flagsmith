@@ -3,9 +3,10 @@ import IntegrationList from 'components/IntegrationList'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import Utils from 'common/utils/utils'
-import InfoMessage from 'components/InfoMessage'
 import AccountStore from 'common/stores/account-store'
 import { OrganisationPermission } from 'common/types/permissions.types'
+import { useHasPermission } from 'common/providers/Permission'
+import API from 'project/api'
 
 const OrganisationIntegrationsPage = ({ match }) => {
   useEffect(() => {
@@ -13,9 +14,23 @@ const OrganisationIntegrationsPage = ({ match }) => {
   }, [])
 
   const integrationData = Utils.getIntegrationData()
-  const integrations = Object.keys(integrationData).filter(
-    (v) => !!integrationData[v]?.organisation,
+  const allIntegrations = Object.keys(integrationData).sort((a, b) =>
+    (integrationData[a]?.title || a).localeCompare(
+      integrationData[b]?.title || b,
+    ),
   )
+  const orgIntegrations = allIntegrations.filter(
+    (key) => !!integrationData[key]?.organisation,
+  )
+  const projectIntegrations = allIntegrations.filter(
+    (key) => !integrationData[key]?.organisation,
+  )
+  const organisationId = Utils.getOrganisationIdFromUrl(match)
+  const { permission: isOrgAdmin } = useHasPermission({
+    id: organisationId,
+    level: 'organisation',
+    permission: OrganisationPermission.ADMIN,
+  })
   if (!AccountStore.isAdmin()) {
     return (
       <div
@@ -34,15 +49,21 @@ const OrganisationIntegrationsPage = ({ match }) => {
         Enhance Flagsmith with your favourite tools. Have any products you want
         to see us integrate with? Message us and we will be right with you.
       </PageTitle>
-      <InfoMessage collapseId='organisation-integrations'>
-        You can add more integrations at the project level. If you add the same
-        integrations there, they will replace the ones set at the organization
-        level.
-      </InfoMessage>
       <IntegrationList
-        organisationId={Utils.getOrganisationIdFromUrl(match)}
-        integrations={integrations}
+        organisationId={organisationId}
+        integrations={orgIntegrations}
+        isOrgAdmin={isOrgAdmin}
       />
+      {!!projectIntegrations.length && (
+        <>
+          <h5 className='mt-5 mb-3'>Project-level integrations</h5>
+          <IntegrationList
+            organisationId={organisationId}
+            integrations={projectIntegrations}
+            isOrgAdmin={isOrgAdmin}
+          />
+        </>
+      )}
     </div>
   )
 }

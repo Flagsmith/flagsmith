@@ -1,3 +1,5 @@
+import range from 'lodash/range'
+
 const Utils = {
   GUID(append) {
     let d = new Date().getTime()
@@ -439,7 +441,7 @@ emailRegex: /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|
       prevTruncated: startPage > 2,
 
       // can go forward a page
-      range: _.range(startPage, endPage),
+      range: range(startPage, endPage),
 
       showFirstPage: startPage > 1,
 
@@ -526,4 +528,4 @@ emailRegex: /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|
   // eslint-disable-next-line
 urlRegex: /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$/,
 }
-module.exports = Utils
+export default Utils

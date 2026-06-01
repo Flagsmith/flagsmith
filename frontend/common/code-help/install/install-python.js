@@ -1,2 +1,2 @@
-module.exports = () => `pip install flagsmith
+export default () => `pip install flagsmith
 `

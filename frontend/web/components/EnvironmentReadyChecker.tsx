@@ -33,21 +33,25 @@ const EnvironmentReadyChecker = ({
   if (!match?.params?.environmentId) {
     return children
   }
-  return isLoading ? (
-    <div className='text-center'>
-      <Loader />
-    </div>
-  ) : data?.is_creating ? (
-    <div className='container'>
-      <div className='d-flex flex-column h-100 flex-1 justify-content-center align-items-center'>
+  if (isLoading) {
+    return (
+      <div className='text-center'>
         <Loader />
-        <h3>Preparing your environment</h3>
-        <p>We are setting up your new environment...</p>
       </div>
-    </div>
-  ) : (
-    children
-  )
+    )
+  }
+  if (data?.is_creating) {
+    return (
+      <div className='container'>
+        <div className='d-flex flex-column h-100 flex-1 justify-content-center align-items-center'>
+          <Loader />
+          <h3>Preparing your environment</h3>
+          <p>We are setting up your new environment...</p>
+        </div>
+      </div>
+    )
+  }
+  return children
 }
 
 export default EnvironmentReadyChecker

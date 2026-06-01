@@ -1,5 +1,5 @@
 import Constants from 'common/constants'
-module.exports = (
+export default (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT },
 ) => `use Flagsmith\\Flagsmith;

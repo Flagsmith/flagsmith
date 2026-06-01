@@ -36,6 +36,7 @@ jobs:
     with:
       target: private-cloud-api
       image-name: flagsmith-private-cloud-api
+      codeartifact-login: true
     secrets:
       secrets: |
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
@@ -46,6 +47,7 @@ jobs:
     with:
       target: private-cloud-unified
       image-name: flagsmith-private-cloud
+      codeartifact-login: true
     secrets:
       secrets: |
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
@@ -65,6 +67,7 @@ jobs:
       target: api-private-test
       image-name: flagsmith-api-private-test
       scan: false
+      codeartifact-login: true
     secrets:
       secrets: |
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
@@ -85,6 +88,10 @@ jobs:
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
       api-image: ${{ matrix.args.api-image }}
       args: ${{ matrix.args.args }}
+      # Run visual regression on the enterprise E2E job (which runs all OSS + enterprise tests)
+      # on a single architecture only, and update baselines since this is the main branch.
+      visual-regression: ${{ matrix.runs-on == 'depot-ubuntu-latest-16' && contains(matrix.args.args, '@enterprise') }}
+      visual-regression-update: ${{ matrix.runs-on == 'depot-ubuntu-latest-16' && contains(matrix.args.args, '@enterprise') }}
     secrets:
       GCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}

@@ -1,9 +1,8 @@
 import React from 'react'
 import { Organisation } from 'common/types/responses'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
-import PaymentLegacy from 'components/modals/Payment'
-import PaymentNew from 'components/modals/payment'
+import Payment from 'components/modals/payment'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import StatItem, { StatItemProps } from 'components/StatItem'
 
@@ -141,14 +140,10 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
         </>
       )}
       <h5>Manage Payment Plan</h5>
-      {Utils.getFlagsmithHasFeature('rtk_payment_modal_migration') ? (
-        <PaymentNew
-          organisation={organisation}
-          isPaymentsEnabled={Utils.getFlagsmithHasFeature('payments_enabled')}
-        />
-      ) : (
-        <PaymentLegacy viewOnly={false} />
-      )}
+      <Payment
+        organisation={organisation}
+        isPaymentsEnabled={Utils.getFlagsmithHasFeature('payments_enabled')}
+      />
     </div>
   )
 }

@@ -1,0 +1,93 @@
+from datetime import timedelta
+from unittest.mock import MagicMock
+
+import pytest
+from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
+from oauth2_provider.models import AccessToken, Application
+
+from oauth2_metadata.tasks import (
+    cleanup_stale_oauth2_applications,
+    clear_expired_oauth2_tokens,
+)
+
+
+def test_clear_expired_oauth2_tokens__called__invokes_cleartokens_command(
+    mocker: MagicMock,
+) -> None:
+    # Given
+    mock_call_command = mocker.patch("oauth2_metadata.tasks.call_command")
+
+    # When
+    clear_expired_oauth2_tokens()
+
+    # Then
+    mock_call_command.assert_called_once_with("cleartokens")
+
+
+@pytest.mark.django_db()
+def test_cleanup_stale_oauth2_applications__old_app_with_no_token__deletes_it() -> None:
+    # Given
+    app = Application.objects.create(
+        name="Stale App",
+        client_type=Application.CLIENT_PUBLIC,
+        authorization_grant_type=Application.GRANT_AUTHORIZATION_CODE,
+        redirect_uris="https://example.com/callback",
+    )
+    Application.objects.filter(pk=app.pk).update(
+        created=timezone.now() - timedelta(days=15),
+    )
+
+    # When
+    cleanup_stale_oauth2_applications()
+
+    # Then
+    assert not Application.objects.filter(pk=app.pk).exists()
+
+
+@pytest.mark.django_db()
+def test_cleanup_stale_oauth2_applications__old_app_with_token__keeps_it(
+    admin_user: AbstractUser,
+) -> None:
+    # Given
+    app = Application.objects.create(
+        name="Active App",
+        client_type=Application.CLIENT_PUBLIC,
+        authorization_grant_type=Application.GRANT_AUTHORIZATION_CODE,
+        redirect_uris="https://example.com/callback",
+    )
+    Application.objects.filter(pk=app.pk).update(
+        created=timezone.now() - timedelta(days=15),
+    )
+    AccessToken.objects.create(
+        user=admin_user,
+        application=app,
+        token="test-token",
+        expires=timezone.now() + timedelta(hours=1),
+    )
+
+    # When
+    cleanup_stale_oauth2_applications()
+
+    # Then
+    assert Application.objects.filter(pk=app.pk).exists()
+
+
+@pytest.mark.django_db()
+def test_cleanup_stale_oauth2_applications__recent_app__keeps_it() -> None:
+    # Given - an app created 5 days ago with no tokens
+    app = Application.objects.create(
+        name="Recent App",
+        client_type=Application.CLIENT_PUBLIC,
+        authorization_grant_type=Application.GRANT_AUTHORIZATION_CODE,
+        redirect_uris="https://example.com/callback",
+    )
+    Application.objects.filter(pk=app.pk).update(
+        created=timezone.now() - timedelta(days=5),
+    )
+
+    # When
+    cleanup_stale_oauth2_applications()
+
+    # Then
+    assert Application.objects.filter(pk=app.pk).exists()

@@ -1,41 +1,207 @@
-import React, { FC } from 'react'
+import { FC, useCallback, useEffect, useState } from 'react'
+import { useHistory } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
-import { useGetTagsQuery } from 'common/services/useTag'
-import FeaturesPage from './features/FeaturesPage'
+import { useGetExperimentsQuery } from 'common/services/useExperiment'
+import { useGetWarehouseConnectionsQuery } from 'common/services/useWarehouseConnection'
+import { ExperimentStatus } from 'common/types/responses'
+import useDebouncedSearch from 'common/useDebouncedSearch'
+import Button from 'components/base/forms/Button'
+import PageTitle from 'components/PageTitle'
+import Paging from 'components/Paging'
+import CreateExperimentWizard from 'components/experiments/CreateExperimentWizard'
+import ExperimentsTable from 'components/experiments/ExperimentsTable'
+import ExperimentsListControls from 'components/experiments/ExperimentsListControls'
+import {
+  FilterTab,
+  TAB_LABELS,
+  TAB_ORDER,
+} from 'components/experiments/constants'
+import Icon from 'components/icons/Icon'
+
+const PAGE_SIZE = 10
 
 const ExperimentsPage: FC = () => {
-  const routeContext = useRouteContext()
-  const projectId = routeContext.projectId!
+  const { environmentId, projectId } = useRouteContext()
+  const [isCreating, setIsCreating] = useState(false)
+  const [activeTab, setActiveTab] = useState<FilterTab>('all')
+  const [page, setPage] = useState(1)
+  const { search, searchInput, setSearchInput } = useDebouncedSearch()
+  const history = useHistory()
 
-  const { data: tags, isLoading } = useGetTagsQuery({ projectId })
+  useEffect(() => {
+    setPage(1)
+  }, [activeTab, search])
 
-  if (isLoading) {
+  const { data: experimentsData, isLoading } = useGetExperimentsQuery(
+    {
+      environmentId: environmentId ?? '',
+      page,
+      page_size: PAGE_SIZE,
+      q: search || undefined,
+      status: activeTab !== 'all' ? activeTab : undefined,
+    },
+    { skip: !environmentId },
+  )
+
+  const { data: warehouseConnections, isLoading: isLoadingWarehouse } =
+    useGetWarehouseConnectionsQuery(
+      { environmentId: environmentId ?? '' },
+      { skip: !environmentId },
+    )
+
+  const hasWarehouse = (warehouseConnections?.length ?? 0) > 0
+  const experiments = experimentsData?.results
+  const experimentCount = experimentsData?.count ?? 0
+  const statusCounts = experimentsData?.status_counts
+
+  const getTabLabel = useCallback(
+    (tab: FilterTab) => {
+      const label = TAB_LABELS[tab]
+      if (!statusCounts) return label
+      if (tab === 'all') {
+        const total = Object.values(statusCounts).reduce(
+          (a, b) => a + (b ?? 0),
+          0,
+        )
+        return total > 0 ? `${label} (${total})` : label
+      }
+      const count = statusCounts[tab as ExperimentStatus] ?? 0
+      return count > 0 ? `${label} (${count})` : label
+    },
+    [statusCounts],
+  )
+
+  if (!environmentId || !projectId) return null
+
+  if (isCreating) {
     return (
-      <div className='text-center'>
-        <Loader />
+      <div data-test='experiments-page' className='app-container container'>
+        <PageTitle
+          title='Create Experiment'
+          cta={
+            <Button theme='outline' onClick={() => setIsCreating(false)}>
+              Cancel
+            </Button>
+          }
+        />
+        <CreateExperimentWizard
+          environmentId={environmentId}
+          projectId={projectId}
+          onCreated={() => setIsCreating(false)}
+        />
       </div>
     )
   }
 
-  const experimentTag = tags?.find(
-    (t) => t.label.toLowerCase() === 'experiment',
-  )
+  const hasActiveFilter = activeTab !== 'all' || !!search
+  const settingsUrl = `/project/${projectId}/environment/${environmentId}/settings?tab=warehouse`
 
-  if (!experimentTag) {
+  const renderBody = () => {
+    if (isLoading || isLoadingWarehouse) {
+      return (
+        <div className='text-center'>
+          <Loader />
+        </div>
+      )
+    }
+    if (!hasWarehouse && experimentCount === 0 && !hasActiveFilter) {
+      return (
+        <div className='text-center py-5'>
+          <Icon
+            name='setting'
+            width={48}
+            className='text-muted mb-3 d-block mx-auto'
+          />
+          <h5>Data warehouse not configured</h5>
+          <p className='text-muted mb-4'>
+            Experiments require a data warehouse connection to collect and
+            analyse results. Configure one in your environment settings to get
+            started.
+          </p>
+          <Button onClick={() => history.push(settingsUrl)}>
+            Configure Warehouse
+          </Button>
+        </div>
+      )
+    }
+    if (experimentCount === 0 && !hasActiveFilter) {
+      return (
+        <div className='text-center py-5'>
+          <Icon
+            name='flask'
+            width={48}
+            className='text-muted mb-3 d-block mx-auto'
+          />
+          <h5>No experiments yet</h5>
+          <p className='text-muted mb-4'>
+            Create your first experiment to start testing hypotheses with your
+            feature flags.
+          </p>
+          <Button onClick={() => setIsCreating(true)}>
+            <Icon name='plus' width={16} />
+            Create Experiment
+          </Button>
+        </div>
+      )
+    }
+    const tabs = TAB_ORDER.map((value) => ({
+      label: getTabLabel(value),
+      value,
+    }))
+    const hasResults = !!experiments?.length
     return (
-      <div data-test='experiments-page' className='app-container container'>
-        <h3>Experiments</h3>
-        <p>You don't have any experiment running at the moment</p>
-      </div>
+      <>
+        <ExperimentsListControls
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          searchInput={searchInput}
+          onSearchChange={setSearchInput}
+        />
+        {hasResults ? (
+          <ExperimentsTable
+            experiments={experiments}
+            environmentId={environmentId}
+          />
+        ) : (
+          <div className='text-center py-5'>
+            <p className='text-muted'>
+              No experiments match your {search ? 'search' : 'filter'}.
+            </p>
+          </div>
+        )}
+        {hasResults && (
+          <Paging
+            paging={{
+              ...(experimentsData || {}),
+              page,
+              pageSize: PAGE_SIZE,
+            }}
+            nextPage={() => setPage(page + 1)}
+            prevPage={() => setPage(page - 1)}
+            goToPage={(p: number) => setPage(p)}
+            isLoading={isLoading}
+          />
+        )}
+      </>
     )
   }
 
   return (
-    <FeaturesPage
-      pageTitle='Experiments'
-      forcedTagIds={[experimentTag.id]}
-      defaultExperiment
-    />
+    <div data-test='experiments-page' className='app-container container'>
+      <PageTitle
+        title='Experiments'
+        cta={
+          hasWarehouse ? (
+            <Button onClick={() => setIsCreating(true)}>
+              <Icon name='plus' width={16} />
+              Create Experiment
+            </Button>
+          ) : undefined
+        }
+      />
+      {renderBody()}
+    </div>
   )
 }
 

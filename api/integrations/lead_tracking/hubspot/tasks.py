@@ -52,19 +52,6 @@ def create_hubspot_contact_for_user(user_id: int) -> None:
 
 
 @register_task_handler()
-def update_hubspot_active_subscription(subscription_id: int) -> None:
-    assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
-
-    from organisations.models import Subscription
-
-    from .lead_tracker import HubspotLeadTracker
-
-    subscription = Subscription.objects.get(id=subscription_id)
-    hubspot_lead_tracker = HubspotLeadTracker()
-    hubspot_lead_tracker.update_company_active_subscription(subscription)
-
-
-@register_task_handler()
 def create_self_hosted_onboarding_lead_task(
     email: str, first_name: str, last_name: str, hubspot_cookie: str = ""
 ) -> None:

@@ -56,13 +56,6 @@
     border-top-right-radius: 0 !important;
   }
 
-  &--no-shadow {
-    box-shadow: none;
-  }
-
-  &__segments-achievements {
-    border: 1px solid $primary !important;
-  }
 }
 .dark {
   .panel {
@@ -70,16 +63,6 @@
       input[type='text'] {
         background: $input-bg-dark;
       }
-    }
-  }
-}
-
-.header {
-  &--icon {
-    .btn--with-icon {
-      position: relative;
-      top: -4px;
-      margin-left: 5px;
     }
   }
 }

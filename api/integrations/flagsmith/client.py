@@ -20,7 +20,6 @@ from django.conf import settings
 from flagsmith import Flagsmith
 from flagsmith.offline_handlers import LocalFileHandler
 from openfeature.client import OpenFeatureClient
-from openfeature.provider import ProviderStatus
 from openfeature_flagsmith.provider import FlagsmithProvider
 
 from integrations.flagsmith.exceptions import FlagsmithIntegrationError
@@ -33,7 +32,10 @@ def get_openfeature_client(
     domain: str = DEFAULT_OPENFEATURE_DOMAIN,
 ) -> OpenFeatureClient:
     openfeature_client = openfeature_api.get_client(domain=domain)
-    if openfeature_client.get_provider_status() != ProviderStatus.READY:
+    # An unbound domain falls back to a ready `NoOpProvider`, so we can't rely
+    # on provider status here — check whether we're still on the default.
+    metadata = openfeature_api.get_provider_metadata(domain)
+    if getattr(metadata, "is_default_provider", False):
         initialise_provider(domain, **get_provider_kwargs())
     return openfeature_client
 

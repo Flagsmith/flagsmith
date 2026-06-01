@@ -695,6 +695,20 @@ def test_list_projects__uuid_filter__returns_matching_project(  # type: ignore[n
     assert response.json()[0]["uuid"] == str(project.uuid)
 
 
+def test_list_projects__non_numeric_organisation__returns_400(  # type: ignore[no-untyped-def]
+    admin_client,
+):
+    # Given
+    base_url = reverse("api-v1:projects:project-list")
+    url = f"{base_url}?organisation=A60ZG9cp5WC53RRZHDkIlUiWuAL57Jhi"
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
 @pytest.mark.parametrize(
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
@@ -853,9 +867,9 @@ def test_get_project__with_features_and_segments__returns_detailed_data(
 
     response_json = response.json()
     assert response_json["name"] == project.name
-    assert response_json["max_segments_allowed"] == 100
-    assert response_json["max_features_allowed"] == 400
-    assert response_json["max_segment_overrides_allowed"] == 100
+    assert response_json["max_segments_allowed"] == 500
+    assert response_json["max_features_allowed"] == 1000
+    assert response_json["max_segment_overrides_allowed"] == 2000
     assert response_json["total_features"] == num_features
     assert response_json["total_segments"] == num_segments
     assert response_json["show_edge_identity_overrides_for_feature"] is False

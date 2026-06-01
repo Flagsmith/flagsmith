@@ -211,10 +211,6 @@ def map_environment_to_engine(
         ps for ps in project.segments.all() if ps.id == ps.version_of_id
     ]
 
-    project_segment_rules_by_segment_id: Dict[
-        int,
-        Iterable["SegmentRule"],
-    ] = {segment.pk: segment.rules.all() for segment in project_segments}
     project_segment_feature_states_by_segment_id = _get_segment_feature_states(
         project_segments,
         environment.pk,
@@ -229,6 +225,19 @@ def map_environment_to_engine(
             else []
         ),
     )
+    # Drop feature-specific segments that have no FeatureSegment in this
+    # environment — without one, they have no evaluation path here, and
+    # their rules only inflate the environment document.
+    project_segments = [
+        ps
+        for ps in project_segments
+        if ps.feature_id is None
+        or project_segment_feature_states_by_segment_id.get(ps.pk)
+    ]
+    project_segment_rules_by_segment_id: Dict[
+        int,
+        Iterable["SegmentRule"],
+    ] = {segment.pk: segment.rules.all() for segment in project_segments}
     environment_feature_states: List["FeatureState"] = _get_prioritised_feature_states(
         [
             feature_state

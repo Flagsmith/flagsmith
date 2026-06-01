@@ -15,7 +15,7 @@ import Tag from './Tag'
 import CreateEditTag from './CreateEditTag'
 import Input from 'components/base/forms/Input'
 import Button from 'components/base/forms/Button'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import TagUsage from 'components/TagUsage'
 import { ProjectPermission } from 'common/types/permissions.types'
 

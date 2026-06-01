@@ -1,7 +1,7 @@
 import React, { useState, FC } from 'react'
 import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 import ModalHR from 'components/modals/ModalHR'
 import { checkWhitespaceIssues } from 'components/segments/Rule/utils'

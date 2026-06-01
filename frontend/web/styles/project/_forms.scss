@@ -1,6 +1,3 @@
-.breadcrumb-item {
-    font-weight: 500;
-}
 .or-divider {
     color: $text-muted;
     font-weight: 400;
@@ -148,14 +145,12 @@ label {
     line-height: $line-height-sm;
     margin-bottom: 6px;
 }
-label,
-.icon-primary {
+label {
     color: $body-color;
     font-weight: 500;
 }
 .dark {
-    label,
-    .icon-primary {
+    label {
         color: $white;
     }
 }
@@ -171,11 +166,6 @@ label,
     svg {
         vertical-align: bottom;
     }
-}
-
-.__react_component_tooltip {
-    z-index: 99999999 !important;
-    position: fixed;
 }
 
 .notification {

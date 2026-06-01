@@ -11,7 +11,7 @@ export type CreateEnvType = (data: {
   cloneFeatureStatesAsync?: boolean
   metadata: Environment['metadata']
 }) => void
-export type ProjectProviderType = {
+type ProjectProviderType = {
   children: (props: {
     createEnv: CreateEnvType
     deleteEnv: typeof AppActions.deleteEnv

@@ -16,6 +16,9 @@ from features.serializers import (
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
+from integrations.gitlab.services import (
+    post_gitlab_state_change_comment_for_feature_state,
+)
 from segments.models import Segment
 from users.models import FFAdminUser
 
@@ -53,6 +56,8 @@ class CustomEnvironmentFeatureVersionFeatureStateSerializer(
                 url=None,
                 feature_states=[feature_state],
             )
+
+        post_gitlab_state_change_comment_for_feature_state(feature_state)
 
         return response
 
@@ -156,7 +161,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
         return [
             fs["feature_segment"]["segment"]
             for fs in self.initial_data.get("feature_states_to_create", [])
-            if fs["feature_segment"] is not None
+            if fs.get("feature_segment") is not None
         ]
 
     @transaction.atomic

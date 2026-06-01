@@ -8,7 +8,7 @@ import { getTagColor } from './Tag'
 import OrganisationStore from 'common/stores/organisation-store'
 import Utils from 'common/utils/utils'
 import classNames from 'classnames'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Color from 'color'
 type TagContent = {
   tag: Partial<TTag>

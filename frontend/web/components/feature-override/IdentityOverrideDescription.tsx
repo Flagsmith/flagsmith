@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import UsersIcon from 'components/svg/UsersIcon'
+import UsersIcon from 'components/icons/UsersIcon'
 
 type IdentityOverrideDescriptionType = {}
 

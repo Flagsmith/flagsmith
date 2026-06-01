@@ -3,15 +3,12 @@ import firstpromoter from 'project/firstPromoter'
 
 let initialised = false
 
-type InitChargebeeParams = {
+type BindChargebeeButtonsParams = {
   isPaymentsEnabled: boolean
 }
 
-export const initChargebee = ({ isPaymentsEnabled }: InitChargebeeParams) => {
-  if (initialised || !Project.chargebee?.site) return
-
+const initChargebee = ({ isPaymentsEnabled }: BindChargebeeButtonsParams) => {
   Chargebee.init({ site: Project.chargebee.site })
-  Chargebee.registerAgain()
   firstpromoter()
   Chargebee.getInstance().setCheckoutCallbacks?.(() => ({
     success: (hostedPageId: string) => {
@@ -19,7 +16,6 @@ export const initChargebee = ({ isPaymentsEnabled }: InitChargebeeParams) => {
     },
   }))
 
-  // Handle plan cookie from signup flow
   const planId = API.getCookie('plan')
   if (planId && isPaymentsEnabled) {
     const link = document.createElement('a')
@@ -32,6 +28,19 @@ export const initChargebee = ({ isPaymentsEnabled }: InitChargebeeParams) => {
     document.body.removeChild(link)
     API.setCookie('plan', null)
   }
+}
 
-  initialised = true
+export const bindChargebeeButtons = ({
+  isPaymentsEnabled,
+}: BindChargebeeButtonsParams) => {
+  if (!Project.chargebee?.site) return
+
+  if (!initialised) {
+    initChargebee({ isPaymentsEnabled })
+    initialised = true
+  }
+
+  // Re-scan the DOM so buttons rendered after the initial mount
+  // (e.g. after toggling the yearly/monthly switch) get wired up.
+  Chargebee.registerAgain()
 }

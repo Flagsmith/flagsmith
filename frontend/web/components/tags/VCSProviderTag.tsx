@@ -1,6 +1,6 @@
 import React from 'react'
-import { GithubIcon } from 'components/base/icons/GithubIcon'
-import GitlabIcon from 'components/base/icons/GitlabIcon'
+import { GithubIcon } from 'components/icons/GithubIcon'
+import GitlabIcon from 'components/icons/GitlabIcon'
 import { VCSProvider } from 'common/types/responses'
 
 interface VCSProviderTagProps {

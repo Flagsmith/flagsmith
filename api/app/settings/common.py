@@ -87,6 +87,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     # Used for managing api keys
     "rest_framework_api_key",
+    "oauth2_provider",
     "rest_framework_simplejwt.token_blacklist",
     "djoser",
     "django.contrib.sites",
@@ -117,6 +118,8 @@ INSTALLED_APPS = [
     "features.workflows.core",
     "features.release_pipelines.core",
     "segments",
+    "segment_membership",
+    "clickhouse",
     "app",
     "e2etests",
     "simple_history",
@@ -153,7 +156,9 @@ INSTALLED_APPS = [
     "integrations.flagsmith",
     "integrations.launch_darkly",
     "integrations.github",
+    "integrations.gitlab",
     "integrations.grafana",
+    "integrations.vcs",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -164,6 +169,8 @@ INSTALLED_APPS = [
     "softdelete",
     "metadata",
     "app_analytics",
+    "experimentation",
+    "oauth2_metadata",
 ]
 
 SILENCED_SYSTEM_CHECKS = ["axes.W002"]
@@ -173,12 +180,16 @@ SITE_ID = 1
 db_conn_max_age = env.int("DJANGO_DB_CONN_MAX_AGE", 60)
 DJANGO_DB_CONN_MAX_AGE = 0 if db_conn_max_age == -1 else db_conn_max_age
 
+DJANGO_DB_CONN_HEALTH_CHECKS = env.bool("DJANGO_DB_CONN_HEALTH_CHECKS", False)
+
 DATABASE_ROUTERS: list[str] = []
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
     DATABASES = {
         "default": dj_database_url.parse(
-            env("DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
+            env("DATABASE_URL"),
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+            conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         ),
     }
     REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
@@ -219,17 +230,23 @@ if "DATABASE_URL" in os.environ:
 
     for i, db_url in enumerate(REPLICA_DATABASE_URLS, start=1):
         DATABASES[f"replica_{i}"] = dj_database_url.parse(
-            db_url, conn_max_age=DJANGO_DB_CONN_MAX_AGE
+            db_url,
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+            conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         )
 
     for i, db_url in enumerate(CROSS_REGION_REPLICA_DATABASE_URLS, start=1):
         DATABASES[f"cross_region_replica_{i}"] = dj_database_url.parse(
-            db_url, conn_max_age=DJANGO_DB_CONN_MAX_AGE
+            db_url,
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+            conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         )
 
     if "ANALYTICS_DATABASE_URL" in os.environ:
         DATABASES["analytics"] = dj_database_url.parse(
-            env("ANALYTICS_DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
+            env("ANALYTICS_DATABASE_URL"),
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+            conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         )
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
 elif "DJANGO_DB_NAME" in os.environ:
@@ -243,6 +260,7 @@ elif "DJANGO_DB_NAME" in os.environ:
             "HOST": os.environ["DJANGO_DB_HOST"],
             "PORT": os.environ["DJANGO_DB_PORT"],
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
+            "CONN_HEALTH_CHECKS": DJANGO_DB_CONN_HEALTH_CHECKS,
         },
     }
     if "DJANGO_DB_NAME_ANALYTICS" in os.environ:
@@ -254,6 +272,7 @@ elif "DJANGO_DB_NAME" in os.environ:
             "HOST": os.environ["DJANGO_DB_HOST_ANALYTICS"],
             "PORT": os.environ["DJANGO_DB_PORT_ANALYTICS"],
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
+            "CONN_HEALTH_CHECKS": DJANGO_DB_CONN_HEALTH_CHECKS,
         }
 
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
@@ -301,6 +320,7 @@ TASK_PROCESSOR_DATABASES = env.list(
 
 
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
+DCR_THROTTLE_RATE = env("DCR_THROTTLE_RATE", "500/month")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", default=None)
 MASTER_API_KEY_THROTTLE_RATE = env("MASTER_API_KEY_THROTTLE_RATE", default=None)
@@ -311,6 +331,7 @@ REST_FRAMEWORK = {
         "custom_auth.jwt_cookie.authentication.JWTCookieAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         "api_keys.authentication.MasterAPIKeyAuthentication",
+        "oauth2_metadata.authentication.OAuth2BearerTokenAuthentication",
     ),
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
@@ -318,6 +339,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": DEFAULT_THROTTLE_CLASSES,
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
+        "dcr_register": DCR_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
         "master_api_key": MASTER_API_KEY_THROTTLE_RATE,
         "mfa_code": "5/min",
@@ -541,6 +563,13 @@ SPECTACULAR_SETTINGS = {
         "edge_api.identities.openapi",
         "environments.identities.traits.openapi",
     ],
+    "PREPROCESSING_HOOKS": [
+        "api.openapi.preprocessing_filter_spec",
+    ],
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+        "api.openapi.postprocessing_assign_tags",
+    ],
     "ENUM_NAME_OVERRIDES": {
         # Overrides to use specific schema names for fields named "type".
         # If this is not set, drf-spectacular will generate schema names like "Type975Enum".
@@ -582,6 +611,9 @@ E2E_NON_ADMIN_USER_WITH_A_ROLE = (
     f"e2e_non_admin_user_with_a_role@{E2E_TEST_EMAIL_DOMAIN}"
 )
 E2E_SEPARATE_TEST_USER = f"e2e_separate_test_user@{E2E_TEST_EMAIL_DOMAIN}"
+# User on a Free-plan organisation, used by the Billing tab E2E tests
+# that need to exercise the "no active subscription" payment flow.
+E2E_BILLING_USER = f"e2e_billing_user@{E2E_TEST_EMAIL_DOMAIN}"
 #  Identity for E2E segment tests
 E2E_IDENTITY = "test-identity"
 
@@ -752,6 +784,9 @@ REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
     "REDIS_CLUSTER_READ_FROM_REPLICAS", default=True
 )
 
+# Redis Cluster URL used to communicate with the event ingestion server.
+INGESTION_REDIS_URL = env.str("INGESTION_REDIS_URL", default="")
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -885,6 +920,26 @@ SIMPLE_JWT = {
         )
     ),
     "SIGNING_KEY": env.str("COOKIE_AUTH_JWT_SIGNING_KEY", default=SECRET_KEY),
+}
+
+# OAuth 2.1 Provider (django-oauth-toolkit)
+FLAGSMITH_API_URL = env.str("FLAGSMITH_API_URL", default="http://localhost:8000")
+FLAGSMITH_FRONTEND_URL = env.str(
+    "FLAGSMITH_FRONTEND_URL", default="http://localhost:8080"
+)
+
+OAUTH2_PROVIDER = {
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 60 * 15,  # 15 minutes
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 60 * 60 * 24 * 30,  # 30 days
+    "ROTATE_REFRESH_TOKEN": True,
+    "PKCE_REQUIRED": True,
+    "ALLOWED_CODE_CHALLENGE_METHODS": ["S256"],
+    "SCOPES": {"mcp": "MCP access"},
+    "DEFAULT_SCOPES": ["mcp"],
+    "ALLOWED_GRANT_TYPES": [
+        "authorization_code",
+        "refresh_token",
+    ],
 }
 
 # Github OAuth credentials
@@ -1023,6 +1078,27 @@ IS_RBAC_INSTALLED = importlib.util.find_spec("rbac") is not None
 if IS_RBAC_INSTALLED:
     INSTALLED_APPS.append("rbac")
 
+SCIM_INSTALLED = importlib.util.find_spec("scim") is not None
+if SCIM_INSTALLED:
+    INSTALLED_APPS += ["django_scim", "scim"]
+    SCIM_SERVICE_PROVIDER = {
+        "AUTHENTICATION_SCHEMES": [
+            {
+                "type": "oauthbearertoken",
+                "name": "OAuth Bearer Token",
+                "description": "Per-organisation bearer token issued via the SCIM configuration API.",
+            },
+        ],
+        "AUTH_CHECK_MIDDLEWARE": "scim.middleware.ScimAuthenticationMiddleware",
+        "BASE_LOCATION_GETTER": "core.helpers.get_request_base_url",
+        "GET_EXTRA_MODEL_FILTER_KWARGS_GETTER": "scim.filters.get_extra_model_filter_kwargs_getter",
+        "GROUP_ADAPTER": "scim.adapters.GroupAdapter",
+        "GROUP_FILTER_PARSER": "scim.filters.GroupFilterQuery",
+        "GROUP_MODEL": "users.models.UserPermissionGroup",
+        "USER_ADAPTER": "scim.adapters.UserAdapter",
+        "USER_FILTER_PARSER": "scim.filters.UserFilterQuery",
+    }
+
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Used to keep edge identities in sync by forwarding the http requests
@@ -1149,17 +1225,6 @@ CORS_ALLOW_HEADERS = list(
 # Hubspot settings
 HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
 ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
-HUBSPOT_IGNORE_DOMAINS = env.list(
-    "HUBSPOT_IGNORE_DOMAINS",
-    subcast=str,
-    default=[],
-)
-HUBSPOT_IGNORE_DOMAINS_REGEX = env.str("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
-HUBSPOT_IGNORE_ORGANISATION_DOMAINS = env.list(
-    "HUBSPOT_IGNORE_ORGANISATION_DOMAINS",
-    subcast=str,
-    default=[],
-)
 
 # Number of minutes to wait for a user that has signed up to
 # join or create an organisation before creating a lead in
@@ -1358,11 +1423,6 @@ ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = env.list(
     default=[],
 )
 
-# Date on which versioning is released. This is used to give any scale up
-# subscriptions created before this date full audit log and versioning
-# history.
-VERSIONING_RELEASE_DATE = env.date("VERSIONING_RELEASE_DATE", default=None)
-
 SUBSCRIPTION_LICENCE_PUBLIC_KEY = env.str(
     "SUBSCRIPTION_LICENCE_PUBLIC_KEY",
     """
@@ -1398,3 +1458,39 @@ REQUIRE_AUTHENTICATION_FOR_API_DOCS = env.bool(
 PYLON_IDENTITY_VERIFICATION_SECRET = env.str("PYLON_IDENTITY_VERIFICATION_SECRET", None)
 
 OSIC_UPDATE_BATCH_SIZE = env.int("OSIC_UPDATE_BATCH_SIZE", default=500)
+
+# ClickHouse backs the segment_membership backfill and refresh tasks. Set
+# CLICKHOUSE_URL (DSN form) or any CLICKHOUSE_HOST + discrete fields to enable.
+# Discrete settings override the matching field parsed from the URL.
+CLICKHOUSE_URL = env.str("CLICKHOUSE_URL", default=None)
+CLICKHOUSE_HOST = env.str("CLICKHOUSE_HOST", default=None)
+CLICKHOUSE_PORT = env.int("CLICKHOUSE_PORT", default=None)
+CLICKHOUSE_USER = env.str("CLICKHOUSE_USER", default=None)
+CLICKHOUSE_PASSWORD = env.str("CLICKHOUSE_PASSWORD", default=None)
+CLICKHOUSE_DATABASE = env.str("CLICKHOUSE_DATABASE", default=None)
+CLICKHOUSE_SECURE = env.bool("CLICKHOUSE_SECURE", default=None)
+
+CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
+
+# Always installed: the router fences the `clickhouse` app's migrations off
+# the default Postgres database whether or not a CH alias is configured.
+DATABASE_ROUTERS.append("app.routers.ClickHouseRouter")
+
+if CLICKHOUSE_ENABLED:
+    _clickhouse_db: dict[str, Any] = {
+        "ENGINE": "clickhouse_backend.backend",
+        "HOST": CLICKHOUSE_HOST,
+        "PORT": CLICKHOUSE_PORT,
+        "USER": CLICKHOUSE_USER,
+        "PASSWORD": CLICKHOUSE_PASSWORD,
+        "NAME": CLICKHOUSE_DATABASE,
+        "OPTIONS": {
+            "dsn": CLICKHOUSE_URL,
+            "secure": CLICKHOUSE_SECURE,
+            "settings": {
+                # ClickHouse Cloud 25.12 requires this for `JSON`-column DDL.
+                "allow_experimental_json_type": 1,
+            },
+        },
+    }
+    DATABASES["clickhouse"] = _clickhouse_db  # type: ignore[assignment]

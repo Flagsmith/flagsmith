@@ -4,7 +4,7 @@ import Utils from 'common/utils/utils'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import Format from 'common/utils/format'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import { Button } from './base/forms/Button'
 import Constants from 'common/constants'
 

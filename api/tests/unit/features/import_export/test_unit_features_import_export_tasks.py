@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 
 import pytest
+from django.db.models import Q
 from django.utils import timezone
 from freezegun.api import FrozenDateTimeFactory
 from pytest_django.fixtures import SettingsWrapper
@@ -31,9 +32,11 @@ from features.import_export.tasks import (
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
+from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Organisation
 from projects.models import Project
 from projects.tags.models import Tag
+from segments.models import Segment
 
 
 def test_clear_stale_feature_imports_and_exports__stale_records__deletes_old_keeps_new(  # type: ignore[no-untyped-def]
@@ -234,6 +237,19 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
         initial_value="changeme",
     )
 
+    feature1_mv_option = MultivariateFeatureOption.objects.create(
+        feature=feature1,
+        default_percentage_allocation=40,
+        type=STRING,
+        string_value="feature1_mv",
+    )
+    feature_state1 = feature1.feature_states.get(environment=environment)
+    feature1_mv_state_value = feature_state1.multivariate_feature_state_values.get(
+        multivariate_feature_option=feature1_mv_option
+    )
+    feature1_mv_state_value.percentage_allocation = 65
+    feature1_mv_state_value.save()
+
     multivariate_feature_option1 = MultivariateFeatureOption.objects.create(
         feature=feature2,
         default_percentage_allocation=30,
@@ -286,13 +302,91 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
     organisation2 = Organisation.objects.create(name="Receiving")
     project2 = Project.objects.create(name="Web", organisation=organisation2)
     environment2 = Environment.objects.create(name="Bat", project=project2)
-    Environment.objects.create(name="Ignore Me", project=project2)
+    bystander_environment = Environment.objects.create(
+        name="Ignore Me", project=project2
+    )
 
     overlapping_feature = Feature.objects.create(
         name="3",
         project=project2,
         initial_value="keepme",
     )
+
+    # Overlapping multivariate feature with a matching MV option (reuse path)
+    # and an extra option not in the import (zero-out path).
+    overlapping_feature_2 = Feature.objects.create(
+        name="2",
+        project=project2,
+        initial_value="overwrite_me",
+    )
+    overlapping_mv_option_match = MultivariateFeatureOption.objects.create(
+        feature=overlapping_feature_2,
+        default_percentage_allocation=30,
+        type=STRING,
+        string_value="mv_feature_option1",
+    )
+    overlapping_mv_option_extra = MultivariateFeatureOption.objects.create(
+        feature=overlapping_feature_2,
+        default_percentage_allocation=25,
+        type=STRING,
+        string_value="extra_option",
+    )
+    overlapping_feature_2_state = overlapping_feature_2.feature_states.get(
+        environment=environment2
+    )
+    overlapping_mv_match_value = (
+        overlapping_feature_2_state.multivariate_feature_state_values.get(
+            multivariate_feature_option=overlapping_mv_option_match
+        )
+    )
+    overlapping_mv_match_value.percentage_allocation = 60
+    overlapping_mv_match_value.save()
+    overlapping_mv_extra_value = (
+        overlapping_feature_2_state.multivariate_feature_state_values.get(
+            multivariate_feature_option=overlapping_mv_option_extra
+        )
+    )
+    overlapping_mv_extra_value.percentage_allocation = 40
+    overlapping_mv_extra_value.save()
+    overlapping_feature_2_pk = overlapping_feature_2.pk
+    overlapping_mv_option_match_pk = overlapping_mv_option_match.pk
+    overlapping_mv_option_extra_pk = overlapping_mv_option_extra.pk
+
+    # Bystander env state on the overlapping feature should survive the import.
+    bystander_fs = overlapping_feature.feature_states.get(
+        environment=bystander_environment
+    )
+    bystander_fs.enabled = True
+    bystander_fs.save()
+    bystander_fs.feature_state_value.type = STRING
+    bystander_fs.feature_state_value.string_value = "bystander_value"
+    bystander_fs.feature_state_value.save()
+    bystander_fs_pk = bystander_fs.pk
+
+    # Target env override state should be destroyed by the import.
+    target_segment = Segment.objects.create(name="Beta", project=project2)
+    target_feature_segment = FeatureSegment.objects.create(
+        feature=overlapping_feature,
+        segment=target_segment,
+        environment=environment2,
+    )
+    target_segment_fs = FeatureState.objects.create(
+        feature=overlapping_feature,
+        environment=environment2,
+        feature_segment=target_feature_segment,
+    )
+    target_identity = Identity.objects.create(
+        identifier="target-id", environment=environment2
+    )
+    target_identity_fs = FeatureState.objects.create(
+        feature=overlapping_feature,
+        environment=environment2,
+        identity=target_identity,
+    )
+    target_segment_pk = target_feature_segment.pk
+    target_segment_fs_pk = target_segment_fs.pk
+    target_identity_fs_pk = target_identity_fs.pk
+
     feature_export = FeatureExport.objects.create(
         environment=environment,
         status=PROCESSING,
@@ -314,19 +408,37 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
     # Then
     assert project2.features.count() == 3
     overlapping_feature.refresh_from_db()
-    assert overlapping_feature.deleted_at < timezone.now()
+    assert overlapping_feature.deleted_at is None
 
     new_feature1 = project2.features.get(name="1")
     new_feature2 = project2.features.get(name="2")
     new_feature3 = project2.features.get(name="3")
+    assert new_feature3.pk == overlapping_feature.pk
 
-    assert new_feature1.type == STANDARD
+    assert new_feature1.type == MULTIVARIATE
     assert new_feature1.initial_value == "200"
     assert new_feature1.is_server_key_only is True
     assert new_feature1.default_enabled is True
 
+    # Newly created MV feature has its options + allocations populated by the
+    # create-strategy path.
+    assert new_feature1.multivariate_options.count() == 1
+    new_feature1_mv_option = new_feature1.multivariate_options.get(
+        string_value="feature1_mv"
+    )
+    assert new_feature1_mv_option.default_percentage_allocation == 40
+    new_feature1_state = new_feature1.feature_states.get(environment=environment2)
+    new_feature1_mv_value = new_feature1_state.multivariate_feature_state_values.get(
+        multivariate_feature_option=new_feature1_mv_option
+    )
+    assert new_feature1_mv_value.percentage_allocation == 65
+
+    # Overlapping MV feature was updated in place: pk preserved, Feature
+    # definition (initial_value, is_server_key_only, default_enabled) preserved
+    # — destructive overwrite touches only env-default state, not the Feature.
+    assert new_feature2.pk == overlapping_feature_2_pk
     assert new_feature2.type == MULTIVARIATE
-    assert new_feature2.initial_value == "banana"
+    assert new_feature2.initial_value == "overwrite_me"
     assert new_feature2.is_server_key_only is False
     assert new_feature2.default_enabled is False
 
@@ -337,13 +449,21 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
 
     new_feature_state2 = queryset.first()
 
-    assert new_feature2.multivariate_options.count() == 2
+    # Three options: the matching one was reused (pk preserved), the second is
+    # newly created from the import, the extra one survives but its target-env
+    # allocation is zeroed.
+    assert new_feature2.multivariate_options.count() == 3
     new_mv_feature_option1 = new_feature2.multivariate_options.get(
         string_value="mv_feature_option1"
     )
     new_mv_feature_option2 = new_feature2.multivariate_options.get(
         string_value="mv_feature_option2"
     )
+    new_mv_feature_option_extra = new_feature2.multivariate_options.get(
+        string_value="extra_option"
+    )
+    assert new_mv_feature_option1.pk == overlapping_mv_option_match_pk
+    assert new_mv_feature_option_extra.pk == overlapping_mv_option_extra_pk
 
     new_mv_fs_value1 = new_feature_state2.multivariate_feature_state_values.get(
         multivariate_feature_option=new_mv_feature_option1
@@ -351,8 +471,12 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
     new_mv_fs_value2 = new_feature_state2.multivariate_feature_state_values.get(
         multivariate_feature_option=new_mv_feature_option2
     )
+    new_mv_fs_value_extra = new_feature_state2.multivariate_feature_state_values.get(
+        multivariate_feature_option=new_mv_feature_option_extra
+    )
     assert new_mv_fs_value1.percentage_allocation == 90
     assert new_mv_fs_value2.percentage_allocation == 10
+    assert new_mv_fs_value_extra.percentage_allocation == 0
 
     assert new_mv_feature_option1.type == STRING
     assert new_mv_feature_option1.default_percentage_allocation == 30
@@ -360,7 +484,7 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
     assert new_mv_feature_option2.default_percentage_allocation == 70
 
     assert new_feature3.type == STANDARD
-    assert new_feature3.initial_value == "changeme"
+    assert new_feature3.initial_value == "keepme"
 
     queryset = new_feature3.feature_states.filter(
         environment=environment2,
@@ -371,6 +495,112 @@ def test_export_and_import_features__overwrite_destructive_strategy__replaces_ov
     assert new_feature_state3.enabled is True
     assert new_feature_state3.feature_state_value.type == STRING
     assert new_feature_state3.feature_state_value.value == "changed"
+
+    # Bystander env's FeatureState row is preserved unchanged.
+    bystander_fs.refresh_from_db()
+    assert bystander_fs.pk == bystander_fs_pk
+    assert bystander_fs.enabled is True
+    assert bystander_fs.feature_state_value.value == "bystander_value"
+
+    # Target env's segment + identity overrides are gone (live filter excludes them).
+    assert not FeatureSegment.objects.filter(pk=target_segment_pk).exists()
+    assert not FeatureState.objects.filter(
+        pk=target_segment_fs_pk, deleted_at__isnull=True
+    ).exists()
+    assert not FeatureState.objects.filter(
+        pk=target_identity_fs_pk, deleted_at__isnull=True
+    ).exists()
+
+
+def test_export_and_import_features__overwrite_destructive_with_v2_versioning__updates_live_version_in_place(
+    db: None,
+    environment: Environment,
+    project: Project,
+) -> None:
+    # Given a source env exporting a feature with a known value, and a target
+    # v2-versioned env where the overlapping feature has multiple published
+    # versions (so the initial version is no longer the live one).
+    source_feature = Feature.objects.create(
+        name="3", project=project, initial_value="changeme"
+    )
+    source_fs = source_feature.feature_states.get(environment=environment)
+    source_fs.enabled = True
+    source_fs.save()
+    source_fs.feature_state_value.type = STRING
+    source_fs.feature_state_value.string_value = "imported_value"
+    source_fs.feature_state_value.save()
+
+    organisation2 = Organisation.objects.create(name="Receiving")
+    project2 = Project.objects.create(name="Web", organisation=organisation2)
+    target_env = Environment.objects.create(
+        name="Target", project=project2, use_v2_feature_versioning=True
+    )
+    target_feature = Feature.objects.create(
+        name="3", project=project2, initial_value="keepme"
+    )
+
+    initial_version = EnvironmentFeatureVersion.objects.get(
+        environment=target_env, feature=target_feature
+    )
+    initial_fs = initial_version.feature_states.get(
+        identity__isnull=True, feature_segment__isnull=True
+    )
+    initial_fs.feature_state_value.type = STRING
+    initial_fs.feature_state_value.string_value = "initial_value"
+    initial_fs.feature_state_value.save()
+
+    second_version = EnvironmentFeatureVersion.objects.create(
+        environment=target_env, feature=target_feature
+    )
+    second_version.publish()
+
+    initial_fs_pk = initial_fs.pk
+    initial_version_pk = initial_version.pk
+    second_version_pk = second_version.pk
+
+    feature_export = FeatureExport.objects.create(
+        environment=environment, status=PROCESSING
+    )
+
+    # When
+    export_features_for_environment(feature_export.id)
+    feature_export.refresh_from_db()
+
+    feature_import = FeatureImport.objects.create(  # type: ignore[misc]
+        environment=target_env,
+        strategy=OVERWRITE_DESTRUCTIVE,
+        data=feature_export.data,
+    )
+    import_features_for_environment(feature_import.id)
+
+    # Then no new version is created (destructive means destructive — no audit
+    # trail of an extra published version), the live version's FS reflects the
+    # imported value, and the prior version's FS is left untouched.
+    versions = EnvironmentFeatureVersion.objects.filter(
+        environment=target_env, feature=target_feature
+    )
+    assert versions.count() == 2
+    assert {v.pk for v in versions} == {initial_version_pk, second_version_pk}
+
+    initial_fs.refresh_from_db()
+    assert initial_fs.pk == initial_fs_pk
+    assert initial_fs.feature_state_value.value == "initial_value"
+
+    live_states = list(
+        FeatureState.objects.get_live_feature_states(
+            environment=target_env,
+            additional_filters=Q(
+                feature=target_feature,
+                identity__isnull=True,
+                feature_segment__isnull=True,
+            ),
+        )
+    )
+    assert len(live_states) == 1
+    live_fs = live_states[0]
+    assert live_fs.environment_feature_version_id == second_version.uuid
+    assert live_fs.enabled is True
+    assert live_fs.feature_state_value.value == "imported_value"
 
 
 def test_create_flagsmith_on_flagsmith_feature_export__valid_config__creates_export(

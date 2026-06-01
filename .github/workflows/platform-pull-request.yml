@@ -113,6 +113,7 @@ jobs:
       target: api-private-test
       image-name: flagsmith-api-private-test
       scan: false
+      codeartifact-login: true
     secrets:
       secrets: |
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
@@ -138,6 +139,7 @@ jobs:
       target: private-cloud-unified
       image-name: flagsmith-private-cloud
       comment: true
+      codeartifact-login: true
     secrets:
       secrets: |
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
@@ -168,6 +170,7 @@ jobs:
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
       api-image: ${{ needs.docker-build-private-cloud.outputs.image }}
       args: --grep "@oss|@enterprise"
+      visual-regression: ${{ matrix.runs-on == 'depot-ubuntu-latest-16' }}
     secrets:
       GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
       SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}

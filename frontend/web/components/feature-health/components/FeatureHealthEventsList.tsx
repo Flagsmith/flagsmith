@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Constants from 'common/constants'
 import { useDismissHealthEventMutation } from 'common/services/useHealthEvents'
 import Button from 'components/base/forms/Button'

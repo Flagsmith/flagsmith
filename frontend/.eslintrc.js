@@ -14,7 +14,6 @@ module.exports = {
   ],
   'globals': {
     '$': true,
-    '$crisp': true,
     'API': true,
     'AccountProvider': true,
     'AccountStore': true,

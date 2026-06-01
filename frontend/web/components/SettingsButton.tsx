@@ -1,5 +1,5 @@
 import React, { FC, ReactNode } from 'react'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Utils, { PaidFeature } from 'common/utils/utils'
 import classNames from 'classnames'
 import PlanBasedBanner from './PlanBasedAccess'

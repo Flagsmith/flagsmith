@@ -7,7 +7,7 @@ import type {
   LifecycleCounts,
 } from 'components/pages/feature-lifecycle/types'
 import Button from 'components/base/forms/Button'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 
 type LifecycleSidebarProps = {
   projectId: number

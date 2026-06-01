@@ -14,6 +14,12 @@ relevant section below for more details.
 
 - `DJANGO_ALLOWED_HOSTS`: Comma-separated list of domains that can access the API. Alternatively `*` to allow any.
 - `DATABASE_URL`: The URL of your PostgreSQL database. Both `postgres://` and `postgresql://` schemas are supported.
+- `DJANGO_DB_CONN_MAX_AGE`: Lifetime of a database connection, in seconds. Defaults to `60`. Set to `-1` to close the
+  connection at the end of each request (Django's default behaviour). See
+  [Django's `CONN_MAX_AGE` docs](https://docs.djangoproject.com/en/stable/ref/databases/#persistent-connections).
+- `DJANGO_DB_CONN_HEALTH_CHECKS`: If `True`, persistent database connections are health checked before being reused.
+  Defaults to `False`. See
+  [Django's `CONN_HEALTH_CHECKS` docs](https://docs.djangoproject.com/en/stable/ref/settings/#std-setting-CONN_HEALTH_CHECKS).
 - `REDIS_URL`: The URL of your Redis instance.
 - `ENV`: The environment the application is running in, e.g. "prod".
 - `SENTRY_DSN`: If you want to send errors to Sentry, specify the DSN here.
@@ -47,7 +53,7 @@ relevant section below for more details.
 - `PREVENT_SIGNUP`: Determines whether to prevent new signups.
 - `ENABLE_EMAIL_ACTIVATION`: New user registration will go via email activation flow, default False.
 - `OTEL_EXPORTER_OTLP_ENDPOINT`: Base OTLP/HTTP endpoint (e.g. `http://collector:4318`). If unset, OTel is disabled. See
-  [OpenTelemetry](/deployment-self-hosting/scaling-and-performance/opentelemetry).
+  [OpenTelemetry](/deployment-self-hosting/observability/opentelemetry).
 - `OTEL_SERVICE_NAME`: The `service.name` resource attribute attached to all OTel telemetry. Defaults to
   `flagsmith-api`.
 - `OTEL_TRACING_EXCLUDED_URL_PATHS`: Comma-separated URL paths to exclude from OTel tracing (e.g.
@@ -71,7 +77,7 @@ relevant section below for more details.
   the browser will use the frontend node server to send API requests. Do not prepend `api/v1/` - it will be added
   automatically.
 - `GOOGLE_ANALYTICS_API_KEY`: Google Analytics key to track API usage.
-- `CRISP_WEBSITE_ID`: Crisp Chat widget Website key.
+- `PYLON_APP_ID`: Pylon in-app chat widget App ID.
 - `FIRST_PROMOTER_ID`: First Promoter ID for checkout affiliates.
 - `ALLOW_SIGNUPS`: **DEPRECATED** in favour of `PREVENT_SIGNUP` in the API. Determines whether to prevent manual signups
   without invites. Set it to any value to allow signups.

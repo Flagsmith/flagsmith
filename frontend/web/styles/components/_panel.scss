@@ -1,12 +1,6 @@
 @import '../variables';
 @import '../flexbox/mixins';
 
-.open-source-card {
-  &:hover,
-  :focus {
-    text-decoration: none !important;
-  }
-}
 .flat-panel {
   .panel {
     box-shadow: none;
@@ -23,10 +17,6 @@
     .panel-content {
       padding: 0 !important;
     }
-  }
-  .no-results {
-    text-align: center;
-    line-height: 44px;
   }
   .panel-heading {
     h1,
@@ -201,17 +191,6 @@ a.text-white {
       }
     }
   }
-  &.panel-override {
-    .panel-content {
-      .search-list {
-        border: none;
-        .list-item-override {
-          border: 1px solid $basic-alpha-16;
-          border-radius: $border-radius-lg;
-        }
-      }
-    }
-  }
   &.panel-projects {
     .panel-content {
       .search-list {
@@ -219,36 +198,5 @@ a.text-white {
         background-color: transparent;
       }
     }
-  }
-  &.panel-change-request {
-    .search-list {
-      border-color: rgba(149, 108, 255, 0.48);
-
-      .table-header {
-        color: #6837fc;
-        background-color: rgba(102, 51, 255, 0.08);
-      }
-
-      .change-request-item {
-        border-color: rgba(149, 108, 255, 0.48);
-      }
-    }
-
-    .change-request-updated-value {
-      input,
-      code.txt {
-        color: #6837fc;
-      }
-    }
-  }
-}
-
-@include media-breakpoint-down(xxl) {
-  .owners-title {
-    display: none;
-  }
-  .table-column.assignees-column {
-    display: block;
-    width: 98px !important;
   }
 }

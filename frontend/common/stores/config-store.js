@@ -1,8 +1,8 @@
 import Project from 'common/project'
+import Dispatcher from 'common/dispatcher/dispatcher'
+import BaseStore from './base/_store'
 
-const Dispatcher = require('../dispatcher/dispatcher')
-const BaseStore = require('./base/_store')
-window.Project = require('../project')
+window.Project = Project
 
 const controller = {
   get() {
@@ -48,6 +48,7 @@ flagsmith
       ? {
           evaluationAnalyticsConfig: {
             analyticsServerUrl: Project.evaluationAnalyticsServerUrl,
+            autoTrackEvaluations: false,
           },
         }
       : {}),
@@ -57,4 +58,4 @@ flagsmith
   })
 
 controller.store = store
-module.exports = controller.store
+export default controller.store

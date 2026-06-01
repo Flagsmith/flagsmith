@@ -22,15 +22,12 @@
       color: $primary400;
     }
 
-    &.chip-user {
-      color: $text-icon-light;
-    }
   }
 }
 .chip {
   display: flex;
   align-items: center;
-  align-self: flex-start !important;
+  align-self: flex-start;
   background-color: $primary-alfa-8;
   border: 1px solid $primary-alfa-24;
   padding: 5px 12px;
@@ -105,21 +102,6 @@
       display: block;
       width: 12px;
       margin-right: 5px;
-    }
-  }
-  &.chip-user {
-    background-color: $basic-alpha-8;
-    color: $body-color;
-    border-color: $basic-alpha-24;
-    .chip-icon {
-      color: $text-icon-light-grey;
-    }
-    &-icon {
-      line-height: $line-height-xxsm;
-      font-size: $font-caption-sm;
-      svg {
-        vertical-align: sub;
-      }
     }
   }
 }

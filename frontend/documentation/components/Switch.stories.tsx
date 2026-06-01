@@ -21,7 +21,7 @@ const meta: Meta<SwitchProps> = {
   },
   component: Switch,
   parameters: { layout: 'centered' },
-  title: 'Components/Switch',
+  title: 'Components/Forms/Switch',
 }
 
 export default meta
@@ -54,16 +54,16 @@ export const States: Story = {
     },
   },
   render: () => (
-    <div style={{ alignItems: 'center', display: 'flex', gap: 24 }}>
-      <div style={{ alignItems: 'center', display: 'flex', gap: 8 }}>
+    <div className='d-flex align-items-center gap-4'>
+      <div className='d-flex align-items-center gap-2'>
         <Switch checked={false} />
         <span>Off</span>
       </div>
-      <div style={{ alignItems: 'center', display: 'flex', gap: 8 }}>
+      <div className='d-flex align-items-center gap-2'>
         <Switch checked={true} />
         <span>On</span>
       </div>
-      <div style={{ alignItems: 'center', display: 'flex', gap: 8 }}>
+      <div className='d-flex align-items-center gap-2'>
         <Switch checked={false} disabled />
         <span>Disabled</span>
       </div>
