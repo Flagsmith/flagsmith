@@ -87,7 +87,12 @@ const ExperimentsPage: FC = () => {
     )
   }
 
-  if (!hasExperiments) return null
+  if (!hasExperiments) {
+    history.replace(
+      `/project/${projectId}/environment/${environmentId}/features`,
+    )
+    return null
+  }
 
   if (isCreating) {
     return (
