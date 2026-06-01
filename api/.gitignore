@@ -9,5 +9,13 @@ static/*
 saml/
 features/workflows/logic/
 
+# flagsmith-private test suites integrated via `make integrate-private-tests`
+/flagsmith-private/
+/tests/rbac_tests/
+/tests/workflow_tests/
+/tests/auth_controller_tests/
+/tests/saml_integration_tests/
+/tests/saml_unit_tests/
+
 # Unit test coverage
 .coverage

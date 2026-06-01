@@ -368,11 +368,6 @@ wheels = [
 ]
 
 [[package]]
-name = "auth-controller"
-version = "0.0.0"
-source = { git = "https://github.com/flagsmith/flagsmith-auth-controller?tag=v0.2.0#b7fa1f42c333b443763548ea1fe0054f07cdf641" }
-
-[[package]]
 name = "autopep8"
 version = "2.0.4"
 source = { registry = "https://pypi.org/simple" }
@@ -1473,10 +1468,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-auth-controller = [
-    { name = "auth-controller" },
-    { name = "django-multiselectfield" },
-]
 dev = [
     { name = "autopep8" },
     { name = "boto3-stubs" },
@@ -1534,7 +1525,6 @@ private = [
 requires-dist = [
     { name = "appdirs", specifier = ">=1.4.4,<1.5.0" },
     { name = "asgiref", specifier = ">=3.8.1,<3.9.0" },
-    { name = "auth-controller", marker = "extra == 'auth-controller'", git = "https://github.com/flagsmith/flagsmith-auth-controller?tag=v0.2.0" },
     { name = "autopep8", marker = "extra == 'dev'", specifier = ">=2.0.1,<2.1.0" },
     { name = "backoff", specifier = ">=2.2.1,<2.3.0" },
     { name = "boto3", specifier = ">=1.35.95,<1.36.0" },
@@ -1558,7 +1548,6 @@ requires-dist = [
     { name = "django-filter", specifier = ">=2.4.0,<2.5.0" },
     { name = "django-health-check", specifier = ">=3.18.2,<3.19.0" },
     { name = "django-lifecycle", specifier = ">=1.2.4,<1.3.0" },
-    { name = "django-multiselectfield", marker = "extra == 'auth-controller'", specifier = ">=1.0.1,<2" },
     { name = "django-oauth-toolkit", specifier = ">=3.0.1,<4.0.0" },
     { name = "django-ordered-model", specifier = ">=3.4.1,<3.5.0" },
     { name = "django-python3-ldap", marker = "extra == 'ldap'", specifier = ">=0.15.6,<1" },
@@ -1586,7 +1575,7 @@ requires-dist = [
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
     { name = "flagsmith-flag-engine", specifier = ">=10.1.0,<11.0.0" },
     { name = "flagsmith-ldap", marker = "extra == 'ldap'", git = "https://github.com/flagsmith/flagsmith-ldap?tag=v0.1.2" },
-    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.7.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
+    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.8.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
     { name = "flagsmith-sql-flag-engine", specifier = ">=0.1.0,<0.2.0" },
     { name = "google-api-python-client", specifier = ">=1.12.5,<1.13.0" },
     { name = "google-re2", specifier = ">=1.0,<2.0.0" },
@@ -1650,7 +1639,7 @@ requires-dist = [
     { name = "tzdata", specifier = ">=2024.1,<2025.0.0" },
     { name = "whitenoise", specifier = ">=6.0.0,<6.1.0" },
 ]
-provides-extras = ["auth-controller", "private", "ldap", "licensing", "dev"]
+provides-extras = ["private", "ldap", "licensing", "dev"]
 
 [[package]]
 name = "flagsmith-common"
@@ -1725,16 +1714,17 @@ source = { git = "https://github.com/flagsmith/flagsmith-ldap?tag=v0.1.2#2456465
 
 [[package]]
 name = "flagsmith-private"
-version = "0.7.0"
+version = "0.8.0"
 source = { registry = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" }
 dependencies = [
+    { name = "django-multiselectfield" },
     { name = "django-scim2" },
     { name = "pysaml2" },
     { name = "scim2-filter-parser" },
 ]
-sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.7.0/flagsmith_private-0.7.0.tar.gz", hash = "sha256:5fc8cab32e51cf0ff8fa6205124128c6182433731934f5df60f3889d98df7b71" }
+sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.8.0/flagsmith_private-0.8.0.tar.gz", hash = "sha256:9c9781f9db6a8e0e39cb8da791c67311898dfc605766031d4ab7d55a38703b34" }
 wheels = [
-    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.7.0/flagsmith_private-0.7.0-py3-none-any.whl", hash = "sha256:370bebed2bc28f857acbaf4c1080fcd377b202ad8839ca5daceedce53948351a" },
+    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.8.0/flagsmith_private-0.8.0-py3-none-any.whl", hash = "sha256:e7fc5ebec132a7ccfd176a5f8d94bb30fd657bdddef9f4e5751d56f8c7657ea7" },
 ]
 
 [[package]]

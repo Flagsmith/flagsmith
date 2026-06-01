@@ -94,12 +94,8 @@ dependencies = [
 # without a PEP 517 `[build-system]` table, so setuptools fallback drops
 # them from the built wheel. We re-declare those transitive deps here so
 # the resolution matches what poetry produced on main.
-auth-controller = [
-    "auth-controller",
-    "django-multiselectfield>=1.0.1,<2",
-]
 private = [
-    "flagsmith-private>=0.7.0,<1",
+    "flagsmith-private>=0.8.0,<1",
 ]
 ldap = [
     "flagsmith-ldap",
@@ -174,7 +170,6 @@ url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazon
 explicit = true
 
 [tool.uv.sources]
-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.2.0" }
 flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.1.2" }
 licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.3.0" }
 flagsmith-private = { index = "flagsmith-pypi-production" }
