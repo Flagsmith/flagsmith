@@ -9,6 +9,16 @@ type VariationTableProps = {
   variations: MultivariateOption[]
 }
 
+const getVariantLetter = (index: number): string => {
+  let result = ''
+  let n = index
+  do {
+    result = String.fromCharCode(65 + (n % 26)) + result
+    n = Math.floor(n / 26) - 1
+  } while (n >= 0)
+  return result
+}
+
 const getVariationValue = (mv: MultivariateOption) => {
   if (mv.type === 'unicode') return mv.string_value
   if (mv.type === 'int') return String(mv.integer_value ?? '')
@@ -46,28 +56,38 @@ const VariationTable: FC<VariationTableProps> = ({
           </span>
         </div>
         <div className='variation-table__cell variation-table__cell--value'>
-          <span className='variation-table__value-badge'>{controlValue}</span>
+          {controlValue ? (
+            <span className='variation-table__value-badge' title={controlValue}>
+              {controlValue}
+            </span>
+          ) : null}
         </div>
       </div>
 
-      {variations.map((mv) => (
-        <div key={mv.id} className='variation-table__row'>
-          <div className='variation-table__cell variation-table__cell--name'>
-            <ColorSwatch color={colorTextAction} size='md' shape='circle' />
-            <span className='variation-table__name-text'>
-              {mv.string_value || `Variation ${mv.id}`}
-            </span>
+      {variations.map((mv, index) => {
+        const value = getVariationValue(mv)
+        const letter = getVariantLetter(index)
+        return (
+          <div key={mv.id} className='variation-table__row'>
+            <div className='variation-table__cell variation-table__cell--name'>
+              <ColorSwatch color={colorTextAction} size='md' shape='circle' />
+              <span className='variation-table__name-text'>
+                {`Variant ${letter}`}
+              </span>
+            </div>
+            <div className='variation-table__cell variation-table__cell--desc'>
+              <span className='variation-table__desc-text' />
+            </div>
+            <div className='variation-table__cell variation-table__cell--value'>
+              {value ? (
+                <span className='variation-table__value-badge' title={value}>
+                  {value}
+                </span>
+              ) : null}
+            </div>
           </div>
-          <div className='variation-table__cell variation-table__cell--desc'>
-            <span className='variation-table__desc-text' />
-          </div>
-          <div className='variation-table__cell variation-table__cell--value'>
-            <span className='variation-table__value-badge'>
-              {getVariationValue(mv)}
-            </span>
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

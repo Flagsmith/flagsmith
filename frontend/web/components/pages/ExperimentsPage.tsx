@@ -32,6 +32,10 @@ const ExperimentsPage: FC = () => {
     setPage(1)
   }, [activeTab, search])
 
+  useEffect(() => {
+    setIsCreating(false)
+  }, [environmentId])
+
   const { data: experimentsData, isLoading } = useGetExperimentsQuery(
     {
       environmentId: environmentId ?? '',
