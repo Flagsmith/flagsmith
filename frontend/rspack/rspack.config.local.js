@@ -2,6 +2,7 @@
 const rspack = require('@rspack/core')
 const { ReactRefreshRspackPlugin: ReactRefreshPlugin } = require('@rspack/plugin-react-refresh')
 const path = require('path')
+const express = require('express')
 
 const base = require('../rspack.config')
 
@@ -12,6 +13,7 @@ module.exports = {
     hot: true,
     liveReload: false,
     port: process.env.PORT || 8080,
+    app: async () => express(),
     setupMiddlewares: (middlewares, devServer) => {
       // Register the Express routes from api/index on the dev server's app
       require('../api/dev-routes')(devServer.app)
