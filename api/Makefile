@@ -163,6 +163,8 @@ integrate-private-tests:
 	mv ./flagsmith-private/integration_tests/workflows_logic tests/workflow_tests
 	mv ./flagsmith-private/integration_tests/auth_controller tests/auth_controller_tests
 	mv ./flagsmith-private/integration_tests/saml tests/saml_integration_tests
+	mv ./flagsmith-private/integration_tests/licensing tests/licensing_integration_tests
+	mv ./flagsmith-private/integration_tests/flagsmith_ldap tests/ldap_integration_tests
 	mv ./flagsmith-private/unit_tests/saml tests/saml_unit_tests
 	rm -rf ./flagsmith-private
 
