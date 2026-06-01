@@ -22,7 +22,12 @@ import Switch from './Switch'
 import TabItem from './navigation/TabMenu/TabItem'
 import Tabs from './navigation/TabMenu/Tabs'
 import UserGroupList from './UserGroupList'
-import { PermissionLevel, Req, PermissionRoleType } from 'common/types/requests'
+import {
+  PermissionLevel,
+  Req,
+  PermissionRoleType,
+  SortOrder,
+} from 'common/types/requests'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './icons/Icon'
@@ -1086,7 +1091,17 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
       >
         <TabItem tabLabel='Users'>
           <OrganisationProvider>
-            {({ isLoading, users }) => (
+            {({ isLoading, users }) => {
+              const usersWithRoleRank = users?.map((user) => ({
+                ...user,
+                _roleRank:
+                  user.role === 'ADMIN'
+                    ? 0
+                    : permissions?.find((p) => p.user.id === user.id)?.admin
+                    ? 1
+                    : 2,
+              }))
+              return (
               <div className='mt-4'>
                 {isLoading && !users?.length && (
                   <div className='centered-container'>
@@ -1101,7 +1116,14 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                           id='org-members-list'
                           title='Users'
                           className='panel--transparent'
-                          items={users}
+                          items={usersWithRoleRank}
+                          sorting={[
+                            {
+                              label: 'Role',
+                              order: SortOrder.ASC,
+                              value: '_roleRank',
+                            },
+                          ]}
                           itemHeight={64}
                           header={
                             <Row className='table-header'>
@@ -1204,7 +1226,8 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                   </div>
                 )}
               </div>
-            )}
+              )
+            }}
           </OrganisationProvider>
         </TabItem>
         <TabItem tabLabel='Groups'>
