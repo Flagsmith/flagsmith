@@ -47,9 +47,13 @@ const UsageTab: FC<UsageTabProps> = ({
             href='https://docs.flagsmith.com/managing-flags/code-references'
             rel='noreferrer'
             onClick={() => {
-              flagsmith.trackEvent('code_references_click_docs', {
-                feature_id: featureId,
-              })
+              if (flagsmith.eventsEnabled) {
+                flagsmith.trackEvent('code_references_click_docs', {
+                  metadata: {
+                    feature_id: featureId,
+                  },
+                })
+              }
             }}
           >
             Learn more

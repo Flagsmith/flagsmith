@@ -31,10 +31,14 @@ const CodeReferenceItem: React.FC<CodeReferenceItemProps> = ({
         target='_blank'
         rel='noreferrer'
         onClick={() => {
-          flagsmith.trackEvent('code_references_click_permalink', {
-            feature_id: featureId,
-            vcs_provider: vcsProvider,
-          })
+          if (flagsmith.eventsEnabled) {
+            flagsmith.trackEvent('code_references_click_permalink', {
+              metadata: {
+                feature_id: featureId,
+                vcs_provider: vcsProvider,
+              },
+            })
+          }
         }}
       >
         {codeReference.file_path}:{codeReference.line_number}
