@@ -51,24 +51,16 @@ from users.models import FFAdminUser
     name="list",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "get_environment_feature_versions",
-                "description": "Retrieves version information for a feature flag in a specific environment. Use this tool for environments with v2 feature versioning (use_v2_feature_versioning: true).",
-            },
-        },
+        operation_id="get_environment_feature_versions",
+        description="Retrieves version information for a feature flag in a specific environment. Applies to environments with v2 feature versioning (use_v2_feature_versioning: true).",
     ),
 )
 @method_decorator(
     name="create",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "create_environment_feature_version",
-                "description": "Creates a new version for a feature flag in a specific environment. Use this tool for environments with v2 feature versioning (use_v2_feature_versioning: true).",
-            },
-        },
+        operation_id="create_environment_feature_version",
+        description="Creates a new version for a feature flag in a specific environment. Applies to environments with v2 feature versioning (use_v2_feature_versioning: true).",
     ),
 )
 class EnvironmentFeatureVersionViewSet(
@@ -160,12 +152,8 @@ class EnvironmentFeatureVersionViewSet(
 
     @extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "publish_environment_feature_version",
-                "description": "Publishes a feature version to make it live in the environment. Use this tool for environments with v2 feature versioning (use_v2_feature_versioning: true).",
-            },
-        },
+        operation_id="publish_environment_feature_version",
+        description="Publishes a feature version to make it live in the environment. Applies to environments with v2 feature versioning (use_v2_feature_versioning: true).",
     )
     @action(detail=True, methods=["POST"])
     def publish(self, request: Request, **kwargs) -> Response:  # type: ignore[no-untyped-def]
@@ -223,36 +211,24 @@ class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):  # type: ignore
     name="list",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "get_environment_feature_version_states",
-                "description": "Retrieves feature state information for a specific version in an environment. Use this tool for environments with v2 feature versioning (use_v2_feature_versioning: true).",
-            },
-        },
+        operation_id="get_environment_feature_version_states",
+        description="Retrieves feature state information for a specific version in an environment. Applies to environments with v2 feature versioning (use_v2_feature_versioning: true).",
     ),
 )
 @method_decorator(
     name="create",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "create_environment_feature_version_state",
-                "description": "Creates a new feature state for a specific version in an environment. Use this tool for environments with v2 feature versioning (use_v2_feature_versioning: true).",
-            },
-        },
+        operation_id="create_environment_feature_version_state",
+        description="Creates a new feature state for a specific version in an environment. Applies to environments with v2 feature versioning (use_v2_feature_versioning: true).",
     ),
 )
 @method_decorator(
     name="update",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "update_environment_feature_version_state",
-                "description": "Updates an existing feature state for a specific version in an environment. Use this tool for environments with v2 feature versioning (use_v2_feature_versioning: true).",
-            },
-        },
+        operation_id="update_environment_feature_version_state",
+        description="Updates an existing feature state for a specific version in an environment. Applies to environments with v2 feature versioning (use_v2_feature_versioning: true).",
     ),
 )
 class EnvironmentFeatureVersionFeatureStatesViewSet(

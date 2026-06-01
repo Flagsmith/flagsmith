@@ -1529,9 +1529,6 @@ licensing = [
 private = [
     { name = "flagsmith-private" },
 ]
-workflows = [
-    { name = "workflows-logic" },
-]
 
 [package.metadata]
 requires-dist = [
@@ -1589,7 +1586,7 @@ requires-dist = [
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
     { name = "flagsmith-flag-engine", specifier = ">=10.1.0,<11.0.0" },
     { name = "flagsmith-ldap", marker = "extra == 'ldap'", git = "https://github.com/flagsmith/flagsmith-ldap?tag=v0.1.2" },
-    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.6.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
+    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.7.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
     { name = "flagsmith-sql-flag-engine", specifier = ">=0.1.0,<0.2.0" },
     { name = "google-api-python-client", specifier = ">=1.12.5,<1.13.0" },
     { name = "google-re2", specifier = ">=1.0,<2.0.0" },
@@ -1652,9 +1649,8 @@ requires-dist = [
     { name = "types-requests", marker = "extra == 'dev'", specifier = ">=2.32.0.20241016,<3.0.0" },
     { name = "tzdata", specifier = ">=2024.1,<2025.0.0" },
     { name = "whitenoise", specifier = ">=6.0.0,<6.1.0" },
-    { name = "workflows-logic", marker = "extra == 'workflows'", git = "https://github.com/flagsmith/flagsmith-workflows?tag=v3.4.0" },
 ]
-provides-extras = ["auth-controller", "private", "ldap", "workflows", "licensing", "dev"]
+provides-extras = ["auth-controller", "private", "ldap", "licensing", "dev"]
 
 [[package]]
 name = "flagsmith-common"
@@ -1729,16 +1725,16 @@ source = { git = "https://github.com/flagsmith/flagsmith-ldap?tag=v0.1.2#2456465
 
 [[package]]
 name = "flagsmith-private"
-version = "0.6.0"
+version = "0.7.0"
 source = { registry = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" }
 dependencies = [
     { name = "django-scim2" },
     { name = "pysaml2" },
     { name = "scim2-filter-parser" },
 ]
-sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.6.0/flagsmith_private-0.6.0.tar.gz", hash = "sha256:5549704f4a23c98e465ba4bb05b82e5440bf84f8d12171d027ae41f265d78ea5" }
+sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.7.0/flagsmith_private-0.7.0.tar.gz", hash = "sha256:5fc8cab32e51cf0ff8fa6205124128c6182433731934f5df60f3889d98df7b71" }
 wheels = [
-    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.6.0/flagsmith_private-0.6.0-py3-none-any.whl", hash = "sha256:5016964c60dc75177a5ea0d290a50a23a6b2283a654ef95c27f8325c486f0cbe" },
+    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.7.0/flagsmith_private-0.7.0-py3-none-any.whl", hash = "sha256:370bebed2bc28f857acbaf4c1080fcd377b202ad8839ca5daceedce53948351a" },
 ]
 
 [[package]]
@@ -4163,17 +4159,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/60/d9/6625ead93412c5ce86db1f8b4f2a70b8043e0a7c1d30099ba3c6a81641ff/wmctrl-0.5.tar.gz", hash = "sha256:7839a36b6fe9e2d6fd22304e5dc372dbced2116ba41283ea938b2da57f53e962", size = 5202, upload-time = "2023-09-16T23:02:08.09Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/13/ca/723e3f8185738d7947f14ee7dc663b59415c6dee43bd71575f8c7f5cd6be/wmctrl-0.5-py2.py3-none-any.whl", hash = "sha256:ae695c1863a314c899e7cf113f07c0da02a394b968c4772e1936219d9234ddd7", size = 4268, upload-time = "2023-09-16T23:02:05.563Z" },
-]
-
-[[package]]
-name = "workflows-logic"
-version = "3.3.2"
-source = { git = "https://github.com/flagsmith/flagsmith-workflows?tag=v3.4.0#f9cedab3ec8dba7198277cb6bce84b059d4be188" }
-dependencies = [
-    { name = "djangorestframework" },
-    { name = "djangorestframework-recursive" },
-    { name = "flagsmith-common" },
-    { name = "flagsmith-flag-engine" },
 ]
 
 [[package]]

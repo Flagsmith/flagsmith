@@ -131,48 +131,32 @@ def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
     decorator=extend_schema(
         tags=["mcp"],
         parameters=[FeatureQuerySerializer],
-        extensions={
-            "x-gram": {
-                "name": "list_project_features",
-                "description": "Lists a project's feature flags (paginated). Pass `environment=<id>` to also get each feature's live state for that environment in `environment_feature_state`, along with override counts. Works for both v1 and v2 versioned environments.",
-            },
-        },
+        operation_id="list_project_features",
+        description="Lists a project's feature flags (paginated). Pass `environment=<id>` to also get each feature's live state for that environment in `environment_feature_state`, along with override counts. Works for both v1 and v2 versioned environments.",
     ),
 )
 @method_decorator(
     name="create",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "create_feature",
-                "description": "Creates a new feature flag in the specified project with default settings.",
-            },
-        },
+        operation_id="create_feature",
+        description="Creates a new feature flag in the specified project with default settings.",
     ),
 )
 @method_decorator(
     name="retrieve",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "get_feature_flag",
-                "description": "Retrieves detailed information about a specific feature flag.",
-            },
-        },
+        operation_id="get_feature_flag",
+        description="Retrieves detailed information about a specific feature flag.",
     ),
 )
 @method_decorator(
     name="update",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "update_feature",
-                "description": "Updates feature flag properties such as name and description.",
-            },
-        },
+        operation_id="update_feature",
+        description="Updates feature flag properties such as name and description.",
     ),
 )
 class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
@@ -537,12 +521,8 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         tags=["mcp"],
         parameters=[GetUsageDataQuerySerializer],
         responses={200: FeatureEvaluationDataSerializer()},
-        extensions={
-            "x-gram": {
-                "name": "get_feature_evaluation_data",
-                "description": "Retrieves evaluation data and analytics for a specific feature flag.",
-            },
-        },
+        operation_id="get_feature_evaluation_data",
+        description="Retrieves evaluation data and analytics for a specific feature flag.",
     )
     @action(detail=True, methods=["GET"], url_path="evaluation-data")
     @throttle_classes([InfluxQueryThrottle])
@@ -827,12 +807,8 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     name="update",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "update_environment_feature_state",
-                "description": "Updates a feature state in an environment, including enabled status and value. Use this tool for environments without v2 feature versioning (use_v2_feature_versioning: false).",
-            },
-        },
+        operation_id="update_environment_feature_state",
+        description="Updates a feature state in an environment, including enabled status and value. Applies to environments without v2 feature versioning (use_v2_feature_versioning: false).",
     ),
 )
 class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
@@ -925,12 +901,8 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
     name="update",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "update_feature_state",
-                "description": "Updates a feature state, including its enabled status and value. Use this tool to update a segment override's value for environments without v2 feature versioning (use_v2_feature_versioning: false).",
-            },
-        },
+        operation_id="update_feature_state",
+        description="Updates a feature state, including its enabled status and value. Also updates a segment override's value for environments without v2 feature versioning (use_v2_feature_versioning: false).",
     ),
 )
 class SimpleFeatureStateViewSet(
@@ -1186,12 +1158,8 @@ def organisation_has_got_feature(request, organisation):  # type: ignore[no-unty
     tags=["mcp"],
     request=CustomCreateSegmentOverrideFeatureStateSerializer(),
     responses={201: CustomCreateSegmentOverrideFeatureStateSerializer()},
-    extensions={
-        "x-gram": {
-            "name": "create_segment_override",
-            "description": "Creates a segment override for a feature in an environment in a single call, setting both the segment binding and its value. Use this tool for environments without v2 feature versioning (use_v2_feature_versioning: false).",
-        },
-    },
+    operation_id="create_segment_override",
+    description="Creates a segment override for a feature in an environment in a single call, setting both the segment binding and its value. Applies to environments without v2 feature versioning (use_v2_feature_versioning: false).",
 )
 @api_view(["POST"])
 @permission_classes([CreateSegmentOverridePermissions])

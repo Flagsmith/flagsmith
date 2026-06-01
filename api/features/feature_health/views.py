@@ -39,12 +39,8 @@ from users.models import FFAdminUser
     name="list",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "get_feature_health_events",
-                "description": "Retrieves feature health monitoring events and metrics for the project.",
-            },
-        },
+        operation_id="get_feature_health_events",
+        description="Retrieves feature health monitoring events and metrics for the project.",
     ),
 )
 class FeatureHealthEventViewSet(

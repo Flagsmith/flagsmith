@@ -67,12 +67,8 @@ logger = logging.getLogger(__name__)
 @extend_schema_view(
     list=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "list_organizations",
-                "description": "Lists all organizations accessible with the provided user API key.",
-            },
-        },
+        operation_id="list_organizations",
+        description="Lists all organisations accessible with the provided user API key.",
     ),
 )
 class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
@@ -147,12 +143,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
     @extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "list_projects_in_organization",
-                "description": "Retrieves all projects within a specified organization.",
-            },
-        },
+        operation_id="list_projects_in_organization",
+        description="Retrieves all projects within a specified organisation.",
     )
     @action(detail=True, permission_classes=[IsAuthenticated])
     def projects(self, request, pk):  # type: ignore[no-untyped-def]
