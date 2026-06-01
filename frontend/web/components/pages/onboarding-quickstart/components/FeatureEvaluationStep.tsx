@@ -1,15 +1,12 @@
-import React, { FC, useEffect, useMemo, useState } from 'react'
+import React, { FC, useMemo, useState } from 'react'
 import { uniqBy } from 'lodash'
-import Button from 'components/base/forms/Button'
 import Constants from 'common/constants'
 import Utils, { planNames } from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
 import { IntegrationSummary } from 'components/pages/IntegrationsPage'
-import StatusPanel from 'web/components/pages/onboarding-quickstart/components/StatusPanel'
 import SuccessActions from 'web/components/pages/onboarding-quickstart/components/SuccessActions'
-import CodeSnippet from 'web/components/pages/onboarding-quickstart/components/CodeSnippet'
+import FlagDemo from 'web/components/pages/onboarding-quickstart/components/FlagDemo'
 import { OnboardingRoleKey } from 'web/components/pages/onboarding-quickstart/data/roles'
-import { useFirstEvaluationPoll } from 'web/components/pages/onboarding-quickstart/hooks/useFirstEvaluationPoll'
 
 type FeatureEvaluationStepProps = {
   environmentKey: string
@@ -30,9 +27,15 @@ const FeatureEvaluationStep: FC<FeatureEvaluationStepProps> = ({
   projectName,
   role,
 }) => {
-  const { markReceived, state } = useFirstEvaluationPoll({ enabled: true })
-  const [toggleValue, setToggleValue] = useState(false)
-  const isReceived = state === 'received'
+  // Fire the activation callback the first time the user flips the demo flag —
+  // the toggle is the AHA in this simulated v1 (there's no real signal yet).
+  const [demoToggled, setDemoToggled] = useState(false)
+  const handleDemoToggle = () => {
+    if (!demoToggled) {
+      setDemoToggled(true)
+      onFirstEvalReceived?.()
+    }
+  }
 
   // Only surface "Invite a teammate" where it makes sense: self-hosted (any
   // plan) or paid SaaS. On the free SaaS plan we hide it rather than nudge an
@@ -62,12 +65,6 @@ const FeatureEvaluationStep: FC<FeatureEvaluationStepProps> = ({
     )
     return merged.slice(0, 12)
   }, [role])
-
-  useEffect(() => {
-    if (state === 'received') {
-      onFirstEvalReceived?.()
-    }
-  }, [state, onFirstEvalReceived])
 
   if (role === 'pm') {
     return (
@@ -115,50 +112,32 @@ const FeatureEvaluationStep: FC<FeatureEvaluationStepProps> = ({
     )
   }
 
-  // Engineer path (default): SDK snippet + status panel + first-eval poll.
+  // Engineer path (default): the shared flag demo — code, a live sample app
+  // the flag controls, and a toggle — then the success actions.
   return (
     <div className='onboarding-quickstart__panel d-flex flex-column gap-3'>
       <div>
-        <h2 className='mb-1'>Let's get your first flag working</h2>
+        <h2 className='mb-1'>See your flag in action</h2>
         <p className='mb-0'>
-          <code className='text-default'>{projectName}</code> and{' '}
-          <code className='text-default'>{featureName}</code> are ready from
-          your answers. Paste the snippet below, run your app, watch the status
-          flip green, then toggle the flag.
+          <code className='text-default'>{featureName}</code> is live in{' '}
+          <code className='text-default'>{projectName}</code>. Flip it below and
+          watch the app react — then paste the snippet to do the same in your
+          own app.
         </p>
       </div>
 
-      <StatusPanel
+      <FlagDemo
+        environmentKey={environmentKey}
         featureName={featureName}
-        isReceived={isReceived}
-        onToggle={() => setToggleValue((value) => !value)}
-        toggleValue={toggleValue}
+        onToggle={handleDemoToggle}
       />
 
-      <div>
-        <h4 className='mb-2'>Paste this in your app</h4>
-        <CodeSnippet
-          environmentKey={environmentKey}
-          featureName={featureName}
-        />
-      </div>
-
-      {isReceived && (
-        <SuccessActions
-          canInvite={canInvite}
-          onExplore={onExplore}
-          onInvite={onInvite}
-          role={role}
-        />
-      )}
-
-      {!isReceived && (
-        <div className='d-flex justify-content-end'>
-          <Button theme='text' onClick={markReceived}>
-            I've installed it — continue
-          </Button>
-        </div>
-      )}
+      <SuccessActions
+        canInvite={canInvite}
+        onExplore={onExplore}
+        onInvite={onInvite}
+        role={role}
+      />
     </div>
   )
 }
