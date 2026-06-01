@@ -1,7 +1,7 @@
 ---
-title: CVES and Vulnerabilities
+title: CVEs and Vulnerabilities
 sidebar_position: 132
-sidebar_label: CVES and Vulnerabilities
+sidebar_label: CVEs and Vulnerabilities
 ---
 
 ## CVEs and Vulnerability Reports
