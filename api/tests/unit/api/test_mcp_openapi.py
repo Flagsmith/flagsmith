@@ -84,16 +84,12 @@ def test_mcp_filter_paths__mixed_mcp_and_non_mcp_operations__includes_only_mcp()
     ]
 
 
-def test_mcp_transform_for_mcp__x_gram_extension_present__preserves_extension() -> None:
+def test_mcp_transform_for_mcp__friendly_operation_id__preserved() -> None:
     # Given
     operation: dict[str, Any] = {
-        "operationId": "organisations_list",
+        "operationId": "list_organizations",
         "tags": ["mcp"],
-        "description": "Original description",
-        "x-gram": {
-            "name": "list_organisations",
-            "description": "Gram-specific description",
-        },
+        "description": "Lists all organisations accessible with the provided user API key.",
     }
     generator = MCPSchemaGenerator()
 
@@ -101,12 +97,11 @@ def test_mcp_transform_for_mcp__x_gram_extension_present__preserves_extension() 
     transformed = generator._transform_for_mcp(operation)
 
     # Then
-    assert transformed["x-gram"] == {
-        "name": "list_organisations",
-        "description": "Gram-specific description",
-    }
-    assert transformed["operationId"] == "organisations_list"
-    assert transformed["description"] == "Original description"
+    assert transformed["operationId"] == "list_organizations"
+    assert (
+        transformed["description"]
+        == "Lists all organisations accessible with the provided user API key."
+    )
 
 
 def test_mcp_transform_for_mcp__no_extensions__preserves_original() -> None:
@@ -269,16 +264,20 @@ def test_mcp_schema__full_schema_generated__includes_expected_endpoints_only() -
     paths = schema["paths"]
 
     assert "/api/v1/organisations/" in paths
-    assert paths["/api/v1/organisations/"]["get"]["x-gram"] == {
-        "name": "list_organizations",
-        "description": "Lists all organizations accessible with the provided user API key.",
-    }
+    organisations_list = paths["/api/v1/organisations/"]["get"]
+    assert organisations_list["operationId"] == "list_organizations"
+    assert (
+        organisations_list["description"]
+        == "Lists all organisations accessible with the provided user API key."
+    )
 
     assert "/api/v1/organisations/{id}/projects/" in paths
-    assert paths["/api/v1/organisations/{id}/projects/"]["get"]["x-gram"] == {
-        "name": "list_projects_in_organization",
-        "description": "Retrieves all projects within a specified organization.",
-    }
+    projects_list = paths["/api/v1/organisations/{id}/projects/"]["get"]
+    assert projects_list["operationId"] == "list_projects_in_organization"
+    assert (
+        projects_list["description"]
+        == "Retrieves all projects within a specified organisation."
+    )
 
     assert "/api/v1/users/" not in paths
 

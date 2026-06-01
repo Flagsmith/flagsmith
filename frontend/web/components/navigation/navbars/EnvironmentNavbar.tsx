@@ -3,6 +3,7 @@ import Utils from 'common/utils/utils'
 import Permission from 'common/providers/Permission'
 import classNames from 'classnames'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import BetaFlag from 'components/BetaFlag'
 import SidebarLink from 'components/navigation/SidebarLink'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 
@@ -78,7 +79,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
               >
                 Features
               </SidebarLink>
-              {Utils.getFlagsmithHasFeature('experimental_flags') && (
+              {Utils.getFlagsmithHasFeature('experimental_flags') ? (
                 <SidebarLink
                   id={mobile ? undefined : 'experiments-link'}
                   icon='flask'
@@ -86,6 +87,16 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                 >
                   Experiments
                 </SidebarLink>
+              ) : (
+                Utils.getFlagsmithHasFeature('experiments_fake_door') && (
+                  <SidebarLink
+                    id={mobile ? undefined : 'experiments-link'}
+                    icon='flask'
+                    to={`/project/${projectId}/environment/${environmentId}/experiments`}
+                  >
+                    <BetaFlag title='Coming soon'>Experiments</BetaFlag>
+                  </SidebarLink>
+                )
               )}
               <SidebarLink
                 id='scheduled-link'

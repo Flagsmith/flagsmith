@@ -156,7 +156,10 @@ const controller = {
           }
           store.model.lastSaved = new Date().valueOf()
           getStore().dispatch(
-            projectFlagService.util.invalidateTags(['ProjectFlag']),
+            projectFlagService.util.invalidateTags([
+              'ProjectFlag',
+              'FeatureList',
+            ]),
           )
 
           store.saved({ createdFlag: flag.name })
@@ -208,7 +211,10 @@ const controller = {
           store.model.features[index] = controller.parseFlag(flag)
           store.model.lastSaved = new Date().valueOf()
           getStore().dispatch(
-            projectFlagService.util.invalidateTags(['ProjectFlag']),
+            projectFlagService.util.invalidateTags([
+              'ProjectFlag',
+              'FeatureList',
+            ]),
           )
           store.changed()
         }
@@ -496,7 +502,10 @@ const controller = {
             }
             onComplete && onComplete()
             getStore().dispatch(
-              projectFlagService.util.invalidateTags(['ProjectFlag']),
+              projectFlagService.util.invalidateTags([
+                'ProjectFlag',
+                'FeatureList',
+              ]),
             )
             store.saved({})
           })
@@ -767,7 +776,10 @@ const controller = {
             throw version.error
           }
           getStore().dispatch(
-            projectFlagService.util.invalidateTags(['ProjectFlag']),
+            projectFlagService.util.invalidateTags([
+              'ProjectFlag',
+              'FeatureList',
+            ]),
           )
           if (!store.model) {
             return

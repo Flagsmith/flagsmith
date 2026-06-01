@@ -199,6 +199,7 @@ export const projectFlagService = service
         invalidatesTags: (res) => [
           { id: 'LIST', type: 'ProjectFlag' },
           { id: res?.id, type: 'ProjectFlag' },
+          { id: 'LIST', type: 'FeatureList' },
         ],
         query: (query: Req['updateProjectFlag']) => ({
           body: query.body,

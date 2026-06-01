@@ -1,5 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react'
 import { useHistory } from 'react-router-dom'
+import Utils from 'common/utils/utils'
 import { useRouteContext } from 'components/providers/RouteContext'
 import { useGetExperimentsQuery } from 'common/services/useExperiment'
 import { useGetWarehouseConnectionsQuery } from 'common/services/useWarehouseConnection'
@@ -9,6 +10,7 @@ import Button from 'components/base/forms/Button'
 import PageTitle from 'components/PageTitle'
 import Paging from 'components/Paging'
 import CreateExperimentWizard from 'components/experiments/CreateExperimentWizard'
+import ExperimentsFakeDoor from 'components/experiments/ExperimentsFakeDoor'
 import ExperimentsTable from 'components/experiments/ExperimentsTable'
 import ExperimentsListControls from 'components/experiments/ExperimentsListControls'
 import {
@@ -31,6 +33,10 @@ const ExperimentsPage: FC = () => {
   useEffect(() => {
     setPage(1)
   }, [activeTab, search])
+
+  useEffect(() => {
+    setIsCreating(false)
+  }, [environmentId])
 
   const { data: experimentsData, isLoading } = useGetExperimentsQuery(
     {
@@ -72,6 +78,25 @@ const ExperimentsPage: FC = () => {
   )
 
   if (!environmentId || !projectId) return null
+
+  const hasExperiments = Utils.getFlagsmithHasFeature('experimental_flags')
+  const hasFakeDoor = Utils.getFlagsmithHasFeature('experiments_fake_door')
+
+  if (!hasExperiments && hasFakeDoor) {
+    return (
+      <div data-test='experiments-page' className='app-container container'>
+        <PageTitle title='Experiments' />
+        <ExperimentsFakeDoor />
+      </div>
+    )
+  }
+
+  if (!hasExperiments) {
+    history.replace(
+      `/project/${projectId}/environment/${environmentId}/features`,
+    )
+    return null
+  }
 
   if (isCreating) {
     return (

@@ -1,3 +1,17 @@
+.wizard-field .react-select__menu-list {
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border-default);
+    border-radius: 3px;
+  }
+}
+
 .wizard-field {
   display: flex;
   flex-direction: column;

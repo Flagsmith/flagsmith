@@ -1,0 +1,57 @@
+.experiments-fake-door {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  &__cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 24px;
+    border-radius: var(--radius-xl);
+    background: linear-gradient(
+      135deg,
+      var(--color-text-action) 0%,
+      var(--color-surface-action-active) 100%
+    );
+    color: white;
+  }
+
+  &__cta-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__cta-title {
+    font-size: var(--font-heading-sm-size, 18px);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &__cta-subtitle {
+    font-size: var(--font-body-size);
+    opacity: 0.85;
+  }
+
+  &__preview {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    opacity: 0.6;
+    filter: grayscale(0.3);
+  }
+
+  &__cta-thanks {
+    font-size: var(--font-heading-sm-size, 18px);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  &__section-title {
+    font-size: var(--font-body-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-default);
+    margin-bottom: 12px;
+  }
+}
