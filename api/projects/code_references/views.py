@@ -71,15 +71,6 @@ class FeatureFlagCodeReferencesScanCreateAPIView(
         )
 
 
-@extend_schema(
-    tags=["mcp"],
-    extensions={
-        "x-gram": {
-            "name": "get_feature_code_references",
-            "description": "Retrieves code references and usage information for the feature flag.",
-        },
-    },
-)
 class FeatureFlagCodeReferenceDetailAPIView(
     generics.RetrieveAPIView[FeatureFlagCodeReferencesRepositorySummary],  # type: ignore[type-var]
 ):
@@ -90,6 +81,11 @@ class FeatureFlagCodeReferenceDetailAPIView(
     serializer_class = FeatureFlagCodeReferencesRepositorySummarySerializer
     permission_classes = [ViewFeatureFlagCodeReferences]
 
+    @extend_schema(
+        tags=["mcp"],
+        operation_id="get_feature_code_references",
+        description="Retrieves code references and usage information for the feature flag.",
+    )
     def get(self, *args: Any, **kwargs: Any) -> response.Response:
         feature = get_object_or_404(
             Feature,
