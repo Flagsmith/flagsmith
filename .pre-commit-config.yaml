@@ -54,6 +54,11 @@ repos:
       - id: uv-lock
         args: ["--project", "api", "--check"]
 
+  - repo: https://github.com/renovatebot/pre-commit-hooks
+    rev: 43.205.2
+    hooks:
+      - id: renovate-config-validator
+
 default_install_hook_types: [pre-commit, pre-push]
 default_stages: [pre-commit]
 
