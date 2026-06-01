@@ -13,8 +13,6 @@ const ExperimentsFakeDoor: FC = () => {
     () => flagsmith.getTrait(TRAIT_KEY) === true,
   )
 
-  const [clicked, setClicked] = useState(false)
-
   const handleSignUp = useCallback(() => {
     const user = AccountStore.getUser()
     const organisation = AccountStore.getOrganisation()
@@ -27,37 +25,32 @@ const ExperimentsFakeDoor: FC = () => {
         organisation: organisation?.name,
       },
     })
-    setClicked(true)
-    setTimeout(() => {
-      flagsmith.setTrait(TRAIT_KEY, true).then(() => {
-        setSignedUp(true)
-      })
-    }, 10000)
+    flagsmith.setTrait(TRAIT_KEY, true).then(() => {
+      setSignedUp(true)
+    })
   }, [])
 
   return (
     <div className='experiments-fake-door'>
-      {!signedUp && (
-        <div className='experiments-fake-door__cta'>
-          <div className='experiments-fake-door__cta-content'>
-            <span className='experiments-fake-door__cta-title'>
-              I would like to participate in beta testing
-            </span>
-            <span className='experiments-fake-door__cta-subtitle'>
-              Get early access to Experiments and help shape the feature
-            </span>
-          </div>
-          {clicked ? (
-            <span className='experiments-fake-door__cta-thanks'>
-              Thank you! 🎉
-            </span>
-          ) : (
-            <Button theme='tertiary' onClick={handleSignUp}>
-              Sign Up
-            </Button>
-          )}
+      <div className='experiments-fake-door__cta'>
+        <div className='experiments-fake-door__cta-content'>
+          <span className='experiments-fake-door__cta-title'>
+            I would like to participate in beta testing
+          </span>
+          <span className='experiments-fake-door__cta-subtitle'>
+            Get early access to Experiments and help shape the feature
+          </span>
         </div>
-      )}
+        {signedUp ? (
+          <span className='experiments-fake-door__cta-thanks'>
+            Thank you! 🎉
+          </span>
+        ) : (
+          <Button theme='tertiary' onClick={handleSignUp}>
+            Sign Up
+          </Button>
+        )}
+      </div>
 
       <div className='experiments-fake-door__preview'>
         <div>
