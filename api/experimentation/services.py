@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import typing
+from functools import lru_cache
 
+from clickhouse_driver import Client
+from django.conf import settings
 from django.utils import timezone
 
 from audit.models import AuditLog
@@ -29,6 +32,28 @@ def is_experiment_feature_enabled(organisation: Organisation) -> bool:
         default_value=False,
         evaluation_context=organisation.openfeature_evaluation_context,
     )
+
+
+@lru_cache(maxsize=1)
+def _get_clickhouse_client() -> Client:
+    """Build a clickhouse-driver client for the experimentation event store.
+
+    The database is taken from the DSN path, so queries can reference the
+    `events` table unqualified.
+    """
+    return Client.from_url(settings.EXPERIMENTATION_CLICKHOUSE_URL)
+
+
+def get_unique_event_names(environment_key: str) -> list[str]:
+    """Return the distinct event names recorded for `environment_key`,
+    ordered alphabetically."""
+    rows = _get_clickhouse_client().execute(
+        "SELECT DISTINCT event FROM events "
+        "WHERE environment_key = %(environment_key)s "
+        "ORDER BY event",
+        {"environment_key": environment_key},
+    )
+    return [row[0] for row in rows]
 
 
 def _resolve_audit_log_author(
