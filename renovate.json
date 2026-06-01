@@ -1,29 +1,24 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:base"],
-  "enabled": false,
-  "dependencyDashboard": false,
-  "osvVulnerabilityAlerts": true,
-  "semanticCommits": "enabled",
-  "semanticCommitType": "deps",
-  "semanticCommitScope": null,
-  "vulnerabilityAlerts": {
-    "enabled": true
-  },
+  "extends": [":disableDependencyDashboard", "security:only-security-updates", "semanticCommitType(deps)"],
   "packageRules": [
     {
       "matchManagers": ["uv"],
-      "addLabels": ["api", "dependencies"]
+      "matchFileNames": ["api/**"],
+      "addLabels": ["api", "dependencies"],
+      "semanticCommitScope": "API"
     },
     {
       "matchManagers": ["npm"],
       "matchFileNames": ["frontend/**"],
-      "addLabels": ["front-end", "dependencies"]
+      "addLabels": ["front-end", "dependencies"],
+      "semanticCommitScope": "Frontend"
     },
     {
       "matchManagers": ["npm"],
       "matchFileNames": ["docs/**"],
-      "addLabels": ["docs", "dependencies"]
+      "addLabels": ["docs", "dependencies"],
+      "semanticCommitScope": "Docs"
     }
   ]
 }
