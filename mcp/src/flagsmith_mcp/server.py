@@ -21,13 +21,14 @@ NON_IDEMPOTENT_METHODS: set[HttpMethod] = {"POST"}
 
 
 def _customise(route: HTTPRoute, component: FastMCPComponent) -> None:
-    if isinstance(component, OpenAPITool):
-        method = route.method
-        component.annotations = ToolAnnotations(
-            readOnlyHint=method in READ_ONLY_METHODS,
-            destructiveHint=method in DESTRUCTIVE_METHODS,
-            idempotentHint=method not in NON_IDEMPOTENT_METHODS,
-        )
+    # Our ROUTE_MAPS only ever yields tools
+    assert isinstance(component, OpenAPITool)
+    method = route.method
+    component.annotations = ToolAnnotations(
+        readOnlyHint=method in READ_ONLY_METHODS,
+        destructiveHint=method in DESTRUCTIVE_METHODS,
+        idempotentHint=method not in NON_IDEMPOTENT_METHODS,
+    )
 
 
 def _fetch_spec() -> dict[str, Any]:
