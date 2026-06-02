@@ -42,3 +42,15 @@ def test_settings__unsupported_transport__raises(
     # When / Then
     with pytest.raises(ValidationError):
         config.Settings()
+
+
+def test_settings__stdio_without_token__raises(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given stdio transport but no API token
+    monkeypatch.setenv("TRANSPORT", "stdio")
+    monkeypatch.delenv("FLAGSMITH_API_TOKEN", raising=False)
+
+    # When / Then
+    with pytest.raises(ValidationError, match="FLAGSMITH_API_TOKEN is required"):
+        config.Settings()

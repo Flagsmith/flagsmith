@@ -8,6 +8,7 @@ from fastmcp.utilities.openapi.models import HttpMethod, HTTPRoute
 from mcp.types import ToolAnnotations
 
 from flagsmith_mcp import config, constants
+from flagsmith_mcp.auth import FlagsmithAuth
 
 ROUTE_MAPS = [
     RouteMap(tags={"mcp"}, mcp_type=MCPType.TOOL),
@@ -41,10 +42,14 @@ def _fetch_spec() -> dict[str, Any]:
 def create_server(settings: config.Settings) -> FastMCP[None]:
     return FastMCP.from_openapi(
         openapi_spec=_fetch_spec(),
-        client=httpx.AsyncClient(base_url=settings.flagsmith_api_url),
+        client=httpx.AsyncClient(
+            base_url=settings.flagsmith_api_url,
+            auth=FlagsmithAuth(settings.flagsmith_api_token),
+        ),
         name="Flagsmith",
         route_maps=ROUTE_MAPS,
         mcp_component_fn=_customise,
+        validate_output=False,  # TODO https://github.com/Flagsmith/flagsmith/issues/7679
     )
 
 

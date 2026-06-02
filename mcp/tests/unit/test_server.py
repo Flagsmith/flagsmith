@@ -137,6 +137,7 @@ def test_run__configured_transport__runs_server_with_it(
 
     monkeypatch.setattr(server, "create_server", lambda settings: FakeServer())
     monkeypatch.setenv("TRANSPORT", "stdio")
+    monkeypatch.setenv("FLAGSMITH_API_TOKEN", "ser.secret")
 
     # When
     server.run()
