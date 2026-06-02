@@ -1,10 +1,10 @@
 from collections.abc import AsyncIterator
 from typing import Any
 
+import openapi_pydantic as openapi
 import pytest
 from fastmcp import Client, FastMCP
 from fastmcp.client.transports import FastMCPTransport
-from openapi_pydantic import Info, OpenAPI
 
 from flagsmith_mcp import config, create_server
 from flagsmith_mcp import server as server_module
@@ -12,7 +12,29 @@ from flagsmith_mcp import server as server_module
 
 @pytest.fixture
 def openapi_spec() -> dict[str, Any]:
-    spec = OpenAPI(info=Info(title="Flagsmith API", version="1.0.0"), paths={})
+    ok = openapi.Response(description="OK")
+    spec = openapi.OpenAPI(
+        info=openapi.Info(title="Flagsmith API", version="1.0.0"),
+        paths={
+            "/environments/": openapi.PathItem(
+                get=openapi.Operation(
+                    operationId="list_environments", tags=["mcp"], responses={"200": ok}
+                ),
+            ),
+            "/environments/{id}/": openapi.PathItem(
+                delete=openapi.Operation(
+                    operationId="delete_environment",
+                    tags=["mcp"],
+                    responses={"200": ok},
+                ),
+            ),
+            "/internal/": openapi.PathItem(
+                get=openapi.Operation(
+                    operationId="internal_only", responses={"200": ok}
+                ),
+            ),
+        },
+    )
     return spec.model_dump(by_alias=True, exclude_none=True, mode="json")
 
 
