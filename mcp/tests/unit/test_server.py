@@ -1,7 +1,9 @@
 import types
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
+from fastmcp.server.providers.openapi import OpenAPITool
 from pytest_httpx import HTTPXMock
 
 from flagsmith_mcp import constants, server
@@ -18,20 +20,23 @@ from flagsmith_mcp import constants, server
         ("POST", False, False, False),
     ],
 )
-def test_annotate__http_method__maps_hints(
+def test_customise__tool_component__maps_method_to_hints(
     method: str,
     read_only: bool,
     destructive: bool,
     idempotent: bool,
 ) -> None:
-    # Given a parametrised HTTP method
+    # Given an OpenAPI tool component and a route for a parametrised HTTP method
+    component = MagicMock(spec=OpenAPITool)
+    route = types.SimpleNamespace(method=method)
+
     # When
-    annotations = server._annotate(method)  # type: ignore[arg-type]
+    server._customise(route=route, component=component)  # type: ignore[arg-type]
 
     # Then
-    assert annotations.readOnlyHint is read_only
-    assert annotations.destructiveHint is destructive
-    assert annotations.idempotentHint is idempotent
+    assert component.annotations.readOnlyHint is read_only
+    assert component.annotations.destructiveHint is destructive
+    assert component.annotations.idempotentHint is idempotent
 
 
 def test_fetch_spec__spec_endpoint__returns_schema(httpx_mock: HTTPXMock) -> None:

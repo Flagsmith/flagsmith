@@ -20,18 +20,14 @@ DESTRUCTIVE_METHODS: set[HttpMethod] = {"DELETE"}
 NON_IDEMPOTENT_METHODS: set[HttpMethod] = {"POST"}
 
 
-def _annotate(method: HttpMethod) -> ToolAnnotations:
-    read_only = method in READ_ONLY_METHODS
-    return ToolAnnotations(
-        readOnlyHint=read_only,
-        destructiveHint=method in DESTRUCTIVE_METHODS,
-        idempotentHint=method not in NON_IDEMPOTENT_METHODS,
-    )
-
-
 def _customise(route: HTTPRoute, component: FastMCPComponent) -> None:
     if isinstance(component, OpenAPITool):
-        component.annotations = _annotate(route.method)
+        method = route.method
+        component.annotations = ToolAnnotations(
+            readOnlyHint=method in READ_ONLY_METHODS,
+            destructiveHint=method in DESTRUCTIVE_METHODS,
+            idempotentHint=method not in NON_IDEMPOTENT_METHODS,
+        )
 
 
 def _fetch_spec() -> dict[str, Any]:
