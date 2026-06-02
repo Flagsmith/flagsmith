@@ -5,6 +5,7 @@
     ":semanticCommitTypeAll(deps)"
   ],
   "recreateClosed": true,
+  "rebaseWhen": "always",
   "packageRules": [
     {
       "matchManagers": ["uv"],
