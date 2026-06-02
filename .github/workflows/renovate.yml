@@ -1,0 +1,31 @@
+name: Renovate
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  push:
+    branches:
+      - ci/self-hosted-renovate
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write # For CodeArtifact OIDC
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Authenticate with CodeArtifact
+        uses: ./.github/actions/codeartifact-login
+
+      - name: Run Renovate
+        uses: renovatebot/github-action@v40
+        env:
+          UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME: ${{ env.UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME }}
+          UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD: ${{ env.UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD }}
+        with:
+          token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
