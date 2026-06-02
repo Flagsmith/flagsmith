@@ -1146,6 +1146,8 @@ export type WarehouseConnection = {
   name: string
   config: SnowflakeConfig | Record<string, never>
   created_at: string
+  total_events_received: number
+  unique_events_count: number
 }
 
 export type Res = {
