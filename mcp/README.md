@@ -8,4 +8,6 @@ This application assumes the following software is installed:
 
 Install dependencies with `make install`.
 
+Run the server with `make serve`.
+
 Run tests with `make test`.

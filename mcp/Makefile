@@ -7,6 +7,10 @@ TRANSPORT ?= http
 install:
 	uv sync --frozen $(opts)
 
+.PHONY: serve
+serve:
+	uv run flagsmith-mcp
+
 .PHONY: lint
 lint:
 	uv run ruff check $(opts)

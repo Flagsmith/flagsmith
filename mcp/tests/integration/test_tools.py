@@ -1,3 +1,5 @@
+from typing import Any
+
 import openapi_pydantic as openapi
 import pytest
 from fastmcp import Client
@@ -5,9 +7,9 @@ from fastmcp.client.transports import FastMCPTransport
 
 
 @pytest.fixture
-def openapi_spec() -> openapi.OpenAPI:
+def openapi_spec() -> dict[str, Any]:
     ok = openapi.Response(description="OK")
-    return openapi.OpenAPI(
+    spec = openapi.OpenAPI(
         info=openapi.Info(title="Flagsmith API", version="1.0.0"),
         paths={
             "/environments/": openapi.PathItem(
@@ -29,6 +31,7 @@ def openapi_spec() -> openapi.OpenAPI:
             ),
         },
     )
+    return spec.model_dump(by_alias=True, exclude_none=True, mode="json")
 
 
 async def test_tools_list__mcp_tagged_routes__returns_tool_catalogue(
