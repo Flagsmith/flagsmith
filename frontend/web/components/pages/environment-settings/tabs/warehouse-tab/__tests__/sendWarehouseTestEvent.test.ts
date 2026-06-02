@@ -2,9 +2,10 @@ import sendWarehouseTestEvent from 'components/pages/environment-settings/tabs/w
 
 const init = jest.fn().mockResolvedValue(undefined)
 const trackEvent = jest.fn()
+const flushEvents = jest.fn().mockResolvedValue(undefined)
 
 jest.mock('@flagsmith/flagsmith/isomorphic', () => ({
-  createFlagsmithInstance: () => ({ init, trackEvent }),
+  createFlagsmithInstance: () => ({ flushEvents, init, trackEvent }),
 }))
 
 jest.mock('common/project', () => ({
@@ -16,6 +17,7 @@ describe('sendWarehouseTestEvent', () => {
   beforeEach(() => {
     init.mockClear()
     trackEvent.mockClear()
+    flushEvents.mockClear()
   })
 
   it('inits a per-environment instance with events enabled and no flag fetch', async () => {
@@ -37,5 +39,11 @@ describe('sendWarehouseTestEvent', () => {
     expect(trackEvent).toHaveBeenCalledWith('test_custom_event')
     expect(init).toHaveBeenCalledTimes(1)
     expect(trackEvent).toHaveBeenCalledTimes(1)
+  })
+
+  it('flushes events so the tracked event is sent immediately', async () => {
+    await sendWarehouseTestEvent('env-key-123')
+
+    expect(flushEvents).toHaveBeenCalledTimes(1)
   })
 })
