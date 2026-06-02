@@ -84,16 +84,12 @@ class WarehouseConnectionViewSet(
 
     def retrieve(self, request: Request, *args: object, **kwargs: object) -> Response:
         connection = self.get_object()
-        annotate_warehouse_event_stats(
-            connection, self.kwargs["environment_api_key"]
-        )
+        annotate_warehouse_event_stats(connection, self.kwargs["environment_api_key"])
         serializer = self.get_serializer(connection)
         return Response(serializer.data)
 
     @action(detail=True, methods=["post"], url_path="test-warehouse-connection")
-    def test_warehouse_connection(
-        self, request: Request, **kwargs: object
-    ) -> Response:
+    def test_warehouse_connection(self, request: Request, **kwargs: object) -> Response:
         connection: WarehouseConnection = self.get_object()
         if connection.warehouse_type != WarehouseType.FLAGSMITH:
             return Response(
