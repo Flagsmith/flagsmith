@@ -49,6 +49,7 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
         name="Flagsmith",
         route_maps=ROUTE_MAPS,
         mcp_component_fn=_customise,
+        validate_output=False,  # TODO https://github.com/Flagsmith/flagsmith/issues/7679
     )
 
 
