@@ -5,6 +5,7 @@ from functools import lru_cache
 
 import structlog
 from clickhouse_driver import Client
+from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
 from django.utils import timezone
 
@@ -26,6 +27,9 @@ if typing.TYPE_CHECKING:
     from users.models import FFAdminUser
 
 logger = structlog.get_logger("warehouse")
+
+CLICKHOUSE_CONNECT_TIMEOUT_SECONDS = 5
+CLICKHOUSE_QUERY_TIMEOUT_SECONDS = 30
 
 
 def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
@@ -49,9 +53,13 @@ def _get_clickhouse_client() -> Client:
     """Build a clickhouse-driver client for the experimentation event store.
 
     The database is taken from the DSN path, so queries can reference the
-    `events` table unqualified.
+    `events` table unqualified. Connect and query timeouts are bounded unless the
+    DSN overrides them.
     """
-    return Client.from_url(settings.EXPERIMENTATION_CLICKHOUSE_URL)
+    host, kwargs = parse_url(settings.EXPERIMENTATION_CLICKHOUSE_URL)
+    kwargs.setdefault("connect_timeout", CLICKHOUSE_CONNECT_TIMEOUT_SECONDS)
+    kwargs.setdefault("send_receive_timeout", CLICKHOUSE_QUERY_TIMEOUT_SECONDS)
+    return Client(host, **kwargs)
 
 
 def get_unique_event_names(environment_key: str) -> list[str]:
@@ -158,7 +166,7 @@ def mark_warehouse_pending_connection(
         return connection
 
     connection.status = WarehouseConnectionStatus.PENDING_CONNECTION
-    connection.save()
+    connection.save(update_fields=["status"])
     logger.info(
         "connection.test_event_sent",
         environment__id=connection.environment_id,
@@ -178,7 +186,7 @@ def refresh_warehouse_connection_status(
         and stats.total_events_received > 0
     ):
         connection.status = WarehouseConnectionStatus.CONNECTED
-        connection.save()
+        connection.save(update_fields=["status"])
         logger.info(
             "connection.connected",
             environment__id=connection.environment_id,
@@ -191,21 +199,15 @@ def annotate_warehouse_event_stats(
     connection: WarehouseConnection,
     environment_key: str,
 ) -> None:
-    """Attach warehouse event stats to a flagsmith connection and update its
-    status to match. No-op for non-flagsmith connections or when no warehouse
-    is configured; leaves the connection unchanged if the warehouse errors."""
+    """Attach live warehouse event stats to a flagsmith connection. No-op for
+    non-flagsmith connections or when no warehouse is configured; leaves stats
+    unset when the warehouse is unreachable. Read-only: never changes status."""
     if (
         connection.warehouse_type != WarehouseType.FLAGSMITH
         or not settings.EXPERIMENTATION_CLICKHOUSE_URL
     ):
         return
     try:
-        stats = get_warehouse_event_stats(environment_key)
+        connection.event_stats = get_warehouse_event_stats(environment_key)
     except Exception:
-        logger.exception(
-            "connection.event_stats_unavailable",
-            environment__id=connection.environment_id,
-        )
         return
-    connection.event_stats = stats
-    refresh_warehouse_connection_status(connection, stats)

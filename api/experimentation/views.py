@@ -32,6 +32,7 @@ from experimentation.services import (
     create_experiment_audit_log,
     create_warehouse_audit_log,
     mark_warehouse_pending_connection,
+    refresh_warehouse_connection_status,
     transition_experiment_status,
 )
 from users.models import FFAdminUser
@@ -97,6 +98,9 @@ class WarehouseConnectionViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
         mark_warehouse_pending_connection(connection)
+        annotate_warehouse_event_stats(connection, self.kwargs["environment_api_key"])
+        if connection.event_stats is not None:
+            refresh_warehouse_connection_status(connection, connection.event_stats)
         serializer = self.get_serializer(connection)
         return Response(serializer.data)
 

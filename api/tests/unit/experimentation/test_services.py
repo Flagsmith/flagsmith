@@ -13,7 +13,7 @@ from experimentation.models import (
 )
 
 
-def test_get_clickhouse_client__configured_url__builds_client_from_url(
+def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
     mocker: MockerFixture,
     settings: SettingsWrapper,
 ) -> None:
@@ -21,17 +21,49 @@ def test_get_clickhouse_client__configured_url__builds_client_from_url(
     settings.EXPERIMENTATION_CLICKHOUSE_URL = (
         "clickhouse://user:pass@ch.example.com:9440/flagsmith_exp?secure=True"
     )
-    mock_from_url = mocker.patch("experimentation.services.Client.from_url")
+    mock_client_cls = mocker.patch("experimentation.services.Client")
     services._get_clickhouse_client.cache_clear()
 
     # When
     client = services._get_clickhouse_client()
 
     # Then
-    mock_from_url.assert_called_once_with(
-        "clickhouse://user:pass@ch.example.com:9440/flagsmith_exp?secure=True",
+    mock_client_cls.assert_called_once_with(
+        "ch.example.com",
+        port=9440,
+        database="flagsmith_exp",
+        user="user",
+        password="pass",
+        secure=True,
+        connect_timeout=services.CLICKHOUSE_CONNECT_TIMEOUT_SECONDS,
+        send_receive_timeout=services.CLICKHOUSE_QUERY_TIMEOUT_SECONDS,
     )
-    assert client is mock_from_url.return_value
+    assert client is mock_client_cls.return_value
+    services._get_clickhouse_client.cache_clear()
+
+
+def test_get_clickhouse_client__dsn_timeouts__are_preserved(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.EXPERIMENTATION_CLICKHOUSE_URL = (
+        "clickhouse://ch.example.com:9000/db?connect_timeout=1&send_receive_timeout=2"
+    )
+    mock_client_cls = mocker.patch("experimentation.services.Client")
+    services._get_clickhouse_client.cache_clear()
+
+    # When
+    services._get_clickhouse_client()
+
+    # Then
+    mock_client_cls.assert_called_once_with(
+        "ch.example.com",
+        port=9000,
+        database="db",
+        connect_timeout=1,
+        send_receive_timeout=2,
+    )
     services._get_clickhouse_client.cache_clear()
 
 
