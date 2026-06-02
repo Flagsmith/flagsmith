@@ -445,16 +445,24 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:186`
+ - `api/experimentation/services.py:182`
 
 Attributes:
  - `environment.id`
  - `organisation.id`
 
+### `warehouse.connection.event_stats_unavailable`
+
+Logged at `exception` from:
+ - `api/experimentation/services.py:205`
+
+Attributes:
+ - `environment.id`
+
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:164`
+ - `api/experimentation/services.py:162`
 
 Attributes:
  - `environment.id`
