@@ -1,80 +1,44 @@
 import pytest
+from pydantic import ValidationError
 
 from flagsmith_mcp import config
 
 
-def test_get_api_url__unset__returns_saas_default(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    # Given
-    monkeypatch.delenv("FLAGSMITH_API_URL", raising=False)
+def test_settings__unset__uses_saas_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Given a clean environment
+    for var in ("FLAGSMITH_API_URL", "FLAGSMITH_API_TOKEN", "TRANSPORT"):
+        monkeypatch.delenv(var, raising=False)
 
     # When
-    api_url = config.get_api_url()
+    settings = config.Settings()
 
     # Then
-    assert api_url == config.DEFAULT_API_URL
+    assert settings.flagsmith_api_url == "https://api.flagsmith.com"
+    assert settings.flagsmith_api_token is None
+    assert settings.transport == "http"
 
 
-def test_get_api_url__set__returns_override(monkeypatch: pytest.MonkeyPatch) -> None:
-    # Given
-    monkeypatch.setenv("FLAGSMITH_API_URL", "https://flagsmith.example.com")
-
-    # When
-    api_url = config.get_api_url()
-
-    # Then
-    assert api_url == "https://flagsmith.example.com"
-
-
-def test_openapi_spec_url__api_url_overridden__stays_hardcoded_to_saas(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_settings__env__overrides_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     # Given
     monkeypatch.setenv("FLAGSMITH_API_URL", "https://self-hosted.example.com")
+    monkeypatch.setenv("FLAGSMITH_API_TOKEN", "ser.secret")
+    monkeypatch.setenv("TRANSPORT", "stdio")
 
     # When
-    api_url = config.get_api_url()
+    settings = config.Settings()
 
     # Then
-    assert api_url == "https://self-hosted.example.com"
-    assert config.OPENAPI_SPEC_URL == "https://api.flagsmith.com/api/v1/swagger.json"
+    assert settings.flagsmith_api_url == "https://self-hosted.example.com"
+    assert settings.flagsmith_api_token == "ser.secret"
+    assert settings.transport == "stdio"
 
 
-def test_get_transport__unset__returns_http_default(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    # Given
-    monkeypatch.delenv("TRANSPORT", raising=False)
-
-    # When
-    transport = config.get_transport()
-
-    # Then
-    assert transport == "http"
-
-
-@pytest.mark.parametrize("value", ["http", "stdio"])
-def test_get_transport__supported__returns_value(
-    monkeypatch: pytest.MonkeyPatch,
-    value: str,
-) -> None:
-    # Given
-    monkeypatch.setenv("TRANSPORT", value)
-
-    # When
-    transport = config.get_transport()
-
-    # Then
-    assert transport == value
-
-
-def test_get_transport__unsupported__raises(
+def test_settings__unsupported_transport__raises(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Given
     monkeypatch.setenv("TRANSPORT", "carrier-pigeon")
 
     # When / Then
-    with pytest.raises(ValueError, match="carrier-pigeon"):
-        config.get_transport()
+    with pytest.raises(ValidationError):
+        config.Settings()

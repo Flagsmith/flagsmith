@@ -1,25 +1,26 @@
-import os
-from typing import Literal, get_args
+from typing import Literal
+
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 Transport = Literal["http", "stdio"]
-TRANSPORTS: tuple[Transport, ...] = get_args(Transport)
 
 # TODO: consume a version-controlled schema — https://github.com/Flagsmith/flagsmith/issues/7669
 OPENAPI_SPEC_URL = "https://api.flagsmith.com/api/v1/swagger.json"
 
-DEFAULT_API_URL = "https://api.flagsmith.com"
-DEFAULT_TRANSPORT: Transport = "http"
 
+class Settings(BaseSettings):
+    model_config = {"use_attribute_docstrings": True}
 
-def get_api_url() -> str:
-    return os.environ.get("FLAGSMITH_API_URL", DEFAULT_API_URL)
-
-
-def get_transport() -> Transport:
-    transport = os.environ.get("TRANSPORT", DEFAULT_TRANSPORT)
-    for candidate in TRANSPORTS:
-        if transport == candidate:
-            return candidate
-    raise ValueError(
-        f"Unsupported TRANSPORT {transport!r}; expected one of {', '.join(TRANSPORTS)}"
+    flagsmith_api_url: str = Field(
+        default="https://api.flagsmith.com",
     )
+    """Flagsmith API base URL."""
+    flagsmith_api_token: str | None = Field(
+        default=None,
+    )
+    """Flagsmith Master API Key. Required for stdio transport, optional for http transport (caller-supplied credential will be used instead)."""
+    transport: Transport = Field(
+        default="http",
+    )
+    """MCP transport to use."""

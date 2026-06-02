@@ -41,10 +41,10 @@ def _fetch_spec() -> dict[str, Any]:
     return spec
 
 
-def create_server() -> FastMCP[None]:
+def create_server(settings: config.Settings) -> FastMCP[None]:
     return FastMCP.from_openapi(
         openapi_spec=_fetch_spec(),
-        client=httpx.AsyncClient(base_url=config.get_api_url()),
+        client=httpx.AsyncClient(base_url=settings.flagsmith_api_url),
         name="Flagsmith",
         route_maps=ROUTE_MAPS,
         mcp_component_fn=_customise,
@@ -52,4 +52,5 @@ def create_server() -> FastMCP[None]:
 
 
 def run() -> None:
-    create_server().run(transport=config.get_transport())
+    settings = config.Settings()
+    create_server(settings).run(transport=settings.transport)
