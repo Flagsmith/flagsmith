@@ -96,7 +96,7 @@ const Utils = Object.assign({}, BaseUtils, {
       }
       return null
     })
-    return 100 - total
+    return parseFloat((100 - total).toFixed(2))
   },
   calculateRemainingLimitsPercentage(
     total: number | undefined,
