@@ -33,7 +33,7 @@ jobs:
           private-key: ${{ secrets.RENOVATE_APP_PRIVATE_KEY }}
 
       - name: Run Renovate
-        run: npx --yes renovate@46
+        uses: renovatebot/github-action@v46.1.14
         env:
           RENOVATE_TOKEN: ${{ steps.app-token.outputs.token }}
           RENOVATE_REPOSITORIES: ${{ github.repository }}
