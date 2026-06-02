@@ -264,6 +264,56 @@ def test_finish_subscription_cancellation__multiple_organisations__removes_exces
     assert organisation4.num_seats == organisation_user_count
 
 
+def test_finish_subscription_cancellation__no_admin__resets_to_free_plan(
+    db: None,
+) -> None:
+    # Given
+    organisation = Organisation.objects.create()
+    UserOrganisation.objects.create(
+        organisation=organisation,
+        user=FFAdminUser.objects.create(email=f"{uuid.uuid4()}@example.com"),
+        role=OrganisationRole.USER,
+    )
+
+    subscription = organisation.subscription
+    subscription.subscription_id = "id"
+    subscription.plan = "plan_code"
+    subscription.cancellation_date = timezone.now() - timedelta(hours=1)
+    subscription.save()
+
+    # When
+    finish_subscription_cancellation()
+
+    # Then
+    organisation.refresh_from_db()
+    subscription.refresh_from_db()
+
+    assert subscription.plan == FREE_PLAN_ID
+    assert UserOrganisation.objects.filter(organisation=organisation).count() == 1
+
+
+def test_finish_subscription_cancellation__no_members__resets_to_free_plan(
+    db: None,
+) -> None:
+    # Given
+    organisation = Organisation.objects.create()
+    subscription = organisation.subscription
+    subscription.subscription_id = "id"
+    subscription.plan = "plan_code"
+    subscription.cancellation_date = timezone.now() - timedelta(hours=1)
+    subscription.save()
+
+    # When
+    finish_subscription_cancellation()
+
+    # Then
+    organisation.refresh_from_db()
+    subscription.refresh_from_db()
+
+    assert subscription.plan == FREE_PLAN_ID
+    assert UserOrganisation.objects.filter(organisation=organisation).count() == 0
+
+
 def test_send_org_subscription_cancelled_alert__valid_organisation__sends_cancellation_email(
     mocker: MockerFixture, settings: SettingsWrapper
 ) -> None:
