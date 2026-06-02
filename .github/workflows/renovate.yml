@@ -3,17 +3,11 @@ name: Renovate
 on:
   schedule:
     - cron: '0 3 * * *'
-  push:
-    branches:
-      - ci/self-hosted-renovate
   workflow_dispatch: {}
 
 permissions:
   contents: read
   id-token: write # For CodeArtifact OIDC
-
-env:
-  LOG_LEVEL: DEBUG
 
 jobs:
   renovate:
