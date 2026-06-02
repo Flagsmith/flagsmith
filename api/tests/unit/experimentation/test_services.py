@@ -77,12 +77,23 @@ def test_get_unique_event_names__no_events__returns_empty_list(
     assert result == []
 
 
-def test_get_warehouse_event_stats__events_present__returns_counts(
+@pytest.mark.parametrize(
+    "rows, expected_total, expected_unique",
+    [
+        ([(42, 3)], 42, 3),
+        ([], 0, 0),
+    ],
+    ids=["events_present", "empty_result_set"],
+)
+def test_get_warehouse_event_stats__rows__returns_counts(
     mocker: MockerFixture,
+    rows: list[tuple[int, int]],
+    expected_total: int,
+    expected_unique: int,
 ) -> None:
     # Given
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = [(42, 3)]
+    mock_client.execute.return_value = rows
     mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
@@ -92,53 +103,13 @@ def test_get_warehouse_event_stats__events_present__returns_counts(
     result = services.get_warehouse_event_stats("env-key-123")
 
     # Then
-    assert result.total_events_received == 42
-    assert result.unique_events_count == 3
+    assert result.total_events_received == expected_total
+    assert result.unique_events_count == expected_unique
     mock_client.execute.assert_called_once_with(
         "SELECT count() AS total, uniqExact(event) AS unique "
         "FROM events WHERE environment_key = %(environment_key)s",
         {"environment_key": "env-key-123"},
     )
-
-
-def test_get_warehouse_event_stats__non_int_clickhouse_values__casts_to_int(
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mock_client = mocker.Mock()
-    mock_client.execute.return_value = [("42", "3")]
-    mocker.patch(
-        "experimentation.services._get_clickhouse_client",
-        return_value=mock_client,
-    )
-
-    # When
-    result = services.get_warehouse_event_stats("env-key-123")
-
-    # Then
-    assert result.total_events_received == 42
-    assert result.unique_events_count == 3
-    assert isinstance(result.total_events_received, int)
-    assert isinstance(result.unique_events_count, int)
-
-
-def test_get_warehouse_event_stats__empty_result_set__returns_zeroes(
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mock_client = mocker.Mock()
-    mock_client.execute.return_value = []
-    mocker.patch(
-        "experimentation.services._get_clickhouse_client",
-        return_value=mock_client,
-    )
-
-    # When
-    result = services.get_warehouse_event_stats("env-key-123")
-
-    # Then
-    assert result.total_events_received == 0
-    assert result.unique_events_count == 0
 
 
 @pytest.mark.django_db

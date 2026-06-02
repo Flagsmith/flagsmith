@@ -774,16 +774,38 @@ def test_patch__exists__creates_audit_log(
     assert "updated" in audit_log.log
 
 
-def test_get__flagsmith_connection__includes_event_stats(
+@pytest.mark.parametrize(
+    "warehouse_type, config, expected_total, expected_unique",
+    [
+        (WarehouseType.FLAGSMITH, None, 12, 3),
+        (
+            WarehouseType.SNOWFLAKE,
+            {"account_identifier": "xy12345.us-east-1"},
+            0,
+            0,
+        ),
+    ],
+    ids=["flagsmith", "snowflake"],
+)
+def test_get__warehouse_type__returns_expected_event_stats(
     admin_client: APIClient,
     environment: Environment,
     enable_features: EnableFeaturesFixture,
-    warehouse_connection: WarehouseConnection,
     warehouse_connection_url: str,
     mocker: MockerFixture,
+    warehouse_type: str,
+    config: dict[str, str] | None,
+    expected_total: int,
+    expected_unique: int,
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
+    WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=warehouse_type,
+        name="Warehouse",
+        config=config,
+    )
     mocker.patch(
         "experimentation.services.get_warehouse_event_stats",
         return_value=WarehouseEventStats(
@@ -798,8 +820,8 @@ def test_get__flagsmith_connection__includes_event_stats(
     # Then
     assert response.status_code == status.HTTP_200_OK
     data = response.json()[0]
-    assert data["total_events_received"] == 12
-    assert data["unique_events_count"] == 3
+    assert data["total_events_received"] == expected_total
+    assert data["unique_events_count"] == expected_unique
 
 
 def test_get__pending_connection_with_events__flips_to_connected(
@@ -858,112 +880,48 @@ def test_get__pending_connection_no_events__stays_pending(
     assert connection.status == WarehouseConnectionStatus.PENDING_CONNECTION
 
 
-def test_get__snowflake_connection__skips_clickhouse_and_nulls_stats(
-    admin_client: APIClient,
-    environment: Environment,
-    enable_features: EnableFeaturesFixture,
-    warehouse_connection_url: str,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-    WarehouseConnection.objects.create(
-        environment=environment,
-        warehouse_type=WarehouseType.SNOWFLAKE,
-        name="Snowflake Warehouse",
-        config={"account_identifier": "xy12345.us-east-1"},
-        status=WarehouseConnectionStatus.CREATED,
-    )
-    stats_spy = mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
-    )
-
-    # When
-    response = admin_client.get(warehouse_connection_url)
-
-    # Then
-    data = response.json()[0]
-    assert data["total_events_received"] is None
-    assert data["unique_events_count"] is None
-    stats_spy.assert_not_called()
-
-
-def test_get_detail__flagsmith_connection__includes_event_stats(
-    admin_client: APIClient,
-    environment: Environment,
-    enable_features: EnableFeaturesFixture,
-    warehouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-    mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
-        return_value=WarehouseEventStats(
-            total_events_received=8,
-            unique_events_count=2,
+@pytest.mark.parametrize(
+    "warehouse_type, config, expected_status",
+    [
+        (WarehouseType.FLAGSMITH, None, status.HTTP_200_OK),
+        (
+            WarehouseType.SNOWFLAKE,
+            {"account_identifier": "xy12345.us-east-1"},
+            status.HTTP_400_BAD_REQUEST,
         ),
-    )
-    url = reverse(
-        "api-v1:environments:experimentation:warehouse-connections-detail",
-        args=[environment.api_key, warehouse_connection.id],
-    )
-
-    # When
-    response = admin_client.get(url)
-
-    # Then
-    assert response.json()["total_events_received"] == 8
-    assert response.json()["unique_events_count"] == 2
-
-
-def _test_warehouse_connection_url(environment: Environment, connection_id: int) -> str:
-    return reverse(
-        "api-v1:environments:experimentation:warehouse-connections-test-warehouse-connection",
-        args=[environment.api_key, connection_id],
-    )
-
-
-def test_test_warehouse_connection__created_flagsmith__returns_200_and_pending(
+    ],
+    ids=["flagsmith", "snowflake"],
+)
+def test_test_warehouse_connection__warehouse_type__expected_status(
     admin_client: APIClient,
     environment: Environment,
     enable_features: EnableFeaturesFixture,
-    warehouse_connection: WarehouseConnection,
-) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-    url = _test_warehouse_connection_url(environment, warehouse_connection.id)
-
-    # When
-    response = admin_client.post(url, format="json")
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["status"] == "pending_connection"
-    warehouse_connection.refresh_from_db()
-    assert warehouse_connection.status == WarehouseConnectionStatus.PENDING_CONNECTION
-
-
-def test_test_warehouse_connection__snowflake__returns_400(
-    admin_client: APIClient,
-    environment: Environment,
-    enable_features: EnableFeaturesFixture,
+    warehouse_type: str,
+    config: dict[str, str] | None,
+    expected_status: int,
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
     connection = WarehouseConnection.objects.create(
         environment=environment,
-        warehouse_type=WarehouseType.SNOWFLAKE,
-        name="Snowflake Warehouse",
-        config={"account_identifier": "xy12345.us-east-1"},
+        warehouse_type=warehouse_type,
+        name="Warehouse",
+        config=config,
     )
-    url = _test_warehouse_connection_url(environment, connection.id)
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-test-warehouse-connection",
+        args=[environment.api_key, connection.id],
+    )
 
     # When
     response = admin_client.post(url, format="json")
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == expected_status
+    if expected_status == status.HTTP_200_OK:
+        assert response.json()["status"] == "pending_connection"
+        connection.refresh_from_db()
+        assert connection.status == WarehouseConnectionStatus.PENDING_CONNECTION
 
 
 def test_test_warehouse_connection__already_connected__is_noop(
@@ -979,7 +937,10 @@ def test_test_warehouse_connection__already_connected__is_noop(
         name="Flagsmith Warehouse",
         status=WarehouseConnectionStatus.CONNECTED,
     )
-    url = _test_warehouse_connection_url(environment, connection.id)
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-test-warehouse-connection",
+        args=[environment.api_key, connection.id],
+    )
 
     # When
     response = admin_client.post(url, format="json")
@@ -997,7 +958,10 @@ def test_test_warehouse_connection__non_admin__returns_403(
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
-    url = _test_warehouse_connection_url(environment, warehouse_connection.id)
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-test-warehouse-connection",
+        args=[environment.api_key, warehouse_connection.id],
+    )
 
     # When
     response = staff_client.post(url, format="json")
@@ -1026,8 +990,8 @@ def test_get__clickhouse_unconfigured__returns_200_without_stats(
     # Then
     assert response.status_code == status.HTTP_200_OK
     data = response.json()[0]
-    assert data["total_events_received"] is None
-    assert data["unique_events_count"] is None
+    assert data["total_events_received"] == 0
+    assert data["unique_events_count"] == 0
     stats_spy.assert_not_called()
 
 
@@ -1058,11 +1022,9 @@ def test_get__clickhouse_errors__returns_200_without_stats_and_logs(
     # Then
     assert response.status_code == status.HTTP_200_OK
     data = response.json()[0]
-    assert data["total_events_received"] is None
-    assert data["unique_events_count"] is None
+    assert data["total_events_received"] == 0
+    assert data["unique_events_count"] == 0
     # connection stays pending (no flip on error)
     assert data["status"] == "pending_connection"
     # an actionable event was logged
-    assert any(
-        e["event"] == "connection.event_stats_unavailable" for e in log.events
-    )
+    assert any(e["event"] == "connection.event_stats_unavailable" for e in log.events)

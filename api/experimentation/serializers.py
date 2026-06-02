@@ -69,13 +69,13 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
         result: WarehouseConnection = super().create(validated_data)
         return result
 
-    def get_total_events_received(self, obj: WarehouseConnection) -> int | None:
+    def get_total_events_received(self, obj: WarehouseConnection) -> int:
         stats: WarehouseEventStats | None = obj.event_stats
-        return stats.total_events_received if stats else None
+        return stats.total_events_received if stats else 0
 
-    def get_unique_events_count(self, obj: WarehouseConnection) -> int | None:
+    def get_unique_events_count(self, obj: WarehouseConnection) -> int:
         stats: WarehouseEventStats | None = obj.event_stats
-        return stats.unique_events_count if stats else None
+        return stats.unique_events_count if stats else 0
 
     @staticmethod
     def _generate_name(warehouse_type: str, environment: Environment) -> str:

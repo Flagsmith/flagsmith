@@ -151,19 +151,3 @@ def test_warehouse_serializer__event_stats_attached__serializes_counts() -> None
     # Then
     assert data["total_events_received"] == 7
     assert data["unique_events_count"] == 2
-
-
-def test_warehouse_serializer__no_event_stats__serializes_nulls() -> None:
-    # Given
-    connection = WarehouseConnection(
-        warehouse_type=WarehouseType.SNOWFLAKE,
-        name="Snowflake Warehouse",
-        status=WarehouseConnectionStatus.CREATED,
-    )
-
-    # When
-    data = WarehouseConnectionSerializer(connection).data
-
-    # Then
-    assert data["total_events_received"] is None
-    assert data["unique_events_count"] is None
