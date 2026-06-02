@@ -1,8 +1,9 @@
-import { FC, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import {
   useCreateWarehouseConnectionMutation,
   useDeleteWarehouseConnectionMutation,
   useGetWarehouseConnectionsQuery,
+  useTestWarehouseConnectionMutation,
   useUpdateWarehouseConnectionMutation,
 } from 'common/services/useWarehouseConnection'
 import { SnowflakeConfig } from 'common/types/responses'
@@ -10,6 +11,8 @@ import Loader from 'components/Loader'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
 import WarehouseSetup from './WarehouseSetup'
 import ConfigForm from './ConfigForm'
+import sendWarehouseTestEvent from './sendWarehouseTestEvent'
+import { getWarehousePollingInterval } from './warehousePolling'
 
 type WarehouseTabProps = {
   environmentId: string
@@ -18,13 +21,18 @@ type WarehouseTabProps = {
 const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
   const [editing, setEditing] = useState(false)
 
+  // Poll only while waiting for the first event to land in the warehouse. Held
+  // in state (updated by the effect below) because the interval depends on the
+  // query's own result, which isn't available when the hook is first called.
+  const [pollingInterval, setPollingInterval] = useState(0)
+
   const {
     data: connections,
     isError,
     isLoading,
   } = useGetWarehouseConnectionsQuery(
     { environmentId },
-    { skip: !environmentId },
+    { pollingInterval, skip: !environmentId },
   )
   const [createConnection, { isLoading: isCreating }] =
     useCreateWarehouseConnectionMutation()
@@ -32,6 +40,13 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
   const [updateConnection] = useUpdateWarehouseConnectionMutation()
 
   const connection = connections?.[0]
+
+  useEffect(() => {
+    setPollingInterval(getWarehousePollingInterval(connection?.status))
+  }, [connection?.status])
+
+  const [testConnection, { isLoading: isSendingTestEvent }] =
+    useTestWarehouseConnectionMutation()
 
   const handleEnableFlagsmith = () => {
     openConfirm({
@@ -88,6 +103,18 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
       .catch(() => toast('Failed to remove warehouse connection', 'danger'))
   }
 
+  const handleSendTestEvent = () => {
+    if (!connection) return
+    sendWarehouseTestEvent(environmentId)
+      .then(() => testConnection({ environmentId, id: connection.id }).unwrap())
+      .then(() => toast('Test event sent'))
+      .catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error('[warehouse] send test event failed:', error)
+        toast('Failed to send test event', 'danger')
+      })
+  }
+
   if (isLoading) {
     return (
       <div className='mt-4 col-md-12'>
@@ -142,6 +169,8 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
             ? () => setEditing(true)
             : undefined
         }
+        onSendTestEvent={handleSendTestEvent}
+        isSendingTestEvent={isSendingTestEvent}
       />
     </div>
   )
