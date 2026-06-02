@@ -5,9 +5,6 @@ from pydantic_settings import BaseSettings
 
 Transport = Literal["http", "stdio"]
 
-# TODO: consume a version-controlled schema — https://github.com/Flagsmith/flagsmith/issues/7669
-OPENAPI_SPEC_URL = "https://api.flagsmith.com/api/v1/swagger.json"
-
 
 class Settings(BaseSettings):
     model_config = {"use_attribute_docstrings": True}

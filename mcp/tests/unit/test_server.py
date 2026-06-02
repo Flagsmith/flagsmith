@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 from pytest_httpx import HTTPXMock
 
-from flagsmith_mcp import config, server
+from flagsmith_mcp import constants, server
 
 
 @pytest.mark.parametrize(
@@ -37,7 +37,7 @@ def test_annotate__http_method__maps_hints(
 def test_fetch_spec__spec_endpoint__returns_schema(httpx_mock: HTTPXMock) -> None:
     # Given
     schema = {"openapi": "3.1.0", "info": {"title": "Flagsmith API", "version": "1"}}
-    httpx_mock.add_response(url=config.OPENAPI_SPEC_URL, json=schema)
+    httpx_mock.add_response(url=constants.OPENAPI_SPEC_URL, json=schema)
 
     # When
     spec = server._fetch_spec()

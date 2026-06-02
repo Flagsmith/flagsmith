@@ -7,7 +7,7 @@ from fastmcp.utilities.components import FastMCPComponent
 from fastmcp.utilities.openapi.models import HttpMethod, HTTPRoute
 from mcp.types import ToolAnnotations
 
-from flagsmith_mcp import config
+from flagsmith_mcp import config, constants
 from flagsmith_mcp.auth import FlagsmithAuth
 
 ROUTE_MAPS = [
@@ -36,7 +36,7 @@ def _customise(route: HTTPRoute, component: FastMCPComponent) -> None:
 
 
 def _fetch_spec() -> dict[str, Any]:
-    response = httpx.get(config.OPENAPI_SPEC_URL)
+    response = httpx.get(constants.OPENAPI_SPEC_URL)
     response.raise_for_status()
     spec: dict[str, Any] = response.json()
     return spec
