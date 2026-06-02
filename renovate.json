@@ -4,6 +4,7 @@
     "security:only-security-updates",
     ":semanticCommitTypeAll(deps)"
   ],
+  "recreateClosed": true,
   "packageRules": [
     {
       "matchManagers": ["uv"],
