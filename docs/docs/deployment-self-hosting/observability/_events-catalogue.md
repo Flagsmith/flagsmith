@@ -442,6 +442,24 @@ Attributes:
  - `feature_name`
  - `sentry_action`
 
+### `warehouse.connection.connected`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:186`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
+### `warehouse.connection.test_event_sent`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:164`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
 ### `workflows.change_request.committed`
 
 Logged at `info` from:

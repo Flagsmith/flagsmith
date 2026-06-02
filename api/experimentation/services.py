@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 from functools import lru_cache
 
+import structlog
 from clickhouse_driver import Client
 from django.conf import settings
 from django.utils import timezone
@@ -10,12 +11,21 @@ from django.utils import timezone
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from experimentation.constants import EXPERIMENT_FLAG, WAREHOUSE_CONNECTION_FLAG
+from experimentation.dataclasses import WarehouseEventStats
+from experimentation.models import (
+    VALID_STATUS_TRANSITIONS,
+    ExperimentStatus,
+    WarehouseConnectionStatus,
+    WarehouseType,
+)
 from integrations.flagsmith.client import get_openfeature_client
 
 if typing.TYPE_CHECKING:
     from experimentation.models import Experiment, WarehouseConnection
     from organisations.models import Organisation
     from users.models import FFAdminUser
+
+logger = structlog.get_logger("warehouse")
 
 
 def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
@@ -54,6 +64,20 @@ def get_unique_event_names(environment_key: str) -> list[str]:
         {"environment_key": environment_key},
     )
     return [row[0] for row in rows]
+
+
+def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
+    """Return event counts recorded for `environment_key` in the warehouse."""
+    rows = _get_clickhouse_client().execute(
+        "SELECT count() AS total, uniqExact(event) AS unique "
+        "FROM events WHERE environment_key = %(environment_key)s",
+        {"environment_key": environment_key},
+    )
+    total, unique = rows[0] if rows else (0, 0)
+    return WarehouseEventStats(
+        total_events_received=int(total),
+        unique_events_count=int(unique),
+    )
 
 
 def _resolve_audit_log_author(
@@ -107,8 +131,6 @@ def transition_experiment_status(
     target_status: str,
     user: FFAdminUser,
 ) -> Experiment:
-    from experimentation.models import VALID_STATUS_TRANSITIONS, ExperimentStatus
-
     valid_targets = VALID_STATUS_TRANSITIONS.get(experiment.status, set())
     if target_status not in valid_targets:
         raise ValueError(
@@ -125,3 +147,65 @@ def transition_experiment_status(
     experiment.save()
     create_experiment_audit_log(experiment, user, action=target_status)
     return experiment
+
+
+def mark_warehouse_pending_connection(
+    connection: WarehouseConnection,
+) -> WarehouseConnection:
+    """Move a connection from created to pending_connection. No-op for any
+    other status."""
+    if connection.status != WarehouseConnectionStatus.CREATED:
+        return connection
+
+    connection.status = WarehouseConnectionStatus.PENDING_CONNECTION
+    connection.save()
+    logger.info(
+        "connection.test_event_sent",
+        environment__id=connection.environment_id,
+        organisation__id=connection.environment.project.organisation_id,
+    )
+    return connection
+
+
+def refresh_warehouse_connection_status(
+    connection: WarehouseConnection,
+    stats: WarehouseEventStats,
+) -> WarehouseConnection:
+    """Set a pending connection to connected when the warehouse has received at
+    least one event. No-op otherwise."""
+    if (
+        connection.status == WarehouseConnectionStatus.PENDING_CONNECTION
+        and stats.total_events_received > 0
+    ):
+        connection.status = WarehouseConnectionStatus.CONNECTED
+        connection.save()
+        logger.info(
+            "connection.connected",
+            environment__id=connection.environment_id,
+            organisation__id=connection.environment.project.organisation_id,
+        )
+    return connection
+
+
+def annotate_warehouse_event_stats(
+    connection: WarehouseConnection,
+    environment_key: str,
+) -> None:
+    """Attach warehouse event stats to a flagsmith connection and update its
+    status to match. No-op for non-flagsmith connections or when no warehouse
+    is configured; leaves the connection unchanged if the warehouse errors."""
+    if (
+        connection.warehouse_type != WarehouseType.FLAGSMITH
+        or not settings.EXPERIMENTATION_CLICKHOUSE_URL
+    ):
+        return
+    try:
+        stats = get_warehouse_event_stats(environment_key)
+    except Exception:
+        logger.exception(
+            "connection.event_stats_unavailable",
+            environment__id=connection.environment_id,
+        )
+        return
+    connection.event_stats = stats
+    refresh_warehouse_connection_status(connection, stats)
