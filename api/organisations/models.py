@@ -205,9 +205,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
 
         user_organisations = UserOrganisation.objects.filter(organisation=self)
         if remaining_seat_holder:
-            user_organisations = user_organisations.exclude(
-                id=remaining_seat_holder.id  # type: ignore[union-attr]
-            )
+            user_organisations = user_organisations.exclude(id=remaining_seat_holder.id)
         user_organisations.delete()
 
 
