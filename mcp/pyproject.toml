@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "An MCP server connecting to the Flagsmith API."
 authors = [{ name = "Flagsmith", email = "support@flagsmith.com" }]
 readme = "README.md"
-requires-python = ">=3.14,<3.15"
+requires-python = ">=3.10"
 dependencies = [
     "fastmcp>=3.3.1,<4.0.0",  # Base MCP functionality
     "pydantic-settings>=2.0.0,<3.0.0",  # Environment-driven configuration
@@ -37,7 +37,7 @@ branch = true
 
 [tool.ruff]
 line-length = 88
-target-version = "py314"
+target-version = "py310"
 
 [tool.ruff.lint]
 # Establish parity with flake8 + isort

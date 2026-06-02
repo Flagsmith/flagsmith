@@ -1,4 +1,4 @@
-from typing import Literal, Self
+from typing import Literal
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     """MCP transport to use."""
 
     @model_validator(mode="after")
-    def validate_stdio_token(self) -> Self:
+    def validate_stdio_token(self) -> "Settings":
         # stdio has no inbound request to forward a credential from, so the
         # server must hold its own master API key.
         if self.transport == "stdio" and self.flagsmith_api_token is None:
