@@ -43,7 +43,8 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
     return FastMCP.from_openapi(
         openapi_spec=_fetch_spec(),
         client=httpx.AsyncClient(
-            base_url=settings.flagsmith_api_url, auth=FlagsmithAuth()
+            base_url=settings.flagsmith_api_url,
+            auth=FlagsmithAuth(settings.flagsmith_api_token),
         ),
         name="Flagsmith",
         route_maps=ROUTE_MAPS,

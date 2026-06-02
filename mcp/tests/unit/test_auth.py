@@ -32,6 +32,32 @@ def test_flagsmith_auth__no_http_request__leaves_upstream_unchanged() -> None:
     assert "authorization" not in upstream.headers
 
 
+def test_flagsmith_auth__static_token_no_http_request__uses_api_key() -> None:
+    # Given a static token and no active HTTP request (e.g. stdio transport)
+    upstream = httpx.Request("GET", "https://api.flagsmith.com/api/v1/organisations/")
+
+    # When
+    next(auth.FlagsmithAuth("ser.secret").auth_flow(upstream))
+
+    # Then the server's own token is sent as an Api-Key credential
+    assert upstream.headers["authorization"] == "Api-Key ser.secret"
+
+
+def test_flagsmith_auth__forwarded_header__wins_over_static_token() -> None:
+    # Given both a forwarded caller header and a static token
+    inbound = Request(
+        {"type": "http", "headers": [(b"authorization", b"Api-Key caller")]}
+    )
+    upstream = httpx.Request("GET", "https://api.flagsmith.com/api/v1/organisations/")
+
+    # When
+    with set_http_request(inbound):
+        next(auth.FlagsmithAuth("ser.secret").auth_flow(upstream))
+
+    # Then the caller's forwarded credential takes precedence
+    assert upstream.headers["authorization"] == "Api-Key caller"
+
+
 def test_flagsmith_auth__upstream_already_authorized__does_not_override() -> None:
     # Given an upstream request that already carries a credential, and an inbound
     # header that differs
