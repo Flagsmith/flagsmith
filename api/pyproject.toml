@@ -85,15 +85,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Optional groups historically pulled in as git deps from the original
-# poetry config. The dist names below match what each upstream project
-# actually publishes via its current build backend (setuptools fallback
-# for repos without [build-system], poetry-core where present).
-#
-# Several upstream repos declare deps via `[tool.poetry.dependencies]`
-# without a PEP 517 `[build-system]` table, so setuptools fallback drops
-# them from the built wheel. We re-declare those transitive deps here so
-# the resolution matches what poetry produced on main.
 private = [
     "flagsmith-private>=0.9.0,<1",
 ]
