@@ -18,26 +18,26 @@ def test_get_api_url__unset__returns_saas_default(
 
 def test_get_api_url__set__returns_override(monkeypatch: pytest.MonkeyPatch) -> None:
     # Given
-    monkeypatch.setenv("FLAGSMITH_API_URL", "https://flagsmith.example.com/api/v1")
+    monkeypatch.setenv("FLAGSMITH_API_URL", "https://flagsmith.example.com")
 
     # When
     api_url = config.get_api_url()
 
     # Then
-    assert api_url == "https://flagsmith.example.com/api/v1"
+    assert api_url == "https://flagsmith.example.com"
 
 
 def test_openapi_spec_url__api_url_overridden__stays_hardcoded_to_saas(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Given
-    monkeypatch.setenv("FLAGSMITH_API_URL", "https://self-hosted.example.com/api/v1")
+    monkeypatch.setenv("FLAGSMITH_API_URL", "https://self-hosted.example.com")
 
     # When
     api_url = config.get_api_url()
 
     # Then
-    assert api_url == "https://self-hosted.example.com/api/v1"
+    assert api_url == "https://self-hosted.example.com"
     assert config.OPENAPI_SPEC_URL == "https://api.flagsmith.com/api/v1/swagger.json"
 
 

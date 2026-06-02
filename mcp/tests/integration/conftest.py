@@ -21,7 +21,7 @@ def server(
     monkeypatch: pytest.MonkeyPatch,
     openapi_spec: dict[str, Any],
 ) -> FastMCP:
-    monkeypatch.setenv("FLAGSMITH_API_URL", "https://flagsmith.example.com/api/v1")
+    monkeypatch.setenv("FLAGSMITH_API_URL", "https://flagsmith.example.com")
     monkeypatch.setattr(server_module, "_fetch_spec", lambda: openapi_spec)
     return create_server()
 
