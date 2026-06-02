@@ -12,6 +12,9 @@ permissions:
   contents: read
   id-token: write # For CodeArtifact OIDC
 
+env:
+  LOG_LEVEL: DEBUG
+
 jobs:
   renovate:
     runs-on: depot-ubuntu-latest-16
