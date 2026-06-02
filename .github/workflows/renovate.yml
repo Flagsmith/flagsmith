@@ -22,6 +22,13 @@ jobs:
       - name: Authenticate with CodeArtifact
         uses: ./.github/actions/codeartifact-login
 
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.RENOVATE_APP_ID }}
+          private-key: ${{ secrets.RENOVATE_APP_PRIVATE_KEY }}
+
       - name: Run Renovate
         uses: renovatebot/github-action@v46.1.14
         env:
@@ -30,4 +37,4 @@ jobs:
           UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME: ${{ env.UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME }}
           UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD: ${{ env.UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD }}
         with:
-          token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
