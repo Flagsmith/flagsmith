@@ -145,6 +145,19 @@ const Utils = Object.assign({}, BaseUtils, {
     return res
   },
 
+  getContrastColour(backgroundColor: string): string {
+    if (!backgroundColor) {
+      return 'white'
+    }
+
+    try {
+      const parsed = Utils.colour(backgroundColor)
+      return parsed.luminosity() > 0.179 ? 'black' : 'white'
+    } catch (_error) {
+      return 'white'
+    }
+  },
+
   copyToClipboard: async (
     value: string,
     successMessage?: string,
