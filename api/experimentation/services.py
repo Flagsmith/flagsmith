@@ -13,7 +13,7 @@ from experimentation.constants import EXPERIMENT_FLAG, WAREHOUSE_CONNECTION_FLAG
 from integrations.flagsmith.client import get_openfeature_client
 
 if typing.TYPE_CHECKING:
-    from experimentation.models import Experiment, WarehouseConnection
+    from experimentation.models import Experiment, Metric, WarehouseConnection
     from organisations.models import Organisation
     from users.models import FFAdminUser
 
@@ -80,6 +80,22 @@ def create_warehouse_audit_log(
             f"Warehouse connection {action} for environment "
             f"{connection.environment.name}"
         ),
+    )
+
+
+def create_metric_audit_log(
+    metric: Metric,
+    user: FFAdminUser,
+    *,
+    action: str,
+) -> None:
+    AuditLog.objects.create(
+        environment=metric.environment,
+        project=metric.environment.project,
+        **_resolve_audit_log_author(user),
+        related_object_id=metric.id,
+        related_object_type=RelatedObjectType.METRIC.name,
+        log=f"Metric '{metric.name}' {action}",
     )
 
 

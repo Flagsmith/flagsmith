@@ -117,3 +117,63 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
                 name="unique_active_experiment_per_feature_env",
             ),
         ]
+
+
+class MetricAggregation(models.TextChoices):
+    COUNT = "count", "Count"
+    SUM = "sum", "Sum"
+    MEAN = "mean", "Mean"
+    OCCURRENCE = "occurrence", "Occurrence (event happened at least once)"
+
+
+class ExpectedDirection(models.TextChoices):
+    INCREASE = "increase", "Increase"
+    DECREASE = "decrease", "Decrease"
+    NOT_INCREASE = "not_increase", "Should not increase"
+    NOT_DECREASE = "not_decrease", "Should not decrease"
+
+
+class Metric(SoftDeleteExportableModel):
+    environment = models.ForeignKey(
+        Environment,
+        on_delete=models.CASCADE,
+        related_name="metrics",
+    )
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, default="")
+    aggregation = models.CharField(
+        max_length=20,
+        choices=MetricAggregation.choices,
+        default=MetricAggregation.MEAN,
+    )
+    definition: models.JSONField[dict[str, object], dict[str, object]] = (
+        models.JSONField()
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class ExperimentMetric(models.Model):
+    experiment = models.ForeignKey(
+        Experiment,
+        on_delete=models.CASCADE,
+        related_name="experiment_metrics",
+    )
+    metric = models.ForeignKey(
+        Metric,
+        on_delete=models.CASCADE,
+        related_name="experiment_metrics",
+    )
+    expected_direction = models.CharField(
+        max_length=20,
+        choices=ExpectedDirection.choices,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["experiment", "metric"],
+                name="metric_attached_once_per_experiment",
+            ),
+        ]
