@@ -167,16 +167,22 @@ const controller = {
             createdFirstFeature = true
             flagsmith.setTrait('first_feature', 'true')
             API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
-            flagsmith.trackEvent('first_feature_created', flag.name, {
-              feature_type: featureType,
-              project_id: projectId,
+            flagsmith.trackEvent('first_feature_created', {
+              metadata: {
+                feature_type: featureType,
+                project_id: projectId,
+              },
+              value: flag.name,
             })
             window.lintrk?.('track', { conversion_id: 16798354 })
           } else {
-            flagsmith.trackEvent('feature_created', flag.name, {
-              feature_type: featureType,
-              project_id: projectId,
-              total_feature_count: store.model?.features?.length ?? 0,
+            flagsmith.trackEvent('feature_created', {
+              metadata: {
+                feature_type: featureType,
+                project_id: projectId,
+                total_feature_count: store.model?.features?.length ?? 0,
+              },
+              value: flag.name,
             })
           }
         }),

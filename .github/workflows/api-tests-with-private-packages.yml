@@ -56,7 +56,7 @@ jobs:
         run: |
           echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials
           git config --global credential.helper store
-          make install-packages opts="--extra dev --extra private --extra auth-controller"
+          make install-packages opts="--extra dev --extra private"
           make integrate-private-tests
           rm -rf ${HOME}/.git-credentials
 

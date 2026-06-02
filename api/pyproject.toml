@@ -12,7 +12,7 @@ readme = "README.md"
 requires-python = ">=3.11, <3.14"
 dependencies = [
     "django>=5,<6",
-    "rudder-sdk-python>=2.0.2,<2.1.0",
+    "rudder-sdk-python>=2.0.2,<3",
     "segment-analytics-python>=2.2.3,<2.3.0",
     "backoff>=2.2.1,<2.3.0",
     "appdirs>=1.4.4,<1.5.0",
@@ -85,29 +85,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Optional groups historically pulled in as git deps from the original
-# poetry config. The dist names below match what each upstream project
-# actually publishes via its current build backend (setuptools fallback
-# for repos without [build-system], poetry-core where present).
-#
-# Several upstream repos declare deps via `[tool.poetry.dependencies]`
-# without a PEP 517 `[build-system]` table, so setuptools fallback drops
-# them from the built wheel. We re-declare those transitive deps here so
-# the resolution matches what poetry produced on main.
-auth-controller = [
-    "auth-controller",
-    "django-multiselectfield>=1.0.1,<2",
-]
 private = [
-    "flagsmith-private>=0.7.0,<1",
-]
-ldap = [
-    "flagsmith-ldap",
-    "django-python3-ldap>=0.15.6,<1",
-]
-licensing = [
-    "licensing",
-    "cryptography>=44.0.1",
+    "flagsmith-private>=0.9.0,<1",
 ]
 dev = [
     "django-test-migrations>=1.2.0,<2.0.0",
@@ -124,7 +103,7 @@ dev = [
     "pylint>=2.16.2,<2.17.0",
     "pep8>=1.7.1,<1.8.0",
     "autopep8>=2.0.1,<2.1.0",
-    "pytest>=7.2.1,<7.3.0",
+    "pytest>=9.0.3,<9.1.0",
     "pytest-django>=4.8.0,<5.0.0",
     "pytest-cov>=4.1.0,<4.2.0",
     "datamodel-code-generator>=0.25,<0.26.0",
@@ -174,9 +153,6 @@ url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazon
 explicit = true
 
 [tool.uv.sources]
-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.2.0" }
-flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.1.2" }
-licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.3.0" }
 flagsmith-private = { index = "flagsmith-pypi-production" }
 clickhouse-driver = { git = "https://github.com/Flagsmith/clickhouse-driver", branch = "newjson" }
 
@@ -259,7 +235,6 @@ override-dependencies = [
     "drf-writable-nested==0.6.4",
     "elementpath==4.1.5",
     "email-validator==2.0.0.post2",
-    "environs==14.1.1",
     "execnet==2.1.1",
     "executing==2.2.1",
     "fancycompleter==0.9.1",
@@ -283,7 +258,6 @@ override-dependencies = [
     "httpx==0.28.1",
     "hubspot-api-client==12.0.0",
     "identify==2.6.3",
-    "idna==3.7",
     "importlib-metadata==8.7.1",
     "inflect==5.6.2",
     "inflection==0.5.1",
@@ -377,7 +351,6 @@ override-dependencies = [
     "pytest-structlog==1.1",
     "pytest-xdist==3.6.1",
     "python-dateutil==2.8.2",
-    "python-dotenv==0.21.1",
     "python-gnupg==0.5.1",
     "python-http-client==3.3.7",
     "python3-openid==3.2.0",
@@ -395,7 +368,6 @@ override-dependencies = [
     "responses==0.22.0",
     "rpds-py==0.30.0",
     "rsa==4.9",
-    "rudder-sdk-python==2.0.2",
     "ruff==0.9.7",
     "s3transfer==0.10.4",
     "segment-analytics-python==2.2.3",
