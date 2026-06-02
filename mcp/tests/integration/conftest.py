@@ -6,7 +6,7 @@ import pytest
 from fastmcp import Client, FastMCP
 from fastmcp.client.transports import FastMCPTransport
 
-from flagsmith_mcp import config, create_server
+from flagsmith_mcp import config
 from flagsmith_mcp import server as server_module
 
 
@@ -45,7 +45,7 @@ def server(
 ) -> FastMCP:
     monkeypatch.setenv("FLAGSMITH_API_URL", "https://flagsmith.example.com")
     monkeypatch.setattr(server_module, "_fetch_spec", lambda: openapi_spec)
-    return create_server(config.Settings())
+    return server_module.create_server(config.Settings())
 
 
 @pytest.fixture
