@@ -1,65 +1,128 @@
-import types
 from typing import Any
-from unittest.mock import MagicMock
 
+import openapi_pydantic as openapi
 import pytest
-from fastmcp.server.providers.openapi import OpenAPITool
+from fastmcp import Client
+from mcp.types import ToolAnnotations
 from pytest_httpx import HTTPXMock
 
-from flagsmith_mcp import constants, server
+from flagsmith_mcp import config, constants, server
 
 
 @pytest.mark.parametrize(
-    "method, read_only, destructive, idempotent",
+    "method, expected",
     [
-        ("GET", True, False, True),
-        ("HEAD", True, False, True),
-        ("DELETE", False, True, True),
-        ("PUT", False, False, True),
-        ("PATCH", False, False, True),
-        ("POST", False, False, False),
+        (
+            "get",
+            ToolAnnotations(
+                readOnlyHint=True,
+                destructiveHint=False,
+                idempotentHint=True,
+            ),
+        ),
+        (
+            "head",
+            ToolAnnotations(
+                readOnlyHint=True,
+                destructiveHint=False,
+                idempotentHint=True,
+            ),
+        ),
+        (
+            "delete",
+            ToolAnnotations(
+                readOnlyHint=False,
+                destructiveHint=True,
+                idempotentHint=True,
+            ),
+        ),
+        (
+            "put",
+            ToolAnnotations(
+                readOnlyHint=False,
+                destructiveHint=False,
+                idempotentHint=True,
+            ),
+        ),
+        (
+            "patch",
+            ToolAnnotations(
+                readOnlyHint=False,
+                destructiveHint=False,
+                idempotentHint=True,
+            ),
+        ),
+        (
+            "post",
+            ToolAnnotations(
+                readOnlyHint=False,
+                destructiveHint=False,
+                idempotentHint=False,
+            ),
+        ),
     ],
 )
-def test_customise__tool_component__maps_method_to_hints(
+async def test_create_server__mcp_route__annotates_tool_per_method(
+    httpx_mock: HTTPXMock,
     method: str,
-    read_only: bool,
-    destructive: bool,
-    idempotent: bool,
+    expected: ToolAnnotations,
 ) -> None:
-    # Given an OpenAPI tool component and a route for a parametrised HTTP method
-    component = MagicMock(spec=OpenAPITool)
-    route = types.SimpleNamespace(method=method)
+    # Given a spec with a single mcp-tagged route using the parametrised method
+    operation = openapi.Operation(
+        operationId="op",
+        tags=["mcp"],
+        responses={"200": openapi.Response(description="OK")},
+    )
+    spec = openapi.OpenAPI(
+        info=openapi.Info(title="Flagsmith API", version="1.0.0"),
+        paths={"/things/": openapi.PathItem.model_validate({method: operation})},
+    )
+    httpx_mock.add_response(
+        url=constants.OPENAPI_SPEC_URL,
+        json=spec.model_dump(by_alias=True, exclude_none=True, mode="json"),
+    )
 
     # When
-    server._customise(route=route, component=component)  # type: ignore[arg-type]
+    async with Client(transport=server.create_server(config.Settings())) as client:
+        tools = {tool.name: tool for tool in await client.list_tools()}
 
-    # Then
-    assert component.annotations.readOnlyHint is read_only
-    assert component.annotations.destructiveHint is destructive
-    assert component.annotations.idempotentHint is idempotent
+    # Then the tool is annotated according to the HTTP method's semantics
+    assert tools["op"].annotations == expected
 
 
-def test_fetch_spec__spec_endpoint__returns_schema(httpx_mock: HTTPXMock) -> None:
-    # Given
-    schema = {"openapi": "3.1.0", "info": {"title": "Flagsmith API", "version": "1"}}
-    httpx_mock.add_response(url=constants.OPENAPI_SPEC_URL, json=schema)
+async def test_create_server__untagged_route__excluded_from_tools(
+    httpx_mock: HTTPXMock,
+) -> None:
+    # Given a spec with one mcp-tagged route and one untagged route
+    spec = openapi.OpenAPI(
+        info=openapi.Info(title="Flagsmith API", version="1.0.0"),
+        paths={
+            "/tagged/": openapi.PathItem(
+                get=openapi.Operation(
+                    operationId="tagged",
+                    tags=["mcp"],
+                    responses={"200": openapi.Response(description="OK")},
+                )
+            ),
+            "/untagged/": openapi.PathItem(
+                get=openapi.Operation(
+                    operationId="untagged",
+                    responses={"200": openapi.Response(description="OK")},
+                )
+            ),
+        },
+    )
+    httpx_mock.add_response(
+        url=constants.OPENAPI_SPEC_URL,
+        json=spec.model_dump(by_alias=True, exclude_none=True, mode="json"),
+    )
 
     # When
-    spec = server._fetch_spec()
+    async with Client(transport=server.create_server(config.Settings())) as client:
+        names = {tool.name for tool in await client.list_tools()}
 
-    # Then
-    assert spec == schema
-
-
-def test_customise__non_tool_component__leaves_annotations_untouched() -> None:
-    # Given
-    component = types.SimpleNamespace(annotations=None)
-
-    # When
-    server._customise(route=None, component=component)  # type: ignore[arg-type]
-
-    # Then
-    assert component.annotations is None
+    # Then only the mcp-tagged route is exposed as a tool
+    assert names == {"tagged"}
 
 
 def test_run__configured_transport__runs_server_with_it(
