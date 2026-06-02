@@ -24,6 +24,7 @@ def test_annotate__http_method__maps_hints(
     destructive: bool,
     idempotent: bool,
 ) -> None:
+    # Given a parametrised HTTP method
     # When
     annotations = server._annotate(method)  # type: ignore[arg-type]
 
