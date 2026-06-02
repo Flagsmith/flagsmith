@@ -1588,7 +1588,7 @@ requires-dist = [
     { name = "pyngo", specifier = ">=2.4.1,<2.5.0" },
     { name = "pyotp", specifier = ">=2.9.0,<3.0.0" },
     { name = "pyparsing", specifier = ">=2.4.7,<2.5.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.2.1,<7.3.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3,<9.1.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0,<4.2.0" },
     { name = "pytest-django", marker = "extra == 'dev'", specifier = ">=4.8.0,<5.0.0" },
     { name = "pytest-freezegun", marker = "extra == 'dev'", specifier = ">=0.4.2,<0.5.0" },
