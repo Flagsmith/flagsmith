@@ -7,3 +7,9 @@
 # Migrate to ruff
 # https://github.com/Flagsmith/flagsmith/pull/5150
 f7487ac5278d60e62067e2f4d5976ceb755f4980
+# Add flagsmith-lint-tests
+# https://github.com/Flagsmith/flagsmith/pull/6933
+95a1721cf187835707b7c4f17114d063cf74a3a4
+# Fix flagsmith-lint-tests violations
+# https://github.com/Flagsmith/flagsmith/pull/6994
+aafc84b1ad52a66f544c604ce3ee7daf8811f8de
