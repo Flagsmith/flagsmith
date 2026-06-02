@@ -1,37 +1,5 @@
-from typing import Any
-
-import openapi_pydantic as openapi
-import pytest
 from fastmcp import Client
 from fastmcp.client.transports import FastMCPTransport
-
-
-@pytest.fixture
-def openapi_spec() -> dict[str, Any]:
-    ok = openapi.Response(description="OK")
-    spec = openapi.OpenAPI(
-        info=openapi.Info(title="Flagsmith API", version="1.0.0"),
-        paths={
-            "/environments/": openapi.PathItem(
-                get=openapi.Operation(
-                    operationId="list_environments", tags=["mcp"], responses={"200": ok}
-                ),
-            ),
-            "/environments/{id}/": openapi.PathItem(
-                delete=openapi.Operation(
-                    operationId="delete_environment",
-                    tags=["mcp"],
-                    responses={"200": ok},
-                ),
-            ),
-            "/internal/": openapi.PathItem(
-                get=openapi.Operation(
-                    operationId="internal_only", responses={"200": ok}
-                ),
-            ),
-        },
-    )
-    return spec.model_dump(by_alias=True, exclude_none=True, mode="json")
 
 
 async def test_tools_list__mcp_tagged_routes__returns_tool_catalogue(
