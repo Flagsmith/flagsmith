@@ -26,14 +26,12 @@ const ExperimentsFakeDoor: FC = () => {
         organisation: organisation?.name,
       },
     })
-    if (flagsmith.eventsEnabled) {
-      flagsmith.trackEvent('experiments_beta_signup', {
-        metadata: {
-          email: user?.email,
-          organisation: organisation?.name,
-        },
-      })
-    }
+    flagsmith.trackEvent('experiments_beta_signup', {
+      metadata: {
+        email: user?.email,
+        organisation: organisation?.name,
+      },
+    })
     flagsmith.setTrait(TRAIT_KEY, true).then(() => {
       setSignedUp(true)
     })

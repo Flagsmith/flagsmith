@@ -47,15 +47,13 @@ const RepoCodeReferencesSection: React.FC<RepoCodeReferencesSectionProps> = ({
           className='flex justify-content-between items-center cursor-pointer'
           onClick={() => {
             if (!isOpen) {
-              if (flagsmith.eventsEnabled) {
-                flagsmith.trackEvent('code_references_expand_repo', {
-                  metadata: {
-                    feature_id: featureId,
-                    refs_count: repositoryScan?.code_references?.length,
-                    vcs_provider: repositoryScan?.vcs_provider,
-                  },
-                })
-              }
+              flagsmith.trackEvent('code_references_expand_repo', {
+                metadata: {
+                  feature_id: featureId,
+                  refs_count: repositoryScan?.code_references?.length,
+                  vcs_provider: repositoryScan?.vcs_provider,
+                },
+              })
             }
             setIsOpen(!isOpen)
           }}
