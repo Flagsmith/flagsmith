@@ -23,6 +23,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Authenticate with CodeArtifact
+        id: codeartifact
         uses: ./.github/actions/codeartifact-login
 
       - name: Generate GitHub App token
@@ -38,5 +39,5 @@ jobs:
           RENOVATE_TOKEN: ${{ steps.app-token.outputs.token }}
           RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_GIT_AUTHOR: ${{ vars.RENOVATE_GIT_AUTHOR }}
-          UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME: ${{ env.UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME }}
-          UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD: ${{ env.UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD }}
+          RENOVATE_HOST_RULES: >-
+            [{"matchHost":"flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com","username":"aws","password":"${{ steps.codeartifact.outputs.token }}"}]
