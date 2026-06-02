@@ -1,5 +1,40 @@
 # Changelog
 
+## [2.238.0](https://github.com/Flagsmith/flagsmith/compare/v2.237.0...v2.238.0) (2026-06-01)
+
+
+### Features
+
+* **experimentation:** add unique event names from ClickHouse ([#7660](https://github.com/Flagsmith/flagsmith/issues/7660)) ([1ee9b7b](https://github.com/Flagsmith/flagsmith/commit/1ee9b7b61468b731141ff229cf8d39b97086a41a))
+* experiments ux improvements ([#7644](https://github.com/Flagsmith/flagsmith/issues/7644)) ([755df22](https://github.com/Flagsmith/flagsmith/commit/755df228908782ddc43ed9a3218565c1e32c42f9))
+* **experiment:** use backend type filter for multivariate features ([#7630](https://github.com/Flagsmith/flagsmith/issues/7630)) ([164d4bc](https://github.com/Flagsmith/flagsmith/commit/164d4bc4cd5759ad95eff6f8b741e22f8c8e7906))
+* **MCP:** Use native OpenAPI tool fields and consolidate private deps ([#7656](https://github.com/Flagsmith/flagsmith/issues/7656)) ([2c8cf0f](https://github.com/Flagsmith/flagsmith/commit/2c8cf0fd99ec455b4b4d87a3318e6135f5fef41d))
+
+
+### Bug Fixes
+
+* feature_segment missing in versioning ([#7618](https://github.com/Flagsmith/flagsmith/issues/7618)) ([f5584c9](https://github.com/Flagsmith/flagsmith/commit/f5584c9f066fc51ebeba0c0ce7daf2642fde10d1))
+* **GitLab:** issue/MR status in the feature Links panel goes stale after state changes ([#7545](https://github.com/Flagsmith/flagsmith/issues/7545)) ([77f742e](https://github.com/Flagsmith/flagsmith/commit/77f742ea2eb209105e0345f0a3598e972723b07b))
+* **webhooks:** Prevent SSRF in webhooks and webhook tests ([#7550](https://github.com/Flagsmith/flagsmith/issues/7550)) ([85b92fa](https://github.com/Flagsmith/flagsmith/commit/85b92fa990b217668ab28e1fd0e3300229a0fb2a))
+
+
+### Dependency Updates
+
+* **node:** upgrade ws transitive dependency to fix CVE-2026-45736 ([#7634](https://github.com/Flagsmith/flagsmith/issues/7634)) ([4de821d](https://github.com/Flagsmith/flagsmith/commit/4de821d5a0f4f6069c9fe2ef16420bdb67ebc5a0))
+
+
+### CI
+
+* **renovate:** Fix renovate config json & add linter to pre-commit hooks ([#7657](https://github.com/Flagsmith/flagsmith/issues/7657)) ([69c6dbf](https://github.com/Flagsmith/flagsmith/commit/69c6dbf196cbbbe04007db000d7737a8deacfd68))
+* Replace Dependabot with Renovate ([#7645](https://github.com/Flagsmith/flagsmith/issues/7645)) ([5b4dff0](https://github.com/Flagsmith/flagsmith/commit/5b4dff0cf60f60aad3c726053b5a23de8844b9b0))
+
+
+### Docs
+
+* add vulnerability response policy to support page ([#7423](https://github.com/Flagsmith/flagsmith/issues/7423)) ([d39aae7](https://github.com/Flagsmith/flagsmith/commit/d39aae712d25df76b3c807adce3fe0be09b52dad))
+* Consolidate PR collaboration guide to Flagsmith/AGENTS.md ([#7646](https://github.com/Flagsmith/flagsmith/issues/7646)) ([c1f40d8](https://github.com/Flagsmith/flagsmith/commit/c1f40d8860fa89bb0406e88f85ccd139287b7c6b))
+* CVE vulnerability guidance ([#7655](https://github.com/Flagsmith/flagsmith/issues/7655)) ([89135fe](https://github.com/Flagsmith/flagsmith/commit/89135fe2ecebfa8be49adaf27a3d2264c86cf5ec))
+
 ## [2.237.0](https://github.com/Flagsmith/flagsmith/compare/v2.236.0...v2.237.0) (2026-05-29)
 
 
