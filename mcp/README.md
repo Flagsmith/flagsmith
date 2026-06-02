@@ -7,3 +7,5 @@ This application assumes the following software is installed:
 - [GNU Make](https://www.gnu.org/software/make/)
 
 Install dependencies with `make install`.
+
+Run tests with `make test`.
