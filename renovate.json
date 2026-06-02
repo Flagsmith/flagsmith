@@ -4,9 +4,10 @@
     "security:only-security-updates",
     ":semanticCommitTypeAll(deps)"
   ],
+  "semanticCommitScope": null,
   "packageRules": [
     {
-      "matchManagers": ["uv"],
+      "matchManagers": ["pep621"],
       "matchFileNames": ["api/**"],
       "addLabels": ["api", "dependencies"],
       "semanticCommitScope": "API"
