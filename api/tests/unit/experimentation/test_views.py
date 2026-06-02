@@ -1,15 +1,42 @@
 import pytest
 from django.urls import reverse
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
-from experimentation.models import WarehouseConnection
+from experimentation import services
+from experimentation.dataclasses import WarehouseEventStats
+from experimentation.models import (
+    WarehouseConnection,
+    WarehouseConnectionStatus,
+    WarehouseType,
+)
 from tests.types import EnableFeaturesFixture
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def mock_clickhouse_stats(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> object:
+    """Default every view test to a configured, empty warehouse. Tests that need
+    events re-patch experimentation.services.get_warehouse_event_stats; tests for the
+    unconfigured/erroring paths override the setting / raise."""
+    settings.EXPERIMENTATION_CLICKHOUSE_URL = "clickhouse://localhost:9000/test"
+    services._get_clickhouse_client.cache_clear()
+    mock_client = mocker.Mock()
+    mock_client.execute.return_value = [(0, 0)]
+    return mocker.patch(
+        "experimentation.services._get_clickhouse_client",
+        return_value=mock_client,
+    )
 
 
 def test_post__valid_data__returns_201_and_creates_connection(
@@ -745,3 +772,297 @@ def test_patch__exists__creates_audit_log(
         related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
     )
     assert "updated" in audit_log.log
+
+
+def test_get__flagsmith_connection__includes_event_stats(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection: WarehouseConnection,
+    warehouse_connection_url: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    mocker.patch(
+        "experimentation.services.get_warehouse_event_stats",
+        return_value=WarehouseEventStats(
+            total_events_received=12,
+            unique_events_count=3,
+        ),
+    )
+
+    # When
+    response = admin_client.get(warehouse_connection_url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()[0]
+    assert data["total_events_received"] == 12
+    assert data["unique_events_count"] == 3
+
+
+def test_get__pending_connection_with_events__flips_to_connected(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    connection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.FLAGSMITH,
+        name="Flagsmith Warehouse",
+        status=WarehouseConnectionStatus.PENDING_CONNECTION,
+    )
+    mocker.patch(
+        "experimentation.services.get_warehouse_event_stats",
+        return_value=WarehouseEventStats(
+            total_events_received=1,
+            unique_events_count=1,
+        ),
+    )
+
+    # When
+    response = admin_client.get(warehouse_connection_url)
+
+    # Then
+    assert response.json()[0]["status"] == "connected"
+    connection.refresh_from_db()
+    assert connection.status == WarehouseConnectionStatus.CONNECTED
+
+
+def test_get__pending_connection_no_events__stays_pending(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given (autouse mock returns 0 events)
+    enable_features("experimentation_warehouse_connection")
+    connection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.FLAGSMITH,
+        name="Flagsmith Warehouse",
+        status=WarehouseConnectionStatus.PENDING_CONNECTION,
+    )
+
+    # When
+    response = admin_client.get(warehouse_connection_url)
+
+    # Then
+    assert response.json()[0]["status"] == "pending_connection"
+    connection.refresh_from_db()
+    assert connection.status == WarehouseConnectionStatus.PENDING_CONNECTION
+
+
+def test_get__snowflake_connection__skips_clickhouse_and_nulls_stats(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.SNOWFLAKE,
+        name="Snowflake Warehouse",
+        config={"account_identifier": "xy12345.us-east-1"},
+        status=WarehouseConnectionStatus.CREATED,
+    )
+    stats_spy = mocker.patch(
+        "experimentation.services.get_warehouse_event_stats",
+    )
+
+    # When
+    response = admin_client.get(warehouse_connection_url)
+
+    # Then
+    data = response.json()[0]
+    assert data["total_events_received"] is None
+    assert data["unique_events_count"] is None
+    stats_spy.assert_not_called()
+
+
+def test_get_detail__flagsmith_connection__includes_event_stats(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    mocker.patch(
+        "experimentation.services.get_warehouse_event_stats",
+        return_value=WarehouseEventStats(
+            total_events_received=8,
+            unique_events_count=2,
+        ),
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.json()["total_events_received"] == 8
+    assert response.json()["unique_events_count"] == 2
+
+
+def _test_warehouse_connection_url(environment: Environment, connection_id: int) -> str:
+    return reverse(
+        "api-v1:environments:experimentation:warehouse-connections-test-warehouse-connection",
+        args=[environment.api_key, connection_id],
+    )
+
+
+def test_test_warehouse_connection__created_flagsmith__returns_200_and_pending(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    url = _test_warehouse_connection_url(environment, warehouse_connection.id)
+
+    # When
+    response = admin_client.post(url, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["status"] == "pending_connection"
+    warehouse_connection.refresh_from_db()
+    assert warehouse_connection.status == WarehouseConnectionStatus.PENDING_CONNECTION
+
+
+def test_test_warehouse_connection__snowflake__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    connection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.SNOWFLAKE,
+        name="Snowflake Warehouse",
+        config={"account_identifier": "xy12345.us-east-1"},
+    )
+    url = _test_warehouse_connection_url(environment, connection.id)
+
+    # When
+    response = admin_client.post(url, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_test_warehouse_connection__already_connected__is_noop(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    connection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.FLAGSMITH,
+        name="Flagsmith Warehouse",
+        status=WarehouseConnectionStatus.CONNECTED,
+    )
+    url = _test_warehouse_connection_url(environment, connection.id)
+
+    # When
+    response = admin_client.post(url, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["status"] == "connected"
+
+
+def test_test_warehouse_connection__non_admin__returns_403(
+    staff_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    url = _test_warehouse_connection_url(environment, warehouse_connection.id)
+
+    # When
+    response = staff_client.post(url, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_get__clickhouse_unconfigured__returns_200_without_stats(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection: WarehouseConnection,
+    warehouse_connection_url: str,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    settings.EXPERIMENTATION_CLICKHOUSE_URL = None
+    stats_spy = mocker.patch("experimentation.services.get_warehouse_event_stats")
+
+    # When
+    response = admin_client.get(warehouse_connection_url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()[0]
+    assert data["total_events_received"] is None
+    assert data["unique_events_count"] is None
+    stats_spy.assert_not_called()
+
+
+def test_get__clickhouse_errors__returns_200_without_stats_and_logs(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+    mocker: MockerFixture,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.FLAGSMITH,
+        name="Flagsmith Warehouse",
+        status=WarehouseConnectionStatus.PENDING_CONNECTION,
+    )
+    mocker.patch(
+        "experimentation.services.get_warehouse_event_stats",
+        side_effect=OSError("clickhouse unreachable"),
+    )
+
+    # When
+    response = admin_client.get(warehouse_connection_url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()[0]
+    assert data["total_events_received"] is None
+    assert data["unique_events_count"] is None
+    # connection stays pending (no flip on error)
+    assert data["status"] == "pending_connection"
+    # an actionable event was logged
+    assert any(
+        e["event"] == "connection.event_stats_unavailable" for e in log.events
+    )

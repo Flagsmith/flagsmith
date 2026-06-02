@@ -16,6 +16,7 @@ from experimentation.models import (
     Experiment,
     ExperimentStatus,
     WarehouseConnection,
+    WarehouseType,
 )
 from experimentation.permissions import (
     ExperimentPermission,
@@ -27,8 +28,10 @@ from experimentation.serializers import (
     WarehouseConnectionSerializer,
 )
 from experimentation.services import (
+    annotate_warehouse_event_stats,
     create_experiment_audit_log,
     create_warehouse_audit_log,
+    mark_warehouse_pending_connection,
     transition_experiment_status,
 )
 from users.models import FFAdminUser
@@ -70,6 +73,36 @@ class WarehouseConnectionViewSet(
             instance, self._get_user(self.request), action="deleted"
         )
         instance.delete()
+
+    def list(self, request: Request, *args: object, **kwargs: object) -> Response:
+        environment_api_key: str = self.kwargs["environment_api_key"]
+        connections = list(self.filter_queryset(self.get_queryset()))
+        for connection in connections:
+            annotate_warehouse_event_stats(connection, environment_api_key)
+        serializer = self.get_serializer(connections, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request: Request, *args: object, **kwargs: object) -> Response:
+        connection = self.get_object()
+        annotate_warehouse_event_stats(
+            connection, self.kwargs["environment_api_key"]
+        )
+        serializer = self.get_serializer(connection)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["post"], url_path="test-warehouse-connection")
+    def test_warehouse_connection(
+        self, request: Request, **kwargs: object
+    ) -> Response:
+        connection: WarehouseConnection = self.get_object()
+        if connection.warehouse_type != WarehouseType.FLAGSMITH:
+            return Response(
+                {"detail": "Test events are only supported for Flagsmith warehouses."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        mark_warehouse_pending_connection(connection)
+        serializer = self.get_serializer(connection)
+        return Response(serializer.data)
 
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         environment = self._get_environment()
