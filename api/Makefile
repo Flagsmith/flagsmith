@@ -149,6 +149,12 @@ generate-grafana-client-types:
 		--wrap-string-literal \
 		--special-field-name-prefix=
 
+PRIVATE_TEST_DIRS := tests/rbac_tests tests/workflow_tests tests/auth_controller_tests tests/saml_integration_tests tests/licensing_integration_tests tests/ldap_integration_tests tests/saml_unit_tests
+
+.PHONY: clean-private-tests
+clean-private-tests:
+	rm -rf $(PRIVATE_TEST_DIRS)
+
 # scim and release_pipelines_logic are deliberately not pulled here: scim's
 # compliance tests need an SCIM_SERVICE_PROVIDER config that conflicts with Core
 # API's own scim tests (django-scim2 caches it globally), and release_pipelines
@@ -157,6 +163,12 @@ generate-grafana-client-types:
 # TODO https://github.com/Flagsmith/flagsmith-private/issues/177
 .PHONY: integrate-private-tests
 integrate-private-tests:
+	@for dir in $(PRIVATE_TEST_DIRS); do \
+		if [ -d "$$dir" ]; then \
+			echo "Warning: $$dir already exists. Run 'make clean-private-tests' to remove all private test directories before re-running this command."; \
+			exit 1; \
+		fi; \
+	done
 	$(eval FLAGSMITH_PRIVATE_REVISION := v$(shell uv run python -c 'import importlib.metadata; print(importlib.metadata.version("flagsmith-private"))'))
 	git clone https://github.com/Flagsmith/flagsmith-private --depth 1 --branch ${FLAGSMITH_PRIVATE_REVISION}
 	mv ./flagsmith-private/integration_tests/rbac tests/rbac_tests
