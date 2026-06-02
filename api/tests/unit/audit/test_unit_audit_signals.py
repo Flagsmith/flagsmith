@@ -16,7 +16,7 @@ from audit.signals import (
     trigger_feature_state_change_webhooks,
 )
 from environments.models import Environment
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureState, FeatureStateValue
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.dynatrace.dynatrace import EVENTS_API_URI
 from integrations.dynatrace.models import DynatraceConfiguration
@@ -589,6 +589,43 @@ def test_send_feature_flag_went_live_signal__non_feature_state_instance__skips_s
         history_record_class_path=feature.history_record_class_path,
     )
 
+    mock_signal_send = mocker.patch("audit.signals.feature_state_change_went_live.send")
+
+    # When
+    send_feature_flag_went_live_signal(sender=AuditLog, instance=audit_log)
+
+    # Then
+    mock_signal_send.assert_not_called()
+
+
+def test_send_feature_flag_went_live_signal__deleted_feature_state__skips_signal(
+    environment: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.get(
+        environment=environment, feature=feature, feature_segment__isnull=True
+    )
+    feature_state_value = feature_state.feature_state_value
+
+    audit_log = AuditLog.objects.create(
+        environment=environment,
+        related_object_id=feature_state.id,
+        related_object_type=RelatedObjectType.FEATURE_STATE.name,
+        history_record_id=feature_state_value.history.first().history_id,
+        history_record_class_path=feature_state_value.history_record_class_path,
+    )
+
+    # Simulate the FeatureState being deleted before the signal runs.
+    mock_audited = mocker.MagicMock(spec=FeatureStateValue)
+    type(mock_audited).feature_state = mocker.PropertyMock(
+        side_effect=FeatureState.DoesNotExist
+    )
+    mocker.patch(
+        "audit.signals.get_audited_instance_from_audit_log_record",
+        return_value=mock_audited,
+    )
     mock_signal_send = mocker.patch("audit.signals.feature_state_change_went_live.send")
 
     # When

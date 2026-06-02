@@ -1,3 +1,5 @@
+from django.core.exceptions import ObjectDoesNotExist
+
 from audit.models import AuditLog
 from audit.services import get_audited_instance_from_audit_log_record
 from features.models import (
@@ -20,41 +22,44 @@ def _get_feature_tags(
 def _get_instance_tags_from_audit_log_record(
     audit_log_record: AuditLog,
 ) -> list[str]:
-    if instance := get_audited_instance_from_audit_log_record(audit_log_record):
-        if isinstance(instance, Feature):
-            return [
-                f"feature:{instance.name}",
-                *_get_feature_tags(instance),
-            ]
+    try:
+        if instance := get_audited_instance_from_audit_log_record(audit_log_record):
+            if isinstance(instance, Feature):
+                return [
+                    f"feature:{instance.name}",
+                    *_get_feature_tags(instance),
+                ]
 
-        if isinstance(instance, FeatureState):
-            return [
-                f"feature:{(feature := instance.feature).name}",
-                f"flag:{'enabled' if instance.enabled else 'disabled'}",
-                *_get_feature_tags(feature),  # type: ignore[has-type]
-            ]
+            if isinstance(instance, FeatureState):
+                return [
+                    f"feature:{(feature := instance.feature).name}",
+                    f"flag:{'enabled' if instance.enabled else 'disabled'}",
+                    *_get_feature_tags(feature),  # type: ignore[has-type]
+                ]
 
-        if isinstance(instance, FeatureStateValue):
-            return [
-                f"feature:{(feature := instance.feature_state.feature).name}",
-                *_get_feature_tags(feature),
-            ]
+            if isinstance(instance, FeatureStateValue):
+                return [
+                    f"feature:{(feature := instance.feature_state.feature).name}",
+                    *_get_feature_tags(feature),
+                ]
 
-        if isinstance(instance, Segment):
-            return [f"segment:{instance.name}"]
+            if isinstance(instance, Segment):
+                return [f"segment:{instance.name}"]
 
-        if isinstance(instance, FeatureSegment):
-            return [
-                f"feature:{(feature := instance.feature).name}",
-                f"segment:{instance.segment.name}",
-                *_get_feature_tags(feature),
-            ]
+            if isinstance(instance, FeatureSegment):
+                return [
+                    f"feature:{(feature := instance.feature).name}",
+                    f"segment:{instance.segment.name}",
+                    *_get_feature_tags(feature),
+                ]
 
-        if isinstance(instance, EnvironmentFeatureVersion):
-            return [
-                f"feature:{instance.feature.name}",
-                *_get_feature_tags(instance.feature),
-            ]
+            if isinstance(instance, EnvironmentFeatureVersion):
+                return [
+                    f"feature:{instance.feature.name}",
+                    *_get_feature_tags(instance.feature),
+                ]
+    except ObjectDoesNotExist:
+        return []
 
     return []
 
