@@ -67,8 +67,8 @@ def test_run__configured_transport__runs_server_with_it(
         def run(self, transport: str) -> None:
             calls["transport"] = transport
 
-    monkeypatch.setattr(server, "create_server", lambda: FakeServer())
-    monkeypatch.setattr(config, "get_transport", lambda: "stdio")
+    monkeypatch.setattr(server, "create_server", lambda settings: FakeServer())
+    monkeypatch.setenv("TRANSPORT", "stdio")
 
     # When
     server.run()
