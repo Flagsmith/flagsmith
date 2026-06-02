@@ -21,6 +21,11 @@ class Settings(BaseSettings):
         default="http",
     )
     """MCP transport to use."""
+    mcp_server_url: str = Field(
+        default="http://127.0.0.1:8000",
+    )
+    """Public base URL of this MCP server, advertised in OAuth protected-resource
+    metadata. Override for HTTP deployments behind a proxy/public hostname."""
 
     @model_validator(mode="after")
     def validate_stdio_token(self) -> "Settings":

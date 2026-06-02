@@ -1,19 +1,19 @@
 from collections.abc import AsyncIterator
-from typing import Any
 
 import openapi_pydantic as openapi
 import pytest
 from fastmcp import Client, FastMCP
 from fastmcp.client.transports import FastMCPTransport
+from respx import MockRouter
 
-from flagsmith_mcp import config
+from flagsmith_mcp import config, constants
 from flagsmith_mcp import server as server_module
 
 
 @pytest.fixture
-def openapi_spec() -> dict[str, Any]:
+def openapi_spec() -> openapi.OpenAPI:
     ok = openapi.Response(description="OK")
-    spec = openapi.OpenAPI(
+    return openapi.OpenAPI(
         info=openapi.Info(title="Flagsmith API", version="1.0.0"),
         paths={
             "/environments/": openapi.PathItem(
@@ -35,16 +35,19 @@ def openapi_spec() -> dict[str, Any]:
             ),
         },
     )
-    return spec.model_dump(by_alias=True, exclude_none=True, mode="json")
+
+
+@pytest.fixture(autouse=True)
+def openapi_spec_mock(respx_mock: MockRouter, openapi_spec: openapi.OpenAPI) -> None:
+    # create_server fetches the OpenAPI spec over HTTP; mock that call (respx
+    # leaves the in-memory ASGI transport used by the tests untouched).
+    respx_mock.get(constants.OPENAPI_SPEC_URL).respond(
+        json=openapi_spec.model_dump(by_alias=True, exclude_none=True, mode="json")
+    )
 
 
 @pytest.fixture
-def server(
-    monkeypatch: pytest.MonkeyPatch,
-    openapi_spec: dict[str, Any],
-) -> FastMCP:
-    monkeypatch.setenv("FLAGSMITH_API_URL", "https://flagsmith.example.com")
-    monkeypatch.setattr(server_module, "_fetch_spec", lambda: openapi_spec)
+def server() -> FastMCP:
     return server_module.create_server(config.Settings())
 
 

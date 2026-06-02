@@ -4,7 +4,7 @@ import openapi_pydantic as openapi
 import pytest
 from fastmcp import Client
 from mcp.types import ToolAnnotations
-from pytest_httpx import HTTPXMock
+from respx import MockRouter
 
 from flagsmith_mcp import config, constants, server
 
@@ -63,7 +63,7 @@ from flagsmith_mcp import config, constants, server
     ],
 )
 async def test_create_server__mcp_route__annotates_tool_per_method(
-    httpx_mock: HTTPXMock,
+    respx_mock: MockRouter,
     method: str,
     expected: ToolAnnotations,
 ) -> None:
@@ -77,9 +77,8 @@ async def test_create_server__mcp_route__annotates_tool_per_method(
         info=openapi.Info(title="Flagsmith API", version="1.0.0"),
         paths={"/things/": openapi.PathItem.model_validate({method: operation})},
     )
-    httpx_mock.add_response(
-        url=constants.OPENAPI_SPEC_URL,
-        json=spec.model_dump(by_alias=True, exclude_none=True, mode="json"),
+    respx_mock.get(constants.OPENAPI_SPEC_URL).respond(
+        json=spec.model_dump(by_alias=True, exclude_none=True, mode="json")
     )
 
     # When
@@ -91,7 +90,7 @@ async def test_create_server__mcp_route__annotates_tool_per_method(
 
 
 async def test_create_server__untagged_route__excluded_from_tools(
-    httpx_mock: HTTPXMock,
+    respx_mock: MockRouter,
 ) -> None:
     # Given a spec with one mcp-tagged route and one untagged route
     spec = openapi.OpenAPI(
@@ -112,9 +111,8 @@ async def test_create_server__untagged_route__excluded_from_tools(
             ),
         },
     )
-    httpx_mock.add_response(
-        url=constants.OPENAPI_SPEC_URL,
-        json=spec.model_dump(by_alias=True, exclude_none=True, mode="json"),
+    respx_mock.get(constants.OPENAPI_SPEC_URL).respond(
+        json=spec.model_dump(by_alias=True, exclude_none=True, mode="json")
     )
 
     # When
