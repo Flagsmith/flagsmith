@@ -15,8 +15,10 @@ flagsmith_mcp_tool_call_duration_seconds = Histogram(
 )
 flagsmith_mcp_tool_result_bytes = Histogram(
     "flagsmith_mcp_tool_result_bytes",
-    "Serialised size of a successful MCP tool call result. A proxy for "
-    "the token cost a tool call incurs on the calling agent's context.",
+    "Size of a successful MCP tool call result's text content — what a "
+    "client renders into the calling agent's context, and so a proxy for "
+    "the token cost of the call. Excludes the structuredContent duplicate "
+    "and JSON-RPC framing also present on the wire.",
     labelnames=["tool"],
     buckets=(256, 1024, 4096, 16384, 65536, 262144, 1048576, float("inf")),
 )
@@ -47,8 +49,14 @@ class PrometheusMiddleware(Middleware):
         flagsmith_mcp_tool_call_duration_seconds.labels(
             tool=tool, status="success"
         ).observe(time.perf_counter() - start)
+        # The text blocks already hold the serialised payload; measuring them
+        # costs no extra marshalling.
         flagsmith_mcp_tool_result_bytes.labels(tool=tool).observe(
-            len(result.model_dump_json(exclude_none=True).encode())
+            sum(
+                len(block.text.encode())
+                for block in result.content
+                if isinstance(block, mt.TextContent)
+            )
         )
         return result
 
