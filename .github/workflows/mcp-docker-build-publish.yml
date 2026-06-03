@@ -54,3 +54,57 @@ jobs:
       source-images: ${{ needs.docker-build-mcp.outputs.image }}
       target-images: quay.io/${{ vars.QUAY_ORGANISATION_NAME }}/flagsmith-mcp
     secrets: inherit
+
+  # Publish to Amazon ECR
+
+  docker-publish-ecr-mcp:
+    name: Publish MCP image to ECR
+    needs: [docker-build-mcp]
+    if: github.event_name == 'release'
+    runs-on: depot-ubuntu-latest
+    # The OIDC role trusts jobs running in the production environment.
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: depot.json
+          sparse-checkout-cone-mode: false
+
+      - name: Login to Github Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.MCP_ECR_GITHUB_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ vars.MCP_ECR_REPOSITORY_URL }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      # Setup Docker buildx with Depot builder so imagetools have access to Depot cache
+      - uses: depot/use-action@v1
+
+      - name: Publish Image
+        uses: kphrx/docker-buildx-imagetools-action@v0.1.2
+        with:
+          sources: ${{ needs.docker-build-mcp.outputs.image }}
+          tags: ${{ steps.meta.outputs.tags }}
