@@ -24,7 +24,5 @@
       "semanticCommitScope": "Docs"
     }
   ],
-  "recreateClosed": true,
-  "rebaseWhen": "always",
-  "semanticCommitScope": null
+  "semanticCommitScope": ""
 }
