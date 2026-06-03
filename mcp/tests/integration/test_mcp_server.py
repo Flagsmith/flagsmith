@@ -1,4 +1,6 @@
 import httpx
+import pytest
+from common.test_tools import SnapshotFixture
 from fastmcp import Client
 from fastmcp.client.transports import FastMCPTransport
 from mcp.types import LATEST_PROTOCOL_VERSION
@@ -41,14 +43,17 @@ async def test_mcp_server__health__returns_ok(
     assert response.text == "OK"
 
 
+@pytest.mark.usefixtures("assert_metric")
 async def test_mcp_server__metrics__returns_prometheus_exposition(
     http_client: httpx.AsyncClient,
+    snapshot: SnapshotFixture,
 ) -> None:
-    # Given the server started via the client fixture
-    # When
+    # Given / When
     response = await http_client.get("/metrics")
 
     # Then
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/plain")
-    assert "flagsmith_mcp_tool_call_duration_seconds" in response.text
+    assert snapshot() == "\n".join(
+        line for line in response.text.splitlines() if "flagsmith_mcp" in line
+    )

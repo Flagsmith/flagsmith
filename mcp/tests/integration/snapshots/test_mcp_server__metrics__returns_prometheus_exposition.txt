@@ -1,0 +1,7 @@
+# HELP flagsmith_mcp_tool_call_duration_seconds Time spent serving an MCP tool call, including the upstream Flagsmith API request.
+# TYPE flagsmith_mcp_tool_call_duration_seconds histogram
+# HELP flagsmith_mcp_tool_result_bytes Serialised size of a tool call result's text content and structuredContent. Helps approximate the call's token cost: clients render either or both into the agent's context.
+# TYPE flagsmith_mcp_tool_result_bytes histogram
+# HELP flagsmith_mcp_tool_catalogue_bytes Serialised size of the tool catalogue returned by tools/list. A proxy for the token cost every MCP session pays before any tool is called.
+# TYPE flagsmith_mcp_tool_catalogue_bytes gauge
+flagsmith_mcp_tool_catalogue_bytes 0.0
