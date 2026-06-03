@@ -31,8 +31,7 @@ async def test_metrics__successful_tool_call__records_duration_and_result_size(
         labels={"tool": "list_environments", "status": "success"},
         value=1,
     )
-    content_sums: dict[str, float] = {}
-    for content in ("unstructured", "structured", "total"):
+    for content in ("unstructured", "structured"):
         assert_metric(
             name="flagsmith_mcp_tool_result_bytes_count",
             labels={"tool": "list_environments", "content": content},
@@ -43,13 +42,7 @@ async def test_metrics__successful_tool_call__records_duration_and_result_size(
             {"tool": "list_environments", "content": content},
         )
         assert content_sum is not None
-        content_sums[content] = content_sum
-    assert content_sums["unstructured"] > 0
-    assert content_sums["structured"] > 0
-    assert (
-        content_sums["total"]
-        == content_sums["unstructured"] + content_sums["structured"]
-    )
+        assert content_sum > 0
 
 
 async def test_metrics__failing_tool_call__records_error_duration_only(
@@ -73,7 +66,7 @@ async def test_metrics__failing_tool_call__records_error_duration_only(
     assert (
         REGISTRY.get_sample_value(
             "flagsmith_mcp_tool_result_bytes_count",
-            {"tool": "list_environments", "content": "total"},
+            {"tool": "list_environments", "content": "unstructured"},
         )
         is None
     )

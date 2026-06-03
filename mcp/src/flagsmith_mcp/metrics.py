@@ -15,11 +15,11 @@ flagsmith_mcp_tool_call_duration_seconds = Histogram(
 )
 flagsmith_mcp_tool_result_bytes = Histogram(
     "flagsmith_mcp_tool_result_bytes",
-    "Size of a successful MCP tool call result: its unstructured text "
-    "blocks, its structuredContent, or their total. A proxy for the token "
-    "cost a call incurs on the calling agent's context — MCP clients "
-    "differ in which content they render to the agent, so the cost sits "
-    "between the larger component and the total.",
+    "Size of a successful MCP tool call result's content: unstructured "
+    "text blocks or structuredContent. A proxy for the token cost a call "
+    "incurs on the calling agent's context — MCP clients differ in which "
+    "content they render to the agent, so the cost sits between the "
+    "larger component and the sum of both.",
     labelnames=["tool", "content"],
     buckets=(256, 1024, 4096, 16384, 65536, 262144, 1048576, float("inf")),
 )
@@ -65,7 +65,6 @@ class PrometheusMiddleware(Middleware):
         for content, size in (
             ("unstructured", unstructured_bytes),
             ("structured", structured_bytes),
-            ("total", unstructured_bytes + structured_bytes),
         ):
             flagsmith_mcp_tool_result_bytes.labels(tool=tool, content=content).observe(
                 size
