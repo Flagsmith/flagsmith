@@ -6,6 +6,8 @@ from fastmcp.server.providers.openapi import MCPType, OpenAPITool, RouteMap
 from fastmcp.utilities.components import FastMCPComponent
 from fastmcp.utilities.openapi.models import HttpMethod, HTTPRoute
 from mcp.types import ToolAnnotations
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse
 
 from flagsmith_mcp import config, constants
 from flagsmith_mcp.auth import FlagsmithAuth
@@ -51,7 +53,7 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
             resource_url=settings.mcp_server_url,
             authorization_server=settings.flagsmith_api_url,
         )
-    return FastMCP.from_openapi(
+    server = FastMCP.from_openapi(
         openapi_spec=_fetch_spec(),
         client=httpx.AsyncClient(
             base_url=settings.flagsmith_api_url,
@@ -63,6 +65,12 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
         validate_output=False,  # TODO https://github.com/Flagsmith/flagsmith/issues/7679
         auth=auth,
     )
+
+    @server.custom_route("/health", methods=["GET"])
+    async def health(request: Request) -> PlainTextResponse:
+        return PlainTextResponse("OK")
+
+    return server
 
 
 def run() -> None:
