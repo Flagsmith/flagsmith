@@ -75,3 +75,15 @@ async def test_metrics__failing_tool_call__records_error_duration_only(
         _sample("flagsmith_mcp_tool_result_bytes_count", result_labels)
         == result_count_before
     )
+
+
+async def test_metrics__tools_list__records_catalogue_size(
+    client: Client[FastMCPTransport],
+) -> None:
+    # Given the server started via the client fixture
+    # When
+    tools = await client.list_tools()
+
+    # Then a catalogue of two tools weighs at least a name and a schema each
+    assert tools
+    assert _sample("flagsmith_mcp_tool_catalogue_bytes", {}) > len(tools) * 50
