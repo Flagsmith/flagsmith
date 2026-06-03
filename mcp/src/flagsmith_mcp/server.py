@@ -9,6 +9,7 @@ from mcp.types import ToolAnnotations
 
 from flagsmith_mcp import config, constants
 from flagsmith_mcp.auth import FlagsmithAuth
+from flagsmith_mcp.oauth import FlagsmithResourceAuth
 
 ROUTE_MAPS = [
     RouteMap(tags={"mcp"}, mcp_type=MCPType.TOOL),
@@ -40,6 +41,16 @@ def _fetch_spec() -> dict[str, Any]:
 
 
 def create_server(settings: config.Settings) -> FastMCP[None]:
+    # OAuth discovery is the credential fallback for HTTP transport: only when
+    # the server holds no static token does it advertise the AS and gate on a
+    # missing Authorization header. Otherwise (stdio, static token, or a
+    # forwarded --header) it's pure pass-through.
+    auth = None
+    if settings.transport == "http" and settings.flagsmith_api_token is None:
+        auth = FlagsmithResourceAuth(
+            resource_url=settings.mcp_server_url,
+            authorization_server=settings.flagsmith_api_url,
+        )
     return FastMCP.from_openapi(
         openapi_spec=_fetch_spec(),
         client=httpx.AsyncClient(
@@ -50,6 +61,7 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
         route_maps=ROUTE_MAPS,
         mcp_component_fn=_customise,
         validate_output=False,  # TODO https://github.com/Flagsmith/flagsmith/issues/7679
+        auth=auth,
     )
 
 
