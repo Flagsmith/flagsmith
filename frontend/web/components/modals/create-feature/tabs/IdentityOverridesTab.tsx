@@ -158,17 +158,31 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
   return (
     <>
       <FormGroup className='mb-4'>
-        <Tooltip
-          title={
-            <h5 className='mb-0'>
-              Identity Overrides{' '}
-              <Icon name='info-outlined' width={20} fill='#9DA4AE' />
-            </h5>
-          }
-          place='top'
-        >
-          {Constants.strings.IDENTITY_OVERRIDES_DESCRIPTION}
-        </Tooltip>
+        <Row className='align-items-center mb-2 gap-4'>
+          <div className='flex-fill'>
+            <Tooltip
+              title={
+                <h5 className='mb-0'>
+                  Identity Overrides{' '}
+                  <Icon name='info-outlined' width={20} fill='#9DA4AE' />
+                </h5>
+              }
+              place='top'
+            >
+              {Constants.strings.IDENTITY_OVERRIDES_DESCRIPTION}
+            </Tooltip>
+          </div>
+          {!isEdge && (
+            <Button
+              onClick={() => changeIdentity(data?.results || [])}
+              type='button'
+              theme='secondary'
+              size='small'
+            >
+              {enabledIdentity ? 'Enable All' : 'Disable All'}
+            </Button>
+          )}
+        </Row>
         <div className='text-muted mb-2'>
           Identity Overrides apply to all individual identities listed here.{' '}
           <a
@@ -193,18 +207,6 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
         <PanelSearch
           id='users-list'
           className='no-pad'
-          action={
-            !isEdge && (
-              <Button
-                onClick={() => changeIdentity(data?.results || [])}
-                type='button'
-                theme='secondary'
-                size='small'
-              >
-                {enabledIdentity ? 'Enable All' : 'Disable All'}
-              </Button>
-            )
-          }
           items={data?.results}
           paging={{ ...data, currentPage: page }}
           renderSearchWithNoResults
