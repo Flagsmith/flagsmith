@@ -12,6 +12,12 @@
       "semanticCommitScope": "API"
     },
     {
+      "matchManagers": ["pep621"],
+      "matchFileNames": ["mcp/**"],
+      "addLabels": ["mcp", "dependencies"],
+      "semanticCommitScope": "MCP"
+    },
+    {
       "matchManagers": ["npm"],
       "matchFileNames": ["frontend/**"],
       "addLabels": ["front-end", "dependencies"],
