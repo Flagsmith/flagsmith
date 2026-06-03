@@ -28,6 +28,12 @@
       "matchFileNames": ["docs/**"],
       "addLabels": ["docs", "dependencies"],
       "semanticCommitScope": "Docs"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchFileNames": [".github/**"],
+      "addLabels": ["ci", "dependencies"],
+      "semanticCommitScope": "CI"
     }
   ],
   "semanticCommitScope": ""
