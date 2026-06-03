@@ -7,10 +7,6 @@ from prometheus_client import REGISTRY
 from respx import MockRouter
 
 
-def _sample(name: str, labels: dict[str, str]) -> float:
-    return REGISTRY.get_sample_value(name, labels) or 0.0
-
-
 async def test_metrics__successful_tool_call__records_duration_and_result_size(
     client: Client[FastMCPTransport],
     http_client: httpx.AsyncClient,
@@ -22,11 +18,17 @@ async def test_metrics__successful_tool_call__records_duration_and_result_size(
     )
     duration_labels = {"tool": "list_environments", "status": "success"}
     result_labels = {"tool": "list_environments"}
-    duration_count_before = _sample(
-        "flagsmith_mcp_tool_call_duration_seconds_count", duration_labels
+    duration_count_before = (
+        REGISTRY.get_sample_value(
+            "flagsmith_mcp_tool_call_duration_seconds_count", duration_labels
+        )
+        or 0.0
     )
-    result_count_before = _sample(
-        "flagsmith_mcp_tool_result_bytes_count", result_labels
+    result_count_before = (
+        REGISTRY.get_sample_value(
+            "flagsmith_mcp_tool_result_bytes_count", result_labels
+        )
+        or 0.0
     )
 
     # When
@@ -37,14 +39,22 @@ async def test_metrics__successful_tool_call__records_duration_and_result_size(
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/plain")
     assert (
-        _sample("flagsmith_mcp_tool_call_duration_seconds_count", duration_labels)
+        REGISTRY.get_sample_value(
+            "flagsmith_mcp_tool_call_duration_seconds_count", duration_labels
+        )
         == duration_count_before + 1
     )
     assert (
-        _sample("flagsmith_mcp_tool_result_bytes_count", result_labels)
+        REGISTRY.get_sample_value(
+            "flagsmith_mcp_tool_result_bytes_count", result_labels
+        )
         == result_count_before + 1
     )
-    assert _sample("flagsmith_mcp_tool_result_bytes_sum", result_labels) > 0
+    result_bytes_sum = REGISTRY.get_sample_value(
+        "flagsmith_mcp_tool_result_bytes_sum", result_labels
+    )
+    assert result_bytes_sum is not None
+    assert result_bytes_sum > 0
 
 
 async def test_metrics__failing_tool_call__records_error_duration_only(
@@ -55,10 +65,13 @@ async def test_metrics__failing_tool_call__records_error_duration_only(
     respx_mock.get("https://api.flagsmith.com/environments/").respond(status_code=502)
     duration_labels = {"tool": "list_environments", "status": "error"}
     result_labels = {"tool": "list_environments"}
-    duration_count_before = _sample(
-        "flagsmith_mcp_tool_call_duration_seconds_count", duration_labels
+    duration_count_before = (
+        REGISTRY.get_sample_value(
+            "flagsmith_mcp_tool_call_duration_seconds_count", duration_labels
+        )
+        or 0.0
     )
-    result_count_before = _sample(
+    result_count_before = REGISTRY.get_sample_value(
         "flagsmith_mcp_tool_result_bytes_count", result_labels
     )
 
@@ -68,11 +81,15 @@ async def test_metrics__failing_tool_call__records_error_duration_only(
 
     # Then
     assert (
-        _sample("flagsmith_mcp_tool_call_duration_seconds_count", duration_labels)
+        REGISTRY.get_sample_value(
+            "flagsmith_mcp_tool_call_duration_seconds_count", duration_labels
+        )
         == duration_count_before + 1
     )
     assert (
-        _sample("flagsmith_mcp_tool_result_bytes_count", result_labels)
+        REGISTRY.get_sample_value(
+            "flagsmith_mcp_tool_result_bytes_count", result_labels
+        )
         == result_count_before
     )
 
@@ -86,4 +103,6 @@ async def test_metrics__tools_list__records_catalogue_size(
 
     # Then a catalogue of two tools weighs at least a name and a schema each
     assert tools
-    assert _sample("flagsmith_mcp_tool_catalogue_bytes", {}) > len(tools) * 50
+    catalogue_bytes = REGISTRY.get_sample_value("flagsmith_mcp_tool_catalogue_bytes")
+    assert catalogue_bytes is not None
+    assert catalogue_bytes > len(tools) * 50
