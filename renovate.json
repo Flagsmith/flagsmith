@@ -4,7 +4,6 @@
     "security:only-security-updates",
     ":semanticCommitTypeAll(deps)"
   ],
-  "semanticCommitScope": null,
   "packageRules": [
     {
       "matchManagers": ["pep621"],
@@ -24,5 +23,8 @@
       "addLabels": ["docs", "dependencies"],
       "semanticCommitScope": "Docs"
     }
-  ]
+  ],
+  "recreateClosed": true,
+  "rebaseWhen": "always",
+  "semanticCommitScope": null
 }
