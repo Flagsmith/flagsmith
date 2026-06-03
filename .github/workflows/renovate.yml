@@ -24,8 +24,8 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v1
         with:
-          app-id: ${{ vars.RENOVATE_APP_ID }}
-          private-key: ${{ secrets.RENOVATE_APP_PRIVATE_KEY }}
+          app-id: ${{ vars.FLAGSMITH_ENGINEERING_GH_APP_ID }}
+          private-key: ${{ secrets.FLAGSMITH_ENGINEERING_GH_APP_PRIVATE_KEY }}
 
       - name: Run Renovate
         uses: renovatebot/github-action@v46.1.14
