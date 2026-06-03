@@ -21,6 +21,7 @@ class NestedMultivariateFeatureOptionSerializer(serializers.ModelSerializer):  #
             "string_value",
             "boolean_value",
             "default_percentage_allocation",
+            "key",
         )
         read_only_fields = ("uuid",)
 
@@ -55,6 +56,16 @@ class FeatureMVOptionsValuesResponseSerializer(serializers.Serializer):  # type:
 class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSerializer):
     class Meta(NestedMultivariateFeatureOptionSerializer.Meta):
         fields = NestedMultivariateFeatureOptionSerializer.Meta.fields + ("feature",)  # type: ignore[assignment]
+        # `key` participates in the ("feature", "key") unique_together, which
+        # makes DRF mark it as required. It is optional (nullable), so override.
+        extra_kwargs = {"key": {"required": False}}
+
+    def get_unique_together_validators(self):  # type: ignore[no-untyped-def]
+        # The auto-generated `UniqueTogetherValidator` for ("feature", "key")
+        # also forces `key` to be required on create. We enforce uniqueness
+        # ourselves in `validate()`, with the database constraint as the final
+        # guard, so drop it.
+        return []
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
@@ -73,7 +84,20 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
                 {"default_percentage_allocation": "Invalid percentage allocation"}
             )
 
+        self._validate_key_is_unique(attrs)
+
         return attrs
+
+    def _validate_key_is_unique(self, attrs: dict[str, typing.Any]) -> None:
+        key = attrs.get("key")
+        if key is None:
+            return
+        if self._get_siblings(attrs["feature"]).filter(key=key).exists():
+            raise ValidationError(
+                {
+                    "key": "Multivariate option with this key already exists for the feature."
+                }
+            )
 
     def _get_siblings(self, feature: Feature):  # type: ignore[no-untyped-def]
         siblings = feature.multivariate_options.all()

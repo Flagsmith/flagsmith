@@ -42,6 +42,79 @@ def test_create_mv_option__valid_data__returns_created(  # type: ignore[no-untyp
     assert set(data.items()).issubset(set(response.json().items()))
 
 
+def test_create_mv_option__with_key__returns_created_with_key(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+        "key": "control",
+    }
+    # When
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["key"] == "control"
+
+
+def test_create_mv_option__duplicate_key_for_same_feature__returns_bad_request(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    existing_option_data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+        "key": "control",
+    }
+    assert (
+        admin_client_new.post(
+            url,
+            data=json.dumps(existing_option_data),
+            content_type="application/json",
+        ).status_code
+        == status.HTTP_201_CREATED
+    )
+    duplicate_option_data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "biggest",
+        "default_percentage_allocation": 50,
+        "key": "control",
+    }
+    # When
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(duplicate_option_data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["key"] == [
+        "Multivariate option with this key already exists for the feature."
+    ]
+
+
 @pytest.mark.parametrize(
     "client, feature_id",
     [

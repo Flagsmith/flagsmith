@@ -50,6 +50,9 @@ class MultivariateFeatureOption(
         related_name="multivariate_options",
     )
 
+    # A stable, human-readable identifier for the variant.
+    key = models.CharField(max_length=2000, null=True, blank=True)
+
     # This field is stored at the feature level but not used here - it is transferred
     # to the MultivariateFeatureStateValue on creation of a new option or when creating
     # a new environment.
@@ -57,6 +60,9 @@ class MultivariateFeatureOption(
         default=100,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
     )
+
+    class Meta:
+        unique_together = ("feature", "key")
 
     @hook(AFTER_CREATE)
     def create_multivariate_feature_state_values(self):  # type: ignore[no-untyped-def]
