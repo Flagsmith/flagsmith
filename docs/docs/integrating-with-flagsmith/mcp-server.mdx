@@ -21,8 +21,9 @@ Cursor, and Codex.
 
 ## Connecting to the server
 
-The server is reachable over HTTP and you connect your client directly to it — there is nothing to install or run
-yourself.
+The server is reachable over HTTP and you connect your client directly to it — on Flagsmith SaaS there is nothing to
+install or run yourself. If you'd rather run the server as a local subprocess, each client below also has a stdio option
+(launched with [uv](https://docs.astral.sh/uv/); authenticate with an API key, since stdio has no interactive OAuth).
 
 | Deployment                  | MCP URL                     |
 | --------------------------- | --------------------------- |
@@ -77,6 +78,15 @@ claude mcp add --transport http flagsmith https://mcp.flagsmith.com \
     --header "Authorization: Api-Key <your-api-key>"
 ```
 
+Or run it locally over stdio:
+
+```bash
+claude mcp add flagsmith \
+    --env TRANSPORT=stdio \
+    --env FLAGSMITH_API_TOKEN=<your-api-key> \
+    -- uvx --from "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp" flagsmith-mcp
+```
+
 </TabItem>
 <TabItem value="cursor" label="Cursor">
 
@@ -105,11 +115,39 @@ To use an API key instead of OAuth, add a `headers` block:
 }
 ```
 
+Or run it locally over stdio:
+
+```json
+{
+    "mcpServers": {
+        "flagsmith": {
+            "command": "uvx",
+            "args": ["--from", "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp", "flagsmith-mcp"],
+            "env": { "TRANSPORT": "stdio", "FLAGSMITH_API_TOKEN": "<your-api-key>" }
+        }
+    }
+}
+```
+
 </TabItem>
 <TabItem value="claude-desktop" label="Claude Desktop">
 
 Open **Settings → Connectors → Add custom connector**, give it the name `Flagsmith` and the URL
 `https://mcp.flagsmith.com`, then connect and complete the OAuth login.
+
+To run it locally over stdio instead, add it to your `claude_desktop_config.json`:
+
+```json
+{
+    "mcpServers": {
+        "flagsmith": {
+            "command": "uvx",
+            "args": ["--from", "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp", "flagsmith-mcp"],
+            "env": { "TRANSPORT": "stdio", "FLAGSMITH_API_TOKEN": "<your-api-key>" }
+        }
+    }
+}
+```
 
 </TabItem>
 <TabItem value="codex" label="Codex CLI">
@@ -119,6 +157,15 @@ Add the server to `~/.codex/config.toml`:
 ```toml
 [mcp_servers.flagsmith]
 url = "https://mcp.flagsmith.com"
+```
+
+Or run it locally over stdio:
+
+```toml
+[mcp_servers.flagsmith]
+command = "uvx"
+args = ["--from", "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp", "flagsmith-mcp"]
+env = { TRANSPORT = "stdio", FLAGSMITH_API_TOKEN = "<your-api-key>" }
 ```
 
 </TabItem>
@@ -138,6 +185,20 @@ Add the server to `~/.codeium/windsurf/mcp_config.json`:
 
 For an API key instead of OAuth, add `"headers": { "Authorization": "Api-Key <your-api-key>" }` to the server entry.
 
+Or run it locally over stdio:
+
+```json
+{
+    "mcpServers": {
+        "flagsmith": {
+            "command": "uvx",
+            "args": ["--from", "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp", "flagsmith-mcp"],
+            "env": { "TRANSPORT": "stdio", "FLAGSMITH_API_TOKEN": "<your-api-key>" }
+        }
+    }
+}
+```
+
 </TabItem>
 <TabItem value="gemini-cli" label="Gemini CLI">
 
@@ -154,6 +215,20 @@ Add the server to `~/.gemini/settings.json`:
 ```
 
 For an API key instead of OAuth, add `"headers": { "Authorization": "Api-Key <your-api-key>" }` to the server entry.
+
+Or run it locally over stdio:
+
+```json
+{
+    "mcpServers": {
+        "flagsmith": {
+            "command": "uvx",
+            "args": ["--from", "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp", "flagsmith-mcp"],
+            "env": { "TRANSPORT": "stdio", "FLAGSMITH_API_TOKEN": "<your-api-key>" }
+        }
+    }
+}
+```
 
 </TabItem>
 <TabItem value="vscode" label="VS Code">
@@ -173,11 +248,28 @@ Add the server to `.vscode/mcp.json` (workspace) or your user `mcp.json`:
 
 For an API key instead of OAuth, add `"headers": { "Authorization": "Api-Key <your-api-key>" }` to the server entry.
 
+Or run it locally over stdio:
+
+```json
+{
+    "servers": {
+        "flagsmith": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": ["--from", "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp", "flagsmith-mcp"],
+            "env": { "TRANSPORT": "stdio", "FLAGSMITH_API_TOKEN": "<your-api-key>" }
+        }
+    }
+}
+```
+
 </TabItem>
 <TabItem value="other" label="Other clients">
 
 Any other client that supports remote (Streamable HTTP) MCP servers can connect by pointing it at the MCP URL above and
-using either OAuth or the `Authorization: Api-Key` header.
+using either OAuth or the `Authorization: Api-Key` header. Clients that support stdio servers can instead launch it with
+`uvx --from "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp" flagsmith-mcp`, setting
+`TRANSPORT=stdio` and `FLAGSMITH_API_TOKEN`.
 
 </TabItem>
 </Tabs>
