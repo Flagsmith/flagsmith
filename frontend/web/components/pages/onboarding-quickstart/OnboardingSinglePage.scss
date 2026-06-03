@@ -101,6 +101,27 @@
     padding: 24px;
   }
 
+  // SDK selector for the manual path (one toggle driving both code steps).
+  &__sdk {
+    background: transparent;
+    border: 1px solid var(--color-border-default);
+    border-radius: 6px;
+    padding: 4px 14px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: color var(--duration-fast) var(--easing-standard),
+      border-color var(--duration-fast) var(--easing-standard),
+      background-color var(--duration-fast) var(--easing-standard);
+
+    &--active {
+      color: var(--color-text-action);
+      border-color: var(--color-border-action);
+      background-color: var(--color-surface-action-subtle);
+    }
+  }
+
   &__tabs {
     border-bottom: 1px solid var(--color-border-default);
     margin-bottom: 20px;
@@ -213,6 +234,142 @@
   &__flag {
     code {
       font-size: 0.8125rem;
+    }
+  }
+
+  // Theme-adaptive code blocks (prototype). CodeHelp/Highlight ships a global
+  // dark-only hljs theme; here we scope a light palette so onboarding code
+  // follows the page theme. Surface + default text use auto-flipping tokens;
+  // the syntax-token colours need an explicit light palette (they're tuned for
+  // a dark surface and fail contrast on light). Dark mode restores the app's
+  // existing palette so it looks unchanged there. Scoped to .onboarding-single
+  // — the rest of the app is untouched.
+  .hljs {
+    background: var(--color-surface-subtle);
+    color: var(--color-text-default);
+    border-color: var(--color-border-default);
+
+    // The global hljs ships a dark scrollbar (customScrollDark); use a light
+    // one to match the light surface.
+    &::-webkit-scrollbar-track {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.32);
+      }
+    }
+  }
+  .hljs-comment,
+  .hljs-deletion,
+  .hljs-meta,
+  .hljs-params {
+    color: #6e7781;
+  }
+  .hljs-keyword,
+  .hljs-selector-tag,
+  .hljs-section,
+  .hljs-attribute,
+  .hljs-name,
+  .hljs-variable {
+    color: #cf222e;
+  }
+  .hljs-string {
+    color: #0a3069;
+  }
+  .hljs-bullet,
+  .hljs-quote,
+  .hljs-link,
+  .hljs-number,
+  .hljs-regexp,
+  .hljs-literal {
+    color: #0550ae;
+  }
+  .hljs-subst,
+  .hljs-type,
+  .hljs-built_in,
+  .hljs-builtin-name,
+  .hljs-symbol,
+  .hljs-selector-id,
+  .hljs-selector-attr,
+  .hljs-selector-pseudo,
+  .hljs-template-tag,
+  .hljs-template-variable,
+  .hljs-addition {
+    color: #953800;
+  }
+  .hljs-code,
+  .hljs-selector-class {
+    color: #0a7b34;
+  }
+  .hljs-strong,
+  .hljs-emphasis {
+    color: #57606a;
+  }
+
+  // Dark mode: restore the app's existing dark syntax palette (literal hex,
+  // matching the global $warning/$success/$info/$secondary400 values, since
+  // this file can't reference the global SCSS colour variables).
+  [data-bs-theme='dark'] & {
+    .hljs {
+      &::-webkit-scrollbar-track {
+        background-color: rgba(255, 255, 255, 0.06);
+      }
+      &::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.22);
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.34);
+        }
+      }
+    }
+    .hljs-comment,
+    .hljs-deletion,
+    .hljs-meta {
+      color: #7f7f7f;
+    }
+    .hljs-params {
+      color: #b9b9b9;
+    }
+    .hljs-keyword,
+    .hljs-selector-tag,
+    .hljs-section,
+    .hljs-attribute,
+    .hljs-name,
+    .hljs-variable {
+      color: #ff9f43;
+    }
+    .hljs-string {
+      color: #27ab95;
+    }
+    .hljs-bullet,
+    .hljs-quote,
+    .hljs-link,
+    .hljs-number,
+    .hljs-regexp,
+    .hljs-literal {
+      color: #0aaddf;
+    }
+    .hljs-subst,
+    .hljs-type,
+    .hljs-built_in,
+    .hljs-builtin-name,
+    .hljs-symbol,
+    .hljs-selector-id,
+    .hljs-selector-attr,
+    .hljs-selector-pseudo,
+    .hljs-template-tag,
+    .hljs-template-variable,
+    .hljs-addition {
+      color: #fae392;
+    }
+    .hljs-code,
+    .hljs-selector-class {
+      color: #a6e22e;
+    }
+    .hljs-strong,
+    .hljs-emphasis {
+      color: #a8a8a2;
     }
   }
 
