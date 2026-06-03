@@ -27,6 +27,13 @@
     padding: 40px 48px;
   }
 
+  &__loading {
+    min-height: 60vh;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9375rem;
+  }
+
   &__crumb {
     font-size: 0.75rem;
     letter-spacing: 0.3px;
