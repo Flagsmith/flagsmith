@@ -6,8 +6,9 @@ authors = [{ name = "Flagsmith", email = "support@flagsmith.com" }]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "fastmcp>=3.3.1,<4.0.0",           # Base MCP functionality
-    "pydantic-settings>=2.0.0,<3.0.0", # Environment-driven configuration
+    "fastmcp>=3.3.1,<4.0.0",            # Base MCP functionality
+    "prometheus-client>=0.21.0,<1.0.0", # Export Prometheus metrics
+    "pydantic-settings>=2.0.0,<3.0.0",  # Environment-driven configuration
 ]
 
 [project.scripts]
