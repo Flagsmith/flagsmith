@@ -39,3 +39,16 @@ async def test_mcp_server__health__returns_ok(
     # Then
     assert response.status_code == 200
     assert response.text == "OK"
+
+
+async def test_mcp_server__metrics__returns_prometheus_exposition(
+    http_client: httpx.AsyncClient,
+) -> None:
+    # Given the server started via the client fixture
+    # When
+    response = await http_client.get("/metrics")
+
+    # Then
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/plain")
+    assert "flagsmith_mcp_tool_call_duration_seconds" in response.text

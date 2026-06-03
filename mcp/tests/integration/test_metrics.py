@@ -1,4 +1,3 @@
-import httpx
 import pytest
 from common.test_tools import AssertMetricFixture
 from fastmcp import Client
@@ -10,7 +9,6 @@ from respx import MockRouter
 
 async def test_metrics__successful_tool_call__records_duration_and_result_size(
     client: Client[FastMCPTransport],
-    http_client: httpx.AsyncClient,
     respx_mock: MockRouter,
     assert_metric: AssertMetricFixture,
 ) -> None:
@@ -21,11 +19,8 @@ async def test_metrics__successful_tool_call__records_duration_and_result_size(
 
     # When
     await client.call_tool("list_environments", {})
-    response = await http_client.get("/metrics")
 
     # Then
-    assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/plain")
     assert_metric(
         name="flagsmith_mcp_tool_call_duration_seconds_count",
         labels={"tool": "list_environments", "status": "success"},
