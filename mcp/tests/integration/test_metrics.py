@@ -31,16 +31,25 @@ async def test_metrics__successful_tool_call__records_duration_and_result_size(
         labels={"tool": "list_environments", "status": "success"},
         value=1,
     )
-    assert_metric(
-        name="flagsmith_mcp_tool_result_bytes_count",
-        labels={"tool": "list_environments"},
-        value=1,
+    content_sums: dict[str, float] = {}
+    for content in ("unstructured", "structured", "total"):
+        assert_metric(
+            name="flagsmith_mcp_tool_result_bytes_count",
+            labels={"tool": "list_environments", "content": content},
+            value=1,
+        )
+        content_sum = REGISTRY.get_sample_value(
+            "flagsmith_mcp_tool_result_bytes_sum",
+            {"tool": "list_environments", "content": content},
+        )
+        assert content_sum is not None
+        content_sums[content] = content_sum
+    assert content_sums["unstructured"] > 0
+    assert content_sums["structured"] > 0
+    assert (
+        content_sums["total"]
+        == content_sums["unstructured"] + content_sums["structured"]
     )
-    result_bytes_sum = REGISTRY.get_sample_value(
-        "flagsmith_mcp_tool_result_bytes_sum", {"tool": "list_environments"}
-    )
-    assert result_bytes_sum is not None
-    assert result_bytes_sum > 0
 
 
 async def test_metrics__failing_tool_call__records_error_duration_only(
@@ -63,7 +72,8 @@ async def test_metrics__failing_tool_call__records_error_duration_only(
     )
     assert (
         REGISTRY.get_sample_value(
-            "flagsmith_mcp_tool_result_bytes_count", {"tool": "list_environments"}
+            "flagsmith_mcp_tool_result_bytes_count",
+            {"tool": "list_environments", "content": "total"},
         )
         is None
     )

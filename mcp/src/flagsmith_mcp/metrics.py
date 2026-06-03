@@ -1,8 +1,8 @@
-import json
 import time
 from collections.abc import Sequence
 
 import mcp.types as mt
+import pydantic_core
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
 from fastmcp.tools.base import Tool, ToolResult
 from prometheus_client import Gauge, Histogram
@@ -15,11 +15,12 @@ flagsmith_mcp_tool_call_duration_seconds = Histogram(
 )
 flagsmith_mcp_tool_result_bytes = Histogram(
     "flagsmith_mcp_tool_result_bytes",
-    "Size of a successful MCP tool call result's text content — what a "
-    "client renders into the calling agent's context, and so a proxy for "
-    "the token cost of the call. Excludes the structuredContent duplicate "
-    "and JSON-RPC framing also present on the wire.",
-    labelnames=["tool"],
+    "Size of a successful MCP tool call result: its unstructured text "
+    "blocks, its structuredContent, or their total. A proxy for the token "
+    "cost a call incurs on the calling agent's context — MCP clients "
+    "differ in which content they render to the agent, so the cost sits "
+    "between the larger component and the total.",
+    labelnames=["tool", "content"],
     buckets=(256, 1024, 4096, 16384, 65536, 262144, 1048576, float("inf")),
 )
 flagsmith_mcp_tool_catalogue_bytes = Gauge(
@@ -49,15 +50,26 @@ class PrometheusMiddleware(Middleware):
         flagsmith_mcp_tool_call_duration_seconds.labels(
             tool=tool, status="success"
         ).observe(time.perf_counter() - start)
-        # The text blocks already hold the serialised payload; measuring them
-        # costs no extra marshalling.
-        flagsmith_mcp_tool_result_bytes.labels(tool=tool).observe(
-            sum(
-                len(block.text.encode())
-                for block in result.content
-                if isinstance(block, mt.TextContent)
-            )
+        # Text blocks already hold the serialised payload; structuredContent
+        # costs one compact dump, matching its wire encoding.
+        unstructured_bytes = sum(
+            len(block.text.encode())
+            for block in result.content
+            if isinstance(block, mt.TextContent)
         )
+        structured_bytes = (
+            len(pydantic_core.to_json(result.structured_content, fallback=str))
+            if result.structured_content is not None
+            else 0
+        )
+        for content, size in (
+            ("unstructured", unstructured_bytes),
+            ("structured", structured_bytes),
+            ("total", unstructured_bytes + structured_bytes),
+        ):
+            flagsmith_mcp_tool_result_bytes.labels(tool=tool, content=content).observe(
+                size
+            )
         return result
 
     async def on_list_tools(
@@ -68,12 +80,12 @@ class PrometheusMiddleware(Middleware):
         tools = await call_next(context)
         flagsmith_mcp_tool_catalogue_bytes.set(
             len(
-                json.dumps(
+                pydantic_core.to_json(
                     [
                         tool.to_mcp_tool().model_dump(exclude_none=True, by_alias=True)
                         for tool in tools
                     ]
-                ).encode()
+                )
             )
         )
         return tools
