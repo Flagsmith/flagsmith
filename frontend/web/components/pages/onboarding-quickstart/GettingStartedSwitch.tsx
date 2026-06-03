@@ -13,8 +13,14 @@ import OnboardingSinglePageContainer from 'web/components/pages/onboarding-quick
  * `onboarding_quickstart_flow` is honoured as a fallback while the multivariate
  * flag is rolled out. Missing/`control` → the existing GettingStartedPage.
  */
+// TEMP (local validation only): force an onboarding variant so you can view
+// it without the flag existing. Set back to '' before merge — the real gate is
+// the onboarding_experience flag. Values: 'single_page' | 'stepped' | ''.
+const FORCE_VARIANT = 'single_page'
+
 const GettingStartedSwitch: FC = () => {
-  const variant = Utils.getFlagsmithValue('onboarding_experience')
+  const variant =
+    FORCE_VARIANT || Utils.getFlagsmithValue('onboarding_experience')
 
   if (variant === 'single_page') {
     return <OnboardingSinglePageContainer />
