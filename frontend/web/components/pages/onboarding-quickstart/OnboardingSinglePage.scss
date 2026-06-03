@@ -1,0 +1,196 @@
+// Single-page onboarding (the AI + manual + verify flow). Everything is
+// pre-created; the user connects their app via their AI agent or the snippet,
+// and an honest waiting→connected signal confirms it for real. Colours via
+// semantic tokens; literal hex only for the dark code/prompt surface, which
+// the token set doesn't expose.
+
+.onboarding-single {
+  background-color: var(--color-surface-subtle);
+  min-height: 100vh;
+
+  // Re-assert semantic text tokens (Bootstrap overrides some with brand
+  // colours that fail on these surfaces).
+  .text-default {
+    color: var(--color-text-default);
+  }
+  .text-action {
+    color: var(--color-text-action);
+  }
+
+  &__page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 1100px;
+    margin-inline: auto;
+    padding: 40px 48px;
+  }
+
+  &__crumb {
+    font-size: 0.75rem;
+    letter-spacing: 0.3px;
+  }
+
+  &__title {
+    font-size: 1.625rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--color-text-default);
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+  }
+
+  &__resources {
+    width: fit-content;
+    padding: 10px 14px;
+    font-size: 0.8125rem;
+  }
+
+  &__chip {
+    padding: 4px 10px;
+    font-size: 0.8125rem;
+
+    &--flag {
+      background-color: var(--color-surface-action-subtle);
+    }
+  }
+
+  &__connect {
+    padding: 24px;
+  }
+
+  &__tabs {
+    border-bottom: 1px solid var(--color-border-default);
+    margin-bottom: 20px;
+  }
+
+  &__tab {
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    padding: 0 0 10px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: color var(--duration-fast) var(--easing-standard),
+      border-color var(--duration-fast) var(--easing-standard);
+
+    &--active {
+      color: var(--color-text-action);
+      border-bottom-color: var(--color-icon-action);
+    }
+  }
+
+  // Dark prompt surface for the AI tab.
+  &__prompt {
+    background-color: #1a2634;
+    padding: 16px;
+  }
+
+  &__prompt-text {
+    color: #a0d4ff;
+    font-family: var(--font-family-mono, monospace);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    background: transparent;
+    white-space: pre-wrap;
+  }
+
+  &__steps {
+    padding-left: 18px;
+
+    li {
+      margin-bottom: 4px;
+    }
+  }
+
+  &__verify {
+    padding: 16px;
+
+    &--waiting {
+      background-color: var(--color-surface-warning, #fff7ed);
+      border: 1px solid var(--orange-200, #fed7aa);
+    }
+
+    &--connected {
+      background-color: var(--color-surface-success, #ecfdf5);
+      border: 1px solid var(--green-200, #a7f3d0);
+    }
+  }
+
+  &__verify-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 9999px;
+    flex-shrink: 0;
+    position: relative;
+
+    &--waiting {
+      background-color: var(--orange-500, #f59e0b);
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 9999px;
+        background-color: inherit;
+        opacity: 0.4;
+        animation: onboarding-single-pulse 1.8s ease-out infinite;
+      }
+    }
+
+    &--connected {
+      background-color: var(--color-icon-success, #22c55e);
+    }
+  }
+
+  &__verify-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+
+    .onboarding-single__verify--waiting & {
+      color: var(--orange-700, #b45309);
+    }
+    .onboarding-single__verify--connected & {
+      color: var(--green-700, #15803d);
+    }
+  }
+
+  &__verify-sub {
+    font-size: 0.75rem;
+
+    .onboarding-single__verify--waiting & {
+      color: var(--orange-800, #92400e);
+    }
+    .onboarding-single__verify--connected & {
+      color: var(--green-800, #166534);
+    }
+  }
+
+  &__flag {
+    code {
+      font-size: 0.8125rem;
+    }
+  }
+
+  @media (max-width: 760px) {
+    &__page {
+      padding: 24px 16px;
+    }
+  }
+}
+
+@keyframes onboarding-single-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
