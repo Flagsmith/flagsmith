@@ -63,6 +63,38 @@
     &--flag {
       background-color: var(--color-surface-action-subtle);
     }
+
+    // Inline-editable chip: reads as a chip, edits in place. A faint border
+    // hints it's interactive; it firms up on hover and turns into an action
+    // ring while focused. The pencil fades in on hover/focus.
+    &--editable {
+      border: 1px solid transparent;
+      transition: border-color var(--duration-fast) var(--easing-standard),
+        background-color var(--duration-fast) var(--easing-standard);
+      cursor: text;
+
+      svg {
+        opacity: 0;
+        transition: opacity var(--duration-fast) var(--easing-standard);
+      }
+
+      &:hover {
+        border-color: var(--color-border-default);
+
+        svg {
+          opacity: 1;
+        }
+      }
+
+      &:focus-within {
+        border-color: var(--color-border-action);
+        background-color: var(--color-surface-default);
+
+        svg {
+          opacity: 1;
+        }
+      }
+    }
   }
 
   &__connect {

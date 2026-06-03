@@ -2,6 +2,8 @@ import React, { FC, useState } from 'react'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import Switch from 'components/Switch'
+import GhostInput from 'components/base/forms/GhostInput'
+import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import CodeSnippet from 'web/components/pages/onboarding-quickstart/components/CodeSnippet'
 import 'web/components/pages/onboarding-quickstart/OnboardingSinglePage.scss'
@@ -11,7 +13,15 @@ type ConnectTab = 'ai' | 'manual'
 type OnboardingSinglePageProps = {
   environmentKey: string
   featureName: string
+  // The flag's real `enabled` state in the Development environment, and a
+  // handler that persists a toggle to Flagsmith. Not local UI state — flipping
+  // this actually changes the flag, which is the whole point of the page.
+  flagEnabled: boolean
+  flagToggleDisabled?: boolean
+  onToggleFlag: () => void
   onGoToDashboard: () => void
+  onRenameOrganisation?: (name: string) => void
+  onRenameProject?: (name: string) => void
   organisationName: string
   projectName: string
   // Becomes true when the SDK makes its first real request. Wired to the real
@@ -20,21 +30,86 @@ type OnboardingSinglePageProps = {
   connected?: boolean
 }
 
+type EditableChipProps = {
+  label: string
+  onCommit: (next: string) => void
+  value: string
+}
+
+// An inline-editable chip built on the shared GhostInput (the transparent,
+// auto-sizing text field used for inline renames elsewhere). Keeps a local
+// draft and commits on blur / Enter; an empty value reverts to the last good
+// name rather than persisting a blank.
+const EditableChip: FC<EditableChipProps> = ({ label, onCommit, value }) => {
+  const [draft, setDraft] = useState(value)
+
+  const commit = () => {
+    const next = draft.trim()
+    if (!next) {
+      setDraft(value)
+      return
+    }
+    if (next !== value) {
+      onCommit(next)
+    }
+  }
+
+  return (
+    <span className='onboarding-single__chip onboarding-single__chip--editable d-inline-flex align-items-center gap-1 rounded-sm bg-surface-subtle text-default'>
+      <GhostInput
+        value={draft}
+        placeholder={label}
+        aria-label={`${label} name`}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.currentTarget.blur()
+          }
+        }}
+      />
+      <Icon
+        name='edit'
+        width={12}
+        fill='var(--color-icon-secondary)'
+        aria-hidden
+      />
+    </span>
+  )
+}
+
 const OnboardingSinglePage: FC<OnboardingSinglePageProps> = ({
   connected = false,
   environmentKey,
   featureName,
+  flagEnabled,
+  flagToggleDisabled = false,
   onGoToDashboard,
+  onRenameOrganisation,
+  onRenameProject,
+  onToggleFlag,
   organisationName,
   projectName,
 }) => {
   const [tab, setTab] = useState<ConnectTab>('ai')
-  const [flagOn, setFlagOn] = useState(true)
   const [copiedPrompt, setCopiedPrompt] = useState(false)
 
   // No-MCP path: the prompt carries the pre-created env key + flag, so the
-  // user's coding agent can wire it in with zero extra setup.
-  const aiPrompt = `Onboard me to Flagsmith. Environment key '${environmentKey}', flag '${featureName}'. Detect my stack, install the SDK, wire the flag in, run it, and verify it evaluates.`
+  // user's coding agent can wire it in with zero extra setup. When this app
+  // isn't on the default SaaS endpoint (staging / self-hosted / region), the
+  // SDK would otherwise default to edge.api.flagsmith.com and silently fail to
+  // authenticate — so we inject the real API base URL the key belongs to and
+  // tell the agent to wire it into the SDK's api/apiUrl option, not just the
+  // test. The honesty instruction mirrors the "demonstrate, don't simulate"
+  // principle: the agent must observe a real evaluation before claiming success.
+  const apiBaseUrl = Constants.getFlagsmithSDKUrl()
+  const apiLine = Constants.isCustomFlagsmithUrl()
+    ? `\n- API base URL: ${apiBaseUrl} (set the SDK's api/apiUrl option to this — not just for the test)`
+    : ''
+  const aiPrompt = `Onboard me to Flagsmith.
+- Environment key: ${environmentKey}
+- Flag: ${featureName}${apiLine}
+Detect my stack, install the matching SDK, and wire the flag into one representative spot (keep the diff small). Then run the app so the SDK actually evaluates '${featureName}', and only tell me it works if you genuinely observed the evaluation — don't fabricate the result. If the key doesn't authenticate, it's almost always the API base URL (staging/self-hosted), not a bad key — don't loop over keys.`
 
   const copyPrompt = () => {
     Utils.copyToClipboard(aiPrompt)
@@ -64,14 +139,18 @@ const OnboardingSinglePage: FC<OnboardingSinglePageProps> = ({
         {/* Pre-created resources — created at signup, shown for reassurance. */}
         <div className='onboarding-single__resources d-inline-flex align-items-center gap-2 rounded-md border border-default bg-surface-default'>
           <span className='text-muted'>Organisation</span>
-          <span className='onboarding-single__chip rounded-sm bg-surface-subtle text-default'>
-            {organisationName}
-          </span>
+          <EditableChip
+            label='Organisation'
+            value={organisationName}
+            onCommit={(name) => onRenameOrganisation?.(name)}
+          />
           <span className='text-muted'>·</span>
           <span className='text-muted'>Project</span>
-          <span className='onboarding-single__chip rounded-sm bg-surface-subtle text-default'>
-            {projectName}
-          </span>
+          <EditableChip
+            label='Project'
+            value={projectName}
+            onCommit={(name) => onRenameProject?.(name)}
+          />
           <span className='text-muted'>·</span>
           <span className='text-muted'>Flag</span>
           <span className='onboarding-single__chip onboarding-single__chip--flag rounded-sm text-action'>
@@ -182,10 +261,11 @@ const OnboardingSinglePage: FC<OnboardingSinglePageProps> = ({
           <span className='text-muted'>Your flag</span>
           <code className='text-action'>{featureName}</code>
           <div className='ms-auto d-flex align-items-center gap-2'>
-            <span className='text-muted'>{flagOn ? 'On' : 'Off'}</span>
+            <span className='text-muted'>{flagEnabled ? 'On' : 'Off'}</span>
             <Switch
-              checked={flagOn}
-              onChange={() => setFlagOn((value) => !value)}
+              checked={flagEnabled}
+              disabled={flagToggleDisabled}
+              onChange={onToggleFlag}
               aria-label={`Toggle ${featureName}`}
             />
           </div>

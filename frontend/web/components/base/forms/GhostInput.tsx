@@ -30,7 +30,9 @@ const GhostInput = forwardRef<HTMLInputElement, GhostInputProps>(
 
     useEffect(() => {
       if (spanRef.current) {
-        setInputWidth(spanRef.current.offsetWidth * 0.95)
+        // Match the measured text width plus a small buffer for the caret;
+        // anything less clips the last character(s).
+        setInputWidth(spanRef.current.offsetWidth + 2)
       }
     }, [value])
 
