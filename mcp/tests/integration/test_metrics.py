@@ -1,5 +1,6 @@
 import httpx
 import pytest
+from common.test_tools import AssertMetricFixture
 from fastmcp import Client
 from fastmcp.client.transports import FastMCPTransport
 from fastmcp.exceptions import ToolError
@@ -11,24 +12,11 @@ async def test_metrics__successful_tool_call__records_duration_and_result_size(
     client: Client[FastMCPTransport],
     http_client: httpx.AsyncClient,
     respx_mock: MockRouter,
+    assert_metric: AssertMetricFixture,
 ) -> None:
     # Given
     respx_mock.get("https://api.flagsmith.com/environments/").respond(
         json={"results": []}
-    )
-    duration_labels = {"tool": "list_environments", "status": "success"}
-    result_labels = {"tool": "list_environments"}
-    duration_count_before = (
-        REGISTRY.get_sample_value(
-            "flagsmith_mcp_tool_call_duration_seconds_count", duration_labels
-        )
-        or 0.0
-    )
-    result_count_before = (
-        REGISTRY.get_sample_value(
-            "flagsmith_mcp_tool_result_bytes_count", result_labels
-        )
-        or 0.0
     )
 
     # When
@@ -38,20 +26,18 @@ async def test_metrics__successful_tool_call__records_duration_and_result_size(
     # Then
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/plain")
-    assert (
-        REGISTRY.get_sample_value(
-            "flagsmith_mcp_tool_call_duration_seconds_count", duration_labels
-        )
-        == duration_count_before + 1
+    assert_metric(
+        name="flagsmith_mcp_tool_call_duration_seconds_count",
+        labels={"tool": "list_environments", "status": "success"},
+        value=1,
     )
-    assert (
-        REGISTRY.get_sample_value(
-            "flagsmith_mcp_tool_result_bytes_count", result_labels
-        )
-        == result_count_before + 1
+    assert_metric(
+        name="flagsmith_mcp_tool_result_bytes_count",
+        labels={"tool": "list_environments"},
+        value=1,
     )
     result_bytes_sum = REGISTRY.get_sample_value(
-        "flagsmith_mcp_tool_result_bytes_sum", result_labels
+        "flagsmith_mcp_tool_result_bytes_sum", {"tool": "list_environments"}
     )
     assert result_bytes_sum is not None
     assert result_bytes_sum > 0
@@ -60,37 +46,26 @@ async def test_metrics__successful_tool_call__records_duration_and_result_size(
 async def test_metrics__failing_tool_call__records_error_duration_only(
     client: Client[FastMCPTransport],
     respx_mock: MockRouter,
+    assert_metric: AssertMetricFixture,
 ) -> None:
     # Given
     respx_mock.get("https://api.flagsmith.com/environments/").respond(status_code=502)
-    duration_labels = {"tool": "list_environments", "status": "error"}
-    result_labels = {"tool": "list_environments"}
-    duration_count_before = (
-        REGISTRY.get_sample_value(
-            "flagsmith_mcp_tool_call_duration_seconds_count", duration_labels
-        )
-        or 0.0
-    )
-    result_count_before = REGISTRY.get_sample_value(
-        "flagsmith_mcp_tool_result_bytes_count", result_labels
-    )
 
     # When
     with pytest.raises(ToolError):
         await client.call_tool("list_environments", {})
 
     # Then
-    assert (
-        REGISTRY.get_sample_value(
-            "flagsmith_mcp_tool_call_duration_seconds_count", duration_labels
-        )
-        == duration_count_before + 1
+    assert_metric(
+        name="flagsmith_mcp_tool_call_duration_seconds_count",
+        labels={"tool": "list_environments", "status": "error"},
+        value=1,
     )
     assert (
         REGISTRY.get_sample_value(
-            "flagsmith_mcp_tool_result_bytes_count", result_labels
+            "flagsmith_mcp_tool_result_bytes_count", {"tool": "list_environments"}
         )
-        == result_count_before
+        is None
     )
 
 
