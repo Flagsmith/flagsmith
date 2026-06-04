@@ -6,6 +6,7 @@ from fastmcp.server.providers.openapi import MCPType, OpenAPITool, RouteMap
 from fastmcp.utilities.components import FastMCPComponent
 from fastmcp.utilities.openapi.models import HttpMethod, HTTPRoute
 from mcp.types import ToolAnnotations
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from prometheus_client import start_http_server
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
@@ -15,7 +16,7 @@ from flagsmith_mcp.auth import FlagsmithAuth
 from flagsmith_mcp.events import EventLoggingMiddleware
 from flagsmith_mcp.metrics import PrometheusMiddleware
 from flagsmith_mcp.oauth import FlagsmithResourceAuth
-from flagsmith_mcp.telemetry import setup_telemetry
+from flagsmith_mcp.telemetry import BaggageMiddleware, setup_telemetry
 
 ROUTE_MAPS = [
     RouteMap(tags={"mcp"}, mcp_type=MCPType.TOOL),
@@ -57,12 +58,16 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
             resource_url=settings.mcp_server_url,
             authorization_server=settings.flagsmith_api_url,
         )
+    api_client = httpx.AsyncClient(
+        base_url=settings.flagsmith_api_url,
+        auth=FlagsmithAuth(settings.flagsmith_api_token),
+    )
+    # Instrument only the Flagsmith API client: emit a span per upstream
+    # call and propagate W3C trace context and baggage to the API.
+    HTTPXClientInstrumentor().instrument_client(api_client)
     server = FastMCP.from_openapi(
         openapi_spec=_fetch_spec(),
-        client=httpx.AsyncClient(
-            base_url=settings.flagsmith_api_url,
-            auth=FlagsmithAuth(settings.flagsmith_api_token),
-        ),
+        client=api_client,
         name="Flagsmith",
         route_maps=ROUTE_MAPS,
         mcp_component_fn=_customise,
@@ -72,6 +77,7 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
 
     server.add_middleware(PrometheusMiddleware())
     server.add_middleware(EventLoggingMiddleware())
+    server.add_middleware(BaggageMiddleware())
 
     @server.custom_route("/health", methods=["GET"])
     async def health(request: Request) -> PlainTextResponse:

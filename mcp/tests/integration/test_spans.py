@@ -32,3 +32,22 @@ async def test_spans__tool_call__annotated_with_client_identity(
         "flagsmith.client.name": "mcp",
         "flagsmith.client.version": "0.1.0",
     }.items() <= dict(span.attributes).items()
+
+
+async def test_spans__tool_call__upstream_request_carries_baggage(
+    client: Client[FastMCPTransport],
+    respx_mock: MockRouter,
+) -> None:
+    # Given
+    route = respx_mock.get("https://api.flagsmith.com/environments/")
+    route.respond(json={"results": []})
+
+    # When
+    await client.call_tool("list_environments", {})
+
+    # Then the instrumented API client propagated W3C Baggage
+    assert route.calls.last.request.headers["baggage"] == (
+        "flagsmith.tool.name=list_environments,"
+        "flagsmith.client.name=mcp,"
+        "flagsmith.client.version=0.1.0"
+    )

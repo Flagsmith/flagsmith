@@ -1,6 +1,7 @@
 import os
 
 from common.core.otel import add_otel_trace_context
+from opentelemetry import baggage
 from pytest_mock import MockerFixture
 
 from flagsmith_mcp import config, telemetry
@@ -98,3 +99,25 @@ def test_client_info_span_processor__outside_request_context__no_attributes(
 
     # Then
     span.set_attribute.assert_not_called()
+
+
+async def test_baggage_middleware__uninitialised_session__tool_name_baggage_only(
+    mocker: MockerFixture,
+) -> None:
+    # Given a tool call outside an initialised session
+    middleware = telemetry.BaggageMiddleware()
+    context = mocker.Mock()
+    context.message.name = "list_environments"
+    seen_baggage: dict[str, object] = {}
+
+    async def record_baggage(ctx: object) -> None:
+        seen_baggage.update(baggage.get_all())
+
+    call_next = mocker.AsyncMock(side_effect=record_baggage)
+
+    # When
+    await middleware.on_call_tool(context, call_next)
+
+    # Then
+    assert seen_baggage == {"flagsmith.tool.name": "list_environments"}
+    assert baggage.get_all() == {}

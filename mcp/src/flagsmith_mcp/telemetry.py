@@ -1,3 +1,4 @@
+import mcp.types as mt
 from common.core.logging import setup_logging
 from common.core.otel import (
     add_otel_trace_context,
@@ -5,7 +6,10 @@ from common.core.otel import (
     build_tracer_provider,
     make_structlog_otel_processor,
 )
-from opentelemetry import trace
+from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
+from fastmcp.tools.base import ToolResult
+from opentelemetry import baggage, trace
+from opentelemetry import context as otel_context
 from opentelemetry.context import Context
 from opentelemetry.sdk.trace import Span, SpanProcessor
 from structlog.typing import Processor
@@ -23,6 +27,30 @@ class ClientInfoSpanProcessor(SpanProcessor):
         if (client_info := get_client_info()) is not None:
             span.set_attribute("flagsmith.client.name", client_info.name)
             span.set_attribute("flagsmith.client.version", client_info.version)
+
+
+class BaggageMiddleware(Middleware):
+    """Attach the tool name and client identity as W3C Baggage, propagated
+    to the Flagsmith API by the instrumented upstream HTTP client."""
+
+    async def on_call_tool(
+        self,
+        context: MiddlewareContext[mt.CallToolRequestParams],
+        call_next: CallNext[mt.CallToolRequestParams, ToolResult],
+    ) -> ToolResult:
+        ctx = baggage.set_baggage("flagsmith.tool.name", context.message.name)
+        if (client_info := get_client_info()) is not None:
+            ctx = baggage.set_baggage(
+                "flagsmith.client.name", client_info.name, context=ctx
+            )
+            ctx = baggage.set_baggage(
+                "flagsmith.client.version", client_info.version, context=ctx
+            )
+        token = otel_context.attach(ctx)
+        try:
+            return await call_next(context)
+        finally:
+            otel_context.detach(token)
 
 
 def setup_telemetry(settings: config.Settings) -> None:
