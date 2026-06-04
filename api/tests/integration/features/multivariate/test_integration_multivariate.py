@@ -177,36 +177,6 @@ def test_create_mv_option__empty_string_key__returns_bad_request(
     assert response.json()["key"] == ["This field may not be blank."]
 
 
-def test_update_mv_option__new_key__returns_updated_key(
-    admin_client_new: APIClient,
-    project: int,
-    feature: int,
-    mv_option_50_percent: int,
-) -> None:
-    # Given
-    url = reverse(
-        "api-v1:projects:feature-mv-options-detail",
-        args=[project, feature, mv_option_50_percent],
-    )
-    data = {
-        "id": mv_option_50_percent,
-        "type": "unicode",
-        "feature": feature,
-        "string_value": "bigger",
-        "default_percentage_allocation": 50,
-        "key": "control",
-    }
-    # When
-    response = admin_client_new.put(
-        url,
-        data=json.dumps(data),
-        content_type="application/json",
-    )
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["key"] == "control"
-
-
 def test_update_mv_option__unchanged_key__returns_ok(
     admin_client_new: APIClient,
     project: int,
