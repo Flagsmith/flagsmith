@@ -136,9 +136,52 @@ def test_run__configured_transport__runs_server_with_it(
     monkeypatch.setattr(server, "create_server", lambda settings: FakeServer())
     monkeypatch.setenv("TRANSPORT", "stdio")
     monkeypatch.setenv("FLAGSMITH_API_TOKEN", "ser.secret")
+    monkeypatch.delenv("METRICS_PORT", raising=False)
 
     # When
     server.run()
 
     # Then
     assert calls == {"transport": "stdio"}
+
+
+def test_run__metrics_port_unset__metrics_server_not_started(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given
+    calls: list[int] = []
+
+    class FakeServer:
+        def run(self, transport: str) -> None:
+            pass
+
+    monkeypatch.setattr(server, "create_server", lambda settings: FakeServer())
+    monkeypatch.setattr(server, "start_http_server", calls.append)
+    monkeypatch.delenv("METRICS_PORT", raising=False)
+
+    # When
+    server.run()
+
+    # Then
+    assert calls == []
+
+
+def test_run__metrics_port_set__metrics_server_started_with_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given
+    calls: list[int] = []
+
+    class FakeServer:
+        def run(self, transport: str) -> None:
+            pass
+
+    monkeypatch.setattr(server, "create_server", lambda settings: FakeServer())
+    monkeypatch.setattr(server, "start_http_server", calls.append)
+    monkeypatch.setenv("METRICS_PORT", "9464")
+
+    # When
+    server.run()
+
+    # Then
+    assert calls == [9464]

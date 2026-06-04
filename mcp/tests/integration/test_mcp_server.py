@@ -4,6 +4,8 @@ from common.test_tools import SnapshotFixture
 from fastmcp import Client
 from fastmcp.client.transports import FastMCPTransport
 from mcp.types import LATEST_PROTOCOL_VERSION
+from prometheus_client import start_http_server
+from respx import MockRouter
 
 
 async def test_mcp_server__ping__returns_expected(
@@ -44,12 +46,20 @@ async def test_mcp_server__health__returns_ok(
 
 
 @pytest.mark.usefixtures("assert_metric")
-async def test_mcp_server__metrics__returns_prometheus_exposition(
-    http_client: httpx.AsyncClient,
+def test_metrics_server__exposition__matches_snapshot(
     snapshot: SnapshotFixture,
+    respx_mock: MockRouter,
 ) -> None:
-    # Given / When
-    response = await http_client.get("/metrics")
+    # Given a metrics server on an ephemeral port
+    respx_mock.route(host="127.0.0.1").pass_through()
+    server, thread = start_http_server(0)
+
+    try:
+        # When
+        response = httpx.get(f"http://127.0.0.1:{server.server_port}/metrics")
+    finally:
+        server.shutdown()
+        thread.join()
 
     # Then
     assert response.status_code == 200
