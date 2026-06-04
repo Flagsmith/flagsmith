@@ -14,6 +14,7 @@ from flagsmith_mcp import config, constants
 from flagsmith_mcp.auth import FlagsmithAuth
 from flagsmith_mcp.metrics import PrometheusMiddleware
 from flagsmith_mcp.oauth import FlagsmithResourceAuth
+from flagsmith_mcp.telemetry import setup_telemetry
 
 ROUTE_MAPS = [
     RouteMap(tags={"mcp"}, mcp_type=MCPType.TOOL),
@@ -79,7 +80,17 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
 
 def run() -> None:
     settings = config.Settings()
+    setup_telemetry(settings)
     server = create_server(settings)
     if settings.metrics_port is not None:
         start_http_server(settings.metrics_port)
-    server.run(transport=settings.transport)
+    if settings.transport == "http":
+        server.run(
+            transport=settings.transport,
+            show_banner=False,
+            # Let uvicorn log records propagate to the root logger so they
+            # are rendered by the configured formatter.
+            uvicorn_config={"log_config": None},
+        )
+    else:
+        server.run(transport=settings.transport, show_banner=False)

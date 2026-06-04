@@ -6,9 +6,10 @@ authors = [{ name = "Flagsmith", email = "support@flagsmith.com" }]
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastmcp>=3.3.1,<4.0.0",            # Base MCP functionality
-    "prometheus-client>=0.21.0,<1.0.0", # Export Prometheus metrics
-    "pydantic-settings>=2.0.0,<3.0.0",  # Environment-driven configuration
+    "fastmcp>=3.3.1,<4.0.0",                    # Base MCP functionality
+    "flagsmith-common[otel]>=3.10.0,<4.0.0",    # Logging and OTel export
+    "prometheus-client>=0.21.0,<1.0.0",         # Export Prometheus metrics
+    "pydantic-settings>=2.0.0,<3.0.0",          # Environment-driven configuration
 ]
 
 [project.scripts]
@@ -16,7 +17,7 @@ flagsmith-mcp = "flagsmith_mcp.server:run"
 
 [dependency-groups]
 dev = [
-    "flagsmith-common[test-tools]>=3.9.1,<4.0.0", # Shared test fixtures
+    "flagsmith-common[test-tools]>=3.10.0,<4.0.0", # Shared test fixtures
     "mypy>=2.1.0,<3.0.0",                         # Static type checking
     "openapi-pydantic>=0.5.0,<1.0.0",             # Build OpenAPI specs as fixtures
     "pytest>=9.0.3,<10.0.0",                      # Run tests
