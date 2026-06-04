@@ -35,7 +35,6 @@ async def test_events__successful_tool_call__emits_tool_called(
 
     # Then
     [event] = [e for e in log.events if e["event"] == "tool.called"]
-    assert event.pop("duration_ms") >= 0
     assert event == {
         "event": "tool.called",
         "level": "info",
@@ -60,7 +59,6 @@ async def test_events__failing_tool_call__emits_tool_called_with_error_status(
 
     # Then
     [event] = [e for e in log.events if e["event"] == "tool.called"]
-    assert event.pop("duration_ms") >= 0
     assert event == {
         "event": "tool.called",
         "level": "info",

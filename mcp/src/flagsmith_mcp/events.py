@@ -1,5 +1,3 @@
-import time
-
 import mcp.types as mt
 import structlog
 from fastmcp.server.dependencies import get_context
@@ -46,7 +44,6 @@ class EventLoggingMiddleware(Middleware):
         client_info = get_client_info()
         client_name = client_info.name if client_info else ""
         client_version = client_info.version if client_info else ""
-        start = time.perf_counter()
         try:
             result = await call_next(context)
         except Exception:
@@ -56,7 +53,6 @@ class EventLoggingMiddleware(Middleware):
                 flagsmith__client__name=client_name,
                 flagsmith__client__version=client_version,
                 status="error",
-                duration_ms=(time.perf_counter() - start) * 1000,
             )
             raise
         logger.info(
@@ -65,6 +61,5 @@ class EventLoggingMiddleware(Middleware):
             flagsmith__client__name=client_name,
             flagsmith__client__version=client_version,
             status="success",
-            duration_ms=(time.perf_counter() - start) * 1000,
         )
         return result
