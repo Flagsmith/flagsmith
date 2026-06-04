@@ -107,7 +107,7 @@ def test_backfill_identities_to_clickhouse__happy_path__bulk_inserts(
     sql, rows_arg = cursor.executemany.call_args.args
     assert sql == (
         "INSERT INTO IDENTITIES "
-        "(environment_id, identifier, identity_key, traits) VALUES"
+        "(environment_id, identifier, identity_key, traits, is_deleted) VALUES"
     )
     assert {row[0] for row in rows_arg} == {environment.api_key}
     assert {row[1] for row in rows_arg} == {"a", "b"}
@@ -356,3 +356,58 @@ def test_refresh_project_segment_counts__never_matched_pair__no_row_written(
     assert not SegmentMembershipCount.objects.filter(
         segment=segment, environment=environment
     ).exists()
+
+
+def test_write_identity_deletion_tombstone_to_clickhouse__clickhouse_disabled__skips(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    settings.CLICKHOUSE_ENABLED = False
+    spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
+
+    # When
+    tasks.write_identity_deletion_tombstone_to_clickhouse(
+        env_key="env-abc",
+        identifier="alice",
+        identity_key="env-abc_alice",
+    )
+
+    # Then
+    spy.assert_not_called()
+    assert any(e["event"] == "tombstone.skipped" for e in log.events)
+
+
+def test_write_identity_deletion_tombstone_to_clickhouse__clickhouse_enabled__writes_tombstone(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    settings.CLICKHOUSE_ENABLED = True
+    cursor = MagicMock()
+    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    open_cursor.return_value.__enter__.return_value = cursor
+
+    # When
+    tasks.write_identity_deletion_tombstone_to_clickhouse(
+        env_key="env-abc",
+        identifier="alice",
+        identity_key="env-abc_alice",
+    )
+
+    # Then — exactly one INSERT with is_deleted=True
+    sql, rows_arg = cursor.executemany.call_args.args
+    assert sql == (
+        "INSERT INTO IDENTITIES "
+        "(environment_id, identifier, identity_key, traits, is_deleted) VALUES"
+    )
+    assert len(rows_arg) == 1
+    row = rows_arg[0]
+    assert row[0] == "env-abc"  # environment_id
+    assert row[1] == "alice"  # identifier
+    assert row[2] == "env-abc_alice"  # identity_key
+    assert row[3] is None  # traits — NULL for tombstone
+    assert row[4] is True  # is_deleted
+    assert any(e["event"] == "tombstone.written" for e in log.events)

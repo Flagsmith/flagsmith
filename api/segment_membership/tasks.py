@@ -45,6 +45,7 @@ _IDENTITIES_COLUMN_NAMES = (
     "identifier",
     "identity_key",
     "traits",
+    "is_deleted",
 )
 
 _INSERT_IDENTITIES_SQL = (
@@ -188,3 +189,40 @@ def refresh_project_segment_counts(project_id: int) -> None:
             membership_counts__count=len(membership_counts),
             stale_counts__count=stale_deleted,
         )
+
+
+@register_task_handler()
+def write_identity_deletion_tombstone_to_clickhouse(
+    env_key: str,
+    identifier: str,
+    identity_key: str,
+) -> None:
+    """Insert a tombstone row for a deleted identity so it is excluded from
+    segment membership counts at the next refresh.
+
+    ReplacingMergeTree(inserted_at) keeps the row with the highest
+    inserted_at per (environment_id, identifier). Because this row is
+    written after the identity is removed from Dynamo its inserted_at
+    will be newer than any prior live row, so FINAL deduplication will
+    always surface the tombstone.
+    """
+    if not settings.CLICKHOUSE_ENABLED:
+        logger.info(
+            "tombstone.skipped",
+            reason="clickhouse_not_configured",
+            env_key=env_key,
+            identifier=identifier,
+        )
+        return
+
+    log_comment = f"flagsmith:segment_membership:tombstone:env_{env_key}"
+    with open_clickhouse_cursor(log_comment=log_comment) as cursor:
+        cursor.executemany(
+            _INSERT_IDENTITIES_SQL,
+            [(env_key, identifier, identity_key, None, True)],  # type: ignore[arg-type]
+        )
+    logger.info(
+        "tombstone.written",
+        env_key=env_key,
+        identifier=identifier,
+    )
