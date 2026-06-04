@@ -134,12 +134,16 @@ def test_run__configured_transport__runs_server_with_it(
         clear=True,
     )
     create_server_mock = mocker.patch.object(server, "create_server", autospec=True)
+    setup_telemetry_mock = mocker.patch.object(server, "setup_telemetry", autospec=True)
 
     # When
     server.run()
 
     # Then
-    create_server_mock.return_value.run.assert_called_once_with(transport="stdio")
+    setup_telemetry_mock.assert_called_once()
+    create_server_mock.return_value.run.assert_called_once_with(
+        transport="stdio", show_banner=False
+    )
 
 
 def test_run__metrics_port_unset__metrics_server_not_started(
@@ -148,6 +152,7 @@ def test_run__metrics_port_unset__metrics_server_not_started(
     # Given
     mocker.patch.dict(os.environ, {}, clear=True)
     mocker.patch.object(server, "create_server", autospec=True)
+    mocker.patch.object(server, "setup_telemetry", autospec=True)
     start_http_server_mock = mocker.patch.object(
         server, "start_http_server", autospec=True
     )
@@ -165,6 +170,7 @@ def test_run__metrics_port_set__metrics_server_started_with_it(
     # Given
     mocker.patch.dict(os.environ, {"METRICS_PORT": "9464"}, clear=True)
     mocker.patch.object(server, "create_server", autospec=True)
+    mocker.patch.object(server, "setup_telemetry", autospec=True)
     start_http_server_mock = mocker.patch.object(
         server, "start_http_server", autospec=True
     )
@@ -174,3 +180,22 @@ def test_run__metrics_port_set__metrics_server_started_with_it(
 
     # Then
     start_http_server_mock.assert_called_once_with(9464)
+
+
+def test_run__http_transport__banner_off_uvicorn_logs_propagated(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch.dict(os.environ, {}, clear=True)
+    create_server_mock = mocker.patch.object(server, "create_server", autospec=True)
+    mocker.patch.object(server, "setup_telemetry", autospec=True)
+
+    # When
+    server.run()
+
+    # Then
+    create_server_mock.return_value.run.assert_called_once_with(
+        transport="http",
+        show_banner=False,
+        uvicorn_config={"log_config": None},
+    )
