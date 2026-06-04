@@ -145,15 +145,12 @@ const Utils = Object.assign({}, BaseUtils, {
     return res
   },
 
-  getContrastColour(backgroundColor: string): string {
-    if (!backgroundColor) {
-      return 'white'
-    }
+  getContrastColour(backgroundColor: string | null | undefined): string {
+    if (!backgroundColor) return 'white'
 
     try {
-      const parsed = Utils.colour(backgroundColor)
-      return parsed.luminosity() > 0.179 ? 'black' : 'white'
-    } catch (_error) {
+      return Color(backgroundColor).luminosity() > 0.179 ? 'black' : 'white'
+    } catch {
       return 'white'
     }
   },
