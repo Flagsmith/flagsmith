@@ -72,6 +72,10 @@ def test_setup_telemetry__otlp_endpoint__exports_logs_and_traces(
     set_tracer_provider_mock.assert_called_once_with(
         build_tracer_provider_mock.return_value
     )
+    [span_processor] = (
+        build_tracer_provider_mock.return_value.add_span_processor.call_args.args
+    )
+    assert isinstance(span_processor, telemetry.ClientInfoSpanProcessor)
     setup_logging_mock.assert_called_once_with(
         log_level="DEBUG",
         log_format="json",
@@ -81,3 +85,16 @@ def test_setup_telemetry__otlp_endpoint__exports_logs_and_traces(
             make_structlog_otel_processor_mock.return_value,
         ],
     )
+
+
+def test_client_info_span_processor__outside_request_context__no_attributes(
+    mocker: MockerFixture,
+) -> None:
+    # Given no MCP request context
+    span = mocker.Mock()
+
+    # When
+    telemetry.ClientInfoSpanProcessor().on_start(span)
+
+    # Then
+    span.set_attribute.assert_not_called()

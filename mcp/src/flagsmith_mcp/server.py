@@ -12,6 +12,7 @@ from starlette.responses import PlainTextResponse
 
 from flagsmith_mcp import config, constants
 from flagsmith_mcp.auth import FlagsmithAuth
+from flagsmith_mcp.events import EventLoggingMiddleware
 from flagsmith_mcp.metrics import PrometheusMiddleware
 from flagsmith_mcp.oauth import FlagsmithResourceAuth
 from flagsmith_mcp.telemetry import setup_telemetry
@@ -70,6 +71,7 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
     )
 
     server.add_middleware(PrometheusMiddleware())
+    server.add_middleware(EventLoggingMiddleware())
 
     @server.custom_route("/health", methods=["GET"])
     async def health(request: Request) -> PlainTextResponse:
