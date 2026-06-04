@@ -1,9 +1,10 @@
-from typing import Any
+import os
 
 import openapi_pydantic as openapi
 import pytest
 from fastmcp import Client
 from mcp.types import ToolAnnotations
+from pytest_mock import MockerFixture
 from respx import MockRouter
 
 from flagsmith_mcp import config, constants, server
@@ -124,21 +125,52 @@ async def test_create_server__untagged_route__excluded_from_tools(
 
 
 def test_run__configured_transport__runs_server_with_it(
-    monkeypatch: pytest.MonkeyPatch,
+    mocker: MockerFixture,
 ) -> None:
     # Given
-    calls: dict[str, Any] = {}
-
-    class FakeServer:
-        def run(self, transport: str) -> None:
-            calls["transport"] = transport
-
-    monkeypatch.setattr(server, "create_server", lambda settings: FakeServer())
-    monkeypatch.setenv("TRANSPORT", "stdio")
-    monkeypatch.setenv("FLAGSMITH_API_TOKEN", "ser.secret")
+    mocker.patch.dict(
+        os.environ,
+        {"TRANSPORT": "stdio", "FLAGSMITH_API_TOKEN": "ser.secret"},
+        clear=True,
+    )
+    create_server_mock = mocker.patch.object(server, "create_server", autospec=True)
 
     # When
     server.run()
 
     # Then
-    assert calls == {"transport": "stdio"}
+    create_server_mock.return_value.run.assert_called_once_with(transport="stdio")
+
+
+def test_run__metrics_port_unset__metrics_server_not_started(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch.dict(os.environ, {}, clear=True)
+    mocker.patch.object(server, "create_server", autospec=True)
+    start_http_server_mock = mocker.patch.object(
+        server, "start_http_server", autospec=True
+    )
+
+    # When
+    server.run()
+
+    # Then
+    start_http_server_mock.assert_not_called()
+
+
+def test_run__metrics_port_set__metrics_server_started_with_it(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch.dict(os.environ, {"METRICS_PORT": "9464"}, clear=True)
+    mocker.patch.object(server, "create_server", autospec=True)
+    start_http_server_mock = mocker.patch.object(
+        server, "start_http_server", autospec=True
+    )
+
+    # When
+    server.run()
+
+    # Then
+    start_http_server_mock.assert_called_once_with(9464)

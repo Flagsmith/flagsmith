@@ -21,6 +21,10 @@ class Settings(BaseSettings):
         default="http",
     )
     """MCP transport to use."""
+    metrics_port: int | None = Field(
+        default=None,
+    )
+    """Serve Prometheus metrics on this port. Disabled when unset."""
     mcp_server_url: str = Field(
         default="http://127.0.0.1:8000",
     )

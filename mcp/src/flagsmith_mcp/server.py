@@ -6,11 +6,13 @@ from fastmcp.server.providers.openapi import MCPType, OpenAPITool, RouteMap
 from fastmcp.utilities.components import FastMCPComponent
 from fastmcp.utilities.openapi.models import HttpMethod, HTTPRoute
 from mcp.types import ToolAnnotations
+from prometheus_client import start_http_server
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 
 from flagsmith_mcp import config, constants
 from flagsmith_mcp.auth import FlagsmithAuth
+from flagsmith_mcp.metrics import PrometheusMiddleware
 from flagsmith_mcp.oauth import FlagsmithResourceAuth
 
 ROUTE_MAPS = [
@@ -66,6 +68,8 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
         auth=auth,
     )
 
+    server.add_middleware(PrometheusMiddleware())
+
     @server.custom_route("/health", methods=["GET"])
     async def health(request: Request) -> PlainTextResponse:
         return PlainTextResponse("OK")
@@ -75,4 +79,7 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
 
 def run() -> None:
     settings = config.Settings()
-    create_server(settings).run(transport=settings.transport)
+    server = create_server(settings)
+    if settings.metrics_port is not None:
+        start_http_server(settings.metrics_port)
+    server.run(transport=settings.transport)
