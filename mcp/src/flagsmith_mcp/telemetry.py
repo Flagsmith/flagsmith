@@ -9,7 +9,7 @@ from common.core.otel import (
 from opentelemetry import baggage, trace
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.context import Context
-from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
+from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor, TracerProvider
 from structlog.typing import Processor
 
 from flagsmith_mcp import config
@@ -52,14 +52,16 @@ def setup_telemetry(settings: config.Settings) -> None:
             add_otel_trace_context,
             make_structlog_otel_processor(log_provider),
         ]
-        # Setting a global tracer provider also activates FastMCP's built-in
-        # per-request server spans.
         tracer_provider = build_tracer_provider(
             endpoint=f"{endpoint}/v1/traces",
             service_name=settings.otel_service_name,
         )
-        tracer_provider.add_span_processor(ClientInfoSpanProcessor())
-        trace.set_tracer_provider(tracer_provider)
+    else:
+        # No exporter: spans stay in-process, but still feed the API
+        # baggage propagation.
+        tracer_provider = TracerProvider()
+    tracer_provider.add_span_processor(ClientInfoSpanProcessor())
+    trace.set_tracer_provider(tracer_provider)
     setup_logging(
         log_level=settings.log_level,
         log_format=settings.log_format,

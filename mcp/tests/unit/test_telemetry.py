@@ -9,7 +9,7 @@ from pytest_mock import MockerFixture
 from flagsmith_mcp import config, telemetry
 
 
-def test_setup_telemetry__no_otlp_endpoint__configures_logging_only(
+def test_setup_telemetry__no_otlp_endpoint__spans_in_process_only(
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -18,18 +18,30 @@ def test_setup_telemetry__no_otlp_endpoint__configures_logging_only(
     set_tracer_provider_mock = mocker.patch(
         "flagsmith_mcp.telemetry.trace.set_tracer_provider", autospec=True
     )
+    build_tracer_provider_mock = mocker.patch.object(
+        telemetry, "build_tracer_provider", autospec=True
+    )
+    tracer_provider_mock = mocker.patch.object(
+        telemetry, "TracerProvider", autospec=True
+    )
 
     # When
     telemetry.setup_telemetry(config.Settings())
 
-    # Then
+    # Then logging is configured without OTel export...
     setup_logging_mock.assert_called_once_with(
         log_level="INFO",
         log_format="generic",
         application_loggers=telemetry.APPLICATION_LOGGERS,
         otel_processors=None,
     )
-    set_tracer_provider_mock.assert_not_called()
+    # ...but spans still record in-process
+    build_tracer_provider_mock.assert_not_called()
+    set_tracer_provider_mock.assert_called_once_with(tracer_provider_mock.return_value)
+    [span_processor] = (
+        tracer_provider_mock.return_value.add_span_processor.call_args.args
+    )
+    assert isinstance(span_processor, telemetry.ClientInfoSpanProcessor)
 
 
 def test_setup_telemetry__otlp_endpoint__exports_logs_and_traces(
