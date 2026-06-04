@@ -16,7 +16,7 @@ from respx import MockRouter
 
 from flagsmith_mcp import config, constants
 from flagsmith_mcp import server as server_module
-from flagsmith_mcp.telemetry import ClientInfoSpanProcessor
+from flagsmith_mcp.telemetry import FlagsmithBaggageSpanProcessor
 
 HTTPClientFactoryFixture = Callable[[FastMCP], AsyncIterator[httpx.AsyncClient]]
 
@@ -28,7 +28,7 @@ def span_exporter() -> InMemorySpanExporter:
     exporter = InMemorySpanExporter()
     provider = TracerProvider()
     provider.add_span_processor(SimpleSpanProcessor(exporter))
-    provider.add_span_processor(ClientInfoSpanProcessor())
+    provider.add_span_processor(FlagsmithBaggageSpanProcessor())
     trace.set_tracer_provider(provider)
     return exporter
 

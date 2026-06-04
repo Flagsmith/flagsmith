@@ -29,6 +29,7 @@ async def test_spans__tool_call__annotated_with_client_identity(
     assert span.attributes is not None
     assert {
         "gen_ai.tool.name": "list_environments",
+        "flagsmith.tool.name": "list_environments",
         "flagsmith.client.name": "mcp",
         "flagsmith.client.version": "0.1.0",
     }.items() <= dict(span.attributes).items()
@@ -47,7 +48,7 @@ async def test_spans__tool_call__upstream_request_carries_baggage(
 
     # Then the instrumented API client propagated W3C Baggage
     assert route.calls.last.request.headers["baggage"] == (
-        "flagsmith.tool.name=list_environments,"
         "flagsmith.client.name=mcp,"
-        "flagsmith.client.version=0.1.0"
+        "flagsmith.client.version=0.1.0,"
+        "flagsmith.tool.name=list_environments"
     )

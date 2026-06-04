@@ -2,6 +2,7 @@ import os
 
 from common.core.otel import add_otel_trace_context
 from opentelemetry import baggage
+from opentelemetry import context as otel_context
 from pytest_mock import MockerFixture
 
 from flagsmith_mcp import config, telemetry
@@ -76,7 +77,7 @@ def test_setup_telemetry__otlp_endpoint__exports_logs_and_traces(
     [span_processor] = (
         build_tracer_provider_mock.return_value.add_span_processor.call_args.args
     )
-    assert isinstance(span_processor, telemetry.ClientInfoSpanProcessor)
+    assert isinstance(span_processor, telemetry.FlagsmithBaggageSpanProcessor)
     setup_logging_mock.assert_called_once_with(
         log_level="DEBUG",
         log_format="json",
@@ -86,19 +87,6 @@ def test_setup_telemetry__otlp_endpoint__exports_logs_and_traces(
             make_structlog_otel_processor_mock.return_value,
         ],
     )
-
-
-def test_client_info_span_processor__outside_request_context__no_attributes(
-    mocker: MockerFixture,
-) -> None:
-    # Given no MCP request context
-    span = mocker.Mock()
-
-    # When
-    telemetry.ClientInfoSpanProcessor().on_start(span)
-
-    # Then
-    span.set_attribute.assert_not_called()
 
 
 async def test_baggage_middleware__uninitialised_session__tool_name_baggage_only(
@@ -121,3 +109,43 @@ async def test_baggage_middleware__uninitialised_session__tool_name_baggage_only
     # Then
     assert seen_baggage == {"flagsmith.tool.name": "list_environments"}
     assert baggage.get_all() == {}
+
+
+async def test_baggage_middleware__uninitialised_session__request_baggage_untouched(
+    mocker: MockerFixture,
+) -> None:
+    # Given a request outside an initialised session
+    middleware = telemetry.BaggageMiddleware()
+    seen_baggage: dict[str, object] = {}
+
+    async def record_baggage(ctx: object) -> None:
+        seen_baggage.update(baggage.get_all())
+
+    call_next = mocker.AsyncMock(side_effect=record_baggage)
+
+    # When
+    await middleware.on_request(mocker.Mock(), call_next)
+
+    # Then
+    assert seen_baggage == {}
+
+
+def test_flagsmith_baggage_span_processor__foreign_baggage__not_copied(
+    mocker: MockerFixture,
+) -> None:
+    # Given baggage with flagsmith and foreign entries
+    span = mocker.Mock()
+    ctx = baggage.set_baggage("other.key", "x")
+    ctx = baggage.set_baggage("flagsmith.tool.name", "list_environments", context=ctx)
+    token = otel_context.attach(ctx)
+
+    # When
+    try:
+        telemetry.FlagsmithBaggageSpanProcessor().on_start(span)
+    finally:
+        otel_context.detach(token)
+
+    # Then
+    span.set_attribute.assert_called_once_with(
+        "flagsmith.tool.name", "list_environments"
+    )
