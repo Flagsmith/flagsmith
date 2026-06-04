@@ -148,6 +148,35 @@ def test_create_mv_option__invalid_key_format__returns_bad_request(
     assert "key" in response.json()
 
 
+def test_create_mv_option__empty_string_key__returns_bad_request(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given - an empty string is not a valid key; clients must omit the field
+    # or send null for "no key"
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+        "key": "",
+    }
+    # When
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["key"] == ["This field may not be blank."]
+
+
 @pytest.mark.parametrize(
     "client, feature_id",
     [

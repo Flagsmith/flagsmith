@@ -57,7 +57,6 @@ class MultivariateFeatureOption(
     key = models.CharField(
         max_length=255,
         null=True,
-        blank=True,
         validators=[validate_slug],
         help_text="A stable, human-readable identifier for the variant.",
     )
