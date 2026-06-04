@@ -76,7 +76,7 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
           className='butter-bar font-weight-medium'
           style={{
             backgroundColor: environmentDetail.banner_colour,
-            color:  Utils.getContrastColour(environmentDetail.banner_colour),
+            color: Utils.getContrastColour(environmentDetail.banner_colour),
           }}
         >
           {environmentDetail.banner_text}
