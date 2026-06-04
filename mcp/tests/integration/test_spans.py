@@ -31,8 +31,9 @@ async def test_spans__tool_call__annotated_with_client_identity(
     assert span.attributes is not None
     assert {
         "gen_ai.tool.name": "list_environments",
-        "flagsmith.client.name": "mcp",
-        "flagsmith.client.version": "0.1.0",
+        "flagsmith.client.name": "flagsmith-mcp",
+        "flagsmith.mcp.client.name": "mcp",
+        "flagsmith.mcp.client.version": "0.1.0",
     }.items() <= dict(span.attributes).items()
 
 
@@ -59,6 +60,7 @@ async def test_spans__tool_call__upstream_request_carries_span_attribute_baggage
     assert {
         "mcp.method.name": "tools/call",
         "gen_ai.tool.name": "list_environments",
-        "flagsmith.client.name": "mcp",
-        "flagsmith.client.version": "0.1.0",
+        "flagsmith.client.name": "flagsmith-mcp",
+        "flagsmith.mcp.client.name": "mcp",
+        "flagsmith.mcp.client.version": "0.1.0",
     }.items() <= entries.items()

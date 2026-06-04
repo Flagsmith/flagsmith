@@ -38,7 +38,7 @@ async def test_event_logging_middleware__no_client_info__empty_client_identity(
     assert log.has(
         "tool.called",
         tool__name="list_environments",
-        flagsmith__client__name="",
-        flagsmith__client__version="",
+        flagsmith__mcp__client__name="",
+        flagsmith__mcp__client__version="",
         status="success",
     )

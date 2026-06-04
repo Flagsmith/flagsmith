@@ -12,19 +12,21 @@ from opentelemetry.context import Context
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor, TracerProvider
 from structlog.typing import Processor
 
-from flagsmith_mcp import config
+from flagsmith_mcp import config, constants
 from flagsmith_mcp.events import get_client_info
 
 APPLICATION_LOGGERS = ["flagsmith_mcp", "fastmcp", "mcp"]
 
 
 class ClientInfoSpanProcessor(SpanProcessor):
-    """Annotate started spans with the MCP client identity."""
+    """Annotate started spans with this service's identity and the MCP
+    client identity."""
 
     def on_start(self, span: Span, parent_context: Context | None = None) -> None:
+        span.set_attribute("flagsmith.client.name", constants.FLAGSMITH_CLIENT_NAME)
         if (client_info := get_client_info()) is not None:
-            span.set_attribute("flagsmith.client.name", client_info.name)
-            span.set_attribute("flagsmith.client.version", client_info.version)
+            span.set_attribute("flagsmith.mcp.client.name", client_info.name)
+            span.set_attribute("flagsmith.mcp.client.version", client_info.version)
 
 
 async def propagate_span_attributes(request: httpx.Request) -> None:

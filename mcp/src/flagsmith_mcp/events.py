@@ -31,8 +31,8 @@ class EventLoggingMiddleware(Middleware):
         client_info = context.message.params.clientInfo
         logger.info(
             "session.opened",
-            flagsmith__client__name=client_info.name,
-            flagsmith__client__version=client_info.version,
+            flagsmith__mcp__client__name=client_info.name,
+            flagsmith__mcp__client__version=client_info.version,
         )
         return result
 
@@ -50,16 +50,16 @@ class EventLoggingMiddleware(Middleware):
             logger.info(
                 "tool.called",
                 tool__name=context.message.name,
-                flagsmith__client__name=client_name,
-                flagsmith__client__version=client_version,
+                flagsmith__mcp__client__name=client_name,
+                flagsmith__mcp__client__version=client_version,
                 status="error",
             )
             raise
         logger.info(
             "tool.called",
             tool__name=context.message.name,
-            flagsmith__client__name=client_name,
-            flagsmith__client__version=client_version,
+            flagsmith__mcp__client__name=client_name,
+            flagsmith__mcp__client__version=client_version,
             status="success",
         )
         return result

@@ -6,7 +6,7 @@ from opentelemetry import trace
 from opentelemetry.sdk.trace import ReadableSpan
 from pytest_mock import MockerFixture
 
-from flagsmith_mcp import config, telemetry
+from flagsmith_mcp import config, constants, telemetry
 
 
 def test_setup_telemetry__no_otlp_endpoint__spans_in_process_only(
@@ -102,7 +102,7 @@ def test_setup_telemetry__otlp_endpoint__exports_logs_and_traces(
     )
 
 
-def test_client_info_span_processor__outside_request_context__no_attributes(
+def test_client_info_span_processor__outside_request_context__service_identity_only(
     mocker: MockerFixture,
 ) -> None:
     # Given no MCP request context
@@ -112,7 +112,9 @@ def test_client_info_span_processor__outside_request_context__no_attributes(
     telemetry.ClientInfoSpanProcessor().on_start(span)
 
     # Then
-    span.set_attribute.assert_not_called()
+    span.set_attribute.assert_called_once_with(
+        "flagsmith.client.name", constants.FLAGSMITH_CLIENT_NAME
+    )
 
 
 async def test_propagate_span_attributes__no_recording_span__headers_untouched() -> (

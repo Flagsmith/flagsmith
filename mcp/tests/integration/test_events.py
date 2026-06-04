@@ -15,8 +15,8 @@ async def test_events__session_initialised__emits_session_opened(
     # Then the client's self-declared identity is reported
     assert log.has(
         "session.opened",
-        flagsmith__client__name="mcp",
-        flagsmith__client__version="0.1.0",
+        flagsmith__mcp__client__name="mcp",
+        flagsmith__mcp__client__version="0.1.0",
     )
 
 
@@ -39,8 +39,8 @@ async def test_events__successful_tool_call__emits_tool_called(
         "event": "tool.called",
         "level": "info",
         "tool__name": "list_environments",
-        "flagsmith__client__name": "mcp",
-        "flagsmith__client__version": "0.1.0",
+        "flagsmith__mcp__client__name": "mcp",
+        "flagsmith__mcp__client__version": "0.1.0",
         "status": "success",
     }
 
@@ -63,7 +63,7 @@ async def test_events__failing_tool_call__emits_tool_called_with_error_status(
         "event": "tool.called",
         "level": "info",
         "tool__name": "list_environments",
-        "flagsmith__client__name": "mcp",
-        "flagsmith__client__version": "0.1.0",
+        "flagsmith__mcp__client__name": "mcp",
+        "flagsmith__mcp__client__version": "0.1.0",
         "status": "error",
     }
