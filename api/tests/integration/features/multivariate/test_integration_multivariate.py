@@ -116,6 +116,39 @@ def test_create_mv_option__duplicate_key_for_same_feature__returns_bad_request(
 
 
 @pytest.mark.parametrize(
+    "invalid_key",
+    ["has spaces", "emoji🚀", "exclamation!", "trailing space "],
+)
+def test_create_mv_option__invalid_key_format__returns_bad_request(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+    invalid_key: str,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+        "key": invalid_key,
+    }
+    # When
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "key" in response.json()
+
+
+@pytest.mark.parametrize(
     "client, feature_id",
     [
         (lazy_fixture("admin_client"), "undefined"),
