@@ -6,12 +6,15 @@ from fastmcp.server.providers.openapi import MCPType, OpenAPITool, RouteMap
 from fastmcp.utilities.components import FastMCPComponent
 from fastmcp.utilities.openapi.models import HttpMethod, HTTPRoute
 from mcp.types import ToolAnnotations
+from prometheus_client import start_http_server
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 
 from flagsmith_mcp import config, constants
 from flagsmith_mcp.auth import FlagsmithAuth
+from flagsmith_mcp.metrics import PrometheusMiddleware
 from flagsmith_mcp.oauth import FlagsmithResourceAuth
+from flagsmith_mcp.telemetry import setup_telemetry
 
 ROUTE_MAPS = [
     RouteMap(tags={"mcp"}, mcp_type=MCPType.TOOL),
@@ -66,6 +69,8 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
         auth=auth,
     )
 
+    server.add_middleware(PrometheusMiddleware())
+
     @server.custom_route("/health", methods=["GET"])
     async def health(request: Request) -> PlainTextResponse:
         return PlainTextResponse("OK")
@@ -75,4 +80,17 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
 
 def run() -> None:
     settings = config.Settings()
-    create_server(settings).run(transport=settings.transport)
+    setup_telemetry(settings)
+    server = create_server(settings)
+    if settings.metrics_port is not None:
+        start_http_server(settings.metrics_port)
+    if settings.transport == "http":
+        server.run(
+            transport=settings.transport,
+            show_banner=False,
+            # Let uvicorn log records propagate to the root logger so they
+            # are rendered by the configured formatter.
+            uvicorn_config={"log_config": None},
+        )
+    else:
+        server.run(transport=settings.transport, show_banner=False)
