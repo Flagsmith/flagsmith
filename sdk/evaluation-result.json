@@ -27,6 +27,11 @@
                     "title": "Reason",
                     "type": "string"
                 },
+                "variant": {
+                    "description": "A stable identifier of the selected multivariate variant. Omitted when no variant was selected, or when the selected variant has no key set.",
+                    "title": "Variant",
+                    "type": "string"
+                },
                 "metadata": {
                     "existingJavaType": "java.util.Map<String,Object>",
                     "description": "Additional metadata associated with the feature.",
