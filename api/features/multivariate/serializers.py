@@ -25,8 +25,7 @@ class NestedMultivariateFeatureOptionSerializer(serializers.ModelSerializer):  #
         )
         # `key` is only writable via the dedicated mv-options endpoint
         # (`MultivariateFeatureOptionSerializer`), where its uniqueness is
-        # validated. This serializer is reused as a writable nested serializer
-        # by `CreateFeatureSerializer`, which performs no such validation.
+        # validated.
         read_only_fields = ("uuid", "key")
 
 
@@ -60,7 +59,6 @@ class FeatureMVOptionsValuesResponseSerializer(serializers.Serializer):  # type:
 class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSerializer):
     class Meta(NestedMultivariateFeatureOptionSerializer.Meta):
         fields = NestedMultivariateFeatureOptionSerializer.Meta.fields + ("feature",)  # type: ignore[assignment]
-        # Unlike in the nested serializer, `key` is writable here.
         read_only_fields = ("uuid",)  # type: ignore[assignment]
         # `key` participates in the ("feature", "key") unique_together, which
         # makes DRF mark it as required. It is optional (nullable), so override.
