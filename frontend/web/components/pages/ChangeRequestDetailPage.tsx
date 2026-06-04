@@ -328,7 +328,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       <Breadcrumb
         items={[
           {
-            title: isScheduled ? 'Scheduling' : 'Change requests',
+            title: isScheduled ? 'Scheduling' : 'Feature Change Requests',
             url: `/project/${projectId}/environment/${environmentId}/${
               isScheduled ? 'scheduled-changes' : 'change-requests'
             }`,
