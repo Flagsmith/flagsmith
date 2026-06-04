@@ -1,8 +1,9 @@
 import os
 
+import httpx
 from common.core.otel import add_otel_trace_context
-from opentelemetry import baggage
-from opentelemetry import context as otel_context
+from opentelemetry import trace
+from opentelemetry.sdk.trace import ReadableSpan
 from pytest_mock import MockerFixture
 
 from flagsmith_mcp import config, telemetry
@@ -77,7 +78,7 @@ def test_setup_telemetry__otlp_endpoint__exports_logs_and_traces(
     [span_processor] = (
         build_tracer_provider_mock.return_value.add_span_processor.call_args.args
     )
-    assert isinstance(span_processor, telemetry.FlagsmithBaggageSpanProcessor)
+    assert isinstance(span_processor, telemetry.ClientInfoSpanProcessor)
     setup_logging_mock.assert_called_once_with(
         log_level="DEBUG",
         log_format="json",
@@ -89,63 +90,43 @@ def test_setup_telemetry__otlp_endpoint__exports_logs_and_traces(
     )
 
 
-async def test_baggage_middleware__uninitialised_session__tool_name_baggage_only(
+def test_client_info_span_processor__outside_request_context__no_attributes(
     mocker: MockerFixture,
 ) -> None:
-    # Given a tool call outside an initialised session
-    middleware = telemetry.BaggageMiddleware()
-    context = mocker.Mock()
-    context.message.name = "list_environments"
-    seen_baggage: dict[str, object] = {}
-
-    async def record_baggage(ctx: object) -> None:
-        seen_baggage.update(baggage.get_all())
-
-    call_next = mocker.AsyncMock(side_effect=record_baggage)
-
-    # When
-    await middleware.on_call_tool(context, call_next)
-
-    # Then
-    assert seen_baggage == {"flagsmith.tool.name": "list_environments"}
-    assert baggage.get_all() == {}
-
-
-async def test_baggage_middleware__uninitialised_session__request_baggage_untouched(
-    mocker: MockerFixture,
-) -> None:
-    # Given a request outside an initialised session
-    middleware = telemetry.BaggageMiddleware()
-    seen_baggage: dict[str, object] = {}
-
-    async def record_baggage(ctx: object) -> None:
-        seen_baggage.update(baggage.get_all())
-
-    call_next = mocker.AsyncMock(side_effect=record_baggage)
-
-    # When
-    await middleware.on_request(mocker.Mock(), call_next)
-
-    # Then
-    assert seen_baggage == {}
-
-
-def test_flagsmith_baggage_span_processor__foreign_baggage__not_copied(
-    mocker: MockerFixture,
-) -> None:
-    # Given baggage with flagsmith and foreign entries
+    # Given no MCP request context
     span = mocker.Mock()
-    ctx = baggage.set_baggage("other.key", "x")
-    ctx = baggage.set_baggage("flagsmith.tool.name", "list_environments", context=ctx)
-    token = otel_context.attach(ctx)
 
     # When
-    try:
-        telemetry.FlagsmithBaggageSpanProcessor().on_start(span)
-    finally:
-        otel_context.detach(token)
+    telemetry.ClientInfoSpanProcessor().on_start(span)
 
     # Then
-    span.set_attribute.assert_called_once_with(
-        "flagsmith.tool.name", "list_environments"
-    )
+    span.set_attribute.assert_not_called()
+
+
+async def test_propagate_span_attributes__no_recording_span__headers_untouched() -> (
+    None
+):
+    # Given no SDK span in the current context
+    request = httpx.Request("GET", "https://api.flagsmith.com/")
+
+    # When
+    await telemetry.propagate_span_attributes(request)
+
+    # Then
+    assert "baggage" not in request.headers
+
+
+async def test_propagate_span_attributes__span_without_attributes__headers_untouched(
+    mocker: MockerFixture,
+) -> None:
+    # Given a recording span with no attributes
+    span = mocker.Mock(spec=ReadableSpan)
+    span.attributes = {}
+    mocker.patch.object(trace, "get_current_span", return_value=span)
+
+    # When
+    request = httpx.Request("GET", "https://api.flagsmith.com/")
+    await telemetry.propagate_span_attributes(request)
+
+    # Then
+    assert "baggage" not in request.headers

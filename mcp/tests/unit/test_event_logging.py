@@ -10,10 +10,10 @@ def test_get_client_info__outside_request_context__returns_none() -> None:
     assert events.get_client_info() is None
 
 
-def test_get_client_info__uninitialised_session__returns_none(
+def test_get_client_info__no_client_params__returns_none(
     mocker: MockerFixture,
 ) -> None:
-    # Given a session that has not completed initialize
+    # Given a session that has not yet completed initialize
     context_mock = mocker.patch.object(events, "get_context", autospec=True)
     context_mock.return_value.session.client_params = None
 
@@ -21,11 +21,11 @@ def test_get_client_info__uninitialised_session__returns_none(
     assert events.get_client_info() is None
 
 
-async def test_event_logging_middleware__uninitialised_session__empty_client_identity(
+async def test_event_logging_middleware__no_client_info__empty_client_identity(
     mocker: MockerFixture,
     log: StructuredLogCapture,
 ) -> None:
-    # Given a tool call outside an initialised session
+    # Given
     middleware = events.EventLoggingMiddleware()
     context = mocker.Mock()
     context.message.name = "list_environments"

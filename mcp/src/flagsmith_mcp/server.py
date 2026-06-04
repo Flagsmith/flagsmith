@@ -16,7 +16,7 @@ from flagsmith_mcp.auth import FlagsmithAuth
 from flagsmith_mcp.events import EventLoggingMiddleware
 from flagsmith_mcp.metrics import PrometheusMiddleware
 from flagsmith_mcp.oauth import FlagsmithResourceAuth
-from flagsmith_mcp.telemetry import BaggageMiddleware, setup_telemetry
+from flagsmith_mcp.telemetry import propagate_span_attributes, setup_telemetry
 
 ROUTE_MAPS = [
     RouteMap(tags={"mcp"}, mcp_type=MCPType.TOOL),
@@ -61,9 +61,11 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
     api_client = httpx.AsyncClient(
         base_url=settings.flagsmith_api_url,
         auth=FlagsmithAuth(settings.flagsmith_api_token),
+        event_hooks={"request": [propagate_span_attributes]},
     )
     # Instrument only the Flagsmith API client: emit a span per upstream
-    # call and propagate W3C trace context and baggage to the API.
+    # call and propagate W3C trace context; the event hook passes the MCP
+    # call context to the API as W3C Baggage.
     HTTPXClientInstrumentor().instrument_client(api_client)
     server = FastMCP.from_openapi(
         openapi_spec=_fetch_spec(),
@@ -77,7 +79,6 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
 
     server.add_middleware(PrometheusMiddleware())
     server.add_middleware(EventLoggingMiddleware())
-    server.add_middleware(BaggageMiddleware())
 
     @server.custom_route("/health", methods=["GET"])
     async def health(request: Request) -> PlainTextResponse:
