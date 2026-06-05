@@ -6,6 +6,7 @@ from environments.models import Environment
 from experimentation.models import (
     Experiment,
     ExperimentMetric,
+    ExperimentStatus,
     Metric,
     WarehouseConnection,
     WarehouseType,
@@ -129,6 +130,12 @@ class ExperimentMetricSerializer(serializers.ModelSerializer):  # type: ignore[t
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         experiment: Experiment = self.context["experiment"]
+
+        if experiment.status == ExperimentStatus.COMPLETED:
+            raise serializers.ValidationError(
+                "Cannot modify metrics of a completed experiment."
+            )
+
         metric: Metric = attrs.get("metric", getattr(self.instance, "metric", None))
 
         if metric.environment_id != experiment.environment_id:

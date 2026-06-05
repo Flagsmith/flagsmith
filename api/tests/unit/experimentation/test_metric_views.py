@@ -333,6 +333,29 @@ def test_delete_metric__attached_to_active_experiment__returns_409(
     assert Metric.objects.filter(name="attached").exists()
 
 
+def test_delete_metric__attached_to_soft_deleted_experiment__returns_204(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given a metric whose only attachment is to a soft-deleted experiment
+    enable_features(EXPERIMENT_FLAG)
+    metric = _metric(environment, "ghost")
+    ExperimentMetric.objects.create(
+        experiment=experiment,
+        metric=metric,
+        expected_direction=ExpectedDirection.INCREASE,
+    )
+    experiment.delete()  # soft-delete leaves the ExperimentMetric row behind
+
+    # When
+    response = admin_client_new.delete(_detail_url(environment, metric))
+
+    # Then the ghost attachment does not block deletion
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
 def test_delete_metric__unattached__returns_204(
     admin_client_new: APIClient,
     environment: Environment,

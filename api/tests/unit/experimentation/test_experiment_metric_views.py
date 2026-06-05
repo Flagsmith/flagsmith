@@ -13,6 +13,7 @@ from experimentation.models import (
     ExpectedDirection,
     Experiment,
     ExperimentMetric,
+    ExperimentStatus,
     Metric,
 )
 
@@ -130,6 +131,78 @@ def test_attach_metric__from_other_environment__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_attach_metric__unknown_experiment__returns_404(
+    admin_client_new: APIClient,
+    environment: Environment,
+    metric: Metric,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    url = reverse(
+        "api-v1:environments:experiments:experiment-metrics-list",
+        args=[environment.api_key, 999_999_999],
+    )
+
+    # When
+    response = admin_client_new.post(
+        url,
+        data={"metric": metric.id, "expected_direction": ExpectedDirection.INCREASE},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_attach_metric__completed_experiment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    metric: Metric,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.save()
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment, experiment),
+        data={"metric": metric.id, "expected_direction": ExpectedDirection.INCREASE},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_detach_metric__completed_experiment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    metric: Metric,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    em = ExperimentMetric.objects.create(
+        experiment=experiment,
+        metric=metric,
+        expected_direction=ExpectedDirection.INCREASE,
+    )
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.save()
+
+    # When
+    response = admin_client_new.delete(_detail_url(environment, experiment, em))
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert ExperimentMetric.objects.filter(pk=em.pk).exists()
 
 
 def test_list_metrics__with_attachment__returns_attached(

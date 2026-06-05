@@ -3,6 +3,7 @@ from typing import Any
 
 from django.db import IntegrityError
 from django.db.models import Count, Q, QuerySet
+from django.shortcuts import get_object_or_404
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -290,14 +291,23 @@ class ExperimentMetricViewSet(
         return context
 
     def _get_experiment(self) -> Experiment:
-        experiment: Experiment = Experiment.objects.get(
+        return get_object_or_404(
+            Experiment,
             id=self.kwargs[self.experiment_url_kwarg],
             environment__api_key=self.kwargs["environment_api_key"],
+            deleted_at__isnull=True,
         )
-        return experiment
 
     def perform_create(self, serializer: BaseSerializer[ExperimentMetric]) -> None:
         serializer.save(experiment=self._get_experiment())
+
+    def destroy(self, request: Request, *args: object, **kwargs: object) -> Response:
+        if self._get_experiment().status == ExperimentStatus.COMPLETED:
+            return Response(
+                {"detail": "Cannot detach metrics from a completed experiment."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return super().destroy(request, *args, **kwargs)
 
 
 class MetricViewSet(
@@ -322,7 +332,10 @@ class MetricViewSet(
     def destroy(self, request: Request, *args: object, **kwargs: object) -> Response:
         instance: Metric = self.get_object()
         if (
-            ExperimentMetric.objects.filter(metric=instance)
+            ExperimentMetric.objects.filter(
+                metric=instance,
+                experiment__deleted_at__isnull=True,
+            )
             .exclude(experiment__status=ExperimentStatus.COMPLETED)
             .exists()
         ):
