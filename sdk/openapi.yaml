@@ -539,6 +539,15 @@ components:
             - type: string
             - type: 'null'
           title: Feature State Value
+        variant:
+          description: >-
+            A stable identifier of the multivariate variant selected for this
+            identity. `null` when no variant was selected, or when the selected
+            variant has no key set.
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Variant
       required:
         - feature
         - enabled
