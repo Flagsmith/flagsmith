@@ -197,6 +197,7 @@ const ExperimentsPage: FC = () => {
         )}
         {hasResults && (
           <Paging
+            className='border-top-0'
             paging={{
               ...(experimentsData || {}),
               page,

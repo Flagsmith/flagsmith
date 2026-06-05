@@ -1019,6 +1019,7 @@ export type Req = {
   deleteExperiment: { environmentId: string; experimentId: number }
   getMetrics: PagedRequest<{
     environmentId: string
+    q?: string
   }>
   createMetric: {
     environmentId: string
@@ -1029,6 +1030,11 @@ export type Req = {
       direction: MetricDirection
       definition: MetricDefinition
     }
+  }
+  updateMetric: {
+    environmentId: string
+    metricId: number
+    body: Req['createMetric']['body']
   }
   deleteMetric: { environmentId: string; metricId: number }
   // END OF TYPES

@@ -1,5 +1,6 @@
 import { Req } from 'common/types/requests'
 import {
+  Metric,
   MetricAggregation,
   MetricDefinition,
   MetricDirection,
@@ -70,6 +71,31 @@ export const DIRECTION_OPTIONS: DirectionOption[] = [
 
 export const canSubmitMetric = (state: MetricFormState): boolean =>
   state.name.trim().length > 0 && state.event.trim().length > 0
+
+export const getMetricAggregationLabel = (
+  aggregation: MetricAggregation,
+): string =>
+  MEASUREMENT_OPTIONS.find((option) => option.value === aggregation)?.title ??
+  aggregation
+
+export const getMetricSubline = (metric: Metric): string =>
+  `${getMetricAggregationLabel(metric.aggregation)} · ${
+    metric.definition.event
+  }`
+
+export const getMetricUsageLabel = (experimentCount: number): string => {
+  if (experimentCount === 0) return 'Not in use'
+  if (experimentCount === 1) return '1 experiment'
+  return `${experimentCount} experiments`
+}
+
+export const metricToFormState = (metric: Metric): MetricFormState => ({
+  aggregation: metric.aggregation,
+  description: metric.description,
+  direction: metric.direction,
+  event: metric.definition.event,
+  name: metric.name,
+})
 
 export const buildMetricPayload = (
   state: MetricFormState,

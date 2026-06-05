@@ -57,47 +57,4 @@
       width: 100%;
     }
   }
-
-  &__list {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-  }
-
-  &__row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 14px 16px;
-
-    & + & {
-      border-top: 1px solid var(--color-border-default);
-    }
-  }
-
-  &__row-main {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  &__row-name {
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-default);
-  }
-
-  &__row-desc {
-    font-size: var(--font-body-sm-size);
-    color: var(--color-text-secondary);
-  }
-
-  &__row-agg {
-    flex-shrink: 0;
-    text-transform: capitalize;
-    font-size: var(--font-caption-size);
-    color: var(--color-text-secondary);
-  }
 }

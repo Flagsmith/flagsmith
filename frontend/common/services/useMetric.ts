@@ -32,6 +32,14 @@ export const metricService = service
         }),
         transformResponse: (res, _, req) => transformCorePaging(req, res),
       }),
+      updateMetric: builder.mutation<Res['metric'], Req['updateMetric']>({
+        invalidatesTags: [{ id: 'LIST', type: 'Metric' }],
+        query: ({ body, environmentId, metricId }) => ({
+          body,
+          method: 'PATCH',
+          url: `environments/${environmentId}/experiment-metrics/${metricId}/`,
+        }),
+      }),
     }),
   })
 
@@ -39,4 +47,5 @@ export const {
   useCreateMetricMutation,
   useDeleteMetricMutation,
   useGetMetricsQuery,
+  useUpdateMetricMutation,
 } = metricService

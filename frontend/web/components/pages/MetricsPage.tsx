@@ -4,17 +4,23 @@ import Utils from 'common/utils/utils'
 import { useRouteContext } from 'components/providers/RouteContext'
 import {
   useCreateMetricMutation,
+  useDeleteMetricMutation,
   useGetMetricsQuery,
+  useUpdateMetricMutation,
 } from 'common/services/useMetric'
 import { useGetWarehouseConnectionsQuery } from 'common/services/useWarehouseConnection'
-import { WarehouseType } from 'common/types/responses'
+import { Metric, WarehouseType } from 'common/types/responses'
+import useDebouncedSearch from 'common/useDebouncedSearch'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import PageTitle from 'components/PageTitle'
+import Paging from 'components/Paging'
 import CreateMetricForm from 'components/experiments/CreateMetricForm'
+import MetricsTable from 'components/experiments/MetricsTable/MetricsTable'
 import {
   buildMetricPayload,
   DEFAULT_METRIC_DEFINITION_VERSION,
+  metricToFormState,
   MetricFormState,
 } from 'components/experiments/CreateMetricForm/utils'
 import './MetricsPage.scss'
@@ -25,16 +31,24 @@ const WAREHOUSE_TYPE_LABEL: Record<WarehouseType, string> = {
   snowflake: 'Snowflake',
 }
 
+const PAGE_SIZE = 10
+
 const MetricsPage: FC = () => {
   const { environmentId, projectId } = useRouteContext()
   const history = useHistory()
   const location = useLocation()
-  const [searchInput, setSearchInput] = useState('')
-  const [createMetric, { isLoading: isSaving }] = useCreateMetricMutation()
+  const { search, searchInput, setSearchInput } = useDebouncedSearch()
+  const [page, setPage] = useState(1)
+  const [createMetric, { isLoading: isCreatingMetric }] =
+    useCreateMetricMutation()
+  const [updateMetric, { isLoading: isUpdatingMetric }] =
+    useUpdateMetricMutation()
+  const [deleteMetric] = useDeleteMetricMutation()
 
   const isEnabled = Utils.getFlagsmithHasFeature('experiment_metrics')
-  const isCreating =
-    new URLSearchParams(location.search).get('create') === 'true'
+  const params = new URLSearchParams(location.search)
+  const isCreating = params.get('create') === 'true'
+  const editingId = params.get('edit') ? Number(params.get('edit')) : null
 
   useEffect(() => {
     if (!isEnabled && environmentId && projectId) {
@@ -44,8 +58,17 @@ const MetricsPage: FC = () => {
     }
   }, [isEnabled, environmentId, projectId, history])
 
+  useEffect(() => {
+    setPage(1)
+  }, [search])
+
   const { data: metricsData, isLoading } = useGetMetricsQuery(
-    { environmentId: environmentId ?? '' },
+    {
+      environmentId: environmentId ?? '',
+      page,
+      page_size: PAGE_SIZE,
+      q: search || undefined,
+    },
     { skip: !environmentId || !isEnabled },
   )
 
@@ -64,11 +87,13 @@ const MetricsPage: FC = () => {
   const settingsUrl = `/project/${projectId}/environment/${environmentId}/settings?tab=warehouse`
   const metricsPath = `/project/${projectId}/environment/${environmentId}/metrics`
   const metrics = metricsData?.results
+  const metricCount = metricsData?.count ?? 0
+  const hasActiveSearch = !!search
+  const version =
+    Number(Utils.getFlagsmithValue('experiment_metrics')) ||
+    DEFAULT_METRIC_DEFINITION_VERSION
 
-  const handleSubmit = async (state: MetricFormState) => {
-    const version =
-      Number(Utils.getFlagsmithValue('experiment_metrics')) ||
-      DEFAULT_METRIC_DEFINITION_VERSION
+  const handleCreate = async (state: MetricFormState) => {
     try {
       await createMetric({
         body: buildMetricPayload(state, version),
@@ -81,6 +106,42 @@ const MetricsPage: FC = () => {
     }
   }
 
+  const handleUpdate = (metric: Metric) => async (state: MetricFormState) => {
+    try {
+      await updateMetric({
+        body: buildMetricPayload(state, version),
+        environmentId,
+        metricId: metric.id,
+      }).unwrap()
+      toast('Metric updated successfully')
+      history.push(metricsPath)
+    } catch {
+      toast('Failed to update metric', 'danger')
+    }
+  }
+
+  const handleDelete = (metric: Metric) => {
+    openConfirm({
+      body: (
+        <div>
+          Are you sure you want to delete <strong>{metric.name}</strong>? This
+          cannot be undone.
+        </div>
+      ),
+      destructive: true,
+      onYes: async () => {
+        try {
+          await deleteMetric({ environmentId, metricId: metric.id }).unwrap()
+          toast('Metric deleted')
+        } catch (e: any) {
+          toast(e?.data?.detail || 'Failed to delete metric', 'danger')
+        }
+      },
+      title: 'Delete Metric',
+      yesText: 'Delete',
+    })
+  }
+
   if (isCreating) {
     return (
       <div data-test='metrics-page' className='app-container container'>
@@ -88,9 +149,37 @@ const MetricsPage: FC = () => {
           Metrics capture the outcomes your experiments measure.
         </PageTitle>
         <CreateMetricForm
-          isSaving={isSaving}
+          isSaving={isCreatingMetric}
           onCancel={() => history.push(metricsPath)}
-          onSubmit={handleSubmit}
+          onSubmit={handleCreate}
+        />
+      </div>
+    )
+  }
+
+  if (editingId) {
+    const metric = metrics?.find((m) => m.id === editingId)
+    if (!metric) {
+      return (
+        <div data-test='metrics-page' className='app-container container'>
+          <PageTitle title='Edit Metric' />
+          <div className='text-center'>
+            <Loader />
+          </div>
+        </div>
+      )
+    }
+    return (
+      <div data-test='metrics-page' className='app-container container'>
+        <PageTitle title='Edit Metric'>
+          Update how this metric is measured.
+        </PageTitle>
+        <CreateMetricForm
+          initialState={metricToFormState(metric)}
+          isSaving={isUpdatingMetric}
+          submitLabel='Save changes'
+          onCancel={() => history.push(metricsPath)}
+          onSubmit={handleUpdate(metric)}
         />
       </div>
     )
@@ -104,7 +193,7 @@ const MetricsPage: FC = () => {
         </div>
       )
     }
-    if (!metrics?.length) {
+    if (metricCount === 0 && !hasActiveSearch) {
       return (
         <div className='text-center py-5'>
           <Icon
@@ -162,23 +251,33 @@ const MetricsPage: FC = () => {
           </Button>
         </div>
 
-        <div className='metrics-page__list'>
-          {metrics.map((metric) => (
-            <div key={metric.id} className='metrics-page__row'>
-              <div className='metrics-page__row-main'>
-                <span className='metrics-page__row-name'>{metric.name}</span>
-                {!!metric.description && (
-                  <span className='metrics-page__row-desc'>
-                    {metric.description}
-                  </span>
-                )}
-              </div>
-              <span className='metrics-page__row-agg'>
-                {metric.aggregation}
-              </span>
-            </div>
-          ))}
-        </div>
+        {metrics?.length ? (
+          <>
+            <MetricsTable
+              metrics={metrics}
+              onEdit={(metric) =>
+                history.push(`${metricsPath}?edit=${metric.id}`)
+              }
+              onDelete={handleDelete}
+            />
+            <Paging
+              className='border-top-0'
+              paging={{
+                ...(metricsData || {}),
+                page,
+                pageSize: PAGE_SIZE,
+              }}
+              nextPage={() => setPage(page + 1)}
+              prevPage={() => setPage(page - 1)}
+              goToPage={(p: number) => setPage(p)}
+              isLoading={isLoading}
+            />
+          </>
+        ) : (
+          <div className='text-center py-5'>
+            <p className='text-muted'>No metrics match your search.</p>
+          </div>
+        )}
       </>
     )
   }
