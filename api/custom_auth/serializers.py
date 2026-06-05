@@ -79,6 +79,11 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         }
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
+        email = attrs.get("email", "")
+        self._validate_registration_invite(
+            email=email, sign_up_type=attrs.get("sign_up_type")
+        )
+
         attrs = super().validate(attrs)
         email = attrs.get("email")
         if attrs.get("superuser"):
@@ -100,10 +105,6 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
             is_authentication_method_valid(
                 self.context.get("request"), email=email, raise_exception=True
             )
-
-        self._validate_registration_invite(
-            email=email, sign_up_type=attrs.get("sign_up_type")
-        )
 
         attrs["email"] = email.lower()
         return attrs
