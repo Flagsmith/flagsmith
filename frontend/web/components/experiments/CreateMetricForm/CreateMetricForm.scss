@@ -39,6 +39,10 @@
     cursor: pointer;
     transition: all var(--duration-fast) var(--easing-standard);
 
+    input {
+      display: none;
+    }
+
     &:hover {
       border-color: var(--color-border-action);
     }
@@ -64,11 +68,13 @@
 
   &__measurement-desc {
     font-size: var(--font-caption-size);
+    font-weight: var(--font-weight-regular);
     color: var(--color-text-secondary);
   }
 
   &__measurement-ex {
     font-size: var(--font-caption-size);
+    font-weight: var(--font-weight-regular);
     color: var(--color-text-secondary);
     font-style: italic;
   }

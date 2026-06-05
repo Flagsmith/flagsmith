@@ -75,16 +75,21 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
         </label>
         <div className='create-metric-form__measurement-grid'>
           {MEASUREMENT_OPTIONS.map((opt) => (
-            <button
+            <label
               key={opt.value}
-              type='button'
               className={`create-metric-form__measurement-card ${
                 state.aggregation === opt.value
                   ? 'create-metric-form__measurement-card--selected'
                   : ''
               }`}
-              onClick={() => update({ aggregation: opt.value })}
             >
+              <input
+                type='radio'
+                name='metric-aggregation'
+                value={opt.value}
+                checked={state.aggregation === opt.value}
+                onChange={() => update({ aggregation: opt.value })}
+              />
               <span className='create-metric-form__measurement-head'>
                 <span className='create-metric-form__measurement-title'>
                   {opt.title}
@@ -96,7 +101,7 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
               <span className='create-metric-form__measurement-ex'>
                 {opt.example}
               </span>
-            </button>
+            </label>
           ))}
         </div>
       </div>
