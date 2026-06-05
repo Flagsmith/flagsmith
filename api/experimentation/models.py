@@ -157,9 +157,6 @@ class Metric(SoftDeleteExportableModel):
         choices=MetricAggregation.choices,
         default=MetricAggregation.MEAN,
     )
-    # Polarity of the metric itself — whether a higher or lower value is
-    # "better". Distinct from ExperimentMetric.expected_direction, which is the
-    # guardrail direction expected of a specific experiment.
     direction = models.CharField(
         max_length=20,
         choices=MetricDirection.choices,

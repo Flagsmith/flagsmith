@@ -2,10 +2,8 @@
 
 ``definition`` is a schema-less JSON column whose shape is versioned so it can
 evolve without breaking stored rows. Each supported version has a validator
-here; the client sends the version it built the definition with (sourced from
-remote config on the frontend). To introduce a new shape, add an entry to
-``METRIC_DEFINITION_VALIDATORS`` — the stats engine will key its SQL
-construction on the same versions.
+here; the client sends the version it built the definition with. To introduce a
+new shape, add an entry to ``METRIC_DEFINITION_VALIDATORS``.
 """
 
 from collections.abc import Callable
@@ -20,7 +18,6 @@ def _validate_v1(definition: dict[str, object]) -> str | None:
     return None
 
 
-# Supported definition versions -> their validator. Add an entry per new shape.
 METRIC_DEFINITION_VALIDATORS: dict[int, DefinitionValidator] = {
     1: _validate_v1,
 }
@@ -32,12 +29,10 @@ def validate_metric_definition(definition: object) -> str | None:
         return "Definition must be an object."
 
     version = definition.get("version")
-    if (
-        not isinstance(version, int)
-        or isinstance(version, bool)
-        or version not in METRIC_DEFINITION_VALIDATORS
-    ):
-        supported = ", ".join(str(v) for v in sorted(METRIC_DEFINITION_VALIDATORS))
-        return f"Definition must specify a supported 'version' ({supported})."
+    validator = (
+        METRIC_DEFINITION_VALIDATORS.get(version) if isinstance(version, int) else None
+    )
+    if validator is None:
+        return "Definition must specify a supported 'version'."
 
-    return METRIC_DEFINITION_VALIDATORS[version](definition)
+    return validator(definition)

@@ -1,8 +1,8 @@
 from typing import TypedDict
 
 
-class MetricDefinition(TypedDict):
-    """The recipe a metric is computed from (v1).
+class MetricDefinitionV1(TypedDict):
+    """The recipe a metric is computed from.
 
     Versioned so the shape can evolve; see ``metric_definitions`` for the
     registry of supported versions and their validators. v1 captures the
@@ -11,6 +11,9 @@ class MetricDefinition(TypedDict):
 
     version: int
     event: str
+
+
+MetricDefinition = MetricDefinitionV1
 
 
 class SnowflakeConfig(TypedDict):
