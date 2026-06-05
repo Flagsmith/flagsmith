@@ -20,48 +20,32 @@ from .serializers import MultivariateFeatureOptionSerializer
     name="list",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "list_feature_multivariate_options",
-                "description": "Retrieves all multivariate options for a feature flag.",
-            },
-        },
+        operation_id="list_feature_multivariate_options",
+        description="Retrieves all multivariate options for a feature flag.",
     ),
 )
 @method_decorator(
     name="create",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "create_feature_multivariate_option",
-                "description": "Creates a new multivariate option for a feature flag.",
-            },
-        },
+        operation_id="create_feature_multivariate_option",
+        description="Creates a new multivariate option for a feature flag.",
     ),
 )
 @method_decorator(
     name="update",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "update_feature_multivariate_option",
-                "description": "Updates an existing multivariate option.",
-            },
-        },
+        operation_id="update_feature_multivariate_option",
+        description="Updates an existing multivariate option.",
     ),
 )
 @method_decorator(
     name="destroy",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "delete_feature_multivariate_option",
-                "description": "Deletes a multivariate option.",
-            },
-        },
+        operation_id="delete_feature_multivariate_option",
+        description="Deletes a multivariate option.",
     ),
 )
 class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]

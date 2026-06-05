@@ -77,7 +77,6 @@ overrides = [
     { name = "drf-writable-nested", specifier = "==0.6.4" },
     { name = "elementpath", specifier = "==4.1.5" },
     { name = "email-validator", specifier = "==2.0.0.post2" },
-    { name = "environs", specifier = "==14.1.1" },
     { name = "execnet", specifier = "==2.1.1" },
     { name = "executing", specifier = "==2.2.1" },
     { name = "fancycompleter", specifier = "==0.9.1" },
@@ -99,7 +98,6 @@ overrides = [
     { name = "httpx", specifier = "==0.28.1" },
     { name = "hubspot-api-client", specifier = "==12.0.0" },
     { name = "identify", specifier = "==2.6.3" },
-    { name = "idna", specifier = "==3.7" },
     { name = "importlib-metadata", specifier = "==8.7.1" },
     { name = "inflect", specifier = "==5.6.2" },
     { name = "inflection", specifier = "==0.5.1" },
@@ -193,7 +191,6 @@ overrides = [
     { name = "pytest-structlog", specifier = "==1.1" },
     { name = "pytest-xdist", specifier = "==3.6.1" },
     { name = "python-dateutil", specifier = "==2.8.2" },
-    { name = "python-dotenv", specifier = "==0.21.1" },
     { name = "python-gnupg", specifier = "==0.5.1" },
     { name = "python-http-client", specifier = "==3.3.7" },
     { name = "python3-openid", specifier = "==3.2.0" },
@@ -211,7 +208,6 @@ overrides = [
     { name = "responses", specifier = "==0.22.0" },
     { name = "rpds-py", specifier = "==0.30.0" },
     { name = "rsa", specifier = "==4.9" },
-    { name = "rudder-sdk-python", specifier = "==2.0.2" },
     { name = "ruff", specifier = "==0.9.7" },
     { name = "s3transfer", specifier = "==0.10.4" },
     { name = "segment-analytics-python", specifier = "==2.2.3" },
@@ -366,11 +362,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/97/90/81f95d5f705be1787
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f0/eb/fcb708c7bf5056045e9e98f62b93bd7467eb718b0202e7698eb11d66416c/attrs-23.1.0-py3-none-any.whl", hash = "sha256:1f28b4522cdc2fb4256ac1a020c78acf9cba2c6b461ccd2c126f3aa8e8335d04", size = 61160, upload-time = "2023-04-16T10:48:16.358Z" },
 ]
-
-[[package]]
-name = "auth-controller"
-version = "0.0.0"
-source = { git = "https://github.com/flagsmith/flagsmith-auth-controller?tag=v0.2.0#b7fa1f42c333b443763548ea1fe0054f07cdf641" }
 
 [[package]]
 name = "autopep8"
@@ -1326,16 +1317,16 @@ wheels = [
 
 [[package]]
 name = "environs"
-version = "14.1.1"
+version = "14.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "marshmallow" },
     { name = "python-dotenv" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/31/d3/e82bdbb8cc332e751f67a3f668c5d134d57f983497d9f3a59a375b6e8fd8/environs-14.1.1.tar.gz", hash = "sha256:03db7ee2d50ec697b68814cd175a3a05a7c7954804e4e419ca8b570dc5a835cf", size = 32050, upload-time = "2025-02-10T20:24:26.437Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fb/c7/94f97e6e74482a50b5fc798856b6cc06e8d072ab05a0b74cb5d87bd0d065/environs-14.6.0.tar.gz", hash = "sha256:ed2767588deb503209ffe4dd9bb2b39311c2e4e7e27ce2c64bf62ca83328d068", size = 35563, upload-time = "2026-02-20T04:02:08.869Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/1c/ab9752f02d32d981d647c05822be9ff93809be8953dacea2da2bec9a9de9/environs-14.1.1-py3-none-any.whl", hash = "sha256:45bc56f1d53bbc59d8dd69bba97377dd88ec28b8229d81cedbd455b21789445b", size = 15566, upload-time = "2025-02-10T20:24:22.116Z" },
+    { url = "https://files.pythonhosted.org/packages/97/a8/c070e1340636acb38d4e6a7e45c46d168a462b48b9b3257e14ca0e5af79b/environs-14.6.0-py3-none-any.whl", hash = "sha256:f8fb3d6c6a55872b0c6db077a28f5a8c7b8984b7c32029613d44cef95cfc0812", size = 17205, upload-time = "2026-02-20T04:02:07.299Z" },
 ]
 
 [[package]]
@@ -1473,10 +1464,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-auth-controller = [
-    { name = "auth-controller" },
-    { name = "django-multiselectfield" },
-]
 dev = [
     { name = "autopep8" },
     { name = "boto3-stubs" },
@@ -1518,26 +1505,14 @@ dev = [
     { name = "types-pytz" },
     { name = "types-requests" },
 ]
-ldap = [
-    { name = "django-python3-ldap" },
-    { name = "flagsmith-ldap" },
-]
-licensing = [
-    { name = "cryptography" },
-    { name = "licensing" },
-]
 private = [
     { name = "flagsmith-private" },
-]
-workflows = [
-    { name = "workflows-logic" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "appdirs", specifier = ">=1.4.4,<1.5.0" },
     { name = "asgiref", specifier = ">=3.8.1,<3.9.0" },
-    { name = "auth-controller", marker = "extra == 'auth-controller'", git = "https://github.com/flagsmith/flagsmith-auth-controller?tag=v0.2.0" },
     { name = "autopep8", marker = "extra == 'dev'", specifier = ">=2.0.1,<2.1.0" },
     { name = "backoff", specifier = ">=2.2.1,<2.3.0" },
     { name = "boto3", specifier = ">=1.35.95,<1.36.0" },
@@ -1545,7 +1520,6 @@ requires-dist = [
     { name = "chargebee", specifier = ">=3.10.0,<4.0.0" },
     { name = "clickhouse-driver", git = "https://github.com/Flagsmith/clickhouse-driver?branch=newjson" },
     { name = "coreapi", specifier = ">=2.3.3,<2.4.0" },
-    { name = "cryptography", marker = "extra == 'licensing'", specifier = ">=44.0.1" },
     { name = "datamodel-code-generator", marker = "extra == 'dev'", specifier = ">=0.25,<0.26.0" },
     { name = "diff-cover", marker = "extra == 'dev'", specifier = ">=10.1.0,<11.0.0" },
     { name = "dj-database-url", specifier = ">=3.0.1,<3.1.0" },
@@ -1561,10 +1535,8 @@ requires-dist = [
     { name = "django-filter", specifier = ">=2.4.0,<2.5.0" },
     { name = "django-health-check", specifier = ">=3.18.2,<3.19.0" },
     { name = "django-lifecycle", specifier = ">=1.2.4,<1.3.0" },
-    { name = "django-multiselectfield", marker = "extra == 'auth-controller'", specifier = ">=1.0.1,<2" },
     { name = "django-oauth-toolkit", specifier = ">=3.0.1,<4.0.0" },
     { name = "django-ordered-model", specifier = ">=3.4.1,<3.5.0" },
-    { name = "django-python3-ldap", marker = "extra == 'ldap'", specifier = ">=0.15.6,<1" },
     { name = "django-redis", specifier = ">=5.4.0,<6.0.0" },
     { name = "django-ses", specifier = ">=3.5.0,<3.6.0" },
     { name = "django-simple-history", specifier = ">=2.12.0,<2.13.0" },
@@ -1588,8 +1560,7 @@ requires-dist = [
     { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.9.1,<4" },
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
     { name = "flagsmith-flag-engine", specifier = ">=10.1.0,<11.0.0" },
-    { name = "flagsmith-ldap", marker = "extra == 'ldap'", git = "https://github.com/flagsmith/flagsmith-ldap?tag=v0.1.2" },
-    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.6.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
+    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.9.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
     { name = "flagsmith-sql-flag-engine", specifier = ">=0.1.0,<0.2.0" },
     { name = "google-api-python-client", specifier = ">=1.12.5,<1.13.0" },
     { name = "google-re2", specifier = ">=1.0,<2.0.0" },
@@ -1597,7 +1568,6 @@ requires-dist = [
     { name = "hubspot-api-client", specifier = ">=12.0.0,<13.0.0" },
     { name = "influxdb-client", specifier = ">=1.50.0,<1.51.0" },
     { name = "ipython", marker = "extra == 'dev'", specifier = ">=9.10.0,<10.0.0" },
-    { name = "licensing", marker = "extra == 'licensing'", git = "https://github.com/flagsmith/licensing?tag=v0.3.0" },
     { name = "moto", marker = "extra == 'dev'", specifier = ">=4.1.3,<4.2.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.15.0,<2.0.0" },
     { name = "mypy-boto3-dynamodb", marker = "extra == 'dev'", specifier = ">=1.33.0,<2.0.0" },
@@ -1618,7 +1588,7 @@ requires-dist = [
     { name = "pyngo", specifier = ">=2.4.1,<2.5.0" },
     { name = "pyotp", specifier = ">=2.9.0,<3.0.0" },
     { name = "pyparsing", specifier = ">=2.4.7,<2.5.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.2.1,<7.3.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3,<9.1.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0,<4.2.0" },
     { name = "pytest-django", marker = "extra == 'dev'", specifier = ">=4.8.0,<5.0.0" },
     { name = "pytest-freezegun", marker = "extra == 'dev'", specifier = ">=0.4.2,<0.5.0" },
@@ -1632,7 +1602,7 @@ requires-dist = [
     { name = "requests", specifier = ">=2.33.0,<2.34.0" },
     { name = "requests-mock", marker = "extra == 'dev'", specifier = ">=1.11.0,<2.0.0" },
     { name = "responses", marker = "extra == 'dev'", specifier = ">=0.22.0,<0.23.0" },
-    { name = "rudder-sdk-python", specifier = ">=2.0.2,<2.1.0" },
+    { name = "rudder-sdk-python", specifier = ">=2.0.2,<3" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.9.7,<0.10.0" },
     { name = "segment-analytics-python", specifier = ">=2.2.3,<2.3.0" },
     { name = "sendgrid-django", specifier = ">=4.2.0,<4.3.0" },
@@ -1652,9 +1622,8 @@ requires-dist = [
     { name = "types-requests", marker = "extra == 'dev'", specifier = ">=2.32.0.20241016,<3.0.0" },
     { name = "tzdata", specifier = ">=2024.1,<2025.0.0" },
     { name = "whitenoise", specifier = ">=6.0.0,<6.1.0" },
-    { name = "workflows-logic", marker = "extra == 'workflows'", git = "https://github.com/flagsmith/flagsmith-workflows?tag=v3.4.0" },
 ]
-provides-extras = ["auth-controller", "private", "ldap", "workflows", "licensing", "dev"]
+provides-extras = ["private", "dev"]
 
 [[package]]
 name = "flagsmith-common"
@@ -1723,22 +1692,20 @@ wheels = [
 ]
 
 [[package]]
-name = "flagsmith-ldap"
-version = "0.0.0"
-source = { git = "https://github.com/flagsmith/flagsmith-ldap?tag=v0.1.2#2456465164f39c8ec77c28a029f72119a93c6776" }
-
-[[package]]
 name = "flagsmith-private"
-version = "0.6.0"
+version = "0.9.0"
 source = { registry = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" }
 dependencies = [
+    { name = "cryptography" },
+    { name = "django-multiselectfield" },
+    { name = "django-python3-ldap" },
     { name = "django-scim2" },
     { name = "pysaml2" },
     { name = "scim2-filter-parser" },
 ]
-sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.6.0/flagsmith_private-0.6.0.tar.gz", hash = "sha256:5549704f4a23c98e465ba4bb05b82e5440bf84f8d12171d027ae41f265d78ea5" }
+sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.9.0/flagsmith_private-0.9.0.tar.gz", hash = "sha256:fc7b11ff24205f07e8eca8debbbf71807ec1da456a2572df4ec6815a4cce8ade" }
 wheels = [
-    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.6.0/flagsmith_private-0.6.0-py3-none-any.whl", hash = "sha256:5016964c60dc75177a5ea0d290a50a23a6b2283a654ef95c27f8325c486f0cbe" },
+    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.9.0/flagsmith_private-0.9.0-py3-none-any.whl", hash = "sha256:6e3fa41790af07cc3296cd45c498e73c35f5b8645a59679627e8287717dcdc95" },
 ]
 
 [[package]]
@@ -1978,11 +1945,11 @@ wheels = [
 
 [[package]]
 name = "idna"
-version = "3.7"
+version = "3.18"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/21/ed/f86a79a07470cb07819390452f178b3bef1d375f2ec021ecfc709fc7cf07/idna-3.7.tar.gz", hash = "sha256:028ff3aadf0609c1fd278d8ea3089299412a7a8b9bd005dd08b9f8285bcb5cfc", size = 189575, upload-time = "2024-04-11T03:34:43.276Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cd/63/9496c57188a2ee585e0f1db071d75089a11e98aa86eb99d9d7618fc1edce/idna-3.18.tar.gz", hash = "sha256:ffb385a7e039654cef1ab9ef32c6fafe283c0c0467bba1d9029738ce4a14a848", size = 196711, upload-time = "2026-06-02T14:34:07.794Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e5/3e/741d8c82801c347547f8a2a06aa57dbb1992be9e948df2ea0eda2c8b79e8/idna-3.7-py3-none-any.whl", hash = "sha256:82fee1fc78add43492d3a1898bfa6d8a904cc97d8427f683ed8e798d07761aa0", size = 66836, upload-time = "2024-04-11T03:34:41.447Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/5e/d4e9f1a599fb8e573b7b87160658329fbf28d19eac2718f51fc3def3aa5a/idna-3.18-py3-none-any.whl", hash = "sha256:7f952cbe720b688055e3f87de14f5c3e5fdaa8bc3928985c4077ca689de849a2", size = 65455, upload-time = "2026-06-02T14:34:06.319Z" },
 ]
 
 [[package]]
@@ -2233,11 +2200,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/43/ac/96bd5464e3edbc615
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4e/f6/71d6ec9f18da0b2201287ce9db6afb1a1f637dedb3f0703409558981c723/ldap3-2.9.1-py2.py3-none-any.whl", hash = "sha256:5869596fc4948797020d3f03b7939da938778a0f9e2009f7a072ccf92b8e8d70", size = 432192, upload-time = "2021-07-18T06:34:12.905Z" },
 ]
-
-[[package]]
-name = "licensing"
-version = "0.0.0"
-source = { git = "https://github.com/flagsmith/licensing?tag=v0.3.0#d38953cd93cb99eab7fd92a0467d8bfcccc4cf96" }
 
 [[package]]
 name = "markupsafe"
@@ -3265,11 +3227,11 @@ wheels = [
 
 [[package]]
 name = "python-dotenv"
-version = "0.21.1"
+version = "1.2.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f5/d7/d548e0d5a68b328a8d69af833a861be415a17cb15ce3d8f0cd850073d2e1/python-dotenv-0.21.1.tar.gz", hash = "sha256:1c93de8f636cde3ce377292818d0e440b6e45a82f215c3744979151fa8151c49", size = 35930, upload-time = "2023-01-21T10:22:47.277Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/82/ed/0301aeeac3e5353ef3d94b6ec08bbcabd04a72018415dcb29e588514bba8/python_dotenv-1.2.2.tar.gz", hash = "sha256:2c371a91fbd7ba082c2c1dc1f8bf89ca22564a087c2c287cd9b662adde799cf3", size = 50135, upload-time = "2026-03-01T16:00:26.196Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/64/62/f19d1e9023aacb47241de3ab5a5d5fedf32c78a71a9e365bb2153378c141/python_dotenv-0.21.1-py3-none-any.whl", hash = "sha256:41e12e0318bebc859fcc4d97d4db8d20ad21721a6aa5047dd59f090391cb549a", size = 19284, upload-time = "2023-01-21T10:22:45.958Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/d7/1959b9648791274998a9c3526f6d0ec8fd2233e4d4acce81bbae76b44b2a/python_dotenv-1.2.2-py3-none-any.whl", hash = "sha256:1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a", size = 22101, upload-time = "2026-03-01T16:00:25.09Z" },
 ]
 
 [[package]]
@@ -3632,7 +3594,7 @@ wheels = [
 
 [[package]]
 name = "rudder-sdk-python"
-version = "2.0.2"
+version = "2.1.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "backoff" },
@@ -3642,9 +3604,9 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/60/af/cd82fe336d192000a4e9130d6daa65e11f84a79af749851bcb487a46bb72/rudder-sdk-python-2.0.2.tar.gz", hash = "sha256:4569bbe0183ea91bca7f23671f412bda03664b55b722d31454639d6409a421ea", size = 15614, upload-time = "2023-03-06T13:18:04.394Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ec/30/21675cadc1731dbb03d4e98b74852a63e0b4c063092cf2342c49b8b02b30/rudder_sdk_python-2.1.4.tar.gz", hash = "sha256:c6040044d79df05973cdec3f4455c7619b2b54b03158c68adca990e6502e1815", size = 15683, upload-time = "2024-09-25T16:36:53.243Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/75/8b/c6fd12edae3bc4e74f5ad01d64ad0ac63834d2106fb9a4773574ab03ab32/rudder_sdk_python-2.0.2-py2.py3-none-any.whl", hash = "sha256:05d36d674ef043704e2b89623b8cfbef160c2a44f4c801b7c268c11dbc29c219", size = 19574, upload-time = "2023-03-06T13:18:02.628Z" },
+    { url = "https://files.pythonhosted.org/packages/bf/4b/a6e3ae5b57dc2fef23b86a742955eff94a3bbe1682e5ee783e3b631eacb6/rudder_sdk_python-2.1.4-py2.py3-none-any.whl", hash = "sha256:a9891944ec4947ae0aea5962560cadf726f55831855993ebfb9c7acbdabb8ebb", size = 19577, upload-time = "2024-09-25T16:36:51.8Z" },
 ]
 
 [[package]]
@@ -4163,17 +4125,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/60/d9/6625ead93412c5ce86db1f8b4f2a70b8043e0a7c1d30099ba3c6a81641ff/wmctrl-0.5.tar.gz", hash = "sha256:7839a36b6fe9e2d6fd22304e5dc372dbced2116ba41283ea938b2da57f53e962", size = 5202, upload-time = "2023-09-16T23:02:08.09Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/13/ca/723e3f8185738d7947f14ee7dc663b59415c6dee43bd71575f8c7f5cd6be/wmctrl-0.5-py2.py3-none-any.whl", hash = "sha256:ae695c1863a314c899e7cf113f07c0da02a394b968c4772e1936219d9234ddd7", size = 4268, upload-time = "2023-09-16T23:02:05.563Z" },
-]
-
-[[package]]
-name = "workflows-logic"
-version = "3.3.2"
-source = { git = "https://github.com/flagsmith/flagsmith-workflows?tag=v3.4.0#f9cedab3ec8dba7198277cb6bce84b059d4be188" }
-dependencies = [
-    { name = "djangorestframework" },
-    { name = "djangorestframework-recursive" },
-    { name = "flagsmith-common" },
-    { name = "flagsmith-flag-engine" },
 ]
 
 [[package]]

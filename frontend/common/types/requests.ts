@@ -24,8 +24,10 @@ import {
   StageActionType,
   StageActionBody,
   ChangeRequest,
+  ExperimentStatus,
   FlagsmithValue,
   TagStrategy,
+  FeatureType,
 } from './responses'
 import { UtmsType } from './utms'
 
@@ -897,6 +899,7 @@ export type Req = {
     sort_field?: string
     sort_direction?: 'ASC' | 'DESC'
     identity?: string
+    type?: FeatureType
   }
   updateFeatureState: {
     environmentId: string
@@ -984,10 +987,15 @@ export type Req = {
     name?: string
     config?: Record<string, string>
   }
-  getExperiments: { environmentId: string }
+  getExperiments: PagedRequest<{
+    environmentId: string
+    status?: ExperimentStatus
+  }>
   createExperiment: {
     environmentId: string
     body: { name: string; hypothesis: string; feature: number }
   }
+  experimentAction: { environmentId: string; experimentId: number }
+  deleteExperiment: { environmentId: string; experimentId: number }
   // END OF TYPES
 }

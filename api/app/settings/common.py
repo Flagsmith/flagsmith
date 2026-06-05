@@ -787,6 +787,9 @@ REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
 # Redis Cluster URL used to communicate with the event ingestion server.
 INGESTION_REDIS_URL = env.str("INGESTION_REDIS_URL", default="")
 
+# DSN for the ClickHouse instance holding ingested experimentation events.
+EXPERIMENTATION_CLICKHOUSE_URL = env.str("EXPERIMENTATION_CLICKHOUSE_URL", default=None)
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",

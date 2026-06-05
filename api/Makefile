@@ -9,8 +9,6 @@ DOTENV_OVERRIDE_FILE ?= .env
 
 UV_VERSION ?= $(shell python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["tool"]["uv"]["required-version"].lstrip("="))')
 
-RBAC_REVISION ?= v0.13.0
-
 OPENAPI_FORMAT_VERSION ?= 1.23.0
 
 -include .env-local
@@ -36,13 +34,6 @@ install-uv:
 .PHONY: install-packages
 install-packages:
 	uv sync --frozen $(opts)
-
-.PHONY: install-private-modules
-install-private-modules:
-	$(eval SITE_PACKAGES_DIR := $(shell uv run python -c 'import site; print(site.getsitepackages()[0])'))
-	rm -rf $(SITE_PACKAGES_DIR)/rbac
-	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && mv ./flagsmith-rbac/rbac $(SITE_PACKAGES_DIR)
-	rm -rf ./flagsmith-rbac
 
 .PHONY: install
 install: install-pip install-uv install-packages
@@ -158,15 +149,36 @@ generate-grafana-client-types:
 		--wrap-string-literal \
 		--special-field-name-prefix=
 
+PRIVATE_TEST_DIRS := tests/rbac_tests tests/workflow_tests tests/auth_controller_tests tests/saml_integration_tests tests/licensing_integration_tests tests/ldap_integration_tests tests/saml_unit_tests
+
+.PHONY: clean-private-tests
+clean-private-tests:
+	rm -rf $(PRIVATE_TEST_DIRS)
+
+# scim and release_pipelines_logic are deliberately not pulled here: scim's
+# compliance tests need an SCIM_SERVICE_PROVIDER config that conflicts with Core
+# API's own scim tests (django-scim2 caches it globally), and release_pipelines
+# has an order-dependent assertion that only holds in isolation. Both run in
+# flagsmith-private's own CI.
+# TODO https://github.com/Flagsmith/flagsmith-private/issues/177
 .PHONY: integrate-private-tests
 integrate-private-tests:
-	$(eval WORKFLOW_REVISION := $(shell uv run python -c 'import tomllib; d=tomllib.load(open("pyproject.toml","rb")); s=d.get("tool",{}).get("uv",{}).get("sources",{}).get("workflows-logic",{}); print(s.get("tag") or s.get("rev") or "")'))
-	$(eval AUTH_CONTROLLER_REVISION := $(shell uv run python -c 'import tomllib; d=tomllib.load(open("pyproject.toml","rb")); s=d.get("tool",{}).get("uv",{}).get("sources",{}).get("auth-controller",{}); print(s.get("tag") or s.get("rev") or "")'))
-
-	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && mv ./flagsmith-rbac/tests tests/rbac_tests
-	git clone https://github.com/flagsmith/flagsmith-workflows --depth 1 --branch ${WORKFLOW_REVISION} && mv ./flagsmith-workflows/tests tests/workflow_tests
-	git clone https://github.com/flagsmith/flagsmith-auth-controller --depth 1 --branch ${AUTH_CONTROLLER_REVISION} && mv ./flagsmith-auth-controller/tests tests/auth_controller_tests
-	rm -rf ./flagsmith-rbac ./flagsmith-workflows ./flagsmith-auth-controller
+	@for dir in $(PRIVATE_TEST_DIRS); do \
+		if [ -d "$$dir" ]; then \
+			echo "Warning: $$dir already exists. Run 'make clean-private-tests' to remove all private test directories before re-running this command."; \
+			exit 1; \
+		fi; \
+	done
+	$(eval FLAGSMITH_PRIVATE_REVISION := v$(shell uv run python -c 'import importlib.metadata; print(importlib.metadata.version("flagsmith-private"))'))
+	git clone https://github.com/Flagsmith/flagsmith-private --depth 1 --branch ${FLAGSMITH_PRIVATE_REVISION}
+	mv ./flagsmith-private/integration_tests/rbac tests/rbac_tests
+	mv ./flagsmith-private/integration_tests/workflows_logic tests/workflow_tests
+	mv ./flagsmith-private/integration_tests/auth_controller tests/auth_controller_tests
+	mv ./flagsmith-private/integration_tests/saml tests/saml_integration_tests
+	mv ./flagsmith-private/integration_tests/licensing tests/licensing_integration_tests
+	mv ./flagsmith-private/integration_tests/flagsmith_ldap tests/ldap_integration_tests
+	mv ./flagsmith-private/unit_tests/saml tests/saml_unit_tests
+	rm -rf ./flagsmith-private
 
 .PHONY: generate-docs
 generate-docs: generate-flagsmith-sdk-openapi

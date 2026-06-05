@@ -41,6 +41,7 @@ flagsmith
     api: Project.flagsmithClientAPI,
     cacheFlags: true,
     enableAnalytics: window.E2E ? false : Project.flagsmithAnalytics,
+    enableEvents: window.E2E ? false : Project.flagsmithAnalytics,
     environmentID: Project.flagsmith,
     onChange: controller.loaded,
     realtime: window.E2E ? false : Project.flagsmithRealtime,

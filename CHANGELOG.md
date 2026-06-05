@@ -1,5 +1,70 @@
 # Changelog
 
+## [2.238.0](https://github.com/Flagsmith/flagsmith/compare/v2.237.0...v2.238.0) (2026-06-01)
+
+
+### Features
+
+* **experimentation:** add unique event names from ClickHouse ([#7660](https://github.com/Flagsmith/flagsmith/issues/7660)) ([1ee9b7b](https://github.com/Flagsmith/flagsmith/commit/1ee9b7b61468b731141ff229cf8d39b97086a41a))
+* experiments ux improvements ([#7644](https://github.com/Flagsmith/flagsmith/issues/7644)) ([755df22](https://github.com/Flagsmith/flagsmith/commit/755df228908782ddc43ed9a3218565c1e32c42f9))
+* **experiment:** use backend type filter for multivariate features ([#7630](https://github.com/Flagsmith/flagsmith/issues/7630)) ([164d4bc](https://github.com/Flagsmith/flagsmith/commit/164d4bc4cd5759ad95eff6f8b741e22f8c8e7906))
+* **MCP:** Use native OpenAPI tool fields and consolidate private deps ([#7656](https://github.com/Flagsmith/flagsmith/issues/7656)) ([2c8cf0f](https://github.com/Flagsmith/flagsmith/commit/2c8cf0fd99ec455b4b4d87a3318e6135f5fef41d))
+
+
+### Bug Fixes
+
+* feature_segment missing in versioning ([#7618](https://github.com/Flagsmith/flagsmith/issues/7618)) ([f5584c9](https://github.com/Flagsmith/flagsmith/commit/f5584c9f066fc51ebeba0c0ce7daf2642fde10d1))
+* **GitLab:** issue/MR status in the feature Links panel goes stale after state changes ([#7545](https://github.com/Flagsmith/flagsmith/issues/7545)) ([77f742e](https://github.com/Flagsmith/flagsmith/commit/77f742ea2eb209105e0345f0a3598e972723b07b))
+* **webhooks:** Prevent SSRF in webhooks and webhook tests ([#7550](https://github.com/Flagsmith/flagsmith/issues/7550)) ([85b92fa](https://github.com/Flagsmith/flagsmith/commit/85b92fa990b217668ab28e1fd0e3300229a0fb2a))
+
+
+### Dependency Updates
+
+* **node:** upgrade ws transitive dependency to fix CVE-2026-45736 ([#7634](https://github.com/Flagsmith/flagsmith/issues/7634)) ([4de821d](https://github.com/Flagsmith/flagsmith/commit/4de821d5a0f4f6069c9fe2ef16420bdb67ebc5a0))
+
+
+### CI
+
+* **renovate:** Fix renovate config json & add linter to pre-commit hooks ([#7657](https://github.com/Flagsmith/flagsmith/issues/7657)) ([69c6dbf](https://github.com/Flagsmith/flagsmith/commit/69c6dbf196cbbbe04007db000d7737a8deacfd68))
+* Replace Dependabot with Renovate ([#7645](https://github.com/Flagsmith/flagsmith/issues/7645)) ([5b4dff0](https://github.com/Flagsmith/flagsmith/commit/5b4dff0cf60f60aad3c726053b5a23de8844b9b0))
+
+
+### Docs
+
+* add vulnerability response policy to support page ([#7423](https://github.com/Flagsmith/flagsmith/issues/7423)) ([d39aae7](https://github.com/Flagsmith/flagsmith/commit/d39aae712d25df76b3c807adce3fe0be09b52dad))
+* Consolidate PR collaboration guide to Flagsmith/AGENTS.md ([#7646](https://github.com/Flagsmith/flagsmith/issues/7646)) ([c1f40d8](https://github.com/Flagsmith/flagsmith/commit/c1f40d8860fa89bb0406e88f85ccd139287b7c6b))
+* CVE vulnerability guidance ([#7655](https://github.com/Flagsmith/flagsmith/issues/7655)) ([89135fe](https://github.com/Flagsmith/flagsmith/commit/89135fe2ecebfa8be49adaf27a3d2264c86cf5ec))
+
+## [2.237.0](https://github.com/Flagsmith/flagsmith/compare/v2.236.0...v2.237.0) (2026-05-29)
+
+
+### Features
+
+* added pagination and deletion guard ([#7615](https://github.com/Flagsmith/flagsmith/issues/7615)) ([588fa17](https://github.com/Flagsmith/flagsmith/commit/588fa174a14be308216b83a00326c2c9162038f8))
+* added search query to get experiment endpoints ([#7617](https://github.com/Flagsmith/flagsmith/issues/7617)) ([91efcff](https://github.com/Flagsmith/flagsmith/commit/91efcffd49f50b8e20a7ba4d20d976808d3123fd))
+* **experiment:** add experiments list page with filtering, pagination, and actions ([#7628](https://github.com/Flagsmith/flagsmith/issues/7628)) ([7ea1158](https://github.com/Flagsmith/flagsmith/commit/7ea1158ddabd4b8833ba3fa069ede8ef3230b4c6))
+* **experimentation:** add Experiment base model and CRUD endpoints ([#7591](https://github.com/Flagsmith/flagsmith/issues/7591)) ([d118da7](https://github.com/Flagsmith/flagsmith/commit/d118da7084fe4576b2c46dab089265a80bd018b0))
+* **experimentation:** add experiment creation wizard frontend ([#7596](https://github.com/Flagsmith/flagsmith/issues/7596)) ([cdda679](https://github.com/Flagsmith/flagsmith/commit/cdda679e2e2b47adb23f8abe21ef562add044442))
+* **experimentation:** return feature object along with experiment entity ([#7609](https://github.com/Flagsmith/flagsmith/issues/7609)) ([e5f2f7c](https://github.com/Flagsmith/flagsmith/commit/e5f2f7c40e63ece574b19ac34631895b3b757f0c))
+* return experiment status counts along paginated list ([#7625](https://github.com/Flagsmith/flagsmith/issues/7625)) ([aa85699](https://github.com/Flagsmith/flagsmith/commit/aa856995f517da77d17a22c07910528ab41f1424))
+* track custom event feature creation ([#7603](https://github.com/Flagsmith/flagsmith/issues/7603)) ([cac20ff](https://github.com/Flagsmith/flagsmith/commit/cac20ff76ae29cafec8adb7bf7f9e2bad3935c31))
+
+
+### Bug Fixes
+
+* allow project admins to create and manage project-scoped custom fields ([#7518](https://github.com/Flagsmith/flagsmith/issues/7518)) ([53b93ba](https://github.com/Flagsmith/flagsmith/commit/53b93bab5803a1e9afad3bf4f9d29d0d705e96d5))
+
+
+### Dependency Updates
+
+* bump flagsmith-sql-flag-engine to 0.1.1 ([#7616](https://github.com/Flagsmith/flagsmith/issues/7616)) ([482f0ff](https://github.com/Flagsmith/flagsmith/commit/482f0ff661c8629a0ab66016c2cfe31a94fab464))
+* Use uv supported by dependabot ([#7633](https://github.com/Flagsmith/flagsmith/issues/7633)) ([d844e1a](https://github.com/Flagsmith/flagsmith/commit/d844e1a6da605459260e26c82d63047eaa74b223))
+
+
+### Docs
+
+* **Sizing:** rewrite as workload-driven guide ([#7592](https://github.com/Flagsmith/flagsmith/issues/7592)) ([b34ef1f](https://github.com/Flagsmith/flagsmith/commit/b34ef1fa123a493c0aeff029dd4e7f0f22ab79f1))
+
 ## [2.236.0](https://github.com/Flagsmith/flagsmith/compare/v2.235.0...v2.236.0) (2026-05-27)
 
 

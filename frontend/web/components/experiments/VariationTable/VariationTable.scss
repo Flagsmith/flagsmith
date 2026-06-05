@@ -19,12 +19,9 @@
     letter-spacing: 0.02em;
 
     &--name,
-    &--desc {
-      flex: 1;
-    }
-
+    &--desc,
     &--value {
-      width: 100px;
+      flex: 1;
     }
   }
 
@@ -47,7 +44,8 @@
       align-items: center;
       gap: 8px;
       flex: 1;
-      min-width: 0;
+      min-width: 120px;
+      white-space: nowrap;
     }
 
     &--desc {
@@ -57,8 +55,8 @@
     }
 
     &--value {
-      width: 120px;
-      flex-shrink: 0;
+      flex: 1;
+      min-width: 0;
     }
   }
 
@@ -84,11 +82,16 @@
   }
 
   &__value-badge {
+    display: inline-block;
     font-family: var(--font-family);
     font-size: var(--font-body-sm-size);
     color: var(--color-text-default);
     background: var(--color-surface-muted);
     padding: 6px 12px;
     border-radius: var(--radius-md);
+    word-break: break-all;
+    max-width: 100%;
+    max-height: 120px;
+    overflow-y: auto;
   }
 }

@@ -29,25 +29,28 @@ const ReviewStep: FC<ReviewStepProps> = ({
         }
       >
         <div className='review-row review-row--block'>
-          <span className='review-row__label'>Name</span>
+          <span className='text-muted'>Name</span>
           <span className='review-row__value'>{name}</span>
         </div>
         {hypothesis && (
           <div className='review-row review-row--block'>
-            <span className='review-row__label'>Hypothesis</span>
+            <span className='text-muted'>Hypothesis</span>
             <span className='review-row__hypothesis'>{hypothesis}</span>
           </div>
         )}
         {selectedFeature && (
           <>
             <div className='review-row review-row--block'>
-              <span className='review-row__label'>Feature Flag</span>
+              <span className='text-muted'>Feature Flag</span>
               <span className='review-row__value review-row__value--flag'>
                 {selectedFeature.name}
               </span>
             </div>
             <VariationTable
-              controlValue={selectedFeature.initial_value?.toString() ?? ''}
+              controlValue={
+                selectedFeature.environment_feature_state?.feature_state_value?.toString() ??
+                ''
+              }
               variations={selectedFeature.multivariate_options}
             />
           </>
