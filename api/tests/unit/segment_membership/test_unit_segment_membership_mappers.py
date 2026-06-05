@@ -99,6 +99,7 @@ def test_map_identity_document_to_clickhouse_row__cases__return_expected(
 
 
 def test_map_identity_document_to_clickhouse_row__is_deleted_true__sets_flag() -> None:
+    # Given a Dynamo identity document and is_deleted=True
     doc: DynamoIdentity = {
         "identity_uuid": UUID_A,
         "identifier": "alice",
@@ -107,5 +108,9 @@ def test_map_identity_document_to_clickhouse_row__is_deleted_true__sets_flag() -
         "created_date": "2026-05-08T00:00:00Z",
         "identity_traits": [],
     }
+
+    # When mapped with is_deleted=True
     result = map_identity_document_to_clickhouse_row("env-key", doc, is_deleted=True)
+
+    # Then the flag is set in the returned tuple
     assert result == ("env-key", "alice", "env_x_alice", None, True)
