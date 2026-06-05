@@ -219,7 +219,7 @@ def write_identity_deletion_tombstone_to_clickhouse(
     with open_clickhouse_cursor(log_comment=log_comment) as cursor:
         cursor.executemany(
             _INSERT_IDENTITIES_SQL,
-            [(env_key, identifier, identity_key, None, True)],  # type: ignore[arg-type]
+            [(env_key, identifier, identity_key, None, True)],
         )
     logger.info(
         "tombstone.written",
