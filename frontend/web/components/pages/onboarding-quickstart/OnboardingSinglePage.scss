@@ -315,9 +315,15 @@
 
   // State colours for the left column (title carries the colour).
   &__verify--waiting {
-    .onboarding-single__badge {
+    .onboarding-single__badge--signal {
       color: var(--color-text-action);
       background-color: var(--color-surface-action-subtle);
+    }
+    // "Scanning for ping" is amber in the design.
+    .onboarding-single__badge--status {
+      color: #d97706;
+      background-color: #fef3c7;
+      border: 1px solid #f59e0b;
     }
     .onboarding-single__verify-title {
       color: var(--color-text-action);
@@ -510,6 +516,9 @@
     }
     &--pending {
       color: #6e7781;
+    }
+    &--await {
+      color: #f0883e;
     }
     &--cursor {
       color: #7ee787;

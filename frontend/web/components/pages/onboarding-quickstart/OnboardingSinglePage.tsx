@@ -441,11 +441,11 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
         >
           <div className='onboarding-single__verify-left'>
             <div className='onboarding-single__verify-badges d-flex align-items-center justify-content-between'>
-              <span className='onboarding-single__badge'>
+              <span className='onboarding-single__badge onboarding-single__badge--signal'>
                 <span className='onboarding-single__badge-dot' aria-hidden />
                 {connected ? 'Evaluation received' : 'Signal detection active'}
               </span>
-              <span className='onboarding-single__badge'>
+              <span className='onboarding-single__badge onboarding-single__badge--status'>
                 <span className='onboarding-single__badge-dot' aria-hidden />
                 {connected ? 'First ping detected' : 'Scanning for ping'}
               </span>
@@ -482,23 +482,25 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
                 </span>
               </div>
               <div className='onboarding-single__console-body'>
-                {/* One checklist across both states. Copy items reflect real
-                    Copy clicks; SDK/flags/evaluation tick on a real request.
-                    Connected appends the request proof; waiting, the watch line. */}
-                {renderCheck(copiedInstall, 'Install command copied')}
-                {renderCheck(copiedCode, 'Code copied')}
-                {renderCheck(connected, 'SDK initialized')}
-                {renderCheck(
-                  connected,
-                  connected
-                    ? `Flags loaded · ${featureName}: ${flagEnabled}`
-                    : 'Flags loaded',
-                )}
-                {renderCheck(connected, 'First evaluation received', 'done')}
+                {/* The checklist is three tasks the user drives. Copy items
+                    tick on the real Copy click; the first evaluation is the
+                    goal, ticking on a real request. Connected appends the
+                    connection receipt — what the SDK reported. */}
+                {renderCheck(copiedInstall, 'Copy install command')}
+                {renderCheck(copiedCode, 'Copy code snippet')}
                 {connected ? (
                   <>
-                    {/* Real request metadata — illustrative values until wired
-                        to the live first-request signal. */}
+                    {renderCheck(
+                      true,
+                      `First evaluation of '${featureName}'`,
+                      'done',
+                    )}
+                    {/* Connection receipt — what the SDK reported on the first
+                        request. Illustrative values until wired to the live
+                        first-request signal. */}
+                    <code className='onboarding-single__console-line onboarding-single__console-line--meta'>
+                      {`SDK initialized · flags loaded · ${featureName}: ${flagEnabled}`}
+                    </code>
                     <code className='onboarding-single__console-line onboarding-single__console-line--meta'>
                       User-Agent: Chrome/120.0 · MacBook Pro
                     </code>
@@ -518,8 +520,9 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
                   </>
                 ) : (
                   <>
-                    <code className='onboarding-single__console-line onboarding-single__console-line--prompt'>
-                      {`$ run your app — watching for ${featureName}'s first evaluation…`}
+                    {/* The one task still required — highlighted as awaiting. */}
+                    <code className='onboarding-single__console-line onboarding-single__console-line--await'>
+                      {`[→] First evaluation of '${featureName}'…`}
                     </code>
                     <code className='onboarding-single__console-line onboarding-single__console-line--cursor'>
                       ▋
