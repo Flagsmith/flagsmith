@@ -15,6 +15,7 @@ from experimentation.models import (
     ExpectedDirection,
     Experiment,
     ExperimentMetric,
+    ExperimentStatus,
     Metric,
     MetricAggregation,
     MetricDirection,
@@ -310,14 +311,25 @@ def test_update_metric__patch__returns_405(
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
+@pytest.mark.parametrize(
+    "experiment_status",
+    [
+        ExperimentStatus.CREATED,
+        ExperimentStatus.RUNNING,
+        ExperimentStatus.PAUSED,
+    ],
+)
 def test_delete_metric__attached_to_active_experiment__returns_409(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
+    experiment_status: str,
     enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
+    experiment.status = experiment_status
+    experiment.save()
     metric = _metric(environment, "attached")
     ExperimentMetric.objects.create(
         experiment=experiment,
@@ -331,6 +343,31 @@ def test_delete_metric__attached_to_active_experiment__returns_409(
     # Then
     assert response.status_code == status.HTTP_409_CONFLICT
     assert Metric.objects.filter(name="attached").exists()
+
+
+def test_delete_metric__attached_to_completed_experiment__returns_204(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.save()
+    metric = _metric(environment, "done")
+    ExperimentMetric.objects.create(
+        experiment=experiment,
+        metric=metric,
+        expected_direction=ExpectedDirection.INCREASE,
+    )
+
+    # When
+    response = admin_client_new.delete(_detail_url(environment, metric))
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not Metric.objects.filter(name="done").exists()
 
 
 def test_delete_metric__attached_to_soft_deleted_experiment__returns_204(
