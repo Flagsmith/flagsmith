@@ -13,7 +13,11 @@ from experimentation.models import (
     WarehouseConnection,
     WarehouseType,
 )
-from experimentation.types import SNOWFLAKE_DEFAULTS, SnowflakeConfig
+from experimentation.types import (
+    SNOWFLAKE_DEFAULTS,
+    MetricExperimentResult,
+    SnowflakeConfig,
+)
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
 from features.multivariate.serializers import NestedMultivariateFeatureOptionSerializer
@@ -101,6 +105,8 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
 
 
 class MetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    experiments = serializers.SerializerMethodField()
+
     class Meta:
         model = Metric
         fields = (
@@ -110,20 +116,33 @@ class MetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
             "aggregation",
             "direction",
             "definition",
+            "experiments",
             "created_at",
             "updated_at",
         )
         read_only_fields = (
             "id",
+            "experiments",
             "created_at",
             "updated_at",
         )
 
-    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        error = validate_metric_definition(attrs["definition"])
+    def get_experiments(self, metric: Metric) -> list[MetricExperimentResult]:
+        return [
+            {
+                "id": experiment_metric.experiment.id,
+                "name": experiment_metric.experiment.name,
+                "status": experiment_metric.experiment.status,
+            }
+            for experiment_metric in metric.experiment_metrics.all()
+            if experiment_metric.experiment.deleted_at is None
+        ]
+
+    def validate_definition(self, definition: object) -> object:
+        error = validate_metric_definition(definition)
         if error:
-            raise serializers.ValidationError({"definition": error})
-        return attrs
+            raise serializers.ValidationError(error)
+        return definition
 
 
 class ExperimentMetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]

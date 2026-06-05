@@ -293,22 +293,162 @@ def test_list_metrics__other_environment__excluded(
     assert names == ["mine"]
 
 
-def test_update_metric__patch__returns_405(
+def test_list_metrics__search_query__filters_by_name(
+    admin_client_new: APIClient,
+    environment: Environment,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given two metrics with distinct names
+    enable_features(EXPERIMENT_FLAG)
+    _metric(environment, "Checkout Conversion")
+    _metric(environment, "Revenue per User")
+
+    # When the list is filtered by a case-insensitive substring
+    response = admin_client_new.get(_list_url(environment), {"q": "checkout"})
+
+    # Then only the matching metric is returned
+    assert response.status_code == status.HTTP_200_OK
+    names = [m["name"] for m in response.json()["results"]]
+    assert names == ["Checkout Conversion"]
+
+
+def test_list_metrics__attached_experiments__included(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given a metric attached to an experiment
+    enable_features(EXPERIMENT_FLAG)
+    metric = _metric(environment, "with-experiment")
+    ExperimentMetric.objects.create(
+        experiment=experiment,
+        metric=metric,
+        expected_direction=ExpectedDirection.INCREASE,
+    )
+
+    # When the list is fetched
+    response = admin_client_new.get(_list_url(environment))
+
+    # Then the metric carries the experiments using it
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()["results"][0]
+    assert data["experiments"] == [
+        {
+            "id": experiment.id,
+            "name": experiment.name,
+            "status": experiment.status,
+        }
+    ]
+
+
+def test_list_metrics__soft_deleted_experiment__excluded_from_experiments(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given a metric whose only attachment is to a soft-deleted experiment
+    enable_features(EXPERIMENT_FLAG)
+    metric = _metric(environment, "ghost-attachment")
+    ExperimentMetric.objects.create(
+        experiment=experiment,
+        metric=metric,
+        expected_direction=ExpectedDirection.INCREASE,
+    )
+    experiment.delete()
+
+    # When the list is fetched
+    response = admin_client_new.get(_list_url(environment))
+
+    # Then the soft-deleted experiment is not reported
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["results"][0]["experiments"] == []
+
+
+def test_list_metrics__unattached_metric__empty_experiments(
+    admin_client_new: APIClient,
+    environment: Environment,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given a metric not attached to any experiment
+    enable_features(EXPERIMENT_FLAG)
+    _metric(environment, "orphan")
+
+    # When the list is fetched
+    response = admin_client_new.get(_list_url(environment))
+
+    # Then it reports no experiments
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["results"][0]["experiments"] == []
+
+
+def test_update_metric__patch__updates_and_audits(
     admin_client_new: APIClient,
     environment: Environment,
     enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
-    metric = _metric(environment, "immutable")
+    metric = _metric(environment, "before")
 
     # When
     response = admin_client_new.patch(
-        _detail_url(environment, metric), data={"name": "changed"}, format="json"
+        _detail_url(environment, metric),
+        data={"name": "after", "description": "new desc"},
+        format="json",
     )
 
-    # Then — metrics are immutable for now
-    assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["name"] == "after"
+    metric.refresh_from_db()
+    assert metric.name == "after"
+    assert metric.description == "new desc"
+    assert AuditLog.objects.filter(
+        related_object_type=RelatedObjectType.METRIC.name,
+        related_object_id=metric.id,
+        log__contains="updated",
+    ).exists()
+
+
+def test_update_metric__invalid_definition__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    metric = _metric(environment, "before")
+
+    # When the definition is patched to an unsupported shape
+    response = admin_client_new.patch(
+        _detail_url(environment, metric),
+        data={"definition": {"version": 99, "event": "x"}},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "definition" in response.json()
+
+
+def test_update_metric__staff_user__returns_403(
+    staff_client: APIClient,
+    environment: Environment,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    metric = _metric(environment, "before")
+
+    # When a non-admin tries to update a metric
+    response = staff_client.patch(
+        _detail_url(environment, metric), data={"name": "after"}, format="json"
+    )
+
+    # Then it is forbidden
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.parametrize(
