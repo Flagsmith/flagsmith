@@ -100,10 +100,7 @@ class MetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
         )
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        definition: Any = attrs.get(
-            "definition", getattr(self.instance, "definition", None)
-        )
-        error = validate_metric_definition(definition)
+        error = validate_metric_definition(attrs["definition"])
         if error:
             raise serializers.ValidationError({"definition": error})
         return attrs
