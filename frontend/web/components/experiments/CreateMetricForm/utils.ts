@@ -11,15 +11,15 @@ export type MetricFormState = {
   aggregation: MetricAggregation
   direction: MetricDirection
   event: string
-  filter: string
 }
+
+export const DEFAULT_METRIC_DEFINITION_VERSION = 1
 
 export const DEFAULT_METRIC_FORM_STATE: MetricFormState = {
   aggregation: 'occurrence',
   description: '',
-  direction: 'increase',
+  direction: 'up',
   event: '',
-  filter: '',
   name: '',
 }
 
@@ -63,8 +63,8 @@ export type DirectionOption = {
 }
 
 export const DIRECTION_OPTIONS: DirectionOption[] = [
-  { label: 'Higher is better', value: 'increase' },
-  { label: 'Lower is better', value: 'decrease' },
+  { label: 'Higher is better', value: 'up' },
+  { label: 'Lower is better', value: 'down' },
   { label: 'Neither — informational only', value: 'informational' },
 ]
 
@@ -73,12 +73,9 @@ export const canSubmitMetric = (state: MetricFormState): boolean =>
 
 export const buildMetricPayload = (
   state: MetricFormState,
+  version: number = DEFAULT_METRIC_DEFINITION_VERSION,
 ): Req['createMetric']['body'] => {
-  const definition: MetricDefinition = { event: state.event.trim() }
-  const filter = state.filter.trim()
-  if (filter) {
-    definition.filter = filter
-  }
+  const definition: MetricDefinition = { event: state.event.trim(), version }
   return {
     aggregation: state.aggregation,
     definition,

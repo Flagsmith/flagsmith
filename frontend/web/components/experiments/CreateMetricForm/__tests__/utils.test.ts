@@ -1,6 +1,7 @@
 import {
   buildMetricPayload,
   canSubmitMetric,
+  DEFAULT_METRIC_DEFINITION_VERSION,
   DEFAULT_METRIC_FORM_STATE,
   MetricFormState,
 } from 'components/experiments/CreateMetricForm/utils'
@@ -42,52 +43,49 @@ describe('buildMetricPayload', () => {
     const state: MetricFormState = {
       aggregation: 'count',
       description: '  Purchases made  ',
-      direction: 'decrease',
+      direction: 'down',
       event: '  checkout_completed  ',
-      filter: '',
       name: '  Purchases  ',
     }
 
-    expect(buildMetricPayload(state)).toEqual({
+    expect(buildMetricPayload(state, 1)).toEqual({
       aggregation: 'count',
-      definition: { event: 'checkout_completed' },
+      definition: { event: 'checkout_completed', version: 1 },
       description: 'Purchases made',
-      direction: 'decrease',
+      direction: 'down',
       name: 'Purchases',
     })
   })
 
-  it('includes the trimmed filter in the definition when provided', () => {
+  it('stamps the definition with the provided version', () => {
     const state: MetricFormState = {
       ...DEFAULT_METRIC_FORM_STATE,
       event: 'checkout_completed',
-      filter: "  status = 'complete'  ",
       name: 'Purchases',
     }
 
-    expect(buildMetricPayload(state).definition).toEqual({
+    expect(buildMetricPayload(state, 2).definition).toEqual({
       event: 'checkout_completed',
-      filter: "status = 'complete'",
+      version: 2,
     })
   })
 
-  it('omits the filter from the definition when blank', () => {
+  it('falls back to the default version when none is given', () => {
     const state: MetricFormState = {
       ...DEFAULT_METRIC_FORM_STATE,
       event: 'checkout_completed',
-      filter: '   ',
       name: 'Purchases',
     }
 
-    expect(buildMetricPayload(state).definition).toEqual({
-      event: 'checkout_completed',
-    })
+    expect(buildMetricPayload(state).definition.version).toBe(
+      DEFAULT_METRIC_DEFINITION_VERSION,
+    )
   })
 })
 
 describe('DEFAULT_METRIC_FORM_STATE', () => {
   it('defaults to an occurrence metric where higher is better', () => {
     expect(DEFAULT_METRIC_FORM_STATE.aggregation).toBe('occurrence')
-    expect(DEFAULT_METRIC_FORM_STATE.direction).toBe('increase')
+    expect(DEFAULT_METRIC_FORM_STATE.direction).toBe('up')
   })
 })

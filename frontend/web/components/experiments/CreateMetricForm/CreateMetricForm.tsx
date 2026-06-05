@@ -38,13 +38,6 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
 
   return (
     <div className='create-metric-form'>
-      <div className='create-metric-form__header'>
-        <span className='create-metric-form__title'>Create Metric</span>
-        <span className='create-metric-form__subtitle'>
-          Metrics capture the outcomes your experiments measure.
-        </span>
-      </div>
-
       <div className='create-metric-form__field'>
         <label className='create-metric-form__label' htmlFor='metric-name'>
           Name
@@ -154,22 +147,6 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
                 update({ event: e.target.value })
               }
               placeholder='e.g. checkout_completed'
-            />
-          </div>
-          <div className='create-metric-form__source-col'>
-            <label
-              className='create-metric-form__sublabel'
-              htmlFor='metric-filter'
-            >
-              Filter <span className='text-muted'>(optional)</span>
-            </label>
-            <Input
-              id='metric-filter'
-              value={state.filter}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                update({ filter: e.target.value })
-              }
-              placeholder="e.g. status = 'complete'"
             />
           </div>
         </div>

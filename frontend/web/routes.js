@@ -47,7 +47,7 @@ import CreateReleasePipelinePage from './components/pages/CreateReleasePipelineP
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 import SegmentPage from './components/pages/SegmentPage'
 import ExperimentsPage from './components/pages/ExperimentsPage'
-import CreateMetricPage from './components/pages/CreateMetricPage'
+import MetricsPage from './components/pages/MetricsPage'
 import ReleaseManagerPage from './components/pages/ReleaseManagerPage'
 import FlagEnvironmentsPage from './components/pages/FlagEnvironmentsPage'
 import ExecutiveViewPage from './components/pages/ExecutiveViewPage'
@@ -174,7 +174,7 @@ export default (
         <ParameterizedRoute
           path={routes.metrics}
           exact
-          component={CreateMetricPage}
+          component={MetricsPage}
         />
         <ParameterizedRoute
           path={routes.lifecycle}

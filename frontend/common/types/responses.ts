@@ -583,11 +583,11 @@ export type ExperimentStatusCounts = Record<ExperimentStatus, number>
 
 export type MetricAggregation = 'count' | 'sum' | 'mean' | 'occurrence'
 
-export type MetricDirection = 'increase' | 'decrease' | 'informational'
+export type MetricDirection = 'up' | 'down' | 'informational'
 
 export type MetricDefinition = {
+  version: number
   event: string
-  filter?: string
 }
 
 export type Metric = {
