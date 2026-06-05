@@ -1,4 +1,4 @@
-name: MCP Build Docker Image and Publish
+name: MCP Build, Publish and Deploy
 
 on:
   pull_request:
@@ -99,6 +99,7 @@ jobs:
           tags: |
             type=ref,event=branch
             type=sha
+            type=raw,value=latest
 
       # Setup Docker buildx with Depot builder so imagetools have access to Depot cache
       - uses: depot/use-action@v1
@@ -153,6 +154,7 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
 
       # Setup Docker buildx with Depot builder so imagetools have access to Depot cache
       - uses: depot/use-action@v1
@@ -162,3 +164,80 @@ jobs:
         with:
           sources: ${{ needs.docker-build-mcp.outputs.image }}
           tags: ${{ steps.meta.outputs.tags }}
+
+  # Register a new task-definition revision (from the in-repo JSON) and roll
+  # the staging ECS service onto the freshly published image.
+
+  deploy-ecr-staging-mcp:
+    name: Deploy MCP to staging
+    needs: [docker-publish-ecr-staging-mcp]
+    if: github.event_name == 'push'
+    runs-on: depot-ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.MCP_ECR_GITHUB_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Render MCP task definition
+        id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: infrastructure/aws/staging/ecs-task-definition-mcp.json
+          container-name: mcp-server
+          image: ${{ vars.MCP_ECR_REPOSITORY_URL }}:latest
+
+      - name: Deploy MCP task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          service: ${{ vars.MCP_ECS_SERVICE }}
+          cluster: ${{ vars.MCP_ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+  # Register a new task-definition revision (from the in-repo JSON) and roll
+  # the production ECS service onto the freshly published image.
+
+  deploy-ecr-mcp:
+    name: Deploy MCP to production
+    needs: [docker-publish-ecr-mcp]
+    if: github.event_name == 'release'
+    runs-on: depot-ubuntu-latest
+    # The OIDC role trusts jobs running in the production environment.
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.MCP_ECR_GITHUB_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Render MCP task definition
+        id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: infrastructure/aws/production/ecs-task-definition-mcp.json
+          container-name: mcp-server
+          image: ${{ vars.MCP_ECR_REPOSITORY_URL }}:latest
+
+      - name: Deploy MCP task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          service: ${{ vars.MCP_ECS_SERVICE }}
+          cluster: ${{ vars.MCP_ECS_CLUSTER }}
+          wait-for-service-stability: true

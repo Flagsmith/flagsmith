@@ -1,0 +1,55 @@
+{
+    "family": "mcp-server",
+    "networkMode": "awsvpc",
+    "executionRoleArn": "arn:aws:iam::302456015006:role/mcp-ecs-execution-role",
+    "containerDefinitions": [
+        {
+            "name": "mcp-server",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "containerPort": 9100,
+                    "hostPort": 9100,
+                    "protocol": "tcp"
+                },
+                {
+                    "containerPort": 8000,
+                    "hostPort": 8000,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "TRANSPORT",
+                    "value": "http"
+                },
+                {
+                    "name": "FLAGSMITH_API_URL",
+                    "value": "https://api-staging.flagsmith.com"
+                },
+                {
+                    "name": "MCP_SERVER_URL",
+                    "value": "https://mcp-staging.flagsmith.com"
+                },
+                {
+                    "name": "METRICS_PORT",
+                    "value": "9100"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/mcp-server",
+                    "awslogs-region": "eu-west-2",
+                    "awslogs-stream-prefix": "mcp-server"
+                }
+            }
+        }
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512"
+}
