@@ -96,7 +96,7 @@ const MetricsPage: FC = () => {
     )
   }
 
-  const renderList = () => {
+  const renderBody = () => {
     if (isLoading) {
       return (
         <div className='text-center'>
@@ -113,28 +113,73 @@ const MetricsPage: FC = () => {
             className='text-muted mb-3 d-block mx-auto'
           />
           <h5>No metrics yet</h5>
-          <p className='text-muted mb-0'>
+          <p className='text-muted mb-4'>
             Create your first metric to measure experiment outcomes.
           </p>
+          <Button onClick={() => history.push(`${metricsPath}?create=true`)}>
+            <Icon name='plus' width={16} />
+            Create Metric
+          </Button>
         </div>
       )
     }
     return (
-      <div className='metrics-page__list'>
-        {metrics.map((metric) => (
-          <div key={metric.id} className='metrics-page__row'>
-            <div className='metrics-page__row-main'>
-              <span className='metrics-page__row-name'>{metric.name}</span>
-              {!!metric.description && (
-                <span className='metrics-page__row-desc'>
-                  {metric.description}
-                </span>
-              )}
-            </div>
-            <span className='metrics-page__row-agg'>{metric.aggregation}</span>
+      <>
+        {!!connection && (
+          <div className='metrics-page__banner'>
+            <span className='metrics-page__banner-text'>
+              <Icon
+                name='layers'
+                width={16}
+                className='metrics-page__banner-icon'
+              />
+              Metrics are computed from your <strong>{warehouseLabel}</strong>{' '}
+              warehouse.
+            </span>
+            <a
+              className='metrics-page__banner-link'
+              onClick={() => history.push(settingsUrl)}
+            >
+              Manage connection
+            </a>
           </div>
-        ))}
-      </div>
+        )}
+
+        <div className='metrics-page__controls'>
+          <div className='metrics-page__search'>
+            <Input
+              value={searchInput}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setSearchInput(Utils.safeParseEventValue(e))
+              }
+              placeholder='Search metrics...'
+              search
+            />
+          </div>
+          <Button onClick={() => history.push(`${metricsPath}?create=true`)}>
+            <Icon name='plus' width={16} />
+            Create Metric
+          </Button>
+        </div>
+
+        <div className='metrics-page__list'>
+          {metrics.map((metric) => (
+            <div key={metric.id} className='metrics-page__row'>
+              <div className='metrics-page__row-main'>
+                <span className='metrics-page__row-name'>{metric.name}</span>
+                {!!metric.description && (
+                  <span className='metrics-page__row-desc'>
+                    {metric.description}
+                  </span>
+                )}
+              </div>
+              <span className='metrics-page__row-agg'>
+                {metric.aggregation}
+              </span>
+            </div>
+          ))}
+        </div>
+      </>
     )
   }
 
@@ -144,45 +189,7 @@ const MetricsPage: FC = () => {
         Metrics track the outcomes you measure across experiments. Each
         experiment picks one as its primary; the rest are observed for context.
       </PageTitle>
-
-      {!!connection && (
-        <div className='metrics-page__banner'>
-          <span className='metrics-page__banner-text'>
-            <Icon
-              name='layers'
-              width={16}
-              className='metrics-page__banner-icon'
-            />
-            Metrics are computed from your <strong>{warehouseLabel}</strong>{' '}
-            warehouse.
-          </span>
-          <a
-            className='metrics-page__banner-link'
-            onClick={() => history.push(settingsUrl)}
-          >
-            Manage connection
-          </a>
-        </div>
-      )}
-
-      <div className='metrics-page__controls'>
-        <div className='metrics-page__search'>
-          <Input
-            value={searchInput}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setSearchInput(Utils.safeParseEventValue(e))
-            }
-            placeholder='Search metrics...'
-            search
-          />
-        </div>
-        <Button onClick={() => history.push(`${metricsPath}?create=true`)}>
-          <Icon name='plus' width={16} />
-          Create Metric
-        </Button>
-      </div>
-
-      {renderList()}
+      {renderBody()}
     </div>
   )
 }
