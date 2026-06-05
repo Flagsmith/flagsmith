@@ -43,6 +43,13 @@ const OnboardingSinglePageContainer: FC = () => {
     )
   }
 
+  // TEMP (preview only): the real "first request received" signal doesn't exist
+  // yet, so the connected state can't fire for real. `?connected=1` lets us
+  // preview the v3 connected design (green console, unlocked flag/quests).
+  // Remove once the real first-traffic signal is wired in.
+  const connectedPreview =
+    new URLSearchParams(window.location.search).get('connected') === '1'
+
   if (resources.status === 'creating') {
     return (
       <div className='onboarding-single'>
@@ -69,6 +76,7 @@ const OnboardingSinglePageContainer: FC = () => {
       projectName={resources.projectName}
       featureName={resources.featureName}
       environmentKey={resources.environmentKey}
+      connected={connectedPreview}
       flagEnabled={flagToggle.enabled}
       flagToggleDisabled={!flagToggle.isReady || flagToggle.isLoading}
       onToggleFlag={flagToggle.toggle}

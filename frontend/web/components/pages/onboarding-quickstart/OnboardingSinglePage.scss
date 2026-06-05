@@ -48,12 +48,12 @@
 
   &__subtitle {
     font-size: 0.875rem;
-  }
+    line-height: 2;
 
-  &__resources {
-    width: fit-content;
-    padding: 10px 14px;
-    font-size: 0.8125rem;
+    // Inline-editable chips sit inside the sentence.
+    .onboarding-single__chip {
+      vertical-align: middle;
+    }
   }
 
   &__chip {
@@ -68,7 +68,7 @@
     // hints it's interactive; it firms up on hover and turns into an action
     // ring while focused. The pencil fades in on hover/focus.
     &--editable {
-      border: 1px solid transparent;
+      border: 1px solid var(--color-border-default);
       transition: border-color var(--duration-fast) var(--easing-standard),
         background-color var(--duration-fast) var(--easing-standard);
       cursor: text;
@@ -101,48 +101,138 @@
     padding: 24px;
   }
 
-  // SDK selector for the manual path (one toggle driving both code steps).
+  // SDK selector chips (manual path) — active is filled purple, others grey,
+  // matching the design's langSwitch.
   &__sdk {
-    background: transparent;
-    border: 1px solid var(--color-border-default);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: var(--color-surface-subtle);
+    border: 0;
     border-radius: 6px;
-    padding: 4px 14px;
+    padding: 5px 12px;
     font-size: 0.8125rem;
     font-weight: 600;
     color: var(--color-text-secondary);
     cursor: pointer;
     transition: color var(--duration-fast) var(--easing-standard),
-      border-color var(--duration-fast) var(--easing-standard),
       background-color var(--duration-fast) var(--easing-standard);
 
     &--active {
-      color: var(--color-text-action);
-      border-color: var(--color-border-action);
-      background-color: var(--color-surface-action-subtle);
+      color: #ffffff;
+      background-color: var(--color-icon-action);
     }
   }
 
-  &__tabs {
+  // Numbered step badge.
+  &__step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    background-color: var(--color-icon-action);
+    color: #ffffff;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  // Manual code card: dark (matching the SDK console), with a header bar
+  // holding the npm/yarn pills or language label + a Copy Code button.
+  &__codecard {
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #0d1117;
+
+    .hljs {
+      background: #0d1117;
+      border: 0;
+      border-radius: 0;
+    }
+  }
+
+  &__codecard-head {
+    padding: 10px 14px;
+    background-color: #161b22;
+  }
+
+  &__codecard-lang {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #8b949e;
+  }
+
+  // npm / yarn pills inside the install card header.
+  &__pm {
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #2a3441;
+  }
+
+  &__pm-opt {
+    background: transparent;
+    border: 0;
+    padding: 3px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #8b949e;
+    cursor: pointer;
+
+    &--active {
+      background-color: var(--color-icon-action);
+      color: #ffffff;
+    }
+  }
+
+  // "Connect your code" (primary) on the left, "✦ Connect with AI" on the
+  // right. The active option carries the accent underline.
+  &__connect-head {
     border-bottom: 1px solid var(--color-border-default);
     margin-bottom: 20px;
   }
 
-  &__tab {
+  &__connect-tab,
+  &__connect-ai {
     background: transparent;
     border: 0;
     border-bottom: 2px solid transparent;
-    padding: 0 0 10px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--color-text-secondary);
+    margin-bottom: -1px;
+    padding: 0 0 12px;
     cursor: pointer;
     transition: color var(--duration-fast) var(--easing-standard),
       border-color var(--duration-fast) var(--easing-standard);
+  }
+
+  &__connect-tab {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-default);
 
     &--active {
       color: var(--color-text-action);
       border-bottom-color: var(--color-icon-action);
     }
+  }
+
+  &__connect-ai {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+
+    &--active {
+      color: var(--color-text-action);
+      border-bottom-color: var(--color-icon-action);
+    }
+  }
+
+  &__sparkle {
+    color: var(--color-text-action);
+    font-size: 0.875rem;
   }
 
   // Dark prompt surface for the AI tab.
@@ -168,225 +258,419 @@
     }
   }
 
+  // Verify (v3) — two columns: a sonar (left) and a live SDK console with the
+  // flag card beneath (right). State colours go purple (waiting) → green
+  // (connected).
   &__verify {
-    padding: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    padding: 24px;
+    background-color: var(--color-surface-default);
 
-    &--waiting {
-      background-color: var(--color-surface-warning, #fff7ed);
-      border: 1px solid var(--orange-200, #fed7aa);
-    }
-
-    &--connected {
-      background-color: var(--color-surface-success, #ecfdf5);
-      border: 1px solid var(--green-200, #a7f3d0);
+    @media (max-width: 760px) {
+      grid-template-columns: 1fr;
     }
   }
 
-  &__verify-dot {
-    width: 12px;
-    height: 12px;
+  &__verify-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__verify-badges {
+    width: 100%;
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
     border-radius: 9999px;
-    flex-shrink: 0;
-    position: relative;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
 
-    &--waiting {
-      background-color: var(--orange-500, #f59e0b);
-
-      &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: 9999px;
-        background-color: inherit;
-        opacity: 0.4;
-        animation: onboarding-single-pulse 1.8s ease-out infinite;
-      }
-    }
-
-    &--connected {
-      background-color: var(--color-icon-success, #22c55e);
-    }
+  &__badge-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background-color: currentColor;
   }
 
   &__verify-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  &__verify-line {
     font-size: 0.875rem;
-    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
 
-    .onboarding-single__verify--waiting & {
-      color: var(--orange-700, #b45309);
+  // State colours for the left column (title carries the colour).
+  &__verify--waiting {
+    .onboarding-single__badge {
+      color: var(--color-text-action);
+      background-color: var(--color-surface-action-subtle);
     }
-    .onboarding-single__verify--connected & {
+    .onboarding-single__verify-title {
+      color: var(--color-text-action);
+    }
+    .onboarding-single__radar-dot {
+      background-color: var(--color-icon-action);
+    }
+  }
+
+  &__verify--connected {
+    .onboarding-single__badge {
       color: var(--green-700, #15803d);
+      background-color: var(--color-surface-success, #dcfce7);
+      border: 1px solid var(--color-icon-success, #22c55e);
+    }
+    .onboarding-single__verify-title {
+      color: var(--color-icon-success, #16a34a);
+    }
+    // Whole radar goes green when connected (rings included), not just the dot.
+    .onboarding-single__radar-ring {
+      border-color: var(--color-icon-success, #22c55e);
+    }
+    .onboarding-single__radar-dot {
+      background-color: var(--color-icon-success, #22c55e);
+      box-shadow: 0 0 8px 2px rgba(34, 197, 94, 0.55);
     }
   }
 
-  &__verify-sub {
+  // Radar grows to fill the left column's available height — and the column
+  // stretches to the right side's height — so the two columns stay balanced.
+  &__radar {
+    position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+    aspect-ratio: 1;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+
+  &__radar-ring,
+  &__radar-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 9999px;
+  }
+
+  &__radar-ring {
+    border: 1px solid var(--color-icon-action);
+
+    &--1 {
+      width: 26%;
+      height: 26%;
+      opacity: 0.7;
+      border-width: 2px;
+    }
+    &--2 {
+      width: 51%;
+      height: 51%;
+      opacity: 0.45;
+      border-width: 1.5px;
+    }
+    &--3 {
+      width: 75%;
+      height: 75%;
+      opacity: 0.28;
+    }
+    &--4 {
+      width: 96%;
+      height: 96%;
+      opacity: 0.14;
+    }
+  }
+
+  &__radar-dot {
+    width: 6%;
+    height: 6%;
+    min-width: 16px;
+    min-height: 16px;
+
+    // Two ripples emanate from the dot; they inherit the dot's colour, so they
+    // are purple while waiting and green once connected.
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 9999px;
+      background-color: inherit;
+      opacity: 0;
+      animation: onboarding-single-ripple 2.4s ease-out infinite;
+    }
+    &::before {
+      animation-delay: 1.2s;
+    }
+  }
+
+  // SDK console (right column). Dark surface, literal hex — these are terminal
+  // colours, not theme tokens.
+  &__verify-right {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  // Honest progress checklist (replaces the SDK console).
+  // SDK console — dark terminal whose body is the honest checklist/log.
+  &__console {
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: #0d1117;
+  }
+
+  &__console-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background-color: #161b22;
+  }
+
+  &__console-light {
+    width: 12px;
+    height: 12px;
+    border-radius: 9999px;
+
+    &--r {
+      background-color: #ff5f57;
+    }
+    &--y {
+      background-color: #ffbd2e;
+    }
+    &--g {
+      background-color: #28c840;
+    }
+  }
+
+  &__console-name {
+    color: #8b949e;
     font-size: 0.75rem;
+  }
 
-    .onboarding-single__verify--waiting & {
-      color: var(--orange-800, #92400e);
-    }
+  &__console-badge {
+    margin-left: auto;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 9999px;
+
     .onboarding-single__verify--connected & {
-      color: var(--green-800, #166534);
+      color: #22c55e;
+      background-color: #0d2b14;
+    }
+    .onboarding-single__verify--waiting & {
+      color: #f59e0b;
+      background-color: #2b1d0d;
     }
   }
 
-  &__flag {
+  &__console-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px 24px;
+    font-family: var(--font-family-mono, 'Menlo', 'Monaco', monospace);
+  }
+
+  &__console-line {
+    font-size: 0.8125rem;
+    white-space: pre-wrap;
+    background: transparent;
+
+    &--prompt {
+      color: #7ee787;
+    }
+    &--ok {
+      color: #3fb950;
+    }
+    &--done {
+      color: #4ade80;
+      font-weight: 700;
+    }
+    &--meta {
+      color: #6e7781;
+    }
+    &--connected {
+      color: #22c55e;
+      font-weight: 700;
+    }
+    &--pending {
+      color: #6e7781;
+    }
+    &--cursor {
+      color: #7ee787;
+      animation: onboarding-single-blink 1s step-end infinite;
+    }
+  }
+
+  &__flagcard {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px;
+    background-color: var(--color-surface-default);
+
     code {
       font-size: 0.8125rem;
     }
+
+    &--locked {
+      opacity: 0.8;
+    }
   }
 
-  // Theme-adaptive code blocks (prototype). CodeHelp/Highlight ships a global
-  // dark-only hljs theme; here we scope a light palette so onboarding code
-  // follows the page theme. Surface + default text use auto-flipping tokens;
-  // the syntax-token colours need an explicit light palette (they're tuned for
-  // a dark surface and fail contrast on light). Dark mode restores the app's
-  // existing palette so it looks unchanged there. Scoped to .onboarding-single
-  // — the rest of the app is untouched.
-  .hljs {
-    background: var(--color-surface-subtle);
-    color: var(--color-text-default);
-    border-color: var(--color-border-default);
-
-    // The global hljs ships a dark scrollbar (customScrollDark); use a light
-    // one to match the light surface.
-    &::-webkit-scrollbar-track {
-      background-color: rgba(0, 0, 0, 0.04);
-    }
-    &::-webkit-scrollbar-thumb {
-      background-color: rgba(0, 0, 0, 0.2);
-      &:hover {
-        background-color: rgba(0, 0, 0, 0.32);
-      }
-    }
-  }
-  .hljs-comment,
-  .hljs-deletion,
-  .hljs-meta,
-  .hljs-params {
-    color: #6e7781;
-  }
-  .hljs-keyword,
-  .hljs-selector-tag,
-  .hljs-section,
-  .hljs-attribute,
-  .hljs-name,
-  .hljs-variable {
-    color: #cf222e;
-  }
-  .hljs-string {
-    color: #0a3069;
-  }
-  .hljs-bullet,
-  .hljs-quote,
-  .hljs-link,
-  .hljs-number,
-  .hljs-regexp,
-  .hljs-literal {
-    color: #0550ae;
-  }
-  .hljs-subst,
-  .hljs-type,
-  .hljs-built_in,
-  .hljs-builtin-name,
-  .hljs-symbol,
-  .hljs-selector-id,
-  .hljs-selector-attr,
-  .hljs-selector-pseudo,
-  .hljs-template-tag,
-  .hljs-template-variable,
-  .hljs-addition {
-    color: #953800;
-  }
-  .hljs-code,
-  .hljs-selector-class {
-    color: #0a7b34;
-  }
-  .hljs-strong,
-  .hljs-emphasis {
-    color: #57606a;
+  &__flagcard-head {
+    font-size: 0.8125rem;
+    font-weight: 600;
   }
 
-  // Dark mode: restore the app's existing dark syntax palette (literal hex,
-  // matching the global $warning/$success/$info/$secondary400 values, since
-  // this file can't reference the global SCSS colour variables).
-  [data-bs-theme='dark'] & {
-    .hljs {
-      &::-webkit-scrollbar-track {
-        background-color: rgba(255, 255, 255, 0.06);
-      }
-      &::-webkit-scrollbar-thumb {
-        background-color: rgba(255, 255, 255, 0.22);
-        &:hover {
-          background-color: rgba(255, 255, 255, 0.34);
-        }
-      }
-    }
-    .hljs-comment,
-    .hljs-deletion,
-    .hljs-meta {
-      color: #7f7f7f;
-    }
-    .hljs-params {
-      color: #b9b9b9;
-    }
-    .hljs-keyword,
-    .hljs-selector-tag,
-    .hljs-section,
-    .hljs-attribute,
-    .hljs-name,
-    .hljs-variable {
-      color: #ff9f43;
-    }
-    .hljs-string {
-      color: #27ab95;
-    }
-    .hljs-bullet,
-    .hljs-quote,
-    .hljs-link,
-    .hljs-number,
-    .hljs-regexp,
-    .hljs-literal {
-      color: #0aaddf;
-    }
-    .hljs-subst,
-    .hljs-type,
-    .hljs-built_in,
-    .hljs-builtin-name,
-    .hljs-symbol,
-    .hljs-selector-id,
-    .hljs-selector-attr,
-    .hljs-selector-pseudo,
-    .hljs-template-tag,
-    .hljs-template-variable,
-    .hljs-addition {
-      color: #fae392;
-    }
-    .hljs-code,
-    .hljs-selector-class {
-      color: #a6e22e;
-    }
-    .hljs-strong,
-    .hljs-emphasis {
-      color: #a8a8a2;
+  // Next quests — grayed/locked until the first evaluation.
+  &__quests {
+    &--locked {
+      opacity: 0.55;
+      pointer-events: none;
     }
   }
+
+  &__quests-lock {
+    font-size: 0.75rem;
+    margin-bottom: 6px;
+  }
+
+  &__quests-title {
+    font-size: 1rem;
+  }
+
+  &__quests-sub {
+    font-size: 0.8125rem;
+    margin-top: 2px;
+    margin-bottom: 14px;
+  }
+
+  &__quests-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+
+    @media (max-width: 900px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  &__quest {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__quest-title {
+    font-size: 0.875rem;
+  }
+
+  &__quest-desc {
+    font-size: 0.75rem;
+    flex: 1;
+  }
+
+  &__quest-visual {
+    margin-top: 8px;
+  }
+
+  &__quest-bar {
+    height: 6px;
+    border-radius: 9999px;
+    background-color: var(--color-surface-subtle);
+    overflow: hidden;
+  }
+
+  &__quest-bar-fill {
+    display: block;
+    width: 25%;
+    height: 100%;
+    background-color: var(--color-icon-action);
+  }
+
+  &__quest-bar-label {
+    font-size: 0.6875rem;
+  }
+
+  &__quest-ab {
+    display: inline-flex;
+    border: 1px solid var(--color-border-default);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  &__quest-ab-opt {
+    padding: 2px 12px;
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+
+    &--active {
+      background-color: var(--color-surface-action-subtle);
+      color: var(--color-text-action);
+    }
+  }
+
+  &__quest-config {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: var(--color-surface-action-subtle);
+    color: var(--color-text-action);
+  }
+
+  // Code blocks use the app's global dark hljs theme (same as CodeHelp /
+  // CodeSnippet), so the code surfaces on the page stay consistent. No
+  // onboarding-scoped override.
 
   @media (max-width: 760px) {
     &__page {
       padding: 24px 16px;
     }
+
+    // Stacked single column — no right side to take the height from, so give
+    // the radar a fixed size.
+    &__radar {
+      flex: none;
+      width: 240px;
+      max-width: 100%;
+    }
   }
 }
 
-@keyframes onboarding-single-pulse {
-  from {
+@keyframes onboarding-single-ripple {
+  0% {
     transform: scale(1);
-    opacity: 0.4;
+    opacity: 0.5;
   }
-  to {
-    transform: scale(2.4);
+  100% {
+    transform: scale(16);
+    opacity: 0;
+  }
+}
+
+@keyframes onboarding-single-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
     opacity: 0;
   }
 }
