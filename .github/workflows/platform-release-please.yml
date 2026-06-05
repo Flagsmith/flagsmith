@@ -14,10 +14,17 @@ jobs:
     runs-on: depot-ubuntu-latest
 
     steps:
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.FLAGSMITH_ENGINEERING_GH_APP_ID }}
+          private-key: ${{ secrets.FLAGSMITH_ENGINEERING_GH_APP_PRIVATE_KEY }}
+
       - uses: googleapis/release-please-action@v4
         id: release
         with:
-          token: ${{secrets.RELEASE_PLEASE_GITHUB_TOKEN}}
+          token: ${{ steps.app-token.outputs.token }}
+
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       release_tag_name: ${{ steps.release.outputs.tag_name }}
