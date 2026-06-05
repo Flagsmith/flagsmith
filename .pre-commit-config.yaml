@@ -14,7 +14,8 @@ repos:
       - id: ruff
         name: mcp-lint
         files: ^mcp/
-        args: [--config, mcp/pyproject.toml, --config, "src = ['mcp/src']", --fix]
+        args:
+          [--config, mcp/pyproject.toml, --config, "src = ['mcp/src']", --fix]
       - id: ruff-format
         name: mcp-format
         files: ^mcp/
@@ -43,6 +44,7 @@ repos:
         language: system
         entry: make -C api generate-docs
         pass_filenames: false
+        files: ^api/
         types_or: [python, toml]
       - id: api-typecheck
         name: api-typecheck
@@ -69,7 +71,7 @@ repos:
       - id: flagsmith-lint-tests
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.11.14  # Ensure this matches the version in api/pyproject.toml
+    rev: 0.11.18 # Ensure this matches the version in api/pyproject.toml
     hooks:
       - id: uv-lock
         name: api-lockcheck
