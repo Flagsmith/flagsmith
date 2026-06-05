@@ -13,6 +13,7 @@ from experimentation.tasks import (
     add_environment_key_to_ingestion,
     delete_environment_key_from_ingestion,
 )
+from experimentation.types import MetricDefinition
 
 
 class WarehouseType(models.TextChoices):
@@ -126,7 +127,17 @@ class MetricAggregation(models.TextChoices):
     OCCURRENCE = "occurrence", "Occurrence (event happened at least once)"
 
 
+class MetricDirection(models.TextChoices):
+    """A metric's inherent polarity — which way is "better"."""
+
+    UP = "up", "Higher is better"
+    DOWN = "down", "Lower is better"
+    INFORMATIONAL = "informational", "Informational only"
+
+
 class ExpectedDirection(models.TextChoices):
+    """The guardrail direction expected of a metric within an experiment."""
+
     INCREASE = "increase", "Increase"
     DECREASE = "decrease", "Decrease"
     NOT_INCREASE = "not_increase", "Should not increase"
@@ -146,7 +157,15 @@ class Metric(SoftDeleteExportableModel):
         choices=MetricAggregation.choices,
         default=MetricAggregation.MEAN,
     )
-    definition: models.JSONField[dict[str, object], dict[str, object]] = (
+    # Polarity of the metric itself — whether a higher or lower value is
+    # "better". Distinct from ExperimentMetric.expected_direction, which is the
+    # guardrail direction expected of a specific experiment.
+    direction = models.CharField(
+        max_length=20,
+        choices=MetricDirection.choices,
+        default=MetricDirection.UP,
+    )
+    definition: models.JSONField[MetricDefinition, MetricDefinition] = (
         models.JSONField()
     )
     created_at = models.DateTimeField(auto_now_add=True)

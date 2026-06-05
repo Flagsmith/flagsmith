@@ -17,6 +17,7 @@ from experimentation.models import (
     ExperimentMetric,
     Metric,
     MetricAggregation,
+    MetricDirection,
 )
 
 if TYPE_CHECKING:
@@ -179,6 +180,95 @@ def test_create_metric__missing_event__returns_400(
 
     # Then it is rejected
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_create_metric__missing_version__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    payload = {
+        "name": "Bad",
+        "aggregation": "count",
+        "definition": {"event": "session_started"},
+    }
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment), data=payload, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "definition" in response.json()
+
+
+def test_create_metric__unsupported_version__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    payload = {
+        "name": "Bad",
+        "aggregation": "count",
+        "definition": {"version": 99, "event": "session_started"},
+    }
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment), data=payload, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "definition" in response.json()
+
+
+def test_create_metric__with_direction__persists_direction(
+    admin_client_new: APIClient,
+    environment: Environment,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    payload = {
+        **_numeric_payload("Time to Activation"),
+        "direction": MetricDirection.DOWN,
+    }
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment), data=payload, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    data = response.json()
+    assert data["direction"] == MetricDirection.DOWN
+    metric = Metric.objects.get(id=data["id"])
+    assert metric.direction == MetricDirection.DOWN
+
+
+def test_create_metric__without_direction__defaults_to_increase(
+    admin_client_new: APIClient,
+    environment: Environment,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment), data=_numeric_payload(), format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["direction"] == MetricDirection.UP
 
 
 def test_list_metrics__other_environment__excluded(

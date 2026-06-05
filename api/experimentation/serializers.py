@@ -10,6 +10,7 @@ from experimentation.models import (
     WarehouseConnection,
     WarehouseType,
 )
+from experimentation.metric_definitions import validate_metric_definition
 from experimentation.types import SNOWFLAKE_DEFAULTS, SnowflakeConfig
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
@@ -86,6 +87,7 @@ class MetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
             "name",
             "description",
             "aggregation",
+            "direction",
             "definition",
             "created_at",
             "updated_at",
@@ -100,21 +102,10 @@ class MetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
         definition: Any = attrs.get(
             "definition", getattr(self.instance, "definition", None)
         )
-        error = self._validate_definition(definition)
+        error = validate_metric_definition(definition)
         if error:
             raise serializers.ValidationError({"definition": error})
         return attrs
-
-    @staticmethod
-    def _validate_definition(definition: Any) -> str | None:
-        if not isinstance(definition, dict):
-            return "Definition must be an object."
-
-        event = definition.get("event")
-        if not event or not isinstance(event, str):
-            return "Definition must specify a non-empty 'event'."
-
-        return None
 
 
 class ExperimentMetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]

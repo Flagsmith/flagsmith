@@ -54,6 +54,18 @@ class Migration(migrations.Migration):
                         max_length=20,
                     ),
                 ),
+                (
+                    "direction",
+                    models.CharField(
+                        choices=[
+                            ("up", "Higher is better"),
+                            ("down", "Lower is better"),
+                            ("informational", "Informational only"),
+                        ],
+                        default="up",
+                        max_length=20,
+                    ),
+                ),
                 ("definition", models.JSONField()),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
