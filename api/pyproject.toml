@@ -133,6 +133,7 @@ dev = [
     # override-dependencies on pydantic strips the email extra. Re-add
     # the transitive deps so poetry.lock parity is preserved.
     "email-validator>=2.0.0",
+    "pyjwt>=2.13.0"
 ]
 
 [build-system]
