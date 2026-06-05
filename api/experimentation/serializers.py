@@ -3,6 +3,7 @@ from typing import Any
 from rest_framework import serializers
 
 from environments.models import Environment
+from experimentation.metric_definitions import validate_metric_definition
 from experimentation.models import (
     Experiment,
     ExperimentMetric,
@@ -11,7 +12,6 @@ from experimentation.models import (
     WarehouseConnection,
     WarehouseType,
 )
-from experimentation.metric_definitions import validate_metric_definition
 from experimentation.types import SNOWFLAKE_DEFAULTS, SnowflakeConfig
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
