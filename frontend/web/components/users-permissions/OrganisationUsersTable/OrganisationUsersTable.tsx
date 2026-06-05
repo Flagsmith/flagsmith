@@ -12,6 +12,13 @@ import OrganisationUsersTableHeader from './components/OrganisationUsersTableHea
 import OrganisationUsersTableRow from './components/OrganisationUsersTableRow'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import { SortOrder } from 'common/types/requests'
+const ROLE_SORT_OPTIONS = [
+  {
+    label: 'Role',
+    order: SortOrder.ASC,
+    value: 'role',
+  },
+]
 interface OrganisationUsersTableProps {
   users: User[]
   organisation: Organisation
@@ -96,13 +103,7 @@ const OrganisationUsersTable: React.FC<OrganisationUsersTableProps> = ({
       header={<OrganisationUsersTableHeader widths={widths} />}
       items={users}
       itemHeight={65}
-      sorting={[
-        {
-          label: 'Role',
-          order: SortOrder.ASC,
-          value: 'role',
-        },
-      ]}
+      sorting={ROLE_SORT_OPTIONS}
       renderRow={(user) => {
         const { email, first_name, id, last_name } = user
 
