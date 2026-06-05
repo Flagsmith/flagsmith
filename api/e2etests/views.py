@@ -1,6 +1,7 @@
 from django.conf import settings
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -13,7 +14,7 @@ class Teardown(APIView):
     permission_classes = (E2ETestPermission,)
     authentication_classes = (TokenAuthentication,)
 
-    def post(self, request):  # type: ignore[no-untyped-def]
+    def post(self, request: Request) -> Response:
         if not settings.ENABLE_FE_E2E:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
