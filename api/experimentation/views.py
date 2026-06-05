@@ -291,12 +291,14 @@ class ExperimentMetricViewSet(
         return context
 
     def _get_experiment(self) -> Experiment:
-        return get_object_or_404(
-            Experiment,
-            id=self.kwargs[self.experiment_url_kwarg],
-            environment__api_key=self.kwargs["environment_api_key"],
-            deleted_at__isnull=True,
-        )
+        if not hasattr(self, "_experiment"):
+            self._experiment = get_object_or_404(
+                Experiment,
+                id=self.kwargs[self.experiment_url_kwarg],
+                environment__api_key=self.kwargs["environment_api_key"],
+                deleted_at__isnull=True,
+            )
+        return self._experiment
 
     def perform_create(self, serializer: BaseSerializer[ExperimentMetric]) -> None:
         serializer.save(experiment=self._get_experiment())
