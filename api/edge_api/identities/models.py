@@ -18,7 +18,6 @@ from environments.models import Environment
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.versioning_service import get_environment_flags_dict
-from segment_membership.tasks import write_identity_deletion_tombstone_to_clickhouse
 from users.models import FFAdminUser
 from util.engine_models.features.models import FeatureStateModel
 from util.engine_models.identities.models import IdentityFeaturesList, IdentityModel
@@ -197,6 +196,10 @@ class EdgeIdentity:
         )
         self._reset_initial_state()  # type: ignore[no-untyped-call]
         if settings.CLICKHOUSE_ENABLED:
+            from segment_membership.tasks import (
+                write_identity_deletion_tombstone_to_clickhouse,
+            )
+
             write_identity_deletion_tombstone_to_clickhouse.delay(
                 args=(
                     self.engine_identity_model.environment_api_key,
