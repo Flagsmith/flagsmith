@@ -47,6 +47,7 @@ import CreateReleasePipelinePage from './components/pages/CreateReleasePipelineP
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 import SegmentPage from './components/pages/SegmentPage'
 import ExperimentsPage from './components/pages/ExperimentsPage'
+import CreateMetricPage from './components/pages/CreateMetricPage'
 import ReleaseManagerPage from './components/pages/ReleaseManagerPage'
 import FlagEnvironmentsPage from './components/pages/FlagEnvironmentsPage'
 import ExecutiveViewPage from './components/pages/ExecutiveViewPage'
@@ -102,6 +103,7 @@ export const routes = {
   'lifecycle': '/project/:projectId/lifecycle/:section?',
   'login': '/login',
   'maintenance': '/maintenance',
+  'metrics': '/project/:projectId/environment/:environmentId/metrics',
   'not-found': '/404',
   'oauth': '/oauth/:type',
   'oauth-authorize': '/oauth/authorize',
@@ -168,6 +170,11 @@ export default (
           path={routes.experiments}
           exact
           component={ExperimentsPage}
+        />
+        <ParameterizedRoute
+          path={routes.metrics}
+          exact
+          component={CreateMetricPage}
         />
         <ParameterizedRoute
           path={routes.lifecycle}
