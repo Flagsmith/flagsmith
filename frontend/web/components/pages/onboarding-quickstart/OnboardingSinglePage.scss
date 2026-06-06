@@ -49,6 +49,8 @@
   &__subtitle {
     font-size: 0.875rem;
     line-height: 2;
+    // Breathing room between the title and the pre-created-resources sentence.
+    margin-top: 12px;
 
     // Inline-editable chips sit inside the sentence.
     .onboarding-single__chip {
@@ -65,8 +67,8 @@
     }
 
     // Inline-editable chip: reads as a chip, edits in place. A faint border
-    // hints it's interactive; it firms up on hover and turns into an action
-    // ring while focused. The pencil fades in on hover/focus.
+    // hints it's interactive; it turns into an action ring while focused. The
+    // pencil is always visible so the field reads as editable without a hover.
     &--editable {
       border: 1px solid var(--color-border-default);
       transition: border-color var(--duration-fast) var(--easing-standard),
@@ -74,25 +76,18 @@
       cursor: text;
 
       svg {
-        opacity: 0;
+        opacity: 0.6;
         transition: opacity var(--duration-fast) var(--easing-standard);
       }
 
-      &:hover {
-        border-color: var(--color-border-default);
-
-        svg {
-          opacity: 1;
-        }
+      &:hover svg,
+      &:focus-within svg {
+        opacity: 1;
       }
 
       &:focus-within {
         border-color: var(--color-border-action);
         background-color: var(--color-surface-default);
-
-        svg {
-          opacity: 1;
-        }
       }
     }
   }
@@ -124,6 +119,12 @@
     }
   }
 
+  // Brand logo inside a language chip; brand colours are baked into the SVG.
+  &__sdk-logo {
+    flex: none;
+    display: block;
+  }
+
   // Numbered step badge.
   &__step-num {
     display: inline-flex;
@@ -139,36 +140,79 @@
     flex-shrink: 0;
   }
 
-  // Manual code card: dark (matching the SDK console), with a header bar
-  // holding the npm/yarn pills or language label + a Copy Code button.
+  // Light code cards, matching the design (white body, light header, dark
+  // text with brand-purple keywords). Hardcoded light for now — proper
+  // light/dark theming of the snippets is a follow-up.
   &__codecard {
     border-radius: 10px;
     overflow: hidden;
-    background-color: #0d1117;
+    background-color: #ffffff;
+    border: 1px solid #e1e4ea;
 
     .hljs {
-      background: #0d1117;
+      background: #ffffff;
       border: 0;
       border-radius: 0;
+      color: #1f2328;
+    }
+
+    // Light syntax palette. Scoped here so it overrides the app's global
+    // dark hljs theme (one extra class = higher specificity).
+    .hljs-keyword,
+    .hljs-built_in,
+    .hljs-literal,
+    .hljs-selector-tag {
+      color: #6837fc;
+    }
+
+    .hljs-string,
+    .hljs-regexp {
+      color: #0a7c5a;
+    }
+
+    .hljs-attr,
+    .hljs-attribute,
+    .hljs-property,
+    .hljs-number,
+    .hljs-type {
+      color: #0550ae;
+    }
+
+    .hljs-title,
+    .hljs-name,
+    .hljs-section {
+      color: #1f2328;
+    }
+
+    .hljs-comment,
+    .hljs-quote {
+      color: #6e7781;
+      font-style: italic;
+    }
+
+    .hljs-meta {
+      color: #5d6878;
     }
   }
 
   &__codecard-head {
     padding: 10px 14px;
-    background-color: #161b22;
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
   }
 
   &__codecard-lang {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #8b949e;
+    color: #5d6878;
   }
 
-  // npm / yarn pills inside the install card header.
+  // npm / yarn pills inside the install card header — each shows a single
+  // copy-pasteable command.
   &__pm {
     border-radius: 6px;
     overflow: hidden;
-    border: 1px solid #2a3441;
+    border: 1px solid #e1e4ea;
   }
 
   &__pm-opt {
@@ -177,13 +221,21 @@
     padding: 3px 12px;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #8b949e;
+    color: #5d6878;
     cursor: pointer;
 
     &--active {
       background-color: var(--color-icon-action);
       color: #ffffff;
     }
+  }
+
+  // "More" accordion: an in-flow panel of long-tail SDK chips revealed below
+  // the quick-pick row (the trigger reuses the chip &__sdk styling).
+  &__more-panel {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--color-border-default);
   }
 
   // "Connect your code" (primary) on the left, "✦ Connect with AI" on the
@@ -644,9 +696,9 @@
     color: var(--color-text-action);
   }
 
-  // Code blocks use the app's global dark hljs theme (same as CodeHelp /
-  // CodeSnippet), so the code surfaces on the page stay consistent. No
-  // onboarding-scoped override.
+  // Manual snippet code cards carry their own light hljs palette (see
+  // &__codecard above), matching the design. The verify "sdk console" below
+  // stays dark on purpose — it's a terminal, not a code listing.
 
   @media (max-width: 760px) {
     &__page {

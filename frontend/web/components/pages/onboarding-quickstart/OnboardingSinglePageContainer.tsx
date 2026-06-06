@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import ErrorMessage from 'components/ErrorMessage'
 import OnboardingSinglePage from 'web/components/pages/onboarding-quickstart/OnboardingSinglePage'
@@ -15,9 +15,13 @@ const OnboardingSinglePageContainer: FC = () => {
   const resources = useEnsureOnboardingResources()
   const [updateOrganisation] = useUpdateOrganisationMutation()
   const [updateProject] = useUpdateProjectMutation()
+  // The flag name is editable and drives the snippets, console and toggle, so
+  // it lives in state here (optimistic) rather than reading the constant each
+  // render. The rename also persists server-side (see renameFeature).
+  const [featureName, setFeatureName] = useState(resources.featureName)
   const flagToggle = useOnboardingFlagToggle({
     environment: resources.environment,
-    featureName: resources.featureName,
+    featureName,
     projectId: resources.projectId,
   })
 
@@ -32,6 +36,20 @@ const OnboardingSinglePageContainer: FC = () => {
   const renameProject = (name: string) => {
     if (resources.projectId !== null) {
       updateProject({ body: { name }, id: resources.projectId })
+    }
+  }
+  // Renaming the flag must persist (the snippet name and the real flag have to
+  // stay in lockstep, or the user's code reads a flag that doesn't exist).
+  // Optimistic: show the new name immediately, revert if the delete+recreate
+  // fails (e.g. the name breaks the project's feature-name regex). The page
+  // sends an already-sanitised name.
+  const renameFeature = async (name: string) => {
+    const previous = featureName
+    setFeatureName(name)
+    const ok = await flagToggle.rename(name)
+    if (!ok) {
+      setFeatureName(previous)
+      toast('Couldn’t rename your flag. Please try again.')
     }
   }
 
@@ -74,7 +92,8 @@ const OnboardingSinglePageContainer: FC = () => {
     <OnboardingSinglePage
       organisationName={resources.organisationName}
       projectName={resources.projectName}
-      featureName={resources.featureName}
+      featureName={featureName}
+      caseSensitive={resources.caseSensitive}
       environmentKey={resources.environmentKey}
       connected={connectedPreview}
       flagEnabled={flagToggle.enabled}
@@ -82,6 +101,7 @@ const OnboardingSinglePageContainer: FC = () => {
       onToggleFlag={flagToggle.toggle}
       onRenameOrganisation={renameOrganisation}
       onRenameProject={renameProject}
+      onRenameFeature={renameFeature}
       onGoToDashboard={goToDashboard}
     />
   )

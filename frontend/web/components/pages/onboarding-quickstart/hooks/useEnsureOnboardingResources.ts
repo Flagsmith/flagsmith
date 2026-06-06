@@ -37,6 +37,7 @@ export type OnboardingResources = {
   organisationName: string
   projectName: string
   featureName: string
+  caseSensitive: boolean
   environment: Environment | null
   environmentKey: string
   projectId: number | null
@@ -84,6 +85,9 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
   const [projectId, setProjectId] = useState<number | null>(null)
   const [organisationName, setOrganisationName] = useState('')
   const [projectName, setProjectName] = useState('')
+  // Whether the project enforces lower-case feature names — drives the same
+  // name normalisation the create-feature modal applies (see the page).
+  const [caseSensitive, setCaseSensitive] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const ranRef = useRef(false)
 
@@ -181,6 +185,7 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
         setOrganisationName(resolvedOrgName)
         setProjectName(project.name)
         setProjectId(project.id)
+        setCaseSensitive(!!project.only_allow_lower_case_feature_names)
         setEnvironment(devEnvironment)
         setEnvironmentKey(devEnvironment.api_key)
         setStatus('ready')
@@ -203,6 +208,7 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
   ])
 
   return {
+    caseSensitive,
     environment,
     environmentKey,
     error,

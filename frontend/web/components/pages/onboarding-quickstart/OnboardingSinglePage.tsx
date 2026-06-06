@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import Switch from 'components/Switch'
@@ -7,10 +7,11 @@ import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import Highlight from 'components/Highlight'
 import {
-  getManualSnippets,
-  ManualLang,
-  MANUAL_LANGS,
-} from 'web/components/pages/onboarding-quickstart/manualSnippets'
+  getSdkSnippet,
+  SdkLang,
+  SDK_LANGS,
+} from 'web/components/pages/onboarding-quickstart/sdkSnippets'
+import { LANGUAGE_LOGOS } from 'web/components/pages/onboarding-quickstart/languageLogos'
 import 'web/components/pages/onboarding-quickstart/OnboardingSinglePage.scss'
 
 type ConnectTab = 'ai' | 'manual'
@@ -45,6 +46,8 @@ const QUESTS: Quest[] = [
 type OnboardingSinglePageProps = {
   environmentKey: string
   featureName: string
+  // Project enforces lower-case feature names — feeds the flag-name normaliser.
+  caseSensitive: boolean
   // The flag's real `enabled` state in the Development environment, and a
   // handler that persists a toggle to Flagsmith. Not local UI state — flipping
   // this actually changes the flag, which is the whole point of the page.
@@ -52,6 +55,7 @@ type OnboardingSinglePageProps = {
   flagToggleDisabled?: boolean
   onToggleFlag: () => void
   onGoToDashboard: () => void
+  onRenameFeature?: (name: string) => void
   onRenameOrganisation?: (name: string) => void
   onRenameProject?: (name: string) => void
   organisationName: string
@@ -66,23 +70,40 @@ type EditableChipProps = {
   label: string
   onCommit: (next: string) => void
   value: string
+  // Optional normaliser applied before commit (e.g. a flag name must be a
+  // valid identifier). The chip then shows the normalised value.
+  transform?: (raw: string) => string
 }
 
 // An inline-editable chip built on the shared GhostInput (the transparent,
 // auto-sizing text field used for inline renames elsewhere). Keeps a local
 // draft and commits on blur / Enter; an empty value reverts to the last good
 // name rather than persisting a blank.
-const EditableChip: FC<EditableChipProps> = ({ label, onCommit, value }) => {
+const EditableChip: FC<EditableChipProps> = ({
+  label,
+  onCommit,
+  transform,
+  value,
+}) => {
   const [draft, setDraft] = useState(value)
 
+  // Keep the draft in sync when the committed value changes upstream (e.g. the
+  // flag name is normalised on rename, or adopted from a refetch).
+  useEffect(() => {
+    setDraft(value)
+  }, [value])
+
   const commit = () => {
-    const next = draft.trim()
+    const next = transform ? transform(draft) : draft.trim()
     if (!next) {
       setDraft(value)
       return
     }
     if (next !== value) {
       onCommit(next)
+    } else {
+      // Normalisation collapsed back to the current value — show it cleanly.
+      setDraft(value)
     }
   }
 
@@ -110,13 +131,25 @@ const EditableChip: FC<EditableChipProps> = ({ label, onCommit, value }) => {
   )
 }
 
+// Normalise a flag name with the SAME rule as the create-feature modal
+// (web/components/modals/create-feature/components/FeatureNameInput.tsx):
+// spaces become underscores, and the name is lower-cased when the project
+// enforces lower-case feature names. The backend regex is the final word on
+// validity (the recreate is rejected if it doesn't conform).
+const sanitizeFlagName = (raw: string, caseSensitive: boolean): string => {
+  const next = raw.replace(/ /g, '_')
+  return caseSensitive ? next.toLowerCase() : next
+}
+
 const OnboardingSinglePage: FC<OnboardingSinglePageProps> = ({
+  caseSensitive,
   connected = false,
   environmentKey,
   featureName,
   flagEnabled,
   flagToggleDisabled = false,
   onGoToDashboard,
+  onRenameFeature,
   onRenameOrganisation,
   onRenameProject,
   onToggleFlag,
@@ -125,8 +158,11 @@ const OnboardingSinglePage: FC<OnboardingSinglePageProps> = ({
 }) => {
   const [tab, setTab] = useState<ConnectTab>('manual')
   const [copiedPrompt, setCopiedPrompt] = useState(false)
-  const [manualLang, setManualLang] = useState<ManualLang>('React')
+  const [sdkLang, setSdkLang] = useState<SdkLang>(SDK_LANGS[0])
   const [copiedManual, setCopiedManual] = useState<string | null>(null)
+  // "More" languages dropdown (the long tail behind the quick-pick chips).
+  const [moreOpen, setMoreOpen] = useState(false)
+  // npm vs yarn for npm-based SDKs — each shows a single copy-pasteable line.
   const [installPm, setInstallPm] = useState<'npm' | 'yarn'>('npm')
   const [copiedInstall, setCopiedInstall] = useState(false)
   const [copiedCode, setCopiedCode] = useState(false)
@@ -209,19 +245,15 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
     </code>
   )
 
-  // Per-language manual snippets (install + wire), matching the design. API URL
-  // injected only off the default SaaS endpoint. See manualSnippets.ts.
-  const manualSnippets = getManualSnippets({
-    apiUrl: apiBaseUrl,
-    environmentKey,
-    featureName,
-    isCustomUrl: Constants.isCustomFlagsmithUrl(),
-  })
-  const manualSnip = manualSnippets[manualLang]
+  // Install + wire snippets for the selected SDK, from the maintained codeHelp
+  // (env key injected, placeholder flag swapped for ours). See sdkSnippets.ts.
+  const sdkSnippet = getSdkSnippet(sdkLang, environmentKey, featureName)
   const installCode =
-    manualSnip.installYarn && installPm === 'yarn'
-      ? manualSnip.installYarn
-      : manualSnip.install
+    sdkSnippet.installYarn && installPm === 'yarn'
+      ? sdkSnippet.installYarn
+      : sdkSnippet.install
+  const popularLangs = SDK_LANGS.filter((l) => l.popular)
+  const moreLangs = SDK_LANGS.filter((l) => !l.popular)
 
   // Radar column: a bold status title + a detail subtitle. Copy progress lives
   // in the checklist, not here.
@@ -274,7 +306,7 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
             Onboarding / Connect your app
           </div>
           <h1 className='onboarding-single__title mb-0'>
-            Welcome — let’s get you live 👋
+            Welcome, let’s get you live 👋
           </h1>
           {/* Pre-created resources, inline in the sentence; org/project editable. */}
           <p className='onboarding-single__subtitle text-muted mb-0'>
@@ -291,9 +323,12 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
               onCommit={(name) => onRenameProject?.(name)}
             />{' '}
             and your flag{' '}
-            <span className='onboarding-single__chip onboarding-single__chip--flag rounded-sm text-action'>
-              {featureName}
-            </span>
+            <EditableChip
+              label='Flag'
+              value={featureName}
+              transform={(raw) => sanitizeFlagName(raw, caseSensitive)}
+              onCommit={(name) => onRenameFeature?.(name)}
+            />
           </p>
         </header>
 
@@ -359,21 +394,91 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
             </div>
           ) : (
             <div className='onboarding-single__panel d-flex flex-column gap-4'>
-              <div className='onboarding-single__sdks d-flex flex-wrap gap-2'>
-                {MANUAL_LANGS.map((lang) => (
+              <div>
+                <div className='onboarding-single__sdks d-flex flex-wrap align-items-center gap-2'>
+                  {popularLangs.map((lang) => (
+                    <button
+                      key={lang.label}
+                      type='button'
+                      className={`onboarding-single__sdk${
+                        sdkLang.label === lang.label
+                          ? ' onboarding-single__sdk--active'
+                          : ''
+                      }`}
+                      onClick={() => setSdkLang(lang)}
+                    >
+                      {LANGUAGE_LOGOS[lang.label] && (
+                        <svg
+                          className='onboarding-single__sdk-logo'
+                          viewBox='0 0 24 24'
+                          width={16}
+                          height={16}
+                          fill={LANGUAGE_LOGOS[lang.label].color}
+                          aria-hidden
+                        >
+                          <path d={LANGUAGE_LOGOS[lang.label].path} />
+                        </svg>
+                      )}
+                      {lang.label}
+                    </button>
+                  ))}
+                  {/* "More" toggles an in-flow accordion of the long tail. When
+                      a long-tail SDK is selected its label sits on the trigger
+                      so the choice stays visible while the panel is collapsed. */}
                   <button
-                    key={lang}
                     type='button'
                     className={`onboarding-single__sdk${
-                      manualLang === lang
-                        ? ' onboarding-single__sdk--active'
-                        : ''
+                      sdkLang.popular ? '' : ' onboarding-single__sdk--active'
                     }`}
-                    onClick={() => setManualLang(lang)}
+                    onClick={() => setMoreOpen((open) => !open)}
+                    aria-expanded={moreOpen}
                   >
-                    {lang}
+                    {sdkLang.popular ? 'More' : sdkLang.label}
+                    <Icon
+                      name={moreOpen ? 'chevron-up' : 'chevron-down'}
+                      width={14}
+                      fill={
+                        sdkLang.popular
+                          ? 'var(--color-icon-secondary)'
+                          : '#ffffff'
+                      }
+                      aria-hidden
+                    />
                   </button>
-                ))}
+                </div>
+                {moreOpen && (
+                  <div className='onboarding-single__more-panel d-flex flex-wrap gap-2'>
+                    {moreLangs.map((lang) => (
+                      <button
+                        key={lang.label}
+                        type='button'
+                        className={`onboarding-single__sdk${
+                          sdkLang.label === lang.label
+                            ? ' onboarding-single__sdk--active'
+                            : ''
+                        }`}
+                        onClick={() => {
+                          setSdkLang(lang)
+                          setMoreOpen(false)
+                        }}
+                      >
+                        {LANGUAGE_LOGOS[lang.label] && (
+                          <svg
+                            className='onboarding-single__sdk-logo'
+                            viewBox='0 0 24 24'
+                            width={16}
+                            height={16}
+                            fill={LANGUAGE_LOGOS[lang.label].color}
+                            aria-hidden
+                          >
+                            <path d={LANGUAGE_LOGOS[lang.label].path} />
+                          </svg>
+                        )}
+                        {lang.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div>
                 <div className='onboarding-single__step-head d-flex align-items-center gap-2 mb-2'>
@@ -386,7 +491,7 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
                   'install',
                   installCode,
                   'bash',
-                  manualSnip.installYarn ? (
+                  sdkSnippet.installYarn ? (
                     <div className='onboarding-single__pm d-inline-flex'>
                       {(['npm', 'yarn'] as const).map((pm) => (
                         <button
@@ -405,7 +510,7 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
                     </div>
                   ) : (
                     <span className='onboarding-single__codecard-lang'>
-                      {manualLang}
+                      {sdkLang.label}
                     </span>
                   ),
                 )}
@@ -419,10 +524,10 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
                 </div>
                 {renderManualCode(
                   'wire',
-                  manualSnip.wire,
-                  manualSnip.hljs,
+                  sdkSnippet.wire,
+                  sdkSnippet.hljs,
                   <span className='onboarding-single__codecard-lang'>
-                    {manualLang}
+                    {sdkLang.label}
                   </span>,
                 )}
               </div>
