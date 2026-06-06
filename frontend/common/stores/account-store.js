@@ -360,9 +360,13 @@ const controller = {
     } else if (!user) {
       store.ephemeral_token = null
       const darkMode = storageGet('dark_mode')
+      const themePreference = storageGet('theme_preference')
       AsyncStorage.clear()
       if (darkMode) {
         storageSet('dark_mode', darkMode)
+      }
+      if (themePreference) {
+        storageSet('theme_preference', themePreference)
       }
       if (!data.token) {
         return

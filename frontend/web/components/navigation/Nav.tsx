@@ -3,15 +3,18 @@ import { useHistory, useLocation } from 'react-router-dom'
 import AccountStore from 'common/stores/account-store'
 import EnvironmentAside from './EnvironmentAside'
 import { Project as ProjectType } from 'common/types/responses'
+// @ts-ignore
 import { AsyncStorage } from 'polyfill-react-native'
 import ProjectNavbar from './navbars/ProjectNavbar'
 import OrganisationNavbar from './navbars/OrganisationNavbar'
 import TopNavbar from './navbars/TopNavbar'
 import { appLevelPaths } from './constants'
+import { ThemeModeDropdown } from 'components/DarkModeSwitch'
 
 type NavType = {
   environmentId: string | undefined
   projectId: number
+  children?: ReactNode
   header?: ReactNode
   activeProject: ProjectType | undefined
 }
@@ -73,10 +76,15 @@ const Nav: FC<NavType> = ({
           <div className='d-flex bg-faint pt-1 py-0'>
             <Flex className='flex-row px-2 '>
               {!!AccountStore.getUser() && (
-                <TopNavbar
-                  activeProject={activeProject}
-                  projectId={projectId}
-                />
+                <>
+                  <TopNavbar
+                    activeProject={activeProject}
+                    projectId={projectId}
+                  />
+                  <div className='d-flex d-sm-none justify-content-end full-width py-2'>
+                    <ThemeModeDropdown />
+                  </div>
+                </>
               )}
             </Flex>
           </div>

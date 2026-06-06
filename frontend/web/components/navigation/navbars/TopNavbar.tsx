@@ -7,6 +7,7 @@ import Icon from 'components/icons/Icon'
 import Headway from 'components/Headway'
 import { Project } from 'common/types/responses'
 import AccountDropdown from 'components/navigation/AccountDropdown'
+import { ThemeModeDropdown } from 'components/DarkModeSwitch'
 
 type TopNavType = {
   activeProject: Project | undefined
@@ -45,6 +46,7 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
             <span className='d-none d-md-block'>Docs</span>
           </a>
           <Headway className='cursor-pointer ps-3' />
+          <ThemeModeDropdown />
 
           {Utils.getFlagsmithHasFeature('persona_based_views') ? (
             <AccountDropdown />

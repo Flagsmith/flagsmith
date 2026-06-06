@@ -28,7 +28,6 @@
     &.placed-bottom {
       top: 100%;
     }
-
   }
 
   &__item {
@@ -57,6 +56,18 @@
       background: $bg-light200;
     }
   }
+
+  .theme-option {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: left;
+
+    &:focus-visible {
+      outline: none;
+      background: $bg-light200;
+    }
+  }
 }
 
 .dark {
@@ -69,6 +80,14 @@
     color: white !important;
 
     &:hover {
+      background: $primary;
+    }
+  }
+
+  .theme-option {
+    background: transparent;
+
+    &:focus-visible {
       background: $primary;
     }
   }
