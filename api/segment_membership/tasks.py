@@ -18,6 +18,7 @@ from task_processor.decorators import (
 )
 
 from environments.dynamodb.wrappers.identity_wrapper import DynamoIdentityWrapper
+from environments.models import Environment
 from projects.models import Project
 from segment_membership.mappers import map_identity_document_to_clickhouse_row
 from segment_membership.metrics import (
@@ -210,6 +211,28 @@ def write_identity_deletion_tombstone_to_clickhouse(
         logger.info(
             "tombstone.skipped",
             reason="clickhouse_not_configured",
+            env_key=env_key,
+            identifier=identifier,
+        )
+        return
+
+    try:
+        environment = Environment.objects.select_related(
+            "project__organisation"
+        ).get(api_key=env_key)
+    except Environment.DoesNotExist:
+        logger.info(
+            "tombstone.skipped",
+            reason="environment_not_found",
+            env_key=env_key,
+            identifier=identifier,
+        )
+        return
+
+    if not is_membership_enabled(environment.project.organisation):
+        logger.info(
+            "tombstone.skipped",
+            reason="segment_membership_disabled",
             env_key=env_key,
             identifier=identifier,
         )
