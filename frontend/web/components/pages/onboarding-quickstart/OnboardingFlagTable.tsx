@@ -1,6 +1,5 @@
 import React, { FC } from 'react'
 import Switch from 'components/Switch'
-import Icon from 'components/icons/Icon'
 import FeatureName from 'components/feature-summary/FeatureName'
 import FeatureDescription from 'components/feature-summary/FeatureDescription'
 import Tag from 'components/tags/Tag'
@@ -52,10 +51,7 @@ const OnboardingFlagTable: FC<OnboardingFlagTableProps> = ({
           </div>
           <FeatureDescription description='Controls the demo button shown to your users' />
         </div>
-        <div className='onboarding-single__flagtable-enabled d-flex align-items-center gap-2'>
-          {!connected && (
-            <Icon name='lock' width={13} fill='var(--color-icon-secondary)' />
-          )}
+        <div className='onboarding-single__flagtable-enabled d-flex align-items-center'>
           <Switch
             checked={connected && flagEnabled}
             disabled={!connected || flagToggleDisabled}

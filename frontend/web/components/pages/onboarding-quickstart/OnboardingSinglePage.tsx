@@ -1,7 +1,6 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
-import Switch from 'components/Switch'
 import GhostInput from 'components/base/forms/GhostInput'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
@@ -266,8 +265,8 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
   const waitingPhrases = useMemo(
     () => [
       'Listening for your first request…',
-      `Run your app — watching for ${featureName}'s first evaluation`,
-      '👋 Welcome — connect your app and this lights up',
+      `Run your app, watching for ${featureName}'s first evaluation`,
+      'Welcome, connect your app and this lights up',
     ],
     [featureName],
   )
@@ -276,7 +275,13 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
   const questVisual = (key: string) => {
     switch (key) {
       case 'kill':
-        return <Switch checked disabled aria-label='Kill switch example' />
+        // Decorative "on" toggle (not a real control) — illustrates the
+        // kill-switch concept at full opacity, like the other quest visuals.
+        return (
+          <span className='onboarding-single__quest-toggle' aria-hidden>
+            <span className='onboarding-single__quest-toggle-knob' />
+          </span>
+        )
       case 'rollout':
         return (
           <div>
@@ -667,8 +672,8 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
             Choose your next quest
           </div>
           <div className='onboarding-single__quests-sub text-muted'>
-            Your flag is a kill-switch today — level it up whenever you’re
-            ready. Same flag, no new setup.
+            You’ve built a basic on/off feature toggle. The same flag can evolve
+            into any of these — no new code, just configuration.
           </div>
           <div className='onboarding-single__quests-grid'>
             {QUESTS.map((quest) => (

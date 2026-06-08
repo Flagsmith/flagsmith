@@ -628,6 +628,26 @@
     color: var(--color-text-action);
   }
 
+  // Decorative "on" toggle for the kill-switch quest — full opacity (not a
+  // disabled control), purely illustrative.
+  &__quest-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 44px;
+    height: 26px;
+    padding: 3px;
+    border-radius: 9999px;
+    background-color: var(--color-icon-action);
+  }
+
+  &__quest-toggle-knob {
+    width: 20px;
+    height: 20px;
+    border-radius: 9999px;
+    background-color: #ffffff;
+  }
+
   // Manual snippet code cards carry their own light hljs palette (see
   // &__codecard above), matching the design. The verify "sdk console" below
   // stays dark on purpose — it's a terminal, not a code listing.
