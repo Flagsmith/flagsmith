@@ -135,7 +135,6 @@ class MetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
                 "status": experiment_metric.experiment.status,
             }
             for experiment_metric in metric.experiment_metrics.all()
-            if experiment_metric.experiment.deleted_at is None
         ]
 
     def validate_definition(self, definition: object) -> object:
