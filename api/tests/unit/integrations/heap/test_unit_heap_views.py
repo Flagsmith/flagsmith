@@ -29,7 +29,7 @@ def test_create_heap_config__post_valid_data__returns_created(
     assert response.status_code == status.HTTP_201_CREATED
     assert HeapConfiguration.objects.filter(environment=environment).count() == 1
     config = HeapConfiguration.objects.get(environment=environment)
-    assert config.base_url == "https://heapanalytics.com"
+    assert config.base_url is None
 
 
 def test_create_heap_config__duplicate_config__returns_bad_request(
@@ -108,7 +108,7 @@ def test_list_heap_config__config_exists__returns_config_list(
     expected_response = {
         "api_key": config.api_key,
         "id": config.id,
-        "base_url": "https://heapanalytics.com",
+        "base_url": None,
     }
     assert response.data == [expected_response]
 
