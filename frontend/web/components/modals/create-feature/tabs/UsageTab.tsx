@@ -48,7 +48,9 @@ const UsageTab: FC<UsageTabProps> = ({
             rel='noreferrer'
             onClick={() => {
               flagsmith.trackEvent('code_references_click_docs', {
-                feature_id: featureId,
+                metadata: {
+                  feature_id: featureId,
+                },
               })
             }}
           >

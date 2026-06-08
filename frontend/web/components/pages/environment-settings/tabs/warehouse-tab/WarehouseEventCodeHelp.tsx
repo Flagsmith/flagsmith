@@ -43,8 +43,17 @@ System.out.println("Hello, Flagsmith Warehouse!");`,
   'JavaScript': {
     code: `import flagsmith from 'flagsmith';
 
-flagsmith.init({ environmentID: 'YOUR_ENVIRONMENT_KEY' });
-console.log('Hello, Flagsmith Warehouse!');`,
+await flagsmith.init({
+  environmentID: 'YOUR_ENVIRONMENT_KEY',
+  enableEvents: true,
+});
+
+flagsmith.trackEvent('purchase', {
+  identifier: 'user_42',
+  value: 99.5,
+  traits: { plan: 'premium' },
+  metadata: { source: 'web' },
+});`,
     enabled: true,
   },
   'Node JS': {
@@ -64,8 +73,18 @@ echo "Hello, Flagsmith Warehouse!";`,
   'Python': {
     code: `from flagsmith import Flagsmith
 
-flagsmith = Flagsmith(environment_key="YOUR_ENVIRONMENT_KEY")
-print("Hello, Flagsmith Ruby Warehouse!")`,
+flagsmith = Flagsmith(
+    environment_key="YOUR_ENVIRONMENT_KEY",
+    enable_events=True,
+)
+
+flagsmith.track_event(
+    "purchase",
+    identifier="user_42",
+    value=99.5,
+    traits={"plan": "premium"},
+    metadata={"source": "web"},
+)`,
     enabled: true,
   },
   'Ruby': {

@@ -16,12 +16,19 @@ const ExperimentsFakeDoor: FC = () => {
   const handleSignUp = useCallback(() => {
     const user = AccountStore.getUser()
     const organisation = AccountStore.getOrganisation()
+    const name = `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim()
     API.trackEvent({
       category: 'experiments',
       event: 'experiments_beta_signup',
       extra: {
         email: user?.email,
-        name: `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim(),
+        name,
+        organisation: organisation?.name,
+      },
+    })
+    flagsmith.trackEvent('experiments_beta_signup', {
+      metadata: {
+        email: user?.email,
         organisation: organisation?.name,
       },
     })
