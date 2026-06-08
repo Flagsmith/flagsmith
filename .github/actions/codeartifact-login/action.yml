@@ -13,7 +13,7 @@ runs:
   using: composite
   steps:
     - name: Configure AWS credentials for CodeArtifact
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
       with:
         role-to-assume: arn:aws:iam::084060095745:role/codeartifact-github-actions-production
         aws-region: eu-west-2

@@ -19,10 +19,10 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: frontend/.nvmrc
           cache: npm
@@ -45,7 +45,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       
       # Temporarily install Firefox 143.0 to avoid test failures as superior versions cause frontend e2e tests to hang
       # To be removed once upstream issue correctly resolved

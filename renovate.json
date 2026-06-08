@@ -2,7 +2,8 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "security:only-security-updates",
-    ":semanticCommitTypeAll(deps)"
+    ":semanticCommitTypeAll(deps)",
+    "helpers:pinGitHubActionDigests"
   ],
   "packageRules": [
     {
@@ -34,6 +35,12 @@
       "matchFileNames": [".github/**"],
       "addLabels": ["ci", "dependencies"],
       "semanticCommitScope": "CI"
+    },
+    {
+      "description": "Trusted action orgs are left on version tags rather than SHA-pinned",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["Flagsmith/**"],
+      "pinDigests": false
     }
   ],
   "semanticCommitScope": ""

@@ -52,10 +52,10 @@ jobs:
 
     steps:
       - name: Prepare oras CLI
-        uses: oras-project/setup-oras@v1
+        uses: oras-project/setup-oras@22ce207df3b08e061f537244349aac6ae1d214f6 # v1
 
       - name: Pull and republish Trivy databases
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         with:
           shell: bash
           command: |
@@ -92,7 +92,7 @@ jobs:
 
     steps:
       - name: Checkout trivy.yaml
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           sparse-checkout: |
             trivy.yaml

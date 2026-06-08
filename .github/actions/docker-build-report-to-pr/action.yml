@@ -16,19 +16,19 @@ runs:
   using: composite
 
   steps:
-    - uses: peter-evans/find-comment@v3
+    - uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3
       id: find-comment
       with:
         issue-number: ${{ github.event.pull_request.number }}
         body-includes: 'Docker builds report'
 
-    - uses: chuhlomin/render-template@v1.4
+    - uses: chuhlomin/render-template@aacf4ca31e76dfdf3c5c32f7803d67271469f2a6 # v1.4
       if: ${{ !inputs.image-tag }}
       id: render-header
       with:
         template: .github/docker_build_comment_template.md
 
-    - uses: peter-evans/create-or-update-comment@v4
+    - uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4
       if: ${{ !inputs.image-tag }}
       with:
         comment-id: ${{ steps.find-comment.outputs.comment-id }}
@@ -36,7 +36,7 @@ runs:
         issue-number: ${{ github.event.pull_request.number }}
         body: ${{ steps.render-header.outputs.result }}
 
-    - uses: peter-evans/create-or-update-comment@v4
+    - uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4
       if: ${{ inputs.image-tag }}
       with:
         comment-id: ${{ steps.find-comment.outputs.comment-id }}
