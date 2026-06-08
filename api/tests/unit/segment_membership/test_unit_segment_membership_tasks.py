@@ -462,7 +462,6 @@ def test_write_identity_deletion_tombstone_to_clickhouse__environment_not_found_
     # Then
     spy.assert_not_called()
     assert any(
-        e["event"] == "tombstone.skipped"
-        and e["reason"] == "environment_not_found"
+        e["event"] == "tombstone.skipped" and e["reason"] == "environment_not_found"
         for e in log.events
     )

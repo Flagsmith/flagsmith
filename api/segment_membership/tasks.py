@@ -217,9 +217,9 @@ def write_identity_deletion_tombstone_to_clickhouse(
         return
 
     try:
-        environment = Environment.objects.select_related(
-            "project__organisation"
-        ).get(api_key=env_key)
+        environment = Environment.objects.select_related("project__organisation").get(
+            api_key=env_key
+        )
     except Environment.DoesNotExist:
         logger.info(
             "tombstone.skipped",
