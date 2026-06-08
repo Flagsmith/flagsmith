@@ -350,6 +350,15 @@ export type Req = {
     organisation_id: number
     role_id: number
   }
+  createProjectRolePermission: {
+    organisation_id: number
+    role_id: number
+    body: {
+      admin?: boolean
+      permissions: RolePermission['permissions']
+      project: number
+    }
+  }
   updateRolePermission: Req['createRolePermission'] & { id: number }
   deleteRolePermission: { organisation_id: number; role_id: number }
 
@@ -641,6 +650,14 @@ export type Req = {
   deleteProject: { id: number }
   migrateProject: { id: number }
   getProjectPermissions: { projectId: number }
+  createProjectUserPermission: {
+    projectId: number
+    body: {
+      admin?: boolean
+      permissions: string[]
+      user: number
+    }
+  }
   createGroup: {
     orgId: number
     data: Omit<UserGroup, 'id' | 'users'>

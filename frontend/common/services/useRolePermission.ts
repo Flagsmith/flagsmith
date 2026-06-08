@@ -6,6 +6,18 @@ export const rolePermissionService = service
   .enhanceEndpoints({ addTagTypes: ['rolePermission'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      createProjectRolePermission: builder.mutation<
+        Res['rolePermission'],
+        Req['createProjectRolePermission']
+      >({
+        invalidatesTags: () => [{ type: 'rolePermission' }],
+        query: (query: Req['createProjectRolePermission']) => ({
+          body: query.body,
+          method: 'POST',
+          url: `organisations/${query.organisation_id}/roles/${query.role_id}/projects-permissions/`,
+        }),
+      }),
+
       createRolePermissions: builder.mutation<
         Res['rolePermission'],
         Req['createRolePermission']
@@ -165,6 +177,7 @@ export async function createRolePermissions(
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useCreateProjectRolePermissionMutation,
   useCreateRolePermissionsMutation,
   useGetRoleEnvironmentPermissionsQuery,
   useGetRoleOrganisationPermissionsQuery,

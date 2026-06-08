@@ -7,7 +7,7 @@ COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
-UV_VERSION ?= $(shell python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["tool"]["uv"]["required-version"].lstrip("<>="))')
+UV_VERSION ?= $(shell python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["tool"]["uv"]["required-version"].lstrip("<=>"))')
 
 OPENAPI_FORMAT_VERSION ?= 1.23.0
 

@@ -661,6 +661,7 @@ def test_edge_identities_update_mv_featurestate__new_allocation__updates_documen
             "multivariate_feature_option": {
                 "id": mv_option_50_percent,
                 "value": mv_option_value,
+                "key": None,
             },
             "mv_fs_value_uuid": mock.ANY,
         }
