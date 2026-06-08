@@ -14,3 +14,4 @@ class RelatedObjectType(enum.Enum):
     RELEASE_PIPELINE = "Release pipeline"
     WAREHOUSE_CONNECTION = "Warehouse connection"
     EXPERIMENT = "Experiment"
+    METRIC = "Metric"

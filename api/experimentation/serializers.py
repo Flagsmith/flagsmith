@@ -4,8 +4,12 @@ from rest_framework import serializers
 
 from environments.models import Environment
 from experimentation.dataclasses import WarehouseEventStats
+from experimentation.metric_definitions import validate_metric_definition
 from experimentation.models import (
     Experiment,
+    ExperimentMetric,
+    ExperimentStatus,
+    Metric,
     WarehouseConnection,
     WarehouseType,
 )
@@ -94,6 +98,77 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             **config,  # type: ignore[typeddict-item]
         }
         return merged
+
+
+class MetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    class Meta:
+        model = Metric
+        fields = (
+            "id",
+            "name",
+            "description",
+            "aggregation",
+            "direction",
+            "definition",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = (
+            "id",
+            "created_at",
+            "updated_at",
+        )
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        error = validate_metric_definition(attrs["definition"])
+        if error:
+            raise serializers.ValidationError({"definition": error})
+        return attrs
+
+
+class ExperimentMetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    metric = serializers.PrimaryKeyRelatedField(  # type: ignore[var-annotated]
+        queryset=Metric.objects.all(),
+    )
+    metric_name = serializers.CharField(source="metric.name", read_only=True)
+    aggregation = serializers.CharField(source="metric.aggregation", read_only=True)
+
+    class Meta:
+        model = ExperimentMetric
+        fields = (
+            "id",
+            "metric",
+            "metric_name",
+            "aggregation",
+            "expected_direction",
+            "created_at",
+        )
+        read_only_fields = ("id", "created_at")
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        experiment: Experiment = self.context["experiment"]
+
+        if experiment.status == ExperimentStatus.COMPLETED:
+            raise serializers.ValidationError(
+                "Cannot modify metrics of a completed experiment."
+            )
+
+        metric: Metric = attrs.get("metric", getattr(self.instance, "metric", None))
+
+        if metric.environment_id != experiment.environment_id:
+            raise serializers.ValidationError(
+                {"metric": "Metric must belong to the experiment's environment."}
+            )
+
+        attached = experiment.experiment_metrics.all()
+        if isinstance(self.instance, ExperimentMetric):
+            attached = attached.exclude(pk=self.instance.pk)
+
+        if "metric" in attrs and attached.filter(metric=metric).exists():
+            raise serializers.ValidationError(
+                {"metric": "Metric is already attached to this experiment."}
+            )
+        return attrs
 
 
 class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
