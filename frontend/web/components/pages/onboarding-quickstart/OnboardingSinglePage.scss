@@ -332,51 +332,13 @@
     gap: 16px;
   }
 
-  &__verify-badges {
-    width: 100%;
-  }
-
-  &__badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border-radius: 9999px;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-  }
-
-  &__badge-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 9999px;
-    background-color: currentColor;
-  }
-
   &__verify-title {
     font-size: 1.25rem;
     font-weight: 700;
   }
 
-  &__verify-line {
-    font-size: 0.875rem;
-    color: var(--color-text-secondary);
-  }
-
   // State colours for the left column (title carries the colour).
   &__verify--waiting {
-    .onboarding-single__badge--signal {
-      color: var(--color-text-action);
-      background-color: var(--color-surface-action-subtle);
-    }
-    // "Scanning for ping" is amber in the design.
-    .onboarding-single__badge--status {
-      color: #d97706;
-      background-color: #fef3c7;
-      border: 1px solid #f59e0b;
-    }
     .onboarding-single__verify-title {
       color: var(--color-text-action);
     }
@@ -386,11 +348,6 @@
   }
 
   &__verify--connected {
-    .onboarding-single__badge {
-      color: var(--green-700, #15803d);
-      background-color: var(--color-surface-success, #dcfce7);
-      border: 1px solid var(--color-icon-success, #22c55e);
-    }
     .onboarding-single__verify-title {
       color: var(--color-icon-success, #16a34a);
     }

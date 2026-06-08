@@ -255,12 +255,9 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
   const popularLangs = SDK_LANGS.filter((l) => l.popular)
   const moreLangs = SDK_LANGS.filter((l) => !l.popular)
 
-  // Radar column: a bold status title + a detail subtitle. Copy progress lives
-  // in the checklist, not here.
-  const verifyTitle = connected ? 'Signal received!' : 'Waiting for the signal'
-  const verifyHeadline = connected
-    ? `${featureName} just evaluated for the first time.`
-    : `Run your app — ${featureName} lights up here.`
+  // Radar column: just the radar + a single status title. Progress detail
+  // lives in the checklist/console, not here.
+  const verifyTitle = connected ? 'Signal received!' : 'Waiting for connection…'
 
   // Illustrative visual for each "next quest" card.
   const questVisual = (key: string) => {
@@ -422,26 +419,20 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
                       {lang.label}
                     </button>
                   ))}
-                  {/* "More" toggles an in-flow accordion of the long tail. When
-                      a long-tail SDK is selected its label sits on the trigger
-                      so the choice stays visible while the panel is collapsed. */}
+                  {/* "More" only toggles the accordion — it's never the
+                      selected item, so it stays neutral and the active state
+                      lives on the chosen chip inside the open panel. */}
                   <button
                     type='button'
-                    className={`onboarding-single__sdk${
-                      sdkLang.popular ? '' : ' onboarding-single__sdk--active'
-                    }`}
+                    className='onboarding-single__sdk'
                     onClick={() => setMoreOpen((open) => !open)}
                     aria-expanded={moreOpen}
                   >
-                    {sdkLang.popular ? 'More' : sdkLang.label}
+                    More
                     <Icon
                       name={moreOpen ? 'chevron-up' : 'chevron-down'}
                       width={14}
-                      fill={
-                        sdkLang.popular
-                          ? 'var(--color-icon-secondary)'
-                          : '#ffffff'
-                      }
+                      fill='var(--color-icon-secondary)'
                       aria-hidden
                     />
                   </button>
@@ -457,10 +448,7 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
                             ? ' onboarding-single__sdk--active'
                             : ''
                         }`}
-                        onClick={() => {
-                          setSdkLang(lang)
-                          setMoreOpen(false)
-                        }}
+                        onClick={() => setSdkLang(lang)}
                       >
                         {LANGUAGE_LOGOS[lang.label] && (
                           <svg
@@ -545,16 +533,6 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
           }`}
         >
           <div className='onboarding-single__verify-left'>
-            <div className='onboarding-single__verify-badges d-flex align-items-center justify-content-between'>
-              <span className='onboarding-single__badge onboarding-single__badge--signal'>
-                <span className='onboarding-single__badge-dot' aria-hidden />
-                {connected ? 'Evaluation received' : 'Signal detection active'}
-              </span>
-              <span className='onboarding-single__badge onboarding-single__badge--status'>
-                <span className='onboarding-single__badge-dot' aria-hidden />
-                {connected ? 'First ping detected' : 'Scanning for ping'}
-              </span>
-            </div>
             <div className='onboarding-single__radar' aria-hidden>
               <span className='onboarding-single__radar-ring onboarding-single__radar-ring--4' />
               <span className='onboarding-single__radar-ring onboarding-single__radar-ring--3' />
@@ -564,9 +542,6 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
             </div>
             <div className='onboarding-single__verify-title text-center'>
               {verifyTitle}
-            </div>
-            <div className='onboarding-single__verify-line text-center'>
-              {verifyHeadline}
             </div>
           </div>
 
