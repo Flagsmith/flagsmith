@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -323,6 +325,39 @@ def test_list_metrics__no_active_attachment__empty_experiments(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["results"][0]["experiments"] == []
+
+
+def test_list_metrics__multiple_attachments__no_n_plus_one(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: "EnableFeaturesFixture",
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    metric = _metric(environment, "first")
+    ExperimentMetric.objects.create(
+        experiment=experiment,
+        metric=metric,
+        expected_direction=ExpectedDirection.INCREASE,
+    )
+    admin_client_new.get(_list_url(environment))
+    with CaptureQueriesContext(connection) as one_metric:
+        admin_client_new.get(_list_url(environment))
+
+    # When
+    for index in range(3):
+        extra = _metric(environment, f"extra-{index}")
+        ExperimentMetric.objects.create(
+            experiment=experiment,
+            metric=extra,
+            expected_direction=ExpectedDirection.INCREASE,
+        )
+    with CaptureQueriesContext(connection) as many_metrics:
+        admin_client_new.get(_list_url(environment))
+
+    # Then
+    assert len(many_metrics) == len(one_metric)
 
 
 def test_update_metric__patch__updates_and_audits(
