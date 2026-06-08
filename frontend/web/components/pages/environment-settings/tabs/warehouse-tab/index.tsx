@@ -21,18 +21,13 @@ type WarehouseTabProps = {
 const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
   const [editing, setEditing] = useState(false)
 
-  // Poll only while waiting for the first event to land in the warehouse. Held
-  // in state (updated by the effect below) because the interval depends on the
-  // query's own result, which isn't available when the hook is first called.
-  const [pollingInterval, setPollingInterval] = useState(0)
-
   const {
     data: connections,
     isError,
     isLoading,
   } = useGetWarehouseConnectionsQuery(
     { environmentId },
-    { pollingInterval, skip: !environmentId },
+    { skip: !environmentId },
   )
   const [createConnection, { isLoading: isCreating }] =
     useCreateWarehouseConnectionMutation()
@@ -40,13 +35,21 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
   const [updateConnection] = useUpdateWarehouseConnectionMutation()
 
   const connection = connections?.[0]
-
-  useEffect(() => {
-    setPollingInterval(getWarehousePollingInterval(connection?.status))
-  }, [connection?.status])
+  const connectionId = connection?.id
+  const connectionStatus = connection?.status
 
   const [testConnection, { isLoading: isSendingTestEvent }] =
     useTestWarehouseConnectionMutation()
+
+  useEffect(() => {
+    const interval = getWarehousePollingInterval(connectionStatus)
+    if (!interval || connectionId === undefined) return
+    testConnection({ environmentId, id: connectionId })
+    const timer = setInterval(() => {
+      testConnection({ environmentId, id: connectionId })
+    }, interval)
+    return () => clearInterval(timer)
+  }, [connectionStatus, connectionId, environmentId, testConnection])
 
   const handleEnableFlagsmith = () => {
     openConfirm({
