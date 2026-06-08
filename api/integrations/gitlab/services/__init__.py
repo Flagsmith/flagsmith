@@ -9,6 +9,7 @@ from integrations.gitlab.services.labels import (
     GITLAB_RESOURCE_KIND_BY_TYPE,
     apply_flagsmith_label_to_resource,
 )
+from integrations.gitlab.services.metadata import update_resource_metadata
 from integrations.gitlab.services.tagging import (
     apply_initial_tag,
     apply_tag_for_event,
@@ -46,4 +47,5 @@ __all__ = [
     "post_unlinked_comment",
     "register_gitlab_webhook_for_resource",
     "set_gitlab_tag",
+    "update_resource_metadata",
 ]

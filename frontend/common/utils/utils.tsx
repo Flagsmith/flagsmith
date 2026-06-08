@@ -55,6 +55,7 @@ export type PaidFeature =
   | 'CREATE_ADDITIONAL_PROJECT'
   | '2FA'
   | 'RELEASE_PIPELINES'
+  | 'WAREHOUSE'
 
 export type AppFeature = PaidFeature | 'FEATURE_HEALTH'
 
@@ -142,6 +143,16 @@ const Utils = Object.assign({}, BaseUtils, {
       res = Color(fallback)
     }
     return res
+  },
+
+  getContrastColour(backgroundColor: string | null | undefined): string {
+    if (!backgroundColor) return 'white'
+
+    try {
+      return Color(backgroundColor).luminosity() > 0.179 ? 'black' : 'white'
+    } catch {
+      return 'white'
+    }
   },
 
   copyToClipboard: async (
@@ -537,6 +548,20 @@ const Utils = Object.assign({}, BaseUtils, {
       case 'METADATA':
       case 'RELEASE_PIPELINES': {
         plan = 'enterprise'
+        break
+      }
+      case 'WAREHOUSE': {
+        const remotePlansValue = Utils.getFlagsmithJSONValue(
+          'experimentation_warehouse_connection',
+          [],
+        )
+        const remotePlans: string[] = Array.isArray(remotePlansValue)
+          ? remotePlansValue
+          : []
+        const allowedPlans = [...remotePlans, 'enterprise']
+        const planHierarchy: Plan[] = ['start-up', 'scale-up', 'enterprise']
+        plan =
+          planHierarchy.find((p) => allowedPlans.includes(p)) || 'enterprise'
         break
       }
 

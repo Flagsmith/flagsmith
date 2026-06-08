@@ -5,20 +5,21 @@ import { IonIcon } from '@ionic/react'
 import { rocket } from 'ionicons/icons'
 type BetaFlagType = {
   children: React.ReactNode
-  flagName: string
+  flagName?: string
+  title?: string
 }
 
-const BetaFlag: FC<BetaFlagType> = ({ children, flagName }) => {
+const BetaFlag: FC<BetaFlagType> = ({ children, flagName, title = 'Beta' }) => {
   const remoteConfig = flagName ? Utils.getFlagsmithJSONValue(flagName) : {}
-  const isBeta = remoteConfig?.beta
+  const show = flagName ? !!remoteConfig?.beta : true
   return (
     <div className='d-flex justify-content-center align-items-center gap-2'>
       {children}
-      {!!isBeta && (
+      {show && (
         <div>
           <a className='chip cursor-pointer chip--xs d-flex align-items-center fw-semibold text-white bg-primary900'>
             {<IonIcon className='me-1' icon={rocket} />}
-            Beta
+            {title}
           </a>
         </div>
       )}

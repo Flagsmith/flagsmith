@@ -17,7 +17,6 @@ export const rolePermissionService = service
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/environments-permissions/`,
         }),
       }),
-
       createProjectRolePermission: builder.mutation<
         Res['rolePermission'],
         Req['createProjectRolePermission']

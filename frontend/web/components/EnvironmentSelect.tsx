@@ -3,6 +3,12 @@ import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { Props } from 'react-select'
 import { Environment } from 'common/types/responses'
 
+export type EnvironmentSelectOption = {
+  value: string
+  label: string
+  environment: Environment | null
+}
+
 type EnvironmentSelectType = Partial<Omit<Props, 'value'>> & {
   projectId: number
   value?: string
@@ -73,11 +79,9 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
           ? [{ environment: null, label: 'All Environments', value: '' }]
           : []
         ).concat(environments)}
-        onChange={(value: {
-          value: string
-          label: string
-          environment: Environment
-        }) => onChange(value?.value || '', value?.environment)}
+        onChange={(value: EnvironmentSelectOption) =>
+          onChange(value?.value || '', value?.environment)
+        }
       />
     </div>
   )

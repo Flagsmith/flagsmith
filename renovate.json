@@ -1,0 +1,40 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "security:only-security-updates",
+    ":semanticCommitTypeAll(deps)"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["pep621"],
+      "matchFileNames": ["api/**"],
+      "addLabels": ["api", "dependencies"],
+      "semanticCommitScope": "API"
+    },
+    {
+      "matchManagers": ["pep621"],
+      "matchFileNames": ["mcp/**"],
+      "addLabels": ["mcp", "dependencies"],
+      "semanticCommitScope": "MCP"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchFileNames": ["frontend/**"],
+      "addLabels": ["front-end", "dependencies"],
+      "semanticCommitScope": "Frontend"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchFileNames": ["docs/**"],
+      "addLabels": ["docs", "dependencies"],
+      "semanticCommitScope": "Docs"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchFileNames": [".github/**"],
+      "addLabels": ["ci", "dependencies"],
+      "semanticCommitScope": "CI"
+    }
+  ],
+  "semanticCommitScope": ""
+}

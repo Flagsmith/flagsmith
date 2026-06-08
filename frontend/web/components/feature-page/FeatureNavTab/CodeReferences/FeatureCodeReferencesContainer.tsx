@@ -44,10 +44,12 @@ const FeatureCodeReferencesContainer: React.FC<
         0,
       )
       flagsmith.trackEvent('code_references_view', {
-        feature_id: featureId,
-        project_id: projectId,
-        repos_count: data.length,
-        total_refs_count: totalRefs,
+        metadata: {
+          feature_id: featureId,
+          project_id: projectId,
+          repos_count: data.length,
+          total_refs_count: totalRefs,
+        },
       })
     }
   }, [data, featureId, projectId])

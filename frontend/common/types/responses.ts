@@ -160,6 +160,11 @@ export type SegmentRule = {
   conditions: SegmentCondition[]
   version_of: number | undefined
 }
+export type SegmentMembership = {
+  environment: number
+  count: number
+  last_synced_at: string
+}
 export type Segment = {
   id: number
   rules: SegmentRule[]
@@ -169,6 +174,7 @@ export type Segment = {
   project: string | number
   feature?: number
   metadata: Metadata[] | []
+  membership_counts?: SegmentMembership[]
 }
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
@@ -571,6 +577,30 @@ export type MultivariateOption = {
 
 export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
 
+export type ExperimentStatus = 'created' | 'running' | 'paused' | 'completed'
+
+export type ExperimentStatusCounts = Record<ExperimentStatus, number>
+
+export type ExperimentFeature = {
+  id: number
+  name: string
+  type: FeatureType
+  initial_value: string | null
+  multivariate_options: MultivariateOption[]
+}
+
+export type Experiment = {
+  id: number
+  name: string
+  hypothesis: string
+  feature: ExperimentFeature
+  status: ExperimentStatus
+  created_at: string
+  updated_at: string
+  started_at: string | null
+  ended_at: string | null
+}
+
 export enum TagStrategy {
   INTERSECTION = 'INTERSECTION',
   UNION = 'UNION',
@@ -955,11 +985,6 @@ export type IdentityTrait = {
   trait_value: FlagsmithValue
 }
 
-enum PipelineStatus {
-  DRAFT = 'DRAFT',
-  ACTIVE = 'ACTIVE',
-}
-
 export interface ReleasePipeline {
   id: number
   name: string
@@ -1095,6 +1120,32 @@ export type ExperimentResults = {
   feature: string
   variants: ExperimentVariantResult[]
   statistics: ExperimentStatistics
+}
+
+export type WarehouseConnectionStatus =
+  | 'created'
+  | 'pending_connection'
+  | 'connected'
+  | 'errored'
+
+export type WarehouseType = 'flagsmith' | 'snowflake' | 'clickhouse'
+
+export type SnowflakeConfig = {
+  account_identifier: string
+  warehouse: string
+  database: string
+  schema: string
+  role: string
+  user: string
+}
+
+export type WarehouseConnection = {
+  id: number
+  warehouse_type: WarehouseType
+  status: WarehouseConnectionStatus
+  name: string
+  config: SnowflakeConfig | Record<string, never>
+  created_at: string
 }
 
 export type Res = {
@@ -1321,5 +1372,12 @@ export type Res = {
   gitlabProjects: PagedResponse<GitLabProject>
   gitlabIssues: PagedResponse<GitLabIssue>
   gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
+  warehouseConnections: WarehouseConnection[]
+  experiments: PagedResponse<Experiment> & {
+    currentPage: number
+    pageSize: number
+    status_counts?: ExperimentStatusCounts
+  }
+  experiment: Experiment
   // END OF TYPES
 }
