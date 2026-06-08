@@ -132,6 +132,24 @@ def test_invite_link_validation__hash_not_provided__raises_permission_denied(
     assert exc_info.value.detail == USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
 
 
+def test_invite_link_validation__existing_email_without_invite__raises_permission_denied(
+    db: None,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ALLOW_REGISTRATION_WITHOUT_INVITE = False
+    FFAdminUser.objects.create(email="testuser@mail.com")
+
+    serializer = CustomUserCreateSerializer(data=user_dict)
+
+    # When
+    with pytest.raises(PermissionDenied) as exc_info:
+        serializer.is_valid(raise_exception=True)
+
+    # Then
+    assert exc_info.value.detail == USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
+
+
 def test_invite_link_validation__invalid_hash__raises_permission_denied(
     invite_link: InviteLink,
     settings: SettingsWrapper,

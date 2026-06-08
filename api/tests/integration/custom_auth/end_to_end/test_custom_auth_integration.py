@@ -123,6 +123,29 @@ def test_register__without_invite_when_disabled__returns_forbidden(
 
 
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)  # type: ignore[misc]
+def test_register__existing_email_without_invite_when_disabled__returns_forbidden(
+    db: None,
+    api_client: APIClient,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    password = FFAdminUser.objects.make_random_password()
+    register_data = {
+        "email": admin_user.email,
+        "password": password,
+        "first_name": "test",
+        "last_name": "register",
+    }
+
+    # When
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+    response = api_client.post(url, data=register_data)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)  # type: ignore[misc]
 def test_register__with_invite_when_registration_disabled__returns_created(
     db: None,
     api_client: APIClient,

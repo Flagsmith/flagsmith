@@ -6,7 +6,6 @@ from djoser.serializers import UserCreateSerializer  # type: ignore[import-untyp
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.validators import UniqueValidator
 
 from organisations.invites.models import Invite, InviteLink
 from users.auth_type import AuthType
@@ -68,13 +67,7 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         write_only_fields = ("sign_up_type",)
         extra_kwargs = {
             "email": {
-                "validators": [
-                    UniqueValidator(
-                        queryset=FFAdminUser.objects.all(),
-                        lookup="iexact",
-                        message="Email already exists. Please log in.",
-                    )
-                ]
+                "validators": list[object](),
             }
         }
 
@@ -83,6 +76,11 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         self._validate_registration_invite(
             email=email, sign_up_type=attrs.get("sign_up_type")
         )
+
+        if FFAdminUser.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError(
+                {"email": "Email already exists. Please log in."}
+            )
 
         attrs = super().validate(attrs)
         email = attrs.get("email")
