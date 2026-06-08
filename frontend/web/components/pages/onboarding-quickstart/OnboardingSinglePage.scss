@@ -27,19 +27,29 @@
     padding: 40px 48px;
   }
 
+  // Full-viewport, vertically-centred splash (no app shell during setup), so
+  // the content sits in the middle rather than floating near the top.
   &__loading {
     display: flex;
     flex-direction: column;
-    min-height: 60vh;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    font-size: 0.9375rem;
+    gap: 12px;
+    min-height: 100vh;
+    padding: 24px;
+    background-color: var(--color-surface-subtle);
+    text-align: center;
   }
 
   &__loading-anim {
-    width: min(440px, 70vw);
+    width: min(480px, 72vw);
     aspect-ratio: 1600 / 1400;
+  }
+
+  &__loading-text {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--color-text-default);
   }
 
   &__crumb {

@@ -78,10 +78,10 @@ const OnboardingSinglePageContainer: FC = () => {
     return (
       <Suspense
         fallback={
-          <div className='onboarding-single'>
-            <div className='onboarding-single__page onboarding-single__loading text-muted'>
+          <div className='onboarding-single__loading'>
+            <span className='onboarding-single__loading-text'>
               Setting up your workspace…
-            </div>
+            </span>
           </div>
         }
       >
