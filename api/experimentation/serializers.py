@@ -3,6 +3,7 @@ from typing import Any
 from rest_framework import serializers
 
 from environments.models import Environment
+from experimentation.dataclasses import WarehouseEventStats
 from experimentation.metric_definitions import validate_metric_definition
 from experimentation.models import (
     Experiment,
@@ -21,10 +22,21 @@ from features.multivariate.serializers import NestedMultivariateFeatureOptionSer
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     name = serializers.CharField(max_length=255, required=False)
     config = serializers.JSONField(default=None, required=False, allow_null=True)
+    total_events_received = serializers.SerializerMethodField()
+    unique_events_count = serializers.SerializerMethodField()
 
     class Meta:
         model = WarehouseConnection
-        fields = ("id", "warehouse_type", "status", "name", "config", "created_at")
+        fields = (
+            "id",
+            "warehouse_type",
+            "status",
+            "name",
+            "config",
+            "created_at",
+            "total_events_received",
+            "unique_events_count",
+        )
         read_only_fields = ("id", "status", "created_at")
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
@@ -60,6 +72,14 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
 
         result: WarehouseConnection = super().create(validated_data)
         return result
+
+    def get_total_events_received(self, obj: WarehouseConnection) -> int | None:
+        stats: WarehouseEventStats | None = obj.event_stats
+        return stats.total_events_received if stats else None
+
+    def get_unique_events_count(self, obj: WarehouseConnection) -> int | None:
+        stats: WarehouseEventStats | None = obj.event_stats
+        return stats.unique_events_count if stats else None
 
     @staticmethod
     def _generate_name(warehouse_type: str, environment: Environment) -> str:

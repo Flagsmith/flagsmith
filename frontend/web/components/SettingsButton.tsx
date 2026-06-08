@@ -8,12 +8,14 @@ type SettingsButtonType = {
   onClick: () => void
   children: ReactNode
   content?: ReactNode
+  dropdown?: ReactNode
   feature?: PaidFeature
 }
 
 const SettingsButton: FC<SettingsButtonType> = ({
   children,
   content,
+  dropdown,
   feature,
   onClick,
 }) => {
@@ -39,6 +41,7 @@ const SettingsButton: FC<SettingsButtonType> = ({
           {!!feature && <PlanBasedBanner feature={feature} theme={'badge'} />}
         </Row>
       </Row>
+      {dropdown}
       {content}
     </>
   )
