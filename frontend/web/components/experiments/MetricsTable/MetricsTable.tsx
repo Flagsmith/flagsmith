@@ -43,7 +43,7 @@ const MetricsTable: FC<MetricsTableProps> = ({ metrics, onDelete, onEdit }) => {
             </td>
             <td className='text-muted'>{metric.description || '—'}</td>
             <td className='text-muted'>
-              {getMetricUsageLabel(metric.experiments.length)}
+              {getMetricUsageLabel(metric.experiments?.length ?? 0)}
             </td>
             <td className='text-muted'>
               {moment(metric.updated_at).fromNow()}

@@ -16,6 +16,7 @@ import Icon from 'components/icons/Icon'
 import PageTitle from 'components/PageTitle'
 import Paging from 'components/Paging'
 import CreateMetricForm from 'components/experiments/CreateMetricForm'
+import CreateMetricFormSkeleton from 'components/experiments/CreateMetricForm/CreateMetricFormSkeleton'
 import MetricsTable from 'components/experiments/MetricsTable/MetricsTable'
 import {
   buildMetricPayload,
@@ -48,7 +49,9 @@ const MetricsPage: FC = () => {
   const isEnabled = Utils.getFlagsmithHasFeature('experiment_metrics')
   const params = new URLSearchParams(location.search)
   const isCreating = params.get('create') === 'true'
-  const editingId = params.get('edit') ? Number(params.get('edit')) : null
+  const editParam = params.get('edit')
+  const editingId =
+    editParam && !isNaN(Number(editParam)) ? Number(editParam) : null
 
   useEffect(() => {
     if (!isEnabled && environmentId && projectId) {
@@ -163,9 +166,16 @@ const MetricsPage: FC = () => {
       return (
         <div data-test='metrics-page' className='app-container container'>
           <PageTitle title='Edit Metric' />
-          <div className='text-center'>
-            <Loader />
-          </div>
+          {isLoading ? (
+            <CreateMetricFormSkeleton />
+          ) : (
+            <div className='text-center py-5'>
+              <p className='text-danger mb-4'>Metric not found.</p>
+              <Button onClick={() => history.push(metricsPath)}>
+                Back to Metrics
+              </Button>
+            </div>
+          )}
         </div>
       )
     }
