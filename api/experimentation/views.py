@@ -361,12 +361,16 @@ class MetricViewSet(
     lookup_url_kwarg = "pk"
 
     def get_queryset(self) -> "QuerySet[Metric]":
-        qs = super().get_queryset().prefetch_related(
-            Prefetch(
-                "experiment_metrics",
-                queryset=ExperimentMetric.objects.filter(
-                    experiment__deleted_at__isnull=True
-                ).select_related("experiment"),
+        qs = (
+            super()
+            .get_queryset()
+            .prefetch_related(
+                Prefetch(
+                    "experiment_metrics",
+                    queryset=ExperimentMetric.objects.filter(
+                        experiment__deleted_at__isnull=True
+                    ).select_related("experiment"),
+                )
             )
         )
         q = self.request.query_params.get("q")

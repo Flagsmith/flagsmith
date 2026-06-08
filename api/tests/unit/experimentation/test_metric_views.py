@@ -89,14 +89,14 @@ def test_create_metric__without_flag__returns_403(
     admin_client_new: APIClient,
     environment: Environment,
 ) -> None:
-    # Given the experiment feature flag is not enabled
+    # Given
 
-    # When an admin tries to create a metric
+    # When
     response = admin_client_new.post(
         _list_url(environment), data=_numeric_payload(), format="json"
     )
 
-    # Then it is forbidden
+    # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -108,48 +108,35 @@ def test_create_metric__staff_user__returns_403(
     # Given
     enable_features(EXPERIMENT_FLAG)
 
-    # When a non-admin tries to create a metric
+    # When
     response = staff_client.post(
         _list_url(environment), data=_numeric_payload(), format="json"
     )
 
-    # Then it is forbidden
+    # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_create_metric__mean_without_value__returns_201(
+@pytest.mark.parametrize(
+    ("aggregation", "event"),
+    [
+        ("mean", "session_ended"),
+        ("occurrence", "activated"),
+    ],
+)
+def test_create_metric__value_free_aggregation__returns_201(
     admin_client_new: APIClient,
     environment: Environment,
     enable_features: "EnableFeaturesFixture",
+    aggregation: str,
+    event: str,
 ) -> None:
-    # Given a mean metric with no explicit value expression
+    # Given
     enable_features(EXPERIMENT_FLAG)
     payload = {
-        "name": "Avg Duration",
-        "aggregation": "mean",
-        "definition": {"version": 1, "event": "session_ended"},
-    }
-
-    # When it is created
-    response = admin_client_new.post(
-        _list_url(environment), data=payload, format="json"
-    )
-
-    # Then it is accepted (defaults to the event's value column)
-    assert response.status_code == status.HTTP_201_CREATED
-
-
-def test_create_metric__occurrence_without_value__returns_201(
-    admin_client_new: APIClient,
-    environment: Environment,
-    enable_features: "EnableFeaturesFixture",
-) -> None:
-    # Given — "event happened at least once" needs no value column
-    enable_features(EXPERIMENT_FLAG)
-    payload = {
-        "name": "Activated",
-        "aggregation": "occurrence",
-        "definition": {"version": 1, "event": "activated"},
+        "name": "Metric",
+        "aggregation": aggregation,
+        "definition": {"version": 1, "event": event},
     }
 
     # When
@@ -161,63 +148,26 @@ def test_create_metric__occurrence_without_value__returns_201(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_create_metric__missing_event__returns_400(
+@pytest.mark.parametrize(
+    "definition",
+    [
+        pytest.param({"version": 1}, id="missing-event"),
+        pytest.param({"event": "session_started"}, id="missing-version"),
+        pytest.param(
+            {"version": 99, "event": "session_started"}, id="unsupported-version"
+        ),
+        pytest.param("not-an-object", id="non-object"),
+    ],
+)
+def test_create_metric__invalid_definition__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
     enable_features: "EnableFeaturesFixture",
-) -> None:
-    # Given a definition with no event
-    enable_features(EXPERIMENT_FLAG)
-    payload = {
-        "name": "Bad",
-        "aggregation": "count",
-        "definition": {"version": 1},
-    }
-
-    # When it is created
-    response = admin_client_new.post(
-        _list_url(environment), data=payload, format="json"
-    )
-
-    # Then it is rejected
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-def test_create_metric__missing_version__returns_400(
-    admin_client_new: APIClient,
-    environment: Environment,
-    enable_features: "EnableFeaturesFixture",
+    definition: object,
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
-    payload = {
-        "name": "Bad",
-        "aggregation": "count",
-        "definition": {"event": "session_started"},
-    }
-
-    # When
-    response = admin_client_new.post(
-        _list_url(environment), data=payload, format="json"
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "definition" in response.json()
-
-
-def test_create_metric__unsupported_version__returns_400(
-    admin_client_new: APIClient,
-    environment: Environment,
-    enable_features: "EnableFeaturesFixture",
-) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-    payload = {
-        "name": "Bad",
-        "aggregation": "count",
-        "definition": {"version": 99, "event": "session_started"},
-    }
+    payload = {"name": "Bad", "aggregation": "count", "definition": definition}
 
     # When
     response = admin_client_new.post(
@@ -278,7 +228,7 @@ def test_list_metrics__other_environment__excluded(
     project: "Project",
     enable_features: "EnableFeaturesFixture",
 ) -> None:
-    # Given a metric in this environment and one in a sibling environment
+    # Given
     enable_features(EXPERIMENT_FLAG)
     other_env = Environment.objects.create(name="Other", project=project)
     _metric(environment, "mine")
@@ -298,15 +248,15 @@ def test_list_metrics__search_query__filters_by_name(
     environment: Environment,
     enable_features: "EnableFeaturesFixture",
 ) -> None:
-    # Given two metrics with distinct names
+    # Given
     enable_features(EXPERIMENT_FLAG)
     _metric(environment, "Checkout Conversion")
     _metric(environment, "Revenue per User")
 
-    # When the list is filtered by a case-insensitive substring
+    # When
     response = admin_client_new.get(_list_url(environment), {"q": "checkout"})
 
-    # Then only the matching metric is returned
+    # Then
     assert response.status_code == status.HTTP_200_OK
     names = [m["name"] for m in response.json()["results"]]
     assert names == ["Checkout Conversion"]
@@ -318,7 +268,7 @@ def test_list_metrics__attached_experiments__included(
     experiment: Experiment,
     enable_features: "EnableFeaturesFixture",
 ) -> None:
-    # Given a metric attached to an experiment
+    # Given
     enable_features(EXPERIMENT_FLAG)
     metric = _metric(environment, "with-experiment")
     ExperimentMetric.objects.create(
@@ -327,10 +277,10 @@ def test_list_metrics__attached_experiments__included(
         expected_direction=ExpectedDirection.INCREASE,
     )
 
-    # When the list is fetched
+    # When
     response = admin_client_new.get(_list_url(environment))
 
-    # Then the metric carries the experiments using it
+    # Then
     assert response.status_code == status.HTTP_200_OK
     data = response.json()["results"][0]
     assert data["experiments"] == [
@@ -348,7 +298,7 @@ def test_list_metrics__soft_deleted_experiment__excluded_from_experiments(
     experiment: Experiment,
     enable_features: "EnableFeaturesFixture",
 ) -> None:
-    # Given a metric whose only attachment is to a soft-deleted experiment
+    # Given
     enable_features(EXPERIMENT_FLAG)
     metric = _metric(environment, "ghost-attachment")
     ExperimentMetric.objects.create(
@@ -358,10 +308,10 @@ def test_list_metrics__soft_deleted_experiment__excluded_from_experiments(
     )
     experiment.delete()
 
-    # When the list is fetched
+    # When
     response = admin_client_new.get(_list_url(environment))
 
-    # Then the soft-deleted experiment is not reported
+    # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["results"][0]["experiments"] == []
 
@@ -371,14 +321,14 @@ def test_list_metrics__unattached_metric__empty_experiments(
     environment: Environment,
     enable_features: "EnableFeaturesFixture",
 ) -> None:
-    # Given a metric not attached to any experiment
+    # Given
     enable_features(EXPERIMENT_FLAG)
     _metric(environment, "orphan")
 
-    # When the list is fetched
+    # When
     response = admin_client_new.get(_list_url(environment))
 
-    # Then it reports no experiments
+    # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["results"][0]["experiments"] == []
 
@@ -421,7 +371,7 @@ def test_update_metric__invalid_definition__returns_400(
     enable_features(EXPERIMENT_FLAG)
     metric = _metric(environment, "before")
 
-    # When the definition is patched to an unsupported shape
+    # When
     response = admin_client_new.patch(
         _detail_url(environment, metric),
         data={"definition": {"version": 99, "event": "x"}},
@@ -442,12 +392,12 @@ def test_update_metric__staff_user__returns_403(
     enable_features(EXPERIMENT_FLAG)
     metric = _metric(environment, "before")
 
-    # When a non-admin tries to update a metric
+    # When
     response = staff_client.patch(
         _detail_url(environment, metric), data={"name": "after"}, format="json"
     )
 
-    # Then it is forbidden
+    # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -516,7 +466,7 @@ def test_delete_metric__attached_to_soft_deleted_experiment__returns_204(
     experiment: Experiment,
     enable_features: "EnableFeaturesFixture",
 ) -> None:
-    # Given a metric whose only attachment is to a soft-deleted experiment
+    # Given
     enable_features(EXPERIMENT_FLAG)
     metric = _metric(environment, "ghost")
     ExperimentMetric.objects.create(
@@ -524,12 +474,12 @@ def test_delete_metric__attached_to_soft_deleted_experiment__returns_204(
         metric=metric,
         expected_direction=ExpectedDirection.INCREASE,
     )
-    experiment.delete()  # soft-delete leaves the ExperimentMetric row behind
+    experiment.delete()
 
     # When
     response = admin_client_new.delete(_detail_url(environment, metric))
 
-    # Then the ghost attachment does not block deletion
+    # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
@@ -538,48 +488,29 @@ def test_delete_metric__unattached__returns_204(
     environment: Environment,
     enable_features: "EnableFeaturesFixture",
 ) -> None:
-    # Given a metric not attached to any experiment
+    # Given
     enable_features(EXPERIMENT_FLAG)
     metric = _metric(environment, "orphan")
 
-    # When it is deleted
+    # When
     response = admin_client_new.delete(_detail_url(environment, metric))
 
-    # Then it is removed
+    # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert not Metric.objects.filter(name="orphan").exists()
-
-
-def test_create_metric__non_object_definition__returns_400(
-    admin_client_new: APIClient,
-    environment: Environment,
-    enable_features: "EnableFeaturesFixture",
-) -> None:
-    # Given a definition that is not an object
-    enable_features(EXPERIMENT_FLAG)
-    payload = {"name": "Bad", "aggregation": "count", "definition": "not-an-object"}
-
-    # When it is created
-    response = admin_client_new.post(
-        _list_url(environment), data=payload, format="json"
-    )
-
-    # Then it is rejected
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "definition" in response.json()
 
 
 def test_list_metrics__unknown_environment__returns_403(
     admin_client_new: APIClient,
 ) -> None:
-    # Given a non-existent environment api key
+    # Given
     url = reverse(
         "api-v1:environments:experiment_metrics:metrics-list",
         args=["does-not-exist"],
     )
 
-    # When the library is listed
+    # When
     response = admin_client_new.get(url)
 
-    # Then access is denied
+    # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
