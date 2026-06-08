@@ -6,6 +6,17 @@ export const organisationService = service
   .enhanceEndpoints({ addTagTypes: ['Organisation'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      createOrganisation: builder.mutation<
+        Res['organisation'],
+        Req['createOrganisation']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'Organisation' }],
+        query: (body: Req['createOrganisation']) => ({
+          body,
+          method: 'POST',
+          url: `organisations/`,
+        }),
+      }),
       deleteOrganisation: builder.mutation<void, Req['deleteOrganisation']>({
         invalidatesTags: [{ id: 'LIST', type: 'Organisation' }],
         query: ({ id }: Req['deleteOrganisation']) => ({
@@ -85,6 +96,7 @@ export async function getOrganisations(
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useCreateOrganisationMutation,
   useDeleteOrganisationMutation,
   useGetOrganisationQuery,
   useGetOrganisationsQuery,

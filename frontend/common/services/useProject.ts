@@ -7,6 +7,14 @@ export const projectService = service
   .enhanceEndpoints({ addTagTypes: ['Project'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      createProject: builder.mutation<Res['project'], Req['createProject']>({
+        invalidatesTags: [{ id: 'LIST', type: 'Project' }],
+        query: (body: Req['createProject']) => ({
+          body,
+          method: 'POST',
+          url: `projects/`,
+        }),
+      }),
       deleteProject: builder.mutation<void, Req['deleteProject']>({
         invalidatesTags: [{ id: 'LIST', type: 'Project' }],
         query: ({ id }: Req['deleteProject']) => ({
@@ -99,6 +107,7 @@ export async function getProject(
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useCreateProjectMutation,
   useDeleteProjectMutation,
   useGetProjectPermissionsQuery,
   useGetProjectQuery,

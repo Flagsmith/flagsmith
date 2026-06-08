@@ -6,6 +6,17 @@ export const environmentService = service
   .enhanceEndpoints({ addTagTypes: ['Environment'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      createEnvironment: builder.mutation<
+        Res['environment'],
+        Req['createEnvironment']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'Environment' }],
+        query: (body: Req['createEnvironment']) => ({
+          body,
+          method: 'POST',
+          url: `environments/`,
+        }),
+      }),
       getEnvironment: builder.query<Res['environment'], Req['getEnvironment']>({
         providesTags: (res) => [{ id: res?.id, type: 'Environment' }],
         query: (query: Req['getEnvironment']) => ({
@@ -84,6 +95,7 @@ export async function updateEnvironment(
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useCreateEnvironmentMutation,
   useGetEnvironmentMetricsQuery,
   useGetEnvironmentQuery,
   useGetEnvironmentsQuery,

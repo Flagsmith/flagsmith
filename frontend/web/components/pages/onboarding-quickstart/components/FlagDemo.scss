@@ -1,0 +1,105 @@
+// FlagDemo — the shared "see your flag work" AHA moment: the SDK snippet
+// (left) + a live sample app (right) + a flag toggle. Designed to be
+// context-agnostic so it can be the stepped flow's final step and the
+// centrepiece of the single-page onboarding. Colours come from semantic
+// tokens; literal hex is used only for the browser traffic-light dots, which
+// the token set doesn't expose.
+
+.flag-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+
+  // Re-assert the semantic text tokens locally so the component renders
+  // correctly wherever it's mounted (Bootstrap's theme overrides some of
+  // these with brand colours that fail on these surfaces).
+  .text-default {
+    color: var(--color-text-default);
+  }
+  .text-action {
+    color: var(--color-text-action);
+  }
+  .text-success {
+    color: var(--color-text-success);
+  }
+
+  &__stage {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+  }
+
+  &__panel {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__browser {
+    overflow: hidden;
+  }
+
+  &__browser-bar {
+    background-color: var(--color-surface-subtle);
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  &__dot {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 9999px;
+    flex-shrink: 0;
+
+    &--red {
+      background-color: #ff5f57;
+    }
+    &--amber {
+      background-color: #febc2e;
+    }
+    &--green {
+      background-color: #28c840;
+    }
+  }
+
+  &__url {
+    font-size: 0.75rem;
+  }
+
+  &__brand-dot {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 9999px;
+    background-color: var(--color-icon-action);
+  }
+
+  // The flag-controlled element — animates in when the flag turns on so the
+  // cause→effect of toggling reads clearly.
+  &__feature {
+    animation: flag-demo-reveal var(--duration-normal, 200ms)
+      var(--easing-standard, ease-out);
+  }
+
+  &__tag {
+    font-size: 0.6875rem;
+    background-color: var(--color-surface-action-subtle);
+  }
+
+  @media (max-width: 760px) {
+    &__stage {
+      flex-direction: column;
+    }
+  }
+}
+
+@keyframes flag-demo-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

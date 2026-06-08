@@ -7,6 +7,7 @@ import Icon from 'components/icons/Icon'
 import Headway from 'components/Headway'
 import { Project } from 'common/types/responses'
 import AccountDropdown from 'components/navigation/AccountDropdown'
+import OnboardingChipWithDrawer from 'web/components/onboarding-quickstart/OnboardingChipWithDrawer'
 
 type TopNavType = {
   activeProject: Project | undefined
@@ -25,16 +26,7 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
           <div className='me-3'>
             <GithubStar />
           </div>
-          <NavLink
-            activeClassName='active'
-            to={'/getting-started'}
-            className='d-flex gap-1 d-none d-md-flex text-end lh-1 align-items-center'
-          >
-            <span>
-              <Icon name='rocket' width={20} fill='#9DA4AE' />
-            </span>
-            <span className='d-none d-md-block'>Getting Started</span>
-          </NavLink>
+          <OnboardingChipWithDrawer />
           <a
             className='d-flex gap-1 ps-3 text-end lh-1 align-items-center'
             href={'https://docs.flagsmith.com'}

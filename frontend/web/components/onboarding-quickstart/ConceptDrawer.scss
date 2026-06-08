@@ -1,0 +1,86 @@
+// Slide-in concept-learning drawer. Single-mode; auto-dismissed by the
+// chip when all items are complete. Tokens drive colour; this file owns
+// the slide-in transform, backdrop fade, progress bar geometry, and the
+// progress-fill width via a CSS custom property.
+
+.concept-drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(360px, 100vw);
+  z-index: 1050;
+  transform: translateX(100%);
+  transition: transform var(--duration-normal) var(--easing-standard);
+  border-left: 1px solid var(--color-border-default);
+  display: flex;
+  flex-direction: column;
+
+  &--open {
+    transform: translateX(0);
+  }
+
+  &__backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.12);
+    z-index: 1040;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--duration-normal) var(--easing-standard);
+
+    &--open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  &__items {
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  &__bar {
+    height: 6px;
+    overflow: hidden;
+  }
+
+  &__bar-fill {
+    height: 100%;
+    width: var(--concept-drawer-progress, 0%);
+    transition: width var(--duration-normal) var(--easing-standard);
+  }
+
+  &__marker {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__marker-empty {
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    border: 1.5px solid var(--color-border-strong);
+  }
+
+  &__item {
+    cursor: pointer;
+    transition: background-color var(--duration-fast) var(--easing-standard),
+      border-color var(--duration-fast) var(--easing-standard);
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.7;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .concept-drawer,
+  .concept-drawer__backdrop,
+  .concept-drawer__bar-fill,
+  .concept-drawer__item {
+    transition: none;
+  }
+}
