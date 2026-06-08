@@ -1,5 +1,52 @@
 # Changelog
 
+## [2.239.0](https://github.com/Flagsmith/flagsmith/compare/v2.238.0...v2.239.0) (2026-06-08)
+
+
+### Features
+
+* add metric search, experiments field and update ([#7724](https://github.com/Flagsmith/flagsmith/issues/7724)) ([3d34cbc](https://github.com/Flagsmith/flagsmith/commit/3d34cbc5352785ecc96e17793580780b91e9e426))
+* choose project administrators on project creation ([#7580](https://github.com/Flagsmith/flagsmith/issues/7580)) ([1bf8bda](https://github.com/Flagsmith/flagsmith/commit/1bf8bda0c32f7ef89d2629fd811f5903f97651e0))
+* **experimentation:** environment-scoped metrics & experiment results ([#7674](https://github.com/Flagsmith/flagsmith/issues/7674)) ([f4b246e](https://github.com/Flagsmith/flagsmith/commit/f4b246ef8fe1684febdfecc7205e9cdee8c73a33))
+* **MCP:** Add Docker image and release publishing ([#7694](https://github.com/Flagsmith/flagsmith/issues/7694)) ([19fa405](https://github.com/Flagsmith/flagsmith/commit/19fa40598e0cc9c0926c97d9a8b77fbbc70d4605))
+* **MCP:** Emit session and tool call events ([#7707](https://github.com/Flagsmith/flagsmith/issues/7707)) ([36ef8dd](https://github.com/Flagsmith/flagsmith/commit/36ef8dd582280fbc451355ee8158a7d0dae82dd5))
+* **MCP:** Expose Prometheus metrics ([#7705](https://github.com/Flagsmith/flagsmith/issues/7705)) ([8ef95e0](https://github.com/Flagsmith/flagsmith/commit/8ef95e01f9957a8eee5acbb616b71cee3128cd51))
+* **MCP:** OAuth 2.0 support for HTTP transport ([#7692](https://github.com/Flagsmith/flagsmith/issues/7692)) ([35664ed](https://github.com/Flagsmith/flagsmith/commit/35664ed2192d72fba4e1fccd175725c4e535b2d4))
+* **MCP:** Run an MCP server out of OpenAPI specs ([#7670](https://github.com/Flagsmith/flagsmith/issues/7670)) ([4688419](https://github.com/Flagsmith/flagsmith/commit/4688419991978f6bd51da85f0b0996b322deeedc))
+* **MCP:** Set up logging and OpenTelemetry export ([#7706](https://github.com/Flagsmith/flagsmith/issues/7706)) ([f3c738b](https://github.com/Flagsmith/flagsmith/commit/f3c738bf2c4b88302f2cef3056ad761c620519de))
+* **multivariate:** add per-feature unique key to multivariate options ([#7698](https://github.com/Flagsmith/flagsmith/issues/7698)) ([6fcede7](https://github.com/Flagsmith/flagsmith/commit/6fcede7e1eb5fa78ccd8d1ab828acbc2c6507984))
+* **multivariate:** report variant key on identities flag responses ([#7723](https://github.com/Flagsmith/flagsmith/issues/7723)) ([08b9690](https://github.com/Flagsmith/flagsmith/commit/08b96904843c33bc5271241b247e674eae234e76))
+* **multivariate:** thread variant key into the environment document ([#7699](https://github.com/Flagsmith/flagsmith/issues/7699)) ([ed18061](https://github.com/Flagsmith/flagsmith/commit/ed18061dc75c8fc44d69e3bc2b15e59665049e12))
+* **sdk:** add variant key to evaluation schemas ([#7704](https://github.com/Flagsmith/flagsmith/issues/7704)) ([2eae0ff](https://github.com/Flagsmith/flagsmith/commit/2eae0ff112e970004937707d930769e19a26f2f3))
+* **sdk:** make evaluation result variant required and nullable ([#7726](https://github.com/Flagsmith/flagsmith/issues/7726)) ([9036dbf](https://github.com/Flagsmith/flagsmith/commit/9036dbfbbb0749fc99b71dbb5cc114d0bf527cf4))
+* verify warehouse connection api and events received ([#7677](https://github.com/Flagsmith/flagsmith/issues/7677)) ([d0ac9b5](https://github.com/Flagsmith/flagsmith/commit/d0ac9b5a972237083b3c49cf9254d0a346838a7e))
+
+
+### Bug Fixes
+
+* **API:** bump PyJWT to 2.13.0 (CVE-2026-48526) and add to dev dependencies ([#7714](https://github.com/Flagsmith/flagsmith/issues/7714)) ([09bac40](https://github.com/Flagsmith/flagsmith/commit/09bac40a687337667c630958d9c9571c8558775a))
+* Improve ButterBar text contrast on banners ([#7684](https://github.com/Flagsmith/flagsmith/issues/7684)) ([cf0d7b0](https://github.com/Flagsmith/flagsmith/commit/cf0d7b03feb4fe3628858adb4de97eb62f401c88))
+* **infra:** Drop SECURE_PROXY_SSL_HEADER_NAME override ([#7499](https://github.com/Flagsmith/flagsmith/issues/7499)) ([ab37e29](https://github.com/Flagsmith/flagsmith/commit/ab37e29f0c75fbbcf7228d832ce93595086ca4ab))
+* **Runtime:** Fix uv compatibility in local envs ([#7720](https://github.com/Flagsmith/flagsmith/issues/7720)) ([4ffbf74](https://github.com/Flagsmith/flagsmith/commit/4ffbf74e101e08f85eb13126234ba75665107e8f))
+
+
+### Dependency Updates
+
+* Bump uv to 0.11.18 ([#7708](https://github.com/Flagsmith/flagsmith/issues/7708)) ([cbcac64](https://github.com/Flagsmith/flagsmith/commit/cbcac642c0a26439fe4902c1c9b8eb67667183d8))
+* update dependency pytest to v9 [security] ([#7689](https://github.com/Flagsmith/flagsmith/issues/7689)) ([253111c](https://github.com/Flagsmith/flagsmith/commit/253111c6eee5e5905144db59fffa879dc561ccc5))
+* Update python-dotenv and idna (transitive dependencies) ([#7682](https://github.com/Flagsmith/flagsmith/issues/7682)) ([08e6853](https://github.com/Flagsmith/flagsmith/commit/08e685328f213db082b28159ce4ca536ff6e1181))
+* Update sentry webpack plugin ([#7683](https://github.com/Flagsmith/flagsmith/issues/7683)) ([de382aa](https://github.com/Flagsmith/flagsmith/commit/de382aaa68d5f7f468bb25143d741f981de342fb))
+* updated track event callsites with new interface ([#7666](https://github.com/Flagsmith/flagsmith/issues/7666)) ([0a935c7](https://github.com/Flagsmith/flagsmith/commit/0a935c72610cc1c15f2f5526015c8bd5389a3ddb))
+
+
+### CI
+
+* remove release-please workflow ([#7718](https://github.com/Flagsmith/flagsmith/issues/7718)) ([dd2572f](https://github.com/Flagsmith/flagsmith/commit/dd2572fb5e1e1c488feac7d2cde286a68c0a05a2))
+* Renovate semantic commit scopes ([#7691](https://github.com/Flagsmith/flagsmith/issues/7691)) ([d9a5d3c](https://github.com/Flagsmith/flagsmith/commit/d9a5d3c001d3bad3fa1c11d7810c7aa28966d572))
+* Run flagsmith-private test suites inline on 0.9.0 ([#7667](https://github.com/Flagsmith/flagsmith/issues/7667)) ([9cfd7ce](https://github.com/Flagsmith/flagsmith/commit/9cfd7ce1335c0a6d7fad8e9772d779002591f543))
+* self-hosted renovate ([#7690](https://github.com/Flagsmith/flagsmith/issues/7690)) ([1946ec5](https://github.com/Flagsmith/flagsmith/commit/1946ec5d5d42c1ed34ca201490f1e5e4c1bc3cb3))
+* Use GH app authentication for release please workflow ([#7715](https://github.com/Flagsmith/flagsmith/issues/7715)) ([9e11027](https://github.com/Flagsmith/flagsmith/commit/9e110273b4ae0ef38ecf61be0600350cf98f0a7e))
+
 ## [2.238.0](https://github.com/Flagsmith/flagsmith/compare/v2.237.0...v2.238.0) (2026-06-01)
 
 
