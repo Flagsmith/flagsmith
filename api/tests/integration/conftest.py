@@ -423,7 +423,11 @@ def identity_document(  # type: ignore[no-untyped-def]
         "multivariate_feature_state_values": [
             {
                 "percentage_allocation": 50,
-                "multivariate_feature_option": {"value": "50_percent", "id": 1},
+                "multivariate_feature_option": {
+                    "value": "50_percent",
+                    "id": 1,
+                    "key": None,
+                },
                 "mv_fs_value_uuid": "9438d56d-e06e-4f6b-bca5-f66755f063c0",
                 "id": 1,
             },
@@ -433,6 +437,7 @@ def identity_document(  # type: ignore[no-untyped-def]
                 "multivariate_feature_option": {
                     "value": "other_50_percent",
                     "id": None,
+                    "key": None,
                 },
                 "id": 2,
             },

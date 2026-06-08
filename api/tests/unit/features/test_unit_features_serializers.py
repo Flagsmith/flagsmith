@@ -3,6 +3,7 @@ from pytest_mock import MockerFixture
 
 from core.constants import BOOLEAN, INTEGER, STRING
 from environments.models import Environment
+from features.feature_types import STANDARD
 from features.models import Feature, FeatureState
 from features.multivariate.models import (
     MultivariateFeatureOption,
@@ -12,7 +13,22 @@ from features.multivariate.serializers import (
     FeatureMVOptionsValuesResponseSerializer,
     MultivariateOptionValuesSerializer,
 )
-from features.serializers import FeatureStateSerializerBasic
+from features.serializers import (
+    FeatureStateSerializerBasic,
+    SDKIdentityFeatureStateSerializer,
+)
+
+
+def test_sdk_identity_feature_state_serializer__non_multivariate_feature__variant_is_none(
+    mocker: MockerFixture,
+) -> None:
+    # Given - a standard (non-multivariate) feature state
+    feature_state = mocker.MagicMock()
+    feature_state.feature.type = STANDARD
+    serializer = SDKIdentityFeatureStateSerializer(context={})
+
+    # When / Then - non-multivariate features are not part of an experiment
+    assert serializer.get_variant(feature_state) is None
 
 
 @pytest.mark.parametrize(

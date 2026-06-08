@@ -21,6 +21,32 @@ class Settings(BaseSettings):
         default="http",
     )
     """MCP transport to use."""
+    metrics_port: int | None = Field(
+        default=None,
+    )
+    """Serve Prometheus metrics on this port. Disabled when unset."""
+    log_level: str = Field(
+        default="INFO",
+    )
+    """Log level for application loggers."""
+    log_format: Literal["generic", "json"] = Field(
+        default="generic",
+    )
+    """Log output format."""
+    otel_exporter_otlp_endpoint: str | None = Field(
+        default=None,
+    )
+    """OTLP endpoint to export logs and traces to. Export is disabled when
+    unset."""
+    otel_service_name: str = Field(
+        default="flagsmith-mcp",
+    )
+    """Service name reported to OpenTelemetry."""
+    mcp_server_url: str = Field(
+        default="http://127.0.0.1:8000",
+    )
+    """Public base URL of this MCP server, advertised in OAuth protected-resource
+    metadata. Override for HTTP deployments behind a proxy/public hostname."""
 
     @model_validator(mode="after")
     def validate_stdio_token(self) -> "Settings":

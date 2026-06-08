@@ -2,33 +2,45 @@ import logging
 from typing import Any
 
 from django.db import IntegrityError
-from django.db.models import Count, Q, QuerySet
+from django.db.models import Count, Prefetch, Q, QuerySet
+from django.shortcuts import get_object_or_404
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
+from rest_framework.viewsets import GenericViewSet
 
 from app.pagination import CustomPagination
 from environments.views import NestedEnvironmentViewSet
 from experimentation.models import (
     Experiment,
+    ExperimentMetric,
     ExperimentStatus,
+    Metric,
     WarehouseConnection,
+    WarehouseType,
 )
 from experimentation.permissions import (
     ExperimentPermission,
+    MetricPermission,
     WarehouseConnectionPermission,
 )
 from experimentation.serializers import (
     ExperimentListSerializer,
+    ExperimentMetricSerializer,
     ExperimentSerializer,
+    MetricSerializer,
     WarehouseConnectionSerializer,
 )
 from experimentation.services import (
+    annotate_warehouse_event_stats,
     create_experiment_audit_log,
+    create_metric_audit_log,
     create_warehouse_audit_log,
+    mark_warehouse_pending_connection,
+    refresh_warehouse_connection_status,
     transition_experiment_status,
 )
 from users.models import FFAdminUser
@@ -70,6 +82,35 @@ class WarehouseConnectionViewSet(
             instance, self._get_user(self.request), action="deleted"
         )
         instance.delete()
+
+    def list(self, request: Request, *args: object, **kwargs: object) -> Response:
+        environment_api_key: str = self.kwargs["environment_api_key"]
+        connections = list(self.filter_queryset(self.get_queryset()))
+        for connection in connections:
+            annotate_warehouse_event_stats(connection, environment_api_key)
+        serializer = self.get_serializer(connections, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request: Request, *args: object, **kwargs: object) -> Response:
+        connection = self.get_object()
+        annotate_warehouse_event_stats(connection, self.kwargs["environment_api_key"])
+        serializer = self.get_serializer(connection)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["post"], url_path="test-warehouse-connection")
+    def test_warehouse_connection(self, request: Request, **kwargs: object) -> Response:
+        connection: WarehouseConnection = self.get_object()
+        if connection.warehouse_type != WarehouseType.FLAGSMITH:
+            return Response(
+                {"detail": "Test events are only supported for Flagsmith warehouses."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        mark_warehouse_pending_connection(connection)
+        annotate_warehouse_event_stats(connection, self.kwargs["environment_api_key"])
+        if connection.event_stats is not None:
+            refresh_warehouse_connection_status(connection, connection.event_stats)
+        serializer = self.get_serializer(connection)
+        return Response(serializer.data)
 
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         environment = self._get_environment()
@@ -247,6 +288,134 @@ class ExperimentViewSet(
             )
         serializer = self.get_serializer(experiment)
         return Response(serializer.data)
+
+    @staticmethod
+    def _get_user(request: Request) -> FFAdminUser:
+        return request.user  # type: ignore[return-value]
+
+
+class ExperimentMetricViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    GenericViewSet[ExperimentMetric],
+):
+    serializer_class = ExperimentMetricSerializer
+    pagination_class = None
+    permission_classes = [IsAuthenticated, ExperimentPermission]
+    lookup_field = "id"
+    lookup_url_kwarg = "pk"
+
+    # The nested router derives this kwarg from the parent's lookup_url_kwarg
+    # ("experiment_id") plus its "experiment_" nest prefix.
+    experiment_url_kwarg = "experiment_experiment_id"
+
+    def get_queryset(self) -> "QuerySet[ExperimentMetric]":
+        return ExperimentMetric.objects.filter(
+            experiment_id=self.kwargs[self.experiment_url_kwarg],
+            experiment__environment__api_key=self.kwargs["environment_api_key"],
+        ).select_related("metric")
+
+    def get_serializer_context(self) -> dict[str, Any]:
+        context = super().get_serializer_context()
+        context["experiment"] = self._get_experiment()
+        return context
+
+    def _get_experiment(self) -> Experiment:
+        if not hasattr(self, "_experiment"):
+            self._experiment = get_object_or_404(
+                Experiment,
+                id=self.kwargs[self.experiment_url_kwarg],
+                environment__api_key=self.kwargs["environment_api_key"],
+                deleted_at__isnull=True,
+            )
+        return self._experiment
+
+    def perform_create(self, serializer: BaseSerializer[ExperimentMetric]) -> None:
+        serializer.save(experiment=self._get_experiment())
+
+    def destroy(self, request: Request, *args: object, **kwargs: object) -> Response:
+        if self._get_experiment().status == ExperimentStatus.COMPLETED:
+            return Response(
+                {"detail": "Cannot detach metrics from a completed experiment."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return super().destroy(request, *args, **kwargs)
+
+
+class MetricViewSet(
+    NestedEnvironmentViewSet[Metric],
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    serializer_class = MetricSerializer
+    pagination_class = CustomPagination
+    permission_classes = [IsAuthenticated, MetricPermission]
+    model_class = Metric
+    lookup_field = "id"
+    lookup_url_kwarg = "pk"
+
+    def get_queryset(self) -> "QuerySet[Metric]":
+        if getattr(self, "swagger_fake_view", False):
+            return super().get_queryset().none()
+        qs = (
+            super()
+            .get_queryset()
+            .prefetch_related(
+                Prefetch(
+                    "experiment_metrics",
+                    queryset=ExperimentMetric.objects.filter(
+                        experiment__deleted_at__isnull=True
+                    ).select_related("experiment"),
+                )
+            )
+        )
+        if q := self.request.query_params.get("q"):
+            qs = qs.filter(name__icontains=q)
+        return qs
+
+    def perform_create(self, serializer: BaseSerializer[Metric]) -> None:
+        metric: Metric = serializer.save(environment=self._get_environment())
+        create_metric_audit_log(metric, self._get_user(self.request), action="created")
+
+    def perform_update(self, serializer: BaseSerializer[Metric]) -> None:
+        changed_fields = {
+            field
+            for field, value in serializer.validated_data.items()
+            if getattr(serializer.instance, field, None) != value
+        }
+        if not changed_fields:
+            return
+        metric: Metric = serializer.save()
+        create_metric_audit_log(metric, self._get_user(self.request), action="updated")
+
+    def destroy(self, request: Request, *args: object, **kwargs: object) -> Response:
+        instance: Metric = self.get_object()
+        if (
+            ExperimentMetric.objects.filter(
+                metric=instance,
+                experiment__deleted_at__isnull=True,
+            )
+            .exclude(experiment__status=ExperimentStatus.COMPLETED)
+            .exists()
+        ):
+            return Response(
+                {
+                    "detail": (
+                        "Cannot delete a metric attached to an active experiment. "
+                        "Detach it or complete the experiment first."
+                    )
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+        create_metric_audit_log(instance, self._get_user(request), action="deleted")
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @staticmethod
     def _get_user(request: Request) -> FFAdminUser:
