@@ -641,6 +641,7 @@ def test_register__with_sign_up_type__stores_sign_up_type(client, db):  # type: 
     )
 
     # Then
+    print(response.content)
     assert response.status_code == status.HTTP_201_CREATED
 
     response_json = response.json()
