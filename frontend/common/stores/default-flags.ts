@@ -145,6 +145,10 @@ const defaultFlags = {
           'key': 'api_key',
           'label': 'API Key',
         },
+        {
+          'key': 'base_url',
+          'label': 'Base URL',
+        },
       ],
       'image': '/static/images/integrations/heap.svg',
       'perEnvironment': true,

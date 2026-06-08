@@ -26,6 +26,7 @@ def test_heap_generate_user_data__correct_values__returns_expected_data(
     api_key = "123key"
     config = HeapConfiguration(api_key=api_key)
     heap_wrapper = HeapWrapper(config)
+    assert heap_wrapper.url == "https://heapanalytics.com/api/track"
 
     # When
     user_data = heap_wrapper.generate_user_data(
@@ -43,3 +44,17 @@ def test_heap_generate_user_data__correct_values__returns_expected_data(
         },
     }
     assert expected_user_data == user_data
+
+
+def test_heap_wrapper__eu_base_url__uses_eu_url() -> None:
+    # Given
+    config = HeapConfiguration(
+        api_key="123key",
+        base_url="https://eu.heapanalytics.com",
+    )
+
+    # When
+    heap_wrapper = HeapWrapper(config)
+
+    # Then
+    assert heap_wrapper.url == "https://eu.heapanalytics.com/api/track"
