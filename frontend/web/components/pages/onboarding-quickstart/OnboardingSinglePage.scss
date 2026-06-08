@@ -28,10 +28,18 @@
   }
 
   &__loading {
+    display: flex;
+    flex-direction: column;
     min-height: 60vh;
     align-items: center;
     justify-content: center;
+    gap: 4px;
     font-size: 0.9375rem;
+  }
+
+  &__loading-anim {
+    width: min(440px, 70vw);
+    aspect-ratio: 1600 / 1400;
   }
 
   &__crumb {
@@ -154,6 +162,20 @@
       border: 0;
       border-radius: 0;
       color: #1f2328;
+
+      // The global customScrollDark mixin hides the horizontal scrollbar and
+      // flips it to display:block on :hover. As a 12px space-reserving webkit
+      // scrollbar (not overlay), that toggle shoves the page around (flicker).
+      // Reserve the gutter at the overflow level (scroll, not auto) so it's
+      // permanent, and force the styled bar shown in both states — re-showing a
+      // display:none'd webkit scrollbar alone doesn't reliably reserve space.
+      overflow-x: scroll;
+      overflow-y: hidden;
+
+      &::-webkit-scrollbar,
+      &:hover::-webkit-scrollbar {
+        display: block !important;
+      }
     }
 
     // Light syntax palette. Scoped here so it overrides the app's global
@@ -313,130 +335,11 @@
   // Verify (v3) — two columns: a sonar (left) and a live SDK console with the
   // flag card beneath (right). State colours go purple (waiting) → green
   // (connected).
+  // Verify is now a single full-width SDK console (no radar). The --waiting /
+  // --connected modifiers remain for the console's LIVE/LISTENING badge colour.
   &__verify {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
     padding: 24px;
     background-color: var(--color-surface-default);
-
-    @media (max-width: 760px) {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  &__verify-left {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-  }
-
-  &__verify-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-  }
-
-  // State colours for the left column (title carries the colour).
-  &__verify--waiting {
-    .onboarding-single__verify-title {
-      color: var(--color-text-action);
-    }
-    .onboarding-single__radar-dot {
-      background-color: var(--color-icon-action);
-    }
-  }
-
-  &__verify--connected {
-    .onboarding-single__verify-title {
-      color: var(--color-icon-success, #16a34a);
-    }
-    // Whole radar goes green when connected (rings included), not just the dot.
-    .onboarding-single__radar-ring {
-      border-color: var(--color-icon-success, #22c55e);
-    }
-    .onboarding-single__radar-dot {
-      background-color: var(--color-icon-success, #22c55e);
-      box-shadow: 0 0 8px 2px rgba(34, 197, 94, 0.55);
-    }
-  }
-
-  // Radar grows to fill the left column's available height — and the column
-  // stretches to the right side's height — so the two columns stay balanced.
-  &__radar {
-    position: relative;
-    flex: 1 1 0;
-    min-height: 0;
-    aspect-ratio: 1;
-    max-width: 100%;
-    margin-inline: auto;
-  }
-
-  &__radar-ring,
-  &__radar-dot {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    border-radius: 9999px;
-  }
-
-  &__radar-ring {
-    border: 1px solid var(--color-icon-action);
-
-    &--1 {
-      width: 26%;
-      height: 26%;
-      opacity: 0.7;
-      border-width: 2px;
-    }
-    &--2 {
-      width: 51%;
-      height: 51%;
-      opacity: 0.45;
-      border-width: 1.5px;
-    }
-    &--3 {
-      width: 75%;
-      height: 75%;
-      opacity: 0.28;
-    }
-    &--4 {
-      width: 96%;
-      height: 96%;
-      opacity: 0.14;
-    }
-  }
-
-  &__radar-dot {
-    width: 6%;
-    height: 6%;
-    min-width: 16px;
-    min-height: 16px;
-
-    // Two ripples emanate from the dot; they inherit the dot's colour, so they
-    // are purple while waiting and green once connected.
-    &::before,
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 9999px;
-      background-color: inherit;
-      opacity: 0;
-      animation: onboarding-single-ripple 2.4s ease-out infinite;
-    }
-    &::before {
-      animation-delay: 1.2s;
-    }
-  }
-
-  // SDK console (right column). Dark surface, literal hex — these are terminal
-  // colours, not theme tokens.
-  &__verify-right {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
   }
 
   // Honest progress checklist (replaces the SDK console).
@@ -493,6 +396,11 @@
     }
   }
 
+  // The status dot pulses while listening, to signal "live, waiting".
+  &__console-badge--listening &__console-badge-dot {
+    animation: onboarding-single-blink 1.4s ease-in-out infinite;
+  }
+
   &__console-body {
     display: flex;
     flex-direction: column;
@@ -529,31 +437,88 @@
     &--await {
       color: #f0883e;
     }
-    &--cursor {
-      color: #7ee787;
-      animation: onboarding-single-blink 1s step-end infinite;
-    }
   }
 
-  &__flagcard {
+  // Blinking cursor inside the ambient typewriter line (inherits the line's
+  // prompt colour).
+  &__type-cursor {
+    margin-left: 1px;
+    animation: onboarding-single-blink 1s step-end infinite;
+  }
+
+  // "Your flags" — the demo flag rendered as a centred features-table card,
+  // narrow so it reads as the spotlight rather than another full-width strip.
+  &__flags {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 12px 16px;
+    gap: 14px;
+  }
+
+  &__flags-title {
+    font-size: 1rem;
+  }
+
+  &__flagtable-wrap {
+    display: flex;
+    justify-content: center;
+  }
+
+  &__flagtable {
+    width: 100%;
+    max-width: 760px;
+    overflow: hidden;
     background-color: var(--color-surface-default);
+    // Highlighted as the hero element: a faint brand border + a stronger
+    // brand-purple glow (with spread) over a neutral drop, so it clearly pops
+    // off the page rather than reading as just another card.
+    border: 1px solid rgba(104, 55, 252, 0.3);
+    box-shadow: 0 18px 44px 2px rgba(104, 55, 252, 0.2),
+      0 6px 16px rgba(15, 23, 42, 0.1);
 
-    code {
-      font-size: 0.8125rem;
-    }
-
+    // Greyed out until the first evaluation — the flag can't be flipped until
+    // the app is connected, so the whole table reads as inactive. The brand
+    // highlight is dropped here; it belongs to the live (connected) state only.
     &--locked {
-      opacity: 0.8;
+      opacity: 0.55;
+      pointer-events: none;
+      border-color: var(--color-border-default);
+      box-shadow: none;
     }
   }
 
-  &__flagcard-head {
-    font-size: 0.8125rem;
-    font-weight: 600;
+  &__flagtable-colhead {
+    gap: 12px;
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  &__flagtable-col {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+
+    &--feature {
+      flex: 1;
+    }
+    &--enabled {
+      width: 90px;
+    }
+  }
+
+  &__flagtable-row {
+    gap: 12px;
+    padding: 14px 20px;
+  }
+
+  &__flagtable-feature {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__flagtable-enabled {
+    width: 90px;
   }
 
   // Next quests — grayed/locked until the first evaluation.
@@ -661,25 +626,6 @@
     &__page {
       padding: 24px 16px;
     }
-
-    // Stacked single column — no right side to take the height from, so give
-    // the radar a fixed size.
-    &__radar {
-      flex: none;
-      width: 240px;
-      max-width: 100%;
-    }
-  }
-}
-
-@keyframes onboarding-single-ripple {
-  0% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(16);
-    opacity: 0;
   }
 }
 

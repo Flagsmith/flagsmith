@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, Suspense, lazy, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import ErrorMessage from 'components/ErrorMessage'
 import OnboardingSinglePage from 'web/components/pages/onboarding-quickstart/OnboardingSinglePage'
@@ -7,6 +7,12 @@ import { useOnboardingFlagToggle } from 'web/components/pages/onboarding-quickst
 import { useUpdateOrganisationMutation } from 'common/services/useOrganisation'
 import { useUpdateProjectMutation } from 'common/services/useProject'
 import 'web/components/pages/onboarding-quickstart/OnboardingSinglePage.scss'
+
+// Lazy so lottie-web + the animation JSON only load when the loading screen
+// renders; the text-only fallback shows instantly meanwhile.
+const OnboardingLoading = lazy(
+  () => import('web/components/pages/onboarding-quickstart/OnboardingLoading'),
+)
 
 // Provides the single-page flow with real, pre-created resources (org,
 // project, Dev/Prod environments, first flag) and the destination handler.
@@ -70,11 +76,17 @@ const OnboardingSinglePageContainer: FC = () => {
 
   if (resources.status === 'creating') {
     return (
-      <div className='onboarding-single'>
-        <div className='onboarding-single__page onboarding-single__loading text-muted'>
-          Setting up your workspace…
-        </div>
-      </div>
+      <Suspense
+        fallback={
+          <div className='onboarding-single'>
+            <div className='onboarding-single__page onboarding-single__loading text-muted'>
+              Setting up your workspace…
+            </div>
+          </div>
+        }
+      >
+        <OnboardingLoading />
+      </Suspense>
     )
   }
 

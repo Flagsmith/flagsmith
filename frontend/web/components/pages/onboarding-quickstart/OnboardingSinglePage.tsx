@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useMemo, useState } from 'react'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import Switch from 'components/Switch'
@@ -12,6 +12,8 @@ import {
   SDK_LANGS,
 } from 'web/components/pages/onboarding-quickstart/sdkSnippets'
 import { LANGUAGE_LOGOS } from 'web/components/pages/onboarding-quickstart/languageLogos'
+import OnboardingFlagTable from 'web/components/pages/onboarding-quickstart/OnboardingFlagTable'
+import OnboardingTypewriter from 'web/components/pages/onboarding-quickstart/OnboardingTypewriter'
 import 'web/components/pages/onboarding-quickstart/OnboardingSinglePage.scss'
 
 type ConnectTab = 'ai' | 'manual'
@@ -255,9 +257,20 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
   const popularLangs = SDK_LANGS.filter((l) => l.popular)
   const moreLangs = SDK_LANGS.filter((l) => !l.popular)
 
-  // Radar column: just the radar + a single status title. Progress detail
-  // lives in the checklist/console, not here.
-  const verifyTitle = connected ? 'Signal received!' : 'Waiting for connection…'
+  // Waiting-console ambiance: the real env it's listening on (grounds the
+  // LISTENING badge), and the cycling guidance for the typewriter line.
+  const envShort =
+    environmentKey.length > 12
+      ? `${environmentKey.slice(0, 5)}…${environmentKey.slice(-3)}`
+      : environmentKey
+  const waitingPhrases = useMemo(
+    () => [
+      'Listening for your first request…',
+      `Run your app — watching for ${featureName}'s first evaluation`,
+      '👋 Welcome — connect your app and this lights up',
+    ],
+    [featureName],
+  )
 
   // Illustrative visual for each "next quest" card.
   const questVisual = (key: string) => {
@@ -532,121 +545,110 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
             connected ? 'connected' : 'waiting'
           }`}
         >
-          <div className='onboarding-single__verify-left'>
-            <div className='onboarding-single__radar' aria-hidden>
-              <span className='onboarding-single__radar-ring onboarding-single__radar-ring--4' />
-              <span className='onboarding-single__radar-ring onboarding-single__radar-ring--3' />
-              <span className='onboarding-single__radar-ring onboarding-single__radar-ring--2' />
-              <span className='onboarding-single__radar-ring onboarding-single__radar-ring--1' />
-              <span className='onboarding-single__radar-dot' />
+          {/* SDK console, full width. Its body is the honest checklist —
+              every line ticks on a real event (the Copy click, a real
+              request), keeping the terminal look without faking SDK output. */}
+          <div className='onboarding-single__console'>
+            <div className='onboarding-single__console-head'>
+              <span className='onboarding-single__console-light onboarding-single__console-light--r' />
+              <span className='onboarding-single__console-light onboarding-single__console-light--y' />
+              <span className='onboarding-single__console-light onboarding-single__console-light--g' />
+              <span className='onboarding-single__console-name'>
+                flagsmith — sdk console
+              </span>
+              <span
+                className={`onboarding-single__console-badge${
+                  connected
+                    ? ''
+                    : ' onboarding-single__console-badge--listening'
+                }`}
+              >
+                <span
+                  className='onboarding-single__console-badge-dot'
+                  aria-hidden
+                >
+                  ●
+                </span>{' '}
+                {connected ? 'LIVE' : 'LISTENING'}
+              </span>
             </div>
-            <div className='onboarding-single__verify-title text-center'>
-              {verifyTitle}
-            </div>
-          </div>
-
-          <div className='onboarding-single__verify-right'>
-            {/* SDK console, but its body is the honest checklist — every line
-                ticks on a real event (pre-created, the Copy click, a real
-                request). Keeps the terminal look without faking SDK output. */}
-            <div className='onboarding-single__console'>
-              <div className='onboarding-single__console-head'>
-                <span className='onboarding-single__console-light onboarding-single__console-light--r' />
-                <span className='onboarding-single__console-light onboarding-single__console-light--y' />
-                <span className='onboarding-single__console-light onboarding-single__console-light--g' />
-                <span className='onboarding-single__console-name'>
-                  flagsmith — sdk console
-                </span>
-                <span className='onboarding-single__console-badge'>
-                  ● {connected ? 'LIVE' : 'LISTENING'}
-                </span>
-              </div>
-              <div className='onboarding-single__console-body'>
-                {/* The checklist is three tasks the user drives. Copy items
+            <div className='onboarding-single__console-body'>
+              {/* The checklist is three tasks the user drives. Copy items
                     tick on the real Copy click; the first evaluation is the
                     goal, ticking on a real request. Connected appends the
                     connection receipt — what the SDK reported. */}
-                {renderCheck(copiedInstall, 'Copy install command')}
-                {renderCheck(copiedCode, 'Copy code snippet')}
-                {connected ? (
-                  <>
-                    {renderCheck(
-                      true,
-                      `First evaluation of '${featureName}'`,
-                      'done',
-                    )}
-                    {/* Connection receipt — what the SDK reported on the first
+              {/* Waiting only: grounds the LISTENING badge with the real env
+                  it's actually watching. */}
+              {!connected && (
+                <code className='onboarding-single__console-line onboarding-single__console-line--meta'>
+                  {`awaiting first request · env ${envShort}`}
+                </code>
+              )}
+              {renderCheck(copiedInstall, 'Copy install command')}
+              {renderCheck(copiedCode, 'Copy code snippet')}
+              {connected ? (
+                <>
+                  {renderCheck(
+                    true,
+                    `First evaluation of '${featureName}'`,
+                    'done',
+                  )}
+                  {/* Connection receipt — what the SDK reported on the first
                         request. Illustrative values until wired to the live
                         first-request signal. */}
-                    <code className='onboarding-single__console-line onboarding-single__console-line--meta'>
-                      {`SDK initialized · flags loaded · ${featureName}: ${flagEnabled}`}
-                    </code>
-                    <code className='onboarding-single__console-line onboarding-single__console-line--meta'>
-                      User-Agent: Chrome/120.0 · MacBook Pro
-                    </code>
-                    <code className='onboarding-single__console-line onboarding-single__console-line--meta'>
-                      IP: 192.168.1.42 · 2024-01-15 14:23:01
-                    </code>
-                    <code className='onboarding-single__console-line onboarding-single__console-line--connected'>
-                      ✓ Connected
-                    </code>
-                    {/* Toggle's now unlocked — nudge to flip it; reflects the
+                  <code className='onboarding-single__console-line onboarding-single__console-line--meta'>
+                    {`SDK initialized · flags loaded · ${featureName}: ${flagEnabled}`}
+                  </code>
+                  <code className='onboarding-single__console-line onboarding-single__console-line--meta'>
+                    User-Agent: Chrome/120.0 · MacBook Pro
+                  </code>
+                  <code className='onboarding-single__console-line onboarding-single__console-line--meta'>
+                    IP: 192.168.1.42 · 2024-01-15 14:23:01
+                  </code>
+                  <code className='onboarding-single__console-line onboarding-single__console-line--connected'>
+                    ✓ Connected
+                  </code>
+                  {/* Toggle's now unlocked — nudge to flip it; reflects the
                         real flag state. */}
-                    <code className='onboarding-single__console-line onboarding-single__console-line--prompt'>
-                      {flagEnabled
-                        ? `✓ ${featureName} is live`
-                        : `→ flip ${featureName} on to see it change`}
-                    </code>
-                  </>
-                ) : (
-                  <>
-                    {/* The one task still required — highlighted as awaiting. */}
-                    <code className='onboarding-single__console-line onboarding-single__console-line--await'>
-                      {`[→] First evaluation of '${featureName}'…`}
-                    </code>
-                    <code className='onboarding-single__console-line onboarding-single__console-line--cursor'>
-                      ▋
-                    </code>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Flag toggle — gated until connected. Becomes the real,
-                persisting control once a first request lands. */}
-            <div
-              className={`onboarding-single__flagcard rounded-md border border-default${
-                connected ? '' : ' onboarding-single__flagcard--locked'
-              }`}
-            >
-              <div className='onboarding-single__flagcard-head d-flex align-items-center gap-1'>
-                {!connected && (
-                  <Icon
-                    name='lock'
-                    width={14}
-                    fill='var(--color-icon-secondary)'
+                  <code className='onboarding-single__console-line onboarding-single__console-line--prompt'>
+                    {flagEnabled
+                      ? `✓ ${featureName} is live`
+                      : `→ flip ${featureName} on to see it change`}
+                  </code>
+                </>
+              ) : (
+                <>
+                  {/* The one task left — a plain [ ] (no arrow), but kept amber
+                      to draw the eye to it. */}
+                  <code className='onboarding-single__console-line onboarding-single__console-line--await'>
+                    {`[ ] First evaluation of '${featureName}'…`}
+                  </code>
+                  {/* Ambient typewriter — cycles honest guidance while it
+                      listens (carries its own blinking cursor). */}
+                  <OnboardingTypewriter
+                    phrases={waitingPhrases}
+                    className='onboarding-single__console-line onboarding-single__console-line--prompt'
                   />
-                )}
-                <span className='text-muted'>Your flag</span>
-              </div>
-              <div className='d-flex align-items-center gap-2'>
-                <code className='onboarding-single__chip rounded-sm bg-surface-subtle text-default'>
-                  {featureName}
-                </code>
-                <div className='ms-auto d-flex align-items-center gap-2'>
-                  <span className='text-muted'>
-                    {connected && flagEnabled ? 'On' : 'Off'}
-                  </span>
-                  <Switch
-                    checked={connected && flagEnabled}
-                    disabled={!connected || flagToggleDisabled}
-                    onChange={onToggleFlag}
-                    aria-label={`Toggle ${featureName}`}
-                  />
-                </div>
-              </div>
+                </>
+              )}
             </div>
           </div>
+        </div>
+
+        {/* Your flags — the real flag in a centred features-table view, to
+            spotlight the product's core surface. The toggle is the real,
+            persisting control, gated until a first request lands. */}
+        <div className='onboarding-single__flags'>
+          <div className='onboarding-single__flags-title text-default fw-semibold text-center'>
+            Your flags
+          </div>
+          <OnboardingFlagTable
+            featureName={featureName}
+            connected={connected}
+            flagEnabled={flagEnabled}
+            flagToggleDisabled={flagToggleDisabled}
+            onToggleFlag={onToggleFlag}
+          />
         </div>
 
         {/* Next quests — grayed/locked until the first evaluation. */}
