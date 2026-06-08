@@ -566,7 +566,7 @@ def test_handle_api_usage_notifications__no_admin_users__skips_notification(
     assert any(e.get("event") == "notification.no_recipients" for e in log.events)
     assert OrganisationAPIUsageNotification.objects.filter(
         organisation=organisation,
-        percent_usage=91,
+        percent_usage=90,
     ).exists()
 
 
