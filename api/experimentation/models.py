@@ -1,3 +1,5 @@
+import typing
+
 from django.db import models
 from django.db.models import Q
 from django_lifecycle import (  # type: ignore[import-untyped]
@@ -13,6 +15,9 @@ from experimentation.tasks import (
     add_environment_key_to_ingestion,
     delete_environment_key_from_ingestion,
 )
+
+if typing.TYPE_CHECKING:
+    from experimentation.dataclasses import WarehouseEventStats
 
 
 class WarehouseType(models.TextChoices):
@@ -48,6 +53,10 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
         models.JSONField(null=True, blank=True)
     )
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # Populated at serialization time for flagsmith connections from ClickHouse;
+    # never persisted to the database.
+    event_stats: "WarehouseEventStats | None" = None
 
     class Meta:
         constraints = [
