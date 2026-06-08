@@ -15,7 +15,7 @@ const Project = {
 
   flagsmithClientEdgeAPI: 'https://edge.bullet-train-staging.win/api/v1/',
 
-  flagsmithClientEventsAPI: 'https://events.bullet-train-staging.win/v1/events',
+  flagsmithClientEventsAPI: 'https://events.bullet-train-staging.win/',
   // This is used for Sentry tracking
   maintenance: false,
   plans: {

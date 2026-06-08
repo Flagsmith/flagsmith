@@ -1,8 +1,8 @@
 import { getWarehousePollingInterval } from 'components/pages/environment-settings/tabs/warehouse-tab/warehousePolling'
 
 describe('getWarehousePollingInterval', () => {
-  it('polls every 30s while pending_connection', () => {
-    expect(getWarehousePollingInterval('pending_connection')).toBe(30000)
+  it('polls every minute while pending_connection', () => {
+    expect(getWarehousePollingInterval('pending_connection')).toBe(60000)
   })
 
   it('does not poll for connected', () => {

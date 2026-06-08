@@ -119,7 +119,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
       />
       <hr className='my-4' />
       {connection.status === 'pending_connection' && (
-        <div className='d-flex flex-row align-items-center gap-2 text-muted mb-2'>
+        <div className='d-flex flex-row flex-nowrap align-items-center gap-2 text-muted mb-2'>
           <Icon name='info' width={14} fill='#656D7B' />
           <span>
             Your test event is on its way. It can take up to a few hours to
@@ -132,16 +132,6 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
         {!isFlagsmith && (
           <Button theme='outline' size='small' disabled>
             Test connection
-          </Button>
-        )}
-        {isFlagsmith && isPending && (
-          <Button
-            theme='outline'
-            size='small'
-            onClick={onSendTestEvent}
-            disabled={isSendingTestEvent}
-          >
-            Verify now
           </Button>
         )}
         {isFlagsmith && !isPending && !isConnected && (

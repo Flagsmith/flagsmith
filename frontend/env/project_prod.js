@@ -22,7 +22,7 @@ const Project = {
 
   flagsmithClientEdgeAPI: 'https://edge.api.flagsmith.com/api/v1/',
 
-  flagsmithClientEventsAPI: 'https://events.api.flagsmith.com/v1/events',
+  flagsmithClientEventsAPI: 'https://events.api.flagsmith.com/',
 
   hubspot: '//js-eu1.hs-scripts.com/143451822.js',
 

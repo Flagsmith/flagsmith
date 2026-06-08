@@ -7,9 +7,9 @@ import {
   useUpdateWarehouseConnectionMutation,
 } from 'common/services/useWarehouseConnection'
 import { SnowflakeConfig } from 'common/types/responses'
-import Loader from 'components/Loader'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
 import WarehouseSetup from './WarehouseSetup'
+import WarehouseSetupSkeleton from './WarehouseSetupSkeleton'
 import ConfigForm from './ConfigForm'
 import sendWarehouseTestEvent from './sendWarehouseTestEvent'
 import { getWarehousePollingInterval } from './warehousePolling'
@@ -118,7 +118,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
   if (isLoading) {
     return (
       <div className='mt-4 col-md-12'>
-        <Loader />
+        <WarehouseSetupSkeleton />
       </div>
     )
   }
