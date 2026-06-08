@@ -3,12 +3,21 @@ from typing import Any
 from rest_framework import serializers
 
 from environments.models import Environment
+from experimentation.dataclasses import WarehouseEventStats
+from experimentation.metric_definitions import validate_metric_definition
 from experimentation.models import (
     Experiment,
+    ExperimentMetric,
+    ExperimentStatus,
+    Metric,
     WarehouseConnection,
     WarehouseType,
 )
-from experimentation.types import SNOWFLAKE_DEFAULTS, SnowflakeConfig
+from experimentation.types import (
+    SNOWFLAKE_DEFAULTS,
+    MetricExperimentResult,
+    SnowflakeConfig,
+)
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
 from features.multivariate.serializers import NestedMultivariateFeatureOptionSerializer
@@ -17,10 +26,21 @@ from features.multivariate.serializers import NestedMultivariateFeatureOptionSer
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     name = serializers.CharField(max_length=255, required=False)
     config = serializers.JSONField(default=None, required=False, allow_null=True)
+    total_events_received = serializers.SerializerMethodField()
+    unique_events_count = serializers.SerializerMethodField()
 
     class Meta:
         model = WarehouseConnection
-        fields = ("id", "warehouse_type", "status", "name", "config", "created_at")
+        fields = (
+            "id",
+            "warehouse_type",
+            "status",
+            "name",
+            "config",
+            "created_at",
+            "total_events_received",
+            "unique_events_count",
+        )
         read_only_fields = ("id", "status", "created_at")
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
@@ -57,6 +77,14 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
         result: WarehouseConnection = super().create(validated_data)
         return result
 
+    def get_total_events_received(self, obj: WarehouseConnection) -> int | None:
+        stats: WarehouseEventStats | None = obj.event_stats
+        return stats.total_events_received if stats else None
+
+    def get_unique_events_count(self, obj: WarehouseConnection) -> int | None:
+        stats: WarehouseEventStats | None = obj.event_stats
+        return stats.unique_events_count if stats else None
+
     @staticmethod
     def _generate_name(warehouse_type: str, environment: Environment) -> str:
         label = WarehouseType(warehouse_type).label
@@ -74,6 +102,91 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             **config,  # type: ignore[typeddict-item]
         }
         return merged
+
+
+class MetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    experiments = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Metric
+        fields = (
+            "id",
+            "name",
+            "description",
+            "aggregation",
+            "direction",
+            "definition",
+            "experiments",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = (
+            "id",
+            "experiments",
+            "created_at",
+            "updated_at",
+        )
+
+    def get_experiments(self, metric: Metric) -> list[MetricExperimentResult]:
+        return [
+            {
+                "id": experiment_metric.experiment.id,
+                "name": experiment_metric.experiment.name,
+                "status": experiment_metric.experiment.status,
+            }
+            for experiment_metric in metric.experiment_metrics.all()
+        ]
+
+    def validate_definition(self, definition: object) -> object:
+        error = validate_metric_definition(definition)
+        if error:
+            raise serializers.ValidationError(error)
+        return definition
+
+
+class ExperimentMetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    metric = serializers.PrimaryKeyRelatedField(  # type: ignore[var-annotated]
+        queryset=Metric.objects.all(),
+    )
+    metric_name = serializers.CharField(source="metric.name", read_only=True)
+    aggregation = serializers.CharField(source="metric.aggregation", read_only=True)
+
+    class Meta:
+        model = ExperimentMetric
+        fields = (
+            "id",
+            "metric",
+            "metric_name",
+            "aggregation",
+            "expected_direction",
+            "created_at",
+        )
+        read_only_fields = ("id", "created_at")
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        experiment: Experiment = self.context["experiment"]
+
+        if experiment.status == ExperimentStatus.COMPLETED:
+            raise serializers.ValidationError(
+                "Cannot modify metrics of a completed experiment."
+            )
+
+        metric: Metric = attrs.get("metric", getattr(self.instance, "metric", None))
+
+        if metric.environment_id != experiment.environment_id:
+            raise serializers.ValidationError(
+                {"metric": "Metric must belong to the experiment's environment."}
+            )
+
+        attached = experiment.experiment_metrics.all()
+        if isinstance(self.instance, ExperimentMetric):
+            attached = attached.exclude(pk=self.instance.pk)
+
+        if "metric" in attrs and attached.filter(metric=metric).exists():
+            raise serializers.ValidationError(
+                {"metric": "Metric is already attached to this experiment."}
+            )
+        return attrs
 
 
 class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]

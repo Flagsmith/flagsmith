@@ -1,13 +1,42 @@
 from collections.abc import AsyncIterator
+from typing import Callable
 
+import httpx
 import openapi_pydantic as openapi
 import pytest
 from fastmcp import Client, FastMCP
 from fastmcp.client.transports import FastMCPTransport
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+    InMemorySpanExporter,
+)
 from respx import MockRouter
 
 from flagsmith_mcp import config, constants
 from flagsmith_mcp import server as server_module
+from flagsmith_mcp.telemetry import ClientInfoSpanProcessor
+
+HTTPClientFactoryFixture = Callable[[FastMCP], AsyncIterator[httpx.AsyncClient]]
+
+
+@pytest.fixture(scope="session")
+def span_exporter() -> InMemorySpanExporter:
+    # The global tracer provider can only be set once per process, hence
+    # the session scope.
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider()
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
+    provider.add_span_processor(ClientInfoSpanProcessor())
+    trace.set_tracer_provider(provider)
+    return exporter
+
+
+@pytest.fixture
+def finished_spans(span_exporter: InMemorySpanExporter) -> InMemorySpanExporter:
+    span_exporter.clear()
+    return span_exporter
 
 
 @pytest.fixture
@@ -55,3 +84,24 @@ def server() -> FastMCP:
 async def client(server: FastMCP) -> AsyncIterator[Client[FastMCPTransport]]:
     async with Client(transport=server) as connected:
         yield connected
+
+
+@pytest.fixture
+def http_client_factory() -> HTTPClientFactoryFixture:
+    async def factory(server: FastMCP) -> AsyncIterator[httpx.AsyncClient]:
+        transport = httpx.ASGITransport(app=server.http_app())
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://testserver"
+        ) as connected:
+            yield connected
+
+    return factory
+
+
+@pytest.fixture
+async def http_client(
+    server: FastMCP,
+    http_client_factory: HTTPClientFactoryFixture,
+) -> AsyncIterator[httpx.AsyncClient]:
+    async for client in http_client_factory(server):
+        yield client

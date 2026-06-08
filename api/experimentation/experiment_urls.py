@@ -1,10 +1,15 @@
-from rest_framework.routers import DefaultRouter
+from rest_framework_nested import routers  # type: ignore[import-untyped]
 
-from experimentation.views import ExperimentViewSet
+from experimentation.views import ExperimentMetricViewSet, ExperimentViewSet
 
 app_name = "experiments"
 
-router = DefaultRouter()
+router = routers.DefaultRouter()
 router.register(r"", ExperimentViewSet, basename="experiments")
 
-urlpatterns = router.urls
+experiments_router = routers.NestedSimpleRouter(router, r"", lookup="experiment")
+experiments_router.register(
+    r"metrics", ExperimentMetricViewSet, basename="experiment-metrics"
+)
+
+urlpatterns = router.urls + experiments_router.urls

@@ -45,7 +45,7 @@ from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
 
-from .constants import INTERSECTION, UNION
+from .constants import CONTROL_VARIANT_KEY, INTERSECTION, UNION
 from .feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
     exceeds_segment_override_limit,
@@ -53,8 +53,9 @@ from .feature_segments.limits import (
 from .feature_segments.serializers import (
     CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
-from .feature_types import FEATURE_TYPE_CHOICES
+from .feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE
 from .models import Feature, FeatureState
+from .multivariate.models import MultivariateFeatureOption
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
 
 
@@ -625,6 +626,27 @@ class SDKFeatureStateSerializer(
         "identity",
         "feature_segment",
     )
+
+
+class SDKIdentityFeatureStateSerializer(SDKFeatureStateSerializer):
+    variant = serializers.SerializerMethodField()
+
+    class Meta(SDKFeatureStateSerializer.Meta):
+        fields = SDKFeatureStateSerializer.Meta.fields + ("variant",)  # type: ignore[assignment]
+
+    @extend_schema_field({"type": "string", "nullable": True})
+    def get_variant(self, obj: FeatureState) -> str | None:
+        if obj.feature.type != MULTIVARIATE:
+            return None
+        identity = self.context["identity"]
+        value_object = obj.get_multivariate_feature_state_value(
+            identity.get_hash_key(
+                identity.environment.use_identity_composite_key_for_hashing
+            )
+        )
+        if isinstance(value_object, MultivariateFeatureOption):
+            return value_object.key
+        return CONTROL_VARIANT_KEY
 
 
 class FeatureStateSerializerBasic(WritableNestedModelSerializer):

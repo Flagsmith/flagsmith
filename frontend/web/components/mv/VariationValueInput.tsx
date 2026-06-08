@@ -83,22 +83,21 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
       </div>
       <div className='ml-3' style={{ width: 160 }}>
         <InputGroup
-          type='text'
+          type='number'
           data-test={`featureVariationWeight${Utils.featureStateToValue(
             value,
           )}`}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const val = Utils.safeParseEventValue(e)
             onChange({
               ...value,
-              default_percentage_allocation: Utils.safeParseEventValue(e)
-                ? parseInt(Utils.safeParseEventValue(e))
-                : null,
+              default_percentage_allocation: val ? parseFloat(val) : null,
             })
           }}
           value={value.default_percentage_allocation}
           inputProps={{
-            maxLength: 3,
             readOnly: disabled,
+            step: 'any',
           }}
           title={weightTitle}
         />

@@ -1,38 +1,14 @@
 from collections.abc import AsyncIterator
-from typing import Callable
 
 import httpx
 import pytest
+from conftest import HTTPClientFactoryFixture
 from fastmcp import FastMCP
 
 from flagsmith_mcp import config
 from flagsmith_mcp import server as server_module
 
-HTTPClientFactoryFixture = Callable[[FastMCP], AsyncIterator[httpx.AsyncClient]]
-
-
 PRM_PATH = "/.well-known/oauth-protected-resource/mcp"
-
-
-@pytest.fixture
-def http_client_factory() -> HTTPClientFactoryFixture:
-    async def factory(server: FastMCP) -> AsyncIterator[httpx.AsyncClient]:
-        transport = httpx.ASGITransport(app=server.http_app())
-        async with httpx.AsyncClient(
-            transport=transport, base_url="http://testserver"
-        ) as connected:
-            yield connected
-
-    return factory
-
-
-@pytest.fixture
-async def http_client(
-    server: FastMCP,
-    http_client_factory: HTTPClientFactoryFixture,
-) -> AsyncIterator[httpx.AsyncClient]:
-    async for client in http_client_factory(server):
-        yield client
 
 
 @pytest.fixture
