@@ -328,7 +328,7 @@ Attributes:
 ### `segment_membership.backfill.environment.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:111`
+ - `api/segment_membership/tasks.py:112`
 
 Attributes:
  - `environment.id`
@@ -338,7 +338,7 @@ Attributes:
 ### `segment_membership.backfill.environment.failed`
 
 Logged at `exception` from:
- - `api/segment_membership/tasks.py:104`
+ - `api/segment_membership/tasks.py:105`
 
 Attributes:
  - `environment.id`
@@ -347,8 +347,8 @@ Attributes:
 ### `segment_membership.backfill.skipped`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:68`
- - `api/segment_membership/tasks.py:73`
+ - `api/segment_membership/tasks.py:69`
+ - `api/segment_membership/tasks.py:74`
 
 Attributes:
  - `reason`
@@ -366,7 +366,7 @@ Attributes:
 ### `segment_membership.refresh.project.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:186`
+ - `api/segment_membership/tasks.py:187`
 
 Attributes:
  - `membership_counts.count`
@@ -376,7 +376,7 @@ Attributes:
 ### `segment_membership.refresh.project.failed`
 
 Logged at `exception` from:
- - `api/segment_membership/tasks.py:159`
+ - `api/segment_membership/tasks.py:160`
 
 Attributes:
  - `project.id`
@@ -384,8 +384,8 @@ Attributes:
 ### `segment_membership.refresh.project.skipped`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:130`
- - `api/segment_membership/tasks.py:139`
+ - `api/segment_membership/tasks.py:131`
+ - `api/segment_membership/tasks.py:140`
 
 Attributes:
  - `project.id`
@@ -394,7 +394,9 @@ Attributes:
 ### `segment_membership.tombstone.skipped`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:210`
+ - `api/segment_membership/tasks.py:211`
+ - `api/segment_membership/tasks.py:224`
+ - `api/segment_membership/tasks.py:233`
 
 Attributes:
  - `env_key`
@@ -404,7 +406,7 @@ Attributes:
 ### `segment_membership.tombstone.written`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:224`
+ - `api/segment_membership/tasks.py:247`
 
 Attributes:
  - `env_key`
