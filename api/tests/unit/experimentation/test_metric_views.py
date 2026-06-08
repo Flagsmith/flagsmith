@@ -292,38 +292,30 @@ def test_list_metrics__attached_experiments__included(
     ]
 
 
-def test_list_metrics__soft_deleted_experiment__excluded_from_experiments(
+@pytest.mark.parametrize(
+    "soft_deleted_attachment",
+    [
+        pytest.param(False, id="unattached"),
+        pytest.param(True, id="soft-deleted-attachment"),
+    ],
+)
+def test_list_metrics__no_active_attachment__empty_experiments(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
+    soft_deleted_attachment: bool,
     enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
-    metric = _metric(environment, "ghost-attachment")
-    ExperimentMetric.objects.create(
-        experiment=experiment,
-        metric=metric,
-        expected_direction=ExpectedDirection.INCREASE,
-    )
-    experiment.delete()
-
-    # When
-    response = admin_client_new.get(_list_url(environment))
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["results"][0]["experiments"] == []
-
-
-def test_list_metrics__unattached_metric__empty_experiments(
-    admin_client_new: APIClient,
-    environment: Environment,
-    enable_features: "EnableFeaturesFixture",
-) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-    _metric(environment, "orphan")
+    metric = _metric(environment, "no-experiments")
+    if soft_deleted_attachment:
+        ExperimentMetric.objects.create(
+            experiment=experiment,
+            metric=metric,
+            expected_direction=ExpectedDirection.INCREASE,
+        )
+        experiment.delete()
 
     # When
     response = admin_client_new.get(_list_url(environment))
@@ -343,6 +335,9 @@ def test_update_metric__patch__updates_and_audits(
     metric = _metric(environment, "before")
 
     # When
+    no_op_response = admin_client_new.patch(
+        _detail_url(environment, metric), data={"name": "before"}, format="json"
+    )
     response = admin_client_new.patch(
         _detail_url(environment, metric),
         data={"name": "after", "description": "new desc"},
@@ -350,16 +345,20 @@ def test_update_metric__patch__updates_and_audits(
     )
 
     # Then
+    assert no_op_response.status_code == status.HTTP_200_OK
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["name"] == "after"
     metric.refresh_from_db()
     assert metric.name == "after"
     assert metric.description == "new desc"
-    assert AuditLog.objects.filter(
-        related_object_type=RelatedObjectType.METRIC.name,
-        related_object_id=metric.id,
-        log__contains="updated",
-    ).exists()
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.METRIC.name,
+            related_object_id=metric.id,
+            log__contains="updated",
+        ).count()
+        == 1
+    )
 
 
 def test_update_metric__invalid_definition__returns_400(
@@ -435,69 +434,42 @@ def test_delete_metric__attached_to_active_experiment__returns_409(
     assert Metric.objects.filter(name="attached").exists()
 
 
-def test_delete_metric__attached_to_completed_experiment__returns_204(
+@pytest.mark.parametrize(
+    "attachment",
+    [
+        pytest.param("none", id="unattached"),
+        pytest.param("completed", id="completed-experiment"),
+        pytest.param("soft-deleted", id="soft-deleted-experiment"),
+    ],
+)
+def test_delete_metric__no_active_attachment__returns_204(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
+    attachment: str,
     enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
-    experiment.status = ExperimentStatus.COMPLETED
-    experiment.save()
-    metric = _metric(environment, "done")
-    ExperimentMetric.objects.create(
-        experiment=experiment,
-        metric=metric,
-        expected_direction=ExpectedDirection.INCREASE,
-    )
+    metric = _metric(environment, "deletable")
+    if attachment == "completed":
+        experiment.status = ExperimentStatus.COMPLETED
+        experiment.save()
+    if attachment in ("completed", "soft-deleted"):
+        ExperimentMetric.objects.create(
+            experiment=experiment,
+            metric=metric,
+            expected_direction=ExpectedDirection.INCREASE,
+        )
+    if attachment == "soft-deleted":
+        experiment.delete()
 
     # When
     response = admin_client_new.delete(_detail_url(environment, metric))
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert not Metric.objects.filter(name="done").exists()
-
-
-def test_delete_metric__attached_to_soft_deleted_experiment__returns_204(
-    admin_client_new: APIClient,
-    environment: Environment,
-    experiment: Experiment,
-    enable_features: "EnableFeaturesFixture",
-) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-    metric = _metric(environment, "ghost")
-    ExperimentMetric.objects.create(
-        experiment=experiment,
-        metric=metric,
-        expected_direction=ExpectedDirection.INCREASE,
-    )
-    experiment.delete()
-
-    # When
-    response = admin_client_new.delete(_detail_url(environment, metric))
-
-    # Then
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-
-
-def test_delete_metric__unattached__returns_204(
-    admin_client_new: APIClient,
-    environment: Environment,
-    enable_features: "EnableFeaturesFixture",
-) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-    metric = _metric(environment, "orphan")
-
-    # When
-    response = admin_client_new.delete(_detail_url(environment, metric))
-
-    # Then
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert not Metric.objects.filter(name="orphan").exists()
+    assert not Metric.objects.filter(name="deletable").exists()
 
 
 def test_list_metrics__unknown_environment__returns_403(

@@ -361,6 +361,8 @@ class MetricViewSet(
     lookup_url_kwarg = "pk"
 
     def get_queryset(self) -> "QuerySet[Metric]":
+        if getattr(self, "swagger_fake_view", False):
+            return super().get_queryset().none()
         qs = (
             super()
             .get_queryset()
@@ -373,8 +375,7 @@ class MetricViewSet(
                 )
             )
         )
-        q = self.request.query_params.get("q")
-        if q:
+        if q := self.request.query_params.get("q"):
             qs = qs.filter(name__icontains=q)
         return qs
 
@@ -383,6 +384,13 @@ class MetricViewSet(
         create_metric_audit_log(metric, self._get_user(self.request), action="created")
 
     def perform_update(self, serializer: BaseSerializer[Metric]) -> None:
+        changed_fields = {
+            field
+            for field, value in serializer.validated_data.items()
+            if getattr(serializer.instance, field, None) != value
+        }
+        if not changed_fields:
+            return
         metric: Metric = serializer.save()
         create_metric_audit_log(metric, self._get_user(self.request), action="updated")
 
