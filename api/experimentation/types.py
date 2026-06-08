@@ -16,6 +16,15 @@ class MetricDefinitionV1(TypedDict):
 MetricDefinition = MetricDefinitionV1
 
 
+class MetricExperimentResult(TypedDict):
+    """A lightweight view of an experiment using a metric, as returned in the
+    metric's ``experiments`` field."""
+
+    id: int
+    name: str
+    status: str
+
+
 class SnowflakeConfig(TypedDict):
     account_identifier: str
     warehouse: str

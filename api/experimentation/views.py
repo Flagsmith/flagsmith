@@ -2,7 +2,7 @@ import logging
 from typing import Any
 
 from django.db import IntegrityError
-from django.db.models import Count, Q, QuerySet
+from django.db.models import Count, Prefetch, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
@@ -350,9 +350,9 @@ class MetricViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
-    # Metrics are environment-scoped and immutable for now (no update action).
     serializer_class = MetricSerializer
     pagination_class = CustomPagination
     permission_classes = [IsAuthenticated, MetricPermission]
@@ -360,9 +360,39 @@ class MetricViewSet(
     lookup_field = "id"
     lookup_url_kwarg = "pk"
 
+    def get_queryset(self) -> "QuerySet[Metric]":
+        if getattr(self, "swagger_fake_view", False):
+            return super().get_queryset().none()
+        qs = (
+            super()
+            .get_queryset()
+            .prefetch_related(
+                Prefetch(
+                    "experiment_metrics",
+                    queryset=ExperimentMetric.objects.filter(
+                        experiment__deleted_at__isnull=True
+                    ).select_related("experiment"),
+                )
+            )
+        )
+        if q := self.request.query_params.get("q"):
+            qs = qs.filter(name__icontains=q)
+        return qs
+
     def perform_create(self, serializer: BaseSerializer[Metric]) -> None:
         metric: Metric = serializer.save(environment=self._get_environment())
         create_metric_audit_log(metric, self._get_user(self.request), action="created")
+
+    def perform_update(self, serializer: BaseSerializer[Metric]) -> None:
+        changed_fields = {
+            field
+            for field, value in serializer.validated_data.items()
+            if getattr(serializer.instance, field, None) != value
+        }
+        if not changed_fields:
+            return
+        metric: Metric = serializer.save()
+        create_metric_audit_log(metric, self._get_user(self.request), action="updated")
 
     def destroy(self, request: Request, *args: object, **kwargs: object) -> Response:
         instance: Metric = self.get_object()
