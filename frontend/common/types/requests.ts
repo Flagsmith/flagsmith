@@ -25,6 +25,9 @@ import {
   StageActionBody,
   ChangeRequest,
   ExperimentStatus,
+  MetricAggregation,
+  MetricDirection,
+  MetricDefinition,
   FlagsmithValue,
   TagStrategy,
   FeatureType,
@@ -998,6 +1001,7 @@ export type Req = {
     config?: Record<string, string>
   }
   deleteWarehouseConnection: { environmentId: string; id: number }
+  testWarehouseConnection: { environmentId: string; id: number }
   updateWarehouseConnection: {
     environmentId: string
     id: number
@@ -1014,5 +1018,26 @@ export type Req = {
   }
   experimentAction: { environmentId: string; experimentId: number }
   deleteExperiment: { environmentId: string; experimentId: number }
+  getMetrics: PagedRequest<{
+    environmentId: string
+    q?: string
+  }>
+  getMetric: { environmentId: string; metricId: number }
+  createMetric: {
+    environmentId: string
+    body: {
+      name: string
+      description: string
+      aggregation: MetricAggregation
+      direction: MetricDirection
+      definition: MetricDefinition
+    }
+  }
+  updateMetric: {
+    environmentId: string
+    metricId: number
+    body: Req['createMetric']['body']
+  }
+  deleteMetric: { environmentId: string; metricId: number }
   // END OF TYPES
 }

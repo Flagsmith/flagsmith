@@ -98,6 +98,15 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                   </SidebarLink>
                 )
               )}
+              {Utils.getFlagsmithHasFeature('experiment_metrics') && (
+                <SidebarLink
+                  id={mobile ? undefined : 'metrics-link'}
+                  icon='bar-chart'
+                  to={`/project/${projectId}/environment/${environmentId}/metrics`}
+                >
+                  Metrics
+                </SidebarLink>
+              )}
               <SidebarLink
                 id='scheduled-link'
                 icon='timer'

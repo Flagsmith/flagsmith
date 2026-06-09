@@ -581,6 +581,33 @@ export type ExperimentStatus = 'created' | 'running' | 'paused' | 'completed'
 
 export type ExperimentStatusCounts = Record<ExperimentStatus, number>
 
+export type MetricAggregation = 'count' | 'sum' | 'mean' | 'occurrence'
+
+export type MetricDirection = 'up' | 'down' | 'informational'
+
+export type MetricDefinition = {
+  version: number
+  event: string
+}
+
+export type MetricExperiment = {
+  id: number
+  name: string
+  status: ExperimentStatus
+}
+
+export type Metric = {
+  id: number
+  name: string
+  description: string
+  aggregation: MetricAggregation
+  direction: MetricDirection
+  definition: MetricDefinition
+  experiments: MetricExperiment[]
+  created_at: string
+  updated_at: string
+}
+
 export type ExperimentFeature = {
   id: number
   name: string
@@ -1146,6 +1173,8 @@ export type WarehouseConnection = {
   name: string
   config: SnowflakeConfig | Record<string, never>
   created_at: string
+  total_events_received: number | null
+  unique_events_count: number | null
 }
 
 export type Res = {
@@ -1379,5 +1408,7 @@ export type Res = {
     status_counts?: ExperimentStatusCounts
   }
   experiment: Experiment
+  metric: Metric
+  metrics: PagedResponse<Metric>
   // END OF TYPES
 }

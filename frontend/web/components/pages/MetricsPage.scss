@@ -1,0 +1,40 @@
+.metrics-page {
+  &__banner {
+    padding: 12px 16px;
+    border: 1px solid var(--color-border-default);
+  }
+
+  &__banner-text {
+    font-size: var(--font-body-sm-size);
+
+    strong {
+      color: var(--color-text-default);
+      font-weight: var(--font-weight-semibold);
+    }
+  }
+
+  &__banner-link {
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__controls {
+    gap: 12px;
+  }
+
+  &__search {
+    flex: 1;
+
+    > div {
+      width: 100%;
+    }
+
+    input {
+      width: 100%;
+    }
+  }
+}

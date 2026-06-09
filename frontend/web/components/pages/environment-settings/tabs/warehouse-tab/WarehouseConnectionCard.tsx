@@ -15,6 +15,8 @@ type WarehouseConnectionCardProps = {
   connection: WarehouseConnection
   onDelete: () => void
   onEdit?: () => void
+  onSendTestEvent: () => void
+  isSendingTestEvent: boolean
 }
 
 const STATUS_COLOUR: Record<WarehouseConnectionStatus, string> = {
@@ -38,13 +40,19 @@ const TYPE_LABEL: Partial<Record<WarehouseType, string>> = {
 
 const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   connection,
+  isSendingTestEvent,
   onDelete,
   onEdit,
+  onSendTestEvent,
 }) => {
   const typeLabel =
     connection.warehouse_type !== 'flagsmith'
       ? TYPE_LABEL[connection.warehouse_type] ?? connection.warehouse_type
       : null
+
+  const isFlagsmith = connection.warehouse_type === 'flagsmith'
+  const isPending = connection.status === 'pending_connection'
+  const isConnected = connection.status === 'connected'
 
   const handleDelete = () => {
     openConfirm({
@@ -106,19 +114,34 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
       <WarehouseStats
         errored={connection.status === 'errored'}
         lastEventReceived='-'
-        totalEventsReceived={0}
-        uniqueEventsCount={0}
+        totalEventsReceived={connection.total_events_received}
+        uniqueEventsCount={connection.unique_events_count}
       />
       <hr className='my-4' />
+      {connection.status === 'pending_connection' && (
+        <div className='d-flex flex-row flex-nowrap align-items-center gap-2 text-muted mb-2'>
+          <Icon name='info' width={14} fill='#656D7B' />
+          <span>
+            Your test event is on its way. It can take up to a few hours to
+            process the first event.
+          </span>
+        </div>
+      )}
       <WarehouseEventCodeHelp />
       <div className='d-flex justify-content-end mt-3'>
-        {connection.warehouse_type === 'flagsmith' ? (
-          <Button theme='primary' size='small' disabled>
-            Send your first event
-          </Button>
-        ) : (
+        {!isFlagsmith && (
           <Button theme='outline' size='small' disabled>
             Test connection
+          </Button>
+        )}
+        {isFlagsmith && !isPending && !isConnected && (
+          <Button
+            theme='primary'
+            size='small'
+            onClick={onSendTestEvent}
+            disabled={isSendingTestEvent}
+          >
+            {isSendingTestEvent ? 'Sending...' : 'Send your first event'}
           </Button>
         )}
       </div>

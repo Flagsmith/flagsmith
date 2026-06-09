@@ -197,6 +197,7 @@ const ExperimentsPage: FC = () => {
         )}
         {hasResults && (
           <Paging
+            className='border-top-0'
             paging={{
               ...(experimentsData || {}),
               page,
@@ -212,19 +213,28 @@ const ExperimentsPage: FC = () => {
     )
   }
 
+  const renderCta = () => {
+    if (hasWarehouse) {
+      return (
+        <Button onClick={() => setIsCreating(true)}>
+          <Icon name='plus' width={16} />
+          Create Experiment
+        </Button>
+      )
+    }
+    if (experimentCount > 0) {
+      return (
+        <Button theme='outline' onClick={() => history.push(settingsUrl)}>
+          Connect Warehouse
+        </Button>
+      )
+    }
+    return undefined
+  }
+
   return (
     <div data-test='experiments-page' className='app-container container'>
-      <PageTitle
-        title='Experiments'
-        cta={
-          hasWarehouse ? (
-            <Button onClick={() => setIsCreating(true)}>
-              <Icon name='plus' width={16} />
-              Create Experiment
-            </Button>
-          ) : undefined
-        }
-      />
+      <PageTitle title='Experiments' cta={renderCta()} />
       {renderBody()}
     </div>
   )

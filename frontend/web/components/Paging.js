@@ -11,6 +11,7 @@ export default class Paging extends PureComponent {
   static displayName = 'Paging'
 
   static propTypes = {
+    className: propTypes.string,
     goToPage: propTypes.func,
     isLoading: propTypes.bool,
     onNextClick: propTypes.func,
@@ -20,7 +21,7 @@ export default class Paging extends PureComponent {
 
   render() {
     const {
-      props: { goToPage, isLoading, nextPage, paging, prevPage },
+      props: { className, goToPage, isLoading, nextPage, paging, prevPage },
     } = this
     const currentIndex = paging.currentPage - 1
     const lastPage = Math.ceil(paging.count / paging.pageSize)
@@ -38,7 +39,10 @@ export default class Paging extends PureComponent {
     }
     return (
       <Row
-        className='paging justify-content-end table-column py-2'
+        className={cn(
+          'paging justify-content-end table-column py-2',
+          className,
+        )}
         style={isLoading ? { opacity: 0.5 } : {}}
       >
         {!!paging.count && (

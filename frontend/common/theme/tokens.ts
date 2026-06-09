@@ -105,6 +105,26 @@ export const easing: Record<string, TokenEntry> = {
     value: 'var(--easing-standard)',
   },
 }
+// Font-weight
+export const fontWeight: Record<string, TokenEntry> = {
+  'bold': {
+    description: 'Maximum emphasis. Page titles, key figures.',
+    value: 'var(--font-weight-bold, 700)',
+  },
+  'medium': {
+    description: 'Subtle emphasis. Labels, secondary headings, table headers.',
+    value: 'var(--font-weight-medium, 500)',
+  },
+  'regular': {
+    description: 'Body copy, default text.',
+    value: 'var(--font-weight-regular, 400)',
+  },
+  'semibold': {
+    description:
+      'Strong emphasis. Card titles, selected states, section headings.',
+    value: 'var(--font-weight-semibold, 600)',
+  },
+}
 
 // =============================================================================
 // Flat token constants — semantic tokens as CSS value strings.
@@ -233,3 +253,9 @@ export const easingEntrance =
 export const easingExit = 'var(--easing-exit, cubic-bezier(0.2, 0, 1, 0.9))'
 export const easingStandard =
   'var(--easing-standard, cubic-bezier(0.2, 0, 0.38, 0.9))'
+
+// Font-weight
+export const fontWeightBold = 'var(--font-weight-bold, 700)'
+export const fontWeightMedium = 'var(--font-weight-medium, 500)'
+export const fontWeightRegular = 'var(--font-weight-regular, 400)'
+export const fontWeightSemibold = 'var(--font-weight-semibold, 600)'
