@@ -6,6 +6,7 @@ from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from features.constants import RESERVED_VARIANT_KEY_MESSAGE
 from features.models import Feature
 from organisations.models import Organisation
 from projects.models import Project
@@ -57,7 +58,7 @@ def test_create_mv_option__with_key__returns_created_with_key(
         "feature": feature,
         "string_value": "bigger",
         "default_percentage_allocation": 50,
-        "key": "control",
+        "key": "variant-a",
     }
     # When
     response = admin_client_new.post(
@@ -67,7 +68,35 @@ def test_create_mv_option__with_key__returns_created_with_key(
     )
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["key"] == "control"
+    assert response.json()["key"] == "variant-a"
+
+
+def test_create_mv_option__reserved_control_key__returns_bad_request(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given - "control" is reserved for the variant an identity falls through to
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+        "key": "control",
+    }
+    # When
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["key"] == [RESERVED_VARIANT_KEY_MESSAGE]
 
 
 def test_create_mv_option__duplicate_key_for_same_feature__returns_bad_request(
@@ -85,7 +114,7 @@ def test_create_mv_option__duplicate_key_for_same_feature__returns_bad_request(
         "feature": feature,
         "string_value": "bigger",
         "default_percentage_allocation": 50,
-        "key": "control",
+        "key": "variant-a",
     }
     assert (
         admin_client_new.post(
@@ -100,7 +129,7 @@ def test_create_mv_option__duplicate_key_for_same_feature__returns_bad_request(
         "feature": feature,
         "string_value": "biggest",
         "default_percentage_allocation": 50,
-        "key": "control",
+        "key": "variant-a",
     }
     # When
     response = admin_client_new.post(
@@ -192,7 +221,7 @@ def test_update_mv_option__unchanged_key__returns_ok(
         "feature": feature,
         "string_value": "bigger",
         "default_percentage_allocation": 50,
-        "key": "control",
+        "key": "variant-a",
     }
     option_id = admin_client_new.post(
         create_url,
@@ -213,7 +242,7 @@ def test_update_mv_option__unchanged_key__returns_ok(
 
     # Then - the option does not collide with itself
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["key"] == "control"
+    assert response.json()["key"] == "variant-a"
 
 
 def test_update_mv_option__duplicate_sibling_key__returns_bad_request(
@@ -231,7 +260,7 @@ def test_update_mv_option__duplicate_sibling_key__returns_bad_request(
         "feature": feature,
         "string_value": "bigger",
         "default_percentage_allocation": 50,
-        "key": "control",
+        "key": "variant-a",
     }
     unkeyed_option_data = {
         "type": "unicode",
@@ -261,7 +290,7 @@ def test_update_mv_option__duplicate_sibling_key__returns_bad_request(
     response = admin_client_new.put(
         update_url,
         data=json.dumps(
-            {**unkeyed_option_data, "id": unkeyed_option_id, "key": "control"}
+            {**unkeyed_option_data, "id": unkeyed_option_id, "key": "variant-a"}
         ),
         content_type="application/json",
     )
