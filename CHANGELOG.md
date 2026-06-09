@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.240.0](https://github.com/Flagsmith/flagsmith/compare/v2.239.0...v2.240.0) (2026-06-09)
+
+
+### Features
+
+* added tests for n plus 1 queries in metrics view ([#7728](https://github.com/Flagsmith/flagsmith/issues/7728)) ([4aab293](https://github.com/Flagsmith/flagsmith/commit/4aab293d383190add9909c1711bfeac9ba437982))
+* **experimentation:** metrics list view with edit, delete and pagination ([#7731](https://github.com/Flagsmith/flagsmith/issues/7731)) ([fef753d](https://github.com/Flagsmith/flagsmith/commit/fef753d1182858a85c2e292110fe99f8fdc8480c))
+* **experimentation:** warehouse connection verification UI ([#7678](https://github.com/Flagsmith/flagsmith/issues/7678)) ([7eda0b1](https://github.com/Flagsmith/flagsmith/commit/7eda0b17bb51fe581a4898c3f74049514ddd1cdb))
+* **experiments:** Create Metric page ([#7712](https://github.com/Flagsmith/flagsmith/issues/7712)) ([416de5c](https://github.com/Flagsmith/flagsmith/commit/416de5caba0531c492e9a442fb8bceea7490b975))
+* **multivariate:** reserve "control" as a variant key ([#7725](https://github.com/Flagsmith/flagsmith/issues/7725)) ([aa90ffc](https://github.com/Flagsmith/flagsmith/commit/aa90ffc5229c04f26c747cb10dc77be27967a579))
+
+
+### Bug Fixes
+
+* **frontend:** prevent error when inputRef is undefined ([#7649](https://github.com/Flagsmith/flagsmith/issues/7649)) ([591ecb3](https://github.com/Flagsmith/flagsmith/commit/591ecb33003505b3af4c35f1cc827c2a5e4c34dd))
+* support decimal multivariate variation weights ([#7672](https://github.com/Flagsmith/flagsmith/issues/7672)) ([c70b12e](https://github.com/Flagsmith/flagsmith/commit/c70b12ebe0c50ba5c823798b4d3ca9e05eabda30))
+
 ## [2.239.0](https://github.com/Flagsmith/flagsmith/compare/v2.238.0...v2.239.0) (2026-06-08)
 
 
