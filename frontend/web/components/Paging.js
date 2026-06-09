@@ -6,6 +6,7 @@ import propTypes from 'prop-types'
 import cn from 'classnames'
 import { chevronBackOutline, chevronForwardOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import BareButton from 'components/base/forms/BareButton'
 
 export default class Paging extends PureComponent {
   static displayName = 'Paging'
@@ -61,8 +62,7 @@ export default class Paging extends PureComponent {
           <Row>
             {!pageRange.includes(0) && !noPages && (
               <>
-                <div
-                  role='button'
+                <BareButton
                   className={cn({
                     'active': currentIndex === 1,
                     'fs-small page': true,
@@ -72,7 +72,7 @@ export default class Paging extends PureComponent {
                   }
                 >
                   {1}
-                </div>
+                </BareButton>
                 {!pageRange.includes(1) && !noPages && (
                   <div
                     className={cn({
@@ -86,9 +86,8 @@ export default class Paging extends PureComponent {
             )}
             {!noPages &&
               map(pageRange, (index) => (
-                <div
+                <BareButton
                   key={index}
-                  role='button'
                   className={cn({
                     'active': currentIndex === index,
                     'fs-small page': true,
@@ -100,7 +99,7 @@ export default class Paging extends PureComponent {
                   }
                 >
                   {index + 1}
-                </div>
+                </BareButton>
               ))}
             {!noPages &&
               !pageRange.includes(lastPage - 1) &&
@@ -122,8 +121,7 @@ export default class Paging extends PureComponent {
               )}
             {!noPages && !pageRange.includes(lastPage - 1) && (
               <>
-                <div
-                  role='button'
+                <BareButton
                   className={cn({
                     'active': currentIndex === lastPage,
                     'page fs-small': true,
@@ -135,7 +133,7 @@ export default class Paging extends PureComponent {
                   }
                 >
                   {lastPage}
-                </div>
+                </BareButton>
               </>
             )}
           </Row>
