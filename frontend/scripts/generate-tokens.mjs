@@ -447,9 +447,9 @@ function generateUtilities() {
   // Colour utilities
   const colourMappings = {
     border: { prefix: 'border', property: 'border-color' },
-    icon: { prefix: 'icon', property: null },
+    icon: { prefix: 'icon', property: null }, // special: color + fill
     surface: { prefix: 'bg-surface', property: 'background-color' },
-    text: { prefix: 'text', property: 'color' }, // special: color + fill
+    text: { prefix: 'text', property: 'color' },
   }
 
   for (const [category, entries] of Object.entries(json.color)) {

@@ -126,18 +126,16 @@ const MetricsPage: FC = () => {
     return (
       <>
         {!!connection && (
-          <div className='metrics-page__banner'>
-            <span className='metrics-page__banner-text'>
-              <Icon
-                name='layers'
-                width={16}
-                className='metrics-page__banner-icon'
-              />
-              Metrics are computed from your <strong>{warehouseLabel}</strong>{' '}
+          <div className='metrics-page__banner d-flex align-items-center justify-content-between gap-3 mb-3 rounded-md bg-surface-subtle'>
+            <span className='metrics-page__banner-text d-flex align-items-center gap-2 text-secondary'>
+              <Icon name='layers' width={16} className='text-action' />
+              Metrics are computed from your <strong>
+                {warehouseLabel}
+              </strong>{' '}
               warehouse.
             </span>
             <a
-              className='metrics-page__banner-link'
+              className='metrics-page__banner-link flex-shrink-0 text-action'
               onClick={() => history.push(settingsUrl)}
             >
               Manage connection
@@ -145,7 +143,7 @@ const MetricsPage: FC = () => {
           </div>
         )}
 
-        <div className='metrics-page__controls'>
+        <div className='metrics-page__controls d-flex align-items-center mb-3'>
           <div className='metrics-page__search'>
             <Input
               value={searchInput}
@@ -162,18 +160,23 @@ const MetricsPage: FC = () => {
           </Button>
         </div>
 
-        <div className='metrics-page__list'>
+        <div className='metrics-page__list d-flex flex-column rounded-md'>
           {metrics.map((metric) => (
-            <div key={metric.id} className='metrics-page__row'>
-              <div className='metrics-page__row-main'>
-                <span className='metrics-page__row-name'>{metric.name}</span>
+            <div
+              key={metric.id}
+              className='metrics-page__row d-flex align-items-center justify-content-between gap-3'
+            >
+              <div className='metrics-page__row-main d-flex flex-column'>
+                <span className='metrics-page__row-name text-default'>
+                  {metric.name}
+                </span>
                 {!!metric.description && (
-                  <span className='metrics-page__row-desc'>
+                  <span className='metrics-page__row-desc text-secondary'>
                     {metric.description}
                   </span>
                 )}
               </div>
-              <span className='metrics-page__row-agg'>
+              <span className='metrics-page__row-agg text-secondary'>
                 {metric.aggregation}
               </span>
             </div>
