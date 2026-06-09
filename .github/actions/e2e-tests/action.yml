@@ -19,15 +19,15 @@ runs:
   using: composite
 
   steps:
-    - uses: actions/checkout@v5
-    - uses: actions/setup-node@v4
+    - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
       with:
         cache: npm
         node-version-file: frontend/.nvmrc
         cache-dependency-path: frontend/package-lock.json
 
     - name: Cache Playwright browsers
-      uses: actions/cache@v4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
       with:
         path: ~/.cache/ms-playwright
         key: ${{ runner.os }}-playwright-${{ hashFiles('frontend/package-lock.json') }}
@@ -46,7 +46,7 @@ runs:
       shell: bash
 
     - name: Run E2E tests
-      uses: nick-fields/retry@v3
+      uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
       with:
         shell: bash
         command: |

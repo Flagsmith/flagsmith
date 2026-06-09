@@ -27,13 +27,13 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Set up Depot CLI
-        uses: depot/setup-action@v1
+        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
         with:
           aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -42,11 +42,11 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@5a88a04c91d5c6f97aae0d9be790e64d9b1d47b7 # v1
 
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
         with:
           images: |
             ${{ steps.login-ecr.outputs.registry }}/${{ inputs.saas-image-name }}
@@ -59,7 +59,7 @@ jobs:
         uses: ./.github/actions/codeartifact-login
 
       - name: Build saas-api image
-        uses: depot/build-push-action@v1
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1
         with:
           target: saas-api
           context: .
@@ -78,7 +78,7 @@ jobs:
     runs-on: depot-ubuntu-latest
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Deploy API to ${{ inputs.environment }}
         id: deploy-api
@@ -119,7 +119,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       # Temporarily install Firefox 143.0 to avoid test failures as superior versions cause frontend e2e tests to hang
       # To be removed once upstream issue correctly resolved

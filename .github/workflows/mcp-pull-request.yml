@@ -27,10 +27,10 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
         with:
           python-version: "3.14"
           enable-cache: true
@@ -39,7 +39,7 @@ jobs:
       - name: Install dependencies
         run: make install
 
-      - uses: liskin/gh-problem-matcher-wrap@v2
+      - uses: liskin/gh-problem-matcher-wrap@4abcf297257f3006bf8834221ec75181d6aff5e9 # v2
         with:
           action: add
           linters: mypy
@@ -47,7 +47,7 @@ jobs:
       - name: Check for new typing errors
         run: make typecheck
 
-      - uses: liskin/gh-problem-matcher-wrap@v2
+      - uses: liskin/gh-problem-matcher-wrap@4abcf297257f3006bf8834221ec75181d6aff5e9 # v2
         with:
           action: remove
           linters: mypy

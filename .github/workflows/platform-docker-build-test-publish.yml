@@ -195,7 +195,7 @@ jobs:
     runs-on: depot-ubuntu-latest
     steps:
       - name: Close prior open PRs
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           github-token: ${{ secrets.FLAGSMITH_CHARTS_GITHUB_TOKEN }}
           script: |
@@ -222,7 +222,7 @@ jobs:
             }
 
       - name: Checkout Target Charts Repository to update yaml
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           repository: flagsmith/flagsmith-charts
           path: chart
@@ -234,13 +234,13 @@ jobs:
           TAG=${{ github.event.release.tag_name }}
           echo "version=${TAG#v}" >> $GITHUB_OUTPUT
 
-      - uses: actions-tools/yaml-outputs@v2
+      - uses: actions-tools/yaml-outputs@1a26d8aaa36aa54fe71d91c265dd6d4369a4fcfb # v2
         id: chart-yaml
         with:
           file-path: ./chart/charts/flagsmith/Chart.yaml
 
       - name: Open a PR bumping Flagsmith to ${{ github.event.release.tag_name }}
-        uses: fjogeleit/yaml-update-action@main
+        uses: fjogeleit/yaml-update-action@dffe9a5223d84653c13374032382f6bb5de8e5ef # v0.17.0
         env:
           COMMIT_MESSAGE: "deps: bump Flagsmith from ${{ steps.chart-yaml.outputs.appVersion }} to ${{ steps.version-trim.outputs.version }}"
         with:

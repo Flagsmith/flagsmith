@@ -53,7 +53,7 @@ runs:
 
   steps:
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
       with:
         aws-access-key-id: ${{ inputs.aws_access_key_id }}
         aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
@@ -61,7 +61,7 @@ runs:
 
     - name: Render SDK API task definition
       id: task-def-sdk-api
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      uses: aws-actions/amazon-ecs-render-task-definition@6853cfae8c3a7d978fbf68b5a55453395541dfbb # v1
       with:
         task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-sdk-api.json
         container-name: flagsmith-api
@@ -69,7 +69,7 @@ runs:
 
     - name: Render Admin API task definition
       id: task-def-admin-api
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      uses: aws-actions/amazon-ecs-render-task-definition@6853cfae8c3a7d978fbf68b5a55453395541dfbb # v1
       with:
         task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-admin-api.json
         container-name: flagsmith-api
@@ -78,7 +78,7 @@ runs:
     # This is used in both the SQL migrations and the Dynamo Identity Migrations
     - name: Fill in the new image ID in the Amazon ECS migration task definition
       id: task-def-migration
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      uses: aws-actions/amazon-ecs-render-task-definition@6853cfae8c3a7d978fbf68b5a55453395541dfbb # v1
       with:
         task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-migration.json
         container-name: flagsmith-api-migration
@@ -103,7 +103,7 @@ runs:
 
     - name: Deploy new Task Definition to ECS Admin API service
       id: deploy-admin-api-task-definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+      uses: aws-actions/amazon-ecs-deploy-task-definition@a310a830f5c14e583e35d84e4e1ec7dd177c3c9c # v2
       with:
         cluster: ${{ inputs.aws_ecs_cluster_name }}
         service: ${{ inputs.aws_ecs_service_name }}
@@ -111,7 +111,7 @@ runs:
 
     - name: Deploy new Task Definition to ECS SDK API service
       id: deploy-sdk-api-task-definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+      uses: aws-actions/amazon-ecs-deploy-task-definition@a310a830f5c14e583e35d84e4e1ec7dd177c3c9c # v2
       with:
         cluster: ${{ inputs.aws_ecs_cluster_name }}
         service: ${{ inputs.aws_ecs_sdk_service_name }}

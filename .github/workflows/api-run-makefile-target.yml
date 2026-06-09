@@ -31,7 +31,7 @@ jobs:
     runs-on: depot-ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Install uv
         uses: ./.github/actions/install-uv
@@ -47,7 +47,7 @@ jobs:
         run: make ${{ inputs.target }}
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@4e1beaa7521e8b457b572c090b25bd3db56bf1c5 # v5
         with:
           branch: chore/make-${{ inputs.target }}-${{ github.run_id }}
           title: ${{ inputs.pr-title }}
