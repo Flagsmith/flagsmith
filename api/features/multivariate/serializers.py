@@ -5,6 +5,7 @@ from django.db.models import Sum
 from rest_framework import serializers
 
 from core.constants import BOOLEAN, INTEGER
+from features.constants import CONTROL_VARIANT_KEY, RESERVED_VARIANT_KEY_MESSAGE
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 
@@ -70,6 +71,11 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
         # ourselves in `validate()`, with the database constraint as the final
         # guard, so drop it.
         return []
+
+    def validate_key(self, value: str | None) -> str | None:
+        if value == CONTROL_VARIANT_KEY:
+            raise serializers.ValidationError(RESERVED_VARIANT_KEY_MESSAGE)
+        return value
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)

@@ -1,15 +1,18 @@
-import { FC, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import {
   useCreateWarehouseConnectionMutation,
   useDeleteWarehouseConnectionMutation,
   useGetWarehouseConnectionsQuery,
+  useTestWarehouseConnectionMutation,
   useUpdateWarehouseConnectionMutation,
 } from 'common/services/useWarehouseConnection'
 import { SnowflakeConfig } from 'common/types/responses'
-import Loader from 'components/Loader'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
 import WarehouseSetup from './WarehouseSetup'
+import WarehouseSetupSkeleton from './WarehouseSetupSkeleton'
 import ConfigForm from './ConfigForm'
+import sendWarehouseTestEvent from './sendWarehouseTestEvent'
+import { getWarehousePollingInterval } from './warehousePolling'
 
 type WarehouseTabProps = {
   environmentId: string
@@ -32,6 +35,21 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
   const [updateConnection] = useUpdateWarehouseConnectionMutation()
 
   const connection = connections?.[0]
+  const connectionId = connection?.id
+  const connectionStatus = connection?.status
+
+  const [testConnection, { isLoading: isSendingTestEvent }] =
+    useTestWarehouseConnectionMutation()
+
+  useEffect(() => {
+    const interval = getWarehousePollingInterval(connectionStatus)
+    if (!interval || connectionId === undefined) return
+    testConnection({ environmentId, id: connectionId })
+    const timer = setInterval(() => {
+      testConnection({ environmentId, id: connectionId })
+    }, interval)
+    return () => clearInterval(timer)
+  }, [connectionStatus, connectionId, environmentId, testConnection])
 
   const handleEnableFlagsmith = () => {
     openConfirm({
@@ -88,10 +106,22 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
       .catch(() => toast('Failed to remove warehouse connection', 'danger'))
   }
 
+  const handleSendTestEvent = () => {
+    if (!connection) return
+    sendWarehouseTestEvent(environmentId)
+      .then(() => testConnection({ environmentId, id: connection.id }).unwrap())
+      .then(() => toast('Test event sent'))
+      .catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error('[warehouse] send test event failed:', error)
+        toast('Failed to send test event', 'danger')
+      })
+  }
+
   if (isLoading) {
     return (
       <div className='mt-4 col-md-12'>
-        <Loader />
+        <WarehouseSetupSkeleton />
       </div>
     )
   }
@@ -142,6 +172,8 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
             ? () => setEditing(true)
             : undefined
         }
+        onSendTestEvent={handleSendTestEvent}
+        isSendingTestEvent={isSendingTestEvent}
       />
     </div>
   )
