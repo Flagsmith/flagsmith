@@ -581,6 +581,26 @@ export type ExperimentStatus = 'created' | 'running' | 'paused' | 'completed'
 
 export type ExperimentStatusCounts = Record<ExperimentStatus, number>
 
+export type MetricAggregation = 'count' | 'sum' | 'mean' | 'occurrence'
+
+export type MetricDirection = 'up' | 'down' | 'informational'
+
+export type MetricDefinition = {
+  version: number
+  event: string
+}
+
+export type Metric = {
+  id: number
+  name: string
+  description: string
+  aggregation: MetricAggregation
+  direction: MetricDirection
+  definition: MetricDefinition
+  created_at: string
+  updated_at: string
+}
+
 export type ExperimentFeature = {
   id: number
   name: string
@@ -1381,5 +1401,7 @@ export type Res = {
     status_counts?: ExperimentStatusCounts
   }
   experiment: Experiment
+  metric: Metric
+  metrics: PagedResponse<Metric>
   // END OF TYPES
 }

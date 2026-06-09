@@ -25,6 +25,9 @@ import {
   StageActionBody,
   ChangeRequest,
   ExperimentStatus,
+  MetricAggregation,
+  MetricDirection,
+  MetricDefinition,
   FlagsmithValue,
   TagStrategy,
   FeatureType,
@@ -1015,5 +1018,19 @@ export type Req = {
   }
   experimentAction: { environmentId: string; experimentId: number }
   deleteExperiment: { environmentId: string; experimentId: number }
+  getMetrics: PagedRequest<{
+    environmentId: string
+  }>
+  createMetric: {
+    environmentId: string
+    body: {
+      name: string
+      description: string
+      aggregation: MetricAggregation
+      direction: MetricDirection
+      definition: MetricDefinition
+    }
+  }
+  deleteMetric: { environmentId: string; metricId: number }
   // END OF TYPES
 }

@@ -172,6 +172,12 @@
   --easing-exit: cubic-bezier(0.2, 0, 1, 0.9);
   --easing-standard: cubic-bezier(0.2, 0, 0.38, 0.9);
 
+  // Font-weight
+  --font-weight-bold: 700;
+  --font-weight-medium: 500;
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+
 }
 
 .dark {

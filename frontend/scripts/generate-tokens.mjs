@@ -27,18 +27,19 @@ const json = JSON.parse(
 // Helpers
 // ---------------------------------------------------------------------------
 
-const kebabToCamel = (s) =>
-  s.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase())
+const kebabToCamel = (s) => s.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase())
 
 const sorted = (obj) =>
-  Object.entries(obj).sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+  Object.entries(obj).sort(([a], [b]) =>
+    a.localeCompare(b, undefined, { numeric: true }),
+  )
 
 const esc = (s) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 const lightVal = (e) => e.light ?? e.value
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
-const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing']
-const DESCRIBED = ['radius', 'shadow', 'duration', 'easing']
+const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
+const DESCRIBED = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 // Chart colours are like colour tokens (light/dark) but not under "color"
 const CHART_CATEGORY = 'chart'
 
@@ -82,7 +83,9 @@ function toPrimitiveRef(val) {
   if (hexMatch) return hexMatch
 
   // rgba match → oklch relative colour
-  const rgbaMatch = val.match(/^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)$/)
+  const rgbaMatch = val.match(
+    /^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)$/,
+  )
   if (rgbaMatch) {
     const rgb = `${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]}`
     const alpha = rgbaMatch[4]
@@ -161,7 +164,7 @@ function buildScssLines() {
     rootLines.push('')
   }
 
-  return { rootLines, darkLines }
+  return { darkLines, rootLines }
 }
 
 function buildTsDescribedLines() {
@@ -170,7 +173,9 @@ function buildTsDescribedLines() {
     if (!json[cat]) continue
     const lines = []
     lines.push(`// ${cap(cat)}`)
-    lines.push(`export const ${cat}: Record<string, TokenEntry> = {`)
+    lines.push(
+      `export const ${kebabToCamel(cat)}: Record<string, TokenEntry> = {`,
+    )
     for (const [key, e] of sorted(json[cat])) {
       const v = esc(makeCssVar(e.cssVar, lightVal(e)))
       const d = esc(e.description || '')
@@ -210,14 +215,22 @@ function cssVarToConstName(cssVar) {
 function buildFlatConstants() {
   const lines = []
 
-  lines.push('// =============================================================================')
+  lines.push(
+    '// =============================================================================',
+  )
   lines.push('// Flat token constants — semantic tokens as CSS value strings.')
   lines.push('// Use directly in any context that accepts a CSS value:')
   lines.push('//   <Bar fill={colorChart1} />              (recharts prop)')
   lines.push('//   style={{ color: colorTextSecondary }}   (inline style)')
-  lines.push('//   border: `1px solid ${colorBorderDefault}` (template strings)')
-  lines.push('// var() resolves at render; theme toggle updates colours via CSS cascade.')
-  lines.push('// =============================================================================')
+  lines.push(
+    '//   border: `1px solid ${colorBorderDefault}` (template strings)',
+  )
+  lines.push(
+    '// var() resolves at render; theme toggle updates colours via CSS cascade.',
+  )
+  lines.push(
+    '// =============================================================================',
+  )
   lines.push('')
 
   // Colour tokens under json.color (border, icon, surface, text)
@@ -297,7 +310,7 @@ function buildTableRows(title, entries, opts = {}) {
 // ---------------------------------------------------------------------------
 
 function generateScss() {
-  const { rootLines, darkLines } = buildScssLines()
+  const { darkLines, rootLines } = buildScssLines()
 
   const header = [
     '// =============================================================================',
@@ -356,18 +369,20 @@ function generateMcpStory() {
   if (json[CHART_CATEGORY]) {
     const chartData = Object.values(json[CHART_CATEGORY]).map((e) => ({
       cssVar: e.cssVar,
-      value: e.light,
       description: e.description || '',
+      value: e.light,
     }))
-    tables.push(...buildTableRows('Chart colours', chartData, { showDescription: true }))
+    tables.push(
+      ...buildTableRows('Chart colours', chartData, { showDescription: true }),
+    )
   }
 
   for (const cat of DESCRIBED) {
     if (!json[cat]) continue
     const data = Object.values(json[cat]).map((e) => ({
       cssVar: e.cssVar,
-      value: lightVal(e),
       description: e.description || '',
+      value: lightVal(e),
     }))
     tables.push(...buildTableRows(cap(cat), data, { showDescription: true }))
   }
@@ -397,7 +412,7 @@ function generateMcpStory() {
     '    >',
     ...tables,
     '',
-    "      <h3>Dark mode shadows</h3>",
+    '      <h3>Dark mode shadows</h3>',
     '      <p>',
     '        Dark mode overrides use stronger opacity (0.20-0.40 vs 0.05-0.20).',
     '        Higher elevation surfaces should use lighter backgrounds',
@@ -431,10 +446,10 @@ function generateUtilities() {
 
   // Colour utilities
   const colourMappings = {
-    surface: { prefix: 'bg-surface', property: 'background-color' },
-    text: { prefix: 'text', property: 'color' },
     border: { prefix: 'border', property: 'border-color' },
     icon: { prefix: 'icon', property: null }, // special: color + fill
+    surface: { prefix: 'bg-surface', property: 'background-color' },
+    text: { prefix: 'text', property: 'color' },
   }
 
   for (const [category, entries] of Object.entries(json.color)) {
@@ -445,7 +460,9 @@ function generateUtilities() {
     for (const [key, e] of sorted(entries)) {
       const cls = `${mapping.prefix}-${key}`
       if (category === 'icon') {
-        lines.push(`.${cls} { color: var(${e.cssVar}); fill: var(${e.cssVar}); }`)
+        lines.push(
+          `.${cls} { color: var(${e.cssVar}); fill: var(${e.cssVar}); }`,
+        )
       } else {
         lines.push(`.${cls} { ${mapping.property}: var(${e.cssVar}); }`)
       }
@@ -493,7 +510,10 @@ function generateUtilities() {
 const scssPath = resolve(ROOT, 'web/styles/_tokens.scss')
 const utilitiesPath = resolve(ROOT, 'web/styles/_token-utilities.scss')
 const tsPath = resolve(ROOT, 'common/theme/tokens.ts')
-const storyPath = resolve(ROOT, 'documentation/TokenReference.generated.stories.tsx')
+const storyPath = resolve(
+  ROOT,
+  'documentation/TokenReference.generated.stories.tsx',
+)
 
 writeFileSync(scssPath, generateScss(), 'utf-8')
 writeFileSync(utilitiesPath, generateUtilities(), 'utf-8')
@@ -523,5 +543,7 @@ console.log(`  ${utilitiesPath}`)
 console.log(`  ${tsPath}`)
 console.log(`  ${storyPath}`)
 console.log(
-  `  ${colorCount} colour + ${nonColorCount} non-colour = ${colorCount + nonColorCount} tokens`,
+  `  ${colorCount} colour + ${nonColorCount} non-colour = ${
+    colorCount + nonColorCount
+  } tokens`,
 )

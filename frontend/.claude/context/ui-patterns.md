@@ -58,6 +58,29 @@ ComponentName/
 
 Single-file components without their own styles can live as a single `.tsx` next to peers — no folder needed.
 
+### SCSS: what belongs here
+
+Write SCSS **only for what utilities and tokens cannot express**. Before adding a rule, ask whether a utility class on the element removes the need for it entirely.
+
+**Do NOT re-declare in SCSS — use a className utility instead:**
+
+| In SCSS you wrote | Use the utility |
+|-------------------|-----------------|
+| `color: var(--color-text-secondary)` | `text-secondary` (`bg-surface-*`, `border-*` likewise) |
+| `border-radius: var(--radius-md)` | `rounded-md` |
+| `box-shadow: var(--shadow-*)` | `shadow-*` |
+| `display: flex; flex-direction: column; gap: 16px` | `d-flex flex-column gap-3` |
+| `align-items: center; justify-content: space-between` | `align-items-center justify-content-between` |
+| `padding: 16px` / `padding: 8px` | `p-3` / `p-2` |
+
+The Bootstrap spacing scale is `1→4px 2→8px 3→16px 4→24px`. `gap-*`, `p-*`, `m-*` all follow it.
+
+**SCSS is for the genuinely custom bits:** selected / hover / focus states, transitions, `grid-template-columns`, pseudo-elements, and one-off values that don't map to the scale.
+
+**Off-scale spacing** (e.g. `12px`, `14px`, `2px`): prefer snapping to the `8/16` scale and using a utility. Keep the off-scale value in SCSS only when the design genuinely requires it — don't reach for custom SCSS just to avoid rounding.
+
+Re-declaring tokens in SCSS typically inflates a stylesheet by ~⅓ over the utility-first equivalent and drifts from the design system.
+
 ## Storybook (Optional)
 
 When working on complex or unfamiliar components, you can query Storybook MCP (`list-all-documentation`, then `get-documentation`) to discover existing components, their props, and visual examples. This is optional — for simple changes, grepping the codebase is fine.
