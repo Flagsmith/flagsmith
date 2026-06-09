@@ -1,21 +1,10 @@
 .metrics-page {
   &__banner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
     padding: 12px 16px;
-    margin-bottom: 16px;
     border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-md);
-    background: var(--color-surface-subtle);
   }
 
   &__banner-text {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--color-text-secondary);
     font-size: var(--font-body-sm-size);
 
     strong {
@@ -24,13 +13,7 @@
     }
   }
 
-  &__banner-icon {
-    color: var(--color-text-action);
-  }
-
   &__banner-link {
-    flex-shrink: 0;
-    color: var(--color-text-action);
     font-weight: var(--font-weight-medium);
     cursor: pointer;
 
@@ -40,10 +23,7 @@
   }
 
   &__controls {
-    display: flex;
-    align-items: center;
     gap: 12px;
-    margin-bottom: 16px;
   }
 
   &__search {

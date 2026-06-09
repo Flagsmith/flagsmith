@@ -17,9 +17,20 @@ export const metricService = service
         }),
       }),
       deleteMetric: builder.mutation<void, Req['deleteMetric']>({
-        invalidatesTags: [{ id: 'LIST', type: 'Metric' }],
+        invalidatesTags: (_res, _err, { metricId }) => [
+          { id: 'LIST', type: 'Metric' },
+          { id: metricId, type: 'Metric' },
+        ],
         query: ({ environmentId, metricId }) => ({
           method: 'DELETE',
+          url: `environments/${environmentId}/experiment-metrics/${metricId}/`,
+        }),
+      }),
+      getMetric: builder.query<Res['metric'], Req['getMetric']>({
+        providesTags: (_res, _err, { metricId }) => [
+          { id: metricId, type: 'Metric' },
+        ],
+        query: ({ environmentId, metricId }) => ({
           url: `environments/${environmentId}/experiment-metrics/${metricId}/`,
         }),
       }),
@@ -33,7 +44,10 @@ export const metricService = service
         transformResponse: (res, _, req) => transformCorePaging(req, res),
       }),
       updateMetric: builder.mutation<Res['metric'], Req['updateMetric']>({
-        invalidatesTags: [{ id: 'LIST', type: 'Metric' }],
+        invalidatesTags: (_res, _err, { metricId }) => [
+          { id: 'LIST', type: 'Metric' },
+          { id: metricId, type: 'Metric' },
+        ],
         query: ({ body, environmentId, metricId }) => ({
           body,
           method: 'PATCH',
@@ -46,6 +60,7 @@ export const metricService = service
 export const {
   useCreateMetricMutation,
   useDeleteMetricMutation,
+  useGetMetricQuery,
   useGetMetricsQuery,
   useUpdateMetricMutation,
 } = metricService

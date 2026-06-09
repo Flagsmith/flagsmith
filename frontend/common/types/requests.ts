@@ -1021,6 +1021,7 @@ export type Req = {
     environmentId: string
     q?: string
   }>
+  getMetric: { environmentId: string; metricId: number }
   createMetric: {
     environmentId: string
     body: {

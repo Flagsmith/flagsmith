@@ -41,7 +41,7 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
   }
 
   return (
-    <div className='create-metric-form'>
+    <div className='create-metric-form d-flex flex-column gap-4'>
       <div className='create-metric-form__field'>
         <label className='create-metric-form__label' htmlFor='metric-name'>
           Name
@@ -112,7 +112,7 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
 
       <div className='create-metric-form__field'>
         <label className='create-metric-form__label'>Direction</label>
-        <div className='create-metric-form__direction-group'>
+        <div className='create-metric-form__direction-group d-flex flex-wrap gap-2'>
           {DIRECTION_OPTIONS.map((opt) => (
             <label
               key={opt.value}
@@ -141,7 +141,7 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
           Where this metric is collected from. Reads from your connected
           warehouse.
         </span>
-        <div className='create-metric-form__source'>
+        <div className='create-metric-form__source gap-3 p-3 rounded-md bg-surface-subtle'>
           <div className='create-metric-form__source-col'>
             <label
               className='create-metric-form__sublabel'
@@ -161,7 +161,7 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
         </div>
       </div>
 
-      <div className='create-metric-form__actions'>
+      <div className='create-metric-form__actions d-flex justify-content-end gap-2 pt-2'>
         <Button theme='outline' onClick={handleCancel} disabled={isSaving}>
           Cancel
         </Button>

@@ -5,6 +5,7 @@ import { useRouteContext } from 'components/providers/RouteContext'
 import {
   useCreateMetricMutation,
   useDeleteMetricMutation,
+  useGetMetricQuery,
   useGetMetricsQuery,
   useUpdateMetricMutation,
 } from 'common/services/useMetric'
@@ -79,6 +80,12 @@ const MetricsPage: FC = () => {
     { environmentId: environmentId ?? '' },
     { skip: !environmentId || !isEnabled },
   )
+
+  const { data: editedMetric, isFetching: isFetchingEditedMetric } =
+    useGetMetricQuery(
+      { environmentId: environmentId ?? '', metricId: editingId ?? 0 },
+      { skip: !environmentId || !isEnabled || editingId === null },
+    )
 
   if (!environmentId || !projectId || !isEnabled) return null
 
@@ -161,12 +168,12 @@ const MetricsPage: FC = () => {
   }
 
   if (editingId) {
-    const metric = metrics?.find((m) => m.id === editingId)
+    const metric = metrics?.find((m) => m.id === editingId) ?? editedMetric
     if (!metric) {
       return (
         <div data-test='metrics-page' className='app-container container'>
           <PageTitle title='Edit Metric' />
-          {isLoading ? (
+          {isFetchingEditedMetric ? (
             <CreateMetricFormSkeleton />
           ) : (
             <div className='text-center py-5'>
@@ -185,6 +192,7 @@ const MetricsPage: FC = () => {
           Update how this metric is measured.
         </PageTitle>
         <CreateMetricForm
+          key={metric.id}
           initialState={metricToFormState(metric)}
           isSaving={isUpdatingMetric}
           submitLabel='Save changes'
@@ -225,18 +233,16 @@ const MetricsPage: FC = () => {
     return (
       <>
         {!!connection && (
-          <div className='metrics-page__banner'>
-            <span className='metrics-page__banner-text'>
-              <Icon
-                name='layers'
-                width={16}
-                className='metrics-page__banner-icon'
-              />
-              Metrics are computed from your <strong>{warehouseLabel}</strong>{' '}
+          <div className='metrics-page__banner d-flex align-items-center justify-content-between gap-3 mb-3 rounded-md bg-surface-subtle'>
+            <span className='metrics-page__banner-text d-flex align-items-center gap-2 text-secondary'>
+              <Icon name='layers' width={16} className='text-action' />
+              Metrics are computed from your <strong>
+                {warehouseLabel}
+              </strong>{' '}
               warehouse.
             </span>
             <a
-              className='metrics-page__banner-link'
+              className='metrics-page__banner-link flex-shrink-0 text-action'
               onClick={() => history.push(settingsUrl)}
             >
               Manage connection
@@ -244,7 +250,7 @@ const MetricsPage: FC = () => {
           </div>
         )}
 
-        <div className='metrics-page__controls'>
+        <div className='metrics-page__controls d-flex align-items-center mb-3'>
           <div className='metrics-page__search'>
             <Input
               value={searchInput}

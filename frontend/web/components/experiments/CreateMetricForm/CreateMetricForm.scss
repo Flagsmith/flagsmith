@@ -1,8 +1,4 @@
 .create-metric-form {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-
   input {
     font-weight: var(--font-weight-regular);
   }
@@ -79,12 +75,6 @@
     font-style: italic;
   }
 
-  &__direction-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
   &__direction-pill {
     display: inline-flex;
     align-items: center;
@@ -121,11 +111,7 @@
   &__source {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 16px;
     border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-md);
-    background: var(--color-surface-subtle);
   }
 
   &__source-col {
@@ -143,10 +129,4 @@
     margin-bottom: 4px;
   }
 
-  &__actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    padding-top: 8px;
-  }
 }
