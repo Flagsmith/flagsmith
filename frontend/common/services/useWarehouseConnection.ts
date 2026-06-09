@@ -36,6 +36,16 @@ export const warehouseConnectionService = service
           url: `environments/${environmentId}/warehouse-connections/`,
         }),
       }),
+      testWarehouseConnection: builder.mutation<
+        Res['warehouseConnections'][number],
+        Req['testWarehouseConnection']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'WarehouseConnection' }],
+        query: ({ environmentId, id }) => ({
+          method: 'POST',
+          url: `environments/${environmentId}/warehouse-connections/${id}/test-warehouse-connection/`,
+        }),
+      }),
       updateWarehouseConnection: builder.mutation<
         Res['warehouseConnections'][number],
         Req['updateWarehouseConnection']
@@ -54,5 +64,6 @@ export const {
   useCreateWarehouseConnectionMutation,
   useDeleteWarehouseConnectionMutation,
   useGetWarehouseConnectionsQuery,
+  useTestWarehouseConnectionMutation,
   useUpdateWarehouseConnectionMutation,
 } = warehouseConnectionService

@@ -998,6 +998,7 @@ export type Req = {
     config?: Record<string, string>
   }
   deleteWarehouseConnection: { environmentId: string; id: number }
+  testWarehouseConnection: { environmentId: string; id: number }
   updateWarehouseConnection: {
     environmentId: string
     id: number

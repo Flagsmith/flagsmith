@@ -126,6 +126,7 @@ const WarehouseEventCodeHelp: FC = () => (
       snippets={enabledSnippets}
       showInitially
       hideHeader
+      hideDocs
     />
   </div>
 )
