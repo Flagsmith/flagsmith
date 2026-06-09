@@ -37,34 +37,4 @@
       width: 100%;
     }
   }
-
-  &__list {
-    border: 1px solid var(--color-border-default);
-    overflow: hidden;
-  }
-
-  &__row {
-    padding: 14px 16px;
-
-    & + & {
-      border-top: 1px solid var(--color-border-default);
-    }
-  }
-
-  &__row-main {
-    gap: 2px;
-  }
-
-  &__row-name {
-    font-weight: var(--font-weight-semibold);
-  }
-
-  &__row-desc {
-    font-size: var(--font-body-sm-size);
-  }
-
-  &__row-agg {
-    text-transform: capitalize;
-    font-size: var(--font-caption-size);
-  }
 }

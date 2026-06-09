@@ -11,23 +11,27 @@ import {
 import './CreateMetricForm.scss'
 
 type CreateMetricFormProps = {
+  initialState?: MetricFormState
   isSaving?: boolean
+  submitLabel?: string
   onCancel: () => void
   onSubmit: (state: MetricFormState) => void
 }
 
 const CreateMetricForm: FC<CreateMetricFormProps> = ({
+  initialState = DEFAULT_METRIC_FORM_STATE,
   isSaving,
   onCancel,
   onSubmit,
+  submitLabel = 'Create Metric',
 }) => {
-  const [state, setState] = useState<MetricFormState>(DEFAULT_METRIC_FORM_STATE)
+  const [state, setState] = useState<MetricFormState>(initialState)
 
   const update = (patch: Partial<MetricFormState>) =>
     setState((prev) => ({ ...prev, ...patch }))
 
   const handleCancel = () => {
-    setState(DEFAULT_METRIC_FORM_STATE)
+    setState(initialState)
     onCancel()
   }
 
@@ -166,7 +170,7 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
           onClick={handleSubmit}
           disabled={!canSubmitMetric(state) || isSaving}
         >
-          {isSaving ? 'Creating…' : 'Create Metric'}
+          {isSaving ? 'Saving…' : submitLabel}
         </Button>
       </div>
     </div>

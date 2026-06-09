@@ -590,6 +590,12 @@ export type MetricDefinition = {
   event: string
 }
 
+export type MetricExperiment = {
+  id: number
+  name: string
+  status: ExperimentStatus
+}
+
 export type Metric = {
   id: number
   name: string
@@ -597,6 +603,7 @@ export type Metric = {
   aggregation: MetricAggregation
   direction: MetricDirection
   definition: MetricDefinition
+  experiments: MetricExperiment[]
   created_at: string
   updated_at: string
 }
