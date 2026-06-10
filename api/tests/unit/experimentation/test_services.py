@@ -136,14 +136,14 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
         ExposureBucket(
             variant="control",
             bucket=datetime(2026, 6, 1),
-            new_units=100,
+            first_exposed_identities=100,
             first_exposure=datetime(2026, 6, 1, 8),
             last_exposure=datetime(2026, 6, 1, 20),
         ),
         ExposureBucket(
             variant="variant_a",
             bucket=datetime(2026, 6, 1),
-            new_units=90,
+            first_exposed_identities=90,
             first_exposure=datetime(2026, 6, 1, 9),
             last_exposure=datetime(2026, 6, 1, 21),
         ),

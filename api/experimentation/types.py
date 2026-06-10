@@ -5,7 +5,7 @@ ExposureGranularity = Literal["hour", "day"]
 
 class ExposureVariantData(TypedDict):
     key: str
-    units: int
+    identities: int
     share: float
     is_control: bool
     first_exposure: str
@@ -14,7 +14,7 @@ class ExposureVariantData(TypedDict):
 
 class ExposureTimeseriesPoint(TypedDict):
     bucket: str
-    cumulative_units: dict[str, int]
+    cumulative_identities: dict[str, int]
 
 
 class ExposureTimeseries(TypedDict):
@@ -26,8 +26,8 @@ class ExposuresPayload(TypedDict):
     """An experiment's exposure window, as persisted on snapshots and served
     by the exposures API."""
 
-    total_units: int
-    excluded_units: int
+    total_identities: int
+    excluded_identities: int
     days_of_data: int
     variants: list[ExposureVariantData]
     timeseries: ExposureTimeseries

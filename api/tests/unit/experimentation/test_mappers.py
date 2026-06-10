@@ -10,14 +10,14 @@ from experimentation.mappers import (
 def _bucket(
     variant: str,
     bucket: datetime,
-    new_units: int,
+    first_exposed_identities: int,
     first_exposure: datetime | None = None,
     last_exposure: datetime | None = None,
 ) -> ExposureBucket:
     return ExposureBucket(
         variant=variant,
         bucket=bucket,
-        new_units=new_units,
+        first_exposed_identities=first_exposed_identities,
         first_exposure=first_exposure or bucket,
         last_exposure=last_exposure or bucket,
     )
@@ -44,7 +44,7 @@ def test_select_exposure_granularity__window_beyond_72_hours__day() -> None:
 def test_build_exposures_payload__multiple_variants__totals_shares_and_extremes() -> (
     None
 ):
-    # Given two variants accumulating units over two daily buckets
+    # Given two variants accumulating identities over two daily buckets
     day_1 = datetime(2026, 6, 1, tzinfo=timezone.utc)
     day_2 = datetime(2026, 6, 2, tzinfo=timezone.utc)
     buckets = [
@@ -83,26 +83,26 @@ def test_build_exposures_payload__multiple_variants__totals_shares_and_extremes(
     )
 
     # Then the totals, shares and per-variant exposure extremes are derived
-    assert payload["total_units"] == 310
-    assert payload["excluded_units"] == 0
+    assert payload["total_identities"] == 310
+    assert payload["excluded_identities"] == 0
     assert payload["days_of_data"] == 9
     control, variant_a = payload["variants"]
     assert control == {
         "key": "control",
-        "units": 150,
+        "identities": 150,
         "share": 150 / 310,
         "is_control": True,
         "first_exposure": "2026-06-01T08:00:00+00:00",
         "last_exposure": "2026-06-09T23:00:00+00:00",
     }
     assert variant_a["key"] == "variant_a"
-    assert variant_a["units"] == 160
+    assert variant_a["identities"] == 160
     assert variant_a["share"] == 160 / 310
     assert variant_a["is_control"] is False
 
 
 def test_build_exposures_payload__control_not_largest__still_listed_first() -> None:
-    # Given a control variant with fewer units than two treatments
+    # Given a control variant with fewer identities than two treatments
     day = datetime(2026, 6, 1, tzinfo=timezone.utc)
     buckets = [
         _bucket("variant_b", day, 30),
@@ -118,7 +118,7 @@ def test_build_exposures_payload__control_not_largest__still_listed_first() -> N
         granularity="day",
     )
 
-    # Then control comes first, treatments follow by descending units
+    # Then control comes first, treatments follow by descending identities
     assert [v["key"] for v in payload["variants"]] == [
         "control",
         "variant_b",
@@ -127,7 +127,7 @@ def test_build_exposures_payload__control_not_largest__still_listed_first() -> N
 
 
 def test_build_exposures_payload__tied_treatments__ordered_by_key() -> None:
-    # Given two treatments with the same unit count
+    # Given two treatments with the same identity count
     day = datetime(2026, 6, 1, tzinfo=timezone.utc)
     buckets = [
         _bucket("variant_b", day, 30),
@@ -164,18 +164,18 @@ def test_build_exposures_payload__multiple_sentinel__excluded_and_counted() -> N
     )
 
     # Then they are excluded from variants, shares and the timeseries
-    assert payload["total_units"] == 195
-    assert payload["excluded_units"] == 5
+    assert payload["total_identities"] == 195
+    assert payload["excluded_identities"] == 5
     assert [v["key"] for v in payload["variants"]] == ["control", "variant_a"]
     assert payload["variants"][0]["share"] == 100 / 195
     assert all(
-        set(point["cumulative_units"]) == {"control", "variant_a"}
+        set(point["cumulative_identities"]) == {"control", "variant_a"}
         for point in payload["timeseries"]["points"]
     )
 
 
 def test_build_exposures_payload__sparse_buckets__cumulative_carries_forward() -> None:
-    # Given variants whose units arrive in different buckets
+    # Given variants whose identities arrive in different buckets
     day_1 = datetime(2026, 6, 1, tzinfo=timezone.utc)
     day_2 = datetime(2026, 6, 2, tzinfo=timezone.utc)
     buckets = [
@@ -197,11 +197,11 @@ def test_build_exposures_payload__sparse_buckets__cumulative_carries_forward() -
         "points": [
             {
                 "bucket": "2026-06-01T00:00:00+00:00",
-                "cumulative_units": {"control": 10, "variant_a": 0},
+                "cumulative_identities": {"control": 10, "variant_a": 0},
             },
             {
                 "bucket": "2026-06-02T00:00:00+00:00",
-                "cumulative_units": {"control": 10, "variant_a": 7},
+                "cumulative_identities": {"control": 10, "variant_a": 7},
             },
         ],
     }
@@ -219,8 +219,8 @@ def test_build_exposures_payload__no_buckets__empty_payload() -> None:
 
     # Then the payload is empty but fully shaped
     assert payload == {
-        "total_units": 0,
-        "excluded_units": 0,
+        "total_identities": 0,
+        "excluded_identities": 0,
         "days_of_data": 1,
         "variants": [],
         "timeseries": {"granularity": "hour", "points": []},

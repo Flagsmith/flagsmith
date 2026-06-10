@@ -97,7 +97,7 @@ def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
 
 
 # Identities are reduced to their first exposure, so at-least-once duplicate
-# delivery cannot inflate unit counts, and identities seen in more than one
+# delivery cannot inflate identity counts, and identities seen in more than one
 # variant are quarantined under the sentinel variant. Bucketing first exposures
 # powers the cumulative time series.
 EXPOSURE_BUCKETS_QUERY = """
@@ -118,7 +118,7 @@ WITH exposures AS (
 SELECT
     variant,
     {bucket_function}(first_exposure) AS bucket,
-    count() AS new_units,
+    count() AS first_exposed_identities,
     min(first_exposure) AS first_exposure,
     max(last_exposure) AS last_exposure
 FROM exposures
@@ -158,11 +158,17 @@ def get_exposure_buckets(
         ExposureBucket(
             variant=variant,
             bucket=bucket,
-            new_units=int(new_units),
+            first_exposed_identities=int(first_exposed_identities),
             first_exposure=first_exposure,
             last_exposure=last_exposure,
         )
-        for variant, bucket, new_units, first_exposure, last_exposure in rows
+        for (
+            variant,
+            bucket,
+            first_exposed_identities,
+            first_exposure,
+            last_exposure,
+        ) in rows
     ]
 
 

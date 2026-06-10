@@ -40,16 +40,16 @@ def build_exposures_payload(
     granularity: ExposureGranularity,
 ) -> ExposuresPayload:
     included = [b for b in buckets if b.variant != MULTIPLE_VARIANT_KEY]
-    excluded_units = sum(
-        b.new_units for b in buckets if b.variant == MULTIPLE_VARIANT_KEY
+    excluded_identities = sum(
+        b.first_exposed_identities for b in buckets if b.variant == MULTIPLE_VARIANT_KEY
     )
-    total_units = sum(b.new_units for b in included)
+    total_identities = sum(b.first_exposed_identities for b in included)
 
     return ExposuresPayload(
-        total_units=total_units,
-        excluded_units=excluded_units,
+        total_identities=total_identities,
+        excluded_identities=excluded_identities,
         days_of_data=_days_of_data(window_start, window_end),
-        variants=_build_variants(included, total_units),
+        variants=_build_variants(included, total_identities),
         timeseries={
             "granularity": granularity,
             "points": _build_timeseries_points(included),
@@ -63,17 +63,20 @@ def _days_of_data(window_start: datetime, window_end: datetime) -> int:
 
 def _build_variants(
     buckets: Sequence[ExposureBucket],
-    total_units: int,
+    total_identities: int,
 ) -> list[ExposureVariantData]:
+    buckets_by_variant: dict[str, list[ExposureBucket]] = {}
+    for b in buckets:
+        buckets_by_variant.setdefault(b.variant, []).append(b)
+
     variants: list[ExposureVariantData] = []
-    for key in {b.variant for b in buckets}:
-        variant_buckets = [b for b in buckets if b.variant == key]
-        units = sum(b.new_units for b in variant_buckets)
+    for key, variant_buckets in buckets_by_variant.items():
+        identities = sum(b.first_exposed_identities for b in variant_buckets)
         variants.append(
             ExposureVariantData(
                 key=key,
-                units=units,
-                share=units / total_units if total_units else 0.0,
+                identities=identities,
+                share=identities / total_identities if total_identities else 0.0,
                 is_control=key == CONTROL_VARIANT_KEY,
                 first_exposure=_isoformat_utc(
                     min(b.first_exposure for b in variant_buckets)
@@ -83,25 +86,28 @@ def _build_variants(
                 ),
             )
         )
-    # Control first, then treatments by descending units, ties alphabetically.
-    variants.sort(key=lambda v: (not v["is_control"], -v["units"], v["key"]))
+    # Control first, then treatments by descending identities, ties
+    # alphabetically.
+    variants.sort(key=lambda v: (not v["is_control"], -v["identities"], v["key"]))
     return variants
 
 
 def _build_timeseries_points(
     buckets: Sequence[ExposureBucket],
 ) -> list[ExposureTimeseriesPoint]:
-    variant_keys = {b.variant for b in buckets}
-    running = dict.fromkeys(variant_keys, 0)
+    running = dict.fromkeys({b.variant for b in buckets}, 0)
+    buckets_by_start: dict[datetime, list[ExposureBucket]] = {}
+    for b in buckets:
+        buckets_by_start.setdefault(b.bucket, []).append(b)
+
     points: list[ExposureTimeseriesPoint] = []
-    for bucket_start in sorted({b.bucket for b in buckets}):
-        for b in buckets:
-            if b.bucket == bucket_start:
-                running[b.variant] += b.new_units
+    for bucket_start in sorted(buckets_by_start):
+        for b in buckets_by_start[bucket_start]:
+            running[b.variant] += b.first_exposed_identities
         points.append(
             ExposureTimeseriesPoint(
                 bucket=_isoformat_utc(bucket_start),
-                cumulative_units=dict(running),
+                cumulative_identities=dict(running),
             )
         )
     return points
