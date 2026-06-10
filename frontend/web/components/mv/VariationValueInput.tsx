@@ -2,11 +2,14 @@ import React from 'react'
 import ValueEditor from 'components/ValueEditor'
 import Constants from 'common/constants'
 import Icon from 'components/icons/Icon'
+import Input from 'components/base/forms/Input'
 import InputGroup from 'components/base/forms/InputGroup'
+import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
 import shallowEqual from 'fbjs/lib/shallowEqual'
 import { ProjectPermission } from 'common/types/permissions.types'
 import { VariationKeyLabel } from './VariationKeyLabel'
+import './VariationValueInput.scss'
 
 interface VariationValueProps {
   canCreateFeature: boolean
@@ -16,6 +19,7 @@ interface VariationValueProps {
   onRemove?: () => void
   readOnly: boolean
   siblingKeys: (string | null | undefined)[]
+  unsaved?: boolean
   value: any
   weightTitle: string
 }
@@ -28,106 +32,110 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
   onRemove,
   readOnly,
   siblingKeys,
+  unsaved,
   value,
   weightTitle,
 }) => {
   return (
-    <div className='mb-2'>
-      <VariationKeyLabel
-        value={value.key}
-        index={index}
-        disabled={disabled || !canCreateFeature}
-        readOnly={readOnly}
-        siblingKeys={siblingKeys}
-        onChange={(key) => onChange({ ...value, key })}
-      />
-      <Row className='align-items-start'>
-        <div className='flex flex-1 overflow-hidden'>
-          <InputGroup
-            noMargin
-            component={
-              <>
-                {Utils.renderWithPermission(
-                  canCreateFeature,
-                  readOnly
-                    ? 'Variation values are defined at the feature level and cannot be changed per segment.'
-                    : Constants.projectPermissions(
-                        ProjectPermission.CREATE_FEATURE,
-                      ),
-                  <ValueEditor
-                    data-test={`featureVariationValue${
-                      Utils.featureStateToValue(value) || index
-                    }`}
-                    name='featureValue'
-                    className='full-width code-medium'
-                    value={Utils.getTypedValue(
-                      Utils.featureStateToValue(value),
-                    )}
-                    disabled={!canCreateFeature || disabled || readOnly}
-                    onBlur={() => {
-                      const newValue = {
-                        ...value,
-                        // Trim spaces and do conversion on blur
-                        ...Utils.valueToFeatureState(
-                          Utils.featureStateToValue(value),
-                        ),
-                      }
-                      if (!shallowEqual(newValue, value)) {
-                        //occurs if we converted a trimmed value
-                        onChange(newValue)
-                      }
-                    }}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      onChange({
-                        ...value,
-                        ...Utils.valueToFeatureState(
-                          Utils.safeParseEventValue(e),
-                          false,
-                        ),
-                      })
-                    }}
-                    placeholder="e.g. 'big' "
-                  />,
-                )}
-              </>
-            }
-            tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
-            title='Variation Value'
-          />
-        </div>
-        <div className='ml-3' style={{ width: 160 }}>
-          <InputGroup
-            type='number'
-            data-test={`featureVariationWeight${Utils.featureStateToValue(
-              value,
-            )}`}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const val = Utils.safeParseEventValue(e)
-              onChange({
-                ...value,
-                default_percentage_allocation: val ? parseFloat(val) : null,
-              })
-            }}
-            value={value.default_percentage_allocation}
-            inputProps={{
-              readOnly: disabled,
-              step: 'any',
-            }}
-            title={weightTitle}
-          />
-        </div>
-        {!!onRemove && !readOnly && (
-          <div style={{ top: '27px' }} className='ml-2 position-relative'>
-            <button
+    <div className='variant-card rounded border-1 shadow-sm p-3 mb-3'>
+      <Row className='justify-content-between align-items-start mb-3'>
+        <VariationKeyLabel
+          value={value.key}
+          index={index}
+          disabled={disabled || !canCreateFeature}
+          readOnly={readOnly}
+          siblingKeys={siblingKeys}
+          onChange={(key) => onChange({ ...value, key })}
+        />
+        <div className='d-flex align-items-center gap-3'>
+          {!!unsaved && <span className='chip chip--xs'>Not saved</span>}
+          {!!onRemove && !readOnly && (
+            <Button
+              theme='text'
               onClick={onRemove}
               id='delete-multivariate'
-              type='button'
-              className='btn btn-with-icon'
+              aria-label='Remove variant'
             >
-              <Icon name='trash-2' width={20} fill={'#656D7B'} />
-            </button>
+              <Icon name='trash-2' width={20} fill='#656D7B' />
+            </Button>
+          )}
+        </div>
+      </Row>
+      <InputGroup
+        noMargin
+        component={
+          <>
+            {Utils.renderWithPermission(
+              canCreateFeature,
+              readOnly
+                ? 'Variation values are defined at the feature level and cannot be changed per segment.'
+                : Constants.projectPermissions(
+                    ProjectPermission.CREATE_FEATURE,
+                  ),
+              <ValueEditor
+                data-test={`featureVariationValue${
+                  Utils.featureStateToValue(value) || index
+                }`}
+                name='featureValue'
+                className='full-width code-medium'
+                value={Utils.getTypedValue(Utils.featureStateToValue(value))}
+                disabled={!canCreateFeature || disabled || readOnly}
+                onBlur={() => {
+                  const newValue = {
+                    ...value,
+                    // Trim spaces and do conversion on blur
+                    ...Utils.valueToFeatureState(
+                      Utils.featureStateToValue(value),
+                    ),
+                  }
+                  if (!shallowEqual(newValue, value)) {
+                    //occurs if we converted a trimmed value
+                    onChange(newValue)
+                  }
+                }}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  onChange({
+                    ...value,
+                    ...Utils.valueToFeatureState(
+                      Utils.safeParseEventValue(e),
+                      false,
+                    ),
+                  })
+                }}
+                placeholder="e.g. 'big' "
+              />,
+            )}
+          </>
+        }
+        tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
+        title='Variation Value'
+      />
+      <Row className='justify-content-between align-items-center mt-2'>
+        <label className='mb-0'>{weightTitle}</label>
+        <div className='d-flex align-items-center gap-2'>
+          <div style={{ width: 64 }}>
+            <Input
+              type='number'
+              size='small'
+              underline
+              centered
+              data-test={`featureVariationWeight${Utils.featureStateToValue(
+                value,
+              )}`}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const val = Utils.safeParseEventValue(e)
+                onChange({
+                  ...value,
+                  default_percentage_allocation: val ? parseFloat(val) : null,
+                })
+              }}
+              value={value.default_percentage_allocation}
+              readOnly={disabled}
+              step='any'
+            />
           </div>
-        )}
+          <span className='text-muted'>%</span>
+        </div>
       </Row>
     </div>
   )

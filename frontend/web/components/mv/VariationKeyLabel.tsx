@@ -35,22 +35,23 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
   // Display-only placeholder when no label is set; the persisted key stays null.
   const displayName = value || `Variant_${index + 1}`
 
+  // Validates the raw input — trimming here would hide a trailing
+  // space from the user until their next keystroke.
   const validate = (next: string): string | null => {
-    const trimmed = next.trim()
-    if (!trimmed) {
+    if (!next) {
       // Empty clears the label (key persists as null).
       return null
     }
-    if (trimmed.length > Constants.forms.maxLength.VARIANT_KEY) {
+    if (next.length > Constants.forms.maxLength.VARIANT_KEY) {
       return `Label must be ${Constants.forms.maxLength.VARIANT_KEY} characters or fewer.`
     }
-    if (!VARIANT_KEY_REGEX.test(trimmed)) {
+    if (!VARIANT_KEY_REGEX.test(next)) {
       return 'Label can only contain letters, numbers, hyphens and underscores.'
     }
-    if (trimmed === Constants.strings.RESERVED_VARIANT_KEY) {
+    if (next === Constants.strings.RESERVED_VARIANT_KEY) {
       return `"${Constants.strings.RESERVED_VARIANT_KEY}" is a reserved label.`
     }
-    if (siblingKeys.some((key) => key === trimmed)) {
+    if (siblingKeys.some((key) => key === next)) {
       return 'This label is already used by another variation.'
     }
     return null
@@ -69,24 +70,26 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
   }
 
   const commit = () => {
-    const trimmed = draft.trim()
-    const validationError = validate(trimmed)
+    const validationError = validate(draft)
     if (validationError) {
       setError(validationError)
       return
     }
-    onChange(trimmed || null)
+    onChange(draft || null)
     setError(null)
     setIsEditing(false)
   }
 
   if (isEditing && canEdit) {
     return (
-      <div className='mb-2'>
-        <Row className='align-items-center gap-4'>
+      <div>
+        <Row className='align-items-center gap-3'>
           <Input
             autoFocus
             size='small'
+            underline
+            data-test={`featureVariationKeyInput${index}`}
+            style={{ width: 150 }}
             value={draft}
             isValid={!error}
             maxLength={Constants.forms.maxLength.VARIANT_KEY}
@@ -107,23 +110,18 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
               }
             }}
           />
-          <div className='d-flex align-items-center gap-2'>
-            <button
-              type='button'
-              className='btn btn-with-icon'
+          <div className='d-flex align-items-center gap-1'>
+            <Button
+              theme='text'
               onClick={commit}
+              data-test={`featureVariationKeySave${index}`}
               aria-label='Save label'
             >
               <Icon name='checkmark-circle' width={20} fill='#6837FC' />
-            </button>
-            <button
-              type='button'
-              className='btn btn-with-icon'
-              onClick={cancel}
-              aria-label='Cancel'
-            >
+            </Button>
+            <Button theme='text' onClick={cancel} aria-label='Cancel'>
               <Icon name='close-circle' width={20} fill='#656D7B' />
-            </button>
+            </Button>
           </div>
         </Row>
         {!!error && <span className='text-danger text-small'>{error}</span>}
@@ -132,13 +130,19 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
   }
 
   return (
-    <Row className='align-items-center mb-2'>
-      <span className='h5 mb-0'>{displayName}</span>
+    <Row className='align-items-center'>
+      <span
+        className='h6 mb-0 font-weight-semibold'
+        data-test={`featureVariationKey${index}`}
+      >
+        {displayName}
+      </span>
       {canEdit && (
         <Button
           theme='text'
           className='text-primary ml-2'
           onClick={startEditing}
+          data-test={`featureVariationKeyEdit${index}`}
           aria-label='Edit label'
         >
           <Icon name='edit' width={16} />

@@ -92,7 +92,8 @@ const Utils = Object.assign({}, BaseUtils, {
       } else if (typeof v.default_percentage_allocation === 'number') {
         total += v.default_percentage_allocation
       } else {
-        total += (v as any).percentage_allocation
+        // A cleared weight input leaves the allocation null — treat as 0.
+        total += (v as any).percentage_allocation || 0
       }
       return null
     })

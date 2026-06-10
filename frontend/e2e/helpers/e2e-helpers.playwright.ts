@@ -626,6 +626,32 @@ export class E2EHelpers {
     await this.waitForElementNotExist('#create-feature-modal');
   }
 
+  // Edit a variant's label (the multivariate option key) and verify it persists
+  async editVariantLabel(featureName: string, index: number, label: string) {
+    await this.gotoFeatures();
+    const featureRow = this.page.locator('[data-test^="feature-item-"]').filter({
+      has: this.page.locator(`span:text-is("${featureName}")`)
+    }).first();
+    await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    await featureRow.dispatchEvent('click');
+    await this.waitForElementVisible(byId('update-feature-btn'));
+    await this.click(byId(`featureVariationKeyEdit${index}`));
+    await this.setText(byId(`featureVariationKeyInput${index}`), label);
+    await this.click(byId(`featureVariationKeySave${index}`));
+    await expect(this.page.locator(byId(`featureVariationKey${index}`))).toHaveText(label);
+    await this.waitForToastsToClear();
+    await this.click(byId('update-feature-btn'));
+    await this.waitForToast();
+    await this.closeModal();
+    await this.waitForElementNotExist('#create-feature-modal');
+    // Reopen the feature and verify the label was saved
+    await featureRow.dispatchEvent('click');
+    await this.waitForElementVisible(byId('update-feature-btn'));
+    await expect(this.page.locator(byId(`featureVariationKey${index}`))).toHaveText(label);
+    await this.closeModal();
+    await this.waitForElementNotExist('#create-feature-modal');
+  }
+
   // Create an environment
   async createEnvironment(name: string) {
     await this.page.waitForLoadState('networkidle');

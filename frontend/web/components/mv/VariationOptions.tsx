@@ -1,6 +1,5 @@
 import React from 'react'
 import ValueEditor from 'components/ValueEditor'
-import InfoMessage from 'components/InfoMessage'
 import ErrorMessage from 'components/ErrorMessage'
 import { VariationValueInput } from './VariationValueInput'
 import Utils from 'common/utils/utils'
@@ -24,6 +23,7 @@ interface VariationOptionsProps {
   select?: boolean
   setValue: (value: FlagsmithValue) => void
   setVariations: (variations: VariationOverride[]) => void
+  unsavedVariations?: boolean[]
   updateVariation: (
     index: number,
     value: MultivariateOption,
@@ -44,6 +44,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
   select,
   setValue,
   setVariations,
+  unsavedVariations,
   updateVariation,
   variationOverrides,
   weightTitle,
@@ -63,26 +64,6 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
           error='Your variation percentage splits total to over 100%'
         />
       )}
-      {!readOnly && (
-        <p className='mb-4'>
-          <InfoMessage collapseId={'variation-value'}>
-            Changing a Variation Value will affect{' '}
-            <strong>all environments</strong>, their weights are specific to
-            this environment. Existing users will see the new variation value if
-            it is changed. These values will only apply when you identify via
-            the SDK.
-            <a
-              target='_blank'
-              href='https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags'
-              rel='noreferrer'
-            >
-              Check the Docs for more details
-            </a>
-            .
-          </InfoMessage>
-        </p>
-      )}
-
       {select && (
         <div className='panel panel--flat panel-without-heading mb-2'>
           <div className='panel-content'>
@@ -167,6 +148,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
             index={i}
             canCreateFeature={canCreateFeature}
             readOnly={readOnly ?? false}
+            unsaved={unsavedVariations?.[i]}
             value={theValue}
             siblingKeys={multivariateOptions
               .filter((_, index) => index !== i)
