@@ -318,9 +318,9 @@ Attributes:
 
 ### `mcp.tool.called`
 
-Logged at `warning` from:
- - `api/telemetry/middleware.py:57`
- - `api/telemetry/middleware.py:59`
+Logged at `info` from:
+ - `api/telemetry/middleware.py:56`
+ - `api/telemetry/middleware.py:58`
 
 Attributes:
  - `organisation.id`

@@ -53,10 +53,9 @@ class MCPUsageLoggerMiddleware:
         }
         try:
             org_id = self._get_organisation_id(request)
+            logger.info("tool.called", organisation__id=org_id, **event)
         except UndefinedOrganisationError:
             logger.warning("tool.called", organisation__id=None, **event)
-        else:
-            logger.info("tool.called", organisation__id=org_id, **event)
 
         return response
 
