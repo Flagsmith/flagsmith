@@ -135,24 +135,13 @@ class ExposureSnapshotStatus(models.TextChoices):
 
 
 class ExperimentExposureSnapshot(models.Model):
-    """A point-in-time computation of an experiment's exposures from the
-    warehouse.
-
-    Snapshots always cover the experiment's full window so far — identity
-    deduplication, multi-variant quarantine and late event delivery make
-    incremental windows unsound. The latest snapshot is what the exposures
-    API serves; the final one, taken on completion, outlives the warehouse's
-    event retention.
-    """
-
     experiment = models.ForeignKey(
         Experiment,
         on_delete=models.CASCADE,
         related_name="exposure_snapshots",
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    window_start = models.DateTimeField()
-    window_end = models.DateTimeField()
+    as_of = models.DateTimeField()
     status = models.CharField(
         max_length=20,
         choices=ExposureSnapshotStatus.choices,
