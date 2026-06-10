@@ -214,5 +214,5 @@ jobs:
             --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment
           aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"
         env:
-          CLUSTER: ${{ vars.MCP_ECS_CLUSTER }}
-          SERVICE: ${{ vars.MCP_ECS_SERVICE }}
+          CLUSTER: ${{ vars.AWS_ECS_CLUSTER_NAME }}
+          SERVICE: ${{ vars.AWS_ECS_MCP_SERVICE_NAME }}
