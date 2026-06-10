@@ -4,6 +4,8 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
+import { colorIconAction, colorIconSecondary } from 'common/theme/tokens'
+import './VariationKeyLabel.scss'
 
 interface VariationKeyLabelProps {
   // The variant's `key`, surfaced in the UI as its "Label".
@@ -88,8 +90,8 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
             autoFocus
             size='small'
             underline
+            className='variation-key-label__input'
             data-test={`featureVariationKeyInput${index}`}
-            style={{ width: 150 }}
             value={draft}
             isValid={!error}
             maxLength={Constants.forms.maxLength.VARIANT_KEY}
@@ -117,10 +119,10 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
               data-test={`featureVariationKeySave${index}`}
               aria-label='Save label'
             >
-              <Icon name='checkmark-circle' width={20} fill='#6837FC' />
+              <Icon name='checkmark-circle' width={20} fill={colorIconAction} />
             </Button>
             <Button theme='text' onClick={cancel} aria-label='Cancel'>
-              <Icon name='close-circle' width={20} fill='#656D7B' />
+              <Icon name='close-circle' width={20} fill={colorIconSecondary} />
             </Button>
           </div>
         </Row>

@@ -2,6 +2,10 @@
   // The InputGroup label is internal to the component, so its weight
   // can only be reduced from here.
   label {
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
+  }
+
+  &__weight {
+    width: 64px;
   }
 }

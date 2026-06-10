@@ -8,7 +8,8 @@ import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
 import shallowEqual from 'fbjs/lib/shallowEqual'
 import { ProjectPermission } from 'common/types/permissions.types'
-import { VariationKeyLabel } from './VariationKeyLabel'
+import { colorIconSecondary } from 'common/theme/tokens'
+import { VariationKeyLabel } from 'components/mv/VariationKeyLabel'
 import './VariationValueInput.scss'
 
 interface VariationValueProps {
@@ -56,7 +57,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
               id='delete-multivariate'
               aria-label='Remove variant'
             >
-              <Icon name='trash-2' width={20} fill='#656D7B' />
+              <Icon name='trash-2' width={20} fill={colorIconSecondary} />
             </Button>
           )}
         </div>
@@ -113,7 +114,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
       <Row className='justify-content-between align-items-center mt-2'>
         <label className='mb-0'>{weightTitle}</label>
         <div className='d-flex align-items-center gap-2'>
-          <div style={{ width: 64 }}>
+          <div className='variant-card__weight'>
             <Input
               type='number'
               size='small'

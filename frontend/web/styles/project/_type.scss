@@ -60,7 +60,7 @@ a {
 }
 
 .font-weight-semibold {
-  font-weight: 600 !important;
+  font-weight: var(--font-weight-semibold) !important;
 }
 
 .text-primary {
