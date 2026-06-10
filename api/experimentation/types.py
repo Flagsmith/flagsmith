@@ -6,7 +6,6 @@ ExposureGranularity = Literal["hour", "day"]
 class ExposureVariantData(TypedDict):
     key: str
     identities: int
-    share: float
     is_control: bool
 
 

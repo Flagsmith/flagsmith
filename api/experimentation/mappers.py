@@ -35,7 +35,7 @@ def build_exposures_payload(
         total_identities=total_identities,
         excluded_identities=excluded_identities,
         days_of_data=_days_of_data(window_start, window_end),
-        variants=_build_variants(included, total_identities),
+        variants=_build_variants(included),
         timeseries={
             "granularity": granularity,
             "points": _build_timeseries_points(included),
@@ -49,23 +49,21 @@ def _days_of_data(window_start: datetime, window_end: datetime) -> int:
 
 def _build_variants(
     buckets: Sequence[ExposureBucket],
-    total_identities: int,
 ) -> list[ExposureVariantData]:
-    buckets_by_variant: dict[str, list[ExposureBucket]] = {}
+    identities_by_variant: dict[str, int] = {}
     for b in buckets:
-        buckets_by_variant.setdefault(b.variant, []).append(b)
-
-    variants: list[ExposureVariantData] = []
-    for key, variant_buckets in buckets_by_variant.items():
-        identities = sum(b.first_exposed_identities for b in variant_buckets)
-        variants.append(
-            ExposureVariantData(
-                key=key,
-                identities=identities,
-                share=identities / total_identities if total_identities else 0.0,
-                is_control=key == CONTROL_VARIANT_KEY,
-            )
+        identities_by_variant[b.variant] = (
+            identities_by_variant.get(b.variant, 0) + b.first_exposed_identities
         )
+
+    variants = [
+        ExposureVariantData(
+            key=key,
+            identities=identities,
+            is_control=key == CONTROL_VARIANT_KEY,
+        )
+        for key, identities in identities_by_variant.items()
+    ]
     variants.sort(key=lambda v: (not v["is_control"], -v["identities"], v["key"]))
     return variants
 

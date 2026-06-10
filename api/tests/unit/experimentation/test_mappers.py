@@ -16,7 +16,7 @@ def _bucket(
     )
 
 
-def test_build_exposures_payload__multiple_variants__totals_and_shares() -> None:
+def test_build_exposures_payload__multiple_variants__derives_totals() -> None:
     # Given two variants accumulating identities over two daily buckets
     day_1 = datetime(2026, 6, 1, tzinfo=timezone.utc)
     day_2 = datetime(2026, 6, 2, tzinfo=timezone.utc)
@@ -35,7 +35,7 @@ def test_build_exposures_payload__multiple_variants__totals_and_shares() -> None
         granularity="day",
     )
 
-    # Then the totals and shares are derived
+    # Then the totals are derived
     assert payload["total_identities"] == 310
     assert payload["excluded_identities"] == 0
     assert payload["days_of_data"] == 9
@@ -43,13 +43,13 @@ def test_build_exposures_payload__multiple_variants__totals_and_shares() -> None
     assert control == {
         "key": "control",
         "identities": 150,
-        "share": 150 / 310,
         "is_control": True,
     }
-    assert variant_a["key"] == "variant_a"
-    assert variant_a["identities"] == 160
-    assert variant_a["share"] == 160 / 310
-    assert variant_a["is_control"] is False
+    assert variant_a == {
+        "key": "variant_a",
+        "identities": 160,
+        "is_control": False,
+    }
 
 
 def test_build_exposures_payload__control_not_largest__still_listed_first() -> None:
@@ -114,11 +114,10 @@ def test_build_exposures_payload__multiple_sentinel__excluded_and_counted() -> N
         granularity="day",
     )
 
-    # Then they are excluded from variants, shares and the timeseries
+    # Then they are excluded from variants, the total and the timeseries
     assert payload["total_identities"] == 195
     assert payload["excluded_identities"] == 5
     assert [v["key"] for v in payload["variants"]] == ["control", "variant_a"]
-    assert payload["variants"][0]["share"] == 100 / 195
     assert all(
         set(point["cumulative_identities"]) == {"control", "variant_a"}
         for point in payload["timeseries"]["points"]
