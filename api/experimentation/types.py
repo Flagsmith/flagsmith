@@ -1,4 +1,36 @@
-from typing import TypedDict
+from typing import Literal, TypedDict
+
+ExposureGranularity = Literal["hour", "day"]
+
+
+class ExposureVariantData(TypedDict):
+    key: str
+    units: int
+    share: float
+    is_control: bool
+    first_exposure: str
+    last_exposure: str
+
+
+class ExposureTimeseriesPoint(TypedDict):
+    bucket: str
+    cumulative_units: dict[str, int]
+
+
+class ExposureTimeseries(TypedDict):
+    granularity: ExposureGranularity
+    points: list[ExposureTimeseriesPoint]
+
+
+class ExposuresPayload(TypedDict):
+    """An experiment's exposure window, as persisted on snapshots and served
+    by the exposures API."""
+
+    total_units: int
+    excluded_units: int
+    days_of_data: int
+    variants: list[ExposureVariantData]
+    timeseries: ExposureTimeseries
 
 
 class MetricDefinitionV1(TypedDict):

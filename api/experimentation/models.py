@@ -15,7 +15,7 @@ from experimentation.tasks import (
     add_environment_key_to_ingestion,
     delete_environment_key_from_ingestion,
 )
-from experimentation.types import MetricDefinition
+from experimentation.types import ExposuresPayload, MetricDefinition
 
 if typing.TYPE_CHECKING:
     from experimentation.dataclasses import WarehouseEventStats
@@ -125,6 +125,48 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
                 fields=["feature", "environment"],
                 condition=Q(deleted_at__isnull=True) & ~Q(status="completed"),
                 name="unique_active_experiment_per_feature_env",
+            ),
+        ]
+
+
+class ExposureSnapshotStatus(models.TextChoices):
+    SUCCESS = "success", "Success"
+    ERROR = "error", "Error"
+
+
+class ExperimentExposureSnapshot(models.Model):
+    """A point-in-time computation of an experiment's exposures from the
+    warehouse.
+
+    Snapshots always cover the experiment's full window so far — identity
+    deduplication, multi-variant quarantine and late event delivery make
+    incremental windows unsound. The latest snapshot is what the exposures
+    API serves; the final one, taken on completion, outlives the warehouse's
+    event retention.
+    """
+
+    experiment = models.ForeignKey(
+        Experiment,
+        on_delete=models.CASCADE,
+        related_name="exposure_snapshots",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    window_start = models.DateTimeField()
+    window_end = models.DateTimeField()
+    status = models.CharField(
+        max_length=20,
+        choices=ExposureSnapshotStatus.choices,
+    )
+    error = models.TextField(blank=True, default="")
+    payload: models.JSONField[ExposuresPayload | None, ExposuresPayload | None] = (
+        models.JSONField(null=True, blank=True)
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=["experiment", "-created_at"],
+                name="exposure_snapshot_latest_idx",
             ),
         ]
 

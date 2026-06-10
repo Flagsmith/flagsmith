@@ -11,8 +11,13 @@ from django.utils import timezone
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
-from experimentation.constants import EXPERIMENT_FLAG, WAREHOUSE_CONNECTION_FLAG
-from experimentation.dataclasses import WarehouseEventStats
+from experimentation.constants import (
+    EXPERIMENT_FLAG,
+    EXPOSURE_EVENT_NAME,
+    MULTIPLE_VARIANT_KEY,
+    WAREHOUSE_CONNECTION_FLAG,
+)
+from experimentation.dataclasses import ExposureBucket, WarehouseEventStats
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
     ExperimentStatus,
@@ -22,7 +27,10 @@ from experimentation.models import (
 from integrations.flagsmith.client import get_openfeature_client
 
 if typing.TYPE_CHECKING:
+    from datetime import datetime
+
     from experimentation.models import Experiment, Metric, WarehouseConnection
+    from experimentation.types import ExposureGranularity
     from organisations.models import Organisation
     from users.models import FFAdminUser
 
@@ -86,6 +94,76 @@ def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
         total_events_received=int(total),
         unique_events_count=int(unique),
     )
+
+
+# Identities are reduced to their first exposure, so at-least-once duplicate
+# delivery cannot inflate unit counts, and identities seen in more than one
+# variant are quarantined under the sentinel variant. Bucketing first exposures
+# powers the cumulative time series.
+EXPOSURE_BUCKETS_QUERY = """
+WITH exposures AS (
+    SELECT
+        identifier,
+        if(uniqExact(value) > 1, %(multiple_variant)s, any(value)) AS variant,
+        min(timestamp) AS first_exposure,
+        max(timestamp) AS last_exposure
+    FROM events
+    WHERE environment_key = %(environment_key)s
+        AND event = %(exposure_event)s
+        AND feature_name = %(feature_name)s
+        AND timestamp >= %(window_start)s
+        AND timestamp <= %(window_end)s
+    GROUP BY identifier
+)
+SELECT
+    variant,
+    {bucket_function}(first_exposure) AS bucket,
+    count() AS new_units,
+    min(first_exposure) AS first_exposure,
+    max(last_exposure) AS last_exposure
+FROM exposures
+GROUP BY variant, bucket
+ORDER BY bucket
+"""
+
+_EXPOSURE_BUCKET_FUNCTIONS: dict[str, str] = {
+    "hour": "toStartOfHour",
+    "day": "toStartOfDay",
+}
+
+
+def get_exposure_buckets(
+    *,
+    environment_key: str,
+    feature_name: str,
+    window_start: datetime,
+    window_end: datetime,
+    granularity: ExposureGranularity,
+) -> list[ExposureBucket]:
+    """Return an experiment's exposures per variant per time bucket."""
+    rows = _get_clickhouse_client().execute(
+        EXPOSURE_BUCKETS_QUERY.format(
+            bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
+        ),
+        {
+            "environment_key": environment_key,
+            "exposure_event": EXPOSURE_EVENT_NAME,
+            "feature_name": feature_name,
+            "multiple_variant": MULTIPLE_VARIANT_KEY,
+            "window_start": window_start,
+            "window_end": window_end,
+        },
+    )
+    return [
+        ExposureBucket(
+            variant=variant,
+            bucket=bucket,
+            new_units=int(new_units),
+            first_exposure=first_exposure,
+            last_exposure=last_exposure,
+        )
+        for variant, bucket, new_units, first_exposure, last_exposure in rows
+    ]
 
 
 def _resolve_audit_log_author(

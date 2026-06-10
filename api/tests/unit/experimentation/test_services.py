@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import pytest
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -5,7 +7,7 @@ from pytest_structlog import StructuredLogCapture
 
 from environments.models import Environment
 from experimentation import services
-from experimentation.dataclasses import WarehouseEventStats
+from experimentation.dataclasses import ExposureBucket, WarehouseEventStats
 from experimentation.models import (
     WarehouseConnection,
     WarehouseConnectionStatus,
@@ -89,6 +91,103 @@ def test_get_unique_event_names__events_present__returns_ordered_names(
         "ORDER BY event",
         {"environment_key": "env-key-123"},
     )
+
+
+def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
+    mocker: MockerFixture,
+) -> None:
+    # Given the warehouse returns one bucket row per variant per day
+    rows = [
+        (
+            "control",
+            datetime(2026, 6, 1),
+            100,
+            datetime(2026, 6, 1, 8),
+            datetime(2026, 6, 1, 20),
+        ),
+        (
+            "variant_a",
+            datetime(2026, 6, 1),
+            90,
+            datetime(2026, 6, 1, 9),
+            datetime(2026, 6, 1, 21),
+        ),
+    ]
+    mock_client = mocker.Mock()
+    mock_client.execute.return_value = rows
+    mocker.patch(
+        "experimentation.services._get_clickhouse_client",
+        return_value=mock_client,
+    )
+    window_start = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
+
+    # When
+    result = services.get_exposure_buckets(
+        environment_key="env-key-123",
+        feature_name="my-feature",
+        window_start=window_start,
+        window_end=window_end,
+        granularity="day",
+    )
+
+    # Then the rows are mapped to dataclasses
+    assert result == [
+        ExposureBucket(
+            variant="control",
+            bucket=datetime(2026, 6, 1),
+            new_units=100,
+            first_exposure=datetime(2026, 6, 1, 8),
+            last_exposure=datetime(2026, 6, 1, 20),
+        ),
+        ExposureBucket(
+            variant="variant_a",
+            bucket=datetime(2026, 6, 1),
+            new_units=90,
+            first_exposure=datetime(2026, 6, 1, 9),
+            last_exposure=datetime(2026, 6, 1, 21),
+        ),
+    ]
+    # And the query buckets first exposures by day, deduplicates identities,
+    # and quarantines identities seen in more than one variant
+    sql, params = mock_client.execute.call_args.args
+    assert "toStartOfDay(first_exposure) AS bucket" in sql
+    assert "GROUP BY identifier" in sql
+    assert "uniqExact(value) > 1" in sql
+    assert params == {
+        "environment_key": "env-key-123",
+        "exposure_event": "$flag_exposure",
+        "feature_name": "my-feature",
+        "multiple_variant": "$multiple",
+        "window_start": window_start,
+        "window_end": window_end,
+    }
+
+
+def test_get_exposure_buckets__hour_granularity__buckets_by_hour(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = mocker.Mock()
+    mock_client.execute.return_value = []
+    mocker.patch(
+        "experimentation.services._get_clickhouse_client",
+        return_value=mock_client,
+    )
+
+    # When
+    result = services.get_exposure_buckets(
+        environment_key="env-key-123",
+        feature_name="my-feature",
+        window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
+        window_end=datetime(2026, 6, 2, tzinfo=timezone.utc),
+        granularity="hour",
+    )
+
+    # Then
+    assert result == []
+    sql, _ = mock_client.execute.call_args.args
+    assert "toStartOfHour(first_exposure) AS bucket" in sql
 
 
 def test_get_unique_event_names__no_events__returns_empty_list(
