@@ -12,7 +12,6 @@ from experimentation.dataclasses import (
     ExposuresSummary,
     ExposuresTimeseries,
     ExposuresTimeseriesPoint,
-    VariantExposures,
     WarehouseEventStats,
 )
 from experimentation.models import (
@@ -271,55 +270,7 @@ def test_build_exposures_summary__multiple_variants__derives_totals() -> None:
     assert summary.total_identities == 310
     assert summary.excluded_identities == 0
     assert summary.days_of_data == 9
-    assert summary.variants == [
-        VariantExposures(key="control", identities=150, is_control=True),
-        VariantExposures(key="variant_a", identities=160, is_control=False),
-    ]
-
-
-def test_build_exposures_summary__control_not_largest__still_listed_first() -> None:
-    # Given a control variant with fewer identities than two treatments
-    day = datetime(2026, 6, 1, tzinfo=timezone.utc)
-    buckets = [
-        _bucket("variant_b", day, 30),
-        _bucket("variant_a", day, 20),
-        _bucket("control", day, 10),
-    ]
-
-    # When
-    summary = services.build_exposures_summary(
-        buckets,
-        window_start=day,
-        window_end=datetime(2026, 6, 8, tzinfo=timezone.utc),
-        granularity="day",
-    )
-
-    # Then control comes first, treatments follow by descending identities
-    assert [v.key for v in summary.variants] == [
-        "control",
-        "variant_b",
-        "variant_a",
-    ]
-
-
-def test_build_exposures_summary__tied_treatments__ordered_by_key() -> None:
-    # Given two treatments with the same identity count
-    day = datetime(2026, 6, 1, tzinfo=timezone.utc)
-    buckets = [
-        _bucket("variant_b", day, 30),
-        _bucket("variant_a", day, 30),
-    ]
-
-    # When
-    summary = services.build_exposures_summary(
-        buckets,
-        window_start=day,
-        window_end=datetime(2026, 6, 8, tzinfo=timezone.utc),
-        granularity="day",
-    )
-
-    # Then the tie is broken alphabetically
-    assert [v.key for v in summary.variants] == ["variant_a", "variant_b"]
+    assert summary.identities_by_variant == {"control": 150, "variant_a": 160}
 
 
 def test_build_exposures_summary__multiple_sentinel__excluded_and_counted() -> None:
@@ -342,7 +293,7 @@ def test_build_exposures_summary__multiple_sentinel__excluded_and_counted() -> N
     # Then they are excluded from variants, the total and the timeseries
     assert summary.total_identities == 195
     assert summary.excluded_identities == 5
-    assert [v.key for v in summary.variants] == ["control", "variant_a"]
+    assert summary.identities_by_variant == {"control": 100, "variant_a": 95}
     assert all(
         set(point.cumulative_identities) == {"control", "variant_a"}
         for point in summary.timeseries.points
@@ -397,7 +348,7 @@ def test_build_exposures_summary__no_buckets__empty_summary() -> None:
         total_identities=0,
         excluded_identities=0,
         days_of_data=1,
-        variants=[],
+        identities_by_variant={},
         timeseries=ExposuresTimeseries(granularity="hour", points=[]),
     )
 

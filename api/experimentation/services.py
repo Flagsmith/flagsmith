@@ -14,7 +14,6 @@ from django.utils import timezone
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from experimentation.constants import (
-    CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
     EXPOSURE_EVENT_NAME,
     EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
@@ -26,7 +25,6 @@ from experimentation.dataclasses import (
     ExposuresSummary,
     ExposuresTimeseries,
     ExposuresTimeseriesPoint,
-    VariantExposures,
     WarehouseEventStats,
 )
 from experimentation.models import (
@@ -178,7 +176,7 @@ def build_exposures_summary(
             if b.variant == MULTIPLE_VARIANT_KEY
         ),
         days_of_data=max(0, math.ceil((window_end - window_start) / timedelta(days=1))),
-        variants=_summarise_variants(included),
+        identities_by_variant=_identities_by_variant(included),
         timeseries=ExposuresTimeseries(
             granularity=granularity,
             points=_cumulative_points(included),
@@ -186,25 +184,13 @@ def build_exposures_summary(
     )
 
 
-def _summarise_variants(
-    buckets: Sequence[ExposureBucket],
-) -> list[VariantExposures]:
-    identities_by_variant: dict[str, int] = {}
+def _identities_by_variant(buckets: Sequence[ExposureBucket]) -> dict[str, int]:
+    identities: dict[str, int] = {}
     for b in buckets:
-        identities_by_variant[b.variant] = (
-            identities_by_variant.get(b.variant, 0) + b.first_exposed_identities
+        identities[b.variant] = (
+            identities.get(b.variant, 0) + b.first_exposed_identities
         )
-
-    variants = [
-        VariantExposures(
-            key=key,
-            identities=identities,
-            is_control=key == CONTROL_VARIANT_KEY,
-        )
-        for key, identities in identities_by_variant.items()
-    ]
-    variants.sort(key=lambda v: (not v.is_control, -v.identities, v.key))
-    return variants
+    return identities
 
 
 def _cumulative_points(

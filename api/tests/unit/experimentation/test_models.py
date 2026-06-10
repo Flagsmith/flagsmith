@@ -8,7 +8,6 @@ from experimentation.dataclasses import (
     ExposuresSummary,
     ExposuresTimeseries,
     ExposuresTimeseriesPoint,
-    VariantExposures,
 )
 from experimentation.models import (
     Experiment,
@@ -64,7 +63,7 @@ def _summary() -> ExposuresSummary:
         total_identities=10,
         excluded_identities=1,
         days_of_data=1,
-        variants=[VariantExposures(key="control", identities=10, is_control=True)],
+        identities_by_variant={"control": 10},
         timeseries=ExposuresTimeseries(
             granularity="hour",
             points=[
@@ -96,7 +95,7 @@ def test_experiment_exposures__record_refresh__stores_payload_and_clears_error(
         "total_identities": 10,
         "excluded_identities": 1,
         "days_of_data": 1,
-        "variants": [{"key": "control", "identities": 10, "is_control": True}],
+        "identities_by_variant": {"control": 10},
         "timeseries": {
             "granularity": "hour",
             "points": [
