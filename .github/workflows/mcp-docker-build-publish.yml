@@ -165,9 +165,6 @@ jobs:
           sources: ${{ needs.docker-build-mcp.outputs.image }}
           tags: ${{ steps.meta.outputs.tags }}
 
-  # Force a new deployment so the staging service re-pulls the freshly
-  # published :latest image. The task definition is owned by Pulumi.
-
   deploy-ecr-staging-mcp:
     name: Deploy MCP to staging
     needs: [docker-publish-ecr-staging-mcp]
@@ -192,9 +189,6 @@ jobs:
         env:
           CLUSTER: ${{ vars.AWS_ECS_CLUSTER_NAME }}
           SERVICE: ${{ vars.AWS_ECS_MCP_SERVICE_NAME }}
-
-  # Force a new deployment so the production service re-pulls the freshly
-  # published :latest image. The task definition is owned by Pulumi.
 
   # TODO: Uncomment once MCP prod is deployed
   # deploy-ecr-mcp:
