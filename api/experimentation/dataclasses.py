@@ -10,11 +10,6 @@ class WarehouseEventStats:
 
 @dataclass(frozen=True)
 class ExposureBucket:
-    """Identities are bucketed by first exposure, so ``last_exposure`` may
-    fall outside the bucket."""
-
     variant: str
     bucket: datetime
     first_exposed_identities: int
-    first_exposure: datetime
-    last_exposure: datetime

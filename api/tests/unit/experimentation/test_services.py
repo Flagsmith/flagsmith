@@ -98,20 +98,8 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
 ) -> None:
     # Given the warehouse returns one bucket row per variant per day
     rows = [
-        (
-            "control",
-            datetime(2026, 6, 1),
-            100,
-            datetime(2026, 6, 1, 8),
-            datetime(2026, 6, 1, 20),
-        ),
-        (
-            "variant_a",
-            datetime(2026, 6, 1),
-            90,
-            datetime(2026, 6, 1, 9),
-            datetime(2026, 6, 1, 21),
-        ),
+        ("control", datetime(2026, 6, 1), 100),
+        ("variant_a", datetime(2026, 6, 1), 90),
     ]
     mock_client = mocker.Mock()
     mock_client.execute.return_value = rows
@@ -137,15 +125,11 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
             variant="control",
             bucket=datetime(2026, 6, 1),
             first_exposed_identities=100,
-            first_exposure=datetime(2026, 6, 1, 8),
-            last_exposure=datetime(2026, 6, 1, 20),
         ),
         ExposureBucket(
             variant="variant_a",
             bucket=datetime(2026, 6, 1),
             first_exposed_identities=90,
-            first_exposure=datetime(2026, 6, 1, 9),
-            last_exposure=datetime(2026, 6, 1, 21),
         ),
     ]
     # And the query buckets first exposures by day, deduplicates identities,

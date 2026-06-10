@@ -11,15 +11,11 @@ def _bucket(
     variant: str,
     bucket: datetime,
     first_exposed_identities: int,
-    first_exposure: datetime | None = None,
-    last_exposure: datetime | None = None,
 ) -> ExposureBucket:
     return ExposureBucket(
         variant=variant,
         bucket=bucket,
         first_exposed_identities=first_exposed_identities,
-        first_exposure=first_exposure or bucket,
-        last_exposure=last_exposure or bucket,
     )
 
 
@@ -41,37 +37,15 @@ def test_select_exposure_granularity__window_beyond_72_hours__day() -> None:
     assert select_exposure_granularity(window_start, window_end) == "day"
 
 
-def test_build_exposures_payload__multiple_variants__totals_shares_and_extremes() -> (
-    None
-):
+def test_build_exposures_payload__multiple_variants__totals_and_shares() -> None:
     # Given two variants accumulating identities over two daily buckets
     day_1 = datetime(2026, 6, 1, tzinfo=timezone.utc)
     day_2 = datetime(2026, 6, 2, tzinfo=timezone.utc)
     buckets = [
-        _bucket(
-            "control",
-            day_1,
-            100,
-            first_exposure=datetime(2026, 6, 1, 8, tzinfo=timezone.utc),
-            last_exposure=datetime(2026, 6, 1, 20, tzinfo=timezone.utc),
-        ),
-        _bucket(
-            "variant_a",
-            day_1,
-            90,
-        ),
-        _bucket(
-            "control",
-            day_2,
-            50,
-            first_exposure=datetime(2026, 6, 2, 1, tzinfo=timezone.utc),
-            last_exposure=datetime(2026, 6, 9, 23, tzinfo=timezone.utc),
-        ),
-        _bucket(
-            "variant_a",
-            day_2,
-            70,
-        ),
+        _bucket("control", day_1, 100),
+        _bucket("variant_a", day_1, 90),
+        _bucket("control", day_2, 50),
+        _bucket("variant_a", day_2, 70),
     ]
 
     # When
@@ -82,7 +56,7 @@ def test_build_exposures_payload__multiple_variants__totals_shares_and_extremes(
         granularity="day",
     )
 
-    # Then the totals, shares and per-variant exposure extremes are derived
+    # Then the totals and shares are derived
     assert payload["total_identities"] == 310
     assert payload["excluded_identities"] == 0
     assert payload["days_of_data"] == 9
@@ -92,8 +66,6 @@ def test_build_exposures_payload__multiple_variants__totals_shares_and_extremes(
         "identities": 150,
         "share": 150 / 310,
         "is_control": True,
-        "first_exposure": "2026-06-01T08:00:00+00:00",
-        "last_exposure": "2026-06-09T23:00:00+00:00",
     }
     assert variant_a["key"] == "variant_a"
     assert variant_a["identities"] == 160
@@ -244,7 +216,7 @@ def test_build_exposures_payload__partial_day_window__days_rounded_up() -> None:
 
 
 def test_build_exposures_payload__naive_datetimes__serialised_as_utc() -> None:
-    # Given naive datetimes as returned by the ClickHouse driver
+    # Given naive bucket datetimes as returned by the ClickHouse driver
     day = datetime(2026, 6, 1)
 
     # When
@@ -256,5 +228,4 @@ def test_build_exposures_payload__naive_datetimes__serialised_as_utc() -> None:
     )
 
     # Then they are serialised as UTC
-    assert payload["variants"][0]["first_exposure"] == "2026-06-01T00:00:00+00:00"
     assert payload["timeseries"]["points"][0]["bucket"] == "2026-06-01T00:00:00+00:00"

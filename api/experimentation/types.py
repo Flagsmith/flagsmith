@@ -8,8 +8,6 @@ class ExposureVariantData(TypedDict):
     identities: int
     share: float
     is_control: bool
-    first_exposure: str
-    last_exposure: str
 
 
 class ExposureTimeseriesPoint(TypedDict):

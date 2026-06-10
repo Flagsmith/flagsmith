@@ -78,12 +78,6 @@ def _build_variants(
                 identities=identities,
                 share=identities / total_identities if total_identities else 0.0,
                 is_control=key == CONTROL_VARIANT_KEY,
-                first_exposure=_isoformat_utc(
-                    min(b.first_exposure for b in variant_buckets)
-                ),
-                last_exposure=_isoformat_utc(
-                    max(b.last_exposure for b in variant_buckets)
-                ),
             )
         )
     # Control first, then treatments by descending identities, ties

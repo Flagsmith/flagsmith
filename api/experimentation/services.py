@@ -105,8 +105,7 @@ WITH exposures AS (
     SELECT
         identifier,
         if(uniqExact(value) > 1, %(multiple_variant)s, any(value)) AS variant,
-        min(timestamp) AS first_exposure,
-        max(timestamp) AS last_exposure
+        min(timestamp) AS first_exposure
     FROM events
     WHERE environment_key = %(environment_key)s
         AND event = %(exposure_event)s
@@ -118,9 +117,7 @@ WITH exposures AS (
 SELECT
     variant,
     {bucket_function}(first_exposure) AS bucket,
-    count() AS first_exposed_identities,
-    min(first_exposure) AS first_exposure,
-    max(last_exposure) AS last_exposure
+    count() AS first_exposed_identities
 FROM exposures
 GROUP BY variant, bucket
 ORDER BY bucket
@@ -159,16 +156,8 @@ def get_exposure_buckets(
             variant=variant,
             bucket=bucket,
             first_exposed_identities=int(first_exposed_identities),
-            first_exposure=first_exposure,
-            last_exposure=last_exposure,
         )
-        for (
-            variant,
-            bucket,
-            first_exposed_identities,
-            first_exposure,
-            last_exposure,
-        ) in rows
+        for variant, bucket, first_exposed_identities in rows
     ]
 
 
