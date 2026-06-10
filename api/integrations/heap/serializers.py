@@ -7,4 +7,4 @@ from integrations.heap.models import HeapConfiguration
 class HeapConfigurationSerializer(BaseEnvironmentIntegrationModelSerializer):
     class Meta:
         model = HeapConfiguration
-        fields = ("id", "api_key")
+        fields = ("id", "api_key", "base_url")
