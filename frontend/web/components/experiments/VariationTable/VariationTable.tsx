@@ -36,9 +36,6 @@ const VariationTable: FC<VariationTableProps> = ({
         <span className='variation-table__th variation-table__th--name'>
           Name
         </span>
-        <span className='variation-table__th variation-table__th--desc'>
-          Description
-        </span>
         <span className='variation-table__th variation-table__th--value'>
           Value
         </span>
@@ -49,11 +46,6 @@ const VariationTable: FC<VariationTableProps> = ({
           <ColorSwatch color={colorTextSuccess} size='md' shape='circle' />
           <span className='variation-table__name-text'>Control</span>
           <span className='variation-table__control-tag'>control</span>
-        </div>
-        <div className='variation-table__cell variation-table__cell--desc'>
-          <span className='variation-table__desc-text'>
-            Flag&apos;s base value
-          </span>
         </div>
         <div className='variation-table__cell variation-table__cell--value'>
           {controlValue ? (
@@ -72,11 +64,8 @@ const VariationTable: FC<VariationTableProps> = ({
             <div className='variation-table__cell variation-table__cell--name'>
               <ColorSwatch color={colorTextAction} size='md' shape='circle' />
               <span className='variation-table__name-text'>
-                {`Variant ${letter}`}
+                {mv.key || `Variant ${letter}`}
               </span>
-            </div>
-            <div className='variation-table__cell variation-table__cell--desc'>
-              <span className='variation-table__desc-text' />
             </div>
             <div className='variation-table__cell variation-table__cell--value'>
               {value ? (

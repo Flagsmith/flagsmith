@@ -19,7 +19,6 @@
     letter-spacing: 0.02em;
 
     &--name,
-    &--desc,
     &--value {
       flex: 1;
     }
@@ -48,12 +47,6 @@
       white-space: nowrap;
     }
 
-    &--desc {
-      flex: 1;
-      min-width: 0;
-      word-break: break-word;
-    }
-
     &--value {
       flex: 1;
       min-width: 0;
@@ -73,12 +66,6 @@
     background: var(--color-surface-muted);
     padding: 2px 8px;
     border-radius: var(--radius-sm);
-  }
-
-  &__desc-text {
-    font-size: var(--font-body-sm-size);
-    color: var(--color-text-secondary);
-    line-height: 1.4;
   }
 
   &__value-badge {

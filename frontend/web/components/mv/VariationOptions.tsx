@@ -168,6 +168,9 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
             canCreateFeature={canCreateFeature}
             readOnly={readOnly ?? false}
             value={theValue}
+            siblingKeys={multivariateOptions
+              .filter((_, index) => index !== i)
+              .map((option) => option.key)}
             onChange={(e) => {
               updateVariation(i, e, variationOverrides)
             }}
