@@ -1,12 +1,25 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { WebClient } from '@slack/web-api';
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
 const CHANNEL_ID = 'C0102JZRG3G'; // infra_tests channel ID
 const failedJsonPath = path.join(__dirname, 'test-results', 'failed.json');
 const failedData = JSON.parse(fs.readFileSync(failedJsonPath, 'utf-8'));
 const failedCount = failedData.failedTests?.length || 0;
+
+async function slackPost(endpoint: string, body: Record<string, unknown>): Promise<unknown> {
+  const res = await fetch(`https://slack.com/api/${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      Authorization: `Bearer ${SLACK_TOKEN}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json() as { ok: boolean; error?: string };
+  if (!data.ok) throw new Error(`Slack ${endpoint} error: ${data.error}`);
+  return data;
+}
 
 async function uploadFile(filePath: string): Promise<void> {
   if (!SLACK_TOKEN) {
@@ -16,14 +29,28 @@ async function uploadFile(filePath: string): Promise<void> {
 
   const epoch = Date.now();
   const filename = `playwright-report-${epoch}.zip`;
+  const fileBytes = fs.readFileSync(filePath);
+  const fileSize = fileBytes.byteLength;
 
   console.log(`Uploading ${filePath}`);
-
-  const slackClient = new WebClient(SLACK_TOKEN);
-  await slackClient.files.uploadV2({
-    channel_id: CHANNEL_ID,
-    file: fs.createReadStream(filePath),
+  const urlRes = await slackPost('files.getUploadURLExternal', {
     filename,
+    length: fileSize,
+  }) as { upload_url: string; file_id: string };
+
+
+  const uploadRes = await fetch(urlRes.upload_url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/octet-stream' },
+    body: fileBytes,
+  });
+  if (!uploadRes.ok) {
+    throw new Error(`Upload to pre-signed URL failed: ${uploadRes.status} ${uploadRes.statusText}`);
+  }
+
+  await slackPost('files.completeUploadExternal', {
+    files: [{ id: urlRes.file_id, title: filename }],
+    channel_id: CHANNEL_ID,
   });
 }
 
@@ -33,17 +60,10 @@ function postMessage(message: string): Promise<unknown> {
     return Promise.resolve();
   }
 
-  const slackClient = new WebClient(SLACK_TOKEN);
-  return slackClient.chat.postMessage({
-    channel: CHANNEL_ID,
-    text: message,
-  });
+  return slackPost('chat.postMessage', { channel: CHANNEL_ID, text: message });
 }
 
-function notifyFailure(
-  failedCount: number,
-  failedTests: any[],
-): Promise<unknown> {
+function notifyFailure(failedCount: number, failedTests: any[]): Promise<unknown> {
   const actionUrl = process.env.GITHUB_ACTION_URL || '';
   if (!actionUrl) {
     console.log('No GITHUB_ACTION_URL set, skipping Slack notification');
@@ -56,16 +76,11 @@ function notifyFailure(
   const prTitle = process.env.PR_TITLE;
   const prUrl = process.env.PR_URL;
 
-  // Build PR info line
   const prInfo = prNumber && prUrl
     ? `*PR:* <${prUrl}|#${prNumber}>${prTitle ? ` - ${prTitle}` : ''}\n`
     : '';
 
-  // Build failed tests list (inline, limit to first 3)
-  const testNames = failedTests
-    .slice(0, 3)
-    .map((test) => test.title)
-    .join(', ');
+  const testNames = failedTests.slice(0, 3).map((t) => t.title).join(', ');
   const moreTests = failedCount > 3 ? ` +${failedCount - 3} more` : '';
 
   const message = `❌ E2E Tests Failed
@@ -94,7 +109,6 @@ async function main() {
   await notifyFailure(failedCount, failedData.failedTests || []);
   console.log('Slack notification sent successfully');
 
-  // Upload HTML report if zip file exists
   const reportZipPath = path.join(__dirname, 'playwright-report.zip');
   if (fs.existsSync(reportZipPath)) {
     console.log('Uploading HTML report...');

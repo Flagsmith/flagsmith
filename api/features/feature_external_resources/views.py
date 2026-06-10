@@ -27,12 +27,8 @@ from .serializers import FeatureExternalResourceSerializer
     name="list",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "get_feature_external_resources",
-                "description": "Retrieves external resources linked to the feature flag.",
-            },
-        },
+        operation_id="get_feature_external_resources",
+        description="Retrieves external resources linked to the feature flag.",
     ),
 )
 class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]

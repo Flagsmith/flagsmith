@@ -163,19 +163,6 @@ Attributes:
  - `organisation.id`
  - `project.id`
 
-### `gitlab.feature.tagged`
-
-Logged at `info` from:
- - `api/integrations/gitlab/services/tagging.py:89`
-
-Attributes:
- - `action`
- - `feature.id`
- - `object_kind`
- - `organisation.id`
- - `project.id`
- - `tag.label`
-
 ### `gitlab.label.created`
 
 Logged at `info` from:
@@ -268,6 +255,17 @@ Attributes:
  - `exc_info`
  - `gitlab.hook.id`
  - `gitlab.project.id`
+ - `organisation.id`
+ - `project.id`
+
+### `gitlab.webhook.processed`
+
+Logged at `info` from:
+ - `api/integrations/gitlab/views/webhook.py:35`
+
+Attributes:
+ - `action`
+ - `object_kind`
  - `organisation.id`
  - `project.id`
 
@@ -368,11 +366,12 @@ Attributes:
 ### `segment_membership.refresh.project.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:170`
+ - `api/segment_membership/tasks.py:185`
 
 Attributes:
  - `membership_counts.count`
  - `project.id`
+ - `stale_counts.count`
 
 ### `segment_membership.refresh.project.failed`
 
@@ -442,6 +441,24 @@ Logged at `info` from:
 Attributes:
  - `feature_name`
  - `sentry_action`
+
+### `warehouse.connection.connected`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:206`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
+### `warehouse.connection.test_event_sent`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:186`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
 
 ### `workflows.change_request.committed`
 

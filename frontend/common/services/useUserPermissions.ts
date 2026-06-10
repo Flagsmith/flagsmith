@@ -6,6 +6,31 @@ export const userPermissionsService = service
   .enhanceEndpoints({ addTagTypes: ['UserPermissions'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      createEnvironmentUserPermission: builder.mutation<
+        Res['userPermissions'],
+        Req['createEnvironmentUserPermission']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'UserPermissions' }],
+        query: ({
+          body,
+          environmentId,
+        }: Req['createEnvironmentUserPermission']) => ({
+          body,
+          method: 'POST',
+          url: `environments/${environmentId}/user-permissions/`,
+        }),
+      }),
+      createProjectUserPermission: builder.mutation<
+        Res['userPermissions'],
+        Req['createProjectUserPermission']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'UserPermissions' }],
+        query: ({ body, projectId }: Req['createProjectUserPermission']) => ({
+          body,
+          method: 'POST',
+          url: `projects/${projectId}/user-permissions/`,
+        }),
+      }),
       getUserPermissions: builder.query<
         Res['userPermissions'],
         Req['getUserPermissions']
@@ -33,6 +58,8 @@ export async function getUserPermissions(
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useCreateEnvironmentUserPermissionMutation,
+  useCreateProjectUserPermissionMutation,
   useGetUserPermissionsQuery,
   // END OF EXPORTS
 } = userPermissionsService

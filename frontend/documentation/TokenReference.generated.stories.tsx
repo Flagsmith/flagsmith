@@ -728,6 +728,56 @@ export const AllTokens: StoryObj = {
           </tr>
         </tbody>
       </table>
+      <h3>Font-weight</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--font-weight-regular</code>
+            </td>
+            <td>
+              <code>400</code>
+            </td>
+            <td>Body copy, default text.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-weight-medium</code>
+            </td>
+            <td>
+              <code>500</code>
+            </td>
+            <td>Subtle emphasis. Labels, secondary headings, table headers.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-weight-semibold</code>
+            </td>
+            <td>
+              <code>600</code>
+            </td>
+            <td>
+              Strong emphasis. Card titles, selected states, section headings.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-weight-bold</code>
+            </td>
+            <td>
+              <code>700</code>
+            </td>
+            <td>Maximum emphasis. Page titles, key figures.</td>
+          </tr>
+        </tbody>
+      </table>
 
       <h3>Dark mode shadows</h3>
       <p>

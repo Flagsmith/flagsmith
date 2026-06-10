@@ -77,7 +77,6 @@ overrides = [
     { name = "drf-writable-nested", specifier = "==0.6.4" },
     { name = "elementpath", specifier = "==4.1.5" },
     { name = "email-validator", specifier = "==2.0.0.post2" },
-    { name = "environs", specifier = "==14.1.1" },
     { name = "execnet", specifier = "==2.1.1" },
     { name = "executing", specifier = "==2.2.1" },
     { name = "fancycompleter", specifier = "==0.9.1" },
@@ -99,7 +98,6 @@ overrides = [
     { name = "httpx", specifier = "==0.28.1" },
     { name = "hubspot-api-client", specifier = "==12.0.0" },
     { name = "identify", specifier = "==2.6.3" },
-    { name = "idna", specifier = "==3.7" },
     { name = "importlib-metadata", specifier = "==8.7.1" },
     { name = "inflect", specifier = "==5.6.2" },
     { name = "inflection", specifier = "==0.5.1" },
@@ -172,7 +170,6 @@ overrides = [
     { name = "pyfakefs", specifier = "==5.7.4" },
     { name = "pygithub", specifier = "==2.8.1" },
     { name = "pygments", specifier = "==2.19.2" },
-    { name = "pyjwt", specifier = "==2.12.0" },
     { name = "pylint", specifier = "==2.16.4" },
     { name = "pymemcache", specifier = "==4.0.0" },
     { name = "pynacl", specifier = "==1.6.2" },
@@ -193,7 +190,6 @@ overrides = [
     { name = "pytest-structlog", specifier = "==1.1" },
     { name = "pytest-xdist", specifier = "==3.6.1" },
     { name = "python-dateutil", specifier = "==2.8.2" },
-    { name = "python-dotenv", specifier = "==0.21.1" },
     { name = "python-gnupg", specifier = "==0.5.1" },
     { name = "python-http-client", specifier = "==3.3.7" },
     { name = "python3-openid", specifier = "==3.2.0" },
@@ -211,7 +207,6 @@ overrides = [
     { name = "responses", specifier = "==0.22.0" },
     { name = "rpds-py", specifier = "==0.30.0" },
     { name = "rsa", specifier = "==4.9" },
-    { name = "rudder-sdk-python", specifier = "==2.0.2" },
     { name = "ruff", specifier = "==0.9.7" },
     { name = "s3transfer", specifier = "==0.10.4" },
     { name = "segment-analytics-python", specifier = "==2.2.3" },
@@ -366,11 +361,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/97/90/81f95d5f705be1787
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f0/eb/fcb708c7bf5056045e9e98f62b93bd7467eb718b0202e7698eb11d66416c/attrs-23.1.0-py3-none-any.whl", hash = "sha256:1f28b4522cdc2fb4256ac1a020c78acf9cba2c6b461ccd2c126f3aa8e8335d04", size = 61160, upload-time = "2023-04-16T10:48:16.358Z" },
 ]
-
-[[package]]
-name = "auth-controller"
-version = "0.0.0"
-source = { git = "https://github.com/flagsmith/flagsmith-auth-controller?tag=v0.2.0#b7fa1f42c333b443763548ea1fe0054f07cdf641" }
 
 [[package]]
 name = "autopep8"
@@ -616,53 +606,10 @@ wheels = [
 [[package]]
 name = "clickhouse-driver"
 version = "0.2.10"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/Flagsmith/clickhouse-driver?branch=newjson#b33d5e74de2c320d02fa0793e45ed26b0b0d3911" }
 dependencies = [
     { name = "pytz" },
     { name = "tzlocal" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/46/9e/d8e40b29b6269a84552441a553fc64dff28f2d7e2d92e81c6be84fe12b4c/clickhouse_driver-0.2.10.tar.gz", hash = "sha256:925fc6ecda1e5314e3f03bcb493955c068b070cdba221fb8ce27329ee8a7f71b", size = 409448, upload-time = "2025-11-10T22:49:58.764Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/13/9d/bb9ee6df5a8fb60b56f9ca76cb9b22beb6d47d45ce561dca4ef9a63c1d4a/clickhouse_driver-0.2.10-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:946daf834f021d69acbebee7abde87bd4ad5aa46fa7b7643805abc7ff487a91f", size = 212466, upload-time = "2025-11-10T22:47:33.591Z" },
-    { url = "https://files.pythonhosted.org/packages/ec/e0/1ae285f4d5bb61bb62016deb38dc175a2b8cbe578dffdad5e1a5a02a176c/clickhouse_driver-0.2.10-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:3572e74cd65828f72284bf607de259c059178b44b19a93cb67766b7e7458cf8e", size = 208477, upload-time = "2025-11-10T22:47:34.925Z" },
-    { url = "https://files.pythonhosted.org/packages/28/04/e2fb47a4aaf9653c9ed872e1505e997d42f834b0891351ef54169e100c5c/clickhouse_driver-0.2.10-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:767af2b2d2e02fb7abd8fc9619f8aa2de65be010d3024029d68bc9b1be564466", size = 1006131, upload-time = "2025-11-10T22:47:36.386Z" },
-    { url = "https://files.pythonhosted.org/packages/e3/52/626cf3a908dde51638213a6c414e86bc66c47e384cb379c4a0533930a329/clickhouse_driver-0.2.10-cp311-cp311-manylinux2014_ppc64le.manylinux_2_17_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:b00005a89f0e40ec0bc313f7e131d958aa17e6af5c3260dbb5c7daf5370c5443", size = 1059838, upload-time = "2025-11-10T22:47:38.266Z" },
-    { url = "https://files.pythonhosted.org/packages/12/57/a5917930760e4032e98017916bd6770308e146d44c58e450da6fa87f2d4b/clickhouse_driver-0.2.10-cp311-cp311-manylinux2014_s390x.manylinux_2_17_s390x.manylinux_2_28_s390x.whl", hash = "sha256:a62ad120dab6bcc68b6413b7ef0dbaef75ab5ca985d490a9e1ec13d93bf33dc3", size = 1069504, upload-time = "2025-11-10T22:47:40.681Z" },
-    { url = "https://files.pythonhosted.org/packages/f5/08/4419ce43b27b6349fd14af0d8f5d8594d270b9bb24cbaca575bacfec630e/clickhouse_driver-0.2.10-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a9f65e71c99f0c8a64afa348977793967f897c4f731984ed54fed4eca8d375a0", size = 998284, upload-time = "2025-11-10T22:47:42.713Z" },
-    { url = "https://files.pythonhosted.org/packages/36/10/edbe55be3554e2cea7c68ed1761aaa2bea0153474d81a467a0ac862b3478/clickhouse_driver-0.2.10-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:c120b182ea7e9713b119ba2b518dd75503c18f26cb001a6e436326765fddd123", size = 971989, upload-time = "2025-11-10T22:47:44.642Z" },
-    { url = "https://files.pythonhosted.org/packages/2f/18/d0b883af04067c70e99c22dbab1f085062ae764a063f22d4e144e833048d/clickhouse_driver-0.2.10-cp311-cp311-musllinux_1_2_ppc64le.whl", hash = "sha256:d3da6f6d05f14780f3183f8b7b23ed9826d1e0f2f73c2471037d5335b474782e", size = 1022107, upload-time = "2025-11-10T22:47:46.148Z" },
-    { url = "https://files.pythonhosted.org/packages/fe/40/11446c52c5330123354f2f88151c620e1b38ca6d5131b2cc71786ec3c067/clickhouse_driver-0.2.10-cp311-cp311-musllinux_1_2_s390x.whl", hash = "sha256:9617c6ef154e58c6693be6e1169000957238f83d21fe20d57bb492412cc6128d", size = 1015750, upload-time = "2025-11-10T22:47:47.702Z" },
-    { url = "https://files.pythonhosted.org/packages/36/9b/32abe3c76fe8494ad1642febbe4c59dfd46477e27c401d2ac8cc8a0a6117/clickhouse_driver-0.2.10-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:b8c2dbee2083295c6d9789a10cb0c967c4e123e6315e3192e4ad935cd55967c3", size = 975901, upload-time = "2025-11-10T22:47:49.136Z" },
-    { url = "https://files.pythonhosted.org/packages/5f/50/0cbbe783bf14381add11a241b4ba35349f5512d1765aabde63d7175c1f0b/clickhouse_driver-0.2.10-cp311-cp311-win32.whl", hash = "sha256:293f47bd36a5b69ede39638ea8f7c1eb3fa7e55f35778a3feb9a3615749100c4", size = 190097, upload-time = "2025-11-10T22:47:50.463Z" },
-    { url = "https://files.pythonhosted.org/packages/1c/12/7bb65617527b2b9a2b4ca8cc0d1ea2d4bdbd6d05a4d9d141cef0083342db/clickhouse_driver-0.2.10-cp311-cp311-win_amd64.whl", hash = "sha256:c9aeebbb0c159173de37deef494b28a4423a767cd7c4b2d596556f7a072f90a6", size = 203591, upload-time = "2025-11-10T22:47:51.562Z" },
-    { url = "https://files.pythonhosted.org/packages/a9/54/0a82bcfc66bbab7a36c37b4bd8b8d088d9001da93661e278b7f6c87a3791/clickhouse_driver-0.2.10-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:1851f5f8b84ead0be6373ef001e8f09d48d45ec0628377e199a223e70417cd40", size = 213107, upload-time = "2025-11-10T22:47:53.314Z" },
-    { url = "https://files.pythonhosted.org/packages/32/7b/8e526f6ffb9983c0c6d082e358df4b20fe1a9e95f453e704bc7a25ef4aab/clickhouse_driver-0.2.10-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:188775d38ff7cb36e7045441aabf3a6a8751127d8b37b6eb1b1518494eaac5bd", size = 207193, upload-time = "2025-11-10T22:47:55.146Z" },
-    { url = "https://files.pythonhosted.org/packages/65/96/40f274896abf287c378575f025c602fa4e834278930dd63574ff548815c4/clickhouse_driver-0.2.10-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:0ff5cba860df61845d6ae12f31d4a70ff4ae3be4e6a8a876e68af8aa4b0e45bc", size = 1046187, upload-time = "2025-11-10T22:47:58.246Z" },
-    { url = "https://files.pythonhosted.org/packages/0c/80/7b6e110c3b803fa8b3f8cdba0e08553a62c5f64e5ad57e56de3ea95cd9e1/clickhouse_driver-0.2.10-cp312-cp312-manylinux2014_ppc64le.manylinux_2_17_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:fad865009d96de44d548f1691ed92adee971f72c001cf4466b3ba2ac7d9db47b", size = 1088806, upload-time = "2025-11-10T22:47:59.834Z" },
-    { url = "https://files.pythonhosted.org/packages/c5/d6/7f77bd00fc01df9db2e573de21bbc1f66083549d004864b892877dee8a76/clickhouse_driver-0.2.10-cp312-cp312-manylinux2014_s390x.manylinux_2_17_s390x.manylinux_2_28_s390x.whl", hash = "sha256:cf0fe791e7c2adc0ab41d4770953c00f8a88bdd7e3ee83bb849a661a6c93d4ef", size = 1109839, upload-time = "2025-11-10T22:48:01.405Z" },
-    { url = "https://files.pythonhosted.org/packages/55/f7/57a80ff9cc44a333021e2caf8d35fc23da6ec7b602bbc3bf8dfac0253a6e/clickhouse_driver-0.2.10-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c5744daafdd0ff7520c6ae95a78211a0ff5c2cfb3513a20f5602d2bc7eed580d", size = 1049773, upload-time = "2025-11-10T22:48:03.089Z" },
-    { url = "https://files.pythonhosted.org/packages/f6/3e/fcf8e9cb9edc717ce6c467a9ec7c96b4495d5f8ec4859175952149fbdaa8/clickhouse_driver-0.2.10-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:f02f6c9f71ae5c06e3b760d3d9f4f758b32acf6f71504b6d90bacca9abbfec18", size = 1006817, upload-time = "2025-11-10T22:48:05.038Z" },
-    { url = "https://files.pythonhosted.org/packages/95/ab/1bc25a385012c03595b91311d8341205a5790375207d80425e2285055d42/clickhouse_driver-0.2.10-cp312-cp312-musllinux_1_2_ppc64le.whl", hash = "sha256:6df571410f149e16e0a0e5529f1c2a9e41bb62b9357a3c8b0bd0647d6bb0fd1e", size = 1051047, upload-time = "2025-11-10T22:48:07.115Z" },
-    { url = "https://files.pythonhosted.org/packages/fd/e1/9dd7331d08495beacf4291a6fbe5514fd0f6f8d53014121a8d70d8bd6c1e/clickhouse_driver-0.2.10-cp312-cp312-musllinux_1_2_s390x.whl", hash = "sha256:1e891162226a44fa169bdc996efd49b22bcf59372c35118ec5785e936fe97178", size = 1052014, upload-time = "2025-11-10T22:48:08.608Z" },
-    { url = "https://files.pythonhosted.org/packages/ee/e9/af10e0ddbbd90c4ead933effff1b8914bc687bd52a70d244404db4c91529/clickhouse_driver-0.2.10-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:3a261947ba0cf0034d044c30563ad151d1cf8156a5ff419b017c423b4235e0ac", size = 1020937, upload-time = "2025-11-10T22:48:10.993Z" },
-    { url = "https://files.pythonhosted.org/packages/f8/78/dbb93037939a7f9424451d10feeb0daa0d5a76163ef2e62407f4d18705ea/clickhouse_driver-0.2.10-cp312-cp312-win32.whl", hash = "sha256:d94f4db3c338ed41b28379931756852586920c5cbac1f07fcc8b7f109b3e69db", size = 190729, upload-time = "2025-11-10T22:48:12.742Z" },
-    { url = "https://files.pythonhosted.org/packages/b6/86/74bddbfaa3c116da34d8c762f728c59d9842a65f202b0b746f5d9a597869/clickhouse_driver-0.2.10-cp312-cp312-win_amd64.whl", hash = "sha256:3ce051f55bdb33396f76a77702936bfa973dfd98f7cf00a72817a1e01c9b7406", size = 204141, upload-time = "2025-11-10T22:48:14.452Z" },
-    { url = "https://files.pythonhosted.org/packages/76/7f/ee5d539611b782a04845545ba391208634124f67c4d57a32d4a46eadfb58/clickhouse_driver-0.2.10-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:e76c1189a6273c79d906ee8274b9d3c7bf8df597ee6199cb75449ee2702deb8a", size = 210645, upload-time = "2025-11-10T22:48:15.995Z" },
-    { url = "https://files.pythonhosted.org/packages/34/92/ee5a2d7a812b65d9690e46222218f33064c4bd44f3535b1ba564fb4b528b/clickhouse_driver-0.2.10-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:8be64c77d58d4a33b3c957cdb7c5a4deeac56bf93f4188dbfb5c5454eb04c985", size = 205158, upload-time = "2025-11-10T22:48:17.745Z" },
-    { url = "https://files.pythonhosted.org/packages/03/00/6c532a0aea89e3d09dd4150b1df0b92e787a306b8711d54d003d18fd1ddd/clickhouse_driver-0.2.10-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:23abafd0c883ccc1baea527c1d05a6bc0c59aae6c29ae65e1b84d498b265f8c0", size = 1033476, upload-time = "2025-11-10T22:48:19.239Z" },
-    { url = "https://files.pythonhosted.org/packages/ea/9b/137ea1ff9539da77cd022331ec4fa079cbefbd4ebbcb5c51bdd7dcd0bca0/clickhouse_driver-0.2.10-cp313-cp313-manylinux2014_ppc64le.manylinux_2_17_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:77ffe2063469c637c5e57bf0713ca1b617b612d55a8392799f97e34c353e6908", size = 1079495, upload-time = "2025-11-10T22:48:20.744Z" },
-    { url = "https://files.pythonhosted.org/packages/ec/1c/e13766af7e4e174c6f17b1fbc5a078b28584f53adc91f103caacc73f569b/clickhouse_driver-0.2.10-cp313-cp313-manylinux2014_s390x.manylinux_2_17_s390x.manylinux_2_28_s390x.whl", hash = "sha256:df2d77779fcc1ddb68614b75bf45b8db61cf63f42a03d5624ce6922a305e609f", size = 1100658, upload-time = "2025-11-10T22:48:22.277Z" },
-    { url = "https://files.pythonhosted.org/packages/41/e5/0686ad3ef1b594c16e8b13394c73ee4860fd025d70211a360f797dd7a28a/clickhouse_driver-0.2.10-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:85e46e31e4b14626571819e669341a3017376ce935d25b2cc0bfea9343b1b562", size = 1034175, upload-time = "2025-11-10T22:48:24.117Z" },
-    { url = "https://files.pythonhosted.org/packages/d8/32/fea4e971297b50e5af3318fd90d400269ae1c74ad4d83a9453b89f578d3c/clickhouse_driver-0.2.10-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:d7435d1ff2bc577aeedf8f01d94b5777af382484f8973a9c5018d5afd0dd175c", size = 995963, upload-time = "2025-11-10T22:48:25.824Z" },
-    { url = "https://files.pythonhosted.org/packages/02/c4/d42f2b69ab5903e5bc9119b179f55c9aef79fe667f77cab4d8ae90492dcd/clickhouse_driver-0.2.10-cp313-cp313-musllinux_1_2_ppc64le.whl", hash = "sha256:b60c7e3321214eec4568811bcd953836671fa078c57f6607f236414447636de2", size = 1044626, upload-time = "2025-11-10T22:48:27.927Z" },
-    { url = "https://files.pythonhosted.org/packages/78/36/043b6b2d967396172a60f10bf26de2c83248857f9a1e75b481f02218d1d7/clickhouse_driver-0.2.10-cp313-cp313-musllinux_1_2_s390x.whl", hash = "sha256:13fdf6571e20ac79992605ad65058296ac0f2437c1e7428a98dd6d173753119e", size = 1045772, upload-time = "2025-11-10T22:48:29.439Z" },
-    { url = "https://files.pythonhosted.org/packages/0c/cf/bc5c807cbe68ce9eeac6a1997b937c81774ca86b2ab593c6efb9121a9f08/clickhouse_driver-0.2.10-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:06b6b683af086f9049d0c5e7e660fb76013439efa640e6c8ff6673622c3838fa", size = 1006716, upload-time = "2025-11-10T22:48:31.086Z" },
-    { url = "https://files.pythonhosted.org/packages/d9/21/9b0e4814aa6c78d717c22cf51e3a5bd73b4f09c4078fc3f274f8a17c3658/clickhouse_driver-0.2.10-cp313-cp313-win32.whl", hash = "sha256:8fc51b0991dc9b89ea2379a0bc0995a9ed24428aad834f6af7841cc94488b82f", size = 189789, upload-time = "2025-11-10T22:48:33.039Z" },
-    { url = "https://files.pythonhosted.org/packages/85/7d/46195e09d4b43f59bc9053f81f6d0c0f25e44c8ef94218fe3c972067cdf4/clickhouse_driver-0.2.10-cp313-cp313-win_amd64.whl", hash = "sha256:fbfe244d2f06824e175492a54033d8282f0ec5644db8e7e3805f7a9d076f5fcf", size = 203020, upload-time = "2025-11-10T22:48:34.874Z" },
-    { url = "https://files.pythonhosted.org/packages/d7/64/6d8ea99c03e99aaf8dfe87961fd2e5baedc72d0a289cab1c5138acbe2d1b/clickhouse_driver-0.2.10-pp311-pypy311_pp73-macosx_10_15_x86_64.whl", hash = "sha256:cb0bbad7b79ecb41f5f348528b6b0c46850d741669dd453f5fa633a8f3eff855", size = 190729, upload-time = "2025-11-10T22:49:45.635Z" },
-    { url = "https://files.pythonhosted.org/packages/40/7d/9abdd95b0da0dcf6dc644336459f132575bfbdee1a4ba377195c2032c03a/clickhouse_driver-0.2.10-pp311-pypy311_pp73-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:68e96e04282d126486b3820391a8ebf1d7c32b61e5fcbd701aeeda79017349e5", size = 216933, upload-time = "2025-11-10T22:49:47.474Z" },
-    { url = "https://files.pythonhosted.org/packages/5a/a4/33d4b6f1650847280265756e4d54f94730cdac082ab3f9e6518ba97502bf/clickhouse_driver-0.2.10-pp311-pypy311_pp73-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:0fd9f72fcfe86e0fef0681cd124325714e92e96ad1fd675dfbeaccdfb7bd2f64", size = 219670, upload-time = "2025-11-10T22:49:49.401Z" },
-    { url = "https://files.pythonhosted.org/packages/d6/c0/320b7cb5e2b6ab73e10ca6f1c5d0a2f04b42dc3acb689533d102d9f3f5e4/clickhouse_driver-0.2.10-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:e24582110f3d532b35e106583981bea0b7a3b10167c8a890a7b6ea5c7c6ce6d6", size = 192945, upload-time = "2025-11-10T22:49:51.168Z" },
 ]
 
 [[package]]
@@ -1369,16 +1316,16 @@ wheels = [
 
 [[package]]
 name = "environs"
-version = "14.1.1"
+version = "14.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "marshmallow" },
     { name = "python-dotenv" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/31/d3/e82bdbb8cc332e751f67a3f668c5d134d57f983497d9f3a59a375b6e8fd8/environs-14.1.1.tar.gz", hash = "sha256:03db7ee2d50ec697b68814cd175a3a05a7c7954804e4e419ca8b570dc5a835cf", size = 32050, upload-time = "2025-02-10T20:24:26.437Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fb/c7/94f97e6e74482a50b5fc798856b6cc06e8d072ab05a0b74cb5d87bd0d065/environs-14.6.0.tar.gz", hash = "sha256:ed2767588deb503209ffe4dd9bb2b39311c2e4e7e27ce2c64bf62ca83328d068", size = 35563, upload-time = "2026-02-20T04:02:08.869Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/1c/ab9752f02d32d981d647c05822be9ff93809be8953dacea2da2bec9a9de9/environs-14.1.1-py3-none-any.whl", hash = "sha256:45bc56f1d53bbc59d8dd69bba97377dd88ec28b8229d81cedbd455b21789445b", size = 15566, upload-time = "2025-02-10T20:24:22.116Z" },
+    { url = "https://files.pythonhosted.org/packages/97/a8/c070e1340636acb38d4e6a7e45c46d168a462b48b9b3257e14ca0e5af79b/environs-14.6.0-py3-none-any.whl", hash = "sha256:f8fb3d6c6a55872b0c6db077a28f5a8c7b8984b7c32029613d44cef95cfc0812", size = 17205, upload-time = "2026-02-20T04:02:07.299Z" },
 ]
 
 [[package]]
@@ -1447,6 +1394,7 @@ dependencies = [
     { name = "backoff" },
     { name = "boto3" },
     { name = "chargebee" },
+    { name = "clickhouse-driver" },
     { name = "coreapi" },
     { name = "dj-database-url" },
     { name = "django" },
@@ -1515,10 +1463,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-auth-controller = [
-    { name = "auth-controller" },
-    { name = "django-multiselectfield" },
-]
 dev = [
     { name = "autopep8" },
     { name = "boto3-stubs" },
@@ -1538,6 +1482,7 @@ dev = [
     { name = "pep8" },
     { name = "pre-commit" },
     { name = "pyfakefs" },
+    { name = "pyjwt" },
     { name = "pylint" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -1560,33 +1505,21 @@ dev = [
     { name = "types-pytz" },
     { name = "types-requests" },
 ]
-ldap = [
-    { name = "django-python3-ldap" },
-    { name = "flagsmith-ldap" },
-]
-licensing = [
-    { name = "cryptography" },
-    { name = "licensing" },
-]
 private = [
     { name = "flagsmith-private" },
-]
-workflows = [
-    { name = "workflows-logic" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "appdirs", specifier = ">=1.4.4,<1.5.0" },
     { name = "asgiref", specifier = ">=3.8.1,<3.9.0" },
-    { name = "auth-controller", marker = "extra == 'auth-controller'", git = "https://github.com/flagsmith/flagsmith-auth-controller?tag=v0.2.0" },
     { name = "autopep8", marker = "extra == 'dev'", specifier = ">=2.0.1,<2.1.0" },
     { name = "backoff", specifier = ">=2.2.1,<2.3.0" },
     { name = "boto3", specifier = ">=1.35.95,<1.36.0" },
     { name = "boto3-stubs", marker = "extra == 'dev'", specifier = ">=1.36.20,<2.0.0" },
     { name = "chargebee", specifier = ">=3.10.0,<4.0.0" },
+    { name = "clickhouse-driver", git = "https://github.com/Flagsmith/clickhouse-driver?branch=newjson" },
     { name = "coreapi", specifier = ">=2.3.3,<2.4.0" },
-    { name = "cryptography", marker = "extra == 'licensing'", specifier = ">=44.0.1" },
     { name = "datamodel-code-generator", marker = "extra == 'dev'", specifier = ">=0.25,<0.26.0" },
     { name = "diff-cover", marker = "extra == 'dev'", specifier = ">=10.1.0,<11.0.0" },
     { name = "dj-database-url", specifier = ">=3.0.1,<3.1.0" },
@@ -1602,10 +1535,8 @@ requires-dist = [
     { name = "django-filter", specifier = ">=2.4.0,<2.5.0" },
     { name = "django-health-check", specifier = ">=3.18.2,<3.19.0" },
     { name = "django-lifecycle", specifier = ">=1.2.4,<1.3.0" },
-    { name = "django-multiselectfield", marker = "extra == 'auth-controller'", specifier = ">=1.0.1,<2" },
     { name = "django-oauth-toolkit", specifier = ">=3.0.1,<4.0.0" },
     { name = "django-ordered-model", specifier = ">=3.4.1,<3.5.0" },
-    { name = "django-python3-ldap", marker = "extra == 'ldap'", specifier = ">=0.15.6,<1" },
     { name = "django-redis", specifier = ">=5.4.0,<6.0.0" },
     { name = "django-ses", specifier = ">=3.5.0,<3.6.0" },
     { name = "django-simple-history", specifier = ">=2.12.0,<2.13.0" },
@@ -1629,8 +1560,7 @@ requires-dist = [
     { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.9.1,<4" },
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
     { name = "flagsmith-flag-engine", specifier = ">=10.1.0,<11.0.0" },
-    { name = "flagsmith-ldap", marker = "extra == 'ldap'", git = "https://github.com/flagsmith/flagsmith-ldap?tag=v0.1.2" },
-    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.6.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
+    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.9.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
     { name = "flagsmith-sql-flag-engine", specifier = ">=0.1.0,<0.2.0" },
     { name = "google-api-python-client", specifier = ">=1.12.5,<1.13.0" },
     { name = "google-re2", specifier = ">=1.0,<2.0.0" },
@@ -1638,7 +1568,6 @@ requires-dist = [
     { name = "hubspot-api-client", specifier = ">=12.0.0,<13.0.0" },
     { name = "influxdb-client", specifier = ">=1.50.0,<1.51.0" },
     { name = "ipython", marker = "extra == 'dev'", specifier = ">=9.10.0,<10.0.0" },
-    { name = "licensing", marker = "extra == 'licensing'", git = "https://github.com/flagsmith/licensing?tag=v0.3.0" },
     { name = "moto", marker = "extra == 'dev'", specifier = ">=4.1.3,<4.2.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.15.0,<2.0.0" },
     { name = "mypy-boto3-dynamodb", marker = "extra == 'dev'", specifier = ">=1.33.0,<2.0.0" },
@@ -1654,12 +1583,13 @@ requires-dist = [
     { name = "pydantic-collections", specifier = ">=0.6.0,<0.7.0" },
     { name = "pyfakefs", marker = "extra == 'dev'", specifier = ">=5.7.4,<6.0.0" },
     { name = "pygithub", specifier = ">=2.8,<2.9.0" },
+    { name = "pyjwt", marker = "extra == 'dev'", specifier = ">=2.13.0" },
     { name = "pylint", marker = "extra == 'dev'", specifier = ">=2.16.2,<2.17.0" },
     { name = "pymemcache", specifier = ">=4.0.0,<4.1.0" },
     { name = "pyngo", specifier = ">=2.4.1,<2.5.0" },
     { name = "pyotp", specifier = ">=2.9.0,<3.0.0" },
     { name = "pyparsing", specifier = ">=2.4.7,<2.5.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.2.1,<7.3.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3,<9.1.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0,<4.2.0" },
     { name = "pytest-django", marker = "extra == 'dev'", specifier = ">=4.8.0,<5.0.0" },
     { name = "pytest-freezegun", marker = "extra == 'dev'", specifier = ">=0.4.2,<0.5.0" },
@@ -1673,7 +1603,7 @@ requires-dist = [
     { name = "requests", specifier = ">=2.33.0,<2.34.0" },
     { name = "requests-mock", marker = "extra == 'dev'", specifier = ">=1.11.0,<2.0.0" },
     { name = "responses", marker = "extra == 'dev'", specifier = ">=0.22.0,<0.23.0" },
-    { name = "rudder-sdk-python", specifier = ">=2.0.2,<2.1.0" },
+    { name = "rudder-sdk-python", specifier = ">=2.0.2,<3" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.9.7,<0.10.0" },
     { name = "segment-analytics-python", specifier = ">=2.2.3,<2.3.0" },
     { name = "sendgrid-django", specifier = ">=4.2.0,<4.3.0" },
@@ -1693,9 +1623,8 @@ requires-dist = [
     { name = "types-requests", marker = "extra == 'dev'", specifier = ">=2.32.0.20241016,<3.0.0" },
     { name = "tzdata", specifier = ">=2024.1,<2025.0.0" },
     { name = "whitenoise", specifier = ">=6.0.0,<6.1.0" },
-    { name = "workflows-logic", marker = "extra == 'workflows'", git = "https://github.com/flagsmith/flagsmith-workflows?tag=v3.4.0" },
 ]
-provides-extras = ["auth-controller", "private", "ldap", "workflows", "licensing", "dev"]
+provides-extras = ["private", "dev"]
 
 [[package]]
 name = "flagsmith-common"
@@ -1764,35 +1693,33 @@ wheels = [
 ]
 
 [[package]]
-name = "flagsmith-ldap"
-version = "0.0.0"
-source = { git = "https://github.com/flagsmith/flagsmith-ldap?tag=v0.1.2#2456465164f39c8ec77c28a029f72119a93c6776" }
-
-[[package]]
 name = "flagsmith-private"
-version = "0.6.0"
+version = "0.9.0"
 source = { registry = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" }
 dependencies = [
+    { name = "cryptography" },
+    { name = "django-multiselectfield" },
+    { name = "django-python3-ldap" },
     { name = "django-scim2" },
     { name = "pysaml2" },
     { name = "scim2-filter-parser" },
 ]
-sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.6.0/flagsmith_private-0.6.0.tar.gz", hash = "sha256:5549704f4a23c98e465ba4bb05b82e5440bf84f8d12171d027ae41f265d78ea5" }
+sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.9.0/flagsmith_private-0.9.0.tar.gz", hash = "sha256:fc7b11ff24205f07e8eca8debbbf71807ec1da456a2572df4ec6815a4cce8ade" }
 wheels = [
-    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.6.0/flagsmith_private-0.6.0-py3-none-any.whl", hash = "sha256:5016964c60dc75177a5ea0d290a50a23a6b2283a654ef95c27f8325c486f0cbe" },
+    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.9.0/flagsmith_private-0.9.0-py3-none-any.whl", hash = "sha256:6e3fa41790af07cc3296cd45c498e73c35f5b8645a59679627e8287717dcdc95" },
 ]
 
 [[package]]
 name = "flagsmith-sql-flag-engine"
-version = "0.1.0"
+version = "0.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "flagsmith-flag-engine" },
     { name = "jsonpath-rfc9535" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/26/6f/9037e90f3b0cb16a25617422f6e1261eedbc3fbdb038c95a363c7a8aacaa/flagsmith_sql_flag_engine-0.1.0.tar.gz", hash = "sha256:bf6377b2d73edbe90f3bcfb8821301b58f0b9eca8a396882b39aea376cbb8c8e", size = 17853, upload-time = "2026-05-20T13:02:17.905Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b5/0f/e14afc677c1c74526057b40dabd17d701788b7e31b60bfbaca592d891b42/flagsmith_sql_flag_engine-0.1.1.tar.gz", hash = "sha256:faa10ae559766e142496964971b612a4ad6f463f92fce318380766aef4607c90", size = 17980, upload-time = "2026-05-27T14:45:32.01Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/df/68/7339fbfe64c3d1bfd35d942a8df68c712f81a266b7fb2a3e98283b84c08e/flagsmith_sql_flag_engine-0.1.0-py3-none-any.whl", hash = "sha256:4c5a0671ba73ec8daab7c21592c1df0dd56c839fdf8af1387322a93038b62fbd", size = 21617, upload-time = "2026-05-20T13:02:16.331Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/b9/b831078e3f4e10e2efdc8a42eb79395858a57d56a91c79c358d4f59b3c62/flagsmith_sql_flag_engine-0.1.1-py3-none-any.whl", hash = "sha256:66dae61a54bab6680562b7eccceb829f6661381a3af47eb38ffc110a707c794d", size = 21738, upload-time = "2026-05-27T14:45:30.763Z" },
 ]
 
 [[package]]
@@ -2019,11 +1946,11 @@ wheels = [
 
 [[package]]
 name = "idna"
-version = "3.7"
+version = "3.18"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/21/ed/f86a79a07470cb07819390452f178b3bef1d375f2ec021ecfc709fc7cf07/idna-3.7.tar.gz", hash = "sha256:028ff3aadf0609c1fd278d8ea3089299412a7a8b9bd005dd08b9f8285bcb5cfc", size = 189575, upload-time = "2024-04-11T03:34:43.276Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cd/63/9496c57188a2ee585e0f1db071d75089a11e98aa86eb99d9d7618fc1edce/idna-3.18.tar.gz", hash = "sha256:ffb385a7e039654cef1ab9ef32c6fafe283c0c0467bba1d9029738ce4a14a848", size = 196711, upload-time = "2026-06-02T14:34:07.794Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e5/3e/741d8c82801c347547f8a2a06aa57dbb1992be9e948df2ea0eda2c8b79e8/idna-3.7-py3-none-any.whl", hash = "sha256:82fee1fc78add43492d3a1898bfa6d8a904cc97d8427f683ed8e798d07761aa0", size = 66836, upload-time = "2024-04-11T03:34:41.447Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/5e/d4e9f1a599fb8e573b7b87160658329fbf28d19eac2718f51fc3def3aa5a/idna-3.18-py3-none-any.whl", hash = "sha256:7f952cbe720b688055e3f87de14f5c3e5fdaa8bc3928985c4077ca689de849a2", size = 65455, upload-time = "2026-06-02T14:34:06.319Z" },
 ]
 
 [[package]]
@@ -2274,11 +2201,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/43/ac/96bd5464e3edbc615
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4e/f6/71d6ec9f18da0b2201287ce9db6afb1a1f637dedb3f0703409558981c723/ldap3-2.9.1-py2.py3-none-any.whl", hash = "sha256:5869596fc4948797020d3f03b7939da938778a0f9e2009f7a072ccf92b8e8d70", size = 432192, upload-time = "2021-07-18T06:34:12.905Z" },
 ]
-
-[[package]]
-name = "licensing"
-version = "0.0.0"
-source = { git = "https://github.com/flagsmith/licensing?tag=v0.3.0#d38953cd93cb99eab7fd92a0467d8bfcccc4cf96" }
 
 [[package]]
 name = "markupsafe"
@@ -3019,7 +2941,7 @@ name = "pygithub"
 version = "2.8.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pyjwt" },
+    { name = "pyjwt", extra = ["crypto"] },
     { name = "pynacl" },
     { name = "requests" },
     { name = "typing-extensions" },
@@ -3041,11 +2963,19 @@ wheels = [
 
 [[package]]
 name = "pyjwt"
-version = "2.12.0"
+version = "2.13.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a8/10/e8192be5f38f3e8e7e046716de4cae33d56fd5ae08927a823bb916be36c1/pyjwt-2.12.0.tar.gz", hash = "sha256:2f62390b667cd8257de560b850bb5a883102a388829274147f1d724453f8fb02", size = 102511, upload-time = "2026-03-12T17:15:30.831Z" }
+dependencies = [
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3b/81/58d0ac84e1ef3a3843791d6954d94c0b33d526c75eeb1efbce9d0a4c4077/pyjwt-2.13.0.tar.gz", hash = "sha256:41571c89ca91598c79e8ef18a2d07367d4810fbbd6f637794879baf1b7703423", size = 107515, upload-time = "2026-05-21T19:54:36.618Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/15/70/70f895f404d363d291dcf62c12c85fdd47619ad9674ac0f53364d035925a/pyjwt-2.12.0-py3-none-any.whl", hash = "sha256:9bb459d1bdd0387967d287f5656bf7ec2b9a26645d1961628cda1764e087fd6e", size = 29700, upload-time = "2026-03-12T17:15:29.257Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/5e/ecf12fdb62546d64385c158514e9b2b671f7832108ef2ecd2020ce0af2d1/pyjwt-2.13.0-py3-none-any.whl", hash = "sha256:66adcc2aff09b3f1bbd95fc1e1577df8ac8723c978552fd43304c8a290ac5728", size = 31274, upload-time = "2026-05-21T19:54:35.362Z" },
+]
+
+[package.optional-dependencies]
+crypto = [
+    { name = "cryptography" },
 ]
 
 [[package]]
@@ -3306,11 +3236,11 @@ wheels = [
 
 [[package]]
 name = "python-dotenv"
-version = "0.21.1"
+version = "1.2.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f5/d7/d548e0d5a68b328a8d69af833a861be415a17cb15ce3d8f0cd850073d2e1/python-dotenv-0.21.1.tar.gz", hash = "sha256:1c93de8f636cde3ce377292818d0e440b6e45a82f215c3744979151fa8151c49", size = 35930, upload-time = "2023-01-21T10:22:47.277Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/82/ed/0301aeeac3e5353ef3d94b6ec08bbcabd04a72018415dcb29e588514bba8/python_dotenv-1.2.2.tar.gz", hash = "sha256:2c371a91fbd7ba082c2c1dc1f8bf89ca22564a087c2c287cd9b662adde799cf3", size = 50135, upload-time = "2026-03-01T16:00:26.196Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/64/62/f19d1e9023aacb47241de3ab5a5d5fedf32c78a71a9e365bb2153378c141/python_dotenv-0.21.1-py3-none-any.whl", hash = "sha256:41e12e0318bebc859fcc4d97d4db8d20ad21721a6aa5047dd59f090391cb549a", size = 19284, upload-time = "2023-01-21T10:22:45.958Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/d7/1959b9648791274998a9c3526f6d0ec8fd2233e4d4acce81bbae76b44b2a/python_dotenv-1.2.2-py3-none-any.whl", hash = "sha256:1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a", size = 22101, upload-time = "2026-03-01T16:00:25.09Z" },
 ]
 
 [[package]]
@@ -3673,7 +3603,7 @@ wheels = [
 
 [[package]]
 name = "rudder-sdk-python"
-version = "2.0.2"
+version = "2.1.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "backoff" },
@@ -3683,9 +3613,9 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/60/af/cd82fe336d192000a4e9130d6daa65e11f84a79af749851bcb487a46bb72/rudder-sdk-python-2.0.2.tar.gz", hash = "sha256:4569bbe0183ea91bca7f23671f412bda03664b55b722d31454639d6409a421ea", size = 15614, upload-time = "2023-03-06T13:18:04.394Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ec/30/21675cadc1731dbb03d4e98b74852a63e0b4c063092cf2342c49b8b02b30/rudder_sdk_python-2.1.4.tar.gz", hash = "sha256:c6040044d79df05973cdec3f4455c7619b2b54b03158c68adca990e6502e1815", size = 15683, upload-time = "2024-09-25T16:36:53.243Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/75/8b/c6fd12edae3bc4e74f5ad01d64ad0ac63834d2106fb9a4773574ab03ab32/rudder_sdk_python-2.0.2-py2.py3-none-any.whl", hash = "sha256:05d36d674ef043704e2b89623b8cfbef160c2a44f4c801b7c268c11dbc29c219", size = 19574, upload-time = "2023-03-06T13:18:02.628Z" },
+    { url = "https://files.pythonhosted.org/packages/bf/4b/a6e3ae5b57dc2fef23b86a742955eff94a3bbe1682e5ee783e3b631eacb6/rudder_sdk_python-2.1.4-py2.py3-none-any.whl", hash = "sha256:a9891944ec4947ae0aea5962560cadf726f55831855993ebfb9c7acbdabb8ebb", size = 19577, upload-time = "2024-09-25T16:36:51.8Z" },
 ]
 
 [[package]]
@@ -4204,17 +4134,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/60/d9/6625ead93412c5ce86db1f8b4f2a70b8043e0a7c1d30099ba3c6a81641ff/wmctrl-0.5.tar.gz", hash = "sha256:7839a36b6fe9e2d6fd22304e5dc372dbced2116ba41283ea938b2da57f53e962", size = 5202, upload-time = "2023-09-16T23:02:08.09Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/13/ca/723e3f8185738d7947f14ee7dc663b59415c6dee43bd71575f8c7f5cd6be/wmctrl-0.5-py2.py3-none-any.whl", hash = "sha256:ae695c1863a314c899e7cf113f07c0da02a394b968c4772e1936219d9234ddd7", size = 4268, upload-time = "2023-09-16T23:02:05.563Z" },
-]
-
-[[package]]
-name = "workflows-logic"
-version = "3.3.2"
-source = { git = "https://github.com/flagsmith/flagsmith-workflows?tag=v3.4.0#f9cedab3ec8dba7198277cb6bce84b059d4be188" }
-dependencies = [
-    { name = "djangorestframework" },
-    { name = "djangorestframework-recursive" },
-    { name = "flagsmith-common" },
-    { name = "flagsmith-flag-engine" },
 ]
 
 [[package]]

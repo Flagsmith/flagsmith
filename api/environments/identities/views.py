@@ -33,7 +33,7 @@ from environments.sdk.serializers import (
     IdentifyWithTraitsSerializer,
     IdentitySerializerWithTraitsAndSegments,
 )
-from features.serializers import SDKFeatureStateSerializer
+from features.serializers import SDKIdentityFeatureStateSerializer
 from integrations.integration import identify_integrations
 from util.views import SDKAPIView
 
@@ -290,7 +290,9 @@ class SDKIdentities(SDKAPIView):
             additional_filters=self._get_additional_filters(),
         ):
             if feature_state.feature.name == feature_name:
-                serializer = SDKFeatureStateSerializer(feature_state, context=context)
+                serializer = SDKIdentityFeatureStateSerializer(
+                    feature_state, context=context
+                )
                 return Response(
                     data=serializer.data, status=status.HTTP_200_OK, headers=headers
                 )

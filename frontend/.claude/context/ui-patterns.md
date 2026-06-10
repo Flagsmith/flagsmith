@@ -1,5 +1,86 @@
 # UI Patterns & Best Practices
 
+**Use design tokens, utility classes, and primitive components before writing anything custom.** Each tier composes the one below — pick the highest tier that fits before reaching for SCSS.
+
+## Design Tokens & Primitives
+
+### Colour Tokens
+
+**Location:** `common/theme/tokens.ts` (auto-generated from `common/theme/tokens.json`)
+
+Never hardcode hex colours in TSX or SCSS. Use:
+- **In SCSS:** CSS variables directly — `var(--color-text-success)`, `var(--color-border-action)`, `var(--color-surface-muted)`
+- **In TSX (inline styles / chart props):** JS token constants — `colorTextSuccess`, `colorBorderAction`, `colorSurfaceMuted`
+
+Token categories: `colorText*`, `colorIcon*`, `colorBorder*`, `colorSurface*`, `colorChart*`, `radius*`, `shadow*`, `duration*`, `easing*`.
+
+### Utility Classes
+
+Before writing custom SCSS, check for token-driven utilities:
+
+- **Token utilities** (`web/styles/_token-utilities.scss`): `bg-surface-*`, `text-*`, `border-*`, `rounded-*`, `shadow-*`, `transition-*`
+- **Bootstrap utilities** (layout / spacing): `d-flex`, `flex-column`, `gap-*`, `p-*`, `m-*`, `text-center`, `align-items-*`, `justify-content-*`
+
+Prefer utility classes over one-off SCSS rules. Combine them freely — `className='d-flex gap-3 bg-surface-muted rounded-lg p-3'`.
+
+### Primitive Components — Use Before Building
+
+Before creating a custom element, check if an existing primitive fits:
+
+| Need | Primitive | Location |
+|------|-----------|----------|
+| Coloured dot / swatch | `ColorSwatch` | `components/ColorSwatch.tsx` — accepts `color`, `size` (`sm`/`md`/`lg`), `shape` (`square`/`circle`) |
+| Text input | `Input` | `components/base/forms/Input.js` — has `search` prop for built-in search icon |
+| Labelled field (text, textarea) | `InputGroup` | `components/base/forms/InputGroup.js` — has `textarea` prop, `title`, handles label + layout |
+| Icons | `Icon` | `components/icons/Icon.tsx` — project's own icon set. **Never use external icon libraries** (ionicons, etc.) |
+| Confirm dialog | `openConfirm` | `components/base/Modal` — see Confirmation Dialogs section below |
+
+### Inline Styles
+
+Avoid inline `style={}` props. Acceptable exceptions:
+- Flex layout fixes (`minWidth: 0` for overflow prevention)
+- Dynamic values that genuinely vary at runtime (e.g. chart dimensions)
+
+For fixed dimensions (widths, padding), prefer SCSS classes.
+
+## Code Organisation
+
+### Component File Structure
+
+Multi-file components (TSX + SCSS) use a folder structure with a barrel export:
+
+```
+ComponentName/
+├── ComponentName.tsx
+├── ComponentName.scss
+└── index.ts          ← barrel export
+```
+
+Single-file components without their own styles can live as a single `.tsx` next to peers — no folder needed.
+
+### SCSS: what belongs here
+
+Write SCSS **only for what utilities and tokens cannot express**. Before adding a rule, ask whether a utility class on the element removes the need for it entirely.
+
+**Do NOT re-declare in SCSS — use a className utility instead:**
+
+| In SCSS you wrote | Use the utility |
+|-------------------|-----------------|
+| `color: var(--color-text-secondary)` | `text-secondary` (`bg-surface-*`, `border-*` likewise) |
+| `border-radius: var(--radius-md)` | `rounded-md` |
+| `box-shadow: var(--shadow-*)` | `shadow-*` |
+| `display: flex; flex-direction: column; gap: 16px` | `d-flex flex-column gap-3` |
+| `align-items: center; justify-content: space-between` | `align-items-center justify-content-between` |
+| `padding: 16px` / `padding: 8px` | `p-3` / `p-2` |
+
+The Bootstrap spacing scale is `1→4px 2→8px 3→16px 4→24px`. `gap-*`, `p-*`, `m-*` all follow it.
+
+**SCSS is for the genuinely custom bits:** selected / hover / focus states, transitions, `grid-template-columns`, pseudo-elements, and one-off values that don't map to the scale.
+
+**Off-scale spacing** (e.g. `12px`, `14px`, `2px`): prefer snapping to the `8/16` scale and using a utility. Keep the off-scale value in SCSS only when the design genuinely requires it — don't reach for custom SCSS just to avoid rounding.
+
+Re-declaring tokens in SCSS typically inflates a stylesheet by ~⅓ over the utility-first equivalent and drifts from the design system.
+
 ## Storybook (Optional)
 
 When working on complex or unfamiliar components, you can query Storybook MCP (`list-all-documentation`, then `get-documentation`) to discover existing components, their props, and visual examples. This is optional — for simple changes, grepping the codebase is fine.
@@ -70,7 +151,7 @@ Use Bootstrap classes for responsive behavior:
 
 ## Tabs Component
 
-**Location:** `components/base/forms/Tabs.tsx`
+**Location:** `components/navigation/TabMenu/Tabs.tsx`
 
 ### Basic Usage
 
@@ -163,13 +244,10 @@ openConfirm({
 ```
 
 ### Parameters
-- `title: string` - Dialog title
+- `title: ReactNode` - Dialog title
 - `body: ReactNode` - Dialog content (can be JSX)
-- `onYes: (closeModal: () => void) => void` - Callback when user confirms
+- `onYes: () => void` - Callback when user confirms. The modal closes automatically after `onYes` returns.
 - `onNo?: () => void` - Optional callback when user cancels
-- `challenge?: string` - Optional challenge text user must type to confirm
-
-### Key Points
-- The `onYes` callback receives a `closeModal` function
-- Always call `closeModal()` when the action completes successfully
-- Can be async - use `async (closeModal) => { ... }`
+- `yesText?: string` - Label for the confirm button (default "OK")
+- `noText?: string` - Label for the cancel button (default "Cancel")
+- `destructive?: boolean` - Renders the confirm button in danger styling. Use for delete/discard actions.

@@ -1,22 +1,26 @@
-import { FC } from 'react'
+import { FC, useEffect, useState } from 'react'
 import {
   useCreateWarehouseConnectionMutation,
   useDeleteWarehouseConnectionMutation,
   useGetWarehouseConnectionsQuery,
+  useTestWarehouseConnectionMutation,
   useUpdateWarehouseConnectionMutation,
 } from 'common/services/useWarehouseConnection'
-import { WarehouseConnection } from 'common/types/responses'
-import Button from 'components/base/forms/Button'
-import Loader from 'components/Loader'
-import Setting from 'components/Setting'
+import { SnowflakeConfig } from 'common/types/responses'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
-import CreateWarehouseConnectionModal from './CreateWarehouseConnectionModal'
+import WarehouseSetup from './WarehouseSetup'
+import WarehouseSetupSkeleton from './WarehouseSetupSkeleton'
+import ConfigForm from './ConfigForm'
+import sendWarehouseTestEvent from './sendWarehouseTestEvent'
+import { getWarehousePollingInterval } from './warehousePolling'
 
 type WarehouseTabProps = {
   environmentId: string
 }
 
 const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
+  const [editing, setEditing] = useState(false)
+
   const {
     data: connections,
     isError,
@@ -30,67 +34,94 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
   const [deleteConnection] = useDeleteWarehouseConnectionMutation()
   const [updateConnection] = useUpdateWarehouseConnectionMutation()
 
-  const hasFlagsmithConnection = connections?.some(
-    (c) => c.warehouse_type === 'flagsmith',
-  )
-  const hasConnections = !!connections?.length
+  const connection = connections?.[0]
+  const connectionId = connection?.id
+  const connectionStatus = connection?.status
 
-  const handleCreateFlagsmith = () => {
-    createConnection({
-      environmentId,
-      warehouse_type: 'flagsmith',
-    })
-      .unwrap()
-      .then(() => toast('Warehouse connection created'))
-      .catch(() => toast('Failed to create warehouse connection', 'danger'))
-  }
+  const [testConnection, { isLoading: isSendingTestEvent }] =
+    useTestWarehouseConnectionMutation()
 
-  const handleConfirmFlagsmith = () => {
+  useEffect(() => {
+    const interval = getWarehousePollingInterval(connectionStatus)
+    if (!interval || connectionId === undefined) return
+    testConnection({ environmentId, id: connectionId })
+    const timer = setInterval(() => {
+      testConnection({ environmentId, id: connectionId })
+    }, interval)
+    return () => clearInterval(timer)
+  }, [connectionStatus, connectionId, environmentId, testConnection])
+
+  const handleEnableFlagsmith = () => {
     openConfirm({
       body: 'This will enable a Flagsmith Warehouse connection for this environment. Are you sure you want to proceed?',
-      onYes: handleCreateFlagsmith,
+      onYes: () => {
+        createConnection({ environmentId, warehouse_type: 'flagsmith' })
+          .unwrap()
+          .then(() => toast('Warehouse connection created'))
+          .catch(() => toast('Failed to create warehouse connection', 'danger'))
+      },
       title: 'Connect Flagsmith Warehouse',
     })
   }
 
-  const handleOpenCreateDrawer = () => {
-    openModal(
-      'Connect Warehouse',
-      <CreateWarehouseConnectionModal
-        save={(data) => createConnection({ environmentId, ...data }).unwrap()}
-      />,
-      'side-modal side-modal--narrow',
-    )
+  const handleCreateSnowflake = ({
+    name,
+    ...config
+  }: SnowflakeConfig & { name: string }) =>
+    createConnection({
+      config,
+      environmentId,
+      name,
+      warehouse_type: 'snowflake',
+    })
+      .unwrap()
+      .then(() => toast('Warehouse connection created'))
+
+  const handleUpdateSnowflake = ({
+    name,
+    ...config
+  }: SnowflakeConfig & { name: string }) => {
+    if (!connection) return Promise.reject()
+    return updateConnection({
+      config,
+      environmentId,
+      id: connection.id,
+      name,
+    })
+      .unwrap()
+      .then(() => {
+        setEditing(false)
+        toast('Warehouse connection updated')
+      })
   }
 
-  const handleOpenEditDrawer = (connection: WarehouseConnection) => {
-    openModal(
-      'Edit Warehouse',
-      <CreateWarehouseConnectionModal
-        connection={connection}
-        save={(data) =>
-          updateConnection({
-            environmentId,
-            id: connection.id,
-            ...data,
-          }).unwrap()
-        }
-      />,
-      'side-modal side-modal--narrow',
-    )
-  }
-
-  const handleDelete = (connection: WarehouseConnection) => {
+  const handleDelete = () => {
+    if (!connection) return
     deleteConnection({ environmentId, id: connection.id })
       .unwrap()
-      .then(() => toast('Warehouse connection removed'))
+      .then(() => {
+        setEditing(false)
+        toast('Warehouse connection removed')
+      })
       .catch(() => toast('Failed to remove warehouse connection', 'danger'))
+  }
+
+  const handleSendTestEvent = () => {
+    if (!connection) return
+    sendWarehouseTestEvent(environmentId)
+      .then(() => testConnection({ environmentId, id: connection.id }).unwrap())
+      .then(() => toast('Test event sent'))
+      .catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error('[warehouse] send test event failed:', error)
+        toast('Failed to send test event', 'danger')
+      })
   }
 
   if (isLoading) {
     return (
       <div className='mt-4 col-md-12'>
-        <Loader />
+        <WarehouseSetupSkeleton />
       </div>
     )
   }
@@ -105,53 +136,45 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     )
   }
 
-  return (
-    <div className='mt-4 col-md-12 d-flex flex-column gap-5'>
-      {!hasFlagsmithConnection && (
-        <div>
-          <Setting
-            title='Connect Flagsmith Warehouse'
-            description='Enable a hosted warehouse connection for this environment to collect experimentation data.'
-            checked={false}
-            disabled={isLoading || isCreating}
-            onChange={handleConfirmFlagsmith}
-          />
-        </div>
-      )}
-      <div>
-        {hasConnections ? (
-          <>
-            <div className='d-flex justify-content-end mb-3'>
-              <Button onClick={handleOpenCreateDrawer} size='small'>
-                Configure a warehouse
-              </Button>
-            </div>
-            {connections.map((connection) => (
-              <WarehouseConnectionCard
-                key={connection.id}
-                connection={connection}
-                onDelete={() => handleDelete(connection)}
-                onEdit={
-                  connection.warehouse_type !== 'flagsmith'
-                    ? () => handleOpenEditDrawer(connection)
-                    : undefined
-                }
-              />
-            ))}
-          </>
-        ) : (
-          <div>
-            <h5 className='fw-bold'>Connect an external Warehouse</h5>
-            <p className='text-muted mb-3'>
-              Flagsmith lets you connect your own data warehouse to collect
-              experimentation data.
-            </p>
-            <Button onClick={handleOpenCreateDrawer} size='small'>
-              Configure a warehouse
-            </Button>
-          </div>
-        )}
+  if (!connection) {
+    return (
+      <div className='mt-4 col-md-12'>
+        <WarehouseSetup
+          onEnableFlagsmith={handleEnableFlagsmith}
+          onCreateSnowflake={handleCreateSnowflake}
+          isCreating={isCreating}
+        />
       </div>
+    )
+  }
+
+  if (editing && connection.warehouse_type === 'snowflake') {
+    return (
+      <div className='mt-4 col-md-12'>
+        <ConfigForm
+          isEdit
+          initialConfig={connection.config as SnowflakeConfig}
+          initialName={connection.name}
+          onSave={handleUpdateSnowflake}
+          onCancel={() => setEditing(false)}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className='mt-4 col-md-12'>
+      <WarehouseConnectionCard
+        connection={connection}
+        onDelete={handleDelete}
+        onEdit={
+          connection.warehouse_type !== 'flagsmith'
+            ? () => setEditing(true)
+            : undefined
+        }
+        onSendTestEvent={handleSendTestEvent}
+        isSendingTestEvent={isSendingTestEvent}
+      />
     </div>
   )
 }

@@ -4,9 +4,12 @@ import Icon from 'components/icons/Icon'
 type WarehouseStatsProps = {
   errored: boolean
   lastEventReceived: string
-  totalEventsReceived: number
-  uniqueEventsCount: number
+  totalEventsReceived: number | null
+  uniqueEventsCount: number | null
 }
+
+const formatCount = (value: number | null): string =>
+  value !== null ? value.toLocaleString() : '-'
 
 const WarehouseStats: FC<WarehouseStatsProps> = ({
   errored,
@@ -30,13 +33,13 @@ const WarehouseStats: FC<WarehouseStatsProps> = ({
     <div className='d-flex flex-row gap-2'>
       <span className='text-muted'>Total events received:</span>
       <span className='font-weight-medium'>
-        {totalEventsReceived.toLocaleString()}
+        {formatCount(totalEventsReceived)}
       </span>
     </div>
     <div className='d-flex flex-row gap-2'>
       <span className='text-muted'>Number of unique events:</span>
       <span className='font-weight-medium'>
-        {uniqueEventsCount.toLocaleString()}
+        {formatCount(uniqueEventsCount)}
       </span>
     </div>
   </div>
