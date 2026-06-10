@@ -1,10 +1,10 @@
-name: MCP Build Docker Image and Publish
+name: MCP Build, Publish and Deploy
 
 on:
   pull_request:
     paths:
       - mcp/**
-      - .github/workflows/mcp-docker-build-publish.yml
+      - .github/workflows/mcp-docker-build-publish-deploy.yml
       - .github/workflows/.reusable-docker-build.yml
       - .github/workflows/.reusable-docker-publish.yml
     types: [opened, synchronize, reopened, ready_for_review]
@@ -13,12 +13,13 @@ on:
       - main
     paths:
       - mcp/**
-      - .github/workflows/mcp-docker-build-publish.yml
+      - .github/workflows/mcp-docker-build-publish-deploy.yml
       - .github/workflows/.reusable-docker-build.yml
       - .github/workflows/.reusable-docker-publish.yml
   release:
     types:
       - released
+  workflow_dispatch:
 
 jobs:
   docker-build-mcp:
@@ -60,7 +61,7 @@ jobs:
   docker-publish-ecr-staging-mcp:
     name: Publish MCP image to staging ECR
     needs: [docker-build-mcp]
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: depot-ubuntu-latest
     # The OIDC role trusts jobs running in the staging environment.
     environment: staging
@@ -99,6 +100,7 @@ jobs:
           tags: |
             type=ref,event=branch
             type=sha
+            type=raw,value=latest
 
       # Setup Docker buildx with Depot builder so imagetools have access to Depot cache
       - uses: depot/use-action@v1
@@ -153,6 +155,7 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
 
       # Setup Docker buildx with Depot builder so imagetools have access to Depot cache
       - uses: depot/use-action@v1
@@ -162,3 +165,54 @@ jobs:
         with:
           sources: ${{ needs.docker-build-mcp.outputs.image }}
           tags: ${{ steps.meta.outputs.tags }}
+
+  deploy-ecr-staging-mcp:
+    name: Deploy MCP to staging
+    needs: [docker-publish-ecr-staging-mcp]
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: depot-ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.MCP_ECR_GITHUB_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Roll the service onto the new image
+        run: |
+          aws ecs update-service \
+            --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment
+          aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"
+        env:
+          CLUSTER: ${{ vars.AWS_ECS_CLUSTER_NAME }}
+          SERVICE: ${{ vars.AWS_ECS_MCP_SERVICE_NAME }}
+
+  deploy-ecr-mcp:
+    name: Deploy MCP to production
+    needs: [docker-publish-ecr-mcp]
+    if: github.event_name == 'release'
+    runs-on: depot-ubuntu-latest
+    # The OIDC role trusts jobs running in the production environment.
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.MCP_ECR_GITHUB_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Roll the service onto the new image
+        run: |
+          aws ecs update-service \
+            --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment
+          aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"
+        env:
+          CLUSTER: ${{ vars.MCP_ECS_CLUSTER }}
+          SERVICE: ${{ vars.MCP_ECS_SERVICE }}
