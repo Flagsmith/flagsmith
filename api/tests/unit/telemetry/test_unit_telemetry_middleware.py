@@ -133,6 +133,30 @@ def test_mcp_usage_logger_middleware__user_with_single_organisation__logs_expect
     ]
 
 
+@pytest.mark.usefixtures("mcp_baggage")
+def test_mcp_usage_logger_middleware__user_without_organisations__logs_warning(
+    staff_client: APIClient,
+    log: StructuredLogCapture,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    assert not staff_user.organisations.exists()
+
+    # When
+    response = staff_client.get("/api/v1/projects/")
+
+    # Then
+    assert response.status_code == 200
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "tool.called",
+            "organisation__id": None,
+            "status": "success",
+        }
+    ]
+
+
 @pytest.mark.usefixtures("mcp_baggage", "organisation")
 def test_mcp_usage_logger_middleware__user_with_multiple_organisations__logs_warning(
     staff_client: APIClient,
@@ -239,6 +263,23 @@ def test_mcp_usage_logger_middleware__user_not_in_url_param_organisation__logs_w
             "status": "error",
         }
     ]
+
+
+@pytest.mark.usefixtures("mcp_baggage")
+def test_mcp_usage_logger_middleware__sdk_request__logs_nothing(
+    api_client: APIClient,
+    log: StructuredLogCapture,
+    environment: Environment,
+) -> None:
+    # Given / When
+    response = api_client.get(
+        "/api/v1/flags/",
+        HTTP_X_ENVIRONMENT_KEY=environment.api_key,  # Doesn't authenticate
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert log.events == []
 
 
 @pytest.mark.usefixtures("mcp_baggage")

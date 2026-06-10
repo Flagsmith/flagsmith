@@ -37,7 +37,7 @@ class MCPUsageLoggerMiddleware:
     def __call__(self, request: HttpRequest) -> HttpResponse:
         response = self.get_response(request)
 
-        if not request.user.is_authenticated:
+        if not request.user or not request.user.is_authenticated:
             return response
 
         if baggage.get_baggage("flagsmith.client.name") != "flagsmith-mcp":
@@ -69,6 +69,8 @@ class MCPUsageLoggerMiddleware:
             return user_orgs.get().id
         except Organisation.MultipleObjectsReturned:
             pass
+        except Organisation.DoesNotExist as error:
+            raise UndefinedOrganisationError from error
 
         # Known URL parameter names
         assert request.resolver_match
