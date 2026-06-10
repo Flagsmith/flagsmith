@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import typing
-from datetime import timezone as datetime_timezone
 from functools import lru_cache
 
 import structlog
@@ -117,7 +116,7 @@ WITH exposures AS (
 )
 SELECT
     variant,
-    {bucket_function}(first_exposure) AS bucket,
+    {bucket_function}(first_exposure, 'UTC') AS bucket,
     count() AS first_exposed_identities
 FROM exposures
 GROUP BY variant, bucket
@@ -186,8 +185,7 @@ def get_exposure_buckets(
     return [
         ExposureBucket(
             variant=variant,
-            # The driver returns naive datetimes; the events table stores UTC.
-            bucket=bucket.replace(tzinfo=datetime_timezone.utc),
+            bucket=bucket,
             first_exposed_identities=int(first_exposed_identities),
         )
         for variant, bucket, first_exposed_identities in rows

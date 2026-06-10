@@ -97,9 +97,10 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
     mocker: MockerFixture,
 ) -> None:
     # Given the warehouse returns one bucket row per variant per day
+    # (aware datetimes: the bucket column type carries 'UTC')
     rows = [
-        ("control", datetime(2026, 6, 1), 100),
-        ("variant_a", datetime(2026, 6, 1), 90),
+        ("control", datetime(2026, 6, 1, tzinfo=timezone.utc), 100),
+        ("variant_a", datetime(2026, 6, 1, tzinfo=timezone.utc), 90),
     ]
     mock_client = mocker.Mock()
     mock_client.execute.return_value = rows
@@ -119,7 +120,7 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
         granularity="day",
     )
 
-    # Then the rows are mapped to dataclasses with aware UTC buckets
+    # Then the rows are mapped to dataclasses
     assert result == [
         ExposureBucket(
             variant="control",
@@ -132,10 +133,10 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
             first_exposed_identities=90,
         ),
     ]
-    # And the query buckets first exposures by day, deduplicates identities,
-    # and quarantines identities seen in more than one variant
+    # And the query buckets first exposures by UTC day, deduplicates
+    # identities, and quarantines identities seen in more than one variant
     sql, params = mock_client.execute.call_args.args
-    assert "toStartOfDay(first_exposure) AS bucket" in sql
+    assert "toStartOfDay(first_exposure, 'UTC') AS bucket" in sql
     assert "GROUP BY identifier" in sql
     assert "uniqExact(value) > 1" in sql
     assert params == {
@@ -171,7 +172,7 @@ def test_get_exposure_buckets__hour_granularity__buckets_by_hour(
     # Then
     assert result == []
     sql, _ = mock_client.execute.call_args.args
-    assert "toStartOfHour(first_exposure) AS bucket" in sql
+    assert "toStartOfHour(first_exposure, 'UTC') AS bucket" in sql
 
 
 def test_compute_exposures_payload__window_within_72_hours__hourly_buckets(
@@ -179,7 +180,9 @@ def test_compute_exposures_payload__window_within_72_hours__hourly_buckets(
 ) -> None:
     # Given a window of exactly 72 hours and one exposure row
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = [("control", datetime(2026, 6, 1), 10)]
+    mock_client.execute.return_value = [
+        ("control", datetime(2026, 6, 1, tzinfo=timezone.utc), 10)
+    ]
     mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
@@ -195,7 +198,7 @@ def test_compute_exposures_payload__window_within_72_hours__hourly_buckets(
 
     # Then the query and the payload agree on hourly granularity
     sql, _ = mock_client.execute.call_args.args
-    assert "toStartOfHour(first_exposure) AS bucket" in sql
+    assert "toStartOfHour(first_exposure, 'UTC') AS bucket" in sql
     assert payload["timeseries"]["granularity"] == "hour"
     assert payload["total_identities"] == 10
 
@@ -221,7 +224,7 @@ def test_compute_exposures_payload__window_beyond_72_hours__daily_buckets(
 
     # Then the query and the payload agree on daily granularity
     sql, _ = mock_client.execute.call_args.args
-    assert "toStartOfDay(first_exposure) AS bucket" in sql
+    assert "toStartOfDay(first_exposure, 'UTC') AS bucket" in sql
     assert payload["timeseries"]["granularity"] == "day"
     assert payload["total_identities"] == 0
 
