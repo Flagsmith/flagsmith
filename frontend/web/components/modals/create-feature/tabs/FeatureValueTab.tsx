@@ -97,10 +97,13 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 
   const addVariation = () => {
     // Default the label to the first free Variant_n so new variants are
-    // saved with a key even if the user never edits it.
-    const existingKeys = multivariate_options.map((option) => option.key)
+    // saved with a key even if the user never edits it. Variants with no
+    // key display as Variant_{index + 1}, so avoid those names too.
+    const existingNames = multivariate_options.map(
+      (option, index) => option.key || `Variant_${index + 1}`,
+    )
     let variantNumber = multivariate_options.length + 1
-    while (existingKeys.includes(`Variant_${variantNumber}`)) {
+    while (existingNames.includes(`Variant_${variantNumber}`)) {
       variantNumber += 1
     }
     const newVariation = {
@@ -193,7 +196,11 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     if (!original) {
       return true
     }
-    return variantFields.some((field) => option[field] !== original[field])
+    return variantFields.some((field) => {
+      const edited = option[field] ?? null
+      const persisted = original[field] ?? null
+      return edited !== persisted
+    })
   })
   const valueTitle = hasVariations ? (
     <span className='d-inline-flex align-items-center'>

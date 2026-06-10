@@ -130,7 +130,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
                   default_percentage_allocation: val ? parseFloat(val) : null,
                 })
               }}
-              value={value.default_percentage_allocation}
+              value={value.default_percentage_allocation ?? ''}
               readOnly={disabled}
               step='any'
             />
