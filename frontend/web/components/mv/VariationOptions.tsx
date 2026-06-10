@@ -153,9 +153,14 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
             readOnly={readOnly ?? false}
             unsaved={unsavedVariations?.[i]}
             value={theValue}
+            // Effective keys: unset labels persist as their Variant_n
+            // fallback, so they count for uniqueness too.
             siblingKeys={multivariateOptions
-              .filter((_, index) => index !== i)
-              .map((option) => option.key)}
+              .map(
+                (option, index) =>
+                  option.key || Utils.getDefaultVariantKey(index),
+              )
+              .filter((_, index) => index !== i)}
             onChange={(e) => {
               updateVariation(i, e, variationOverrides)
             }}

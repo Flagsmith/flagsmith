@@ -34,8 +34,8 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
   const [error, setError] = useState<string | null>(null)
 
   const canEdit = !readOnly && !disabled
-  // Display-only placeholder when no label is set; the persisted key stays null.
-  const displayName = value || `Variant_${index + 1}`
+  // Fallback label when none is set — persisted on save by the provider.
+  const displayName = value || Utils.getDefaultVariantKey(index)
 
   // Validates the raw input — trimming here would hide a trailing
   // space from the user until their next keystroke.
@@ -72,6 +72,9 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
   }
 
   const commit = () => {
+    if (error) {
+      return
+    }
     onChange(draft || null)
     setError(null)
     setIsEditing(false)
@@ -90,13 +93,19 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
             value={draft}
             isValid={!error}
             maxLength={Constants.forms.maxLength.VARIANT_KEY}
-            placeholder={`Variant_${index + 1}`}
+            placeholder={Utils.getDefaultVariantKey(index)}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const next = Utils.safeParseEventValue(e).replace(/ /g, '_')
               setDraft(next)
               setError(validate(next))
             }}
-            onBlur={commit}
+            // An invalid draft must not be committed — keep the row in edit
+            // mode with the error visible instead.
+            onBlur={() => {
+              if (!error) {
+                commit()
+              }
+            }}
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
@@ -115,12 +124,17 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
           <div className='d-flex align-items-center gap-1'>
             <Button
               theme='text'
+              disabled={!!error}
               onClick={commit}
               onMouseDown={(e) => e.preventDefault()}
               data-test={`featureVariationKeySave${index}`}
               aria-label='Save label'
             >
-              <Icon name='checkmark-circle' width={20} fill={colorIconAction} />
+              <Icon
+                name='checkmark-circle'
+                width={20}
+                fill={error ? colorIconSecondary : colorIconAction}
+              />
             </Button>
             <Button
               theme='text'

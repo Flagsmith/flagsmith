@@ -256,6 +256,11 @@ const Utils = Object.assign({}, BaseUtils, {
       OrganisationPermission.CREATE_PROJECT
     ]
   },
+  // The label a variant displays (and is saved with) when the user never
+  // sets one — keep display, validation and save payloads consistent.
+  getDefaultVariantKey(index: number) {
+    return `Variant_${index + 1}`
+  },
   getExistingWaitForTime: (
     waitFor: string | undefined,
   ):

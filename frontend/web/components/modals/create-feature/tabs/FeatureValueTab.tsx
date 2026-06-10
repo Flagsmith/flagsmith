@@ -98,18 +98,18 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   const addVariation = () => {
     // Default the label to the first free Variant_n so new variants are
     // saved with a key even if the user never edits it. Variants with no
-    // key display as Variant_{index + 1}, so avoid those names too.
+    // key display (and persist) their fallback, so avoid those names too.
     const existingNames = multivariate_options.map(
-      (option, index) => option.key || `Variant_${index + 1}`,
+      (option, index) => option.key || Utils.getDefaultVariantKey(index),
     )
-    let variantNumber = multivariate_options.length + 1
-    while (existingNames.includes(`Variant_${variantNumber}`)) {
-      variantNumber += 1
+    let nextIndex = multivariate_options.length
+    while (existingNames.includes(Utils.getDefaultVariantKey(nextIndex))) {
+      nextIndex += 1
     }
     const newVariation = {
       ...Utils.valueToFeatureState(''),
       default_percentage_allocation: 0,
-      key: `Variant_${variantNumber}`,
+      key: Utils.getDefaultVariantKey(nextIndex),
     }
     onProjectFlagChange({
       multivariate_options: [...multivariate_options, newVariation],
