@@ -316,6 +316,15 @@ Attributes:
  - `project_id`
  - `retry_at`
 
+### `mcp.tool.called`
+
+Logged at `warning` from:
+ - `api/telemetry/middleware.py:57`
+ - `api/telemetry/middleware.py:59`
+
+Attributes:
+ - `organisation.id`
+
 ### `platform_hub.no_analytics_database_configured`
 
 Logged at `warning` from:
