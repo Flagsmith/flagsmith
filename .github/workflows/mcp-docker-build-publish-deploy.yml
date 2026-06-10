@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - mcp/**
-      - .github/workflows/mcp-docker-build-publish.yml
+      - .github/workflows/mcp-docker-build-publish-deploy.yml
       - .github/workflows/.reusable-docker-build.yml
       - .github/workflows/.reusable-docker-publish.yml
     types: [opened, synchronize, reopened, ready_for_review]
@@ -13,7 +13,7 @@ on:
       - main
     paths:
       - mcp/**
-      - .github/workflows/mcp-docker-build-publish.yml
+      - .github/workflows/mcp-docker-build-publish-deploy.yml
       - .github/workflows/.reusable-docker-build.yml
       - .github/workflows/.reusable-docker-publish.yml
   release:
