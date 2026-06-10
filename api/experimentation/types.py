@@ -3,30 +3,6 @@ from typing import Literal, TypedDict
 ExposureGranularity = Literal["hour", "day"]
 
 
-class ExposureVariantData(TypedDict):
-    key: str
-    identities: int
-    is_control: bool
-
-
-class ExposureTimeseriesPoint(TypedDict):
-    bucket: str
-    cumulative_identities: dict[str, int]
-
-
-class ExposureTimeseries(TypedDict):
-    granularity: ExposureGranularity
-    points: list[ExposureTimeseriesPoint]
-
-
-class ExposuresPayload(TypedDict):
-    total_identities: int
-    excluded_identities: int
-    days_of_data: int
-    variants: list[ExposureVariantData]
-    timeseries: ExposureTimeseries
-
-
 class MetricDefinitionV1(TypedDict):
     """The recipe a metric is computed from.
 

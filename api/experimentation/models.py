@@ -1,4 +1,5 @@
 import typing
+from dataclasses import asdict
 from datetime import datetime
 
 from django.db import models
@@ -17,10 +18,10 @@ from experimentation.tasks import (
     add_environment_key_to_ingestion,
     delete_environment_key_from_ingestion,
 )
-from experimentation.types import ExposuresPayload, MetricDefinition
+from experimentation.types import MetricDefinition
 
 if typing.TYPE_CHECKING:
-    from experimentation.dataclasses import WarehouseEventStats
+    from experimentation.dataclasses import ExposuresSummary, WarehouseEventStats
 
 
 class WarehouseType(models.TextChoices):
@@ -138,13 +139,13 @@ class ExperimentExposures(models.Model):
         related_name="exposures",
     )
     as_of = models.DateTimeField(null=True)
-    payload: models.JSONField[ExposuresPayload | None, ExposuresPayload | None] = (
+    payload: models.JSONField[dict[str, object] | None, dict[str, object] | None] = (
         models.JSONField(null=True, blank=True)
     )
     last_error_at = models.DateTimeField(null=True, blank=True)
 
-    def record_refresh(self, payload: ExposuresPayload, as_of: datetime) -> None:
-        self.payload = payload
+    def record_refresh(self, summary: "ExposuresSummary", as_of: datetime) -> None:
+        self.payload = asdict(summary)
         self.as_of = as_of
         self.last_error_at = None
         self.save(update_fields=["payload", "as_of", "last_error_at"])

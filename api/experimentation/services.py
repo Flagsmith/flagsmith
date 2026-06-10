@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import math
 import typing
+from datetime import timedelta
 from functools import lru_cache
 
 import structlog
@@ -12,14 +14,21 @@ from django.utils import timezone
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from experimentation.constants import (
+    CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
     EXPOSURE_EVENT_NAME,
     EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
     MULTIPLE_VARIANT_KEY,
     WAREHOUSE_CONNECTION_FLAG,
 )
-from experimentation.dataclasses import ExposureBucket, WarehouseEventStats
-from experimentation.mappers import build_exposures_payload
+from experimentation.dataclasses import (
+    ExposureBucket,
+    ExposuresSummary,
+    ExposuresTimeseries,
+    ExposuresTimeseriesPoint,
+    VariantExposures,
+    WarehouseEventStats,
+)
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
     ExperimentStatus,
@@ -29,10 +38,11 @@ from experimentation.models import (
 from integrations.flagsmith.client import get_openfeature_client
 
 if typing.TYPE_CHECKING:
+    from collections.abc import Sequence
     from datetime import datetime
 
     from experimentation.models import Experiment, Metric, WarehouseConnection
-    from experimentation.types import ExposureGranularity, ExposuresPayload
+    from experimentation.types import ExposureGranularity
     from organisations.models import Organisation
     from users.models import FFAdminUser
 
@@ -129,13 +139,13 @@ _EXPOSURE_BUCKET_FUNCTIONS: dict[str, str] = {
 }
 
 
-def compute_exposures_payload(
+def compute_exposures_summary(
     *,
     environment_key: str,
     feature_name: str,
     window_start: datetime,
     window_end: datetime,
-) -> ExposuresPayload:
+) -> ExposuresSummary:
     granularity = _select_exposure_granularity(window_start, window_end)
     buckets = get_exposure_buckets(
         environment_key=environment_key,
@@ -144,12 +154,78 @@ def compute_exposures_payload(
         window_end=window_end,
         granularity=granularity,
     )
-    return build_exposures_payload(
+    return build_exposures_summary(
         buckets,
         window_start=window_start,
         window_end=window_end,
         granularity=granularity,
     )
+
+
+def build_exposures_summary(
+    buckets: Sequence[ExposureBucket],
+    *,
+    window_start: datetime,
+    window_end: datetime,
+    granularity: ExposureGranularity,
+) -> ExposuresSummary:
+    included = [b for b in buckets if b.variant != MULTIPLE_VARIANT_KEY]
+    return ExposuresSummary(
+        total_identities=sum(b.first_exposed_identities for b in included),
+        excluded_identities=sum(
+            b.first_exposed_identities
+            for b in buckets
+            if b.variant == MULTIPLE_VARIANT_KEY
+        ),
+        days_of_data=max(0, math.ceil((window_end - window_start) / timedelta(days=1))),
+        variants=_summarise_variants(included),
+        timeseries=ExposuresTimeseries(
+            granularity=granularity,
+            points=_cumulative_points(included),
+        ),
+    )
+
+
+def _summarise_variants(
+    buckets: Sequence[ExposureBucket],
+) -> list[VariantExposures]:
+    identities_by_variant: dict[str, int] = {}
+    for b in buckets:
+        identities_by_variant[b.variant] = (
+            identities_by_variant.get(b.variant, 0) + b.first_exposed_identities
+        )
+
+    variants = [
+        VariantExposures(
+            key=key,
+            identities=identities,
+            is_control=key == CONTROL_VARIANT_KEY,
+        )
+        for key, identities in identities_by_variant.items()
+    ]
+    variants.sort(key=lambda v: (not v.is_control, -v.identities, v.key))
+    return variants
+
+
+def _cumulative_points(
+    buckets: Sequence[ExposureBucket],
+) -> list[ExposuresTimeseriesPoint]:
+    running = dict.fromkeys({b.variant for b in buckets}, 0)
+    buckets_by_start: dict[datetime, list[ExposureBucket]] = {}
+    for b in buckets:
+        buckets_by_start.setdefault(b.bucket, []).append(b)
+
+    points: list[ExposuresTimeseriesPoint] = []
+    for bucket_start in sorted(buckets_by_start):
+        for b in buckets_by_start[bucket_start]:
+            running[b.variant] += b.first_exposed_identities
+        points.append(
+            ExposuresTimeseriesPoint(
+                bucket=bucket_start.isoformat(),
+                cumulative_identities=dict(running),
+            )
+        )
+    return points
 
 
 def _select_exposure_granularity(

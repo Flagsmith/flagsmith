@@ -7,7 +7,14 @@ from pytest_structlog import StructuredLogCapture
 
 from environments.models import Environment
 from experimentation import services
-from experimentation.dataclasses import ExposureBucket, WarehouseEventStats
+from experimentation.dataclasses import (
+    ExposureBucket,
+    ExposuresSummary,
+    ExposuresTimeseries,
+    ExposuresTimeseriesPoint,
+    VariantExposures,
+    WarehouseEventStats,
+)
 from experimentation.models import (
     WarehouseConnection,
     WarehouseConnectionStatus,
@@ -189,18 +196,18 @@ def test_compute_exposures_payload__window_within_72_hours__hourly_buckets(
     )
 
     # When
-    payload = services.compute_exposures_payload(
+    summary = services.compute_exposures_summary(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
         window_end=datetime(2026, 6, 4, tzinfo=timezone.utc),
     )
 
-    # Then the query and the payload agree on hourly granularity
+    # Then the query and the summary agree on hourly granularity
     sql, _ = mock_client.execute.call_args.args
     assert "toStartOfHour(first_exposure, 'UTC') AS bucket" in sql
-    assert payload["timeseries"]["granularity"] == "hour"
-    assert payload["total_identities"] == 10
+    assert summary.timeseries.granularity == "hour"
+    assert summary.total_identities == 10
 
 
 def test_compute_exposures_payload__window_beyond_72_hours__daily_buckets(
@@ -215,18 +222,200 @@ def test_compute_exposures_payload__window_beyond_72_hours__daily_buckets(
     )
 
     # When
-    payload = services.compute_exposures_payload(
+    summary = services.compute_exposures_summary(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
         window_end=datetime(2026, 6, 4, 0, 0, 1, tzinfo=timezone.utc),
     )
 
-    # Then the query and the payload agree on daily granularity
+    # Then the query and the summary agree on daily granularity
     sql, _ = mock_client.execute.call_args.args
     assert "toStartOfDay(first_exposure, 'UTC') AS bucket" in sql
-    assert payload["timeseries"]["granularity"] == "day"
-    assert payload["total_identities"] == 0
+    assert summary.timeseries.granularity == "day"
+    assert summary.total_identities == 0
+
+
+def _bucket(
+    variant: str,
+    bucket: datetime,
+    first_exposed_identities: int,
+) -> ExposureBucket:
+    return ExposureBucket(
+        variant=variant,
+        bucket=bucket,
+        first_exposed_identities=first_exposed_identities,
+    )
+
+
+def test_build_exposures_summary__multiple_variants__derives_totals() -> None:
+    # Given two variants accumulating identities over two daily buckets
+    day_1 = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    day_2 = datetime(2026, 6, 2, tzinfo=timezone.utc)
+    buckets = [
+        _bucket("control", day_1, 100),
+        _bucket("variant_a", day_1, 90),
+        _bucket("control", day_2, 50),
+        _bucket("variant_a", day_2, 70),
+    ]
+
+    # When
+    summary = services.build_exposures_summary(
+        buckets,
+        window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
+        window_end=datetime(2026, 6, 10, tzinfo=timezone.utc),
+        granularity="day",
+    )
+
+    # Then
+    assert summary.total_identities == 310
+    assert summary.excluded_identities == 0
+    assert summary.days_of_data == 9
+    assert summary.variants == [
+        VariantExposures(key="control", identities=150, is_control=True),
+        VariantExposures(key="variant_a", identities=160, is_control=False),
+    ]
+
+
+def test_build_exposures_summary__control_not_largest__still_listed_first() -> None:
+    # Given a control variant with fewer identities than two treatments
+    day = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    buckets = [
+        _bucket("variant_b", day, 30),
+        _bucket("variant_a", day, 20),
+        _bucket("control", day, 10),
+    ]
+
+    # When
+    summary = services.build_exposures_summary(
+        buckets,
+        window_start=day,
+        window_end=datetime(2026, 6, 8, tzinfo=timezone.utc),
+        granularity="day",
+    )
+
+    # Then control comes first, treatments follow by descending identities
+    assert [v.key for v in summary.variants] == [
+        "control",
+        "variant_b",
+        "variant_a",
+    ]
+
+
+def test_build_exposures_summary__tied_treatments__ordered_by_key() -> None:
+    # Given two treatments with the same identity count
+    day = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    buckets = [
+        _bucket("variant_b", day, 30),
+        _bucket("variant_a", day, 30),
+    ]
+
+    # When
+    summary = services.build_exposures_summary(
+        buckets,
+        window_start=day,
+        window_end=datetime(2026, 6, 8, tzinfo=timezone.utc),
+        granularity="day",
+    )
+
+    # Then the tie is broken alphabetically
+    assert [v.key for v in summary.variants] == ["variant_a", "variant_b"]
+
+
+def test_build_exposures_summary__multiple_sentinel__excluded_and_counted() -> None:
+    # Given identities seen in more than one variant, quarantined as $multiple
+    day = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    buckets = [
+        _bucket("control", day, 100),
+        _bucket("variant_a", day, 95),
+        _bucket("$multiple", day, 5),
+    ]
+
+    # When
+    summary = services.build_exposures_summary(
+        buckets,
+        window_start=day,
+        window_end=datetime(2026, 6, 8, tzinfo=timezone.utc),
+        granularity="day",
+    )
+
+    # Then they are excluded from variants, the total and the timeseries
+    assert summary.total_identities == 195
+    assert summary.excluded_identities == 5
+    assert [v.key for v in summary.variants] == ["control", "variant_a"]
+    assert all(
+        set(point.cumulative_identities) == {"control", "variant_a"}
+        for point in summary.timeseries.points
+    )
+
+
+def test_build_exposures_summary__sparse_buckets__cumulative_carries_forward() -> None:
+    # Given variants whose identities arrive in different buckets
+    day_1 = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    day_2 = datetime(2026, 6, 2, tzinfo=timezone.utc)
+    buckets = [
+        _bucket("control", day_1, 10),
+        _bucket("variant_a", day_2, 7),
+    ]
+
+    # When
+    summary = services.build_exposures_summary(
+        buckets,
+        window_start=day_1,
+        window_end=datetime(2026, 6, 3, tzinfo=timezone.utc),
+        granularity="day",
+    )
+
+    # Then every point covers every variant, carrying totals forward
+    assert summary.timeseries == ExposuresTimeseries(
+        granularity="day",
+        points=[
+            ExposuresTimeseriesPoint(
+                bucket="2026-06-01T00:00:00+00:00",
+                cumulative_identities={"control": 10, "variant_a": 0},
+            ),
+            ExposuresTimeseriesPoint(
+                bucket="2026-06-02T00:00:00+00:00",
+                cumulative_identities={"control": 10, "variant_a": 7},
+            ),
+        ],
+    )
+
+
+def test_build_exposures_summary__no_buckets__empty_summary() -> None:
+    # Given no exposure data
+    # When
+    summary = services.build_exposures_summary(
+        [],
+        window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
+        window_end=datetime(2026, 6, 2, tzinfo=timezone.utc),
+        granularity="hour",
+    )
+
+    # Then the summary is empty but fully shaped
+    assert summary == ExposuresSummary(
+        total_identities=0,
+        excluded_identities=0,
+        days_of_data=1,
+        variants=[],
+        timeseries=ExposuresTimeseries(granularity="hour", points=[]),
+    )
+
+
+def test_build_exposures_summary__partial_day_window__days_rounded_up() -> None:
+    # Given a window of 3 days and 6 hours
+    day = datetime(2026, 6, 1, tzinfo=timezone.utc)
+
+    # When
+    summary = services.build_exposures_summary(
+        [],
+        window_start=day,
+        window_end=datetime(2026, 6, 4, 6, tzinfo=timezone.utc),
+        granularity="day",
+    )
+
+    # Then the partial day counts as a full one
+    assert summary.days_of_data == 4
 
 
 def test_get_unique_event_names__no_events__returns_empty_list(

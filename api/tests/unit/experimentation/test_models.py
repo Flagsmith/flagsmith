@@ -1,14 +1,21 @@
+from dataclasses import asdict
+
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
 from environments.models import Environment
+from experimentation.dataclasses import (
+    ExposuresSummary,
+    ExposuresTimeseries,
+    ExposuresTimeseriesPoint,
+    VariantExposures,
+)
 from experimentation.models import (
     Experiment,
     ExperimentExposures,
     WarehouseConnection,
     WarehouseType,
 )
-from experimentation.types import ExposuresPayload
 
 
 def test_warehouse_connection__after_create__enqueues_ingestion_add_task(
@@ -52,6 +59,24 @@ def test_warehouse_connection__after_delete__enqueues_ingestion_delete_task(
     )
 
 
+def _summary() -> ExposuresSummary:
+    return ExposuresSummary(
+        total_identities=10,
+        excluded_identities=1,
+        days_of_data=1,
+        variants=[VariantExposures(key="control", identities=10, is_control=True)],
+        timeseries=ExposuresTimeseries(
+            granularity="hour",
+            points=[
+                ExposuresTimeseriesPoint(
+                    bucket="2026-06-01T00:00:00+00:00",
+                    cumulative_identities={"control": 10},
+                )
+            ],
+        ),
+    )
+
+
 def test_experiment_exposures__record_refresh__stores_payload_and_clears_error(
     experiment: Experiment,
 ) -> None:
@@ -60,21 +85,28 @@ def test_experiment_exposures__record_refresh__stores_payload_and_clears_error(
         experiment=experiment,
         last_error_at=timezone.now(),
     )
-    payload: ExposuresPayload = {
-        "total_identities": 10,
-        "excluded_identities": 0,
-        "days_of_data": 1,
-        "variants": [],
-        "timeseries": {"granularity": "hour", "points": []},
-    }
     as_of = timezone.now()
 
     # When
-    exposures.record_refresh(payload, as_of)
+    exposures.record_refresh(_summary(), as_of)
 
-    # Then the payload lands and the error marker is cleared
+    # Then the summary is stored as plain JSON and the error marker is cleared
     exposures.refresh_from_db()
-    assert exposures.payload == payload
+    assert exposures.payload == {
+        "total_identities": 10,
+        "excluded_identities": 1,
+        "days_of_data": 1,
+        "variants": [{"key": "control", "identities": 10, "is_control": True}],
+        "timeseries": {
+            "granularity": "hour",
+            "points": [
+                {
+                    "bucket": "2026-06-01T00:00:00+00:00",
+                    "cumulative_identities": {"control": 10},
+                }
+            ],
+        },
+    }
     assert exposures.as_of == as_of
     assert exposures.last_error_at is None
 
@@ -83,18 +115,11 @@ def test_experiment_exposures__record_failure__preserves_last_good_payload(
     experiment: Experiment,
 ) -> None:
     # Given a row holding a previously computed payload
-    payload: ExposuresPayload = {
-        "total_identities": 10,
-        "excluded_identities": 0,
-        "days_of_data": 1,
-        "variants": [],
-        "timeseries": {"granularity": "hour", "points": []},
-    }
     as_of = timezone.now()
     exposures = ExperimentExposures.objects.create(
         experiment=experiment,
         as_of=as_of,
-        payload=payload,
+        payload=asdict(_summary()),
     )
 
     # When
@@ -103,5 +128,5 @@ def test_experiment_exposures__record_failure__preserves_last_good_payload(
     # Then only the error marker changes
     exposures.refresh_from_db()
     assert exposures.last_error_at is not None
-    assert exposures.payload == payload
+    assert exposures.payload == asdict(_summary())
     assert exposures.as_of == as_of

@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from experimentation.types import ExposureGranularity
+
 
 @dataclass(frozen=True)
 class WarehouseEventStats:
@@ -13,3 +15,31 @@ class ExposureBucket:
     variant: str
     bucket: datetime
     first_exposed_identities: int
+
+
+@dataclass(frozen=True)
+class VariantExposures:
+    key: str
+    identities: int
+    is_control: bool
+
+
+@dataclass(frozen=True)
+class ExposuresTimeseriesPoint:
+    bucket: str
+    cumulative_identities: dict[str, int]
+
+
+@dataclass(frozen=True)
+class ExposuresTimeseries:
+    granularity: ExposureGranularity
+    points: list[ExposuresTimeseriesPoint]
+
+
+@dataclass(frozen=True)
+class ExposuresSummary:
+    total_identities: int
+    excluded_identities: int
+    days_of_data: int
+    variants: list[VariantExposures]
+    timeseries: ExposuresTimeseries
