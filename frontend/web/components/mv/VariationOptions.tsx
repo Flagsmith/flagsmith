@@ -13,6 +13,7 @@ type VariationOverride = {
 }
 
 interface VariationOptionsProps {
+  apiErrors?: (string | null)[]
   canCreateFeature: boolean
   controlPercentage: number
   controlValue: FlagsmithValue
@@ -34,6 +35,7 @@ interface VariationOptionsProps {
 }
 
 export const VariationOptions: React.FC<VariationOptionsProps> = ({
+  apiErrors,
   canCreateFeature,
   controlPercentage,
   controlValue,
@@ -146,6 +148,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
           <VariationValueInput
             key={i}
             index={i}
+            apiError={apiErrors?.[i]}
             canCreateFeature={canCreateFeature}
             readOnly={readOnly ?? false}
             unsaved={unsavedVariations?.[i]}

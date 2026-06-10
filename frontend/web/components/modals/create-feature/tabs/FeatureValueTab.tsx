@@ -189,18 +189,31 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     if (!originalMultivariateOptions) {
       return false
     }
-    if (!option.id) {
-      return true
+    // A just-saved variant may not have its id reflected in local state
+    // yet, so id-less options are matched against id-less baseline entries.
+    const savedMvs = originalMultivariateOptions.filter((o) =>
+      option.id ? o.id === option.id : !o.id,
+    )
+    return !savedMvs.some((savedMv) =>
+      variantFields.every(
+        (field) => (option[field] ?? null) === (savedMv[field] ?? null),
+      ),
+    )
+  })
+
+  const variationApiErrors = multivariate_options.map((_, i) => {
+    const variationError = error?.multivariate_options?.[i]
+    if (!variationError) {
+      return null
     }
-    const original = originalMultivariateOptions.find((o) => o.id === option.id)
-    if (!original) {
-      return true
+    if (typeof variationError === 'string') {
+      return variationError
     }
-    return variantFields.some((field) => {
-      const edited = option[field] ?? null
-      const persisted = original[field] ?? null
-      return edited !== persisted
-    })
+    const firstField = Object.values(variationError)[0]
+    return (
+      (Array.isArray(firstField) ? firstField[0] : firstField) ||
+      'Failed to save this variation.'
+    )
   })
   const valueTitle = hasVariations ? (
     <span className='d-inline-flex align-items-center'>
@@ -400,6 +413,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
                     multivariate_feature_state_values: variations as any,
                   })
                 }
+                apiErrors={variationApiErrors}
                 unsavedVariations={unsavedVariations}
                 updateVariation={handleUpdateVariation}
                 weightTitle={

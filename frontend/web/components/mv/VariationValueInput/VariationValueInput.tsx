@@ -1,5 +1,6 @@
 import React from 'react'
 import ValueEditor from 'components/ValueEditor'
+import ErrorMessage from 'components/ErrorMessage'
 import Constants from 'common/constants'
 import Icon from 'components/icons/Icon'
 import Input from 'components/base/forms/Input'
@@ -13,6 +14,7 @@ import { VariationKeyLabel } from 'components/mv/VariationKeyLabel'
 import './VariationValueInput.scss'
 
 interface VariationValueProps {
+  apiError?: string | null
   canCreateFeature: boolean
   disabled: boolean
   index: number
@@ -26,6 +28,7 @@ interface VariationValueProps {
 }
 
 export const VariationValueInput: React.FC<VariationValueProps> = ({
+  apiError,
   canCreateFeature,
   disabled,
   index,
@@ -138,6 +141,11 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
           <span className='text-muted'>%</span>
         </div>
       </Row>
+      {!!apiError && (
+        <div className='mt-2'>
+          <ErrorMessage error={apiError} />
+        </div>
+      )}
     </div>
   )
 }

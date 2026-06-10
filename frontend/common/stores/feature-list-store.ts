@@ -21,6 +21,7 @@ import {
   ChangeRequest,
   Environment,
   FeatureState,
+  MultivariateOption,
   PagedResponse,
   ProjectFlag,
   TypedFeatureState,
@@ -247,12 +248,21 @@ const controller = {
       store.model && store.model.features
         ? store.model.features.find((v) => v.id === flag.id)
         : flag
+    store.error = null
     Promise.all(
       (flag.multivariate_options || []).map((v, i) => {
-        const originalMV =
-          v.id && originalFlag?.multivariate_options
-            ? originalFlag.multivariate_options.find((m) => m.id === v.id)
-            : null
+        let originalMV = null
+        if (originalFlag?.multivariate_options) {
+          if (v.id) {
+            originalMV = originalFlag.multivariate_options.find(
+              (m: MultivariateOption) => m.id === v.id,
+            )
+          } else if (v.key) {
+            originalMV = originalFlag.multivariate_options.find(
+              (m: MultivariateOption) => !!m.key && m.key === v.key,
+            )
+          }
+        }
         const url = `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`
         const mvData = {
           ...v,
@@ -263,14 +273,16 @@ const controller = {
           originalMV
             ? data.put(`${url}${originalMV.id}/`, mvData)
             : data.post(url, mvData)
-        ).then((res) => {
-          // It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
-          flag.multivariate_options[i] = res
-          return {
-            ...v,
-            id: res.id,
-          }
-        })
+        )
+          .then((res) => {
+            // It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
+            flag.multivariate_options[i] = res
+            return {
+              ...v,
+              id: res.id,
+            }
+          })
+          .catch((e) => Promise.reject({ mvIndex: i, source: e }))
       }),
     )
       .then(() => {
@@ -288,6 +300,32 @@ const controller = {
       .then(() => {
         if (onComplete) {
           onComplete(flag)
+        }
+      })
+      .catch((e) => {
+        if (typeof e?.mvIndex !== 'number') {
+          API.ajaxHandler(store, e)
+          return
+        }
+        // Attribute the failure to the option that caused it so the UI
+        // can surface it on the right variation.
+        const surface = (body: any) => {
+          store.error = { multivariate_options: { [e.mvIndex]: body } } as any
+          store.goneABitWest()
+        }
+        if (typeof e.source?.text === 'function') {
+          e.source
+            .text()
+            .then((text: string) => {
+              let body = text
+              try {
+                body = JSON.parse(text)
+              } catch {}
+              surface(body)
+            })
+            .catch(() => surface(null))
+        } else {
+          surface(e.source ?? null)
         }
       })
   },
@@ -852,6 +890,11 @@ const controller = {
               projectId,
             }).then((version) => {
               if (version.error) {
+                // Multivariate options are saved separately at the project
+                // level, so an unchanged environment state is not a failure.
+                if (version.error.message === 'Feature contains no changes') {
+                  return
+                }
                 throw version.error
               }
               const featureState = version.data.feature_states[0].data

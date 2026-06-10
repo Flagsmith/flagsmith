@@ -245,6 +245,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   useEffect(() => {
     if (props.projectFlag) {
       setProjectFlag(cloneDeep(props.projectFlag))
+      setSavedMultivariateOptions(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.projectFlag?.id])
@@ -266,8 +267,16 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   }, [environmentVariations])
 
   // The persisted variants with the same environment weights merged in,
-  // so the modal's edited copy only differs after a user change.
+  // so the modal's edited copy only differs after a user change. Refreshed
+  // from the edited copy after each successful value save.
+  const [savedMultivariateOptions, setSavedMultivariateOptions] = useState<
+    any[] | null
+  >(null)
+  const mvBaselineRefreshRef = useRef(false)
   const originalMultivariateOptions = useMemo(() => {
+    if (savedMultivariateOptions) {
+      return savedMultivariateOptions
+    }
     const options = props.projectFlag?.multivariate_options
     if (!options) {
       return undefined
@@ -280,7 +289,11 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
       props.multivariate_options || environmentVariations,
     )
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.projectFlag?.multivariate_options, environmentVariations])
+  }, [
+    props.projectFlag?.multivariate_options,
+    environmentVariations,
+    savedMultivariateOptions,
+  ])
 
   const cleanInputValue = (value: any) => {
     if (value && typeof value === 'string') {
@@ -440,9 +453,22 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
 
   return (
     <Provider
+      onError={() => {
+        if (mvBaselineRefreshRef.current) {
+          // The value save failed — keep the unsaved indicators accurate.
+          mvBaselineRefreshRef.current = false
+          setValueChanged(true)
+        }
+      }}
       onSave={() => {
         if (identity) {
           close()
+        }
+        if (mvBaselineRefreshRef.current) {
+          mvBaselineRefreshRef.current = false
+          setSavedMultivariateOptions(
+            cloneDeep(projectFlag.multivariate_options || []),
+          )
         }
         AppActions.refreshFeatures(projectId, environmentId)
 
@@ -571,6 +597,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
               )
             } else {
               setValueChanged(false)
+              mvBaselineRefreshRef.current = true
               save(editFeatureValue, isSaving)
             }
           },

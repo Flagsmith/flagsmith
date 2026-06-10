@@ -72,11 +72,6 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
   }
 
   const commit = () => {
-    const validationError = validate(draft)
-    if (validationError) {
-      setError(validationError)
-      return
-    }
     onChange(draft || null)
     setError(null)
     setIsEditing(false)
@@ -97,18 +92,23 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
             maxLength={Constants.forms.maxLength.VARIANT_KEY}
             placeholder={`Variant_${index + 1}`}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const next = Utils.safeParseEventValue(e)
+              const next = Utils.safeParseEventValue(e).replace(/ /g, '_')
               setDraft(next)
               setError(validate(next))
             }}
+            onBlur={commit}
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
                 commit()
               }
               if (e.key === 'Escape') {
-                e.preventDefault()
-                cancel()
+                // The input blurs (and commits) on Escape before this
+                // handler runs — revert to the original value.
+                onChange(value ?? null)
+                setDraft(value ?? '')
+                setError(null)
+                setIsEditing(false)
               }
             }}
           />
@@ -116,12 +116,18 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
             <Button
               theme='text'
               onClick={commit}
+              onMouseDown={(e) => e.preventDefault()}
               data-test={`featureVariationKeySave${index}`}
               aria-label='Save label'
             >
               <Icon name='checkmark-circle' width={20} fill={colorIconAction} />
             </Button>
-            <Button theme='text' onClick={cancel} aria-label='Cancel'>
+            <Button
+              theme='text'
+              onClick={cancel}
+              onMouseDown={(e) => e.preventDefault()}
+              aria-label='Cancel'
+            >
               <Icon name='close-circle' width={20} fill={colorIconSecondary} />
             </Button>
           </div>
