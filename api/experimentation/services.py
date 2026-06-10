@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing
+from datetime import timezone as datetime_timezone
 from functools import lru_cache
 
 import structlog
@@ -14,10 +15,12 @@ from audit.related_object_type import RelatedObjectType
 from experimentation.constants import (
     EXPERIMENT_FLAG,
     EXPOSURE_EVENT_NAME,
+    EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
     MULTIPLE_VARIANT_KEY,
     WAREHOUSE_CONNECTION_FLAG,
 )
 from experimentation.dataclasses import ExposureBucket, WarehouseEventStats
+from experimentation.mappers import build_exposures_payload
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
     ExperimentStatus,
@@ -30,7 +33,7 @@ if typing.TYPE_CHECKING:
     from datetime import datetime
 
     from experimentation.models import Experiment, Metric, WarehouseConnection
-    from experimentation.types import ExposureGranularity
+    from experimentation.types import ExposureGranularity, ExposuresPayload
     from organisations.models import Organisation
     from users.models import FFAdminUser
 
@@ -127,6 +130,38 @@ _EXPOSURE_BUCKET_FUNCTIONS: dict[str, str] = {
 }
 
 
+def compute_exposures_payload(
+    *,
+    environment_key: str,
+    feature_name: str,
+    window_start: datetime,
+    window_end: datetime,
+) -> ExposuresPayload:
+    granularity = _select_exposure_granularity(window_start, window_end)
+    buckets = get_exposure_buckets(
+        environment_key=environment_key,
+        feature_name=feature_name,
+        window_start=window_start,
+        window_end=window_end,
+        granularity=granularity,
+    )
+    return build_exposures_payload(
+        buckets,
+        window_start=window_start,
+        window_end=window_end,
+        granularity=granularity,
+    )
+
+
+def _select_exposure_granularity(
+    window_start: datetime,
+    window_end: datetime,
+) -> ExposureGranularity:
+    if window_end - window_start <= EXPOSURE_HOURLY_BUCKET_MAX_WINDOW:
+        return "hour"
+    return "day"
+
+
 def get_exposure_buckets(
     *,
     environment_key: str,
@@ -151,7 +186,8 @@ def get_exposure_buckets(
     return [
         ExposureBucket(
             variant=variant,
-            bucket=bucket,
+            # The driver returns naive datetimes; the events table stores UTC.
+            bucket=bucket.replace(tzinfo=datetime_timezone.utc),
             first_exposed_identities=int(first_exposed_identities),
         )
         for variant, bucket, first_exposed_identities in rows

@@ -1,7 +1,9 @@
 import typing
+from datetime import datetime
 
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     AFTER_DELETE,
@@ -139,8 +141,17 @@ class ExperimentExposures(models.Model):
     payload: models.JSONField[ExposuresPayload | None, ExposuresPayload | None] = (
         models.JSONField(null=True, blank=True)
     )
-    last_error = models.TextField(blank=True, default="")
     last_error_at = models.DateTimeField(null=True, blank=True)
+
+    def record_refresh(self, payload: ExposuresPayload, as_of: datetime) -> None:
+        self.payload = payload
+        self.as_of = as_of
+        self.last_error_at = None
+        self.save(update_fields=["payload", "as_of", "last_error_at"])
+
+    def record_failure(self) -> None:
+        self.last_error_at = timezone.now()
+        self.save(update_fields=["last_error_at"])
 
 
 class MetricAggregation(models.TextChoices):

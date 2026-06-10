@@ -3,11 +3,10 @@ ClickHouse imports here."""
 
 import math
 from collections.abc import Sequence
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
-    EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
     MULTIPLE_VARIANT_KEY,
 )
 from experimentation.dataclasses import ExposureBucket
@@ -17,15 +16,6 @@ from experimentation.types import (
     ExposureTimeseriesPoint,
     ExposureVariantData,
 )
-
-
-def select_exposure_granularity(
-    window_start: datetime,
-    window_end: datetime,
-) -> ExposureGranularity:
-    if window_end - window_start <= EXPOSURE_HOURLY_BUCKET_MAX_WINDOW:
-        return "hour"
-    return "day"
 
 
 def build_exposures_payload(
@@ -94,16 +84,8 @@ def _build_timeseries_points(
             running[b.variant] += b.first_exposed_identities
         points.append(
             ExposureTimeseriesPoint(
-                bucket=_isoformat_utc(bucket_start),
+                bucket=bucket_start.isoformat(),
                 cumulative_identities=dict(running),
             )
         )
     return points
-
-
-def _isoformat_utc(value: datetime) -> str:
-    """The ClickHouse driver returns naive datetimes; the events table stores
-    UTC."""
-    if value.tzinfo is None:
-        value = value.replace(tzinfo=timezone.utc)
-    return value.isoformat()

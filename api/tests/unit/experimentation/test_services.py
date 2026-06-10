@@ -119,16 +119,16 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
         granularity="day",
     )
 
-    # Then the rows are mapped to dataclasses
+    # Then the rows are mapped to dataclasses with aware UTC buckets
     assert result == [
         ExposureBucket(
             variant="control",
-            bucket=datetime(2026, 6, 1),
+            bucket=datetime(2026, 6, 1, tzinfo=timezone.utc),
             first_exposed_identities=100,
         ),
         ExposureBucket(
             variant="variant_a",
-            bucket=datetime(2026, 6, 1),
+            bucket=datetime(2026, 6, 1, tzinfo=timezone.utc),
             first_exposed_identities=90,
         ),
     ]
@@ -172,6 +172,58 @@ def test_get_exposure_buckets__hour_granularity__buckets_by_hour(
     assert result == []
     sql, _ = mock_client.execute.call_args.args
     assert "toStartOfHour(first_exposure) AS bucket" in sql
+
+
+def test_compute_exposures_payload__window_within_72_hours__hourly_buckets(
+    mocker: MockerFixture,
+) -> None:
+    # Given a window of exactly 72 hours and one exposure row
+    mock_client = mocker.Mock()
+    mock_client.execute.return_value = [("control", datetime(2026, 6, 1), 10)]
+    mocker.patch(
+        "experimentation.services._get_clickhouse_client",
+        return_value=mock_client,
+    )
+
+    # When
+    payload = services.compute_exposures_payload(
+        environment_key="env-key-123",
+        feature_name="my-feature",
+        window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
+        window_end=datetime(2026, 6, 4, tzinfo=timezone.utc),
+    )
+
+    # Then the query and the payload agree on hourly granularity
+    sql, _ = mock_client.execute.call_args.args
+    assert "toStartOfHour(first_exposure) AS bucket" in sql
+    assert payload["timeseries"]["granularity"] == "hour"
+    assert payload["total_identities"] == 10
+
+
+def test_compute_exposures_payload__window_beyond_72_hours__daily_buckets(
+    mocker: MockerFixture,
+) -> None:
+    # Given a window one second past 72 hours
+    mock_client = mocker.Mock()
+    mock_client.execute.return_value = []
+    mocker.patch(
+        "experimentation.services._get_clickhouse_client",
+        return_value=mock_client,
+    )
+
+    # When
+    payload = services.compute_exposures_payload(
+        environment_key="env-key-123",
+        feature_name="my-feature",
+        window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
+        window_end=datetime(2026, 6, 4, 0, 0, 1, tzinfo=timezone.utc),
+    )
+
+    # Then the query and the payload agree on daily granularity
+    sql, _ = mock_client.execute.call_args.args
+    assert "toStartOfDay(first_exposure) AS bucket" in sql
+    assert payload["timeseries"]["granularity"] == "day"
+    assert payload["total_identities"] == 0
 
 
 def test_get_unique_event_names__no_events__returns_empty_list(

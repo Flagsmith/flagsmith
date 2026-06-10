@@ -1,10 +1,7 @@
 from datetime import datetime, timezone
 
 from experimentation.dataclasses import ExposureBucket
-from experimentation.mappers import (
-    build_exposures_payload,
-    select_exposure_granularity,
-)
+from experimentation.mappers import build_exposures_payload
 
 
 def _bucket(
@@ -17,24 +14,6 @@ def _bucket(
         bucket=bucket,
         first_exposed_identities=first_exposed_identities,
     )
-
-
-def test_select_exposure_granularity__window_within_72_hours__hour() -> None:
-    # Given a window of exactly 72 hours
-    window_start = datetime(2026, 6, 1, tzinfo=timezone.utc)
-    window_end = datetime(2026, 6, 4, tzinfo=timezone.utc)
-
-    # When / Then
-    assert select_exposure_granularity(window_start, window_end) == "hour"
-
-
-def test_select_exposure_granularity__window_beyond_72_hours__day() -> None:
-    # Given a window one second past 72 hours
-    window_start = datetime(2026, 6, 1, tzinfo=timezone.utc)
-    window_end = datetime(2026, 6, 4, 0, 0, 1, tzinfo=timezone.utc)
-
-    # When / Then
-    assert select_exposure_granularity(window_start, window_end) == "day"
 
 
 def test_build_exposures_payload__multiple_variants__totals_and_shares() -> None:
@@ -213,19 +192,3 @@ def test_build_exposures_payload__partial_day_window__days_rounded_up() -> None:
 
     # Then the partial day counts as a full one
     assert payload["days_of_data"] == 4
-
-
-def test_build_exposures_payload__naive_datetimes__serialised_as_utc() -> None:
-    # Given naive bucket datetimes as returned by the ClickHouse driver
-    day = datetime(2026, 6, 1)
-
-    # When
-    payload = build_exposures_payload(
-        [_bucket("control", day, 1)],
-        window_start=datetime(2026, 6, 1),
-        window_end=datetime(2026, 6, 2),
-        granularity="day",
-    )
-
-    # Then they are serialised as UTC
-    assert payload["timeseries"]["points"][0]["bucket"] == "2026-06-01T00:00:00+00:00"

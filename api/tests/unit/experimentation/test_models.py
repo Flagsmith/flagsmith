@@ -1,7 +1,14 @@
+from django.utils import timezone
 from pytest_mock import MockerFixture
 
 from environments.models import Environment
-from experimentation.models import WarehouseConnection, WarehouseType
+from experimentation.models import (
+    Experiment,
+    ExperimentExposures,
+    WarehouseConnection,
+    WarehouseType,
+)
+from experimentation.types import ExposuresPayload
 
 
 def test_warehouse_connection__after_create__enqueues_ingestion_add_task(
@@ -43,3 +50,58 @@ def test_warehouse_connection__after_delete__enqueues_ingestion_delete_task(
     mock_task.delay.assert_called_once_with(
         kwargs={"environment_api_key": environment_api_key},
     )
+
+
+def test_experiment_exposures__record_refresh__stores_payload_and_clears_error(
+    experiment: Experiment,
+) -> None:
+    # Given a row whose last refresh failed
+    exposures = ExperimentExposures.objects.create(
+        experiment=experiment,
+        last_error_at=timezone.now(),
+    )
+    payload: ExposuresPayload = {
+        "total_identities": 10,
+        "excluded_identities": 0,
+        "days_of_data": 1,
+        "variants": [],
+        "timeseries": {"granularity": "hour", "points": []},
+    }
+    as_of = timezone.now()
+
+    # When
+    exposures.record_refresh(payload, as_of)
+
+    # Then the payload lands and the error marker is cleared
+    exposures.refresh_from_db()
+    assert exposures.payload == payload
+    assert exposures.as_of == as_of
+    assert exposures.last_error_at is None
+
+
+def test_experiment_exposures__record_failure__preserves_last_good_payload(
+    experiment: Experiment,
+) -> None:
+    # Given a row holding a previously computed payload
+    payload: ExposuresPayload = {
+        "total_identities": 10,
+        "excluded_identities": 0,
+        "days_of_data": 1,
+        "variants": [],
+        "timeseries": {"granularity": "hour", "points": []},
+    }
+    as_of = timezone.now()
+    exposures = ExperimentExposures.objects.create(
+        experiment=experiment,
+        as_of=as_of,
+        payload=payload,
+    )
+
+    # When
+    exposures.record_failure()
+
+    # Then only the error marker changes
+    exposures.refresh_from_db()
+    assert exposures.last_error_at is not None
+    assert exposures.payload == payload
+    assert exposures.as_of == as_of
