@@ -41,7 +41,7 @@ System.out.println("Hello, Flagsmith Warehouse!");`,
     enabled: false,
   },
   'JavaScript': {
-    code: `import flagsmith from 'flagsmith';
+    code: `import flagsmith from '@flagsmith/flagsmith';
 
 await flagsmith.init({
   environmentID: 'YOUR_ENVIRONMENT_KEY',
@@ -57,7 +57,7 @@ flagsmith.trackEvent('purchase', {
     enabled: true,
   },
   'Node JS': {
-    code: `import Flagsmith from 'flagsmith-nodejs';
+    code: `import Flagsmith from '@flagsmith/nodejs';
 
 const flagsmith = new Flagsmith({ environmentKey: 'YOUR_ENVIRONMENT_KEY' });
 console.log('Hello, Flagsmith Warehouse!');`,
