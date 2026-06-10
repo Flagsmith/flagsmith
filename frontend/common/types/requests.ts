@@ -863,7 +863,7 @@ export type Req = {
     userId: number
   }
   getUserPermissions: {
-    id?: number
+    id?: number | string
     userId: number | undefined
     level: PermissionLevel
   }
