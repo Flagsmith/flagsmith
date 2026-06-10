@@ -71,6 +71,7 @@ import {
   decorateUsersForSort,
   userTableSorting,
 } from './users-permissions/sortUsers'
+import { isOrgAdmin } from './users-permissions/isOrgAdmin'
 
 import Project from 'common/project'
 
@@ -1111,7 +1112,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                 permissions?.map((p) => [p.user.id, p]),
               )
               const sortableUsers = decorateUsersForSort(users, (user) => {
-                if (user.role === 'ADMIN') return 'Organisation Administrator'
+                if (isOrgAdmin(user)) return 'Organisation Administrator'
                 if (permissionsByUserId.get(user.id)?.admin) {
                   return `${Format.camelCase(level)} Administrator`
                 }
@@ -1148,23 +1149,22 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                               </Row>
                             }
                             renderRow={(user) => {
-                              const { email, first_name, id, last_name, role } =
-                                user
+                              const { email, first_name, id, last_name } = user
+                              const orgAdmin = isOrgAdmin(user)
                               const onClick = () => {
-                                if (role !== 'ADMIN') {
+                                if (!orgAdmin) {
                                   editUserPermissions(user)
                                 }
                               }
-                              const matchingPermissions = permissions?.find(
-                                (v) => v.user.id === id,
-                              )
+                              const matchingPermissions =
+                                permissionsByUserId.get(id)
 
                               return (
                                 <Row
                                   onClick={onClick}
                                   space
                                   className={`list-item${
-                                    role === 'ADMIN' ? '' : ' clickable'
+                                    orgAdmin ? '' : ' clickable'
                                   }`}
                                   key={id}
                                 >
@@ -1179,7 +1179,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                       {email}
                                     </div>
                                   </Flex>
-                                  {role === 'ADMIN' ? (
+                                  {orgAdmin ? (
                                     <Flex className='table-column fs-small lh-sm'>
                                       <Tooltip
                                         title={'Organisation Administrator'}
@@ -1206,7 +1206,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                     style={{ width: '80px' }}
                                     className='table-column d-flex justify-content-end'
                                   >
-                                    {role !== 'ADMIN' && (
+                                    {!orgAdmin && (
                                       <UserAction
                                         canEdit
                                         canRemove={false}
