@@ -44,6 +44,11 @@ import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
 import Dispatcher from 'common/dispatcher/dispatcher'
 import BaseStore from './base/_store'
 import data from 'common/data/base/_data'
+import {
+  createMultivariateOption,
+  deleteMultivariateOption,
+  updateMultivariateOption,
+} from 'common/services/useMultivariateOption'
 import { createSegmentOverride } from 'common/services/useSegmentOverride'
 import { getStore } from 'common/store'
 let createdFirstFeature = false
@@ -120,15 +125,19 @@ const controller = {
         }
         return Promise.all(
           (flag.multivariate_options || []).map((v) =>
-            data
-              .post(
-                `${Project.api}projects/${projectId}/features/${res.data.id}/mv-options/`,
-                {
-                  ...v,
-                  feature: res.data.id,
-                },
-              )
-              .then(() => res.data),
+            createMultivariateOption(getStore(), {
+              body: {
+                ...v,
+                feature: res.data.id,
+              },
+              feature_id: res.data.id,
+              project_id: projectId,
+            }).then((mvRes) => {
+              if (mvRes.error) {
+                throw mvRes.error
+              }
+              return res.data
+            }),
           ),
         ).then(() =>
           data.get(
@@ -263,7 +272,6 @@ const controller = {
             )
           }
         }
-        const url = `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`
         const mvData = {
           ...v,
           default_percentage_allocation: 0,
@@ -271,18 +279,28 @@ const controller = {
         }
         return (
           originalMV
-            ? data.put(`${url}${originalMV.id}/`, mvData)
-            : data.post(url, mvData)
-        )
-          .then((res) => {
-            // It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
-            flag.multivariate_options[i] = res
-            return {
-              ...v,
-              id: res.id,
-            }
-          })
-          .catch((e) => Promise.reject({ mvIndex: i, source: e }))
+            ? updateMultivariateOption(getStore(), {
+                body: mvData,
+                feature_id: flag.id,
+                mv_id: originalMV.id,
+                project_id: projectId,
+              })
+            : createMultivariateOption(getStore(), {
+                body: mvData,
+                feature_id: flag.id,
+                project_id: projectId,
+              })
+        ).then((res) => {
+          if (res.error) {
+            return Promise.reject({ mvIndex: i, source: res.error })
+          }
+          // It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
+          flag.multivariate_options[i] = res.data
+          return {
+            ...v,
+            id: res.data.id,
+          }
+        })
       }),
     )
       .then(() => {
@@ -291,9 +309,15 @@ const controller = {
         )
         return Promise.all(
           deletedMv.map((v) =>
-            data.delete(
-              `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${v.id}/`,
-            ),
+            deleteMultivariateOption(getStore(), {
+              feature_id: flag.id,
+              mv_id: v.id,
+              project_id: projectId,
+            }).then((res) => {
+              if (res.error) {
+                throw res.error
+              }
+            }),
           ),
         )
       })
@@ -309,24 +333,10 @@ const controller = {
         }
         // Attribute the failure to the option that caused it so the UI
         // can surface it on the right variation.
-        const surface = (body: any) => {
-          store.error = { multivariate_options: { [e.mvIndex]: body } } as any
-          store.goneABitWest()
-        }
-        if (typeof e.source?.text === 'function') {
-          e.source
-            .text()
-            .then((text: string) => {
-              let body = text
-              try {
-                body = JSON.parse(text)
-              } catch {}
-              surface(body)
-            })
-            .catch(() => surface(null))
-        } else {
-          surface(e.source ?? null)
-        }
+        store.error = {
+          multivariate_options: { [e.mvIndex]: e.source?.data ?? null },
+        } as any
+        store.goneABitWest()
       })
   },
   editFeatureState: async (

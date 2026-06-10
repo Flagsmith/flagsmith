@@ -1039,5 +1039,21 @@ export type Req = {
     body: Req['createMetric']['body']
   }
   deleteMetric: { environmentId: string; metricId: number }
+  createMultivariateOption: {
+    project_id: string | number
+    feature_id: number
+    body: Partial<MultivariateOption> & { feature: number }
+  }
+  updateMultivariateOption: Req['createMultivariateOption'] & { mv_id: number }
+  deleteMultivariateOption: {
+    project_id: string | number
+    feature_id: number
+    mv_id: number
+  }
+  saveMultivariateOptions: {
+    project_id: string | number
+    feature_id: number
+    multivariate_options: Partial<MultivariateOption>[]
+  }
   // END OF TYPES
 }
