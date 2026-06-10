@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 class HeapWrapper(AbstractBaseIdentityIntegrationWrapper):  # type: ignore[type-arg]
     def __init__(self, config: HeapConfiguration):
         self.api_key = config.api_key
-        self.url = f"{config.base_url or DEFAULT_HEAP_API_URL}/api/track"
+        base_url = (config.base_url or DEFAULT_HEAP_API_URL).rstrip("/")
+        self.url = f"{base_url}/api/track"
 
     def _identify_user(self, user_data: dict) -> None:  # type: ignore[type-arg]
         response = requests.post(self.url, json=user_data)
