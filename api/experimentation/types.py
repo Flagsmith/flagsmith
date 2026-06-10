@@ -21,9 +21,6 @@ class ExposureTimeseries(TypedDict):
 
 
 class ExposuresPayload(TypedDict):
-    """An experiment's exposure window, as persisted on snapshots and served
-    by the exposures API."""
-
     total_identities: int
     excluded_identities: int
     days_of_data: int

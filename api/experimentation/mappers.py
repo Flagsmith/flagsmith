@@ -1,9 +1,5 @@
-"""Mapping of warehouse exposure rows to the exposures payload.
-
-Pure functions: no Django models, no ClickHouse. Input is the per-variant
-per-bucket rows produced by the exposures query; output is the JSON-serialisable
-payload persisted on exposure snapshots and served by the exposures API.
-"""
+"""Pure mapping of exposure rows to the exposures payload — no Django or
+ClickHouse imports here."""
 
 import math
 from collections.abc import Sequence
@@ -80,8 +76,6 @@ def _build_variants(
                 is_control=key == CONTROL_VARIANT_KEY,
             )
         )
-    # Control first, then treatments by descending identities, ties
-    # alphabetically.
     variants.sort(key=lambda v: (not v["is_control"], -v["identities"], v["key"]))
     return variants
 

@@ -96,10 +96,8 @@ def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
     )
 
 
-# Identities are reduced to their first exposure, so at-least-once duplicate
-# delivery cannot inflate identity counts, and identities seen in more than one
-# variant are quarantined under the sentinel variant. Bucketing first exposures
-# powers the cumulative time series.
+# Events are delivered at-least-once; first-exposure dedup keeps duplicates
+# from inflating identity counts.
 EXPOSURE_BUCKETS_QUERY = """
 WITH exposures AS (
     SELECT
@@ -137,7 +135,6 @@ def get_exposure_buckets(
     window_end: datetime,
     granularity: ExposureGranularity,
 ) -> list[ExposureBucket]:
-    """Return an experiment's exposures per variant per time bucket."""
     rows = _get_clickhouse_client().execute(
         EXPOSURE_BUCKETS_QUERY.format(
             bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]

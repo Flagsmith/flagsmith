@@ -129,35 +129,18 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
         ]
 
 
-class ExposureSnapshotStatus(models.TextChoices):
-    SUCCESS = "success", "Success"
-    ERROR = "error", "Error"
-
-
-class ExperimentExposureSnapshot(models.Model):
-    experiment = models.ForeignKey(
+class ExperimentExposures(models.Model):
+    experiment = models.OneToOneField(
         Experiment,
         on_delete=models.CASCADE,
-        related_name="exposure_snapshots",
+        related_name="exposures",
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    as_of = models.DateTimeField()
-    status = models.CharField(
-        max_length=20,
-        choices=ExposureSnapshotStatus.choices,
-    )
-    error = models.TextField(blank=True, default="")
+    as_of = models.DateTimeField(null=True)
     payload: models.JSONField[ExposuresPayload | None, ExposuresPayload | None] = (
         models.JSONField(null=True, blank=True)
     )
-
-    class Meta:
-        indexes = [
-            models.Index(
-                fields=["experiment", "-created_at"],
-                name="exposure_snapshot_latest_idx",
-            ),
-        ]
+    last_error = models.TextField(blank=True, default="")
+    last_error_at = models.DateTimeField(null=True, blank=True)
 
 
 class MetricAggregation(models.TextChoices):
