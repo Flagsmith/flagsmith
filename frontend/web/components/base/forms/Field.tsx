@@ -29,16 +29,20 @@ const Field: FC<FieldProps> = ({
   label,
   required,
   tooltip,
-}) => (
-  <div className={cn('form-group', className)}>
-    {label && (
-      <FieldLabel htmlFor={htmlFor} required={required} tooltip={tooltip}>
-        {label}
-      </FieldLabel>
-    )}
-    {children}
-    <FieldError error={error} />
-  </div>
-)
+}) => {
+  // Stable id so the control can reference the message via aria-describedby.
+  const errorId = error && htmlFor ? `${htmlFor}-error` : undefined
+  return (
+    <div className={cn('form-group', className)}>
+      {label && (
+        <FieldLabel htmlFor={htmlFor} required={required} tooltip={tooltip}>
+          {label}
+        </FieldLabel>
+      )}
+      {children}
+      <FieldError id={errorId} error={error} />
+    </div>
+  )
+}
 
 export default Field

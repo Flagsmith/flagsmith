@@ -23,7 +23,10 @@ const FieldLabel: FC<FieldLabelProps> = ({
   required,
   tooltip,
 }) => (
-  <label htmlFor={htmlFor} className={cn('control-label', className)}>
+  <label
+    htmlFor={htmlFor}
+    className={cn('control-label d-flex align-items-center', className)}
+  >
     {children}
     {required && (
       <span className='text-danger ml-1' aria-hidden>

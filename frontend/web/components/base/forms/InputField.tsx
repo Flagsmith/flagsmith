@@ -33,6 +33,7 @@ const InputField: FC<InputFieldProps> = ({
 }) => {
   const generatedId = useRef(Utils.GUID()).current
   const fieldId = id ?? generatedId
+  const errorId = error ? `${fieldId}-error` : undefined
   return (
     <Field
       label={label}
@@ -51,6 +52,9 @@ const InputField: FC<InputFieldProps> = ({
         // to a controlled `invalid` prop once Input is slimmed.
         isValid={!error}
         autoValidate={!!error}
+        // Associate the error with the input for screen readers.
+        aria-invalid={error ? true : undefined}
+        aria-describedby={errorId}
       />
     </Field>
   )

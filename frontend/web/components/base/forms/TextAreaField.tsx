@@ -37,6 +37,7 @@ const TextAreaField: FC<TextAreaFieldProps> = ({
 }) => {
   const generatedId = useRef(Utils.GUID()).current
   const fieldId = id ?? generatedId
+  const errorId = error ? `${fieldId}-error` : undefined
   return (
     <Field
       label={label}
@@ -51,6 +52,8 @@ const TextAreaField: FC<TextAreaFieldProps> = ({
         id={fieldId}
         ref={ref}
         className={cn(textareaClassName, { 'border-danger': !!error })}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={errorId}
       />
     </Field>
   )
