@@ -33,12 +33,11 @@ class MCPUsageLoggerMiddleware:
             # - flagsmith.mcp.client.name
             # - flagsmith.mcp.client.version
             "status": "error" if response.status_code >= 400 else "success",
-            "organisation__id": (org_id := self._get_organisation_id(request)),
         }
-        if org_id is not None:
-            logger.info("tool.called", **event)
+        if (org_id := self._get_organisation_id(request)) is not None:
+            logger.info("tool.called", organisation__id=org_id, **event)
         else:
-            logger.warning("tool.called", **event)
+            logger.warning("tool.called", organisation__id=None, **event)
 
         return response
 
