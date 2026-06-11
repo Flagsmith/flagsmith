@@ -159,12 +159,8 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
             <Input
               value={repositoryOwner}
               data-test='repositoryOwner'
-              inputProps={{
-                name: 'repositoryOwner',
-              }}
-              onChange={(e: InputEvent) =>
-                setRepositoryOwner(Utils.safeParseEventValue(e))
-              }
+              name='repositoryOwner'
+              onChange={(e) => setRepositoryOwner(Utils.safeParseEventValue(e))}
               disabled
               type='text'
               title={'Repository Owner'}

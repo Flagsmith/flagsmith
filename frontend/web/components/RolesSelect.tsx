@@ -44,7 +44,7 @@ const RoleSelect: FC<RoleSelectType> = ({
       <Input
         disabled={disabled}
         value={filter}
-        onChange={(e: InputEvent) => setFilter(Utils.safeParseEventValue(e))}
+        onChange={(e) => setFilter(Utils.safeParseEventValue(e))}
         className='full-width mb-2'
         placeholder='Type or choose a Role'
         search

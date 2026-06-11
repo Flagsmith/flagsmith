@@ -198,7 +198,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   )
 
   const navigateOrganisations = (
-    e: KeyboardEvent,
+    e: React.KeyboardEvent,
     organisations: Organisation[],
   ) => {
     const currentIndex = organisations
@@ -212,7 +212,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   }
 
   const getNewIndex = (
-    e: KeyboardEvent,
+    e: React.KeyboardEvent,
     currentIndex: number,
     items: any[] | undefined,
     go: (item: any) => void,
@@ -237,7 +237,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
 
     return -1
   }
-  const navigateProjects = (e: KeyboardEvent) => {
+  const navigateProjects = (e: React.KeyboardEvent) => {
     const currentIndex = projects
       ? projects.findIndex((v) => `${v.id}` === `${hoveredProject}`)
       : -1
@@ -334,10 +334,8 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
             >
               <Input
                 autoFocus={focus === 'organisation'}
-                onKeyDown={(e: KeyboardEvent) =>
-                  navigateOrganisations(e, organisations)
-                }
-                onChange={(e: KeyboardEvent) => {
+                onKeyDown={(e) => navigateOrganisations(e, organisations)}
+                onChange={(e) => {
                   setOrganisationSearch(Utils.safeParseEventValue(e))
                 }}
                 search
@@ -390,11 +388,11 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
               )}
             >
               <Input
-                onChange={(e: InputEvent) => {
+                onChange={(e) => {
                   setProjectSearch(Utils.safeParseEventValue(e))
                 }}
                 autoFocus={focus === 'project'}
-                onKeyDown={(e: KeyboardEvent) => navigateProjects(e)}
+                onKeyDown={(e) => navigateProjects(e)}
                 search
                 className='full-width'
                 inputClassName='border-0 bg-transparent border-bottom-1'

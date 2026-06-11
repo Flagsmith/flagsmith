@@ -26,7 +26,7 @@ const ProjectPermissions = ({ userId }: { userId?: number }) => {
           type='text'
           className='ml-3='
           value={searchProject}
-          onChange={(e: InputEvent) => {
+          onChange={(e) => {
             setSearchProject(Utils.safeParseEventValue(e))
           }}
           size='small'

@@ -169,9 +169,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
                   submit()
                 }
               }}
-              onChange={(e: InputEvent) =>
-                setFilter(Utils.safeParseEventValue(e))
-              }
+              onChange={(e) => setFilter(Utils.safeParseEventValue(e))}
               size='xSmall'
               className='full-width'
               placeholder='Search tags...'

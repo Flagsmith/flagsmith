@@ -139,7 +139,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
             id='segmentID'
             maxLength={SEGMENT_ID_MAXLENGTH}
             value={name}
-            onChange={(e: InputEvent) => {
+            onChange={(e) => {
               setValueChanged(true)
               setName(
                 Format.enumeration
@@ -147,7 +147,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
                   .toLowerCase(),
               )
             }}
-            isValid={name && name.length}
+            isValid={!!(name && name.length)}
             type='text'
             placeholder='E.g. power_users'
           />
@@ -162,7 +162,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
             name: 'featureDesc',
             readOnly: !!identity || readOnly,
           }}
-          onChange={(e: InputEvent) => {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setValueChanged(true)
             setDescription(Utils.safeParseEventValue(e))
           }}
