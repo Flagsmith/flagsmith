@@ -11,8 +11,19 @@ from django.utils import timezone
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
-from experimentation.constants import EXPERIMENT_FLAG, WAREHOUSE_CONNECTION_FLAG
-from experimentation.dataclasses import WarehouseEventStats
+from experimentation.constants import (
+    EXPERIMENT_FLAG,
+    EXPOSURE_EVENT_NAME,
+    EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
+    WAREHOUSE_CONNECTION_FLAG,
+)
+from experimentation.dataclasses import (
+    ExposureBucket,
+    ExposuresSummary,
+    ExposuresTimeseries,
+    ExposuresTimeseriesPoint,
+    WarehouseEventStats,
+)
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
     ExperimentStatus,
@@ -22,7 +33,11 @@ from experimentation.models import (
 from integrations.flagsmith.client import get_openfeature_client
 
 if typing.TYPE_CHECKING:
+    from collections.abc import Sequence
+    from datetime import datetime
+
     from experimentation.models import Experiment, Metric, WarehouseConnection
+    from experimentation.types import ExposureGranularity
     from organisations.models import Organisation
     from users.models import FFAdminUser
 
@@ -86,6 +101,130 @@ def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
         total_events_received=int(total),
         unique_events_count=int(unique),
     )
+
+
+# Events are delivered at-least-once; first-exposure dedup keeps duplicates
+# from inflating identity counts.
+EXPOSURE_BUCKETS_QUERY = """
+WITH exposures AS (
+    SELECT
+        identifier,
+        if(uniqExact(value) > 1, '', any(value)) AS variant,
+        uniqExact(value) > 1 AS quarantined,
+        min(timestamp) AS first_exposure
+    FROM events
+    WHERE environment_key = %(environment_key)s
+        AND event = %(exposure_event)s
+        AND feature_name = %(feature_name)s
+        AND timestamp >= %(window_start)s
+        AND timestamp < %(window_end)s
+    GROUP BY identifier
+)
+SELECT
+    quarantined,
+    variant,
+    {bucket_function}(first_exposure, 'UTC') AS bucket,
+    count() AS first_exposed_identities
+FROM exposures
+GROUP BY quarantined, variant, bucket
+ORDER BY bucket
+"""
+
+_EXPOSURE_BUCKET_FUNCTIONS: dict[str, str] = {
+    "hour": "toStartOfHour",
+    "day": "toStartOfDay",
+}
+
+
+def compute_exposures_summary(
+    *,
+    environment_key: str,
+    feature_name: str,
+    window_start: datetime,
+    window_end: datetime,
+) -> ExposuresSummary:
+    granularity = _select_exposure_granularity(window_start, window_end)
+    buckets = get_exposure_buckets(
+        environment_key=environment_key,
+        feature_name=feature_name,
+        window_start=window_start,
+        window_end=window_end,
+        granularity=granularity,
+    )
+    return build_exposures_summary(buckets, granularity=granularity)
+
+
+def build_exposures_summary(
+    buckets: Sequence[ExposureBucket],
+    *,
+    granularity: ExposureGranularity,
+) -> ExposuresSummary:
+    return ExposuresSummary(
+        excluded_identities=sum(
+            b.first_exposed_identities for b in buckets if b.quarantined
+        ),
+        timeseries=ExposuresTimeseries(
+            granularity=granularity,
+            points=_timeseries_points([b for b in buckets if not b.quarantined]),
+        ),
+    )
+
+
+def _timeseries_points(
+    buckets: Sequence[ExposureBucket],
+) -> list[ExposuresTimeseriesPoint]:
+    new_identities_by_bucket: dict[datetime, dict[str, int]] = {}
+    for b in buckets:
+        new_identities_by_bucket.setdefault(b.bucket, {})[b.variant] = (
+            b.first_exposed_identities
+        )
+    return [
+        ExposuresTimeseriesPoint(
+            bucket=bucket_start.isoformat(),
+            new_identities=new_identities_by_bucket[bucket_start],
+        )
+        for bucket_start in sorted(new_identities_by_bucket)
+    ]
+
+
+def _select_exposure_granularity(
+    window_start: datetime,
+    window_end: datetime,
+) -> ExposureGranularity:
+    if window_end - window_start <= EXPOSURE_HOURLY_BUCKET_MAX_WINDOW:
+        return "hour"
+    return "day"
+
+
+def get_exposure_buckets(
+    *,
+    environment_key: str,
+    feature_name: str,
+    window_start: datetime,
+    window_end: datetime,
+    granularity: ExposureGranularity,
+) -> list[ExposureBucket]:
+    rows = _get_clickhouse_client().execute(
+        EXPOSURE_BUCKETS_QUERY.format(
+            bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
+        ),
+        {
+            "environment_key": environment_key,
+            "exposure_event": EXPOSURE_EVENT_NAME,
+            "feature_name": feature_name,
+            "window_start": window_start,
+            "window_end": window_end,
+        },
+    )
+    return [
+        ExposureBucket(
+            variant=variant,
+            bucket=bucket,
+            first_exposed_identities=int(first_exposed_identities),
+            quarantined=bool(quarantined),
+        )
+        for quarantined, variant, bucket, first_exposed_identities in rows
+    ]
 
 
 def _resolve_audit_log_author(

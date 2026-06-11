@@ -1,4 +1,6 @@
-from typing import TypedDict
+from typing import Literal, TypedDict
+
+ExposureGranularity = Literal["hour", "day"]
 
 
 class MetricDefinitionV1(TypedDict):

@@ -1,7 +1,10 @@
 import typing
+from dataclasses import asdict
+from datetime import datetime
 
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     AFTER_DELETE,
@@ -18,7 +21,7 @@ from experimentation.tasks import (
 from experimentation.types import MetricDefinition
 
 if typing.TYPE_CHECKING:
-    from experimentation.dataclasses import WarehouseEventStats
+    from experimentation.dataclasses import ExposuresSummary, WarehouseEventStats
 
 
 class WarehouseType(models.TextChoices):
@@ -127,6 +130,29 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
                 name="unique_active_experiment_per_feature_env",
             ),
         ]
+
+
+class ExperimentExposures(models.Model):
+    experiment = models.OneToOneField(
+        Experiment,
+        on_delete=models.CASCADE,
+        related_name="exposures",
+    )
+    as_of = models.DateTimeField(null=True, blank=True)
+    payload: models.JSONField[dict[str, object] | None, dict[str, object] | None] = (
+        models.JSONField(null=True, blank=True)
+    )
+    last_error_at = models.DateTimeField(null=True, blank=True)
+
+    def record_refresh(self, summary: "ExposuresSummary", as_of: datetime) -> None:
+        self.payload = asdict(summary)
+        self.as_of = as_of
+        self.last_error_at = None
+        self.save(update_fields=["payload", "as_of", "last_error_at"])
+
+    def record_failure(self) -> None:
+        self.last_error_at = timezone.now()
+        self.save(update_fields=["last_error_at"])
 
 
 class MetricAggregation(models.TextChoices):
