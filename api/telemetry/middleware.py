@@ -20,10 +20,10 @@ class MCPUsageLoggerMiddleware:
     def __call__(self, request: HttpRequest) -> HttpResponse:
         response = self.get_response(request)
 
-        if not request.user or not request.user.is_authenticated:
+        if baggage.get_baggage("flagsmith.client.name") != "flagsmith-mcp":
             return response
 
-        if baggage.get_baggage("flagsmith.client.name") != "flagsmith-mcp":
+        if not request.user or not request.user.is_authenticated:
             return response
 
         logger = structlog.get_logger("mcp")
