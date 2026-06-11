@@ -1,5 +1,4 @@
 import React, { FC, useState } from 'react'
-import Constants from 'common/constants'
 import AppActions from 'common/dispatcher/app-actions'
 import FeatureListStore from 'common/stores/feature-list-store'
 import { useGetProjectQuery } from 'common/services/useProject'
@@ -163,17 +162,7 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
           className='no-pad identity-overrides-title'
           title={
             <>
-              <Tooltip
-                title={
-                  <h5 className='mb-0'>
-                    Identity Overrides{' '}
-                    <Icon name='info-outlined' width={20} fill='#9DA4AE' />
-                  </h5>
-                }
-                place='top'
-              >
-                {Constants.strings.IDENTITY_OVERRIDES_DESCRIPTION}
-              </Tooltip>
+              <h5 className='mb-0'>Identity Overrides</h5>
               <div className='fw-normal transform-none mt-4'>
                 <InfoMessage collapseId='identity-overrides'>
                   Identity overrides override feature values for individual
