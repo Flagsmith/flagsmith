@@ -1,8 +1,8 @@
 import Icon from 'components/icons/Icon'
-import { FC } from 'react'
+import { FC, ReactNode } from 'react'
 
 interface LabelWithTooltipProps {
-  label: string
+  label: ReactNode
   tooltip?: string
 }
 

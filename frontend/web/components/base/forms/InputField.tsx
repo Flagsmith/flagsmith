@@ -25,8 +25,9 @@ interface InputFieldProps
   required?: boolean
   // Info-icon tooltip text shown next to the label.
   tooltip?: string
-  // Styles the label/input/error wrapper; `inputClassName` styles the input.
-  wrapperClassName?: string
+  // Styles the field wrapper (the label/input/error group); `inputClassName`
+  // styles the input element.
+  className?: string
   ref?: Ref<InputMethods>
 }
 
@@ -34,13 +35,13 @@ interface InputFieldProps
 // and library-agnostic: pass `error` and it surfaces both the invalid styling
 // and the message.
 const InputField: FC<InputFieldProps> = ({
+  className,
   error,
   id,
   label,
   ref,
   required,
   tooltip,
-  wrapperClassName,
   ...inputProps
 }) => {
   const generatedId = useRef(Utils.GUID()).current
@@ -53,7 +54,7 @@ const InputField: FC<InputFieldProps> = ({
       required={required}
       tooltip={tooltip}
       htmlFor={fieldId}
-      className={wrapperClassName}
+      className={className}
     >
       <Input
         {...inputProps}
