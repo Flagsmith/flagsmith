@@ -3,11 +3,15 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 from environments.tasks import rebuild_environment_document
+from features.signals import feature_state_change_went_live
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import (
     create_environment_feature_version_published_audit_log_task,
     trigger_update_version_webhooks,
+)
+from features.versioning.versioning_service import (
+    get_updated_feature_states_for_version,
 )
 
 
@@ -62,3 +66,18 @@ def create_environment_feature_version_published_audit_log(  # type: ignore[no-u
     create_environment_feature_version_published_audit_log_task.delay(
         kwargs={"environment_feature_version_uuid": str(instance.uuid)}
     )
+
+
+@receiver(environment_feature_version_published, sender=EnvironmentFeatureVersion)
+def trigger_feature_state_change_went_live_signal(  # type: ignore[no-untyped-def]
+    instance: EnvironmentFeatureVersion, **kwargs
+) -> None:
+    """
+    Fire `feature_state_change_went_live` for each FS that changed in this
+    version so consumers of that signal (e.g. Sentry) are notified for v2
+    publishes. v1 drives this signal via the FS-typed AuditLog row; v2
+    suppresses that row by design (see FeatureState.get_skip_create_audit_log),
+    so this receiver bridges the gap.
+    """
+    for fs in get_updated_feature_states_for_version(instance):
+        feature_state_change_went_live.send(fs)

@@ -11,6 +11,7 @@ import Button from 'components/base/forms/Button'
 import PasswordRequirements from 'components/PasswordRequirements'
 import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import { Icon } from 'components/icons'
 import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
 import OnboardingPage from './OnboardingPage'
@@ -206,9 +207,9 @@ const HomePage: React.FC = () => {
           <Button
             theme='secondary'
             className='w-100'
-            iconLeft='github'
             href={JSON.parse(Utils.getFlagsmithValue('oauth_github')).url}
           >
+            <Icon name='github' />
             GitHub
           </Button>
         </div>,

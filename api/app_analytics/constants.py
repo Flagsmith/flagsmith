@@ -31,6 +31,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
     "flagsmith-flutter-sdk": [
         "unknown",
         "6.1.0",
+        "6.1.1",
     ],
     "flagsmith-go-sdk": [
         "unknown",
@@ -43,6 +44,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "8.0.1",
         "8.0.2",
         "8.1.0",
+        "8.1.1",
     ],
     "flagsmith-js-sdk": [
         "unknown",
@@ -69,6 +71,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "unknown",
         "5.0.0",
         "5.1.0",
+        "5.1.1",
     ],
     "flagsmith-python-sdk": [
         "unknown",
@@ -80,6 +83,8 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "5.1.1",
         "5.2.0",
         "5.3.0",
+        "5.3.1",
+        "5.4.0",
     ],
     "flagsmith-ruby-sdk": [
         "unknown",

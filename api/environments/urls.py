@@ -173,4 +173,16 @@ urlpatterns = [
         get_experiment_results,
         name="experiment-results",
     ),
+    path(
+        "<str:environment_api_key>/warehouse-connections/",
+        include("experimentation.urls"),
+    ),
+    path(
+        "<str:environment_api_key>/experiments/",
+        include("experimentation.experiment_urls"),
+    ),
+    path(
+        "<str:environment_api_key>/experiment-metrics/",
+        include("experimentation.metric_urls"),
+    ),
 ]

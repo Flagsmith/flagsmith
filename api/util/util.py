@@ -93,3 +93,13 @@ def truncate(
     separated by a delimiter.
     """
     return delimiter.join([value[:ends_len], value[-ends_len:]])
+
+
+def batched(iterable: Iterable[T], size: int) -> Generator[list[T], None, None]:
+    """Yield consecutive batches of `size` items from `iterable`. The
+    final batch may be smaller.
+
+    Backport from Python 3.12."""
+    iterator = iter(iterable)
+    while batch := list(islice(iterator, size)):
+        yield batch

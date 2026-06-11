@@ -170,7 +170,6 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
             </Flex>
             <Flex className='table-column'>
               <FeatureValue
-                includeEmpty
                 data-test={`user-trait-value-${i}`}
                 value={trait_value}
               />

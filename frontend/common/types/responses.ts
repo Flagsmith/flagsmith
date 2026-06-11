@@ -160,6 +160,11 @@ export type SegmentRule = {
   conditions: SegmentCondition[]
   version_of: number | undefined
 }
+export type SegmentMembership = {
+  environment: number
+  count: number
+  last_synced_at: string
+}
 export type Segment = {
   id: number
   rules: SegmentRule[]
@@ -169,6 +174,7 @@ export type Segment = {
   project: string | number
   feature?: number
   metadata: Metadata[] | []
+  membership_counts?: SegmentMembership[]
 }
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
@@ -571,6 +577,57 @@ export type MultivariateOption = {
 
 export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
 
+export type ExperimentStatus = 'created' | 'running' | 'paused' | 'completed'
+
+export type ExperimentStatusCounts = Record<ExperimentStatus, number>
+
+export type MetricAggregation = 'count' | 'sum' | 'mean' | 'occurrence'
+
+export type MetricDirection = 'up' | 'down' | 'informational'
+
+export type MetricDefinition = {
+  version: number
+  event: string
+}
+
+export type MetricExperiment = {
+  id: number
+  name: string
+  status: ExperimentStatus
+}
+
+export type Metric = {
+  id: number
+  name: string
+  description: string
+  aggregation: MetricAggregation
+  direction: MetricDirection
+  definition: MetricDefinition
+  experiments: MetricExperiment[]
+  created_at: string
+  updated_at: string
+}
+
+export type ExperimentFeature = {
+  id: number
+  name: string
+  type: FeatureType
+  initial_value: string | null
+  multivariate_options: MultivariateOption[]
+}
+
+export type Experiment = {
+  id: number
+  name: string
+  hypothesis: string
+  feature: ExperimentFeature
+  status: ExperimentStatus
+  created_at: string
+  updated_at: string
+  started_at: string | null
+  ended_at: string | null
+}
+
 export enum TagStrategy {
   INTERSECTION = 'INTERSECTION',
   UNION = 'UNION',
@@ -864,6 +921,16 @@ export type SAMLAttributeMapping = {
   idp_attribute_name: string
 }
 
+export type ScimConfiguration = {
+  created_at: string
+  token_rotated_at: string
+  base_url: string
+}
+
+export type ScimConfigurationWithToken = ScimConfiguration & {
+  token: string
+}
+
 export type HealthEventType = 'HEALTHY' | 'UNHEALTHY'
 
 export type FeatureHealthEventReasonTextBlock = {
@@ -943,11 +1010,6 @@ export type IdentityTrait = {
   id: number | string
   trait_key: string
   trait_value: FlagsmithValue
-}
-
-enum PipelineStatus {
-  DRAFT = 'DRAFT',
-  ACTIVE = 'ACTIVE',
 }
 
 export interface ReleasePipeline {
@@ -1087,6 +1149,34 @@ export type ExperimentResults = {
   statistics: ExperimentStatistics
 }
 
+export type WarehouseConnectionStatus =
+  | 'created'
+  | 'pending_connection'
+  | 'connected'
+  | 'errored'
+
+export type WarehouseType = 'flagsmith' | 'snowflake' | 'clickhouse'
+
+export type SnowflakeConfig = {
+  account_identifier: string
+  warehouse: string
+  database: string
+  schema: string
+  role: string
+  user: string
+}
+
+export type WarehouseConnection = {
+  id: number
+  warehouse_type: WarehouseType
+  status: WarehouseConnectionStatus
+  name: string
+  config: SnowflakeConfig | Record<string, never>
+  created_at: string
+  total_events_received: number | null
+  unique_events_count: number | null
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -1215,6 +1305,8 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  scimConfiguration: ScimConfiguration
+  scimConfigurationWithToken: ScimConfigurationWithToken
   identitySegments: PagedResponse<Segment>
   organisationWebhooks: PagedResponse<Webhook>
   projectChangeRequests: PagedResponse<ChangeRequestSummary>
@@ -1309,5 +1401,14 @@ export type Res = {
   gitlabProjects: PagedResponse<GitLabProject>
   gitlabIssues: PagedResponse<GitLabIssue>
   gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
+  warehouseConnections: WarehouseConnection[]
+  experiments: PagedResponse<Experiment> & {
+    currentPage: number
+    pageSize: number
+    status_counts?: ExperimentStatusCounts
+  }
+  experiment: Experiment
+  metric: Metric
+  metrics: PagedResponse<Metric>
   // END OF TYPES
 }

@@ -8,17 +8,17 @@ from environments.identities.traits.models import Trait
 from features.models import FeatureState
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
+from .constants import DEFAULT_HEAP_API_URL
 from .models import HeapConfiguration
 
 logger = logging.getLogger(__name__)
-
-HEAP_API_URL = "https://heapanalytics.com"
 
 
 class HeapWrapper(AbstractBaseIdentityIntegrationWrapper):  # type: ignore[type-arg]
     def __init__(self, config: HeapConfiguration):
         self.api_key = config.api_key
-        self.url = f"{HEAP_API_URL}/api/track"
+        base_url = (config.base_url or DEFAULT_HEAP_API_URL).rstrip("/")
+        self.url = f"{base_url}/api/track"
 
     def _identify_user(self, user_data: dict) -> None:  # type: ignore[type-arg]
         response = requests.post(self.url, json=user_data)

@@ -1,0 +1,97 @@
+.variation-table {
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+
+  &__head {
+    display: flex;
+    padding: 12px 20px;
+    background: var(--color-surface-muted);
+    gap: 16px;
+  }
+
+  &__th {
+    font-size: var(--font-caption-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+
+    &--name,
+    &--desc,
+    &--value {
+      flex: 1;
+    }
+  }
+
+  &__row {
+    display: flex;
+    padding: 16px 20px;
+    gap: 16px;
+    border-top: 1px solid var(--color-border-default);
+    align-items: center;
+    transition: background var(--duration-fast) var(--easing-standard);
+
+    &:hover {
+      background: var(--color-surface-hover);
+    }
+  }
+
+  &__cell {
+    &--name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 120px;
+      white-space: nowrap;
+    }
+
+    &--desc {
+      flex: 1;
+      min-width: 0;
+      word-break: break-word;
+    }
+
+    &--value {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  &__name-text {
+    font-size: var(--font-body-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-default);
+  }
+
+  &__control-tag {
+    font-size: var(--font-caption-xs-size);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    background: var(--color-surface-muted);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+  }
+
+  &__desc-text {
+    font-size: var(--font-body-sm-size);
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+  }
+
+  &__value-badge {
+    display: inline-block;
+    font-family: var(--font-family);
+    font-size: var(--font-body-sm-size);
+    color: var(--color-text-default);
+    background: var(--color-surface-muted);
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    word-break: break-all;
+    max-width: 100%;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+}

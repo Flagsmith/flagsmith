@@ -9,6 +9,9 @@ defaults:
   run:
     working-directory: api
 
+permissions:
+  contents: read
+
 jobs:
   update_server_defaults:
     runs-on: depot-ubuntu-latest
@@ -20,17 +23,16 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: ./.github/actions/install-uv
         with:
           python-version: 3.12
-          cache: pip
 
       - name: Install Dependencies
-        run: make install
+        run: make install-packages
 
       - name: Update defaults
-        run: poetry run python manage.py updateflagsmithenvironment
+        run: uv run python manage.py updateflagsmithenvironment
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8

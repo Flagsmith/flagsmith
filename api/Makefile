@@ -7,46 +7,44 @@ COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
-POETRY_VERSION ?= 2.2.1
-
-SAML_REVISION ?= v1.6.6
-RBAC_REVISION ?= v0.13.0
+UV_VERSION ?= $(shell python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["tool"]["uv"]["required-version"].lstrip("<=>"))')
 
 OPENAPI_FORMAT_VERSION ?= 1.23.0
 
 -include .env-local
+-include .env-codeartifact
 -include $(DOTENV_OVERRIDE_FILE)
+
+.PHONY: codeartifact-login
+codeartifact-login:
+	@token=$$(aws codeartifact get-authorization-token \
+		--domain flagsmith-production --domain-owner 084060095745 \
+		--region eu-west-2 \
+		--query authorizationToken --output text) && \
+	printf 'UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws\nUV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD=%s\n' "$$token" > .env-codeartifact
 
 .PHONY: install-pip
 install-pip:
 	python -m pip -q install --upgrade pip
 
-.PHONY: install-poetry
-install-poetry:
-	python -m pip -q install poetry==${POETRY_VERSION}
+.PHONY: install-uv
+install-uv:
+	python -m pip -q install uv==${UV_VERSION}
 
 .PHONY: install-packages
 install-packages:
-	poetry install --no-root $(opts)
-
-.PHONY: install-private-modules
-install-private-modules:
-	$(eval SITE_PACKAGES_DIR := $(shell poetry run python -c 'import site; print(site.getsitepackages()[0])'))
-	rm -rf $(SITE_PACKAGES_DIR)/saml $(SITE_PACKAGES_DIR)/rbac
-	git clone https://github.com/flagsmith/flagsmith-saml --depth 1 --branch ${SAML_REVISION} && mv ./flagsmith-saml/saml $(SITE_PACKAGES_DIR)
-	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && mv ./flagsmith-rbac/rbac $(SITE_PACKAGES_DIR)
-	rm -rf ./flagsmith-saml ./flagsmith-rbac
+	uv sync --frozen $(opts)
 
 .PHONY: install
-install: install-pip install-poetry install-packages
+install: install-pip install-uv install-packages
 
 .PHONY: lint
 lint:
-	poetry run pre-commit run -a
+	uv run pre-commit run -a
 
 .PHONY: typecheck
 typecheck:
-	poetry run mypy .
+	uv run mypy .
 
 .PHONY: docker-up
 docker-up:
@@ -71,44 +69,44 @@ docker-build:
 
 .PHONY: wait-for-db
 wait-for-db:
-	poetry run python manage.py waitfordb 
-	poetry run python manage.py waitfordb --database analytics
+	uv run python manage.py waitfordb
+	uv run python manage.py waitfordb --database analytics
 
 .PHONY: test
 test: docker-up wait-for-db
-	poetry run pytest $(opts)
+	uv run pytest $(opts)
 
 .PHONY: django-make-migrations
 django-make-migrations: docker-up wait-for-db
-	poetry run python manage.py waitfordb
-	poetry run python manage.py makemigrations $(opts)
+	uv run python manage.py waitfordb
+	uv run python manage.py makemigrations $(opts)
 
 .PHONY: django-squash-migrations
 django-squash-migrations: docker-up wait-for-db
-	poetry run python manage.py waitfordb
-	poetry run python manage.py squashmigrations $(opts)
+	uv run python manage.py waitfordb
+	uv run python manage.py squashmigrations $(opts)
 
 .PHONY: django-migrate
 django-migrate: docker-up wait-for-db
-	poetry run python manage.py waitfordb
-	poetry run python manage.py migrate
-	poetry run python manage.py createcachetable
+	uv run python manage.py waitfordb
+	uv run python manage.py migrate
+	uv run python manage.py createcachetable
 
 .PHONY: django-shell
 django-shell:
-	poetry run python manage.py shell_plus
+	uv run python manage.py shell_plus
 
 .PHONY: django-collect-static
 django-collect-static:
-	poetry run python manage.py collectstatic --noinput
+	uv run python manage.py collectstatic --noinput
 
 .PHONY: serve
 serve: docker-up wait-for-db
-	poetry run flagsmith start --reload api
+	uv run flagsmith start --reload api
 
 .PHONY: run-task-processor
 run-task-processor: docker-up wait-for-db
-	poetry run flagsmith start --reload --bind 0.0.0.0:8001 task-processor
+	uv run flagsmith start --reload --bind 0.0.0.0:8001 task-processor
 
 .PHONY: serve-with-task-processor
 serve-with-task-processor: TASK_RUN_METHOD=TASK_PROCESSOR
@@ -118,7 +116,7 @@ serve-with-task-processor:
 .PHONY: generate-flagsmith-sdk-openapi
 generate-flagsmith-sdk-openapi: OPENAPI_SERVERS=[{"url": "https://edge.api.flagsmith.com", "description": "Flagsmith Edge API"}]
 generate-flagsmith-sdk-openapi:
-	poetry run python manage.py spectacular | \
+	uv run python manage.py spectacular | \
 	  npx openapi-format@${OPENAPI_FORMAT_VERSION} /dev/fd/0 \
 	    --filterFile openapi-filter-flagsmith-sdk.yml \
 	    --output ../sdk/openapi.yaml
@@ -151,26 +149,46 @@ generate-grafana-client-types:
 		--wrap-string-literal \
 		--special-field-name-prefix=
 
+PRIVATE_TEST_DIRS := tests/rbac_tests tests/workflow_tests tests/auth_controller_tests tests/saml_integration_tests tests/licensing_integration_tests tests/ldap_integration_tests tests/saml_unit_tests
+
+.PHONY: clean-private-tests
+clean-private-tests:
+	rm -rf $(PRIVATE_TEST_DIRS)
+
+# scim and release_pipelines_logic are deliberately not pulled here: scim's
+# compliance tests need an SCIM_SERVICE_PROVIDER config that conflicts with Core
+# API's own scim tests (django-scim2 caches it globally), and release_pipelines
+# has an order-dependent assertion that only holds in isolation. Both run in
+# flagsmith-private's own CI.
+# TODO https://github.com/Flagsmith/flagsmith-private/issues/177
 .PHONY: integrate-private-tests
 integrate-private-tests:
-	$(eval WORKFLOW_REVISION := $(shell grep -A 1 "\[tool.poetry.group.workflows.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'))
-	$(eval AUTH_CONTROLLER_REVISION := $(shell grep -A 1 "\[tool.poetry.group.auth-controller.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'))
-
-	git clone https://github.com/flagsmith/flagsmith-saml --depth 1 --branch ${SAML_REVISION} && mv ./flagsmith-saml/tests tests/saml_tests
-	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && mv ./flagsmith-rbac/tests tests/rbac_tests
-	git clone https://github.com/flagsmith/flagsmith-workflows --depth 1 --branch ${WORKFLOW_REVISION} && mv ./flagsmith-workflows/tests tests/workflow_tests
-	git clone https://github.com/flagsmith/flagsmith-auth-controller --depth 1 --branch ${AUTH_CONTROLLER_REVISION} && mv ./flagsmith-auth-controller/tests tests/auth_controller_tests
-	rm -rf ./flagsmith-saml ./flagsmith-rbac ./flagsmith-workflows ./flagsmith-auth-controller
+	@for dir in $(PRIVATE_TEST_DIRS); do \
+		if [ -d "$$dir" ]; then \
+			echo "Warning: $$dir already exists. Run 'make clean-private-tests' to remove all private test directories before re-running this command."; \
+			exit 1; \
+		fi; \
+	done
+	$(eval FLAGSMITH_PRIVATE_REVISION := v$(shell uv run python -c 'import importlib.metadata; print(importlib.metadata.version("flagsmith-private"))'))
+	git clone https://github.com/Flagsmith/flagsmith-private --depth 1 --branch ${FLAGSMITH_PRIVATE_REVISION}
+	mv ./flagsmith-private/integration_tests/rbac tests/rbac_tests
+	mv ./flagsmith-private/integration_tests/workflows_logic tests/workflow_tests
+	mv ./flagsmith-private/integration_tests/auth_controller tests/auth_controller_tests
+	mv ./flagsmith-private/integration_tests/saml tests/saml_integration_tests
+	mv ./flagsmith-private/integration_tests/licensing tests/licensing_integration_tests
+	mv ./flagsmith-private/integration_tests/flagsmith_ldap tests/ldap_integration_tests
+	mv ./flagsmith-private/unit_tests/saml tests/saml_unit_tests
+	rm -rf ./flagsmith-private
 
 .PHONY: generate-docs
 generate-docs: generate-flagsmith-sdk-openapi
-	poetry run flagsmith docgen metrics > ../docs/docs/deployment-self-hosting/observability/_metrics-catalogue.md
-	poetry run flagsmith docgen events > ../docs/docs/deployment-self-hosting/observability/_events-catalogue.md
+	uv run flagsmith docgen metrics > ../docs/docs/deployment-self-hosting/observability/_metrics-catalogue.md
+	uv run flagsmith docgen events > ../docs/docs/deployment-self-hosting/observability/_events-catalogue.md
 
 .PHONY: add-known-sdk-version
 add-known-sdk-version:
-	poetry run python scripts/add-known-sdk-version.py $(opts)
+	uv run python scripts/add-known-sdk-version.py $(opts)
 
 .PHONY: generate-mcp-spec
 generate-mcp-spec:
-	poetry run python manage.py spectacular --generator-class api.openapi.MCPSchemaGenerator --file mcp_openapi.yaml
+	uv run python manage.py spectacular --generator-class api.openapi.MCPSchemaGenerator --file mcp_openapi.yaml

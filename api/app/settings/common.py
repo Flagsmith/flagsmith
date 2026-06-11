@@ -118,6 +118,8 @@ INSTALLED_APPS = [
     "features.workflows.core",
     "features.release_pipelines.core",
     "segments",
+    "segment_membership",
+    "clickhouse",
     "app",
     "e2etests",
     "simple_history",
@@ -168,6 +170,7 @@ INSTALLED_APPS = [
     "softdelete",
     "metadata",
     "app_analytics",
+    "experimentation",
     "oauth2_metadata",
 ]
 
@@ -561,6 +564,13 @@ SPECTACULAR_SETTINGS = {
         "edge_api.identities.openapi",
         "environments.identities.traits.openapi",
     ],
+    "PREPROCESSING_HOOKS": [
+        "api.openapi.preprocessing_filter_spec",
+    ],
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+        "api.openapi.postprocessing_assign_tags",
+    ],
     "ENUM_NAME_OVERRIDES": {
         # Overrides to use specific schema names for fields named "type".
         # If this is not set, drf-spectacular will generate schema names like "Type975Enum".
@@ -774,6 +784,12 @@ DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = env.bool(
 REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
     "REDIS_CLUSTER_READ_FROM_REPLICAS", default=True
 )
+
+# Redis Cluster URL used to communicate with the event ingestion server.
+INGESTION_REDIS_URL = env.str("INGESTION_REDIS_URL", default="")
+
+# DSN for the ClickHouse instance holding ingested experimentation events.
+EXPERIMENTATION_CLICKHOUSE_URL = env.str("EXPERIMENTATION_CLICKHOUSE_URL", default=None)
 
 CACHES = {
     "default": {
@@ -1065,6 +1081,27 @@ if AUTH_CONTROLLER_INSTALLED:
 IS_RBAC_INSTALLED = importlib.util.find_spec("rbac") is not None
 if IS_RBAC_INSTALLED:
     INSTALLED_APPS.append("rbac")
+
+SCIM_INSTALLED = importlib.util.find_spec("scim") is not None
+if SCIM_INSTALLED:
+    INSTALLED_APPS += ["django_scim", "scim"]
+    SCIM_SERVICE_PROVIDER = {
+        "AUTHENTICATION_SCHEMES": [
+            {
+                "type": "oauthbearertoken",
+                "name": "OAuth Bearer Token",
+                "description": "Per-organisation bearer token issued via the SCIM configuration API.",
+            },
+        ],
+        "AUTH_CHECK_MIDDLEWARE": "scim.middleware.ScimAuthenticationMiddleware",
+        "BASE_LOCATION_GETTER": "core.helpers.get_request_base_url",
+        "GET_EXTRA_MODEL_FILTER_KWARGS_GETTER": "scim.filters.get_extra_model_filter_kwargs_getter",
+        "GROUP_ADAPTER": "scim.adapters.GroupAdapter",
+        "GROUP_FILTER_PARSER": "scim.filters.GroupFilterQuery",
+        "GROUP_MODEL": "users.models.UserPermissionGroup",
+        "USER_ADAPTER": "scim.adapters.UserAdapter",
+        "USER_FILTER_PARSER": "scim.filters.UserFilterQuery",
+    }
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
@@ -1390,11 +1427,6 @@ ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = env.list(
     default=[],
 )
 
-# Date on which versioning is released. This is used to give any scale up
-# subscriptions created before this date full audit log and versioning
-# history.
-VERSIONING_RELEASE_DATE = env.date("VERSIONING_RELEASE_DATE", default=None)
-
 SUBSCRIPTION_LICENCE_PUBLIC_KEY = env.str(
     "SUBSCRIPTION_LICENCE_PUBLIC_KEY",
     """
@@ -1430,3 +1462,39 @@ REQUIRE_AUTHENTICATION_FOR_API_DOCS = env.bool(
 PYLON_IDENTITY_VERIFICATION_SECRET = env.str("PYLON_IDENTITY_VERIFICATION_SECRET", None)
 
 OSIC_UPDATE_BATCH_SIZE = env.int("OSIC_UPDATE_BATCH_SIZE", default=500)
+
+# ClickHouse backs the segment_membership backfill and refresh tasks. Set
+# CLICKHOUSE_URL (DSN form) or any CLICKHOUSE_HOST + discrete fields to enable.
+# Discrete settings override the matching field parsed from the URL.
+CLICKHOUSE_URL = env.str("CLICKHOUSE_URL", default=None)
+CLICKHOUSE_HOST = env.str("CLICKHOUSE_HOST", default=None)
+CLICKHOUSE_PORT = env.int("CLICKHOUSE_PORT", default=None)
+CLICKHOUSE_USER = env.str("CLICKHOUSE_USER", default=None)
+CLICKHOUSE_PASSWORD = env.str("CLICKHOUSE_PASSWORD", default=None)
+CLICKHOUSE_DATABASE = env.str("CLICKHOUSE_DATABASE", default=None)
+CLICKHOUSE_SECURE = env.bool("CLICKHOUSE_SECURE", default=None)
+
+CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
+
+# Always installed: the router fences the `clickhouse` app's migrations off
+# the default Postgres database whether or not a CH alias is configured.
+DATABASE_ROUTERS.append("app.routers.ClickHouseRouter")
+
+if CLICKHOUSE_ENABLED:
+    _clickhouse_db: dict[str, Any] = {
+        "ENGINE": "clickhouse_backend.backend",
+        "HOST": CLICKHOUSE_HOST,
+        "PORT": CLICKHOUSE_PORT,
+        "USER": CLICKHOUSE_USER,
+        "PASSWORD": CLICKHOUSE_PASSWORD,
+        "NAME": CLICKHOUSE_DATABASE,
+        "OPTIONS": {
+            "dsn": CLICKHOUSE_URL,
+            "secure": CLICKHOUSE_SECURE,
+            "settings": {
+                # ClickHouse Cloud 25.12 requires this for `JSON`-column DDL.
+                "allow_experimental_json_type": 1,
+            },
+        },
+    }
+    DATABASES["clickhouse"] = _clickhouse_db  # type: ignore[assignment]

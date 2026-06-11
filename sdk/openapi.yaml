@@ -576,4 +576,7 @@ components:
       in: header
       name: Authorization
       description: Token-based authentication with required prefix "Token"
+tags:
+  - name: sdk
+    description: 'SDK endpoints for flags, identities, and traits.'
 $schema: 'https://spec.openapis.org/oas/3.1/dialect/base'

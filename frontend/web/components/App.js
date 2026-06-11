@@ -232,7 +232,12 @@ const App = class extends Component {
     ) {
       return <Blocked />
     }
-    if (Project.maintenance || this.props.error || !window.projectOverrides) {
+    if (
+      Project.maintenance ||
+      Utils.getFlagsmithHasFeature('maintenance_mode') ||
+      this.props.error ||
+      !window.projectOverrides
+    ) {
       return <Maintenance />
     }
     const activeProject = OrganisationStore.getProject(projectId)

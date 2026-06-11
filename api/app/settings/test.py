@@ -1,5 +1,9 @@
 from app.settings.common import *  # noqa
-from app.settings.common import REST_FRAMEWORK
+from app.settings.common import INSTALLED_APPS, LDAP_INSTALLED, REST_FRAMEWORK
+
+if LDAP_INSTALLED:
+    INSTALLED_APPS = INSTALLED_APPS + ["flagsmith_ldap"]
+    LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID = None
 
 # We dont want to track tests
 ENABLE_TELEMETRY = False

@@ -1,14 +1,25 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Ruff version.
     rev: v0.15.12
+    # Each project is linted under its own config; the global hook runs once per project.
     hooks:
-      # Run the linter.
       - id: ruff
+        name: api-lint
+        files: ^api/
         args: [--config, api/pyproject.toml, --config, "src = ['api']", --fix]
-      # Run the formatter.
       - id: ruff-format
+        name: api-format
+        files: ^api/
         args: [--config, api/pyproject.toml, --config, "src = ['api']"]
+      - id: ruff
+        name: mcp-lint
+        files: ^mcp/
+        args:
+          [--config, mcp/pyproject.toml, --config, "src = ['mcp/src']", --fix]
+      - id: ruff-format
+        name: mcp-format
+        files: ^mcp/
+        args: [--config, mcp/pyproject.toml, --config, "src = ['mcp/src']"]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -33,30 +44,52 @@ repos:
         language: system
         entry: make -C api generate-docs
         pass_filenames: false
+        files: ^api/
         types_or: [python, toml]
-      - id: python-typecheck
-        name: python-typecheck
+      - id: api-typecheck
+        name: api-typecheck
         language: system
-        entry: poetry -C api run mypy .
+        entry: uv run --directory api mypy .
         require_serial: true
         pass_filenames: false
+        files: ^api/
+        types: [python]
+        stages: [pre-push]
+      - id: mcp-typecheck
+        name: mcp-typecheck
+        language: system
+        entry: uv run --directory mcp mypy .
+        require_serial: true
+        pass_filenames: false
+        files: ^mcp/
         types: [python]
         stages: [pre-push]
 
   - repo: https://github.com/Flagsmith/flagsmith-common
-    rev: v3.8.2
+    rev: v3.9.0
     hooks:
       - id: flagsmith-lint-tests
 
-  - repo: https://github.com/python-poetry/poetry
-    rev: 2.3.2
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.11.18 # Ensure this matches the version in api/pyproject.toml
     hooks:
-      - id: poetry-check
-        args: ["-C", "api"]
+      - id: uv-lock
+        name: api-lockcheck
+        args: ["--project", "api", "--check"]
+      - id: uv-lock
+        name: mcp-lockcheck
+        args: ["--project", "mcp", "--check"]
+
+  - repo: https://github.com/renovatebot/pre-commit-hooks
+    rev: 43.205.2
+    hooks:
+      - id: renovate-config-validator
+        name: renovate-config-validator
+        stages: [pre-push]
 
 default_install_hook_types: [pre-commit, pre-push]
 default_stages: [pre-commit]
 
 ci:
-  skip: [generate-docs, python-typecheck]
+  skip: [generate-docs, api-typecheck, mcp-typecheck, renovate-config-validator]
   autoupdate_commit_msg: "ci: pre-commit autoupdate"

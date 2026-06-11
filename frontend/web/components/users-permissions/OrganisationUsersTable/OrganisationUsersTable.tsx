@@ -1,5 +1,10 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import AppActions from 'common/dispatcher/app-actions'
+import Constants from 'common/constants'
+import {
+  decorateUsersForSort,
+  userTableSorting,
+} from 'components/users-permissions/sortUsers'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import { Organisation, User } from 'common/types/responses'
@@ -87,14 +92,25 @@ const OrganisationUsersTable: React.FC<OrganisationUsersTableProps> = ({
     })
   }
 
+  const sortableUsers = useMemo(
+    () =>
+      decorateUsersForSort(
+        users,
+        (user) =>
+          Constants.roles[user.role as keyof typeof Constants.roles] || '',
+      ),
+    [users],
+  )
+
   return (
     <PanelSearch
       id='org-members-list'
       title='Members'
       className='no-pad'
       header={<OrganisationUsersTableHeader widths={widths} />}
-      items={users}
+      items={sortableUsers}
       itemHeight={65}
+      sorting={userTableSorting}
       renderRow={(user) => {
         const { email, first_name, id, last_name } = user
 

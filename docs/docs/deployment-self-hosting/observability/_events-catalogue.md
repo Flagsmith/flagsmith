@@ -63,7 +63,7 @@ Attributes:
 ### `code_references.scan.created`
 
 Logged at `info` from:
- - `api/projects/code_references/views.py:41`
+ - `api/projects/code_references/views.py:61`
 
 Attributes:
  - `code_references.count`
@@ -181,19 +181,6 @@ Attributes:
  - `organisation.id`
  - `project.id`
 
-### `gitlab.feature.tagged`
-
-Logged at `info` from:
- - `api/integrations/gitlab/services/tagging.py:89`
-
-Attributes:
- - `action`
- - `feature.id`
- - `object_kind`
- - `organisation.id`
- - `project.id`
- - `tag.label`
-
 ### `gitlab.label.created`
 
 Logged at `info` from:
@@ -289,6 +276,17 @@ Attributes:
  - `organisation.id`
  - `project.id`
 
+### `gitlab.webhook.processed`
+
+Logged at `info` from:
+ - `api/integrations/gitlab/views/webhook.py:35`
+
+Attributes:
+ - `action`
+ - `object_kind`
+ - `organisation.id`
+ - `project.id`
+
 ### `gitlab.webhook.registered`
 
 Logged at `info` from:
@@ -345,10 +343,76 @@ Logged at `warning` from:
 
 Attributes:
 
+### `segment_membership.backfill.environment.completed`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:110`
+
+Attributes:
+ - `environment.id`
+ - `project.id`
+ - `rows.count`
+
+### `segment_membership.backfill.environment.failed`
+
+Logged at `exception` from:
+ - `api/segment_membership/tasks.py:103`
+
+Attributes:
+ - `environment.id`
+ - `project.id`
+
+### `segment_membership.backfill.skipped`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:67`
+ - `api/segment_membership/tasks.py:72`
+
+Attributes:
+ - `reason`
+
+### `segment_membership.compute.segment.skipped`
+
+Logged at `error` from:
+ - `api/segment_membership/services.py:96`
+
+Attributes:
+ - `project.id`
+ - `reason`
+ - `segment.id`
+
+### `segment_membership.refresh.project.completed`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:185`
+
+Attributes:
+ - `membership_counts.count`
+ - `project.id`
+ - `stale_counts.count`
+
+### `segment_membership.refresh.project.failed`
+
+Logged at `exception` from:
+ - `api/segment_membership/tasks.py:158`
+
+Attributes:
+ - `project.id`
+
+### `segment_membership.refresh.project.skipped`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:129`
+ - `api/segment_membership/tasks.py:138`
+
+Attributes:
+ - `project.id`
+ - `reason`
+
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:142`
+ - `api/segments/serializers.py:155`
 
 Attributes:
  - `revision_id`
@@ -357,7 +421,7 @@ Attributes:
 ### `sentry_change_tracking.integration_error`
 
 Logged at `warning` from:
- - `api/integrations/sentry/change_tracking.py:112`
+ - `api/integrations/sentry/change_tracking.py:109`
 
 Attributes:
  - `feature_name`
@@ -368,7 +432,7 @@ Attributes:
 ### `sentry_change_tracking.request_failure`
 
 Logged at `warning` from:
- - `api/integrations/sentry/change_tracking.py:102`
+ - `api/integrations/sentry/change_tracking.py:99`
 
 Attributes:
  - `error`
@@ -378,7 +442,7 @@ Attributes:
 ### `sentry_change_tracking.sending`
 
 Logged at `debug` from:
- - `api/integrations/sentry/change_tracking.py:87`
+ - `api/integrations/sentry/change_tracking.py:84`
 
 Attributes:
  - `feature_name`
@@ -390,11 +454,29 @@ Attributes:
 ### `sentry_change_tracking.success`
 
 Logged at `info` from:
- - `api/integrations/sentry/change_tracking.py:109`
+ - `api/integrations/sentry/change_tracking.py:106`
 
 Attributes:
  - `feature_name`
  - `sentry_action`
+
+### `warehouse.connection.connected`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:345`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
+### `warehouse.connection.test_event_sent`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:325`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
 
 ### `workflows.change_request.committed`
 
