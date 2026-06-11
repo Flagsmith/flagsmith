@@ -115,7 +115,9 @@ def _translate(
     )
 
 
-def test_feature_state_to_flagd_flag__segment_override_with_different_value__synthesises_variant() -> None:
+def test_feature_state_to_flagd_flag__segment_override_with_different_value__synthesises_variant() -> (
+    None
+):
     # Given a string flag whose Premium segment override sets a
     # different string value
     feature = _feature(name="seg_value")
@@ -145,7 +147,9 @@ def test_feature_state_to_flagd_flag__segment_override_with_different_value__syn
     }
 
 
-def test_feature_state_to_flagd_flag__identity_override_with_different_value__synthesises_variant() -> None:
+def test_feature_state_to_flagd_flag__identity_override_with_different_value__synthesises_variant() -> (
+    None
+):
     # Given a string flag whose Alice override sets a different value
     feature = _feature(name="id_value")
     default_fs = FeatureStateModel(
@@ -170,7 +174,9 @@ def test_feature_state_to_flagd_flag__identity_override_with_different_value__sy
     }
 
 
-def test_feature_state_to_flagd_flag__override_value_equals_control__no_extra_variant() -> None:
+def test_feature_state_to_flagd_flag__override_value_equals_control__no_extra_variant() -> (
+    None
+):
     # Given a string flag whose Premium segment override carries the
     # same value as the default
     feature = _feature(name="seg_same")
@@ -195,7 +201,9 @@ def test_feature_state_to_flagd_flag__override_value_equals_control__no_extra_va
     assert "targeting" not in flag
 
 
-def test_feature_state_to_flagd_flag__disabled_override_with_distinct_value__routes_to_value() -> None:
+def test_feature_state_to_flagd_flag__disabled_override_with_distinct_value__routes_to_value() -> (
+    None
+):
     # Given a segment override that's disabled but carries a distinct
     # value. The new model treats override.enabled as decorative for
     # flagd consumers; only the typed value flows through.
@@ -229,7 +237,9 @@ def test_feature_state_to_flagd_flag__disabled_override_with_distinct_value__rou
     }
 
 
-def test_feature_state_to_flagd_flag__disabled_override_value_equals_control__warns() -> None:
+def test_feature_state_to_flagd_flag__disabled_override_value_equals_control__warns() -> (
+    None
+):
     # Given a disabled override whose value equals the control —
     # invisible to flagd consumers, so we emit a translation warning.
     from integrations.flagd.constants import WARNING_DISABLED_OVERRIDE_NO_OP
@@ -303,7 +313,9 @@ def test_feature_state_to_flagd_flag__segment_name_special_chars__slugified(
     assert flag["variants"][expected_variant] == "B"
 
 
-def test_feature_state_to_flagd_flag__two_overrides_with_distinct_values__two_variants() -> None:
+def test_feature_state_to_flagd_flag__two_overrides_with_distinct_values__two_variants() -> (
+    None
+):
     # Given a flag with two segment overrides setting different values
     feature = _feature(id_=2, name="multi_override")
     default_fs = FeatureStateModel(

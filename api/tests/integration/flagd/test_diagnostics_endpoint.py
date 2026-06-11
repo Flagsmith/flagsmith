@@ -77,9 +77,7 @@ def test_flagd_diagnostics__regex_segment__warning_surfaced_per_feature(
     # environmentWarnings since segments are environment-wide)
     body = response.json()
     assert body["summary"]["totalWarnings"] >= 1
-    all_reasons = {
-        w["reason"] for w in body.get("environmentWarnings", [])
-    } | {
+    all_reasons = {w["reason"] for w in body.get("environmentWarnings", [])} | {
         w["reason"]
         for feature_entry in body["features"]
         for w in feature_entry["warnings"]

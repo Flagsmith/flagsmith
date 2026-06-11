@@ -88,17 +88,15 @@ def feature_state_to_flagd_flag(
     # Mint per-override variants for overrides whose value differs from
     # control. Mutates ``variants`` in place and returns lookup tables
     # the targeting builder consults.
-    segment_override_variants, identity_override_variants = (
-        _register_override_variants(
-            feature_state.feature.id,
-            control_value=control_value,
-            segments=segments,
-            segment_keys=segment_keys,
-            identity_overrides=identity_overrides,
-            variants=variants,
-            feature_key=feature_key,
-            warnings=warnings,
-        )
+    segment_override_variants, identity_override_variants = _register_override_variants(
+        feature_state.feature.id,
+        control_value=control_value,
+        segments=segments,
+        segment_keys=segment_keys,
+        identity_overrides=identity_overrides,
+        variants=variants,
+        feature_key=feature_key,
+        warnings=warnings,
     )
 
     control_target: Any

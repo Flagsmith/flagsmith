@@ -42,9 +42,12 @@ def test_flagd_configuration__post_first_time__creates_with_enabled_value(
     # Then a row is created with the requested state
     assert response.status_code == status.HTTP_201_CREATED, response.content
     assert response.json()["enabled"] is True
-    assert FlagdProjectConfiguration.objects.filter(
-        project_id=project, enabled=True
-    ).count() == 1
+    assert (
+        FlagdProjectConfiguration.objects.filter(
+            project_id=project, enabled=True
+        ).count()
+        == 1
+    )
 
 
 @pytest.mark.django_db
@@ -94,5 +97,3 @@ def test_flagd_configuration__patch_enabled_false__disables_sync_endpoint(
 
     # Then the sync endpoint immediately starts returning 404
     assert server_side_sdk_client.get(sync_url).status_code == status.HTTP_404_NOT_FOUND
-
-

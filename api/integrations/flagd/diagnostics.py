@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import Any
 
 import structlog
+from django.conf import settings
 
 from integrations.flagd.constants import (
     DEFAULT_IDENTITY_OVERRIDE_LIMIT,
@@ -32,7 +33,6 @@ from integrations.flagd.translators.type_check import detect_type_mismatch
 from integrations.flagd.types import TranslationWarning
 from util.engine_models.environments.models import EnvironmentModel
 from util.mappers.engine import map_environment_to_engine
-from django.conf import settings
 
 logger = structlog.get_logger("flagd_sync")
 
@@ -68,9 +68,7 @@ def diagnose_environment(environment: Any) -> dict[str, Any]:
         )
 
     default_feature_states = [
-        fs
-        for fs in engine_environment.feature_states
-        if fs.feature_segment is None
+        fs for fs in engine_environment.feature_states if fs.feature_segment is None
     ]
 
     features: list[dict[str, Any]] = []
@@ -114,9 +112,7 @@ def diagnose_environment(environment: Any) -> dict[str, Any]:
                 }
             )
 
-    flag_set_id = (
-        f"{slugify_name(project.name)}/{slugify_name(environment.name)}"
-    )
+    flag_set_id = f"{slugify_name(project.name)}/{slugify_name(environment.name)}"
     return {
         "flagSetId": flag_set_id,
         "translatorVersion": FLAGD_TRANSLATOR_VERSION,

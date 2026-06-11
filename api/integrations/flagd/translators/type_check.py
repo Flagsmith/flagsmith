@@ -94,9 +94,6 @@ def detect_type_mismatch(
     return [
         TranslationWarning(
             reason=WARNING_TYPE_MISMATCH,
-            detail=(
-                f"feature={feature_state.feature.name}, "
-                f"types=[{types_summary}]"
-            ),
+            detail=(f"feature={feature_state.feature.name}, types=[{types_summary}]"),
         )
     ]

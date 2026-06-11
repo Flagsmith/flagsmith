@@ -160,7 +160,9 @@ def test_build_flagd_document__segment_used_by_one_feature__inlined() -> None:
     }
 
 
-def test_build_flagd_document__segment_used_by_two_features__extracted_to_evaluators() -> None:
+def test_build_flagd_document__segment_used_by_two_features__extracted_to_evaluators() -> (
+    None
+):
     # Given a shared segment with overrides on two features
     feature_a = _feature(1, "flag_a")
     feature_b = _feature(2, "flag_b")
@@ -186,16 +188,16 @@ def test_build_flagd_document__segment_used_by_two_features__extracted_to_evalua
     document = _build(env)
 
     # Then the segment is in $evaluators
-    assert document["$evaluators"] == {
-        "Premium": {"==": [{"var": "tier"}, "premium"]}
-    }
+    assert document["$evaluators"] == {"Premium": {"==": [{"var": "tier"}, "premium"]}}
     # And both flags reference it by $ref
     for flag_key in ("flag_a", "flag_b"):
         flag = document["flags"][flag_key]
         assert flag["targeting"]["if"][0] == {"$ref": "Premium"}
 
 
-def test_build_flagd_document__two_feature_scoped_segments_share_name__inlined_no_collision() -> None:
+def test_build_flagd_document__two_feature_scoped_segments_share_name__inlined_no_collision() -> (
+    None
+):
     # Given two segments that happen to share a display name but live
     # on different features (different IDs, different rules) — the
     # exact scenario the inline strategy is designed to handle.
@@ -221,9 +223,7 @@ def test_build_flagd_document__two_feature_scoped_segments_share_name__inlined_n
         value="b.com",
         overrides=[_override(feature=feature_b, enabled=True, value="b-special")],
     )
-    env = _environment(
-        segments=[seg_a, seg_b], feature_states=[default_a, default_b]
-    )
+    env = _environment(segments=[seg_a, seg_b], feature_states=[default_a, default_b])
 
     # When the document is built
     document = _build(env)
@@ -291,6 +291,4 @@ def test_build_flagd_document__inline_segment_doc__still_passes_flagd_schema() -
 
     # Then the document still validates against the flagd schema
     errors = sorted(_validator().iter_errors(document), key=lambda e: list(e.path))
-    assert not errors, "\n".join(
-        f"{list(e.path)}: {e.message}" for e in errors
-    )
+    assert not errors, "\n".join(f"{list(e.path)}: {e.message}" for e in errors)

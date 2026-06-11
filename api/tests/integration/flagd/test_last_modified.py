@@ -102,8 +102,6 @@ def test_flagd_sync__live_from_activation__breaks_if_none_match_short_circuit(
 
     # Then a conditional GET no longer short-circuits — the new ETag
     # reflects the change.
-    follow_up = server_side_sdk_client.get(
-        url, HTTP_IF_NONE_MATCH=initial_etag
-    )
+    follow_up = server_side_sdk_client.get(url, HTTP_IF_NONE_MATCH=initial_etag)
     assert follow_up.status_code == status.HTTP_200_OK
     assert follow_up.headers["ETag"] != initial_etag

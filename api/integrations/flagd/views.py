@@ -42,9 +42,8 @@ def _require_flagd_enabled(environment) -> None:  # type: ignore[no-untyped-def]
     simply isn't configured.
     """
     if not is_flagd_enabled_for_project(environment.project_id):
-        raise NotFound(
-            "flagd integration is not enabled for this project."
-        )
+        raise NotFound("flagd integration is not enabled for this project.")
+
 
 logger = structlog.get_logger("flagd_sync")
 
@@ -111,9 +110,7 @@ def _get_etag(request: Request) -> Optional[str]:
     if last_modified is None:
         return None
     raw = (
-        f"{environment.api_key}:"
-        f"{last_modified.isoformat()}:"
-        f"{FLAGD_TRANSLATOR_VERSION}"
+        f"{environment.api_key}:{last_modified.isoformat()}:{FLAGD_TRANSLATOR_VERSION}"
     )
     return hashlib.sha256(raw.encode()).hexdigest()
 

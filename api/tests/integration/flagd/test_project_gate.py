@@ -19,9 +19,7 @@ def test_flagd_sync__integration_disabled__returns_404(
     environment: int,
 ) -> None:
     # Given the integration is explicitly disabled for the project
-    FlagdProjectConfiguration.objects.filter(project_id=project).update(
-        enabled=False
-    )
+    FlagdProjectConfiguration.objects.filter(project_id=project).update(enabled=False)
 
     # When the sync endpoint is called
     response = server_side_sdk_client.get(reverse("api-v1:flagd:sync"))
@@ -37,9 +35,7 @@ def test_flagd_diagnostics__integration_disabled__returns_404(
     environment: int,
 ) -> None:
     # Given the integration is disabled
-    FlagdProjectConfiguration.objects.filter(project_id=project).update(
-        enabled=False
-    )
+    FlagdProjectConfiguration.objects.filter(project_id=project).update(enabled=False)
 
     # When the diagnostics endpoint is called
     response = server_side_sdk_client.get(reverse("api-v1:flagd:diagnostics"))

@@ -64,9 +64,7 @@ def test_detect_type_mismatch__all_strings__no_warning() -> None:
     ],
     ids=["string+number", "number+string", "boolean+string", "array+object"],
 )
-def test_detect_type_mismatch__mixed_types__emits_warning(
-    control, mv_value
-) -> None:
+def test_detect_type_mismatch__mixed_types__emits_warning(control, mv_value) -> None:
     # Given a flag whose values land in different flagd type buckets
     fs = FeatureStateModel(
         feature=_feature("mixed"),
@@ -135,7 +133,9 @@ def test_detect_type_mismatch__single_variant__no_warning() -> None:
     assert warnings == []
 
 
-def test_detect_type_mismatch__segment_override_with_different_type__emits_warning() -> None:
+def test_detect_type_mismatch__segment_override_with_different_type__emits_warning() -> (
+    None
+):
     # Given a string flag whose segment override sets a number value
     feature = _feature("seg_mix")
     default_fs = FeatureStateModel(
@@ -144,9 +144,7 @@ def test_detect_type_mismatch__segment_override_with_different_type__emits_warni
     segment_override_fs = FeatureStateModel(
         feature=feature, enabled=True, feature_state_value=42
     )
-    segment = SegmentModel(
-        id=10, name="Premium", feature_states=[segment_override_fs]
-    )
+    segment = SegmentModel(id=10, name="Premium", feature_states=[segment_override_fs])
 
     # When the type check runs
     warnings = detect_type_mismatch(default_fs, segments=[segment])
@@ -158,7 +156,9 @@ def test_detect_type_mismatch__segment_override_with_different_type__emits_warni
     assert "string" in warnings[0]["detail"]
 
 
-def test_detect_type_mismatch__identity_override_with_different_type__emits_warning() -> None:
+def test_detect_type_mismatch__identity_override_with_different_type__emits_warning() -> (
+    None
+):
     # Given a string flag whose identity override sets a boolean value
     feature = _feature("id_mix")
     default_fs = FeatureStateModel(
@@ -168,9 +168,7 @@ def test_detect_type_mismatch__identity_override_with_different_type__emits_warn
         identifier="alice",
         environment_api_key="ser.test",
         identity_features=[
-            FeatureStateModel(
-                feature=feature, enabled=True, feature_state_value=True
-            ),
+            FeatureStateModel(feature=feature, enabled=True, feature_state_value=True),
         ],
     )
 
@@ -184,7 +182,9 @@ def test_detect_type_mismatch__identity_override_with_different_type__emits_warn
     assert "string" in warnings[0]["detail"]
 
 
-def test_detect_type_mismatch__override_value_matches_control_type__no_warning() -> None:
+def test_detect_type_mismatch__override_value_matches_control_type__no_warning() -> (
+    None
+):
     # Given a string flag whose segment override sets a different string
     feature = _feature("seg_match")
     default_fs = FeatureStateModel(
@@ -193,9 +193,7 @@ def test_detect_type_mismatch__override_value_matches_control_type__no_warning()
     segment_override_fs = FeatureStateModel(
         feature=feature, enabled=True, feature_state_value="B"
     )
-    segment = SegmentModel(
-        id=11, name="Premium", feature_states=[segment_override_fs]
-    )
+    segment = SegmentModel(id=11, name="Premium", feature_states=[segment_override_fs])
 
     # When the type check runs
     warnings = detect_type_mismatch(default_fs, segments=[segment])
