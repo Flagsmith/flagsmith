@@ -23,3 +23,11 @@ export const Required: Story = {
     </FieldLabel>
   ),
 }
+
+export const WithTooltip: Story = {
+  render: () => (
+    <FieldLabel htmlFor='email' tooltip='We never share your email.'>
+      Email
+    </FieldLabel>
+  ),
+}

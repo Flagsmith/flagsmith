@@ -67,3 +67,13 @@ export const ReadOnly: Story = {
 export const WithoutLabel: Story = {
   render: () => <InputField placeholder='No label' />,
 }
+
+export const WithTooltip: Story = {
+  render: () => (
+    <InputField
+      label='Email'
+      tooltip='We never share your email.'
+      placeholder='you@example.com'
+    />
+  ),
+}

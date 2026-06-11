@@ -13,6 +13,8 @@ interface InputFieldProps extends Omit<InputProps, 'isValid'> {
   // is present, so this works with manual state or any form library.
   error?: ReactNode
   required?: boolean
+  // Info-icon tooltip shown next to the label.
+  tooltip?: ReactNode
   // Styles the label/input/error wrapper; `inputClassName` styles the input.
   wrapperClassName?: string
   ref?: Ref<InputMethods>
@@ -27,6 +29,7 @@ const InputField: FC<InputFieldProps> = ({
   label,
   ref,
   required,
+  tooltip,
   wrapperClassName,
   ...inputProps
 }) => {
@@ -35,7 +38,7 @@ const InputField: FC<InputFieldProps> = ({
   return (
     <div className={cn('form-group', wrapperClassName)}>
       {label && (
-        <FieldLabel htmlFor={fieldId} required={required}>
+        <FieldLabel htmlFor={fieldId} required={required} tooltip={tooltip}>
           {label}
         </FieldLabel>
       )}
