@@ -35,3 +35,4 @@ jobs:
           RENOVATE_GIT_AUTHOR: ${{ vars.RENOVATE_GIT_AUTHOR }}
           RENOVATE_HOST_RULES: >-
             [{"matchHost":"flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com","username":"aws","password":"${{ steps.codeartifact.outputs.token }}"}]
+          LOG_LEVEL: DEBUG
