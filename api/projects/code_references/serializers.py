@@ -38,9 +38,7 @@ class FeatureFlagCodeReferencesScanSerializer(
         default=VCSProvider.GITHUB,
     )
     revision = serializers.CharField(max_length=100)
-    code_references = _CodeReferenceSubmitSerializer(
-        many=True, required=True, allow_empty=False
-    )
+    code_references = _CodeReferenceSubmitSerializer(many=True, required=True)
 
 
 class FeatureFlagCodeReferencesRepositorySummarySerializer(
