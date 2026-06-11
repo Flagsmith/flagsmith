@@ -5,6 +5,8 @@ from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 from opentelemetry import baggage
 
+from telemetry.spans import get_span_attribute
+
 
 class UndefinedOrganisationError(Exception):
     """The organisation can't be probed from context."""
@@ -12,21 +14,6 @@ class UndefinedOrganisationError(Exception):
 
 class MCPUsageLoggerMiddleware:
     """Emit telemetry events for MCP usage"""
-
-    _url_param_to_organisation_lookup = {
-        "organisation_pk": "pk",
-        "project_pk": "projects__pk",
-        "environment_pk": "projects__environments__pk",
-        "environment_api_key": "projects__environments__api_key",
-    }
-
-    _pk_url_name_to_organisation_lookup = {
-        "organisation-projects": "pk",
-        "project-detail": "projects__pk",
-        "project-environments": "projects__pk",
-        "featurestates-detail": "projects__features__feature_states__pk",
-        "feature-segment-detail": "projects__features__feature_segments__pk",
-    }
 
     def __init__(
         self,
@@ -63,33 +50,15 @@ class MCPUsageLoggerMiddleware:
         """Obtain the organisation ID from the request context."""
         from organisations.models import Organisation
 
+        # Set by the permission layer for organisations the user belongs to
+        if isinstance(organisation_id := get_span_attribute("organisation.id"), int):
+            return organisation_id
+
         assert request.user.is_authenticated  # NOTE: protected upstream
-        user_orgs = request.user.organisations.all()
         try:  # Most of the time, the user belongs to one organisation
-            return user_orgs.get().id
-        except Organisation.MultipleObjectsReturned:
-            pass
-        except Organisation.DoesNotExist as error:
+            return request.user.organisations.get().id
+        except (
+            Organisation.DoesNotExist,
+            Organisation.MultipleObjectsReturned,
+        ) as error:
             raise UndefinedOrganisationError from error
-
-        # Known URL parameter names
-        assert request.resolver_match
-        kwargs = request.resolver_match.kwargs
-        for url_param, value in kwargs.items():
-            if lookup := self._url_param_to_organisation_lookup.get(url_param):
-                try:
-                    return user_orgs.filter(**{lookup: value}).get().id
-                except Organisation.DoesNotExist as error:
-                    raise UndefinedOrganisationError from error
-
-        # Known URLs using `pk`
-        assert (url_name := request.resolver_match.url_name)
-        if (lookup := self._pk_url_name_to_organisation_lookup.get(url_name)) and (
-            pk := kwargs["pk"]
-        ):
-            try:
-                return user_orgs.filter(**{lookup: pk}).get().id
-            except Organisation.DoesNotExist as error:
-                raise UndefinedOrganisationError from error
-
-        raise UndefinedOrganisationError

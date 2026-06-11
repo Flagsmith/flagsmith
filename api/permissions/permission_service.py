@@ -6,6 +6,7 @@ from django.db.models import Q, QuerySet
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
+from telemetry.spans import set_span_attribute
 
 from .rbac_wrapper import (  # type: ignore[attr-defined]
     get_permitted_environments_for_master_api_key_using_roles,
@@ -25,6 +26,7 @@ def is_user_organisation_admin(
 ) -> bool:
     user_organisation = user.get_user_organisation(organisation)
     if user_organisation is not None:
+        set_span_attribute("organisation.id", user_organisation.organisation_id)
         return user_organisation.role == OrganisationRole.ADMIN.name
     return False
 
