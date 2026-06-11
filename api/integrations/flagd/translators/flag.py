@@ -223,24 +223,16 @@ def _unique_variant_name(candidate: str, taken: set[str]) -> str:
         counter += 1
 
 
-def _build_targeting(
+def _collect_identity_branches(
     *,
-    feature_state: FeatureStateModel,
+    feature_id: int,
     feature_key: str,
-    segments: Iterable[SegmentModel],
-    segment_targeting: dict[int, JsonLogic | None],
-    segment_keys: dict[int, str],
     identity_overrides: Iterable[IdentityModel],
-    identity_override_limit: int,
-    control_target: Any,
-    segment_override_variants: dict[int, str],
     identity_override_variants: dict[str, str],
+    identity_override_limit: int,
     warnings: list[TranslationWarning],
-) -> JsonLogic | None:
-    feature_id = feature_state.feature.id
-
-    # ----- Identity overrides (highest priority) ------------------------
-    identity_branches: list[tuple[str, str]] = []
+) -> list[tuple[str, str]]:
+    branches: list[tuple[str, str]] = []
     overflow = 0
     for identity in identity_overrides:
         override_fs = _find_identity_override(identity, feature_id)
@@ -250,10 +242,10 @@ def _build_targeting(
         if variant is None:
             # No-op override (value == control); nothing to route.
             continue
-        if len(identity_branches) >= identity_override_limit:
+        if len(branches) >= identity_override_limit:
             overflow += 1
             continue
-        identity_branches.append((identity.identifier, variant))
+        branches.append((identity.identifier, variant))
     if overflow:
         warnings.append(
             TranslationWarning(
@@ -261,13 +253,22 @@ def _build_targeting(
                 detail=f"feature={feature_key}, dropped={overflow}",
             )
         )
+    return branches
 
-    # ----- Segment overrides -------------------------------------------
+
+def _collect_segment_branches(
+    *,
+    feature_id: int,
+    segments: Iterable[SegmentModel],
+    segment_targeting: dict[int, JsonLogic | None],
+    segment_keys: dict[int, str],
+    segment_override_variants: dict[int, str],
+) -> list[tuple[JsonLogic, str]]:
     # Higher priority (lower numeric value) wins; default to insertion
     # order when priority is missing.
-    segment_branches: list[tuple[JsonLogic, str]] = []
-    indexed_segments = list(segments)
-    indexed_segments.sort(
+    branches: list[tuple[JsonLogic, str]] = []
+    indexed_segments = sorted(
+        segments,
         key=lambda s: _segment_override_priority(s, feature_id),
     )
     for segment in indexed_segments:
@@ -286,7 +287,42 @@ def _build_targeting(
         segment_logic: JsonLogic = (
             {"$ref": shared_key} if shared_key is not None else targeting
         )
-        segment_branches.append((segment_logic, variant))
+        branches.append((segment_logic, variant))
+    return branches
+
+
+def _build_targeting(
+    *,
+    feature_state: FeatureStateModel,
+    feature_key: str,
+    segments: Iterable[SegmentModel],
+    segment_targeting: dict[int, JsonLogic | None],
+    segment_keys: dict[int, str],
+    identity_overrides: Iterable[IdentityModel],
+    identity_override_limit: int,
+    control_target: Any,
+    segment_override_variants: dict[int, str],
+    identity_override_variants: dict[str, str],
+    warnings: list[TranslationWarning],
+) -> JsonLogic | None:
+    feature_id = feature_state.feature.id
+
+    # Identity overrides take highest priority, then segment overrides.
+    identity_branches = _collect_identity_branches(
+        feature_id=feature_id,
+        feature_key=feature_key,
+        identity_overrides=identity_overrides,
+        identity_override_variants=identity_override_variants,
+        identity_override_limit=identity_override_limit,
+        warnings=warnings,
+    )
+    segment_branches = _collect_segment_branches(
+        feature_id=feature_id,
+        segments=segments,
+        segment_targeting=segment_targeting,
+        segment_keys=segment_keys,
+        segment_override_variants=segment_override_variants,
+    )
 
     fallback: Any = control_target
 

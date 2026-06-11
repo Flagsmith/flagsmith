@@ -27,6 +27,35 @@ from util.engine_models.segments.models import SegmentModel
 WARNING_TYPE_MISMATCH = "type_mismatch"
 
 
+def _ingest_value(value: Any, seen: dict[str, Any]) -> None:
+    type_ = _flagd_type(value)
+    if type_ is None or type_ in seen:
+        return
+    seen[type_] = value
+
+
+def _ingest_feature_state(fs: FeatureStateModel, seen: dict[str, Any]) -> None:
+    _ingest_value(fs.feature_state_value, seen)
+    for mv_value in fs.multivariate_feature_state_values:
+        _ingest_value(mv_value.multivariate_feature_option.value, seen)
+
+
+def _iter_override_feature_states(
+    feature_id: int,
+    *,
+    segments: Iterable[SegmentModel],
+    identity_overrides: Iterable[IdentityModel],
+) -> Iterable[FeatureStateModel]:
+    for segment in segments:
+        for fs in segment.feature_states:
+            if fs.feature.id == feature_id:
+                yield fs
+    for identity in identity_overrides:
+        for fs in identity.identity_features:
+            if fs.feature.id == feature_id:
+                yield fs
+
+
 def _flagd_type(value: Any) -> str | None:
     """
     Bucket a Python value into one of flagd's typed-flag categories.
@@ -66,26 +95,11 @@ def detect_type_mismatch(
     feature_id = feature_state.feature.id
     seen: dict[str, Any] = {}
 
-    def _ingest(value: Any) -> None:
-        type_ = _flagd_type(value)
-        if type_ is None or type_ in seen:
-            return
-        seen[type_] = value
-
-    def _ingest_feature_state(fs: FeatureStateModel) -> None:
-        _ingest(fs.feature_state_value)
-        for mv_value in fs.multivariate_feature_state_values:
-            _ingest(mv_value.multivariate_feature_option.value)
-
-    _ingest_feature_state(feature_state)
-    for segment in segments:
-        for fs in segment.feature_states:
-            if fs.feature.id == feature_id:
-                _ingest_feature_state(fs)
-    for identity in identity_overrides:
-        for fs in identity.identity_features:
-            if fs.feature.id == feature_id:
-                _ingest_feature_state(fs)
+    _ingest_feature_state(feature_state, seen)
+    for fs in _iter_override_feature_states(
+        feature_id, segments=segments, identity_overrides=identity_overrides
+    ):
+        _ingest_feature_state(fs, seen)
 
     if len(seen) <= 1:
         return []

@@ -7,6 +7,7 @@ work against the same data shape that the SDK environment-document
 endpoint already produces.
 """
 
+from collections.abc import Callable
 from typing import Any
 
 from flag_engine.segments import constants as op
@@ -21,9 +22,15 @@ from integrations.flagd.types import JsonLogic
 from util.engine_models.segments.models import SegmentConditionModel
 
 _SEMVER_SUFFIX = ":semver"
-_SEMVER_OPERATOR_MAP = {
+_SEMVER_OPERATOR_MAP: dict[str, str] = {
     op.EQUAL: "=",
     op.NOT_EQUAL: "!=",
+    op.GREATER_THAN: ">",
+    op.GREATER_THAN_INCLUSIVE: ">=",
+    op.LESS_THAN: "<",
+    op.LESS_THAN_INCLUSIVE: "<=",
+}
+_COMPARISON_OPERATOR_MAP: dict[str, str] = {
     op.GREATER_THAN: ">",
     op.GREATER_THAN_INCLUSIVE: ">=",
     op.LESS_THAN: "<",
@@ -61,81 +68,128 @@ def condition_to_jsonlogic(
     if _is_semver_value(raw_value):
         return _semver_jsonlogic(property_name, operator, raw_value)
 
-    if operator in (op.EQUAL, op.NOT_EQUAL):
-        jsonlogic_op = "==" if operator == op.EQUAL else "!="
-        return {jsonlogic_op: [_var(property_name), _coerce_value(raw_value)]}
+    handler = _OPERATOR_HANDLERS.get(operator)
+    if handler is None:
+        raise UntranslatableConditionError(WARNING_UNKNOWN_OPERATOR, operator=operator)
+    return handler(property_name, operator, raw_value, feature_key)
 
-    if operator in (
-        op.GREATER_THAN,
-        op.GREATER_THAN_INCLUSIVE,
-        op.LESS_THAN,
-        op.LESS_THAN_INCLUSIVE,
-    ):
-        jsonlogic_op = {
-            op.GREATER_THAN: ">",
-            op.GREATER_THAN_INCLUSIVE: ">=",
-            op.LESS_THAN: "<",
-            op.LESS_THAN_INCLUSIVE: "<=",
-        }[operator]
-        try:
-            numeric_value: Any = float(raw_value)
-            if numeric_value.is_integer():
-                numeric_value = int(numeric_value)
-        except (TypeError, ValueError) as exc:
-            raise UntranslatableConditionError(
-                WARNING_MALFORMED_VALUE, operator=operator
-            ) from exc
-        return {jsonlogic_op: [_var(property_name), numeric_value]}
 
-    if operator == op.CONTAINS:
-        return {"in": [raw_value, _var(property_name)]}
+def _equality_jsonlogic(
+    property_name: str | None,
+    operator: str,
+    raw_value: str,
+    feature_key: str | None,
+) -> JsonLogic:
+    jsonlogic_op = "==" if operator == op.EQUAL else "!="
+    return {jsonlogic_op: [_var(property_name), _coerce_value(raw_value)]}
+
+
+def _comparison_jsonlogic(
+    property_name: str | None,
+    operator: str,
+    raw_value: str,
+    feature_key: str | None,
+) -> JsonLogic:
+    jsonlogic_op = _COMPARISON_OPERATOR_MAP[operator]
+    try:
+        numeric_value: Any = float(raw_value)
+        if numeric_value.is_integer():
+            numeric_value = int(numeric_value)
+    except (TypeError, ValueError) as exc:
+        raise UntranslatableConditionError(
+            WARNING_MALFORMED_VALUE, operator=operator
+        ) from exc
+    return {jsonlogic_op: [_var(property_name), numeric_value]}
+
+
+def _contains_jsonlogic(
+    property_name: str | None,
+    operator: str,
+    raw_value: str,
+    feature_key: str | None,
+) -> JsonLogic:
+    contains: JsonLogic = {"in": [raw_value, _var(property_name)]}
     if operator == op.NOT_CONTAINS:
-        return {"!": {"in": [raw_value, _var(property_name)]}}
+        return {"!": contains}
+    return contains
 
-    if operator == op.IN:
-        members = [v for v in (m.strip() for m in raw_value.split(",")) if v]
-        return {"in": [_var(property_name), members]}
 
-    if operator == op.MODULO:
-        try:
-            divisor_str, remainder_str = raw_value.split("|", 1)
-            divisor: float = float(divisor_str)
-            remainder: float = float(remainder_str)
-        except ValueError as exc:
-            raise UntranslatableConditionError(
-                WARNING_MALFORMED_VALUE, operator=operator
-            ) from exc
-        return {"==": [{"%": [_var(property_name), divisor]}, remainder]}
+def _in_jsonlogic(
+    property_name: str | None,
+    operator: str,
+    raw_value: str,
+    feature_key: str | None,
+) -> JsonLogic:
+    members = [v for v in (m.strip() for m in raw_value.split(",")) if v]
+    return {"in": [_var(property_name), members]}
 
-    if operator == op.PERCENTAGE_SPLIT:
-        try:
-            threshold = float(raw_value)
-        except (TypeError, ValueError) as exc:
-            raise UntranslatableConditionError(
-                WARNING_MALFORMED_VALUE, operator=operator
-            ) from exc
-        # PERCENTAGE_SPLIT in Flagsmith means "this identity falls under X%".
-        # Express as a fractional bucket: targetingKey lands in the "in"
-        # bucket of size `threshold` or the "out" bucket of size 100 - threshold.
-        bucket_seed_parts: list[Any] = [{"var": "targetingKey"}]
-        if feature_key:
-            bucket_seed_parts.append(feature_key)
-        return {
-            "==": [
-                {
-                    "fractional": [
-                        {"cat": bucket_seed_parts}
-                        if feature_key
-                        else {"var": "targetingKey"},
-                        ["in", threshold],
-                        ["out", max(0.0, 100.0 - threshold)],
-                    ]
-                },
-                "in",
-            ]
-        }
 
-    raise UntranslatableConditionError(WARNING_UNKNOWN_OPERATOR, operator=operator)
+def _modulo_jsonlogic(
+    property_name: str | None,
+    operator: str,
+    raw_value: str,
+    feature_key: str | None,
+) -> JsonLogic:
+    try:
+        divisor_str, remainder_str = raw_value.split("|", 1)
+        divisor: float = float(divisor_str)
+        remainder: float = float(remainder_str)
+    except ValueError as exc:
+        raise UntranslatableConditionError(
+            WARNING_MALFORMED_VALUE, operator=operator
+        ) from exc
+    return {"==": [{"%": [_var(property_name), divisor]}, remainder]}
+
+
+def _percentage_split_jsonlogic(
+    property_name: str | None,
+    operator: str,
+    raw_value: str,
+    feature_key: str | None,
+) -> JsonLogic:
+    try:
+        threshold = float(raw_value)
+    except (TypeError, ValueError) as exc:
+        raise UntranslatableConditionError(
+            WARNING_MALFORMED_VALUE, operator=operator
+        ) from exc
+    # PERCENTAGE_SPLIT in Flagsmith means "this identity falls under X%".
+    # Express as a fractional bucket: targetingKey lands in the "in"
+    # bucket of size `threshold` or the "out" bucket of size 100 - threshold.
+    bucket_seed_parts: list[Any] = [{"var": "targetingKey"}]
+    if feature_key:
+        bucket_seed_parts.append(feature_key)
+    return {
+        "==": [
+            {
+                "fractional": [
+                    {"cat": bucket_seed_parts}
+                    if feature_key
+                    else {"var": "targetingKey"},
+                    ["in", threshold],
+                    ["out", max(0.0, 100.0 - threshold)],
+                ]
+            },
+            "in",
+        ]
+    }
+
+
+_OPERATOR_HANDLERS: dict[
+    str, Callable[[str | None, str, str, str | None], JsonLogic]
+] = {
+    op.EQUAL: _equality_jsonlogic,
+    op.NOT_EQUAL: _equality_jsonlogic,
+    op.GREATER_THAN: _comparison_jsonlogic,
+    op.GREATER_THAN_INCLUSIVE: _comparison_jsonlogic,
+    op.LESS_THAN: _comparison_jsonlogic,
+    op.LESS_THAN_INCLUSIVE: _comparison_jsonlogic,
+    op.CONTAINS: _contains_jsonlogic,
+    op.NOT_CONTAINS: _contains_jsonlogic,
+    op.IN: _in_jsonlogic,
+    op.MODULO: _modulo_jsonlogic,
+    op.PERCENTAGE_SPLIT: _percentage_split_jsonlogic,
+}
 
 
 def _var(property_name: str | None) -> JsonLogic:
