@@ -1,9 +1,7 @@
 import React, { FC, ReactNode, Ref, useRef } from 'react'
-import cn from 'classnames'
 import Input, { InputMethods, InputProps } from './Input'
 import Utils from 'common/utils/utils'
-import FieldLabel from './FieldLabel'
-import FieldError from './FieldError'
+import Field from './Field'
 
 interface InputFieldProps extends Omit<InputProps, 'isValid'> {
   // Field label; wired to the input via htmlFor/id.
@@ -20,9 +18,9 @@ interface InputFieldProps extends Omit<InputProps, 'isValid'> {
   ref?: Ref<InputMethods>
 }
 
-// Composes FieldLabel + Input + FieldError into one labelled, validated field —
-// the typed successor to InputGroup. Presentational and library-agnostic: pass
-// `error` and it surfaces both the invalid styling and the message.
+// Field specialised to Input — the typed successor to InputGroup. Presentational
+// and library-agnostic: pass `error` and it surfaces both the invalid styling
+// and the message.
 const InputField: FC<InputFieldProps> = ({
   error,
   id,
@@ -36,12 +34,14 @@ const InputField: FC<InputFieldProps> = ({
   const generatedId = useRef(Utils.GUID()).current
   const fieldId = id ?? generatedId
   return (
-    <div className={cn('form-group', wrapperClassName)}>
-      {label && (
-        <FieldLabel htmlFor={fieldId} required={required} tooltip={tooltip}>
-          {label}
-        </FieldLabel>
-      )}
+    <Field
+      label={label}
+      error={error}
+      required={required}
+      tooltip={tooltip}
+      htmlFor={fieldId}
+      className={wrapperClassName}
+    >
       <Input
         {...inputProps}
         id={fieldId}
@@ -52,8 +52,7 @@ const InputField: FC<InputFieldProps> = ({
         isValid={!error}
         autoValidate={!!error}
       />
-      <FieldError error={error} />
-    </div>
+    </Field>
   )
 }
 
