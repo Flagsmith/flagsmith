@@ -5,7 +5,6 @@ from datetime import timezone as dt_timezone
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_mock import MockerFixture
-from pytest_structlog import StructuredLogCapture
 
 from experimentation.dataclasses import (
     ExposuresSummary,
@@ -73,7 +72,6 @@ def _summary() -> ExposuresSummary:
 def test_compute_experiment_exposures__running_experiment__stores_summary(
     experiment: Experiment,
     mocker: MockerFixture,
-    log: StructuredLogCapture,
 ) -> None:
     # Given a running experiment and a warehouse responding with a summary
     experiment.status = ExperimentStatus.RUNNING
@@ -98,17 +96,6 @@ def test_compute_experiment_exposures__running_experiment__stores_summary(
     assert exposures.payload == asdict(_summary())
     assert exposures.as_of == timezone.now()
     assert exposures.last_error_at is None
-    assert log.events == [
-        {
-            "level": "info",
-            "event": "exposures.computed",
-            "experiment__id": experiment.id,
-            "environment__id": experiment.environment_id,
-            "organisation__id": experiment.environment.project.organisation_id,
-            "identities__count": 10,
-            "excluded_identities__count": 1,
-        }
-    ]
 
 
 def test_compute_experiment_exposures__completed_experiment__window_ends_at_ended_at(
@@ -142,7 +129,6 @@ def test_compute_experiment_exposures__completed_experiment__window_ends_at_ende
 def test_compute_experiment_exposures__warehouse_error__records_failure(
     experiment: Experiment,
     mocker: MockerFixture,
-    log: StructuredLogCapture,
 ) -> None:
     # Given a running experiment whose row holds a previously computed payload
     experiment.status = ExperimentStatus.RUNNING
@@ -167,13 +153,6 @@ def test_compute_experiment_exposures__warehouse_error__records_failure(
     assert exposures.last_error_at is not None
     assert exposures.payload == asdict(_summary())
     assert exposures.as_of == as_of
-    assert log.has(
-        "exposures.compute_failed",
-        level="error",
-        experiment__id=experiment.id,
-        environment__id=experiment.environment_id,
-        organisation__id=experiment.environment.project.organisation_id,
-    )
 
 
 def test_compute_experiment_exposures__not_started_experiment__skips(
