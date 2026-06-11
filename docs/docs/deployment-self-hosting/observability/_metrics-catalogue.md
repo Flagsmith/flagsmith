@@ -37,23 +37,6 @@ Results of cache retrieval for environment document. `result` label is either `h
 Labels:
  - `result`
 
-### `flagsmith_experimentation_exposures_computation_duration_seconds`
-
-Histogram.
-
-Duration of one experiment exposures summary computation, dominated by the ClickHouse exposure-buckets query.
-
-Labels:
-
-### `flagsmith_experimentation_exposures_computations`
-
-Counter.
-
-Total experiment exposures summary computations across all experiments, labelled by result (success or failure).
-
-Labels:
- - `result`
-
 ### `flagsmith_http_server_request_duration_seconds`
 
 Histogram.

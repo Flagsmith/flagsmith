@@ -9,10 +9,6 @@ from task_processor.decorators import (
 )
 
 from experimentation import ingestion_sync_service
-from experimentation.metrics import (
-    flagsmith_experimentation_exposures_computation_duration_seconds,
-    flagsmith_experimentation_exposures_computations_total,
-)
 
 logger = structlog.get_logger("experimentation")
 
@@ -48,25 +44,18 @@ def compute_experiment_exposures(experiment_id: int) -> None:
     exposures, _ = ExperimentExposures.objects.get_or_create(experiment=experiment)
     as_of = experiment.ended_at or timezone.now()
     try:
-        with flagsmith_experimentation_exposures_computation_duration_seconds.time():
-            summary = compute_exposures_summary(
-                environment_key=experiment.environment.api_key,
-                feature_name=experiment.feature.name,
-                window_start=experiment.started_at,
-                window_end=as_of,
-            )
+        summary = compute_exposures_summary(
+            environment_key=experiment.environment.api_key,
+            feature_name=experiment.feature.name,
+            window_start=experiment.started_at,
+            window_end=as_of,
+        )
     except Exception as exc:
         exposures.record_failure()
-        flagsmith_experimentation_exposures_computations_total.labels(
-            result="failure"
-        ).inc()
         log.error("exposures.compute_failed", exc_info=exc)
         return
 
     exposures.record_refresh(summary, as_of)
-    flagsmith_experimentation_exposures_computations_total.labels(
-        result="success"
-    ).inc()
     log.info(
         "exposures.computed",
         identities__count=sum(

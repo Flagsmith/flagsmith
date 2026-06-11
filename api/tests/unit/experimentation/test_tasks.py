@@ -2,7 +2,6 @@ from dataclasses import asdict
 from datetime import datetime
 from datetime import timezone as dt_timezone
 
-import prometheus_client
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_django.fixtures import SettingsWrapper
@@ -73,16 +72,6 @@ def _summary() -> ExposuresSummary:
     )
 
 
-def _computations_count(result: str) -> float:
-    return (
-        prometheus_client.REGISTRY.get_sample_value(
-            "flagsmith_experimentation_exposures_computations_total",
-            {"result": result},
-        )
-        or 0.0
-    )
-
-
 @freeze_time("2026-06-11T12:00:00Z")
 def test_compute_experiment_exposures__running_experiment__stores_summary(
     experiment: Experiment,
@@ -97,7 +86,6 @@ def test_compute_experiment_exposures__running_experiment__stores_summary(
         "experimentation.services.compute_exposures_summary",
         return_value=_summary(),
     )
-    success_count = _computations_count("success")
 
     # When
     compute_experiment_exposures(experiment_id=experiment.id)
@@ -113,7 +101,6 @@ def test_compute_experiment_exposures__running_experiment__stores_summary(
     assert exposures.payload == asdict(_summary())
     assert exposures.as_of == timezone.now()
     assert exposures.last_error_at is None
-    assert _computations_count("success") == success_count + 1
     assert log.events == [
         {
             "level": "info",
@@ -174,7 +161,6 @@ def test_compute_experiment_exposures__warehouse_error__records_failure(
         "experimentation.services.compute_exposures_summary",
         side_effect=Exception("warehouse unreachable"),
     )
-    failure_count = _computations_count("failure")
 
     # When
     compute_experiment_exposures(experiment_id=experiment.id)
@@ -184,7 +170,6 @@ def test_compute_experiment_exposures__warehouse_error__records_failure(
     assert exposures.last_error_at is not None
     assert exposures.payload == asdict(_summary())
     assert exposures.as_of == as_of
-    assert _computations_count("failure") == failure_count + 1
     assert log.has(
         "exposures.compute_failed",
         level="error",
