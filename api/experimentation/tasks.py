@@ -21,11 +21,12 @@ def delete_environment_key_from_ingestion(environment_api_key: str) -> None:
 
 @register_task_handler()
 def compute_experiment_exposures(experiment_id: int) -> None:
-    experiment = Experiment.objects.select_related(
-        "environment__project",
-        "feature",
-    ).get(id=experiment_id)
-    if not experiment.started_at:
+    experiment = (
+        Experiment.objects.select_related("environment__project", "feature")
+        .filter(id=experiment_id)
+        .first()
+    )
+    if experiment is None or not experiment.started_at:
         return
 
     log = logger.bind(

@@ -143,6 +143,7 @@ class ExperimentExposures(models.Model):
         models.JSONField(null=True, blank=True)
     )
     last_error_at = models.DateTimeField(null=True, blank=True)
+    refresh_requested_at = models.DateTimeField(null=True, blank=True)
 
     def record_refresh(self, summary: "ExposuresSummary", as_of: datetime) -> None:
         self.payload = asdict(summary)
@@ -153,6 +154,10 @@ class ExperimentExposures(models.Model):
     def record_failure(self) -> None:
         self.last_error_at = timezone.now()
         self.save(update_fields=["last_error_at"])
+
+    def record_refresh_request(self) -> None:
+        self.refresh_requested_at = timezone.now()
+        self.save(update_fields=["refresh_requested_at"])
 
 
 class MetricAggregation(models.TextChoices):

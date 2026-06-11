@@ -4,6 +4,7 @@ from typing import Any
 from django.db import IntegrityError
 from django.db.models import Count, Prefetch, Q, QuerySet
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -14,8 +15,10 @@ from rest_framework.viewsets import GenericViewSet
 
 from app.pagination import CustomPagination
 from environments.views import NestedEnvironmentViewSet
+from experimentation.constants import EXPOSURES_REFRESH_MIN_INTERVAL
 from experimentation.models import (
     Experiment,
+    ExperimentExposures,
     ExperimentMetric,
     ExperimentStatus,
     Metric,
@@ -290,6 +293,26 @@ class ExperimentViewSet(
                 {"detail": "Cannot refresh exposures before the experiment starts."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        exposures, _ = ExperimentExposures.objects.get_or_create(experiment=experiment)
+        if (
+            experiment.ended_at is not None
+            and exposures.as_of is not None
+            and exposures.as_of >= experiment.ended_at
+        ):
+            return Response(
+                {"detail": "Exposures are final for this completed experiment."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if (
+            exposures.refresh_requested_at is not None
+            and timezone.now() - exposures.refresh_requested_at
+            < EXPOSURES_REFRESH_MIN_INTERVAL
+        ):
+            return Response(
+                {"detail": "A refresh was requested recently. Try again later."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+        exposures.record_refresh_request()
         compute_experiment_exposures.delay(kwargs={"experiment_id": experiment.id})
         return Response(status=status.HTTP_202_ACCEPTED)
 

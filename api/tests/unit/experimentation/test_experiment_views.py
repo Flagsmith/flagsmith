@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 from django.db import IntegrityError
 from django.urls import reverse
+from django.utils import timezone
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -14,7 +15,10 @@ from rest_framework.test import APIClient
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
-from experimentation.constants import EXPERIMENT_FLAG
+from experimentation.constants import (
+    EXPERIMENT_FLAG,
+    EXPOSURES_REFRESH_MIN_INTERVAL,
+)
 from experimentation.models import (
     Experiment,
     ExperimentExposures,
@@ -690,6 +694,7 @@ def test_exposures__computed_row__returns_row(
         "exposures": {
             "as_of": "2026-06-11T12:00:00Z",
             "last_error_at": None,
+            "refresh_requested_at": None,
             "payload": payload,
         }
     }
@@ -740,6 +745,7 @@ def test_exposures__failed_refresh__returns_error_marker_with_last_payload(
         "exposures": {
             "as_of": "2026-06-11T11:00:00Z",
             "last_error_at": "2026-06-11T12:00:00Z",
+            "refresh_requested_at": None,
             "payload": payload,
         }
     }
@@ -799,6 +805,125 @@ def test_refresh_exposures__started_experiment__enqueues_compute(
     mock_compute.delay.assert_called_once_with(
         kwargs={"experiment_id": experiment.id},
     )
+    exposures = ExperimentExposures.objects.get(experiment=experiment)
+    assert exposures.refresh_requested_at is not None
+
+
+def test_refresh_exposures__requested_recently__returns_429(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given a refresh was requested moments ago
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentExposures.objects.create(
+        experiment=experiment,
+        refresh_requested_at=timezone.now(),
+    )
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_exposures")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-exposures")
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+    mock_compute.delay.assert_not_called()
+
+
+def test_refresh_exposures__last_request_beyond_interval__enqueues_compute(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given the last refresh request is older than the minimum interval
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentExposures.objects.create(
+        experiment=experiment,
+        refresh_requested_at=timezone.now() - EXPOSURES_REFRESH_MIN_INTERVAL,
+    )
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_exposures")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-exposures")
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    mock_compute.delay.assert_called_once()
+
+
+def test_refresh_exposures__completed_with_final_row__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given a completed experiment whose row already covers the full window
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
+    experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentExposures.objects.create(
+        experiment=experiment,
+        as_of=experiment.ended_at,
+        payload={"excluded_identities": 0},
+    )
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_exposures")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-exposures")
+    )
+
+    # Then the final data cannot be recomputed away (events expire in the
+    # warehouse after 90 days)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    mock_compute.delay.assert_not_called()
+
+
+def test_refresh_exposures__completed_with_stale_row__enqueues_compute(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given a completed experiment last computed before it ended
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
+    experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentExposures.objects.create(
+        experiment=experiment,
+        as_of=datetime(2026, 6, 7, tzinfo=dt_timezone.utc),
+        payload={"excluded_identities": 0},
+    )
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_exposures")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-exposures")
+    )
+
+    # Then the finalising refresh is allowed
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    mock_compute.delay.assert_called_once()
 
 
 def test_refresh_exposures__not_started_experiment__returns_400(

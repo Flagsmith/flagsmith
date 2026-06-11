@@ -191,3 +191,21 @@ def test_compute_experiment_exposures__not_started_experiment__skips(
     # Then nothing is queried or stored
     mock_compute.assert_not_called()
     assert not ExperimentExposures.objects.filter(experiment=experiment).exists()
+
+
+def test_compute_experiment_exposures__experiment_deleted_after_enqueue__skips(
+    experiment: Experiment,
+    mocker: MockerFixture,
+) -> None:
+    # Given the experiment is deleted between enqueue and execution
+    experiment_id = experiment.id
+    experiment.delete()
+    mock_compute = mocker.patch(
+        "experimentation.tasks.compute_exposures_summary",
+    )
+
+    # When
+    compute_experiment_exposures(experiment_id=experiment_id)
+
+    # Then the task exits without raising into the task processor
+    mock_compute.assert_not_called()

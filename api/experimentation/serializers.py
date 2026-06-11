@@ -251,4 +251,4 @@ class ExperimentListSerializer(ExperimentSerializer):
 class ExperimentExposuresSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = ExperimentExposures
-        fields = ("as_of", "last_error_at", "payload")
+        fields = ("as_of", "last_error_at", "refresh_requested_at", "payload")
