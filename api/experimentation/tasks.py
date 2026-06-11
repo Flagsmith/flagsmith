@@ -9,6 +9,12 @@ from task_processor.decorators import (
 )
 
 from experimentation import ingestion_sync_service
+from experimentation.models import (
+    Experiment,
+    ExperimentExposures,
+    ExperimentStatus,
+)
+from experimentation.services import compute_exposures_summary
 
 logger = structlog.get_logger("experimentation")
 
@@ -25,10 +31,6 @@ def delete_environment_key_from_ingestion(environment_api_key: str) -> None:
 
 @register_task_handler()
 def compute_experiment_exposures(experiment_id: int) -> None:
-    # Imported lazily: models imports this module at load time.
-    from experimentation.models import Experiment, ExperimentExposures
-    from experimentation.services import compute_exposures_summary
-
     experiment = Experiment.objects.select_related(
         "environment__project",
         "feature",
@@ -69,9 +71,6 @@ def compute_experiment_exposures(experiment_id: int) -> None:
     run_every=timedelta(minutes=settings.EXPERIMENTATION_EXPOSURES_REFRESH_MINUTES),
 )
 def refresh_running_experiment_exposures() -> None:
-    # Imported lazily: models imports this module at load time.
-    from experimentation.models import Experiment, ExperimentStatus
-
     if not settings.EXPERIMENTATION_CLICKHOUSE_URL:
         return
 

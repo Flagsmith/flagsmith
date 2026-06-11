@@ -661,7 +661,7 @@ def test_action__complete__enqueues_final_exposures_refresh(
     experiment.status = ExperimentStatus.RUNNING
     experiment.save()
     mock_compute = mocker.patch(
-        "experimentation.services.compute_experiment_exposures",
+        "experimentation.tasks.compute_experiment_exposures",
     )
 
     # When
@@ -684,7 +684,7 @@ def test_action__start__does_not_enqueue_exposures_refresh(
     # Given
     enable_features(EXPERIMENT_FLAG)
     mock_compute = mocker.patch(
-        "experimentation.services.compute_experiment_exposures",
+        "experimentation.tasks.compute_experiment_exposures",
     )
 
     # When

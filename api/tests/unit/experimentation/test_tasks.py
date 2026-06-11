@@ -83,7 +83,7 @@ def test_compute_experiment_exposures__running_experiment__stores_summary(
     experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
     experiment.save()
     mock_compute = mocker.patch(
-        "experimentation.services.compute_exposures_summary",
+        "experimentation.tasks.compute_exposures_summary",
         return_value=_summary(),
     )
 
@@ -124,7 +124,7 @@ def test_compute_experiment_exposures__completed_experiment__window_ends_at_ende
     experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
     experiment.save()
     mock_compute = mocker.patch(
-        "experimentation.services.compute_exposures_summary",
+        "experimentation.tasks.compute_exposures_summary",
         return_value=_summary(),
     )
 
@@ -158,7 +158,7 @@ def test_compute_experiment_exposures__warehouse_error__records_failure(
         payload=asdict(_summary()),
     )
     mocker.patch(
-        "experimentation.services.compute_exposures_summary",
+        "experimentation.tasks.compute_exposures_summary",
         side_effect=Exception("warehouse unreachable"),
     )
 
@@ -185,7 +185,7 @@ def test_compute_experiment_exposures__not_started_experiment__skips(
 ) -> None:
     # Given a created experiment that has never started
     mock_compute = mocker.patch(
-        "experimentation.services.compute_exposures_summary",
+        "experimentation.tasks.compute_exposures_summary",
     )
 
     # When

@@ -82,7 +82,7 @@ Attributes:
 ### `experimentation.exposures.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:55`
+ - `api/experimentation/tasks.py:57`
 
 Attributes:
  - `environment.id`
@@ -93,7 +93,7 @@ Attributes:
 ### `experimentation.exposures.computed`
 
 Logged at `info` from:
- - `api/experimentation/tasks.py:59`
+ - `api/experimentation/tasks.py:61`
 
 Attributes:
  - `environment.id`
@@ -468,7 +468,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:348`
+ - `api/experimentation/services.py:349`
 
 Attributes:
  - `environment.id`
@@ -477,7 +477,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:328`
+ - `api/experimentation/services.py:329`
 
 Attributes:
  - `environment.id`
