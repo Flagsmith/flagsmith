@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from datetime import timezone as dt_timezone
 from typing import TYPE_CHECKING
 
@@ -8,6 +8,7 @@ import pytest
 from django.db import IntegrityError
 from django.urls import reverse
 from django.utils import timezone
+from freezegun import freeze_time
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -809,21 +810,22 @@ def test_refresh_exposures__started_experiment__enqueues_compute(
     assert exposures.refresh_requested_at is not None
 
 
-def test_refresh_exposures__requested_recently__returns_429(
+@freeze_time("2026-06-11T12:00:00Z")
+def test_refresh_exposures__requested_recently__returns_429_with_retry_after(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
     enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
-    # Given a refresh was requested moments ago
+    # Given a refresh was requested a minute ago
     enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.RUNNING
     experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
     experiment.save()
     ExperimentExposures.objects.create(
         experiment=experiment,
-        refresh_requested_at=timezone.now(),
+        refresh_requested_at=timezone.now() - timedelta(minutes=1),
     )
     mock_compute = mocker.patch("experimentation.views.compute_experiment_exposures")
 
@@ -832,8 +834,9 @@ def test_refresh_exposures__requested_recently__returns_429(
         _action_url(environment, experiment, "refresh-exposures")
     )
 
-    # Then
+    # Then the client is told when to retry
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+    assert response.headers["Retry-After"] == "240"
     mock_compute.delay.assert_not_called()
 
 

@@ -35,6 +35,9 @@ def compute_experiment_exposures(experiment_id: int) -> None:
         organisation__id=experiment.environment.project.organisation_id,
     )
     exposures, _ = ExperimentExposures.objects.get_or_create(experiment=experiment)
+    if exposures.is_final:
+        return
+
     as_of = experiment.ended_at or timezone.now()
     try:
         summary = compute_exposures_summary(

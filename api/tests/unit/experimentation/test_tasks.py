@@ -193,6 +193,33 @@ def test_compute_experiment_exposures__not_started_experiment__skips(
     assert not ExperimentExposures.objects.filter(experiment=experiment).exists()
 
 
+def test_compute_experiment_exposures__final_row__skips_without_recompute(
+    experiment: Experiment,
+    mocker: MockerFixture,
+) -> None:
+    # Given a completed experiment whose row already covers the full window
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
+    experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentExposures.objects.create(
+        experiment=experiment,
+        as_of=experiment.ended_at,
+        payload=asdict(_summary()),
+    )
+    mock_compute = mocker.patch(
+        "experimentation.tasks.compute_exposures_summary",
+    )
+
+    # When
+    compute_experiment_exposures(experiment_id=experiment.id)
+
+    # Then the final payload is left untouched regardless of the caller
+    mock_compute.assert_not_called()
+    exposures = ExperimentExposures.objects.get(experiment=experiment)
+    assert exposures.payload == asdict(_summary())
+
+
 def test_compute_experiment_exposures__experiment_deleted_after_enqueue__skips(
     experiment: Experiment,
     mocker: MockerFixture,

@@ -145,6 +145,14 @@ class ExperimentExposures(models.Model):
     last_error_at = models.DateTimeField(null=True, blank=True)
     refresh_requested_at = models.DateTimeField(null=True, blank=True)
 
+    @property
+    def is_final(self) -> bool:
+        # Recomputing a final row can only lose data: warehouse events expire.
+        ended_at = self.experiment.ended_at
+        return (
+            ended_at is not None and self.as_of is not None and self.as_of >= ended_at
+        )
+
     def record_refresh(self, summary: "ExposuresSummary", as_of: datetime) -> None:
         self.payload = asdict(summary)
         self.as_of = as_of

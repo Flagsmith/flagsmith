@@ -1,4 +1,5 @@
 import logging
+import math
 from typing import Any
 
 from django.db import IntegrityError
@@ -293,24 +294,27 @@ class ExperimentViewSet(
                 {"detail": "Cannot refresh exposures before the experiment starts."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        exposures, _ = ExperimentExposures.objects.get_or_create(experiment=experiment)
-        if (
-            experiment.ended_at is not None
-            and exposures.as_of is not None
-            and exposures.as_of >= experiment.ended_at
-        ):
+        exposures = ExperimentExposures.objects.filter(experiment=experiment).first()
+        if exposures is not None and exposures.is_final:
             return Response(
                 {"detail": "Exposures are final for this completed experiment."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if (
-            exposures.refresh_requested_at is not None
-            and timezone.now() - exposures.refresh_requested_at
-            < EXPOSURES_REFRESH_MIN_INTERVAL
-        ):
-            return Response(
-                {"detail": "A refresh was requested recently. Try again later."},
-                status=status.HTTP_429_TOO_MANY_REQUESTS,
+        if exposures is not None and exposures.refresh_requested_at is not None:
+            retry_after = EXPOSURES_REFRESH_MIN_INTERVAL - (
+                timezone.now() - exposures.refresh_requested_at
+            )
+            if retry_after.total_seconds() > 0:
+                return Response(
+                    {"detail": "A refresh was requested recently. Try again later."},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS,
+                    headers={
+                        "Retry-After": str(math.ceil(retry_after.total_seconds()))
+                    },
+                )
+        if exposures is None:
+            exposures, _ = ExperimentExposures.objects.get_or_create(
+                experiment=experiment
             )
         exposures.record_refresh_request()
         compute_experiment_exposures.delay(kwargs={"experiment_id": experiment.id})
