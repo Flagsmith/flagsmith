@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import math
 import typing
-from datetime import timedelta
 from functools import lru_cache
 
 import structlog
@@ -153,64 +151,40 @@ def compute_exposures_summary(
         window_end=window_end,
         granularity=granularity,
     )
-    return build_exposures_summary(
-        buckets,
-        window_start=window_start,
-        window_end=window_end,
-        granularity=granularity,
-    )
+    return build_exposures_summary(buckets, granularity=granularity)
 
 
 def build_exposures_summary(
     buckets: Sequence[ExposureBucket],
     *,
-    window_start: datetime,
-    window_end: datetime,
     granularity: ExposureGranularity,
 ) -> ExposuresSummary:
-    included = [b for b in buckets if not b.quarantined]
     return ExposuresSummary(
-        total_identities=sum(b.first_exposed_identities for b in included),
         excluded_identities=sum(
             b.first_exposed_identities for b in buckets if b.quarantined
         ),
-        days_of_data=max(0, math.ceil((window_end - window_start) / timedelta(days=1))),
-        identities_by_variant=_identities_by_variant(included),
         timeseries=ExposuresTimeseries(
             granularity=granularity,
-            points=_cumulative_points(included),
+            points=_timeseries_points([b for b in buckets if not b.quarantined]),
         ),
     )
 
 
-def _identities_by_variant(buckets: Sequence[ExposureBucket]) -> dict[str, int]:
-    identities: dict[str, int] = {}
-    for b in buckets:
-        identities[b.variant] = (
-            identities.get(b.variant, 0) + b.first_exposed_identities
-        )
-    return identities
-
-
-def _cumulative_points(
+def _timeseries_points(
     buckets: Sequence[ExposureBucket],
 ) -> list[ExposuresTimeseriesPoint]:
-    running = dict.fromkeys({b.variant for b in buckets}, 0)
-    buckets_by_start: dict[datetime, list[ExposureBucket]] = {}
+    new_identities_by_bucket: dict[datetime, dict[str, int]] = {}
     for b in buckets:
-        buckets_by_start.setdefault(b.bucket, []).append(b)
-
-    points: list[ExposuresTimeseriesPoint] = []
-    for bucket_start in sorted(buckets_by_start):
-        for b in buckets_by_start[bucket_start]:
-            running[b.variant] += b.first_exposed_identities
-        points.append(
-            ExposuresTimeseriesPoint(
-                bucket=bucket_start.isoformat(),
-                cumulative_identities=dict(running),
-            )
+        new_identities_by_bucket.setdefault(b.bucket, {})[b.variant] = (
+            b.first_exposed_identities
         )
-    return points
+    return [
+        ExposuresTimeseriesPoint(
+            bucket=bucket_start.isoformat(),
+            new_identities=new_identities_by_bucket[bucket_start],
+        )
+        for bucket_start in sorted(new_identities_by_bucket)
+    ]
 
 
 def _select_exposure_granularity(

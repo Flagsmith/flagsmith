@@ -21,7 +21,7 @@ class ExposureBucket:
 @dataclass(frozen=True)
 class ExposuresTimeseriesPoint:
     bucket: str
-    cumulative_identities: dict[str, int]
+    new_identities: dict[str, int]
 
 
 @dataclass(frozen=True)
@@ -32,8 +32,5 @@ class ExposuresTimeseries:
 
 @dataclass(frozen=True)
 class ExposuresSummary:
-    total_identities: int
     excluded_identities: int
-    days_of_data: int
-    identities_by_variant: dict[str, int]
     timeseries: ExposuresTimeseries

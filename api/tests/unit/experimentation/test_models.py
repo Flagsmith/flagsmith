@@ -60,16 +60,13 @@ def test_warehouse_connection__after_delete__enqueues_ingestion_delete_task(
 
 def _summary() -> ExposuresSummary:
     return ExposuresSummary(
-        total_identities=10,
         excluded_identities=1,
-        days_of_data=1,
-        identities_by_variant={"control": 10},
         timeseries=ExposuresTimeseries(
             granularity="hour",
             points=[
                 ExposuresTimeseriesPoint(
                     bucket="2026-06-01T00:00:00+00:00",
-                    cumulative_identities={"control": 10},
+                    new_identities={"control": 10},
                 )
             ],
         ),
@@ -92,16 +89,13 @@ def test_experiment_exposures__record_refresh__stores_payload_and_clears_error(
     # Then the summary is stored as plain JSON and the error marker is cleared
     exposures.refresh_from_db()
     assert exposures.payload == {
-        "total_identities": 10,
         "excluded_identities": 1,
-        "days_of_data": 1,
-        "identities_by_variant": {"control": 10},
         "timeseries": {
             "granularity": "hour",
             "points": [
                 {
                     "bucket": "2026-06-01T00:00:00+00:00",
-                    "cumulative_identities": {"control": 10},
+                    "new_identities": {"control": 10},
                 }
             ],
         },
