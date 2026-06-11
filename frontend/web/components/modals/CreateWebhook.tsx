@@ -4,6 +4,7 @@ import { Webhook } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import ErrorMessage from 'components/ErrorMessage'
 import Highlight from 'components/Highlight'
+import PasswordInput from 'components/base/forms/PasswordInput'
 import TestWebhook from 'components/TestWebhook'
 import ViewDocs from 'components/ViewDocs'
 import { FC, useState, useRef, ChangeEvent } from 'react'
@@ -111,13 +112,12 @@ const CreateWebhook: FC<CreateWebhookProps> = ({
               </a>{' '}
             </label>
           </div>
-          <Input
+          <PasswordInput
             ref={secretInputRef}
             value={secret}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               setSecret(Utils.safeParseEventValue(e))
             }
-            type='password'
             className='full-width'
             placeholder='Secret'
           />

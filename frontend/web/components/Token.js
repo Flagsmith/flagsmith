@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import PasswordInput from './base/forms/PasswordInput'
 
 class Token extends Component {
   constructor(props) {
@@ -12,7 +13,7 @@ class Token extends Component {
     if (!this.props.token) return null
     return (
       <Row className='flex-nowrap'>
-        <Input
+        <PasswordInput
           inputProps={{
             readOnly: true,
           }}
@@ -21,7 +22,6 @@ class Token extends Component {
           className={`${
             this.state.showToken ? 'font-weight-bold' : ''
           } full-width`}
-          type='password'
         />
         {this.props.show && (
           <Button

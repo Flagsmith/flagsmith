@@ -9,6 +9,7 @@ import Button from 'components/base/forms/Button'
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
 import Input from 'components/base/forms/Input'
+import PasswordInput from 'components/base/forms/PasswordInput'
 import Switch from 'components/Switch'
 import { Webhook } from 'common/types/responses'
 import {
@@ -113,14 +114,13 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
               </a>{' '}
             </label>
           </div>
-          <Input
+          <PasswordInput
             ref={inputRef}
             value={secret}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               setSecret(Utils.safeParseEventValue(e))
             }
             isValid={!!url && url.length > 0}
-            type='password'
             className='full-width'
             placeholder='Secret'
           />
