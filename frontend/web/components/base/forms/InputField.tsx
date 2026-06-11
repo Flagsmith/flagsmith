@@ -13,8 +13,8 @@ interface InputFieldProps extends Omit<InputProps, 'isValid'> {
   // is present, so this works with manual state or any form library.
   error?: ReactNode
   required?: boolean
-  // Info-icon tooltip shown next to the label.
-  tooltip?: ReactNode
+  // Info-icon tooltip text shown next to the label.
+  tooltip?: string
   // Styles the label/input/error wrapper; `inputClassName` styles the input.
   wrapperClassName?: string
   ref?: Ref<InputMethods>

@@ -8,8 +8,8 @@ interface FieldLabelProps {
   children: ReactNode
   // Shows a danger asterisk after the label.
   required?: boolean
-  // When set, an info icon follows the label and reveals this content on hover.
-  tooltip?: ReactNode
+  // When set, an info icon follows the label and reveals this text on hover.
+  tooltip?: string
   className?: string
 }
 
