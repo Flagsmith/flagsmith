@@ -790,6 +790,11 @@ INGESTION_REDIS_URL = env.str("INGESTION_REDIS_URL", default="")
 # DSN for the ClickHouse instance holding ingested experimentation events.
 EXPERIMENTATION_CLICKHOUSE_URL = env.str("EXPERIMENTATION_CLICKHOUSE_URL", default=None)
 
+# Minutes between exposure summary refreshes for running experiments.
+EXPERIMENTATION_EXPOSURES_REFRESH_MINUTES = env.int(
+    "EXPERIMENTATION_EXPOSURES_REFRESH_MINUTES", default=60
+)
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",

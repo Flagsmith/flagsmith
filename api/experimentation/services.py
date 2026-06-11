@@ -30,6 +30,7 @@ from experimentation.models import (
     WarehouseConnectionStatus,
     WarehouseType,
 )
+from experimentation.tasks import compute_experiment_exposures
 from integrations.flagsmith.client import get_openfeature_client
 
 if typing.TYPE_CHECKING:
@@ -309,6 +310,8 @@ def transition_experiment_status(
 
     experiment.save()
     create_experiment_audit_log(experiment, user, action=target_status)
+    if target_status == ExperimentStatus.COMPLETED:
+        compute_experiment_exposures.delay(kwargs={"experiment_id": experiment.id})
     return experiment
 
 

@@ -649,6 +649,52 @@ def test_action__complete__sets_ended_at(
     assert response.json()["ended_at"] is not None
 
 
+def test_action__complete__enqueues_final_exposures_refresh(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.save()
+    mock_compute = mocker.patch(
+        "experimentation.services.compute_experiment_exposures",
+    )
+
+    # When
+    response = admin_client_new.post(_action_url(environment, experiment, "complete"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_compute.delay.assert_called_once_with(
+        kwargs={"experiment_id": experiment.id},
+    )
+
+
+def test_action__start__does_not_enqueue_exposures_refresh(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    mock_compute = mocker.patch(
+        "experimentation.services.compute_experiment_exposures",
+    )
+
+    # When
+    response = admin_client_new.post(_action_url(environment, experiment, "start"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_compute.delay.assert_not_called()
+
+
 def test_delete__exists__returns_204_and_soft_deletes(
     admin_client_new: APIClient,
     environment: Environment,
