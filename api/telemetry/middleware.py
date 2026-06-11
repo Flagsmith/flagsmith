@@ -8,10 +8,6 @@ from opentelemetry import baggage
 from telemetry.spans import get_span_attribute
 
 
-class UndefinedOrganisationError(Exception):
-    """The organisation can't be probed from context."""
-
-
 class MCPUsageLoggerMiddleware:
     """Emit telemetry events for MCP usage"""
 
@@ -37,16 +33,16 @@ class MCPUsageLoggerMiddleware:
             # - flagsmith.mcp.client.name
             # - flagsmith.mcp.client.version
             "status": "error" if response.status_code >= 400 else "success",
+            "organisation__id": (org_id := self._get_organisation_id(request)),
         }
-        try:
-            org_id = self._get_organisation_id(request)
-            logger.info("tool.called", organisation__id=org_id, **event)
-        except UndefinedOrganisationError:
-            logger.warning("tool.called", organisation__id=None, **event)
+        if org_id is not None:
+            logger.info("tool.called", **event)
+        else:
+            logger.warning("tool.called", **event)
 
         return response
 
-    def _get_organisation_id(self, request: HttpRequest) -> int:
+    def _get_organisation_id(self, request: HttpRequest) -> int | None:
         """Obtain the organisation ID from the request context."""
         from organisations.models import Organisation
 
@@ -59,6 +55,6 @@ class MCPUsageLoggerMiddleware:
             return request.user.organisations.get().id
         except (
             Organisation.DoesNotExist,
-            Organisation.MultipleObjectsReturned,
-        ) as error:
-            raise UndefinedOrganisationError from error
+            Organisation.MultipleObjectsReturned,  # Don't guess
+        ):
+            return None
