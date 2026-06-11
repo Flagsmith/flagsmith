@@ -3,7 +3,19 @@ import Input, { InputMethods, InputProps } from './Input'
 import Utils from 'common/utils/utils'
 import Field from './Field'
 
-interface InputFieldProps extends Omit<InputProps, 'isValid'> {
+interface InputFieldProps
+  extends Omit<
+    InputProps,
+    // Validation is controlled via `error` (InputField sets isValid/autoValidate
+    // itself); the variant/adornment props belong to other components.
+    | 'autoValidate'
+    | 'centered'
+    | 'enableAutoComplete'
+    | 'isValid'
+    | 'search'
+    | 'showSuccess'
+    | 'underline'
+  > {
   // Field label; wired to the input via htmlFor/id.
   label?: ReactNode
   // Field-level error. When set, the input shows its invalid state and the
