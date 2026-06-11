@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: '0 3 * * *'
   workflow_dispatch: {}
+  push:
+    branches:
+      - ci/renovate-uv-lock-failures
 
 permissions:
   contents: read
