@@ -635,7 +635,15 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                 <Tabs
                   urlParam='tab'
                   history={props.history}
-                  onChange={() => setTabKey((k) => k + 1)}
+                  onChange={() => {
+                    setTabKey((k) => k + 1)
+                    // A save error belongs to the tab it occurred on — the
+                    // other tabs cannot render its shape meaningfully.
+                    if (FeatureListStore.error) {
+                      FeatureListStore.error = null
+                      FeatureListStore.trigger('change')
+                    }
+                  }}
                   overflowX
                 >
                   <TabItem

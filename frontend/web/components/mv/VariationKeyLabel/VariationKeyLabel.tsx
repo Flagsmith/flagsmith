@@ -106,18 +106,11 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
                 commit()
               }
             }}
+            // Escape is left to bubble up and close the modal.
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
                 commit()
-              }
-              if (e.key === 'Escape') {
-                // The input blurs (and commits) on Escape before this
-                // handler runs — revert to the original value.
-                onChange(value ?? null)
-                setDraft(value ?? '')
-                setError(null)
-                setIsEditing(false)
               }
             }}
           />
