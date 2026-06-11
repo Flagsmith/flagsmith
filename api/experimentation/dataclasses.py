@@ -15,6 +15,7 @@ class ExposureBucket:
     variant: str
     bucket: datetime
     first_exposed_identities: int
+    quarantined: bool = False
 
 
 @dataclass(frozen=True)

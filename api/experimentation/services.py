@@ -17,7 +17,6 @@ from experimentation.constants import (
     EXPERIMENT_FLAG,
     EXPOSURE_EVENT_NAME,
     EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
-    MULTIPLE_VARIANT_KEY,
     WAREHOUSE_CONNECTION_FLAG,
 )
 from experimentation.dataclasses import (
@@ -112,7 +111,8 @@ EXPOSURE_BUCKETS_QUERY = """
 WITH exposures AS (
     SELECT
         identifier,
-        if(uniqExact(value) > 1, %(multiple_variant)s, any(value)) AS variant,
+        any(value) AS variant,
+        uniqExact(value) > 1 AS quarantined,
         min(timestamp) AS first_exposure
     FROM events
     WHERE environment_key = %(environment_key)s
@@ -123,11 +123,12 @@ WITH exposures AS (
     GROUP BY identifier
 )
 SELECT
-    variant,
+    quarantined,
+    if(quarantined, '', variant) AS variant,
     {bucket_function}(first_exposure, 'UTC') AS bucket,
     count() AS first_exposed_identities
 FROM exposures
-GROUP BY variant, bucket
+GROUP BY quarantined, variant, bucket
 ORDER BY bucket
 """
 
@@ -167,13 +168,11 @@ def build_exposures_summary(
     window_end: datetime,
     granularity: ExposureGranularity,
 ) -> ExposuresSummary:
-    included = [b for b in buckets if b.variant != MULTIPLE_VARIANT_KEY]
+    included = [b for b in buckets if not b.quarantined]
     return ExposuresSummary(
         total_identities=sum(b.first_exposed_identities for b in included),
         excluded_identities=sum(
-            b.first_exposed_identities
-            for b in buckets
-            if b.variant == MULTIPLE_VARIANT_KEY
+            b.first_exposed_identities for b in buckets if b.quarantined
         ),
         days_of_data=max(0, math.ceil((window_end - window_start) / timedelta(days=1))),
         identities_by_variant=_identities_by_variant(included),
@@ -239,7 +238,6 @@ def get_exposure_buckets(
             "environment_key": environment_key,
             "exposure_event": EXPOSURE_EVENT_NAME,
             "feature_name": feature_name,
-            "multiple_variant": MULTIPLE_VARIANT_KEY,
             "window_start": window_start,
             "window_end": window_end,
         },
@@ -249,8 +247,9 @@ def get_exposure_buckets(
             variant=variant,
             bucket=bucket,
             first_exposed_identities=int(first_exposed_identities),
+            quarantined=bool(quarantined),
         )
-        for variant, bucket, first_exposed_identities in rows
+        for quarantined, variant, bucket, first_exposed_identities in rows
     ]
 
 

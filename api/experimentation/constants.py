@@ -10,7 +10,4 @@ variant key."""
 CONTROL_VARIANT_KEY = "control"
 """The variant key SDKs report for the feature's default serve."""
 
-MULTIPLE_VARIANT_KEY = "$multiple"
-"""Sentinel variant for identities exposed to more than one variant."""
-
 EXPOSURE_HOURLY_BUCKET_MAX_WINDOW = timedelta(hours=72)

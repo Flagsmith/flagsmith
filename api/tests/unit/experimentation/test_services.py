@@ -102,11 +102,12 @@ def test_get_unique_event_names__events_present__returns_ordered_names(
 def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
     mocker: MockerFixture,
 ) -> None:
-    # Given the warehouse returns one bucket row per variant per day
-    # (aware datetimes: the bucket column type carries 'UTC')
+    # Given the warehouse returns one bucket row per variant per day, plus a
+    # quarantined row (aware datetimes: the bucket column type carries 'UTC')
     rows = [
-        ("control", datetime(2026, 6, 1, tzinfo=timezone.utc), 100),
-        ("variant_a", datetime(2026, 6, 1, tzinfo=timezone.utc), 90),
+        (0, "control", datetime(2026, 6, 1, tzinfo=timezone.utc), 100),
+        (0, "variant_a", datetime(2026, 6, 1, tzinfo=timezone.utc), 90),
+        (1, "", datetime(2026, 6, 1, tzinfo=timezone.utc), 5),
     ]
     mock_client = mocker.Mock()
     mock_client.execute.return_value = rows
@@ -138,18 +139,23 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
             bucket=datetime(2026, 6, 1, tzinfo=timezone.utc),
             first_exposed_identities=90,
         ),
+        ExposureBucket(
+            variant="",
+            bucket=datetime(2026, 6, 1, tzinfo=timezone.utc),
+            first_exposed_identities=5,
+            quarantined=True,
+        ),
     ]
     # And the query buckets first exposures by UTC day, deduplicates
-    # identities, and quarantines identities seen in more than one variant
+    # identities, and flags identities seen in more than one variant
     sql, params = mock_client.execute.call_args.args
     assert "toStartOfDay(first_exposure, 'UTC') AS bucket" in sql
     assert "GROUP BY identifier" in sql
-    assert "uniqExact(value) > 1" in sql
+    assert "uniqExact(value) > 1 AS quarantined" in sql
     assert params == {
         "environment_key": "env-key-123",
         "exposure_event": "$flag_exposure",
         "feature_name": "my-feature",
-        "multiple_variant": "$multiple",
         "window_start": window_start,
         "window_end": window_end,
     }
@@ -187,7 +193,7 @@ def test_compute_exposures_payload__window_within_72_hours__hourly_buckets(
     # Given a window of exactly 72 hours and one exposure row
     mock_client = mocker.Mock()
     mock_client.execute.return_value = [
-        ("control", datetime(2026, 6, 1, tzinfo=timezone.utc), 10)
+        (0, "control", datetime(2026, 6, 1, tzinfo=timezone.utc), 10)
     ]
     mocker.patch(
         "experimentation.services._get_clickhouse_client",
@@ -239,11 +245,13 @@ def _bucket(
     variant: str,
     bucket: datetime,
     first_exposed_identities: int,
+    quarantined: bool = False,
 ) -> ExposureBucket:
     return ExposureBucket(
         variant=variant,
         bucket=bucket,
         first_exposed_identities=first_exposed_identities,
+        quarantined=quarantined,
     )
 
 
@@ -273,13 +281,15 @@ def test_build_exposures_summary__multiple_variants__derives_totals() -> None:
     assert summary.identities_by_variant == {"control": 150, "variant_a": 160}
 
 
-def test_build_exposures_summary__multiple_sentinel__excluded_and_counted() -> None:
-    # Given identities seen in more than one variant, quarantined as $multiple
+def test_build_exposures_summary__quarantined_identities__excluded_and_counted() -> (
+    None
+):
+    # Given identities flagged as exposed to more than one variant
     day = datetime(2026, 6, 1, tzinfo=timezone.utc)
     buckets = [
         _bucket("control", day, 100),
         _bucket("variant_a", day, 95),
-        _bucket("$multiple", day, 5),
+        _bucket("", day, 5, quarantined=True),
     ]
 
     # When
