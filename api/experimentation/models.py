@@ -14,10 +14,6 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 
 from core.models import SoftDeleteExportableModel
 from environments.models import Environment
-from experimentation.tasks import (
-    add_environment_key_to_ingestion,
-    delete_environment_key_from_ingestion,
-)
 from experimentation.types import MetricDefinition
 
 if typing.TYPE_CHECKING:
@@ -73,12 +69,16 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
 
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def sync_to_ingestion_on_create(self) -> None:
+        from experimentation.tasks import add_environment_key_to_ingestion
+
         add_environment_key_to_ingestion.delay(
             kwargs={"environment_api_key": self.environment.api_key},
         )
 
     @hook(AFTER_DELETE)  # type: ignore[misc]
     def sync_to_ingestion_on_delete(self) -> None:
+        from experimentation.tasks import delete_environment_key_from_ingestion
+
         delete_environment_key_from_ingestion.delay(
             kwargs={"environment_api_key": self.environment.api_key},
         )

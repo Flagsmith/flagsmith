@@ -23,7 +23,7 @@ def test_warehouse_connection__after_create__enqueues_ingestion_add_task(
 ) -> None:
     # Given
     mock_task = mocker.patch(
-        "experimentation.models.add_environment_key_to_ingestion",
+        "experimentation.tasks.add_environment_key_to_ingestion",
     )
 
     # When
@@ -45,7 +45,7 @@ def test_warehouse_connection__after_delete__enqueues_ingestion_delete_task(
 ) -> None:
     # Given
     mock_task = mocker.patch(
-        "experimentation.models.delete_environment_key_from_ingestion",
+        "experimentation.tasks.delete_environment_key_from_ingestion",
     )
     environment_api_key = warehouse_connection.environment.api_key
 

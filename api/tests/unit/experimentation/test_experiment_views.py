@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+from datetime import timezone as dt_timezone
 from typing import TYPE_CHECKING
 
 import pytest
@@ -13,7 +15,11 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from experimentation.constants import EXPERIMENT_FLAG
-from experimentation.models import Experiment, ExperimentStatus
+from experimentation.models import (
+    Experiment,
+    ExperimentExposures,
+    ExperimentStatus,
+)
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
 from tests.types import EnableFeaturesFixture
@@ -647,6 +653,191 @@ def test_action__complete__sets_ended_at(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["ended_at"] is not None
+
+
+def test_exposures__computed_row__returns_row(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a previously computed exposures row
+    enable_features(EXPERIMENT_FLAG)
+    payload = {
+        "excluded_identities": 4,
+        "timeseries": {
+            "granularity": "day",
+            "points": [
+                {
+                    "bucket": "2026-06-01T00:00:00+00:00",
+                    "new_identities": {"control": 310, "variant_a": 295},
+                }
+            ],
+        },
+    }
+    ExperimentExposures.objects.create(
+        experiment=experiment,
+        as_of=datetime(2026, 6, 11, 12, tzinfo=dt_timezone.utc),
+        payload=payload,
+    )
+
+    # When
+    response = admin_client_new.get(_action_url(environment, experiment, "exposures"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "exposures": {
+            "as_of": "2026-06-11T12:00:00Z",
+            "last_error_at": None,
+            "payload": payload,
+        }
+    }
+
+
+def test_exposures__never_computed__returns_null(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(_action_url(environment, experiment, "exposures"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"exposures": None}
+
+
+def test_exposures__failed_refresh__returns_error_marker_with_last_payload(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a row whose last refresh failed after an earlier success
+    enable_features(EXPERIMENT_FLAG)
+    payload = {
+        "excluded_identities": 0,
+        "timeseries": {"granularity": "hour", "points": []},
+    }
+    ExperimentExposures.objects.create(
+        experiment=experiment,
+        as_of=datetime(2026, 6, 11, 11, tzinfo=dt_timezone.utc),
+        payload=payload,
+        last_error_at=datetime(2026, 6, 11, 12, tzinfo=dt_timezone.utc),
+    )
+
+    # When
+    response = admin_client_new.get(_action_url(environment, experiment, "exposures"))
+
+    # Then the stale data and the error marker are both surfaced
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "exposures": {
+            "as_of": "2026-06-11T11:00:00Z",
+            "last_error_at": "2026-06-11T12:00:00Z",
+            "payload": payload,
+        }
+    }
+
+
+def test_exposures__admin_without_flag__returns_403(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+) -> None:
+    # Given — feature flag not enabled
+
+    # When
+    response = admin_client_new.get(_action_url(environment, experiment, "exposures"))
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_exposures__staff_user_with_flag__returns_403(
+    staff_client: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = staff_client.get(_action_url(environment, experiment, "exposures"))
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_refresh_exposures__started_experiment__enqueues_compute(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_exposures")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-exposures")
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    mock_compute.delay.assert_called_once_with(
+        kwargs={"experiment_id": experiment.id},
+    )
+
+
+def test_refresh_exposures__not_started_experiment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given a created experiment that has never started
+    enable_features(EXPERIMENT_FLAG)
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_exposures")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-exposures")
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    mock_compute.delay.assert_not_called()
+
+
+def test_refresh_exposures__staff_user_with_flag__returns_403(
+    staff_client: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = staff_client.post(
+        _action_url(environment, experiment, "refresh-exposures")
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_delete__exists__returns_204_and_soft_deletes(

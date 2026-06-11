@@ -28,6 +28,7 @@ from experimentation.permissions import (
     WarehouseConnectionPermission,
 )
 from experimentation.serializers import (
+    ExperimentExposuresSerializer,
     ExperimentListSerializer,
     ExperimentMetricSerializer,
     ExperimentSerializer,
@@ -43,6 +44,7 @@ from experimentation.services import (
     refresh_warehouse_connection_status,
     transition_experiment_status,
 )
+from experimentation.tasks import compute_experiment_exposures
 from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
@@ -267,6 +269,29 @@ class ExperimentViewSet(
     @action(detail=True, methods=["post"])
     def complete(self, request: Request, **kwargs: object) -> Response:
         return self._transition_status(ExperimentStatus.COMPLETED)
+
+    @action(detail=True, methods=["get"])
+    def exposures(self, request: Request, **kwargs: object) -> Response:
+        experiment: Experiment = self.get_object()
+        exposures = getattr(experiment, "exposures", None)
+        return Response(
+            {
+                "exposures": (
+                    ExperimentExposuresSerializer(exposures).data if exposures else None
+                ),
+            }
+        )
+
+    @action(detail=True, methods=["post"], url_path="exposures/refresh")
+    def refresh_exposures(self, request: Request, **kwargs: object) -> Response:
+        experiment: Experiment = self.get_object()
+        if experiment.started_at is None:
+            return Response(
+                {"detail": "Cannot refresh exposures before the experiment starts."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        compute_experiment_exposures.delay(kwargs={"experiment_id": experiment.id})
+        return Response(status=status.HTTP_202_ACCEPTED)
 
     def _transition_status(self, target_status: str) -> Response:
         experiment: Experiment = self.get_object()
