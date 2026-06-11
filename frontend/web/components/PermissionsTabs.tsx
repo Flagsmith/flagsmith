@@ -9,7 +9,7 @@ import {
 } from 'common/types/responses'
 import Tabs from './navigation/TabMenu/Tabs'
 import TabItem from './navigation/TabMenu/TabItem'
-import Input from './base/forms/Input'
+import SearchInput from './base/forms/SearchInput'
 import Utils from 'common/utils/utils'
 import RolePermissionsList from './RolePermissionsList'
 import ProjectFilter from './ProjectFilter'
@@ -106,14 +106,12 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         >
           <Row className='justify-content-between'>
             <h5 className='my-3'>Permissions</h5>
-            <Input
-              type='text'
+            <SearchInput
               className='ml-3'
               value={searchProject}
               onChange={(e) => setSearchProject(Utils.safeParseEventValue(e))}
               size='small'
               placeholder='Search Projects'
-              search
             />
           </Row>
           <RolePermissionsList
@@ -136,14 +134,12 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         >
           <Row className='justify-content-between'>
             <h5 className='my-3'>Permissions</h5>
-            <Input
-              type='text'
+            <SearchInput
               className='ml-3'
               value={searchEnv}
               onChange={(e) => setSearchEnv(Utils.safeParseEventValue(e))}
               size='small'
               placeholder='Search Environments'
-              search
             />
           </Row>
           <div className='mb-2' style={{ width: 250 }}>

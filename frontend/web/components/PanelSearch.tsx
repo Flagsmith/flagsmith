@@ -10,7 +10,7 @@ import React, {
 } from 'react'
 import { AutoSizer, List } from 'react-virtualized'
 import Popover from './base/Popover'
-import Input from './base/forms/Input'
+import SearchInput from './base/forms/SearchInput'
 import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronUp } from 'ionicons/icons'
@@ -328,7 +328,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
                 <Row
                   onClick={() => inputRef.current && inputRef.current.focus()}
                 >
-                  <Input
+                  <SearchInput
                     ref={inputRef}
                     onBlur={props.onBlur}
                     onChange={(e: ChangeEvent<HTMLInputElement>) => {
@@ -339,11 +339,9 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
                         setInternalSearch(Utils.safeParseEventValue(e))
                       }
                     }}
-                    type='text'
                     value={search}
                     size='small'
                     placeholder='Search'
-                    search
                   />
                   {props.filterRowContent}
                 </Row>

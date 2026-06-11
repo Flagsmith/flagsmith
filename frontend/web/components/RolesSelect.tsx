@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react'
 import InlineModal from './InlineModal'
 import { Role } from 'common/types/responses'
-import Input from './base/forms/Input'
+import SearchInput from './base/forms/SearchInput'
 import Utils from 'common/utils/utils'
 import Icon from './icons/Icon'
 
@@ -41,13 +41,12 @@ const RoleSelect: FC<RoleSelectType> = ({
       onClose={onToggle}
       className='inline-modal--sm'
     >
-      <Input
+      <SearchInput
         disabled={disabled}
         value={filter}
         onChange={(e) => setFilter(Utils.safeParseEventValue(e))}
         className='full-width mb-2'
         placeholder='Type or choose a Role'
-        search
       />
       <div style={{ maxHeight: 200, overflowY: 'auto' }}>
         {rolelist &&

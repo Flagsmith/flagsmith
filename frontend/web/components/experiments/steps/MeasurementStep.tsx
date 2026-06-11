@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import Button from 'components/base/forms/Button'
+import SearchInput from 'components/base/forms/SearchInput'
 import Icon from 'components/icons/Icon'
 import ContentCard from 'components/base/grid/ContentCard'
 
@@ -9,11 +10,9 @@ const MeasurementStep: FC = () => {
       <ContentCard title='Metrics'>
         <div className='d-flex align-items-center gap-3'>
           <div className='flex-fill'>
-            <Input
-              type='text'
+            <SearchInput
               placeholder='Search metrics...'
               disabled
-              search
               size='small'
             />
           </div>

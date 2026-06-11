@@ -4,7 +4,7 @@ import { IonIcon } from '@ionic/react'
 import { caretDown } from 'ionicons/icons'
 import classNames from 'classnames'
 import TableFilterItem from './TableFilterItem'
-import Input from 'components/base/forms/Input'
+import SearchInput from 'components/base/forms/SearchInput'
 import Utils from 'common/utils/utils'
 
 type TableFilterType = {
@@ -80,17 +80,15 @@ const TableFilter: FC<TableFilterType> = ({
         >
           {!!showSearch && (
             <div className='px-2 mt-2 mb-2'>
-              <Input
+              <SearchInput
                 autoFocus
                 onChange={(e) => {
                   setFilter(Utils.safeParseEventValue(e))
                 }}
                 className='full-width'
                 value={filter}
-                type='text'
                 size='xSmall'
                 placeholder='Search'
-                search
               />
               {!filteredOptions?.length && (
                 <div className='text-center py-2'>No results</div>

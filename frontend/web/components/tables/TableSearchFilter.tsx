@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react'
-import Input from 'components/base/forms/Input'
+import SearchInput from 'components/base/forms/SearchInput'
 import Utils from 'common/utils/utils'
 import useDebounce from 'common/useDebounce'
 
@@ -16,18 +16,16 @@ const TableSearchFilter: FC<TableFilterType> = ({ onChange, value }) => {
   const debouncedOnChange = useDebounce((v: string) => onChange(v), 100)
 
   return (
-    <Input
+    <SearchInput
       onChange={(e) => {
         const v = Utils.safeParseEventValue(e)
         setLocalValue(v)
         debouncedOnChange(v)
       }}
       value={localValue}
-      type='text'
       className='me-3'
       size='xSmall'
       placeholder='Search'
-      search
     />
   )
 }

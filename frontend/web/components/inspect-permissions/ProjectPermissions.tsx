@@ -5,7 +5,7 @@ import { Project } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 
 import OrganisationStore from 'common/stores/organisation-store'
-import Input from 'components/base/forms/Input'
+import SearchInput from 'components/base/forms/SearchInput'
 import ExpandablePermissionsList from './ExpandablePermissionsList'
 
 const ProjectPermissions = ({ userId }: { userId?: number }) => {
@@ -22,8 +22,7 @@ const ProjectPermissions = ({ userId }: { userId?: number }) => {
     <>
       <Row className='justify-content-between'>
         <h5 className='my-3'>Permissions</h5>
-        <Input
-          type='text'
+        <SearchInput
           className='ml-3='
           value={searchProject}
           onChange={(e) => {
@@ -31,7 +30,6 @@ const ProjectPermissions = ({ userId }: { userId?: number }) => {
           }}
           size='small'
           placeholder='Search Projects'
-          search
         />
       </Row>
       <PanelSearch

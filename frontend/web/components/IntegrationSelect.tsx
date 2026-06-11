@@ -5,6 +5,7 @@ import {
   IntegrationSummary,
 } from './pages/IntegrationsPage'
 import Input from './base/forms/Input'
+import SearchInput from './base/forms/SearchInput'
 import Utils from 'common/utils/utils'
 import { sortBy, uniqBy } from 'lodash'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -103,15 +104,13 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
             </PageTitle>
             <div className='row'>
               <div className='col-md-6 px-3'>
-                <Input
+                <SearchInput
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setSearch(Utils.safeParseEventValue(e))
                   }}
                   value={search}
-                  type='text'
                   className='w-100'
                   placeholder='Search'
-                  search
                 />
               </div>
               <div className='col-md-6'>

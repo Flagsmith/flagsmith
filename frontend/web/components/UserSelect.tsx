@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import InlineModal from './InlineModal'
 import Icon from './icons/Icon'
 import classNames from 'classnames'
-import Input from './base/forms/Input'
+import SearchInput from './base/forms/SearchInput'
 import Utils from 'common/utils/utils'
 interface UserSelectProps {
   users: any[]
@@ -53,7 +53,7 @@ const UserSelect: React.FC<UserSelectProps> = ({
       onClose={onToggle}
       className={modalClassName}
     >
-      <Input
+      <SearchInput
         disabled={disabled}
         value={filter}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -61,7 +61,6 @@ const UserSelect: React.FC<UserSelectProps> = ({
         }
         className='full-width mb-2'
         placeholder='Search User'
-        search
       />
       <div style={{ maxHeight: 200, overflowX: 'hidden', overflowY: 'auto' }}>
         {matchingUsers &&

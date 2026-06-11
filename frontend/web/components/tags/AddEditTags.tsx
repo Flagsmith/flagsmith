@@ -13,7 +13,7 @@ import {
 import { Tag as TTag } from 'common/types/responses'
 import Tag from './Tag'
 import CreateEditTag from './CreateEditTag'
-import Input from 'components/base/forms/Input'
+import SearchInput from 'components/base/forms/SearchInput'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import TagUsage from 'components/TagUsage'
@@ -161,7 +161,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
         <InlineModal
           hideClose
           title={
-            <Input
+            <SearchInput
               autoFocus
               value={filter}
               onKeyPress={(e) => {
@@ -173,7 +173,6 @@ const AddEditTags: FC<AddEditTagsType> = ({
               size='xSmall'
               className='full-width'
               placeholder='Search tags...'
-              search
             />
           }
           isOpen={isOpen}

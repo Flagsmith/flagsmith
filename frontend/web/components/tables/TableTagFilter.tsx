@@ -1,6 +1,6 @@
 import React, { FC, useMemo, useState } from 'react'
 import TableFilter from './TableFilter'
-import Input from 'components/base/forms/Input'
+import SearchInput from 'components/base/forms/SearchInput'
 import Utils from 'common/utils/utils'
 import { useGetTagsQuery } from 'common/services/useTag'
 import Tag from 'components/tags/Tag'
@@ -102,17 +102,15 @@ const TableTagFilter: FC<TableFilterType> = ({
       >
         <div className='inline-modal__list d-flex flex-column mx-0 py-0'>
           <div className='px-2 my-2'>
-            <Input
+            <SearchInput
               autoFocus
               onChange={(e) => {
                 setFilter(Utils.safeParseEventValue(e))
               }}
               className='full-width'
               value={filter}
-              type='text'
               size='xSmall'
               placeholder='Search'
-              search
             />
           </div>
           {filteredTags?.length === 0 && (

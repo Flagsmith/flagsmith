@@ -13,6 +13,7 @@ import { useGetWarehouseConnectionsQuery } from 'common/services/useWarehouseCon
 import { Metric, WarehouseType } from 'common/types/responses'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import Button from 'components/base/forms/Button'
+import SearchInput from 'components/base/forms/SearchInput'
 import Icon from 'components/icons/Icon'
 import PageTitle from 'components/PageTitle'
 import Paging from 'components/Paging'
@@ -252,13 +253,12 @@ const MetricsPage: FC = () => {
 
         <div className='metrics-page__controls d-flex align-items-center mb-3'>
           <div className='metrics-page__search'>
-            <Input
+            <SearchInput
               value={searchInput}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setSearchInput(Utils.safeParseEventValue(e))
               }
               placeholder='Search metrics...'
-              search
             />
           </div>
           <Button onClick={() => history.push(`${metricsPath}?create=true`)}>

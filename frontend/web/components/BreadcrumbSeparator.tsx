@@ -2,7 +2,7 @@ import React, { FC, ReactNode, useEffect, useRef, useState } from 'react'
 import { IonIcon } from '@ionic/react'
 import { checkmarkCircle, chevronDown, chevronUp } from 'ionicons/icons'
 import InlineModal from './InlineModal'
-import Input from './base/forms/Input'
+import SearchInput from './base/forms/SearchInput'
 import {
   Environment,
   Organisation,
@@ -332,13 +332,12 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
               onMouseEnter={() => setHoveredSection('organisation')}
               style={{ maxWidth: 'calc(50vw - 10px)', width: 260 }}
             >
-              <Input
+              <SearchInput
                 autoFocus={focus === 'organisation'}
                 onKeyDown={(e) => navigateOrganisations(e, organisations)}
                 onChange={(e) => {
                   setOrganisationSearch(Utils.safeParseEventValue(e))
                 }}
-                search
                 inputClassName='border-0 bg-transparent border-bottom-1'
                 size='xSmall'
                 className='full-width'
@@ -387,13 +386,12 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                 'border-left-1',
               )}
             >
-              <Input
+              <SearchInput
                 onChange={(e) => {
                   setProjectSearch(Utils.safeParseEventValue(e))
                 }}
                 autoFocus={focus === 'project'}
                 onKeyDown={(e) => navigateProjects(e)}
-                search
                 className='full-width'
                 inputClassName='border-0 bg-transparent border-bottom-1'
                 size='xSmall'

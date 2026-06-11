@@ -1,5 +1,6 @@
 import { ChangeEvent, FC } from 'react'
 import Utils from 'common/utils/utils'
+import SearchInput from 'components/base/forms/SearchInput'
 import { FilterTab } from 'components/experiments/constants'
 import './ExperimentsListControls.scss'
 
@@ -35,13 +36,12 @@ const ExperimentsListControls: FC<ExperimentsListControlsProps> = ({
         ))}
       </div>
       <div className='experiments-controls__search'>
-        <Input
+        <SearchInput
           value={searchInput}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
             onSearchChange(Utils.safeParseEventValue(e))
           }
           placeholder='Search experiments...'
-          search
           size='small'
         />
       </div>
