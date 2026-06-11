@@ -30,3 +30,13 @@ export const Default: Story = {
 export const Disabled: Story = {
   render: () => <PasswordInput value='hunter2' disabled />,
 }
+
+export const Sizes: Story = {
+  render: () => (
+    <div className='d-flex flex-column gap-3'>
+      <PasswordInput value='hunter2' placeholder='Default' />
+      <PasswordInput value='hunter2' size='small' placeholder='Small' />
+      <PasswordInput value='hunter2' size='xSmall' placeholder='Extra small' />
+    </div>
+  ),
+}

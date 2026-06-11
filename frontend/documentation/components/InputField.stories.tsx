@@ -57,3 +57,13 @@ export const Sizes: Story = {
     </div>
   ),
 }
+
+export const ReadOnly: Story = {
+  render: () => (
+    <InputField label='Environment key' readOnly value='ser.abc123' />
+  ),
+}
+
+export const WithoutLabel: Story = {
+  render: () => <InputField placeholder='No label' />,
+}

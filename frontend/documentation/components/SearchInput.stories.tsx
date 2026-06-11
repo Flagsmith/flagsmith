@@ -36,3 +36,9 @@ export const Sizes: Story = {
     </div>
   ),
 }
+
+export const Disabled: Story = {
+  render: () => (
+    <SearchInput value='read-only' disabled placeholder='Search…' />
+  ),
+}
