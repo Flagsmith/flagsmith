@@ -146,12 +146,15 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
             quarantined=True,
         ),
     ]
-    # And the query buckets first exposures by UTC day, deduplicates
-    # identities, and flags identities seen in more than one variant
+    # And the query buckets first exposures by UTC day over a half-open
+    # window, deduplicates identities, and flags identities seen in more
+    # than one variant
     sql, params = mock_client.execute.call_args.args
     assert "toStartOfDay(first_exposure, 'UTC') AS bucket" in sql
     assert "GROUP BY identifier" in sql
     assert "uniqExact(value) > 1 AS quarantined" in sql
+    assert "timestamp >= %(window_start)s" in sql
+    assert "timestamp < %(window_end)s" in sql
     assert params == {
         "environment_key": "env-key-123",
         "exposure_event": "$flag_exposure",

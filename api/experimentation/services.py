@@ -109,7 +109,7 @@ EXPOSURE_BUCKETS_QUERY = """
 WITH exposures AS (
     SELECT
         identifier,
-        any(value) AS variant,
+        if(uniqExact(value) > 1, '', any(value)) AS variant,
         uniqExact(value) > 1 AS quarantined,
         min(timestamp) AS first_exposure
     FROM events
@@ -117,12 +117,12 @@ WITH exposures AS (
         AND event = %(exposure_event)s
         AND feature_name = %(feature_name)s
         AND timestamp >= %(window_start)s
-        AND timestamp <= %(window_end)s
+        AND timestamp < %(window_end)s
     GROUP BY identifier
 )
 SELECT
     quarantined,
-    if(quarantined, '', variant) AS variant,
+    variant,
     {bucket_function}(first_exposure, 'UTC') AS bucket,
     count() AS first_exposed_identities
 FROM exposures

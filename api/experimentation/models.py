@@ -138,7 +138,7 @@ class ExperimentExposures(models.Model):
         on_delete=models.CASCADE,
         related_name="exposures",
     )
-    as_of = models.DateTimeField(null=True)
+    as_of = models.DateTimeField(null=True, blank=True)
     payload: models.JSONField[dict[str, object] | None, dict[str, object] | None] = (
         models.JSONField(null=True, blank=True)
     )

@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("as_of", models.DateTimeField(null=True)),
+                ("as_of", models.DateTimeField(blank=True, null=True)),
                 ("payload", models.JSONField(blank=True, null=True)),
                 ("last_error_at", models.DateTimeField(blank=True, null=True)),
                 (
