@@ -118,30 +118,27 @@ const controller = {
       }),
       project_id: projectId,
     })
-      .then((res) => {
+      .then(async (res) => {
         if (res.error) {
           throw res.error?.error || res.error
         }
-        return Promise.all(
-          (flag.multivariate_options || []).map((v) =>
-            createMultivariateOption(getStore(), {
-              body: {
-                ...v,
-                feature: res.data.id,
-              },
-              feature_id: res.data.id,
-              project_id: projectId,
-            }).then((mvRes) => {
-              if (mvRes.error) {
-                throw mvRes.error
-              }
-              return res.data
-            }),
-          ),
-        ).then(() =>
-          data.get(
-            `${Project.api}projects/${projectId}/features/${res.data.id}/`,
-          ),
+        // Sequential so options get ascending ids in input order, which is
+        // the order the UI displays.
+        for (const v of flag.multivariate_options || []) {
+          const mvRes = await createMultivariateOption(getStore(), {
+            body: {
+              ...v,
+              feature: res.data.id,
+            },
+            feature_id: res.data.id,
+            project_id: projectId,
+          })
+          if (mvRes.error) {
+            throw mvRes.error
+          }
+        }
+        return data.get(
+          `${Project.api}projects/${projectId}/features/${res.data.id}/`,
         )
       })
       .then(() =>
@@ -159,7 +156,7 @@ const controller = {
             feature: v.id,
           }))
           store.model = {
-            features: features.results,
+            features: features.results.map(controller.parseFlag),
             keyedEnvironmentFeatures:
               environmentFeatures && keyBy(environmentFeatures, 'feature'),
           }
@@ -992,6 +989,14 @@ const controller = {
           ...fs,
           segment: fs.segment.id,
         })),
+      // The API returns multivariate options in unspecified order, which
+      // can change after any update — keep creation order stable for the
+      // UI and for index-based weight mapping.
+      multivariate_options:
+        flag.multivariate_options &&
+        [...flag.multivariate_options].sort(
+          (a: MultivariateOption, b: MultivariateOption) => a.id - b.id,
+        ),
     }
   },
   searchFeatures: throttle(

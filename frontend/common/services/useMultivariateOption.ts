@@ -35,41 +35,42 @@ export const multivariateOptionService = service.injectEndpoints({
           (flagRes.data as ProjectFlag)?.multivariate_options || []
         const errors: Record<number, any> = {}
         // Results are written back by input index — downstream feature
-        // state saves map weights to option ids positionally.
+        // state saves map weights to option ids positionally. Requests run
+        // sequentially so newly created options get ascending ids in input
+        // order, which is the order the UI displays.
         const ordered: MultivariateOption[] = []
-        await Promise.all(
-          args.multivariate_options.map(async (v, i) => {
-            let original
-            if (v.id) {
-              original = serverOptions.find((m) => m.id === v.id)
-            } else if (v.key) {
-              original = serverOptions.find((m) => !!m.key && m.key === v.key)
-            }
-            const body = {
-              ...v,
-              default_percentage_allocation: 0,
-              feature: args.feature_id,
-            }
-            const res = await baseQuery(
-              original
-                ? {
-                    body,
-                    method: 'PUT',
-                    url: `${featureUrl}mv-options/${original.id}/`,
-                  }
-                : {
-                    body,
-                    method: 'POST',
-                    url: `${featureUrl}mv-options/`,
-                  },
-            )
-            if (res.error) {
-              errors[i] = (res.error as { data?: any })?.data ?? null
-            } else {
-              ordered[i] = res.data as MultivariateOption
-            }
-          }),
-        )
+        for (let i = 0; i < args.multivariate_options.length; i++) {
+          const v = args.multivariate_options[i]
+          let original
+          if (v.id) {
+            original = serverOptions.find((m) => m.id === v.id)
+          } else if (v.key) {
+            original = serverOptions.find((m) => !!m.key && m.key === v.key)
+          }
+          const body = {
+            ...v,
+            default_percentage_allocation: 0,
+            feature: args.feature_id,
+          }
+          const res = await baseQuery(
+            original
+              ? {
+                  body,
+                  method: 'PUT',
+                  url: `${featureUrl}mv-options/${original.id}/`,
+                }
+              : {
+                  body,
+                  method: 'POST',
+                  url: `${featureUrl}mv-options/`,
+                },
+          )
+          if (res.error) {
+            errors[i] = (res.error as { data?: any })?.data ?? null
+          } else {
+            ordered[i] = res.data as MultivariateOption
+          }
+        }
         if (Object.keys(errors).length) {
           return { data: { errors, multivariate_options: ordered } }
         }
