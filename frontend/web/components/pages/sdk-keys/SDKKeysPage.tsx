@@ -53,7 +53,6 @@ const SDKKeysPage: FC = () => {
               value={environmentId}
               inputClassName='input input--wide'
               type='text'
-              title={<h3>Client-side Environment Key</h3>}
               placeholder='Client-side Environment Key'
             />
           </Flex>
