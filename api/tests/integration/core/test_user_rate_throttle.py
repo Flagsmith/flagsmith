@@ -2,7 +2,7 @@ import json
 
 import pytest
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -10,7 +10,7 @@ from rest_framework.test import APIClient
 
 @pytest.mark.parametrize(
     "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+    [(lf("admin_master_api_key_client")), (lf("admin_client"))],
 )
 def test_user_throttle__admin_endpoint_exceeds_rate_limit__returns_too_many_requests(
     client: APIClient, project: int, mocker: MockerFixture, reset_cache: None

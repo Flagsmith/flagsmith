@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from rest_framework.request import Request
 
 from organisations.models import Organisation, Subscription
@@ -13,10 +13,10 @@ from organisations.subscriptions.permissions import require_minimum_plan
 @pytest.mark.parametrize(
     "subscription_fixture, expected",
     [
-        (lazy_fixture("free_subscription"), False),
-        (lazy_fixture("startup_subscription"), False),
-        (lazy_fixture("scale_up_subscription"), True),
-        (lazy_fixture("enterprise_subscription"), True),
+        (lf("free_subscription"), False),
+        (lf("startup_subscription"), False),
+        (lf("scale_up_subscription"), True),
+        (lf("enterprise_subscription"), True),
     ],
 )
 def test_require_minimum_plan__has_permission__plan_matrix(
@@ -38,10 +38,10 @@ def test_require_minimum_plan__has_permission__plan_matrix(
 @pytest.mark.parametrize(
     "subscription_fixture, expected",
     [
-        (lazy_fixture("free_subscription"), False),
-        (lazy_fixture("startup_subscription"), False),
-        (lazy_fixture("scale_up_subscription"), True),
-        (lazy_fixture("enterprise_subscription"), True),
+        (lf("free_subscription"), False),
+        (lf("startup_subscription"), False),
+        (lf("scale_up_subscription"), True),
+        (lf("enterprise_subscription"), True),
     ],
 )
 def test_require_minimum_plan__has_object_permission__plan_matrix(
@@ -125,18 +125,18 @@ def test_require_minimum_plan_has_object_permission__obj_without_organisation__r
 @pytest.mark.parametrize(
     "minimum, subscription_fixture, allowed",
     [
-        (SubscriptionPlanFamily.START_UP, lazy_fixture("free_subscription"), False),
-        (SubscriptionPlanFamily.START_UP, lazy_fixture("startup_subscription"), True),
-        (SubscriptionPlanFamily.SCALE_UP, lazy_fixture("startup_subscription"), False),
-        (SubscriptionPlanFamily.SCALE_UP, lazy_fixture("scale_up_subscription"), True),
+        (SubscriptionPlanFamily.START_UP, lf("free_subscription"), False),
+        (SubscriptionPlanFamily.START_UP, lf("startup_subscription"), True),
+        (SubscriptionPlanFamily.SCALE_UP, lf("startup_subscription"), False),
+        (SubscriptionPlanFamily.SCALE_UP, lf("scale_up_subscription"), True),
         (
             SubscriptionPlanFamily.ENTERPRISE,
-            lazy_fixture("scale_up_subscription"),
+            lf("scale_up_subscription"),
             False,
         ),
         (
             SubscriptionPlanFamily.ENTERPRISE,
-            lazy_fixture("enterprise_subscription"),
+            lf("enterprise_subscription"),
             True,
         ),
     ],

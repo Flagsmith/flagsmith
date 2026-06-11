@@ -4,7 +4,7 @@ import typing
 import pytest
 from common.environments.permissions import UPDATE_FEATURE_STATE
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -29,7 +29,7 @@ from tests.types import WithEnvironmentPermissionsCallable
 )
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_update_flag_v1__by_feature_name__updates_feature_state(
     staff_client: APIClient,
@@ -71,7 +71,7 @@ def test_update_flag_v1__by_feature_name__updates_feature_state(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_update_flag_v1__by_feature_id__updates_feature_state(
     staff_client: APIClient,
@@ -110,7 +110,7 @@ def test_update_flag_v1__by_feature_id__updates_feature_state(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_update_flag_v1__both_name_and_id_provided__returns_400(
     staff_client: APIClient,
@@ -145,7 +145,7 @@ def test_update_flag_v1__both_name_and_id_provided__returns_400(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_update_flag_v1__both_name_and_id_for_different_features__returns_400(
     staff_client: APIClient,
@@ -187,7 +187,7 @@ def test_update_flag_v1__both_name_and_id_for_different_features__returns_400(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_update_flag_v1__neither_name_nor_id_provided__returns_400(
     staff_client: APIClient,
@@ -222,7 +222,7 @@ def test_update_flag_v1__neither_name_nor_id_provided__returns_400(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_update_flag_v1__feature_not_found_by_name__returns_400(
     staff_client: APIClient,
@@ -254,7 +254,7 @@ def test_update_flag_v1__feature_not_found_by_name__returns_400(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_update_flag_v1__feature_not_found_by_id__returns_400(
     staff_client: APIClient,
@@ -286,7 +286,7 @@ def test_update_flag_v1__feature_not_found_by_id__returns_400(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_update_flag_v1__segment_override_by_name__creates_override(
     staff_client: APIClient,
@@ -337,7 +337,7 @@ def test_update_flag_v1__segment_override_by_name__creates_override(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_update_flag_v1__segment_override_no_existing_feature_segment__creates_feature_segment(
     staff_client: APIClient,
@@ -457,7 +457,7 @@ def test_update_flag_v1__new_segment_override_at_priority_zero__reorders_existin
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_update_flag_v2__new_segment_overrides__creates_overrides(
     staff_client: APIClient,
@@ -545,7 +545,7 @@ def test_update_flag_v2__new_segment_overrides__creates_overrides(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_update_flag_v2__environment_default_only__updates_default_state(
     staff_client: APIClient,
@@ -638,7 +638,7 @@ def test_update_flag_v2__duplicate_segment_ids__returns_400(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_update_flag_v1__existing_segment_override_with_new_priority__updates_priority(
     staff_client: APIClient,
@@ -700,7 +700,7 @@ def test_update_flag_v1__existing_segment_override_with_new_priority__updates_pr
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_update_flag_v2__existing_segment_override_with_new_priority__updates_priority(
     staff_client: APIClient,
@@ -1054,7 +1054,7 @@ def test_update_flag_v1__nonexistent_environment__returns_403(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_delete_segment_override__existing_override__removes_override(
     staff_client: APIClient,
@@ -1119,7 +1119,7 @@ def test_delete_segment_override__existing_override__removes_override(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_delete_segment_override__by_feature_id__returns_204(
     staff_client: APIClient,
@@ -1174,7 +1174,7 @@ def test_delete_segment_override__by_feature_id__returns_204(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_delete_segment_override__feature_not_found__returns_400(
     staff_client: APIClient,
@@ -1209,7 +1209,7 @@ def test_delete_segment_override__feature_not_found__returns_400(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_delete_segment_override__segment_not_in_project__returns_400(
     staff_client: APIClient,
@@ -1243,7 +1243,7 @@ def test_delete_segment_override__segment_not_in_project__returns_400(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_delete_segment_override__no_existing_override__returns_404(
     staff_client: APIClient,
@@ -1280,7 +1280,7 @@ def test_delete_segment_override__no_existing_override__returns_404(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_delete_segment_override__no_permission__returns_403(
     staff_client: APIClient,
@@ -1312,7 +1312,7 @@ def test_delete_segment_override__no_permission__returns_403(
 
 @pytest.mark.parametrize(
     "environment_",
-    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+    (lf("environment"), lf("environment_v2_versioning")),
 )
 def test_delete_segment_override__workflow_enabled__returns_403(
     staff_client: APIClient,

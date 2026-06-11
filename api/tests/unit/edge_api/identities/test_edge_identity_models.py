@@ -6,7 +6,7 @@ import shortuuid
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock import MockerFixture
 
 from api_keys.user import APIKeyUser
@@ -278,8 +278,8 @@ def test_save__no_changes__does_not_generate_audit_records(  # type: ignore[no-u
 @pytest.mark.parametrize(
     "user, user_id, api_key_id",
     [
-        (lazy_fixture("api_key_user"), None, lazy_fixture("master_api_key_id")),
-        (lazy_fixture("admin_user"), lazy_fixture("admin_user_id"), None),
+        (lf("api_key_user"), None, lf("master_api_key_id")),
+        (lf("admin_user"), lf("admin_user_id"), None),
     ],
 )
 def test_edge_identity_save_called__feature_override_added__expected_tasks_called(
@@ -347,8 +347,8 @@ def test_edge_identity_save_called__feature_override_added__expected_tasks_calle
 @pytest.mark.parametrize(
     "user, user_id, api_key_id",
     [
-        (lazy_fixture("api_key_user"), None, lazy_fixture("master_api_key_id")),
-        (lazy_fixture("admin_user"), lazy_fixture("admin_user_id"), None),
+        (lf("api_key_user"), None, lf("master_api_key_id")),
+        (lf("admin_user"), lf("admin_user_id"), None),
     ],
 )
 def test_edge_identity_save_called__feature_override_removed__expected_tasks_called(

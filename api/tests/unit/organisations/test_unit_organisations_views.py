@@ -15,7 +15,7 @@ from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock import MockerFixture
 from pytz import UTC
 from rest_framework import status
@@ -225,7 +225,7 @@ def test_create_organisation__saml_user__returns_403(
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_update_organisation__valid_data__returns_200(
     client: APIClient,
@@ -505,7 +505,7 @@ def test_invite_user__as_user_role__creates_user_invite(
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("staff_client")],
+    [lf("admin_master_api_key_client"), lf("staff_client")],
 )
 def test_list_projects__valid_organisation__returns_projects(
     organisation: Organisation,
@@ -608,7 +608,7 @@ def test_update_subscription__valid_hosted_page__updates_from_chargebee(
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_delete_organisation__with_related_objects__soft_deletes(
     organisation: Organisation,

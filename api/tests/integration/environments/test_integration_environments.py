@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 from django.urls import reverse
 from pytest_django.fixtures import DjangoAssertNumQueries
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -16,7 +16,7 @@ from tests.integration.helpers import (
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_clone_environment__feature_states_with_value__clones_values(  # type: ignore[no-untyped-def]
     client: APIClient,

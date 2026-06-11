@@ -6,7 +6,7 @@ import pytest
 import responses
 from django.urls import reverse
 from freezegun import freeze_time
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -147,7 +147,7 @@ def test_update_segment_override__via_api__webhook_payload_has_correct_previous_
 
 @pytest.mark.parametrize(
     "webhook",
-    [lazy_fixture("environment_webhook"), lazy_fixture("organisation_webhook")],
+    [lf("environment_webhook"), lf("organisation_webhook")],
 )
 @responses.activate
 def test_update_multivariate_percentage__percentage_changed__webhook_payload_includes_multivariate_values(
@@ -243,7 +243,7 @@ def test_update_multivariate_percentage__percentage_changed__webhook_payload_inc
 
 @pytest.mark.parametrize(
     "webhook",
-    [lazy_fixture("environment_webhook"), lazy_fixture("organisation_webhook")],
+    [lf("environment_webhook"), lf("organisation_webhook")],
 )
 @responses.activate
 def test_update_feature_live__legacy_versioning__webhook_payload_has_correct_previous_and_new_states(
@@ -283,7 +283,7 @@ def test_update_feature_live__legacy_versioning__webhook_payload_has_correct_pre
 
 @pytest.mark.parametrize(
     "webhook",
-    [lazy_fixture("environment_webhook"), lazy_fixture("organisation_webhook")],
+    [lf("environment_webhook"), lf("organisation_webhook")],
 )
 @responses.activate
 def test_update_feature_scheduled__legacy_versioning__webhook_payload_has_correct_previous_and_new_states(

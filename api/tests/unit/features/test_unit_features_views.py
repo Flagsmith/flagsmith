@@ -23,7 +23,7 @@ from django.utils import timezone
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -3248,7 +3248,7 @@ def test_update_feature_state__change_feature__returns_400(
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_create_feature__missing_required_metadata__returns_400(
     project: Project,
@@ -3272,7 +3272,7 @@ def test_create_feature__missing_required_metadata__returns_400(
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_create_feature__with_optional_metadata__returns_201(
     project: Project,
@@ -3308,7 +3308,7 @@ def test_create_feature__with_optional_metadata__returns_201(
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_create_feature__with_required_metadata__returns_201(
     project: Project,
@@ -3344,7 +3344,7 @@ def test_create_feature__with_required_metadata__returns_201(
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_create_feature__required_metadata_org_content_type__returns_201(
     project: Project,
