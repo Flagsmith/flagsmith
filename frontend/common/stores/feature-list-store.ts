@@ -252,6 +252,7 @@ const controller = {
       })
       return
     }
+    store.error = null
     const originalFlag =
       store.model && store.model.features
         ? store.model.features.find((v) => v.id === flag.id)
@@ -266,7 +267,6 @@ const controller = {
       }
       return
     }
-    store.error = null
     saveMultivariateOptions(getStore(), {
       feature_id: flag.id,
       multivariate_options: flag.multivariate_options || [],
