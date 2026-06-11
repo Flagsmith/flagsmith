@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { MultivariateOption } from 'common/types/responses'
 import ColorSwatch from 'components/ColorSwatch'
-import Utils from 'common/utils/utils'
+import { getDefaultVariantKey } from 'common/utils/multivariate'
 import { colorTextAction, colorTextSuccess } from 'common/theme/tokens'
 import './VariationTable.scss'
 
@@ -54,7 +54,7 @@ const VariationTable: FC<VariationTableProps> = ({
             <div className='variation-table__cell variation-table__cell--name'>
               <ColorSwatch color={colorTextAction} size='md' shape='circle' />
               <span className='variation-table__name-text'>
-                {mv.key || Utils.getDefaultVariantKey(index)}
+                {mv.key || getDefaultVariantKey(index)}
               </span>
             </div>
             <div className='variation-table__cell variation-table__cell--value'>
