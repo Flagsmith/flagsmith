@@ -14,15 +14,6 @@ export const multivariateOptionService = service.injectEndpoints({
         url: `projects/${query.project_id}/features/${query.feature_id}/mv-options/`,
       }),
     }),
-    deleteMultivariateOption: builder.mutation<
-      void,
-      Req['deleteMultivariateOption']
-    >({
-      query: (query) => ({
-        method: 'DELETE',
-        url: `projects/${query.project_id}/features/${query.feature_id}/mv-options/${query.mv_id}/`,
-      }),
-    }),
     saveMultivariateOptions: builder.mutation<
       Res['saveMultivariateOptions'],
       Req['saveMultivariateOptions']
@@ -100,16 +91,6 @@ export const multivariateOptionService = service.injectEndpoints({
         return { data: { errors: null, multivariate_options: ordered } }
       },
     }),
-    updateMultivariateOption: builder.mutation<
-      Res['multivariateOption'],
-      Req['updateMultivariateOption']
-    >({
-      query: (query) => ({
-        body: query.body,
-        method: 'PUT',
-        url: `projects/${query.project_id}/features/${query.feature_id}/mv-options/${query.mv_id}/`,
-      }),
-    }),
     // END OF ENDPOINTS
   }),
 })
@@ -128,35 +109,6 @@ export async function createMultivariateOption(
     ),
   )
 }
-export async function updateMultivariateOption(
-  store: any,
-  data: Req['updateMultivariateOption'],
-  options?: Parameters<
-    typeof multivariateOptionService.endpoints.updateMultivariateOption.initiate
-  >[1],
-) {
-  return store.dispatch(
-    multivariateOptionService.endpoints.updateMultivariateOption.initiate(
-      data,
-      options,
-    ),
-  )
-}
-export async function deleteMultivariateOption(
-  store: any,
-  data: Req['deleteMultivariateOption'],
-  options?: Parameters<
-    typeof multivariateOptionService.endpoints.deleteMultivariateOption.initiate
-  >[1],
-) {
-  return store.dispatch(
-    multivariateOptionService.endpoints.deleteMultivariateOption.initiate(
-      data,
-      options,
-    ),
-  )
-}
-
 export async function saveMultivariateOptions(
   store: any,
   data: Req['saveMultivariateOptions'],
@@ -174,8 +126,6 @@ export async function saveMultivariateOptions(
 
 export const {
   useCreateMultivariateOptionMutation,
-  useDeleteMultivariateOptionMutation,
   useSaveMultivariateOptionsMutation,
-  useUpdateMultivariateOptionMutation,
   // END OF EXPORTS
 } = multivariateOptionService

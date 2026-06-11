@@ -1044,12 +1044,6 @@ export type Req = {
     feature_id: number
     body: Partial<MultivariateOption> & { feature: number }
   }
-  updateMultivariateOption: Req['createMultivariateOption'] & { mv_id: number }
-  deleteMultivariateOption: {
-    project_id: string | number
-    feature_id: number
-    mv_id: number
-  }
   saveMultivariateOptions: {
     project_id: string | number
     feature_id: number
