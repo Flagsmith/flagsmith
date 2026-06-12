@@ -104,7 +104,7 @@ const TableTagFilter: FC<TableFilterType> = ({
           <div className='px-2 my-2'>
             <Input
               autoFocus
-              onChange={(e: InputEvent) => {
+              onChange={(e) => {
                 setFilter(Utils.safeParseEventValue(e))
               }}
               className='full-width'

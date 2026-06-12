@@ -110,9 +110,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
               type='text'
               className='ml-3'
               value={searchProject}
-              onChange={(e: InputEvent) =>
-                setSearchProject(Utils.safeParseEventValue(e))
-              }
+              onChange={(e) => setSearchProject(Utils.safeParseEventValue(e))}
               size='small'
               placeholder='Search Projects'
               search
@@ -142,9 +140,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
               type='text'
               className='ml-3'
               value={searchEnv}
-              onChange={(e: InputEvent) =>
-                setSearchEnv(Utils.safeParseEventValue(e))
-              }
+              onChange={(e) => setSearchEnv(Utils.safeParseEventValue(e))}
               size='small'
               placeholder='Search Environments'
               search

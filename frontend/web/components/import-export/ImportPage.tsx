@@ -130,9 +130,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
             <Input
               value={LDKey}
               name='ldkey'
-              onChange={(e: InputEvent) =>
-                setLDKey(Utils.safeParseEventValue(e))
-              }
+              onChange={(e) => setLDKey(Utils.safeParseEventValue(e))}
               type='text'
               placeholder='My LaunchDarkly key'
             />

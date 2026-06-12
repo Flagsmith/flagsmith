@@ -4,21 +4,21 @@ textarea {
   width: 100%;
   height: $textarea-height;
   outline: none;
-  border: 1px solid $input-border-color;
+  border: 1px solid var(--color-border-default);
   border-radius: $border-radius;
-  color: $body-color;
+  color: var(--color-text-default);
   line-height: $line-height-lg;
   padding: $input-padding;
   font-weight: $input-font-weight;
   &::placeholder {
-    color: $input-placeholder-color !important;
+    color: var(--color-text-tertiary) !important;
     font-weight: normal;
   }
   &:hover {
-    border-color: $basic-alpha-48;
+    border-color: var(--color-border-strong);
   }
   &:focus {
-    border-color: $primary;
+    border-color: var(--color-border-action);
   }
   &.textarea-lg {
     padding: $input-padding-lg;
@@ -33,7 +33,7 @@ textarea {
 .input-container.input-underline {
   input.input {
     border: none;
-    border-bottom: 1px solid $input-border-color;
+    border-bottom: 1px solid var(--color-border-default);
     border-radius: 0;
     background-color: transparent;
     padding-left: 8px;
@@ -41,11 +41,11 @@ textarea {
     // _forms.scss re-applies a full border shorthand on hover/focus.
     &:hover {
       border: none;
-      border-bottom: 1px solid $basic-alpha-48;
+      border-bottom: 1px solid var(--color-border-strong);
     }
     &:focus {
       border: none;
-      border-bottom: 1px solid $primary;
+      border-bottom: 1px solid var(--color-border-action);
     }
   }
   input[type='number'].input {
@@ -65,15 +65,15 @@ textarea {
 .dark .input-container.input-underline {
   input.input {
     border: none;
-    border-bottom: 1px solid $white-alpha-16;
+    border-bottom: 1px solid var(--color-border-default);
     background-color: transparent;
     &:hover {
       border: none;
-      border-bottom: 1px solid $white-alpha-48;
+      border-bottom: 1px solid var(--color-border-strong);
     }
     &:focus {
       border: none;
-      border-bottom: 1px solid $primary;
+      border-bottom: 1px solid var(--color-border-action);
     }
   }
 }
@@ -88,7 +88,7 @@ textarea {
   background-color: transparent !important;
   &.invalid hr,
   &.invalid hr.highlight {
-    border-color: $alert-danger-border-color;
+    border-color: var(--color-border-danger);
   }
 
   label {
@@ -108,7 +108,7 @@ textarea {
   input[type='text'],
   input[type='password'] {
     width: 100%;
-    border: 1px solid $input-border-color;
+    border: 1px solid var(--color-border-default);
     outline: none;
     box-shadow: none;
     background-image: none;
@@ -118,14 +118,14 @@ textarea {
     border-radius: $border-radius;
 
     &:read-only {
-      color: #777;
+      color: var(--color-text-secondary);
     }
     &:disabled {
-      border: 1px solid $basic-alpha-8;
-      color: $text-icon-light-grey;
+      border: 1px solid var(--color-border-disabled);
+      color: var(--color-text-disabled);
       & + .input-icon-right {
         path {
-          fill: $text-icon-light-grey;
+          fill: var(--color-text-disabled);
           opacity: $btn-disabled-opacity;
         }
       }
@@ -147,9 +147,9 @@ textarea {
     background-image: none;
     -webkit-appearance: none;
     background-image: none;
-    color: rgba(0, 0, 0, 0.870588);
+    color: var(--color-text-default);
     height: 100%;
-    background-color: $input-bg;
+    background-color: var(--color-surface-default);
     &::-webkit-input-placeholder {
       font-family: $font-family;
       font-weight: 400;
@@ -159,7 +159,7 @@ textarea {
   hr {
     border-bottom-width: 1px;
     border-style: none none solid;
-    border-color: $input-border-color;
+    border-color: var(--color-border-default);
     bottom: 8px;
     box-sizing: content-box;
     margin: 0px;
@@ -167,14 +167,14 @@ textarea {
     width: 100%;
     &.highlight {
       border-bottom-width: 2px;
-      border-color: $input-border-highlight-color;
+      border-color: var(--color-border-action);
       transform: scaleX(0);
       transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;
     }
   }
 
   &.error hr {
-    border-color: $alert-danger-border-color;
+    border-color: var(--color-border-danger);
   }
 
   &.error,
@@ -191,22 +191,22 @@ textarea {
   input:-webkit-autofill,
   textarea:-webkit-autofill,
   select:-webkit-autofill {
-    background-color: $input-bg-dark;
-    color: $body-color-dark;
+    background-color: var(--color-surface-default);
+    color: var(--color-text-default);
   }
 }
 .dark textarea {
-  background-color: $input-bg-dark;
-  color: $body-color-dark;
-  border-color: $input-bg-dark;
+  background-color: var(--color-surface-default);
+  color: var(--color-text-default);
+  border-color: var(--color-surface-default);
   &::placeholder {
-    color: $input-placeholder-color-dark !important;
+    color: var(--color-text-tertiary) !important;
   }
   &:hover {
-    border-color: $white-alpha-8;
+    border-color: var(--color-border-strong);
   }
   &:focus {
-    border-color: $primary;
+    border-color: var(--color-border-action);
   }
 }
 
@@ -247,7 +247,7 @@ textarea {
   }
 }
 .react-datepicker-time__input input {
-  border: 1px solid $input-border-color;
+  border: 1px solid var(--color-border-default);
   padding: 2px;
   border-radius: $border-radius;
   color: white;
@@ -259,7 +259,7 @@ textarea {
 }
 .dark {
   .react-datepicker-time__input input {
-    border: 1px solid $input-border-color;
+    border: 1px solid var(--color-border-default);
     padding: 2px;
     border-radius: $border-radius;
     color: white;
