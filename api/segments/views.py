@@ -88,7 +88,7 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         project = self.get_project()
         queryset = Segment.live_objects.filter(project=project, is_system_segment=False)
 
-        if self.action == "list":
+        if self.action in ("list", "retrieve"):
             # TODO: at the moment, the UI only shows the name and description of the segment in the list view.
             #  we shouldn't return all of the rules and conditions in the list view.
             queryset = queryset.prefetch_related(
@@ -100,6 +100,9 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                 "rules__rules__rules",
                 "metadata",
             )
+
+        if self.action == "retrieve":
+            queryset = queryset.select_related("project__organisation")
 
         query_serializer = SegmentListQuerySerializer(data=self.request.query_params)
         query_serializer.is_valid(raise_exception=True)
