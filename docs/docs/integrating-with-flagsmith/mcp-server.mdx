@@ -1,0 +1,334 @@
+---
+description: Connect AI assistants and agents to Flagsmith using the Model Context Protocol (MCP).
+sidebar_label: MCP Server
+sidebar_position: 30
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import McpToolCatalogue from './_mcp-tool-catalogue.md';
+import McpToolCatalogueEnterprise from './_mcp-tool-catalogue-enterprise.md';
+
+# MCP Server
+
+The Flagsmith MCP Server gives AI assistants and agents programmatic access to the Flagsmith Admin API through the
+[Model Context Protocol](https://modelcontextprotocol.io). Your assistant can manage feature flags, segments,
+multivariate options, and release workflows on your behalf — in a human-in-the-loop IDE session, or fully automated in a
+CI/CD pipeline.
+
+It works with any MCP client that supports remote (Streamable HTTP) servers, including Claude Code, Claude Desktop,
+Cursor, and Codex.
+
+## Connecting to the server
+
+The server is reachable over HTTP and you connect your client directly to it — on Flagsmith SaaS there is nothing to
+install or run yourself. If you'd rather run the server as a local subprocess, each client below also has a stdio option
+(launched with [uv](https://docs.astral.sh/uv/); authenticate with an API key, since stdio has no interactive OAuth).
+
+| Deployment                  | MCP URL                     |
+| --------------------------- | --------------------------- |
+| Flagsmith SaaS (cloud)      | `https://mcp.flagsmith.com` |
+| Self-hosted / private cloud | Your MCP server base URL    |
+
+For self-hosted instances the MCP server is part of your Flagsmith deployment; use your MCP server base URL wherever the
+examples below use the SaaS URL.
+
+## Authentication
+
+The server supports two authentication methods. Use whichever suits your client; both work side by side.
+
+### OAuth (interactive clients)
+
+For interactive clients — IDEs, desktop apps, CLIs you drive by hand — OAuth is the simplest option, with no API keys to
+manage. The client discovers the OAuth configuration automatically from the MCP URL: on first connection it opens your
+browser, you log in to Flagsmith and authorise access, and the client stores the resulting token.
+
+### API key (CI and non-interactive agents)
+
+For automation — CI jobs, headless agents — authenticate with an
+[Organisation API key](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/authentication) by sending it in the
+`Authorization` header:
+
+```
+Authorization: Api-Key <your-api-key>
+```
+
+:::caution
+
+The `Api-Key ` prefix is required. The header value should look like `Api-Key ser.abc123…`, not the key on its own.
+
+:::
+
+## Installing in your client
+
+The examples below use the SaaS URL. For self-hosted, substitute your MCP server base URL.
+
+<Tabs groupId="mcp-client" queryString>
+<TabItem value="claude-code" label="Claude Code">
+
+```bash
+claude mcp add --transport http flagsmith https://mcp.flagsmith.com
+```
+
+Then run `/mcp` in Claude Code to complete the OAuth login. For non-interactive use, pass the API key as a header
+instead:
+
+```bash
+claude mcp add --transport http flagsmith https://mcp.flagsmith.com \
+    --header "Authorization: Api-Key <your-api-key>"
+```
+
+Or run it locally over stdio:
+
+```bash
+claude mcp add flagsmith \
+    --env TRANSPORT=stdio \
+    --env FLAGSMITH_API_TOKEN=<your-api-key> \
+    -- uvx --from "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp" flagsmith-mcp
+```
+
+</TabItem>
+<TabItem value="cursor" label="Cursor">
+
+Add the server to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (per project):
+
+```json
+{
+    "mcpServers": {
+        "flagsmith": {
+            "url": "https://mcp.flagsmith.com"
+        }
+    }
+}
+```
+
+To use an API key instead of OAuth, add a `headers` block:
+
+```json
+{
+    "mcpServers": {
+        "flagsmith": {
+            "url": "https://mcp.flagsmith.com",
+            "headers": { "Authorization": "Api-Key <your-api-key>" }
+        }
+    }
+}
+```
+
+Or run it locally over stdio:
+
+```json
+{
+    "mcpServers": {
+        "flagsmith": {
+            "command": "uvx",
+            "args": ["--from", "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp", "flagsmith-mcp"],
+            "env": { "TRANSPORT": "stdio", "FLAGSMITH_API_TOKEN": "<your-api-key>" }
+        }
+    }
+}
+```
+
+</TabItem>
+<TabItem value="claude-desktop" label="Claude Desktop">
+
+Open **Settings → Connectors → Add custom connector**, give it the name `Flagsmith` and the URL
+`https://mcp.flagsmith.com`, then connect and complete the OAuth login.
+
+To run it locally over stdio instead, add it to your `claude_desktop_config.json`:
+
+```json
+{
+    "mcpServers": {
+        "flagsmith": {
+            "command": "uvx",
+            "args": ["--from", "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp", "flagsmith-mcp"],
+            "env": { "TRANSPORT": "stdio", "FLAGSMITH_API_TOKEN": "<your-api-key>" }
+        }
+    }
+}
+```
+
+</TabItem>
+<TabItem value="codex" label="Codex CLI">
+
+Add the server to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.flagsmith]
+url = "https://mcp.flagsmith.com"
+```
+
+Or run it locally over stdio:
+
+```toml
+[mcp_servers.flagsmith]
+command = "uvx"
+args = ["--from", "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp", "flagsmith-mcp"]
+env = { TRANSPORT = "stdio", FLAGSMITH_API_TOKEN = "<your-api-key>" }
+```
+
+</TabItem>
+<TabItem value="windsurf" label="Windsurf">
+
+Add the server to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+    "mcpServers": {
+        "flagsmith": {
+            "serverUrl": "https://mcp.flagsmith.com"
+        }
+    }
+}
+```
+
+For an API key instead of OAuth, add `"headers": { "Authorization": "Api-Key <your-api-key>" }` to the server entry.
+
+Or run it locally over stdio:
+
+```json
+{
+    "mcpServers": {
+        "flagsmith": {
+            "command": "uvx",
+            "args": ["--from", "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp", "flagsmith-mcp"],
+            "env": { "TRANSPORT": "stdio", "FLAGSMITH_API_TOKEN": "<your-api-key>" }
+        }
+    }
+}
+```
+
+</TabItem>
+<TabItem value="gemini-cli" label="Gemini CLI">
+
+Add the server to `~/.gemini/settings.json`:
+
+```json
+{
+    "mcpServers": {
+        "flagsmith": {
+            "httpUrl": "https://mcp.flagsmith.com"
+        }
+    }
+}
+```
+
+For an API key instead of OAuth, add `"headers": { "Authorization": "Api-Key <your-api-key>" }` to the server entry.
+
+Or run it locally over stdio:
+
+```json
+{
+    "mcpServers": {
+        "flagsmith": {
+            "command": "uvx",
+            "args": ["--from", "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp", "flagsmith-mcp"],
+            "env": { "TRANSPORT": "stdio", "FLAGSMITH_API_TOKEN": "<your-api-key>" }
+        }
+    }
+}
+```
+
+</TabItem>
+<TabItem value="vscode" label="VS Code">
+
+Add the server to `.vscode/mcp.json` (workspace) or your user `mcp.json`:
+
+```json
+{
+    "servers": {
+        "flagsmith": {
+            "type": "http",
+            "url": "https://mcp.flagsmith.com"
+        }
+    }
+}
+```
+
+For an API key instead of OAuth, add `"headers": { "Authorization": "Api-Key <your-api-key>" }` to the server entry.
+
+Or run it locally over stdio:
+
+```json
+{
+    "servers": {
+        "flagsmith": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": ["--from", "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp", "flagsmith-mcp"],
+            "env": { "TRANSPORT": "stdio", "FLAGSMITH_API_TOKEN": "<your-api-key>" }
+        }
+    }
+}
+```
+
+</TabItem>
+<TabItem value="other" label="Other clients">
+
+Any other client that supports remote (Streamable HTTP) MCP servers can connect by pointing it at the MCP URL above and
+using either OAuth or the `Authorization: Api-Key` header. Clients that support stdio servers can instead launch it with
+`uvx --from "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp" flagsmith-mcp`, setting
+`TRANSPORT=stdio` and `FLAGSMITH_API_TOKEN`.
+
+</TabItem>
+</Tabs>
+
+## Available tools
+
+The tools available to your assistant depend on what your Flagsmith deployment has installed. The core tools below are
+available on every deployment. The [enterprise tools](#enterprise-tools) require a paid SaaS plan or a self-hosted
+Enterprise deployment, and only appear when those features are present.
+
+### Core tools
+
+<McpToolCatalogue />
+
+### Enterprise tools
+
+Available on paid SaaS plans and self-hosted Enterprise deployments.
+
+<McpToolCatalogueEnterprise />
+
+## Migrating from the Gram-hosted server
+
+:::caution Deprecation
+
+The previous MCP server was hosted on Gram at `https://app.getgram.ai/mcp/flagsmith-mcp`. It is deprecated and will be
+shut down on **30 June 2026**.
+
+Point your client at `https://mcp.flagsmith.com` instead. Tool names are unchanged, so no other changes to your prompts
+or automations are needed. If you authenticated with a custom `Mcp-Flagsmith-Token-Auth` header, switch to the standard
+`Authorization: Api-Key <key>` header (or OAuth).
+
+:::
+
+## Example prompts
+
+For developers:
+
+-   "Create a feature flag called `new_checkout_flow` and turn it on in the staging environment."
+-   "What segments exist in the mobile-app project?"
+-   "Add a multivariate option to the `button_color` flag."
+
+For release managers:
+
+-   "Show me all pending change requests for the production environment."
+-   "Add the `premium_features` flag to the Q1 release pipeline."
+
+For DevOps and automation:
+
+-   Build agents that create kill switches for new deployments.
+-   Integrate flag validation and management into your CI/CD pipelines.
+-   Automate segment updates based on external analytics data.
+
+## Early Access — We Want Your Feedback! 🚀
+
+This is an early release, and we're actively developing it alongside customers like you. Things might be rough around
+the edges, but that's where you come in.
+
+**Found a bug? Have an idea? Something confusing?**
+
+We'd love to hear from you — drop our support team a message at [support@flagsmith.com](mailto:support@flagsmith.com).
+
+Your feedback directly shapes what we build next. Let's make this awesome together.

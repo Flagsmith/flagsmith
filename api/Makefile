@@ -184,6 +184,7 @@ integrate-private-tests:
 generate-docs: generate-flagsmith-sdk-openapi
 	uv run flagsmith docgen metrics > ../docs/docs/deployment-self-hosting/observability/_metrics-catalogue.md
 	uv run flagsmith docgen events > ../docs/docs/deployment-self-hosting/observability/_events-catalogue.md
+	uv run python manage.py generate_mcp_tool_catalogue > ../docs/docs/integrating-with-flagsmith/_mcp-tool-catalogue.md
 
 .PHONY: add-known-sdk-version
 add-known-sdk-version:
