@@ -27,6 +27,7 @@ import {
   TypedFeatureState,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
+import { sortMultivariateOptions } from 'common/utils/multivariate'
 import Actions from 'common/dispatcher/action-constants'
 import Project from 'common/project'
 import flagsmith from '@flagsmith/flagsmith'
@@ -114,26 +115,23 @@ const controller = {
       }),
       project_id: projectId,
     })
-      .then((res) => {
+      .then(async (res) => {
         if (res.error) {
           throw res.error?.error || res.error
         }
-        return Promise.all(
-          (flag.multivariate_options || []).map((v) =>
-            data
-              .post(
-                `${Project.api}projects/${projectId}/features/${res.data.id}/mv-options/`,
-                {
-                  ...v,
-                  feature: res.data.id,
-                },
-              )
-              .then(() => res.data),
-          ),
-        ).then(() =>
-          data.get(
-            `${Project.api}projects/${projectId}/features/${res.data.id}/`,
-          ),
+        // Sequential so options get ascending ids in input order, which is
+        // the order the UI displays.
+        for (const v of flag.multivariate_options || []) {
+          await data.post(
+            `${Project.api}projects/${projectId}/features/${res.data.id}/mv-options/`,
+            {
+              ...v,
+              feature: res.data.id,
+            },
+          )
+        }
+        return data.get(
+          `${Project.api}projects/${projectId}/features/${res.data.id}/`,
         )
       })
       .then(() =>
@@ -151,7 +149,7 @@ const controller = {
             feature: v.id,
           }))
           store.model = {
-            features: features.results,
+            features: features.results.map(controller.parseFlag),
             keyedEnvironmentFeatures:
               environmentFeatures && keyBy(environmentFeatures, 'feature'),
           }
@@ -1029,6 +1027,9 @@ const controller = {
           ...fs,
           segment: fs.segment.id,
         })),
+      multivariate_options:
+        flag.multivariate_options &&
+        sortMultivariateOptions(flag.multivariate_options),
     }
   },
   searchFeatures: throttle(

@@ -4,3 +4,12 @@
 // pulling in Utils' store dependencies (Storybook stubs out Utils).
 export const getDefaultVariantKey = (index: number): string =>
   `Variant_${index + 1}`
+
+// Options not yet saved have no id and sort last, in input order.
+export const sortMultivariateOptions = <T extends { id?: number | null }>(
+  options: T[],
+): T[] =>
+  [...options].sort(
+    (a, b) =>
+      (a.id ?? Number.MAX_SAFE_INTEGER) - (b.id ?? Number.MAX_SAFE_INTEGER),
+  )
