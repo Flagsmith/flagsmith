@@ -20,6 +20,16 @@ export default (WrappedComponent) => {
           isLoading: ConfigStore.isLoading,
         })
       })
+      // The SDK's onChange can fire in the gap between the constructor
+      // reading the store and this subscription. With realtime and events
+      // disabled (E2E) no further change event arrives, so a missed one
+      // leaves the app on the loader forever — re-sync after subscribing.
+      if (ConfigStore.model || ConfigStore.error) {
+        this.setState({
+          error: ConfigStore.error,
+          isLoading: ConfigStore.isLoading,
+        })
+      }
     }
 
     render() {
