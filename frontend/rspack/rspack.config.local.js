@@ -1,6 +1,8 @@
 // rspack.config.local.js (dev)
 const rspack = require('@rspack/core')
-const { ReactRefreshRspackPlugin: ReactRefreshPlugin } = require('@rspack/plugin-react-refresh')
+const {
+  ReactRefreshRspackPlugin: ReactRefreshPlugin,
+} = require('@rspack/plugin-react-refresh')
 const path = require('path')
 const express = require('express')
 
@@ -9,11 +11,14 @@ const base = require('../rspack.config')
 module.exports = {
   ...base,
   devServer: {
+    app: async () => express(),
+    // Overlay only for compile errors — the overlay iframe blocks all
+    // pointer events, and warnings/runtime rejections fire routinely.
+    client: { overlay: { runtimeErrors: false, warnings: false } },
     historyApiFallback: true,
     hot: true,
     liveReload: false,
     port: process.env.PORT || 8080,
-    app: async () => express(),
     setupMiddlewares: (middlewares, devServer) => {
       // Register the Express routes from api/index on the dev server's app
       require('../api/dev-routes')(devServer.app)
@@ -46,6 +51,12 @@ module.exports = {
           {
             loader: 'sass-loader',
             options: {
+              // The codebase still uses @import; the deprecation fires on
+              // every build and is not actionable here.
+              sassOptions: {
+                silenceDeprecations: ['import'],
+              },
+
               sourceMap: true,
             },
           },
