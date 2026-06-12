@@ -20,6 +20,14 @@ export default (WrappedComponent) => {
           isLoading: ConfigStore.isLoading,
         })
       })
+      // Re-sync: the store can finish loading before this subscription
+      // exists, and no further change event arrives to recover.
+      if (ConfigStore.hasLoaded || ConfigStore.error) {
+        this.setState({
+          error: ConfigStore.error,
+          isLoading: ConfigStore.isLoading,
+        })
+      }
     }
 
     render() {
