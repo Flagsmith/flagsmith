@@ -337,7 +337,7 @@ Attributes:
 ### `segment_membership.backfill.environment.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:110`
+ - `api/segment_membership/tasks.py:112`
 
 Attributes:
  - `environment.id`
@@ -347,7 +347,7 @@ Attributes:
 ### `segment_membership.backfill.environment.failed`
 
 Logged at `exception` from:
- - `api/segment_membership/tasks.py:103`
+ - `api/segment_membership/tasks.py:105`
 
 Attributes:
  - `environment.id`
@@ -356,8 +356,8 @@ Attributes:
 ### `segment_membership.backfill.skipped`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:67`
- - `api/segment_membership/tasks.py:72`
+ - `api/segment_membership/tasks.py:69`
+ - `api/segment_membership/tasks.py:74`
 
 Attributes:
  - `reason`
@@ -375,7 +375,7 @@ Attributes:
 ### `segment_membership.refresh.project.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:185`
+ - `api/segment_membership/tasks.py:187`
 
 Attributes:
  - `membership_counts.count`
@@ -385,7 +385,7 @@ Attributes:
 ### `segment_membership.refresh.project.failed`
 
 Logged at `exception` from:
- - `api/segment_membership/tasks.py:158`
+ - `api/segment_membership/tasks.py:160`
 
 Attributes:
  - `project.id`
@@ -393,12 +393,33 @@ Attributes:
 ### `segment_membership.refresh.project.skipped`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:129`
- - `api/segment_membership/tasks.py:138`
+ - `api/segment_membership/tasks.py:131`
+ - `api/segment_membership/tasks.py:140`
 
 Attributes:
  - `project.id`
  - `reason`
+
+### `segment_membership.tombstone.skipped`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:211`
+ - `api/segment_membership/tasks.py:224`
+ - `api/segment_membership/tasks.py:233`
+
+Attributes:
+ - `env_key`
+ - `identifier`
+ - `reason`
+
+### `segment_membership.tombstone.written`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:247`
+
+Attributes:
+ - `env_key`
+ - `identifier`
 
 ### `segments.serializers.segment_revision_created`
 

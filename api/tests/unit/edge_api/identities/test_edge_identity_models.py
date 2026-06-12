@@ -6,6 +6,7 @@ import shortuuid
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
+from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 
@@ -507,6 +508,56 @@ def test_save__feature_override_updated__generates_audit_records(
             "identifier": edge_identity_model.identifier,
         }
     )
+
+
+def test_edge_identity_delete__clickhouse_enabled__dispatches_tombstone_task(
+    mocker: MockerFixture,
+    edge_identity_model: EdgeIdentity,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.CLICKHOUSE_ENABLED = True
+    mock_tombstone_task = mocker.MagicMock()
+    mocker.patch(
+        "segment_membership.tasks.write_identity_deletion_tombstone_to_clickhouse",
+        mock_tombstone_task,
+    )
+
+    # When
+    edge_identity_model.delete()
+
+    # Then
+    edge_identity_dynamo_wrapper_mock.delete_item.assert_called_once()
+    mock_tombstone_task.delay.assert_called_once_with(
+        args=(
+            edge_identity_model.environment_api_key,
+            edge_identity_model.identifier,
+            edge_identity_model.engine_identity_model.composite_key,
+        )
+    )
+
+
+def test_edge_identity_delete__clickhouse_disabled__no_tombstone_dispatched(
+    mocker: MockerFixture,
+    edge_identity_model: EdgeIdentity,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.CLICKHOUSE_ENABLED = False
+    mock_tombstone_task = mocker.MagicMock()
+    mocker.patch(
+        "segment_membership.tasks.write_identity_deletion_tombstone_to_clickhouse",
+        mock_tombstone_task,
+    )
+
+    # When
+    edge_identity_model.delete()
+
+    # Then
+    edge_identity_dynamo_wrapper_mock.delete_item.assert_called_once()
+    mock_tombstone_task.delay.assert_not_called()
 
 
 def test_get_all_feature_states__post_v2_versioning_migration__returns_latest_overrides(

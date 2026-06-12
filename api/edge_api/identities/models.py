@@ -2,6 +2,7 @@ import copy
 import typing
 from contextlib import suppress
 
+from django.conf import settings
 from django.db.models import Prefetch, Q
 
 from api_keys.user import APIKeyUser
@@ -194,6 +195,18 @@ class EdgeIdentity:
             user=user,
         )
         self._reset_initial_state()  # type: ignore[no-untyped-call]
+        if settings.CLICKHOUSE_ENABLED:
+            from segment_membership.tasks import (
+                write_identity_deletion_tombstone_to_clickhouse,
+            )
+
+            write_identity_deletion_tombstone_to_clickhouse.delay(
+                args=(
+                    self.engine_identity_model.environment_api_key,
+                    self.engine_identity_model.identifier,
+                    self.engine_identity_model.composite_key,
+                )
+            )
 
     def synchronise_features(self, valid_feature_names: typing.Collection[str]) -> None:
         identity_feature_names = {

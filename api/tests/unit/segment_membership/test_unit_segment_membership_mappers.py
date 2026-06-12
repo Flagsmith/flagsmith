@@ -22,7 +22,7 @@ UUID_A = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
                     {"trait_key": "plan", "trait_value": "growth"},
                 ],
             },
-            ("env-key", "alice", "env_x_alice", {"plan": "growth"}),
+            ("env-key", "alice", "env_x_alice", {"plan": "growth"}, False),
             id="single string trait",
         ),
         pytest.param(
@@ -34,7 +34,7 @@ UUID_A = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
                 "created_date": "2026-05-08T00:00:00Z",
                 "identity_traits": [],
             },
-            ("env-key", "alice", "env_x_alice", None),
+            ("env-key", "alice", "env_x_alice", None, False),
             id="empty traits collapse to NULL",
         ),
         pytest.param(
@@ -48,7 +48,7 @@ UUID_A = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
                     {"trait_key": "age", "trait_value": Decimal("18")},
                 ],
             },
-            ("env-key", "alice", "env_x_alice", {"age": 18}),
+            ("env-key", "alice", "env_x_alice", {"age": 18}, False),
             id="whole-number Decimal narrows to int",
         ),
         pytest.param(
@@ -62,7 +62,7 @@ UUID_A = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
                     {"trait_key": "score", "trait_value": Decimal("1.5")},
                 ],
             },
-            ("env-key", "alice", "env_x_alice", {"score": 1.5}),
+            ("env-key", "alice", "env_x_alice", {"score": 1.5}, False),
             id="fractional Decimal narrows to float",
         ),
         pytest.param(
@@ -82,6 +82,7 @@ UUID_A = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
                 "alice",
                 "env_x_alice",
                 {"plan": "growth", "team": "alpha"},
+                False,
             ),
             id="multiple traits flatten to a single dict",
         ),
@@ -89,9 +90,27 @@ UUID_A = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 )
 def test_map_identity_document_to_clickhouse_row__cases__return_expected(
     doc: DynamoIdentity,
-    expected: tuple[str, str, str, dict[str, object] | None],
+    expected: tuple[str, str, str, dict[str, object] | None, bool],
 ) -> None:
     # Given a Dynamo identity document
     # When mapped onto an IDENTITIES row
     # Then it lines up positionally with the IDENTITIES schema
     assert map_identity_document_to_clickhouse_row("env-key", doc) == expected
+
+
+def test_map_identity_document_to_clickhouse_row__is_deleted_true__sets_flag() -> None:
+    # Given a Dynamo identity document and is_deleted=True
+    doc: DynamoIdentity = {
+        "identity_uuid": UUID_A,
+        "identifier": "alice",
+        "environment_api_key": "env-key",
+        "composite_key": "env_x_alice",
+        "created_date": "2026-05-08T00:00:00Z",
+        "identity_traits": [],
+    }
+
+    # When mapped with is_deleted=True
+    result = map_identity_document_to_clickhouse_row("env-key", doc, is_deleted=True)
+
+    # Then the flag is set in the returned tuple
+    assert result == ("env-key", "alice", "env_x_alice", None, True)

@@ -104,7 +104,9 @@ def compute_segment_counts_for_project(
             f"SELECT {seg.id} AS segment_id, "
             f"i.environment_id AS env_key, count() AS c "
             f"FROM IDENTITIES AS i FINAL "
-            f"WHERE i.environment_id IN %(env_keys)s AND ({predicate}) "
+            f"WHERE i.environment_id IN %(env_keys)s "
+            f"AND i.is_deleted = false "
+            f"AND ({predicate}) "
             f"GROUP BY i.environment_id"
         )
 
