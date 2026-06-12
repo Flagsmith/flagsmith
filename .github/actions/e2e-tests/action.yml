@@ -64,3 +64,17 @@ runs:
         SLACK_TOKEN: ${{ inputs.slack_token }}
         ENV: ${{ inputs.environment == 'production' && 'prod' || inputs.environment }}
         GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+    # Short retention because traces capture network payloads, including the
+    # (throwaway, reseeded-per-run) e2e users' auth tokens.
+    - name: Upload Playwright test results
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        # run_attempt avoids the v4 immutable-name collision when a failed job is re-run
+        name: e2e-test-results-${{ inputs.environment }}-attempt-${{ github.run_attempt }}
+        path: |
+          frontend/e2e/test-results
+          frontend/e2e/playwright-report
+        retention-days: 7
+        if-no-files-found: ignore
