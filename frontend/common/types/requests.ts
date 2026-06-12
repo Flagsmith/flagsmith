@@ -1011,7 +1011,10 @@ export type Req = {
     project_id: number
     gitlab_project_id: number
   }>
-  getWarehouseConnections: { environmentId: string }
+  getWarehouseConnections: {
+    environmentId: string
+    exclude_event_stats?: boolean
+  }
   createWarehouseConnection: {
     environmentId: string
     warehouse_type: string

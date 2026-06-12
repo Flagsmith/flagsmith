@@ -77,7 +77,7 @@ const MetricsPage: FC = () => {
   )
 
   const { data: warehouseConnections } = useGetWarehouseConnectionsQuery(
-    { environmentId: environmentId ?? '' },
+    { environmentId: environmentId ?? '', exclude_event_stats: true },
     { skip: !environmentId || !isEnabled },
   )
 

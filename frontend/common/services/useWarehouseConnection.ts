@@ -42,8 +42,10 @@ export const warehouseConnectionService = service
         Req['getWarehouseConnections']
       >({
         providesTags: [{ id: 'LIST', type: 'WarehouseConnection' }],
-        query: ({ environmentId }) => ({
-          url: `environments/${environmentId}/warehouse-connections/`,
+        query: ({ environmentId, exclude_event_stats }) => ({
+          url: `environments/${environmentId}/warehouse-connections/${
+            exclude_event_stats ? '?exclude_event_stats=true' : ''
+          }`,
         }),
       }),
       testWarehouseConnection: builder.mutation<
