@@ -1,11 +1,11 @@
 import React, { FC, useEffect, useState } from 'react'
 import { Link, useHistory, useRouteMatch } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
-import keyBy from 'lodash/keyBy'
+
 
 import { getStore } from 'common/store'
 import { getTags } from 'common/services/useTag'
-import { Identity, IdentityFeatureState } from 'common/types/responses'
+import { Identity } from 'common/types/responses'
 import API from 'project/api'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
@@ -24,14 +24,12 @@ import Panel from 'components/base/grid/Panel'
 import PanelSearch from 'components/PanelSearch'
 import TryIt from 'components/TryIt'
 import Utils from 'common/utils/utils'
-import _data from 'common/data/base/_data'
 import { removeIdentity } from './IdentitiesPage'
 import IdentityTraits from 'components/IdentityTraits'
 import { useGetIdentitySegmentsQuery } from 'common/services/useIdentitySegment'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import FeatureOverrideRow from 'components/feature-override/FeatureOverrideRow'
 import FeatureFilters from 'components/feature-page/FeatureFilters'
-import Project from 'common/project'
 import SettingTitle from 'components/SettingTitle'
 import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
@@ -54,8 +52,7 @@ const IdentityPage: FC = () => {
 
   const { filters, goToPage, handleFilterChange, page } =
     useFeatureFilters(history)
-  const [actualFlags, setActualFlags] =
-    useState<Record<string, IdentityFeatureState>>()
+
   const preselect = Utils.fromParam().flag
   const [segmentsPage, setSegmentsPage] = useState(1)
   const { search, searchInput, setSearchInput } = useDebouncedSearch('')
@@ -75,12 +72,12 @@ const IdentityPage: FC = () => {
 
   const apiParams = environmentId
     ? buildApiFilterParams(
-        filters,
-        page,
-        environmentId,
-        projectId!,
-        getEnvironmentIdFromKey,
-      )
+      filters,
+      page,
+      environmentId,
+      projectId!,
+      getEnvironmentIdFromKey,
+    )
     : null
 
   const { data: featureListData, isFetching: isLoadingFeatures } =
@@ -96,23 +93,13 @@ const IdentityPage: FC = () => {
   useEffect(() => {
     AppActions.getIdentity(environmentId, id)
     getTags(getStore(), { projectId: `${projectId}` })
-    getActualFlags()
+
     API.trackPage(Constants.pages.USER)
     // eslint-disable-next-line
   }, [])
 
-  const getActualFlags = () => {
-    const url = `${
-      Project.api
-    }environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${id}/${Utils.getFeatureStatesEndpoint()}/all/`
-    _data.get(url).then((res: IdentityFeatureState[]) => {
-      setActualFlags(keyBy(res, (v: IdentityFeatureState) => v.feature.name))
-    })
-  }
 
-  const onSave = () => {
-    getActualFlags()
-  }
+  const onSave = () => { }
 
   const editSegment = (segment: any) => {
     API.trackEvent(Constants.events.VIEW_SEGMENT)
@@ -138,17 +125,17 @@ const IdentityPage: FC = () => {
         <IdentityProvider onSave={onSave}>
           {({
             identity,
-            identityFlags,
+
             isLoading: isIdentityLoading,
           }: {
             identity: { identity: Identity; identifier: string }
-            identityFlags: IdentityFeatureState[]
+
             isLoading: boolean
           }) => {
             const identityName =
               (identity && identity.identity.identifier) || id
             const isDataLoaded =
-              !!actualFlags && !!identityFlags && !!projectFlags && !!projectId
+              !!featureListData && !!projectFlags && !!projectId
             return isIdentityLoading || !isDataLoaded ? (
               <div className='text-center'>
                 <Loader />
@@ -235,7 +222,8 @@ const IdentityPage: FC = () => {
                                 className='mx-2'
                                 title={'Identity Feature States'}
                                 json={
-                                  identityFlags && Object.values(identityFlags)
+                                  featureListData?.identityStates &&
+                                  Object.values(featureListData.identityStates)
                                 }
                               />
                             </>
@@ -261,29 +249,13 @@ const IdentityPage: FC = () => {
                           isLoading={isLoadingFeatures}
                           items={projectFlags}
                           renderRow={({ id: featureId, name }, i) => {
-                            const identityFlag = identityFlags[featureId]
-                            const actualEnabled =
-                              actualFlags && actualFlags[name]?.enabled
-                            const environmentFlag =
-                              (environmentFlags &&
-                                environmentFlags[featureId]) ||
-                              {}
+                            const identityFlag =
+                              featureListData?.identityStates?.[featureId]
                             const projectFlag = projectFlags?.find(
-                              (p: any) => p.id === environmentFlag.feature,
+                              (p: any) => p.id === featureId,
                             )
-                            const actualFlagForFeature =
-                              actualFlags?.[name]?.feature?.id === featureId
-                                ? actualFlags[name]
-                                : undefined
-                            const overrideFeatureState = identityFlag
-                              ? {
-                                  ...identityFlag,
-                                  //resolves multivariate value if one is set
-                                  feature_state_value:
-                                    actualFlagForFeature?.feature_state_value,
-                                }
-                              : actualFlagForFeature ??
-                                environmentFlags[featureId]
+                            const overrideFeatureState =
+                              identityFlag ?? environmentFlags?.[featureId]
                             return (
                               !!projectFlag && (
                                 <FeatureOverrideRow
@@ -292,16 +264,15 @@ const IdentityPage: FC = () => {
                                   identifier={identity?.identity?.identifier}
                                   identityName={identityName}
                                   shouldPreselect={name === preselect}
-                                  toggleDataTest={`user-feature-switch-${i}${
-                                    actualEnabled ? '-on' : '-off'
-                                  }`}
+                                  toggleDataTest={`user-feature-switch-${i}${identityFlag?.enabled ? '-on' : '-off'
+                                    }`}
                                   level='identity'
                                   valueDataTest={`user-feature-value-${i}`}
                                   projectFlag={projectFlag}
                                   dataTest={`user-feature-${i}`}
                                   overrideFeatureState={overrideFeatureState}
                                   environmentFeatureState={
-                                    environmentFlags[featureId]
+                                    environmentFlags?.[featureId]
                                   }
                                 />
                               )
