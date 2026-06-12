@@ -27,24 +27,27 @@
 .dark {
     .input-container {
         input.input {
-            border: 1px solid $input-hover-border-color-dark;
-            background-color: $input-bg-dark;
-            color: $text-icon-light;
+            border: 1px solid var(--color-border-default);
+            background-color: var(--color-surface-default);
+            color: var(--color-text-default);
+            // Dark hover/focus stay action-coloured (was $primary) — the light
+            // rule uses --color-border-strong on hover, so this override keeps
+            // the existing dark behaviour rather than inheriting it.
             &:hover {
-                border: 1px solid $input-focus-border-color-dark;
+                border: 1px solid var(--color-border-action);
             }
             &:focus {
-                border: 1px solid $input-focus-border-color-dark;
+                border: 1px solid var(--color-border-action);
             }
             &::placeholder {
-                color: $input-placeholder-color-dark;
+                color: var(--color-text-tertiary);
             }
             &:disabled {
-                border: 1px solid $black-alpha-32;
-                color: $text-icon-light-grey;
+                border: 1px solid var(--color-border-disabled);
+                color: var(--color-text-disabled);
                 & + .input-icon-right {
                     path {
-                        fill: $text-icon-light-grey;
+                        fill: var(--color-text-disabled);
                         opacity: $btn-disabled-opacity;
                     }
                 }
@@ -60,27 +63,27 @@
 .react-datepicker-wrapper .react-datepicker__input-container {
     &.invalid {
         input.input {
-            border-color: $danger !important;
+            border-color: var(--color-border-danger) !important;
         }
     }
     &.success {
         input.input {
-            border-color: $success !important;
+            border-color: var(--color-border-success) !important;
         }
     }
 
     input.input {
-        border: 1px solid $input-border-color;
-        background-color: $input-bg;
+        border: 1px solid var(--color-border-default);
+        background-color: var(--color-surface-default);
         @include transition(all 200ms);
         &:hover {
-            border: 1px solid $basic-alpha-48;
+            border: 1px solid var(--color-border-strong);
         }
         &:focus {
-            border: 1px solid $primary;
+            border: 1px solid var(--color-border-action);
         }
         border-radius: $border-radius;
-        color: $body-color;
+        color: var(--color-text-default);
         height: $input-height;
         line-height: $line-height-lg;
         padding: 12px 12px 12px 16px;
@@ -89,7 +92,7 @@
         }
 
         &::placeholder {
-            color: $input-placeholder-color;
+            color: var(--color-text-tertiary);
             font-weight: normal;
         }
 
