@@ -89,6 +89,11 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
     permission: EnvironmentPermission.UPDATE_FEATURE_STATE,
     tags: projectFlag?.tags,
   })
+  const isEnvironmentAdmin = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission: EnvironmentPermission.ADMIN,
+  })
 
   useEffect(() => {
     AppActions.getChangeRequest(id, projectId, environmentId)
@@ -338,6 +343,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       />
       <ChangeRequestPageInner
         hidePublish={!projectFlag}
+        canManageChangeRequests={isEnvironmentAdmin?.permission}
         publishChangeRequest={publishChangeRequest}
         approvePermission={approvePermission?.permission}
         approveChangeRequest={approveChangeRequest}
@@ -420,6 +426,7 @@ type ChangeRequestPageInnerType = {
   approvePermission: boolean | undefined
   publishPermission: boolean | undefined
   isScheduled: boolean
+  canManageChangeRequests?: boolean
   hidePublish?: boolean
   scheduledDate?: moment.Moment | null
   changeRequest: ProjectChangeRequest | ChangeRequest | undefined
@@ -434,6 +441,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
   addOwner,
   approveChangeRequest,
   approvePermission,
+  canManageChangeRequests,
   changeRequest,
   deleteChangeRequest,
   editChangeRequest,
@@ -539,13 +547,13 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
     changeRequest &&
     changeRequest.user &&
     orgUsers.find((v) => v.id === changeRequest.user)
-  const isYours = AccountStore.getUserId() === changeRequest.user
+
   return (
     <div>
       <PageTitle
         cta={
           (!changeRequest.committed_at || isScheduled) &&
-          isYours && (
+          (isYourChangeRequest || !!canManageChangeRequests) && (
             <Row>
               <Button theme='secondary' onClick={deleteChangeRequest}>
                 Delete
@@ -564,7 +572,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
         by {user ? `${user.first_name} ${user.last_name}` : 'Unknown user'}
       </PageTitle>
       <p className='mt-2'>{changeRequest.description}</p>
-      {hasApprovals && isYours && !changeRequest.committed_at && (
+      {hasApprovals && isYourChangeRequest && !changeRequest.committed_at && (
         <div className='col-md-6 mb-4'>
           <InfoMessage>
             This change request has been approved and can no longer be edited.
@@ -652,7 +660,9 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                     <Row
                       key={g.id}
                       onClick={
-                        hasApprovals ? undefined : () => removeOwner(g.id, false)
+                        hasApprovals
+                          ? undefined
+                          : () => removeOwner(g.id, false)
                       }
                       className='chip'
                       style={{
