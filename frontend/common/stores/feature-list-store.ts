@@ -27,6 +27,7 @@ import {
   TypedFeatureState,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
+import { sortMultivariateOptions } from 'common/utils/multivariate'
 import Actions from 'common/dispatcher/action-constants'
 import Project from 'common/project'
 import flagsmith from '@flagsmith/flagsmith'
@@ -989,14 +990,9 @@ const controller = {
           ...fs,
           segment: fs.segment.id,
         })),
-      // The API returns multivariate options in unspecified order, which
-      // can change after any update — keep creation order stable for the
-      // UI and for index-based weight mapping.
       multivariate_options:
         flag.multivariate_options &&
-        [...flag.multivariate_options].sort(
-          (a: MultivariateOption, b: MultivariateOption) => a.id - b.id,
-        ),
+        sortMultivariateOptions(flag.multivariate_options),
     }
   },
   searchFeatures: throttle(
