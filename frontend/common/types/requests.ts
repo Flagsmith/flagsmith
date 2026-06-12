@@ -24,6 +24,7 @@ import {
   StageActionType,
   StageActionBody,
   ChangeRequest,
+  ExpectedDirection,
   ExperimentStatus,
   MetricAggregation,
   MetricDirection,
@@ -1031,7 +1032,12 @@ export type Req = {
   }>
   createExperiment: {
     environmentId: string
-    body: { name: string; hypothesis: string; feature: number }
+    body: {
+      name: string
+      hypothesis: string
+      feature: number
+      metrics: { metric: number; expected_direction: ExpectedDirection }[]
+    }
   }
   experimentAction: { environmentId: string; experimentId: number }
   deleteExperiment: { environmentId: string; experimentId: number }

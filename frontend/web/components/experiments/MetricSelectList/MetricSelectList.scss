@@ -1,0 +1,21 @@
+.metric-select-card {
+  border: 1px solid var(--color-border-default);
+  background: none;
+  width: 100%;
+  transition: border-color var(--duration-fast) ease,
+    background-color var(--duration-fast) ease;
+
+  &:hover {
+    border-color: var(--color-border-action);
+  }
+
+  &--selected {
+    border-color: var(--color-border-action);
+    background-color: var(--color-surface-action-subtle);
+  }
+
+  &__name {
+    font-weight: 500;
+    color: var(--color-text-default);
+  }
+}
