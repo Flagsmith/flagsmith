@@ -1,5 +1,6 @@
-import { ChangeEvent, FC } from 'react'
+import { ChangeEvent, FC, useMemo } from 'react'
 import { ProjectFlag } from 'common/types/responses'
+import { useGetExperimentsQuery } from 'common/services/useExperiment'
 import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import useDebouncedSearch from 'common/useDebouncedSearch'
@@ -49,6 +50,20 @@ const SetupStep: FC<SetupStepProps> = ({
 
   const multivariateFeatures = featureList?.results ?? []
 
+  // One active (non-completed) experiment per feature and environment is
+  // enforced by the API — grey those features out instead of 409ing at launch.
+  const { data: experimentsData } = useGetExperimentsQuery(
+    { environmentId, page: 1, page_size: 100 },
+    { skip: !environmentId },
+  )
+  const featureIdsInExperiment = useMemo(() => {
+    const ids = new Set<number>()
+    experimentsData?.results?.forEach((experiment) => {
+      if (experiment.status !== 'completed') ids.add(experiment.feature.id)
+    })
+    return ids
+  }, [experimentsData])
+
   return (
     <div className='d-flex flex-column gap-4'>
       <ContentCard
@@ -96,11 +111,17 @@ const SetupStep: FC<SetupStepProps> = ({
                 ? { label: selectedFeature.name, value: selectedFeature.id }
                 : null
             }
-            options={multivariateFeatures.map((f) => ({
-              feature: f,
-              label: f.name,
-              value: f.id,
-            }))}
+            options={multivariateFeatures.map((f) => {
+              const isInExperiment = featureIdsInExperiment.has(f.id)
+              return {
+                feature: f,
+                isDisabled: isInExperiment,
+                label: isInExperiment
+                  ? `${f.name} (already in an experiment)`
+                  : f.name,
+                value: f.id,
+              }
+            })}
             onInputChange={(val: string) => setSearchInput(val)}
             onChange={(
               option: {
