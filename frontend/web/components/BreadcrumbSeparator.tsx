@@ -1,4 +1,11 @@
-import React, { FC, ReactNode, useEffect, useRef, useState } from 'react'
+import React, {
+  FC,
+  KeyboardEvent,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { IonIcon } from '@ionic/react'
 import { checkmarkCircle, chevronDown, chevronUp } from 'ionicons/icons'
 import InlineModal from './InlineModal'
@@ -198,7 +205,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   )
 
   const navigateOrganisations = (
-    e: React.KeyboardEvent,
+    e: KeyboardEvent,
     organisations: Organisation[],
   ) => {
     const currentIndex = organisations
@@ -212,7 +219,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   }
 
   const getNewIndex = (
-    e: React.KeyboardEvent,
+    e: KeyboardEvent,
     currentIndex: number,
     items: any[] | undefined,
     go: (item: any) => void,
@@ -237,7 +244,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
 
     return -1
   }
-  const navigateProjects = (e: React.KeyboardEvent) => {
+  const navigateProjects = (e: KeyboardEvent) => {
     const currentIndex = projects
       ? projects.findIndex((v) => `${v.id}` === `${hoveredProject}`)
       : -1
