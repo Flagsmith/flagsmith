@@ -11,6 +11,16 @@ export const warehouseConnectionService = service
         Req['createWarehouseConnection']
       >({
         invalidatesTags: [{ id: 'LIST', type: 'WarehouseConnection' }],
+        async onQueryStarted({ environmentId }, { dispatch, queryFulfilled }) {
+          const { data } = await queryFulfilled
+          dispatch(
+            warehouseConnectionService.util.updateQueryData(
+              'getWarehouseConnections',
+              { environmentId },
+              () => [data],
+            ),
+          )
+        },
         query: ({ environmentId, ...body }) => ({
           body,
           method: 'POST',
