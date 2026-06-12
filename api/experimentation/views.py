@@ -164,7 +164,8 @@ class ExperimentViewSet(
         qs = super().get_queryset()
         if self.action in ("list", "retrieve"):
             qs = qs.select_related("feature").prefetch_related(
-                "feature__multivariate_options"
+                "feature__multivariate_options",
+                "experiment_metrics__metric",
             )
         status_filter = self.request.query_params.get("status")
         if status_filter:
