@@ -10,6 +10,8 @@ type SelectableCardProps = {
   title: string
   description: string
   badge?: { label: string; variant: BadgeVariant }
+  /** Small info tags rendered under the description (e.g. measurement type). */
+  tags?: string[]
   disabled?: boolean
 }
 
@@ -20,6 +22,7 @@ const SelectableCard: FC<SelectableCardProps> = ({
   icon,
   onClick,
   selected,
+  tags,
   title,
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -43,6 +46,15 @@ const SelectableCard: FC<SelectableCardProps> = ({
         {icon && <div className='selectable-card__icon'>{icon}</div>}
         <span className='selectable-card__title'>{title}</span>
         <span className='selectable-card__description'>{description}</span>
+        {!!tags?.length && (
+          <div className='selectable-card__tags'>
+            {tags.map((tag) => (
+              <span key={tag} className='selectable-card__tag'>
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       {badge && (
         <div className='selectable-card__aside'>

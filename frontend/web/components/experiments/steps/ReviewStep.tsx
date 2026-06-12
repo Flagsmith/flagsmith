@@ -3,10 +3,7 @@ import { ExpectedDirection, Metric, ProjectFlag } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import ContentCard from 'components/base/grid/ContentCard'
 import VariationTable from 'components/experiments/VariationTable'
-import {
-  getExpectedDirectionLabel,
-  METRIC_DIRECTION_LABELS,
-} from 'components/experiments/constants'
+import { getExpectedDirectionLabel } from 'components/experiments/constants'
 import './ReviewStep.scss'
 
 type ReviewStepProps = {
@@ -68,7 +65,7 @@ const ReviewStep: FC<ReviewStepProps> = ({
       </ContentCard>
 
       <ContentCard
-        title='Measurement'
+        title={selectedMetric ? 'Measurement (1 metric)' : 'Measurement'}
         action={
           <Button theme='text' size='xSmall' onClick={onEditMeasurement}>
             Edit
@@ -76,34 +73,24 @@ const ReviewStep: FC<ReviewStepProps> = ({
         }
       >
         {selectedMetric ? (
-          <>
-            <div className='review-row review-row--block'>
-              <span className='text-muted'>Primary metric</span>
-              <span className='review-row__value'>{selectedMetric.name}</span>
+          <div className='review-metric-card'>
+            <div className='review-metric-card__content'>
+              <span className='review-metric-card__title'>
+                {selectedMetric.name}
+              </span>
               {!!selectedMetric.description && (
-                <span className='text-secondary'>
+                <span className='review-metric-card__description'>
                   {selectedMetric.description}
                 </span>
               )}
-              <div className='d-flex flex-wrap gap-2 mt-1'>
-                <span className='bg-surface-subtle rounded-sm px-2 py-1 fs-small text-secondary'>
-                  {selectedMetric.definition.event}:{' '}
-                  {selectedMetric.aggregation}
-                </span>
-                <span className='bg-surface-subtle rounded-sm px-2 py-1 fs-small text-secondary'>
-                  {METRIC_DIRECTION_LABELS[selectedMetric.direction]}
-                </span>
-              </div>
-            </div>
-            {expectedDirection && (
-              <div className='review-row review-row--block'>
-                <span className='text-muted'>Expected direction</span>
-                <span className='review-row__value'>
+              {expectedDirection && (
+                <span className='review-metric-card__direction'>
                   {getExpectedDirectionLabel(expectedDirection)}
                 </span>
-              </div>
-            )}
-          </>
+              )}
+            </div>
+            <span className='review-metric-card__badge'>Primary</span>
+          </div>
         ) : (
           <p className='text-muted mb-0'>No metric selected.</p>
         )}

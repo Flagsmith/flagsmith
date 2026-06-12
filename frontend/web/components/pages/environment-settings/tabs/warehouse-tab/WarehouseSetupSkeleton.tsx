@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import Skeleton from 'components/Skeleton'
 import './WarehouseSetup.scss'
-import './SelectableCard.scss'
+import 'components/base/SelectableCard/SelectableCard.scss'
 
 // Mirrors the WarehouseSetup layout (warehouse-type selector + Flagsmith enable
 // card) so the loading state has the same shape as the empty state it resolves

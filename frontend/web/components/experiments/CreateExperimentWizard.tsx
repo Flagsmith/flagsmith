@@ -11,6 +11,8 @@ import ReviewStep from './steps/ReviewStep'
 
 const TOTAL_STEPS = 4
 const MEASUREMENT_STEP = 2
+// Hidden until the preview content is wired up to the wizard state
+const SHOW_LIVE_PREVIEW = false
 
 type CreateExperimentWizardProps = {
   environmentId: string
@@ -197,7 +199,7 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
           onLaunch={handleLaunch}
         />
       </div>
-      <LivePreviewPanel />
+      {SHOW_LIVE_PREVIEW && <LivePreviewPanel />}
     </div>
   )
 }

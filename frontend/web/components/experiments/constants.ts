@@ -27,9 +27,9 @@ export const TAB_ORDER: FilterTab[] = [
 ]
 
 export const METRIC_DIRECTION_LABELS: Record<MetricDirection, string> = {
-  down: '↓ Lower is better',
-  informational: 'Informational',
-  up: '↑ Higher is better',
+  down: '↓ lower is better',
+  informational: 'informational',
+  up: '↑ higher is better',
 }
 
 export type ExpectedDirectionOption = {

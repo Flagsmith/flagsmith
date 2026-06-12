@@ -3,7 +3,7 @@ import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 import { WarehouseType } from 'common/types/responses'
 import { ConfigFormData } from './ConfigForm'
-import SelectableCard from './SelectableCard'
+import SelectableCard from 'components/base/SelectableCard'
 import ConfigForm from './ConfigForm'
 import './WarehouseSetup.scss'
 
