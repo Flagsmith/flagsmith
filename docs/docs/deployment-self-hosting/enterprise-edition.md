@@ -53,6 +53,12 @@ This image includes additions from the SaaS image above:
 - MySQL Support
 - AppDynamics Integration
 
+## Licensing
+
+Enterprise Edition deployments require a valid licence to configure seat and project limits for your organisation. See
+[Enterprise Licence](/deployment-self-hosting/core-configuration/licence) for instructions on uploading your licence via
+the dashboard or API.
+
 ## Environment Variables
 
 ### Frontend Environment Variables
