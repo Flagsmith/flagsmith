@@ -8,7 +8,7 @@ export default (WrappedComponent) => {
       super(props)
       this.state = {
         error: ConfigStore.error,
-        isLoading: ConfigStore.model ? ConfigStore.isLoading : true,
+        isLoading: ConfigStore.hasLoaded ? ConfigStore.isLoading : true,
       }
       ES6Component(this)
     }
