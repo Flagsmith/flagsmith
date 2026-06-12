@@ -1413,5 +1413,12 @@ export type Res = {
   experiment: Experiment
   metric: Metric
   metrics: PagedResponse<Metric>
+  multivariateOption: MultivariateOption
+  saveMultivariateOptions: {
+    multivariate_options: MultivariateOption[]
+    // Per-option API errors keyed by the input option's index; null when all
+    // requests succeeded.
+    errors: Record<number, any> | null
+  }
   // END OF TYPES
 }

@@ -221,7 +221,9 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
       <span className='ml-1'>
         <Icon name='info-outlined' />
       </span>
-      <span className='chip chip--xs ml-2'>{controlPercentage}%</span>
+      <span className='chip chip--xs ml-2'>
+        {Math.max(0, controlPercentage)}%
+      </span>
     </span>
   ) : (
     'Value'

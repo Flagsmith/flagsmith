@@ -12,16 +12,22 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     const {
         assertNumberOfVersions,
         click,
+        closeModal,
         compareVersion,
         createFeature,
         createOrganisationAndProject,
         createRemoteConfig,
         editRemoteConfig,
+        gotoFeature,
+        gotoFeatures,
         login,
+        setText,
         toggleFeature,
         tryItExpect,
+        waitForElementNotExist,
         waitForElementVisible,
         waitForFeatureSwitch,
+        waitForToast,
         waitForToastsToClear,
     } = createHelpers(page)
     const flagsmith = await getFlagsmith()
@@ -78,6 +84,38 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     await compareVersion('a', 0, null, true, true, 'small', 'medium')
     await compareVersion('b', 0, null, true, true, 'small', 'small')
     await compareVersion('c', 0, null, false, true, null, null)
+
+    // ===================================================================================
+    // Test: Multivariate option edits in a versioned environment
+    // A label edit plus a structural change (new variant) in a single save must
+    // survive a reopen — the versioned save consumes option ids positionally
+    // from the multivariate save, so this pins that contract under v2.
+    // ===================================================================================
+    log('Edit variant label and add a variant in one save (versioned env)')
+    await gotoFeatures()
+    await gotoFeature('b')
+    await click(byId('featureVariationKeyEdit0'))
+    await setText(byId('featureVariationKeyInput0'), 'primary')
+    await click(byId('featureVariationKeySave0'))
+    await expect(page.locator(byId('featureVariationKey0'))).toHaveText('primary')
+    await click(byId('add-variation'))
+    await page.waitForTimeout(200)
+    await setText(byId('featureVariationValue2'), 'huge')
+    await page.waitForTimeout(500)
+    await click(byId('update-feature-btn'))
+    await waitForToast()
+    await closeModal()
+    await waitForElementNotExist('#create-feature-modal')
+
+    log('Label and new variant survived the versioned save')
+    await gotoFeatures()
+    await gotoFeature('b')
+    await expect(page.locator('#create-feature-modal .variant-card')).toHaveCount(3)
+    await expect(page.locator(byId('featureVariationKey0'))).toHaveText('primary')
+    await expect(page.locator(byId('featureVariationWeightbig'))).toHaveValue('100')
+    await expect(page.locator(byId('featureVariationWeighthuge'))).toBeVisible()
+    await closeModal()
+    await waitForElementNotExist('#create-feature-modal')
 
     // ===================================================================================
     // Test: Row toggle in versioned environment
