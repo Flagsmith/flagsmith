@@ -133,3 +133,14 @@ Labels:
  - `task_type`
  - `result`
 
+### `flagsmith_worker_rss_bytes`
+
+Gauge.
+
+Maximum RSS (high-water mark) of the worker process in bytes, read from VmHWM in /proc/self/status.
+
+Labels:
+ - `pid`
+
+
+

@@ -364,6 +364,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "core.middleware.structlog_context.StructlogContextMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
@@ -1452,6 +1453,9 @@ if LICENSING_INSTALLED:
     INSTALLED_APPS.append("licensing")
 
 PROMETHEUS_ENABLED = env.bool("PROMETHEUS_ENABLED", False)
+
+if PROMETHEUS_ENABLED:
+    MIDDLEWARE.append("core.middleware.worker_rss.WorkerRSSMiddleware")
 
 DOCGEN_MODE = env.bool("DOCGEN_MODE", default=False)
 
