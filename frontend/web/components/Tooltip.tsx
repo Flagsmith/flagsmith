@@ -56,7 +56,8 @@ const Tooltip: FC<TooltipProps> = ({
         float={effect === 'float'}
         afterShow={afterShow}
         delayShow={delayShow}
-        style={{ wordBreak: 'break-word' }}
+        style={{ fontWeight: 'normal', wordBreak: 'break-word' }}
+        noArrow
       />
     </>
   )
