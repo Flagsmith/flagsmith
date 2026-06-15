@@ -8,8 +8,9 @@ import React, {
   useRef,
 } from 'react'
 import cn from 'classnames'
-import Icon from 'components/icons/Icon'
 import { TooltipProps } from 'components/Tooltip'
+import FieldError from './FieldError'
+import FieldLabel from './FieldLabel'
 import Input, { InputProps, InputSize } from './Input'
 
 export interface InputGroupMethods {
@@ -101,6 +102,16 @@ const InputGroup: FC<InputGroupProps> = ({
   }))
 
   const { error, ...restInputProps } = inputProps ?? {}
+  // Wire label -> control -> error off the same id so screen readers announce
+  // the message for this field (htmlFor/id/aria-describedby all share `id`).
+  const errorId = `${id}-error`
+  const hasError = Array.isArray(error) ? error.length > 0 : !!error
+  let errorContent: ReactNode = null
+  if (typeof error === 'string') {
+    errorContent = error
+  } else if (Array.isArray(error) && error.length) {
+    errorContent = error.map((err, i) => <div key={i}>{err}</div>)
+  }
 
   return (
     <div
@@ -109,34 +120,19 @@ const InputGroup: FC<InputGroupProps> = ({
         'invalid': !!isInvalid,
       })}
     >
-      {tooltip ? (
-        <Tooltip
-          title={
-            <label
-              htmlFor={id}
-              className='cols-sm-2 control-label cursor-pointer'
-            >
-              <div>
-                {title} {!hideTooltipIcon && <Icon name='info-outlined' />}{' '}
-                {unsaved && <div className='unread'>Unsaved</div>}
-              </div>
-            </label>
-          }
-          place={tooltipPlace || 'top'}
-        >
-          {tooltip}
-        </Tooltip>
-      ) : (
+      {(!!title || !!tooltip) && (
         <Row>
-          {!!title && (
-            <Flex>
-              <label htmlFor={id} className='cols-sm-2 control-label'>
-                <div>
-                  {title} {unsaved && <div className='unread'>Unsaved</div>}
-                </div>
-              </label>
-            </Flex>
-          )}
+          <Flex>
+            <FieldLabel
+              htmlFor={id}
+              className='cols-sm-2'
+              tooltip={hideTooltipIcon ? undefined : tooltip}
+              tooltipPlace={tooltipPlace}
+            >
+              {title}
+              {unsaved && <div className='unread'>Unsaved</div>}
+            </FieldLabel>
+          </Flex>
           {!!rightComponent && (
             <div style={{ marginBottom: '0.5rem' }}>{rightComponent}</div>
           )}
@@ -160,6 +156,8 @@ const InputGroup: FC<InputGroupProps> = ({
                 data-test={dataTest}
                 onChange={onChange}
                 id={id}
+                aria-invalid={hasError}
+                aria-describedby={hasError ? errorId : undefined}
                 placeholder={placeholder}
                 onBlur={onBlur}
               />
@@ -181,6 +179,8 @@ const InputGroup: FC<InputGroupProps> = ({
                 onChange={onChange}
                 type={type || 'text'}
                 id={id}
+                aria-invalid={hasError}
+                aria-describedby={hasError ? errorId : undefined}
                 onBlur={onBlur}
                 placeholder={placeholder}
                 size={size}
@@ -189,19 +189,7 @@ const InputGroup: FC<InputGroupProps> = ({
           </div>
         )}
       </div>
-      {error && (
-        <span>
-          <span
-            id={inputProps?.name ? `${inputProps.name}-error` : ''}
-            className='text-danger'
-          >
-            {typeof error === 'string'
-              ? error
-              : !!error?.length &&
-                error.map((err, i) => <div key={i}>{err}</div>)}
-          </span>
-        </span>
-      )}
+      <FieldError id={errorId} error={errorContent} />
     </div>
   )
 }

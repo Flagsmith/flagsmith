@@ -1,7 +1,7 @@
 import React, { FC, ReactNode } from 'react'
 import cn from 'classnames'
 import Icon from 'components/icons/Icon'
-import Tooltip from 'components/Tooltip'
+import Tooltip, { TooltipProps } from 'components/Tooltip'
 
 interface FieldLabelProps {
   // Associates the label with its control; required for accessibility.
@@ -11,6 +11,8 @@ interface FieldLabelProps {
   required?: boolean
   // When set, an info icon follows the label and reveals this text on hover.
   tooltip?: string
+  // Placement of the tooltip relative to the icon (defaults to 'top').
+  tooltipPlace?: TooltipProps['place']
   className?: string
 }
 
@@ -22,6 +24,7 @@ const FieldLabel: FC<FieldLabelProps> = ({
   htmlFor,
   required,
   tooltip,
+  tooltipPlace = 'top',
 }) => (
   <label
     htmlFor={htmlFor}
@@ -36,7 +39,7 @@ const FieldLabel: FC<FieldLabelProps> = ({
     {tooltip && (
       <Tooltip
         title={<Icon name='info-outlined' width={12} height={12} />}
-        place='top'
+        place={tooltipPlace}
         titleClassName='cursor-pointer ml-1'
       >
         {tooltip}
