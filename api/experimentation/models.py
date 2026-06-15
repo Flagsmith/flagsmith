@@ -147,7 +147,6 @@ class ExperimentExposures(models.Model):
 
     @property
     def is_final(self) -> bool:
-        # Recomputing a final row can only lose data: warehouse events expire.
         ended_at = self.experiment.ended_at
         return (
             ended_at is not None and self.as_of is not None and self.as_of >= ended_at
