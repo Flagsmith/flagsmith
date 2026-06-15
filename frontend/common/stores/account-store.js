@@ -314,6 +314,7 @@ const controller = {
     getStore().dispatch(setSelectedOrganisationId(id))
     store.changed()
     identifyChatUser()
+    API.setFlagsmithOrganisationPlanTrait()
   },
 
   setToken: (token) => {
