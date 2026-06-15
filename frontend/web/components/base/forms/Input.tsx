@@ -11,7 +11,7 @@ import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 import { colorIconDanger } from 'common/theme/tokens'
 
-type InputSize = 'default' | 'large' | 'small' | 'xSmall'
+export type InputSize = 'default' | 'large' | 'small' | 'xSmall'
 
 // Imperative API exposed via ref (React 19 ref-as-prop, no forwardRef).
 // focus() is a no-op under E2E, matching the original behaviour.
