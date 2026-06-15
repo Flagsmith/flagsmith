@@ -264,7 +264,11 @@ WITH exposures AS (
 
 
 def _metric_value_expression(index: int, aggregation: str) -> str:
-    condition = f"m.event = %(metric_{index}_event)s"
+    # Post-exposure attribution lives here, not in the JOIN ON: ClickHouse
+    # rejects an ON clause mixing left and right columns in an inequality.
+    condition = (
+        f"m.event = %(metric_{index}_event)s AND m.timestamp >= e.first_exposure"
+    )
     value = "toFloat64OrZero(m.value)"
     if aggregation == MetricAggregation.OCCURRENCE:
         return f"countIf({condition}) > 0"
@@ -305,7 +309,6 @@ unit_values AS (
         ON m.identifier = e.identifier
         AND m.environment_key = %(environment_key)s
         AND m.event IN %(metric_events)s
-        AND m.timestamp >= e.first_exposure
         AND m.timestamp < %(window_end)s
     WHERE e.quarantined = 0
     GROUP BY e.identifier, e.variant

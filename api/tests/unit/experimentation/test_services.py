@@ -615,8 +615,14 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     assert "m.timestamp >= e.first_exposure" in sql
     assert "timestamp < %(window_end)s" in sql
     assert "WHERE e.quarantined = 0" in sql
-    assert "countIf(m.event = %(metric_0_event)s) > 0 AS m0" in sql
-    assert "sumIf(toFloat64OrZero(m.value), m.event = %(metric_1_event)s) AS m1" in sql
+    assert (
+        "countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure)"
+        " > 0 AS m0" in sql
+    )
+    assert (
+        "sumIf(toFloat64OrZero(m.value), m.event = %(metric_1_event)s"
+        " AND m.timestamp >= e.first_exposure) AS m1" in sql
+    )
     assert "sum(m0) AS m0_sum, sum(m0 * m0) AS m0_sum_squares" in sql
     assert params["metric_events"] == ["purchase", "revenue"]
     assert params["metric_0_event"] == "purchase"
@@ -656,16 +662,22 @@ def test_get_metric_variant_stats__no_metrics__counts_variants_only(
 @pytest.mark.parametrize(
     "aggregation, expected",
     [
-        (MetricAggregation.OCCURRENCE, "countIf(m.event = %(metric_0_event)s) > 0"),
-        (MetricAggregation.COUNT, "countIf(m.event = %(metric_0_event)s)"),
+        (
+            MetricAggregation.OCCURRENCE,
+            "countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure) > 0",
+        ),
+        (
+            MetricAggregation.COUNT,
+            "countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure)",
+        ),
         (
             MetricAggregation.SUM,
-            "sumIf(toFloat64OrZero(m.value), m.event = %(metric_0_event)s)",
+            "sumIf(toFloat64OrZero(m.value), m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure)",
         ),
         (
             MetricAggregation.MEAN,
-            "if(countIf(m.event = %(metric_0_event)s) > 0, "
-            "avgIf(toFloat64OrZero(m.value), m.event = %(metric_0_event)s), 0)",
+            "if(countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure) > 0, "
+            "avgIf(toFloat64OrZero(m.value), m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure), 0)",
         ),
     ],
     ids=["occurrence", "count", "sum", "mean"],
