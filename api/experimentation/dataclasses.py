@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from experimentation.stats import Inference, VariantStats
 from experimentation.types import ExposureGranularity
 
 
@@ -34,3 +35,24 @@ class ExposuresTimeseries:
 class ExposuresSummary:
     excluded_identities: int
     timeseries: ExposuresTimeseries
+
+
+@dataclass(frozen=True)
+class MetricSpec:
+    metric_id: int
+    event: str
+    aggregation: str
+    lower_is_better: bool
+
+
+@dataclass(frozen=True)
+class MetricResult:
+    metric_id: int
+    variants: dict[str, VariantStats]
+    inference: dict[str, Inference | None]
+
+
+@dataclass(frozen=True)
+class ResultsSummary:
+    srm_p_value: float | None
+    metrics: list[MetricResult]
