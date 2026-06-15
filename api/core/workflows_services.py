@@ -4,10 +4,8 @@ import structlog
 from django.db import transaction
 from django.utils import timezone
 
-from environments.tasks import rebuild_environment_document
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
-from features.versioning.tasks import trigger_update_version_webhooks
 from features.workflows.core.exceptions import ChangeRequestNotApprovedError
 
 if TYPE_CHECKING:
@@ -86,18 +84,6 @@ class ChangeRequestCommitService:
             )
 
             for environment_feature_version in environment_feature_versions:
-                trigger_update_version_webhooks.delay(
-                    kwargs={
-                        "environment_feature_version_uuid": str(
-                            environment_feature_version.uuid
-                        )
-                    },
-                    delay_until=environment_feature_version.live_from,
-                )
-                rebuild_environment_document.delay(
-                    kwargs={"environment_id": self.change_request.environment_id},
-                    delay_until=environment_feature_version.live_from,
-                )
                 environment_feature_version_published.send(
                     EnvironmentFeatureVersion, instance=environment_feature_version
                 )
