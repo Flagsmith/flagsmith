@@ -45,6 +45,10 @@ import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
 import Dispatcher from 'common/dispatcher/dispatcher'
 import BaseStore from './base/_store'
 import data from 'common/data/base/_data'
+import {
+  createMultivariateOption,
+  saveMultivariateOptions,
+} from 'common/services/useMultivariateOption'
 import { createSegmentOverride } from 'common/services/useSegmentOverride'
 import { getStore } from 'common/store'
 let createdFirstFeature = false
@@ -122,13 +126,17 @@ const controller = {
         // Sequential so options get ascending ids in input order, which is
         // the order the UI displays.
         for (const v of flag.multivariate_options || []) {
-          await data.post(
-            `${Project.api}projects/${projectId}/features/${res.data.id}/mv-options/`,
-            {
+          const mvRes = await createMultivariateOption(getStore(), {
+            body: {
               ...v,
               feature: res.data.id,
             },
-          )
+            feature_id: res.data.id,
+            project_id: projectId,
+          })
+          if (mvRes.error) {
+            throw mvRes.error
+          }
         }
         return data.get(
           `${Project.api}projects/${projectId}/features/${res.data.id}/`,
@@ -242,90 +250,45 @@ const controller = {
       })
       return
     }
+    store.error = null
     const originalFlag =
       store.model && store.model.features
         ? store.model.features.find((v) => v.id === flag.id)
         : flag
-    store.error = null
-    Promise.all(
-      (flag.multivariate_options || []).map((v, i) => {
-        let originalMV = null
-        if (originalFlag?.multivariate_options) {
-          if (v.id) {
-            originalMV = originalFlag.multivariate_options.find(
-              (m: MultivariateOption) => m.id === v.id,
-            )
-          } else if (v.key) {
-            originalMV = originalFlag.multivariate_options.find(
-              (m: MultivariateOption) => !!m.key && m.key === v.key,
-            )
-          }
-        }
-        const url = `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`
-        const mvData = {
-          ...v,
-          default_percentage_allocation: 0,
-          feature: flag.id,
-        }
-        return (
-          originalMV
-            ? data.put(`${url}${originalMV.id}/`, mvData)
-            : data.post(url, mvData)
-        )
-          .then((res) => {
-            // It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
-            flag.multivariate_options[i] = res
-            return {
-              ...v,
-              id: res.id,
-            }
-          })
-          .catch((e) => Promise.reject({ mvIndex: i, source: e }))
-      }),
-    )
-      .then(() => {
-        const deletedMv = (originalFlag?.multivariate_options || []).filter(
-          (v) => !flag.multivariate_options.find((x) => v.id === x.id),
-        )
-        return Promise.all(
-          deletedMv.map((v) =>
-            data.delete(
-              `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${v.id}/`,
-            ),
-          ),
-        )
-      })
-      .then(() => {
-        if (onComplete) {
-          onComplete(flag)
-        }
-      })
-      .catch((e) => {
-        if (typeof e?.mvIndex !== 'number') {
-          API.ajaxHandler(store, e)
-          return
-        }
-        // Attribute the failure to the option that caused it so the UI
-        // can surface it on the right variation.
-        const surface = (body: any) => {
-          store.error = { multivariate_options: { [e.mvIndex]: body } } as any
-          store.goneABitWest()
-        }
-        if (typeof e.source?.text === 'function') {
-          e.source
-            .text()
-            .then((text: string) => {
-              let body = text
-              try {
-                body = JSON.parse(text)
-              } catch {}
-              surface(body)
-            })
-            .catch(() => surface(null))
-        } else {
-          surface(e.source ?? null)
-        }
-      })
+    // Standard flags carry no multivariate data — skip the round-trip.
+    if (
+      !flag.multivariate_options?.length &&
+      !originalFlag?.multivariate_options?.length
+    ) {
+      if (onComplete) {
+        onComplete(flag)
+      }
+      return
+    }
+    saveMultivariateOptions(getStore(), {
+      feature_id: flag.id,
+      multivariate_options: flag.multivariate_options || [],
+      project_id: projectId,
+    }).then((res) => {
+      if (res.error) {
+        API.ajaxHandler(store, res.error)
+        return
+      }
+      if (res.data.errors) {
+        store.error = { multivariate_options: res.data.errors } as any
+        store.goneABitWest()
+        return
+      }
+      // It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
+      res.data.multivariate_options.forEach(
+        (v: MultivariateOption, i: number) => {
+          flag.multivariate_options[i] = v
+        },
+      )
+      if (onComplete) {
+        onComplete(flag)
+      }
+    })
   },
   editFeatureState: async (
     projectId,

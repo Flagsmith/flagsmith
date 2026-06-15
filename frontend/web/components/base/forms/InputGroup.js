@@ -29,7 +29,10 @@ const InputGroup = class extends Component {
         {this.props.tooltip ? (
           <Tooltip
             title={
-              <label htmlFor={id} className='cols-sm-2 control-label'>
+              <label
+                htmlFor={id}
+                className='cols-sm-2 control-label cursor-pointer'
+              >
                 <div>
                   {props.title}{' '}
                   {!props.hideTooltipIcon && <Icon name='info-outlined' />}{' '}
