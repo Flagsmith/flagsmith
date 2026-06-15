@@ -1,6 +1,7 @@
 import { FC, useCallback, useMemo, useState } from 'react'
 import { ExpectedDirection, Metric, ProjectFlag } from 'common/types/responses'
 import { useCreateExperimentMutation } from 'common/services/useExperiment'
+import { METRIC_DIRECTION_TO_EXPECTED_DIRECTION } from './constants'
 import WizardStepper from './WizardStepper'
 import WizardNavButtons from './WizardNavButtons'
 import LivePreviewPanel from './LivePreviewPanel'
@@ -11,7 +12,6 @@ import ReviewStep from './steps/ReviewStep'
 
 const TOTAL_STEPS = 4
 const MEASUREMENT_STEP = 2
-// Hidden until the preview content is wired up to the wizard state
 const SHOW_LIVE_PREVIEW = false
 
 type CreateExperimentWizardProps = {
@@ -58,9 +58,9 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
 
   const handleMetricSelect = useCallback((metric: Metric) => {
     setSelectedMetric(metric)
-    // The metric's own direction and the experiment's expected direction
-    // are independent concepts — picking a metric never implies a direction.
-    setExpectedDirection(null)
+    setExpectedDirection(
+      METRIC_DIRECTION_TO_EXPECTED_DIRECTION[metric.direction],
+    )
   }, [])
 
   const handleContinue = useCallback(() => {

@@ -50,8 +50,6 @@ const SetupStep: FC<SetupStepProps> = ({
 
   const multivariateFeatures = featureList?.results ?? []
 
-  // One active (non-completed) experiment per feature and environment is
-  // enforced by the API — grey those features out instead of 409ing at launch.
   const { data: experimentsData } = useGetExperimentsQuery(
     { environmentId, page: 1, page_size: 100 },
     { skip: !environmentId },

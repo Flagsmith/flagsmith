@@ -14,10 +14,6 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 
 from core.models import SoftDeleteExportableModel
 from environments.models import Environment
-from experimentation.tasks import (
-    add_environment_key_to_ingestion,
-    delete_environment_key_from_ingestion,
-)
 from experimentation.types import MetricDefinition
 
 if typing.TYPE_CHECKING:
@@ -73,12 +69,16 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
 
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def sync_to_ingestion_on_create(self) -> None:
+        from experimentation.tasks import add_environment_key_to_ingestion
+
         add_environment_key_to_ingestion.delay(
             kwargs={"environment_api_key": self.environment.api_key},
         )
 
     @hook(AFTER_DELETE)  # type: ignore[misc]
     def sync_to_ingestion_on_delete(self) -> None:
+        from experimentation.tasks import delete_environment_key_from_ingestion
+
         delete_environment_key_from_ingestion.delay(
             kwargs={"environment_api_key": self.environment.api_key},
         )
@@ -143,6 +143,14 @@ class ExperimentExposures(models.Model):
         models.JSONField(null=True, blank=True)
     )
     last_error_at = models.DateTimeField(null=True, blank=True)
+    refresh_requested_at = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def is_final(self) -> bool:
+        ended_at = self.experiment.ended_at
+        return (
+            ended_at is not None and self.as_of is not None and self.as_of >= ended_at
+        )
 
     def record_refresh(self, summary: "ExposuresSummary", as_of: datetime) -> None:
         self.payload = asdict(summary)
@@ -153,6 +161,10 @@ class ExperimentExposures(models.Model):
     def record_failure(self) -> None:
         self.last_error_at = timezone.now()
         self.save(update_fields=["last_error_at"])
+
+    def record_refresh_request(self) -> None:
+        self.refresh_requested_at = timezone.now()
+        self.save(update_fields=["refresh_requested_at"])
 
 
 class MetricAggregation(models.TextChoices):

@@ -25,8 +25,6 @@ const AudienceStep: FC = () => {
           </div>
         </div>
       </ContentCard>
-
-      {/* Sample size hidden for now — hardcoded to 100% in payload */}
     </div>
   )
 }

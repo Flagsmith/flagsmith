@@ -49,3 +49,12 @@ export const getExpectedDirectionLabel = (
 ): string =>
   EXPECTED_DIRECTION_OPTIONS.find((option) => option.value === direction)
     ?.label ?? direction
+
+export const METRIC_DIRECTION_TO_EXPECTED_DIRECTION: Record<
+  MetricDirection,
+  ExpectedDirection | null
+> = {
+  down: 'decrease',
+  informational: null,
+  up: 'increase',
+}

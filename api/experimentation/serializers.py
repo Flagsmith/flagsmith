@@ -1,6 +1,7 @@
 from typing import Any
 
 from django.db import transaction
+from django.db.models import QuerySet
 from rest_framework import serializers
 
 from environments.models import Environment
@@ -9,6 +10,7 @@ from experimentation.metric_definitions import validate_metric_definition
 from experimentation.models import (
     ExpectedDirection,
     Experiment,
+    ExperimentExposures,
     ExperimentMetric,
     ExperimentStatus,
     Metric,
@@ -191,10 +193,16 @@ class ExperimentMetricSerializer(serializers.ModelSerializer):  # type: ignore[t
         return attrs
 
 
+class _EnvironmentScopedMetricField(serializers.PrimaryKeyRelatedField[Metric]):
+    def get_queryset(self) -> QuerySet[Metric]:
+        queryset: QuerySet[Metric] = Metric.objects.filter(
+            environment=self.context["environment"]
+        )
+        return queryset
+
+
 class ExperimentMetricInlineSerializer(serializers.Serializer):  # type: ignore[type-arg]
-    metric = serializers.PrimaryKeyRelatedField(  # type: ignore[var-annotated]
-        queryset=Metric.objects.all(),
-    )
+    metric = _EnvironmentScopedMetricField()
     expected_direction = serializers.ChoiceField(choices=ExpectedDirection.choices)
 
 
@@ -260,13 +268,6 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
             raise serializers.ValidationError(
                 {"metrics": "Metric can only be attached once per experiment."}
             )
-        environment: Environment | None = self.context.get("environment")
-        if environment and any(
-            entry["metric"].environment_id != environment.id for entry in metrics
-        ):
-            raise serializers.ValidationError(
-                {"metrics": "Metric must belong to the experiment's environment."}
-            )
 
     def create(self, validated_data: dict[str, Any]) -> Experiment:
         metrics: list[dict[str, Any]] = validated_data.pop("metrics", [])
@@ -301,3 +302,9 @@ class ExperimentListSerializer(ExperimentSerializer):
         many=True,
         read_only=True,
     )
+
+
+class ExperimentExposuresSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    class Meta:
+        model = ExperimentExposures
+        fields = ("as_of", "last_error_at", "refresh_requested_at", "payload")

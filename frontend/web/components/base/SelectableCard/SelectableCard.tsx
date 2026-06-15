@@ -10,7 +10,6 @@ type SelectableCardProps = {
   title: string
   description: string
   badge?: { label: string; variant: BadgeVariant }
-  /** Small info tags rendered under the description (e.g. measurement type). */
   tags?: string[]
   disabled?: boolean
 }
