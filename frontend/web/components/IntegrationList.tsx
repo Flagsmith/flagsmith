@@ -22,6 +22,8 @@ import Utils from 'common/utils/utils'
 import { Link, useHistory } from 'react-router-dom'
 import each from 'lodash/each'
 import { useGetProjectQuery } from 'common/services/useProject'
+import API from 'project/api'
+import Constants from 'common/constants'
 
 type IntegrationAction = {
   label: string
@@ -519,6 +521,7 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
     githubId: any = undefined,
   ) => {
     const params = Utils.fromParam()
+    API.trackEvent(Constants.events.VIEW_INTEGRATION(id))
     // On the org page, a project-level-only integration cannot be saved
     // against the organisation — the user must pick a project in the modal.
     const requiresProjectSelection =
