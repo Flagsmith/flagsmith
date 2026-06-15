@@ -5,6 +5,7 @@ from datetime import timezone as dt_timezone
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 
 from experimentation.dataclasses import (
     ExposuresSummary,
@@ -129,6 +130,7 @@ def test_compute_experiment_exposures__completed_experiment__window_ends_at_ende
 def test_compute_experiment_exposures__warehouse_error__records_failure(
     experiment: Experiment,
     mocker: MockerFixture,
+    log: StructuredLogCapture,
 ) -> None:
     # Given a running experiment whose row holds a previously computed payload
     experiment.status = ExperimentStatus.RUNNING
@@ -153,6 +155,14 @@ def test_compute_experiment_exposures__warehouse_error__records_failure(
     assert exposures.last_error_at is not None
     assert exposures.payload == asdict(_summary())
     assert exposures.as_of == as_of
+    # And the failure is logged for operators
+    assert log.has(
+        "exposures.compute_failed",
+        level="error",
+        experiment__id=experiment.id,
+        environment__id=experiment.environment_id,
+        organisation__id=experiment.environment.project.organisation_id,
+    )
 
 
 def test_compute_experiment_exposures__not_started_experiment__skips(

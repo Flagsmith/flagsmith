@@ -1,9 +1,12 @@
+import structlog
 from django.utils import timezone
 from task_processor.decorators import register_task_handler
 
 from experimentation import ingestion_sync_service
 from experimentation.models import Experiment, ExperimentExposures
 from experimentation.services import compute_exposures_summary
+
+logger = structlog.get_logger("experimentation")
 
 
 @register_task_handler()
@@ -19,7 +22,7 @@ def delete_environment_key_from_ingestion(environment_api_key: str) -> None:
 @register_task_handler()
 def compute_experiment_exposures(experiment_id: int) -> None:
     experiment = (
-        Experiment.objects.select_related("environment", "feature")
+        Experiment.objects.select_related("environment__project", "feature")
         .filter(id=experiment_id)
         .first()
     )
@@ -38,8 +41,15 @@ def compute_experiment_exposures(experiment_id: int) -> None:
             window_start=experiment.started_at,
             window_end=as_of,
         )
-    except Exception:
+    except Exception as exc:
         exposures.record_failure()
+        logger.error(
+            "exposures.compute_failed",
+            exc_info=exc,
+            experiment__id=experiment.id,
+            environment__id=experiment.environment_id,
+            organisation__id=experiment.environment.project.organisation_id,
+        )
         return
 
     exposures.record_refresh(summary, as_of)
