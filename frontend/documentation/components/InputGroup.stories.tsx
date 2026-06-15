@@ -1,6 +1,7 @@
 import React, { ComponentProps, useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
+import Button from 'components/base/forms/Button'
 import InputGroup from 'components/base/forms/InputGroup'
 
 // Stateful wrapper so the field is controlled in the story (InputGroup forwards
@@ -102,13 +103,19 @@ export const Sizes: Story = {
   ),
 }
 
-// A control rendered beside the label (e.g. a reset/regenerate action).
+// An action rendered in the label row, right-aligned — as the login form does
+// with "Forgot password" next to the Password field.
 export const WithRightComponent: Story = {
   render: () => (
     <Field
-      title='API key'
-      initialValue='sk_live_123'
-      rightComponent={<span className='text-primary'>Regenerate</span>}
+      title='Password'
+      type='password'
+      initialValue='secret'
+      rightComponent={
+        <Button theme='text' type='button' className='fs-small float-end'>
+          Forgot password
+        </Button>
+      }
     />
   ),
 }
