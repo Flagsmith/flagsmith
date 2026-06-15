@@ -175,6 +175,22 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
               </Button>
             )}
           </Row>
+          <div className='text-muted mb-2'>
+            <p>
+              Segment Overrides apply when the identity traits match the segment
+              rules.
+            </p>{' '}
+            <p>
+              Identity Overrides always override Segment Overrides.{' '}
+              <a
+                target='_blank'
+                href='https://docs.flagsmith.com/basic-features/segments'
+                rel='noreferrer'
+              >
+                Learn more
+              </a>
+            </p>{' '}
+          </div>
           {segmentOverrides ? (
             <>
               <ErrorMessage error={featureError} />
@@ -206,6 +222,9 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
           {!showCreateSegment && <ModalHR className='mt-4' />}
           {!showCreateSegment && (
             <div>
+              <p className='text-right mt-4 fs-small lh-sm modal-caption'>
+                Drag overrides to adjust priority.
+              </p>
               <p className='text-right mt-4 fs-small lh-sm modal-caption'>
                 {is4Eyes && isVersioned
                   ? 'This will create a change request with any value and segment override changes for the environment'

@@ -223,7 +223,7 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
       <Breadcrumb
         items={[
           {
-            title: 'Change requests',
+            title: 'Segment Change Requests',
             url: `/project/${projectId}/change-requests`,
           },
         ]}

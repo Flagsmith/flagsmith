@@ -22,12 +22,12 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     title: 'Two-Factor Authentication',
   },
   '4_EYES': {
-    description: 'Add a 4-eyes approval mechanism to your feature changes.',
+    description: 'Add a four-eyes approval mechanism to your feature changes.',
     docs: 'https://docs.flagsmith.com/advanced-use/change-requests',
     title: 'Feature Change Requests',
   },
   '4_EYES_PROJECT': {
-    description: 'Add a 4-eyes approval mechanism to your segment changes.',
+    description: 'Add a four-eyes approval mechanism to your segment changes.',
     docs: 'https://docs.flagsmith.com/advanced-use/change-requests',
     title: 'Segment Change Requests',
   },

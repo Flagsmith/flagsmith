@@ -8,7 +8,7 @@ import {
 } from '../config'
 
 test.describe('Change Request Tests', () => {
-  test('Change requests can be created, approved, and published with 4-eyes approval @enterprise', async ({
+  test('Change requests can be created, approved, and published with four-eyes approval @enterprise', async ({
     page,
   }, testInfo) => {
     const {
