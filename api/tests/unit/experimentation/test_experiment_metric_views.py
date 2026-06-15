@@ -40,16 +40,6 @@ def _detail_url(
     )
 
 
-@pytest.fixture()
-def metric(environment: Environment) -> Metric:
-    metric: Metric = Metric.objects.create(
-        environment=environment,
-        name="Sessions per User",
-        definition={"version": 1, "event": "session_started"},
-    )
-    return metric
-
-
 def test_attach_metric__valid__returns_201(
     admin_client_new: APIClient,
     environment: Environment,

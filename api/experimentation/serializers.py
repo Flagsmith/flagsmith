@@ -1,11 +1,14 @@
 from typing import Any
 
+from django.db import transaction
+from django.db.models import QuerySet
 from rest_framework import serializers
 
 from environments.models import Environment
 from experimentation.dataclasses import WarehouseEventStats
 from experimentation.metric_definitions import validate_metric_definition
 from experimentation.models import (
+    ExpectedDirection,
     Experiment,
     ExperimentExposures,
     ExperimentMetric,
@@ -190,7 +193,28 @@ class ExperimentMetricSerializer(serializers.ModelSerializer):  # type: ignore[t
         return attrs
 
 
+class _EnvironmentScopedMetricField(serializers.PrimaryKeyRelatedField[Metric]):
+    def get_queryset(self) -> QuerySet[Metric]:
+        queryset: QuerySet[Metric] = Metric.objects.filter(
+            environment=self.context["environment"]
+        )
+        return queryset
+
+
+class ExperimentMetricInlineSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    metric = _EnvironmentScopedMetricField()
+    expected_direction = serializers.ChoiceField(choices=ExpectedDirection.choices)
+
+
 class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    # Annotated with the common base type so ExperimentListSerializer can
+    # override the field with a read-only representation.
+    metrics: serializers.BaseSerializer[Any] = ExperimentMetricInlineSerializer(
+        many=True,
+        required=False,
+        write_only=True,
+    )
+
     class Meta:
         model = Experiment
         fields = (
@@ -199,6 +223,7 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
             "name",
             "hypothesis",
             "status",
+            "metrics",
             "created_at",
             "updated_at",
             "started_at",
@@ -230,7 +255,33 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
             raise serializers.ValidationError(
                 {"feature": "Cannot change the feature of an existing experiment."}
             )
+        if self.instance is not None and "metrics" in attrs:
+            raise serializers.ValidationError(
+                {"metrics": "Cannot change the metrics of an existing experiment."}
+            )
+        self._validate_metrics(attrs.get("metrics") or [])
         return attrs
+
+    def _validate_metrics(self, metrics: list[dict[str, Any]]) -> None:
+        metric_ids = [entry["metric"].id for entry in metrics]
+        if len(metric_ids) != len(set(metric_ids)):
+            raise serializers.ValidationError(
+                {"metrics": "Metric can only be attached once per experiment."}
+            )
+
+    def create(self, validated_data: dict[str, Any]) -> Experiment:
+        metrics: list[dict[str, Any]] = validated_data.pop("metrics", [])
+        with transaction.atomic():
+            experiment: Experiment = super().create(validated_data)
+            ExperimentMetric.objects.bulk_create(
+                ExperimentMetric(
+                    experiment=experiment,
+                    metric=entry["metric"],
+                    expected_direction=entry["expected_direction"],
+                )
+                for entry in metrics
+            )
+        return experiment
 
 
 class ExperimentFeatureSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -246,6 +297,11 @@ class ExperimentFeatureSerializer(serializers.ModelSerializer):  # type: ignore[
 
 class ExperimentListSerializer(ExperimentSerializer):
     feature = ExperimentFeatureSerializer(read_only=True)
+    metrics = ExperimentMetricSerializer(
+        source="experiment_metrics",
+        many=True,
+        read_only=True,
+    )
 
 
 class ExperimentExposuresSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]

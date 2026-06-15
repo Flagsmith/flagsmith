@@ -21,9 +21,12 @@ from experimentation.constants import (
     EXPOSURES_REFRESH_MIN_INTERVAL,
 )
 from experimentation.models import (
+    ExpectedDirection,
     Experiment,
     ExperimentExposures,
+    ExperimentMetric,
     ExperimentStatus,
+    Metric,
 )
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
@@ -1137,6 +1140,210 @@ def test_patch__no_change__skips_audit_log(
         related_object_type=RelatedObjectType.EXPERIMENT.name
     ).count()
     assert audit_count_after == audit_count_before
+
+
+def test_post__inline_metric__creates_experiment_metric(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+    metric: Metric,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "With metric",
+            "hypothesis": "It will work",
+            "metrics": [
+                {"metric": metric.id, "expected_direction": "increase"},
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    experiment_metric = ExperimentMetric.objects.get(
+        experiment_id=response.json()["id"]
+    )
+    assert experiment_metric.metric == metric
+    assert experiment_metric.expected_direction == ExpectedDirection.INCREASE
+
+
+def test_post__metric_from_other_environment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+    enable_features: EnableFeaturesFixture,
+    project: Project,
+) -> None:
+    # Given a metric defined in a sibling environment
+    enable_features(EXPERIMENT_FLAG)
+    other_env = Environment.objects.create(name="Other", project=project)
+    foreign = Metric.objects.create(
+        environment=other_env,
+        name="foreign",
+        definition={"version": 1, "event": "x"},
+    )
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "Foreign metric",
+            "hypothesis": "Should fail",
+            "metrics": [
+                {"metric": foreign.id, "expected_direction": "increase"},
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert not Experiment.objects.filter(name="Foreign metric").exists()
+
+
+def test_post__duplicate_metrics__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+    metric: Metric,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "Duplicate metrics",
+            "hypothesis": "Should fail",
+            "metrics": [
+                {"metric": metric.id, "expected_direction": "increase"},
+                {"metric": metric.id, "expected_direction": "decrease"},
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert not Experiment.objects.filter(name="Duplicate metrics").exists()
+
+
+def test_post__invalid_expected_direction__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+    metric: Metric,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "Bad direction",
+            "hypothesis": "Should fail",
+            "metrics": [
+                {"metric": metric.id, "expected_direction": "sideways"},
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_patch__metrics__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    metric: Metric,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.patch(
+        _detail_url(environment, experiment),
+        data={
+            "metrics": [
+                {"metric": metric.id, "expected_direction": "increase"},
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert not experiment.experiment_metrics.exists()
+
+
+def test_get_list__with_attached_metric__returns_metrics(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    metric: Metric,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    ExperimentMetric.objects.create(
+        experiment=experiment,
+        metric=metric,
+        expected_direction=ExpectedDirection.INCREASE,
+    )
+
+    # When
+    response = admin_client_new.get(_list_url(environment))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    metrics_data = response.json()["results"][0]["metrics"]
+    assert len(metrics_data) == 1
+    assert metrics_data[0]["metric"] == metric.id
+    assert metrics_data[0]["metric_name"] == metric.name
+    assert metrics_data[0]["expected_direction"] == "increase"
+
+
+def test_get_detail__with_attached_metric__returns_metrics(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    metric: Metric,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    ExperimentMetric.objects.create(
+        experiment=experiment,
+        metric=metric,
+        expected_direction=ExpectedDirection.INCREASE,
+    )
+
+    # When
+    response = admin_client_new.get(_detail_url(environment, experiment))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    metrics_data = response.json()["metrics"]
+    assert len(metrics_data) == 1
+    assert metrics_data[0]["metric"] == metric.id
 
 
 def test_post__concurrent_create_race__returns_409(
