@@ -52,6 +52,7 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
 
   const stepValidity: Record<number, boolean> = {
     0: isStep1Valid,
+    3: isStep1Valid && isMeasurementValid,
     [MEASUREMENT_STEP]: isMeasurementValid,
   }
   const canContinue = stepValidity[currentStep] ?? true

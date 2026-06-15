@@ -53,6 +53,7 @@ const MeasurementStep: FC<MeasurementStepProps> = ({
                 if (option) onExpectedDirectionChange(option.value)
               }}
               placeholder='Select an expected direction...'
+              isClearable={false}
             />
             <span className='wizard-field__hint'>
               How you expect the primary metric to move if the hypothesis is
