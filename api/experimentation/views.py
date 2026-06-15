@@ -92,7 +92,10 @@ class WarehouseConnectionViewSet(
     def list(self, request: Request, *args: object, **kwargs: object) -> Response:
         environment_api_key: str = self.kwargs["environment_api_key"]
         connections = list(self.filter_queryset(self.get_queryset()))
-        if request.query_params.get("exclude_event_stats") not in ("true", "True"):
+        exclude_event_stats = (
+            request.query_params.get("exclude_event_stats", "").lower() == "true"
+        )
+        if not exclude_event_stats:
             for connection in connections:
                 annotate_warehouse_event_stats(connection, environment_api_key)
         serializer = self.get_serializer(connections, many=True)
