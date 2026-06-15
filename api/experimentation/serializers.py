@@ -9,6 +9,7 @@ from experimentation.metric_definitions import validate_metric_definition
 from experimentation.models import (
     ExpectedDirection,
     Experiment,
+    ExperimentExposures,
     ExperimentMetric,
     ExperimentStatus,
     Metric,
@@ -301,3 +302,9 @@ class ExperimentListSerializer(ExperimentSerializer):
         many=True,
         read_only=True,
     )
+
+
+class ExperimentExposuresSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    class Meta:
+        model = ExperimentExposures
+        fields = ("as_of", "last_error_at", "refresh_requested_at", "payload")
