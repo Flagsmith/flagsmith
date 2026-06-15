@@ -46,6 +46,17 @@ class MetricSpec:
 
 
 @dataclass(frozen=True)
+class ResultsAggregates:
+    """Sufficient statistics gathered from the warehouse for one experiment:
+    the specs they were computed from, per-variant identity counts, and per
+    metric the per-variant ``VariantStats``. Bundled so the keys can't drift."""
+
+    specs: list[MetricSpec]
+    exposure_counts: dict[str, int]
+    metric_stats: dict[int, dict[str, VariantStats]]
+
+
+@dataclass(frozen=True)
 class MetricResult:
     metric_id: int
     variants: dict[str, VariantStats]
