@@ -1,5 +1,7 @@
 import {
   ExpectedDirection,
+  Experiment,
+  ExperimentMetric,
   ExperimentStatus,
   MetricDirection,
 } from 'common/types/responses'
@@ -58,3 +60,7 @@ export const METRIC_DIRECTION_TO_EXPECTED_DIRECTION: Record<
   informational: null,
   up: 'increase',
 }
+
+export const getPrimaryMetric = (
+  experiment: Experiment,
+): ExperimentMetric | undefined => experiment.metrics?.[0]
