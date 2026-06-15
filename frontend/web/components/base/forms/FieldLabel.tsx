@@ -1,6 +1,7 @@
 import React, { FC, ReactNode } from 'react'
 import cn from 'classnames'
-import LabelWithTooltip from 'components/base/LabelWithTooltip'
+import Icon from 'components/icons/Icon'
+import Tooltip from 'components/Tooltip'
 
 interface FieldLabelProps {
   // Associates the label with its control; required for accessibility.
@@ -14,8 +15,7 @@ interface FieldLabelProps {
 }
 
 // The label for a form field — wires `htmlFor` to the control, with an optional
-// required indicator and an info-icon tooltip. The tooltip is rendered by the
-// shared LabelWithTooltip (which uses the DS Tooltip), not hand-rolled here.
+// required indicator and an info-icon tooltip (rendered with the DS Tooltip).
 const FieldLabel: FC<FieldLabelProps> = ({
   children,
   className,
@@ -27,19 +27,21 @@ const FieldLabel: FC<FieldLabelProps> = ({
     htmlFor={htmlFor}
     className={cn('control-label d-flex align-items-center', className)}
   >
-    <LabelWithTooltip
-      label={
-        <>
-          {children}
-          {required && (
-            <span className='text-danger ml-1' aria-hidden>
-              *
-            </span>
-          )}
-        </>
-      }
-      tooltip={tooltip}
-    />
+    {children}
+    {required && (
+      <span className='text-danger ml-1' aria-hidden>
+        *
+      </span>
+    )}
+    {tooltip && (
+      <Tooltip
+        title={<Icon name='info-outlined' width={12} height={12} />}
+        place='top'
+        titleClassName='cursor-pointer ml-1'
+      >
+        {tooltip}
+      </Tooltip>
+    )}
   </label>
 )
 
