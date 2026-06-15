@@ -120,7 +120,7 @@ const InputGroup: FC<InputGroupProps> = ({
               tooltipPlace={tooltipPlace}
             >
               {title}
-              {unsaved && <div className='unread'>Unsaved</div>}
+              {unsaved && <div className='unread ml-1'>Unsaved</div>}
             </FieldLabel>
           </Flex>
           {!!rightComponent && (

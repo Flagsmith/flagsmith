@@ -26,10 +26,7 @@ const FieldLabel: FC<FieldLabelProps> = ({
   tooltip,
   tooltipPlace = 'top',
 }) => (
-  <label
-    htmlFor={htmlFor}
-    className={cn('control-label d-flex align-items-center', className)}
-  >
+  <label htmlFor={htmlFor} className={cn('control-label', className)}>
     {children}
     {required && (
       <span className='text-danger ml-1' aria-hidden>
@@ -40,7 +37,7 @@ const FieldLabel: FC<FieldLabelProps> = ({
       <Tooltip
         title={<Icon name='info-outlined' width={12} height={12} />}
         place={tooltipPlace}
-        titleClassName='cursor-pointer ml-1 d-flex align-items-center'
+        titleClassName='cursor-pointer ml-1 d-inline-flex align-items-center'
       >
         {tooltip}
       </Tooltip>
