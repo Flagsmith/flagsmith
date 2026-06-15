@@ -1,6 +1,5 @@
 import React from 'react'
 import ValueEditor from 'components/ValueEditor'
-import InfoMessage from 'components/InfoMessage'
 import ErrorMessage from 'components/ErrorMessage'
 import { VariationValueInput } from './VariationValueInput'
 import Utils from 'common/utils/utils'
@@ -14,6 +13,7 @@ type VariationOverride = {
 }
 
 interface VariationOptionsProps {
+  apiErrors?: (string | null)[]
   canCreateFeature: boolean
   controlPercentage: number
   controlValue: FlagsmithValue
@@ -24,6 +24,7 @@ interface VariationOptionsProps {
   select?: boolean
   setValue: (value: FlagsmithValue) => void
   setVariations: (variations: VariationOverride[]) => void
+  unsavedVariations?: boolean[]
   updateVariation: (
     index: number,
     value: MultivariateOption,
@@ -34,6 +35,7 @@ interface VariationOptionsProps {
 }
 
 export const VariationOptions: React.FC<VariationOptionsProps> = ({
+  apiErrors,
   canCreateFeature,
   controlPercentage,
   controlValue,
@@ -44,6 +46,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
   select,
   setValue,
   setVariations,
+  unsavedVariations,
   updateVariation,
   variationOverrides,
   weightTitle,
@@ -63,26 +66,6 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
           error='Your variation percentage splits total to over 100%'
         />
       )}
-      {!readOnly && (
-        <p className='mb-4'>
-          <InfoMessage collapseId={'variation-value'}>
-            Changing a Variation Value will affect{' '}
-            <strong>all environments</strong>, their weights are specific to
-            this environment. Existing users will see the new variation value if
-            it is changed. These values will only apply when you identify via
-            the SDK.
-            <a
-              target='_blank'
-              href='https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags'
-              rel='noreferrer'
-            >
-              Check the Docs for more details
-            </a>
-            .
-          </InfoMessage>
-        </p>
-      )}
-
       {select && (
         <div className='panel panel--flat panel-without-heading mb-2'>
           <div className='panel-content'>
@@ -165,9 +148,19 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
           <VariationValueInput
             key={i}
             index={i}
+            apiError={apiErrors?.[i]}
             canCreateFeature={canCreateFeature}
             readOnly={readOnly ?? false}
+            unsaved={unsavedVariations?.[i]}
             value={theValue}
+            // Effective keys: unset labels persist as their Variant_n
+            // fallback, so they count for uniqueness too.
+            siblingKeys={multivariateOptions
+              .map(
+                (option, index) =>
+                  option.key || Utils.getDefaultVariantKey(index),
+              )
+              .filter((_, index) => index !== i)}
             onChange={(e) => {
               updateVariation(i, e, variationOverrides)
             }}

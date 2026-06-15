@@ -51,12 +51,10 @@ const SetupStep: FC<SetupStepProps> = ({
 
   return (
     <div className='d-flex flex-column gap-4'>
-      <ContentCard title='Experiment details'>
-        <p className='text-muted fs-small mb-0'>
-          Name the experiment and capture what you&apos;re trying to learn
-          before picking a flag.
-        </p>
-
+      <ContentCard
+        title='Experiment details'
+        description="Name the experiment and capture what you're trying to learn before picking a flag."
+      >
         <InputGroup
           title='Experiment Name *'
           value={name}
@@ -86,12 +84,10 @@ const SetupStep: FC<SetupStepProps> = ({
         </div>
       </ContentCard>
 
-      <ContentCard title='Feature flag'>
-        <p className='text-muted fs-small mb-0'>
-          The flag you&apos;re experimenting on. Variations are read-only,
-          defined on the flag itself.
-        </p>
-
+      <ContentCard
+        title='Feature flag'
+        description="The flag you're experimenting on. Variations are read-only, defined on the flag itself."
+      >
         <div className='wizard-field'>
           <label className='wizard-field__label'>Feature Flag</label>
           <Select

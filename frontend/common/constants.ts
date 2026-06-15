@@ -396,6 +396,7 @@ const Constants = {
       'FEATURE_ID': 150,
       'SEGMENT_ID': 150,
       'TRAITS_ID': 150,
+      'VARIANT_KEY': 255,
     },
   },
 
@@ -651,6 +652,7 @@ const Constants = {
       'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.',
     REMOTE_CONFIG_DESCRIPTION_VARIATION:
       'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.<br/>Variation values are set per project, the environment weight is per environment.',
+    RESERVED_VARIANT_KEY: 'control',
     SEGMENT_OVERRIDES_DESCRIPTION:
       'Set different values for your feature based on what segments users are in. Identity overrides will take priority over any segment override.',
     TAGS_DESCRIPTION:

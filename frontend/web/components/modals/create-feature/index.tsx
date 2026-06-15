@@ -1,4 +1,11 @@
-import React, { FC, useCallback, useEffect, useRef, useState } from 'react'
+import React, {
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import cloneDeep from 'lodash/cloneDeep'
 import moment from 'moment'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
@@ -68,6 +75,21 @@ type InjectedSegmentOverrideProps = {
   updateSegments: (segments: SegmentOverrideValue[]) => void
   removeMultivariateOption: (id: number) => void
 }
+
+// Replaces each option's default weight with its environment allocation.
+const mergeEnvironmentWeights = (options: any[], variations: any[]): any[] =>
+  options.map((v: any) => {
+    const matchingVariation = variations.find(
+      (e: any) => e.multivariate_feature_option === v.id,
+    )
+    return {
+      ...v,
+      default_percentage_allocation:
+        (matchingVariation && matchingVariation.percentage_allocation) ||
+        v.default_percentage_allocation ||
+        0,
+    }
+  })
 
 const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const {
@@ -223,6 +245,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   useEffect(() => {
     if (props.projectFlag) {
       setProjectFlag(cloneDeep(props.projectFlag))
+      setSavedMultivariateOptions(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.projectFlag?.id])
@@ -232,22 +255,45 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     if (!identity && environmentVariations?.length) {
       setProjectFlag((prev: any) => ({
         ...prev,
-        multivariate_options: prev.multivariate_options?.map((v: any) => {
-          const matchingVariation = (
-            props.multivariate_options || environmentVariations
-          ).find((e: any) => e.multivariate_feature_option === v.id)
-          return {
-            ...v,
-            default_percentage_allocation:
-              (matchingVariation && matchingVariation.percentage_allocation) ||
-              v.default_percentage_allocation ||
-              0,
-          }
-        }),
+        multivariate_options:
+          prev.multivariate_options &&
+          mergeEnvironmentWeights(
+            prev.multivariate_options,
+            props.multivariate_options || environmentVariations,
+          ),
       }))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [environmentVariations])
+
+  // The persisted variants with the same environment weights merged in,
+  // so the modal's edited copy only differs after a user change. Refreshed
+  // from the edited copy after each successful value save.
+  const [savedMultivariateOptions, setSavedMultivariateOptions] = useState<
+    any[] | null
+  >(null)
+  const mvBaselineRefreshRef = useRef(false)
+  const originalMultivariateOptions = useMemo(() => {
+    if (savedMultivariateOptions) {
+      return savedMultivariateOptions
+    }
+    const options = props.projectFlag?.multivariate_options
+    if (!options) {
+      return undefined
+    }
+    if (identity || !environmentVariations?.length) {
+      return options
+    }
+    return mergeEnvironmentWeights(
+      options,
+      props.multivariate_options || environmentVariations,
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    props.projectFlag?.multivariate_options,
+    environmentVariations,
+    savedMultivariateOptions,
+  ])
 
   const cleanInputValue = (value: any) => {
     if (value && typeof value === 'string') {
@@ -407,9 +453,22 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
 
   return (
     <Provider
+      onError={() => {
+        if (mvBaselineRefreshRef.current) {
+          // The value save failed — keep the unsaved indicators accurate.
+          mvBaselineRefreshRef.current = false
+          setValueChanged(true)
+        }
+      }}
       onSave={() => {
         if (identity) {
           close()
+        }
+        if (mvBaselineRefreshRef.current) {
+          mvBaselineRefreshRef.current = false
+          setSavedMultivariateOptions(
+            cloneDeep(projectFlag.multivariate_options || []),
+          )
         }
         AppActions.refreshFeatures(projectId, environmentId)
 
@@ -538,6 +597,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
               )
             } else {
               setValueChanged(false)
+              mvBaselineRefreshRef.current = true
               save(editFeatureValue, isSaving)
             }
           },
@@ -575,7 +635,15 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                 <Tabs
                   urlParam='tab'
                   history={props.history}
-                  onChange={() => setTabKey((k) => k + 1)}
+                  onChange={() => {
+                    setTabKey((k) => k + 1)
+                    // A save error belongs to the tab it occurred on — the
+                    // other tabs cannot render its shape meaningfully.
+                    if (FeatureListStore.error) {
+                      FeatureListStore.error = null
+                      FeatureListStore.trigger('change')
+                    }
+                  }}
                   overflowX
                 >
                   <TabItem
@@ -596,6 +664,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       isVersioned={isVersioned}
                       isSaving={isSaving}
                       existingChangeRequest={!!existingChangeRequest}
+                      originalMultivariateOptions={originalMultivariateOptions}
                       onSaveFeatureValue={saveFeatureValue}
                       onEnvironmentFlagChange={(changes: any) => {
                         setEnvironmentFlag((prev: any) => ({

@@ -28,6 +28,56 @@ textarea {
 
 @import '~react-datepicker/dist/react-datepicker.css';
 
+// Borderless input with a bottom underline only; the underline turns
+// primary while focused. Used for inline edits (variant label, weight).
+.input-container.input-underline {
+  input.input {
+    border: none;
+    border-bottom: 1px solid $input-border-color;
+    border-radius: 0;
+    background-color: transparent;
+    padding-left: 8px;
+    padding-right: 8px;
+    // _forms.scss re-applies a full border shorthand on hover/focus.
+    &:hover {
+      border: none;
+      border-bottom: 1px solid $basic-alpha-48;
+    }
+    &:focus {
+      border: none;
+      border-bottom: 1px solid $primary;
+    }
+  }
+  input[type='number'].input {
+    -moz-appearance: textfield;
+    appearance: textfield;
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+}
+
+// _forms.scss (.dark .input-container input.input) re-applies the full
+// border and a solid background at equal specificity, so the underline
+// variant needs its own dark overrides.
+.dark .input-container.input-underline {
+  input.input {
+    border: none;
+    border-bottom: 1px solid $white-alpha-16;
+    background-color: transparent;
+    &:hover {
+      border: none;
+      border-bottom: 1px solid $white-alpha-48;
+    }
+    &:focus {
+      border: none;
+      border-bottom: 1px solid $primary;
+    }
+  }
+}
+
 .input-container,
 .react-datepicker-wrapper .react-datepicker__input-container {
   font-family: $font-family;
