@@ -29,6 +29,7 @@ from experimentation.dataclasses import (
     ExposuresTimeseriesPoint,
     MetricResult,
     MetricSpec,
+    ResultsAggregates,
     ResultsSummary,
     WarehouseEventStats,
 )
@@ -271,8 +272,10 @@ def _metric_value_expression(index: int, aggregation: str) -> str:
         return f"countIf({condition})"
     if aggregation == MetricAggregation.SUM:
         return f"sumIf({value}, {condition})"
-    # mean: per-identity average, zero when the identity has no matching events
-    return f"if(countIf({condition}) > 0, avgIf({value}, {condition}), 0)"
+    if aggregation == MetricAggregation.MEAN:
+        # per-identity average, zero when the identity has no matching events
+        return f"if(countIf({condition}) > 0, avgIf({value}, {condition}), 0)"
+    raise ValueError(f"Unsupported metric aggregation: {aggregation}")
 
 
 def _build_results_query(specs: Sequence[MetricSpec]) -> str:
@@ -321,7 +324,7 @@ def get_metric_variant_stats(
     window_start: datetime,
     window_end: datetime,
     specs: Sequence[MetricSpec],
-) -> tuple[dict[str, int], dict[int, dict[str, VariantStats]]]:
+) -> ResultsAggregates:
     """Run the warehouse query, returning per-variant identity counts and, per
     metric, per-variant sufficient statistics."""
     params: dict[str, object] = {
@@ -343,25 +346,31 @@ def get_metric_variant_stats(
         spec.metric_id: {} for spec in specs
     }
     for row in rows:
-        variant = row[0]
-        n = int(row[1])
+        # Columns are emitted in query order: variant, n, then a (sum,
+        # sum_squares) pair per spec — consumed positionally in that order.
+        columns = iter(row)
+        variant = next(columns)
+        n = int(next(columns))
         exposure_counts[variant] = n
-        for index, spec in enumerate(specs):
+        for spec in specs:
             metric_stats[spec.metric_id][variant] = VariantStats(
                 n=n,
-                sum=float(row[2 + index * 2]),
-                sum_squares=float(row[3 + index * 2]),
+                sum=float(next(columns)),
+                sum_squares=float(next(columns)),
             )
-    return exposure_counts, metric_stats
+    return ResultsAggregates(
+        specs=list(specs),
+        exposure_counts=exposure_counts,
+        metric_stats=metric_stats,
+    )
 
 
 def build_results_summary(
+    aggregates: ResultsAggregates,
     *,
-    specs: Sequence[MetricSpec],
-    exposure_counts: dict[str, int],
-    metric_stats: dict[int, dict[str, VariantStats]],
     expected_shares: dict[str, float],
 ) -> ResultsSummary:
+    exposure_counts = aggregates.exposure_counts
     total = sum(exposure_counts.values())
     if expected_shares and total >= SRM_MIN_TOTAL_IDENTITIES:
         srm = srm_p_value(
@@ -375,10 +384,12 @@ def build_results_summary(
         metrics=[
             MetricResult(
                 metric_id=spec.metric_id,
-                variants=metric_stats.get(spec.metric_id, {}),
-                inference=_metric_inference(spec, metric_stats.get(spec.metric_id, {})),
+                variants=aggregates.metric_stats.get(spec.metric_id, {}),
+                inference=_metric_inference(
+                    spec, aggregates.metric_stats.get(spec.metric_id, {})
+                ),
             )
-            for spec in specs
+            for spec in aggregates.specs
         ],
     )
 
@@ -400,6 +411,8 @@ def _infer_treatment(
     control: VariantStats | None,
     treatment: VariantStats,
 ) -> Inference | None:
+    # Product floor for showing a result at all; compare_to_control applies its
+    # own independent guards (e.g. zero control mean) on top of this.
     if (
         control is None
         or control.n < RESULTS_MIN_IDENTITIES_PER_VARIANT

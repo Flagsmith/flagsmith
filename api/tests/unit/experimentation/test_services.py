@@ -14,6 +14,7 @@ from experimentation.dataclasses import (
     ExposuresTimeseries,
     ExposuresTimeseriesPoint,
     MetricSpec,
+    ResultsAggregates,
     WarehouseEventStats,
 )
 from experimentation.models import (
@@ -558,6 +559,18 @@ def _spec(
     )
 
 
+def _aggregates(
+    specs: list[MetricSpec],
+    exposure_counts: dict[str, int],
+    metric_stats: dict[int, dict[str, VariantStats]],
+) -> ResultsAggregates:
+    return ResultsAggregates(
+        specs=specs,
+        exposure_counts=exposure_counts,
+        metric_stats=metric_stats,
+    )
+
+
 def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     mocker: MockerFixture,
 ) -> None:
@@ -580,7 +593,7 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
 
     # When
-    exposure_counts, metric_stats = services.get_metric_variant_stats(
+    aggregates = services.get_metric_variant_stats(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=window_start,
@@ -589,11 +602,11 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     )
 
     # Then per-variant counts and sufficient statistics are mapped per metric
-    assert exposure_counts == {"control": 1000, "variant_a": 1000}
-    assert metric_stats[7]["variant_a"] == VariantStats(
+    assert aggregates.exposure_counts == {"control": 1000, "variant_a": 1000}
+    assert aggregates.metric_stats[7]["variant_a"] == VariantStats(
         n=1000, sum=120.0, sum_squares=120.0
     )
-    assert metric_stats[9]["control"] == VariantStats(
+    assert aggregates.metric_stats[9]["control"] == VariantStats(
         n=1000, sum=5000.0, sum_squares=30000.0
     )
     # And the query joins post-exposure metric events and excludes quarantined
@@ -623,7 +636,7 @@ def test_get_metric_variant_stats__no_metrics__counts_variants_only(
     )
 
     # When
-    exposure_counts, metric_stats = services.get_metric_variant_stats(
+    aggregates = services.get_metric_variant_stats(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -632,8 +645,8 @@ def test_get_metric_variant_stats__no_metrics__counts_variants_only(
     )
 
     # Then only the per-variant counts are returned, with no metric join
-    assert exposure_counts == {"control": 1000, "variant_a": 900}
-    assert metric_stats == {}
+    assert aggregates.exposure_counts == {"control": 1000, "variant_a": 900}
+    assert aggregates.metric_stats == {}
     sql, params = mock_client.execute.call_args.args
     assert "SELECT variant, count() AS n" in sql
     assert "LEFT JOIN" not in sql
@@ -666,18 +679,26 @@ def test_metric_value_expression__aggregation__builds_clause(
     assert services._metric_value_expression(0, aggregation) == expected
 
 
+def test_metric_value_expression__unknown_aggregation__raises() -> None:
+    # Given an aggregation the query builder does not support
+    # When / Then it refuses rather than silently emitting the wrong clause
+    with pytest.raises(ValueError, match="Unsupported metric aggregation"):
+        services._metric_value_expression(0, "median")
+
+
 def test_build_results_summary__healthy_arms__infers_each_treatment() -> None:
     # Given a 10% control and a 12% treatment, both well above the floor
     control = VariantStats(n=1000, sum=100.0, sum_squares=100.0)
     treatment = VariantStats(n=1000, sum=120.0, sum_squares=120.0)
-    specs = [_spec(metric_id=7)]
-    metric_stats = {7: {"control": control, "variant_a": treatment}}
+    aggregates = _aggregates(
+        [_spec(metric_id=7)],
+        {"control": 1000, "variant_a": 1000},
+        {7: {"control": control, "variant_a": treatment}},
+    )
 
     # When
     summary = services.build_results_summary(
-        specs=specs,
-        exposure_counts={"control": 1000, "variant_a": 1000},
-        metric_stats=metric_stats,
+        aggregates,
         expected_shares={"control": 0.5, "variant_a": 0.5},
     )
 
@@ -695,15 +716,14 @@ def test_build_results_summary__healthy_arms__infers_each_treatment() -> None:
 def test_build_results_summary__below_identity_floor__inference_none() -> None:
     # Given arms below the minimum identities per variant
     arm = VariantStats(n=40, sum=4.0, sum_squares=4.0)
-    specs = [_spec(metric_id=7)]
+    aggregates = _aggregates(
+        [_spec(metric_id=7)],
+        {"control": 40, "variant_a": 40},
+        {7: {"control": arm, "variant_a": arm}},
+    )
 
     # When
-    summary = services.build_results_summary(
-        specs=specs,
-        exposure_counts={"control": 40, "variant_a": 40},
-        metric_stats={7: {"control": arm, "variant_a": arm}},
-        expected_shares={},
-    )
+    summary = services.build_results_summary(aggregates, expected_shares={})
 
     # Then inference is withheld
     assert summary.metrics[0].inference["variant_a"] is None
@@ -715,15 +735,14 @@ def test_build_results_summary__occurrence_below_conversion_floor__inference_non
     # Given enough identities but too few conversions on an occurrence metric
     control = VariantStats(n=100, sum=10.0, sum_squares=10.0)
     treatment = VariantStats(n=100, sum=3.0, sum_squares=3.0)
-    specs = [_spec(metric_id=7, aggregation=MetricAggregation.OCCURRENCE)]
+    aggregates = _aggregates(
+        [_spec(metric_id=7, aggregation=MetricAggregation.OCCURRENCE)],
+        {"control": 100, "variant_a": 100},
+        {7: {"control": control, "variant_a": treatment}},
+    )
 
     # When
-    summary = services.build_results_summary(
-        specs=specs,
-        exposure_counts={"control": 100, "variant_a": 100},
-        metric_stats={7: {"control": control, "variant_a": treatment}},
-        expected_shares={},
-    )
+    summary = services.build_results_summary(aggregates, expected_shares={})
 
     # Then inference is withheld
     assert summary.metrics[0].inference["variant_a"] is None
@@ -733,17 +752,14 @@ def test_build_results_summary__lower_is_better__flips_chance_to_win() -> None:
     # Given a value metric where a fall is the win
     control = VariantStats(n=1000, sum=100.0, sum_squares=100.0)
     treatment = VariantStats(n=1000, sum=120.0, sum_squares=120.0)
-    specs = [
-        _spec(metric_id=7, aggregation=MetricAggregation.SUM, lower_is_better=True)
-    ]
+    aggregates = _aggregates(
+        [_spec(metric_id=7, aggregation=MetricAggregation.SUM, lower_is_better=True)],
+        {"control": 1000, "variant_a": 1000},
+        {7: {"control": control, "variant_a": treatment}},
+    )
 
     # When
-    summary = services.build_results_summary(
-        specs=specs,
-        exposure_counts={"control": 1000, "variant_a": 1000},
-        metric_stats={7: {"control": control, "variant_a": treatment}},
-        expected_shares={},
-    )
+    summary = services.build_results_summary(aggregates, expected_shares={})
 
     # Then the rise counts against the treatment
     inference = summary.metrics[0].inference["variant_a"]
@@ -756,32 +772,30 @@ def test_build_results_summary__zero_control_mean__inference_none() -> None:
     # Given a control with no value: the relative lift is undefined
     control = VariantStats(n=100, sum=0.0, sum_squares=0.0)
     treatment = VariantStats(n=100, sum=50.0, sum_squares=50.0)
-    specs = [_spec(metric_id=7, aggregation=MetricAggregation.COUNT)]
-
-    # When
-    summary = services.build_results_summary(
-        specs=specs,
-        exposure_counts={"control": 100, "variant_a": 100},
-        metric_stats={7: {"control": control, "variant_a": treatment}},
-        expected_shares={},
+    aggregates = _aggregates(
+        [_spec(metric_id=7, aggregation=MetricAggregation.COUNT)],
+        {"control": 100, "variant_a": 100},
+        {7: {"control": control, "variant_a": treatment}},
     )
 
-    # Then inference is withheld
+    # When
+    summary = services.build_results_summary(aggregates, expected_shares={})
+
+    # Then inference is withheld by the kernel's own guard
     assert summary.metrics[0].inference["variant_a"] is None
 
 
 def test_build_results_summary__no_control_variant__inference_none() -> None:
     # Given a metric with stats for a treatment but no control
     treatment = VariantStats(n=1000, sum=120.0, sum_squares=120.0)
-    specs = [_spec(metric_id=7)]
+    aggregates = _aggregates(
+        [_spec(metric_id=7)],
+        {"variant_a": 1000},
+        {7: {"variant_a": treatment}},
+    )
 
     # When
-    summary = services.build_results_summary(
-        specs=specs,
-        exposure_counts={"variant_a": 1000},
-        metric_stats={7: {"variant_a": treatment}},
-        expected_shares={},
-    )
+    summary = services.build_results_summary(aggregates, expected_shares={})
 
     # Then inference is withheld
     assert summary.metrics[0].inference["variant_a"] is None
@@ -789,11 +803,11 @@ def test_build_results_summary__no_control_variant__inference_none() -> None:
 
 def test_build_results_summary__balanced_traffic__srm_reports_no_mismatch() -> None:
     # Given a balanced split above the SRM gate
+    aggregates = _aggregates([], {"control": 5000, "variant_a": 5000}, {})
+
     # When
     summary = services.build_results_summary(
-        specs=[],
-        exposure_counts={"control": 5000, "variant_a": 5000},
-        metric_stats={},
+        aggregates,
         expected_shares={"control": 0.5, "variant_a": 0.5},
     )
 
@@ -804,11 +818,11 @@ def test_build_results_summary__balanced_traffic__srm_reports_no_mismatch() -> N
 
 def test_build_results_summary__imbalanced_traffic__srm_below_threshold() -> None:
     # Given a 60/40 split against an expected 50/50
+    aggregates = _aggregates([], {"control": 6000, "variant_a": 4000}, {})
+
     # When
     summary = services.build_results_summary(
-        specs=[],
-        exposure_counts={"control": 6000, "variant_a": 4000},
-        metric_stats={},
+        aggregates,
         expected_shares={"control": 0.5, "variant_a": 0.5},
     )
 
@@ -830,12 +844,11 @@ def test_build_results_summary__srm_not_computable__srm_none(
     expected_shares: dict[str, float],
 ) -> None:
     # Given too little traffic, or no configured split to compare against
+    aggregates = _aggregates([], exposure_counts, {})
+
     # When
     summary = services.build_results_summary(
-        specs=[],
-        exposure_counts=exposure_counts,
-        metric_stats={},
-        expected_shares=expected_shares,
+        aggregates, expected_shares=expected_shares
     )
 
     # Then SRM is not reported
@@ -846,10 +859,13 @@ def test_build_results_summary__computed__serialises_to_wire_shape() -> None:
     # Given a computed summary
     control = VariantStats(n=1000, sum=100.0, sum_squares=100.0)
     treatment = VariantStats(n=1000, sum=120.0, sum_squares=120.0)
+    aggregates = _aggregates(
+        [_spec(metric_id=7)],
+        {"control": 1000, "variant_a": 1000},
+        {7: {"control": control, "variant_a": treatment}},
+    )
     summary = services.build_results_summary(
-        specs=[_spec(metric_id=7)],
-        exposure_counts={"control": 1000, "variant_a": 1000},
-        metric_stats={7: {"control": control, "variant_a": treatment}},
+        aggregates,
         expected_shares={"control": 0.5, "variant_a": 0.5},
     )
 
