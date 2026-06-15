@@ -29,7 +29,6 @@ interface InputGroupProps {
   tooltipPlace?: TooltipProps['place']
   hideTooltipIcon?: boolean
   unsaved?: boolean
-  rightComponent?: ReactNode
   // Render an arbitrary control instead of the default Input/textarea.
   component?: ReactNode
   textarea?: boolean
@@ -74,7 +73,6 @@ const InputGroup: FC<InputGroupProps> = ({
   onChange,
   placeholder,
   ref,
-  rightComponent,
   size,
   textarea,
   title,
@@ -123,9 +121,6 @@ const InputGroup: FC<InputGroupProps> = ({
               {unsaved && <div className='unread ml-1'>Unsaved</div>}
             </FieldLabel>
           </Flex>
-          {!!rightComponent && (
-            <div style={{ marginBottom: '0.5rem' }}>{rightComponent}</div>
-          )}
         </Row>
       )}
 

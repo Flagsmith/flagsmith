@@ -418,30 +418,29 @@ const HomePage: React.FC = () => {
                                     ) =>
                                       setPassword(Utils.safeParseEventValue(e))
                                     }
-                                    rightComponent={
-                                      !disableForgotPassword && (
-                                        <Link
-                                          tabIndex={-1}
-                                          className='float-end'
-                                          to={`/password-recovery${redirect}`}
-                                          onClick={showForgotPassword}
-                                        >
-                                          <Button
-                                            theme='text'
-                                            tabIndex={-1}
-                                            type='button'
-                                            className='fs-small'
-                                          >
-                                            Forgot password
-                                          </Button>
-                                        </Link>
-                                      )
-                                    }
                                     className='input-default full-width mb-2'
                                     type='password'
                                     data-test='password'
                                     id='password'
                                   />
+                                  {!disableForgotPassword && (
+                                    <div className='d-flex justify-content-end mb-2'>
+                                      <Link
+                                        tabIndex={-1}
+                                        to={`/password-recovery${redirect}`}
+                                        onClick={showForgotPassword}
+                                      >
+                                        <Button
+                                          theme='text'
+                                          tabIndex={-1}
+                                          type='button'
+                                          className='fs-small'
+                                        >
+                                          Forgot password
+                                        </Button>
+                                      </Link>
+                                    </div>
+                                  )}
                                   <div className='form-cta'>
                                     <Button
                                       id='login-btn'

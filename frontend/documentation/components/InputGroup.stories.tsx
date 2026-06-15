@@ -1,7 +1,6 @@
 import React, { ComponentProps, useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
-import Button from 'components/base/forms/Button'
 import InputGroup from 'components/base/forms/InputGroup'
 
 // Stateful wrapper so the field is controlled in the story (InputGroup forwards
@@ -100,22 +99,5 @@ export const Sizes: Story = {
       <Field size='small' title='Small' placeholder='Small' />
       <Field size='xSmall' title='xSmall' placeholder='xSmall' />
     </div>
-  ),
-}
-
-// An action rendered in the label row, right-aligned — as the login form does
-// with "Forgot password" next to the Password field.
-export const WithRightComponent: Story = {
-  render: () => (
-    <Field
-      title='Password'
-      type='password'
-      initialValue='secret'
-      rightComponent={
-        <Button theme='text' type='button' className='fs-small float-end'>
-          Forgot password
-        </Button>
-      }
-    />
   ),
 }
