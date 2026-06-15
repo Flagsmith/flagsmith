@@ -68,6 +68,25 @@ Identity overrides always take precedence over segment overrides. Simply put, th
 2. Segment overrides
 3. Default value for the current environment
 
+## Inspecting segment membership
+
+Open a segment from the Segments page and switch to the Identities tab to see who currently matches its rules. Pick an environment from the selector — segments are defined at the project level, but membership is per-environment. Search by identifier to find a specific user.
+
+The list shows identifiers and the date each identity was first seen. Trait values aren't shown inline; click through to view them.
+
+You need View permission on the project and View Identities permission on the chosen environment.
+
+### How fresh is the count?
+
+Each count is shown with a timestamp telling you when it was computed.
+
+- Self-hosted: the count updates as identities and traits change.
+- [Edge API](/performance/edge-api) projects: SDK writes don't update the count. It only changes when you click Refresh, edit the segment, or change identities from the dashboard.
+
+### Not yet supported
+
+Exporting the member list, real-time notifications, multi-segment intersection, and filtering by trait value within the view. Use the Flagsmith API for programmatic access.
+
 ## Context values
 
 :::info
