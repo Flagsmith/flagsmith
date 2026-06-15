@@ -7,6 +7,7 @@ from experimentation.dataclasses import WarehouseEventStats
 from experimentation.metric_definitions import validate_metric_definition
 from experimentation.models import (
     Experiment,
+    ExperimentExposures,
     ExperimentMetric,
     ExperimentStatus,
     Metric,
@@ -245,3 +246,9 @@ class ExperimentFeatureSerializer(serializers.ModelSerializer):  # type: ignore[
 
 class ExperimentListSerializer(ExperimentSerializer):
     feature = ExperimentFeatureSerializer(read_only=True)
+
+
+class ExperimentExposuresSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    class Meta:
+        model = ExperimentExposures
+        fields = ("as_of", "last_error_at", "refresh_requested_at", "payload")

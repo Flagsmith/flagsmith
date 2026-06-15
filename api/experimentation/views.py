@@ -1,9 +1,11 @@
 import logging
+import math
 from typing import Any
 
 from django.db import IntegrityError
 from django.db.models import Count, Prefetch, Q, QuerySet
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -14,8 +16,10 @@ from rest_framework.viewsets import GenericViewSet
 
 from app.pagination import CustomPagination
 from environments.views import NestedEnvironmentViewSet
+from experimentation.constants import EXPOSURES_REFRESH_MIN_INTERVAL
 from experimentation.models import (
     Experiment,
+    ExperimentExposures,
     ExperimentMetric,
     ExperimentStatus,
     Metric,
@@ -28,6 +32,7 @@ from experimentation.permissions import (
     WarehouseConnectionPermission,
 )
 from experimentation.serializers import (
+    ExperimentExposuresSerializer,
     ExperimentListSerializer,
     ExperimentMetricSerializer,
     ExperimentSerializer,
@@ -43,6 +48,7 @@ from experimentation.services import (
     refresh_warehouse_connection_status,
     transition_experiment_status,
 )
+from experimentation.tasks import compute_experiment_exposures
 from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
@@ -267,6 +273,52 @@ class ExperimentViewSet(
     @action(detail=True, methods=["post"])
     def complete(self, request: Request, **kwargs: object) -> Response:
         return self._transition_status(ExperimentStatus.COMPLETED)
+
+    @action(detail=True, methods=["get"])
+    def exposures(self, request: Request, **kwargs: object) -> Response:
+        experiment: Experiment = self.get_object()
+        exposures = getattr(experiment, "exposures", None)
+        return Response(
+            {
+                "exposures": (
+                    ExperimentExposuresSerializer(exposures).data if exposures else None
+                ),
+            }
+        )
+
+    @action(detail=True, methods=["post"], url_path="exposures/refresh")
+    def refresh_exposures(self, request: Request, **kwargs: object) -> Response:
+        experiment: Experiment = self.get_object()
+        if experiment.started_at is None:
+            return Response(
+                {"detail": "Cannot refresh exposures before the experiment starts."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        exposures = ExperimentExposures.objects.filter(experiment=experiment).first()
+        if exposures is not None and exposures.is_final:
+            return Response(
+                {"detail": "Exposures are final for this completed experiment."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if exposures is not None and exposures.refresh_requested_at is not None:
+            retry_after = EXPOSURES_REFRESH_MIN_INTERVAL - (
+                timezone.now() - exposures.refresh_requested_at
+            )
+            if retry_after.total_seconds() > 0:
+                return Response(
+                    {"detail": "A refresh was requested recently. Try again later."},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS,
+                    headers={
+                        "Retry-After": str(math.ceil(retry_after.total_seconds()))
+                    },
+                )
+        if exposures is None:
+            exposures, _ = ExperimentExposures.objects.get_or_create(
+                experiment=experiment
+            )
+        exposures.record_refresh_request()
+        compute_experiment_exposures.delay(kwargs={"experiment_id": experiment.id})
+        return Response(status=status.HTTP_202_ACCEPTED)
 
     def _transition_status(self, target_status: str) -> Response:
         experiment: Experiment = self.get_object()

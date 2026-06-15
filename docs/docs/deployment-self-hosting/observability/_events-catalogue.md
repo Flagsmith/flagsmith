@@ -79,6 +79,17 @@ Attributes:
  - `environment_api_key`
  - `environment_id`
 
+### `experimentation.exposures.compute_failed`
+
+Logged at `error` from:
+ - `api/experimentation/tasks.py:46`
+
+Attributes:
+ - `environment.id`
+ - `exc_info`
+ - `experiment.id`
+ - `organisation.id`
+
 ### `feature_health.feature_health_event_dismissal_not_supported`
 
 Logged at `warning` from:

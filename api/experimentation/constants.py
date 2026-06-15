@@ -8,3 +8,5 @@ EXPOSURE_EVENT_NAME = "$flag_exposure"
 variant key."""
 
 EXPOSURE_HOURLY_BUCKET_MAX_WINDOW = timedelta(hours=72)
+
+EXPOSURES_REFRESH_MIN_INTERVAL = timedelta(minutes=5)
