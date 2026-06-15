@@ -27,7 +27,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     isError,
     isLoading,
   } = useGetWarehouseConnectionsQuery(
-    { environmentId },
+    { environmentId, exclude_event_stats: true },
     { skip: !environmentId },
   )
   const [createConnection, { isLoading: isCreating }] =
@@ -41,6 +41,10 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
 
   const [testConnection, { isLoading: isSendingTestEvent }] =
     useTestWarehouseConnectionMutation()
+
+  useEffect(() => {
+    if (connection) setIsEnabling(false)
+  }, [connection])
 
   useEffect(() => {
     const interval = getWarehousePollingInterval(connectionStatus)

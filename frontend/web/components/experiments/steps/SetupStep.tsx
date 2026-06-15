@@ -57,7 +57,9 @@ const SetupStep: FC<SetupStepProps> = ({
   const featureIdsInExperiment = useMemo(() => {
     const ids = new Set<number>()
     experimentsData?.results?.forEach((experiment) => {
-      if (experiment.status !== 'completed') ids.add(experiment.feature.id)
+      if (experiment.status !== 'completed' && experiment.feature?.id) {
+        ids.add(experiment.feature.id)
+      }
     })
     return ids
   }, [experimentsData])

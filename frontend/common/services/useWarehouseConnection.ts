@@ -11,16 +11,6 @@ export const warehouseConnectionService = service
         Req['createWarehouseConnection']
       >({
         invalidatesTags: [{ id: 'LIST', type: 'WarehouseConnection' }],
-        async onQueryStarted({ environmentId }, { dispatch, queryFulfilled }) {
-          const { data } = await queryFulfilled
-          dispatch(
-            warehouseConnectionService.util.updateQueryData(
-              'getWarehouseConnections',
-              { environmentId },
-              () => [data],
-            ),
-          )
-        },
         query: ({ environmentId, ...body }) => ({
           body,
           method: 'POST',
@@ -52,7 +42,25 @@ export const warehouseConnectionService = service
         Res['warehouseConnections'][number],
         Req['testWarehouseConnection']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'WarehouseConnection' }],
+        async onQueryStarted({ environmentId }, { dispatch, queryFulfilled }) {
+          try {
+            const { data } = await queryFulfilled
+            dispatch(
+              warehouseConnectionService.util.updateQueryData(
+                'getWarehouseConnections',
+                { environmentId, exclude_event_stats: true },
+                (draft) => {
+                  const index = draft.findIndex(
+                    (connection) => connection.id === data.id,
+                  )
+                  if (index !== -1) draft[index] = data
+                },
+              ),
+            )
+          } catch {
+            return
+          }
+        },
         query: ({ environmentId, id }) => ({
           method: 'POST',
           url: `environments/${environmentId}/warehouse-connections/${id}/test-warehouse-connection/`,
