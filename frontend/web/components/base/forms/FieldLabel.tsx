@@ -40,7 +40,7 @@ const FieldLabel: FC<FieldLabelProps> = ({
       <Tooltip
         title={<Icon name='info-outlined' width={12} height={12} />}
         place={tooltipPlace}
-        titleClassName='cursor-pointer ml-1'
+        titleClassName='cursor-pointer ml-1 d-flex align-items-center'
       >
         {tooltip}
       </Tooltip>
