@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing
+from dataclasses import replace
 from functools import lru_cache
 
 import structlog
@@ -12,9 +13,13 @@ from django.utils import timezone
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from experimentation.constants import (
+    CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
     EXPOSURE_EVENT_NAME,
     EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
+    RESULTS_MIN_CONVERSIONS_PER_VARIANT,
+    RESULTS_MIN_IDENTITIES_PER_VARIANT,
+    SRM_MIN_TOTAL_IDENTITIES,
     WAREHOUSE_CONNECTION_FLAG,
 )
 from experimentation.dataclasses import (
@@ -22,13 +27,23 @@ from experimentation.dataclasses import (
     ExposuresSummary,
     ExposuresTimeseries,
     ExposuresTimeseriesPoint,
+    MetricResult,
+    MetricSpec,
+    ResultsSummary,
     WarehouseEventStats,
 )
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
     ExperimentStatus,
+    MetricAggregation,
     WarehouseConnectionStatus,
     WarehouseType,
+)
+from experimentation.stats import (
+    Inference,
+    VariantStats,
+    compare_to_control,
+    srm_p_value,
 )
 from integrations.flagsmith.client import get_openfeature_client
 
@@ -225,6 +240,183 @@ def get_exposure_buckets(
         )
         for quarantined, variant, bucket, first_exposed_identities in rows
     ]
+
+
+# First-exposed identities per variant (same dedup/quarantine as the exposures
+# query), each carrying the per-metric value used to derive sufficient
+# statistics. Metric events are attributed from first exposure onwards.
+_RESULTS_EXPOSURES_CTE = """
+WITH exposures AS (
+    SELECT
+        identifier,
+        if(uniqExact(value) > 1, '', any(value)) AS variant,
+        uniqExact(value) > 1 AS quarantined,
+        min(timestamp) AS first_exposure
+    FROM events
+    WHERE environment_key = %(environment_key)s
+        AND event = %(exposure_event)s
+        AND feature_name = %(feature_name)s
+        AND timestamp >= %(window_start)s
+        AND timestamp < %(window_end)s
+    GROUP BY identifier
+)"""
+
+
+def _metric_value_expression(index: int, aggregation: str) -> str:
+    condition = f"m.event = %(metric_{index}_event)s"
+    value = "toFloat64OrZero(m.value)"
+    if aggregation == MetricAggregation.OCCURRENCE:
+        return f"countIf({condition}) > 0"
+    if aggregation == MetricAggregation.COUNT:
+        return f"countIf({condition})"
+    if aggregation == MetricAggregation.SUM:
+        return f"sumIf({value}, {condition})"
+    # mean: per-identity average, zero when the identity has no matching events
+    return f"if(countIf({condition}) > 0, avgIf({value}, {condition}), 0)"
+
+
+def _build_results_query(specs: Sequence[MetricSpec]) -> str:
+    if not specs:
+        return (
+            _RESULTS_EXPOSURES_CTE
+            + "\nSELECT variant, count() AS n"
+            + "\nFROM exposures\nWHERE quarantined = 0\nGROUP BY variant"
+        )
+    value_expressions = ",\n        ".join(
+        f"{_metric_value_expression(i, spec.aggregation)} AS m{i}"
+        for i, spec in enumerate(specs)
+    )
+    outer_aggregates = ",\n    ".join(
+        f"sum(m{i}) AS m{i}_sum, sum(m{i} * m{i}) AS m{i}_sum_squares"
+        for i in range(len(specs))
+    )
+    return (
+        _RESULTS_EXPOSURES_CTE
+        + f""",
+unit_values AS (
+    SELECT
+        e.variant AS variant,
+        {value_expressions}
+    FROM exposures AS e
+    LEFT JOIN events AS m
+        ON m.identifier = e.identifier
+        AND m.environment_key = %(environment_key)s
+        AND m.event IN %(metric_events)s
+        AND m.timestamp >= e.first_exposure
+        AND m.timestamp < %(window_end)s
+    WHERE e.quarantined = 0
+    GROUP BY e.identifier, e.variant
+)
+SELECT variant, count() AS n,
+    {outer_aggregates}
+FROM unit_values
+GROUP BY variant"""
+    )
+
+
+def get_metric_variant_stats(
+    *,
+    environment_key: str,
+    feature_name: str,
+    window_start: datetime,
+    window_end: datetime,
+    specs: Sequence[MetricSpec],
+) -> tuple[dict[str, int], dict[int, dict[str, VariantStats]]]:
+    """Run the warehouse query, returning per-variant identity counts and, per
+    metric, per-variant sufficient statistics."""
+    params: dict[str, object] = {
+        "environment_key": environment_key,
+        "exposure_event": EXPOSURE_EVENT_NAME,
+        "feature_name": feature_name,
+        "window_start": window_start,
+        "window_end": window_end,
+    }
+    if specs:
+        params["metric_events"] = [spec.event for spec in specs]
+        for index, spec in enumerate(specs):
+            params[f"metric_{index}_event"] = spec.event
+
+    rows = _get_clickhouse_client().execute(_build_results_query(specs), params)
+
+    exposure_counts: dict[str, int] = {}
+    metric_stats: dict[int, dict[str, VariantStats]] = {
+        spec.metric_id: {} for spec in specs
+    }
+    for row in rows:
+        variant = row[0]
+        n = int(row[1])
+        exposure_counts[variant] = n
+        for index, spec in enumerate(specs):
+            metric_stats[spec.metric_id][variant] = VariantStats(
+                n=n,
+                sum=float(row[2 + index * 2]),
+                sum_squares=float(row[3 + index * 2]),
+            )
+    return exposure_counts, metric_stats
+
+
+def build_results_summary(
+    *,
+    specs: Sequence[MetricSpec],
+    exposure_counts: dict[str, int],
+    metric_stats: dict[int, dict[str, VariantStats]],
+    expected_shares: dict[str, float],
+) -> ResultsSummary:
+    total = sum(exposure_counts.values())
+    if expected_shares and total >= SRM_MIN_TOTAL_IDENTITIES:
+        srm = srm_p_value(
+            [exposure_counts.get(variant, 0) for variant in expected_shares],
+            list(expected_shares.values()),
+        )
+    else:
+        srm = None
+    return ResultsSummary(
+        srm_p_value=srm,
+        metrics=[
+            MetricResult(
+                metric_id=spec.metric_id,
+                variants=metric_stats.get(spec.metric_id, {}),
+                inference=_metric_inference(spec, metric_stats.get(spec.metric_id, {})),
+            )
+            for spec in specs
+        ],
+    )
+
+
+def _metric_inference(
+    spec: MetricSpec,
+    variants: dict[str, VariantStats],
+) -> dict[str, Inference | None]:
+    control = variants.get(CONTROL_VARIANT_KEY)
+    return {
+        variant_key: _infer_treatment(spec, control, treatment)
+        for variant_key, treatment in variants.items()
+        if variant_key != CONTROL_VARIANT_KEY
+    }
+
+
+def _infer_treatment(
+    spec: MetricSpec,
+    control: VariantStats | None,
+    treatment: VariantStats,
+) -> Inference | None:
+    if (
+        control is None
+        or control.n < RESULTS_MIN_IDENTITIES_PER_VARIANT
+        or treatment.n < RESULTS_MIN_IDENTITIES_PER_VARIANT
+    ):
+        return None
+    if spec.aggregation == MetricAggregation.OCCURRENCE and (
+        control.sum < RESULTS_MIN_CONVERSIONS_PER_VARIANT
+        or treatment.sum < RESULTS_MIN_CONVERSIONS_PER_VARIANT
+    ):
+        return None
+    inference = compare_to_control(control, treatment)
+    if inference is not None and spec.lower_is_better:
+        # "Winning" means moving the metric the good way; for a lower-is-better
+        # metric that's a fall, so the chance of winning is the chance lift < 0.
+        inference = replace(inference, chance_to_win=1.0 - inference.chance_to_win)
+    return inference
 
 
 def _resolve_audit_log_author(

@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from datetime import datetime, timezone
 
 import pytest
@@ -12,13 +13,16 @@ from experimentation.dataclasses import (
     ExposuresSummary,
     ExposuresTimeseries,
     ExposuresTimeseriesPoint,
+    MetricSpec,
     WarehouseEventStats,
 )
 from experimentation.models import (
+    MetricAggregation,
     WarehouseConnection,
     WarehouseConnectionStatus,
     WarehouseType,
 )
+from experimentation.stats import VariantStats
 
 
 def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
@@ -538,3 +542,331 @@ def test_refresh_warehouse_connection_status__already_connected__is_noop(
     # Then
     assert result.status == WarehouseConnectionStatus.CONNECTED
     assert log.events == []
+
+
+def _spec(
+    metric_id: int = 7,
+    event: str = "purchase",
+    aggregation: str = MetricAggregation.OCCURRENCE,
+    lower_is_better: bool = False,
+) -> MetricSpec:
+    return MetricSpec(
+        metric_id=metric_id,
+        event=event,
+        aggregation=aggregation,
+        lower_is_better=lower_is_better,
+    )
+
+
+def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
+    mocker: MockerFixture,
+) -> None:
+    # Given the warehouse returns per-variant counts and two metrics' sums
+    rows = [
+        ("control", 1000, 100.0, 100.0, 5000.0, 30000.0),
+        ("variant_a", 1000, 120.0, 120.0, 5200.0, 31000.0),
+    ]
+    mock_client = mocker.Mock()
+    mock_client.execute.return_value = rows
+    mocker.patch(
+        "experimentation.services._get_clickhouse_client",
+        return_value=mock_client,
+    )
+    specs = [
+        _spec(metric_id=7, event="purchase", aggregation=MetricAggregation.OCCURRENCE),
+        _spec(metric_id=9, event="revenue", aggregation=MetricAggregation.SUM),
+    ]
+    window_start = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
+
+    # When
+    exposure_counts, metric_stats = services.get_metric_variant_stats(
+        environment_key="env-key-123",
+        feature_name="my-feature",
+        window_start=window_start,
+        window_end=window_end,
+        specs=specs,
+    )
+
+    # Then per-variant counts and sufficient statistics are mapped per metric
+    assert exposure_counts == {"control": 1000, "variant_a": 1000}
+    assert metric_stats[7]["variant_a"] == VariantStats(
+        n=1000, sum=120.0, sum_squares=120.0
+    )
+    assert metric_stats[9]["control"] == VariantStats(
+        n=1000, sum=5000.0, sum_squares=30000.0
+    )
+    # And the query joins post-exposure metric events and excludes quarantined
+    sql, params = mock_client.execute.call_args.args
+    assert "LEFT JOIN events AS m" in sql
+    assert "m.timestamp >= e.first_exposure" in sql
+    assert "timestamp < %(window_end)s" in sql
+    assert "WHERE e.quarantined = 0" in sql
+    assert "countIf(m.event = %(metric_0_event)s) > 0 AS m0" in sql
+    assert "sumIf(toFloat64OrZero(m.value), m.event = %(metric_1_event)s) AS m1" in sql
+    assert "sum(m0) AS m0_sum, sum(m0 * m0) AS m0_sum_squares" in sql
+    assert params["metric_events"] == ["purchase", "revenue"]
+    assert params["metric_0_event"] == "purchase"
+    assert params["metric_1_event"] == "revenue"
+    assert params["window_end"] == window_end
+
+
+def test_get_metric_variant_stats__no_metrics__counts_variants_only(
+    mocker: MockerFixture,
+) -> None:
+    # Given an experiment with no attached metrics
+    mock_client = mocker.Mock()
+    mock_client.execute.return_value = [("control", 1000), ("variant_a", 900)]
+    mocker.patch(
+        "experimentation.services._get_clickhouse_client",
+        return_value=mock_client,
+    )
+
+    # When
+    exposure_counts, metric_stats = services.get_metric_variant_stats(
+        environment_key="env-key-123",
+        feature_name="my-feature",
+        window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
+        window_end=datetime(2026, 6, 10, tzinfo=timezone.utc),
+        specs=[],
+    )
+
+    # Then only the per-variant counts are returned, with no metric join
+    assert exposure_counts == {"control": 1000, "variant_a": 900}
+    assert metric_stats == {}
+    sql, params = mock_client.execute.call_args.args
+    assert "SELECT variant, count() AS n" in sql
+    assert "LEFT JOIN" not in sql
+    assert "metric_events" not in params
+
+
+@pytest.mark.parametrize(
+    "aggregation, expected",
+    [
+        (MetricAggregation.OCCURRENCE, "countIf(m.event = %(metric_0_event)s) > 0"),
+        (MetricAggregation.COUNT, "countIf(m.event = %(metric_0_event)s)"),
+        (
+            MetricAggregation.SUM,
+            "sumIf(toFloat64OrZero(m.value), m.event = %(metric_0_event)s)",
+        ),
+        (
+            MetricAggregation.MEAN,
+            "if(countIf(m.event = %(metric_0_event)s) > 0, "
+            "avgIf(toFloat64OrZero(m.value), m.event = %(metric_0_event)s), 0)",
+        ),
+    ],
+    ids=["occurrence", "count", "sum", "mean"],
+)
+def test_metric_value_expression__aggregation__builds_clause(
+    aggregation: str,
+    expected: str,
+) -> None:
+    # Given an aggregation
+    # When / Then it maps to its per-identity unit-value expression
+    assert services._metric_value_expression(0, aggregation) == expected
+
+
+def test_build_results_summary__healthy_arms__infers_each_treatment() -> None:
+    # Given a 10% control and a 12% treatment, both well above the floor
+    control = VariantStats(n=1000, sum=100.0, sum_squares=100.0)
+    treatment = VariantStats(n=1000, sum=120.0, sum_squares=120.0)
+    specs = [_spec(metric_id=7)]
+    metric_stats = {7: {"control": control, "variant_a": treatment}}
+
+    # When
+    summary = services.build_results_summary(
+        specs=specs,
+        exposure_counts={"control": 1000, "variant_a": 1000},
+        metric_stats=metric_stats,
+        expected_shares={"control": 0.5, "variant_a": 0.5},
+    )
+
+    # Then the treatment is compared to control and the raw stats are kept
+    assert summary.metrics[0].variants == {
+        "control": control,
+        "variant_a": treatment,
+    }
+    inference = summary.metrics[0].inference["variant_a"]
+    assert inference is not None
+    assert inference.lift == pytest.approx(0.2)
+    assert inference.chance_to_win == pytest.approx(0.90379, abs=1e-4)
+
+
+def test_build_results_summary__below_identity_floor__inference_none() -> None:
+    # Given arms below the minimum identities per variant
+    arm = VariantStats(n=40, sum=4.0, sum_squares=4.0)
+    specs = [_spec(metric_id=7)]
+
+    # When
+    summary = services.build_results_summary(
+        specs=specs,
+        exposure_counts={"control": 40, "variant_a": 40},
+        metric_stats={7: {"control": arm, "variant_a": arm}},
+        expected_shares={},
+    )
+
+    # Then inference is withheld
+    assert summary.metrics[0].inference["variant_a"] is None
+
+
+def test_build_results_summary__occurrence_below_conversion_floor__inference_none() -> (
+    None
+):
+    # Given enough identities but too few conversions on an occurrence metric
+    control = VariantStats(n=100, sum=10.0, sum_squares=10.0)
+    treatment = VariantStats(n=100, sum=3.0, sum_squares=3.0)
+    specs = [_spec(metric_id=7, aggregation=MetricAggregation.OCCURRENCE)]
+
+    # When
+    summary = services.build_results_summary(
+        specs=specs,
+        exposure_counts={"control": 100, "variant_a": 100},
+        metric_stats={7: {"control": control, "variant_a": treatment}},
+        expected_shares={},
+    )
+
+    # Then inference is withheld
+    assert summary.metrics[0].inference["variant_a"] is None
+
+
+def test_build_results_summary__lower_is_better__flips_chance_to_win() -> None:
+    # Given a value metric where a fall is the win
+    control = VariantStats(n=1000, sum=100.0, sum_squares=100.0)
+    treatment = VariantStats(n=1000, sum=120.0, sum_squares=120.0)
+    specs = [
+        _spec(metric_id=7, aggregation=MetricAggregation.SUM, lower_is_better=True)
+    ]
+
+    # When
+    summary = services.build_results_summary(
+        specs=specs,
+        exposure_counts={"control": 1000, "variant_a": 1000},
+        metric_stats={7: {"control": control, "variant_a": treatment}},
+        expected_shares={},
+    )
+
+    # Then the rise counts against the treatment
+    inference = summary.metrics[0].inference["variant_a"]
+    assert inference is not None
+    assert inference.lift == pytest.approx(0.2)
+    assert inference.chance_to_win == pytest.approx(1 - 0.90379, abs=1e-4)
+
+
+def test_build_results_summary__zero_control_mean__inference_none() -> None:
+    # Given a control with no value: the relative lift is undefined
+    control = VariantStats(n=100, sum=0.0, sum_squares=0.0)
+    treatment = VariantStats(n=100, sum=50.0, sum_squares=50.0)
+    specs = [_spec(metric_id=7, aggregation=MetricAggregation.COUNT)]
+
+    # When
+    summary = services.build_results_summary(
+        specs=specs,
+        exposure_counts={"control": 100, "variant_a": 100},
+        metric_stats={7: {"control": control, "variant_a": treatment}},
+        expected_shares={},
+    )
+
+    # Then inference is withheld
+    assert summary.metrics[0].inference["variant_a"] is None
+
+
+def test_build_results_summary__no_control_variant__inference_none() -> None:
+    # Given a metric with stats for a treatment but no control
+    treatment = VariantStats(n=1000, sum=120.0, sum_squares=120.0)
+    specs = [_spec(metric_id=7)]
+
+    # When
+    summary = services.build_results_summary(
+        specs=specs,
+        exposure_counts={"variant_a": 1000},
+        metric_stats={7: {"variant_a": treatment}},
+        expected_shares={},
+    )
+
+    # Then inference is withheld
+    assert summary.metrics[0].inference["variant_a"] is None
+
+
+def test_build_results_summary__balanced_traffic__srm_reports_no_mismatch() -> None:
+    # Given a balanced split above the SRM gate
+    # When
+    summary = services.build_results_summary(
+        specs=[],
+        exposure_counts={"control": 5000, "variant_a": 5000},
+        metric_stats={},
+        expected_shares={"control": 0.5, "variant_a": 0.5},
+    )
+
+    # Then
+    assert summary.srm_p_value == pytest.approx(1.0)
+    assert summary.metrics == []
+
+
+def test_build_results_summary__imbalanced_traffic__srm_below_threshold() -> None:
+    # Given a 60/40 split against an expected 50/50
+    # When
+    summary = services.build_results_summary(
+        specs=[],
+        exposure_counts={"control": 6000, "variant_a": 4000},
+        metric_stats={},
+        expected_shares={"control": 0.5, "variant_a": 0.5},
+    )
+
+    # Then the mismatch is flagged
+    assert summary.srm_p_value is not None
+    assert summary.srm_p_value < 0.001
+
+
+@pytest.mark.parametrize(
+    "exposure_counts, expected_shares",
+    [
+        ({"control": 40, "variant_a": 40}, {"control": 0.5, "variant_a": 0.5}),
+        ({"control": 5000, "variant_a": 5000}, {}),
+    ],
+    ids=["below_gate", "no_expected_shares"],
+)
+def test_build_results_summary__srm_not_computable__srm_none(
+    exposure_counts: dict[str, int],
+    expected_shares: dict[str, float],
+) -> None:
+    # Given too little traffic, or no configured split to compare against
+    # When
+    summary = services.build_results_summary(
+        specs=[],
+        exposure_counts=exposure_counts,
+        metric_stats={},
+        expected_shares=expected_shares,
+    )
+
+    # Then SRM is not reported
+    assert summary.srm_p_value is None
+
+
+def test_build_results_summary__computed__serialises_to_wire_shape() -> None:
+    # Given a computed summary
+    control = VariantStats(n=1000, sum=100.0, sum_squares=100.0)
+    treatment = VariantStats(n=1000, sum=120.0, sum_squares=120.0)
+    summary = services.build_results_summary(
+        specs=[_spec(metric_id=7)],
+        exposure_counts={"control": 1000, "variant_a": 1000},
+        metric_stats={7: {"control": control, "variant_a": treatment}},
+        expected_shares={"control": 0.5, "variant_a": 0.5},
+    )
+
+    # When
+    payload = asdict(summary)
+
+    # Then the payload nests raw stats and per-treatment inference
+    assert payload["srm_p_value"] == pytest.approx(1.0)
+    assert payload["metrics"][0]["metric_id"] == 7
+    assert payload["metrics"][0]["variants"]["control"] == {
+        "n": 1000,
+        "sum": 100.0,
+        "sum_squares": 100.0,
+    }
+    assert set(payload["metrics"][0]["inference"]["variant_a"]) == {
+        "lift",
+        "ci_low",
+        "ci_high",
+        "chance_to_win",
+    }
