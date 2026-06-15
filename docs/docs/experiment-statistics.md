@@ -8,11 +8,11 @@ Flagsmith's statistics engine answers three questions about an experiment: **Am 
 control), **by how much?** (the lift), and **can I trust it?** (is the difference real, and was traffic split fairly).
 This page explains the terms you'll see, in plain language — no statistics background needed.
 
-:::info Availability
+:::info Coming soon — Enterprise beta
 
-- **Available now:** the **Exposures panel** — who was bucketed into each variant, over time.
-- **Coming soon:** the **Results scorecard** — lift, credible intervals, chance to beat control, and the sample ratio
-  mismatch check.
+Experiment statistics aren't generally available yet. They are launching as a beta on **Enterprise** plans — to join,
+[get in touch](https://www.flagsmith.com/contact-us). Everything described on this page is part of that upcoming
+release; it previews what the feature will do.
 
 :::
 
@@ -65,8 +65,6 @@ fresh the figures are.
 
 ## Exposures
 
-**Available now.**
-
 An identity is counted **once**, in the variant it saw **first**. Because exposures are deduplicated by identity and
 keep only the earliest timestamp, duplicate event delivery can't inflate your counts, and each identity lands in the
 time bucket of its first exposure.
@@ -79,8 +77,6 @@ The panel shows a headline total, a cumulative chart (one line per variant), a v
 identities, share %), the excluded note, and a "last computed" time.
 
 ## Experiment results
-
-**Coming soon.**
 
 For each metric, the scorecard reports how each variant did against control, using a **Bayesian** engine. Three numbers
 per variant:
@@ -104,8 +100,6 @@ check whenever you like: peeking doesn't inflate your error rate the way repeate
 
 ## Sample ratio mismatch (SRM)
 
-**Coming soon.**
-
 Before trusting a result, you need traffic to have split the way you configured. If you set 50/50 but see 9,120 in
 control and 6,400 in the variant, something is broken — and if assignment is broken, every other number is suspect,
 because the groups aren't comparable.
@@ -116,15 +110,11 @@ the results** — investigate one-variant crashes, redirects that bypass bucketi
 
 ## Collecting data
 
-**Coming soon.**
-
 Statistics on a handful of people are meaningless, so a metric shows **collecting data** until every arm has at least
 **50 identities** (and, for conversion metrics, at least **5 conversions**). This stops you reading a "+300% lift" off
 three conversions.
 
 ## Metric types
-
-**Metrics: available now. Inference over them: coming soon.**
 
 | Aggregation    | What it measures                               | Example                 |
 | -------------- | ---------------------------------------------- | ----------------------- |
@@ -138,18 +128,20 @@ metrics into **goals** and **guardrails**.
 
 ## Summary
 
-| Capability                                      | Status                       |
-| ----------------------------------------------- | ---------------------------- |
-| Exposures panel (counts, chart, share)          | Available now                |
-| First-exposure attribution & duplicate immunity | Available now                |
-| Quarantined (multi-variant) identities          | Available now                |
-| Metric definitions                              | Available now                |
-| Results scorecard: lift, credible interval      | Coming soon                  |
-| Chance to beat control & winning/losing flags   | Coming soon                  |
-| Sample ratio mismatch (SRM) check               | Coming soon                  |
-| Collecting-data floor                           | Coming soon                  |
-| Risk / decision banner / trend chart            | Not planned for this version |
-| Frequentist engine                              | Deferred                     |
+Nothing here is generally available yet — the table shows what the upcoming Enterprise beta will include.
+
+| Capability                                      | Status                |
+| ----------------------------------------------- | --------------------- |
+| Exposures panel (counts, chart, share)          | In the first beta     |
+| First-exposure attribution & duplicate immunity | In the first beta     |
+| Quarantined (multi-variant) identities          | In the first beta     |
+| Metric definitions                              | In the first beta     |
+| Results scorecard: lift, credible interval      | Planned               |
+| Chance to beat control & winning/losing flags   | Planned               |
+| Sample ratio mismatch (SRM) check               | Planned               |
+| Collecting-data floor                           | Planned               |
+| Risk / decision banner / trend chart            | Not currently planned |
+| Frequentist engine                              | Deferred              |
 
 For experiment setup — multivariate flags, bucketing, identities — see
 [Experimentation (A/B Testing)](/experimentation-ab-testing) and [managing identities](/flagsmith-concepts/identities).
