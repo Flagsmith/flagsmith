@@ -1,0 +1,77 @@
+# Local-dev stack: Flagsmith UI + flagd runtime + Postgres for persistence.
+#
+# Build the Flagsmith image once with:
+#   docker build -t flagsmith-flagd-dev:local --target oss-unified .
+# Then bring everything up:
+#   docker compose -f docker-compose.flagd-dev.yml up
+#
+# The local-dev server-side key is intentionally hard-coded; override it
+# via `FLAGSMITH_SERVER_KEY=ser.your-key docker compose up`. The
+# bootstrap step pins the Flagsmith EnvironmentAPIKey to whatever value
+# you provide, so flagd and Flagsmith stay in sync without any runtime
+# file ferrying.
+#
+# See docs/docs/integrating-with-flagsmith/flagd-local-dev.md for details.
+
+x-flagsmith-env: &flagsmith-env
+  DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+  USE_POSTGRES_FOR_ANALYTICS: "true"
+  DJANGO_ALLOWED_HOSTS: "*"
+  DJANGO_SECRET_KEY: dev-only-secret-not-for-prod
+  ENVIRONMENT: local
+  PREVENT_SIGNUP: "true"
+  TASK_RUN_METHOD: SYNCHRONOUSLY
+
+volumes:
+  flagsmith-pgdata:
+
+services:
+  postgres:
+    image: postgres:15.5-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flagsmith
+    volumes:
+      - flagsmith-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d flagsmith -U postgres"]
+      interval: 2s
+      retries: 20
+
+  flagsmith:
+    image: flagsmith-flagd-dev:local
+    ports:
+      - "8000:8000"
+    environment:
+      <<: *flagsmith-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Healthcheck is baked into the image; don't override it.
+
+  # Idempotent: creates a default org/project/env on first run, reuses
+  # them thereafter. Pins the EnvironmentAPIKey to FLAGSMITH_SERVER_KEY
+  # so flagd can consume the same value via compose interpolation.
+  flagsmith-bootstrap:
+    image: flagsmith-flagd-dev:local
+    depends_on:
+      flagsmith:
+        condition: service_healthy
+    environment:
+      <<: *flagsmith-env
+    entrypoint: ["python", "manage.py"]
+    command:
+      - bootstrap_flagd_local
+      - --api-key=${FLAGSMITH_SERVER_KEY:-ser.local-dev-flagd-sync-not-secret}
+
+  flagd:
+    image: ghcr.io/open-feature/flagd:v0.13.2
+    depends_on:
+      flagsmith-bootstrap:
+        condition: service_completed_successfully
+    ports:
+      - "8013:8013"   # gRPC
+      - "8016:8016"   # OFREP
+    command:
+      - start
+      - --sources=[{"uri":"http://flagsmith:8000/api/v1/flagd/flags.json","provider":"http","authHeader":"Bearer ${FLAGSMITH_SERVER_KEY:-ser.local-dev-flagd-sync-not-secret}","interval":5}]
