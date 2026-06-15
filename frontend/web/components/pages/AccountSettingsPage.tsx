@@ -211,7 +211,6 @@ const AccountSettingsPage: FC = () => {
                     }}
                     value={email}
                     type='text'
-                    name='Email Address'
                   />
                   <div className='text-right'>
                     <Button
@@ -250,7 +249,6 @@ const AccountSettingsPage: FC = () => {
                 }
                 isValid={firstName && firstName.length}
                 type='text'
-                name='First Name*'
               />
               <InputGroup
                 className='mb-5'
@@ -264,7 +262,6 @@ const AccountSettingsPage: FC = () => {
                 onChange={(e: any) => setLastName(Utils.safeParseEventValue(e))}
                 isValid={lastName && lastName.length}
                 type='text'
-                name='Last Name*'
               />
               {error && <ErrorMessage>{error}</ErrorMessage>}
               <div className='text-right'>
@@ -367,8 +364,6 @@ const AccountSettingsPage: FC = () => {
                     }
                     isValid={currentPassword && currentPassword.length}
                     type='password'
-                    name='Current Password*'
-                    autocomplete='current-password'
                   />
                   <InputGroup
                     className='mt-4'
@@ -384,8 +379,6 @@ const AccountSettingsPage: FC = () => {
                     }
                     isValid={newPassword1 && newPassword1.length}
                     type='password'
-                    autocomplete='new-password'
-                    name='New Password*'
                   />
                   <InputGroup
                     className='mt-4'
@@ -401,8 +394,6 @@ const AccountSettingsPage: FC = () => {
                     }
                     isValid={newPassword2 && newPassword2.length}
                     type='password'
-                    autocomplete='new-password'
-                    name='Confirm New Password*'
                   />
                   {passwordError && (
                     <ErrorMessage>{passwordError}</ErrorMessage>

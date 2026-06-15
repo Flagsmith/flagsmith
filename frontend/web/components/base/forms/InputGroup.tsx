@@ -52,18 +52,6 @@ interface InputGroupProps {
     error?: string | string[]
     name?: string
   }
-  /** @deprecated legacy top-level prop, never forwarded — set via inputProps */
-  name?: string
-  /** @deprecated legacy top-level prop, never forwarded — set via inputProps */
-  autocomplete?: string
-  /** @deprecated legacy top-level prop, never forwarded — set via inputProps */
-  autoFocus?: boolean
-  /** @deprecated legacy top-level prop, never forwarded — set via inputProps */
-  autoValidate?: boolean
-  /** @deprecated legacy top-level prop, never forwarded — set via inputProps */
-  search?: boolean
-  /** @deprecated legacy top-level prop, never forwarded — set via inputProps */
-  rows?: number
   'data-test'?: string
   ref?: Ref<InputGroupMethods>
 }

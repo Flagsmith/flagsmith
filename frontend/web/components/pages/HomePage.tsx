@@ -403,7 +403,6 @@ const HomePage: React.FC = () => {
                                     ) => setEmail(Utils.safeParseEventValue(e))}
                                     className='input-default full-width mb-4'
                                     type='text'
-                                    name='email'
                                     id='email'
                                   />
                                   <InputGroup
@@ -440,7 +439,6 @@ const HomePage: React.FC = () => {
                                     }
                                     className='input-default full-width mb-2'
                                     type='password'
-                                    name='password'
                                     data-test='password'
                                     id='password'
                                   />
@@ -589,7 +587,6 @@ const HomePage: React.FC = () => {
                                   }
                                   className='input-default full-width'
                                   type='text'
-                                  name='firstName'
                                   id='firstName'
                                 />
                                 <InputGroup
@@ -607,7 +604,6 @@ const HomePage: React.FC = () => {
                                   }
                                   className='input-default full-width'
                                   type='text'
-                                  name='lastName'
                                   id='lastName'
                                 />
                                 <InputGroup
@@ -624,7 +620,6 @@ const HomePage: React.FC = () => {
                                   ) => setEmail(Utils.safeParseEventValue(e))}
                                   className='input-default full-width'
                                   type='email'
-                                  name='email'
                                   id='email'
                                 />
                                 {isFreeEmailDomain(email) && (
@@ -649,7 +644,6 @@ const HomePage: React.FC = () => {
                                   }
                                   className='input-default full-width'
                                   type='password'
-                                  name='password'
                                   id='password'
                                 />
                                 <PasswordRequirements

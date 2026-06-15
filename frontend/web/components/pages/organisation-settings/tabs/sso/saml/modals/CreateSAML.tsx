@@ -126,7 +126,6 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
           className: 'full-width',
         }}
         type='text'
-        name='Name*'
       />
 
       <InputGroup
@@ -144,7 +143,6 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
           name: 'groupName',
         }}
         type='text'
-        name='Frontend URL*'
       />
       <InputGroup
         className='mt-2 mb-4'
@@ -341,7 +339,6 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
             className: 'full-width',
           }}
           type='text'
-          name='Name*'
         />
         <div className='text-right'>
           <Button
