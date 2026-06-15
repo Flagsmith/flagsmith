@@ -93,6 +93,16 @@ def test_compare_to_control__zero_control_mean__returns_none() -> None:
     assert compare_to_control(control, treatment) is None
 
 
+def test_compare_to_control__negative_control_mean__returns_none() -> None:
+    # Given a control whose values average below zero (e.g. a revenue metric
+    # with refunds): relative lift against it is meaningless
+    control = VariantStats(n=1000, sum=-50.0, sum_squares=600.0)
+    treatment = VariantStats(n=1000, sum=120.0, sum_squares=120.0)
+
+    # When / Then
+    assert compare_to_control(control, treatment) is None
+
+
 @pytest.mark.parametrize(
     "control_n, treatment_n",
     [(1, 1000), (1000, 1), (0, 1000)],

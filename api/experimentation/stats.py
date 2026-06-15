@@ -55,8 +55,9 @@ def compare_to_control(
     treatment: VariantStats,
 ) -> Inference | None:
     # Inference is undefined without two observations per arm (no spread to
-    # measure) or a zero control mean (relative lift divides by it).
-    if control.n < 2 or treatment.n < 2 or control.mean == 0:
+    # measure) or a non-positive control mean (relative lift against it is
+    # meaningless, and divides by zero when the mean is exactly zero).
+    if control.n < 2 or treatment.n < 2 or control.mean <= 0:
         return None
 
     lift = (treatment.mean - control.mean) / control.mean
