@@ -9,7 +9,7 @@ from django.contrib.auth.models import AbstractUser
 from django.urls import reverse
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock.plugin import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -340,8 +340,8 @@ def test_update_invite__put_request__returns_405(  # type: ignore[no-untyped-def
 @pytest.mark.parametrize(
     "invite_object, url",
     [
-        (lazy_fixture("invite"), "api-v1:users:user-join-organisation"),
-        (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
+        (lf("invite"), "api-v1:users:user-join-organisation"),
+        (lf("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
 def test_join_organisation__exceeds_plan_limit_saas__returns_400(
@@ -368,8 +368,8 @@ def test_join_organisation__exceeds_plan_limit_saas__returns_400(
 @pytest.mark.parametrize(
     "invite_object, url",
     [
-        (lazy_fixture("invite"), "api-v1:users:user-join-organisation"),
-        (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
+        (lf("invite"), "api-v1:users:user-join-organisation"),
+        (lf("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
 def test_join_organisation__exceeds_plan_limit_self_hosted__returns_400(
@@ -400,8 +400,8 @@ def test_join_organisation__exceeds_plan_limit_self_hosted__returns_400(
 @pytest.mark.parametrize(
     "invite_object, url",
     [
-        (lazy_fixture("invite"), "api-v1:users:user-join-organisation"),
-        (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
+        (lf("invite"), "api-v1:users:user-join-organisation"),
+        (lf("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
 def test_join_organisation__payment_fails__returns_400(

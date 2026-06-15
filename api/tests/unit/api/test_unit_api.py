@@ -1,6 +1,6 @@
 import pytest
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -15,7 +15,7 @@ from rest_framework.test import APIClient
 )
 @pytest.mark.parametrize(
     "client",
-    (lazy_fixture("api_client"), lazy_fixture("admin_client")),
+    (lf("api_client"), lf("admin_client")),
 )
 def test_swagger_docs_generation__valid_url__returns_ok(
     url: str, client: APIClient

@@ -3,7 +3,7 @@ import json
 import pytest
 from common.projects.permissions import VIEW_PROJECT
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -14,7 +14,7 @@ from tests.types import WithProjectPermissionsCallable
 
 @pytest.mark.parametrize(
     "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+    [(lf("admin_master_api_key_client")), (lf("admin_client"))],
 )
 def test_get_tag_by_uuid__valid_client__returns_tag(  # type: ignore[no-untyped-def]
     client: APIClient, project: Project, tag: Tag

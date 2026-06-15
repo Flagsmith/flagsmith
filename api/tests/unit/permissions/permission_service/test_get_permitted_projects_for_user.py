@@ -6,7 +6,7 @@ from common.projects.permissions import (
     DELETE_FEATURE,
     VIEW_PROJECT,
 )
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 
 from organisations.models import Organisation, UserOrganisation
 from permissions.models import PermissionModel
@@ -34,8 +34,8 @@ def test_get_permitted_projects_for_user__org_admin__returns_all_projects(  # ty
 @pytest.mark.parametrize(
     "project_admin",
     [
-        (lazy_fixture("project_admin_via_user_permission")),
-        (lazy_fixture("project_admin_via_user_permission_group")),
+        (lf("project_admin_via_user_permission")),
+        (lf("project_admin_via_user_permission_group")),
     ],
 )
 def test_get_permitted_projects_for_user__project_admin__returns_single_project(

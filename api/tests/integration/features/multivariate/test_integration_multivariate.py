@@ -2,7 +2,7 @@ import json
 
 import pytest
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -15,7 +15,7 @@ from users.models import FFAdminUser
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_create_mv_option__valid_data__returns_created(  # type: ignore[no-untyped-def]
     client, project, mv_option_50_percent, feature
@@ -305,8 +305,8 @@ def test_update_mv_option__duplicate_sibling_key__returns_bad_request(
 @pytest.mark.parametrize(
     "client, feature_id",
     [
-        (lazy_fixture("admin_client"), "undefined"),
-        (lazy_fixture("admin_client"), "89809"),
+        (lf("admin_client"), "undefined"),
+        (lf("admin_client"), "89809"),
     ],
 )
 def test_create_mv_option__invalid_feature_id__returns_not_found(  # type: ignore[no-untyped-def]
@@ -368,7 +368,7 @@ def test_create_mv_option__user_not_project_member__returns_forbidden(project): 
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_list_mv_options__option_exists__returns_option(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
@@ -391,7 +391,7 @@ def test_list_mv_options__option_exists__returns_option(  # type: ignore[no-unty
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_create_mv_option__total_allocation_exceeds_100__returns_bad_request(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
@@ -422,7 +422,7 @@ def test_create_mv_option__total_allocation_exceeds_100__returns_bad_request(  #
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_update_mv_option__valid_allocation__returns_updated_option(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
@@ -453,7 +453,7 @@ def test_update_mv_option__valid_allocation__returns_updated_option(  # type: ig
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_update_mv_option__total_allocation_exceeds_100__returns_bad_request(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
@@ -504,7 +504,7 @@ def test_update_mv_option__total_allocation_exceeds_100__returns_bad_request(  #
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_delete_mv_option__option_exists__returns_no_content(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
@@ -538,7 +538,7 @@ def test_delete_mv_option__option_exists__returns_no_content(  # type: ignore[no
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_update_feature_state__two_mv_options_at_50_percent__returns_ok(  # type: ignore[no-untyped-def]
     project, environment, environment_api_key, client, feature
@@ -635,7 +635,7 @@ def test_update_feature_state__two_mv_options_at_50_percent__returns_ok(  # type
 
 @pytest.mark.parametrize(
     "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    [lf("admin_master_api_key_client"), lf("admin_client")],
 )
 def test_update_feature_state__swap_variation_weights__returns_ok(  # type: ignore[no-untyped-def]
     project, environment, environment_api_key, client, feature

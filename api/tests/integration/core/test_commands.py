@@ -3,7 +3,7 @@ from django.core.management import call_command
 from django.db.models import Model
 from djoser.utils import decode_uid  # type: ignore[import-untyped]
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 
 from organisations.models import (
     Organisation,
@@ -131,9 +131,9 @@ def test_bootstrap__cli_overrides_provided__creates_expected_entities(
 @pytest.mark.parametrize(
     "existing_data",
     [
-        lazy_fixture("admin_user"),
-        lazy_fixture("organisation"),
-        lazy_fixture("project"),
+        lf("admin_user"),
+        lf("organisation"),
+        lf("project"),
     ],
 )
 def test_bootstrap__used_instance__skip_expected(

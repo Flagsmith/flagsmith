@@ -6,7 +6,7 @@ from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 
 from environments.models import Environment
 from environments.permissions.models import (
@@ -42,8 +42,8 @@ def test_get_permitted_environments_for_user__org_admin__returns_all_environment
 @pytest.mark.parametrize(
     "project_admin",
     [
-        (lazy_fixture("project_admin_via_user_permission")),
-        (lazy_fixture("project_admin_via_user_permission_group")),
+        (lf("project_admin_via_user_permission")),
+        (lf("project_admin_via_user_permission_group")),
     ],
 )
 def test_get_permitted_environments_for_user__project_admin__returns_all_environments(  # noqa: E501
@@ -69,8 +69,8 @@ def test_get_permitted_environments_for_user__project_admin__returns_all_environ
 @pytest.mark.parametrize(
     "environment_admin",
     [
-        (lazy_fixture("environment_admin_via_user_permission")),
-        (lazy_fixture("environment_admin_via_user_permission_group")),
+        (lf("environment_admin_via_user_permission")),
+        (lf("environment_admin_via_user_permission_group")),
     ],
 )
 def test_get_permitted_environments_for_user__environment_admin__returns_environment(  # noqa: E501

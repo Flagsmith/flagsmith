@@ -7,7 +7,7 @@ import pytest
 import requests
 import responses
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.response import Response
@@ -662,15 +662,15 @@ def test_fetch_repositories__valid_installation__returns_repositories(
     "client, reverse_url",
     [
         (
-            lazy_fixture("admin_master_api_key_client"),
+            lf("admin_master_api_key_client"),
             "api-v1:organisations:get-github-issues",
         ),
         (
-            lazy_fixture("admin_master_api_key_client"),
+            lf("admin_master_api_key_client"),
             "api-v1:organisations:get-github-pulls",
         ),
-        (lazy_fixture("admin_client"), "api-v1:organisations:get-github-issues"),
-        (lazy_fixture("admin_client"), "api-v1:organisations:get-github-pulls"),
+        (lf("admin_client"), "api-v1:organisations:get-github-issues"),
+        (lf("admin_client"), "api-v1:organisations:get-github-pulls"),
     ],
 )
 def test_fetch_issues_and_pulls__integration_not_configured__returns_400(

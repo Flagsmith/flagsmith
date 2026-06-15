@@ -2,7 +2,7 @@ from typing import Type
 
 import pytest
 from django.contrib.auth.models import AbstractUser
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
@@ -35,17 +35,17 @@ def test_dynatrace_wrapper__valid_config__initializes_correctly():  # type: igno
     (
         (
             RelatedObjectType.FEATURE.name,
-            lazy_fixture("feature"),
+            lf("feature"),
             "Flagsmith Deployment - Flag Changed: Test Feature1",
         ),
         (
             RelatedObjectType.FEATURE_STATE.name,
-            lazy_fixture("feature_state"),
+            lf("feature_state"),
             "Flagsmith Deployment - Flag Changed: Test Feature1",
         ),
         (
             RelatedObjectType.SEGMENT.name,
-            lazy_fixture("segment"),
+            lf("segment"),
             "Flagsmith Deployment - Segment Changed: segment",
         ),
     ),
