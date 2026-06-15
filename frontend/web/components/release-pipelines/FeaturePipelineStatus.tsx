@@ -2,6 +2,7 @@ import {
   useGetReleasePipelineQuery,
   useGetReleasePipelinesQuery,
 } from 'common/services/useReleasePipelines'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import AccordionCard from 'components/base/accordion/AccordionCard'
 import { useMemo } from 'react'
 
@@ -39,7 +40,7 @@ const FeaturePipelineStatus = ({
 
   const { data: releasePipeline } = useGetReleasePipelineQuery(
     {
-      pipelineId: matchingReleasePipeline?.id ?? NaN,
+      pipelineId: matchingReleasePipeline?.id ?? 0,
       projectId: Number(projectId),
     },
     {
@@ -49,6 +50,16 @@ const FeaturePipelineStatus = ({
 
   const stages = releasePipeline?.stages
   const totalStages = (stages?.length ?? 0) + 1
+
+  const { data: environments } = useGetEnvironmentsQuery(
+    { projectId: Number(projectId) },
+    { skip: !projectId || !stages?.length },
+  )
+  const envNameById = useMemo(() => {
+    const map = new Map<number, string>()
+    environments?.results?.forEach((env) => map.set(env.id, env.name))
+    return map
+  }, [environments])
 
   const stageHasFeature = useMemo(
     () =>
@@ -74,7 +85,7 @@ const FeaturePipelineStatus = ({
             key={stage.id}
             stageOrder={stage.order}
             stageName={stage.name}
-            stageEnvironment={stage.environment}
+            envName={envNameById.get(stage.environment)}
             stageActions={stage.actions}
             stageTrigger={stage.trigger}
             totalStages={totalStages}

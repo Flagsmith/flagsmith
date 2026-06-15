@@ -1,7 +1,7 @@
   .circle-container {
-      background-color: white;
+      background-color: var(--color-surface-default);
       border: 4px solid;
-      border-color: #AAA;
+      border-color: var(--color-border-default);
       border-radius: 50%;
       height: 40px;
       width: 40px;
@@ -13,11 +13,13 @@
       justify-content: center;
 
       &.in-stage {
-        border-color: #6837fc;
+        border-color: var(--color-border-action);
+        color: var(--color-icon-action);
       }
 
       &.completed {
-        border-color: #53af41;
+        border-color: var(--color-border-success);
+        color: var(--color-icon-success);
       }
 
   }
@@ -27,7 +29,7 @@
   }
 
   .line-left {
-    background-color: #AAA;
+    background-color: var(--color-border-default);
     border: unset;
     height: 3px;
     left: 0%;
@@ -36,11 +38,11 @@
     z-index: 1;
 
     &.completed {
-      background-color: #53af41;
+      background-color: var(--color-border-success);
     }
   }
   .line-right {
-    background-color: #AAA;
+    background-color: var(--color-border-default);
     border: unset;
     height: 3px;
     left: 50%;
@@ -49,6 +51,6 @@
     z-index: 1;
 
     &.completed {
-      background-color: #53af41;
+      background-color: var(--color-border-success);
     }
   }
