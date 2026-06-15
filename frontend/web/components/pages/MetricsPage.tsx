@@ -77,7 +77,7 @@ const MetricsPage: FC = () => {
   )
 
   const { data: warehouseConnections } = useGetWarehouseConnectionsQuery(
-    { environmentId: environmentId ?? '' },
+    { environmentId: environmentId ?? '', exclude_event_stats: true },
     { skip: !environmentId || !isEnabled },
   )
 
@@ -234,7 +234,7 @@ const MetricsPage: FC = () => {
       <>
         {!!connection && (
           <div className='metrics-page__banner d-flex align-items-center justify-content-between gap-3 mb-3 rounded-md bg-surface-subtle'>
-            <span className='metrics-page__banner-text d-flex align-items-center gap-2 text-secondary'>
+            <span className='metrics-page__banner-text d-flex align-items-center gap-2'>
               <Icon name='layers' width={16} className='text-action' />
               Metrics are computed from your <strong>
                 {warehouseLabel}

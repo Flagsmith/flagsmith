@@ -20,13 +20,14 @@ type WarehouseTabProps = {
 
 const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
   const [editing, setEditing] = useState(false)
+  const [isEnabling, setIsEnabling] = useState(false)
 
   const {
     data: connections,
     isError,
     isLoading,
   } = useGetWarehouseConnectionsQuery(
-    { environmentId },
+    { environmentId, exclude_event_stats: true },
     { skip: !environmentId },
   )
   const [createConnection, { isLoading: isCreating }] =
@@ -42,6 +43,10 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     useTestWarehouseConnectionMutation()
 
   useEffect(() => {
+    if (connection) setIsEnabling(false)
+  }, [connection])
+
+  useEffect(() => {
     const interval = getWarehousePollingInterval(connectionStatus)
     if (!interval || connectionId === undefined) return
     testConnection({ environmentId, id: connectionId })
@@ -55,10 +60,14 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     openConfirm({
       body: 'This will enable a Flagsmith Warehouse connection for this environment. Are you sure you want to proceed?',
       onYes: () => {
+        setIsEnabling(true)
         createConnection({ environmentId, warehouse_type: 'flagsmith' })
           .unwrap()
           .then(() => toast('Warehouse connection created'))
-          .catch(() => toast('Failed to create warehouse connection', 'danger'))
+          .catch(() => {
+            setIsEnabling(false)
+            toast('Failed to create warehouse connection', 'danger')
+          })
       },
       title: 'Connect Flagsmith Warehouse',
     })
@@ -142,7 +151,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
         <WarehouseSetup
           onEnableFlagsmith={handleEnableFlagsmith}
           onCreateSnowflake={handleCreateSnowflake}
-          isCreating={isCreating}
+          isCreating={isCreating || isEnabling}
         />
       </div>
     )

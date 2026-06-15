@@ -9,8 +9,20 @@
 
   &__header {
     display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__heading {
+    display: flex;
     align-items: center;
     justify-content: space-between;
+  }
+
+  &__description {
+    font-size: var(--font-caption-size);
+    color: var(--color-text-secondary);
+    margin: 0;
   }
 
   .input-container {

@@ -24,6 +24,7 @@ import {
   StageActionType,
   StageActionBody,
   ChangeRequest,
+  ExpectedDirection,
   ExperimentStatus,
   MetricAggregation,
   MetricDirection,
@@ -1010,7 +1011,10 @@ export type Req = {
     project_id: number
     gitlab_project_id: number
   }>
-  getWarehouseConnections: { environmentId: string }
+  getWarehouseConnections: {
+    environmentId: string
+    exclude_event_stats?: boolean
+  }
   createWarehouseConnection: {
     environmentId: string
     warehouse_type: string
@@ -1031,7 +1035,12 @@ export type Req = {
   }>
   createExperiment: {
     environmentId: string
-    body: { name: string; hypothesis: string; feature: number }
+    body: {
+      name: string
+      hypothesis: string
+      feature: number
+      metrics: { metric: number; expected_direction: ExpectedDirection }[]
+    }
   }
   experimentAction: { environmentId: string; experimentId: number }
   deleteExperiment: { environmentId: string; experimentId: number }

@@ -1,4 +1,10 @@
-import { ExperimentStatus } from 'common/types/responses'
+import {
+  ExpectedDirection,
+  Experiment,
+  ExperimentMetric,
+  ExperimentStatus,
+  MetricDirection,
+} from 'common/types/responses'
 
 export const EXPERIMENT_STATUS_LABELS: Record<ExperimentStatus, string> = {
   completed: 'Completed',
@@ -21,3 +27,40 @@ export const TAB_ORDER: FilterTab[] = [
   'paused',
   'completed',
 ]
+
+export const METRIC_DIRECTION_LABELS: Record<MetricDirection, string> = {
+  down: '↓ lower is better',
+  informational: 'informational',
+  up: '↑ higher is better',
+}
+
+export type ExpectedDirectionOption = {
+  value: ExpectedDirection
+  label: string
+}
+
+export const EXPECTED_DIRECTION_OPTIONS: ExpectedDirectionOption[] = [
+  { label: 'Increase', value: 'increase' },
+  { label: 'Decrease', value: 'decrease' },
+  { label: 'Should not increase', value: 'not_increase' },
+  { label: 'Should not decrease', value: 'not_decrease' },
+]
+
+export const getExpectedDirectionLabel = (
+  direction: ExpectedDirection,
+): string =>
+  EXPECTED_DIRECTION_OPTIONS.find((option) => option.value === direction)
+    ?.label ?? direction
+
+export const METRIC_DIRECTION_TO_EXPECTED_DIRECTION: Record<
+  MetricDirection,
+  ExpectedDirection | null
+> = {
+  down: 'decrease',
+  informational: null,
+  up: 'increase',
+}
+
+export const getPrimaryMetric = (
+  experiment: Experiment,
+): ExperimentMetric | undefined => experiment.metrics?.[0]

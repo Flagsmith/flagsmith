@@ -51,7 +51,7 @@ const ExperimentsPage: FC = () => {
 
   const { data: warehouseConnections, isLoading: isLoadingWarehouse } =
     useGetWarehouseConnectionsQuery(
-      { environmentId: environmentId ?? '' },
+      { environmentId: environmentId ?? '', exclude_event_stats: true },
       { skip: !environmentId },
     )
 
@@ -214,6 +214,9 @@ const ExperimentsPage: FC = () => {
   }
 
   const renderCta = () => {
+    if (isLoading || isLoadingWarehouse) {
+      return undefined
+    }
     if (hasWarehouse) {
       return (
         <Button onClick={() => setIsCreating(true)}>

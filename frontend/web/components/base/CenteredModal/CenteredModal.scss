@@ -1,0 +1,9 @@
+.centered-modal {
+  width: 80vw;
+  max-width: 80vw;
+
+  .modal-body {
+    max-height: 75vh;
+    overflow-y: auto;
+  }
+}

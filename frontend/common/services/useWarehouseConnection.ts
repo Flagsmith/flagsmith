@@ -32,15 +32,35 @@ export const warehouseConnectionService = service
         Req['getWarehouseConnections']
       >({
         providesTags: [{ id: 'LIST', type: 'WarehouseConnection' }],
-        query: ({ environmentId }) => ({
-          url: `environments/${environmentId}/warehouse-connections/`,
+        query: ({ environmentId, exclude_event_stats }) => ({
+          url: `environments/${environmentId}/warehouse-connections/${
+            exclude_event_stats ? '?exclude_event_stats=true' : ''
+          }`,
         }),
       }),
       testWarehouseConnection: builder.mutation<
         Res['warehouseConnections'][number],
         Req['testWarehouseConnection']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'WarehouseConnection' }],
+        async onQueryStarted({ environmentId }, { dispatch, queryFulfilled }) {
+          try {
+            const { data } = await queryFulfilled
+            dispatch(
+              warehouseConnectionService.util.updateQueryData(
+                'getWarehouseConnections',
+                { environmentId, exclude_event_stats: true },
+                (draft) => {
+                  const index = draft.findIndex(
+                    (connection) => connection.id === data.id,
+                  )
+                  if (index !== -1) draft[index] = data
+                },
+              ),
+            )
+          } catch {
+            return
+          }
+        },
         query: ({ environmentId, id }) => ({
           method: 'POST',
           url: `environments/${environmentId}/warehouse-connections/${id}/test-warehouse-connection/`,

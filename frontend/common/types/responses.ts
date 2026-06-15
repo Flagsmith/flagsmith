@@ -608,6 +608,21 @@ export type Metric = {
   updated_at: string
 }
 
+export type ExpectedDirection =
+  | 'increase'
+  | 'decrease'
+  | 'not_increase'
+  | 'not_decrease'
+
+export type ExperimentMetric = {
+  id: number
+  metric: number
+  metric_name: string
+  aggregation: MetricAggregation
+  expected_direction: ExpectedDirection
+  created_at: string
+}
+
 export type ExperimentFeature = {
   id: number
   name: string
@@ -622,6 +637,7 @@ export type Experiment = {
   hypothesis: string
   feature: ExperimentFeature
   status: ExperimentStatus
+  metrics: ExperimentMetric[]
   created_at: string
   updated_at: string
   started_at: string | null
