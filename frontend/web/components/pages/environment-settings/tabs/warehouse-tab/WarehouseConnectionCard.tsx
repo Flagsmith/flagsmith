@@ -17,6 +17,7 @@ type WarehouseConnectionCardProps = {
   onEdit?: () => void
   onSendTestEvent: () => void
   isSendingTestEvent: boolean
+  isLoadingStats?: boolean
 }
 
 const STATUS_COLOUR: Record<WarehouseConnectionStatus, string> = {
@@ -40,6 +41,7 @@ const TYPE_LABEL: Partial<Record<WarehouseType, string>> = {
 
 const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   connection,
+  isLoadingStats,
   isSendingTestEvent,
   onDelete,
   onEdit,
@@ -114,6 +116,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
       <WarehouseStats
         errored={connection.status === 'errored'}
         lastEventReceived='-'
+        loading={isLoadingStats}
         totalEventsReceived={connection.total_events_received}
         uniqueEventsCount={connection.unique_events_count}
       />
