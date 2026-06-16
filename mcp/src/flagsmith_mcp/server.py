@@ -8,6 +8,7 @@ from fastmcp.utilities.openapi.models import HttpMethod, HTTPRoute
 from mcp.types import ToolAnnotations
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from prometheus_client import start_http_server
+from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 
@@ -15,6 +16,7 @@ from flagsmith_mcp import config, constants
 from flagsmith_mcp.auth import FlagsmithAuth
 from flagsmith_mcp.events import EventLoggingMiddleware
 from flagsmith_mcp.metrics import PrometheusMiddleware
+from flagsmith_mcp.middleware import RootRouterMiddleware
 from flagsmith_mcp.oauth import FlagsmithResourceAuth
 from flagsmith_mcp.telemetry import propagate_span_attributes, setup_telemetry
 
@@ -97,6 +99,8 @@ def run() -> None:
         server.run(
             transport=settings.transport,
             show_banner=False,
+            path=constants.STREAMABLE_HTTP_PATH,
+            middleware=[Middleware(RootRouterMiddleware)],
             # Let uvicorn log records propagate to the root logger so they
             # are rendered by the configured formatter.
             uvicorn_config={"log_config": None},

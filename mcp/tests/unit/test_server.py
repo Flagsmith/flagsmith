@@ -8,6 +8,7 @@ from pytest_mock import MockerFixture
 from respx import MockRouter
 
 from flagsmith_mcp import config, constants, server
+from flagsmith_mcp.middleware import RootRouterMiddleware
 
 
 @pytest.mark.parametrize(
@@ -193,9 +194,12 @@ def test_run__http_transport__banner_off_uvicorn_logs_propagated(
     # When
     server.run()
 
-    # Then
-    create_server_mock.return_value.run.assert_called_once_with(
-        transport="http",
-        show_banner=False,
-        uvicorn_config={"log_config": None},
-    )
+    # Then the server is served on the streamable HTTP path, with logs
+    # propagated and the root router installed
+    _, kwargs = create_server_mock.return_value.run.call_args
+    assert kwargs["transport"] == "http"
+    assert kwargs["show_banner"] is False
+    assert kwargs["path"] == constants.STREAMABLE_HTTP_PATH
+    assert kwargs["uvicorn_config"] == {"log_config": None}
+    (root_router,) = kwargs["middleware"]
+    assert root_router.cls is RootRouterMiddleware
