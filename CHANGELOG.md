@@ -1,5 +1,44 @@
 # Changelog
 
+## [2.241.0](https://github.com/Flagsmith/flagsmith/compare/v2.240.0...v2.241.0) (2026-06-16)
+
+
+### Features
+
+* add Heap region support ([#7732](https://github.com/Flagsmith/flagsmith/issues/7732)) ([5ef4042](https://github.com/Flagsmith/flagsmith/commit/5ef4042b963c349f37f1feac4b0c0abb6ed80d98))
+* choose environment administrators on environment creation ([#7610](https://github.com/Flagsmith/flagsmith/issues/7610)) ([58a7463](https://github.com/Flagsmith/flagsmith/commit/58a7463535b81b886fd6cfbb59a69a67945d567f))
+* **Code References:** Allow empty code reference scans to clear references ([#7764](https://github.com/Flagsmith/flagsmith/issues/7764)) ([879046c](https://github.com/Flagsmith/flagsmith/commit/879046cc32d395784ff4e83891d4e7712030f7e5))
+* **experimentation:** accept inline metrics on experiment creation ([#7770](https://github.com/Flagsmith/flagsmith/issues/7770)) ([4c4a992](https://github.com/Flagsmith/flagsmith/commit/4c4a992b6f49d7dac3039c5a90b76f5588063405))
+* **experimentation:** add experiment exposures model, warehouse query and summary builder ([#7740](https://github.com/Flagsmith/flagsmith/issues/7740)) ([a9822c3](https://github.com/Flagsmith/flagsmith/commit/a9822c3296ccde1a7dc337b1448cba82d91ff534))
+* **experimentation:** Bayesian stats kernel ([#7769](https://github.com/Flagsmith/flagsmith/issues/7769)) ([44c2b69](https://github.com/Flagsmith/flagsmith/commit/44c2b691dd8c489d795db011fd62407dd1baee36))
+* **experimentation:** experiment exposures read and refresh endpoints ([#7754](https://github.com/Flagsmith/flagsmith/issues/7754)) ([a65d175](https://github.com/Flagsmith/flagsmith/commit/a65d1752b1942d86478f0de44abcdd2af9924bfc))
+* label variant key UI ([#7745](https://github.com/Flagsmith/flagsmith/issues/7745)) ([118bdbc](https://github.com/Flagsmith/flagsmith/commit/118bdbcf661bc055046ffed06da5c469e7c1f9a9))
+* **MCP:** Push MCP usage via OTel ([#7746](https://github.com/Flagsmith/flagsmith/issues/7746)) ([5d410f2](https://github.com/Flagsmith/flagsmith/commit/5d410f27da390a048c16f19eb0c5a4dd8d3b8cb9))
+* sort/inspect users across permissions tables ([#7611](https://github.com/Flagsmith/flagsmith/issues/7611)) ([51dfe03](https://github.com/Flagsmith/flagsmith/commit/51dfe03bd522450b59dad3141dc1baca4a287928))
+
+
+### Bug Fixes
+
+* **api:** Remove Django pin from uv override-dependencies and upgrade to `5.2.15` ([#7755](https://github.com/Flagsmith/flagsmith/issues/7755)) ([8a6c26b](https://github.com/Flagsmith/flagsmith/commit/8a6c26bd8edae7134f53a1536efc7cdbd28e44d3))
+* **ci:** Fix MCP env var names ([#7744](https://github.com/Flagsmith/flagsmith/issues/7744)) ([d8ae75c](https://github.com/Flagsmith/flagsmith/commit/d8ae75c4b92399b763ab944907a213c90f7d9885))
+* **frontend:** Allow change request deletion based on API permissions ([#7772](https://github.com/Flagsmith/flagsmith/issues/7772)) ([601e716](https://github.com/Flagsmith/flagsmith/commit/601e716635892451c89088a308f2d02c7ffd50de))
+* **frontend:** gate app boot on ConfigStore.hasLoaded to avoid loader deadlock ([#7785](https://github.com/Flagsmith/flagsmith/issues/7785)) ([3965016](https://github.com/Flagsmith/flagsmith/commit/39650167f563e14e479acc0c8c37d2e177b76531))
+* Normalise heap base url and add request coverage ([#7747](https://github.com/Flagsmith/flagsmith/issues/7747)) ([79a1673](https://github.com/Flagsmith/flagsmith/commit/79a1673e956cd6b6804c816b413e4d73f926285c))
+* Password validation fires before disabled invites check ([#7711](https://github.com/Flagsmith/flagsmith/issues/7711)) ([8cf2785](https://github.com/Flagsmith/flagsmith/commit/8cf27855590a65f051ff1cd3234ab9328ccd4e64))
+
+
+### CI
+
+* **frontend:** lint changed files on pull requests ([#7748](https://github.com/Flagsmith/flagsmith/issues/7748)) ([56f2ad6](https://github.com/Flagsmith/flagsmith/commit/56f2ad6962d59b83072300e486a407294292d783))
+* **frontend:** upload Playwright artifacts when E2E tests fail ([#7774](https://github.com/Flagsmith/flagsmith/issues/7774)) ([9fd0eb3](https://github.com/Flagsmith/flagsmith/commit/9fd0eb317563c5af9968836e774f81e2e9866f3c))
+* **mcp:** render and deploy task definition to ECS ([#7716](https://github.com/Flagsmith/flagsmith/issues/7716)) ([9d6105d](https://github.com/Flagsmith/flagsmith/commit/9d6105d2a5ec8a68a3f00c55f6ce7a1dde3ae7ce))
+
+
+### Docs
+
+* migrate flagsmith-cli and flagsmith-nodejs references to [@flagsmith](https://github.com/flagsmith) scope ([#7583](https://github.com/Flagsmith/flagsmith/issues/7583)) ([4be0701](https://github.com/Flagsmith/flagsmith/commit/4be0701cfc01c25eee6c56cebcf62932ae275412))
+* remove trailing whitespace in Data Model documentation ([#7773](https://github.com/Flagsmith/flagsmith/issues/7773)) ([1d18113](https://github.com/Flagsmith/flagsmith/commit/1d18113fd3c16432a2056fde4f52f10c650c57b8))
+
 ## [2.240.0](https://github.com/Flagsmith/flagsmith/compare/v2.239.0...v2.240.0) (2026-06-09)
 
 
