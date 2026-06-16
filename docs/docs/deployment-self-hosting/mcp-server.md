@@ -5,6 +5,8 @@ sidebar_position: 4
 description: Run the Flagsmith MCP Server as part of your self-hosted deployment.
 ---
 
+import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
+
 The [Flagsmith MCP Server](/integrating-with-flagsmith/mcp-server) gives AI assistants and agents access to the
 Flagsmith Admin API through the [Model Context Protocol](https://modelcontextprotocol.io). On Flagsmith SaaS it is
 hosted for you at `https://mcp.flagsmith.com`. When you self-host Flagsmith, you run the server yourself as an
@@ -19,19 +21,20 @@ talks to your Flagsmith API over HTTP, and MCP clients connect to it over
 Point the server at your Flagsmith API with `FLAGSMITH_API_URL` and expose its HTTP port. The examples below assume your
 API is reachable at `https://flagsmith.example.com` and serve the MCP endpoint on port 8000.
 
-<details>
-<summary>Docker CLI</summary>
-```
+<Tabs groupId="deployment-method" queryString>
+<TabItem value="docker-cli" label="Docker CLI">
+
+```bash
 docker run \
     -e FLAGSMITH_API_URL=https://flagsmith.example.com \
     -e MCP_SERVER_URL=https://mcp.flagsmith.example.com \
     -p 8000:8000 \
     flagsmith/flagsmith-mcp:latest
 ```
-</details>
 
-<details>
-<summary>Docker Compose</summary>
+</TabItem>
+<TabItem value="docker-compose" label="Docker Compose">
+
 ```yaml title="compose.yaml"
 services:
  mcp:
@@ -42,10 +45,48 @@ services:
   ports:
    - '8000:8000'
 ```
-</details>
+
+</TabItem>
+</Tabs>
 
 The server is reachable at `/mcp`, and also at the bare URL — a request to `/` is dispatched to the MCP endpoint, so
 clients that drop the `/mcp` suffix still work. Browsers that open the bare URL are redirected to this documentation.
+
+## Running over stdio
+
+For a single user on one machine, you don't need to host the server at all — the client can launch it as a local
+subprocess over stdio. This skips Docker and OAuth: point it at your API with `FLAGSMITH_API_URL` and authenticate with
+a [static API key](#authentication).
+
+Run the published package directly with [uv](https://docs.astral.sh/uv/):
+
+```bash
+FLAGSMITH_API_URL=https://flagsmith.example.com \
+TRANSPORT=stdio \
+FLAGSMITH_API_TOKEN=<your-api-key> \
+    uvx --from "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp" flagsmith-mcp
+```
+
+Most clients accept these as a command and environment block. For example, in a `mcp.json`-style configuration:
+
+```json
+{
+ "mcpServers": {
+  "flagsmith": {
+   "command": "uvx",
+   "args": ["--from", "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp", "flagsmith-mcp"],
+   "env": {
+    "FLAGSMITH_API_URL": "https://flagsmith.example.com",
+    "TRANSPORT": "stdio",
+    "FLAGSMITH_API_TOKEN": "<your-api-key>"
+   }
+  }
+ }
+}
+```
+
+See the [MCP Server integration guide](/integrating-with-flagsmith/mcp-server#installing-in-your-client) for the exact
+configuration each client expects — add `FLAGSMITH_API_URL` to the stdio examples there to target your deployment.
 
 ## Configuration
 
