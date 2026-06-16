@@ -41,20 +41,19 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
   const [updateConnection] = useUpdateWarehouseConnectionMutation()
 
   const baseConnection = connections?.[0]
-  const statsConnection = connectionsWithStats?.find(
-    (item) => item.id === baseConnection?.id,
-  )
-  const connection = useMemo(
-    () =>
-      baseConnection && statsConnection
-        ? {
-            ...baseConnection,
-            total_events_received: statsConnection.total_events_received,
-            unique_events_count: statsConnection.unique_events_count,
-          }
-        : baseConnection,
-    [baseConnection, statsConnection],
-  )
+  const connection = useMemo(() => {
+    if (!baseConnection) return undefined
+    const statsConnection = connectionsWithStats?.find(
+      (item) => item.id === baseConnection.id,
+    )
+    return statsConnection
+      ? {
+          ...baseConnection,
+          total_events_received: statsConnection.total_events_received,
+          unique_events_count: statsConnection.unique_events_count,
+        }
+      : baseConnection
+  }, [baseConnection, connectionsWithStats])
   const connectionId = connection?.id
   const connectionStatus = connection?.status
 
