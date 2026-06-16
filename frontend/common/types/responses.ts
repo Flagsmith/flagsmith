@@ -573,6 +573,9 @@ export type MultivariateOption = {
   string_value: string
   boolean_value?: boolean
   default_percentage_allocation: number
+  // A stable, human-readable identifier for the variant (the backend `key`).
+  // Surfaced in the UI as the variation "Label". Slug-constrained and nullable.
+  key?: string | null
 }
 
 export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
@@ -1426,5 +1429,12 @@ export type Res = {
   experiment: Experiment
   metric: Metric
   metrics: PagedResponse<Metric>
+  multivariateOption: MultivariateOption
+  saveMultivariateOptions: {
+    multivariate_options: MultivariateOption[]
+    // Per-option API errors keyed by the input option's index; null when all
+    // requests succeeded.
+    errors: Record<number, any> | null
+  }
   // END OF TYPES
 }

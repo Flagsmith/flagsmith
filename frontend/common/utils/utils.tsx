@@ -21,6 +21,7 @@ import find from 'lodash/find'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
+import { getDefaultVariantKey } from './multivariate'
 import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
@@ -92,7 +93,8 @@ const Utils = Object.assign({}, BaseUtils, {
       } else if (typeof v.default_percentage_allocation === 'number') {
         total += v.default_percentage_allocation
       } else {
-        total += (v as any).percentage_allocation
+        // A cleared weight input leaves the allocation null — treat as 0.
+        total += (v as any).percentage_allocation || 0
       }
       return null
     })
@@ -255,6 +257,7 @@ const Utils = Object.assign({}, BaseUtils, {
       OrganisationPermission.CREATE_PROJECT
     ]
   },
+  getDefaultVariantKey,
   getExistingWaitForTime: (
     waitFor: string | undefined,
   ):

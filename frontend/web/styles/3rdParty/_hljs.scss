@@ -20,7 +20,12 @@
   }
   &.code-medium {
     .hljs {
-      padding: $input-padding;
+      // Align the single-line editor height with adjacent inputs ($input-height).
+      // Reduced vertical padding so border + line-height + padding == $input-height,
+      // while min-height keeps the empty/placeholder state aligned too. The editor
+      // still grows for multi-line values.
+      padding: 9px 12px 9px 16px;
+      min-height: $input-height;
     }
   }
   textarea {
