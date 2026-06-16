@@ -119,9 +119,11 @@ def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
     )
 
 
-# Events are delivered at-least-once; first-exposure dedup keeps duplicates
-# from inflating identity counts.
-EXPOSURE_BUCKETS_QUERY = """
+# First exposure per identity over a half-open window. Events are delivered
+# at-least-once, so dedup keeps duplicates from inflating counts; identities
+# seen in more than one variant are quarantined (variant blanked). Shared by
+# the exposures and results queries, which extend it differently.
+_EXPOSURES_CTE = """
 WITH exposures AS (
     SELECT
         identifier,
@@ -135,7 +137,11 @@ WITH exposures AS (
         AND timestamp >= %(window_start)s
         AND timestamp < %(window_end)s
     GROUP BY identifier
-)
+)"""
+
+EXPOSURE_BUCKETS_QUERY = (
+    _EXPOSURES_CTE
+    + """
 SELECT
     quarantined,
     variant,
@@ -145,6 +151,7 @@ FROM exposures
 GROUP BY quarantined, variant, bucket
 ORDER BY bucket
 """
+)
 
 _EXPOSURE_BUCKET_FUNCTIONS: dict[str, str] = {
     "hour": "toStartOfHour",
@@ -243,26 +250,6 @@ def get_exposure_buckets(
     ]
 
 
-# First-exposed identities per variant (same dedup/quarantine as the exposures
-# query), each carrying the per-metric value used to derive sufficient
-# statistics. Metric events are attributed from first exposure onwards.
-_RESULTS_EXPOSURES_CTE = """
-WITH exposures AS (
-    SELECT
-        identifier,
-        if(uniqExact(value) > 1, '', any(value)) AS variant,
-        uniqExact(value) > 1 AS quarantined,
-        min(timestamp) AS first_exposure
-    FROM events
-    WHERE environment_key = %(environment_key)s
-        AND event = %(exposure_event)s
-        AND feature_name = %(feature_name)s
-        AND timestamp >= %(window_start)s
-        AND timestamp < %(window_end)s
-    GROUP BY identifier
-)"""
-
-
 def _metric_value_expression(index: int, aggregation: str) -> str:
     # Post-exposure attribution lives here, not in the JOIN ON: ClickHouse
     # rejects an ON clause mixing left and right columns in an inequality.
@@ -285,7 +272,7 @@ def _metric_value_expression(index: int, aggregation: str) -> str:
 def _build_results_query(specs: Sequence[MetricSpec]) -> str:
     if not specs:
         return (
-            _RESULTS_EXPOSURES_CTE
+            _EXPOSURES_CTE
             + "\nSELECT variant, count() AS n"
             + "\nFROM exposures\nWHERE quarantined = 0\nGROUP BY variant"
         )
@@ -298,7 +285,7 @@ def _build_results_query(specs: Sequence[MetricSpec]) -> str:
         for i in range(len(specs))
     )
     return (
-        _RESULTS_EXPOSURES_CTE
+        _EXPOSURES_CTE
         + f""",
 unit_values AS (
     SELECT
