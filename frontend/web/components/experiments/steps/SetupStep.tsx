@@ -1,5 +1,6 @@
-import { ChangeEvent, FC } from 'react'
+import { ChangeEvent, FC, useMemo } from 'react'
 import { ProjectFlag } from 'common/types/responses'
+import { useGetExperimentsQuery } from 'common/services/useExperiment'
 import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import useDebouncedSearch from 'common/useDebouncedSearch'
@@ -49,14 +50,26 @@ const SetupStep: FC<SetupStepProps> = ({
 
   const multivariateFeatures = featureList?.results ?? []
 
+  const { data: experimentsData } = useGetExperimentsQuery(
+    { environmentId, page: 1, page_size: 100 },
+    { skip: !environmentId },
+  )
+  const featureIdsInExperiment = useMemo(() => {
+    const ids = new Set<number>()
+    experimentsData?.results?.forEach((experiment) => {
+      if (experiment.status !== 'completed' && experiment.feature?.id) {
+        ids.add(experiment.feature.id)
+      }
+    })
+    return ids
+  }, [experimentsData])
+
   return (
     <div className='d-flex flex-column gap-4'>
-      <ContentCard title='Experiment details'>
-        <p className='text-muted fs-small mb-0'>
-          Name the experiment and capture what you&apos;re trying to learn
-          before picking a flag.
-        </p>
-
+      <ContentCard
+        title='Experiment details'
+        description="Name the experiment and capture what you're trying to learn before picking a flag."
+      >
         <InputGroup
           title='Experiment Name *'
           value={name}
@@ -86,12 +99,10 @@ const SetupStep: FC<SetupStepProps> = ({
         </div>
       </ContentCard>
 
-      <ContentCard title='Feature flag'>
-        <p className='text-muted fs-small mb-0'>
-          The flag you&apos;re experimenting on. Variations are read-only,
-          defined on the flag itself.
-        </p>
-
+      <ContentCard
+        title='Feature flag'
+        description="The flag you're experimenting on. Variations are read-only, defined on the flag itself."
+      >
         <div className='wizard-field'>
           <label className='wizard-field__label'>Feature Flag</label>
           <Select
@@ -100,11 +111,17 @@ const SetupStep: FC<SetupStepProps> = ({
                 ? { label: selectedFeature.name, value: selectedFeature.id }
                 : null
             }
-            options={multivariateFeatures.map((f) => ({
-              feature: f,
-              label: f.name,
-              value: f.id,
-            }))}
+            options={multivariateFeatures.map((f) => {
+              const isInExperiment = featureIdsInExperiment.has(f.id)
+              return {
+                feature: f,
+                isDisabled: isInExperiment,
+                label: isInExperiment
+                  ? `${f.name} (already in an experiment)`
+                  : f.name,
+                value: f.id,
+              }
+            })}
             onInputChange={(val: string) => setSearchInput(val)}
             onChange={(
               option: {

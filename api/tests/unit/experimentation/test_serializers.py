@@ -1,6 +1,7 @@
 import pytest
 
 from environments.models import Environment
+from experimentation.dataclasses import WarehouseEventStats
 from experimentation.models import (
     WarehouseConnection,
     WarehouseConnectionStatus,
@@ -130,3 +131,23 @@ def test_create__flagsmith_with_config__raises_validation_error(
     # When / Then
     assert not serializer.is_valid()
     assert "config" in serializer.errors
+
+
+def test_warehouse_serializer__event_stats_attached__serializes_counts() -> None:
+    # Given
+    connection = WarehouseConnection(
+        warehouse_type=WarehouseType.FLAGSMITH,
+        name="Flagsmith Warehouse",
+        status=WarehouseConnectionStatus.CONNECTED,
+    )
+    connection.event_stats = WarehouseEventStats(
+        total_events_received=7,
+        unique_events_count=2,
+    )
+
+    # When
+    data = WarehouseConnectionSerializer(connection).data
+
+    # Then
+    assert data["total_events_received"] == 7
+    assert data["unique_events_count"] == 2

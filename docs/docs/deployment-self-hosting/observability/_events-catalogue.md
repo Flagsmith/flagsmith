@@ -79,6 +79,17 @@ Attributes:
  - `environment_api_key`
  - `environment_id`
 
+### `experimentation.exposures.compute_failed`
+
+Logged at `error` from:
+ - `api/experimentation/tasks.py:46`
+
+Attributes:
+ - `environment.id`
+ - `exc_info`
+ - `experiment.id`
+ - `organisation.id`
+
 ### `feature_health.feature_health_event_dismissal_not_supported`
 
 Logged at `warning` from:
@@ -316,6 +327,15 @@ Attributes:
  - `project_id`
  - `retry_at`
 
+### `mcp.tool.called`
+
+Logged at `info` from:
+ - `api/telemetry/middleware.py:38`
+ - `api/telemetry/middleware.py:40`
+
+Attributes:
+ - `organisation.id`
+
 ### `platform_hub.no_analytics_database_configured`
 
 Logged at `warning` from:
@@ -441,6 +461,24 @@ Logged at `info` from:
 Attributes:
  - `feature_name`
  - `sentry_action`
+
+### `warehouse.connection.connected`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:345`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
+### `warehouse.connection.test_event_sent`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:325`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
 
 ### `workflows.change_request.committed`
 

@@ -6,10 +6,16 @@
   ],
   "packageRules": [
     {
-      "matchManagers": ["uv"],
+      "matchManagers": ["pep621"],
       "matchFileNames": ["api/**"],
       "addLabels": ["api", "dependencies"],
       "semanticCommitScope": "API"
+    },
+    {
+      "matchManagers": ["pep621"],
+      "matchFileNames": ["mcp/**"],
+      "addLabels": ["mcp", "dependencies"],
+      "semanticCommitScope": "MCP"
     },
     {
       "matchManagers": ["npm"],
@@ -22,6 +28,13 @@
       "matchFileNames": ["docs/**"],
       "addLabels": ["docs", "dependencies"],
       "semanticCommitScope": "Docs"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchFileNames": [".github/**"],
+      "addLabels": ["ci", "dependencies"],
+      "semanticCommitScope": "CI"
     }
-  ]
+  ],
+  "semanticCommitScope": ""
 }

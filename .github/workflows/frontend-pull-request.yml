@@ -34,3 +34,42 @@ jobs:
 
       - name: Run unit tests
         run: npm run test:unit -- --passWithNoTests
+
+  lint:
+    name: Lint changed files
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # needed to diff against the PR base
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Diff-scoped: the frontend has a large pre-existing eslint/tsc backlog,
+      # so a whole-repo gate isn't viable yet.
+      - name: Lint changed files
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          CHANGED=$(git diff --name-only --diff-filter=ACMR --relative \
+            "$BASE_SHA" HEAD -- '*.ts' '*.tsx' '*.js')
+          if [ -z "$CHANGED" ]; then
+            echo "No frontend JS/TS files changed — skipping."
+            exit 0
+          fi
+          echo "Linting changed files:"
+          echo "$CHANGED"
+          echo "$CHANGED" | xargs npx eslint

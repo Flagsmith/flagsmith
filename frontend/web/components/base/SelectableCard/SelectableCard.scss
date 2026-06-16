@@ -50,12 +50,28 @@
 
   &__title {
     font-size: var(--font-body-size);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     color: var(--color-text-default);
   }
 
   &__description {
     font-size: var(--font-caption-size);
+    color: var(--color-text-secondary);
+  }
+
+  &__tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  &__tag {
+    font-size: var(--font-caption-xs-size);
+    font-weight: var(--font-weight-regular);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-emphasis);
     color: var(--color-text-secondary);
   }
 
@@ -68,7 +84,7 @@
 
   &__badge {
     font-size: var(--font-caption-xs-size);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     padding: 4px 12px;
     border-radius: var(--radius-full);
     flex-shrink: 0;

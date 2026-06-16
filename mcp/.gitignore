@@ -1,0 +1,15 @@
+# Python / uv
+.venv
+__pycache__/
+*.py[cod]
+dist/
+*.egg-info/
+
+# Test / type / lint caches
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

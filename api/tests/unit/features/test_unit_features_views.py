@@ -2238,6 +2238,31 @@ def test_create_feature__admin_with_mv_options__returns_201(
     assert len(response_json["multivariate_options"]) == 1
 
 
+def test_create_feature__mv_options_with_key__key_is_read_only(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given - mv option keys are only writable via the dedicated mv-options
+    # endpoint, where their uniqueness is validated
+    data = {
+        "name": "test_feature",
+        "default_enabled": True,
+        "multivariate_options": [
+            {"type": "unicode", "string_value": "test-value", "key": "control"}
+        ],
+    }
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["multivariate_options"][0]["key"] is None
+
+
 def test_get_feature_by_uuid__existing_feature__returns_200(
     admin_client_new: APIClient,
     project: Project,

@@ -7,6 +7,7 @@ from experimentation import ingestion_sync_service
 from experimentation.models import (
     Experiment,
     ExperimentStatus,
+    Metric,
     WarehouseConnection,
     WarehouseType,
 )
@@ -35,6 +36,16 @@ def warehouse_connection_url(environment: Environment) -> str:
         "api-v1:environments:experimentation:warehouse-connections-list",
         args=[environment.api_key],
     )
+
+
+@pytest.fixture()
+def metric(environment: Environment) -> Metric:
+    metric: Metric = Metric.objects.create(
+        environment=environment,
+        name="Sessions per User",
+        definition={"version": 1, "event": "session_started"},
+    )
+    return metric
 
 
 @pytest.fixture()

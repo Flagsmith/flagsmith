@@ -27,6 +27,14 @@
                     "title": "Reason",
                     "type": "string"
                 },
+                "variant": {
+                    "description": "A stable identifier of the multivariate variant the identity was bucketed into: the variant's key, \"control\" for the control bucket, or null when no multivariate split applied (a standard feature, an unkeyed variant, or evaluation without an identity).",
+                    "title": "Variant",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "metadata": {
                     "existingJavaType": "java.util.Map<String,Object>",
                     "description": "Additional metadata associated with the feature.",
@@ -38,7 +46,8 @@
                 "name",
                 "enabled",
                 "value",
-                "reason"
+                "reason",
+                "variant"
             ],
             "title": "FlagResult",
             "type": "object"

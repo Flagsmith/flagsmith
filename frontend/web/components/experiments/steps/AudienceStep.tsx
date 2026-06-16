@@ -5,13 +5,10 @@ import ContentCard from 'components/base/grid/ContentCard'
 const AudienceStep: FC = () => {
   return (
     <div className='d-flex flex-column gap-4'>
-      <ContentCard title='Targeting'>
-        <p className='text-muted fs-small mb-0'>
-          Define who is eligible for the experiment using attribute conditions.
-          Conditions are AND-joined. Leave empty to run on all identities in the
-          environment. Conditions are frozen at launch. Later edits to existing
-          Segments cannot drift the experiment audience.
-        </p>
+      <ContentCard
+        title='Targeting'
+        description='Define who is eligible for the experiment using attribute conditions. Conditions are AND-joined. Leave empty to run on all identities in the environment. Conditions are frozen at launch. Later edits to existing Segments cannot drift the experiment audience.'
+      >
         <div className='d-flex align-items-start gap-3 p-3 border rounded'>
           <Icon
             name='people'
@@ -28,8 +25,6 @@ const AudienceStep: FC = () => {
           </div>
         </div>
       </ContentCard>
-
-      {/* Sample size hidden for now — hardcoded to 100% in payload */}
     </div>
   )
 }

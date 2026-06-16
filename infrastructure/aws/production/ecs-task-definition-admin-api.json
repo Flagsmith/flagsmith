@@ -138,10 +138,6 @@
                     "value": "flagsmith_project_metadata"
                 },
                 {
-                    "name": "SECURE_PROXY_SSL_HEADER_NAME",
-                    "value": "HTTP_CLOUDFRONT_FORWARDED_PROTO"
-                },
-                {
                     "name": "SENDER_EMAIL",
                     "value": "Flagsmith <support@flagsmith.com>"
                 },

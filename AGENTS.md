@@ -8,3 +8,4 @@ Install Git hooks: `make install-hooks`
 For backend code, read @api/README.md
 For frontend code, read @frontend/README.md
 For docs.flagsmith.com source, read @docs/README.md
+For MCP code, read @mcp/README.md

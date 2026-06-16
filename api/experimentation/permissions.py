@@ -40,3 +40,7 @@ class ExperimentPermission(BasePermission):
 
         user: FFAdminUser = request.user  # type: ignore[assignment]
         return user.is_environment_admin(environment)
+
+
+# Metrics are gated identically to experiments; aliased until the rules diverge.
+MetricPermission = ExperimentPermission

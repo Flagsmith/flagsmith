@@ -8,6 +8,7 @@ import Icon from './icons/Icon'
 type Snippets = Record<string, string>
 
 type CodeHelpProps = {
+  hideDocs?: boolean
   hideHeader?: boolean
   showInitially?: boolean
   snippets: Snippets
@@ -22,6 +23,7 @@ type LanguageOption = {
 
 type SnippetItemProps = {
   code: string
+  hideDocs?: boolean
   isVisible: boolean
   language: string
   languageKey: string
@@ -108,6 +110,7 @@ const getDocsLink = (key: string): string | null => {
 
 const SnippetItem: FC<SnippetItemProps> = ({
   code,
+  hideDocs,
   isVisible,
   language,
   languageKey,
@@ -115,8 +118,8 @@ const SnippetItem: FC<SnippetItemProps> = ({
   onCopy,
   onLanguageChange,
 }) => {
-  const docs = getDocsLink(languageKey)
-  const github = getGithubLink(languageKey)
+  const docs = hideDocs ? null : getDocsLink(languageKey)
+  const github = hideDocs ? null : getGithubLink(languageKey)
 
   return (
     <div className={!isVisible ? 'd-none' : 'hljs-container mt-2 mb-2'}>
@@ -185,6 +188,7 @@ const SnippetItem: FC<SnippetItemProps> = ({
 }
 
 const CodeHelp: FC<CodeHelpProps> = ({
+  hideDocs,
   hideHeader,
   showInitially,
   snippets,
@@ -251,6 +255,7 @@ const CodeHelp: FC<CodeHelpProps> = ({
               <SnippetItem
                 key={key}
                 code={code}
+                hideDocs={hideDocs}
                 isVisible={key === language}
                 language={language}
                 languageOptions={languageOptions}

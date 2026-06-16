@@ -367,6 +367,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    "telemetry.middleware.MCPUsageLoggerMiddleware",  # Must come last!
 ]
 
 ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
