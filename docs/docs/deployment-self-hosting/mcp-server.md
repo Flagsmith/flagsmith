@@ -37,13 +37,19 @@ docker run \
 
 ```yaml title="compose.yaml"
 services:
+ api:
+  # See the Docker hosting guide for a complete API and database setup.
+  image: flagsmith/flagsmith:latest
  mcp:
   image: flagsmith/flagsmith-mcp:latest
   environment:
-   FLAGSMITH_API_URL: https://flagsmith.example.com
+   # Reach the API over the internal Compose network, not its public domain.
+   FLAGSMITH_API_URL: http://api:8000
    MCP_SERVER_URL: https://mcp.flagsmith.example.com
   ports:
    - '8000:8000'
+  depends_on:
+   - api
 ```
 
 </TabItem>
@@ -51,6 +57,10 @@ services:
 
 The server is reachable at `/mcp`, and also at the bare URL — a request to `/` is dispatched to the MCP endpoint, so
 clients that drop the `/mcp` suffix still work. Browsers that open the bare URL are redirected to this documentation.
+
+The container serves plain HTTP; terminate TLS at a reverse proxy in front of it. Set `MCP_SERVER_URL` to the public
+`https://` URL clients connect to (as in the examples above) so the OAuth metadata the server advertises matches the
+externally reachable address.
 
 ## Running over stdio
 
@@ -66,6 +76,9 @@ TRANSPORT=stdio \
 FLAGSMITH_API_TOKEN=<your-api-key> \
     uvx --from "git+https://github.com/Flagsmith/flagsmith.git@main#subdirectory=mcp" flagsmith-mcp
 ```
+
+We recommend pinning to the [release tag](https://github.com/Flagsmith/flagsmith/releases) matching your Flagsmith
+version — for example `@v2.241.0` instead of `@main` — so you don't pull unreleased changes.
 
 Most clients accept these as a command and environment block. For example, in a `mcp.json`-style configuration:
 
