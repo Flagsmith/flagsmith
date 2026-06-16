@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.242.0](https://github.com/Flagsmith/flagsmith/compare/v2.241.0...v2.242.0) (2026-06-16)
+
+
+### Features
+
+* **experiments:** attach a primary metric in the create experiment wizard ([#7780](https://github.com/Flagsmith/flagsmith/issues/7780)) ([76fb3e3](https://github.com/Flagsmith/flagsmith/commit/76fb3e366c3662f206e61697c5090ad16ae8e462))
+* **MCP:** Serve MCP at the bare server URL ([#7797](https://github.com/Flagsmith/flagsmith/issues/7797)) ([90b08f1](https://github.com/Flagsmith/flagsmith/commit/90b08f192416510f17657d634aa28c5cd44fdfa3))
+
+
+### Bug Fixes
+
+* **frontend:** add guard against null model ([#7778](https://github.com/Flagsmith/flagsmith/issues/7778)) ([5665ad0](https://github.com/Flagsmith/flagsmith/commit/5665ad0585a0c19f6512ecdc91bc6a7e6b982e55))
+* **MCP:** Bare server URL fails OAuth resource validation ([#7798](https://github.com/Flagsmith/flagsmith/issues/7798)) ([537b57e](https://github.com/Flagsmith/flagsmith/commit/537b57e73fd27f40eb18750ec30ce63319c54efa))
+* trigger get warehouse stat request ([#7794](https://github.com/Flagsmith/flagsmith/issues/7794)) ([cdc3c06](https://github.com/Flagsmith/flagsmith/commit/cdc3c060472ca7c37260bbecf521ab2244df319e))
+
+
+### Dependency Updates
+
+* **frontend:** update dependency dompurify to v3.4.9 [security] ([#7790](https://github.com/Flagsmith/flagsmith/issues/7790)) ([e927630](https://github.com/Flagsmith/flagsmith/commit/e927630f049c7dcd5a4d1c0f8b8ccd5140406d58))
+
+
+### Docs
+
+* **MCP:** Document self-hosting the MCP server ([#7800](https://github.com/Flagsmith/flagsmith/issues/7800)) ([cfdf9dc](https://github.com/Flagsmith/flagsmith/commit/cfdf9dc726c95f8fb621db670906b293e35ef0cc))
+* **MCP:** Rewrite MCP server page and generate the tool catalogue ([#7668](https://github.com/Flagsmith/flagsmith/issues/7668)) ([9c8cff0](https://github.com/Flagsmith/flagsmith/commit/9c8cff0b5e8c77be81914a68845325504d833f3b))
+
 ## [2.241.0](https://github.com/Flagsmith/flagsmith/compare/v2.240.0...v2.241.0) (2026-06-16)
 
 
