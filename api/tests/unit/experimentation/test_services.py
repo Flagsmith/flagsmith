@@ -613,6 +613,7 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     sql, params = mock_client.execute.call_args.args
     assert "LEFT JOIN events AS m" in sql
     assert "m.timestamp >= e.first_exposure" in sql
+    assert "m.timestamp >= %(window_start)s" in sql
     assert "timestamp < %(window_end)s" in sql
     assert "WHERE e.quarantined = 0" in sql
     assert (

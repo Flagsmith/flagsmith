@@ -296,6 +296,7 @@ unit_values AS (
         ON m.identifier = e.identifier
         AND m.environment_key = %(environment_key)s
         AND m.event IN %(metric_events)s
+        AND m.timestamp >= %(window_start)s
         AND m.timestamp < %(window_end)s
     WHERE e.quarantined = 0
     GROUP BY e.identifier, e.variant
