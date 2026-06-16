@@ -119,10 +119,8 @@ def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
     )
 
 
-# First exposure per identity over a half-open window. Events are delivered
-# at-least-once, so dedup keeps duplicates from inflating counts; identities
-# seen in more than one variant are quarantined (variant blanked). Shared by
-# the exposures and results queries, which extend it differently.
+# Events are delivered at-least-once, so dedup keeps duplicates from inflating
+# counts. Shared by the exposures and results queries.
 _EXPOSURES_CTE = """
 WITH exposures AS (
     SELECT

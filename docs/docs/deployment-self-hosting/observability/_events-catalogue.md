@@ -465,7 +465,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:541`
+ - `api/experimentation/services.py:539`
 
 Attributes:
  - `environment.id`
@@ -474,7 +474,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:521`
+ - `api/experimentation/services.py:519`
 
 Attributes:
  - `environment.id`
