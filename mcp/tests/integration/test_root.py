@@ -3,7 +3,7 @@ import pytest
 
 from flagsmith_mcp import constants
 
-PRM_PATH = "/.well-known/oauth-protected-resource/mcp"
+PRM_PATH = "/.well-known/oauth-protected-resource"
 
 
 async def test_root__browser_accept__redirects_to_docs(
