@@ -150,7 +150,8 @@ The server forwards this header to the Flagsmith API unchanged. This suits CI jo
 
 Setting `FLAGSMITH_API_TOKEN` makes the server use that key for every request, regardless of which client connects. This
 disables OAuth and is the only option for the `stdio` transport, which has no inbound request to forward a credential
-from. Avoid it for shared HTTP deployments, since every client then acts with the same permissions.
+from. Avoid it for shared HTTP deployments: every client acts as the same identity, so you can't scope permissions per
+user and every action is attributed to the same key in your audit log.
 
 ## Connecting clients
 
