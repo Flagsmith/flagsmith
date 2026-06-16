@@ -137,12 +137,11 @@ const API = {
     return flagsmith
       .identify(`${user.id}`, {
         email: user.email,
-        organisation_plan: Utils.getSubscriptionPlanFamily(
-          AccountStore.getOrganisation()?.subscription?.plan,
-        ),
         organisations: user.organisations
           ? user.organisations.map((o) => String(o.id)).join(',')
           : '',
+        'subscription.plan':
+          AccountStore.getOrganisation()?.subscription?.plan || '',
       })
       .then(() =>
         flagsmith.setTrait(
@@ -288,11 +287,11 @@ const API = {
     API.setCookie('event', v)
   },
 
-  setFlagsmithOrganisationPlanTrait: () => {
+  setFlagsmithSubscriptionPlanTrait: () => {
     const organisation = AccountStore.getOrganisation()
     return flagsmith.setTrait(
-      'organisation_plan',
-      Utils.getSubscriptionPlanFamily(organisation?.subscription?.plan),
+      'subscription.plan',
+      organisation?.subscription?.plan || '',
     )
   },
 

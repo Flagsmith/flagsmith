@@ -490,14 +490,6 @@ export type AuditLogDetail = AuditLogItem & {
     new: FlagsmithValue
   }[]
 }
-// Mirrors API plans, to be updated in case of new family plan
-export enum SubscriptionPlan {
-  FREE = 'free',
-  STARTUP = 'startup',
-  SCALE_UP = 'scale-up',
-  ENTERPRISE = 'enterprise',
-}
-
 export type Subscription = {
   id: number
   uuid: string

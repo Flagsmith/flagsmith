@@ -12,7 +12,6 @@ import {
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
-  SubscriptionPlan,
   Tag,
   UserPermissions,
 } from 'common/types/responses'
@@ -624,29 +623,6 @@ const Utils = Object.assign({}, BaseUtils, {
       return true
     }
     return false
-  },
-
-  // Collapse a raw subscription plan id (e.g. 'scale-up-v4-monthly', 'startup-v2')
-  // into its plan family, mirroring SubscriptionPlanFamily.get_by_plan_id in
-  // api/organisations/subscriptions/constants.py. An unrecognised (new) plan is
-  // surfaced as its raw id rather than silently bucketed as free, so it stays
-  // visible and segmentable until added as a family. An empty plan is free.
-  getSubscriptionPlanFamily: (plan?: string | null): string => {
-    const raw = (plan || '').toLowerCase()
-    if (!raw) {
-      return SubscriptionPlan.FREE
-    }
-    const normalised = raw.replace(/-/g, '')
-    if (normalised.startsWith('scaleup')) {
-      return SubscriptionPlan.SCALE_UP
-    }
-    if (normalised.startsWith('startup')) {
-      return SubscriptionPlan.STARTUP
-    }
-    if (normalised.startsWith('enterprise')) {
-      return SubscriptionPlan.ENTERPRISE
-    }
-    return raw
   },
 
   getTagColour(index: number) {
