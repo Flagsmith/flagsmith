@@ -28,11 +28,14 @@
   }
 
   &__row {
-    cursor: pointer;
     transition: background var(--duration-fast) var(--easing-standard);
 
-    &:hover {
-      background: var(--color-surface-hover);
+    &--clickable {
+      cursor: pointer;
+
+      &:hover {
+        background: var(--color-surface-subtle);
+      }
     }
   }
 
