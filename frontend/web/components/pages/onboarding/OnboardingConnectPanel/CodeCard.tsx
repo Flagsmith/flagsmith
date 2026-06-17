@@ -31,7 +31,7 @@ const CodeCard: FC<CodeCardProps> = ({ code, headerLeft, hljsClass }) => {
             className='d-inline-flex align-items-center gap-1'
             aria-live='polite'
           >
-            <Icon name='copy' width={14} fill='currentColor' />
+            <Icon name='copy' width={14} />
             {copied ? 'Copied' : 'Copy Code'}
           </span>
         </Button>
