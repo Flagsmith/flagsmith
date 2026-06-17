@@ -35,7 +35,7 @@ export const FeaturesSDKIntegration: FC<FeaturesSDKIntegrationProps> = ({
         {hasMcp && (
           <CalloutBar
             theme='dark'
-            icon={<span style={{ color: '#ffffff' }}>{'<>'}</span>}
+            icon={<>{'<>'}</>}
             prefix='Integration:'
             label='Manage flags with AI using our MCP'
             onClick={() =>
