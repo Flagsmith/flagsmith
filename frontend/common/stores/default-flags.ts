@@ -168,6 +168,10 @@ const defaultFlags = {
           'key': 'api_key',
           'label': 'Project Token',
         },
+        {
+          'key': 'base_url',
+          'label': 'Base URL',
+        },
       ],
       'image': '/static/images/integrations/mp.svg',
       'perEnvironment': true,
