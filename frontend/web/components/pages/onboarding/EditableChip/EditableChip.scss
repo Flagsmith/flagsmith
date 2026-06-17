@@ -1,0 +1,23 @@
+// The base Chip provides the shell (padding, border, surface, radius, layout).
+// EditableChip adds only the inline-edit affordance: a faint border that becomes
+// an action ring on focus, and a pencil that brightens on hover/focus.
+.editable-chip {
+  cursor: text;
+  transition: border-color var(--duration-fast) var(--easing-standard),
+    background-color var(--duration-fast) var(--easing-standard);
+
+  svg {
+    opacity: 0.6;
+    transition: opacity var(--duration-fast) var(--easing-standard);
+  }
+
+  &:hover svg,
+  &:focus-within svg {
+    opacity: 1;
+  }
+
+  &:focus-within {
+    border-color: var(--color-border-action);
+    background-color: var(--color-surface-default);
+  }
+}
