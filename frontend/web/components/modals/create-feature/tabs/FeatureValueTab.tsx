@@ -11,6 +11,8 @@ import Tooltip from 'components/Tooltip'
 import Icon from 'components/icons/Icon'
 import Switch from 'components/Switch'
 import JSONReference from 'components/JSONReference'
+import Button from 'components/base/forms/Button'
+import CompareSegmentOverride from 'components/diff/CompareSegmentOverride'
 import { FlagValueFooter } from 'components/modals/FlagValueFooter'
 import Utils from 'common/utils/utils'
 import {
@@ -116,6 +118,8 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     })
   }
 
+  const [compareOpen, setCompareOpen] = useState(false)
+
   const [isNegativeNumber, setIsNegativeNumber] = useState(
     isNegativeNumberString(featureState?.feature_state_value),
   )
@@ -175,6 +179,12 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   const enabledString = isEdit ? 'Enabled' : 'Enabled by default'
 
   const hasVariations = !!multivariate_options && !!multivariate_options.length
+
+  // The Value tab compares the environment default against other environments
+  // (and this environment's segment overrides). Multivariate features and
+  // identity overrides are excluded.
+  const canCompareValue =
+    isEdit && !!environmentId && !identity && !hasVariations
 
   // Fields the user can change on a variant from this tab.
   const variantFields: (keyof MultivariateOption)[] = [
@@ -254,6 +264,34 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     !!multivariate_options.length
   )
 
+  if (compareOpen && canCompareValue && environmentId) {
+    return (
+      <div className={`${identity ? 'mx-3' : ''}`}>
+        <div className='mb-3'>
+          <Button
+            theme='text'
+            size='small'
+            onClick={() => setCompareOpen(false)}
+          >
+            <Icon name='arrow-left' width={16} />
+            Back to value
+          </Button>
+        </div>
+        <CompareSegmentOverride
+          projectId={projectId}
+          environmentId={environmentId}
+          featureId={projectFlag.id}
+          source={{
+            enabled: default_enabled,
+            label: 'Environment Default',
+            value: initial_value,
+          }}
+          sourceDescriptor={{ kind: 'environment' }}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className={`${identity ? 'mx-3' : ''}`}>
       <FormGroup className='mb-4'>
@@ -312,6 +350,19 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
             title={valueTitle}
             hideTooltipIcon={hasVariations}
           />
+          {canCompareValue && (
+            <div className='text-end mt-2'>
+              <Button
+                theme='text'
+                size='small'
+                data-test='compare-feature-value'
+                onClick={() => setCompareOpen(true)}
+              >
+                <Icon name='difference' width={16} />
+                Compare across environments
+              </Button>
+            </div>
+          )}
         </FormGroup>
       )}
 

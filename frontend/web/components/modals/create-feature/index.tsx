@@ -696,6 +696,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                           segmentOverrides={segmentOverrides}
                           updateSegments={updateSegments}
                           controlValue={environmentFlag.feature_state_value}
+                          controlEnabled={environmentFlag.enabled}
                           onSegmentsChange={() => setSegmentsChanged(true)}
                           saveFeatureSegments={saveFeatureSegments}
                           isSaving={isSaving}
