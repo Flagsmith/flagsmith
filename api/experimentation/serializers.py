@@ -285,14 +285,44 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
 
 
 class ExperimentFeatureSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
-    multivariate_options = NestedMultivariateFeatureOptionSerializer(
-        many=True, read_only=True
-    )
+    multivariate_options = serializers.SerializerMethodField()
 
     class Meta:
         model = Feature
         fields = ("id", "name", "type", "initial_value", "multivariate_options")
         read_only_fields = fields
+
+    def get_multivariate_options(self, feature: Feature) -> list[dict[str, Any]]:
+        options = NestedMultivariateFeatureOptionSerializer(
+            feature.multivariate_options.all(), many=True
+        ).data
+
+        environment: Environment | None = self.context.get("environment")
+        if not environment:
+            return options  # type: ignore[return-value]
+
+        env_state = (
+            feature.feature_states.filter(
+                environment=environment,
+                identity__isnull=True,
+                feature_segment__isnull=True,
+            )
+            .order_by("-live_from", "-version")
+            .first()
+        )
+        if not env_state:
+            return options  # type: ignore[return-value]
+
+        alloc_map = dict(
+            env_state.multivariate_feature_state_values.values_list(
+                "multivariate_feature_option_id", "percentage_allocation"
+            )
+        )
+        for option in options:
+            if option["id"] in alloc_map:
+                option["default_percentage_allocation"] = alloc_map[option["id"]]
+
+        return options  # type: ignore[return-value]
 
 
 class ExperimentListSerializer(ExperimentSerializer):

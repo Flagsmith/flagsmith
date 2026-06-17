@@ -175,6 +175,7 @@ class ExperimentViewSet(
         if self.action in ("list", "retrieve"):
             qs = qs.select_related("feature").prefetch_related(
                 "feature__multivariate_options",
+                "feature__feature_states__multivariate_feature_state_values",
                 "experiment_metrics__metric",
             )
         status_filter = self.request.query_params.get("status")
@@ -189,7 +190,7 @@ class ExperimentViewSet(
         if q:
             qs = qs.filter(Q(name__icontains=q) | Q(feature__name__icontains=q))
 
-        return qs
+        return qs.order_by("-created_at")
 
     def list(self, request: Request, *args: object, **kwargs: object) -> Response:
         response = super().list(request, *args, **kwargs)
