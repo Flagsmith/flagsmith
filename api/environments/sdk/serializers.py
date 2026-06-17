@@ -19,7 +19,7 @@ from environments.sdk.services import (
 from environments.sdk.types import SDKTraitData
 from features.serializers import (
     FeatureStateSerializerFull,
-    SDKFeatureStateSerializer,
+    SDKIdentityFeatureStateSerializer,
 )
 from integrations.integration import identify_integrations
 from segments.serializers import SegmentSerializerBasic
@@ -138,7 +138,7 @@ class IdentifyWithTraitsSerializer(
     )
     transient = serializers.BooleanField(write_only=True, default=False)
     traits = TraitSerializerBasic(required=False, many=True)
-    flags = SDKFeatureStateSerializer(read_only=True, many=True)
+    flags = SDKIdentityFeatureStateSerializer(read_only=True, many=True)
 
     sensitive_fields = ("traits",)
 

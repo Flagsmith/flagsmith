@@ -21,6 +21,7 @@ import find from 'lodash/find'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
+import { getDefaultVariantKey } from './multivariate'
 import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
@@ -55,6 +56,7 @@ export type PaidFeature =
   | 'CREATE_ADDITIONAL_PROJECT'
   | '2FA'
   | 'RELEASE_PIPELINES'
+  | 'WAREHOUSE'
 
 export type AppFeature = PaidFeature | 'FEATURE_HEALTH'
 
@@ -91,11 +93,12 @@ const Utils = Object.assign({}, BaseUtils, {
       } else if (typeof v.default_percentage_allocation === 'number') {
         total += v.default_percentage_allocation
       } else {
-        total += (v as any).percentage_allocation
+        // A cleared weight input leaves the allocation null — treat as 0.
+        total += (v as any).percentage_allocation || 0
       }
       return null
     })
-    return 100 - total
+    return parseFloat((100 - total).toFixed(2))
   },
   calculateRemainingLimitsPercentage(
     total: number | undefined,
@@ -157,6 +160,7 @@ const Utils = Object.assign({}, BaseUtils, {
       throw error
     }
   },
+
   displayLimitAlert(type: string, percentage: number | undefined) {
     const envOrProject =
       type === 'segment overrides' ? 'environment' : 'project'
@@ -199,7 +203,6 @@ const Utils = Object.assign({}, BaseUtils, {
         return featureState.string_value
     }
   },
-
   findOperator(
     operator: SegmentCondition['operator'],
     value: string,
@@ -216,18 +219,29 @@ const Utils = Object.assign({}, BaseUtils, {
 
     return conditions.find((v) => v.value === operator)
   },
+
   /** Checks whether the specified flag exists, which is different from the flag being enabled or not. This is used to
    *  only add behaviour to Flagsmith-on-Flagsmith flags that have been explicitly created by customers.
    */
   flagsmithFeatureExists(flag: string) {
     return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
   },
+
   getContentType(
     contentTypes: ContentType[] | undefined,
     model: string,
     type: string,
   ) {
     return contentTypes?.find((c: ContentType) => c[model] === type) || null
+  },
+  getContrastColour(backgroundColor: string | null | undefined): string {
+    if (!backgroundColor) return 'white'
+
+    try {
+      return Color(backgroundColor).luminosity() > 0.179 ? 'black' : 'white'
+    } catch {
+      return 'white'
+    }
   },
   getCreateProjectPermission(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
@@ -243,6 +257,7 @@ const Utils = Object.assign({}, BaseUtils, {
       OrganisationPermission.CREATE_PROJECT
     ]
   },
+  getDefaultVariantKey,
   getExistingWaitForTime: (
     waitFor: string | undefined,
   ):
@@ -537,6 +552,20 @@ const Utils = Object.assign({}, BaseUtils, {
       case 'METADATA':
       case 'RELEASE_PIPELINES': {
         plan = 'enterprise'
+        break
+      }
+      case 'WAREHOUSE': {
+        const remotePlansValue = Utils.getFlagsmithJSONValue(
+          'experimentation_warehouse_connection',
+          [],
+        )
+        const remotePlans: string[] = Array.isArray(remotePlansValue)
+          ? remotePlansValue
+          : []
+        const allowedPlans = [...remotePlans, 'enterprise']
+        const planHierarchy: Plan[] = ['start-up', 'scale-up', 'enterprise']
+        plan =
+          planHierarchy.find((p) => allowedPlans.includes(p)) || 'enterprise'
         break
       }
 

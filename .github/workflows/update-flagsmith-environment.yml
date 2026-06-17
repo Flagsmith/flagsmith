@@ -9,6 +9,9 @@ defaults:
   run:
     working-directory: api
 
+permissions:
+  contents: read
+
 jobs:
   update_server_defaults:
     runs-on: depot-ubuntu-latest

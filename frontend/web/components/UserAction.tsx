@@ -142,7 +142,7 @@ const UserAction: FC<UserActionProps> = ({
     [close, onRemove, onEdit, onInspectPermissions],
   )
 
-  if (!canEdit && !!canRemove) {
+  if (!canEdit && !!canRemove && !canInspectPermissions) {
     return (
       <Button onClick={onRemove} size='small' className='btn-with-icon'>
         <Icon name='trash-2' width={16} fill='#656D7B' />
@@ -150,7 +150,7 @@ const UserAction: FC<UserActionProps> = ({
     )
   }
 
-  if (!!canEdit && !canRemove) {
+  if (!!canEdit && !canRemove && !canInspectPermissions) {
     return (
       <Button
         onClick={() => handleActionClick('edit')}
@@ -162,7 +162,7 @@ const UserAction: FC<UserActionProps> = ({
     )
   }
 
-  if (!canEdit && !canRemove) {
+  if (!canEdit && !canRemove && !canInspectPermissions) {
     return null
   }
 

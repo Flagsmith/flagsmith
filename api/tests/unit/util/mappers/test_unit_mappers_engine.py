@@ -284,6 +284,69 @@ def test_map_feature_state_to_engine__feature_segment__return_expected(
     assert result == expected_result
 
 
+def test_map_mv_option_to_engine__option_with_key__includes_key(
+    multivariate_feature: "Feature",
+) -> None:
+    # Given
+    mv_option = multivariate_feature.multivariate_options.first()
+    assert mv_option is not None
+    mv_option.key = "control"
+    mv_option.save()
+
+    # When
+    result = engine.map_mv_option_to_engine(mv_option)
+
+    # Then
+    assert result.key == "control"
+    assert result == MultivariateFeatureOptionModel(
+        value=mv_option.value,
+        id=mv_option.id,
+        key="control",
+    )
+
+
+def test_map_feature_state_to_engine__mv_option_with_key__key_in_serialised_document(
+    segment_multivariate_feature_state: FeatureState,
+    multivariate_feature: "Feature",
+) -> None:
+    # Given
+    mv_option = multivariate_feature.multivariate_options.first()
+    assert mv_option is not None
+    mv_option.key = "control"
+    mv_option.save()
+    mv_fs_value = (
+        segment_multivariate_feature_state.multivariate_feature_state_values.get()
+    )
+
+    # When
+    result = engine.map_feature_state_to_engine(
+        segment_multivariate_feature_state,
+        mv_fs_values=[mv_fs_value],
+    )
+    document = result.model_dump()
+
+    # Then
+    assert (
+        document["multivariate_feature_state_values"][0]["multivariate_feature_option"][
+            "key"
+        ]
+        == "control"
+    )
+
+
+def test_multivariate_feature_option_model__document_without_key__defaults_to_none() -> (
+    None
+):
+    # Given - a document produced before `key` existed on the model
+    document = {"value": "control", "id": 1}
+
+    # When
+    model = MultivariateFeatureOptionModel.model_validate(document)
+
+    # Then
+    assert model.key is None
+
+
 def test_map_environment_to_engine__multiple_segments_and_versions__returns_expected_model(
     environment: Environment,
     feature: "Feature",

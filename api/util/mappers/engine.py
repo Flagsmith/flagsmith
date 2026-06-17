@@ -185,7 +185,9 @@ def map_feature_to_engine(feature: "Feature") -> FeatureModel:
 def map_mv_option_to_engine(
     mv_option: "MultivariateFeatureOption",
 ) -> MultivariateFeatureOptionModel:
-    return MultivariateFeatureOptionModel(value=mv_option.value, id=mv_option.id)
+    return MultivariateFeatureOptionModel(
+        value=mv_option.value, id=mv_option.id, key=mv_option.key
+    )
 
 
 def map_environment_to_engine(

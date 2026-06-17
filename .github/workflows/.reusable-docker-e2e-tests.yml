@@ -153,7 +153,6 @@ jobs:
           cd e2e
           zip -r playwright-report.zip playwright-report/ || echo "Failed to zip report"
           cd ..
-          npm install --no-save @slack/web-api
           npx -y tsx e2e/slack-e2e-reporter.ts
         env:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}

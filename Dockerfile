@@ -106,10 +106,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # * build-python-private [build-python]
 FROM build-python AS build-python-private
 
-# Authenticate git with token, install private Python dependencies,
-# and integrate private modules
-ARG RBAC_REVISION
-ARG EXTRAS="--extra private --extra auth-controller --extra ldap --extra workflows --extra licensing"
+# Authenticate git with token and install private Python dependencies
+ARG EXTRAS="--extra private"
 RUN --mount=type=secret,id=github_private_cloud_token \
   --mount=type=secret,id=codeartifact_token \
   --mount=type=cache,target=/root/.cache/uv \
@@ -117,8 +115,7 @@ RUN --mount=type=secret,id=github_private_cloud_token \
   git config --global credential.helper store && \
   UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws \
   UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
-  make install-packages opts="--no-install-project ${EXTRAS}" && \
-  make install-private-modules
+  make install-packages opts="--no-install-project ${EXTRAS}"
 
 # * api-runtime
 FROM wolfi-base AS api-runtime
@@ -179,7 +176,7 @@ RUN --mount=type=secret,id=codeartifact_token \
   --mount=type=cache,target=/root/.cache/uv \
   UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws \
   UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
-  make install-packages opts='--extra dev --extra private --extra auth-controller --extra ldap --extra workflows --extra licensing' && \
+  make install-packages opts='--extra dev --extra private' && \
   make integrate-private-tests && \
   git config --global --unset credential.helper && \
   rm -f ${HOME}/.git-credentials

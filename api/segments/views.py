@@ -43,48 +43,32 @@ logger = logging.getLogger(__name__)
     decorator=extend_schema(
         tags=["mcp"],
         parameters=[SegmentListQuerySerializer],
-        extensions={
-            "x-gram": {
-                "name": "list_project_segments",
-                "description": "Retrieves all user segments defined for audience targeting within the project.",
-            },
-        },
+        operation_id="list_project_segments",
+        description="Retrieves all user segments defined for audience targeting within the project.",
     ),
 )
 @method_decorator(
     name="create",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "create_project_segment",
-                "description": "Creates a new user segment for audience targeting within the project.",
-            },
-        },
+        operation_id="create_project_segment",
+        description="Creates a new user segment for audience targeting within the project.",
     ),
 )
 @method_decorator(
     name="retrieve",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "get_project_segment",
-                "description": "Retrieves detailed information about a specific user segment.",
-            },
-        },
+        operation_id="get_project_segment",
+        description="Retrieves detailed information about a specific user segment.",
     ),
 )
 @method_decorator(
     name="update",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "update_project_segment",
-                "description": "Updates an existing user segment's properties and rules.",
-            },
-        },
+        operation_id="update_project_segment",
+        description="Updates an existing user segment's properties and rules.",
     ),
 )
 class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
@@ -108,6 +92,7 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             # TODO: at the moment, the UI only shows the name and description of the segment in the list view.
             #  we shouldn't return all of the rules and conditions in the list view.
             queryset = queryset.prefetch_related(
+                "membership_counts",
                 "rules",
                 "rules__conditions",
                 "rules__rules",

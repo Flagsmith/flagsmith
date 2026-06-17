@@ -1,8 +1,16 @@
+from typing import Any
+
+import pytest
 from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.openapi import AutoSchema
 from typing_extensions import TypedDict
 
-from api.openapi import TypedDictSchemaExtension
+from api.openapi import (
+    TAGS,
+    TypedDictSchemaExtension,
+    postprocessing_assign_tags,
+    preprocessing_filter_spec,
+)
 
 
 def test_typeddict_schema_extension__nested_typed_dict__renders_expected_schema() -> (
@@ -86,6 +94,162 @@ def test_typeddict_schema_extension__nested_typed_dict__registers_components() -
             }
         },
     }
+
+
+@pytest.mark.parametrize(
+    "path, expected_tag",
+    [
+        ("/api/v1/organisations/", "Organisations"),
+        ("/api/v1/organisations/{id}/groups/", "Organisations"),
+        ("/api/v1/projects/{id}/", "Projects"),
+        ("/api/v1/environments/{api_key}/", "Environments"),
+        ("/api/v1/projects/{id}/features/", "Features"),
+        ("/api/v1/flags/{feature_id}/multivariate-options/", "Features"),
+        ("/api/v1/environments/{api_key}/featurestates/{id}/", "Feature states"),
+        ("/api/v1/environment-feature-versions/{id}/", "Feature states"),
+        ("/api/v1/environments/{api_key}/identities/{id}/", "Identities"),
+        ("/api/v1/environments/{api_key}/edge-identities/{id}/", "Identities"),
+        ("/api/v1/traits/", "Identities"),
+        ("/api/v1/segments/{id}/", "Segments"),
+        ("/api/v1/environments/{api_key}/integrations/amplitude/{id}/", "Integrations"),
+        ("/api/v1/projects/{id}/integrations/datadog/{id}/", "Integrations"),
+        ("/api/v1/organisations/{id}/integrations/github/", "Integrations"),
+        ("/api/v1/environments/{api_key}/user-permissions/{id}/", "Permissions"),
+        ("/api/v1/projects/{id}/user-group-permissions/{id}/", "Permissions"),
+        ("/api/v1/environments/{api_key}/webhooks/{id}/", "Webhooks"),
+        ("/api/v1/cb-webhook/", "Webhooks"),
+        ("/api/v1/github-webhook/", "Webhooks"),
+        ("/api/v1/audit/", "Audit"),
+        ("/api/v1/auth/login/", "Authentication"),
+        ("/api/v1/users/join/{hash}/", "Authentication"),
+        ("/api/v1/analytics/flags/", "Analytics"),
+        ("/api/v1/metadata/fields/", "Metadata"),
+        ("/api/v1/onboarding/request/send/", "Onboarding"),
+        ("/api/v1/admin/dashboard/summary/", "Admin dashboard"),
+    ],
+)
+def test_postprocessing_assign_tags__parametrized_path__assigns_correct_tag(
+    path: str, expected_tag: str
+) -> None:
+    # Given
+    result: dict[str, Any] = {
+        "paths": {
+            path: {
+                "get": {
+                    "operationId": "test_op",
+                    "tags": ["api"],
+                },
+            },
+        },
+    }
+
+    # When
+    postprocessing_assign_tags(result, generator=None)
+
+    # Then
+    assert result["paths"][path]["get"]["tags"] == [expected_tag]
+
+
+def test_postprocessing_assign_tags__explicit_tags__preserved() -> None:
+    # Given
+    result: dict[str, Any] = {
+        "paths": {
+            "/api/v1/flags/": {
+                "get": {
+                    "operationId": "sdk_flags",
+                    "tags": ["sdk"],
+                },
+            },
+            "/api/v1/organisations/": {
+                "get": {
+                    "operationId": "organisations_list",
+                    "tags": ["mcp", "organisations"],
+                },
+            },
+        },
+    }
+
+    # When
+    postprocessing_assign_tags(result, generator=None)
+
+    # Then
+    assert result["paths"]["/api/v1/flags/"]["get"]["tags"] == ["sdk"]
+    assert result["paths"]["/api/v1/organisations/"]["get"]["tags"] == [
+        "mcp",
+        "organisations",
+    ]
+
+
+def test_postprocessing_assign_tags__empty_paths__sets_tags_list_on_result() -> None:
+    # Given
+    result: dict[str, Any] = {"paths": {}}
+
+    # When
+    postprocessing_assign_tags(result, generator=None)
+
+    # Then
+    assert result["tags"] == TAGS
+
+
+def test_postprocessing_assign_tags__unmatched_path__assigned_other_tag() -> None:
+    # Given
+    result: dict[str, Any] = {
+        "paths": {
+            "/api/v1/unknown-endpoint/": {
+                "get": {
+                    "operationId": "unknown",
+                    "tags": ["api"],
+                },
+            },
+        },
+    }
+
+    # When
+    postprocessing_assign_tags(result, generator=None)
+
+    # Then
+    assert result["paths"]["/api/v1/unknown-endpoint/"]["get"]["tags"] == ["Other"]
+
+
+def test_postprocessing_assign_tags__non_dict_operation__skipped() -> None:
+    # Given - a path item with both a real operation and a non-dict entry
+    # (e.g. path-level `parameters`, which is a list rather than an operation dict)
+    result: dict[str, Any] = {
+        "paths": {
+            "/api/v1/projects/{id}/": {
+                "parameters": [{"name": "id", "in": "path"}],
+                "get": {
+                    "operationId": "projects_retrieve",
+                    "tags": ["api"],
+                },
+            },
+        },
+    }
+
+    # When
+    postprocessing_assign_tags(result, generator=None)
+
+    # Then - the real operation got its tag, and the non-dict entry was left alone
+    assert result["paths"]["/api/v1/projects/{id}/"]["get"]["tags"] == ["Projects"]
+    assert result["paths"]["/api/v1/projects/{id}/"]["parameters"] == [
+        {"name": "id", "in": "path"}
+    ]
+
+
+def test_preprocessing_filter_spec__swagger_endpoints__removed() -> None:
+    # Given
+    endpoints = [
+        ("/api/v1/organisations/", "^api/v1/organisations/", "GET", None),
+        ("/api/v1/swagger.json", "^api/v1/swagger.json", "GET", None),
+        ("/api/v1/swagger.yaml", "^api/v1/swagger.yaml", "GET", None),
+    ]
+
+    # When
+    filtered = preprocessing_filter_spec(endpoints)
+
+    # Then
+    assert len(filtered) == 1
+    assert filtered[0][0] == "/api/v1/organisations/"
 
 
 def test_typeddict_schema_extension__simple_model__returns_correct_name() -> None:

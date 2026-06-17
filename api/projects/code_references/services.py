@@ -146,7 +146,9 @@ def record_scan(
             for feature_name, references in references_by_feature.items()
             if (feature := features_by_name.get(feature_name)) is not None
         ],
-        ignore_conflicts=True,
+        update_conflicts=True,
+        unique_fields=["feature", "repository", "code_references_hash"],
+        update_fields=["created_at", "revision"],
     )
 
     return FeatureFlagCodeReferencesScan(

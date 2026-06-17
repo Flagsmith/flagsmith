@@ -10,11 +10,21 @@ from rest_framework.exceptions import ValidationError
 from edge_api.utils import is_edge_enabled
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.models import Project
+from segment_membership.models import SegmentMembershipCount
 from segments.models import Condition, Segment, SegmentRule
 
 logger = structlog.get_logger(__name__)
 
 DictList = list[dict[str, Any]]
+
+
+class SegmentMembershipCountSerializer(
+    serializers.ModelSerializer[SegmentMembershipCount]
+):
+    class Meta:
+        model = SegmentMembershipCount
+        fields = ["environment", "count", "last_synced_at"]
+        read_only_fields = ["environment", "count", "last_synced_at"]
 
 
 class ConditionSerializer(serializers.ModelSerializer[Condition]):
@@ -82,6 +92,7 @@ class SegmentRuleSerializer(_BaseSegmentRuleSerializer):
 class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
     rules = SegmentRuleSerializer(many=True, required=True, allow_empty=False)
     metadata = MetadataSerializer(required=False, many=True)
+    membership_counts = SegmentMembershipCountSerializer(many=True, read_only=True)
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """
@@ -112,7 +123,9 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             "version_of",
             "rules",
             "metadata",
+            "membership_counts",
         ]
+        read_only_fields = ["membership_counts"]
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)
