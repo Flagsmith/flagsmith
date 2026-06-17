@@ -30,7 +30,10 @@ const CalloutBar: FC<CalloutBarProps> = ({
   return (
     <div style={{ cursor: onClick ? 'pointer' : undefined }} onClick={onClick}>
       <div className='flex-row'>
-        <div className='flex flex-1'>
+        <div
+          className='flex flex-1'
+          style={isMobile ? { overflowX: 'scroll' } : undefined}
+        >
           <div>
             <pre
               className={`hljs-header${isDark ? ' bg-primary900' : ''}`}
