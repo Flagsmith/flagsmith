@@ -103,19 +103,28 @@ const MCPIntegration: FC = () => {
                 )}
                 <MCPSnippet code={tab.snippet} language={tab.language} />
                 {!isSaas && (
-                  <p className='text-muted mt-2 mb-0'>
-                    Replace{' '}
-                    <InlineCode>{SELF_HOSTED_URL_PLACEHOLDER}</InlineCode> with
-                    your MCP server&apos;s base URL. See{' '}
-                    <a
-                      href={SELF_HOSTING_DOCS_URL}
-                      target='_blank'
-                      rel='noreferrer'
-                    >
-                      Self-hosting the MCP Server
-                    </a>
-                    .
-                  </p>
+                  <>
+                    <p className='text-muted mt-2 mb-0'>
+                      Replace{' '}
+                      <InlineCode>
+                        <span className='fw-bold'>
+                          {SELF_HOSTED_URL_PLACEHOLDER}
+                        </span>
+                      </InlineCode>{' '}
+                      with your MCP server&apos;s base URL.
+                    </p>
+                    <p className='text-muted mt-1 mb-0'>
+                      See{' '}
+                      <a
+                        href={SELF_HOSTING_DOCS_URL}
+                        target='_blank'
+                        rel='noreferrer'
+                      >
+                        Self-hosting the MCP Server
+                      </a>
+                      .
+                    </p>
+                  </>
                 )}
                 {effectiveConnection === 'apiKey' ? (
                   <p className='text-muted mt-2 mb-0'>
