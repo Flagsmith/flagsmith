@@ -39,7 +39,7 @@ const ConnectYourCodePanel: FC<ConnectYourCodePanelProps> = ({
         </div>
         <CodeCard
           code={installCode}
-          hljsClass='bash'
+          language='bash'
           headerLeft={
             sdkSnippet.installYarn ? (
               <div className='onboarding-connect__pm d-inline-flex'>
@@ -73,7 +73,7 @@ const ConnectYourCodePanel: FC<ConnectYourCodePanelProps> = ({
         </div>
         <CodeCard
           code={sdkSnippet.wire}
-          hljsClass={sdkSnippet.hljs}
+          language={sdkSnippet.language}
           headerLeft={
             <span className='onboarding-connect__codecard-lang'>
               {sdkLang.label}

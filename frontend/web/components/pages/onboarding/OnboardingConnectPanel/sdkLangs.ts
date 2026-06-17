@@ -21,7 +21,7 @@ export type SdkLang = {
   // Key into codeHelp.INSTALL (occasionally differs, e.g. Next.js).
   installKey: string
   // highlight.js language for the wire snippet (install is always shell).
-  hljs: string
+  language: string
   // Brand logo component for the chip. Imported by name so unreferenced logos
   // shake out of the bundle.
   logo: ComponentType
@@ -33,101 +33,107 @@ export type SdkLang = {
 // React Native reuses the React logo; both Next.js routers share the Next mark.
 export const SDK_LANGS: SdkLang[] = [
   {
-    hljs: 'javascript',
     installKey: 'React',
     label: 'React',
+    language: 'javascript',
     logo: ReactLogo,
     popular: true,
   },
   {
-    hljs: 'javascript',
     installKey: 'JavaScript',
     label: 'JavaScript',
+    language: 'javascript',
     logo: JavascriptLogo,
     popular: true,
   },
   {
-    hljs: 'python',
     installKey: 'Python',
     label: 'Python',
+    language: 'python',
     logo: PythonLogo,
     popular: true,
   },
   {
-    hljs: 'javascript',
     installKey: 'Node JS',
     label: 'Node.js',
+    language: 'javascript',
     logo: NodejsLogo,
     popular: true,
   },
-  { hljs: 'go', installKey: 'Go', label: 'Go', logo: GoLogo, popular: true },
   {
-    hljs: 'ruby',
+    installKey: 'Go',
+    label: 'Go',
+    language: 'go',
+    logo: GoLogo,
+    popular: true,
+  },
+  {
     installKey: 'Ruby',
     label: 'Ruby',
+    language: 'ruby',
     logo: RubyLogo,
     popular: true,
   },
   {
-    hljs: 'csharp',
     installKey: '.NET',
     label: '.NET',
+    language: 'csharp',
     logo: DotnetLogo,
     popular: false,
   },
   {
-    hljs: 'dart',
     installKey: 'Flutter',
     label: 'Flutter',
+    language: 'dart',
     logo: FlutterLogo,
     popular: false,
   },
   {
-    hljs: 'javascript',
     installKey: 'Next.js',
     label: 'Next.js (app router)',
+    language: 'javascript',
     logo: NextjsLogo,
     popular: false,
   },
   {
-    hljs: 'javascript',
     installKey: 'Next.js',
     label: 'Next.js (pages router)',
+    language: 'javascript',
     logo: NextjsLogo,
     popular: false,
   },
   {
-    hljs: 'java',
     installKey: 'Java',
     label: 'Java',
+    language: 'java',
     logo: JavaLogo,
     popular: false,
   },
   {
-    hljs: 'php',
     installKey: 'PHP',
     label: 'PHP',
+    language: 'php',
     logo: PhpLogo,
     popular: false,
   },
   {
-    hljs: 'javascript',
     installKey: 'React Native',
     label: 'React Native',
+    language: 'javascript',
     logo: ReactLogo,
     popular: false,
   },
   {
-    hljs: 'rust',
     installKey: 'Rust',
     label: 'Rust',
+    language: 'rust',
     logo: RustLogo,
     popular: false,
   },
   {
-    hljs: 'swift',
     installKey: 'iOS',
     label: 'iOS',
+    language: 'swift',
     logo: IosLogo,
     popular: false,
   },

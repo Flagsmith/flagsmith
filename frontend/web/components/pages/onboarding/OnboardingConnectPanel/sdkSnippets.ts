@@ -28,7 +28,7 @@ export type SdkSnippet = {
   // drives the npm/yarn pills so each shows a single copy-pasteable line.
   installYarn?: string
   wire: string
-  hljs: string
+  language: string
 }
 
 // codeHelp's npm-based install is a "// npm\n<cmd>\n\n// yarn\n<cmd>" block.
@@ -59,7 +59,7 @@ export const getSdkSnippet = (
     .split(PLACEHOLDER_FLAG)
     .join(featureName)
   return {
-    hljs: lang.hljs,
+    language: lang.language,
     ...parseInstall(unescapeHtml(installs[lang.installKey] ?? '')),
     wire: wire.trim(),
   }

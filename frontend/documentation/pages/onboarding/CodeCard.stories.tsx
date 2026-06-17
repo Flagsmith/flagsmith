@@ -12,7 +12,7 @@ const meta: Meta<typeof CodeCard> = {
     headerLeft: (
       <span className='onboarding-connect__codecard-lang'>Shell</span>
     ),
-    hljsClass: 'bash',
+    language: 'bash',
   },
   component: CodeCard,
   parameters: {
@@ -38,6 +38,6 @@ export const Wire: Story = {
     headerLeft: (
       <span className='onboarding-connect__codecard-lang'>JavaScript</span>
     ),
-    hljsClass: 'javascript',
+    language: 'javascript',
   },
 }

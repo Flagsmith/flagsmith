@@ -6,15 +6,15 @@ import { useCopyFeedback } from 'components/pages/onboarding/hooks/useCopyFeedba
 
 export type CodeCardProps = {
   code: string
-  // highlight.js language class for the body.
-  hljsClass: string
+  // Syntax language for the body's highlighting (e.g. 'bash', 'javascript').
+  language: string
   // Left side of the card header (e.g. the language label or npm/yarn pills).
   headerLeft: ReactNode
 }
 
 // Owns its own "Copied" feedback so each card is independent. Highlight escapes
 // the body for display; Copy uses the raw string.
-const CodeCard: FC<CodeCardProps> = ({ code, headerLeft, hljsClass }) => {
+const CodeCard: FC<CodeCardProps> = ({ code, headerLeft, language }) => {
   const { copied, copy } = useCopyFeedback()
 
   return (
@@ -36,7 +36,7 @@ const CodeCard: FC<CodeCardProps> = ({ code, headerLeft, hljsClass }) => {
           </span>
         </Button>
       </div>
-      <Highlight forceExpanded className={hljsClass}>
+      <Highlight forceExpanded className={language}>
         {code}
       </Highlight>
     </div>
