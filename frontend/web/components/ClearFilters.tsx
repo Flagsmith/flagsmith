@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import { IonIcon } from '@ionic/react'
-import { closeCircle, informationCircleOutline } from 'ionicons/icons'
+import { closeCircle } from 'ionicons/icons'
 
 type ClearFiltersType = {
   onClick: () => void

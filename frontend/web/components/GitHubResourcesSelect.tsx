@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useState } from 'react'
+import React, { FC, useMemo, useState } from 'react'
 import { ExternalResource, GithubResource, Res } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import useInfiniteScroll from 'common/useInfiniteScroll'

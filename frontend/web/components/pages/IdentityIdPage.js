@@ -29,7 +29,9 @@ const IdentityIdPage = class extends Component {
           this.props.history.replace(
             `/project/${params.projectId}/environment/${
               params.environmentId
-            }/identities/${params.identity}/${user.identity || user.identity_uuid}`,
+            }/identities/${params.identity}/${
+              user.identity || user.identity_uuid
+            }`,
           )
         } else {
           this.props.history.replace(

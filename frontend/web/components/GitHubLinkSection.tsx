@@ -1,6 +1,6 @@
 import React, { FC, useState } from 'react'
 import Constants from 'common/constants'
-import GitHubResourcesSelect from 'components/GitHubResourcesSelect'
+import GitHubResourcesSelect from './GitHubResourcesSelect'
 import { useCreateExternalResourceMutation } from 'common/services/useExternalResource'
 import AppActions from 'common/dispatcher/app-actions'
 import type { ExternalResource, GithubResource } from 'common/types/responses'

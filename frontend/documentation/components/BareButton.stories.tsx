@@ -1,10 +1,7 @@
 import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
-import {
-  BareButton,
-  BareButtonProps,
-} from 'components/base/forms/BareButton'
+import { BareButton, BareButtonProps } from 'components/base/forms/BareButton'
 import { Icon } from 'components/icons'
 
 const meta: Meta<BareButtonProps> = {
@@ -92,10 +89,7 @@ export const AsChipDelete: Story = {
       style={{ alignItems: 'center', display: 'inline-flex', gap: 4 }}
     >
       my-tag
-      <BareButton
-        aria-label='Remove tag'
-        onClick={() => alert('Deleted')}
-      >
+      <BareButton aria-label='Remove tag' onClick={() => alert('Deleted')}>
         <Icon name='close' width={16} height={16} fill='currentColor' />
       </BareButton>
     </span>

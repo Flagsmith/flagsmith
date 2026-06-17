@@ -62,4 +62,3 @@ const SelectableCard: FC<SelectableCardProps> = ({
 
 SelectableCard.displayName = 'SelectableCard'
 export default SelectableCard
-

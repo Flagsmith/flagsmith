@@ -1,10 +1,13 @@
-.bare-btn {
+// Reset at zero specificity so consumer classes always win, regardless of load order.
+:where(.bare-btn) {
   all: unset;
   display: inline-flex;
   align-items: center;
   cursor: pointer;
   box-sizing: border-box;
+}
 
+.bare-btn {
   &:disabled,
   &[aria-disabled='true'] {
     cursor: default;

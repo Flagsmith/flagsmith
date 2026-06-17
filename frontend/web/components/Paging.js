@@ -6,7 +6,7 @@ import propTypes from 'prop-types'
 import cn from 'classnames'
 import { chevronBackOutline, chevronForwardOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
-import BareButton from 'components/base/forms/BareButton'
+import BareButton from './base/forms/BareButton'
 
 export default class Paging extends PureComponent {
   static displayName = 'Paging'

@@ -1,5 +1,4 @@
 import React, { FC } from 'react'
-import classNames from 'classnames'
 import Switch from 'components/Switch'
 
 type DiffType = {

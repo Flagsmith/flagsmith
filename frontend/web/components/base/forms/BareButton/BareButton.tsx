@@ -1,5 +1,6 @@
 import React, { ButtonHTMLAttributes } from 'react'
 import cn from 'classnames'
+import './BareButton.scss'
 
 export type BareButtonProps = ButtonHTMLAttributes<HTMLButtonElement>
 
@@ -14,19 +15,8 @@ export type BareButtonProps = ButtonHTMLAttributes<HTMLButtonElement>
  * screen-reader role for free — without manual `tabIndex`, `onKeyDown` or
  * `role` attributes.
  */
-export const BareButton = React.forwardRef<
-  HTMLButtonElement,
-  BareButtonProps
->(
-  (
-    {
-      children,
-      className,
-      type = 'button',
-      ...rest
-    },
-    ref,
-  ) => {
+export const BareButton = React.forwardRef<HTMLButtonElement, BareButtonProps>(
+  ({ children, className, type = 'button', ...rest }, ref) => {
     return (
       <button
         {...rest}

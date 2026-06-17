@@ -6,7 +6,7 @@ import React, {
 } from 'react'
 import { filter } from 'lodash'
 import Icon from './icons/Icon'
-import BareButton from 'components/base/forms/BareButton'
+import BareButton from './base/forms/BareButton'
 
 type ChipInputType = {
   placeholder?: string
