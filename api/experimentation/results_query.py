@@ -1,13 +1,16 @@
 """
 Per-metric slot builder for the experimentation results ClickHouse query.
 
-Each _MetricSlot ties together three things that must stay in sync:
+Each _MetricSlot owns one alias (``m{i}``) and derives all three things that
+must agree on it:
   - the per-identity expression in the unit_values CTE SELECT
   - the outer sufficient-stat aggregate in the final SELECT
-  - the column pair consumed from a result row during decode
+  - the column pair read back from a result row by name during decode
 
-ResultsQueryBuilder owns the slots and provides build_query() + decode_rows(),
-so the same objects drive both phases and ordering can't diverge between them.
+ResultsQueryBuilder owns the slots and provides build_query() + decode_rows().
+Because decode_rows looks each column up by name, the SELECT and the decode
+bind on the alias rather than on column order — a reordered or inserted column
+can't silently misalign them.
 """
 
 from collections.abc import Sequence
