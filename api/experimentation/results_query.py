@@ -101,9 +101,7 @@ class _MetricSlot:
         a = self._alias
         return f"sum({a}) AS {a}_sum, sum({a} * {a}) AS {a}_sum_squares"
 
-    def decode(
-        self, n: int, row: Sequence[Any], index: dict[str, int]
-    ) -> VariantStats:
+    def decode(self, n: int, row: Sequence[Any], index: dict[str, int]) -> VariantStats:
         """Read this slot's two columns (sum, sum_squares) from a row by name."""
         return VariantStats(
             n=n,
