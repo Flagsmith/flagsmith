@@ -1,3 +1,4 @@
+from enum import StrEnum
 from datetime import date
 from typing import TYPE_CHECKING, Literal, NamedTuple, TypeAlias, TypedDict
 
@@ -25,6 +26,11 @@ PeriodType = Literal[
     "previous_billing_period",
     "90_day_period",
 ]
+
+
+class DownsampleSize(StrEnum):
+    SHORT_TERM = "15m"
+    LONG_TERM = "1h"
 
 
 class APIUsageCacheKey(NamedTuple):
