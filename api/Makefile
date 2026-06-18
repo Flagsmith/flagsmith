@@ -188,7 +188,3 @@ generate-docs: generate-flagsmith-sdk-openapi
 .PHONY: add-known-sdk-version
 add-known-sdk-version:
 	uv run python scripts/add-known-sdk-version.py $(opts)
-
-.PHONY: generate-mcp-spec
-generate-mcp-spec:
-	uv run python manage.py spectacular --generator-class api.openapi.MCPSchemaGenerator --file mcp_openapi.yaml
