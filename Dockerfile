@@ -85,7 +85,7 @@ RUN cd frontend && npm run bundle
 
 # * build-python
 FROM wolfi-base AS build-python
-COPY --from=astral/uv /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv /uv /uvx /bin/
 WORKDIR /build
 
 ARG PYTHON_VERSION
