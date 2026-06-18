@@ -175,7 +175,10 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
                 })
                   .unwrap()
                   .catch((e) =>
-                    toast(e?.data?.[0] || 'Failed to remove owner.', 'danger'),
+                    toast(
+                      e?.data?.[0] || 'Failed to remove owner.',
+                      'danger',
+                    ),
                   )
               }
             />

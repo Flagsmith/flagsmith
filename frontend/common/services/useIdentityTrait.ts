@@ -4,6 +4,7 @@ import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 import { getStore } from 'common/store'
 import { identitySegmentService } from './useIdentitySegment'
+import q from 'refractor/lang/q'
 
 function getTraitEndpoint(
   use_edge_identities: boolean,

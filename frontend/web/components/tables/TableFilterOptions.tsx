@@ -1,7 +1,7 @@
 import React, { FC, ReactNode, useMemo, useState } from 'react'
 import InlineModal from 'components/InlineModal'
 import { IonIcon } from '@ionic/react'
-import { caretDown } from 'ionicons/icons'
+import { caretDown, search } from 'ionicons/icons'
 import classNames from 'classnames'
 import TableFilterItem from './TableFilterItem'
 import Input from 'components/base/forms/Input'

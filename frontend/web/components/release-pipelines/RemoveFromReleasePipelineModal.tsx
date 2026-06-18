@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRemoveFeatureMutation } from 'common/services/useReleasePipelines'
 import Button from 'components/base/forms/Button'
 

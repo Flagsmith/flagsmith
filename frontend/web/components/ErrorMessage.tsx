@@ -50,7 +50,9 @@ const ErrorMessage: FC<ErrorMessageProps> = ({
             __html: Object.keys(error)
               .map(
                 (v) =>
-                  `${Format.camelCase(Format.enumeration.get(v))}: ${error[v]}`,
+                  `${Format.camelCase(Format.enumeration.get(v))}: ${
+                    error[v]
+                  }`,
               )
               .join('<br/>'),
           }}

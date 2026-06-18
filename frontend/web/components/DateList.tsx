@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { FC, useMemo } from 'react'
 import moment from 'moment'
 import { PagedResponse } from 'common/types/responses'
 import groupBy from 'lodash/groupBy'
