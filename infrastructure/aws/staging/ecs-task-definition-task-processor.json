@@ -179,6 +179,10 @@
                 {
                     "name": "LOG_FORMAT",
                     "value": "json"
+                },
+                {
+                    "name": "INGESTION_REDIS_URL",
+                    "value": "rediss://serverless-redis-cache-7u3xil.serverless.euw2.cache.amazonaws.com:6379"
                 }
             ],
             "secrets": [
@@ -189,6 +193,10 @@
                 {
                     "name": "DATABASE_URL",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DATABASE_URL::"
+                },
+                {
+                    "name": "CLICKHOUSE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:clickhouse-url-ns26gC"
                 },
                 {
                     "name": "DJANGO_SECRET_KEY",

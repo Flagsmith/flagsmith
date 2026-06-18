@@ -111,21 +111,13 @@ class InviteLinkViewSet(
 @extend_schema_view(
     list=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "list_organization_invites",
-                "description": "Retrieves all pending invitations for the organization.",
-            },
-        },
+        operation_id="list_organization_invites",
+        description="Retrieves all pending invitations for the organisation.",
     ),
     create=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "create_organization_invite",
-                "description": "Send an invitation to join the organization with specified role and permissions.",
-            },
-        },
+        operation_id="create_organization_invite",
+        description="Send an invitation to join the organisation with specified role and permissions.",
     ),
 )
 class InviteViewSet(

@@ -163,12 +163,8 @@ def password_reset_redirect(
 @extend_schema_view(
     list=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "list_organization_groups",
-                "description": "Retrieves all permission groups within the organization.",
-            },
-        },
+        operation_id="list_organization_groups",
+        description="Retrieves all permission groups within the organisation.",
     ),
 )
 class UserPermissionGroupViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]

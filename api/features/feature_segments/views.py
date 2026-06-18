@@ -30,24 +30,16 @@ logger = logging.getLogger(__name__)
     decorator=extend_schema(
         tags=["mcp"],
         parameters=[FeatureSegmentQuerySerializer],
-        extensions={
-            "x-gram": {
-                "name": "list_feature_segments",
-                "description": "Lists segment overrides for a feature in an environment.",
-            },
-        },
+        operation_id="list_feature_segments",
+        description="Lists segment overrides for a feature in an environment.",
     ),
 )
 @method_decorator(
     name="destroy",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "delete_feature_segment",
-                "description": "Deletes a segment override. Use this tool for environments without v2 feature versioning (use_v2_feature_versioning: false).",
-            },
-        },
+        operation_id="delete_feature_segment",
+        description="Deletes a segment override. Applies to environments without v2 feature versioning (use_v2_feature_versioning: false).",
     ),
 )
 class FeatureSegmentViewSet(

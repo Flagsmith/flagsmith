@@ -55,24 +55,16 @@ from users.models import FFAdminUser
     name="retrieve",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "get_project",
-                "description": "Retrieves comprehensive information about a specific project including configuration and statistics.",
-            },
-        },
+        operation_id="get_project",
+        description="Retrieves comprehensive information about a specific project including configuration and statistics.",
     ),
 )
 @method_decorator(
     name="update",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "update_project",
-                "description": "Updates project configuration settings such as the project name and feature visibility.",
-            },
-        },
+        operation_id="update_project",
+        description="Updates project configuration settings such as the project name and feature visibility.",
     ),
 )
 class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
@@ -132,12 +124,8 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
     @extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "list_project_environments",
-                "description": "Retrieves all environments configured for the specified project.",
-            },
-        },
+        operation_id="list_project_environments",
+        description="Retrieves all environments configured for the specified project.",
     )
     @action(detail=True)
     def environments(self, request, pk):  # type: ignore[no-untyped-def]

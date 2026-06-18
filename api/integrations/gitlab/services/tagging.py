@@ -1,5 +1,3 @@
-import structlog
-
 from features.feature_external_resources.models import (
     GITLAB_RESOURCE_TYPES,
     FeatureExternalResource,
@@ -20,8 +18,6 @@ from integrations.gitlab.mappers import (
 from integrations.gitlab.models import GitLabWebhook
 from integrations.gitlab.types import GitLabWebhookPayload
 from projects.tags.models import Tag, TagType
-
-logger = structlog.get_logger("gitlab")
 
 
 def set_gitlab_tag(feature: Feature, new_label: GitLabTagLabel) -> None:
@@ -67,9 +63,7 @@ def apply_tag_for_event(
     if not (label := map_gitlab_webhook_payload_to_tag_label(payload)):
         return
 
-    if not (
-        resource_url := (attrs := payload.get("object_attributes") or {}).get("url")
-    ):
+    if not (resource_url := (payload.get("object_attributes") or {}).get("url")):
         return
 
     if not (
@@ -82,17 +76,6 @@ def apply_tag_for_event(
         return
 
     set_gitlab_tag(feature, label)
-    log = logger.bind(
-        organisation__id=webhook.gitlab_configuration.project.organisation_id,
-        project__id=webhook.gitlab_configuration.project_id,
-    )
-    log.info(
-        "feature.tagged",
-        feature__id=feature.id,
-        tag__label=label.value,
-        object_kind=payload.get("object_kind"),
-        action=attrs.get("action"),
-    )
 
 
 def clear_tag_for_resource(resource: FeatureExternalResource) -> None:

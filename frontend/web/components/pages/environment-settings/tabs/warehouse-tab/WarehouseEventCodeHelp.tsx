@@ -41,14 +41,23 @@ System.out.println("Hello, Flagsmith Warehouse!");`,
     enabled: false,
   },
   'JavaScript': {
-    code: `import flagsmith from 'flagsmith';
+    code: `import flagsmith from '@flagsmith/flagsmith';
 
-flagsmith.init({ environmentID: 'YOUR_ENVIRONMENT_KEY' });
-console.log('Hello, Flagsmith Warehouse!');`,
+await flagsmith.init({
+  environmentID: 'YOUR_ENVIRONMENT_KEY',
+  enableEvents: true,
+});
+
+flagsmith.trackEvent('purchase', {
+  identifier: 'user_42',
+  value: 99.5,
+  traits: { plan: 'premium' },
+  metadata: { source: 'web' },
+});`,
     enabled: true,
   },
   'Node JS': {
-    code: `import Flagsmith from 'flagsmith-nodejs';
+    code: `import Flagsmith from '@flagsmith/nodejs';
 
 const flagsmith = new Flagsmith({ environmentKey: 'YOUR_ENVIRONMENT_KEY' });
 console.log('Hello, Flagsmith Warehouse!');`,
@@ -64,8 +73,18 @@ echo "Hello, Flagsmith Warehouse!";`,
   'Python': {
     code: `from flagsmith import Flagsmith
 
-flagsmith = Flagsmith(environment_key="YOUR_ENVIRONMENT_KEY")
-print("Hello, Flagsmith Warehouse!")`,
+flagsmith = Flagsmith(
+    environment_key="YOUR_ENVIRONMENT_KEY",
+    enable_events=True,
+)
+
+flagsmith.track_event(
+    "purchase",
+    identifier="user_42",
+    value=99.5,
+    traits={"plan": "premium"},
+    metadata={"source": "web"},
+)`,
     enabled: true,
   },
   'Ruby': {
@@ -99,15 +118,15 @@ const enabledSnippets = Object.fromEntries(
 
 const WarehouseEventCodeHelp: FC = () => (
   <div>
-    <p className='text-center fst-italic text-muted'>
-      Verify your connection by sending your first custom event using one of our
-      SDKs
+    <p className='text-muted fw-bold'>
+      Use our SDKs to send your first experimentation events.
     </p>
     <CodeHelp
       title='Send your first event'
       snippets={enabledSnippets}
       showInitially
       hideHeader
+      hideDocs
     />
   </div>
 )

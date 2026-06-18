@@ -14,11 +14,13 @@ export type TooltipProps = {
   effect?: 'float' | 'solid'
   afterShow?: () => void
   renderInPortal?: boolean
+  delayShow?: number
 }
 
 const Tooltip: FC<TooltipProps> = ({
   afterShow,
   children,
+  delayShow = 500,
   effect,
   place,
   plainText,
@@ -53,7 +55,7 @@ const Tooltip: FC<TooltipProps> = ({
         place={place || 'top'}
         float={effect === 'float'}
         afterShow={afterShow}
-        delayShow={500}
+        delayShow={delayShow}
         style={{ wordBreak: 'break-word' }}
       />
     </>

@@ -367,6 +367,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    "telemetry.middleware.MCPUsageLoggerMiddleware",  # Must come last!
 ]
 
 ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
@@ -783,6 +784,12 @@ DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = env.bool(
 REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
     "REDIS_CLUSTER_READ_FROM_REPLICAS", default=True
 )
+
+# Redis Cluster URL used to communicate with the event ingestion server.
+INGESTION_REDIS_URL = env.str("INGESTION_REDIS_URL", default="")
+
+# DSN for the ClickHouse instance holding ingested experimentation events.
+EXPERIMENTATION_CLICKHOUSE_URL = env.str("EXPERIMENTATION_CLICKHOUSE_URL", default=None)
 
 CACHES = {
     "default": {

@@ -160,6 +160,11 @@ export type SegmentRule = {
   conditions: SegmentCondition[]
   version_of: number | undefined
 }
+export type SegmentMembership = {
+  environment: number
+  count: number
+  last_synced_at: string
+}
 export type Segment = {
   id: number
   rules: SegmentRule[]
@@ -169,6 +174,7 @@ export type Segment = {
   project: string | number
   feature?: number
   metadata: Metadata[] | []
+  membership_counts?: SegmentMembership[]
 }
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
@@ -567,9 +573,79 @@ export type MultivariateOption = {
   string_value: string
   boolean_value?: boolean
   default_percentage_allocation: number
+  // A stable, human-readable identifier for the variant (the backend `key`).
+  // Surfaced in the UI as the variation "Label". Slug-constrained and nullable.
+  key?: string | null
 }
 
 export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
+
+export type ExperimentStatus = 'created' | 'running' | 'paused' | 'completed'
+
+export type ExperimentStatusCounts = Record<ExperimentStatus, number>
+
+export type MetricAggregation = 'count' | 'sum' | 'mean' | 'occurrence'
+
+export type MetricDirection = 'up' | 'down' | 'informational'
+
+export type MetricDefinition = {
+  version: number
+  event: string
+}
+
+export type MetricExperiment = {
+  id: number
+  name: string
+  status: ExperimentStatus
+}
+
+export type Metric = {
+  id: number
+  name: string
+  description: string
+  aggregation: MetricAggregation
+  direction: MetricDirection
+  definition: MetricDefinition
+  experiments: MetricExperiment[]
+  created_at: string
+  updated_at: string
+}
+
+export type ExpectedDirection =
+  | 'increase'
+  | 'decrease'
+  | 'not_increase'
+  | 'not_decrease'
+
+export type ExperimentMetric = {
+  id: number
+  metric: number
+  metric_name: string
+  aggregation: MetricAggregation
+  expected_direction: ExpectedDirection
+  created_at: string
+}
+
+export type ExperimentFeature = {
+  id: number
+  name: string
+  type: FeatureType
+  initial_value: string | null
+  multivariate_options: MultivariateOption[]
+}
+
+export type Experiment = {
+  id: number
+  name: string
+  hypothesis: string
+  feature: ExperimentFeature
+  status: ExperimentStatus
+  metrics: ExperimentMetric[]
+  created_at: string
+  updated_at: string
+  started_at: string | null
+  ended_at: string | null
+}
 
 export enum TagStrategy {
   INTERSECTION = 'INTERSECTION',
@@ -1116,6 +1192,8 @@ export type WarehouseConnection = {
   name: string
   config: SnowflakeConfig | Record<string, never>
   created_at: string
+  total_events_received: number | null
+  unique_events_count: number | null
 }
 
 export type Res = {
@@ -1343,5 +1421,20 @@ export type Res = {
   gitlabIssues: PagedResponse<GitLabIssue>
   gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
   warehouseConnections: WarehouseConnection[]
+  experiments: PagedResponse<Experiment> & {
+    currentPage: number
+    pageSize: number
+    status_counts?: ExperimentStatusCounts
+  }
+  experiment: Experiment
+  metric: Metric
+  metrics: PagedResponse<Metric>
+  multivariateOption: MultivariateOption
+  saveMultivariateOptions: {
+    multivariate_options: MultivariateOption[]
+    // Per-option API errors keyed by the input option's index; null when all
+    // requests succeeded.
+    errors: Record<number, any> | null
+  }
   // END OF TYPES
 }

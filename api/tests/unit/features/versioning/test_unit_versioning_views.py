@@ -1001,6 +1001,46 @@ def test_create_version__non_segment_override_in_create_list__returns_bad_reques
     }
 
 
+def test_create_version__missing_feature_segment_key__returns_bad_request(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    # A payload where `feature_segment` key is omitted entirely
+    # (as opposed to being explicitly set to None).
+    # This previously caused a KeyError -> 500 Internal Server Error.
+    data = {
+        "feature_states_to_create": [
+            {
+                # `feature_segment` key is intentionally absent
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "some new value",
+                },
+            }
+        ]
+    }
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    # Should return 400 Bad Request, not 500 Internal Server Error
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "message": "Cannot create FeatureState objects that are not segment overrides."
+    }
+
+
 def test_create_version__duplicate_segment_override__returns_bad_request(
     feature: Feature,
     admin_client_new: APIClient,

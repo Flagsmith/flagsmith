@@ -161,6 +161,21 @@ def refresh_project_segment_counts(project_id: int) -> None:
         now = timezone.now()
         for m in membership_counts:
             m.last_synced_at = now
+
+        new_pairs = {(m.segment_id, m.environment_id) for m in membership_counts}
+        stale_ids = [
+            pk
+            for pk, segment_id, environment_id in (
+                SegmentMembershipCount.objects.filter(
+                    segment__project=project
+                ).values_list("id", "segment_id", "environment_id")
+            )
+            if (segment_id, environment_id) not in new_pairs
+        ]
+        stale_deleted, _ = SegmentMembershipCount.objects.filter(
+            id__in=stale_ids,
+        ).delete()
+
         SegmentMembershipCount.objects.bulk_create(
             membership_counts,
             update_conflicts=True,
@@ -171,4 +186,5 @@ def refresh_project_segment_counts(project_id: int) -> None:
             "refresh.project.completed",
             project__id=project_id,
             membership_counts__count=len(membership_counts),
+            stale_counts__count=stale_deleted,
         )

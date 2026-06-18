@@ -80,12 +80,8 @@ logger = logging.getLogger(__name__)
                 type=int,
             )
         ],
-        extensions={
-            "x-gram": {
-                "name": "list_environments",
-                "description": "Lists all environments the user has access to",
-            },
-        },
+        operation_id="list_environments",
+        description="Lists all environments the user has access to",
     ),
 )
 class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]

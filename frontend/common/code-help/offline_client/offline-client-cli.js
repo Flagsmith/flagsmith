@@ -1,5 +1,5 @@
 export default (envId) => `
-npm i flagsmith-cli -g
+npm i @flagsmith/cli -g
 export FLAGSMITH_ENVIRONMENT=${envId}
 flagsmith get
 `
