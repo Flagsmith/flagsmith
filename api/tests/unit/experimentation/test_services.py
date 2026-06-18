@@ -577,8 +577,19 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
 ) -> None:
     # Given the warehouse returns per-variant counts for all four aggregation types
     rows = [
-        ("control",   1000, 100.0, 100.0, 5000.0, 30000.0, 3000.0, 9000.0, 200.0, 500.0),
-        ("variant_a", 1000, 120.0, 120.0, 5200.0, 31000.0, 3200.0, 9500.0, 210.0, 520.0),
+        ("control", 1000, 100.0, 100.0, 5000.0, 30000.0, 3000.0, 9000.0, 200.0, 500.0),
+        (
+            "variant_a",
+            1000,
+            120.0,
+            120.0,
+            5200.0,
+            31000.0,
+            3200.0,
+            9500.0,
+            210.0,
+            520.0,
+        ),
     ]
     mock_client = mocker.Mock()
     mock_client.execute.return_value = rows
@@ -587,10 +598,10 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
         return_value=mock_client,
     )
     specs = [
-        _spec(metric_id=7,  event="purchase",  aggregation=MetricAggregation.OCCURRENCE),
-        _spec(metric_id=9,  event="revenue",   aggregation=MetricAggregation.SUM),
+        _spec(metric_id=7, event="purchase", aggregation=MetricAggregation.OCCURRENCE),
+        _spec(metric_id=9, event="revenue", aggregation=MetricAggregation.SUM),
         _spec(metric_id=11, event="page_view", aggregation=MetricAggregation.COUNT),
-        _spec(metric_id=13, event="session",   aggregation=MetricAggregation.MEAN),
+        _spec(metric_id=13, event="session", aggregation=MetricAggregation.MEAN),
     ]
     window_start = datetime(2026, 6, 1, tzinfo=timezone.utc)
     window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
@@ -656,9 +667,9 @@ def test_get_metric_variant_stats__three_variants__maps_all_variants(
 ) -> None:
     # Given three variants returned from the warehouse
     rows = [
-        ("control",   1000, 100.0, 100.0, 5000.0, 30000.0),
-        ("variant_a",  900,  80.0,  80.0, 4500.0, 25000.0),
-        ("variant_b",  950, 110.0, 110.0, 5100.0, 29000.0),
+        ("control", 1000, 100.0, 100.0, 5000.0, 30000.0),
+        ("variant_a", 900, 80.0, 80.0, 4500.0, 25000.0),
+        ("variant_b", 950, 110.0, 110.0, 5100.0, 29000.0),
     ]
     mock_client = mocker.Mock()
     mock_client.execute.return_value = rows
@@ -668,7 +679,7 @@ def test_get_metric_variant_stats__three_variants__maps_all_variants(
     )
     specs = [
         _spec(metric_id=7, event="purchase", aggregation=MetricAggregation.OCCURRENCE),
-        _spec(metric_id=9, event="revenue",  aggregation=MetricAggregation.SUM),
+        _spec(metric_id=9, event="revenue", aggregation=MetricAggregation.SUM),
     ]
 
     # When
@@ -750,7 +761,10 @@ def test_metric_slot_unit_select__aggregation__builds_expression(
 ) -> None:
     # Given a metric slot for each aggregation type
     # When / Then it produces the correct per-identity unit-value expression
-    assert _MetricSlot(spec=_spec(aggregation=aggregation), index=0).unit_select() == expected
+    assert (
+        _MetricSlot(spec=_spec(aggregation=aggregation), index=0).unit_select()
+        == expected
+    )
 
 
 def test_metric_slot_unit_select__unknown_aggregation__raises() -> None:
