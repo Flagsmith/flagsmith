@@ -17,7 +17,6 @@ const ExperimentDetailPage: FC = () => {
     useParams<ExperimentDetailParams>()
   const history = useHistory()
   const numericId = Number(experimentId)
-  const hasFeature = Utils.getFlagsmithHasFeature('experimental_flags')
 
   const {
     data: experiment,
@@ -25,10 +24,10 @@ const ExperimentDetailPage: FC = () => {
     isLoading,
   } = useGetExperimentQuery(
     { environmentId, experimentId: numericId },
-    { refetchOnMountOrArgChange: true, skip: !hasFeature },
+    { refetchOnMountOrArgChange: true },
   )
 
-  if (!hasFeature) {
+  if (!Utils.getFlagsmithHasFeature('experimental_flags')) {
     history.replace(
       `/project/${projectId}/environment/${environmentId}/features`,
     )
