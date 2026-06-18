@@ -1,9 +1,15 @@
 import { FC } from 'react'
 import { useHistory, useParams } from 'react-router-dom'
 import Utils from 'common/utils/utils'
-import { useGetExperimentQuery } from 'common/services/useExperiment'
+import {
+  useGetExperimentExposuresQuery,
+  useGetExperimentQuery,
+} from 'common/services/useExperiment'
+import { getHeadlineTotal } from 'components/experiments/results/derive'
 import ExperimentDetailHeader from 'components/experiments/results/ExperimentDetailHeader'
 import ExperimentConfiguration from 'components/experiments/results/ExperimentConfiguration'
+import ExperimentSummaryScorecard from 'components/experiments/results/ExperimentSummaryScorecard'
+import ExperimentMetricScorecard from 'components/experiments/results/ExperimentMetricScorecard'
 import ExperimentExposuresPanel from 'components/experiments/results/ExperimentExposuresPanel'
 
 type ExperimentDetailParams = {
@@ -26,6 +32,11 @@ const ExperimentDetailPage: FC = () => {
   } = useGetExperimentQuery(
     { environmentId, experimentId: numericId },
     { refetchOnMountOrArgChange: true, skip: !hasFeature },
+  )
+
+  const { data: exposures } = useGetExperimentExposuresQuery(
+    { environmentId, experimentId: numericId },
+    { skip: !hasFeature },
   )
 
   if (!hasFeature) {
@@ -55,6 +66,10 @@ const ExperimentDetailPage: FC = () => {
     )
   }
 
+  const usersEnrolled = exposures?.payload
+    ? getHeadlineTotal(exposures.payload)
+    : null
+
   return (
     <div className='app-container container mt-4'>
       <ExperimentDetailHeader
@@ -65,6 +80,15 @@ const ExperimentDetailPage: FC = () => {
 
       {experiment.status !== 'created' && (
         <>
+          <h5 className='mb-3 mt-5'>Results</h5>
+          <ExperimentSummaryScorecard
+            experiment={experiment}
+            usersEnrolled={usersEnrolled}
+          />
+
+          <h5 className='mb-3 mt-5'>Analysis</h5>
+          <ExperimentMetricScorecard experiment={experiment} />
+
           <h5 className='mb-3 mt-5'>Exposures</h5>
           <ExperimentExposuresPanel
             environmentId={environmentId}
