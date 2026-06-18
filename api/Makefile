@@ -23,20 +23,12 @@ codeartifact-login:
 		--query authorizationToken --output text) && \
 	printf 'UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws\nUV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD=%s\n' "$$token" > .env-codeartifact
 
-.PHONY: install-pip
-install-pip:
-	python -m pip -q install --upgrade pip
-
-.PHONY: install-uv
-install-uv:
-	python -m pip -q install uv==${UV_VERSION}
-
 .PHONY: install-packages
 install-packages:
 	uv sync --frozen $(opts)
 
 .PHONY: install
-install: install-pip install-uv install-packages
+install: install-packages
 
 .PHONY: lint
 lint:
