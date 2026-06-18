@@ -898,11 +898,20 @@ export class E2EHelpers {
     if (entityName) {
       await this.click(byId(`permissions-${entityName.toLowerCase()}`));
     }
+    // Wait for the permission save (POST/PUT) to commit before closing, so a later read can't race the grant.
+    const savePromise = this.page.waitForResponse(
+      (res) =>
+        res.url().includes('/user-permissions/') &&
+        ['POST', 'PUT'].includes(res.request().method()) &&
+        res.ok(),
+      { timeout: LONG_TIMEOUT },
+    );
     if (permission === 'ADMIN') {
       await this.click(byId(`admin-switch-${level}`));
     } else {
       await this.click(byId(`permission-switch-${permission}`));
     }
+    await savePromise;
     await this.closeModal();
   }
 
