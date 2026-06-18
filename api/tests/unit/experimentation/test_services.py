@@ -8,6 +8,7 @@ from pytest_structlog import StructuredLogCapture
 
 from environments.models import Environment
 from experimentation import services
+from experimentation._results_query import _MetricSlot
 from experimentation.dataclasses import (
     ExposureBucket,
     ExposuresSummary,
@@ -574,10 +575,10 @@ def _aggregates(
 def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     mocker: MockerFixture,
 ) -> None:
-    # Given the warehouse returns per-variant counts and two metrics' sums
+    # Given the warehouse returns per-variant counts for all four aggregation types
     rows = [
-        ("control", 1000, 100.0, 100.0, 5000.0, 30000.0),
-        ("variant_a", 1000, 120.0, 120.0, 5200.0, 31000.0),
+        ("control",   1000, 100.0, 100.0, 5000.0, 30000.0, 3000.0, 9000.0, 200.0, 500.0),
+        ("variant_a", 1000, 120.0, 120.0, 5200.0, 31000.0, 3200.0, 9500.0, 210.0, 520.0),
     ]
     mock_client = mocker.Mock()
     mock_client.execute.return_value = rows
@@ -586,8 +587,10 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
         return_value=mock_client,
     )
     specs = [
-        _spec(metric_id=7, event="purchase", aggregation=MetricAggregation.OCCURRENCE),
-        _spec(metric_id=9, event="revenue", aggregation=MetricAggregation.SUM),
+        _spec(metric_id=7,  event="purchase",  aggregation=MetricAggregation.OCCURRENCE),
+        _spec(metric_id=9,  event="revenue",   aggregation=MetricAggregation.SUM),
+        _spec(metric_id=11, event="page_view", aggregation=MetricAggregation.COUNT),
+        _spec(metric_id=13, event="session",   aggregation=MetricAggregation.MEAN),
     ]
     window_start = datetime(2026, 6, 1, tzinfo=timezone.utc)
     window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
@@ -609,6 +612,12 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     assert aggregates.metric_stats[9]["control"] == VariantStats(
         n=1000, sum=5000.0, sum_squares=30000.0
     )
+    assert aggregates.metric_stats[11]["control"] == VariantStats(
+        n=1000, sum=3000.0, sum_squares=9000.0
+    )
+    assert aggregates.metric_stats[13]["variant_a"] == VariantStats(
+        n=1000, sum=210.0, sum_squares=520.0
+    )
     # And the query joins post-exposure metric events and excludes quarantined
     sql, params = mock_client.execute.call_args.args
     assert "LEFT JOIN events AS m" in sql
@@ -624,11 +633,63 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
         "sumIf(toFloat64OrZero(m.value), m.event = %(metric_1_event)s"
         " AND m.timestamp >= e.first_exposure) AS m1" in sql
     )
+    assert (
+        "countIf(m.event = %(metric_2_event)s AND m.timestamp >= e.first_exposure)"
+        " AS m2" in sql
+    )
+    assert (
+        "if(countIf(m.event = %(metric_3_event)s AND m.timestamp >= e.first_exposure)"
+        " > 0, avgIf(toFloat64OrZero(m.value), m.event = %(metric_3_event)s"
+        " AND m.timestamp >= e.first_exposure), 0) AS m3" in sql
+    )
     assert "sum(m0) AS m0_sum, sum(m0 * m0) AS m0_sum_squares" in sql
-    assert params["metric_events"] == ["purchase", "revenue"]
+    assert params["metric_events"] == ["purchase", "revenue", "page_view", "session"]
     assert params["metric_0_event"] == "purchase"
     assert params["metric_1_event"] == "revenue"
+    assert params["metric_2_event"] == "page_view"
+    assert params["metric_3_event"] == "session"
     assert params["window_end"] == window_end
+
+
+def test_get_metric_variant_stats__three_variants__maps_all_variants(
+    mocker: MockerFixture,
+) -> None:
+    # Given three variants returned from the warehouse
+    rows = [
+        ("control",   1000, 100.0, 100.0, 5000.0, 30000.0),
+        ("variant_a",  900,  80.0,  80.0, 4500.0, 25000.0),
+        ("variant_b",  950, 110.0, 110.0, 5100.0, 29000.0),
+    ]
+    mock_client = mocker.Mock()
+    mock_client.execute.return_value = rows
+    mocker.patch(
+        "experimentation.services._get_clickhouse_client",
+        return_value=mock_client,
+    )
+    specs = [
+        _spec(metric_id=7, event="purchase", aggregation=MetricAggregation.OCCURRENCE),
+        _spec(metric_id=9, event="revenue",  aggregation=MetricAggregation.SUM),
+    ]
+
+    # When
+    aggregates = services.get_metric_variant_stats(
+        environment_key="env-key-123",
+        feature_name="my-feature",
+        window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
+        window_end=datetime(2026, 6, 10, tzinfo=timezone.utc),
+        specs=specs,
+    )
+
+    # Then all three variants are decoded into counts and metric stats
+    assert aggregates.exposure_counts == {
+        "control": 1000,
+        "variant_a": 900,
+        "variant_b": 950,
+    }
+    assert aggregates.metric_stats[7].keys() == {"control", "variant_a", "variant_b"}
+    assert aggregates.metric_stats[9]["variant_b"] == VariantStats(
+        n=950, sum=5100.0, sum_squares=29000.0
+    )
 
 
 def test_get_metric_variant_stats__no_metrics__counts_variants_only(
@@ -665,38 +726,38 @@ def test_get_metric_variant_stats__no_metrics__counts_variants_only(
     [
         (
             MetricAggregation.OCCURRENCE,
-            "countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure) > 0",
+            "countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure) > 0 AS m0",
         ),
         (
             MetricAggregation.COUNT,
-            "countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure)",
+            "countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure) AS m0",
         ),
         (
             MetricAggregation.SUM,
-            "sumIf(toFloat64OrZero(m.value), m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure)",
+            "sumIf(toFloat64OrZero(m.value), m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure) AS m0",
         ),
         (
             MetricAggregation.MEAN,
             "if(countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure) > 0, "
-            "avgIf(toFloat64OrZero(m.value), m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure), 0)",
+            "avgIf(toFloat64OrZero(m.value), m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure), 0) AS m0",
         ),
     ],
     ids=["occurrence", "count", "sum", "mean"],
 )
-def test_metric_value_expression__aggregation__builds_clause(
+def test_metric_slot_unit_select__aggregation__builds_expression(
     aggregation: str,
     expected: str,
 ) -> None:
-    # Given an aggregation
-    # When / Then it maps to its per-identity unit-value expression
-    assert services._metric_value_expression(0, aggregation) == expected
+    # Given a metric slot for each aggregation type
+    # When / Then it produces the correct per-identity unit-value expression
+    assert _MetricSlot(spec=_spec(aggregation=aggregation), index=0).unit_select() == expected
 
 
-def test_metric_value_expression__unknown_aggregation__raises() -> None:
-    # Given an aggregation the query builder does not support
+def test_metric_slot_unit_select__unknown_aggregation__raises() -> None:
+    # Given an aggregation the slot does not support
     # When / Then it refuses rather than silently emitting the wrong clause
     with pytest.raises(ValueError, match="Unsupported metric aggregation"):
-        services._metric_value_expression(0, "median")
+        _MetricSlot(spec=_spec(aggregation="median"), index=0).unit_select()
 
 
 def test_build_results_summary__healthy_arms__infers_each_treatment() -> None:

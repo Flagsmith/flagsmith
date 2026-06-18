@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from experimentation._results_query import _EXPOSURES_CTE, ResultsQueryBuilder
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
@@ -118,24 +119,6 @@ def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
         unique_events_count=int(unique),
     )
 
-
-# Events are delivered at-least-once, so dedup keeps duplicates from inflating
-# counts. Shared by the exposures and results queries.
-_EXPOSURES_CTE = """
-WITH exposures AS (
-    SELECT
-        identifier,
-        if(uniqExact(value) > 1, '', any(value)) AS variant,
-        uniqExact(value) > 1 AS quarantined,
-        min(timestamp) AS first_exposure
-    FROM events
-    WHERE environment_key = %(environment_key)s
-        AND event = %(exposure_event)s
-        AND feature_name = %(feature_name)s
-        AND timestamp >= %(window_start)s
-        AND timestamp < %(window_end)s
-    GROUP BY identifier
-)"""
 
 EXPOSURE_BUCKETS_QUERY = (
     _EXPOSURES_CTE
@@ -248,64 +231,6 @@ def get_exposure_buckets(
     ]
 
 
-def _metric_value_expression(index: int, aggregation: str) -> str:
-    # Post-exposure attribution lives here, not in the JOIN ON: ClickHouse
-    # rejects an ON clause mixing left and right columns in an inequality.
-    condition = (
-        f"m.event = %(metric_{index}_event)s AND m.timestamp >= e.first_exposure"
-    )
-    value = "toFloat64OrZero(m.value)"
-    if aggregation == MetricAggregation.OCCURRENCE:
-        return f"countIf({condition}) > 0"
-    if aggregation == MetricAggregation.COUNT:
-        return f"countIf({condition})"
-    if aggregation == MetricAggregation.SUM:
-        return f"sumIf({value}, {condition})"
-    if aggregation == MetricAggregation.MEAN:
-        # per-identity average, zero when the identity has no matching events
-        return f"if(countIf({condition}) > 0, avgIf({value}, {condition}), 0)"
-    raise ValueError(f"Unsupported metric aggregation: {aggregation}")
-
-
-def _build_results_query(specs: Sequence[MetricSpec]) -> str:
-    if not specs:
-        return (
-            _EXPOSURES_CTE
-            + "\nSELECT variant, count() AS n"
-            + "\nFROM exposures\nWHERE quarantined = 0\nGROUP BY variant"
-        )
-    value_expressions = ",\n        ".join(
-        f"{_metric_value_expression(i, spec.aggregation)} AS m{i}"
-        for i, spec in enumerate(specs)
-    )
-    outer_aggregates = ",\n    ".join(
-        f"sum(m{i}) AS m{i}_sum, sum(m{i} * m{i}) AS m{i}_sum_squares"
-        for i in range(len(specs))
-    )
-    return (
-        _EXPOSURES_CTE
-        + f""",
-unit_values AS (
-    SELECT
-        e.variant AS variant,
-        {value_expressions}
-    FROM exposures AS e
-    LEFT JOIN events AS m
-        ON m.identifier = e.identifier
-        AND m.environment_key = %(environment_key)s
-        AND m.event IN %(metric_events)s
-        AND m.timestamp >= %(window_start)s
-        AND m.timestamp < %(window_end)s
-    WHERE e.quarantined = 0
-    GROUP BY e.identifier, e.variant
-)
-SELECT variant, count() AS n,
-    {outer_aggregates}
-FROM unit_values
-GROUP BY variant"""
-    )
-
-
 def get_metric_variant_stats(
     *,
     environment_key: str,
@@ -316,6 +241,7 @@ def get_metric_variant_stats(
 ) -> ResultsAggregates:
     """Run the warehouse query, returning per-variant identity counts and, per
     metric, per-variant sufficient statistics."""
+    builder = ResultsQueryBuilder(specs)
     params: dict[str, object] = {
         "environment_key": environment_key,
         "exposure_event": EXPOSURE_EVENT_NAME,
@@ -323,30 +249,11 @@ def get_metric_variant_stats(
         "window_start": window_start,
         "window_end": window_end,
     }
-    if specs:
-        params["metric_events"] = [spec.event for spec in specs]
-        for index, spec in enumerate(specs):
-            params[f"metric_{index}_event"] = spec.event
+    builder.add_metric_params(params)
 
-    rows = _get_clickhouse_client().execute(_build_results_query(specs), params)
+    rows = _get_clickhouse_client().execute(builder.build_query(), params)
+    exposure_counts, metric_stats = builder.decode_rows(rows)
 
-    exposure_counts: dict[str, int] = {}
-    metric_stats: dict[int, dict[str, VariantStats]] = {
-        spec.metric_id: {} for spec in specs
-    }
-    for row in rows:
-        # Columns are emitted in query order: variant, n, then a (sum,
-        # sum_squares) pair per spec — consumed positionally in that order.
-        columns = iter(row)
-        variant = next(columns)
-        n = int(next(columns))
-        exposure_counts[variant] = n
-        for spec in specs:
-            metric_stats[spec.metric_id][variant] = VariantStats(
-                n=n,
-                sum=float(next(columns)),
-                sum_squares=float(next(columns)),
-            )
     return ResultsAggregates(
         specs=list(specs),
         exposure_counts=exposure_counts,
