@@ -28,6 +28,7 @@ from experimentation.models import (
     ExperimentStatus,
     Metric,
 )
+from experimentation.serializers import ExperimentFeatureSerializer
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
@@ -1409,3 +1410,50 @@ def test_get_detail__env_level_allocations__returns_environment_percentages(
     options = response.json()["feature"]["multivariate_options"]
     returned_allocs = sorted(o["default_percentage_allocation"] for o in options)
     assert returned_allocs == sorted(env_allocations)
+
+
+@pytest.mark.django_db()
+def test_experiment_feature_serializer__no_environment_context__returns_default_allocations(
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    serializer = ExperimentFeatureSerializer(multivariate_feature, context={})
+
+    # When
+    data = serializer.data
+
+    # Then
+    for option in data["multivariate_options"]:
+        assert option["default_percentage_allocation"] == pytest.approx(
+            multivariate_feature.multivariate_options.get(
+                id=option["id"]
+            ).default_percentage_allocation
+        )
+
+
+@pytest.mark.django_db()
+def test_experiment_feature_serializer__no_env_feature_state__returns_default_allocations(
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    FeatureState.objects.filter(
+        feature=multivariate_feature,
+        environment=environment,
+        identity__isnull=True,
+        feature_segment__isnull=True,
+    ).delete()
+    serializer = ExperimentFeatureSerializer(
+        multivariate_feature, context={"environment": environment}
+    )
+
+    # When
+    data = serializer.data
+
+    # Then
+    for option in data["multivariate_options"]:
+        assert option["default_percentage_allocation"] == pytest.approx(
+            multivariate_feature.multivariate_options.get(
+                id=option["id"]
+            ).default_percentage_allocation
+        )
