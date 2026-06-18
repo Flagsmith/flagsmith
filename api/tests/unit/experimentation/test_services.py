@@ -8,7 +8,6 @@ from pytest_structlog import StructuredLogCapture
 
 from environments.models import Environment
 from experimentation import services
-from experimentation.results_query import _MetricSlot
 from experimentation.dataclasses import (
     ExposureBucket,
     ExposuresSummary,
@@ -24,6 +23,7 @@ from experimentation.models import (
     WarehouseConnectionStatus,
     WarehouseType,
 )
+from experimentation.results_query import _MetricSlot
 from experimentation.stats import VariantStats
 
 
