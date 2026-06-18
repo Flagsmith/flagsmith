@@ -8,6 +8,7 @@ import structlog
 from clickhouse_driver import Client
 from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
+from django.db.models import Q
 from django.utils import timezone
 
 from audit.models import AuditLog
@@ -37,6 +38,7 @@ from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
     ExperimentStatus,
     MetricAggregation,
+    MetricDirection,
     WarehouseConnectionStatus,
     WarehouseType,
 )
@@ -47,6 +49,7 @@ from experimentation.stats import (
     compare_to_control,
     srm_p_value,
 )
+from features.models import FeatureState
 from integrations.flagsmith.client import get_openfeature_client
 
 if typing.TYPE_CHECKING:
@@ -292,6 +295,98 @@ def build_results_summary(
             for spec in aggregates.specs
         ],
     )
+
+
+def compute_results_summary(
+    experiment: "Experiment",
+    *,
+    window_start: "datetime",
+    window_end: "datetime",
+) -> ResultsSummary:
+    """Gather an experiment's metric statistics from the warehouse and reduce
+    them to the stored results payload."""
+    specs = _experiment_metric_specs(experiment)
+    aggregates = get_metric_variant_stats(
+        environment_key=experiment.environment.api_key,
+        feature_name=experiment.feature.name,
+        window_start=window_start,
+        window_end=window_end,
+        specs=specs,
+    )
+    return build_results_summary(
+        aggregates,
+        expected_shares=_expected_variant_shares(experiment),
+    )
+
+
+def _experiment_metric_specs(experiment: "Experiment") -> list[MetricSpec]:
+    return [
+        MetricSpec(
+            metric_id=experiment_metric.metric_id,
+            event=experiment_metric.metric.definition["event"],
+            aggregation=experiment_metric.metric.aggregation,
+            lower_is_better=(
+                experiment_metric.metric.direction == MetricDirection.DOWN
+            ),
+        )
+        for experiment_metric in experiment.experiment_metrics.select_related("metric")
+    ]
+
+
+def _expected_variant_shares(experiment: "Experiment") -> dict[str, float]:
+    """The traffic split SRM tests against: each multivariate option's
+    environment allocation, with ``control`` taking the unallocated remainder.
+    Empty when the feature has no usable allocations, skipping the SRM check."""
+    # TODO: read the split from the percentage-split segment override feature
+    # state once that's implemented, rather than the environment default.
+    feature_state = (
+        FeatureState.objects.get_live_feature_states(
+            environment=experiment.environment,
+            additional_filters=Q(feature_segment__isnull=True, identity__isnull=True),
+            feature_id=experiment.feature_id,
+        )
+        .prefetch_related(
+            "multivariate_feature_state_values__multivariate_feature_option"
+        )
+        # Highest id is the current version, matching how Environment selects
+        # active feature states (Max("id")); the default ordering is ascending.
+        .order_by("-id")
+        .first()
+    )
+    if feature_state is None:
+        return {}
+
+    shares: dict[str, float] = {}
+    allocated = 0.0
+    for mv_value in feature_state.multivariate_feature_state_values.all():
+        key = mv_value.multivariate_feature_option.key
+        if key is None:
+            # An unkeyed option's traffic can't be attributed to a variant;
+            # counting it as control would inflate control's expected share and
+            # raise a false SRM alarm, so skip the check entirely.
+            logger.error(
+                "srm.unkeyed_variant",
+                experiment__id=experiment.id,
+                environment__id=experiment.environment_id,
+                feature__id=experiment.feature_id,
+            )
+            return {}
+        shares[key] = mv_value.percentage_allocation / 100
+        allocated += mv_value.percentage_allocation
+    if not shares:
+        return {}
+    if allocated > 100:
+        # A misconfigured feature whose options over-allocate; control's share
+        # would be negative, so there's no valid split to test against.
+        logger.error(
+            "srm.overallocated",
+            experiment__id=experiment.id,
+            environment__id=experiment.environment_id,
+            feature__id=experiment.feature_id,
+        )
+        return {}
+    shares[CONTROL_VARIANT_KEY] = (100 - allocated) / 100
+    return shares
 
 
 def _metric_inference(

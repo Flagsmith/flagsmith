@@ -10,6 +10,7 @@ variant key."""
 EXPOSURE_HOURLY_BUCKET_MAX_WINDOW = timedelta(hours=72)
 
 EXPOSURES_REFRESH_MIN_INTERVAL = timedelta(minutes=5)
+RESULTS_REFRESH_MIN_INTERVAL = timedelta(minutes=5)
 
 CONTROL_VARIANT_KEY = "control"
 

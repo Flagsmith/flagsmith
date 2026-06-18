@@ -12,6 +12,7 @@ from experimentation.models import (
     Experiment,
     ExperimentExposures,
     ExperimentMetric,
+    ExperimentResults,
     ExperimentStatus,
     Metric,
     WarehouseConnection,
@@ -340,6 +341,28 @@ class ExperimentListSerializer(ExperimentSerializer):
 
 
 class ExperimentExposuresSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    is_final = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = ExperimentExposures
-        fields = ("as_of", "last_error_at", "refresh_requested_at", "payload")
+        fields = (
+            "as_of",
+            "last_error_at",
+            "refresh_requested_at",
+            "payload",
+            "is_final",
+        )
+
+
+class ExperimentResultsSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    is_final = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = ExperimentResults
+        fields = (
+            "as_of",
+            "last_error_at",
+            "refresh_requested_at",
+            "payload",
+            "is_final",
+        )

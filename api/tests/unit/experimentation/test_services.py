@@ -18,13 +18,23 @@ from experimentation.dataclasses import (
     WarehouseEventStats,
 )
 from experimentation.models import (
+    ExpectedDirection,
+    Experiment,
+    ExperimentMetric,
+    ExperimentStatus,
+    Metric,
     MetricAggregation,
+    MetricDirection,
     WarehouseConnection,
     WarehouseConnectionStatus,
     WarehouseType,
 )
 from experimentation.results_query import _MetricSlot
 from experimentation.stats import VariantStats
+from features.feature_types import MULTIVARIATE
+from features.models import Feature, FeatureState
+from features.multivariate.models import MultivariateFeatureOption
+from features.value_types import STRING
 
 
 def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
@@ -1031,3 +1041,263 @@ def test_build_results_summary__computed__serialises_to_wire_shape() -> None:
         "ci_high",
         "chance_to_win",
     }
+
+
+@pytest.mark.django_db
+def test_experiment_metric_specs__attached_metrics__maps_definition_and_direction(
+    experiment: Experiment,
+    environment: Environment,
+) -> None:
+    # Given two metrics attached to the experiment, one lower-is-better
+    higher = Metric.objects.create(
+        environment=environment,
+        name="Revenue",
+        aggregation=MetricAggregation.SUM,
+        direction=MetricDirection.UP,
+        definition={"version": 1, "event": "purchase"},
+    )
+    lower = Metric.objects.create(
+        environment=environment,
+        name="Errors",
+        aggregation=MetricAggregation.COUNT,
+        direction=MetricDirection.DOWN,
+        definition={"version": 1, "event": "error"},
+    )
+    ExperimentMetric.objects.create(
+        experiment=experiment,
+        metric=higher,
+        expected_direction=ExpectedDirection.INCREASE,
+    )
+    ExperimentMetric.objects.create(
+        experiment=experiment,
+        metric=lower,
+        expected_direction=ExpectedDirection.DECREASE,
+    )
+
+    # When
+    specs = services._experiment_metric_specs(experiment)
+
+    # Then each metric maps to its event, aggregation and polarity
+    assert specs == [
+        MetricSpec(
+            metric_id=higher.id,
+            event="purchase",
+            aggregation=MetricAggregation.SUM,
+            lower_is_better=False,
+        ),
+        MetricSpec(
+            metric_id=lower.id,
+            event="error",
+            aggregation=MetricAggregation.COUNT,
+            lower_is_better=True,
+        ),
+    ]
+
+
+def _multivariate_feature(
+    environment: Environment,
+    allocations: dict[str | None, int],
+) -> Feature:
+    feature: Feature = Feature.objects.create(
+        name="results-feature",
+        project=environment.project,
+        type=MULTIVARIATE,
+        initial_value="control",
+    )
+    for key, allocation in allocations.items():
+        MultivariateFeatureOption.objects.create(
+            feature=feature,
+            key=key,
+            default_percentage_allocation=allocation,
+            type=STRING,
+            string_value=key or "unkeyed",
+        )
+    return feature
+
+
+@pytest.mark.django_db
+def test_expected_variant_shares__keyed_options__control_takes_remainder(
+    environment: Environment,
+) -> None:
+    # Given a multivariate feature whose options are allocated 30% and 20%
+    feature = _multivariate_feature(environment, {"variant_a": 30, "variant_b": 20})
+    experiment = Experiment.objects.create(
+        environment=environment,
+        feature=feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.RUNNING,
+    )
+
+    # When
+    shares = services._expected_variant_shares(experiment)
+
+    # Then control takes the unallocated remainder
+    assert shares == pytest.approx({"variant_a": 0.3, "variant_b": 0.2, "control": 0.5})
+
+
+@pytest.mark.django_db
+def test_expected_variant_shares__null_option_keys__returns_empty(
+    experiment: Experiment,
+) -> None:
+    # Given the experiment's multivariate options carry no variant keys
+
+    # When / Then the split can't be described, so SRM is skipped
+    assert services._expected_variant_shares(experiment) == {}
+
+
+@pytest.mark.django_db
+def test_expected_variant_shares__mixed_keyed_and_null_options__returns_empty(
+    environment: Environment,
+    log: StructuredLogCapture,
+) -> None:
+    # Given a multivariate feature with one keyed and one unkeyed option
+    feature = _multivariate_feature(environment, {"variant_a": 30, None: 30})
+    experiment = Experiment.objects.create(
+        environment=environment,
+        feature=feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.RUNNING,
+    )
+
+    # When / Then the unkeyed option's share can't be attributed, so rather than
+    # folding it into control SRM is skipped entirely and the gap is logged
+    assert services._expected_variant_shares(experiment) == {}
+    assert log.has(
+        "srm.unkeyed_variant",
+        level="error",
+        experiment__id=experiment.id,
+        environment__id=experiment.environment_id,
+        feature__id=experiment.feature_id,
+    )
+
+
+@pytest.mark.django_db
+def test_expected_variant_shares__overallocated_options__returns_empty(
+    environment: Environment,
+    log: StructuredLogCapture,
+) -> None:
+    # Given a misconfigured feature whose options allocate more than 100%
+    feature = _multivariate_feature(environment, {"variant_a": 70, "variant_b": 60})
+    experiment = Experiment.objects.create(
+        environment=environment,
+        feature=feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.RUNNING,
+    )
+
+    # When / Then control's share would be negative, so SRM is skipped and logged
+    assert services._expected_variant_shares(experiment) == {}
+    assert log.has(
+        "srm.overallocated",
+        level="error",
+        experiment__id=experiment.id,
+        environment__id=experiment.environment_id,
+        feature__id=experiment.feature_id,
+    )
+
+
+@pytest.mark.django_db
+def test_expected_variant_shares__no_multivariate_options__returns_empty(
+    environment: Environment,
+    feature: Feature,
+) -> None:
+    # Given a standard feature with no multivariate allocations
+    experiment = Experiment.objects.create(
+        environment=environment,
+        feature=feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.RUNNING,
+    )
+
+    # When / Then there is no split to test
+    assert services._expected_variant_shares(experiment) == {}
+
+
+@pytest.mark.django_db
+def test_expected_variant_shares__no_live_feature_state__returns_empty(
+    experiment: Experiment,
+) -> None:
+    # Given the feature has no live state in the environment
+    FeatureState.objects.filter(
+        feature=experiment.feature,
+        environment=experiment.environment,
+    ).delete()
+
+    # When / Then
+    assert services._expected_variant_shares(experiment) == {}
+
+
+@pytest.mark.django_db
+def test_compute_results_summary__experiment__queries_warehouse_and_builds(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given a running experiment with one keyed variant and one attached metric
+    feature = _multivariate_feature(environment, {"variant_a": 50})
+    experiment = Experiment.objects.create(
+        environment=environment,
+        feature=feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.RUNNING,
+    )
+    metric = Metric.objects.create(
+        environment=environment,
+        name="Purchases",
+        aggregation=MetricAggregation.OCCURRENCE,
+        direction=MetricDirection.UP,
+        definition={"version": 1, "event": "purchase"},
+    )
+    ExperimentMetric.objects.create(
+        experiment=experiment,
+        metric=metric,
+        expected_direction=ExpectedDirection.INCREASE,
+    )
+    expected_specs = [
+        _spec(
+            metric_id=metric.id,
+            event="purchase",
+            aggregation=MetricAggregation.OCCURRENCE,
+        )
+    ]
+    aggregates = _aggregates(
+        specs=expected_specs,
+        exposure_counts={"control": 1000, "variant_a": 1000},
+        metric_stats={
+            metric.id: {
+                "control": VariantStats(n=1000, sum=100.0, sum_squares=100.0),
+                "variant_a": VariantStats(n=1000, sum=140.0, sum_squares=140.0),
+            }
+        },
+    )
+    mock_stats = mocker.patch(
+        "experimentation.services.get_metric_variant_stats",
+        return_value=aggregates,
+    )
+    window_start = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
+
+    # When
+    summary = services.compute_results_summary(
+        experiment,
+        window_start=window_start,
+        window_end=window_end,
+    )
+
+    # Then the warehouse is queried with the experiment's metric specs
+    mock_stats.assert_called_once_with(
+        environment_key=environment.api_key,
+        feature_name=feature.name,
+        window_start=window_start,
+        window_end=window_end,
+        specs=expected_specs,
+    )
+    # And the summary carries the metric result with an SRM verdict from the
+    # configured 50/50 split
+    assert summary.srm_p_value == pytest.approx(1.0)
+    assert summary.metrics[0].metric_id == metric.id
+    assert summary.metrics[0].inference["variant_a"] is not None
