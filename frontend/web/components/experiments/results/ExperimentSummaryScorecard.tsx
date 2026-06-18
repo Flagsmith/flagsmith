@@ -1,13 +1,15 @@
 import { FC, useMemo } from 'react'
 import Icon from 'components/icons/Icon'
 import InfoMessage from 'components/InfoMessage'
-import {
-  BayesianResultsSummary,
-  Experiment,
-  Inference,
-} from 'common/types/responses'
+import { BayesianResultsSummary, Experiment } from 'common/types/responses'
 import { getPrimaryMetric } from 'components/experiments/constants'
-import { getVariantIdentities } from './derive'
+import {
+  formatLiftPct,
+  getMetricResult,
+  getVariantIdentities,
+  getWinningVariant,
+  isLiftFavourable,
+} from './derive'
 import StatCard from './StatCard'
 
 type ExperimentSummaryScorecardProps = {
@@ -21,44 +23,28 @@ type SummaryStats = {
   chanceToBest: string
   liftVsControl: string
   liftFavourable: boolean
-} | null
+}
 
 const deriveSummary = (
   experiment: Experiment,
   results: BayesianResultsSummary,
-): SummaryStats => {
+): SummaryStats | null => {
   const metric = getPrimaryMetric(experiment)
   if (!metric) return null
-  const metricResult = results.metrics.find(
-    (m) => m.metric_id === metric.metric,
-  )
+  const metricResult = getMetricResult(results, metric.metric)
   if (!metricResult) return null
 
   const identities = getVariantIdentities(experiment.feature)
-  let best: { name: string; ctw: number; inference: Inference } | null = null
+  const winner = getWinningVariant(metricResult, identities)
+  if (!winner) return null
 
-  identities.forEach((v) => {
-    if (v.isControl) return
-    const inf = metricResult.inference[v.key]
-    if (!inf) return
-    if (!best || inf.chance_to_win > best.ctw) {
-      best = { ctw: inf.chance_to_win, inference: inf, name: v.name }
-    }
-  })
-
-  if (!best) return null
-  const winner = best as { name: string; ctw: number; inference: Inference }
-  const dir = metric.expected_direction
-  const favourable =
-    dir === 'increase' || dir === 'not_decrease'
-      ? winner.inference.lift > 0
-      : winner.inference.lift < 0
   return {
-    chanceToBest: `${Math.round(winner.ctw * 100)}%`,
-    liftFavourable: favourable,
-    liftVsControl: `${winner.inference.lift >= 0 ? '+' : ''}${(
-      winner.inference.lift * 100
-    ).toFixed(1)}%`,
+    chanceToBest: `${Math.round(winner.chancToWin * 100)}%`,
+    liftFavourable: isLiftFavourable(
+      winner.inference.lift,
+      metric.expected_direction,
+    ),
+    liftVsControl: formatLiftPct(winner.inference.lift),
     winnerName: winner.name,
   }
 }
@@ -84,14 +70,7 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
               width={20}
               fill='var(--color-text-success)'
             />
-            <span
-              style={{
-                color: 'var(--color-text-success)',
-                fontWeight: 'var(--font-weight-regular)' as string,
-              }}
-            >
-              Recommendation
-            </span>
+            <span className='text-success fw-normal'>Recommendation</span>
           </div>
           <div>
             {summary.winnerName} is outperforming Control with{' '}
@@ -99,8 +78,7 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
           </div>
         </div>
       ) : (
-        hasResults &&
-        !summary && (
+        hasResults && (
           <InfoMessage title='Collecting data'>
             The experiment is still gathering data. Results will appear once
             there is enough traffic for statistically meaningful analysis.
@@ -121,9 +99,7 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
             loading={!hasResults}
             value={
               summary?.winnerName ? (
-                <span style={{ color: 'var(--color-text-success)' }}>
-                  {summary.winnerName}
-                </span>
+                <span className='text-success'>{summary.winnerName}</span>
               ) : undefined
             }
           />
@@ -142,11 +118,9 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
             value={
               summary?.liftVsControl ? (
                 <span
-                  style={{
-                    color: summary.liftFavourable
-                      ? 'var(--color-text-success)'
-                      : 'var(--color-text-danger)',
-                  }}
+                  className={
+                    summary.liftFavourable ? 'text-success' : 'text-danger'
+                  }
                 >
                   {summary.liftVsControl}
                 </span>

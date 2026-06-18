@@ -9,8 +9,16 @@ import {
   Inference,
   MetricAggregation,
 } from 'common/types/responses'
+import { colorIconSecondary } from 'common/theme/tokens'
 import { getPrimaryMetric } from 'components/experiments/constants'
-import { VariantIdentity, getVariantIdentities } from './derive'
+import {
+  VariantIdentity,
+  formatLiftPct,
+  getMetricResult,
+  getVariantIdentities,
+  getWinningVariant,
+  isLiftFavourable,
+} from './derive'
 import './results.scss'
 
 type ExperimentMetricScorecardProps = {
@@ -25,14 +33,6 @@ const renderMean = (
   if (mean === null) return '—'
   if (aggregation === 'occurrence') return `${(mean * 100).toFixed(1)}%`
   return mean.toFixed(2)
-}
-
-const isLiftFavourable = (
-  lift: number,
-  direction: ExpectedDirection,
-): boolean => {
-  if (direction === 'increase' || direction === 'not_decrease') return lift > 0
-  return lift < 0
 }
 
 const liftColour = (lift: number, direction: ExpectedDirection): string =>
@@ -183,6 +183,7 @@ const SharedAxisChart: FC<{
   )
 }
 
+// Fixed ±30% scale for the inline table bar; SharedAxisChart uses a dynamic range.
 const LIFT_RANGE = 0.3
 const liftToPercent = (value: number): number =>
   Math.max(0, Math.min(100, ((value / LIFT_RANGE + 1) / 2) * 100))
@@ -198,7 +199,6 @@ const renderLift = (
   if (!inference) {
     return <span className='text-muted fs-caption'>Collecting data…</span>
   }
-  const liftPct = inference.lift * 100
   const colour = liftColour(inference.lift, direction)
   const left = liftToPercent(inference.ci_low)
   const right = liftToPercent(inference.ci_high)
@@ -225,8 +225,7 @@ const renderLift = (
         className='experiment-results__lift-value'
         style={{ color: colour }}
       >
-        {liftPct >= 0 ? '+' : ''}
-        {liftPct.toFixed(1)}%
+        {formatLiftPct(inference.lift)}
       </span>
     </div>
   )
@@ -276,23 +275,21 @@ const ExperimentMetricScorecard: FC<ExperimentMetricScorecardProps> = ({
   results,
 }) => {
   const metric = getPrimaryMetric(experiment)
-  const identities = getVariantIdentities(experiment.feature)
-  const metricResult = metric
-    ? results?.metrics.find((m) => m.metric_id === metric.metric)
-    : undefined
+  const identities = useMemo(
+    () => getVariantIdentities(experiment.feature),
+    [experiment.feature],
+  )
+  const metricResult = useMemo(
+    () =>
+      metric && results ? getMetricResult(results, metric.metric) : undefined,
+    [metric, results],
+  )
   const srmBroken =
     !!results && results.srm_p_value !== null && results.srm_p_value < 0.001
 
-  const highestCtw = identities.reduce<{
-    key: string | null
-    value: number
-  }>(
-    (best, v) => {
-      if (v.isControl) return best
-      const ctw = metricResult?.inference[v.key]?.chance_to_win ?? 0
-      return ctw > best.value ? { key: v.key, value: ctw } : best
-    },
-    { key: null, value: 0 },
+  const winner = useMemo(
+    () => (metricResult ? getWinningVariant(metricResult, identities) : null),
+    [metricResult, identities],
   )
 
   const axisRange = useMemo(
@@ -337,7 +334,11 @@ const ExperimentMetricScorecard: FC<ExperimentMetricScorecardProps> = ({
                   title={
                     <span className='d-inline-flex align-items-center gap-1'>
                       Delta
-                      <Icon name='info-outlined' width={16} fill='#9DA4AE' />
+                      <Icon
+                        name='info-outlined'
+                        width={16}
+                        fill={colorIconSecondary}
+                      />
                     </span>
                   }
                 >
@@ -350,7 +351,11 @@ const ExperimentMetricScorecard: FC<ExperimentMetricScorecardProps> = ({
                   title={
                     <span className='d-inline-flex align-items-center gap-1'>
                       Credible Interval (95%)
-                      <Icon name='info-outlined' width={16} fill='#9DA4AE' />
+                      <Icon
+                        name='info-outlined'
+                        width={16}
+                        fill={colorIconSecondary}
+                      />
                     </span>
                   }
                 >
@@ -380,11 +385,7 @@ const ExperimentMetricScorecard: FC<ExperimentMetricScorecardProps> = ({
                   <td>{renderLift(v, inference, metric.expected_direction)}</td>
                   <td>{renderCI(v, inference)}</td>
                   <td>
-                    {renderWinProbability(
-                      v,
-                      inference,
-                      v.key === highestCtw.key,
-                    )}
+                    {renderWinProbability(v, inference, v.key === winner?.key)}
                   </td>
                 </tr>
               )

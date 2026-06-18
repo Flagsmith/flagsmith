@@ -1,9 +1,13 @@
 import moment from 'moment'
 import { ChartDataPoint, buildChartColorMap } from 'components/charts'
 import {
+  BayesianMetricResult,
+  BayesianResultsSummary,
+  ExpectedDirection,
   ExperimentFeature,
   ExposureGranularity,
   ExposuresSummary,
+  Inference,
   MultivariateOption,
 } from 'common/types/responses'
 
@@ -105,6 +109,53 @@ export const getHeadlineTotal = (summary: ExposuresSummary): number =>
       sum + Object.values(point.new_identities).reduce((a, b) => a + b, 0),
     0,
   )
+
+export const isLiftFavourable = (
+  lift: number,
+  direction: ExpectedDirection,
+): boolean => {
+  if (direction === 'increase' || direction === 'not_decrease') return lift > 0
+  return lift < 0
+}
+
+export const formatLiftPct = (lift: number): string => {
+  const pct = lift * 100
+  return `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`
+}
+
+export const getMetricResult = (
+  results: BayesianResultsSummary,
+  metricId: number,
+): BayesianMetricResult | undefined =>
+  results.metrics.find((m) => m.metric_id === metricId)
+
+export type WinningVariant = {
+  key: string
+  name: string
+  chancToWin: number
+  inference: Inference
+}
+
+export const getWinningVariant = (
+  metricResult: BayesianMetricResult,
+  identities: VariantIdentity[],
+): WinningVariant | null => {
+  let best: WinningVariant | null = null
+  identities.forEach((v) => {
+    if (v.isControl) return
+    const inf = metricResult.inference[v.key]
+    if (!inf) return
+    if (!best || inf.chance_to_win > best.chancToWin) {
+      best = {
+        chancToWin: inf.chance_to_win,
+        inference: inf,
+        key: v.key,
+        name: v.name,
+      }
+    }
+  })
+  return best
+}
 
 export type VariantTotal = {
   key: string
