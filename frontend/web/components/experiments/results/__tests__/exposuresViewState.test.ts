@@ -1,8 +1,6 @@
 import {
-  REFRESH_POLL_INTERVAL_MS,
   canRefreshExposures,
   deriveExposuresViewState,
-  getRefreshPollInterval,
 } from 'components/experiments/results/exposuresViewState'
 import { ExperimentExposures, ExperimentStatus } from 'common/types/responses'
 
@@ -26,38 +24,35 @@ const loaded = exposures({
 
 describe('deriveExposuresViewState', () => {
   it('is empty when there is no payload and nothing in flight', () => {
-    expect(deriveExposuresViewState(exposures(), 'running').kind).toBe('empty')
+    expect(deriveExposuresViewState(exposures()).kind).toBe('empty')
   })
 
   it('is loaded when a payload is present and fresh', () => {
-    expect(deriveExposuresViewState(loaded, 'running').kind).toBe('loaded')
+    expect(deriveExposuresViewState(loaded).kind).toBe('loaded')
   })
 
   it('is refreshing when a request is newer than the last result', () => {
-    const state = deriveExposuresViewState(
-      { ...loaded, refresh_requested_at: '2026-06-12T11:00:00Z' },
-      'running',
-    )
+    const state = deriveExposuresViewState({
+      ...loaded,
+      refresh_requested_at: '2026-06-12T11:00:00Z',
+    })
     expect(state.kind).toBe('refreshing')
   })
 
   it('is error when the last error is newer than as_of, preserving stale payload', () => {
-    const state = deriveExposuresViewState(
-      { ...loaded, last_error_at: '2026-06-12T12:00:00Z' },
-      'running',
-    )
+    const state = deriveExposuresViewState({
+      ...loaded,
+      last_error_at: '2026-06-12T12:00:00Z',
+    })
     expect(state).toEqual({ kind: 'error', staleAvailable: true })
   })
 
   it('prefers refreshing over a prior error', () => {
-    const state = deriveExposuresViewState(
-      {
-        ...loaded,
-        last_error_at: '2026-06-12T12:00:00Z',
-        refresh_requested_at: '2026-06-12T13:00:00Z',
-      },
-      'running',
-    )
+    const state = deriveExposuresViewState({
+      ...loaded,
+      last_error_at: '2026-06-12T12:00:00Z',
+      refresh_requested_at: '2026-06-12T13:00:00Z',
+    })
     expect(state.kind).toBe('refreshing')
   })
 })
@@ -78,27 +73,5 @@ describe('canRefreshExposures', () => {
       canRefresh: false,
       reason: 'final',
     })
-  })
-})
-
-describe('getRefreshPollInterval', () => {
-  it('polls while a refresh is in flight', () => {
-    const state = deriveExposuresViewState(
-      { ...loaded, refresh_requested_at: '2026-06-12T11:00:00Z' },
-      'running',
-    )
-    expect(getRefreshPollInterval(state)).toBe(REFRESH_POLL_INTERVAL_MS)
-  })
-
-  it('does not poll when loaded', () => {
-    expect(
-      getRefreshPollInterval(deriveExposuresViewState(loaded, 'running')),
-    ).toBe(0)
-  })
-
-  it('does not poll when empty', () => {
-    expect(
-      getRefreshPollInterval(deriveExposuresViewState(exposures(), 'running')),
-    ).toBe(0)
   })
 })

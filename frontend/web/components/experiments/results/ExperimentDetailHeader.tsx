@@ -13,6 +13,7 @@ import {
   useUpdateExperimentMutation,
 } from 'common/services/useExperiment'
 import { Experiment } from 'common/types/responses'
+import { getPrimaryMetric } from 'components/experiments/constants'
 import 'components/base/SelectableCard/SelectableCard.scss'
 import './results.scss'
 
@@ -128,7 +129,7 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
     }
   }
 
-  const metric = experiment.metrics[0]
+  const metric = getPrimaryMetric(experiment)
   const metricName = metric?.metric_name
   const startedFact = experiment.started_at
     ? `started ${moment(experiment.started_at).format('D MMM YYYY')}`

@@ -26,7 +26,6 @@ const hasError = (e: ExperimentExposures): boolean =>
 
 export const deriveExposuresViewState = (
   exposures: ExperimentExposures | null | undefined,
-  _status: ExperimentStatus,
 ): ExposuresViewState => {
   if (!exposures) return { kind: 'empty' }
   if (isRefreshing(exposures)) return { kind: 'refreshing' }
@@ -36,9 +35,6 @@ export const deriveExposuresViewState = (
   if (exposures.payload) return { kind: 'loaded' }
   return { kind: 'empty' }
 }
-
-export const getRefreshPollInterval = (state: ExposuresViewState): number =>
-  state.kind === 'refreshing' ? REFRESH_POLL_INTERVAL_MS : 0
 
 export const canRefreshExposures = (
   status: ExperimentStatus,

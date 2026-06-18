@@ -135,11 +135,11 @@ const HomePage: React.FC = () => {
 
     if (document.location.href.indexOf('invite') !== -1) {
       const invite = params.redirect
-      if (invite.includes('invite-link')) {
+      if (invite?.includes('invite-link')) {
         const id = invite.split('invite-link/')[1]
         API.setInviteType('INVITE_LINK')
         API.setInvite(id)
-      } else if (invite.includes('invite')) {
+      } else if (invite?.includes('invite')) {
         const id = invite.split('invite/')[1]
         API.setInviteType('INVITE_EMAIL')
         API.setInvite(id)

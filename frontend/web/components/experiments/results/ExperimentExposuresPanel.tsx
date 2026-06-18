@@ -57,7 +57,7 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
   const [refresh, { isLoading: isSubmitting }] =
     useRefreshExperimentExposuresMutation()
 
-  const viewState = deriveExposuresViewState(exposures, experiment.status)
+  const viewState = deriveExposuresViewState(exposures)
   const availability = canRefreshExposures(experiment.status, exposures)
   const payload = exposures?.payload ?? null
 

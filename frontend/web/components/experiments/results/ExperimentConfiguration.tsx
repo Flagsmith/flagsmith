@@ -2,6 +2,7 @@ import { FC, useMemo } from 'react'
 import ContentCard from 'components/base/grid/ContentCard'
 import ColorSwatch from 'components/ColorSwatch'
 import { Experiment, ExpectedDirection } from 'common/types/responses'
+import { getPrimaryMetric } from 'components/experiments/constants'
 import { getVariantIdentities } from './derive'
 import './results.scss'
 
@@ -19,7 +20,7 @@ type ExperimentConfigurationProps = {
 const ExperimentConfiguration: FC<ExperimentConfigurationProps> = ({
   experiment,
 }) => {
-  const metric = experiment.metrics[0]
+  const metric = getPrimaryMetric(experiment)
   const identities = useMemo(
     () => getVariantIdentities(experiment.feature),
     [experiment.feature],
