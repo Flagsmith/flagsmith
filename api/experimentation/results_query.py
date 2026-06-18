@@ -157,10 +157,8 @@ GROUP BY variant"""
     ) -> tuple[dict[str, int], dict[int, dict[str, VariantStats]]]:
         """Decode raw ClickHouse rows into exposure counts and per-metric stats.
 
-        Columns are located by name (from the query's column metadata), so decode
-        is independent of SELECT order: a reordered or inserted column can't
-        silently misalign, and a missing one raises KeyError rather than reading a
-        neighbour's value.
+        Columns are located by name, so a missing one raises KeyError rather than
+        silently reading a neighbour's value.
         """
         index = {name: position for position, name in enumerate(column_names)}
         exposure_counts: dict[str, int] = {}
