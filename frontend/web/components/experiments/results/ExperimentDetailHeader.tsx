@@ -30,7 +30,8 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
   const [pauseExperiment] = usePauseExperimentMutation()
   const [completeExperiment] = useCompleteExperimentMutation()
   const [deleteExperiment] = useDeleteExperimentMutation()
-  const [updateExperiment] = useUpdateExperimentMutation()
+  const [updateExperiment, { isLoading: isUpdating }] =
+    useUpdateExperimentMutation()
 
   const [isEditingHypothesis, setIsEditingHypothesis] = useState(false)
   const [hypothesisDraft, setHypothesisDraft] = useState('')
@@ -113,6 +114,7 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
   }
 
   const commitHypothesis = async () => {
+    if (isUpdating) return
     const trimmed = hypothesisDraft.trim()
     if (trimmed === (experiment.hypothesis ?? '')) {
       setIsEditingHypothesis(false)
@@ -184,6 +186,7 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
           <div className='d-flex align-items-start gap-2 mt-1'>
             <textarea
               autoFocus
+              disabled={isUpdating}
               className='form-control'
               rows={3}
               value={hypothesisDraft}

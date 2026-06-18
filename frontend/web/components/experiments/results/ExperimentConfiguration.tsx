@@ -26,7 +26,7 @@ const ExperimentConfiguration: FC<ExperimentConfigurationProps> = ({
     [experiment.feature],
   )
 
-  const treatmentTotal = experiment.feature.multivariate_options.reduce(
+  const treatmentTotal = (experiment.feature.multivariate_options ?? []).reduce(
     (sum, mv) => sum + mv.default_percentage_allocation,
     0,
   )

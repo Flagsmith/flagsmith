@@ -37,7 +37,9 @@ export const experimentService = service
         }),
       }),
       getExperiment: builder.query<Res['experiment'], Req['getExperiment']>({
-        providesTags: (res) => [{ id: res?.id, type: 'Experiment' }],
+        providesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'Experiment' },
+        ],
         query: ({ environmentId, experimentId }) => ({
           url: `environments/${environmentId}/experiments/${experimentId}/`,
         }),
@@ -101,8 +103,8 @@ export const experimentService = service
         Res['experiment'],
         Req['updateExperiment']
       >({
-        invalidatesTags: (res) => [
-          { id: res?.id, type: 'Experiment' },
+        invalidatesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'Experiment' },
           { id: 'LIST', type: 'Experiment' },
         ],
         query: ({ body, environmentId, experimentId }) => ({

@@ -58,7 +58,7 @@ const ExperimentsPage: FC = () => {
   const hasWarehouse = (warehouseConnections?.length ?? 0) > 0
   const experiments = experimentsData?.results
     ?.slice()
-    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    ?.sort((a, b) => b.created_at.localeCompare(a.created_at))
   const experimentCount = experimentsData?.count ?? 0
   const statusCounts = experimentsData?.status_counts
 
