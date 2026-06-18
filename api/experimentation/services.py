@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
-from experimentation._results_query import _EXPOSURES_CTE, ResultsQueryBuilder
+from experimentation.results_query import _EXPOSURES_CTE, ResultsQueryBuilder
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
