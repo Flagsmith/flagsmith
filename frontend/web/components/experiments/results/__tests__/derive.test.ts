@@ -65,8 +65,8 @@ describe('getVariantIdentities', () => {
     )
     expect(result.map((v) => [v.key, v.name, v.value, v.isControl])).toEqual([
       ['control', 'Control', 'off', true],
-      ['variant_b', 'Variant A', 'big', false],
-      ['variant_c', 'Variant B', 'huge', false],
+      ['variant_b', 'variant_b', 'big', false],
+      ['variant_c', 'variant_c', 'huge', false],
     ])
   })
 
@@ -137,8 +137,8 @@ describe('buildExposuresChartData', () => {
       identities,
     )
     expect(seriesLabels).toEqual({
-      b: 'Variant A',
-      c: 'Variant B',
+      b: 'b',
+      c: 'c',
       control: 'Control',
     })
     expect(Object.keys(colorMap).sort()).toEqual(['b', 'c', 'control'])
