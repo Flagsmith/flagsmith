@@ -18,17 +18,6 @@ export type VariantIdentity = {
   isControl: boolean
 }
 
-// "A", "B", ... "Z", "AA", ... — matches VariationTable's getVariantLetter.
-const getVariantLetter = (index: number): string => {
-  let result = ''
-  let n = index
-  do {
-    result = String.fromCharCode(65 + (n % 26)) + result
-    n = Math.floor(n / 26) - 1
-  } while (n >= 0)
-  return result
-}
-
 const getVariationValue = (mv: MultivariateOption): string => {
   if (mv.type === 'int') return String(mv.integer_value ?? '')
   if (mv.type === 'bool') return String(mv.boolean_value ?? '')
@@ -41,7 +30,7 @@ export const getVariantIdentities = (
   const options = feature.multivariate_options ?? []
   const keys = [
     CONTROL_VARIANT_KEY,
-    ...options.map((mv, i) => mv.key ?? `variant-${i}`),
+    ...options.map((mv, i) => mv.key ?? `Variant_${i + 1}`),
   ]
   const colourMap = buildChartColorMap(keys)
   const control: VariantIdentity = {
@@ -52,12 +41,12 @@ export const getVariantIdentities = (
     value: feature.initial_value ?? '',
   }
   const treatments: VariantIdentity[] = options.map((mv, i) => {
-    const key = mv.key ?? `variant-${i}`
+    const key = mv.key ?? `Variant_${i + 1}`
     return {
       colour: colourMap[key],
       isControl: false,
       key,
-      name: mv.key || `Variant ${getVariantLetter(i)}`,
+      name: key,
       value: getVariationValue(mv),
     }
   })

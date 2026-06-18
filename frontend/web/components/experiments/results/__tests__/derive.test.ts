@@ -91,7 +91,11 @@ describe('getVariantIdentities', () => {
         ],
       }),
     )
-    expect(result[1]).toMatchObject({ key: 'variant-0', value: '42' })
+    expect(result[1]).toMatchObject({
+      key: 'Variant_1',
+      name: 'Variant_1',
+      value: '42',
+    })
   })
 })
 
