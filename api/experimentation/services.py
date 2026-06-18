@@ -251,8 +251,12 @@ def get_metric_variant_stats(
     }
     builder.add_metric_params(params)
 
-    rows = _get_clickhouse_client().execute(builder.build_query(), params)
-    exposure_counts, metric_stats = builder.decode_rows(rows)
+    rows, columns = _get_clickhouse_client().execute(
+        builder.build_query(), params, with_column_types=True
+    )
+    exposure_counts, metric_stats = builder.decode_rows(
+        rows, [name for name, _type in columns]
+    )
 
     return ResultsAggregates(
         specs=list(specs),

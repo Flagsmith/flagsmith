@@ -10,7 +10,7 @@ ResultsQueryBuilder owns the slots and provides build_query() + decode_rows(),
 so the same objects drive both phases and ordering can't diverge between them.
 """
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -101,12 +101,14 @@ class _MetricSlot:
         a = self._alias
         return f"sum({a}) AS {a}_sum, sum({a} * {a}) AS {a}_sum_squares"
 
-    def decode(self, n: int, columns: Iterator[Any]) -> VariantStats:
-        """Consume this slot's two columns (sum, sum_squares) from a row iterator."""
+    def decode(
+        self, n: int, row: Sequence[Any], index: dict[str, int]
+    ) -> VariantStats:
+        """Read this slot's two columns (sum, sum_squares) from a row by name."""
         return VariantStats(
             n=n,
-            sum=float(next(columns)),
-            sum_squares=float(next(columns)),
+            sum=float(row[index[f"{self._alias}_sum"]]),
+            sum_squares=float(row[index[f"{self._alias}_sum_squares"]]),
         )
 
 
@@ -150,18 +152,24 @@ GROUP BY variant"""
             params[f"metric_{slot.index}_event"] = slot.spec.event
 
     def decode_rows(
-        self, rows: list[Any]
+        self, rows: list[Any], column_names: Sequence[str]
     ) -> tuple[dict[str, int], dict[int, dict[str, VariantStats]]]:
-        """Decode raw ClickHouse rows into exposure counts and per-metric stats."""
+        """Decode raw ClickHouse rows into exposure counts and per-metric stats.
+
+        Columns are located by name (from the query's column metadata), so decode
+        is independent of SELECT order: a reordered or inserted column can't
+        silently misalign, and a missing one raises KeyError rather than reading a
+        neighbour's value.
+        """
+        index = {name: position for position, name in enumerate(column_names)}
         exposure_counts: dict[str, int] = {}
         metric_stats: dict[int, dict[str, VariantStats]] = {
             slot.spec.metric_id: {} for slot in self._slots
         }
         for row in rows:
-            columns = iter(row)
-            variant = str(next(columns))
-            n = int(next(columns))
+            variant = str(row[index["variant"]])
+            n = int(row[index["n"]])
             exposure_counts[variant] = n
             for slot in self._slots:
-                metric_stats[slot.spec.metric_id][variant] = slot.decode(n, columns)
+                metric_stats[slot.spec.metric_id][variant] = slot.decode(n, row, index)
         return exposure_counts, metric_stats

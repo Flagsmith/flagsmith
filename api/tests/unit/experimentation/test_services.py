@@ -572,6 +572,16 @@ def _aggregates(
     )
 
 
+def _result_columns(metric_count: int) -> list[tuple[str, str]]:
+    """The `(name, type)` metadata clickhouse-driver returns for the results
+    query with `with_column_types=True`, in SELECT order."""
+    columns = [("variant", "String"), ("n", "UInt64")]
+    for i in range(metric_count):
+        columns.append((f"m{i}_sum", "Float64"))
+        columns.append((f"m{i}_sum_squares", "Float64"))
+    return columns
+
+
 def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     mocker: MockerFixture,
 ) -> None:
@@ -592,7 +602,7 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
         ),
     ]
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = rows
+    mock_client.execute.return_value = (rows, _result_columns(4))
     mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
@@ -672,7 +682,7 @@ def test_get_metric_variant_stats__three_variants__maps_all_variants(
         ("variant_b", 950, 110.0, 110.0, 5100.0, 29000.0),
     ]
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = rows
+    mock_client.execute.return_value = (rows, _result_columns(2))
     mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
@@ -708,7 +718,10 @@ def test_get_metric_variant_stats__no_metrics__counts_variants_only(
 ) -> None:
     # Given an experiment with no attached metrics
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = [("control", 1000), ("variant_a", 900)]
+    mock_client.execute.return_value = (
+        [("control", 1000), ("variant_a", 900)],
+        _result_columns(0),
+    )
     mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
@@ -730,6 +743,50 @@ def test_get_metric_variant_stats__no_metrics__counts_variants_only(
     assert "SELECT variant, count() AS n" in sql
     assert "LEFT JOIN" not in sql
     assert "metric_events" not in params
+
+
+def test_get_metric_variant_stats__shuffled_columns__maps_by_name(
+    mocker: MockerFixture,
+) -> None:
+    # Given column metadata in a different order than the natural SELECT, with
+    # each row's values laid out to match that shuffled order
+    columns = [
+        ("m1_sum_squares", "Float64"),
+        ("variant", "String"),
+        ("m0_sum", "Float64"),
+        ("n", "UInt64"),
+        ("m1_sum", "Float64"),
+        ("m0_sum_squares", "Float64"),
+    ]
+    rows = [(30000.0, "control", 100.0, 1000, 5000.0, 100.0)]
+    mock_client = mocker.Mock()
+    mock_client.execute.return_value = (rows, columns)
+    mocker.patch(
+        "experimentation.services._get_clickhouse_client",
+        return_value=mock_client,
+    )
+    specs = [
+        _spec(metric_id=7, event="purchase", aggregation=MetricAggregation.OCCURRENCE),
+        _spec(metric_id=9, event="revenue", aggregation=MetricAggregation.SUM),
+    ]
+
+    # When
+    aggregates = services.get_metric_variant_stats(
+        environment_key="env-key-123",
+        feature_name="my-feature",
+        window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
+        window_end=datetime(2026, 6, 10, tzinfo=timezone.utc),
+        specs=specs,
+    )
+
+    # Then values are decoded by column name, not position
+    assert aggregates.exposure_counts == {"control": 1000}
+    assert aggregates.metric_stats[7]["control"] == VariantStats(
+        n=1000, sum=100.0, sum_squares=100.0
+    )
+    assert aggregates.metric_stats[9]["control"] == VariantStats(
+        n=1000, sum=5000.0, sum_squares=30000.0
+    )
 
 
 @pytest.mark.parametrize(
