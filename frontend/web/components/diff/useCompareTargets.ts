@@ -101,9 +101,16 @@ const useCompareTargets = ({
     if (!envResults?.length) {
       return []
     }
-    const segmentName = (segmentId: number) =>
-      segments?.results?.find((s) => s.id === segmentId)?.name ||
-      `Segment ${segmentId}`
+    // Until the segments have loaded, show an ellipsis rather than the raw id.
+    const segmentName = (segmentId: number) => {
+      if (!segments?.results) {
+        return '…'
+      }
+      return (
+        segments.results.find((s) => s.id === segmentId)?.name ||
+        `Segment ${segmentId}`
+      )
+    }
     // The featurestates endpoint returns feature_state_value as a typed
     // object, so convert it to a primitive before comparing/rendering.
     const toValue = (fs: FeatureState): FlagsmithValue =>
@@ -147,7 +154,11 @@ const useCompareTargets = ({
         out.push({
           enabled: !!s.enabled,
           group: 'Segment Overrides',
-          label: `${env.name} › ${segmentName(segId)}`,
+          // Only other environments need the environment name to disambiguate;
+          // the current environment's overrides stand on their own.
+          label: isCurrent
+            ? segmentName(segId)
+            : `${env.name} › ${segmentName(segId)}`,
           value: toValue(s),
         })
       })
@@ -170,7 +181,7 @@ const useCompareTargets = ({
     sourceSegmentId,
   ])
 
-  return { isLoading, targets }
+  return { isLoading: isLoading || !segments?.results, targets }
 }
 
 export default useCompareTargets

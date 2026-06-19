@@ -1,7 +1,6 @@
 import React, { FC, useState } from 'react'
 import InfoMessage from 'components/InfoMessage'
-import DiffString from './DiffString'
-import DiffEnabled from './DiffEnabled'
+import DiffFeatureStateValues from './DiffFeatureStateValues'
 import useCompareTargets, {
   CompareSource,
   CompareTarget,
@@ -14,8 +13,6 @@ type CompareSegmentOverrideType = {
   source: CompareTarget
   sourceDescriptor: CompareSource
 }
-
-const enabledWidth = 110
 
 const hasDifference = (source: CompareTarget, target: CompareTarget) =>
   source.enabled !== target.enabled || `${source.value}` !== `${target.value}`
@@ -83,37 +80,10 @@ const CompareSegmentOverride: FC<CompareSegmentOverrideType> = ({
       )
     }
     return (
-      <div className='panel-content'>
-        <div className='search-list mt-2'>
-          <div className='flex-row gap-5 table-header'>
-            <div
-              style={{ width: enabledWidth }}
-              className='table-column flex-row text-center'
-            >
-              Enabled
-            </div>
-            <div className='table-column flex-row flex flex-1'>Value</div>
-          </div>
-          <div className='flex-row pt-4 gap-5 list-item list-item-sm'>
-            <div
-              style={{ width: enabledWidth }}
-              className='table-column text-center'
-            >
-              <div className='d-flex flex-row'>
-                <DiffEnabled
-                  oldValue={target.enabled}
-                  newValue={source.enabled}
-                />
-              </div>
-            </div>
-            <div className='table-column flex flex-1 overflow-hidden'>
-              <div>
-                <DiffString oldValue={target.value} newValue={source.value} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DiffFeatureStateValues
+        enabled={{ newValue: source.enabled, oldValue: target.enabled }}
+        value={{ newValue: source.value, oldValue: target.value }}
+      />
     )
   }
 
