@@ -42,10 +42,16 @@ const OnboardingFlow: FC = () => {
         ? `/organisation/${organisationId}/projects`
         : '/',
     )
-  // The flag name drives the connect-panel snippets/prompt. Default to the
-  // bootstrapped flag (its real name, reused on revisit); a rename is shown
-  // optimistically and reverted if the persist fails.
+  // Inline renames are optimistic and revert if the persist fails. The flag name
+  // also drives the connect-panel snippets/prompt, so it defaults to the
+  // bootstrapped flag (its real name, reused on revisit).
+  const [renamedOrganisation, setRenamedOrganisation] = useState<string | null>(
+    null,
+  )
+  const [renamedProject, setRenamedProject] = useState<string | null>(null)
   const [renamedFeature, setRenamedFeature] = useState<string | null>(null)
+  const organisationDisplayName = renamedOrganisation ?? organisationName
+  const projectDisplayName = renamedProject ?? projectName
   const featureName = renamedFeature ?? bootstrappedFeatureName
   const { isReady: flagReady, rename: renameFlag } = useOnboardingFlagRename({
     environment,
@@ -53,16 +59,37 @@ const OnboardingFlow: FC = () => {
     projectId,
   })
 
-  // Persist inline renames. Org/project are single-field PATCHes; the chip owns
-  // the optimistic display (the shell nav adopts the new names on its next load).
-  const renameOrganisation = (name: string) => {
-    if (organisationId !== null) {
-      updateOrganisation({ body: { name }, id: organisationId })
+  // Org/project are single-field PATCHes; the shell nav adopts the new names on
+  // its next load.
+  const renameOrganisation = async (name: string) => {
+    if (organisationId === null) {
+      return
+    }
+    const previous = organisationDisplayName
+    setRenamedOrganisation(name)
+    try {
+      await updateOrganisation({ body: { name }, id: organisationId }).unwrap()
+      toast('Organisation name updated')
+    } catch {
+      setRenamedOrganisation(previous)
+      toast(
+        'Couldn’t update your organisation name. Please try again.',
+        'danger',
+      )
     }
   }
-  const renameProject = (name: string) => {
-    if (projectId !== null) {
-      updateProject({ body: { name }, id: projectId })
+  const renameProject = async (name: string) => {
+    if (projectId === null) {
+      return
+    }
+    const previous = projectDisplayName
+    setRenamedProject(name)
+    try {
+      await updateProject({ body: { name }, id: projectId }).unwrap()
+      toast('Project name updated')
+    } catch {
+      setRenamedProject(previous)
+      toast('Couldn’t update your project name. Please try again.', 'danger')
     }
   }
   // The flag and its snippet name must stay in lockstep, so this persists
@@ -70,7 +97,9 @@ const OnboardingFlow: FC = () => {
   const renameFeature = async (name: string) => {
     const previous = featureName
     setRenamedFeature(name)
-    if (!(await renameFlag(name))) {
+    if (await renameFlag(name)) {
+      toast('Flag name updated')
+    } else {
       setRenamedFeature(previous)
       // Only surface an error for a genuine failure - a rename attempted before
       // the flag query settles also returns false, and shouldn't alarm the user.
@@ -109,8 +138,8 @@ const OnboardingFlow: FC = () => {
         <ThemeToggle />
       </div>
       <OnboardingHeader
-        organisationName={organisationName}
-        projectName={projectName}
+        organisationName={organisationDisplayName}
+        projectName={projectDisplayName}
         featureName={featureName}
         caseSensitive={caseSensitive}
         onRenameOrganisation={renameOrganisation}
