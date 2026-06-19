@@ -2,6 +2,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { LineChart } from 'components/charts'
 import ContentCard from 'components/base/grid/ContentCard'
 import Button from 'components/base/forms/Button'
+import Icon from 'components/icons/Icon'
 import {
   useGetExperimentExposuresQuery,
   useRefreshExperimentExposuresMutation,
@@ -181,15 +182,6 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
       className='experiment-results__exposures-card'
       title='Enrollment over time'
     >
-      {viewState.kind === 'error' && (
-        <div className='alert alert-warning'>
-          The last refresh failed.
-          {viewState.staleAvailable
-            ? ' Showing the previously computed data.'
-            : ''}
-        </div>
-      )}
-
       {chart && hasData && (
         <>
           {isRefreshing && (
@@ -205,7 +197,19 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
             seriesLabels={buildLegendLabels(totals)}
             showLegend
           />
-          <AsOfLabel asOf={asOf} />
+          <div className='fs-caption'>
+            <AsOfLabel asOf={asOf} />
+            {viewState.kind === 'error' && (
+              <>
+                <br />
+                <span className='d-inline-flex align-items-center gap-1 text-danger'>
+                  <Icon fill='#e53e3e' name='warning' width={14} />
+                  The last exposure computation failed. Showing previously
+                  computed data.
+                </span>
+              </>
+            )}
+          </div>
         </>
       )}
 
@@ -230,8 +234,27 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
               </span>
             ))}
           </div>
-          <AsOfLabel asOf={asOf} />
+          <div className='fs-caption'>
+            <AsOfLabel asOf={asOf} />
+            {viewState.kind === 'error' && (
+              <>
+                <br />
+                <span className='d-inline-flex align-items-center gap-1 text-danger'>
+                  <Icon fill='#e53e3e' name='warning' width={14} />
+                  The last exposure computation failed. Showing previously
+                  computed data.
+                </span>
+              </>
+            )}
+          </div>
         </>
+      )}
+
+      {!payload && viewState.kind === 'error' && (
+        <div className='d-flex align-items-center justify-content-center gap-1 text-danger fs-caption py-4'>
+          <Icon fill='#e53e3e' name='warning' width={14} />
+          The last exposure computation failed.
+        </div>
       )}
 
       {!payload && viewState.kind !== 'error' && (

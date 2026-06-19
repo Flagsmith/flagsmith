@@ -34,16 +34,18 @@ const ExperimentConfiguration: FC<ExperimentConfigurationProps> = ({
   const getAllocation = (index: number): number =>
     index === 0
       ? 100 - treatmentTotal
-      : experiment.feature.multivariate_options[index - 1]
+      : experiment.feature.multivariate_options?.[index - 1]
           ?.default_percentage_allocation ?? 0
 
   return (
     <div className='row mb-4'>
       <div className='col-md-4'>
         <ContentCard compact title='Feature flag'>
-          <code className='experiment-results-page__flag'>
-            {experiment.feature.name}
-          </code>
+          <div>
+            <span className='selectable-card__tag'>
+              {experiment.feature.name}
+            </span>
+          </div>
         </ContentCard>
       </div>
       <div className='col-md-4'>

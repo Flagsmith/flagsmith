@@ -1,23 +1,6 @@
-.experiment-results-page {
-  &__name {
-    font-size: 20px;
-    line-height: 1.3;
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-default);
-  }
-
-  &__flag {
-    align-self: flex-start;
-    font-size: var(--font-body-sm-size);
-    color: var(--color-text-secondary);
-    background: var(--color-surface-muted);
-    padding: 4px 8px;
-    border-radius: var(--radius-sm);
-  }
-}
-
 .experiment-results {
   &__exposures-card {
     background: var(--color-surface-default);
   }
+
 }

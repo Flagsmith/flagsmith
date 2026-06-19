@@ -13,6 +13,7 @@ import {
   useUpdateExperimentMutation,
 } from 'common/services/useExperiment'
 import { Experiment } from 'common/types/responses'
+import Tooltip from 'components/Tooltip'
 import { getPrimaryMetric } from 'components/experiments/constants'
 import 'components/base/SelectableCard/SelectableCard.scss'
 import './results.scss'
@@ -140,13 +141,25 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
     ? `ended ${moment(experiment.ended_at).format('D MMM YYYY')}`
     : null
 
+  const hasMetric = !!metric
+
   const renderActions = () => {
     switch (experiment.status) {
       case 'created':
         return (
-          <Button onClick={handleStart} size='small'>
-            Start Experiment
-          </Button>
+          <Tooltip
+            plainText
+            place='bottom'
+            title={
+              <Button disabled={!hasMetric} onClick={handleStart} size='small'>
+                Start Experiment
+              </Button>
+            }
+          >
+            {hasMetric
+              ? null
+              : 'A metric must be attached before starting the experiment'}
+          </Tooltip>
         )
       case 'paused':
         return (
@@ -258,7 +271,7 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
       <div className='mb-4'>
         <div className='flex-row justify-content-between align-items-center'>
           <div className='flex-row align-items-center gap-2'>
-            <h2 className='experiment-results-page__name mb-0'>
+            <h2 className='text-default fw-bold mb-0' style={{ fontSize: 20 }}>
               {experiment.name}
             </h2>
             <StatusBadge status={experiment.status} />

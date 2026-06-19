@@ -35,20 +35,14 @@ const ExperimentsTable: FC<ExperimentsTableProps> = ({
       <tbody>
         {experiments.map((exp) => {
           const primaryMetric = getPrimaryMetric(exp)
-          const hasMetric = !!primaryMetric
           return (
             <tr
               key={exp.id}
-              className={`experiments-table__row${
-                hasMetric ? ' experiments-table__row--clickable' : ''
-              }`}
-              onClick={
-                hasMetric
-                  ? () =>
-                      history.push(
-                        `/project/${projectId}/environment/${environmentId}/experiments/${exp.id}`,
-                      )
-                  : undefined
+              className='experiments-table__row experiments-table__row--clickable'
+              onClick={() =>
+                history.push(
+                  `/project/${projectId}/environment/${environmentId}/experiments/${exp.id}`,
+                )
               }
             >
               <td className='fw-medium'>{exp.name}</td>
