@@ -9,6 +9,7 @@ import {
 import { Experiment } from 'common/types/responses'
 import {
   buildExposuresChartData,
+  getHeadlineTotal,
   getVariantIdentities,
   getVariantTotals,
 } from './derive'
@@ -36,12 +37,10 @@ const parseRetryAfter = (err: unknown): number | null => {
   const fetchErr = err as {
     status?: number
     retryAfter?: number | null
-    data?: { detail?: string }
   }
   if (fetchErr.status !== 429) return null
   if (fetchErr.retryAfter) return fetchErr.retryAfter
-  const match = fetchErr.data?.detail?.match(/(\d+)/)
-  return match ? parseInt(match[1], 10) : 300
+  return 300
 }
 
 const formatCountdown = (seconds: number): string => {
@@ -130,7 +129,8 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
   )
 
   const isRefreshing = viewState.kind === 'refreshing' || isSubmitting
-  const hasData = !!payload
+  const headline = payload ? getHeadlineTotal(payload) : 0
+  const hasData = !!payload && headline > 0
 
   const handleRefresh = useCallback(async () => {
     const result = await refresh({
@@ -190,7 +190,7 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
         </div>
       )}
 
-      {chart ? (
+      {chart && hasData && (
         <>
           {isRefreshing && (
             <div className='text-muted fs-caption mb-2'>
@@ -207,21 +207,46 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
           />
           <AsOfLabel asOf={asOf} />
         </>
-      ) : (
-        viewState.kind !== 'error' && (
-          <div className='text-muted text-center py-4'>
-            {isRefreshing
-              ? 'Computing exposures…'
-              : 'No exposure data computed yet.'}
-            {!isRefreshing && availability.canRefresh && (
-              <div className='mt-2'>
-                <Button onClick={handleRefresh} size='small' theme='secondary'>
-                  Compute now
-                </Button>
-              </div>
-            )}
+      )}
+
+      {payload && !hasData && (
+        <>
+          <div className='text-muted text-center py-5'>
+            No exposures collected yet.
           </div>
-        )
+          <div className='d-flex justify-content-center gap-3 fs-caption mb-2'>
+            {totals.map((t) => (
+              <span key={t.key} className='d-flex align-items-center gap-1'>
+                <span
+                  style={{
+                    background: t.colour,
+                    borderRadius: '50%',
+                    display: 'inline-block',
+                    height: 8,
+                    width: 8,
+                  }}
+                />
+                {t.name}
+              </span>
+            ))}
+          </div>
+          <AsOfLabel asOf={asOf} />
+        </>
+      )}
+
+      {!payload && viewState.kind !== 'error' && (
+        <div className='text-muted text-center py-4'>
+          {isRefreshing
+            ? 'Computing exposures…'
+            : 'No exposure data computed yet.'}
+          {!isRefreshing && availability.canRefresh && (
+            <div className='mt-2'>
+              <Button onClick={handleRefresh} size='small' theme='secondary'>
+                Compute now
+              </Button>
+            </div>
+          )}
+        </div>
       )}
     </ContentCard>
   )

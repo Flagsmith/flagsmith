@@ -90,20 +90,27 @@ export const experimentService = service
         invalidatesTags: (_res, _err, { experimentId }) => [
           { id: experimentId, type: 'ExperimentExposures' },
         ],
-        query: ({ environmentId, experimentId }) => ({
-          method: 'POST',
-          url: `environments/${environmentId}/experiments/${experimentId}/exposures/refresh/`,
-        }),
-        transformErrorResponse: (baseQueryError, meta) => {
-          if (
-            typeof baseQueryError.status === 'number' &&
-            baseQueryError.status === 429
-          ) {
-            const header = meta?.response?.headers?.get('Retry-After')
-            const retryAfter = header ? parseInt(header, 10) : null
-            return { ...baseQueryError, retryAfter }
+        queryFn: async (
+          { environmentId, experimentId },
+          _api,
+          _extraOptions,
+          baseQuery,
+        ) => {
+          const result = await baseQuery({
+            method: 'POST',
+            url: `environments/${environmentId}/experiments/${experimentId}/exposures/refresh/`,
+          })
+          if (result.error) {
+            const retryAfter =
+              result.meta?.response?.headers?.get('Retry-After')
+            return {
+              error: {
+                ...result.error,
+                retryAfter: retryAfter ? parseInt(retryAfter, 10) : null,
+              },
+            }
           }
-          return baseQueryError
+          return { data: result.data as Res['experimentExposures'] }
         },
       }),
       startExperiment: builder.mutation<
