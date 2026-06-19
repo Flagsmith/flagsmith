@@ -63,11 +63,15 @@ const ExperimentDetailPage: FC = () => {
       />
       <ExperimentConfiguration experiment={experiment} />
 
-      <h5 className='mb-3 mt-5'>Exposures</h5>
-      <ExperimentExposuresPanel
-        environmentId={environmentId}
-        experiment={experiment}
-      />
+      {experiment.status !== 'created' && (
+        <>
+          <h5 className='mb-3 mt-5'>Exposures</h5>
+          <ExperimentExposuresPanel
+            environmentId={environmentId}
+            experiment={experiment}
+          />
+        </>
+      )}
     </div>
   )
 }

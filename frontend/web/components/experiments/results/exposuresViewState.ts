@@ -13,6 +13,7 @@ export type RefreshAvailability = {
 }
 
 export const REFRESH_POLL_INTERVAL_MS = 10000
+export const POLL_TIMEOUT_MS = 120000
 
 const ms = (iso: string | null): number => (iso ? new Date(iso).getTime() : 0)
 

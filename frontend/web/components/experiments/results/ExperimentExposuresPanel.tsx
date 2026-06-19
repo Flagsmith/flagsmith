@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useState } from 'react'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { LineChart } from 'components/charts'
 import ContentCard from 'components/base/grid/ContentCard'
 import Button from 'components/base/forms/Button'
@@ -14,6 +14,7 @@ import {
 } from './derive'
 import type { VariantTotal } from './derive'
 import {
+  POLL_TIMEOUT_MS,
   REFRESH_POLL_INTERVAL_MS,
   canRefreshExposures,
   deriveExposuresViewState,
@@ -29,6 +30,24 @@ const buildLegendLabels = (totals: VariantTotal[]): Record<string, string> => {
     )}%)`
   })
   return labels
+}
+
+const parseRetryAfter = (err: unknown): number | null => {
+  const fetchErr = err as {
+    status?: number
+    retryAfter?: number | null
+    data?: { detail?: string }
+  }
+  if (fetchErr.status !== 429) return null
+  if (fetchErr.retryAfter) return fetchErr.retryAfter
+  const match = fetchErr.data?.detail?.match(/(\d+)/)
+  return match ? parseInt(match[1], 10) : 300
+}
+
+const formatCountdown = (seconds: number): string => {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return m > 0 ? `${m}m ${s}s` : `${s}s`
 }
 
 type ExperimentExposuresPanelProps = {
@@ -47,6 +66,8 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
 }) => {
   const [pollInterval, setPollInterval] = useState(0)
   const [refreshRequested, setRefreshRequested] = useState(false)
+  const [pollStartedAt, setPollStartedAt] = useState<number | null>(null)
+  const [retryAfter, setRetryAfter] = useState<number | null>(null)
   const { data: exposures } = useGetExperimentExposuresQuery(
     { environmentId, experimentId: experiment.id },
     {
@@ -61,8 +82,10 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
   const availability = canRefreshExposures(experiment.status, exposures)
   const payload = exposures?.payload ?? null
 
+  const pollTimedOut =
+    pollStartedAt !== null && Date.now() - pollStartedAt > POLL_TIMEOUT_MS
   const shouldPoll =
-    viewState.kind === 'refreshing' || (refreshRequested && !payload)
+    !pollTimedOut && (viewState.kind === 'refreshing' || refreshRequested)
   const nextPollInterval = shouldPoll ? REFRESH_POLL_INTERVAL_MS : 0
   useEffect(() => {
     setPollInterval(nextPollInterval)
@@ -71,8 +94,27 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
   useEffect(() => {
     if (viewState.kind === 'loaded' || viewState.kind === 'error') {
       setRefreshRequested(false)
+      setPollStartedAt(null)
     }
   }, [viewState.kind])
+
+  useEffect(() => {
+    if (pollTimedOut) {
+      setRefreshRequested(false)
+      setPollStartedAt(null)
+    }
+  }, [pollTimedOut])
+
+  useEffect(() => {
+    if (retryAfter === null || retryAfter <= 0) return
+    const timer = setInterval(() => {
+      setRetryAfter((prev) => {
+        if (prev === null || prev <= 1) return null
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [retryAfter !== null]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const identities = useMemo(
     () => getVariantIdentities(experiment.feature),
@@ -90,27 +132,45 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
   const isRefreshing = viewState.kind === 'refreshing' || isSubmitting
   const hasData = !!payload
 
-  const handleRefresh = async () => {
-    try {
-      await refresh({ environmentId, experimentId: experiment.id }).unwrap()
+  const handleRefresh = useCallback(async () => {
+    const result = await refresh({
+      environmentId,
+      experimentId: experiment.id,
+    })
+    if ('error' in result && result.error) {
+      const seconds = parseRetryAfter(result.error)
+      if (seconds !== null) {
+        setRetryAfter(seconds)
+      } else {
+        toast('Failed to refresh exposures', 'danger')
+      }
+    } else {
       setRefreshRequested(true)
-    } catch {
-      toast('Failed to refresh exposures', 'danger')
+      setPollStartedAt(Date.now())
     }
-  }
+  }, [refresh, environmentId, experiment.id])
 
   const action = (
-    <AsOfRefreshControl
-      asOf={exposures?.as_of ?? null}
-      disabled={!availability.canRefresh || isRefreshing}
-      disabledReason={
-        availability.reason
-          ? REFRESH_DISABLED_COPY[availability.reason]
-          : undefined
-      }
-      isRefreshing={isRefreshing && hasData}
-      onRefresh={handleRefresh}
-    />
+    <div className='d-flex flex-column align-items-end'>
+      <AsOfRefreshControl
+        asOf={exposures?.as_of ?? null}
+        disabled={
+          !availability.canRefresh || isRefreshing || retryAfter !== null
+        }
+        disabledReason={
+          availability.reason
+            ? REFRESH_DISABLED_COPY[availability.reason]
+            : undefined
+        }
+        isRefreshing={isRefreshing && hasData}
+        onRefresh={handleRefresh}
+      />
+      {retryAfter !== null && (
+        <div className='text-muted fs-caption mt-1 text-end'>
+          Computing, retry in {formatCountdown(retryAfter)}
+        </div>
+      )}
+    </div>
   )
 
   const asOf = exposures?.as_of ?? null

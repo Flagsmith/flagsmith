@@ -12,7 +12,10 @@ export const experimentService = service
         Res['experiment'],
         Req['experimentAction']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'Experiment' }],
+        invalidatesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'Experiment' },
+          { id: 'LIST', type: 'Experiment' },
+        ],
         query: ({ environmentId, experimentId }) => ({
           method: 'POST',
           url: `environments/${environmentId}/experiments/${experimentId}/complete/`,
@@ -71,7 +74,10 @@ export const experimentService = service
         Res['experiment'],
         Req['experimentAction']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'Experiment' }],
+        invalidatesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'Experiment' },
+          { id: 'LIST', type: 'Experiment' },
+        ],
         query: ({ environmentId, experimentId }) => ({
           method: 'POST',
           url: `environments/${environmentId}/experiments/${experimentId}/pause/`,
@@ -88,12 +94,26 @@ export const experimentService = service
           method: 'POST',
           url: `environments/${environmentId}/experiments/${experimentId}/exposures/refresh/`,
         }),
+        transformErrorResponse: (baseQueryError, meta) => {
+          if (
+            typeof baseQueryError.status === 'number' &&
+            baseQueryError.status === 429
+          ) {
+            const header = meta?.response?.headers?.get('Retry-After')
+            const retryAfter = header ? parseInt(header, 10) : null
+            return { ...baseQueryError, retryAfter }
+          }
+          return baseQueryError
+        },
       }),
       startExperiment: builder.mutation<
         Res['experiment'],
         Req['experimentAction']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'Experiment' }],
+        invalidatesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'Experiment' },
+          { id: 'LIST', type: 'Experiment' },
+        ],
         query: ({ environmentId, experimentId }) => ({
           method: 'POST',
           url: `environments/${environmentId}/experiments/${experimentId}/start/`,
