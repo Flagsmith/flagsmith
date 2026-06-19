@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC } from 'react'
 import { useHistory, useParams } from 'react-router-dom'
 import Utils from 'common/utils/utils'
 import {
@@ -12,11 +12,6 @@ import ExperimentConfiguration from 'components/experiments/results/ExperimentCo
 import ExperimentSummaryScorecard from 'components/experiments/results/ExperimentSummaryScorecard'
 import ExperimentMetricScorecard from 'components/experiments/results/ExperimentMetricScorecard'
 import ExperimentExposuresPanel from 'components/experiments/results/ExperimentExposuresPanel'
-import {
-  buildFakeExposures,
-  buildFakeResults,
-  isFakeDataEnabled,
-} from 'components/experiments/results/fakeData'
 
 type ExperimentDetailParams = {
   projectId: string
@@ -30,7 +25,6 @@ const ExperimentDetailPage: FC = () => {
   const history = useHistory()
   const numericId = Number(experimentId)
   const hasFeature = Utils.getFlagsmithHasFeature('experimental_flags')
-  const useFake = isFakeDataEnabled()
 
   const {
     data: experiment,
@@ -43,25 +37,15 @@ const ExperimentDetailPage: FC = () => {
 
   const { data: exposures } = useGetExperimentExposuresQuery(
     { environmentId, experimentId: numericId },
-    { skip: !hasFeature || useFake },
+    { skip: !hasFeature },
   )
 
   const { data: bayesianResults } = useGetExperimentBayesianResultsQuery(
     { environmentId, experimentId: numericId },
-    { skip: !hasFeature || useFake },
+    { skip: !hasFeature },
   )
 
-  const fakeExposures = useMemo(
-    () => (useFake && experiment ? buildFakeExposures(experiment) : undefined),
-    [useFake, experiment],
-  )
-  const fakeResults = useMemo(
-    () => (useFake && experiment ? buildFakeResults(experiment) : undefined),
-    [useFake, experiment],
-  )
-
-  const effectiveExposures = fakeExposures ?? exposures
-  const results = fakeResults ?? bayesianResults?.payload ?? undefined
+  const results = bayesianResults?.payload ?? undefined
 
   if (!hasFeature) {
     history.replace(
@@ -90,8 +74,8 @@ const ExperimentDetailPage: FC = () => {
     )
   }
 
-  const usersEnrolled = effectiveExposures?.payload
-    ? getHeadlineTotal(effectiveExposures.payload)
+  const usersEnrolled = exposures?.payload
+    ? getHeadlineTotal(exposures.payload)
     : null
 
   return (
@@ -118,7 +102,6 @@ const ExperimentDetailPage: FC = () => {
           <ExperimentExposuresPanel
             environmentId={environmentId}
             experiment={experiment}
-            exposuresOverride={fakeExposures}
           />
         </>
       )}
