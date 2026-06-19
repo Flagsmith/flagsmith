@@ -1,3 +1,4 @@
+export { default as FeaturePermalinkHandler } from './FeaturePermalinkHandler'
 export { FeaturesEmptyState } from './FeaturesEmptyState'
 export { FeatureMetricsSection } from './FeatureMetricsSection'
 export { FeaturesPageHeader } from './FeaturesPageHeader'

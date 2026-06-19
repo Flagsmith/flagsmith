@@ -14,6 +14,7 @@ import FeatureRowSkeleton from 'components/feature-summary/FeatureRowSkeleton'
 import JSONReference from 'components/JSONReference'
 import Permission from 'common/providers/Permission'
 import {
+  FeaturePermalinkHandler,
   FeaturesEmptyState,
   FeatureMetricsSection,
   FeaturesPageHeader,
@@ -173,6 +174,22 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
     () => data?.pagination ?? DEFAULT_PAGINATION,
     [data?.pagination],
   )
+
+  // A permalinked feature (`?feature=<id>`) is opened by its own FeatureRow, but
+  // rows only exist for the current page. When the target feature lives on a later
+  // page we open it via a dedicated handler instead (see #4239).
+  const permalinkFeatureId = useMemo(() => {
+    const { feature } = Utils.fromParam(history.location.search) as {
+      feature?: string
+    }
+    const featureId = feature ? parseInt(feature) : NaN
+    return Number.isNaN(featureId) ? null : featureId
+  }, [history.location.search])
+  const isPermalinkOnCurrentPage =
+    permalinkFeatureId !== null &&
+    projectFlags.some(
+      (projectFlag: ProjectFlag) => projectFlag.id === permalinkFeatureId,
+    )
 
   usePageTracking({
     context: {
@@ -377,6 +394,20 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
             />
 
             <FormGroup className='mb-4'>{renderFeaturesList()}</FormGroup>
+
+            {!!data &&
+              !isPermalinkOnCurrentPage &&
+              permalinkFeatureId !== null &&
+              !!currentEnvironment && (
+                <FeaturePermalinkHandler
+                  featureId={permalinkFeatureId}
+                  projectId={projectId}
+                  environmentApiKey={environmentId}
+                  environmentId={currentEnvironment.id}
+                  minimumChangeRequestApprovals={minimumChangeRequestApprovals}
+                  experimentMode={defaultExperiment}
+                />
+              )}
 
             <FeaturesSDKIntegration
               projectId={projectId}
