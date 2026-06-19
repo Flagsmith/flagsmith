@@ -26,11 +26,21 @@ type ExperimentMetricScorecardProps = {
   results?: BayesianResultsSummary
 }
 
-const renderMean = (
-  mean: number | null,
+const AGGREGATION_HEADER: Record<MetricAggregation, string> = {
+  count: 'Count',
+  mean: 'Mean',
+  occurrence: 'Occ. Rate',
+  sum: 'Sum',
+}
+
+const renderMetricValue = (
+  stats: { n: number; sum: number } | undefined,
   aggregation: MetricAggregation,
 ): string => {
-  if (mean === null) return '—'
+  if (!stats || stats.n === 0) return '—'
+  if (aggregation === 'count' || aggregation === 'sum')
+    return stats.sum.toLocaleString(undefined, { maximumFractionDigits: 2 })
+  const mean = stats.sum / stats.n
   if (aggregation === 'occurrence') return `${(mean * 100).toFixed(1)}%`
   return mean.toFixed(2)
 }
@@ -325,16 +335,15 @@ const ExperimentMetricScorecard: FC<ExperimentMetricScorecardProps> = ({
               <th style={{ width: '10%' }}>Variant</th>
               <th style={{ width: '8%' }}>Exposures</th>
               <th style={{ width: '12%' }}>
-                {metric.aggregation === 'occurrence'
-                  ? 'Occurrence Rate'
-                  : 'Mean'}
+                {AGGREGATION_HEADER[metric.aggregation]}
               </th>
               <th style={{ width: '24%' }}>
                 <Tooltip
                   title={
-                    <span className='d-inline-flex align-items-center gap-1'>
+                    <span className='d-inline-flex align-items-center gap-1 flex-nowrap'>
                       Delta
                       <Icon
+                        className='flex-shrink-0'
                         name='info-outlined'
                         width={16}
                         fill={colorIconSecondary}
@@ -349,9 +358,10 @@ const ExperimentMetricScorecard: FC<ExperimentMetricScorecardProps> = ({
               <th style={{ width: '16%' }}>
                 <Tooltip
                   title={
-                    <span className='d-inline-flex align-items-center gap-1'>
+                    <span className='d-inline-flex align-items-center gap-1 flex-nowrap'>
                       Credible Interval (95%)
                       <Icon
+                        className='flex-shrink-0'
                         name='info-outlined'
                         width={16}
                         fill={colorIconSecondary}
@@ -371,7 +381,6 @@ const ExperimentMetricScorecard: FC<ExperimentMetricScorecardProps> = ({
             {identities.map((v) => {
               const stats = metricResult?.variants[v.key]
               const inference = metricResult?.inference[v.key] ?? null
-              const mean = stats && stats.n > 0 ? stats.sum / stats.n : null
               return (
                 <tr key={v.key}>
                   <td>
@@ -381,7 +390,7 @@ const ExperimentMetricScorecard: FC<ExperimentMetricScorecardProps> = ({
                     </span>
                   </td>
                   <td>{stats ? stats.n.toLocaleString() : '—'}</td>
-                  <td>{renderMean(mean, metric.aggregation)}</td>
+                  <td>{renderMetricValue(stats, metric.aggregation)}</td>
                   <td>{renderLift(v, inference, metric.expected_direction)}</td>
                   <td>{renderCI(v, inference)}</td>
                   <td>

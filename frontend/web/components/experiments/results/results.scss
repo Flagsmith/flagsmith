@@ -218,13 +218,14 @@
 
     th {
       padding: 16px 20px;
-      font-size: var(--font-caption-size);
+      font-size: 11px;
       font-weight: var(--font-weight-medium);
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--color-text-secondary);
       background: var(--color-surface-muted);
       text-align: left;
+      white-space: nowrap;
       border-top: 1px solid var(--color-border-default);
       border-bottom: 1px solid var(--color-border-default);
 
