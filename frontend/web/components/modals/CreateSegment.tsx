@@ -291,7 +291,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [valueChanged, setValueChanged] = useState(false)
   const [metadataValueChanged, setMetadataValueChanged] = useState(false)
   const onClosing = useCallback(() => {
-    return new Promise((resolve) => {
+    return new Promise<boolean>((resolve) => {
       if (valueChanged) {
         openConfirm({
           body: 'Closing this will discard your unsaved changes.',
@@ -306,6 +306,19 @@ const CreateSegment: FC<CreateSegmentType> = ({
       }
     })
   }, [valueChanged])
+  // The condensed/inline drawer (e.g. creating a feature-specific segment) is
+  // closed via the `onCancel` prop, which bypasses the modal's intercept-close
+  // handler above. Guard it so unsaved changes prompt the same confirmation (#5368).
+  const handleCancel = useCallback(() => {
+    if (!onCancel) {
+      return
+    }
+    onClosing().then((shouldClose) => {
+      if (shouldClose) {
+        onCancel()
+      }
+    })
+  }, [onCancel, onClosing])
   const onCreateChangeRequest = async (changeRequestData: {
     approvals: []
     description: string
@@ -569,7 +582,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 isSaving={isSaving}
                 isValid={isValid}
                 isLimitReached={isLimitReached}
-                onCancel={onCancel}
+                onCancel={handleCancel}
                 topLevelRuleType={topLevelRuleType}
                 setTopLevelRuleType={setTopLevelRuleType}
               />
@@ -646,7 +659,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 isSaving={isSaving}
                 isValid={isValid}
                 isLimitReached={isLimitReached}
-                onCancel={onCancel}
+                onCancel={handleCancel}
                 topLevelRuleType={topLevelRuleType}
                 setTopLevelRuleType={setTopLevelRuleType}
               />
@@ -685,7 +698,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               isSaving={isSaving}
               isValid={isValid}
               isLimitReached={isLimitReached}
-              onCancel={onCancel}
+              onCancel={handleCancel}
               topLevelRuleType={topLevelRuleType}
               setTopLevelRuleType={setTopLevelRuleType}
             />
