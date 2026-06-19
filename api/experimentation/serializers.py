@@ -299,7 +299,9 @@ class ExperimentFeatureSerializer(serializers.ModelSerializer):  # type: ignore[
 
         environment: Environment | None = self.context.get("environment")
         if not environment:
-            return options  # type: ignore[return-value]
+            raise ValueError(
+                "ExperimentFeatureSerializer requires 'environment' in context."
+            )
 
         env_state = (
             feature.feature_states.filter(
@@ -311,7 +313,10 @@ class ExperimentFeatureSerializer(serializers.ModelSerializer):  # type: ignore[
             .first()
         )
         if not env_state:
-            return options  # type: ignore[return-value]
+            raise ValueError(
+                f"No environment feature state found for feature {feature.id} "
+                f"in environment {environment.id}."
+            )
 
         alloc_map = dict(
             env_state.multivariate_feature_state_values.values_list(

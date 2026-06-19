@@ -1412,27 +1412,18 @@ def test_get_detail__env_level_allocations__returns_environment_percentages(
     assert returned_allocs == sorted(env_allocations)
 
 
-@pytest.mark.django_db()
-def test_experiment_feature_serializer__no_environment_context__returns_default_allocations(
+def test_experiment_feature_serializer__no_environment_context__raises(
     multivariate_feature: Feature,
 ) -> None:
     # Given
     serializer = ExperimentFeatureSerializer(multivariate_feature, context={})
 
-    # When
-    data = serializer.data
-
-    # Then
-    for option in data["multivariate_options"]:
-        assert option["default_percentage_allocation"] == pytest.approx(
-            multivariate_feature.multivariate_options.get(
-                id=option["id"]
-            ).default_percentage_allocation
-        )
+    # When / Then
+    with pytest.raises(ValueError, match="requires 'environment' in context"):
+        serializer.data
 
 
-@pytest.mark.django_db()
-def test_experiment_feature_serializer__no_env_feature_state__returns_default_allocations(
+def test_experiment_feature_serializer__no_env_feature_state__raises(
     environment: Environment,
     multivariate_feature: Feature,
 ) -> None:
@@ -1447,13 +1438,6 @@ def test_experiment_feature_serializer__no_env_feature_state__returns_default_al
         multivariate_feature, context={"environment": environment}
     )
 
-    # When
-    data = serializer.data
-
-    # Then
-    for option in data["multivariate_options"]:
-        assert option["default_percentage_allocation"] == pytest.approx(
-            multivariate_feature.multivariate_options.get(
-                id=option["id"]
-            ).default_percentage_allocation
-        )
+    # When / Then
+    with pytest.raises(ValueError, match="No environment feature state found"):
+        serializer.data
