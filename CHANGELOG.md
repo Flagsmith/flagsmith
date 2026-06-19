@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.243.1](https://github.com/Flagsmith/flagsmith/compare/v2.243.0...v2.243.1) (2026-06-19)
+
+
+### Bug Fixes
+
+* expose retry-after header ([#7832](https://github.com/Flagsmith/flagsmith/issues/7832)) ([5266950](https://github.com/Flagsmith/flagsmith/commit/52669508cd61faab831e107398615b214f08ece9))
+* task processor deployment ([#7835](https://github.com/Flagsmith/flagsmith/issues/7835)) ([6bcaca6](https://github.com/Flagsmith/flagsmith/commit/6bcaca6de717cbd16447e2847ba68db77270340b))
+
 ## [2.243.0](https://github.com/Flagsmith/flagsmith/compare/v2.242.0...v2.243.0) (2026-06-19)
 
 
