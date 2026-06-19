@@ -1,23 +1,24 @@
 import React, { FC, useEffect, useState } from 'react'
 import GhostInput from 'components/base/forms/GhostInput'
 import Icon from 'components/icons/Icon'
-import Chip from 'components/base/Chip'
 import { colorIconSecondary } from 'common/theme/tokens'
-import './EditableChip.scss'
+import './InlineInput.scss'
 
-export type EditableChipProps = {
+export type InlineInputProps = {
   label: string
   value: string
   onCommit: (next: string) => void
   // Optional normaliser applied before commit (e.g. a flag name must be a
-  // valid identifier). The chip then shows the normalised value.
+  // valid identifier). The field then shows the normalised value.
   transform?: (raw: string) => string
 }
 
-// Onboarding-local rename chip (Chip + GhostInput): commits on blur / Enter, an
-// empty value reverts. Deliberately NOT a shared inline-edit primitive — that
-// pattern is converging on one component (see Wadii's segment work).
-const EditableChip: FC<EditableChipProps> = ({
+// Onboarding-local inline editable value (GhostInput + pencil) for the welcome
+// sentence. Reads as part of the prose — a dashed underline hints it's editable
+// and the pencil/highlight surface on hover — rather than a bordered pill.
+// Commits on blur / Enter; an empty value reverts. Deliberately NOT a shared
+// inline-edit primitive (see Wadii's segment work).
+const InlineInput: FC<InlineInputProps> = ({
   label,
   onCommit,
   transform,
@@ -46,7 +47,7 @@ const EditableChip: FC<EditableChipProps> = ({
   }
 
   return (
-    <Chip className='editable-chip'>
+    <span className='inline-input'>
       <GhostInput
         value={draft}
         placeholder={label}
@@ -60,8 +61,8 @@ const EditableChip: FC<EditableChipProps> = ({
         }}
       />
       <Icon name='edit' width={12} fill={colorIconSecondary} aria-hidden />
-    </Chip>
+    </span>
   )
 }
 
-export default EditableChip
+export default InlineInput

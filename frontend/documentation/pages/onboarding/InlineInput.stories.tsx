@@ -1,26 +1,26 @@
 import React, { useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
-import EditableChip from 'components/pages/onboarding/EditableChip'
+import InlineInput from 'components/pages/onboarding/InlineInput'
 
-const meta: Meta<typeof EditableChip> = {
-  component: EditableChip,
+const meta: Meta<typeof InlineInput> = {
+  component: InlineInput,
   parameters: {
     docs: {
       description: {
         component:
-          'An onboarding-local rename chip: the shared Chip shell + a GhostInput + a pencil. Commits on blur / Enter; an empty value reverts to the last good name; an optional `transform` normalises on commit (e.g. flag-name rules). Used in the onboarding header sentence. Feature-local — not a shared inline-edit primitive.',
+          'An onboarding-local inline editable value (GhostInput + pencil) used in the welcome sentence. Reads as part of the prose — a dashed underline hints it’s editable — rather than a pill. Commits on blur / Enter; an empty value reverts; an optional `transform` normalises on commit (e.g. flag-name rules). Feature-local — not a shared inline-edit primitive.',
       },
     },
     layout: 'centered',
   },
-  title: 'Pages/Onboarding/EditableChip',
+  title: 'Pages/Onboarding/InlineInput',
 }
 export default meta
 
-type Story = StoryObj<typeof EditableChip>
+type Story = StoryObj<typeof InlineInput>
 
-// EditableChip is controlled; wrap it so the stories commit and re-render.
+// InlineInput is controlled; wrap it so the stories commit and re-render.
 const Controlled = ({
   initial,
   label,
@@ -32,7 +32,7 @@ const Controlled = ({
 }) => {
   const [value, setValue] = useState(initial)
   return (
-    <EditableChip
+    <InlineInput
       label={label}
       value={value}
       onCommit={setValue}

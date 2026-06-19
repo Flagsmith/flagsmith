@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import { sanitizeFeatureName } from 'common/utils/sanitizeFeatureName'
-import EditableChip from 'components/pages/onboarding/EditableChip'
+import InlineInput from 'components/pages/onboarding/InlineInput'
 import './OnboardingHeader.scss'
 
 export type OnboardingHeaderProps = {
@@ -32,19 +32,19 @@ const OnboardingHeader: FC<OnboardingHeaderProps> = ({
     </h1>
     <p className='onboarding-header__subtitle text-muted mb-0'>
       We created your organisation{' '}
-      <EditableChip
+      <InlineInput
         label='Organisation'
         value={organisationName}
         onCommit={(name) => onRenameOrganisation?.(name)}
       />
       , your project{' '}
-      <EditableChip
+      <InlineInput
         label='Project'
         value={projectName}
         onCommit={(name) => onRenameProject?.(name)}
       />{' '}
       and your flag{' '}
-      <EditableChip
+      <InlineInput
         label='Flag'
         value={featureName}
         transform={(raw) => sanitizeFeatureName(raw, caseSensitive)}
