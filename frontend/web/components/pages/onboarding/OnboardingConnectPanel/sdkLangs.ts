@@ -16,7 +16,6 @@ import {
 } from './logos'
 
 export type SdkLang = {
-  // Display label (chip text + radiogroup key).
   label: string
   // Key into codeHelp's INSTALL and INIT maps. Differs from the display label,
   // e.g. 'Node JS' (not 'Node.js') and 'Next.js' (not 'Next.js (app router)').

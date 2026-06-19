@@ -1,7 +1,6 @@
 .onboarding-connect {
   padding: 24px;
 
-  // Numbered step badge.
   &__step-num {
     display: inline-flex;
     align-items: center;
@@ -107,7 +106,6 @@
     color: var(--color-text-secondary);
   }
 
-  // npm / yarn pills inside the install card header.
   &__pm {
     border-radius: 6px;
     overflow: hidden;
