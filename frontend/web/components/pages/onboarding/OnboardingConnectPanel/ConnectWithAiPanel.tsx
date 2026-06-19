@@ -35,7 +35,7 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
       <span className='text-default fw-semibold'>
         Paste this into your AI coding agent’s chat
       </span>
-      <div className='bg-surface-subtle p-3 d-flex align-items-start gap-3 rounded-md'>
+      <div className='bg-surface-muted p-3 d-flex align-items-start gap-3 rounded-md'>
         <code className='onboarding-connect__prompt-text flex-fill'>
           {aiPrompt}
         </code>

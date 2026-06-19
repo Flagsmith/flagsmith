@@ -41,7 +41,7 @@ const OnboardingConnectPanel: FC<OnboardingConnectPanelProps> = ({
   const [tab, setTab] = useState<ConnectTab>('manual')
 
   return (
-    <div className='onboarding-connect rounded-lg border border-default bg-surface-default'>
+    <div className='onboarding-connect rounded-lg shadow-md bg-surface-subtle'>
       <OnboardingTabs
         aria-label='Connect your app'
         tabs={CONNECT_TABS}

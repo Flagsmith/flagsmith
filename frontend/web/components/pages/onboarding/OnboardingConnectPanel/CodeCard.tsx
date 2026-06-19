@@ -18,7 +18,7 @@ const CodeCard: FC<CodeCardProps> = ({ code, headerLeft, language }) => {
   const { copied, copy } = useCopyFeedback()
 
   return (
-    <div className='onboarding-connect__codecard border border-default bg-surface-default'>
+    <div className='onboarding-connect__codecard bg-surface-muted'>
       <div className='onboarding-connect__codecard-head d-flex align-items-center'>
         <div className='d-flex align-items-center gap-2'>{headerLeft}</div>
         <Button
