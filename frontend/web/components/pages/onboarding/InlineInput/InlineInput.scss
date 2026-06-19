@@ -1,7 +1,8 @@
 // Inline editable value in the onboarding welcome sentence. Reads as part of
-// the prose - a dashed underline hints it's editable; the pencil and a faint
-// highlight surface on hover/focus - instead of a bordered pill. The value
-// (GhostInput) inherits the surrounding type, so it sits inline with the text.
+// the prose: a purple (action) dashed underline marks it editable, matching the
+// accent chip variant; the pencil and a faint highlight surface on hover/focus,
+// and the underline goes solid while editing. The value (GhostInput) inherits
+// the surrounding type, so it sits inline with the text.
 .inline-input {
   display: inline-flex;
   align-items: center;
@@ -9,13 +10,13 @@
   gap: 4px;
   padding: 0 4px;
   border-radius: var(--radius-xs);
-  border-bottom: 1px dashed var(--color-border-strong);
+  border-bottom: 1px dashed var(--color-border-action);
   cursor: text;
   transition: background-color var(--duration-fast) var(--easing-standard),
     border-color var(--duration-fast) var(--easing-standard);
 
   svg {
-    opacity: 0.5;
+    opacity: 0.6;
     transition: opacity var(--duration-fast) var(--easing-standard);
   }
 
@@ -29,6 +30,6 @@
   }
 
   &:focus-within {
-    border-bottom-color: var(--color-border-action);
+    border-bottom-style: solid;
   }
 }
