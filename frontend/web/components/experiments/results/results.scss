@@ -209,11 +209,12 @@
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-lg);
     background: var(--color-surface-default);
-    overflow: hidden;
+    overflow-x: auto;
   }
 
   &__scorecard-table {
     width: 100%;
+    min-width: 700px;
     border-collapse: collapse;
 
     th {

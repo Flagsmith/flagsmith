@@ -96,7 +96,10 @@ const ExperimentDetailPage: FC = () => {
           />
 
           <h5 className='mb-3 mt-5'>Analysis</h5>
-          <ExperimentMetricScorecard experiment={experiment} results={results} />
+          <ExperimentMetricScorecard
+            experiment={experiment}
+            results={results}
+          />
 
           <h5 className='mb-3 mt-5'>Exposures</h5>
           <ExperimentExposuresPanel

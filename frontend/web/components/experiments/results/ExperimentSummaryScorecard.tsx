@@ -85,7 +85,7 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
           </InfoMessage>
         )
       )}
-      <div className='row mb-4'>
+      <div className='row g-3 mb-4'>
         <div className='col-md-3'>
           <StatCard
             label='Users enrolled'
