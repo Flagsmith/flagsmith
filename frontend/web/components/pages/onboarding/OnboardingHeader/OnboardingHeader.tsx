@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import Constants from 'common/constants'
 import { sanitizeFeatureName } from 'common/utils/sanitizeFeatureName'
 import InlineInput from 'components/pages/onboarding/InlineInput'
 import './OnboardingHeader.scss'
@@ -47,6 +48,8 @@ const OnboardingHeader: FC<OnboardingHeaderProps> = ({
       <InlineInput
         label='Flag'
         value={featureName}
+        variant='accent'
+        maxLength={Constants.forms.maxLength.FEATURE_ID}
         transform={(raw) => sanitizeFeatureName(raw, caseSensitive)}
         onCommit={(name) => onRenameFeature?.(name)}
       />

@@ -1,28 +1,39 @@
 import React, { FC, useEffect, useState } from 'react'
 import GhostInput from 'components/base/forms/GhostInput'
 import Icon from 'components/icons/Icon'
-import { colorIconSecondary } from 'common/theme/tokens'
+import { colorIconAction } from 'common/theme/tokens'
 import './InlineInput.scss'
+
+export type InlineInputVariant = 'default' | 'accent'
 
 export type InlineInputProps = {
   label: string
   value: string
   onCommit: (next: string) => void
-  // Optional normaliser applied before commit (e.g. a flag name must be a
-  // valid identifier). The field then shows the normalised value.
+  // Optional normaliser. Applied live as you type and again on commit (e.g. a
+  // flag name must be a valid identifier - spaces become underscores - matching
+  // the create-feature modal). The field shows the normalised value as you go.
   transform?: (raw: string) => string
+  // 'accent' fills the field with a soft purple background so the hero value
+  // (the flag name the user will reference in code) stands out from the lighter
+  // underline treatment used for the org and project.
+  variant?: InlineInputVariant
+  // Cap the length, matching the source modal (e.g. the flag uses FEATURE_ID).
+  maxLength?: number
 }
 
 // Onboarding-local inline editable value (GhostInput + pencil) for the welcome
-// sentence. Reads as part of the prose - a dashed underline hints it's editable
-// and the pencil/highlight surface on hover - rather than a bordered pill.
-// Commits on blur / Enter; an empty value reverts. Deliberately NOT a shared
-// inline-edit primitive (see Wadii's segment work).
+// sentence: an action underline + pencil mark it editable, it commits on
+// blur/Enter, and an empty value reverts. Shares the VariationKeyLabel inline
+// edit's visual language but drops its buttons/validation to stay prose-like;
+// feature-local for now, both should converge on one primitive.
 const InlineInput: FC<InlineInputProps> = ({
   label,
+  maxLength,
   onCommit,
   transform,
   value,
+  variant = 'default',
 }) => {
   const [draft, setDraft] = useState(value)
 
@@ -47,12 +58,20 @@ const InlineInput: FC<InlineInputProps> = ({
   }
 
   return (
-    <span className='inline-input'>
+    <span
+      className={`inline-input${
+        variant === 'accent' ? ' inline-input--accent' : ''
+      }`}
+    >
       <GhostInput
         value={draft}
         placeholder={label}
+        maxLength={maxLength}
         aria-label={`${label} name`}
-        onChange={(e) => setDraft(e.target.value)}
+        onChange={(e) => {
+          const raw = e.target.value
+          setDraft(transform ? transform(raw) : raw)
+        }}
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
@@ -60,7 +79,7 @@ const InlineInput: FC<InlineInputProps> = ({
           }
         }}
       />
-      <Icon name='edit' width={12} fill={colorIconSecondary} aria-hidden />
+      <Icon name='edit' width={12} fill={colorIconAction} aria-hidden />
     </span>
   )
 }
