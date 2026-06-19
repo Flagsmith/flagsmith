@@ -235,7 +235,6 @@ def test_enqueue_membership_refresh__flag_on__enqueues_refresh(
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    # an org with the flag on
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     mocker.patch("segment_membership.tasks.open_clickhouse_cursor")
@@ -249,7 +248,6 @@ def test_enqueue_membership_refresh__flag_on__enqueues_refresh(
     run_tasks(num_tasks=2)
 
     # Then
-    # exactly one refresh runs, for the project
     compute_segment_counts_for_project_mock.assert_called_once_with(project, mocker.ANY)
 
 
@@ -260,7 +258,6 @@ def test_enqueue_membership_refresh__flag_off__does_not_enqueue(
     project: Project,
 ) -> None:
     # Given
-    # the org's flag is off
     settings.CLICKHOUSE_ENABLED = True
     mocker.patch("segment_membership.tasks.open_clickhouse_cursor")
     compute_segment_counts_for_project_mock = mocker.patch(
@@ -273,7 +270,6 @@ def test_enqueue_membership_refresh__flag_off__does_not_enqueue(
     run_tasks(num_tasks=1)
 
     # Then
-    # no refresh runs
     compute_segment_counts_for_project_mock.assert_not_called()
 
 
@@ -285,7 +281,6 @@ def test_enqueue_membership_refresh__refresh_already_pending__debounces(
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    # a refresh for the same project is already pending
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     mocker.patch("segment_membership.tasks.open_clickhouse_cursor")
@@ -300,7 +295,6 @@ def test_enqueue_membership_refresh__refresh_already_pending__debounces(
     run_tasks(num_tasks=2)
 
     # Then
-    # the call did not enqueue a second refresh -- only the pending one ran
     compute_segment_counts_for_project_mock.assert_called_once_with(project, mocker.ANY)
 
 
@@ -313,7 +307,6 @@ def test_enqueue_membership_refresh__pending_for_other_project__still_enqueues(
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    # a refresh is pending for a different project only
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     mocker.patch("segment_membership.tasks.open_clickhouse_cursor")
@@ -328,7 +321,6 @@ def test_enqueue_membership_refresh__pending_for_other_project__still_enqueues(
     run_tasks(num_tasks=3)
 
     # Then
-    # the debounce is scoped per project: both refreshes run
     assert compute_segment_counts_for_project_mock.call_count == 2
     compute_segment_counts_for_project_mock.assert_has_calls(
         [mocker.call(project, mocker.ANY), mocker.call(project_b, mocker.ANY)],
