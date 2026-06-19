@@ -22,6 +22,7 @@ export type ChipProps = {
   role?: 'button' | 'radio'
   tabIndex?: number
   'aria-checked'?: boolean
+  'aria-expanded'?: boolean
   onKeyDown?: (e: KeyboardEvent) => void
   ref?: Ref<HTMLSpanElement>
 }
@@ -39,6 +40,7 @@ const VARIANT_UTILITIES: Record<ChipVariant, string> = {
 // props. Count badges are out of scope.
 const Chip = ({
   'aria-checked': ariaChecked,
+  'aria-expanded': ariaExpanded,
   children,
   className,
   onClick,
@@ -70,6 +72,7 @@ const Chip = ({
       role={role ?? (onClick ? 'button' : undefined)}
       tabIndex={interactive ? tabIndex ?? 0 : undefined}
       aria-checked={ariaChecked}
+      aria-expanded={ariaExpanded}
       onKeyDown={
         onKeyDown ??
         (onClick

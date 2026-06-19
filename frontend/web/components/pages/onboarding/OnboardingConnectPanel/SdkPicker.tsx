@@ -1,35 +1,40 @@
 import React, { FC, KeyboardEvent, useRef, useState } from 'react'
+import classNames from 'classnames'
 import Icon from 'components/icons/Icon'
 import Chip from 'components/base/Chip'
 import { colorIconSecondary } from 'common/theme/tokens'
 import { SDK_LANGS, SdkLang } from './sdkLangs'
+import './SdkPicker.scss'
 
 export type SdkPickerProps = {
   selected: SdkLang
   onSelect: (lang: SdkLang) => void
 }
 
-// The language / framework picker: popular SDKs as quick-pick chips, the long
-// tail behind "More". A single-select radiogroup — one tab stop, with
-// Arrow/Home/End moving focus and selection across the visible options
-// (selection follows focus). "More" is a separate disclosure button, not an
-// option, so it stays outside the group.
+// The language / framework picker: popular SDKs as quick-pick chips with a
+// "More" toggle pinned at the end of the first row, and the long tail opening as
+// a second row beneath — so "More" never moves and open/close happens in place.
+// A single-select radiogroup with Arrow/Home/End roving across the *visible*
+// chips (selection follows focus). The overflow row stays mounted for the
+// open/close transition but is `inert` while collapsed, so keyboard and screen
+// readers skip it.
 const SdkPicker: FC<SdkPickerProps> = ({ onSelect, selected }) => {
   const [moreOpen, setMoreOpen] = useState(false)
-  const optionRefs = useRef<(HTMLSpanElement | null)[]>([])
+  const refs = useRef<Record<string, HTMLSpanElement | null>>({})
 
   const popularLangs = SDK_LANGS.filter((l) => l.popular)
   const moreLangs = SDK_LANGS.filter((l) => !l.popular)
-  const options = moreOpen ? [...popularLangs, ...moreLangs] : popularLangs
+  const visibleLangs = moreOpen ? SDK_LANGS : popularLangs
 
-  // The selected option is the single tab stop; if it's hidden (selected a
-  // "More" SDK then collapsed), fall back to the first so the group stays
-  // reachable.
-  const selectedIndex = options.findIndex((l) => l.label === selected.label)
-  const tabStopIndex = selectedIndex === -1 ? 0 : selectedIndex
+  // Exactly one chip is the tab stop: the selected one, or the first visible if
+  // the selection is hidden in the collapsed tail.
+  const tabStopLabel = visibleLangs.some((l) => l.label === selected.label)
+    ? selected.label
+    : visibleLangs[0]?.label
 
-  const onKeyDown = (e: KeyboardEvent, index: number) => {
-    const last = options.length - 1
+  const onKeyDown = (e: KeyboardEvent, lang: SdkLang) => {
+    const index = visibleLangs.findIndex((l) => l.label === lang.label)
+    const last = visibleLangs.length - 1
     let next: number
     switch (e.key) {
       case 'ArrowRight':
@@ -50,25 +55,26 @@ const SdkPicker: FC<SdkPickerProps> = ({ onSelect, selected }) => {
         return
     }
     e.preventDefault()
-    onSelect(options[next])
-    optionRefs.current[next]?.focus()
+    const target = visibleLangs[next]
+    onSelect(target)
+    refs.current[target.label]?.focus()
   }
 
-  const renderOption = (lang: SdkLang, index: number) => {
+  const renderOption = (lang: SdkLang) => {
     const Logo = lang.logo
     const isSelected = selected.label === lang.label
     return (
       <Chip
         key={lang.label}
         ref={(el) => {
-          optionRefs.current[index] = el
+          refs.current[lang.label] = el
         }}
         role='radio'
         aria-checked={isSelected}
-        tabIndex={index === tabStopIndex ? 0 : -1}
+        tabIndex={lang.label === tabStopLabel ? 0 : -1}
         variant={isSelected ? 'accent' : 'neutral'}
         onClick={() => onSelect(lang)}
-        onKeyDown={(e) => onKeyDown(e, index)}
+        onKeyDown={(e) => onKeyDown(e, lang)}
       >
         <Logo />
         {lang.label}
@@ -76,27 +82,37 @@ const SdkPicker: FC<SdkPickerProps> = ({ onSelect, selected }) => {
     )
   }
 
-  // Column layout: the radiogroup wraps on top, the More/Less toggle sits on
-  // its own line beneath it — so the toggle keeps a stable position instead of
-  // trailing the chips and jumping when the long tail expands.
   return (
-    <div className='d-flex flex-column align-items-start gap-2'>
-      <div
-        role='radiogroup'
-        aria-label='SDK'
-        className='d-flex flex-wrap align-items-center gap-2'
-      >
-        {options.map(renderOption)}
+    <div
+      role='radiogroup'
+      aria-label='SDK'
+      className='sdk-picker d-flex flex-column align-items-start'
+    >
+      <div className='d-flex flex-wrap align-items-center gap-2'>
+        {popularLangs.map(renderOption)}
+        <Chip
+          onClick={() => setMoreOpen((open) => !open)}
+          aria-expanded={moreOpen}
+        >
+          {moreOpen ? 'Less' : 'More'}
+          <Icon
+            name={moreOpen ? 'chevron-up' : 'chevron-down'}
+            width={14}
+            fill={colorIconSecondary}
+            aria-hidden
+          />
+        </Chip>
       </div>
-      <Chip onClick={() => setMoreOpen((open) => !open)}>
-        {moreOpen ? 'Less' : 'More'}
-        <Icon
-          name={moreOpen ? 'chevron-up' : 'chevron-down'}
-          width={14}
-          fill={colorIconSecondary}
-          aria-hidden
-        />
-      </Chip>
+      <div
+        className={classNames('sdk-picker__overflow', {
+          'sdk-picker__overflow--open': moreOpen,
+        })}
+        inert={!moreOpen}
+      >
+        <div className='d-flex flex-wrap gap-2 pt-2'>
+          {moreLangs.map(renderOption)}
+        </div>
+      </div>
     </div>
   )
 }
