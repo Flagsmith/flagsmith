@@ -118,7 +118,7 @@ const OnboardingFlow: FC = () => {
         environmentKey={environmentKey}
         featureName={featureName}
       />
-      <div className='text-end'>
+      <div className='d-flex justify-content-end'>
         <Button theme='text' onClick={skipToApp}>
           Skip — set up manually
         </Button>
