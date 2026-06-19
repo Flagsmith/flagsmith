@@ -42,9 +42,11 @@ const OnboardingFlow: FC = () => {
         ? `/organisation/${organisationId}/projects`
         : '/',
     )
-  // The flag name drives the connect-panel snippets/prompt, so it's optimistic
-  // state here: shown immediately on rename, reverted if the persist fails.
-  const [featureName, setFeatureName] = useState(bootstrappedFeatureName)
+  // The flag name drives the connect-panel snippets/prompt. Default to the
+  // bootstrapped flag (its real name, reused on revisit); a rename is shown
+  // optimistically and reverted if the persist fails.
+  const [renamedFeature, setRenamedFeature] = useState<string | null>(null)
+  const featureName = renamedFeature ?? bootstrappedFeatureName
   const { isReady: flagReady, rename: renameFlag } = useOnboardingFlagRename({
     environment,
     featureName,
@@ -67,9 +69,9 @@ const OnboardingFlow: FC = () => {
   // (delete + recreate). Optimistic, reverting on failure.
   const renameFeature = async (name: string) => {
     const previous = featureName
-    setFeatureName(name)
+    setRenamedFeature(name)
     if (!(await renameFlag(name))) {
-      setFeatureName(previous)
+      setRenamedFeature(previous)
       // Only surface an error for a genuine failure - a rename attempted before
       // the flag query settles also returns false, and shouldn't alarm the user.
       if (flagReady) {
