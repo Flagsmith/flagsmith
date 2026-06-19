@@ -19,6 +19,11 @@ import { createOrganisationViaAccountStore } from './createOrganisationViaAccoun
 type Store = ReturnType<typeof getStore>
 
 const FLAG_NAME = 'show_demo_button'
+const DEFAULT_ORG_NAME = 'My organisation'
+const DEFAULT_PROJECT_NAME = 'My first project'
+// Written on create and matched by name on reuse, so the two must stay in step.
+const DEV_ENVIRONMENT_NAME = 'Development'
+const PROD_ENVIRONMENT_NAME = 'Production'
 
 type ExistingOrg = { id: number; name: string }
 
@@ -45,7 +50,7 @@ async function ensureOrganisation(
   if (existingOrg) {
     return existingOrg
   }
-  const name = defaults.orgName || 'My organisation'
+  const name = defaults.orgName || DEFAULT_ORG_NAME
   const id = await createOrganisationViaAccountStore(name)
   AppActions.selectOrganisation(id)
   store.dispatch(
@@ -73,7 +78,7 @@ async function ensureProject(
   const project = await store
     .dispatch(
       projectService.endpoints.createProject.initiate({
-        name: defaults.projectName || 'My first project',
+        name: defaults.projectName || DEFAULT_PROJECT_NAME,
         organisation: organisationId,
       }),
     )
@@ -81,7 +86,7 @@ async function ensureProject(
   await store
     .dispatch(
       environmentService.endpoints.createEnvironment.initiate({
-        name: 'Development',
+        name: DEV_ENVIRONMENT_NAME,
         project: project.id,
       }),
     )
@@ -89,7 +94,7 @@ async function ensureProject(
   await store
     .dispatch(
       environmentService.endpoints.createEnvironment.initiate({
-        name: 'Production',
+        name: PROD_ENVIRONMENT_NAME,
         project: project.id,
       }),
     )
@@ -108,14 +113,15 @@ async function ensureEnvironments(
   })) as { data?: PagedResponse<Environment> }
   const environments = envResult?.data?.results ?? []
   const devEnvironment =
-    environments.find((env) => env.name === 'Development') ?? environments[0]
+    environments.find((env) => env.name === DEV_ENVIRONMENT_NAME) ??
+    environments[0]
   if (devEnvironment) {
     return devEnvironment
   }
   return store
     .dispatch(
       environmentService.endpoints.createEnvironment.initiate({
-        name: 'Development',
+        name: DEV_ENVIRONMENT_NAME,
         project: project.id,
       }),
     )
