@@ -6,12 +6,14 @@ from django.core.cache import BaseCache
 from django.core.cache.backends.locmem import LocMemCache
 from django.test import Client as DjangoClient
 from django.urls import reverse
+from influxdb_client import InfluxDBClient
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from app.utils import create_hash
+from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.enums import EnvironmentDocumentCacheMode
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
@@ -36,6 +38,25 @@ def api_client():  # type: ignore[no-untyped-def]
 def admin_client(api_client, admin_user):  # type: ignore[no-untyped-def]
     api_client.force_authenticate(user=admin_user)
     return api_client
+
+
+@pytest.fixture()
+def influxdb(settings: SettingsWrapper) -> InfluxDBClient:
+    settings.INFLUXDB_BUCKET = "api_usage"
+    settings.INFLUXDB_URL = "http://localhost:8086"
+    settings.INFLUXDB_ORG = "flagsmith"
+    settings.INFLUXDB_TOKEN = "admin-token"
+
+    # Matches api.app_analytics.influxdb_wrapper bucket definitions
+    client = InfluxDBWrapper.get_client()
+    client.buckets_api().create_bucket(
+        org="flagsmith", bucket_name="api_usage_downsampled_15m"
+    )
+    client.buckets_api().create_bucket(
+        org="flagsmith", bucket_name="api_usage_downsampled_1h"
+    )
+
+    return client
 
 
 @pytest.fixture()
