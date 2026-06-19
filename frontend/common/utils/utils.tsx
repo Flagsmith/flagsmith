@@ -696,6 +696,8 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return false
   },
+  isOrgOnFreePlan: (): boolean =>
+    Utils.getPlanName(AccountStore.getActiveOrgPlan()) === planNames.free,
   isSaas: () => selectBuildVersion(getStore().getState())?.backend?.is_saas,
 
   isValidNumber(value: any) {

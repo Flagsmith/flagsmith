@@ -82,7 +82,7 @@ const ExperimentsPage: FC = () => {
   const hasExperiments = Utils.getFlagsmithHasFeature('experimental_flags')
   const hasFakeDoor = Utils.getFlagsmithHasFeature('experiments_fake_door')
 
-  if (!hasExperiments && hasFakeDoor) {
+  if (!Utils.isOrgOnFreePlan() && !hasExperiments && hasFakeDoor) {
     return (
       <div data-test='experiments-page' className='app-container container'>
         <PageTitle title='Experiments' />
