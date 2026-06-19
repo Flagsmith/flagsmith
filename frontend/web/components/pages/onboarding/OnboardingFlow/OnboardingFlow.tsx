@@ -2,6 +2,7 @@ import React, { FC, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
 import OnboardingHeader from 'components/pages/onboarding/OnboardingHeader'
+import ThemeToggle from 'components/pages/onboarding/ThemeToggle'
 import OnboardingConnectPanel from 'components/pages/onboarding/OnboardingConnectPanel'
 import { useEnsureOnboardingResources } from 'components/pages/onboarding/hooks/useEnsureOnboardingResources'
 import { useOnboardingFlagRename } from 'components/pages/onboarding/hooks/useOnboardingFlagRename'
@@ -101,6 +102,9 @@ const OnboardingFlow: FC = () => {
 
   return (
     <div className='onboarding-flow mx-auto d-flex flex-column gap-4'>
+      <div className='d-flex justify-content-end'>
+        <ThemeToggle />
+      </div>
       <OnboardingHeader
         organisationName={organisationName}
         projectName={projectName}
