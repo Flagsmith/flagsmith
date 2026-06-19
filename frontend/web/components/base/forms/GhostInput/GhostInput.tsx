@@ -31,7 +31,7 @@ const GhostInput = ({
   // Auto-size the field to its content by measuring a hidden span that mirrors
   // the text and font. +2px leaves room for the caret so the last character
   // isn't clipped. useLayoutEffect (not useEffect) so the width is committed
-  // before paint — otherwise fast typing paints a too-narrow frame first and
+  // before paint - otherwise fast typing paints a too-narrow frame first and
   // the trailing letters flicker as the box catches up.
   useLayoutEffect(() => {
     if (spanRef.current) {

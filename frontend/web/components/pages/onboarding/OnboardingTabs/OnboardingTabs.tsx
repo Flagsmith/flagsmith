@@ -18,7 +18,7 @@ type OnboardingTabsProps<Id extends string> = {
 
 // One-off tablist for the onboarding connect panel. We deliberately don't reuse
 // the shared navigation Tabs because this design right-aligns one tab ("Connect
-// with AI"), which the shared component can't express — it packs tabs left and
+// with AI"), which the shared component can't express - it packs tabs left and
 // reserves the right slot for a CTA. It's local to onboarding by design.
 //
 // Behaviour follows the WAI-ARIA tabs pattern: role tablist/tab, aria-selected,

@@ -14,7 +14,7 @@ const meta: Meta<typeof OnboardingHeader> = {
     docs: {
       description: {
         component:
-          'The top of the single-page onboarding flow: a welcome title and a sentence naming the resources we pre-created, with organisation / project / flag inline-editable in place via the shared GhostInput. Presentational — the rename handlers are owned by the page that assembles the flow.',
+          'The top of the single-page onboarding flow: a welcome title and a sentence naming the resources we pre-created, with organisation / project / flag inline-editable in place via the shared GhostInput. Presentational - the rename handlers are owned by the page that assembles the flow.',
       },
     },
     layout: 'padded',

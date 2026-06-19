@@ -4,8 +4,8 @@ import Icon from 'components/icons/Icon'
 import { getDarkMode, setDarkMode } from 'project/darkMode'
 
 // Compact light/dark toggle for the chromeless onboarding flow (which has no
-// app nav to reach the theme setting). setDarkMode flips the theme live — it
-// toggles the body class + data-bs-theme and persists to storage — so the
+// app nav to reach the theme setting). setDarkMode flips the theme live - it
+// toggles the body class + data-bs-theme and persists to storage - so the
 // local state only exists to re-render this button's own icon. Uses the
 // existing icon-button (Button theme='icon'); migrate to the dedicated
 // icon-button primitive once that lands.

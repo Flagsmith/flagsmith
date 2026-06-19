@@ -13,7 +13,7 @@ type UseOnboardingFlagRenameArgs = {
 }
 
 // "Rename" the onboarding flag. Feature names are immutable once created, so
-// this is a delete + recreate under the hood — safe here because the flag is
+// this is a delete + recreate under the hood - safe here because the flag is
 // freshly bootstrapped and not yet depended on. Recreate first (names differ,
 // so no unique conflict) and only then drop the old one, so a flag always
 // exists even if the second call fails. Resolves true on success.

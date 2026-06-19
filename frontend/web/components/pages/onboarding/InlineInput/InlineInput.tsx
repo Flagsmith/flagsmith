@@ -14,8 +14,8 @@ export type InlineInputProps = {
 }
 
 // Onboarding-local inline editable value (GhostInput + pencil) for the welcome
-// sentence. Reads as part of the prose — a dashed underline hints it's editable
-// and the pencil/highlight surface on hover — rather than a bordered pill.
+// sentence. Reads as part of the prose - a dashed underline hints it's editable
+// and the pencil/highlight surface on hover - rather than a bordered pill.
 // Commits on blur / Enter; an empty value reverts. Deliberately NOT a shared
 // inline-edit primitive (see Wadii's segment work).
 const InlineInput: FC<InlineInputProps> = ({

@@ -13,7 +13,7 @@ const meta: Meta<typeof SdkPicker> = {
     docs: {
       description: {
         component:
-          'The SDK / framework picker: popular SDKs as quick-pick Chips, the long tail behind "More". Controlled — the selected SDK lives in the parent.',
+          'The SDK / framework picker: popular SDKs as quick-pick Chips, the long tail behind "More". Controlled - the selected SDK lives in the parent.',
       },
     },
     layout: 'padded',

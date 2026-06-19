@@ -9,7 +9,7 @@ const meta: Meta<typeof InlineInput> = {
     docs: {
       description: {
         component:
-          'An onboarding-local inline editable value (GhostInput + pencil) used in the welcome sentence. Reads as part of the prose — a dashed underline hints it’s editable — rather than a pill. Commits on blur / Enter; an empty value reverts; an optional `transform` normalises on commit (e.g. flag-name rules). Feature-local — not a shared inline-edit primitive.',
+          'An onboarding-local inline editable value (GhostInput + pencil) used in the welcome sentence. Reads as part of the prose - a dashed underline hints it’s editable - rather than a pill. Commits on blur / Enter; an empty value reverts; an optional `transform` normalises on commit (e.g. flag-name rules). Feature-local - not a shared inline-edit primitive.',
       },
     },
     layout: 'centered',

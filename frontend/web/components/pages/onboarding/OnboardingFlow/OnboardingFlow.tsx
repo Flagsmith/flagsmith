@@ -1,6 +1,7 @@
 import React, { FC, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
+import Icon from 'components/icons/Icon'
 import OnboardingHeader from 'components/pages/onboarding/OnboardingHeader'
 import ThemeToggle from 'components/pages/onboarding/ThemeToggle'
 import OnboardingConnectPanel from 'components/pages/onboarding/OnboardingConnectPanel'
@@ -69,7 +70,7 @@ const OnboardingFlow: FC = () => {
     setFeatureName(name)
     if (!(await renameFlag(name))) {
       setFeatureName(previous)
-      // Only surface an error for a genuine failure — a rename attempted before
+      // Only surface an error for a genuine failure - a rename attempted before
       // the flag query settles also returns false, and shouldn't alarm the user.
       if (flagReady) {
         toast('Couldn’t rename your flag. Please try again.', 'danger')
@@ -120,7 +121,10 @@ const OnboardingFlow: FC = () => {
       />
       <div className='d-flex justify-content-end'>
         <Button theme='text' onClick={skipToApp}>
-          Skip — set up manually
+          <span className='d-inline-flex align-items-center gap-1'>
+            Skip onboarding, I’m a pro
+            <Icon name='arrow-right' width={14} />
+          </span>
         </Button>
       </div>
     </div>

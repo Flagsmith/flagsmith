@@ -33,7 +33,7 @@ export type OnboardingConnectPanelProps = {
 // Two ways to connect an app to the pre-created flag: paste an agent-agnostic
 // prompt ("Connect with AI"), or copy the install + wire snippets for a chosen
 // SDK ("Connect your code"). Both carry the real env key + flag; nothing faked.
-// This is the shell — the tabs and each panel's content live in their own files.
+// This is the shell - the tabs and each panel's content live in their own files.
 const OnboardingConnectPanel: FC<OnboardingConnectPanelProps> = ({
   environmentKey,
   featureName,

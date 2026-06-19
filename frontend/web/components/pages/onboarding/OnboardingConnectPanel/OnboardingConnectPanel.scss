@@ -33,7 +33,7 @@
     }
   }
 
-  // Code cards — theme-adaptive via semantic tokens (light editor in light mode,
+  // Code cards - theme-adaptive via semantic tokens (light editor in light mode,
   // dark in dark mode). Surface, base text and every syntax colour map to
   // semantic tokens that flip with the theme, so there's no hardcoded hex and no
   // per-theme override. TODO(#6606): lift this palette into the shared `.hljs`

@@ -297,8 +297,8 @@ const App = class extends Component {
               )
             }
 
-            // Chromeless onboarding: render only the flow — no nav, sidebar or
-            // header links — so the user can't navigate away mid-flow. The flow
+            // Chromeless onboarding: render only the flow - no nav, sidebar or
+            // header links - so the user can't navigate away mid-flow. The flow
             // provides its own Skip escape.
             if (isOnboardingFlow) {
               return <div>{this.props.children}</div>

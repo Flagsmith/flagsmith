@@ -24,7 +24,7 @@ export const createOrganisationViaAccountStore = (
     const onSaved = () => {
       cleanup()
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore — savedId is set by the createOrganisation controller
+      // @ts-ignore - savedId is set by the createOrganisation controller
       resolve(AccountStore.savedId as number)
     }
     const onProblem = () => {

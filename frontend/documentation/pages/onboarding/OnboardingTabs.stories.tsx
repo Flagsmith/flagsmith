@@ -11,7 +11,7 @@ const meta: Meta<typeof OnboardingTabs> = {
     docs: {
       description: {
         component:
-          "One-off onboarding tablist following the WAI-ARIA tabs pattern: roving tabindex, Arrow/Home/End keys, aria-selected. A tab can be pushed to the trailing edge with `alignEnd` — the reason this isn't the shared navigation Tabs. Local to onboarding; pair with OnboardingTabPanel for the content side.",
+          "One-off onboarding tablist following the WAI-ARIA tabs pattern: roving tabindex, Arrow/Home/End keys, aria-selected. A tab can be pushed to the trailing edge with `alignEnd` - the reason this isn't the shared navigation Tabs. Local to onboarding; pair with OnboardingTabPanel for the content side.",
       },
     },
     layout: 'padded',

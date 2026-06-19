@@ -52,7 +52,7 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
       <div>
         <span className='text-default fw-semibold'>What happens next</span>
         <ul className='onboarding-connect__steps text-muted mt-2 mb-0'>
-          <li>Detects your stack — language, framework, package manager.</li>
+          <li>Detects your stack: language, framework and package manager.</li>
           <li>Installs the Flagsmith SDK and wires it into your code.</li>
           <li>Uses your flag {featureName} and verifies it’s working.</li>
         </ul>

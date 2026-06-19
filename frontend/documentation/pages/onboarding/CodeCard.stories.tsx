@@ -19,7 +19,7 @@ const meta: Meta<typeof CodeCard> = {
     docs: {
       description: {
         component:
-          'A copyable, syntax-highlighted code block with a header strip. Owns its own "Copied" feedback (announced via aria-live) and is theme-adaptive via semantic tokens — a light editor in light mode, dark in dark mode.',
+          'A copyable, syntax-highlighted code block with a header strip. Owns its own "Copied" feedback (announced via aria-live) and is theme-adaptive via semantic tokens - a light editor in light mode, dark in dark mode.',
       },
     },
     layout: 'padded',

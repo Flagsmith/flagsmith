@@ -10,7 +10,7 @@ export type LogoProps = {
 }
 
 // Shared wrapper for the SDK brand logos: a 24×24 single-path mark rendered at
-// 16px, decorative (aria-hidden). One logo component per file imports this —
+// 16px, decorative (aria-hidden). One logo component per file imports this -
 // see ./index.ts. Mirrors the icon convention we're standardising on.
 const Svg: FC<LogoProps> = ({ children, color }) => {
   const fill =

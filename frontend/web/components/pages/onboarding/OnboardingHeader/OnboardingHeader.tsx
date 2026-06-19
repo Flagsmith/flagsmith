@@ -7,7 +7,7 @@ export type OnboardingHeaderProps = {
   organisationName: string
   projectName: string
   featureName: string
-  // Project enforces lower-case feature names — feeds the flag-name normaliser.
+  // Project enforces lower-case feature names - feeds the flag-name normaliser.
   caseSensitive: boolean
   onRenameOrganisation?: (name: string) => void
   onRenameProject?: (name: string) => void

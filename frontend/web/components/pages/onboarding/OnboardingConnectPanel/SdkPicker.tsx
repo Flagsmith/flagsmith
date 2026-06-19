@@ -13,7 +13,7 @@ export type SdkPickerProps = {
 
 // The language / framework picker: popular SDKs as quick-pick chips with a
 // "More" toggle pinned at the end of the first row, and the long tail opening as
-// a second row beneath — so "More" never moves and open/close happens in place.
+// a second row beneath - so "More" never moves and open/close happens in place.
 // A single-select radiogroup with Arrow/Home/End roving across the *visible*
 // chips (selection follows focus). The overflow row stays mounted for the
 // open/close transition but is `inert` while collapsed, so keyboard and screen

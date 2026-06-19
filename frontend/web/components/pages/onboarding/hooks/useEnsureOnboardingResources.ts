@@ -54,7 +54,7 @@ export type OnboardingResources = {
  * avoids:
  *  - Creating a second organisation. The org is resolved from the loaded
  *    organisations list (not just the legacy AccountStore selection, which may
- *    still be unresolved on a return visit) — creating only when the user has
+ *    still be unresolved on a return visit) - creating only when the user has
  *    none. Otherwise plan org caps reject the create with a 403.
  *  - Piling up duplicate "My first project"s. An existing project (and its
  *    environment) is reused; the flag is ensured, tolerating an
@@ -85,7 +85,7 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
   const [projectId, setProjectId] = useState<number | null>(null)
   const [organisationName, setOrganisationName] = useState('')
   const [projectName, setProjectName] = useState('')
-  // Whether the project enforces lower-case feature names — drives the same
+  // Whether the project enforces lower-case feature names - drives the same
   // name normalisation the create-feature modal applies (see the page).
   const [caseSensitive, setCaseSensitive] = useState(false)
   const [error, setError] = useState<unknown>(null)
@@ -144,7 +144,7 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
           }).unwrap()
         }
 
-        // Surface an environment key — reuse one, preferring Development;
+        // Surface an environment key - reuse one, preferring Development;
         // create it only if the (reused) project somehow has none.
         const envResult = (await getEnvironments(getStore(), {
           projectId: project.id,
@@ -161,7 +161,7 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
         }
 
         // Ensure the demo flag exists. A unique-name conflict on a revisit is
-        // expected and fine — we display the flag either way.
+        // expected and fine - we display the flag either way.
         try {
           const featureBody: Partial<ProjectFlag> = {
             name: FLAG_NAME,
@@ -173,7 +173,7 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
             project_id: project.id,
           }).unwrap()
         } catch {
-          // Flag already exists in this project — reuse it.
+          // Flag already exists in this project - reuse it.
         }
 
         // Refresh the legacy org store so the shell sees the project.

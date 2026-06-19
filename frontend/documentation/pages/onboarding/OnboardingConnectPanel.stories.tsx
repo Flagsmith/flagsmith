@@ -12,7 +12,7 @@ const meta: Meta<typeof OnboardingConnectPanel> = {
     docs: {
       description: {
         component:
-          'Two ways to connect an app to the pre-created flag: a "Connect with AI" tab (an agent-agnostic, zero-auth prompt carrying the real env key + flag) and a "Connect your code" tab (an SDK selector built on Chip, with install + wire snippets per language). Nothing is faked — the prompt and snippets carry the user\'s real env key + flag.',
+          'Two ways to connect an app to the pre-created flag: a "Connect with AI" tab (an agent-agnostic, zero-auth prompt carrying the real env key + flag) and a "Connect your code" tab (an SDK selector built on Chip, with install + wire snippets per language). Nothing is faked - the prompt and snippets carry the user\'s real env key + flag.',
       },
     },
     layout: 'padded',

@@ -1,6 +1,6 @@
 // Inline editable value in the onboarding welcome sentence. Reads as part of
-// the prose — a dashed underline hints it's editable; the pencil and a faint
-// highlight surface on hover/focus — instead of a bordered pill. The value
+// the prose - a dashed underline hints it's editable; the pencil and a faint
+// highlight surface on hover/focus - instead of a bordered pill. The value
 // (GhostInput) inherits the surrounding type, so it sits inline with the text.
 .inline-input {
   display: inline-flex;
