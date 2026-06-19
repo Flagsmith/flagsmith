@@ -40,9 +40,9 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v5
 
-      - name: Install uv
-        uses: ./.github/actions/install-uv
+      - uses: ./.github/actions/install-uv
         with:
+          working-directory: api
           python-version: ${{ matrix.python-version }}
 
       - name: Install SAML Dependencies

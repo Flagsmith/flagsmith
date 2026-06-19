@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing
+from dataclasses import replace
 from functools import lru_cache
 
 import structlog
@@ -12,9 +13,13 @@ from django.utils import timezone
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from experimentation.constants import (
+    CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
     EXPOSURE_EVENT_NAME,
     EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
+    RESULTS_MIN_CONVERSIONS_PER_VARIANT,
+    RESULTS_MIN_IDENTITIES_PER_VARIANT,
+    SRM_MIN_TOTAL_IDENTITIES,
     WAREHOUSE_CONNECTION_FLAG,
 )
 from experimentation.dataclasses import (
@@ -22,13 +27,25 @@ from experimentation.dataclasses import (
     ExposuresSummary,
     ExposuresTimeseries,
     ExposuresTimeseriesPoint,
+    MetricResult,
+    MetricSpec,
+    ResultsAggregates,
+    ResultsSummary,
     WarehouseEventStats,
 )
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
     ExperimentStatus,
+    MetricAggregation,
     WarehouseConnectionStatus,
     WarehouseType,
+)
+from experimentation.results_query import _EXPOSURES_CTE, ResultsQueryBuilder
+from experimentation.stats import (
+    Inference,
+    VariantStats,
+    compare_to_control,
+    srm_p_value,
 )
 from integrations.flagsmith.client import get_openfeature_client
 
@@ -103,23 +120,9 @@ def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
     )
 
 
-# Events are delivered at-least-once; first-exposure dedup keeps duplicates
-# from inflating identity counts.
-EXPOSURE_BUCKETS_QUERY = """
-WITH exposures AS (
-    SELECT
-        identifier,
-        if(uniqExact(value) > 1, '', any(value)) AS variant,
-        uniqExact(value) > 1 AS quarantined,
-        min(timestamp) AS first_exposure
-    FROM events
-    WHERE environment_key = %(environment_key)s
-        AND event = %(exposure_event)s
-        AND feature_name = %(feature_name)s
-        AND timestamp >= %(window_start)s
-        AND timestamp < %(window_end)s
-    GROUP BY identifier
-)
+EXPOSURE_BUCKETS_QUERY = (
+    _EXPOSURES_CTE
+    + """
 SELECT
     quarantined,
     variant,
@@ -129,6 +132,7 @@ FROM exposures
 GROUP BY quarantined, variant, bucket
 ORDER BY bucket
 """
+)
 
 _EXPOSURE_BUCKET_FUNCTIONS: dict[str, str] = {
     "hour": "toStartOfHour",
@@ -225,6 +229,107 @@ def get_exposure_buckets(
         )
         for quarantined, variant, bucket, first_exposed_identities in rows
     ]
+
+
+def get_metric_variant_stats(
+    *,
+    environment_key: str,
+    feature_name: str,
+    window_start: datetime,
+    window_end: datetime,
+    specs: Sequence[MetricSpec],
+) -> ResultsAggregates:
+    """Run the warehouse query, returning per-variant identity counts and, per
+    metric, per-variant sufficient statistics."""
+    builder = ResultsQueryBuilder(specs)
+    params: dict[str, object] = {
+        "environment_key": environment_key,
+        "exposure_event": EXPOSURE_EVENT_NAME,
+        "feature_name": feature_name,
+        "window_start": window_start,
+        "window_end": window_end,
+    }
+    builder.add_metric_params(params)
+
+    rows, columns = _get_clickhouse_client().execute(
+        builder.build_query(), params, with_column_types=True
+    )
+    exposure_counts, metric_stats = builder.decode_rows(
+        rows, [name for name, _type in columns]
+    )
+
+    return ResultsAggregates(
+        specs=list(specs),
+        exposure_counts=exposure_counts,
+        metric_stats=metric_stats,
+    )
+
+
+def build_results_summary(
+    aggregates: ResultsAggregates,
+    *,
+    expected_shares: dict[str, float],
+) -> ResultsSummary:
+    exposure_counts = aggregates.exposure_counts
+    total = sum(exposure_counts.values())
+    if expected_shares and total >= SRM_MIN_TOTAL_IDENTITIES:
+        srm = srm_p_value(
+            [exposure_counts.get(variant, 0) for variant in expected_shares],
+            list(expected_shares.values()),
+        )
+    else:
+        srm = None
+    return ResultsSummary(
+        srm_p_value=srm,
+        metrics=[
+            MetricResult(
+                metric_id=spec.metric_id,
+                variants=aggregates.metric_stats.get(spec.metric_id, {}),
+                inference=_metric_inference(
+                    spec, aggregates.metric_stats.get(spec.metric_id, {})
+                ),
+            )
+            for spec in aggregates.specs
+        ],
+    )
+
+
+def _metric_inference(
+    spec: MetricSpec,
+    variants: dict[str, VariantStats],
+) -> dict[str, Inference | None]:
+    control = variants.get(CONTROL_VARIANT_KEY)
+    return {
+        variant_key: _infer_treatment(spec, control, treatment)
+        for variant_key, treatment in variants.items()
+        if variant_key != CONTROL_VARIANT_KEY
+    }
+
+
+def _infer_treatment(
+    spec: MetricSpec,
+    control: VariantStats | None,
+    treatment: VariantStats,
+) -> Inference | None:
+    # Product floor for showing a result at all; compare_to_control applies its
+    # own independent guards (e.g. zero control mean) on top of this.
+    if (
+        control is None
+        or control.n < RESULTS_MIN_IDENTITIES_PER_VARIANT
+        or treatment.n < RESULTS_MIN_IDENTITIES_PER_VARIANT
+    ):
+        return None
+    if spec.aggregation == MetricAggregation.OCCURRENCE and (
+        control.sum < RESULTS_MIN_CONVERSIONS_PER_VARIANT
+        or treatment.sum < RESULTS_MIN_CONVERSIONS_PER_VARIANT
+    ):
+        return None
+    inference = compare_to_control(control, treatment)
+    if inference is not None and spec.lower_is_better:
+        # "Winning" means moving the metric the good way; for a lower-is-better
+        # metric that's a fall, so the chance of winning is the chance lift < 0.
+        inference = replace(inference, chance_to_win=1.0 - inference.chance_to_win)
+    return inference
 
 
 def _resolve_audit_log_author(

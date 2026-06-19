@@ -22,6 +22,11 @@ on:
         description: The concurrent number of browsers to be used on testing
         required: false
         default: 16
+      pg-max-connections:
+        type: number
+        description: Postgres max_connections for the E2E database. Raise above the default of 100 for high-concurrency runs (e.g. private-cloud) to avoid connection exhaustion.
+        required: false
+        default: 100
       runs-on:
         type: string
         description: The runner label to use. Defaults to `depot-ubuntu-latest`
@@ -115,6 +120,7 @@ jobs:
           E2E_IMAGE: ${{ inputs.e2e-image }}
           E2E_CONCURRENCY: ${{ inputs.concurrency }}
           E2E_RETRIES: 2
+          PG_MAX_CONNECTIONS: ${{ inputs.pg-max-connections }}
           VISUAL_REGRESSION: ${{ inputs.visual-regression && '1' || '' }}
           VISUAL_REGRESSION_ARGS: ${{ inputs.visual-regression-update && '--update-snapshots' || '' }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
