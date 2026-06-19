@@ -1,7 +1,8 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { useHistory, useParams } from 'react-router-dom'
 import Utils from 'common/utils/utils'
 import {
+  useGetExperimentBayesianResultsQuery,
   useGetExperimentExposuresQuery,
   useGetExperimentQuery,
 } from 'common/services/useExperiment'
@@ -11,6 +12,11 @@ import ExperimentConfiguration from 'components/experiments/results/ExperimentCo
 import ExperimentSummaryScorecard from 'components/experiments/results/ExperimentSummaryScorecard'
 import ExperimentMetricScorecard from 'components/experiments/results/ExperimentMetricScorecard'
 import ExperimentExposuresPanel from 'components/experiments/results/ExperimentExposuresPanel'
+import {
+  buildFakeExposures,
+  buildFakeResults,
+  isFakeDataEnabled,
+} from 'components/experiments/results/fakeData'
 
 type ExperimentDetailParams = {
   projectId: string
@@ -24,6 +30,7 @@ const ExperimentDetailPage: FC = () => {
   const history = useHistory()
   const numericId = Number(experimentId)
   const hasFeature = Utils.getFlagsmithHasFeature('experimental_flags')
+  const useFake = isFakeDataEnabled()
 
   const {
     data: experiment,
@@ -36,8 +43,25 @@ const ExperimentDetailPage: FC = () => {
 
   const { data: exposures } = useGetExperimentExposuresQuery(
     { environmentId, experimentId: numericId },
-    { skip: !hasFeature },
+    { skip: !hasFeature || useFake },
   )
+
+  const { data: bayesianResults } = useGetExperimentBayesianResultsQuery(
+    { environmentId, experimentId: numericId },
+    { skip: !hasFeature || useFake },
+  )
+
+  const fakeExposures = useMemo(
+    () => (useFake && experiment ? buildFakeExposures(experiment) : undefined),
+    [useFake, experiment],
+  )
+  const fakeResults = useMemo(
+    () => (useFake && experiment ? buildFakeResults(experiment) : undefined),
+    [useFake, experiment],
+  )
+
+  const effectiveExposures = fakeExposures ?? exposures
+  const results = fakeResults ?? bayesianResults?.payload ?? undefined
 
   if (!hasFeature) {
     history.replace(
@@ -66,8 +90,8 @@ const ExperimentDetailPage: FC = () => {
     )
   }
 
-  const usersEnrolled = exposures?.payload
-    ? getHeadlineTotal(exposures.payload)
+  const usersEnrolled = effectiveExposures?.payload
+    ? getHeadlineTotal(effectiveExposures.payload)
     : null
 
   return (
@@ -83,16 +107,18 @@ const ExperimentDetailPage: FC = () => {
           <h5 className='mb-3 mt-5'>Results</h5>
           <ExperimentSummaryScorecard
             experiment={experiment}
+            results={results}
             usersEnrolled={usersEnrolled}
           />
 
           <h5 className='mb-3 mt-5'>Analysis</h5>
-          <ExperimentMetricScorecard experiment={experiment} />
+          <ExperimentMetricScorecard experiment={experiment} results={results} />
 
           <h5 className='mb-3 mt-5'>Exposures</h5>
           <ExperimentExposuresPanel
             environmentId={environmentId}
             experiment={experiment}
+            exposuresOverride={fakeExposures}
           />
         </>
       )}
