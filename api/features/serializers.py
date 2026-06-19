@@ -11,7 +11,7 @@ from common.features.serializers import (
     FeatureStateValueSerializer,
 )
 from common.projects.permissions import VIEW_PROJECT
-from django.db import models
+from django.db import IntegrityError, models
 from drf_spectacular.utils import extend_schema_field
 from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
@@ -57,6 +57,11 @@ from .feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE
 from .models import Feature, FeatureState
 from .multivariate.models import MultivariateFeatureOption
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
+
+DUPLICATE_FEATURE_NAME_ERROR = (
+    "Feature with that name already exists for this project. Note that feature "
+    "names are case insensitive."
+)
 
 
 class FeatureStateSerializerSmall(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -275,7 +280,14 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         group_owners: list[UserPermissionGroup] = validated_data.pop("group_owners", [])
 
         user = validated_data.pop("user", None)
-        instance = super(CreateFeatureSerializer, self).create(validated_data)  # type: ignore[no-untyped-call]
+        try:
+            instance = super(CreateFeatureSerializer, self).create(validated_data)  # type: ignore[no-untyped-call]
+        except IntegrityError:
+            # A concurrent request may create a feature with the same name after
+            # `validate_name` has run but before this insert, tripping the
+            # case-insensitive unique constraint. Surface this as a 400 rather
+            # than letting the IntegrityError bubble up as an HTTP 500.
+            raise serializers.ValidationError({"name": [DUPLICATE_FEATURE_NAME_ERROR]})
 
         if owners:
             instance.owners.add(*owners)
@@ -369,11 +381,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             )
 
         if existing_feature_queryset.exists():
-            raise serializers.ValidationError(
-                "Feature with that name already exists for this "
-                "project. Note that feature names are case "
-                "insensitive."
-            )
+            raise serializers.ValidationError(DUPLICATE_FEATURE_NAME_ERROR)
 
         return name
 

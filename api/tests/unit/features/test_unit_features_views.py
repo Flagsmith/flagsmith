@@ -1806,6 +1806,35 @@ def test_create_feature__name_does_not_match_regex__returns_400(
     )
 
 
+def test_create_feature__name_race_condition__returns_400(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    # Simulate a race where `validate_name` passes (e.g. a concurrent request
+    # creates the feature after validation runs) but the database's
+    # case-insensitive unique constraint rejects the duplicate name on insert.
+    mocker.patch(
+        "features.serializers.CreateFeatureSerializer.validate_name",
+        side_effect=lambda name: name,
+    )
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": feature.name, "type": STANDARD, "project": project.id}
+
+    # When
+    response = admin_client_new.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["name"][0] == (
+        "Feature with that name already exists for this project. Note that "
+        "feature names are case insensitive."
+    )
+
+
 def test_create_feature__valid_data__creates_audit_log(
     admin_client_new: APIClient,
     project: Project,
