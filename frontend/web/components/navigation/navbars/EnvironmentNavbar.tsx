@@ -88,6 +88,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                   Experiments
                 </SidebarLink>
               ) : (
+                !Utils.isOrgOnFreePlan() &&
                 Utils.getFlagsmithHasFeature('experiments_fake_door') && (
                   <SidebarLink
                     id={mobile ? undefined : 'experiments-link'}

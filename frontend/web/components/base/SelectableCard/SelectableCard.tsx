@@ -1,4 +1,5 @@
 import React, { FC, ReactNode } from 'react'
+import BareButton from 'components/base/forms/BareButton'
 import './SelectableCard.scss'
 
 type BadgeVariant = 'primary' | 'secondary'
@@ -24,22 +25,13 @@ const SelectableCard: FC<SelectableCardProps> = ({
   tags,
   title,
 }) => {
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      onClick()
-    }
-  }
-
   return (
-    <div
+    <BareButton
       className={`selectable-card${
         selected ? ' selectable-card--selected' : ''
       }${disabled ? ' selectable-card--disabled' : ''}`}
-      onClick={disabled ? undefined : onClick}
-      onKeyDown={disabled ? undefined : handleKeyDown}
-      role='button'
-      tabIndex={disabled ? -1 : 0}
+      onClick={onClick}
+      disabled={disabled}
     >
       <div className='selectable-card__content'>
         {icon && <div className='selectable-card__icon'>{icon}</div>}
@@ -64,7 +56,7 @@ const SelectableCard: FC<SelectableCardProps> = ({
           </span>
         </div>
       )}
-    </div>
+    </BareButton>
   )
 }
 

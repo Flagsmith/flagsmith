@@ -1225,6 +1225,7 @@ CORS_ALLOW_HEADERS = list(
         )
     )
 )
+CORS_EXPOSE_HEADERS = ["Retry-After"]
 
 # Hubspot settings
 HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)

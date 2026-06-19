@@ -1043,7 +1043,15 @@ export type Req = {
     }
   }
   experimentAction: { environmentId: string; experimentId: number }
+  updateExperiment: {
+    environmentId: string
+    experimentId: number
+    body: { hypothesis?: string }
+  }
   deleteExperiment: { environmentId: string; experimentId: number }
+  getExperiment: { environmentId: string; experimentId: number }
+  getExperimentExposures: { environmentId: string; experimentId: number }
+  refreshExperimentExposures: { environmentId: string; experimentId: number }
   getMetrics: PagedRequest<{
     environmentId: string
     q?: string

@@ -26,7 +26,7 @@ jobs:
       - name: Install uv
         uses: ./.github/actions/install-uv
         with:
-          python-version: 3.12
+          working-directory: api
 
       - name: Install Dependencies
         run: make install-packages

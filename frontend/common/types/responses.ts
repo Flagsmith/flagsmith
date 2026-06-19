@@ -611,21 +611,6 @@ export type Metric = {
   updated_at: string
 }
 
-export type ExpectedDirection =
-  | 'increase'
-  | 'decrease'
-  | 'not_increase'
-  | 'not_decrease'
-
-export type ExperimentMetric = {
-  id: number
-  metric: number
-  metric_name: string
-  aggregation: MetricAggregation
-  expected_direction: ExpectedDirection
-  created_at: string
-}
-
 export type ExperimentFeature = {
   id: number
   name: string
@@ -645,6 +630,73 @@ export type Experiment = {
   updated_at: string
   started_at: string | null
   ended_at: string | null
+}
+
+export type ExpectedDirection =
+  | 'increase'
+  | 'decrease'
+  | 'not_increase'
+  | 'not_decrease'
+
+// Join object returned on the experiment-detail `metrics` array
+// (api/experimentation ExperimentMetricSerializer).
+export type ExperimentMetric = {
+  id: number
+  metric: number
+  metric_name: string
+  aggregation: MetricAggregation
+  expected_direction: ExpectedDirection
+  created_at: string
+}
+
+// --- Exposures (live) — mirrors api/experimentation dataclasses ---
+export type ExposureGranularity = 'hour' | 'day'
+
+export type ExposuresTimeseriesPoint = {
+  bucket: string
+  new_identities: Record<string, number>
+}
+
+export type ExposuresTimeseries = {
+  granularity: ExposureGranularity
+  points: ExposuresTimeseriesPoint[]
+}
+
+export type ExposuresSummary = {
+  excluded_identities: number
+  timeseries: ExposuresTimeseries
+}
+
+export type ExperimentExposures = {
+  as_of: string | null
+  last_error_at: string | null
+  refresh_requested_at: string | null
+  payload: ExposuresSummary | null
+}
+
+// --- Bayesian results (defined now, consumed when the endpoint ships) ---
+export type VariantStats = {
+  n: number
+  sum: number
+  sum_squares: number
+}
+
+export type Inference = {
+  lift: number
+  ci_low: number
+  ci_high: number
+  chance_to_win: number
+}
+
+export type BayesianMetricResult = {
+  metric_id: number
+  variants: Record<string, VariantStats>
+  inference: Record<string, Inference | null>
+}
+
+export type BayesianResultsSummary = {
+  srm_p_value: number | null
+  metrics: BayesianMetricResult[]
 }
 
 export enum TagStrategy {
@@ -1427,6 +1479,8 @@ export type Res = {
     status_counts?: ExperimentStatusCounts
   }
   experiment: Experiment
+  experimentExposures: ExperimentExposures
+  experimentBayesianResults: BayesianResultsSummary
   metric: Metric
   metrics: PagedResponse<Metric>
   multivariateOption: MultivariateOption

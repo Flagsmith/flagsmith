@@ -47,6 +47,7 @@ import CreateReleasePipelinePage from './components/pages/CreateReleasePipelineP
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 import SegmentPage from './components/pages/SegmentPage'
 import ExperimentsPage from './components/pages/ExperimentsPage'
+import ExperimentDetailPage from './components/pages/ExperimentDetailPage'
 import MetricsPage from './components/pages/MetricsPage'
 import ReleaseManagerPage from './components/pages/ReleaseManagerPage'
 import FlagEnvironmentsPage from './components/pages/FlagEnvironmentsPage'
@@ -78,6 +79,8 @@ export const routes = {
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
   'executive-view': '/organisation/:organisationId/executive-view',
+  'experiment-detail':
+    '/project/:projectId/environment/:environmentId/experiments/:experimentId',
   'experiments': '/project/:projectId/environment/:environmentId/experiments',
   'feature-history': '/project/:projectId/environment/:environmentId/history',
   'feature-history-detail':
@@ -170,6 +173,11 @@ export default (
           path={routes.experiments}
           exact
           component={ExperimentsPage}
+        />
+        <ParameterizedRoute
+          path={routes['experiment-detail']}
+          exact
+          component={ExperimentDetailPage}
         />
         <ParameterizedRoute
           path={routes.metrics}

@@ -17,27 +17,17 @@ type LineChartProps = {
   data: ChartDataPoint[]
   series: string[]
   colorMap: Record<string, string>
+  height?: number
   xAxisInterval?: number
-  /**
-   * Render recharts' built-in `<Legend />` below the chart. Default `false` —
-   * most consumers already expose a coloured filter UI (tags / MultiSelect)
-   * that serves the same purpose, so a second legend is redundant and can
-   * display raw dataKeys (e.g. numeric env IDs) that are meaningless to users.
-   */
   showLegend?: boolean
-  /**
-   * Optional dataKey → display name map, threaded through to the tooltip (and
-   * the legend when enabled). Use this when dataKeys are opaque identifiers
-   * (e.g. numeric env ids) that need a human-readable label on display.
-   */
   seriesLabels?: Record<string, string>
-  /** Render vertical grid lines (one per x tick). Default `true`. */
   verticalGrid?: boolean
 }
 
 const LineChart: FC<LineChartProps> = ({
   colorMap,
   data,
+  height = 400,
   series,
   seriesLabels,
   showLegend = false,
@@ -45,7 +35,7 @@ const LineChart: FC<LineChartProps> = ({
   xAxisInterval = 0,
 }) => {
   return (
-    <ResponsiveContainer height={400} width='100%'>
+    <ResponsiveContainer height={height} width='100%'>
       <RawLineChart data={data}>
         <CartesianGrid
           strokeDasharray='3 5'

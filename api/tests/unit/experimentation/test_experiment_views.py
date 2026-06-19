@@ -19,17 +19,21 @@ from environments.models import Environment
 from experimentation.constants import (
     EXPERIMENT_FLAG,
     EXPOSURES_REFRESH_MIN_INTERVAL,
+    RESULTS_REFRESH_MIN_INTERVAL,
 )
 from experimentation.models import (
     ExpectedDirection,
     Experiment,
     ExperimentExposures,
     ExperimentMetric,
+    ExperimentResults,
     ExperimentStatus,
     Metric,
 )
+from experimentation.serializers import ExperimentFeatureSerializer
 from features.feature_types import MULTIVARIATE
-from features.models import Feature
+from features.models import Feature, FeatureState
+from features.multivariate.models import MultivariateFeatureStateValue
 from tests.types import EnableFeaturesFixture
 
 if TYPE_CHECKING:
@@ -700,6 +704,7 @@ def test_exposures__computed_row__returns_row(
             "last_error_at": None,
             "refresh_requested_at": None,
             "payload": payload,
+            "is_final": False,
         }
     }
 
@@ -751,6 +756,7 @@ def test_exposures__failed_refresh__returns_error_marker_with_last_payload(
             "last_error_at": "2026-06-11T12:00:00Z",
             "refresh_requested_at": None,
             "payload": payload,
+            "is_final": False,
         }
     }
 
@@ -1373,3 +1379,375 @@ def test_post__concurrent_create_race__returns_409(
 
     # Then
     assert response.status_code == status.HTTP_409_CONFLICT
+
+
+def test_results__computed_row__returns_row(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a previously computed results row
+    enable_features(EXPERIMENT_FLAG)
+    payload = {
+        "srm_p_value": 0.42,
+        "metrics": [
+            {
+                "metric_id": 7,
+                "variants": {
+                    "control": {"n": 1000, "sum": 100.0, "sum_squares": 100.0}
+                },
+                "inference": {},
+            }
+        ],
+    }
+    ExperimentResults.objects.create(
+        experiment=experiment,
+        as_of=datetime(2026, 6, 11, 12, tzinfo=dt_timezone.utc),
+        payload=payload,
+    )
+
+    # When
+    response = admin_client_new.get(_action_url(environment, experiment, "results"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "results": {
+            "as_of": "2026-06-11T12:00:00Z",
+            "last_error_at": None,
+            "refresh_requested_at": None,
+            "payload": payload,
+            "is_final": False,
+        }
+    }
+
+
+def test_results__never_computed__returns_null(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(_action_url(environment, experiment, "results"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"results": None}
+
+
+def test_results__failed_refresh__returns_error_marker_with_last_payload(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a row whose last refresh failed after an earlier success
+    enable_features(EXPERIMENT_FLAG)
+    payload: dict[str, object] = {"srm_p_value": None, "metrics": []}
+    ExperimentResults.objects.create(
+        experiment=experiment,
+        as_of=datetime(2026, 6, 11, 11, tzinfo=dt_timezone.utc),
+        payload=payload,
+        last_error_at=datetime(2026, 6, 11, 12, tzinfo=dt_timezone.utc),
+    )
+
+    # When
+    response = admin_client_new.get(_action_url(environment, experiment, "results"))
+
+    # Then the stale data and the error marker are both surfaced
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "results": {
+            "as_of": "2026-06-11T11:00:00Z",
+            "last_error_at": "2026-06-11T12:00:00Z",
+            "refresh_requested_at": None,
+            "payload": payload,
+            "is_final": False,
+        }
+    }
+
+
+def test_results__admin_without_flag__returns_403(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+) -> None:
+    # Given — feature flag not enabled
+
+    # When
+    response = admin_client_new.get(_action_url(environment, experiment, "results"))
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_results__staff_user_with_flag__returns_403(
+    staff_client: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = staff_client.get(_action_url(environment, experiment, "results"))
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_refresh_results__started_experiment__enqueues_compute(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_results")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-results")
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    mock_compute.delay.assert_called_once_with(
+        kwargs={"experiment_id": experiment.id},
+    )
+    results = ExperimentResults.objects.get(experiment=experiment)
+    assert results.refresh_requested_at is not None
+
+
+@freeze_time("2026-06-11T12:00:00Z")
+def test_refresh_results__requested_recently__returns_429_with_retry_after(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given a refresh was requested a minute ago
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentResults.objects.create(
+        experiment=experiment,
+        refresh_requested_at=timezone.now() - timedelta(minutes=1),
+    )
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_results")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-results")
+    )
+
+    # Then the client is told when to retry
+    assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+    assert response.headers["Retry-After"] == "240"
+    mock_compute.delay.assert_not_called()
+
+
+def test_refresh_results__last_request_beyond_interval__enqueues_compute(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given the last refresh request is older than the minimum interval
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentResults.objects.create(
+        experiment=experiment,
+        refresh_requested_at=timezone.now() - RESULTS_REFRESH_MIN_INTERVAL,
+    )
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_results")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-results")
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    mock_compute.delay.assert_called_once()
+
+
+def test_refresh_results__completed_with_final_row__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given a completed experiment whose row already covers the full window
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
+    experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentResults.objects.create(
+        experiment=experiment,
+        as_of=experiment.ended_at,
+        payload={"srm_p_value": None, "metrics": []},
+    )
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_results")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-results")
+    )
+
+    # Then a final row is not recomputed
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    mock_compute.delay.assert_not_called()
+
+
+def test_refresh_results__completed_with_stale_row__enqueues_compute(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given a completed experiment last computed before it ended
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
+    experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentResults.objects.create(
+        experiment=experiment,
+        as_of=datetime(2026, 6, 7, tzinfo=dt_timezone.utc),
+        payload={"srm_p_value": None, "metrics": []},
+    )
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_results")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-results")
+    )
+
+    # Then the finalising refresh is allowed
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    mock_compute.delay.assert_called_once()
+
+
+def test_refresh_results__not_started_experiment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given a created experiment that has never started
+    enable_features(EXPERIMENT_FLAG)
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_results")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-results")
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    mock_compute.delay.assert_not_called()
+
+
+def test_refresh_results__staff_user_with_flag__returns_403(
+    staff_client: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = staff_client.post(
+        _action_url(environment, experiment, "refresh-results")
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_get_detail__env_level_allocations__returns_environment_percentages(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    multivariate_feature: Feature,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    env_fs = FeatureState.objects.get(
+        feature=multivariate_feature,
+        environment=environment,
+        identity__isnull=True,
+        feature_segment__isnull=True,
+    )
+    env_allocations = [10.0, 20.0, 70.0]
+    for mv_fsv, alloc in zip(
+        MultivariateFeatureStateValue.objects.filter(feature_state=env_fs).order_by(
+            "multivariate_feature_option_id"
+        ),
+        env_allocations,
+    ):
+        mv_fsv.percentage_allocation = alloc
+        mv_fsv.save()
+
+    # When
+    response = admin_client_new.get(_detail_url(environment, experiment))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    options = response.json()["feature"]["multivariate_options"]
+    returned_allocs = sorted(o["default_percentage_allocation"] for o in options)
+    assert returned_allocs == sorted(env_allocations)
+
+
+def test_experiment_feature_serializer__no_environment_context__raises(
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    serializer = ExperimentFeatureSerializer(multivariate_feature, context={})
+
+    # When / Then
+    with pytest.raises(ValueError, match="requires 'environment' in context"):
+        serializer.data
+
+
+def test_experiment_feature_serializer__no_env_feature_state__raises(
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    FeatureState.objects.filter(
+        feature=multivariate_feature,
+        environment=environment,
+        identity__isnull=True,
+        feature_segment__isnull=True,
+    ).delete()
+    serializer = ExperimentFeatureSerializer(
+        multivariate_feature, context={"environment": environment}
+    )
+
+    # When / Then
+    with pytest.raises(ValueError, match="No environment feature state found"):
+        serializer.data

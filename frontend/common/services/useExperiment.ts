@@ -5,14 +5,17 @@ import Utils from 'common/utils/utils'
 import transformCorePaging from 'common/transformCorePaging'
 
 export const experimentService = service
-  .enhanceEndpoints({ addTagTypes: ['Experiment'] })
+  .enhanceEndpoints({ addTagTypes: ['Experiment', 'ExperimentExposures'] })
   .injectEndpoints({
     endpoints: (builder) => ({
       completeExperiment: builder.mutation<
         Res['experiment'],
         Req['experimentAction']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'Experiment' }],
+        invalidatesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'Experiment' },
+          { id: 'LIST', type: 'Experiment' },
+        ],
         query: ({ environmentId, experimentId }) => ({
           method: 'POST',
           url: `environments/${environmentId}/experiments/${experimentId}/complete/`,
@@ -36,6 +39,28 @@ export const experimentService = service
           url: `environments/${environmentId}/experiments/${experimentId}/`,
         }),
       }),
+      getExperiment: builder.query<Res['experiment'], Req['getExperiment']>({
+        providesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'Experiment' },
+        ],
+        query: ({ environmentId, experimentId }) => ({
+          url: `environments/${environmentId}/experiments/${experimentId}/`,
+        }),
+      }),
+      getExperimentExposures: builder.query<
+        Res['experimentExposures'] | null,
+        Req['getExperimentExposures']
+      >({
+        providesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'ExperimentExposures' },
+        ],
+        query: ({ environmentId, experimentId }) => ({
+          url: `environments/${environmentId}/experiments/${experimentId}/exposures/`,
+        }),
+        transformResponse: (res: {
+          exposures: Res['experimentExposures'] | null
+        }) => res.exposures,
+      }),
       getExperiments: builder.query<Res['experiments'], Req['getExperiments']>({
         providesTags: [{ id: 'LIST', type: 'Experiment' }],
         query: ({ environmentId, ...rest }) => ({
@@ -49,20 +74,70 @@ export const experimentService = service
         Res['experiment'],
         Req['experimentAction']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'Experiment' }],
+        invalidatesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'Experiment' },
+          { id: 'LIST', type: 'Experiment' },
+        ],
         query: ({ environmentId, experimentId }) => ({
           method: 'POST',
           url: `environments/${environmentId}/experiments/${experimentId}/pause/`,
         }),
       }),
+      refreshExperimentExposures: builder.mutation<
+        Res['experimentExposures'],
+        Req['refreshExperimentExposures']
+      >({
+        invalidatesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'ExperimentExposures' },
+        ],
+        queryFn: async (
+          { environmentId, experimentId },
+          _api,
+          _extraOptions,
+          baseQuery,
+        ) => {
+          const result = await baseQuery({
+            method: 'POST',
+            url: `environments/${environmentId}/experiments/${experimentId}/exposures/refresh/`,
+          })
+          if (result.error) {
+            const retryAfter =
+              result.meta?.response?.headers?.get('Retry-After')
+            return {
+              error: {
+                ...result.error,
+                retryAfter: retryAfter ? parseInt(retryAfter, 10) : null,
+              },
+            }
+          }
+          return { data: result.data as Res['experimentExposures'] }
+        },
+      }),
       startExperiment: builder.mutation<
         Res['experiment'],
         Req['experimentAction']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'Experiment' }],
+        invalidatesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'Experiment' },
+          { id: 'LIST', type: 'Experiment' },
+        ],
         query: ({ environmentId, experimentId }) => ({
           method: 'POST',
           url: `environments/${environmentId}/experiments/${experimentId}/start/`,
+        }),
+      }),
+      updateExperiment: builder.mutation<
+        Res['experiment'],
+        Req['updateExperiment']
+      >({
+        invalidatesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'Experiment' },
+          { id: 'LIST', type: 'Experiment' },
+        ],
+        query: ({ body, environmentId, experimentId }) => ({
+          body,
+          method: 'PATCH',
+          url: `environments/${environmentId}/experiments/${experimentId}/`,
         }),
       }),
     }),
@@ -72,7 +147,11 @@ export const {
   useCompleteExperimentMutation,
   useCreateExperimentMutation,
   useDeleteExperimentMutation,
+  useGetExperimentExposuresQuery,
+  useGetExperimentQuery,
   useGetExperimentsQuery,
   usePauseExperimentMutation,
+  useRefreshExperimentExposuresMutation,
   useStartExperimentMutation,
+  useUpdateExperimentMutation,
 } = experimentService
