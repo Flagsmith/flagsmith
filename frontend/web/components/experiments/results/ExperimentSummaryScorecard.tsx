@@ -39,7 +39,7 @@ const deriveSummary = (
   if (!winner) return null
 
   return {
-    chanceToBest: `${Math.round(winner.chancToWin * 100)}%`,
+    chanceToBest: `${Math.round(winner.chanceToWin * 100)}%`,
     liftFavourable: isLiftFavourable(
       winner.inference.lift,
       metric.expected_direction,

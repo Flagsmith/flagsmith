@@ -1,6 +1,7 @@
 import { FC, ReactNode, useMemo } from 'react'
 import ColorSwatch from 'components/ColorSwatch'
 import Icon from 'components/icons/Icon'
+import Tooltip from 'components/Tooltip'
 import {
   BayesianMetricResult,
   BayesianResultsSummary,

@@ -132,7 +132,7 @@ export const getMetricResult = (
 export type WinningVariant = {
   key: string
   name: string
-  chancToWin: number
+  chanceToWin: number
   inference: Inference
 }
 
@@ -145,9 +145,9 @@ export const getWinningVariant = (
     if (v.isControl) return
     const inf = metricResult.inference[v.key]
     if (!inf) return
-    if (!best || inf.chance_to_win > best.chancToWin) {
+    if (!best || inf.chance_to_win > best.chanceToWin) {
       best = {
-        chancToWin: inf.chance_to_win,
+        chanceToWin: inf.chance_to_win,
         inference: inf,
         key: v.key,
         name: v.name,
