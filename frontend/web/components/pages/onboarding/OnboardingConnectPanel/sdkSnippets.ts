@@ -55,12 +55,12 @@ export const getSdkSnippet = (
     string,
     string
   >
-  const wire = unescapeHtml(inits[lang.label] ?? '')
+  const wire = unescapeHtml(inits[lang.codeHelpKey] ?? '')
     .split(PLACEHOLDER_FLAG)
     .join(featureName)
   return {
     language: lang.language,
-    ...parseInstall(unescapeHtml(installs[lang.installKey] ?? '')),
+    ...parseInstall(unescapeHtml(installs[lang.codeHelpKey] ?? '')),
     wire: wire.trim(),
   }
 }

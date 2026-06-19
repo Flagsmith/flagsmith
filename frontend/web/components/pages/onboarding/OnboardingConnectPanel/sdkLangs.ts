@@ -16,10 +16,11 @@ import {
 } from './logos'
 
 export type SdkLang = {
-  // Display label and the key into codeHelp.INIT.
+  // Display label (chip text + radiogroup key).
   label: string
-  // Key into codeHelp.INSTALL (occasionally differs, e.g. Next.js).
-  installKey: string
+  // Key into codeHelp's INSTALL and INIT maps. Differs from the display label,
+  // e.g. 'Node JS' (not 'Node.js') and 'Next.js' (not 'Next.js (app router)').
+  codeHelpKey: string
   // highlight.js language for the wire snippet (install is always shell).
   language: string
   // Brand logo component for the chip. Imported by name so unreferenced logos
@@ -33,105 +34,105 @@ export type SdkLang = {
 // React Native reuses the React logo; both Next.js routers share the Next mark.
 export const SDK_LANGS: SdkLang[] = [
   {
-    installKey: 'React',
+    codeHelpKey: 'React',
     label: 'React',
     language: 'javascript',
     logo: ReactLogo,
     popular: true,
   },
   {
-    installKey: 'JavaScript',
+    codeHelpKey: 'JavaScript',
     label: 'JavaScript',
     language: 'javascript',
     logo: JavascriptLogo,
     popular: true,
   },
   {
-    installKey: 'Python',
+    codeHelpKey: 'Python',
     label: 'Python',
     language: 'python',
     logo: PythonLogo,
     popular: true,
   },
   {
-    installKey: 'Node JS',
+    codeHelpKey: 'Node JS',
     label: 'Node.js',
     language: 'javascript',
     logo: NodejsLogo,
     popular: true,
   },
   {
-    installKey: 'Go',
+    codeHelpKey: 'Go',
     label: 'Go',
     language: 'go',
     logo: GoLogo,
     popular: true,
   },
   {
-    installKey: 'Ruby',
+    codeHelpKey: 'Ruby',
     label: 'Ruby',
     language: 'ruby',
     logo: RubyLogo,
     popular: true,
   },
   {
-    installKey: '.NET',
+    codeHelpKey: '.NET',
     label: '.NET',
     language: 'csharp',
     logo: DotnetLogo,
     popular: false,
   },
   {
-    installKey: 'Flutter',
+    codeHelpKey: 'Flutter',
     label: 'Flutter',
     language: 'dart',
     logo: FlutterLogo,
     popular: false,
   },
   {
-    installKey: 'Next.js',
+    codeHelpKey: 'Next.js',
     label: 'Next.js (app router)',
     language: 'javascript',
     logo: NextjsLogo,
     popular: false,
   },
   {
-    installKey: 'Next.js',
+    codeHelpKey: 'Next.js',
     label: 'Next.js (pages router)',
     language: 'javascript',
     logo: NextjsLogo,
     popular: false,
   },
   {
-    installKey: 'Java',
+    codeHelpKey: 'Java',
     label: 'Java',
     language: 'java',
     logo: JavaLogo,
     popular: false,
   },
   {
-    installKey: 'PHP',
+    codeHelpKey: 'PHP',
     label: 'PHP',
     language: 'php',
     logo: PhpLogo,
     popular: false,
   },
   {
-    installKey: 'React Native',
+    codeHelpKey: 'React Native',
     label: 'React Native',
     language: 'javascript',
     logo: ReactLogo,
     popular: false,
   },
   {
-    installKey: 'Rust',
+    codeHelpKey: 'Rust',
     label: 'Rust',
     language: 'rust',
     logo: RustLogo,
     popular: false,
   },
   {
-    installKey: 'iOS',
+    codeHelpKey: 'iOS',
     label: 'iOS',
     language: 'swift',
     logo: IosLogo,
