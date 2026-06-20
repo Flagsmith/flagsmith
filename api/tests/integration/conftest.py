@@ -49,12 +49,17 @@ def influxdb(settings: SettingsWrapper) -> InfluxDBClient:
 
     # Matches api.app_analytics.influxdb_wrapper bucket definitions
     client = InfluxDBWrapper.get_client()
-    client.buckets_api().create_bucket(
-        org="flagsmith", bucket_name="api_usage_downsampled_15m"
-    )
-    client.buckets_api().create_bucket(
-        org="flagsmith", bucket_name="api_usage_downsampled_1h"
-    )
+    bucket_api = client.buckets_api()
+    bucket_names = [
+        "api_usage_downsampled_15m",
+        "api_usage_downsampled_1h",
+    ]
+    for bucket_name in bucket_names:
+        if not bucket_api.find_bucket_by_name(bucket_name):
+            bucket_api.create_bucket(
+                org="flagsmith",
+                bucket_name=bucket_name,
+            )
 
     return client
 

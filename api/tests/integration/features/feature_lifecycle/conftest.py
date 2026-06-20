@@ -4,8 +4,10 @@ from uuid import uuid4
 
 import pytest
 from django.utils import timezone
-from influxdb_client import InfluxDBClient
+from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.write_api import SYNCHRONOUS
 
+from app_analytics.constants import ANALYTICS_READ_BUCKET_SIZE
 from app_analytics.models import FeatureEvaluationBucket
 from environments.models import Environment
 from features.models import Feature
@@ -77,4 +79,13 @@ def make_analytics_db_usage(
 def make_influxdb_usage(
     influxdb: InfluxDBClient,
 ) -> Callable[[Feature, Environment, int], None]:
-    raise NotImplementedError
+    write_api = influxdb.write_api(write_options=SYNCHRONOUS)
+    return lambda feature, environment, evaluation_count: write_api.write(
+        bucket="api_usage_downsampled_15m",
+        org="flagsmith",
+        record=Point("feature_evaluation")
+        .tag("environment_id", str(environment.pk))
+        .tag("feature_id", feature.name)
+        .field("request_count", evaluation_count)
+        .time(timezone.now() - timedelta(minutes=ANALYTICS_READ_BUCKET_SIZE)),
+    )
