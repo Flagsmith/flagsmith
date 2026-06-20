@@ -12,6 +12,7 @@ from features.feature_lifecycle.types import LifecycleStage
 from features.models import Feature
 from projects.code_references.models import ScannedCodeReferences
 from projects.tags.models import Tag
+from users.models import FFAdminUser
 
 
 @pytest.mark.use_analytics_db
@@ -119,30 +120,47 @@ def test_feature_lifecycle_counts__varied_stages_influxdb__responds_200_with_jso
     }
 
 
-@pytest.mark.parametrize(
-    "stage",
-    [
-        LifecycleStage.NEW,
-        LifecycleStage.LIVE,
-        LifecycleStage.STALE,
-        LifecycleStage.PERMANENT,
-        LifecycleStage.NEEDS_MONITORING,
-        LifecycleStage.TO_REMOVE,
-    ],
-)
-def test_feature_lifecycle_counts__one_feature__responds_200_with_json_summary(
-    stage: LifecycleStage,
+def test_feature_lifecycle_counts__no_features__responds_200_with_empty_json_summary(
+    admin_client: APIClient,
+    environment: int,
 ):
-    raise NotImplementedError
+    # Given / When
+    response = admin_client.get(
+        f"/api/v1/environments/{environment}/feature-lifecycle-counts/"
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {lifecycle_stage: 0 for lifecycle_stage in LifecycleStage}
 
 
-def test_feature_lifecycle_counts__no_features__responds_200_with_empty_json_summary():
-    raise NotImplementedError
+def test_feature_lifecycle_counts__anonymous_user__responds_401(
+    environment: int,
+):
+    # Given
+    client = APIClient()
+
+    # When
+    response = client.get(
+        f"/api/v1/environments/{environment}/feature-lifecycle-counts/"
+    )
+
+    # Then
+    assert response.status_code == 401
 
 
-def test_feature_lifecycle_counts__anonymous_user__responds_401():
-    raise NotImplementedError
+def test_feature_lifecycle_counts__non_member_user__responds_403(
+    environment: int,
+):
+    # Given
+    non_member = FFAdminUser.objects.create(username="who")
+    client = APIClient()
+    client.force_authenticate(user=non_member)
 
+    # When
+    response = client.get(
+        f"/api/v1/environments/{environment}/feature-lifecycle-counts/"
+    )
 
-def test_feature_lifecycle_counts__non_member_user__responds_403():
-    raise NotImplementedError
+    # Then
+    assert response.status_code == 403
