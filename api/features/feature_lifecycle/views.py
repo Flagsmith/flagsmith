@@ -1,12 +1,16 @@
 from common.environments.permissions import VIEW_ENVIRONMENT
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from environments.models import Environment
+from features.feature_lifecycle.serializers import (
+    FeatureLifecycleCountsSerializer,
+)
 from features.feature_lifecycle.services import (
     annotate_feature_queryset_with_lifecycle_stage,
 )
@@ -18,6 +22,16 @@ class FeatureLifecycleCountsAPIView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        tags=["mcp"],
+        operation_id="get_feature_lifecycle_counts",
+        description=(
+            "Retrieves the count of features in each lifecycle stage "
+            "(new, live, stale, permanent, needs_monitoring, to_remove) "
+            "for the specified environment."
+        ),
+        responses={200: FeatureLifecycleCountsSerializer},
+    )
     def get(self, request: Request, environment_pk: int) -> Response:
         environment = get_object_or_404(Environment, pk=environment_pk)
         if not request.user.has_environment_permission(VIEW_ENVIRONMENT, environment):
