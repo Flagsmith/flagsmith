@@ -53,22 +53,22 @@ def test_migrate_feature_evaluations__influx_records_exist__creates_pg_buckets(
             mocker.call.query(
                 (
                     'from (bucket: "test_bucket") '
-                    f"|> range(start: -1d, stop: -0d) "
-                    f'|> filter(fn: (r) => r._measurement == "feature_evaluation")'
+                    "|> range(start: -1d, stop: -0d) "
+                    '|> filter(fn: (r) => r._measurement == "feature_evaluation")'
                 )
             ),
             mocker.call.query(
                 (
                     'from (bucket: "test_bucket") '
-                    f"|> range(start: -2d, stop: -1d) "
-                    f'|> filter(fn: (r) => r._measurement == "feature_evaluation")'
+                    "|> range(start: -2d, stop: -1d) "
+                    '|> filter(fn: (r) => r._measurement == "feature_evaluation")'
                 )
             ),
             mocker.call.query(
                 (
                     'from (bucket: "test_bucket") '
-                    f"|> range(start: -3d, stop: -2d) "
-                    f'|> filter(fn: (r) => r._measurement == "feature_evaluation")'
+                    "|> range(start: -3d, stop: -2d) "
+                    '|> filter(fn: (r) => r._measurement == "feature_evaluation")'
                 )
             ),
         ]

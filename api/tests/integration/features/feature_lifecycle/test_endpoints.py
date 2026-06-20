@@ -53,14 +53,17 @@ def test_feature_lifecycle_counts__varied_stages_analytics_db__responds_200_with
     }
 
 
-@pytest.mark.parametrize("stage", [
-    LifecycleStage.NEW,
-    LifecycleStage.LIVE,
-    LifecycleStage.STALE,
-    LifecycleStage.PERMANENT,
-    LifecycleStage.NEEDS_MONITORING,
-    LifecycleStage.TO_REMOVE,
-])
+@pytest.mark.parametrize(
+    "stage",
+    [
+        LifecycleStage.NEW,
+        LifecycleStage.LIVE,
+        LifecycleStage.STALE,
+        LifecycleStage.PERMANENT,
+        LifecycleStage.NEEDS_MONITORING,
+        LifecycleStage.TO_REMOVE,
+    ],
+)
 def test_feature_lifecycle_counts__one_feature__responds_200_with_json_summary(
     stage: LifecycleStage,
 ):

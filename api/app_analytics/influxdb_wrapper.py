@@ -38,7 +38,6 @@ DEFAULT_DROP_COLUMNS = (
 )
 
 GET_MULTIPLE_EVENTS_LIST_GROUP_CLAUSE = (
-
     f"|> group(columns: {json.dumps(['resource', *LABELS])}) "
 )
 
