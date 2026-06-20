@@ -11,16 +11,15 @@ from environments.models import Environment
 from features.models import Feature
 from projects.code_references.models import ScannedCodeReferences, VCSRepository
 from projects.code_references.types import StoredCodeReference, VCSProvider
-from projects.models import Project
-from projects.tags.models import Tag
+from projects.tags.models import Tag, TagType
 
 
 @pytest.fixture()
 def stale_tag(project: int) -> Tag:
     return Tag.objects.create(  # type: ignore[no-any-return]
-        label="stale",
         project_id=project,
         is_system_tag=True,
+        type=TagType.STALE,
     )
 
 
@@ -48,8 +47,11 @@ def code_references_repository(project: int) -> VCSRepository:
 def make_code_references(
     code_references_repository: VCSRepository,
 ) -> Callable[[Feature, list[StoredCodeReference]], ScannedCodeReferences]:
+    now = timezone.now()
+    code_references_repository.last_scanned_at = now
+    code_references_repository.save()
     return lambda feature, code_references: ScannedCodeReferences.objects.create(
-        created_at=timezone.now(),
+        created_at=now,
         feature=feature,
         repository=code_references_repository,
         revision=str(uuid4()),
@@ -59,7 +61,9 @@ def make_code_references(
 
 
 @pytest.fixture
-def make_analytics_db_usage(environment: int) -> Callable[[Feature, int], FeatureEvaluationBucket]:
+def make_analytics_db_usage(
+    environment: int,
+) -> Callable[[Feature, int], FeatureEvaluationBucket]:
     return lambda feature, evaluation_count: FeatureEvaluationBucket.objects.create(
         feature_name=feature.name,
         bucket_size=15,

@@ -3,6 +3,7 @@ from enum import StrEnum
 
 class LifecycleStage(StrEnum):
     """The lifecycle stage of a feature"""
+
     NEW = "new"
     LIVE = "live"
     STALE = "stale"

@@ -102,6 +102,17 @@ def get_code_references_for_feature_flag(
     ]
 
 
+def get_feature_flags_in_latest_scan(project: Project) -> QuerySet[Feature]:
+    """Obtain features found in the latest code references scan"""
+    fresh_scans = ScannedCodeReferences.objects.filter(
+        feature__project=project,
+        created_at=F("repository__last_scanned_at"),
+    )
+    return Feature.objects.filter(
+        scanned_code_references__in=fresh_scans,
+    )
+
+
 def record_scan(
     project: Project,
     repository_url: str,
