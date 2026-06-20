@@ -130,6 +130,15 @@ Logged at `warning` from:
 Attributes:
  - `path`
 
+### `feature_lifecycle.summarised`
+
+Logged at `info` from:
+ - `api/features/feature_lifecycle/views.py:53`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
 ### `gitlab.api_call.failed`
 
 Logged at `error` from:

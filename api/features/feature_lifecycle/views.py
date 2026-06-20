@@ -1,3 +1,4 @@
+import structlog
 from common.environments.permissions import VIEW_ENVIRONMENT
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
@@ -15,6 +16,8 @@ from features.feature_lifecycle.services import (
     annotate_feature_queryset_with_lifecycle_stage,
 )
 from features.feature_lifecycle.types import LifecycleStage
+
+logger = structlog.get_logger("feature_lifecycle")
 
 
 class FeatureLifecycleCountsAPIView(APIView):
@@ -46,5 +49,11 @@ class FeatureLifecycleCountsAPIView(APIView):
         summary: dict[LifecycleStage, int] = {stage: 0 for stage in LifecycleStage}
         for stage_count in counts:
             summary[stage_count["lifecycle_stage"]] = stage_count["count"]
+
+        logger.info(
+            "summarised",
+            organisation__id=environment.project.organisation_id,
+            environment__id=environment.pk,
+        )
 
         return Response(summary)

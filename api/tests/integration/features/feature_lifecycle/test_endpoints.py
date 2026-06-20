@@ -3,6 +3,7 @@ from collections.abc import Callable
 import freezegun
 import pytest
 from pytest_django.fixtures import SettingsWrapper
+from pytest_structlog import StructuredLogCapture
 from rest_framework.test import APIClient
 
 from app_analytics.models import FeatureEvaluationBucket
@@ -122,6 +123,8 @@ def test_feature_lifecycle_counts__varied_stages_influxdb__responds_200_with_jso
 def test_feature_lifecycle_counts__no_features__responds_200_with_empty_json_summary(
     admin_client: APIClient,
     environment: int,
+    log: StructuredLogCapture,
+    organisation: int,
 ):
     # Given / When
     response = admin_client.get(
@@ -131,6 +134,12 @@ def test_feature_lifecycle_counts__no_features__responds_200_with_empty_json_sum
     # Then
     assert response.status_code == 200
     assert response.json() == {lifecycle_stage: 0 for lifecycle_stage in LifecycleStage}
+    assert log.has(
+        "summarised",
+        level="info",
+        organisation__id=organisation,
+        environment__id=environment,
+    )
 
 
 def test_feature_lifecycle_counts__anonymous_user__responds_401(
