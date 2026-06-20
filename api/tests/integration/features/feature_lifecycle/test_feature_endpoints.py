@@ -127,6 +127,83 @@ def test_feature_list_endpoint__varied_stages_influxdb__responds_200_with_lifecy
     assert json_features["to_remove"]["lifecycle_stage"] == LifecycleStage.TO_REMOVE
 
 
+@freezegun.freeze_time("2099-01-01T12:00:00Z")
+def test_feature_list_endpoint__lifecycle_stage_filter__responds_200_with_only_matching_features(
+    admin_client: APIClient,
+    enable_features: EnableFeaturesFixture,
+    environment: int,
+    make_code_references: Callable[[Feature, list], ScannedCodeReferences],
+    permanent_tag: Tag,
+    project: int,
+    stale_tag: Tag,
+):
+    # Given
+    enable_features("feature_lifecycle")
+
+    Feature.objects.create(project_id=project, name="new")
+
+    live_feature = Feature.objects.create(project_id=project, name="live")
+    make_code_references(live_feature, [{"file_name": "file.py", "line_number": 1}])
+
+    stale_feature = Feature.objects.create(project_id=project, name="stale")
+    make_code_references(stale_feature, [])
+    stale_feature.tags.add(stale_tag)
+
+    permanent_feature = Feature.objects.create(project_id=project, name="permanent")
+    permanent_feature.tags.add(permanent_tag)
+
+    # When
+    response = admin_client.get(
+        f"/api/v1/projects/{project}/features/"
+        f"?environment={environment}&lifecycle_stage={LifecycleStage.LIVE}"
+    )
+
+    # Then
+    assert response.status_code == 200
+    json_features = response.json()["results"]
+    assert [feature["name"] for feature in json_features] == ["live"]
+
+
+def test_feature_list_endpoint__invalid_lifecycle_stage_filter__responds_400(
+    admin_client: APIClient,
+    enable_features: EnableFeaturesFixture,
+    environment: int,
+    project: int,
+):
+    # Given
+    enable_features("feature_lifecycle")
+
+    # When
+    response = admin_client.get(
+        f"/api/v1/projects/{project}/features/"
+        f"?environment={environment}&lifecycle_stage=not_a_stage"
+    )
+
+    # Then
+    assert response.status_code == 400
+
+
+@freezegun.freeze_time("2099-01-01T12:00:00Z")
+def test_feature_list_endpoint__lifecycle_stage_filter_flag_off__ignores_filter(
+    admin_client: APIClient,
+    environment: int,
+    project: int,
+):
+    # Given
+    Feature.objects.create(project_id=project, name="feature")
+
+    # When
+    response = admin_client.get(
+        f"/api/v1/projects/{project}/features/"
+        f"?environment={environment}&lifecycle_stage={LifecycleStage.LIVE}"
+    )
+
+    # Then
+    assert response.status_code == 200
+    json_features = response.json()["results"]
+    assert [feature["name"] for feature in json_features] == ["feature"]
+
+
 def test_feature_list_endpoint__flag_off__responds_200_without_lifecycle_stage(
     admin_client: APIClient,
     environment: int,

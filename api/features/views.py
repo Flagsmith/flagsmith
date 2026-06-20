@@ -271,6 +271,8 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                 queryset = annotate_feature_queryset_with_lifecycle_stage(
                     queryset, self.environment
                 )
+                if lifecycle_stage := query_data.get("lifecycle_stage"):
+                    queryset = queryset.filter(lifecycle_stage=lifecycle_stage)
             page = self.paginate_queryset(queryset)
             self.feature_ids = [feature.id for feature in page]
             feature_states_query = Q(

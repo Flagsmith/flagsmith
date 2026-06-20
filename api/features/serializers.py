@@ -116,6 +116,12 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
         help_text="ID of the identity to sort features with identity overrides first.",
     )
 
+    lifecycle_stage = serializers.ChoiceField(
+        choices=list(LifecycleStage),
+        required=False,
+        help_text="Lifecycle stage to filter on. Requires `environment`.",
+    )
+
     is_enabled = serializers.BooleanField(
         allow_null=True,
         required=False,
