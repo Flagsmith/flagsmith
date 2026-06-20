@@ -37,7 +37,7 @@ class FeatureLifecycleCountsAPIView(APIView):
     )
     def get(self, request: Request, environment_pk: int) -> Response:
         environment = get_object_or_404(Environment, pk=environment_pk)
-        if not request.user.has_environment_permission(VIEW_ENVIRONMENT, environment):
+        if not request.user.has_environment_permission(VIEW_ENVIRONMENT, environment):  # type: ignore[union-attr]
             return Response(status=403)
 
         features = annotate_feature_queryset_with_lifecycle_stage(
@@ -45,7 +45,7 @@ class FeatureLifecycleCountsAPIView(APIView):
             environment,
         )
 
-        counts = features.values("lifecycle_stage").annotate(count=Count("pk"))
+        counts = features.values("lifecycle_stage").annotate(count=Count("pk"))  # type: ignore[misc]
         summary: dict[LifecycleStage, int] = {stage: 0 for stage in LifecycleStage}
         for stage_count in counts:
             summary[stage_count["lifecycle_stage"]] = stage_count["count"]

@@ -55,7 +55,7 @@ def influxdb(settings: SettingsWrapper) -> InfluxDBClient:
         "api_usage_downsampled_1h",
     ]
     for bucket_name in bucket_names:
-        if not bucket_api.find_bucket_by_name(bucket_name):
+        if not bucket_api.find_bucket_by_name(bucket_name):  # type: ignore[no-untyped-call]
             bucket_api.create_bucket(
                 org="flagsmith",
                 bucket_name=bucket_name,

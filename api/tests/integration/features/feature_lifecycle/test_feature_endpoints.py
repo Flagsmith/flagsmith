@@ -1,16 +1,15 @@
-from collections.abc import Callable
-
 import freezegun
 import pytest
 from pytest_django.fixtures import SettingsWrapper
 from rest_framework.test import APIClient
 
-from app_analytics.models import FeatureEvaluationBucket
-from environments.models import Environment
 from features.feature_lifecycle.types import LifecycleStage
 from features.models import Feature
-from projects.code_references.models import ScannedCodeReferences
 from projects.tags.models import Tag
+from tests.integration.features.feature_lifecycle.conftest import (
+    MakeCodeReferencesFixture,
+    MakeFeatureUsageFixture,
+)
 from tests.types import EnableFeaturesFixture
 
 
@@ -20,13 +19,13 @@ def test_feature_list_endpoint__varied_stages_analytics_db__responds_200_with_li
     admin_client: APIClient,
     enable_features: EnableFeaturesFixture,
     environment: int,
-    make_analytics_db_usage: Callable[[Feature, int], FeatureEvaluationBucket],
-    make_code_references: Callable[[Feature, list], ScannedCodeReferences],
+    make_analytics_db_usage: MakeFeatureUsageFixture,
+    make_code_references: MakeCodeReferencesFixture,
     permanent_tag: Tag,
     project: int,
     settings: SettingsWrapper,
     stale_tag: Tag,
-):
+) -> None:
     # Given
     enable_features("feature_lifecycle")
     settings.USE_POSTGRES_FOR_ANALYTICS = True
@@ -34,7 +33,7 @@ def test_feature_list_endpoint__varied_stages_analytics_db__responds_200_with_li
     Feature.objects.create(project_id=project, name="new")
 
     live_feature = Feature.objects.create(project_id=project, name="live")
-    make_code_references(live_feature, [{"file_name": "file.py", "line_number": 1}])
+    make_code_references(live_feature, [{"file_path": "file.py", "line_number": 1}])
 
     stale_feature = Feature.objects.create(project_id=project, name="stale")
     make_code_references(stale_feature, [])
@@ -77,20 +76,19 @@ def test_feature_list_endpoint__varied_stages_influxdb__responds_200_with_lifecy
     admin_client: APIClient,
     enable_features: EnableFeaturesFixture,
     environment: int,
-    make_code_references: Callable[[Feature, list], ScannedCodeReferences],
-    make_influxdb_usage: Callable[[Feature, Environment, int], None],
+    make_code_references: MakeCodeReferencesFixture,
+    make_influxdb_usage: MakeFeatureUsageFixture,
     permanent_tag: Tag,
     project: int,
     stale_tag: Tag,
-):
+) -> None:
     # Given
     enable_features("feature_lifecycle")
-    environment_object = Environment.objects.get(pk=environment)
 
     Feature.objects.create(project_id=project, name="new")
 
     live_feature = Feature.objects.create(project_id=project, name="live")
-    make_code_references(live_feature, [{"file_name": "file.py", "line_number": 1}])
+    make_code_references(live_feature, [{"file_path": "file.py", "line_number": 1}])
 
     stale_feature = Feature.objects.create(project_id=project, name="stale")
     make_code_references(stale_feature, [])
@@ -103,7 +101,7 @@ def test_feature_list_endpoint__varied_stages_influxdb__responds_200_with_lifecy
         project_id=project, name="needs_monitoring"
     )
     needs_monitoring_feature.tags.add(stale_tag)
-    make_influxdb_usage(needs_monitoring_feature, environment_object, 1)
+    make_influxdb_usage(needs_monitoring_feature, 1)
 
     to_remove_feature = Feature.objects.create(project_id=project, name="to_remove")
     to_remove_feature.tags.add(stale_tag)
@@ -132,18 +130,18 @@ def test_feature_list_endpoint__lifecycle_stage_filter__responds_200_with_only_m
     admin_client: APIClient,
     enable_features: EnableFeaturesFixture,
     environment: int,
-    make_code_references: Callable[[Feature, list], ScannedCodeReferences],
+    make_code_references: MakeCodeReferencesFixture,
     permanent_tag: Tag,
     project: int,
     stale_tag: Tag,
-):
+) -> None:
     # Given
     enable_features("feature_lifecycle")
 
     Feature.objects.create(project_id=project, name="new")
 
     live_feature = Feature.objects.create(project_id=project, name="live")
-    make_code_references(live_feature, [{"file_name": "file.py", "line_number": 1}])
+    make_code_references(live_feature, [{"file_path": "file.py", "line_number": 1}])
 
     stale_feature = Feature.objects.create(project_id=project, name="stale")
     make_code_references(stale_feature, [])
@@ -169,7 +167,7 @@ def test_feature_list_endpoint__invalid_lifecycle_stage_filter__responds_400(
     enable_features: EnableFeaturesFixture,
     environment: int,
     project: int,
-):
+) -> None:
     # Given
     enable_features("feature_lifecycle")
 
@@ -188,7 +186,7 @@ def test_feature_list_endpoint__lifecycle_stage_filter_flag_off__ignores_filter(
     admin_client: APIClient,
     environment: int,
     project: int,
-):
+) -> None:
     # Given
     Feature.objects.create(project_id=project, name="feature")
 
@@ -208,7 +206,7 @@ def test_feature_list_endpoint__flag_off__responds_200_without_lifecycle_stage(
     admin_client: APIClient,
     environment: int,
     project: int,
-):
+) -> None:
     # Given
     Feature.objects.create(project_id=project, name="feature")
 
@@ -227,7 +225,7 @@ def test_feature_list_endpoint__no_environment__responds_200_without_lifecycle_s
     admin_client: APIClient,
     enable_features: EnableFeaturesFixture,
     project: int,
-):
+) -> None:
     # Given
     enable_features("feature_lifecycle")
     Feature.objects.create(project_id=project, name="feature")
@@ -247,7 +245,7 @@ def test_feature_detail_endpoint__new_feature__responds_200_with_lifecycle_stage
     enable_features: EnableFeaturesFixture,
     environment: int,
     project: int,
-):
+) -> None:
     # Given
     enable_features("feature_lifecycle")
     feature = Feature.objects.create(project_id=project, name="new")
@@ -267,13 +265,13 @@ def test_feature_detail_endpoint__live_feature__responds_200_with_lifecycle_stag
     admin_client: APIClient,
     enable_features: EnableFeaturesFixture,
     environment: int,
-    make_code_references: Callable[[Feature, list], ScannedCodeReferences],
+    make_code_references: MakeCodeReferencesFixture,
     project: int,
-):
+) -> None:
     # Given
     enable_features("feature_lifecycle")
     feature = Feature.objects.create(project_id=project, name="live")
-    make_code_references(feature, [{"file_name": "file.py", "line_number": 1}])
+    make_code_references(feature, [{"file_path": "file.py", "line_number": 1}])
 
     # When
     response = admin_client.get(
@@ -290,10 +288,10 @@ def test_feature_detail_endpoint__stale_feature__responds_200_with_lifecycle_sta
     admin_client: APIClient,
     enable_features: EnableFeaturesFixture,
     environment: int,
-    make_code_references: Callable[[Feature, list], ScannedCodeReferences],
+    make_code_references: MakeCodeReferencesFixture,
     project: int,
     stale_tag: Tag,
-):
+) -> None:
     # Given
     enable_features("feature_lifecycle")
     feature = Feature.objects.create(project_id=project, name="stale")
@@ -317,7 +315,7 @@ def test_feature_detail_endpoint__permanent_feature__responds_200_with_lifecycle
     environment: int,
     permanent_tag: Tag,
     project: int,
-):
+) -> None:
     # Given
     enable_features("feature_lifecycle")
     feature = Feature.objects.create(project_id=project, name="permanent")
@@ -339,11 +337,11 @@ def test_feature_detail_endpoint__needs_monitoring_feature__responds_200_with_li
     admin_client: APIClient,
     enable_features: EnableFeaturesFixture,
     environment: int,
-    make_analytics_db_usage: Callable[[Feature, int], FeatureEvaluationBucket],
+    make_analytics_db_usage: MakeFeatureUsageFixture,
     project: int,
     settings: SettingsWrapper,
     stale_tag: Tag,
-):
+) -> None:
     # Given
     enable_features("feature_lifecycle")
     settings.USE_POSTGRES_FOR_ANALYTICS = True
@@ -370,7 +368,7 @@ def test_feature_detail_endpoint__to_remove_feature__responds_200_with_lifecycle
     project: int,
     settings: SettingsWrapper,
     stale_tag: Tag,
-):
+) -> None:
     # Given
     enable_features("feature_lifecycle")
     settings.USE_POSTGRES_FOR_ANALYTICS = True
@@ -392,7 +390,7 @@ def test_feature_detail_endpoint__flag_off__responds_200_without_lifecycle_stage
     admin_client: APIClient,
     environment: int,
     project: int,
-):
+) -> None:
     # Given
     feature = Feature.objects.create(project_id=project, name="feature")
 
@@ -411,7 +409,7 @@ def test_feature_detail_endpoint__no_environment__responds_200_without_lifecycle
     admin_client: APIClient,
     enable_features: EnableFeaturesFixture,
     project: int,
-):
+) -> None:
     # Given
     enable_features("feature_lifecycle")
     feature = Feature.objects.create(project_id=project, name="feature")

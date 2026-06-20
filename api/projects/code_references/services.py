@@ -108,9 +108,10 @@ def get_feature_flags_in_latest_scan(project: Project) -> QuerySet[Feature]:
         feature__project=project,
         created_at=F("repository__last_scanned_at"),
     )
-    return Feature.objects.filter(
+    features_in_scan: QuerySet[Feature] = Feature.objects.filter(
         scanned_code_references__in=fresh_scans,
     )
+    return features_in_scan
 
 
 def record_scan(

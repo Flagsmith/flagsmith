@@ -18,7 +18,6 @@ from django.db.models import (
     Value,
     When,
 )
-from django.db.models.fields import CharField
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -177,7 +176,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             "partial_update": UpdateFeatureSerializer,
         }.get(self.action, ProjectFeatureSerializer)
 
-    def get_queryset(self):  # type: ignore[no-untyped-def]
+    def get_queryset(self):  # type: ignore[no-untyped-def]  # noqa: C901
         if getattr(self, "swagger_fake_view", False):
             return Feature.objects.none()
 

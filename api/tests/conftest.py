@@ -232,7 +232,8 @@ def django_db_setup(request: pytest.FixtureRequest) -> None:
 
 @pytest.fixture()
 def mock_influxdb_client(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch.object(InfluxDBWrapper, "get_client").return_value
+    client: MagicMock = mocker.patch.object(InfluxDBWrapper, "get_client").return_value
+    return client
 
 
 @pytest.fixture(autouse=True)

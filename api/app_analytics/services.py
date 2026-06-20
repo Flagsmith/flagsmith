@@ -51,10 +51,11 @@ def get_features_in_use(
         feature_names = _get_feature_names_in_use_from_influxdb(environment, since)
     else:
         return None
-    return Feature.objects.filter(
+    features_in_use: QuerySet[Feature] = Feature.objects.filter(
         name__in=feature_names,
         project__environments=environment,
     )
+    return features_in_use
 
 
 def _get_feature_names_in_use_from_analytics_db(
