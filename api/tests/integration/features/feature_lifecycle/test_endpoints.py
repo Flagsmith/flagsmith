@@ -2,7 +2,6 @@ from collections.abc import Callable
 
 import freezegun
 import pytest
-from influxdb_client import InfluxDBClient
 from pytest_django.fixtures import SettingsWrapper
 from rest_framework.test import APIClient
 
@@ -68,11 +67,11 @@ def test_feature_lifecycle_counts__varied_stages_analytics_db__responds_200_with
     }
 
 
+@pytest.mark.usefixtures("influxdb")
 @freezegun.freeze_time("2099-01-01T12:00:00Z")
 def test_feature_lifecycle_counts__varied_stages_influxdb__responds_200_with_json_summary(
     admin_client: APIClient,
     environment: int,
-    influxdb: InfluxDBClient,
     make_code_references: Callable[[Feature, list], ScannedCodeReferences],
     make_influxdb_usage: Callable[[Feature, Environment, int], None],
     permanent_tag: Tag,

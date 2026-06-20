@@ -46,6 +46,7 @@ from util.drf_writable_nested.serializers import (
 )
 
 from .constants import CONTROL_VARIANT_KEY, INTERSECTION, UNION
+from .feature_lifecycle.types import LifecycleStage
 from .feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
     exceeds_segment_override_limit,
@@ -456,10 +457,17 @@ class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerial
         read_only=True,
     )
 
+    # NOTE: This field is populated by `features.feature_lifecycle.services.annotate_feature_queryset_with_lifecycle_stage`.
+    lifecycle_stage = serializers.ChoiceField(
+        choices=list(LifecycleStage),
+        read_only=True,
+    )
+
     class Meta(CreateFeatureSerializer.Meta):
         fields = CreateFeatureSerializer.Meta.fields + (  # type: ignore[assignment]
             "metadata",
             "code_references_counts",
+            "lifecycle_stage",
         )
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:

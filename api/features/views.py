@@ -18,6 +18,7 @@ from django.db.models import (
     Value,
     When,
 )
+from django.db.models.fields import CharField
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -58,6 +59,10 @@ from environments.models import Environment
 from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
+)
+from features.feature_lifecycle.services import (
+    annotate_feature_queryset_with_lifecycle_stage,
+    is_feature_lifecycle_enabled,
 )
 from features.value_types import BOOLEAN, INTEGER, STRING
 from projects.code_references.services import (
@@ -261,8 +266,12 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         queryset = queryset.order_by(*override_ordering, sort)
 
         if environment_id:
-            page = self.paginate_queryset(queryset)
             self.environment = Environment.objects.get(id=environment_id)
+            if is_feature_lifecycle_enabled(project.organisation):
+                queryset = annotate_feature_queryset_with_lifecycle_stage(
+                    queryset, self.environment
+                )
+            page = self.paginate_queryset(queryset)
             self.feature_ids = [feature.id for feature in page]
             feature_states_query = Q(
                 feature_id__in=self.feature_ids,

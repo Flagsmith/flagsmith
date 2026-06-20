@@ -10,8 +10,18 @@ from app_analytics.services import get_features_in_use
 from environments.models import Environment
 from features.feature_lifecycle.types import LifecycleStage
 from features.models import Feature
+from integrations.flagsmith.client import get_openfeature_client
+from organisations.models import Organisation
 from projects.code_references.services import get_feature_flags_in_latest_scan
 from projects.tags.models import Tag, TagType
+
+
+def is_feature_lifecycle_enabled(organisation: Organisation) -> bool:
+    return get_openfeature_client().get_boolean_value(
+        "feature_lifecycle",
+        default_value=False,
+        evaluation_context=organisation.openfeature_evaluation_context,
+    )
 
 
 def annotate_feature_queryset_with_lifecycle_stage(
