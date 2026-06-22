@@ -189,7 +189,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
               >
                 Learn more
               </a>
-            </p>{' '}
+            </p>
           </div>
           {segmentOverrides ? (
             <>
