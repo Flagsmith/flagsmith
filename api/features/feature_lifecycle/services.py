@@ -35,7 +35,7 @@ def annotate_feature_queryset_with_lifecycle_stage(
     features_in_code = get_feature_flags_in_latest_scan(environment.project)
     features_in_use = get_features_in_use(environment, since=usage_window)
 
-    return queryset.annotate(
+    return queryset.alias(
         has_code_references=Exists(
             features_in_code.filter(pk=OuterRef("pk")),
         ),
@@ -50,6 +50,7 @@ def annotate_feature_queryset_with_lifecycle_stage(
         has_stale_tag=Exists(
             Tag.objects.filter(feature=OuterRef("pk"), type=TagType.STALE),
         ),
+    ).annotate(
         lifecycle_stage=Case(
             When(
                 has_code_references=False,
