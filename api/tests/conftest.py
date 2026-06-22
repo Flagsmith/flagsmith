@@ -1361,7 +1361,7 @@ def clickhouse_db(
     if "clickhouse" not in settings.DATABASES:  # pragma: no cover
         pytest.skip("No ClickHouse database configured, skipping")
     request.applymarker(pytest.mark.django_db(databases=["default", "clickhouse"]))
-    request.getfixturevalue("db")
+    request.getfixturevalue("db")  # Resolve `db` only after injecting the clickhouse db
     yield
     connection = connections["clickhouse"]
     with connection.cursor() as cursor:
