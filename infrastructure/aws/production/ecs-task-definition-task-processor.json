@@ -258,6 +258,10 @@
                 {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
+                },
+                {
+                    "name": "EXPERIMENTATION_CLICKHOUSE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:EXPERIMENTATION_CLICKHOUSE_URL::"
                 }
             ],
             "logConfiguration": {
