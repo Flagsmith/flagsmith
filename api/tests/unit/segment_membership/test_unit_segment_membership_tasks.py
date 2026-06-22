@@ -54,12 +54,6 @@ def test_backfill_identities_to_clickhouse__dynamo_disabled__skips(
     spy.assert_not_called()
 
 
-# NOTE: the happy path (rows actually landing in IDENTITIES, refresh dispatched)
-# is covered end-to-end against a live ClickHouse in
-# tests/integration/segment_membership/test_segment_membership_clickhouse.py.
-# The cases below cover the skip/error branches with the cursor mocked.
-
-
 def test_backfill_identities_to_clickhouse__insert_fails__logs_and_continues(
     mocker: MockerFixture,
     settings: SettingsWrapper,
@@ -194,13 +188,6 @@ def test_refresh_project_segment_counts__compute_fails__logs(
 
     # Then
     assert any(e["event"] == "refresh.project.failed" for e in log.events)
-
-
-# NOTE: the happy path (real predicate over real IDENTITIES rows upserting a
-# real count) is covered end-to-end against a live ClickHouse in
-# tests/integration/segment_membership/test_segment_membership_clickhouse.py.
-# The cases below mock `compute_segment_counts_for_project` to cover the
-# upsert/delete bookkeeping in isolation.
 
 
 def test_refresh_project_segment_counts__previously_matching_pair_drops_to_zero__row_deleted(
