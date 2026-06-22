@@ -157,6 +157,61 @@ export const getWinningVariant = (
   return best
 }
 
+export type AxisRange = { min: number; max: number }
+
+export const computeAxisRange = (
+  identities: VariantIdentity[],
+  metricResult?: BayesianMetricResult,
+): AxisRange => {
+  let min = -0.1
+  let max = 0.1
+  identities.forEach((v) => {
+    if (v.isControl) return
+    const inf = metricResult?.inference[v.key]
+    if (!inf) return
+    if (inf.ci_low < min) min = inf.ci_low
+    if (inf.ci_high > max) max = inf.ci_high
+  })
+  const pad = (max - min) * 0.15
+  return { max: max + pad, min: min - pad }
+}
+
+export const valueToPercent = (value: number, range: AxisRange): number =>
+  ((value - range.min) / (range.max - range.min)) * 100
+
+export const buildTicks = (range: AxisRange): number[] => {
+  const span = range.max - range.min
+  let step = 0.05
+  if (span > 5) step = 1
+  else if (span > 2) step = 0.5
+  else if (span > 0.6) step = 0.2
+  else if (span > 0.3) step = 0.1
+
+  const ticks: number[] = []
+  const start = Math.ceil(range.min / step) * step
+  for (let v = start; v <= range.max; v += step) {
+    ticks.push(Math.round(v * 1000) / 1000)
+  }
+  return ticks
+}
+
+export const liftToPercent = (value: number, liftRange: number): number =>
+  Math.max(0, Math.min(100, ((value / liftRange + 1) / 2) * 100))
+
+export const computeLiftRange = (
+  identities: VariantIdentity[],
+  metricResult?: BayesianMetricResult,
+): number => {
+  let max = 0.3
+  identities.forEach((v) => {
+    if (v.isControl) return
+    const inf = metricResult?.inference[v.key]
+    if (!inf) return
+    max = Math.max(max, Math.abs(inf.ci_low), Math.abs(inf.ci_high))
+  })
+  return max * 1.1
+}
+
 export type VariantTotal = {
   key: string
   name: string
