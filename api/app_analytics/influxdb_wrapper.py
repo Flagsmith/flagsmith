@@ -63,9 +63,7 @@ class InfluxDBWrapper:
         )
 
     @classmethod
-    def get_bucket(cls, size: DownsampleSize | None) -> str:
-        if size is None:
-            return settings.INFLUXDB_BUCKET
+    def get_bucket(cls, size: DownsampleSize) -> str:
         return f"{settings.INFLUXDB_BUCKET}_downsampled_{size}"
 
     @classmethod
