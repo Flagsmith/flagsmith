@@ -1,6 +1,7 @@
 import { FC, useMemo } from 'react'
 import Icon from 'components/icons/Icon'
 import InfoMessage from 'components/InfoMessage'
+import { colorTextSuccess } from 'common/theme/tokens'
 import { BayesianResultsSummary, Experiment } from 'common/types/responses'
 import { getPrimaryMetric } from 'components/experiments/constants'
 import {
@@ -9,7 +10,7 @@ import {
   getVariantIdentities,
   getWinningVariant,
   isLiftFavourable,
-} from './derive'
+} from 'components/experiments/results/derive'
 import StatCard from './StatCard'
 
 type ExperimentSummaryScorecardProps = {
@@ -68,7 +69,7 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
             <Icon
               name='checkmark-circle'
               width={20}
-              fill='var(--color-text-success)'
+              fill={colorTextSuccess}
             />
             <span className='text-success fw-normal'>Recommendation</span>
           </div>
