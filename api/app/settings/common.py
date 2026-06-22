@@ -1483,7 +1483,7 @@ DATABASE_ROUTERS.append("app.routers.ClickHouseRouter")
 
 if CLICKHOUSE_ENABLED:
     _clickhouse_db: dict[str, Any] = {
-        "ENGINE": "clickhouse_backend.backend",
+        "ENGINE": "core.db_backends.clickhouse",
         "HOST": CLICKHOUSE_HOST,
         "PORT": CLICKHOUSE_PORT,
         "USER": CLICKHOUSE_USER,
