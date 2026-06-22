@@ -231,6 +231,20 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
                   : 'This will update the segment overrides for the environment'}{' '}
                 <strong>{environmentName}</strong>
               </p>
+              {is4Eyes && !isVersioned && (
+                <InfoMessage>
+                  Enable Feature Versioning to gate segment overrides with
+                  Feature Change Requests.{' '}
+                  <a
+                    href='https://docs.flagsmith.com/managing-flags/feature-versioning'
+                    target='_blank'
+                    rel='noreferrer'
+                  >
+                    Learn more
+                  </a>
+                  .
+                </InfoMessage>
+              )}
               <div className='text-right'>
                 {isVersioned && is4Eyes
                   ? Utils.renderWithPermission(
