@@ -21,6 +21,7 @@ import find from 'lodash/find'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
+import { getDefaultVariantKey } from './multivariate'
 import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
@@ -92,7 +93,8 @@ const Utils = Object.assign({}, BaseUtils, {
       } else if (typeof v.default_percentage_allocation === 'number') {
         total += v.default_percentage_allocation
       } else {
-        total += (v as any).percentage_allocation
+        // A cleared weight input leaves the allocation null — treat as 0.
+        total += (v as any).percentage_allocation || 0
       }
       return null
     })
@@ -255,6 +257,7 @@ const Utils = Object.assign({}, BaseUtils, {
       OrganisationPermission.CREATE_PROJECT
     ]
   },
+  getDefaultVariantKey,
   getExistingWaitForTime: (
     waitFor: string | undefined,
   ):
@@ -467,6 +470,7 @@ const Utils = Object.assign({}, BaseUtils, {
         }
     }
   },
+
   getPlanName: (_plan: string) => {
     const plan = (_plan || '')?.toLowerCase()
     if (plan.includes('free')) {
@@ -489,6 +493,7 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return planNames.free
   },
+
   getPlanPermission: (plan: string, feature: PaidFeature) => {
     const planName = Utils.getPlanName(plan)
     if (!plan || planName === planNames.free) {
@@ -508,6 +513,7 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return true
   },
+
   getPlansPermission: (feature: PaidFeature) => {
     const isOrgPermission = feature !== '2FA'
     let plans
@@ -527,6 +533,7 @@ const Utils = Object.assign({}, BaseUtils, {
     )
     return !!found
   },
+
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
@@ -692,6 +699,8 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return false
   },
+  isOrgOnFreePlan: (): boolean =>
+    Utils.getPlanName(AccountStore.getActiveOrgPlan()) === planNames.free,
   isSaas: () => selectBuildVersion(getStore().getState())?.backend?.is_saas,
 
   isValidNumber(value: any) {

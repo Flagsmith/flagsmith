@@ -2,6 +2,7 @@ import { PagedResponse, ProjectFlag, Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
+import { sortMultivariateOptions } from 'common/utils/multivariate'
 
 /**
  * Number of features to display per page in the features list.
@@ -122,6 +123,12 @@ export const projectFlagService = service
             pageSize: arg.page_size || FEATURES_PAGE_SIZE,
             previous: response.previous,
           },
+          results: response.results.map((feature) => ({
+            ...feature,
+            multivariate_options: sortMultivariateOptions(
+              feature.multivariate_options,
+            ),
+          })),
         }),
       }),
 
@@ -129,6 +136,12 @@ export const projectFlagService = service
         providesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
         query: (query: Req['getProjectFlag']) => ({
           url: `projects/${query.project}/features/${query.id}/`,
+        }),
+        transformResponse: (res: Res['projectFlag']) => ({
+          ...res,
+          multivariate_options: sortMultivariateOptions(
+            res.multivariate_options,
+          ),
         }),
       }),
 

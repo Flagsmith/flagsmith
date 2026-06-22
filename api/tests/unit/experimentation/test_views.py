@@ -1072,6 +1072,30 @@ def test_get__clickhouse_unconfigured__returns_200_without_stats(
     stats_spy.assert_not_called()
 
 
+def test_get__exclude_event_stats__returns_200_without_querying_warehouse(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection: WarehouseConnection,
+    warehouse_connection_url: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    annotate_spy = mocker.patch("experimentation.views.annotate_warehouse_event_stats")
+
+    # When
+    response = admin_client.get(f"{warehouse_connection_url}?exclude_event_stats=true")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()[0]
+    assert data["id"] == warehouse_connection.id
+    assert data["total_events_received"] is None
+    assert data["unique_events_count"] is None
+    annotate_spy.assert_not_called()
+
+
 def test_get__clickhouse_errors__returns_200_without_stats(
     admin_client: APIClient,
     environment: Environment,

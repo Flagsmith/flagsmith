@@ -79,7 +79,18 @@ const FeatureListProvider = class extends React.Component {
     environmentFlag,
     segmentOverrides,
   ) => {
-    AppActions.createFlag(projectId, environmentId, flag, segmentOverrides)
+    AppActions.createFlag(
+      projectId,
+      environmentId,
+      {
+        ...flag,
+        multivariate_options: flag.multivariate_options?.map((v, i) => ({
+          ...v,
+          key: v.key || Utils.getDefaultVariantKey(i),
+        })),
+      },
+      segmentOverrides,
+    )
   }
 
   editFeatureValue = (
@@ -94,7 +105,7 @@ const FeatureListProvider = class extends React.Component {
       Object.assign({}, projectFlag, {
         multivariate_options:
           flag.multivariate_options &&
-          flag.multivariate_options.map((v) => {
+          flag.multivariate_options.map((v, i) => {
             const matchingProjectVariate =
               (projectFlag.multivariate_options &&
                 projectFlag.multivariate_options.find((p) => p.id === v.id)) ||
@@ -103,6 +114,7 @@ const FeatureListProvider = class extends React.Component {
               ...v,
               default_percentage_allocation:
                 matchingProjectVariate.default_percentage_allocation,
+              key: v.key || Utils.getDefaultVariantKey(i),
             }
           }),
       }),
@@ -192,7 +204,7 @@ const FeatureListProvider = class extends React.Component {
       Object.assign({}, projectFlag, flag, {
         multivariate_options:
           flag.multivariate_options &&
-          flag.multivariate_options.map((v) => {
+          flag.multivariate_options.map((v, i) => {
             const matchingProjectVariate =
               (projectFlag.multivariate_options &&
                 projectFlag.multivariate_options.find((p) => p.id === v.id)) ||
@@ -201,6 +213,7 @@ const FeatureListProvider = class extends React.Component {
               ...v,
               default_percentage_allocation:
                 matchingProjectVariate.default_percentage_allocation,
+              key: v.key || Utils.getDefaultVariantKey(i),
             }
           }),
       }),

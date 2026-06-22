@@ -24,7 +24,11 @@ import {
   StageActionType,
   StageActionBody,
   ChangeRequest,
+  ExpectedDirection,
   ExperimentStatus,
+  MetricAggregation,
+  MetricDirection,
+  MetricDefinition,
   FlagsmithValue,
   TagStrategy,
   FeatureType,
@@ -359,6 +363,15 @@ export type Req = {
       project: number
     }
   }
+  createEnvironmentRolePermission: {
+    organisation_id: number
+    role_id: number
+    body: {
+      admin?: boolean
+      permissions: RolePermission['permissions']
+      environment: number
+    }
+  }
   updateRolePermission: Req['createRolePermission'] & { id: number }
   deleteRolePermission: { organisation_id: number; role_id: number }
 
@@ -658,6 +671,14 @@ export type Req = {
       user: number
     }
   }
+  createEnvironmentUserPermission: {
+    environmentId: string
+    body: {
+      admin?: boolean
+      permissions: string[]
+      user: number
+    }
+  }
   createGroup: {
     orgId: number
     data: Omit<UserGroup, 'id' | 'users'>
@@ -843,7 +864,7 @@ export type Req = {
     userId: number
   }
   getUserPermissions: {
-    id?: number
+    id?: number | string
     userId: number | undefined
     level: PermissionLevel
   }
@@ -990,7 +1011,10 @@ export type Req = {
     project_id: number
     gitlab_project_id: number
   }>
-  getWarehouseConnections: { environmentId: string }
+  getWarehouseConnections: {
+    environmentId: string
+    exclude_event_stats?: boolean
+  }
   createWarehouseConnection: {
     environmentId: string
     warehouse_type: string
@@ -998,6 +1022,7 @@ export type Req = {
     config?: Record<string, string>
   }
   deleteWarehouseConnection: { environmentId: string; id: number }
+  testWarehouseConnection: { environmentId: string; id: number }
   updateWarehouseConnection: {
     environmentId: string
     id: number
@@ -1010,9 +1035,53 @@ export type Req = {
   }>
   createExperiment: {
     environmentId: string
-    body: { name: string; hypothesis: string; feature: number }
+    body: {
+      name: string
+      hypothesis: string
+      feature: number
+      metrics: { metric: number; expected_direction: ExpectedDirection }[]
+    }
   }
   experimentAction: { environmentId: string; experimentId: number }
+  updateExperiment: {
+    environmentId: string
+    experimentId: number
+    body: { hypothesis?: string }
+  }
   deleteExperiment: { environmentId: string; experimentId: number }
+  getExperiment: { environmentId: string; experimentId: number }
+  getExperimentExposures: { environmentId: string; experimentId: number }
+  refreshExperimentExposures: { environmentId: string; experimentId: number }
+  getMetrics: PagedRequest<{
+    environmentId: string
+    q?: string
+  }>
+  getMetric: { environmentId: string; metricId: number }
+  createMetric: {
+    environmentId: string
+    body: {
+      name: string
+      description: string
+      aggregation: MetricAggregation
+      direction: MetricDirection
+      definition: MetricDefinition
+    }
+  }
+  updateMetric: {
+    environmentId: string
+    metricId: number
+    body: Req['createMetric']['body']
+  }
+  deleteMetric: { environmentId: string; metricId: number }
+  createMultivariateOption: {
+    project_id: string | number
+    feature_id: number
+    body: Partial<MultivariateOption> & { feature: number }
+  }
+  saveMultivariateOptions: {
+    project_id: string | number
+    feature_id: number
+    multivariate_options: Partial<MultivariateOption>[]
+  }
   // END OF TYPES
 }

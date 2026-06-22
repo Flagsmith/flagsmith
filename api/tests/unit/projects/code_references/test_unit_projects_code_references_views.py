@@ -76,6 +76,60 @@ def test_create_code_reference__valid_payload__returns_201_with_accepted_referen
     ]
 
 
+def test_create_code_reference__empty_references__returns_201_and_clears_previous_references(
+    admin_client_new: APIClient,
+    feature: Feature,
+    project: Project,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    with freezegun.freeze_time("2099-06-01T12:00:00+00:00"):
+        admin_client_new.post(
+            f"/api/v1/projects/{project.pk}/code-references/",
+            data={
+                "repository_url": "https://github.flagsmith.com/",
+                "revision": "rev-1",
+                "code_references": [
+                    {
+                        "feature_name": feature.name,
+                        "file_path": "path/to/file.py",
+                        "line_number": 1,
+                    },
+                ],
+            },
+            format="json",
+        )
+    assert ScannedCodeReferences.objects.filter(feature=feature).exists()
+
+    # When
+    with freezegun.freeze_time("2099-06-02T12:00:00+00:00"):
+        response = admin_client_new.post(
+            f"/api/v1/projects/{project.pk}/code-references/",
+            data={
+                "repository_url": "https://github.flagsmith.com/",
+                "revision": "rev-2",
+                "code_references": [],
+            },
+            format="json",
+        )
+
+    # Then
+    assert response.status_code == 201
+    assert response.data["code_references"] == []
+    references_response = admin_client_new.get(
+        f"/api/v1/projects/{project.pk}/features/{feature.pk}/code-references/",
+    )
+    assert references_response.status_code == 200
+    assert references_response.json() == []
+    assert log.events[-1] == {
+        "event": "scan.created",
+        "level": "info",
+        "organisation__id": project.organisation_id,
+        "code_references__count": 0,
+        "feature__count": 0,
+    }
+
+
 def test_create_code_reference__not_authenticated__returns_401(
     client: APIClient,
     project: Project,

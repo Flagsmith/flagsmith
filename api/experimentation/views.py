@@ -1,11 +1,14 @@
 import logging
+from datetime import timedelta
 from typing import Any
 
 from django.db import IntegrityError
 from django.db.models import Count, Prefetch, Q, QuerySet
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import Throttled, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -14,9 +17,16 @@ from rest_framework.viewsets import GenericViewSet
 
 from app.pagination import CustomPagination
 from environments.views import NestedEnvironmentViewSet
+from experimentation.constants import (
+    EXPOSURES_REFRESH_MIN_INTERVAL,
+    RESULTS_REFRESH_MIN_INTERVAL,
+)
 from experimentation.models import (
     Experiment,
+    ExperimentComputation,
+    ExperimentExposures,
     ExperimentMetric,
+    ExperimentResults,
     ExperimentStatus,
     Metric,
     WarehouseConnection,
@@ -28,8 +38,10 @@ from experimentation.permissions import (
     WarehouseConnectionPermission,
 )
 from experimentation.serializers import (
+    ExperimentExposuresSerializer,
     ExperimentListSerializer,
     ExperimentMetricSerializer,
+    ExperimentResultsSerializer,
     ExperimentSerializer,
     MetricSerializer,
     WarehouseConnectionSerializer,
@@ -42,6 +54,10 @@ from experimentation.services import (
     mark_warehouse_pending_connection,
     refresh_warehouse_connection_status,
     transition_experiment_status,
+)
+from experimentation.tasks import (
+    compute_experiment_exposures,
+    compute_experiment_results,
 )
 from users.models import FFAdminUser
 
@@ -86,8 +102,12 @@ class WarehouseConnectionViewSet(
     def list(self, request: Request, *args: object, **kwargs: object) -> Response:
         environment_api_key: str = self.kwargs["environment_api_key"]
         connections = list(self.filter_queryset(self.get_queryset()))
-        for connection in connections:
-            annotate_warehouse_event_stats(connection, environment_api_key)
+        exclude_event_stats = (
+            request.query_params.get("exclude_event_stats", "").lower() == "true"
+        )
+        if not exclude_event_stats:
+            for connection in connections:
+                annotate_warehouse_event_stats(connection, environment_api_key)
         serializer = self.get_serializer(connections, many=True)
         return Response(serializer.data)
 
@@ -164,7 +184,9 @@ class ExperimentViewSet(
         qs = super().get_queryset()
         if self.action in ("list", "retrieve"):
             qs = qs.select_related("feature").prefetch_related(
-                "feature__multivariate_options"
+                "feature__multivariate_options",
+                "feature__feature_states__multivariate_feature_state_values",
+                "experiment_metrics__metric",
             )
         status_filter = self.request.query_params.get("status")
         if status_filter:
@@ -178,7 +200,7 @@ class ExperimentViewSet(
         if q:
             qs = qs.filter(Q(name__icontains=q) | Q(feature__name__icontains=q))
 
-        return qs
+        return qs.order_by("-created_at")
 
     def list(self, request: Request, *args: object, **kwargs: object) -> Response:
         response = super().list(request, *args, **kwargs)
@@ -267,6 +289,89 @@ class ExperimentViewSet(
     @action(detail=True, methods=["post"])
     def complete(self, request: Request, **kwargs: object) -> Response:
         return self._transition_status(ExperimentStatus.COMPLETED)
+
+    @action(detail=True, methods=["get"])
+    def exposures(self, request: Request, **kwargs: object) -> Response:
+        experiment: Experiment = self.get_object()
+        exposures = getattr(experiment, "exposures", None)
+        return Response(
+            {
+                "exposures": (
+                    ExperimentExposuresSerializer(exposures).data if exposures else None
+                ),
+            }
+        )
+
+    @action(detail=True, methods=["post"], url_path="exposures/refresh")
+    def refresh_exposures(self, request: Request, **kwargs: object) -> Response:
+        experiment: Experiment = self.get_object()
+        exposures = ExperimentExposures.objects.filter(experiment=experiment).first()
+        self._validate_refresh_request(
+            experiment,
+            exposures,
+            min_interval=EXPOSURES_REFRESH_MIN_INTERVAL,
+            before_start_detail="Cannot refresh exposures before the experiment starts.",
+            final_detail="Exposures are final for this completed experiment.",
+        )
+        if exposures is None:
+            exposures, _ = ExperimentExposures.objects.get_or_create(
+                experiment=experiment
+            )
+        exposures.record_refresh_request()
+        compute_experiment_exposures.delay(kwargs={"experiment_id": experiment.id})
+        return Response(status=status.HTTP_202_ACCEPTED)
+
+    @action(detail=True, methods=["get"])
+    def results(self, request: Request, **kwargs: object) -> Response:
+        experiment: Experiment = self.get_object()
+        results = getattr(experiment, "results", None)
+        return Response(
+            {
+                "results": (
+                    ExperimentResultsSerializer(results).data if results else None
+                ),
+            }
+        )
+
+    @action(detail=True, methods=["post"], url_path="results/refresh")
+    def refresh_results(self, request: Request, **kwargs: object) -> Response:
+        experiment: Experiment = self.get_object()
+        results = ExperimentResults.objects.filter(experiment=experiment).first()
+        self._validate_refresh_request(
+            experiment,
+            results,
+            min_interval=RESULTS_REFRESH_MIN_INTERVAL,
+            before_start_detail="Cannot refresh results before the experiment starts.",
+            final_detail="Results are final for this completed experiment.",
+        )
+        if results is None:
+            results, _ = ExperimentResults.objects.get_or_create(experiment=experiment)
+        results.record_refresh_request()
+        compute_experiment_results.delay(kwargs={"experiment_id": experiment.id})
+        return Response(status=status.HTTP_202_ACCEPTED)
+
+    def _validate_refresh_request(
+        self,
+        experiment: Experiment,
+        computation: "ExperimentComputation[Any] | None",
+        *,
+        min_interval: timedelta,
+        before_start_detail: str,
+        final_detail: str,
+    ) -> None:
+        if experiment.started_at is None:
+            raise ValidationError({"detail": before_start_detail})
+        if computation is not None and computation.is_final:
+            raise ValidationError({"detail": final_detail})
+        if computation is not None and computation.refresh_requested_at is not None:
+            retry_after = min_interval - (
+                timezone.now() - computation.refresh_requested_at
+            )
+            if retry_after.total_seconds() > 0:
+                raise Throttled(
+                    wait=retry_after.total_seconds(),
+                    detail="A refresh was requested recently. Try again later.",
+                )
 
     def _transition_status(self, target_status: str) -> Response:
         experiment: Experiment = self.get_object()

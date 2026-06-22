@@ -82,6 +82,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
             style={{ height: buttonWidth, width: buttonWidth }}
             onClick={() => setOpen(!open)}
             theme='secondary'
+            data-test='overflow-nav-button'
             className='d-flex align-items-center justify-content-center m-0 p-0'
           >
             <IonIcon className='fs-small' icon={icon} />

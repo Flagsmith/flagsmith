@@ -58,6 +58,11 @@ class FlagsmithResourceAuth(RemoteAuthProvider):
             scopes_supported=OAUTH_SCOPES,
         )
 
+    def _get_resource_url(self, path: str | None = None) -> AnyHttpUrl | None:
+        # Advertise the server origin as the protected resource
+        # to enable client registration for both the root path and the /mcp path
+        return super()._get_resource_url(None)
+
     def get_middleware(self) -> list[Middleware]:
         return [
             Middleware(AuthenticationMiddleware, backend=_AnySchemeBackend()),

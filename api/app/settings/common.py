@@ -367,6 +367,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    "telemetry.middleware.MCPUsageLoggerMiddleware",  # Must come last!
 ]
 
 ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
@@ -1224,6 +1225,7 @@ CORS_ALLOW_HEADERS = list(
         )
     )
 )
+CORS_EXPOSE_HEADERS = ["Retry-After"]
 
 # Hubspot settings
 HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
@@ -1493,6 +1495,10 @@ if CLICKHOUSE_ENABLED:
             "settings": {
                 # ClickHouse Cloud 25.12 requires this for `JSON`-column DDL.
                 "allow_experimental_json_type": 1,
+                # Block each DDL statement until every replica has applied it.
+                # Prevents replicated deployments (e.g. ClickHouse Cloud)
+                # from breaking migrations with Error 517.
+                "alter_sync": 2,
             },
         },
     }

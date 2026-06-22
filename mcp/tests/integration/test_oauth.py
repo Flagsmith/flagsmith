@@ -8,7 +8,7 @@ from fastmcp import FastMCP
 from flagsmith_mcp import config
 from flagsmith_mcp import server as server_module
 
-PRM_PATH = "/.well-known/oauth-protected-resource/mcp"
+PRM_PATH = "/.well-known/oauth-protected-resource"
 
 
 @pytest.fixture
@@ -33,9 +33,11 @@ async def test_http_no_token__serves_protected_resource_metadata(
     # Given OAuth discovery is active (server fixture: http, no static token)
     response = await http_client.get(PRM_PATH)
 
-    # Then it advertises the Flagsmith AS and the mcp scope (RFC 9728)
+    # Then it advertises the Flagsmith AS and the mcp scope (RFC 9728), and the
+    # resource is the server origin
     assert response.status_code == 200
     body = response.json()
+    assert body["resource"] == "http://127.0.0.1:8000/"
     assert body["authorization_servers"] == ["https://api.flagsmith.com/"]
     assert body["scopes_supported"] == ["mcp"]
 

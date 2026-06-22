@@ -1,7 +1,10 @@
-import typing
+from dataclasses import asdict
+from datetime import datetime
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     AFTER_DELETE,
@@ -11,14 +14,16 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 
 from core.models import SoftDeleteExportableModel
 from environments.models import Environment
-from experimentation.tasks import (
-    add_environment_key_to_ingestion,
-    delete_environment_key_from_ingestion,
+from experimentation.dataclasses import (
+    ExposuresSummary,
+    ResultsSummary,
+    WarehouseEventStats,
 )
 from experimentation.types import MetricDefinition
 
-if typing.TYPE_CHECKING:
-    from experimentation.dataclasses import WarehouseEventStats
+# A computation's payload is the serialised form of its summary dataclass; the
+# concrete subclass binds which one, so record_refresh stays type-safe per panel.
+SummaryT = TypeVar("SummaryT", ExposuresSummary, ResultsSummary)
 
 
 class WarehouseType(models.TextChoices):
@@ -70,12 +75,16 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
 
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def sync_to_ingestion_on_create(self) -> None:
+        from experimentation.tasks import add_environment_key_to_ingestion
+
         add_environment_key_to_ingestion.delay(
             kwargs={"environment_api_key": self.environment.api_key},
         )
 
     @hook(AFTER_DELETE)  # type: ignore[misc]
     def sync_to_ingestion_on_delete(self) -> None:
+        from experimentation.tasks import delete_environment_key_from_ingestion
+
         delete_environment_key_from_ingestion.delay(
             kwargs={"environment_api_key": self.environment.api_key},
         )
@@ -127,6 +136,64 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
                 name="unique_active_experiment_per_feature_env",
             ),
         ]
+
+
+class ExperimentComputation(models.Model, Generic[SummaryT]):
+    """One cached, refreshable warehouse computation per experiment: a single row
+    updated in place, frozen once ``is_final``. A failed refresh preserves the
+    last good payload so the UI keeps showing real data with a staleness note."""
+
+    as_of = models.DateTimeField(null=True, blank=True)
+    payload: models.JSONField[dict[str, object] | None, dict[str, object] | None] = (
+        models.JSONField(null=True, blank=True)
+    )
+    last_error_at = models.DateTimeField(null=True, blank=True)
+    refresh_requested_at = models.DateTimeField(null=True, blank=True)
+
+    if TYPE_CHECKING:
+        # Each concrete subclass defines this as a OneToOneField; declared here
+        # so is_final can read the experiment without the field assignment.
+        experiment: "models.OneToOneField[Experiment, Experiment]"
+
+    class Meta:
+        abstract = True
+
+    @property
+    def is_final(self) -> bool:
+        ended_at = self.experiment.ended_at
+        return (
+            ended_at is not None and self.as_of is not None and self.as_of >= ended_at
+        )
+
+    def record_refresh(self, summary: SummaryT, as_of: datetime) -> None:
+        self.payload = asdict(summary)
+        self.as_of = as_of
+        self.last_error_at = None
+        self.save(update_fields=["payload", "as_of", "last_error_at"])
+
+    def record_failure(self) -> None:
+        self.last_error_at = timezone.now()
+        self.save(update_fields=["last_error_at"])
+
+    def record_refresh_request(self) -> None:
+        self.refresh_requested_at = timezone.now()
+        self.save(update_fields=["refresh_requested_at"])
+
+
+class ExperimentExposures(ExperimentComputation[ExposuresSummary]):
+    experiment = models.OneToOneField(
+        Experiment,
+        on_delete=models.CASCADE,
+        related_name="exposures",
+    )
+
+
+class ExperimentResults(ExperimentComputation[ResultsSummary]):
+    experiment = models.OneToOneField(
+        Experiment,
+        on_delete=models.CASCADE,
+        related_name="results",
+    )
 
 
 class MetricAggregation(models.TextChoices):

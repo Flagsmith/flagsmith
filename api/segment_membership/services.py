@@ -7,6 +7,7 @@ from django.db.backends.utils import CursorWrapper
 from flag_engine.context.types import EvaluationContext
 from flagsmith_sql_flag_engine import TranslateContext, translate_segment
 from flagsmith_sql_flag_engine.dialects import ClickHouseDialect
+from task_processor.models import Task
 
 from integrations.flagsmith.client import get_openfeature_client
 from organisations.models import Organisation
@@ -26,6 +27,29 @@ def is_membership_enabled(organisation: Organisation) -> bool:
         default_value=False,
         evaluation_context=organisation.openfeature_evaluation_context,
     )
+
+
+def enqueue_membership_refresh(project: Project) -> None:
+    """Queue a per-project segment membership count refresh after a canonical
+    segment is created or edited.
+
+    No-op when the org has the feature off, or when a refresh for the project
+    is already pending or running.
+    """
+    if not is_membership_enabled(project.organisation):
+        return
+
+    from segment_membership.tasks import refresh_project_segment_counts
+
+    if Task.objects.filter(
+        task_identifier=refresh_project_segment_counts.task_identifier,
+        completed=False,
+        num_failures__lt=3,
+        serialized_args=Task.serialize_data((project.id,)),
+    ).exists():
+        return
+
+    refresh_project_segment_counts.delay(args=(project.id,))
 
 
 @contextmanager
