@@ -1355,7 +1355,7 @@ def clickhouse_db(
     Skips when no `clickhouse` alias is configured (i.e. ClickHouse isn't
     running). ClickHouse has no transactional rollback, so -- unlike the
     Postgres-backed `db` fixture -- we can't rely on Django wrapping the test
-    in a transaction. We truncate IDENTITIES on teardown instead to isolate
+    in a transaction. We truncate every table on teardown instead to isolate
     tests from one another.
     """
     if "clickhouse" not in settings.DATABASES:  # pragma: no cover
@@ -1363,8 +1363,10 @@ def clickhouse_db(
     request.applymarker(pytest.mark.django_db(databases=["default", "clickhouse"]))
     request.getfixturevalue("db")
     yield
-    with connections["clickhouse"].cursor() as cursor:
-        cursor.execute("TRUNCATE TABLE IDENTITIES")
+    connection = connections["clickhouse"]
+    with connection.cursor() as cursor:
+        for table_name in connection.introspection.table_names(cursor):
+            cursor.execute(f"TRUNCATE TABLE {connection.ops.quote_name(table_name)}")
 
 
 @pytest.fixture
