@@ -136,7 +136,7 @@
 
   &__axis-row {
     position: relative;
-    padding: 8px 0;
+    padding: 12px 0;
   }
 
   &__axis-row-label {
@@ -265,6 +265,15 @@
 
   &__exposures-card {
     background: var(--color-surface-default);
+  }
+
+  &__axis-dot-label {
+    position: absolute;
+    top: -14px;
+    transform: translateX(-50%);
+    font-size: 10px;
+    font-weight: var(--font-weight-bold);
+    white-space: nowrap;
   }
 
   &__refresh {

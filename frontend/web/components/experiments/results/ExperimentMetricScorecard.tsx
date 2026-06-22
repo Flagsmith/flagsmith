@@ -76,7 +76,9 @@ const valueToPercent = (value: number, range: AxisRange): number =>
 const buildTicks = (range: AxisRange): number[] => {
   const span = range.max - range.min
   let step = 0.05
-  if (span > 0.6) step = 0.2
+  if (span > 5) step = 1
+  else if (span > 2) step = 0.5
+  else if (span > 0.6) step = 0.2
   else if (span > 0.3) step = 0.1
 
   const ticks: number[] = []
@@ -184,6 +186,12 @@ const SharedAxisChart: FC<{
                     className='experiment-results__axis-dot'
                     style={{ background: colour, left: `${dotPos}%` }}
                   />
+                  <span
+                    className='experiment-results__axis-dot-label'
+                    style={{ color: colour, left: `${dotPos}%` }}
+                  >
+                    {formatLiftPct(inf.lift)}
+                  </span>
                 </div>
               </div>
             )
@@ -194,15 +202,14 @@ const SharedAxisChart: FC<{
   )
 }
 
-// Fixed ±30% scale for the inline table bar; SharedAxisChart uses a dynamic range.
-const LIFT_RANGE = 0.3
-const liftToPercent = (value: number): number =>
-  Math.max(0, Math.min(100, ((value / LIFT_RANGE + 1) / 2) * 100))
+const liftToPercent = (value: number, liftRange: number): number =>
+  Math.max(0, Math.min(100, ((value / liftRange + 1) / 2) * 100))
 
 const renderLift = (
   identity: VariantIdentity,
   inference: Inference | null,
   direction: ExpectedDirection,
+  liftRange: number,
 ): ReactNode => {
   if (identity.isControl) {
     return <span className='text-muted fs-caption'>Baseline</span>
@@ -211,9 +218,9 @@ const renderLift = (
     return <span className='text-muted fs-caption'>Collecting data…</span>
   }
   const colour = liftColour(inference.lift, direction)
-  const left = liftToPercent(inference.ci_low)
-  const right = liftToPercent(inference.ci_high)
-  const dotPos = liftToPercent(inference.lift)
+  const left = liftToPercent(inference.ci_low, liftRange)
+  const right = liftToPercent(inference.ci_high, liftRange)
+  const dotPos = liftToPercent(inference.lift, liftRange)
 
   return (
     <div className='experiment-results__lift-bar'>
@@ -308,6 +315,17 @@ const ExperimentMetricScorecard: FC<ExperimentMetricScorecardProps> = ({
     [identities, metricResult],
   )
 
+  const liftRange = useMemo(() => {
+    let max = 0.3
+    identities.forEach((v) => {
+      if (v.isControl) return
+      const inf = metricResult?.inference[v.key]
+      if (!inf) return
+      max = Math.max(max, Math.abs(inf.ci_low), Math.abs(inf.ci_high))
+    })
+    return max * 1.1
+  }, [identities, metricResult])
+
   if (!metric) return null
 
   return (
@@ -392,7 +410,14 @@ const ExperimentMetricScorecard: FC<ExperimentMetricScorecardProps> = ({
                   </td>
                   <td>{stats ? stats.n.toLocaleString() : '—'}</td>
                   <td>{renderMetricValue(stats, metric.aggregation)}</td>
-                  <td>{renderLift(v, inference, metric.expected_direction)}</td>
+                  <td>
+                    {renderLift(
+                      v,
+                      inference,
+                      metric.expected_direction,
+                      liftRange,
+                    )}
+                  </td>
                   <td>{renderCI(v, inference)}</td>
                   <td>
                     {renderWinProbability(v, inference, v.key === winner?.key)}
