@@ -223,7 +223,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
           {!showCreateSegment && (
             <div>
               <p className='text-right mt-4 fs-small lh-sm modal-caption'>
-                Drag overrides to adjust priority.
+                Re-order overrides to adjust priority.
               </p>
               <p className='text-right mt-4 fs-small lh-sm modal-caption'>
                 {is4Eyes && isVersioned
