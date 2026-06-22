@@ -138,7 +138,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
         )}
       >
         <div>
-          <Row className='align-items-center mb-2 gap-4 segment-overrides-title'>
+          <Row className='align-items-center mb-2 gap-4'>
             <div className='flex-fill'>
               <Tooltip
                 title={
