@@ -43,6 +43,7 @@ from common.projects.permissions import CREATE_ENVIRONMENT, DELETE_FEATURE, VIEW
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
+from django.db import connections
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
 from django.test.utils import setup_databases
 from django_test_migrations.migrator import Migrator
@@ -1342,6 +1343,28 @@ def enable_features(
 def clear_content_type_cache() -> typing.Generator[None, None, None]:
     yield
     ContentType.objects.clear_cache()
+
+
+@pytest.fixture
+def clickhouse_db(
+    request: pytest.FixtureRequest, settings: SettingsWrapper
+) -> typing.Generator[None, None, None]:
+    """
+    Opt a test into a live ClickHouse database.
+
+    Skips when no `clickhouse` alias is configured (i.e. ClickHouse isn't
+    running). ClickHouse has no transactional rollback, so -- unlike the
+    Postgres-backed `db` fixture -- we can't rely on Django wrapping the test
+    in a transaction. We truncate IDENTITIES on teardown instead to isolate
+    tests from one another.
+    """
+    if "clickhouse" not in settings.DATABASES:  # pragma: no cover
+        pytest.skip("No ClickHouse database configured, skipping")
+    request.applymarker(pytest.mark.django_db(databases=["default", "clickhouse"]))
+    request.getfixturevalue("db")
+    yield
+    with connections["clickhouse"].cursor() as cursor:
+        cursor.execute("TRUNCATE TABLE IDENTITIES")
 
 
 @pytest.fixture

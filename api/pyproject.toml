@@ -484,6 +484,9 @@ addopts = [
 ]
 console_output_style = 'count'
 log_level = 'INFO'
+markers = [
+  "clickhouse: test requires a live ClickHouse database (see the clickhouse_db fixture)",
+]
 
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]
