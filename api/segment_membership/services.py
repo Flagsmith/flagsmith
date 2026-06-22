@@ -63,7 +63,6 @@ def open_clickhouse_cursor(
     """
     with connections["clickhouse"].cursor() as cursor:
         if log_comment:
-            # Underlying clickhouse-driver cursor exposes set_settings(...).
             cursor.cursor.set_settings({"log_comment": log_comment})
         yield cursor
 

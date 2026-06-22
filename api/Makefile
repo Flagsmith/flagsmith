@@ -63,6 +63,7 @@ docker-build:
 wait-for-db:
 	uv run python manage.py waitfordb
 	uv run python manage.py waitfordb --database analytics
+	uv run python manage.py waitfordb --database clickhouse
 
 .PHONY: test
 test: docker-up wait-for-db

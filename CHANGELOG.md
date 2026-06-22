@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.244.0](https://github.com/Flagsmith/flagsmith/compare/v2.243.1...v2.244.0) (2026-06-22)
+
+
+### Features
+
+* **experiments:** add experiment detail page with exposures panel ([#7811](https://github.com/Flagsmith/flagsmith/issues/7811)) ([47490f4](https://github.com/Flagsmith/flagsmith/commit/47490f4ed9011c789fbfba911d66e0cb4b62b8d2))
+* gate experiment placeholder only for paying customers ([#7786](https://github.com/Flagsmith/flagsmith/issues/7786)) ([51858d6](https://github.com/Flagsmith/flagsmith/commit/51858d67f19297d75f746b232abaef21c9208b4f))
+
+
+### Bug Fixes
+
+* **infra:** add EXPERIMENTATION_CLICKHOUSE_URL to task processor task defs ([#7845](https://github.com/Flagsmith/flagsmith/issues/7845)) ([82b09a4](https://github.com/Flagsmith/flagsmith/commit/82b09a41dde5a558064474696c91872c1363e1ad))
+
+
+### Dependency Updates
+
+* **frontend:** update dependency dompurify to v3.4.11 [security] ([#7829](https://github.com/Flagsmith/flagsmith/issues/7829)) ([0ce7ddb](https://github.com/Flagsmith/flagsmith/commit/0ce7ddb41b624247bbc14f7a499ac544a08ba79e))
+
+
+### CI
+
+* **frontend:** lint changed lines via eslint-plugin-diff ([#7822](https://github.com/Flagsmith/flagsmith/issues/7822)) ([d8727e0](https://github.com/Flagsmith/flagsmith/commit/d8727e0c58b2233f3f7b8bb298ae4148d71eb260))
+* **frontend:** skip Chromatic on fork PRs ([#7823](https://github.com/Flagsmith/flagsmith/issues/7823)) ([abfdc80](https://github.com/Flagsmith/flagsmith/commit/abfdc800c97ec279b35252ec41f20560a25706b3))
+
 ## [2.243.1](https://github.com/Flagsmith/flagsmith/compare/v2.243.0...v2.243.1) (2026-06-19)
 
 
