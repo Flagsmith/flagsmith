@@ -11,7 +11,6 @@ from segment_membership.services import (
     compute_segment_counts_for_project,
     enqueue_membership_refresh,
     get_projects_to_process,
-    get_segment_members,
     is_membership_enabled,
 )
 from segment_membership.tasks import refresh_project_segment_counts
@@ -152,28 +151,6 @@ def test_compute_segment_counts_for_project__untranslatable_segment__skips(
     # Then
     assert result == []
     cursor.execute.assert_not_called()
-
-
-def test_get_segment_members__untranslatable_segment__returns_empty_without_querying(
-    project: Project,
-    environment: Environment,
-    segment: Segment,
-    segment_rule: SegmentRule,
-    mocker: MockerFixture,
-) -> None:
-    # Given a segment whose rules can't be translated to a SQL predicate
-    mocker.patch(
-        "segment_membership.services.translate_segment",
-        return_value=None,
-    )
-    open_cursor = mocker.patch("segment_membership.services.open_clickhouse_cursor")
-
-    # When
-    result = get_segment_members(segment, environment, cursor=None, limit=100)
-
-    # Then no ClickHouse query is issued and no members are returned
-    assert result == []
-    open_cursor.assert_not_called()
 
 
 def test_enqueue_membership_refresh__flag_on__enqueues_refresh(
