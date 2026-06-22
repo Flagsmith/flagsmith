@@ -1495,6 +1495,10 @@ if CLICKHOUSE_ENABLED:
             "settings": {
                 # ClickHouse Cloud 25.12 requires this for `JSON`-column DDL.
                 "allow_experimental_json_type": 1,
+                # Block each DDL statement until every replica has applied it.
+                # Prevents replicated deployments (e.g. ClickHouse Cloud)
+                # from breaking migrations with Error 517.
+                "alter_sync": 2,
             },
         },
     }
