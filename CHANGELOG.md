@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.245.0](https://github.com/Flagsmith/flagsmith/compare/v2.244.1...v2.245.0) (2026-06-23)
+
+
+### Features
+
+* **experiments:** Bayesian analysis scorecards and results UI ([#7813](https://github.com/Flagsmith/flagsmith/issues/7813)) ([91238bb](https://github.com/Flagsmith/flagsmith/commit/91238bb744420ca71f38a5062c993601940d2e9e))
+
+
+### Bug Fixes
+
+* **clickhouse:** Avoid excess ALTER statements for no-op `migrate` ([#7853](https://github.com/Flagsmith/flagsmith/issues/7853)) ([0b85fe1](https://github.com/Flagsmith/flagsmith/commit/0b85fe174957fd2cf7db52b7e6a8069928c91893))
+
 ## [2.244.1](https://github.com/Flagsmith/flagsmith/compare/v2.244.0...v2.244.1) (2026-06-22)
 
 
