@@ -20,6 +20,10 @@ export type SdkLang = {
   // Key into codeHelp's INSTALL and INIT maps. Differs from the display label,
   // e.g. 'Node JS' (not 'Node.js') and 'Next.js' (not 'Next.js (app router)').
   codeHelpKey: string
+  // codeHelp keys INIT per router for Next.js ('Next.js (app router)' / '(pages
+  // router)') but INSTALL by plain 'Next.js'. Set this where the INIT key differs
+  // from codeHelpKey, so the wire snippet still resolves; defaults to codeHelpKey.
+  initKey?: string
   // highlight.js language for the wire snippet (install is always shell).
   language: string
   // Brand logo component for the chip. Imported by name so unreferenced logos
@@ -90,6 +94,7 @@ export const SDK_LANGS: SdkLang[] = [
   },
   {
     codeHelpKey: 'Next.js',
+    initKey: 'Next.js (app router)',
     label: 'Next.js (app router)',
     language: 'javascript',
     logo: NextjsLogo,
@@ -97,6 +102,7 @@ export const SDK_LANGS: SdkLang[] = [
   },
   {
     codeHelpKey: 'Next.js',
+    initKey: 'Next.js (pages router)',
     label: 'Next.js (pages router)',
     language: 'javascript',
     logo: NextjsLogo,

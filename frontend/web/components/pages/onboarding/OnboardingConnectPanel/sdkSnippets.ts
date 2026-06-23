@@ -55,7 +55,7 @@ export const getSdkSnippet = (
     string,
     string
   >
-  const wire = unescapeHtml(inits[lang.codeHelpKey] ?? '')
+  const wire = unescapeHtml(inits[lang.initKey ?? lang.codeHelpKey] ?? '')
     .split(PLACEHOLDER_FLAG)
     .join(featureName)
   return {
