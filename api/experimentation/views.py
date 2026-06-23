@@ -42,6 +42,7 @@ from experimentation.serializers import (
     ExperimentListSerializer,
     ExperimentMetricSerializer,
     ExperimentResultsSerializer,
+    ExperimentRolloutSerializer,
     ExperimentSerializer,
     MetricSerializer,
     WarehouseConnectionSerializer,
@@ -54,10 +55,14 @@ from experimentation.services import (
     mark_warehouse_pending_connection,
     refresh_warehouse_connection_status,
     transition_experiment_status,
+    update_experiment_rollout,
 )
 from experimentation.tasks import (
     compute_experiment_exposures,
     compute_experiment_results,
+)
+from features.feature_states.serializers import (
+    validate_multivariate_state_values,
 )
 from users.models import FFAdminUser
 
@@ -176,7 +181,7 @@ class ExperimentViewSet(
         return context
 
     def get_serializer_class(self) -> type[BaseSerializer[Experiment]]:
-        if self.action in ("list", "retrieve", "start", "pause", "complete"):
+        if self.action in ("list", "retrieve", "start", "pause", "complete", "rollout"):
             return ExperimentListSerializer
         return ExperimentSerializer
 
@@ -289,6 +294,21 @@ class ExperimentViewSet(
     @action(detail=True, methods=["post"])
     def complete(self, request: Request, **kwargs: object) -> Response:
         return self._transition_status(ExperimentStatus.COMPLETED)
+
+    @action(detail=True, methods=["patch"])
+    def rollout(self, request: Request, **kwargs: object) -> Response:
+        experiment: Experiment = self.get_object()
+        serializer = ExperimentRolloutSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        validate_multivariate_state_values(
+            experiment.feature, data.get("multivariate_feature_state_values", [])
+        )
+        update_experiment_rollout(
+            experiment,
+            **ExperimentRolloutSerializer.to_service_kwargs(data, request),
+        )
+        return Response(self.get_serializer(experiment).data)
 
     @action(detail=True, methods=["get"])
     def exposures(self, request: Request, **kwargs: object) -> Response:

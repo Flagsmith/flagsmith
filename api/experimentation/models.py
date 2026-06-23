@@ -127,6 +127,13 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
     updated_at = models.DateTimeField(auto_now=True)
     started_at = models.DateTimeField(null=True, blank=True)
     ended_at = models.DateTimeField(null=True, blank=True)
+    rollout_segment = models.OneToOneField(
+        "segments.Segment",
+        on_delete=models.SET_NULL,
+        related_name="experiment_rollout",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         constraints = [

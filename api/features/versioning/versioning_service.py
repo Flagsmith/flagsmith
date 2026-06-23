@@ -3,15 +3,17 @@ import typing
 from common.core.utils import using_database_replica
 from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.feature_states.models import FeatureValueType
 from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
+from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.dataclasses import (
     FlagChangeSet,
     FlagChangeSetV2,
+    MultivariateValueChangeSet,
 )
 from features.versioning.exceptions import DirectFeatureStateWriteNotAllowedError
 from features.versioning.models import EnvironmentFeatureVersion
@@ -186,6 +188,7 @@ def _update_flag_for_versioning_v2(
         change_set.feature_state_value,
         change_set.type_,
     )
+    _update_multivariate_values(target_feature_state, change_set.multivariate_values)
 
     if change_set.segment_id is not None and change_set.segment_priority is not None:
         _update_segment_priority(target_feature_state, change_set.segment_priority)
@@ -238,6 +241,7 @@ def _update_flag_for_versioning_v1(
         change_set.feature_state_value,
         change_set.type_,
     )
+    _update_multivariate_values(target_feature_state, change_set.multivariate_values)
 
     if change_set.segment_id is not None and change_set.segment_priority is not None:
         _update_segment_priority(target_feature_state, change_set.segment_priority)
@@ -250,6 +254,43 @@ def _update_feature_state_value(
 ) -> None:
     fsv.set_value(value, type_)
     fsv.save()
+
+
+def _update_multivariate_values(
+    feature_state: FeatureState,
+    values: list[MultivariateValueChangeSet] | None,
+) -> None:
+    if values is None:
+        return
+
+    existing = {
+        mv.multivariate_feature_option_id: mv
+        for mv in feature_state.multivariate_feature_state_values.all()
+    }
+
+    passed_option_ids = {value.multivariate_feature_option_id for value in values}
+    effective_total = sum(value.percentage_allocation for value in values) + sum(
+        mv.percentage_allocation
+        for option_id, mv in existing.items()
+        if option_id not in passed_option_ids
+    )
+    if effective_total > 100:
+        raise ValidationError(
+            "Multivariate allocations for the feature state must not exceed "
+            f"100%, got {effective_total}%."
+        )
+
+    for value in values:
+        mv = existing.get(value.multivariate_feature_option_id)
+        if mv is None:
+            MultivariateFeatureStateValue.objects.create(
+                feature_state=feature_state,
+                multivariate_feature_option_id=value.multivariate_feature_option_id,
+                percentage_allocation=value.percentage_allocation,
+            )
+        elif mv.percentage_allocation != value.percentage_allocation:
+            mv.percentage_allocation = value.percentage_allocation
+            mv.save()
 
 
 def _create_segment_override(
@@ -333,6 +374,7 @@ def _update_flag_v2_for_versioning_v2(
                 override.feature_state_value,
                 override.type_,
             )
+            _update_multivariate_values(segment_state, override.multivariate_values)
 
             if override.priority is not None:
                 _update_segment_priority(segment_state, override.priority)
@@ -351,6 +393,7 @@ def _update_flag_v2_for_versioning_v2(
                 override.feature_state_value,
                 override.type_,
             )
+            _update_multivariate_values(segment_state, override.multivariate_values)
 
     new_version.publish(
         published_by=change_set.author.user,
@@ -402,6 +445,7 @@ def _update_flag_v2_for_versioning_v1(
                 override.feature_state_value,
                 override.type_,
             )
+            _update_multivariate_values(segment_state, override.multivariate_values)
         else:
             assert len(segment_states) == 1
             segment_state = list(segment_states.values())[0]
@@ -413,6 +457,7 @@ def _update_flag_v2_for_versioning_v1(
                 override.feature_state_value,
                 override.type_,
             )
+            _update_multivariate_values(segment_state, override.multivariate_values)
 
             if override.priority is not None:
                 _update_segment_priority(segment_state, override.priority)

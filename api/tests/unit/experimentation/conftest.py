@@ -2,6 +2,7 @@ import pytest
 from django.urls import reverse
 from pytest_mock import MockerFixture
 
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from experimentation import ingestion_sync_service
 from experimentation.models import (
@@ -11,7 +12,11 @@ from experimentation.models import (
     WarehouseConnection,
     WarehouseType,
 )
+from experimentation.services import create_experiment_rollout
 from features.models import Feature
+from features.multivariate.models import MultivariateFeatureOption
+from features.versioning.dataclasses import MultivariateValueChangeSet
+from users.models import FFAdminUser
 
 
 @pytest.fixture(autouse=True)
@@ -59,5 +64,27 @@ def experiment(
         name="Test Experiment",
         hypothesis="Test hypothesis",
         status=ExperimentStatus.CREATED,
+    )
+    return experiment
+
+
+@pytest.fixture()
+def experiment_with_rollout(
+    experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> Experiment:
+    option_a, option_b, _ = multivariate_options
+    create_experiment_rollout(
+        experiment,
+        enabled=True,
+        rollout_percentage=20.0,
+        feature_state_value="control",
+        value_type="string",
+        multivariate_values=[
+            MultivariateValueChangeSet(option_a.id, 50.0),
+            MultivariateValueChangeSet(option_b.id, 50.0),
+        ],
+        author=AuthorData(user=admin_user),
     )
     return experiment

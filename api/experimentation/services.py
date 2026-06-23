@@ -10,9 +10,12 @@ from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
+from flag_engine.segments.constants import PERCENTAGE_SPLIT
+from rest_framework.exceptions import ValidationError
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.dataclasses import AuthorData
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
@@ -50,7 +53,10 @@ from experimentation.stats import (
     srm_p_value,
 )
 from features.models import FeatureState
+from features.versioning.dataclasses import FlagChangeSet, MultivariateValueChangeSet
+from features.versioning.versioning_service import update_flag
 from integrations.flagsmith.client import get_openfeature_client
+from segments.models import Condition, Segment, SegmentRule
 
 if typing.TYPE_CHECKING:
     from collections.abc import Sequence
@@ -58,6 +64,7 @@ if typing.TYPE_CHECKING:
 
     from experimentation.models import Experiment, Metric, WarehouseConnection
     from experimentation.types import ExposureGranularity
+    from features.feature_states.models import FeatureValueType
     from organisations.models import Organisation
     from users.models import FFAdminUser
 
@@ -510,6 +517,86 @@ def transition_experiment_status(
     experiment.save()
     create_experiment_audit_log(experiment, user, action=target_status)
     return experiment
+
+
+def _create_rollout_segment(
+    experiment: Experiment, rollout_percentage: float
+) -> Segment:
+    segment: Segment = Segment.objects.create(
+        name=f"experiment-{experiment.id}-rollout",
+        project=experiment.feature.project,
+        is_system_segment=True,
+    )
+    rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(
+        rule=rule,
+        operator=PERCENTAGE_SPLIT,
+        property="$.identity.key",
+        value=str(rollout_percentage),
+    )
+    return segment
+
+
+def create_experiment_rollout(
+    experiment: Experiment,
+    *,
+    enabled: bool,
+    rollout_percentage: float,
+    feature_state_value: str,
+    value_type: FeatureValueType,
+    multivariate_values: list[MultivariateValueChangeSet],
+    author: AuthorData,
+) -> None:
+    segment = _create_rollout_segment(experiment, rollout_percentage)
+    experiment.rollout_segment = segment
+    experiment.save()
+    update_flag(
+        experiment.environment,
+        experiment.feature,
+        FlagChangeSet(
+            author=author,
+            enabled=enabled,
+            feature_state_value=feature_state_value,
+            type_=value_type,
+            segment_id=segment.id,
+            multivariate_values=multivariate_values,
+        ),
+    )
+
+
+def update_experiment_rollout(
+    experiment: Experiment,
+    *,
+    enabled: bool,
+    rollout_percentage: float,
+    feature_state_value: str,
+    value_type: FeatureValueType,
+    multivariate_values: list[MultivariateValueChangeSet],
+    author: AuthorData,
+) -> None:
+    if experiment.status in (ExperimentStatus.RUNNING, ExperimentStatus.COMPLETED):
+        raise ValidationError(
+            f"Cannot update the rollout of a {experiment.status} experiment."
+        )
+    segment = experiment.rollout_segment
+    if segment is None:
+        raise ValidationError("Experiment has no rollout to update.")
+
+    condition = Condition.objects.get(rule__segment=segment, operator=PERCENTAGE_SPLIT)
+    condition.value = str(rollout_percentage)
+    condition.save()
+    update_flag(
+        experiment.environment,
+        experiment.feature,
+        FlagChangeSet(
+            author=author,
+            enabled=enabled,
+            feature_state_value=feature_state_value,
+            type_=value_type,
+            segment_id=segment.id,
+            multivariate_values=multivariate_values,
+        ),
+    )
 
 
 def mark_warehouse_pending_connection(

@@ -33,7 +33,11 @@ from experimentation.models import (
 from experimentation.serializers import ExperimentFeatureSerializer
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
-from features.multivariate.models import MultivariateFeatureStateValue
+from features.multivariate.models import (
+    MultivariateFeatureOption,
+    MultivariateFeatureStateValue,
+)
+from segments.models import Condition
 from tests.types import EnableFeaturesFixture
 
 if TYPE_CHECKING:
@@ -1751,3 +1755,261 @@ def test_experiment_feature_serializer__no_env_feature_state__raises(
     # When / Then
     with pytest.raises(ValueError, match="No environment feature state found"):
         serializer.data
+
+
+def test_post__with_experiment_rollout__creates_rollout(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "Rollout experiment",
+            "hypothesis": "It will work",
+            "experiment_rollout": {
+                "enabled": True,
+                "rollout_percentage": 30,
+                "feature_state_value": {"type": "string", "value": "control"},
+                "multivariate_feature_state_values": [
+                    {
+                        "multivariate_feature_option": option_a.id,
+                        "percentage_allocation": 60,
+                    },
+                    {
+                        "multivariate_feature_option": option_b.id,
+                        "percentage_allocation": 40,
+                    },
+                ],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    experiment = Experiment.objects.get(id=response.json()["id"])
+    assert experiment.rollout_segment is not None
+    assert experiment.rollout_segment.is_system_segment is True
+
+
+def test_post__rollout_allocations_exceed_100__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    option_a, option_b, _ = multivariate_options
+
+    # When the allocations sum to more than 100%
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "Rollout experiment",
+            "hypothesis": "It will work",
+            "experiment_rollout": {
+                "enabled": True,
+                "rollout_percentage": 30,
+                "feature_state_value": {"type": "string", "value": "control"},
+                "multivariate_feature_state_values": [
+                    {
+                        "multivariate_feature_option": option_a.id,
+                        "percentage_allocation": 60,
+                    },
+                    {
+                        "multivariate_feature_option": option_b.id,
+                        "percentage_allocation": 60,
+                    },
+                ],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "exceed" in str(response.json()).lower()
+
+
+def test_post__rollout_mv_option_not_on_feature__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "Rollout experiment",
+            "hypothesis": "It will work",
+            "experiment_rollout": {
+                "enabled": True,
+                "rollout_percentage": 30,
+                "feature_state_value": {"type": "string", "value": "control"},
+                "multivariate_feature_state_values": [
+                    {
+                        "multivariate_feature_option": 999999,
+                        "percentage_allocation": 100,
+                    },
+                ],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "do not belong to the feature" in str(response.json())
+
+
+def test_action_rollout__valid__updates_percentage(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data={
+            "enabled": False,
+            "rollout_percentage": 75,
+            "feature_state_value": {"type": "string", "value": "control"},
+            "multivariate_feature_state_values": [
+                {
+                    "multivariate_feature_option": option_a.id,
+                    "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_b.id,
+                    "percentage_allocation": 50,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    condition = Condition.objects.get(
+        rule__segment=experiment_with_rollout.rollout_segment
+    )
+    assert condition.value == "75.0"
+
+
+def test_action_rollout__running_experiment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    experiment_with_rollout.status = ExperimentStatus.RUNNING
+    experiment_with_rollout.save()
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data={
+            "enabled": True,
+            "rollout_percentage": 75,
+            "feature_state_value": {"type": "string", "value": "control"},
+            "multivariate_feature_state_values": [
+                {
+                    "multivariate_feature_option": option_a.id,
+                    "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_b.id,
+                    "percentage_allocation": 50,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_action_rollout__mv_option_not_on_feature__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data={
+            "enabled": True,
+            "rollout_percentage": 75,
+            "feature_state_value": {"type": "string", "value": "control"},
+            "multivariate_feature_state_values": [
+                {
+                    "multivariate_feature_option": 999999,
+                    "percentage_allocation": 100,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "do not belong to the feature" in str(response.json())
+
+
+def test_patch__experiment_rollout_on_update__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.patch(
+        _detail_url(environment, experiment),
+        data={
+            "experiment_rollout": {
+                "enabled": True,
+                "rollout_percentage": 30,
+                "feature_state_value": {"type": "string", "value": "control"},
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Cannot change the rollout" in str(response.json())
