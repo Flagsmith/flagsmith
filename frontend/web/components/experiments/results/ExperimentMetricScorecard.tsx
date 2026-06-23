@@ -7,7 +7,7 @@ import {
   getMetricResult,
   getVariantIdentities,
   getWinningVariant,
-} from 'components/experiments/results/derive'
+} from './derive'
 import ExperimentResultsAxisChart from './ExperimentResultsAxisChart'
 import ExperimentResultsScorecardTable from './ExperimentResultsScorecardTable'
 import './results.scss'

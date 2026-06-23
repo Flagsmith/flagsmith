@@ -10,7 +10,7 @@ import {
   getVariantIdentities,
   getWinningVariant,
   isLiftFavourable,
-} from 'components/experiments/results/derive'
+} from './derive'
 import StatCard from './StatCard'
 
 type ExperimentSummaryScorecardProps = {
@@ -66,11 +66,7 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
       {summary ? (
         <div className='alert alert-success mb-3'>
           <div className='d-flex align-items-center gap-2 mb-1'>
-            <Icon
-              name='checkmark-circle'
-              width={20}
-              fill={colorTextSuccess}
-            />
+            <Icon name='checkmark-circle' width={20} fill={colorTextSuccess} />
             <span className='text-success fw-normal'>Recommendation</span>
           </div>
           <div>
