@@ -133,7 +133,7 @@ Attributes:
 ### `feature_lifecycle.summarised`
 
 Logged at `info` from:
- - `api/features/feature_lifecycle/views.py:53`
+ - `api/features/feature_lifecycle/views.py:52`
 
 Attributes:
  - `environment.id`
