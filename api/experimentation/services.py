@@ -8,6 +8,7 @@ import structlog
 from clickhouse_driver import Client
 from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
@@ -582,21 +583,24 @@ def update_experiment_rollout(
     if segment is None:
         raise ValidationError("Experiment has no rollout to update.")
 
-    condition = Condition.objects.get(rule__segment=segment, operator=PERCENTAGE_SPLIT)
-    condition.value = str(rollout_percentage)
-    condition.save()
-    update_flag(
-        experiment.environment,
-        experiment.feature,
-        FlagChangeSet(
-            author=author,
-            enabled=enabled,
-            feature_state_value=feature_state_value,
-            type_=value_type,
-            segment_id=segment.id,
-            multivariate_values=multivariate_values,
-        ),
-    )
+    with transaction.atomic():
+        condition = Condition.objects.get(
+            rule__segment=segment, operator=PERCENTAGE_SPLIT
+        )
+        condition.value = str(rollout_percentage)
+        condition.save()
+        update_flag(
+            experiment.environment,
+            experiment.feature,
+            FlagChangeSet(
+                author=author,
+                enabled=enabled,
+                feature_state_value=feature_state_value,
+                type_=value_type,
+                segment_id=segment.id,
+                multivariate_values=multivariate_values,
+            ),
+        )
 
 
 def mark_warehouse_pending_connection(

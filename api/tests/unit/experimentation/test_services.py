@@ -1452,3 +1452,34 @@ def test_update_experiment_rollout__no_rollout__raises(
             multivariate_values=[],
             author=author,
         )
+
+
+def test_update_experiment_rollout__update_flag_fails__rolls_back(
+    experiment_with_rollout: Experiment,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+) -> None:
+    # Given a rollout at 20% and update_flag will fail mid-update
+    experiment = experiment_with_rollout
+    mocker.patch(
+        "experimentation.services.update_flag",
+        side_effect=RuntimeError("boom"),
+    )
+
+    # When the update fails
+    with pytest.raises(RuntimeError):
+        services.update_experiment_rollout(
+            experiment,
+            enabled=False,
+            rollout_percentage=80.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[],
+            author=AuthorData(user=admin_user),
+        )
+
+    # Then the percentage split change is rolled back
+    condition = Condition.objects.get(
+        rule__segment=experiment.rollout_segment, operator=PERCENTAGE_SPLIT
+    )
+    assert condition.value == "20.0"
