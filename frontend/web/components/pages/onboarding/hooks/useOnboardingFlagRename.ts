@@ -12,11 +12,14 @@ type UseOnboardingFlagRenameArgs = {
   featureName: string
 }
 
-// "Rename" the onboarding flag. Feature names are immutable once created, so
-// this is a delete + recreate under the hood - safe here because the flag is
-// freshly bootstrapped and not yet depended on. Recreate first (names differ,
-// so no unique conflict) and only then drop the old one, so a flag always
-// exists even if the second call fails. Resolves true on success.
+// "Rename" the onboarding flag. Feature names are immutable once created
+// (UpdateFeatureSerializer marks `name` read-only), so this is a delete +
+// recreate under the hood - safe here because the flag is freshly bootstrapped
+// and not yet depended on. Recreate first (names differ, so no unique conflict)
+// and only then drop the old one, so a flag always exists even if the second
+// call fails. The recreate carries over the old flag's tags/type/description so
+// the Onboarding badge (and any other tag) survives the rename. Resolves true
+// on success.
 //
 // The toggle that will also act on this flag lives in #7766 (the flags table);
 // this hook is intentionally rename-only so the connect-panel issue doesn't pull
@@ -45,9 +48,11 @@ export const useOnboardingFlagRename = ({
     try {
       await createProjectFlag({
         body: {
+          description: flag.description,
           name,
           project: projectId,
-          type: 'STANDARD',
+          tags: flag.tags,
+          type: flag.type,
         } as Req['createProjectFlag']['body'],
         project_id: projectId,
       }).unwrap()
