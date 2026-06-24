@@ -555,9 +555,7 @@ def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
         )
 
 
-def _sync_rollout_segment(
-    experiment: Experiment, rollout_percentage: float
-) -> Segment:
+def _sync_rollout_segment(experiment: Experiment, rollout_percentage: float) -> Segment:
     segment = experiment.rollout_segment
     if segment is not None:
         condition = Condition.objects.get(
