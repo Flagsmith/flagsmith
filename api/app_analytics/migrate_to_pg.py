@@ -6,7 +6,7 @@ from app_analytics.types import DownsampleSize
 
 def migrate_feature_evaluations(migrate_till: int = 30) -> None:
     query_api = InfluxDBWrapper.get_client().query_api()
-    read_bucket = InfluxDBWrapper.get_bucket(DownsampleSize.SHORT_TERM)
+    read_bucket = InfluxDBWrapper.get_downsampled_bucket(DownsampleSize.FIFTEEN_MINUTES)
 
     for i in range(migrate_till):
         range_start = f"-{i + 1}d"

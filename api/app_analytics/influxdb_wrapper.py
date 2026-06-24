@@ -63,14 +63,14 @@ class InfluxDBWrapper:
         )
 
     @classmethod
-    def get_bucket(cls, size: DownsampleSize) -> str:
+    def get_downsampled_bucket(cls, size: DownsampleSize) -> str:
         return f"{settings.INFLUXDB_BUCKET}_downsampled_{size}"
 
     @classmethod
-    def get_downsampled_bucket(cls, date_start: datetime) -> str:
+    def select_downsampled_bucket(cls, date_start: datetime) -> str:
         if (timezone.now() - date_start).days > 10:
-            return cls.get_bucket(DownsampleSize.LONG_TERM)
-        return cls.get_bucket(DownsampleSize.SHORT_TERM)
+            return cls.get_downsampled_bucket(DownsampleSize.ONE_HOUR)
+        return cls.get_downsampled_bucket(DownsampleSize.FIFTEEN_MINUTES)
 
     def add_data_point(
         self,
@@ -121,7 +121,8 @@ class InfluxDBWrapper:
         bucket: str | None = None,
     ) -> list[FluxTable]:
         if bucket is None:
-            bucket = cls.get_bucket(DownsampleSize.SHORT_TERM)  # NOTE: Legacy default
+            # NOTE: Legacy default
+            bucket = cls.get_downsampled_bucket(DownsampleSize.FIFTEEN_MINUTES)
 
         now = timezone.now()
         if date_start is None:
@@ -405,7 +406,7 @@ def get_top_organisations(
     if limit:
         limit = f"|> limit(n:{limit})"
 
-    bucket = InfluxDBWrapper.get_downsampled_bucket(date_start)
+    bucket = InfluxDBWrapper.select_downsampled_bucket(date_start)
     results = InfluxDBWrapper.influx_query_manager(
         date_start=date_start,
         bucket=bucket,
@@ -447,7 +448,7 @@ def get_current_api_usage(
 
     :return: number of current api calls
     """
-    bucket = InfluxDBWrapper.get_bucket(DownsampleSize.SHORT_TERM)
+    bucket = InfluxDBWrapper.get_downsampled_bucket(DownsampleSize.FIFTEEN_MINUTES)
     results = InfluxDBWrapper.influx_query_manager(
         date_start=date_start,
         bucket=bucket,
@@ -489,7 +490,7 @@ def get_platform_usage_trends(
 
     org_id_set = ", ".join(f'"{oid}"' for oid in organisation_ids)
 
-    bucket = InfluxDBWrapper.get_downsampled_bucket(date_start)
+    bucket = InfluxDBWrapper.select_downsampled_bucket(date_start)
     results = InfluxDBWrapper.influx_query_manager(
         date_start=date_start,
         date_stop=date_stop,

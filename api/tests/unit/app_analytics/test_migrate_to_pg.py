@@ -17,7 +17,9 @@ def test_migrate_feature_evaluations__influx_records_exist__creates_pg_buckets(
     # Given
     feature_name = "test_feature_one"
     environment_id = "1"
-    mocker.patch.object(InfluxDBWrapper, "get_bucket", return_value="test_bucket")
+    mocker.patch.object(
+        InfluxDBWrapper, "get_downsampled_bucket", return_value="test_bucket"
+    )
     mock_query_api = mock_influxdb_client.query_api.return_value
     mock_tables = []
     for i in range(3):

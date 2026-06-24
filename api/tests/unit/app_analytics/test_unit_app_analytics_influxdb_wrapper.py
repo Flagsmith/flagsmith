@@ -571,27 +571,27 @@ def test_influx_query_manager__empty_date_range__returns_empty_list() -> None:
     assert results == []
 
 
-def test_get_downsampled_bucket__less_than_10_days__returns_15m_bucket(
+def test_select_downsampled_bucket__less_than_10_days__returns_15m_bucket(
     settings: SettingsWrapper,
 ) -> None:
     # Given
     two_days = timezone.now() - timedelta(days=2)
 
     # When
-    result = InfluxDBWrapper.get_downsampled_bucket(two_days)
+    result = InfluxDBWrapper.select_downsampled_bucket(two_days)
 
     # Then
     assert result == settings.INFLUXDB_BUCKET + "_downsampled_15m"
 
 
-def test_get_downsampled_bucket__more_than_10_days__returns_1h_bucket(
+def test_select_downsampled_bucket__more_than_10_days__returns_1h_bucket(
     settings: SettingsWrapper,
 ) -> None:
     # Given
     twelve_days = timezone.now() - timedelta(days=12)
 
     # When
-    result = InfluxDBWrapper.get_downsampled_bucket(twelve_days)
+    result = InfluxDBWrapper.select_downsampled_bucket(twelve_days)
 
     # Then
     assert result == settings.INFLUXDB_BUCKET + "_downsampled_1h"

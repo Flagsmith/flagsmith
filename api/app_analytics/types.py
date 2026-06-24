@@ -29,8 +29,8 @@ PeriodType = Literal[
 
 
 class DownsampleSize(StrEnum):
-    SHORT_TERM = "15m"
-    LONG_TERM = "1h"
+    FIFTEEN_MINUTES = "15m"
+    ONE_HOUR = "1h"
 
 
 class APIUsageCacheKey(NamedTuple):
