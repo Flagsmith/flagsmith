@@ -661,9 +661,7 @@ def test_process_import_request__import__enqueues_membership_refresh(
     )
 
     # When
-    # the import (which bulk-creates segments) completes
     process_import_request(import_request)
 
     # Then
-    # it triggers a single membership refresh for the imported project
     enqueue_membership_refresh_mock.assert_called_once_with(project)

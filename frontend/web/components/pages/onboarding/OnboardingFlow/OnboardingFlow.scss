@@ -1,0 +1,10 @@
+// Reading-column width for the onboarding flow - a focused, single-task flow
+// (prose + code), constrained for readability rather than full-width. A
+// per-flow constraint, deliberately not the legacy 1220px app-container rail.
+// Centring is the `mx-auto` utility on the element.
+.onboarding-flow {
+  max-width: 1100px;
+  // Minimal top padding so the theme-toggle row isn't flush to the very edge;
+  // sides + bottom keep the reading column off the edges.
+  padding: 4px 24px 40px;
+}

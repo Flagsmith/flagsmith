@@ -124,6 +124,8 @@
     flex: 1;
     min-width: 80px;
     background: transparent;
+    // Was unset → black → invisible in dark mode; token follows the theme.
+    color: var(--color-text-default);
     font-size: $font-sm;
     line-height: $line-height-sm;
     padding: 2px 0;

@@ -362,6 +362,7 @@ export type IntegrationData = {
   organisation?: string
   project?: string
   isOauth?: boolean
+  customUI?: boolean
 }
 
 export type ActiveIntegration = {
@@ -672,6 +673,14 @@ export type ExperimentExposures = {
   last_error_at: string | null
   refresh_requested_at: string | null
   payload: ExposuresSummary | null
+}
+
+export type ExperimentBayesianResults = {
+  as_of: string | null
+  last_error_at: string | null
+  refresh_requested_at: string | null
+  payload: BayesianResultsSummary | null
+  is_final: boolean
 }
 
 // --- Bayesian results (defined now, consumed when the endpoint ships) ---
@@ -1480,7 +1489,7 @@ export type Res = {
   }
   experiment: Experiment
   experimentExposures: ExperimentExposures
-  experimentBayesianResults: BayesianResultsSummary
+  experimentBayesianResults: ExperimentBayesianResults
   metric: Metric
   metrics: PagedResponse<Metric>
   multivariateOption: MultivariateOption

@@ -387,7 +387,7 @@ Attributes:
 ### `segment_membership.compute.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:120`
+ - `api/segment_membership/services.py:119`
 
 Attributes:
  - `project.id`

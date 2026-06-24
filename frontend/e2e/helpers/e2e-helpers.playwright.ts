@@ -1089,7 +1089,7 @@ export class E2EHelpers {
     log(`Create change request: ${title}`);
 
     // Click the update/create change request button
-    // When 4-eyes is enabled, this button says "Create Change Request"
+    // When four-eyes is enabled, this button says "Create Change Request"
     await this.click('#update-feature-btn');
     await this.page.waitForTimeout(1000);
 

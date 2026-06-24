@@ -38,7 +38,7 @@ const ExperimentConfiguration: FC<ExperimentConfigurationProps> = ({
           ?.default_percentage_allocation ?? 0
 
   return (
-    <div className='row mb-4'>
+    <div className='row g-3 mb-4'>
       <div className='col-md-4'>
         <ContentCard compact title='Feature flag'>
           <div>

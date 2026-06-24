@@ -165,6 +165,17 @@
   }
 }
 
+// Dark CalloutBar variant: white prefix/icon/chevron (via currentColor),
+// gold label. Keeps colours in the design system rather than inline styles.
+.hljs-header.callout-bar--dark {
+  background-color: $primary900;
+  color: white;
+
+  .hljs-description {
+    color: var(--gold-500);
+  }
+}
+
 .hljs {
   color: $code-color;
   padding: 18px;

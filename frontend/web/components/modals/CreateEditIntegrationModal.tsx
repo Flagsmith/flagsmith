@@ -26,6 +26,7 @@ import {
 } from 'common/services/useIntegration'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import { useGetProjectQuery } from 'common/services/useProject'
+import MCPIntegration from 'components/integrations/MCPIntegration'
 
 const GITHUB_INSTALLATION_UPDATE = 'update'
 
@@ -418,6 +419,14 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
           </label>
         </div>
         {field.options ? renderFieldSelect(field) : renderFieldInput(field)}
+      </div>
+    )
+  }
+
+  if (integration.customUI) {
+    return (
+      <div className={classNames({ 'p-4': !!modal })}>
+        {id === 'mcp' && <MCPIntegration />}
       </div>
     )
   }

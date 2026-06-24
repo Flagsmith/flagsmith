@@ -292,6 +292,13 @@ const Constants = {
       }
     },
     'VIEW_FEATURE': { 'category': 'Features', 'event': 'Feature viewed' },
+    VIEW_INTEGRATION: (integration: string) => {
+      return {
+        category: 'Integrations',
+        event: 'View Integration',
+        extra: { integration },
+      }
+    },
     VIEW_LOCKED_FEATURE: (feature: string) => {
       return {
         'category': 'Locked Feature',

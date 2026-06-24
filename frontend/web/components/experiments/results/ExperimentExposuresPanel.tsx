@@ -7,7 +7,7 @@ import {
   useGetExperimentExposuresQuery,
   useRefreshExperimentExposuresMutation,
 } from 'common/services/useExperiment'
-import { Experiment } from 'common/types/responses'
+import { Experiment, ExperimentExposures } from 'common/types/responses'
 import {
   buildExposuresChartData,
   getHeadlineTotal,
@@ -53,6 +53,7 @@ const formatCountdown = (seconds: number): string => {
 type ExperimentExposuresPanelProps = {
   experiment: Experiment
   environmentId: string
+  exposuresOverride?: ExperimentExposures
 }
 
 const REFRESH_DISABLED_COPY: Record<string, string> = {
@@ -63,18 +64,21 @@ const REFRESH_DISABLED_COPY: Record<string, string> = {
 const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
   environmentId,
   experiment,
+  exposuresOverride,
 }) => {
   const [pollInterval, setPollInterval] = useState(0)
   const [refreshRequested, setRefreshRequested] = useState(false)
   const [pollStartedAt, setPollStartedAt] = useState<number | null>(null)
   const [retryAfter, setRetryAfter] = useState<number | null>(null)
-  const { data: exposures } = useGetExperimentExposuresQuery(
+  const { data: fetched } = useGetExperimentExposuresQuery(
     { environmentId, experimentId: experiment.id },
     {
       pollingInterval: pollInterval,
       refetchOnMountOrArgChange: true,
+      skip: !!exposuresOverride,
     },
   )
+  const exposures = exposuresOverride ?? fetched
   const [refresh, { isLoading: isSubmitting }] =
     useRefreshExperimentExposuresMutation()
 

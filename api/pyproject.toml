@@ -156,6 +156,9 @@ explicit = true
 [tool.uv.sources]
 flagsmith-private = { index = "flagsmith-pypi-production" }
 clickhouse-driver = { git = "https://github.com/Flagsmith/clickhouse-driver", branch = "newjson" }
+# TODO: Revert to the PyPI release once a version closing
+# https://github.com/jayvynl/django-clickhouse-backend/issues/154 is published.
+django-clickhouse-backend = { git = "https://github.com/jayvynl/django-clickhouse-backend", rev = "d884c7d" }
 
 [tool.uv]
 required-version = ">=0.11.18"  # Ensure this matches the version in .pre-commit-config.yaml
@@ -484,6 +487,9 @@ addopts = [
 ]
 console_output_style = 'count'
 log_level = 'INFO'
+markers = [
+  "clickhouse: test requires a live ClickHouse database (see the clickhouse_db fixture)",
+]
 
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]
