@@ -19,6 +19,7 @@ from features.import_export.views import (
 from features.multivariate.views import MultivariateFeatureOptionViewSet
 from features.views import FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
+from integrations.flagd.views import FlagdProjectConfigurationViewSet
 from integrations.gitlab.views import (
     BrowseGitLabIssues,
     BrowseGitLabMergeRequests,
@@ -80,6 +81,11 @@ projects_router.register(
     r"integrations/grafana",
     GrafanaProjectConfigurationViewSet,
     basename="integrations-grafana",
+)
+projects_router.register(
+    r"integrations/flagd",
+    FlagdProjectConfigurationViewSet,
+    basename="integrations-flagd",
 )
 projects_router.register(
     "audit",

@@ -29,6 +29,19 @@ paths:
         - Environment API Key: []
       tags:
         - sdk
+  /api/v1/flagd/flags.json:
+    get:
+      operationId: sdk_v1_flagd_sync
+      description: |-
+        HTTP sync endpoint consumed by flagd: returns the current
+        Flagsmith environment as a flagd flag-definition document.
+      responses:
+        '200':
+          description: No response body
+      security:
+        - Environment API Key: []
+      tags:
+        - sdk
   /api/v1/flags/:
     get:
       operationId: sdk_v1_flags

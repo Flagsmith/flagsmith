@@ -25,3 +25,4 @@ src/CI_COMMIT_SHA
 *.iml
 
 AGENTS.local.md
+.claude/

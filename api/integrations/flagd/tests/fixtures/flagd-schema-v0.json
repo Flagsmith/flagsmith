@@ -1,0 +1,295 @@
+{
+  "$id": "https://flagd.dev/schema/v0/flags.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$ref": "#/definitions/providerConfig",
+  "definitions": {
+    "flagsMap": {
+      "title": "Flags",
+      "description": "Top-level flags object. All flags are defined here.",
+      "type": "object",
+      "$comment": "flag objects are one of the 4 flag types defined in definitions",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^.{1,}$": {
+          "$ref": "#/definitions/anyFlag"
+        }
+      }
+    },
+    "flagsArray": {
+      "title": "Flags",
+      "description": "Top-level flags array. All flags are defined here.",
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/definitions/anyFlag"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "key": {
+                "description": "Key of the flag: uniquely identifies this flag within it's flagSet",
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "key"
+            ]
+          }
+        ]
+      }
+    },
+    "baseConfig": {
+      "title": "flagd Flag Configuration",
+      "description": "Defines flags for use in flagd providers, including typed variants and rules.",
+      "type": "object",
+      "properties": {
+        "$evaluators": {
+          "title": "Evaluators",
+          "description": "Reusable targeting rules that can be referenced with \"$ref\": \"myRule\" in multiple flags.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^.{1,}$": {
+              "$comment": "this relative ref means that targeting.json MUST be in the same dir, or available on the same HTTP path",
+              "$ref": "./targeting.json"
+            }
+          }
+        },
+        "metadata": {
+          "title": "Flag Set Metadata",
+          "description": "Metadata about the flag set, with keys of type string, and values of type boolean, string, or number.",
+          "properties": {
+            "flagSetId": {
+              "description": "The unique identifier for the flag set.",
+              "type": "string"
+            },
+            "version": {
+              "description": "The version of the flag set.",
+              "type": "string"
+            }
+          },
+          "$ref": "#/definitions/metadata"
+        }
+      }
+    },
+    "providerConfig": {
+      "description": "Defines flags for use in providers (not flagd), including typed variants and rules.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/baseConfig"
+        }
+      ],
+      "properties": {
+        "flags": {
+          "$ref": "#/definitions/flagsMap"
+        }
+      },
+      "required": [
+        "flags"
+      ]
+    },
+    "flagdConfig": {
+      "description": "Defines flags for use in the flagd daemon (a superset of what's available in providers), including typed variants and rules. Flags can be defined as an array or an object.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/baseConfig"
+        },
+        {
+          "properties": {
+            "flags": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/flagsMap"
+                },
+                {
+                  "$ref": "#/definitions/flagsArray"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "required": [
+        "flags"
+      ]
+    },
+    "baseFlag": {
+      "$comment": "base flag object; no title/description here, allows for better UX, keep it in the overrides",
+      "type": "object",
+      "properties": {
+        "state": {
+          "title": "Flag State",
+          "description": "Indicates whether the flag is functional. Disabled flags are treated as if they don't exist.",
+          "type": "string",
+          "enum": [
+            "ENABLED",
+            "DISABLED"
+          ]
+        },
+        "defaultVariant": {
+          "title": "Default Variant",
+          "description": "The variant to serve if no dynamic targeting applies (including if the targeting returns null). Set to null to use code-defined default.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "targeting": {
+          "$ref": "./targeting.json"
+        },
+        "metadata": {
+          "title": "Flag Metadata",
+          "description": "Metadata about an individual feature flag, with keys of type string, and values of type boolean, string, or number.",
+          "$ref": "#/definitions/metadata"
+        },
+        "variants": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "patternProperties": {
+            "^.{1,}$": {}
+          }
+        }
+      },
+      "required": [
+        "state",
+        "variants"
+      ]
+    },
+    "booleanVariants": {
+      "type": "object",
+      "properties": {
+        "variants": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^.{1,}$": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "stringVariants": {
+      "type": "object",
+      "properties": {
+        "variants": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^.{1,}$": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "numberVariants": {
+      "type": "object",
+      "properties": {
+        "variants": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^.{1,}$": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "objectVariants": {
+      "type": "object",
+      "properties": {
+        "variants": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^.{1,}$": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "anyFlag": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/booleanFlag"
+        },
+        {
+          "$ref": "#/definitions/numberFlag"
+        },
+        {
+          "$ref": "#/definitions/stringFlag"
+        },
+        {
+          "$ref": "#/definitions/objectFlag"
+        }
+      ]
+    },
+    "booleanFlag": {
+      "$comment": "merge the variants with the base flag to build our typed flags",
+      "title": "Boolean flag",
+      "description": "A flag having boolean values.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/baseFlag"
+        },
+        {
+          "$ref": "#/definitions/booleanVariants"
+        }
+      ]
+    },
+    "stringFlag": {
+      "title": "String flag",
+      "description": "A flag having string values.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/baseFlag"
+        },
+        {
+          "$ref": "#/definitions/stringVariants"
+        }
+      ]
+    },
+    "numberFlag": {
+      "title": "Numeric flag",
+      "description": "A flag having numeric values.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/baseFlag"
+        },
+        {
+          "$ref": "#/definitions/numberVariants"
+        }
+      ]
+    },
+    "objectFlag": {
+      "title": "Object flag",
+      "description": "A flag having arbitrary object values.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/baseFlag"
+        },
+        {
+          "$ref": "#/definitions/objectVariants"
+        }
+      ]
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "number",
+          "boolean"
+        ]
+      }
+    }
+  }
+}
