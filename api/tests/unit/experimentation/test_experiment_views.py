@@ -2013,3 +2013,46 @@ def test_patch__experiment_rollout_on_update__returns_400(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "Cannot change the rollout" in str(response.json())
+
+
+def test_get_detail__with_rollout__returns_rollout(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    response = admin_client_new.get(_detail_url(environment, experiment_with_rollout))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    rollout = response.json()["experiment_rollout"]
+    assert rollout["enabled"] is True
+    assert rollout["rollout_percentage"] == 20.0
+    assert rollout["feature_state_value"] == {"type": "string", "value": "control"}
+    assert {
+        (mv["multivariate_feature_option"], mv["percentage_allocation"])
+        for mv in rollout["multivariate_feature_state_values"]
+    } == {(option_a.id, 50.0), (option_b.id, 50.0)}
+
+
+def test_get_detail__without_rollout__returns_null(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(_detail_url(environment, experiment))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["experiment_rollout"] is None

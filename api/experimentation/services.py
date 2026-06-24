@@ -54,10 +54,13 @@ from experimentation.stats import (
     srm_p_value,
 )
 from features.models import FeatureState
+from features.value_types import BOOLEAN, INTEGER, STRING
 from features.versioning.dataclasses import FlagChangeSet
 from features.versioning.versioning_service import update_flag
 from integrations.flagsmith.client import get_openfeature_client
 from segments.models import Condition, Segment, SegmentRule
+
+_ROLLOUT_VALUE_TYPE = {INTEGER: "integer", STRING: "string", BOOLEAN: "boolean"}
 
 if typing.TYPE_CHECKING:
     from collections.abc import Sequence
@@ -590,6 +593,40 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
                 multivariate_values=spec.multivariate_values,
             ),
         )
+
+
+def get_experiment_rollout(experiment: Experiment) -> dict[str, typing.Any] | None:
+    segment_id = experiment.rollout_segment_id
+    if segment_id is None:
+        return None
+
+    feature_state = FeatureState.objects.get_live_feature_states(
+        environment=experiment.environment,
+        additional_filters=Q(
+            feature_segment__segment_id=segment_id, identity__isnull=True
+        ),
+        feature_id=experiment.feature_id,
+    ).latest("id")
+
+    condition = Condition.objects.get(
+        rule__segment_id=segment_id, operator=PERCENTAGE_SPLIT
+    )
+    value = feature_state.feature_state_value
+    return {
+        "enabled": feature_state.enabled,
+        "rollout_percentage": float(condition.value or 0),
+        "feature_state_value": {
+            "type": _ROLLOUT_VALUE_TYPE.get(value.type or STRING, "string"),
+            "value": str(value.value),
+        },
+        "multivariate_feature_state_values": [
+            {
+                "multivariate_feature_option": mv.multivariate_feature_option_id,
+                "percentage_allocation": mv.percentage_allocation,
+            }
+            for mv in feature_state.multivariate_feature_state_values.all()
+        ],
+    }
 
 
 def mark_warehouse_pending_connection(

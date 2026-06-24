@@ -1478,3 +1478,74 @@ def test_apply_experiment_rollout__update_flag_fails__rolls_back(
         rule__segment=experiment.rollout_segment, operator=PERCENTAGE_SPLIT
     )
     assert condition.value == "20.0"
+
+
+def test_get_experiment_rollout__rollout_exists__returns_representation(
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+) -> None:
+    # Given a rollout (20%, options split 50/50, value "control") from the fixture
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    rollout = services.get_experiment_rollout(experiment_with_rollout)
+
+    # Then
+    assert rollout is not None
+    assert rollout["enabled"] is True
+    assert rollout["rollout_percentage"] == 20.0
+    assert rollout["feature_state_value"] == {"type": "string", "value": "control"}
+    assert {
+        (mv["multivariate_feature_option"], mv["percentage_allocation"])
+        for mv in rollout["multivariate_feature_state_values"]
+    } == {(option_a.id, 50.0), (option_b.id, 50.0)}
+
+
+def test_get_experiment_rollout__no_rollout__returns_none(
+    experiment: Experiment,
+) -> None:
+    # Given an experiment without a rollout
+    # When / Then
+    assert services.get_experiment_rollout(experiment) is None
+
+
+def test_get_experiment_rollout__v2_versioning__returns_representation(
+    environment_v2_versioning: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given a rollout on a v2 environment
+    option_a, option_b, _ = multivariate_options
+    experiment = Experiment.objects.create(
+        environment=environment_v2_versioning,
+        feature=multivariate_feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.CREATED,
+    )
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=30.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # When
+    rollout = services.get_experiment_rollout(experiment)
+
+    # Then
+    assert rollout is not None
+    assert rollout["rollout_percentage"] == 30.0
+    assert {
+        (mv["multivariate_feature_option"], mv["percentage_allocation"])
+        for mv in rollout["multivariate_feature_state_values"]
+    } == {(option_a.id, 60.0), (option_b.id, 40.0)}

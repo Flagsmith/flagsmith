@@ -19,7 +19,10 @@ from experimentation.models import (
     WarehouseConnection,
     WarehouseType,
 )
-from experimentation.services import apply_experiment_rollout
+from experimentation.services import (
+    apply_experiment_rollout,
+    get_experiment_rollout,
+)
 from experimentation.types import (
     SNOWFLAKE_DEFAULTS,
     MetricExperimentResult,
@@ -251,7 +254,9 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
         required=False,
         write_only=True,
     )
-    experiment_rollout = ExperimentRolloutSerializer(required=False, write_only=True)
+    experiment_rollout: Any = ExperimentRolloutSerializer(
+        required=False, write_only=True
+    )
 
     class Meta:
         model = Experiment
@@ -393,6 +398,10 @@ class ExperimentListSerializer(ExperimentSerializer):
         many=True,
         read_only=True,
     )
+    experiment_rollout = serializers.SerializerMethodField()
+
+    def get_experiment_rollout(self, experiment: Experiment) -> dict[str, Any] | None:
+        return get_experiment_rollout(experiment)
 
 
 class ExperimentExposuresSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
