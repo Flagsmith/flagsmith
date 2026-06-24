@@ -5,16 +5,19 @@ description: |
   invalidated against api/uv.lock.
 
 inputs:
-  python-version:
-    description: Python version to install
+  working-directory:
+    description: Directory containing pyproject.toml to read uv version from
     required: true
+  python-version:
+    description: Override Python version from pyproject.toml
 
 runs:
   using: composite
   steps:
-    - uses: astral-sh/setup-uv@v6
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
       with:
-        version-file: api/pyproject.toml
+        version-file: ${{ inputs.working-directory }}/pyproject.toml
         python-version: ${{ inputs.python-version }}
         enable-cache: true
-        cache-dependency-glob: api/uv.lock
+        cache-dependency-glob: ${{ inputs.working-directory }}/uv.lock

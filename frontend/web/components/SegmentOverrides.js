@@ -14,7 +14,6 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import CreateSegmentModal from './modals/CreateSegment'
 import SegmentSelect from './SegmentSelect'
 import JSONReference from './JSONReference'
-import InfoMessage from './InfoMessage'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
 import Icon from './icons/Icon'
@@ -795,23 +794,6 @@ class TheComponent extends Component {
               <div className='overflow-visible'>
                 {!this.props.id && (
                   <div className='my-4'>
-                    <InfoMessage
-                      collapseId={'segment-overrides'}
-                      className='mb-4 text-start faint'
-                    >
-                      Segment overrides override the environment defaults,
-                      prioritise them by dragging it to the top of the list.
-                      Segment overrides will only apply when you identify via
-                      the SDK, any identity overrides will take priority.{' '}
-                      <a
-                        target='_blank'
-                        href='https://docs.flagsmith.com/basic-features/segments'
-                        rel='noreferrer'
-                      >
-                        Check the Docs for more details
-                      </a>
-                      .
-                    </InfoMessage>
                     <SegmentOverrideLimit
                       id={this.props.environmentId}
                       maxSegmentOverridesAllowed={ProjectStore.getMaxSegmentOverridesAllowed()}

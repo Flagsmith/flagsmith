@@ -262,6 +262,10 @@
                 {
                     "name": "CLICKHOUSE_URL",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:clickhouse-url-kB2CK9"
+                },
+                {
+                    "name": "EXPERIMENTATION_CLICKHOUSE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:EXPERIMENTATION_CLICKHOUSE_URL::"
                 }
             ],
             "logConfiguration": {

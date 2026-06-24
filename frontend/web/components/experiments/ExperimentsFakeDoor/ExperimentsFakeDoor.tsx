@@ -45,7 +45,14 @@ const ExperimentsFakeDoor: FC = () => {
             I would like to participate in beta testing
           </span>
           <span className='experiments-fake-door__cta-subtitle'>
-            Get early access to Experiments and help shape the feature
+            Get early access to Experiments and help shape the feature.{' '}
+            <a
+              href='https://docs.flagsmith.com/experiment-statistics'
+              target='_blank'
+              rel='noreferrer'
+            >
+              Learn more
+            </a>
           </span>
         </div>
         {signedUp ? (

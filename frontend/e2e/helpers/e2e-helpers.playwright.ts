@@ -1,8 +1,8 @@
 import { Page, expect } from '@playwright/test';
-import { LONG_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith } from './utils.playwright';
+import { LONG_TIMEOUT, SHORT_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith } from './utils.playwright';
 
 // Re-export for backwards compatibility
-export { LONG_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith };
+export { LONG_TIMEOUT, SHORT_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith };
 
 
 export type MultiVariate = { value: string; weight: number };
@@ -38,6 +38,26 @@ export class E2EHelpers {
       state: 'visible',
       timeout
     });
+  }
+
+  // Asserts a navbar link is reachable. A link can either be shown inline, or
+  // collapsed into the OverflowNav "more" menu when the navbar runs out of
+  // horizontal space (e.g. when a feature flag adds an extra item). Try inline
+  // first; if it isn't visible, open the overflow menu and retry. Only fails if
+  // the link is reachable via neither.
+  async waitForNavElementVisible(selector: string) {
+    logUsingLastSection(`Waiting nav element visible (inline or overflow) ${selector}`);
+    const element = this.page.locator(selector).first();
+    try {
+      await element.waitFor({ state: 'visible', timeout: SHORT_TIMEOUT });
+      return;
+    } catch {
+      const overflowButton = this.page.locator(byId('overflow-nav-button')).first();
+      if (await overflowButton.isVisible()) {
+        await overflowButton.click();
+      }
+      await element.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    }
   }
 
   async waitForElementNotClickable(selector: string) {
@@ -898,11 +918,20 @@ export class E2EHelpers {
     if (entityName) {
       await this.click(byId(`permissions-${entityName.toLowerCase()}`));
     }
+    // Wait for the permission save (POST/PUT) to commit before closing, so a later read can't race the grant.
+    const savePromise = this.page.waitForResponse(
+      (res) =>
+        res.url().includes('/user-permissions/') &&
+        ['POST', 'PUT'].includes(res.request().method()) &&
+        res.ok(),
+      { timeout: LONG_TIMEOUT },
+    );
     if (permission === 'ADMIN') {
       await this.click(byId(`admin-switch-${level}`));
     } else {
       await this.click(byId(`permission-switch-${permission}`));
     }
+    await savePromise;
     await this.closeModal();
   }
 
@@ -1060,7 +1089,7 @@ export class E2EHelpers {
     log(`Create change request: ${title}`);
 
     // Click the update/create change request button
-    // When 4-eyes is enabled, this button says "Create Change Request"
+    // When four-eyes is enabled, this button says "Create Change Request"
     await this.click('#update-feature-btn');
     await this.page.waitForTimeout(1000);
 

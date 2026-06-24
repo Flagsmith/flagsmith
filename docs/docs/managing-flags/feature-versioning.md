@@ -76,9 +76,11 @@ If you have an Audit Log Webhook configured:
 
 ### 4. Change requests
 
-Change requests on a v2 environment carry their content on `change_sets` and `environment_feature_versions` rather than on `feature_states`. If your scripts read the `feature_states` array off a change-request payload, read the new fields instead.
+**API Changes**: change requests on a v2 environment carry their content on `change_sets` and `environment_feature_versions` rather than on `feature_states`. If your scripts read the `feature_states` array off a change-request payload, read the new fields instead.
 
-A new email also fires when a scheduled change request fails to publish at its scheduled time due to a conflict with a more recent change.
+**Functionality-wise**, v2 also enables using Change Requests to gate **segment override** changes — otherwise it only covers changes to environment default.
+
+Additionally, a new email also fires when a scheduled change request fails to publish at its scheduled time due to a conflict with a more recent change.
 
 ---
 

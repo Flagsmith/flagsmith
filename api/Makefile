@@ -23,20 +23,12 @@ codeartifact-login:
 		--query authorizationToken --output text) && \
 	printf 'UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws\nUV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD=%s\n' "$$token" > .env-codeartifact
 
-.PHONY: install-pip
-install-pip:
-	python -m pip -q install --upgrade pip
-
-.PHONY: install-uv
-install-uv:
-	python -m pip -q install uv==${UV_VERSION}
-
 .PHONY: install-packages
 install-packages:
 	uv sync --frozen $(opts)
 
 .PHONY: install
-install: install-pip install-uv install-packages
+install: install-packages
 
 .PHONY: lint
 lint:
@@ -71,6 +63,7 @@ docker-build:
 wait-for-db:
 	uv run python manage.py waitfordb
 	uv run python manage.py waitfordb --database analytics
+	uv run python manage.py waitfordb --database clickhouse
 
 .PHONY: test
 test: docker-up wait-for-db
@@ -189,7 +182,3 @@ generate-docs: generate-flagsmith-sdk-openapi
 .PHONY: add-known-sdk-version
 add-known-sdk-version:
 	uv run python scripts/add-known-sdk-version.py $(opts)
-
-.PHONY: generate-mcp-spec
-generate-mcp-spec:
-	uv run python manage.py spectacular --generator-class api.openapi.MCPSchemaGenerator --file mcp_openapi.yaml

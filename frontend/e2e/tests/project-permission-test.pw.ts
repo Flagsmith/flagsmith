@@ -24,6 +24,7 @@ test.describe('Project Permission Tests', () => {
       waitForElementNotExist,
       waitForElementVisible,
       waitForFeatureSwitch,
+      waitForNavElementVisible,
       waitForPageFullyLoaded,
     } = createHelpers(page);
 
@@ -84,7 +85,7 @@ test.describe('Project Permission Tests', () => {
     log('User with ADMIN permissions can set project settings')
     await login(E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, PASSWORD)
     await gotoProject(PROJECT_NAME)
-    await waitForElementVisible('#project-settings-link')
+    await waitForNavElementVisible('#project-settings-link')
     await logout()
     log('Remove user as project ADMIN')
     await login(E2E_USER, PASSWORD)

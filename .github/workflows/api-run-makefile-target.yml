@@ -33,10 +33,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install uv
-        uses: ./.github/actions/install-uv
+      - uses: ./.github/actions/install-uv
         with:
-          python-version: 3.13
+          working-directory: api
 
       - name: Install Dependencies
         run: make install-packages opts='--extra dev'

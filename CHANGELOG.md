@@ -1,5 +1,89 @@
 # Changelog
 
+## [2.245.0](https://github.com/Flagsmith/flagsmith/compare/v2.244.1...v2.245.0) (2026-06-23)
+
+
+### Features
+
+* **experiments:** Bayesian analysis scorecards and results UI ([#7813](https://github.com/Flagsmith/flagsmith/issues/7813)) ([91238bb](https://github.com/Flagsmith/flagsmith/commit/91238bb744420ca71f38a5062c993601940d2e9e))
+
+
+### Bug Fixes
+
+* **clickhouse:** Avoid excess ALTER statements for no-op `migrate` ([#7853](https://github.com/Flagsmith/flagsmith/issues/7853)) ([0b85fe1](https://github.com/Flagsmith/flagsmith/commit/0b85fe174957fd2cf7db52b7e6a8069928c91893))
+
+## [2.244.1](https://github.com/Flagsmith/flagsmith/compare/v2.244.0...v2.244.1) (2026-06-22)
+
+
+### Bug Fixes
+
+* **clickhouse:** Intermittent migration failures from replica metadata lag ([#7847](https://github.com/Flagsmith/flagsmith/issues/7847)) ([70f0ec3](https://github.com/Flagsmith/flagsmith/commit/70f0ec3f6fd3c2fea8fa87f1de1c42e04b198a85))
+
+
+### Dependency Updates
+
+* **mcp:** update dependency pydantic-settings to v2.14.2 [security] ([#7841](https://github.com/Flagsmith/flagsmith/issues/7841)) ([59f3b2e](https://github.com/Flagsmith/flagsmith/commit/59f3b2e13038005b9878ec2891e857e23e00e944))
+
+
+### CI
+
+* **api:** Add ClickHouse to the local and CI test stack ([#7848](https://github.com/Flagsmith/flagsmith/issues/7848)) ([d991940](https://github.com/Flagsmith/flagsmith/commit/d9919400a1b8093ee7bc6c5c527adf16c416bae1))
+
+## [2.244.0](https://github.com/Flagsmith/flagsmith/compare/v2.243.1...v2.244.0) (2026-06-22)
+
+
+### Features
+
+* **experiments:** add experiment detail page with exposures panel ([#7811](https://github.com/Flagsmith/flagsmith/issues/7811)) ([47490f4](https://github.com/Flagsmith/flagsmith/commit/47490f4ed9011c789fbfba911d66e0cb4b62b8d2))
+* gate experiment placeholder only for paying customers ([#7786](https://github.com/Flagsmith/flagsmith/issues/7786)) ([51858d6](https://github.com/Flagsmith/flagsmith/commit/51858d67f19297d75f746b232abaef21c9208b4f))
+
+
+### Bug Fixes
+
+* **infra:** add EXPERIMENTATION_CLICKHOUSE_URL to task processor task defs ([#7845](https://github.com/Flagsmith/flagsmith/issues/7845)) ([82b09a4](https://github.com/Flagsmith/flagsmith/commit/82b09a41dde5a558064474696c91872c1363e1ad))
+
+
+### Dependency Updates
+
+* **frontend:** update dependency dompurify to v3.4.11 [security] ([#7829](https://github.com/Flagsmith/flagsmith/issues/7829)) ([0ce7ddb](https://github.com/Flagsmith/flagsmith/commit/0ce7ddb41b624247bbc14f7a499ac544a08ba79e))
+
+
+### CI
+
+* **frontend:** lint changed lines via eslint-plugin-diff ([#7822](https://github.com/Flagsmith/flagsmith/issues/7822)) ([d8727e0](https://github.com/Flagsmith/flagsmith/commit/d8727e0c58b2233f3f7b8bb298ae4148d71eb260))
+* **frontend:** skip Chromatic on fork PRs ([#7823](https://github.com/Flagsmith/flagsmith/issues/7823)) ([abfdc80](https://github.com/Flagsmith/flagsmith/commit/abfdc800c97ec279b35252ec41f20560a25706b3))
+
+## [2.243.1](https://github.com/Flagsmith/flagsmith/compare/v2.243.0...v2.243.1) (2026-06-19)
+
+
+### Bug Fixes
+
+* expose retry-after header ([#7832](https://github.com/Flagsmith/flagsmith/issues/7832)) ([5266950](https://github.com/Flagsmith/flagsmith/commit/52669508cd61faab831e107398615b214f08ece9))
+* task processor deployment ([#7835](https://github.com/Flagsmith/flagsmith/issues/7835)) ([6bcaca6](https://github.com/Flagsmith/flagsmith/commit/6bcaca6de717cbd16447e2847ba68db77270340b))
+
+## [2.243.0](https://github.com/Flagsmith/flagsmith/compare/v2.242.0...v2.243.0) (2026-06-19)
+
+
+### Features
+
+* add BareButton primitive, migrate role=button sites ([#7733](https://github.com/Flagsmith/flagsmith/issues/7733)) ([09cbb72](https://github.com/Flagsmith/flagsmith/commit/09cbb722ae941c1301b12407588fda2e1cb9b801))
+* **experimentation:** experiment results model, task and endpoints ([#7796](https://github.com/Flagsmith/flagsmith/issues/7796)) ([d68c358](https://github.com/Flagsmith/flagsmith/commit/d68c358f5c42a55ed03bff2a9805f6104083353c))
+* **experimentation:** results aggregation query and payload builder ([#7781](https://github.com/Flagsmith/flagsmith/issues/7781)) ([c4670cb](https://github.com/Flagsmith/flagsmith/commit/c4670cb6bf9e563917209e2a8258bca5720c77c0))
+* **Segment membership:** Refresh membership counts on segment edit ([#7828](https://github.com/Flagsmith/flagsmith/issues/7828)) ([1bdb7ca](https://github.com/Flagsmith/flagsmith/commit/1bdb7ca23fc81fb7f61c615fc3a165e002c2f0f1))
+
+
+### Bug Fixes
+
+* **experiments:** resolve environment-level variant allocations ([#7805](https://github.com/Flagsmith/flagsmith/issues/7805)) ([72a7df9](https://github.com/Flagsmith/flagsmith/commit/72a7df9a165efc02e501934bbb717c6323ba7c7d))
+* **frontend:** prevent crash if redirect param is undefined ([#7788](https://github.com/Flagsmith/flagsmith/issues/7788)) ([4be6fa0](https://github.com/Flagsmith/flagsmith/commit/4be6fa080799ac7fbd1463e0134c7e24ccf145ff))
+* **Local:** Fix `make install` ([#7808](https://github.com/Flagsmith/flagsmith/issues/7808)) ([294e591](https://github.com/Flagsmith/flagsmith/commit/294e591572166865f9fd234e299c64a79530c740))
+
+
+### CI
+
+* **MCP:** Remove Gram MCP schema push ([#7820](https://github.com/Flagsmith/flagsmith/issues/7820)) ([40323e3](https://github.com/Flagsmith/flagsmith/commit/40323e30f921b78ad4d91bde053253a6ff03464c))
+* raise db pg-max-connections for private cloud e2e ([#7825](https://github.com/Flagsmith/flagsmith/issues/7825)) ([8977abe](https://github.com/Flagsmith/flagsmith/commit/8977abef665f5fc2ea3f3b5f97126f4a6b471e51))
+
 ## [2.242.0](https://github.com/Flagsmith/flagsmith/compare/v2.241.0...v2.242.0) (2026-06-16)
 
 

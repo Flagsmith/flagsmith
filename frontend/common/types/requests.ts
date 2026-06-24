@@ -659,6 +659,7 @@ export type Req = {
     id: string
   }
   getProject: { id: number }
+  createProject: { name: string; organisation: number }
   updateProject: { id: number; body: UpdateProjectBody }
   deleteProject: { id: number }
   migrateProject: { id: number }
@@ -722,6 +723,7 @@ export type Req = {
     feature_id: number
     group_ids: number[]
   }
+  createEnvironment: { name: string; project: number }
   updateEnvironment: { id: number; body: Environment }
   createCloneIdentityFeatureStates: {
     environment_id: string
@@ -1043,7 +1045,20 @@ export type Req = {
     }
   }
   experimentAction: { environmentId: string; experimentId: number }
+  updateExperiment: {
+    environmentId: string
+    experimentId: number
+    body: { hypothesis?: string }
+  }
   deleteExperiment: { environmentId: string; experimentId: number }
+  getExperiment: { environmentId: string; experimentId: number }
+  getExperimentExposures: { environmentId: string; experimentId: number }
+  refreshExperimentExposures: { environmentId: string; experimentId: number }
+  getExperimentBayesianResults: { environmentId: string; experimentId: number }
+  refreshExperimentBayesianResults: {
+    environmentId: string
+    experimentId: number
+  }
   getMetrics: PagedRequest<{
     environmentId: string
     q?: string

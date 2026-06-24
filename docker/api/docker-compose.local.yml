@@ -5,6 +5,7 @@ name: flagsmith
 volumes:
   pg_11_data:
   pg_11_data_analytics:
+  clickhouse_data:
 
 services:
   db:
@@ -32,3 +33,30 @@ services:
     environment:
       POSTGRES_DB: analytics
       POSTGRES_PASSWORD: password
+
+  clickhouse:
+    # Match the version Flagsmith runs on ClickHouse Cloud.
+    image: clickhouse/clickhouse-server:25.12
+    pull_policy: always
+    restart: unless-stopped
+    # ClickHouse opens a file descriptor per column/part, so it needs a far
+    # higher open-files limit than the OS default (~1024); 262144 is the value
+    # ClickHouse's docs and official image recommend.
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    ports:
+      - 8123:8123
+      - 9000:9000
+    environment:
+      CLICKHOUSE_USER: flagsmith
+      CLICKHOUSE_PASSWORD: password
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
