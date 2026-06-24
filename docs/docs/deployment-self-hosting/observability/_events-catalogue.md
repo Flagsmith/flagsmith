@@ -387,10 +387,19 @@ Attributes:
 ### `segment_membership.compute.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:119`
+ - `api/segment_membership/services.py:121`
 
 Attributes:
  - `project.id`
+ - `reason`
+ - `segment.id`
+
+### `segment_membership.members.segment.skipped`
+
+Logged at `error` from:
+ - `api/segment_membership/services.py:180`
+
+Attributes:
  - `reason`
  - `segment.id`
 
@@ -425,7 +434,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:157`
+ - `api/segments/serializers.py:158`
 
 Attributes:
  - `revision_id`

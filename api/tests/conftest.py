@@ -1370,6 +1370,43 @@ def clickhouse_db(
 
 
 @pytest.fixture
+def environment_api_key_str(environment: "Environment") -> str:
+    return str(environment.api_key)
+
+
+@pytest.fixture
+def segment_membership_identities(
+    clickhouse_db: None,
+    environment_api_key_str: str,
+) -> None:
+    rows = [
+        (
+            environment_api_key_str,
+            "alice",
+            "alice_key",
+            {"foo": "bar"},
+        ),  # matches segment
+        (
+            environment_api_key_str,
+            "bob",
+            "bob_key",
+            {"foo": "bar"},
+        ),  # matches segment
+        (
+            environment_api_key_str,
+            "carol",
+            "carol_key",
+            {"foo": "baz"},
+        ),  # doesn't match
+    ]
+    with connections["clickhouse"].cursor() as cursor:
+        cursor.executemany(
+            "INSERT INTO IDENTITIES (environment_id, identifier, identity_key, traits) VALUES",
+            rows,  # type: ignore[arg-type]
+        )
+
+
+@pytest.fixture
 def use_analytics_db(request: pytest.FixtureRequest, settings: SettingsWrapper) -> None:
     """
     Skip tests if no analytics database is configured,

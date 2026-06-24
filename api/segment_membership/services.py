@@ -9,10 +9,12 @@ from flagsmith_sql_flag_engine import TranslateContext, translate_segment
 from flagsmith_sql_flag_engine.dialects import ClickHouseDialect
 from task_processor.models import Task
 
+from environments.models import Environment
 from integrations.flagsmith.client import get_openfeature_client
 from organisations.models import Organisation
 from projects.models import Project
 from segment_membership.models import SegmentMembershipCount
+from segment_membership.types import ClickHouseReadIdentityRow, SegmentMember
 from segments.models import Segment
 from util.engine_models.context.mappers import map_segment_to_segment_context
 from util.mappers.engine import map_segment_to_engine
@@ -150,3 +152,62 @@ def compute_segment_counts_for_project(
             )
         )
     return membership_counts
+
+
+def get_segment_members_page(
+    segment: Segment,
+    environment: Environment,
+    *,
+    cursor: str | None,
+    limit: int,
+) -> list[SegmentMember]:
+    """Return one page of identities matching `segment` in `environment`,
+    ordered by `identifier`.
+
+    Provide identifier as `cursor` to get a page after that identifier.
+    """
+    translate_ctx = TranslateContext(
+        evaluation_context=EvaluationContext(
+            environment={"key": "_members", "name": segment.project.name}
+        ),
+        dialect=ClickHouseDialect(),
+    )
+    predicate = translate_segment(
+        map_segment_to_segment_context(map_segment_to_engine(segment)),
+        translate_ctx,
+    )
+    if predicate is None:
+        logger.error(
+            "members.segment.skipped",
+            segment__id=segment.id,
+            reason="untranslatable",
+        )
+        return []
+
+    conditions = ["i.environment_id = %(env_key)s"]
+    params: dict[str, Any] = {"env_key": environment.api_key, "limit": limit}
+    if cursor:
+        conditions.append("i.identifier > %(cursor)s")
+        params["cursor"] = cursor
+    conditions.append(f"({predicate})")
+
+    sql = (
+        "SELECT i.identifier, i.identity_key, i.traits "
+        "FROM IDENTITIES AS i FINAL "
+        f"WHERE {' AND '.join(conditions)} "
+        "ORDER BY i.identifier ASC "
+        "LIMIT %(limit)s"
+    )
+    log_comment = (
+        "flagsmith:segment_membership:read"
+        f":org_{segment.project.organisation_id}"
+        f":project_{segment.project_id}"
+    )
+    with open_clickhouse_cursor(log_comment=log_comment) as ch_cursor:
+        ch_cursor.execute(sql, params)
+        rows: list[ClickHouseReadIdentityRow] = ch_cursor.fetchall()
+
+    return [
+        SegmentMember(identifier=row[0], identity_key=row[1], traits=row[2])
+        for row in rows
+    ]

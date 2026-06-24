@@ -1,7 +1,6 @@
 import uuid
 
 import pytest
-from django.db import connections
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
@@ -19,27 +18,9 @@ from segment_membership.tasks import (
 from tests.types import EnableFeaturesFixture
 
 
-@pytest.fixture
-def seeded_identities(clickhouse_db: None, environment_api_key: str) -> None:
-    """Seed three IDENTITIES rows for the environment: two match the `segment`
-    fixture's `foo EQUAL bar` condition, one does not."""
-    rows = [
-        (environment_api_key, "alice", "alice_key", {"foo": "bar"}),
-        (environment_api_key, "bob", "bob_key", {"foo": "bar"}),
-        (environment_api_key, "carol", "carol_key", {"foo": "baz"}),
-    ]
-    with connections["clickhouse"].cursor() as cursor:
-        # Django's CursorWrapper stub forbids dicts in the params sequence;
-        # clickhouse-driver accepts them as JSON-column payloads.
-        cursor.executemany(
-            "INSERT INTO IDENTITIES (environment_id, identifier, identity_key, traits) VALUES",
-            rows,  # type: ignore[arg-type]
-        )
-
-
 @pytest.mark.clickhouse
 def test_compute_segment_counts_for_project__matching_identities__counts_real_rows(
-    seeded_identities: None,
+    segment_membership_identities: None,
     project: int,
     environment: int,
     segment: int,
@@ -61,7 +42,7 @@ def test_compute_segment_counts_for_project__matching_identities__counts_real_ro
 
 @pytest.mark.clickhouse
 def test_refresh_project_segment_counts__matching_identities__upserts_real_counts(
-    seeded_identities: None,
+    segment_membership_identities: None,
     settings: SettingsWrapper,
     project: int,
     environment: int,
