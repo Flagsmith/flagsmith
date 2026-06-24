@@ -254,6 +254,80 @@ def test_get_segment_members_page__limit__caps_results(
     ]
 
 
+@pytest.mark.parametrize(
+    "q,expected_result",
+    [
+        pytest.param(
+            "ali",
+            [
+                SegmentMember(
+                    identifier="alice",
+                    identity_key="alice_key",
+                    traits={"foo": "bar"},
+                ),
+            ],
+            id="substring",
+        ),
+        pytest.param(
+            "ALICE",
+            [
+                SegmentMember(
+                    identifier="alice",
+                    identity_key="alice_key",
+                    traits={"foo": "bar"},
+                ),
+            ],
+            id="case-insensitive",
+        ),
+        pytest.param("zzz", [], id="no-match"),
+    ],
+)
+@pytest.mark.clickhouse
+def test_get_segment_members_page__q__returns_expected(
+    segment_membership_identities: None,
+    matching_segment: Segment,
+    environment: Environment,
+    q: str,
+    expected_result: list[SegmentMember],
+) -> None:
+    # Given / When
+    members = get_segment_members_page(
+        matching_segment,
+        environment,
+        cursor=None,
+        limit=100,
+        q=q,
+    )
+
+    # Then
+    assert members == expected_result
+
+
+@pytest.mark.clickhouse
+def test_get_segment_members_page__q_matches_beyond_first_page__still_found(
+    segment_membership_identities: None,
+    matching_segment: Segment,
+    environment: Environment,
+) -> None:
+    # Given / When
+    members = get_segment_members_page(
+        matching_segment,
+        environment,
+        cursor=None,
+        limit=1,
+        q="bob",
+    )
+
+    # Then
+    assert members == [
+        SegmentMember(
+            identifier="bob",
+            identity_key="bob_key",
+            traits={"foo": "bar"},
+        ),
+    ]
+
+
 def test_enqueue_membership_refresh__flag_on__enqueues_refresh(
     run_tasks: RunTasksFixture,
     mocker: MockerFixture,

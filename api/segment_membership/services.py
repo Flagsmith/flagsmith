@@ -160,11 +160,13 @@ def get_segment_members_page(
     *,
     cursor: str | None,
     limit: int,
+    q: str | None = None,
 ) -> list[SegmentMember]:
     """Return one page of identities matching `segment` in `environment`,
     ordered by `identifier`.
 
     Provide identifier as `cursor` to get a page after that identifier.
+    Provide `q` to filter to identifiers containing it (case-insensitive).
     """
     translate_ctx = TranslateContext(
         evaluation_context=EvaluationContext(
@@ -189,6 +191,9 @@ def get_segment_members_page(
     if cursor:
         conditions.append("i.identifier > %(cursor)s")
         params["cursor"] = cursor
+    if q:
+        conditions.append("positionCaseInsensitiveUTF8(i.identifier, %(q)s) > 0")
+        params["q"] = q
     conditions.append(f"({predicate})")
 
     sql = (

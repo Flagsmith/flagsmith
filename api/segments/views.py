@@ -178,8 +178,15 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     @action(detail=True, methods=["GET"], url_path="members")
     def members(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user: "FFAdminUser" = request.user  # type: ignore[assignment]
-        segment = self.get_object()
-        project = segment.project
+        project = self.get_project()
+        # Fetch by pk directly rather than via get_object()/get_queryset(): the
+        # latter applies the list endpoint's `q` (segment-name search), which
+        # would filter this segment out when `q` is used here to search members.
+        segment = get_object_or_404(
+            Segment.live_objects.filter(project=project, is_system_segment=False),
+            pk=self.kwargs["pk"],
+        )
+        self.check_object_permissions(request, segment)
         if not is_membership_enabled(project.organisation):
             raise NotFound()
 
@@ -194,11 +201,12 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         limit = query_serializer.validated_data["limit"]
         cursor = query_serializer.validated_data.get("cursor")
+        q = query_serializer.validated_data.get("q")
         with flagsmith_segment_membership_read_duration_seconds.time():
             # Fetch one extra row to detect whether a further page exists, so the
             # last page doesn't advertise a phantom (empty) next page.
             members = get_segment_members_page(
-                segment, environment, cursor=cursor, limit=limit + 1
+                segment, environment, cursor=cursor, limit=limit + 1, q=q
             )
 
         has_more = len(members) > limit
