@@ -139,6 +139,37 @@ def test_get_segment_members__matching_identities__returns_members(
 
 
 @pytest.mark.clickhouse
+def test_get_segment_members__q__filters_by_identifier(
+    segment_membership_identities: None,
+    admin_client: APIClient,
+    project: int,
+    environment: int,
+    segment: int,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+
+    # When
+    response = admin_client.get(
+        f"/api/v1/projects/{project}/segments/{segment}/members/?environment={environment}&q=ali"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "results": [
+            {
+                "identifier": "alice",
+                "identity_key": "alice_key",
+                "traits": {"foo": "bar"},
+            },
+        ],
+        "next_cursor": None,
+    }
+
+
+@pytest.mark.clickhouse
 def test_get_segment_members__more_results_than_limit__returns_next_cursor(
     segment_membership_identities: None,
     admin_client: APIClient,

@@ -257,6 +257,10 @@ class SegmentMembersQuerySerializer(serializers.Serializer):  # type: ignore[typ
         required=False,
         help_text="The identifier of the previous page's last row; omit for the first page.",
     )
+    q = serializers.CharField(
+        required=False,
+        help_text="Case-insensitive substring to filter members by identifier.",
+    )
     limit = serializers.IntegerField(
         required=False,
         default=100,
