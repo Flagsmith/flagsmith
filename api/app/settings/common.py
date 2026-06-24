@@ -1225,6 +1225,7 @@ CORS_ALLOW_HEADERS = list(
         )
     )
 )
+CORS_EXPOSE_HEADERS = ["Retry-After"]
 
 # Hubspot settings
 HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
@@ -1482,7 +1483,7 @@ DATABASE_ROUTERS.append("app.routers.ClickHouseRouter")
 
 if CLICKHOUSE_ENABLED:
     _clickhouse_db: dict[str, Any] = {
-        "ENGINE": "clickhouse_backend.backend",
+        "ENGINE": "core.db_backends.clickhouse",
         "HOST": CLICKHOUSE_HOST,
         "PORT": CLICKHOUSE_PORT,
         "USER": CLICKHOUSE_USER,
@@ -1494,6 +1495,10 @@ if CLICKHOUSE_ENABLED:
             "settings": {
                 # ClickHouse Cloud 25.12 requires this for `JSON`-column DDL.
                 "allow_experimental_json_type": 1,
+                # Block each DDL statement until every replica has applied it.
+                # Prevents replicated deployments (e.g. ClickHouse Cloud)
+                # from breaking migrations with Error 517.
+                "alter_sync": 2,
             },
         },
     }

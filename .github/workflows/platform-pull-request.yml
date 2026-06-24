@@ -171,6 +171,8 @@ jobs:
       api-image: ${{ needs.docker-build-private-cloud.outputs.image }}
       args: --grep "@oss|@enterprise"
       visual-regression: ${{ matrix.runs-on == 'depot-ubuntu-latest-16' }}
+      # TODO: identify whether the E2E leaks connections, leading to the connection bloat
+      pg-max-connections: 200
     secrets:
       GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
       SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}

@@ -1,20 +1,26 @@
 from __future__ import annotations
 
 import typing
+from dataclasses import replace
 from functools import lru_cache
 
 import structlog
 from clickhouse_driver import Client
 from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
+from django.db.models import Q
 from django.utils import timezone
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from experimentation.constants import (
+    CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
     EXPOSURE_EVENT_NAME,
     EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
+    RESULTS_MIN_CONVERSIONS_PER_VARIANT,
+    RESULTS_MIN_IDENTITIES_PER_VARIANT,
+    SRM_MIN_TOTAL_IDENTITIES,
     WAREHOUSE_CONNECTION_FLAG,
 )
 from experimentation.dataclasses import (
@@ -22,14 +28,28 @@ from experimentation.dataclasses import (
     ExposuresSummary,
     ExposuresTimeseries,
     ExposuresTimeseriesPoint,
+    MetricResult,
+    MetricSpec,
+    ResultsAggregates,
+    ResultsSummary,
     WarehouseEventStats,
 )
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
     ExperimentStatus,
+    MetricAggregation,
+    MetricDirection,
     WarehouseConnectionStatus,
     WarehouseType,
 )
+from experimentation.results_query import _EXPOSURES_CTE, ResultsQueryBuilder
+from experimentation.stats import (
+    Inference,
+    VariantStats,
+    compare_to_control,
+    srm_p_value,
+)
+from features.models import FeatureState
 from integrations.flagsmith.client import get_openfeature_client
 
 if typing.TYPE_CHECKING:
@@ -103,23 +123,9 @@ def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
     )
 
 
-# Events are delivered at-least-once; first-exposure dedup keeps duplicates
-# from inflating identity counts.
-EXPOSURE_BUCKETS_QUERY = """
-WITH exposures AS (
-    SELECT
-        identifier,
-        if(uniqExact(value) > 1, '', any(value)) AS variant,
-        uniqExact(value) > 1 AS quarantined,
-        min(timestamp) AS first_exposure
-    FROM events
-    WHERE environment_key = %(environment_key)s
-        AND event = %(exposure_event)s
-        AND feature_name = %(feature_name)s
-        AND timestamp >= %(window_start)s
-        AND timestamp < %(window_end)s
-    GROUP BY identifier
-)
+EXPOSURE_BUCKETS_QUERY = (
+    _EXPOSURES_CTE
+    + """
 SELECT
     quarantined,
     variant,
@@ -129,6 +135,7 @@ FROM exposures
 GROUP BY quarantined, variant, bucket
 ORDER BY bucket
 """
+)
 
 _EXPOSURE_BUCKET_FUNCTIONS: dict[str, str] = {
     "hour": "toStartOfHour",
@@ -225,6 +232,199 @@ def get_exposure_buckets(
         )
         for quarantined, variant, bucket, first_exposed_identities in rows
     ]
+
+
+def get_metric_variant_stats(
+    *,
+    environment_key: str,
+    feature_name: str,
+    window_start: datetime,
+    window_end: datetime,
+    specs: Sequence[MetricSpec],
+) -> ResultsAggregates:
+    """Run the warehouse query, returning per-variant identity counts and, per
+    metric, per-variant sufficient statistics."""
+    builder = ResultsQueryBuilder(specs)
+    params: dict[str, object] = {
+        "environment_key": environment_key,
+        "exposure_event": EXPOSURE_EVENT_NAME,
+        "feature_name": feature_name,
+        "window_start": window_start,
+        "window_end": window_end,
+    }
+    builder.add_metric_params(params)
+
+    rows, columns = _get_clickhouse_client().execute(
+        builder.build_query(), params, with_column_types=True
+    )
+    exposure_counts, metric_stats = builder.decode_rows(
+        rows, [name for name, _type in columns]
+    )
+
+    return ResultsAggregates(
+        specs=list(specs),
+        exposure_counts=exposure_counts,
+        metric_stats=metric_stats,
+    )
+
+
+def build_results_summary(
+    aggregates: ResultsAggregates,
+    *,
+    expected_shares: dict[str, float],
+) -> ResultsSummary:
+    exposure_counts = aggregates.exposure_counts
+    total = sum(exposure_counts.values())
+    if expected_shares and total >= SRM_MIN_TOTAL_IDENTITIES:
+        srm = srm_p_value(
+            [exposure_counts.get(variant, 0) for variant in expected_shares],
+            list(expected_shares.values()),
+        )
+    else:
+        srm = None
+    return ResultsSummary(
+        srm_p_value=srm,
+        metrics=[
+            MetricResult(
+                metric_id=spec.metric_id,
+                variants=aggregates.metric_stats.get(spec.metric_id, {}),
+                inference=_metric_inference(
+                    spec, aggregates.metric_stats.get(spec.metric_id, {})
+                ),
+            )
+            for spec in aggregates.specs
+        ],
+    )
+
+
+def compute_results_summary(
+    experiment: "Experiment",
+    *,
+    window_start: "datetime",
+    window_end: "datetime",
+) -> ResultsSummary:
+    """Gather an experiment's metric statistics from the warehouse and reduce
+    them to the stored results payload."""
+    specs = _experiment_metric_specs(experiment)
+    aggregates = get_metric_variant_stats(
+        environment_key=experiment.environment.api_key,
+        feature_name=experiment.feature.name,
+        window_start=window_start,
+        window_end=window_end,
+        specs=specs,
+    )
+    return build_results_summary(
+        aggregates,
+        expected_shares=_expected_variant_shares(experiment),
+    )
+
+
+def _experiment_metric_specs(experiment: "Experiment") -> list[MetricSpec]:
+    return [
+        MetricSpec(
+            metric_id=experiment_metric.metric_id,
+            event=experiment_metric.metric.definition["event"],
+            aggregation=experiment_metric.metric.aggregation,
+            lower_is_better=(
+                experiment_metric.metric.direction == MetricDirection.DOWN
+            ),
+        )
+        for experiment_metric in experiment.experiment_metrics.select_related("metric")
+    ]
+
+
+def _expected_variant_shares(experiment: "Experiment") -> dict[str, float]:
+    """The traffic split SRM tests against: each multivariate option's
+    environment allocation, with ``control`` taking the unallocated remainder.
+    Empty when the feature has no usable allocations, skipping the SRM check."""
+    # TODO: read the split from the percentage-split segment override feature
+    # state once that's implemented, rather than the environment default.
+    feature_state = (
+        FeatureState.objects.get_live_feature_states(
+            environment=experiment.environment,
+            additional_filters=Q(feature_segment__isnull=True, identity__isnull=True),
+            feature_id=experiment.feature_id,
+        )
+        .prefetch_related(
+            "multivariate_feature_state_values__multivariate_feature_option"
+        )
+        # Highest id is the current version, matching how Environment selects
+        # active feature states (Max("id")); the default ordering is ascending.
+        .order_by("-id")
+        .first()
+    )
+    if feature_state is None:
+        return {}
+
+    shares: dict[str, float] = {}
+    allocated = 0.0
+    for mv_value in feature_state.multivariate_feature_state_values.all():
+        key = mv_value.multivariate_feature_option.key
+        if key is None:
+            # An unkeyed option's traffic can't be attributed to a variant;
+            # counting it as control would inflate control's expected share and
+            # raise a false SRM alarm, so skip the check entirely.
+            logger.error(
+                "srm.unkeyed_variant",
+                experiment__id=experiment.id,
+                environment__id=experiment.environment_id,
+                feature__id=experiment.feature_id,
+            )
+            return {}
+        shares[key] = mv_value.percentage_allocation / 100
+        allocated += mv_value.percentage_allocation
+    if not shares:
+        return {}
+    if allocated > 100:
+        # A misconfigured feature whose options over-allocate; control's share
+        # would be negative, so there's no valid split to test against.
+        logger.error(
+            "srm.overallocated",
+            experiment__id=experiment.id,
+            environment__id=experiment.environment_id,
+            feature__id=experiment.feature_id,
+        )
+        return {}
+    shares[CONTROL_VARIANT_KEY] = (100 - allocated) / 100
+    return shares
+
+
+def _metric_inference(
+    spec: MetricSpec,
+    variants: dict[str, VariantStats],
+) -> dict[str, Inference | None]:
+    control = variants.get(CONTROL_VARIANT_KEY)
+    return {
+        variant_key: _infer_treatment(spec, control, treatment)
+        for variant_key, treatment in variants.items()
+        if variant_key != CONTROL_VARIANT_KEY
+    }
+
+
+def _infer_treatment(
+    spec: MetricSpec,
+    control: VariantStats | None,
+    treatment: VariantStats,
+) -> Inference | None:
+    # Product floor for showing a result at all; compare_to_control applies its
+    # own independent guards (e.g. zero control mean) on top of this.
+    if (
+        control is None
+        or control.n < RESULTS_MIN_IDENTITIES_PER_VARIANT
+        or treatment.n < RESULTS_MIN_IDENTITIES_PER_VARIANT
+    ):
+        return None
+    if spec.aggregation == MetricAggregation.OCCURRENCE and (
+        control.sum < RESULTS_MIN_CONVERSIONS_PER_VARIANT
+        or treatment.sum < RESULTS_MIN_CONVERSIONS_PER_VARIANT
+    ):
+        return None
+    inference = compare_to_control(control, treatment)
+    if inference is not None and spec.lower_is_better:
+        # "Winning" means moving the metric the good way; for a lower-is-better
+        # metric that's a fall, so the chance of winning is the chance lift < 0.
+        inference = replace(inference, chance_to_win=1.0 - inference.chance_to_win)
+    return inference
 
 
 def _resolve_audit_log_author(

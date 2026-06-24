@@ -882,14 +882,10 @@ wheels = [
 [[package]]
 name = "django-clickhouse-backend"
 version = "1.6"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/jayvynl/django-clickhouse-backend?rev=d884c7d#d884c7d8d89fd94d79fca440e3965a931aa69435" }
 dependencies = [
     { name = "clickhouse-driver" },
     { name = "django" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/c1/db/55e54cc0793e391ae0f7797f010771ce31348e89629d4db7dec2aebb66f8/django_clickhouse_backend-1.6.tar.gz", hash = "sha256:fd4840b8789f571838fbc8a4c323e9600fed0ee34113fa761ef7a4f231298e10", size = 76500, upload-time = "2026-01-12T06:26:10.073Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/56/995c790c736c2016fe0ae6418a84b65b201bd3134d81e50868d36a43f640/django_clickhouse_backend-1.6-py3-none-any.whl", hash = "sha256:6e1ddba09d7c2bcbb3dd2a9c80606c75c5b42c6f9d220104751857c925a9a5e0", size = 88911, upload-time = "2026-01-12T06:26:08.744Z" },
 ]
 
 [[package]]
@@ -1525,7 +1521,7 @@ requires-dist = [
     { name = "django", specifier = ">=5,<6" },
     { name = "django-admin-sso", specifier = ">=5.2.0,<5.3.0" },
     { name = "django-axes", specifier = ">=8.1.0,<9.0.0" },
-    { name = "django-clickhouse-backend", specifier = ">=1.4,<2.0" },
+    { name = "django-clickhouse-backend", git = "https://github.com/jayvynl/django-clickhouse-backend?rev=d884c7d" },
     { name = "django-cockroachdb", specifier = ">=4.2,<4.3.0" },
     { name = "django-cors-headers", specifier = ">=3.5.0,<3.6.0" },
     { name = "django-debug-toolbar", marker = "extra == 'dev'" },

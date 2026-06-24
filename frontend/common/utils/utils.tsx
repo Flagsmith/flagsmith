@@ -470,6 +470,7 @@ const Utils = Object.assign({}, BaseUtils, {
         }
     }
   },
+
   getPlanName: (_plan: string) => {
     const plan = (_plan || '')?.toLowerCase()
     if (plan.includes('free')) {
@@ -492,6 +493,7 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return planNames.free
   },
+
   getPlanPermission: (plan: string, feature: PaidFeature) => {
     const planName = Utils.getPlanName(plan)
     if (!plan || planName === planNames.free) {
@@ -511,6 +513,7 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return true
   },
+
   getPlansPermission: (feature: PaidFeature) => {
     const isOrgPermission = feature !== '2FA'
     let plans
@@ -530,6 +533,7 @@ const Utils = Object.assign({}, BaseUtils, {
     )
     return !!found
   },
+
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
@@ -695,6 +699,8 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return false
   },
+  isOrgOnFreePlan: (): boolean =>
+    Utils.getPlanName(AccountStore.getActiveOrgPlan()) === planNames.free,
   isSaas: () => selectBuildVersion(getStore().getState())?.backend?.is_saas,
 
   isValidNumber(value: any) {

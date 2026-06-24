@@ -1,5 +1,5 @@
 import logging
-import math
+from datetime import timedelta
 from typing import Any
 
 from django.db import IntegrityError
@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import Throttled, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -16,11 +17,16 @@ from rest_framework.viewsets import GenericViewSet
 
 from app.pagination import CustomPagination
 from environments.views import NestedEnvironmentViewSet
-from experimentation.constants import EXPOSURES_REFRESH_MIN_INTERVAL
+from experimentation.constants import (
+    EXPOSURES_REFRESH_MIN_INTERVAL,
+    RESULTS_REFRESH_MIN_INTERVAL,
+)
 from experimentation.models import (
     Experiment,
+    ExperimentComputation,
     ExperimentExposures,
     ExperimentMetric,
+    ExperimentResults,
     ExperimentStatus,
     Metric,
     WarehouseConnection,
@@ -35,6 +41,7 @@ from experimentation.serializers import (
     ExperimentExposuresSerializer,
     ExperimentListSerializer,
     ExperimentMetricSerializer,
+    ExperimentResultsSerializer,
     ExperimentSerializer,
     MetricSerializer,
     WarehouseConnectionSerializer,
@@ -48,7 +55,10 @@ from experimentation.services import (
     refresh_warehouse_connection_status,
     transition_experiment_status,
 )
-from experimentation.tasks import compute_experiment_exposures
+from experimentation.tasks import (
+    compute_experiment_exposures,
+    compute_experiment_results,
+)
 from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
@@ -175,6 +185,7 @@ class ExperimentViewSet(
         if self.action in ("list", "retrieve"):
             qs = qs.select_related("feature").prefetch_related(
                 "feature__multivariate_options",
+                "feature__feature_states__multivariate_feature_state_values",
                 "experiment_metrics__metric",
             )
         status_filter = self.request.query_params.get("status")
@@ -189,7 +200,7 @@ class ExperimentViewSet(
         if q:
             qs = qs.filter(Q(name__icontains=q) | Q(feature__name__icontains=q))
 
-        return qs
+        return qs.order_by("-created_at")
 
     def list(self, request: Request, *args: object, **kwargs: object) -> Response:
         response = super().list(request, *args, **kwargs)
@@ -294,29 +305,14 @@ class ExperimentViewSet(
     @action(detail=True, methods=["post"], url_path="exposures/refresh")
     def refresh_exposures(self, request: Request, **kwargs: object) -> Response:
         experiment: Experiment = self.get_object()
-        if experiment.started_at is None:
-            return Response(
-                {"detail": "Cannot refresh exposures before the experiment starts."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         exposures = ExperimentExposures.objects.filter(experiment=experiment).first()
-        if exposures is not None and exposures.is_final:
-            return Response(
-                {"detail": "Exposures are final for this completed experiment."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if exposures is not None and exposures.refresh_requested_at is not None:
-            retry_after = EXPOSURES_REFRESH_MIN_INTERVAL - (
-                timezone.now() - exposures.refresh_requested_at
-            )
-            if retry_after.total_seconds() > 0:
-                return Response(
-                    {"detail": "A refresh was requested recently. Try again later."},
-                    status=status.HTTP_429_TOO_MANY_REQUESTS,
-                    headers={
-                        "Retry-After": str(math.ceil(retry_after.total_seconds()))
-                    },
-                )
+        self._validate_refresh_request(
+            experiment,
+            exposures,
+            min_interval=EXPOSURES_REFRESH_MIN_INTERVAL,
+            before_start_detail="Cannot refresh exposures before the experiment starts.",
+            final_detail="Exposures are final for this completed experiment.",
+        )
         if exposures is None:
             exposures, _ = ExperimentExposures.objects.get_or_create(
                 experiment=experiment
@@ -324,6 +320,58 @@ class ExperimentViewSet(
         exposures.record_refresh_request()
         compute_experiment_exposures.delay(kwargs={"experiment_id": experiment.id})
         return Response(status=status.HTTP_202_ACCEPTED)
+
+    @action(detail=True, methods=["get"])
+    def results(self, request: Request, **kwargs: object) -> Response:
+        experiment: Experiment = self.get_object()
+        results = getattr(experiment, "results", None)
+        return Response(
+            {
+                "results": (
+                    ExperimentResultsSerializer(results).data if results else None
+                ),
+            }
+        )
+
+    @action(detail=True, methods=["post"], url_path="results/refresh")
+    def refresh_results(self, request: Request, **kwargs: object) -> Response:
+        experiment: Experiment = self.get_object()
+        results = ExperimentResults.objects.filter(experiment=experiment).first()
+        self._validate_refresh_request(
+            experiment,
+            results,
+            min_interval=RESULTS_REFRESH_MIN_INTERVAL,
+            before_start_detail="Cannot refresh results before the experiment starts.",
+            final_detail="Results are final for this completed experiment.",
+        )
+        if results is None:
+            results, _ = ExperimentResults.objects.get_or_create(experiment=experiment)
+        results.record_refresh_request()
+        compute_experiment_results.delay(kwargs={"experiment_id": experiment.id})
+        return Response(status=status.HTTP_202_ACCEPTED)
+
+    def _validate_refresh_request(
+        self,
+        experiment: Experiment,
+        computation: "ExperimentComputation[Any] | None",
+        *,
+        min_interval: timedelta,
+        before_start_detail: str,
+        final_detail: str,
+    ) -> None:
+        if experiment.started_at is None:
+            raise ValidationError({"detail": before_start_detail})
+        if computation is not None and computation.is_final:
+            raise ValidationError({"detail": final_detail})
+        if computation is not None and computation.refresh_requested_at is not None:
+            retry_after = min_interval - (
+                timezone.now() - computation.refresh_requested_at
+            )
+            if retry_after.total_seconds() > 0:
+                raise Throttled(
+                    wait=retry_after.total_seconds(),
+                    detail="A refresh was requested recently. Try again later.",
+                )
 
     def _transition_status(self, target_status: str) -> Response:
         experiment: Experiment = self.get_object()

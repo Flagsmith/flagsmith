@@ -22,6 +22,7 @@ from features.serializers import (
 )
 from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project
+from segment_membership.services import enqueue_membership_refresh
 
 from .models import Segment
 from .permissions import SegmentPermissions
@@ -180,6 +181,7 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = CloneSegmentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         clone = source_segment.clone(name=serializer.validated_data["name"])
+        enqueue_membership_refresh(clone.project)
         return Response(SegmentSerializer(clone).data, status=status.HTTP_201_CREATED)
 
 

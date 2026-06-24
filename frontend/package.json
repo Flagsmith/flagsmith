@@ -161,6 +161,7 @@
     "chromatic": "^15.2.0",
     "eslint": "^8.0.1",
     "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-diff": "^2.1.7",
     "eslint-plugin-import": "2.27.5",
     "eslint-plugin-import-alias": "^1.2.0",
     "eslint-plugin-prettier": "^3.4.0",

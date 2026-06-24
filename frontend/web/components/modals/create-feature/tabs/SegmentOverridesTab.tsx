@@ -76,7 +76,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
   const { permission: savePermission } = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: Utils.getManageFeaturePermission(is4Eyes, false),
+    permission: Utils.getManageFeaturePermission(is4Eyes),
     tags: projectFlag.tags,
   })
 
@@ -183,6 +183,22 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
               </Button>
             )}
           </Row>
+          <div className='text-muted mb-2'>
+            <p>
+              Segment Overrides apply when the identity traits match the segment
+              rules.
+            </p>{' '}
+            <p>
+              Identity Overrides always override Segment Overrides.{' '}
+              <a
+                target='_blank'
+                href='https://docs.flagsmith.com/basic-features/segments'
+                rel='noreferrer'
+              >
+                Learn more
+              </a>
+            </p>
+          </div>
           {segmentOverrides ? (
             <>
               <ErrorMessage error={featureError} />
@@ -217,19 +233,33 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
           {!isComparing && !showCreateSegment && (
             <div>
               <p className='text-right mt-4 fs-small lh-sm modal-caption'>
+                Re-order overrides to adjust priority.
+              </p>
+              <p className='text-right mt-4 fs-small lh-sm modal-caption'>
                 {is4Eyes && isVersioned
                   ? 'This will create a change request with any value and segment override changes for the environment'
                   : 'This will update the segment overrides for the environment'}{' '}
                 <strong>{environmentName}</strong>
               </p>
+              {is4Eyes && !isVersioned && (
+                <InfoMessage>
+                  Enable Feature Versioning to gate segment overrides with
+                  Feature Change Requests.{' '}
+                  <a
+                    href='https://docs.flagsmith.com/managing-flags/feature-versioning'
+                    target='_blank'
+                    rel='noreferrer'
+                  >
+                    Learn more
+                  </a>
+                  .
+                </InfoMessage>
+              )}
               <div className='text-right'>
                 {isVersioned && is4Eyes
                   ? Utils.renderWithPermission(
                       savePermission,
-                      Utils.getManageFeaturePermissionDescription(
-                        is4Eyes,
-                        false,
-                      ),
+                      Utils.getManageFeaturePermissionDescription(is4Eyes),
                       <Button
                         onClick={() => saveFeatureSegments(false)}
                         type='button'

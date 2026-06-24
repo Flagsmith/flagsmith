@@ -11,6 +11,7 @@ from edge_api.utils import is_edge_enabled
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.models import Project
 from segment_membership.models import SegmentMembershipCount
+from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule
 
 logger = structlog.get_logger(__name__)
@@ -145,6 +146,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         metadata_data = validated_data.pop("metadata", [])
         segment = super().create(validated_data)  # type: ignore[no-untyped-call]
         self._update_metadata(segment, metadata_data)
+        enqueue_membership_refresh(segment.project)
         return segment
 
     def update(self, segment: Segment, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
@@ -159,6 +161,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                 )
             segment = super().update(segment, validated_data)  # type: ignore[no-untyped-call]
         self._update_metadata(segment, metadata)
+        enqueue_membership_refresh(segment.project)
         return segment
 
     def _get_rules_and_conditions_without_deleted(

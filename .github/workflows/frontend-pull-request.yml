@@ -58,18 +58,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Diff-scoped: the frontend has a large pre-existing eslint/tsc backlog,
-      # so a whole-repo gate isn't viable yet.
-      - name: Lint changed files
+      # Lints only the lines this PR changed (eslint-plugin-diff), so the
+      # pre-existing backlog doesn't fail PRs. Fork-safe: pure eslint + git.
+      - name: Lint changed lines
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: |
-          CHANGED=$(git diff --name-only --diff-filter=ACMR --relative \
-            "$BASE_SHA" HEAD -- '*.ts' '*.tsx' '*.js')
-          if [ -z "$CHANGED" ]; then
-            echo "No frontend JS/TS files changed — skipping."
-            exit 0
-          fi
-          echo "Linting changed files:"
-          echo "$CHANGED"
-          echo "$CHANGED" | xargs npx eslint
+          ESLINT_PLUGIN_DIFF_COMMIT: ${{ github.event.pull_request.base.sha }}
+        run: npm run lint

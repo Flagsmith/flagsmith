@@ -88,6 +88,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                   Experiments
                 </SidebarLink>
               ) : (
+                !Utils.isOrgOnFreePlan() &&
                 Utils.getFlagsmithHasFeature('experiments_fake_door') && (
                   <SidebarLink
                     id={mobile ? undefined : 'experiments-link'}
@@ -125,7 +126,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                 to={`/project/${projectId}/environment/${environmentId}/change-requests/`}
               >
                 <div>
-                  Change Requests{' '}
+                  Feature Change Requests{' '}
                   {changeRequests ? (
                     <span className='ms-1 unread d-inline'>
                       {changeRequests}

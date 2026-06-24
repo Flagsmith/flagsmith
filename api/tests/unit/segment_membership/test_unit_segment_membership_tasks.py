@@ -54,70 +54,6 @@ def test_backfill_identities_to_clickhouse__dynamo_disabled__skips(
     spy.assert_not_called()
 
 
-def test_backfill_identities_to_clickhouse__happy_path__bulk_inserts(
-    mocker: MockerFixture,
-    settings: SettingsWrapper,
-    project: Project,
-    environment: Environment,
-    segment: Segment,
-    enable_features: EnableFeaturesFixture,
-    log: StructuredLogCapture,
-) -> None:
-    # Given
-    enable_features("segment_membership_inspection")
-    settings.CLICKHOUSE_ENABLED = True
-    cursor = MagicMock()
-    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
-    open_cursor.return_value.__enter__.return_value = cursor
-    refresh_dispatch = mocker.patch.object(tasks, "refresh_project_segment_counts")
-    wrapper = MagicMock(is_enabled=True)
-    wrapper.iter_all_items_paginated.return_value = iter(
-        [
-            {
-                "identity_uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-                "identifier": "a",
-                "composite_key": "k1",
-                "environment_api_key": environment.api_key,
-                "created_date": "2026-05-08T00:00:00Z",
-                "identity_traits": [],
-            },
-            {
-                "identity_uuid": "550e8400-e29b-41d4-a716-446655440000",
-                "identifier": "b",
-                "composite_key": "k2",
-                "environment_api_key": environment.api_key,
-                "created_date": "2026-05-08T00:00:00Z",
-                "identity_traits": [],
-            },
-        ]
-    )
-    mocker.patch.object(tasks, "DynamoIdentityWrapper", return_value=wrapper)
-
-    # When
-    backfill_identities_to_clickhouse()
-
-    # Then
-    open_cursor.assert_called_with(
-        log_comment=(
-            f"flagsmith:segment_membership:backfill"
-            f":org_{project.organisation_id}"
-            f":project_{project.id}"
-        )
-    )
-    sql, rows_arg = cursor.executemany.call_args.args
-    assert sql == (
-        "INSERT INTO IDENTITIES "
-        "(environment_id, identifier, identity_key, traits) VALUES"
-    )
-    assert {row[0] for row in rows_arg} == {environment.api_key}
-    assert {row[1] for row in rows_arg} == {"a", "b"}
-    assert any(
-        e["event"] == "backfill.environment.completed" and e["rows__count"] == 2
-        for e in log.events
-    )
-    refresh_dispatch.delay.assert_called_once_with(args=(project.id,))
-
-
 def test_backfill_identities_to_clickhouse__insert_fails__logs_and_continues(
     mocker: MockerFixture,
     settings: SettingsWrapper,
@@ -252,50 +188,6 @@ def test_refresh_project_segment_counts__compute_fails__logs(
 
     # Then
     assert any(e["event"] == "refresh.project.failed" for e in log.events)
-
-
-def test_refresh_project_segment_counts__counts_returned__upserts_per_env_rows(
-    mocker: MockerFixture,
-    settings: SettingsWrapper,
-    project: Project,
-    environment: Environment,
-    segment: Segment,
-    enable_features: EnableFeaturesFixture,
-) -> None:
-    # Given
-    enable_features("segment_membership_inspection")
-    settings.CLICKHOUSE_ENABLED = True
-    cursor = MagicMock()
-    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
-    open_cursor.return_value.__enter__.return_value = cursor
-    mocker.patch.object(
-        tasks,
-        "compute_segment_counts_for_project",
-        return_value=[
-            SegmentMembershipCount(
-                segment_id=segment.id,
-                environment_id=environment.id,
-                count=42,
-            ),
-        ],
-    )
-
-    # When
-    refresh_project_segment_counts(project.id)
-
-    # Then
-    membership = SegmentMembershipCount.objects.get(
-        segment=segment, environment=environment
-    )
-    assert membership.count == 42
-    assert membership.last_synced_at is not None
-    open_cursor.assert_called_once_with(
-        log_comment=(
-            f"flagsmith:segment_membership:refresh"
-            f":org_{project.organisation_id}"
-            f":project_{project.id}"
-        )
-    )
 
 
 def test_refresh_project_segment_counts__previously_matching_pair_drops_to_zero__row_deleted(

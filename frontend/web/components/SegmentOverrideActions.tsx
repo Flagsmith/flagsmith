@@ -147,7 +147,7 @@ const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
                 handleActionClick('compare')
               }}
             >
-              <Icon name='difference' width={18} fill='#9DA4AE' />
+              <Icon name='difference' width={18} />
               <span>Compare</span>
             </div>
           )}

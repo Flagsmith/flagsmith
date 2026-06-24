@@ -237,6 +237,10 @@
                 {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
+                },
+                {
+                    "name": "EXPERIMENTATION_CLICKHOUSE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:EXPERIMENTATION_CLICKHOUSE_URL::"
                 }
             ],
             "logConfiguration": {
