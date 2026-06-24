@@ -6,7 +6,7 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import http_date
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -138,8 +138,8 @@ def test_get_environment_document__valid_api_key__returns_full_document(
 @pytest.mark.parametrize(
     "environment_",
     (
-        lazy_fixture("environment"),
-        lazy_fixture("environment_v2_versioning"),
+        lf("environment"),
+        lf("environment_v2_versioning"),
     ),
 )
 def test_get_environment_document__identity_overrides__returns_override_data(

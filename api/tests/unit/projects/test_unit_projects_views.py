@@ -11,7 +11,7 @@ from common.projects.permissions import (
 from django.urls import reverse
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -111,7 +111,7 @@ def test_create_project__admin_master_api_key_client__returns_201_and_creates_pr
 
 @pytest.mark.parametrize(
     "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+    [(lf("admin_master_api_key_client")), (lf("admin_client"))],
 )
 def test_update_project__valid_data__returns_200_and_updates_project(
     client: APIClient,
@@ -165,7 +165,7 @@ def test_update_project__different_organisation__does_not_change_organisation(
 
 @pytest.mark.parametrize(
     "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+    [(lf("admin_master_api_key_client")), (lf("admin_client"))],
 )
 def test_list_project_permissions__valid_client__returns_all_permissions(
     client: APIClient, project: Project
@@ -711,7 +711,7 @@ def test_list_projects__non_numeric_organisation__returns_400(  # type: ignore[n
 
 @pytest.mark.parametrize(
     "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+    [(lf("admin_master_api_key_client")), (lf("admin_client"))],
 )
 def test_get_project_by_uuid__existing_project__returns_project(  # type: ignore[no-untyped-def]
     client, project, mocker, settings, organisation
@@ -730,10 +730,10 @@ def test_get_project_by_uuid__existing_project__returns_project(  # type: ignore
 @pytest.mark.parametrize(
     "subscription, can_update_realtime",
     [
-        (lazy_fixture("free_subscription"), False),
-        (lazy_fixture("startup_subscription"), False),
-        (lazy_fixture("scale_up_subscription"), False),
-        (lazy_fixture("enterprise_subscription"), True),
+        (lf("free_subscription"), False),
+        (lf("startup_subscription"), False),
+        (lf("scale_up_subscription"), False),
+        (lf("enterprise_subscription"), True),
     ],
 )
 def test_enable_realtime_updates__subscription_tier__returns_expected_value(  # type: ignore[no-untyped-def]
@@ -763,7 +763,7 @@ def test_enable_realtime_updates__subscription_tier__returns_expected_value(  # 
 
 @pytest.mark.parametrize(
     "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+    [(lf("admin_master_api_key_client")), (lf("admin_client"))],
 )
 def test_update_project__read_only_fields__does_not_update_read_only_fields(  # type: ignore[no-untyped-def]
     client, project, mocker, settings, organisation
@@ -796,7 +796,7 @@ def test_update_project__read_only_fields__does_not_update_read_only_fields(  # 
 
 @pytest.mark.parametrize(
     "client",
-    (lazy_fixture("admin_client"), lazy_fixture("admin_master_api_key_client")),
+    (lf("admin_client"), lf("admin_master_api_key_client")),
 )
 def test_list_projects__existing_project__returns_project_data(client, organisation):  # type: ignore[no-untyped-def]
     # Given
@@ -842,7 +842,7 @@ def test_list_projects__existing_project__returns_project_data(client, organisat
 
 @pytest.mark.parametrize(
     "client",
-    (lazy_fixture("admin_client"), lazy_fixture("admin_master_api_key_client")),
+    (lf("admin_client"), lf("admin_master_api_key_client")),
 )
 def test_get_project__with_features_and_segments__returns_detailed_data(
     client: APIClient, organisation: Organisation, project: Project

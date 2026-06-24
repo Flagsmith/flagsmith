@@ -5,7 +5,7 @@ from unittest import mock
 
 import pytest
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -377,22 +377,22 @@ def transient_identifier(
     "identifier_data,expected_identifier",
     [
         pytest.param(
-            lazy_fixture("existing_identity_identifier_data"),
-            lazy_fixture("identity_identifier"),
+            lf("existing_identity_identifier_data"),
+            lf("identity_identifier"),
             id="existing-identifier",
         ),
         pytest.param({"identifier": "unseen"}, "unseen", id="new-identifier"),
         pytest.param(
             {"identifier": ""},
-            lazy_fixture("transient_identifier"),
+            lf("transient_identifier"),
             id="blank-identifier",
         ),
         pytest.param(
             {"identifier": None},
-            lazy_fixture("transient_identifier"),
+            lf("transient_identifier"),
             id="null-identifier",
         ),
-        pytest.param({}, lazy_fixture("transient_identifier"), id="missing-identifier"),
+        pytest.param({}, lf("transient_identifier"), id="missing-identifier"),
     ],
 )
 def test_get_feature_states_for_identity__segment_matching_traits__returns_segment_override(

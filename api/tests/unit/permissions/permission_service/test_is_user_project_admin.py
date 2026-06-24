@@ -1,7 +1,7 @@
 import typing
 
 import pytest
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 
 from organisations.models import Organisation, UserOrganisation
 from permissions.permission_service import is_user_project_admin
@@ -24,8 +24,8 @@ def test_is_user_project_admin__org_admin__returns_true(admin_user, project):  #
 @pytest.mark.parametrize(
     "project_admin",
     [
-        (lazy_fixture("project_admin_via_user_permission")),
-        (lazy_fixture("project_admin_via_user_permission_group")),
+        (lf("project_admin_via_user_permission")),
+        (lf("project_admin_via_user_permission_group")),
     ],
 )
 def test_is_user_project_admin__project_admin__returns_true(

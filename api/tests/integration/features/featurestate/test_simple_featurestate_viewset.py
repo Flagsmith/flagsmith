@@ -2,13 +2,13 @@ import json
 
 import pytest
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from rest_framework import status
 
 
 @pytest.mark.parametrize(
     "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+    [(lf("admin_master_api_key_client")), (lf("admin_client"))],
 )
 def test_create_feature_state__identity_override__returns_201(  # type: ignore[no-untyped-def]
     client, environment, identity, feature
@@ -34,7 +34,7 @@ def test_create_feature_state__identity_override__returns_201(  # type: ignore[n
 
 @pytest.mark.parametrize(
     "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+    [(lf("admin_master_api_key_client")), (lf("admin_client"))],
 )
 def test_create_feature_state__identity_with_identifier__returns_201(  # type: ignore[no-untyped-def]
     client, environment, identity, feature, identity_identifier
@@ -60,7 +60,7 @@ def test_create_feature_state__identity_with_identifier__returns_201(  # type: i
 
 @pytest.mark.parametrize(
     "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+    [(lf("admin_master_api_key_client")), (lf("admin_client"))],
 )
 def test_list_feature_states__filter_by_environment__returns_environment_states(  # type: ignore[no-untyped-def]
     client, environment, feature
@@ -82,7 +82,7 @@ def test_list_feature_states__filter_by_environment__returns_environment_states(
 
 @pytest.mark.parametrize(
     "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+    [(lf("admin_master_api_key_client")), (lf("admin_client"))],
 )
 def test_update_feature_state__new_value__returns_updated_value(  # type: ignore[no-untyped-def]
     client, environment, feature_state, feature, identity
@@ -109,7 +109,7 @@ def test_update_feature_state__new_value__returns_updated_value(  # type: ignore
 
 @pytest.mark.parametrize(
     "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+    [(lf("admin_master_api_key_client")), (lf("admin_client"))],
 )
 def test_update_feature_state__identity_with_identifier__returns_updated_value(  # type: ignore[no-untyped-def]
     client, environment, identity_featurestate, feature, identity, identity_identifier

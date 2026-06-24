@@ -1,5 +1,5 @@
 import pytest
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock import MockerFixture
 
 from api_keys.models import MasterAPIKey
@@ -15,11 +15,11 @@ from webhooks.webhooks import WebhookEventType
 @pytest.mark.parametrize(
     "user, api_key, changed_by",
     [
-        (lazy_fixture("admin_user"), None, lazy_fixture("admin_user_email")),
+        (lf("admin_user"), None, lf("admin_user_email")),
         (
             None,
-            lazy_fixture("master_api_key_object"),
-            lazy_fixture("master_api_key_name"),
+            lf("master_api_key_object"),
+            lf("master_api_key_name"),
         ),
     ],
 )

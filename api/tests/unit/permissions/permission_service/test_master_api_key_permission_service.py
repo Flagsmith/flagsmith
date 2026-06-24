@@ -1,5 +1,5 @@
 import pytest
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 
 from environments.permissions.models import EnvironmentPermissionModel
 from organisations.permissions.models import OrganisationPermissionModel
@@ -16,16 +16,16 @@ from projects.models import ProjectPermissionModel
 @pytest.mark.parametrize(
     "for_project, for_master_api_key, expected_is_admin",
     [
-        (lazy_fixture("project"), lazy_fixture("admin_master_api_key_object"), True),
-        (lazy_fixture("project"), lazy_fixture("master_api_key_object"), False),
+        (lf("project"), lf("admin_master_api_key_object"), True),
+        (lf("project"), lf("master_api_key_object"), False),
         (
-            lazy_fixture("organisation_two_project_one"),
-            lazy_fixture("admin_master_api_key_object"),
+            lf("organisation_two_project_one"),
+            lf("admin_master_api_key_object"),
             False,
         ),
         (
-            lazy_fixture("organisation_two_project_one"),
-            lazy_fixture("master_api_key_object"),
+            lf("organisation_two_project_one"),
+            lf("master_api_key_object"),
             False,
         ),
     ],
@@ -48,19 +48,19 @@ def test_is_master_api_key_project_admin__given_key_and_project__returns_expecte
     "for_environment, for_master_api_key, expected_is_admin",
     [
         (
-            lazy_fixture("environment"),
-            lazy_fixture("admin_master_api_key_object"),
+            lf("environment"),
+            lf("admin_master_api_key_object"),
             True,
         ),
-        (lazy_fixture("environment"), lazy_fixture("master_api_key_object"), False),
+        (lf("environment"), lf("master_api_key_object"), False),
         (
-            lazy_fixture("organisation_two_project_one_environment_one"),
-            lazy_fixture("admin_master_api_key_object"),
+            lf("organisation_two_project_one_environment_one"),
+            lf("admin_master_api_key_object"),
             False,
         ),
         (
-            lazy_fixture("organisation_two_project_one_environment_one"),
-            lazy_fixture("master_api_key_object"),
+            lf("organisation_two_project_one_environment_one"),
+            lf("master_api_key_object"),
             False,
         ),
     ],
@@ -81,16 +81,16 @@ def test_is_master_api_key_environment_admin__given_key_and_environment__returns
 @pytest.mark.parametrize(
     "for_project, for_master_api_key, expected_count",
     [
-        (lazy_fixture("project"), lazy_fixture("admin_master_api_key_object"), 1),
-        (lazy_fixture("project"), lazy_fixture("master_api_key_object"), 0),
+        (lf("project"), lf("admin_master_api_key_object"), 1),
+        (lf("project"), lf("master_api_key_object"), 0),
         (
-            lazy_fixture("organisation_two_project_one"),
-            lazy_fixture("master_api_key_object"),
+            lf("organisation_two_project_one"),
+            lf("master_api_key_object"),
             0,
         ),
         (
-            lazy_fixture("organisation_two_project_one"),
-            lazy_fixture("admin_master_api_key_object"),
+            lf("organisation_two_project_one"),
+            lf("admin_master_api_key_object"),
             0,
         ),
     ],
@@ -116,16 +116,16 @@ def test_get_permitted_projects_for_master_api_key__given_key__returns_expected_
 @pytest.mark.parametrize(
     "for_project, for_master_api_key, expected_count",
     [
-        (lazy_fixture("project"), lazy_fixture("admin_master_api_key_object"), 2),
-        (lazy_fixture("project"), lazy_fixture("master_api_key_object"), 0),
+        (lf("project"), lf("admin_master_api_key_object"), 2),
+        (lf("project"), lf("master_api_key_object"), 0),
         (
-            lazy_fixture("organisation_two_project_one"),
-            lazy_fixture("master_api_key_object"),
+            lf("organisation_two_project_one"),
+            lf("master_api_key_object"),
             0,
         ),
         (
-            lazy_fixture("organisation_two_project_one"),
-            lazy_fixture("admin_master_api_key_object"),
+            lf("organisation_two_project_one"),
+            lf("admin_master_api_key_object"),
             0,
         ),
     ],
@@ -157,19 +157,19 @@ def test_get_permitted_environments_for_master_api_key__given_key_and_project__r
     "for_organisation, for_master_api_key, expected_has_permission",
     [
         (
-            lazy_fixture("organisation"),
-            lazy_fixture("admin_master_api_key_object"),
+            lf("organisation"),
+            lf("admin_master_api_key_object"),
             True,
         ),
-        (lazy_fixture("organisation"), lazy_fixture("master_api_key_object"), False),
+        (lf("organisation"), lf("master_api_key_object"), False),
         (
-            lazy_fixture("organisation_two"),
-            lazy_fixture("master_api_key_object"),
+            lf("organisation_two"),
+            lf("master_api_key_object"),
             False,
         ),
         (
-            lazy_fixture("organisation_two"),
-            lazy_fixture("admin_master_api_key_object"),
+            lf("organisation_two"),
+            lf("admin_master_api_key_object"),
             False,
         ),
     ],

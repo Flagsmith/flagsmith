@@ -3,7 +3,7 @@ import pytest
 from botocore.exceptions import ClientError
 from django.conf import settings
 from moto import mock_s3  # type: ignore[import-untyped]
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock import MockerFixture
 
 from sse.dataclasses import SSEAccessLogs
@@ -35,12 +35,12 @@ def test_send_environment_update_message_for_project__sse_enabled__schedules_tas
     "test_settings, test_project",
     [
         (
-            lazy_fixture("sse_enabled_settings"),
-            lazy_fixture("project"),
+            lf("sse_enabled_settings"),
+            lf("project"),
         ),
         (
-            lazy_fixture("sse_disabled_settings"),
-            lazy_fixture("realtime_enabled_project"),
+            lf("sse_disabled_settings"),
+            lf("realtime_enabled_project"),
         ),
     ],
 )
@@ -63,12 +63,12 @@ def test_send_environment_update_message_for_project__sse_or_realtime_disabled__
     "test_settings, test_environment ",
     [
         (
-            lazy_fixture("sse_enabled_settings"),
-            lazy_fixture("environment"),
+            lf("sse_enabled_settings"),
+            lf("environment"),
         ),
         (
-            lazy_fixture("sse_disabled_settings"),
-            lazy_fixture("realtime_enabled_project_environment_one"),
+            lf("sse_disabled_settings"),
+            lf("realtime_enabled_project_environment_one"),
         ),
     ],
 )

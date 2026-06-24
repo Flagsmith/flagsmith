@@ -8,7 +8,7 @@ import pytest
 from django.urls import reverse
 from mypy_boto3_dynamodb.service_resource import Table
 from mypy_boto3_dynamodb.type_defs import TableAttributeValueTypeDef
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.exceptions import NotFound
@@ -727,9 +727,7 @@ def test_edge_identities_create_featurestate__invalid_mv_allocation__returns_400
     assert "multivariate_feature_state_values" in response.json()
 
 
-@pytest.mark.parametrize(
-    "lazy_feature", [(lazy_fixture("feature")), (lazy_fixture("feature_name"))]
-)
+@pytest.mark.parametrize("lazy_feature", [(lf("feature")), (lf("feature_name"))])
 def test_edge_identities_with_identifier_create_featurestate__valid_data__creates_override(  # type: ignore[no-untyped-def]
     dynamodb_wrapper_v2,
     admin_client,
@@ -793,9 +791,7 @@ def test_edge_identities_with_identifier_create_featurestate__valid_data__create
     assert actual_feature_state["featurestate_uuid"] is not None
 
 
-@pytest.mark.parametrize(
-    "lazy_feature", [(lazy_fixture("feature")), (lazy_fixture("feature_name"))]
-)
+@pytest.mark.parametrize("lazy_feature", [(lf("feature")), (lf("feature_name"))])
 def test_edge_identities_with_identifier_delete_featurestate__valid_feature__removes_override(  # type: ignore[no-untyped-def]
     dynamodb_wrapper_v2,
     admin_client,

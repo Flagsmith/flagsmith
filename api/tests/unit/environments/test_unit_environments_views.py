@@ -10,7 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from flag_engine.segments.constants import EQUAL
 from pytest_django import DjangoAssertNumQueries
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -198,11 +198,11 @@ def test_create_environment__valid_data__creates_audit_log_entry(
     "client, master_api_key, author",
     [
         (
-            lazy_fixture("admin_master_api_key_client"),
-            lazy_fixture("admin_master_api_key_object"),
+            lf("admin_master_api_key_client"),
+            lf("admin_master_api_key_object"),
             None,
         ),
-        (lazy_fixture("admin_client_original"), None, lazy_fixture("admin_user")),
+        (lf("admin_client_original"), None, lf("admin_user")),
     ],
 )
 def test_update_feature_state__valid_data__creates_audit_log_entry(
@@ -614,8 +614,8 @@ def test_delete_api_key__existing_key__deletes_key(
 @pytest.mark.parametrize(
     "client, is_admin_master_api_key_client",
     [
-        (lazy_fixture("admin_master_api_key_client"), True),
-        (lazy_fixture("admin_client_original"), False),
+        (lf("admin_master_api_key_client"), True),
+        (lf("admin_client_original"), False),
     ],
 )
 def test_create_environment__valid_data__returns_201_with_defaults(  # type: ignore[no-untyped-def]

@@ -6,7 +6,7 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.utils import timezone
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock import MockerFixture
 
 from environments.identities.models import Identity
@@ -489,7 +489,7 @@ def test_feature_state_gt__environment_default__returns_expected(
     "feature_identity, expected_result",
     [
         (
-            lazy_fixture("identity"),
+            lf("identity"),
             "Identity test_identity - Project Test Project - Environment Test Environment - Feature Test Feature1 - Enabled: False",
         ),
         (

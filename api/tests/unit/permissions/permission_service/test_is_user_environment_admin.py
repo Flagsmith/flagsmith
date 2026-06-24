@@ -2,7 +2,7 @@ import typing
 
 import pytest
 from django.conf import settings
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 
 from environments.models import Environment
 from environments.permissions.models import (
@@ -28,8 +28,8 @@ def test_is_user_environment_admin__org_admin__returns_true(admin_user, environm
 @pytest.mark.parametrize(
     "project_admin",
     [
-        (lazy_fixture("project_admin_via_user_permission")),
-        (lazy_fixture("project_admin_via_user_permission_group")),
+        (lf("project_admin_via_user_permission")),
+        (lf("project_admin_via_user_permission_group")),
     ],
 )
 def test_is_user_environment_admin__project_admin__returns_true(
@@ -47,8 +47,8 @@ def test_is_user_environment_admin__project_admin__returns_true(
 @pytest.mark.parametrize(
     "environment_admin",
     [
-        (lazy_fixture("environment_admin_via_user_permission")),
-        (lazy_fixture("environment_admin_via_user_permission_group")),
+        (lf("environment_admin_via_user_permission")),
+        (lf("environment_admin_via_user_permission_group")),
     ],
 )
 def test_is_user_environment_admin__environment_admin__returns_true(  # type: ignore[no-untyped-def]

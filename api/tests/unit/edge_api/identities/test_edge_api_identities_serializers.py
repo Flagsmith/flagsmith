@@ -1,7 +1,7 @@
 import pytest
 from django.test import RequestFactory
 from django.utils import timezone
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf
 from pytest_mock import MockerFixture
 
 from api_keys.user import APIKeyUser
@@ -61,8 +61,8 @@ def test_edge_identity_feature_state_serializer__missing_mvfsvs__saves_successfu
 @pytest.mark.parametrize(
     "user",
     [
-        lazy_fixture("api_key_user"),
-        lazy_fixture("admin_user"),
+        lf("api_key_user"),
+        lf("admin_user"),
     ],
 )
 def test_edge_identity_feature_state_serializer__new_override__calls_webhook(  # type: ignore[no-untyped-def]
