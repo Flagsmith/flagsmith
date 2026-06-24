@@ -30,7 +30,6 @@ class FeatureLifecycleCountsAPIView(APIView):
         operation_id="get_feature_lifecycle_counts",
         description=(
             "Retrieves the count of features in each lifecycle stage "
-            "(new, live, stale, permanent, needs_monitoring, to_remove) "
             "for the specified environment."
         ),
         responses={200: FeatureLifecycleCountsSerializer},
