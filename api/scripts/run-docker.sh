@@ -45,9 +45,6 @@ run_task_processor() {
     if [ -n "$TASK_PROCESSOR_DATABASE_URL" ] || [ -n "$TASK_PROCESSOR_DATABASE_NAME" ]; then
         waitfordb --waitfor 30 --migrations --database task_processor
     fi
-    if [ -n "$CLICKHOUSE_URL" ] || [ -n "$CLICKHOUSE_HOST" ]; then
-        waitfordb --waitfor 30 --migrations --database clickhouse
-    fi
     exec flagsmith start \
              --bind 0.0.0.0:8000 \
              --access-logfile $ACCESS_LOG_LOCATION \
