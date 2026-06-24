@@ -66,7 +66,7 @@ class APIUsageRaw(models.Model):
 
 class AbstractBucket(LifecycleModelMixin, models.Model):  # type: ignore[misc]
     bucket_size = models.PositiveIntegerField(help_text="Bucket size in minutes")
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(db_index=True)
     total_count = models.PositiveIntegerField()
     environment_id = models.PositiveIntegerField()
     labels = models.JSONField(default=dict)
