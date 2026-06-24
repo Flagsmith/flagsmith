@@ -16,7 +16,6 @@ from rest_framework.exceptions import ValidationError
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
-from core.dataclasses import AuthorData
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
@@ -36,6 +35,7 @@ from experimentation.dataclasses import (
     MetricSpec,
     ResultsAggregates,
     ResultsSummary,
+    RolloutSpec,
     WarehouseEventStats,
 )
 from experimentation.models import (
@@ -54,7 +54,7 @@ from experimentation.stats import (
     srm_p_value,
 )
 from features.models import FeatureState
-from features.versioning.dataclasses import FlagChangeSet, MultivariateValueChangeSet
+from features.versioning.dataclasses import FlagChangeSet
 from features.versioning.versioning_service import update_flag
 from integrations.flagsmith.client import get_openfeature_client
 from segments.models import Condition, Segment, SegmentRule
@@ -65,7 +65,6 @@ if typing.TYPE_CHECKING:
 
     from experimentation.models import Experiment, Metric, WarehouseConnection
     from experimentation.types import ExposureGranularity
-    from features.feature_states.models import FeatureValueType
     from organisations.models import Organisation
     from users.models import FFAdminUser
 
@@ -538,67 +537,59 @@ def _create_rollout_segment(
     return segment
 
 
-def create_experiment_rollout(
-    experiment: Experiment,
-    *,
-    enabled: bool,
-    rollout_percentage: float,
-    feature_state_value: str,
-    value_type: FeatureValueType,
-    multivariate_values: list[MultivariateValueChangeSet],
-    author: AuthorData,
-) -> None:
-    segment = _create_rollout_segment(experiment, rollout_percentage)
-    experiment.rollout_segment = segment
-    experiment.save()
-    update_flag(
-        experiment.environment,
-        experiment.feature,
-        FlagChangeSet(
-            author=author,
-            enabled=enabled,
-            feature_state_value=feature_state_value,
-            type_=value_type,
-            segment_id=segment.id,
-            multivariate_values=multivariate_values,
-        ),
+def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
+    option_ids = [v.multivariate_feature_option_id for v in spec.multivariate_values]
+    if len(option_ids) != len(set(option_ids)):
+        raise ValidationError("Multivariate options must be unique")
+    valid_option_ids = set(
+        experiment.feature.multivariate_options.values_list("id", flat=True)
     )
-
-
-def update_experiment_rollout(
-    experiment: Experiment,
-    *,
-    enabled: bool,
-    rollout_percentage: float,
-    feature_state_value: str,
-    value_type: FeatureValueType,
-    multivariate_values: list[MultivariateValueChangeSet],
-    author: AuthorData,
-) -> None:
-    if experiment.status in (ExperimentStatus.RUNNING, ExperimentStatus.COMPLETED):
+    if invalid := set(option_ids) - valid_option_ids:
         raise ValidationError(
-            f"Cannot update the rollout of a {experiment.status} experiment."
+            f"Multivariate options {sorted(invalid)} do not belong to the feature"
         )
-    segment = experiment.rollout_segment
-    if segment is None:
-        raise ValidationError("Experiment has no rollout to update.")
+    total = sum(v.percentage_allocation for v in spec.multivariate_values)
+    if total > 100:
+        raise ValidationError(
+            f"Multivariate allocations must not exceed 100%, got {total}%."
+        )
 
-    with transaction.atomic():
+
+def _sync_rollout_segment(
+    experiment: Experiment, rollout_percentage: float
+) -> Segment:
+    segment = experiment.rollout_segment
+    if segment is not None:
         condition = Condition.objects.get(
             rule__segment=segment, operator=PERCENTAGE_SPLIT
         )
         condition.value = str(rollout_percentage)
         condition.save()
+        return segment
+    segment = _create_rollout_segment(experiment, rollout_percentage)
+    experiment.rollout_segment = segment
+    experiment.save()
+    return segment
+
+
+def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
+    if experiment.status in (ExperimentStatus.RUNNING, ExperimentStatus.COMPLETED):
+        raise ValidationError(
+            f"Cannot change the rollout of a {experiment.status} experiment."
+        )
+    validate_rollout_spec(experiment, spec)
+    with transaction.atomic():
+        segment = _sync_rollout_segment(experiment, spec.rollout_percentage)
         update_flag(
             experiment.environment,
             experiment.feature,
             FlagChangeSet(
-                author=author,
-                enabled=enabled,
-                feature_state_value=feature_state_value,
-                type_=value_type,
+                author=spec.author,
+                enabled=spec.enabled,
+                feature_state_value=spec.feature_state_value,
+                type_=spec.value_type,
                 segment_id=segment.id,
-                multivariate_values=multivariate_values,
+                multivariate_values=spec.multivariate_values,
             ),
         )
 

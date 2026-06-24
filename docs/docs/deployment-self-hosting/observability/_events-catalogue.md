@@ -476,7 +476,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:636`
+ - `api/experimentation/services.py:627`
 
 Attributes:
  - `environment.id`
@@ -485,7 +485,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:616`
+ - `api/experimentation/services.py:607`
 
 Attributes:
  - `environment.id`
@@ -494,7 +494,7 @@ Attributes:
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:389`
+ - `api/experimentation/services.py:388`
 
 Attributes:
  - `environment.id`
@@ -504,7 +504,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:375`
+ - `api/experimentation/services.py:374`
 
 Attributes:
  - `environment.id`

@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
-from experimentation.dataclasses import WarehouseEventStats
+from experimentation.dataclasses import RolloutSpec, WarehouseEventStats
 from experimentation.metric_definitions import validate_metric_definition
 from experimentation.models import (
     ExpectedDirection,
@@ -19,7 +19,7 @@ from experimentation.models import (
     WarehouseConnection,
     WarehouseType,
 )
-from experimentation.services import create_experiment_rollout
+from experimentation.services import apply_experiment_rollout
 from experimentation.types import (
     SNOWFLAKE_DEFAULTS,
     MetricExperimentResult,
@@ -28,7 +28,6 @@ from experimentation.types import (
 from features.feature_states.serializers import (
     FeatureValueSerializer,
     MultivariateValueSerializer,
-    validate_multivariate_state_values,
 )
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
@@ -226,22 +225,22 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
     )
 
     @staticmethod
-    def to_service_kwargs(data: dict[str, Any], request: Any) -> dict[str, Any]:
+    def to_spec(data: dict[str, Any], request: Any) -> RolloutSpec:
         value = data["feature_state_value"]
-        return {
-            "enabled": data["enabled"],
-            "rollout_percentage": data["rollout_percentage"],
-            "feature_state_value": value["value"],
-            "value_type": value["type"],
-            "multivariate_values": [
+        return RolloutSpec(
+            enabled=data["enabled"],
+            rollout_percentage=data["rollout_percentage"],
+            feature_state_value=value["value"],
+            value_type=value["type"],
+            multivariate_values=[
                 MultivariateValueChangeSet(
                     multivariate_feature_option_id=mv["multivariate_feature_option"],
                     percentage_allocation=mv["percentage_allocation"],
                 )
                 for mv in data.get("multivariate_feature_state_values", [])
             ],
-            "author": AuthorData.from_request(request),
-        }
+            author=AuthorData.from_request(request),
+        )
 
 
 class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -309,17 +308,7 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
                 }
             )
         self._validate_metrics(attrs.get("metrics") or [])
-        self._validate_rollout(attrs)
         return attrs
-
-    def _validate_rollout(self, attrs: dict[str, Any]) -> None:
-        rollout = attrs.get("experiment_rollout")
-        feature = attrs.get("feature")
-        if not rollout or feature is None:
-            return
-        validate_multivariate_state_values(
-            feature, rollout.get("multivariate_feature_state_values", [])
-        )
 
     def _validate_metrics(self, metrics: list[dict[str, Any]]) -> None:
         metric_ids = [entry["metric"].id for entry in metrics]
@@ -342,9 +331,9 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
                 for entry in metrics
             )
             if rollout is not None:
-                create_experiment_rollout(
+                apply_experiment_rollout(
                     experiment,
-                    **ExperimentRolloutSerializer.to_service_kwargs(
+                    ExperimentRolloutSerializer.to_spec(
                         rollout, self.context["request"]
                     ),
                 )

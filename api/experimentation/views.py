@@ -49,20 +49,17 @@ from experimentation.serializers import (
 )
 from experimentation.services import (
     annotate_warehouse_event_stats,
+    apply_experiment_rollout,
     create_experiment_audit_log,
     create_metric_audit_log,
     create_warehouse_audit_log,
     mark_warehouse_pending_connection,
     refresh_warehouse_connection_status,
     transition_experiment_status,
-    update_experiment_rollout,
 )
 from experimentation.tasks import (
     compute_experiment_exposures,
     compute_experiment_results,
-)
-from features.feature_states.serializers import (
-    validate_multivariate_state_values,
 )
 from users.models import FFAdminUser
 
@@ -300,13 +297,9 @@ class ExperimentViewSet(
         experiment: Experiment = self.get_object()
         serializer = ExperimentRolloutSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
-        validate_multivariate_state_values(
-            experiment.feature, data.get("multivariate_feature_state_values", [])
-        )
-        update_experiment_rollout(
+        apply_experiment_rollout(
             experiment,
-            **ExperimentRolloutSerializer.to_service_kwargs(data, request),
+            ExperimentRolloutSerializer.to_spec(serializer.validated_data, request),
         )
         return Response(self.get_serializer(experiment).data)
 

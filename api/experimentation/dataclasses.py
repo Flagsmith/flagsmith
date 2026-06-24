@@ -1,8 +1,21 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from core.dataclasses import AuthorData
 from experimentation.stats import Inference, VariantStats
 from experimentation.types import ExposureGranularity
+from features.feature_states.models import FeatureValueType
+from features.versioning.dataclasses import MultivariateValueChangeSet
+
+
+@dataclass(frozen=True)
+class RolloutSpec:
+    enabled: bool
+    rollout_percentage: float
+    feature_state_value: str
+    value_type: FeatureValueType
+    multivariate_values: list[MultivariateValueChangeSet]
+    author: AuthorData
 
 
 @dataclass(frozen=True)
