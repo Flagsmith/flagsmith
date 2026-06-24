@@ -195,13 +195,15 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         limit = query_serializer.validated_data["limit"]
         cursor = query_serializer.validated_data.get("cursor")
         with flagsmith_segment_membership_read_duration_seconds.time():
+            # Fetch one extra row to detect whether a further page exists, so the
+            # last page doesn't advertise a phantom (empty) next page.
             members = get_segment_members_page(
-                segment, environment, cursor=cursor, limit=limit
+                segment, environment, cursor=cursor, limit=limit + 1
             )
 
-        # A full page may have more rows; expose the last identifier as the
-        # next cursor. A short page is the last page.
-        next_cursor = members[-1]["identifier"] if len(members) == limit else None
+        has_more = len(members) > limit
+        members = members[:limit]
+        next_cursor = members[-1]["identifier"] if has_more else None
         return Response({"results": members, "next_cursor": next_cursor})
 
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:

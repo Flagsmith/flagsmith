@@ -139,7 +139,7 @@ def test_get_segment_members__matching_identities__returns_members(
 
 
 @pytest.mark.clickhouse
-def test_get_segment_members__full_page__returns_next_cursor(
+def test_get_segment_members__more_results_than_limit__returns_next_cursor(
     segment_membership_identities: None,
     admin_client: APIClient,
     project: int,
@@ -147,7 +147,38 @@ def test_get_segment_members__full_page__returns_next_cursor(
     segment: int,
     enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
+    # Given two matching identities (alice, bob)
+    enable_features("segment_membership_inspection")
+
+    # When a page smaller than the match count is requested
+    response = admin_client.get(
+        f"/api/v1/projects/{project}/segments/{segment}/members/?environment={environment}&limit=1"
+    )
+
+    # Then there's a further page, so next_cursor is the last identifier
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "results": [
+            {
+                "identifier": "alice",
+                "identity_key": "alice_key",
+                "traits": {"foo": "bar"},
+            },
+        ],
+        "next_cursor": "alice",
+    }
+
+
+@pytest.mark.clickhouse
+def test_get_segment_members__limit_equals_match_count__no_next_cursor(
+    segment_membership_identities: None,
+    admin_client: APIClient,
+    project: int,
+    environment: int,
+    segment: int,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given two matching identities and a limit of exactly two
     enable_features("segment_membership_inspection")
 
     # When
@@ -155,7 +186,8 @@ def test_get_segment_members__full_page__returns_next_cursor(
         f"/api/v1/projects/{project}/segments/{segment}/members/?environment={environment}&limit=2"
     )
 
-    # Then
+    # Then there's no further page -- next_cursor is null rather than advertising
+    # a phantom empty page at the exact boundary
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
         "results": [
@@ -166,5 +198,5 @@ def test_get_segment_members__full_page__returns_next_cursor(
             },
             {"identifier": "bob", "identity_key": "bob_key", "traits": {"foo": "bar"}},
         ],
-        "next_cursor": "bob",
+        "next_cursor": None,
     }
