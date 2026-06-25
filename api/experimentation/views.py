@@ -38,6 +38,7 @@ from experimentation.permissions import (
     WarehouseConnectionPermission,
 )
 from experimentation.serializers import (
+    ExperimentDetailSerializer,
     ExperimentExposuresSerializer,
     ExperimentListSerializer,
     ExperimentMetricSerializer,
@@ -178,7 +179,9 @@ class ExperimentViewSet(
         return context
 
     def get_serializer_class(self) -> type[BaseSerializer[Experiment]]:
-        if self.action in ("list", "retrieve", "start", "pause", "complete", "rollout"):
+        if self.action == "retrieve":
+            return ExperimentDetailSerializer
+        if self.action in ("list", "start", "pause", "complete", "rollout"):
             return ExperimentListSerializer
         return ExperimentSerializer
 

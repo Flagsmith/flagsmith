@@ -398,6 +398,9 @@ class ExperimentListSerializer(ExperimentSerializer):
         many=True,
         read_only=True,
     )
+
+
+class ExperimentDetailSerializer(ExperimentListSerializer):
     experiment_rollout = serializers.SerializerMethodField()
 
     def get_experiment_rollout(self, experiment: Experiment) -> dict[str, Any] | None:

@@ -1549,3 +1549,28 @@ def test_get_experiment_rollout__v2_versioning__returns_representation(
         (mv["multivariate_feature_option"], mv["percentage_allocation"])
         for mv in rollout["multivariate_feature_state_values"]
     } == {(option_a.id, 60.0), (option_b.id, 40.0)}
+
+
+def test_get_experiment_rollout__boolean_value__returns_lowercase_string(
+    experiment: Experiment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=20.0,
+            feature_state_value="true",
+            value_type="boolean",
+            multivariate_values=[],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # When
+    rollout = services.get_experiment_rollout(experiment)
+
+    # Then
+    assert rollout is not None
+    assert rollout["feature_state_value"] == {"type": "boolean", "value": "true"}

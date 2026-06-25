@@ -617,7 +617,9 @@ def get_experiment_rollout(experiment: Experiment) -> dict[str, typing.Any] | No
         "rollout_percentage": float(condition.value or 0),
         "feature_state_value": {
             "type": _ROLLOUT_VALUE_TYPE.get(value.type or STRING, "string"),
-            "value": str(value.value),
+            "value": (
+                str(value.value).lower() if value.type == BOOLEAN else str(value.value)
+            ),
         },
         "multivariate_feature_state_values": [
             {
