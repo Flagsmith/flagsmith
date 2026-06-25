@@ -37,8 +37,16 @@ const OnboardingFlagsTable: FC<OnboardingFlagsTableProps> = ({
 }) => {
   const waiting = status === 'waiting'
   return (
-    <section className='onboarding-flags d-flex flex-column align-items-center'>
-      <h3 className='onboarding-flags__title m-0 fw-bold'>Your flags</h3>
+    <section
+      className='onboarding-flags d-flex flex-column align-items-center'
+      aria-labelledby='onboarding-flags-title'
+    >
+      <h3
+        className='onboarding-flags__title m-0 fw-bold'
+        id='onboarding-flags-title'
+      >
+        Your flags
+      </h3>
       <div
         className={classNames(
           'onboarding-flags__table bg-surface-default rounded-xl',
@@ -76,6 +84,7 @@ const OnboardingFlagsTable: FC<OnboardingFlagsTableProps> = ({
                 checked={flag.enabled}
                 disabled={togglingFlag === flag.name}
                 onChange={(enabled) => onToggle(flag, enabled)}
+                aria-label={`Toggle ${flag.name}`}
               />
             </div>
           </div>

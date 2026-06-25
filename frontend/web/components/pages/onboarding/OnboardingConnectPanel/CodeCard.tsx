@@ -12,12 +12,17 @@ export type CodeCardProps = {
   headerLeft: ReactNode
   // Fires when the user copies the code (drives the verify checklist).
   onCopy?: () => void
+  // Accessible name for the copy button. The visible label is the same ("Copy
+  // Code") on every card, so this distinguishes them for screen readers;
+  // defaults to the visible label.
+  copyLabel?: string
 }
 
 // Owns its own "Copied" feedback so each card is independent. Highlight escapes
 // the body for display; Copy uses the raw string.
 const CodeCard: FC<CodeCardProps> = ({
   code,
+  copyLabel,
   headerLeft,
   language,
   onCopy,
@@ -32,6 +37,7 @@ const CodeCard: FC<CodeCardProps> = ({
           theme='primary'
           size='small'
           className='ms-auto'
+          aria-label={copyLabel}
           onClick={() => {
             copy(code)
             onCopy?.()

@@ -46,6 +46,7 @@ const ConnectYourCodePanel: FC<ConnectYourCodePanelProps> = ({
           code={installCode}
           language='bash'
           onCopy={onCopyInstall}
+          copyLabel='Copy install command'
           headerLeft={
             sdkSnippet.installYarn ? (
               <div className='onboarding-connect__pm d-inline-flex'>
@@ -81,6 +82,7 @@ const ConnectYourCodePanel: FC<ConnectYourCodePanelProps> = ({
           code={sdkSnippet.wire}
           language={sdkSnippet.language}
           onCopy={onCopyWire}
+          copyLabel='Copy code snippet'
           headerLeft={
             <span className='onboarding-connect__codecard-lang'>
               {sdkLang.label}
