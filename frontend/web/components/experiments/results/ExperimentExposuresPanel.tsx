@@ -4,7 +4,7 @@ import { LineChart } from 'components/charts'
 import ContentCard from 'components/base/grid/ContentCard'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
-import useCountdown, { formatCountdown } from 'common/hooks/useCountdown'
+import useCountdown from 'common/hooks/useCountdown'
 import { colorIconDanger } from 'common/theme/tokens'
 import {
   useGetExperimentExposuresQuery,
@@ -24,6 +24,7 @@ import {
   REFRESH_POLL_INTERVAL_MS,
   canRefreshExposures,
   deriveExposuresViewState,
+  getExposuresRefreshLabel,
 } from './exposuresViewState'
 import RefreshControl from './RefreshControl'
 import './results.scss'
@@ -150,6 +151,8 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
     }
   }, [refresh, environmentId, experiment.id, startRetryCountdown])
 
+  const refreshLabel = getExposuresRefreshLabel(retryAfter, isRefreshing)
+
   const action = (
     <RefreshControl
       disabled={!availability.canRefresh || retryAfter !== null}
@@ -160,9 +163,15 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
       }
       isRefreshing={isRefreshing}
       label={
-        retryAfter !== null
-          ? `Computing, retry in ${formatCountdown(retryAfter)}`
-          : undefined
+        refreshLabel && (
+          <span
+            className={
+              refreshLabel.tone === 'danger' ? 'text-danger' : undefined
+            }
+          >
+            {refreshLabel.message}
+          </span>
+        )
       }
       onRefresh={handleRefresh}
     />
@@ -178,11 +187,6 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
     >
       {chart && hasData && (
         <>
-          {isRefreshing && (
-            <div className='text-muted fs-caption mb-2'>
-              Computing… this will refresh automatically.
-            </div>
-          )}
           <LineChart
             colorMap={chart.colorMap}
             data={chart.points}
