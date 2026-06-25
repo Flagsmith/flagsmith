@@ -5,6 +5,7 @@ import {
 } from 'common/services/useFeatureState'
 import { useGetTagsQuery } from 'common/services/useTag'
 import { Environment, Tag } from 'common/types/responses'
+import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
 
 // Resolves the onboarding demo flag's Development feature state and exposes a
 // real, persisted toggle (updateFeatureState) for the flags table. Finds the
@@ -36,13 +37,16 @@ export const useOnboardingFlag = (
   )
   const state = states?.results?.[0]
 
-  const [updateFeatureState, { isLoading }] = useUpdateFeatureStateMutation()
+  const [updateFeatureState] = useUpdateFeatureStateMutation()
 
-  // Persisted toggle. Not optimistic: the Switch reflects the RTK-cached state
-  // and is disabled mid-flight, so a failure just leaves the old value. Toast on
-  // failure, matching the header rename UX, rather than failing silently.
+  // Optimistic toggle, mirroring the product feature row: the switch flips
+  // instantly via displayEnabled and reverts on failure, rather than waiting for
+  // the update + refetch round-trip (which left the switch visibly stuck).
+  const { displayEnabled, isLoading, revertToggle, startToggle } =
+    useFeatureRowState(state?.enabled)
+
   const toggle = async (enabled: boolean) => {
-    if (!environment || !state) {
+    if (!environment || !state || !startToggle(enabled)) {
       return
     }
     try {
@@ -52,12 +56,13 @@ export const useOnboardingFlag = (
         environmentId: environment.api_key,
       }).unwrap()
     } catch {
+      revertToggle()
       toast('Couldn’t update your flag. Please try again.', 'danger')
     }
   }
 
   return {
-    enabled: !!state?.enabled,
+    enabled: !!displayEnabled,
     isToggling: isLoading,
     ready: !!state,
     tags,

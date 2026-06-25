@@ -21,6 +21,9 @@ export type OnboardingFlagsTableProps = {
   onToggle: (flag: OnboardingFlagRow, enabled: boolean) => void
   // Name of the flag whose toggle is mid-flight, so its Switch disables.
   togglingFlag?: string | null
+  // Whether the flag's state has loaded; the toggle stays disabled until then so
+  // a click can't no-op against an unresolved feature state. Defaults to true.
+  togglesReady?: boolean
 }
 
 // The "Your flags" card from the onboarding design: the pre-created flag(s) in a
@@ -33,6 +36,7 @@ const OnboardingFlagsTable: FC<OnboardingFlagsTableProps> = ({
   flags,
   onToggle,
   status,
+  togglesReady = true,
   togglingFlag,
 }) => {
   const waiting = status === 'waiting'
@@ -82,7 +86,12 @@ const OnboardingFlagsTable: FC<OnboardingFlagsTableProps> = ({
             <div className='onboarding-flags__toggle'>
               <Switch
                 checked={flag.enabled}
-                disabled={togglingFlag === flag.name}
+                // Locked until the app connects (the first evaluation arrives)
+                // and the flag state has loaded - the table is a dimmed preview
+                // until then, and an early click must not no-op.
+                disabled={
+                  waiting || !togglesReady || togglingFlag === flag.name
+                }
                 onChange={(enabled) => onToggle(flag, enabled)}
                 aria-label={`Toggle ${flag.name}`}
               />

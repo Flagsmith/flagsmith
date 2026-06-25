@@ -75,6 +75,7 @@ const OnboardingFlow: FC = () => {
   const {
     enabled: flagEnabled,
     isToggling,
+    ready: flagStateReady,
     tags: flagTags,
     toggle: toggleFlag,
   } = useOnboardingFlag(environment, projectId, featureName)
@@ -190,6 +191,7 @@ const OnboardingFlow: FC = () => {
         ]}
         onToggle={(_flag, next) => toggleFlag(next)}
         togglingFlag={isToggling ? featureName : null}
+        togglesReady={flagStateReady}
       />
       <div className='d-flex justify-content-end'>
         <Button theme='text' onClick={skipToApp}>
