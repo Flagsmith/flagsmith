@@ -18,7 +18,11 @@ from flagsmith_mcp.events import EventLoggingMiddleware
 from flagsmith_mcp.metrics import PrometheusMiddleware
 from flagsmith_mcp.middleware import RootRouterMiddleware
 from flagsmith_mcp.oauth import FlagsmithResourceAuth
-from flagsmith_mcp.telemetry import propagate_span_attributes, setup_telemetry
+from flagsmith_mcp.telemetry import (
+    propagate_span_attributes,
+    setup_sentry,
+    setup_telemetry,
+)
 
 ROUTE_MAPS = [
     RouteMap(tags={"mcp"}, mcp_type=MCPType.TOOL),
@@ -92,6 +96,7 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
 def run() -> None:
     settings = config.Settings()
     setup_telemetry(settings)
+    setup_sentry(settings)
     server = create_server(settings)
     if settings.metrics_port is not None:
         start_http_server(settings.metrics_port)

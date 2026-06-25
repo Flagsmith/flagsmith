@@ -117,6 +117,40 @@ def test_client_info_span_processor__outside_request_context__service_identity_o
     )
 
 
+def test_setup_sentry__no_dsn__init_not_called(mocker: MockerFixture) -> None:
+    # Given
+    mocker.patch.dict(os.environ, {}, clear=True)
+    sentry_sdk_mock = mocker.patch.object(telemetry, "sentry_sdk", autospec=True)
+    empty_settings = config.Settings()
+
+    # When
+    telemetry.setup_sentry(empty_settings)
+
+    # Then
+    sentry_sdk_mock.init.assert_not_called()
+
+
+def test_setup_sentry__dsn_set__initialises_error_capture(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch.dict(os.environ, {}, clear=True)
+    sentry_sdk_mock = mocker.patch.object(telemetry, "sentry_sdk", autospec=True)
+    settings = config.Settings(
+        sentry_dsn="https://public@sentry.example/1",
+        environment="staging",
+    )
+
+    # When
+    telemetry.setup_sentry(settings)
+
+    # Then
+    sentry_sdk_mock.init.assert_called_once_with(
+        dsn="https://public@sentry.example/1",
+        environment="staging",
+    )
+
+
 async def test_propagate_span_attributes__no_recording_span__headers_untouched() -> (
     None
 ):

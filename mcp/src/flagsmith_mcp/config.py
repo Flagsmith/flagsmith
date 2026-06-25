@@ -9,6 +9,10 @@ Transport = Literal["http", "stdio"]
 class Settings(BaseSettings):
     model_config = {"use_attribute_docstrings": True}
 
+    environment: Literal["local", "dev", "staging", "production"] = Field(
+        default="local",
+    )
+    """Deployment environment."""
     flagsmith_api_url: str = Field(
         default="https://api.flagsmith.com",
     )
@@ -47,6 +51,10 @@ class Settings(BaseSettings):
     )
     """Public base URL of this MCP server, advertised in OAuth protected-resource
     metadata. Override for HTTP deployments behind a proxy/public hostname."""
+    sentry_dsn: str | None = Field(
+        default=None,
+    )
+    """Sentry DSN for error reporting. Error capture is disabled when unset."""
 
     @model_validator(mode="after")
     def validate_stdio_token(self) -> "Settings":

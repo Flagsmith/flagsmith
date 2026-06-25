@@ -11,6 +11,7 @@ dependencies = [
     "opentelemetry-instrumentation-httpx>=0.46b0,<1.0.0", # Trace upstream API calls
     "prometheus-client>=0.21.0,<1.0.0",         # Export Prometheus metrics
     "pydantic-settings>=2.0.0,<3.0.0",          # Environment-driven configuration
+    "sentry-sdk>=2.63.0,<3.0.0",                # Capture errors and tracebacks
 ]
 
 [project.scripts]
