@@ -36,8 +36,8 @@
 
   &__legend {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    flex-wrap: wrap;
+    gap: 8px 16px;
   }
 
   &__legend-item {
