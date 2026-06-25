@@ -136,8 +136,17 @@ const App = class extends Component {
     }
 
     if (!AccountStore.getOrganisation() && !invite) {
-      // If user has no organisation redirect to /create
-      this.props.history.replace(`/create${query}`)
+      // New users with no organisation go through the single-page onboarding
+      // flow when it's enabled - it creates the organisation itself, so it
+      // replaces the legacy /create page. Everyone else still gets /create.
+      if (
+        AccountStore.getUser()?.isGettingStarted &&
+        Utils.getFlagsmithHasFeature('onboarding_quickstart_flow')
+      ) {
+        this.props.history.replace('/getting-started')
+      } else {
+        this.props.history.replace(`/create${query}`)
+      }
       return
     }
 
