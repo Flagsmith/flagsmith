@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.246.0](https://github.com/Flagsmith/flagsmith/compare/v2.245.0...v2.246.0) (2026-06-25)
+
+
+### Features
+
+* compare feature states across environments and segments ([#7806](https://github.com/Flagsmith/flagsmith/issues/7806)) ([b4f22f6](https://github.com/Flagsmith/flagsmith/commit/b4f22f64327802822bf61b10dec101faae88c3d5))
+* **experimentation:** experiment rollout with multivariate segment override ([#7851](https://github.com/Flagsmith/flagsmith/issues/7851)) ([4203446](https://github.com/Flagsmith/flagsmith/commit/420344691551aaf465a5c668516bd4b66de131f8))
+* **experimentation:** expose experiment rollout in API responses ([#7858](https://github.com/Flagsmith/flagsmith/issues/7858)) ([d79ed7e](https://github.com/Flagsmith/flagsmith/commit/d79ed7e1fa9c8f2cf948cd7a10e30be37690f43d))
+* **Feature Lifecycle:** Update API with feature lifecycle info ([#7789](https://github.com/Flagsmith/flagsmith/issues/7789)) ([824988c](https://github.com/Flagsmith/flagsmith/commit/824988c9760e314cb4b0607c1b6ff4a8549c1637))
+* in app mcp instructions ([#7438](https://github.com/Flagsmith/flagsmith/issues/7438)) ([ca07878](https://github.com/Flagsmith/flagsmith/commit/ca0787818c38aa7ba971608bac30081f9dad8048))
+* **Segment membership inspection:** Add segment members read endpoint ([#7861](https://github.com/Flagsmith/flagsmith/issues/7861)) ([c983f85](https://github.com/Flagsmith/flagsmith/commit/c983f85055871ffd4573756c4b27a8e08733a662))
+
+
+### Bug Fixes
+
+* **Change Requests:** Revamp docs, improve UX ([#7709](https://github.com/Flagsmith/flagsmith/issues/7709)) ([171d251](https://github.com/Flagsmith/flagsmith/commit/171d251e6a6d8087f90c3c37c9786ecc22984f3a))
+* **clickhouse:** Task processor startup queries ClickHouse migrations on every boot ([#7863](https://github.com/Flagsmith/flagsmith/issues/7863)) ([5b2f0cc](https://github.com/Flagsmith/flagsmith/commit/5b2f0cc2d4b2164dfc34b1855f5fc347590bcfdb))
+
+
+### Dependency Updates
+
+* **frontend:** update dependency http-proxy-middleware to v3 [security] ([#7830](https://github.com/Flagsmith/flagsmith/issues/7830)) ([d0d81d7](https://github.com/Flagsmith/flagsmith/commit/d0d81d7bc4af0bd70b1b6a6852462b20373bfd83))
+* Update flagsmith-private to 0.10.0 ([#7872](https://github.com/Flagsmith/flagsmith/issues/7872)) ([00696c5](https://github.com/Flagsmith/flagsmith/commit/00696c5c82e2d7cf5f783cf916cbe18cfd33e0b6))
+
 ## [2.245.0](https://github.com/Flagsmith/flagsmith/compare/v2.244.1...v2.245.0) (2026-06-23)
 
 
