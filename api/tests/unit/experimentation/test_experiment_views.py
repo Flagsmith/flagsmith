@@ -15,12 +15,14 @@ from rest_framework.test import APIClient
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from experimentation.constants import (
     EXPERIMENT_FLAG,
     EXPOSURES_REFRESH_MIN_INTERVAL,
     RESULTS_REFRESH_MIN_INTERVAL,
 )
+from experimentation.dataclasses import RolloutSpec
 from experimentation.models import (
     ExpectedDirection,
     Experiment,
@@ -31,17 +33,20 @@ from experimentation.models import (
     Metric,
 )
 from experimentation.serializers import ExperimentFeatureSerializer
+from experimentation.services import apply_experiment_rollout
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
 from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
+from features.versioning.dataclasses import MultivariateValueChangeSet
 from segments.models import Condition
 from tests.types import EnableFeaturesFixture
 
 if TYPE_CHECKING:
     from projects.models import Project
+    from users.models import FFAdminUser
 
 pytestmark = pytest.mark.django_db
 
@@ -650,6 +655,45 @@ def test_action__start__sets_started_at(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["started_at"] is not None
+
+
+def test_action_start__disabled_rollout__enables_override(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a configured but disabled rollout
+    enable_features(EXPERIMENT_FLAG)
+    option_a, option_b, _ = multivariate_options
+    apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=False,
+            rollout_percentage=20.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # When the experiment is started
+    response = admin_client_new.post(_action_url(environment, experiment, "start"))
+
+    # Then the rollout segment override is enabled
+    assert response.status_code == status.HTTP_200_OK
+    override = FeatureState.objects.get(
+        environment=environment,
+        feature=experiment.feature,
+        feature_segment__segment=experiment.rollout_segment,
+    )
+    assert override.enabled is True
 
 
 def test_action__complete__sets_ended_at(

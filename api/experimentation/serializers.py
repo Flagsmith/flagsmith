@@ -228,7 +228,7 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
     )
 
     @staticmethod
-    def to_spec(data: dict[str, Any], request: Any) -> RolloutSpec:
+    def to_spec(data: dict[str, Any], author: AuthorData) -> RolloutSpec:
         value = data["feature_state_value"]
         return RolloutSpec(
             enabled=data["enabled"],
@@ -242,7 +242,7 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
                 )
                 for mv in data.get("multivariate_feature_state_values", [])
             ],
-            author=AuthorData.from_request(request),
+            author=author,
         )
 
 
@@ -339,7 +339,7 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
                 apply_experiment_rollout(
                     experiment,
                     ExperimentRolloutSerializer.to_spec(
-                        rollout, self.context["request"]
+                        rollout, AuthorData.from_request(self.context["request"])
                     ),
                 )
         return experiment

@@ -16,6 +16,7 @@ from rest_framework.serializers import BaseSerializer
 from rest_framework.viewsets import GenericViewSet
 
 from app.pagination import CustomPagination
+from core.dataclasses import AuthorData
 from environments.views import NestedEnvironmentViewSet
 from experimentation.constants import (
     EXPOSURES_REFRESH_MIN_INTERVAL,
@@ -302,7 +303,9 @@ class ExperimentViewSet(
         serializer.is_valid(raise_exception=True)
         apply_experiment_rollout(
             experiment,
-            ExperimentRolloutSerializer.to_spec(serializer.validated_data, request),
+            ExperimentRolloutSerializer.to_spec(
+                serializer.validated_data, AuthorData.from_request(request)
+            ),
         )
         return Response(self.get_serializer(experiment).data)
 
