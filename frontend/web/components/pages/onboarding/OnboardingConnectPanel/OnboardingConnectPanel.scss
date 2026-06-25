@@ -17,7 +17,8 @@
 
   &__prompt-text {
     color: var(--color-text-default);
-    font-family: var(--font-family-mono, monospace);
+    // No mono design token exists; literal stack, matching the verify console.
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
     font-size: 0.8125rem;
     line-height: 1.5;
     background: transparent;
