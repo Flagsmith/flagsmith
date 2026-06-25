@@ -31,7 +31,32 @@ We avoid class-based tests. To manage test lifecycle and dependencies, we rely o
 
 We enforce the `test_{subject}__{condition}__{expected outcome}` template for test names, e.g. `test_get_version__valid_file_contents__returns_version_number`.
 
-We use the Given When Then structure in all our tests.
+We structure each test into sections:
+- `# Given / When` + `# Then` for tests with empty, or implicit setup — e.g. via fixtures.
+- `# Given` + `# When` + `# Then` for tests with explicit setup.
+
+We avoid extra comments in tests, and rely on the test name and body to communicate the intent.
+
+### Code guidelines: comments
+
+We use docstrings for public functions and classes.
+
+We avoid comments unless they reveal useful context only seen outside the code. When a comment is necessary, we prefer terse, one-line comments over long paragraphs.
+
+We avoid deictic comments, such as references to a work session, or to an investigation. For example:
+- "This fixes the failing test in CI" — deixis about a situation.
+- "The cache was returning stale segments here" — deixis about a debugging session.
+- "TODO: remove this logic branch before shipping to production" — deixis about team dynamics.
+- "Decision 3: evaluate in the view" — deixis about a decision-making process.
+- "Switched from offset pagination to cursors" — deixis about a prior draft.
+- "We no longer recompute this on every request" — deixis about a discarded approach.
+
+We prefer comments that survive the code across time, and that add value to future readers with no context. They reveal context as it is, never how the code came to be. For example:
+- "Float sums drift on large totals."
+- "Webhooks may arrive out of order."
+- "Empty Content-Length is rejected upstream."
+- "TODO: https://flagsmith.github.com/org/repo/issues/1234"
+
 
 ### Code guidelines: metrics
 
@@ -125,6 +150,8 @@ Squash newly added migrations whenever you can.
 ### Code guidelines: typing
 
 This codebase, including tests, is fully type-checked by Mypy in strict mode. Resolving existing `# type: ignore` comments is always welcome. If you happen to bring a new `# type: ignore` comment, please document the reason, and consider fixing a small number of adjacent `# type: ignore` comments, if possible and appropriate for the scope of your task.
+
+We resort to using `# type: ignore` comments only when upstream typing is absent or incomplete. We prefer `# type: ignore` over `typing.cast` calls because the comments will reveal themselves removable once upstream typing is improved, while `cast` remains silent.
 
 To run a full type check, run `make typecheck`.
 
