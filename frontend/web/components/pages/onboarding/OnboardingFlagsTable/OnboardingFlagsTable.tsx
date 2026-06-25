@@ -40,6 +40,10 @@ const OnboardingFlagsTable: FC<OnboardingFlagsTableProps> = ({
   togglingFlag,
 }) => {
   const waiting = status === 'waiting'
+  // Toggles are interactive only once the app has connected and the flag state
+  // has loaded; before that the table is a dimmed preview and a click would
+  // no-op. (A mid-flight toggle also locks its own row, below.)
+  const togglesLocked = waiting || !togglesReady
   return (
     <section
       className='onboarding-flags d-flex flex-column align-items-center'
@@ -86,12 +90,7 @@ const OnboardingFlagsTable: FC<OnboardingFlagsTableProps> = ({
             <div className='onboarding-flags__toggle'>
               <Switch
                 checked={flag.enabled}
-                // Locked until the app connects (the first evaluation arrives)
-                // and the flag state has loaded - the table is a dimmed preview
-                // until then, and an early click must not no-op.
-                disabled={
-                  waiting || !togglesReady || togglingFlag === flag.name
-                }
+                disabled={togglesLocked || togglingFlag === flag.name}
                 onChange={(enabled) => onToggle(flag, enabled)}
                 aria-label={`Toggle ${flag.name}`}
               />
