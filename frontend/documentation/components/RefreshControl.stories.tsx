@@ -75,7 +75,7 @@ export const Refreshing: Story = {
 export const Throttled: Story = {
   args: {
     disabled: true,
-    label: 'Computing, retry in 4m 30s',
+    label: 'Computing… retry in 4m 30s',
   },
   parameters: {
     docs: {

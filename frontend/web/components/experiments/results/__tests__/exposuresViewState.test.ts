@@ -80,14 +80,14 @@ describe('canRefreshExposures', () => {
 describe('getExposuresRefreshLabel', () => {
   it('prefers a retry countdown over the in-progress message', () => {
     expect(getExposuresRefreshLabel(90, true)).toEqual({
-      message: 'Computing, retry in 1m 30s',
+      message: 'Computing… retry in 1m 30s',
       tone: 'muted',
     })
   })
 
   it('shows an in-progress message while refreshing', () => {
     expect(getExposuresRefreshLabel(null, true)).toEqual({
-      message: 'Computing… this will refresh automatically.',
+      message: 'Computing… exposures will update automatically.',
       tone: 'muted',
     })
   })

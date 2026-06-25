@@ -58,13 +58,13 @@ export const getExposuresRefreshLabel = (
 ): RefreshLabel | null => {
   if (retryAfter !== null) {
     return {
-      message: `Computing, retry in ${formatCountdown(retryAfter)}`,
+      message: `Computing… retry in ${formatCountdown(retryAfter)}`,
       tone: 'muted',
     }
   }
   if (isRefreshing) {
     return {
-      message: 'Computing… this will refresh automatically.',
+      message: 'Computing… exposures will update automatically.',
       tone: 'muted',
     }
   }
