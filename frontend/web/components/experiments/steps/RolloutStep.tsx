@@ -27,7 +27,7 @@ const RolloutStep: FC<RolloutStepProps> = ({
 }) => {
   if (!selectedFeature) {
     return (
-      <ContentCard white title='Rollout configuration'>
+      <ContentCard background='white' title='Rollout configuration'>
         <p className='text-muted mb-0'>
           Select a feature flag in the Setup step to configure the rollout.
         </p>
@@ -38,7 +38,7 @@ const RolloutStep: FC<RolloutStepProps> = ({
   return (
     <div className='d-flex flex-column gap-4'>
       <ContentCard
-        white
+        background='white'
         title='Sample Size'
         description='What percentage of eligible users enters the experiment?'
       >
@@ -46,7 +46,7 @@ const RolloutStep: FC<RolloutStepProps> = ({
       </ContentCard>
 
       <ContentCard
-        white
+        background='white'
         title='Variation Split'
         description='Distribute sampled identities across control and treatment variations. Control takes one of the slots; weights must sum to 100.'
         action={

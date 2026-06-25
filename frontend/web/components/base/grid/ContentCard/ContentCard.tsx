@@ -8,25 +8,25 @@ type ContentCardProps = {
   action?: ReactNode
   className?: string
   compact?: boolean
-  white?: boolean
+  background?: 'default' | 'white'
   children: ReactNode
 }
 
 const ContentCard: FC<ContentCardProps> = ({
   action,
+  background,
   children,
   className,
   compact,
   description,
   title,
-  white,
 }) => {
   return (
     <div
       className={cn(
         'content-card',
         compact && 'content-card--compact',
-        white && 'content-card--white',
+        background === 'white' && 'content-card--white',
         className,
       )}
     >

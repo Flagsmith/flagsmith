@@ -36,27 +36,27 @@
 
   &__legend {
     display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   &__legend-item {
-    flex-shrink: 0;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 2px;
-    padding: 0 4px;
-    min-width: 0;
-    text-align: center;
+    gap: 8px;
+  }
+
+  &__legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
   }
 
   &__legend-label {
     font-size: var(--font-caption-size);
     font-weight: var(--font-weight-semibold);
     color: var(--color-text-default);
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   &__legend-value {

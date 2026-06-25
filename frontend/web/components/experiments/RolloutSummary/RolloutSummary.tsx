@@ -61,11 +61,11 @@ const RolloutSummary: FC<RolloutSummaryProps> = ({
 
       <div className='rollout-summary__legend'>
         {arms.map((arm) => (
-          <div
-            key={arm.label}
-            className='rollout-summary__legend-item'
-            style={{ width: `${arm.scaled}%` }}
-          >
+          <div key={arm.label} className='rollout-summary__legend-item'>
+            <span
+              className='rollout-summary__legend-swatch'
+              style={{ background: arm.colour }}
+            />
             <span className='rollout-summary__legend-label'>{arm.label}</span>
             <span className='rollout-summary__legend-value'>
               {formatPercentage(arm.weight)}
