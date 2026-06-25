@@ -1,5 +1,5 @@
 import { FC, ReactNode } from 'react'
-import Button, { themeClassNames } from './Button'
+import Button, { themeClassNames } from 'components/base/forms/Button'
 
 type RefreshControlProps = {
   onRefresh: () => void
@@ -22,13 +22,14 @@ const RefreshControl: FC<RefreshControlProps> = ({
 }) => (
   <div className='d-flex flex-column align-items-end'>
     <Button
-      disabled={disabled || isRefreshing}
+      disabled={disabled}
+      isLoading={isRefreshing}
       onClick={onRefresh}
       size='small'
       theme={theme}
-      title={disabled ? disabledReason : undefined}
+      title={disabled && !isRefreshing ? disabledReason : undefined}
     >
-      {isRefreshing ? 'Refreshing…' : children ?? 'Refresh'}
+      {children ?? 'Refresh'}
     </Button>
     {label ? (
       <div className='text-muted fs-caption mt-1 text-end'>{label}</div>

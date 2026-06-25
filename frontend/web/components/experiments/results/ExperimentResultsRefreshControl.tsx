@@ -1,15 +1,18 @@
-import { FC, ReactNode, useCallback, useEffect, useState } from 'react'
+import { FC, useCallback, useEffect, useState } from 'react'
+import useCountdown from 'common/hooks/useCountdown'
 import {
   useGetExperimentBayesianResultsQuery,
   useRefreshExperimentBayesianResultsMutation,
 } from 'common/services/useExperiment'
 import { ExperimentStatus } from 'common/types/responses'
-import RefreshControl from 'components/base/forms/RefreshControl'
+import RefreshControl from './RefreshControl'
 import {
+  DEFAULT_RETRY_AFTER_S,
   POLL_TIMEOUT_MS,
   REFRESH_POLL_INTERVAL_MS,
   canRefreshResults,
   deriveResultsViewState,
+  getResultsRefreshLabel,
 } from './resultsViewState'
 
 const parseRetryAfter = (err: unknown): number | null => {
@@ -19,13 +22,7 @@ const parseRetryAfter = (err: unknown): number | null => {
   }
   if (fetchErr.status !== 429) return null
   if (fetchErr.retryAfter) return fetchErr.retryAfter
-  return 300
-}
-
-const formatCountdown = (seconds: number): string => {
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return m > 0 ? `${m}m ${s}s` : `${s}s`
+  return DEFAULT_RETRY_AFTER_S
 }
 
 type ExperimentResultsRefreshControlProps = {
@@ -45,7 +42,7 @@ const ExperimentResultsRefreshControl: FC<
   const [pollInterval, setPollInterval] = useState(0)
   const [refreshRequested, setRefreshRequested] = useState(false)
   const [pollStartedAt, setPollStartedAt] = useState<number | null>(null)
-  const [retryAfter, setRetryAfter] = useState<number | null>(null)
+  const [retryAfter, startRetryCountdown] = useCountdown()
 
   const { data: results } = useGetExperimentBayesianResultsQuery(
     { environmentId, experimentId },
@@ -80,20 +77,8 @@ const ExperimentResultsRefreshControl: FC<
     }
   }, [pollTimedOut])
 
-  useEffect(() => {
-    if (retryAfter === null || retryAfter <= 0) return
-    const timer = setInterval(() => {
-      setRetryAfter((prev) => {
-        if (prev === null || prev <= 1) return null
-        return prev - 1
-      })
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [retryAfter !== null]) // eslint-disable-line react-hooks/exhaustive-deps
-
   const isRefreshing =
     refreshRequested || viewState.kind === 'refreshing' || isSubmitting
-  const hasData = !!results?.payload
 
   const handleRefresh = useCallback(async () => {
     setRefreshRequested(true)
@@ -104,34 +89,31 @@ const ExperimentResultsRefreshControl: FC<
       setPollStartedAt(null)
       const seconds = parseRetryAfter(result.error)
       if (seconds !== null) {
-        setRetryAfter(seconds)
+        startRetryCountdown(seconds)
       } else {
         toast('Failed to refresh results', 'danger')
       }
     }
-  }, [refresh, environmentId, experimentId])
+  }, [refresh, environmentId, experimentId, startRetryCountdown])
 
-  let label: ReactNode = undefined
-  if (retryAfter !== null) {
-    label = `Computing, retry in ${formatCountdown(retryAfter)}`
-  } else if (isRefreshing) {
-    label = 'Computing… results will update automatically.'
-  } else if (viewState.kind === 'error') {
-    label = (
-      <span className='text-danger'>The last results computation failed.</span>
-    )
-  }
+  const label = getResultsRefreshLabel(retryAfter, isRefreshing, viewState)
 
   return (
     <RefreshControl
-      disabled={!availability.canRefresh || isRefreshing || retryAfter !== null}
+      disabled={!availability.canRefresh || retryAfter !== null}
       disabledReason={
         availability.reason
           ? REFRESH_DISABLED_COPY[availability.reason]
           : undefined
       }
-      isRefreshing={isRefreshing && hasData}
-      label={label}
+      isRefreshing={isRefreshing}
+      label={
+        label && (
+          <span className={label.tone === 'danger' ? 'text-danger' : undefined}>
+            {label.message}
+          </span>
+        )
+      }
       onRefresh={handleRefresh}
     >
       Refresh results

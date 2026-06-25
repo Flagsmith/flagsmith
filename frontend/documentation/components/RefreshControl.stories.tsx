@@ -1,7 +1,7 @@
 import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
-import RefreshControl from 'components/base/forms/RefreshControl'
+import RefreshControl from 'components/experiments/results/RefreshControl'
 import { themeClassNames } from 'components/base/forms/Button'
 
 const themeOptions = Object.keys(themeClassNames) as Array<
@@ -25,7 +25,7 @@ const meta: Meta<typeof RefreshControl> = {
     isRefreshing: {
       control: 'boolean',
       description:
-        'Shows a busy label and disables the button while a refresh is in flight.',
+        'Shows a spinner and disables the button while a refresh is in flight. The label stays unchanged.',
     },
     label: {
       control: 'text',
@@ -48,7 +48,7 @@ const meta: Meta<typeof RefreshControl> = {
   },
   component: RefreshControl,
   parameters: { layout: 'centered' },
-  title: 'Components/RefreshControl',
+  title: 'Experiments/RefreshControl',
 }
 
 export default meta
@@ -66,7 +66,7 @@ export const Refreshing: Story = {
     docs: {
       description: {
         story:
-          'While a refresh is in flight the button shows a busy label and disables itself. The `label` slot carries the in-progress message.',
+          'While a refresh is in flight the button shows a spinner and disables itself, keeping its label. The `label` slot carries the in-progress message.',
       },
     },
   },

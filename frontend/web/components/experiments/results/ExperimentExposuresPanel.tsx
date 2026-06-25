@@ -3,8 +3,8 @@ import moment from 'moment'
 import { LineChart } from 'components/charts'
 import ContentCard from 'components/base/grid/ContentCard'
 import Button from 'components/base/forms/Button'
-import RefreshControl from 'components/base/forms/RefreshControl'
 import Icon from 'components/icons/Icon'
+import useCountdown, { formatCountdown } from 'common/hooks/useCountdown'
 import { colorIconDanger } from 'common/theme/tokens'
 import {
   useGetExperimentExposuresQuery,
@@ -19,11 +19,13 @@ import {
 } from './derive'
 import type { VariantTotal } from './derive'
 import {
+  DEFAULT_RETRY_AFTER_S,
   POLL_TIMEOUT_MS,
   REFRESH_POLL_INTERVAL_MS,
   canRefreshExposures,
   deriveExposuresViewState,
 } from './exposuresViewState'
+import RefreshControl from './RefreshControl'
 import './results.scss'
 
 const AsOfLabel: FC<{ asOf: string | null }> = ({ asOf }) => (
@@ -49,13 +51,7 @@ const parseRetryAfter = (err: unknown): number | null => {
   }
   if (fetchErr.status !== 429) return null
   if (fetchErr.retryAfter) return fetchErr.retryAfter
-  return 300
-}
-
-const formatCountdown = (seconds: number): string => {
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return m > 0 ? `${m}m ${s}s` : `${s}s`
+  return DEFAULT_RETRY_AFTER_S
 }
 
 type ExperimentExposuresPanelProps = {
@@ -77,7 +73,7 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
   const [pollInterval, setPollInterval] = useState(0)
   const [refreshRequested, setRefreshRequested] = useState(false)
   const [pollStartedAt, setPollStartedAt] = useState<number | null>(null)
-  const [retryAfter, setRetryAfter] = useState<number | null>(null)
+  const [retryAfter, startRetryCountdown] = useCountdown()
   const { data: fetched } = useGetExperimentExposuresQuery(
     { environmentId, experimentId: experiment.id },
     {
@@ -117,17 +113,6 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
     }
   }, [pollTimedOut])
 
-  useEffect(() => {
-    if (retryAfter === null || retryAfter <= 0) return
-    const timer = setInterval(() => {
-      setRetryAfter((prev) => {
-        if (prev === null || prev <= 1) return null
-        return prev - 1
-      })
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [retryAfter !== null]) // eslint-disable-line react-hooks/exhaustive-deps
-
   const identities = useMemo(
     () => getVariantIdentities(experiment.feature),
     [experiment.feature],
@@ -158,22 +143,22 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
       setPollStartedAt(null)
       const seconds = parseRetryAfter(result.error)
       if (seconds !== null) {
-        setRetryAfter(seconds)
+        startRetryCountdown(seconds)
       } else {
         toast('Failed to refresh exposures', 'danger')
       }
     }
-  }, [refresh, environmentId, experiment.id])
+  }, [refresh, environmentId, experiment.id, startRetryCountdown])
 
   const action = (
     <RefreshControl
-      disabled={!availability.canRefresh || isRefreshing || retryAfter !== null}
+      disabled={!availability.canRefresh || retryAfter !== null}
       disabledReason={
         availability.reason
           ? REFRESH_DISABLED_COPY[availability.reason]
           : undefined
       }
-      isRefreshing={isRefreshing && hasData}
+      isRefreshing={isRefreshing}
       label={
         retryAfter !== null
           ? `Computing, retry in ${formatCountdown(retryAfter)}`

@@ -1,6 +1,7 @@
 import {
   canRefreshResults,
   deriveResultsViewState,
+  getResultsRefreshLabel,
 } from 'components/experiments/results/resultsViewState'
 import {
   ExperimentBayesianResults,
@@ -78,5 +79,36 @@ describe('canRefreshResults', () => {
         reason: 'final',
       },
     )
+  })
+})
+
+describe('getResultsRefreshLabel', () => {
+  it('prefers a retry countdown over everything else', () => {
+    expect(
+      getResultsRefreshLabel(90, true, { kind: 'error', staleAvailable: true }),
+    ).toEqual({ message: 'Computing, retry in 1m 30s', tone: 'muted' })
+  })
+
+  it('shows an in-progress message while refreshing', () => {
+    expect(getResultsRefreshLabel(null, true, { kind: 'loaded' })).toEqual({
+      message: 'Computing… results will update automatically.',
+      tone: 'muted',
+    })
+  })
+
+  it('surfaces a danger message on error when idle', () => {
+    expect(
+      getResultsRefreshLabel(null, false, {
+        kind: 'error',
+        staleAvailable: false,
+      }),
+    ).toEqual({
+      message: 'The last results computation failed.',
+      tone: 'danger',
+    })
+  })
+
+  it('is null when idle and healthy', () => {
+    expect(getResultsRefreshLabel(null, false, { kind: 'loaded' })).toBeNull()
   })
 })

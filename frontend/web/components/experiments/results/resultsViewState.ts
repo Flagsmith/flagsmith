@@ -2,6 +2,7 @@ import {
   ExperimentBayesianResults,
   ExperimentStatus,
 } from 'common/types/responses'
+import { formatCountdown } from 'common/hooks/useCountdown'
 
 export type ResultsViewState =
   | { kind: 'empty' }
@@ -15,8 +16,11 @@ export type RefreshAvailability = {
   reason?: RefreshReason
 }
 
+export type RefreshLabel = { message: string; tone: 'muted' | 'danger' }
+
 export const REFRESH_POLL_INTERVAL_MS = 10000
 export const POLL_TIMEOUT_MS = 120000
+export const DEFAULT_RETRY_AFTER_S = 300
 
 const ms = (iso: string | null): number => (iso ? new Date(iso).getTime() : 0)
 
@@ -47,4 +51,27 @@ export const canRefreshResults = (
   if (status === 'created') return { canRefresh: false, reason: 'not_started' }
   if (results?.is_final) return { canRefresh: false, reason: 'final' }
   return { canRefresh: true }
+}
+
+export const getResultsRefreshLabel = (
+  retryAfter: number | null,
+  isRefreshing: boolean,
+  viewState: ResultsViewState,
+): RefreshLabel | null => {
+  if (retryAfter !== null) {
+    return {
+      message: `Computing, retry in ${formatCountdown(retryAfter)}`,
+      tone: 'muted',
+    }
+  }
+  if (isRefreshing) {
+    return {
+      message: 'Computing… results will update automatically.',
+      tone: 'muted',
+    }
+  }
+  if (viewState.kind === 'error') {
+    return { message: 'The last results computation failed.', tone: 'danger' }
+  }
+  return null
 }
