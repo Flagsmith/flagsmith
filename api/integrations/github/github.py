@@ -84,13 +84,13 @@ def tag_feature_per_github_event(
             label=tag_by_event_type[event_type][action],
             project=feature.project,
             is_system_tag=True,
-            type=TagType.GITHUB.value,
+            type=TagType.GITHUB,
         )
         tag_label_pattern = "Issue" if event_type == "issues" else "PR"
         # Remove all GITHUB tags from the feature which label starts with issue or pr depending on event_type
         feature.tags.remove(
             *feature.tags.filter(
-                Q(type=TagType.GITHUB.value) & Q(label__startswith=tag_label_pattern)
+                Q(type=TagType.GITHUB) & Q(label__startswith=tag_label_pattern)
             )
         )
 
