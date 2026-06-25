@@ -404,6 +404,9 @@ export type User = {
   last_login: string
   uuid: string
   onboarding: Onboarding
+  // Set client-side at login (not returned by the API): true for a freshly
+  // signed-up user, used to route them into the getting-started flow.
+  isGettingStarted?: boolean
   // TODO: Use enum
   role: string
 }
