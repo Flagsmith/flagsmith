@@ -11,7 +11,7 @@ def test_environment_api_key__created_with_warehouse__enqueues_write(
     # Given
     environment = warehouse_connection.environment
     mock_task = mocker.patch(
-        "experimentation.signals.write_environment_ingestion_key",
+        "experimentation.tasks.write_environment_ingestion_key",
     )
 
     # When
@@ -31,7 +31,7 @@ def test_environment_api_key__updated_with_warehouse__enqueues_write(
     environment = warehouse_connection.environment
     api_key = EnvironmentAPIKey.objects.create(environment=environment, name="backend")
     mock_task = mocker.patch(
-        "experimentation.signals.write_environment_ingestion_key",
+        "experimentation.tasks.write_environment_ingestion_key",
     )
 
     # When
@@ -50,7 +50,7 @@ def test_environment_api_key__saved_without_warehouse__does_not_enqueue(
 ) -> None:
     # Given
     mock_task = mocker.patch(
-        "experimentation.signals.write_environment_ingestion_key",
+        "experimentation.tasks.write_environment_ingestion_key",
     )
 
     # When
@@ -69,7 +69,7 @@ def test_environment_api_key__deleted_with_warehouse__enqueues_removal(
     api_key = EnvironmentAPIKey.objects.create(environment=environment, name="backend")
     key = api_key.key
     mock_task = mocker.patch(
-        "experimentation.signals.remove_environment_ingestion_key",
+        "experimentation.tasks.remove_environment_ingestion_key",
     )
 
     # When
@@ -86,7 +86,7 @@ def test_environment_api_key__deleted_without_warehouse__does_not_enqueue(
     # Given
     api_key = EnvironmentAPIKey.objects.create(environment=environment, name="backend")
     mock_task = mocker.patch(
-        "experimentation.signals.remove_environment_ingestion_key",
+        "experimentation.tasks.remove_environment_ingestion_key",
     )
 
     # When
