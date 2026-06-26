@@ -195,13 +195,14 @@ class ExperimentViewSet(
                 "feature__feature_states__multivariate_feature_state_values",
                 "experiment_metrics__metric",
             )
-        status_filter = self.request.query_params.get("status")
+        status_filter = self.request.query_params.getlist("status")
         if status_filter:
-            if status_filter not in ExperimentStatus.values:
+            invalid = [s for s in status_filter if s not in ExperimentStatus.values]
+            if invalid:
                 raise serializers.ValidationError(
-                    {"status": f"Invalid status '{status_filter}'."}
+                    {"status": f"Invalid status value(s): {', '.join(invalid)}."}
                 )
-            qs = qs.filter(status=status_filter)
+            qs = qs.filter(status__in=status_filter)
 
         q = self.request.query_params.get("q")
         if q:
