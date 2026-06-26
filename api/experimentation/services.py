@@ -575,7 +575,7 @@ def _sync_rollout_segment(experiment: Experiment, rollout_percentage: float) -> 
 
 
 def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
-    if experiment.status in (ExperimentStatus.RUNNING, ExperimentStatus.COMPLETED):
+    if experiment.status == ExperimentStatus.COMPLETED:
         raise ValidationError(
             f"Cannot change the rollout of a {experiment.status} experiment."
         )

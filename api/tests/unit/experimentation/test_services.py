@@ -1392,18 +1392,13 @@ def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enab
     assert override.enabled is False
 
 
-@pytest.mark.parametrize(
-    "status",
-    [ExperimentStatus.RUNNING, ExperimentStatus.COMPLETED],
-)
-def test_apply_experiment_rollout__running_or_completed__raises(
-    status: ExperimentStatus,
+def test_apply_experiment_rollout__completed__raises(
     experiment_with_rollout: Experiment,
     admin_user: FFAdminUser,
 ) -> None:
     # Given
     experiment = experiment_with_rollout
-    experiment.status = status
+    experiment.status = ExperimentStatus.COMPLETED
     experiment.save()
 
     # When / Then
@@ -1419,6 +1414,38 @@ def test_apply_experiment_rollout__running_or_completed__raises(
                 author=AuthorData(user=admin_user),
             ),
         )
+
+
+@pytest.mark.parametrize(
+    "status",
+    [ExperimentStatus.RUNNING, ExperimentStatus.PAUSED],
+)
+def test_apply_experiment_rollout__running_or_paused__updates_rollout(
+    status: ExperimentStatus,
+    experiment_with_rollout: Experiment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    experiment = experiment_with_rollout
+    experiment.status = status
+    experiment.save()
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=50.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # Then
+    condition = Condition.objects.get(rule__segment=experiment.rollout_segment)
+    assert condition.value == "50.0"
 
 
 def test_apply_experiment_rollout__duplicate_options__raises(

@@ -1984,7 +1984,7 @@ def test_action_rollout__valid__updates_percentage(
     assert condition.value == "75.0"
 
 
-def test_action_rollout__running_experiment__returns_400(
+def test_action_rollout__running_experiment__updates_percentage(
     admin_client_new: APIClient,
     environment: Environment,
     experiment_with_rollout: Experiment,
@@ -1994,6 +1994,48 @@ def test_action_rollout__running_experiment__returns_400(
     # Given
     enable_features(EXPERIMENT_FLAG)
     experiment_with_rollout.status = ExperimentStatus.RUNNING
+    experiment_with_rollout.save()
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data={
+            "enabled": True,
+            "rollout_percentage": 75,
+            "feature_state_value": {"type": "string", "value": "control"},
+            "multivariate_feature_state_values": [
+                {
+                    "multivariate_feature_option": option_a.id,
+                    "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_b.id,
+                    "percentage_allocation": 50,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    condition = Condition.objects.get(
+        rule__segment=experiment_with_rollout.rollout_segment
+    )
+    assert condition.value == "75.0"
+
+
+def test_action_rollout__completed_experiment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    experiment_with_rollout.status = ExperimentStatus.COMPLETED
     experiment_with_rollout.save()
     option_a, option_b, _ = multivariate_options
 
