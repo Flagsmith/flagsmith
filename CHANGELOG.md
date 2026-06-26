@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.248.0](https://github.com/Flagsmith/flagsmith/compare/v2.247.0...v2.248.0) (2026-06-26)
+
+
+### Features
+
+* **experimentation:** allow updating rollout while experiment is running ([#7886](https://github.com/Flagsmith/flagsmith/issues/7886)) ([1ce5f34](https://github.com/Flagsmith/flagsmith/commit/1ce5f342b95a0763577c0703db1e31f7ccd573ed))
+* **experimentation:** simplify lifecycle by skipping draft and paused states ([#7884](https://github.com/Flagsmith/flagsmith/issues/7884)) ([3e183c5](https://github.com/Flagsmith/flagsmith/commit/3e183c5966b4bcce066062ab1b931370b2fb0dec))
+* **mcp:** expose experimentation endpoints as MCP tools ([#7885](https://github.com/Flagsmith/flagsmith/issues/7885)) ([94ca795](https://github.com/Flagsmith/flagsmith/commit/94ca7953dc9d396a1d505633ddd8f914d895eca7))
+
+
+### Bug Fixes
+
+* **Feature Lifecycle:** Exclude archived features from lifecycle counts ([#7897](https://github.com/Flagsmith/flagsmith/issues/7897)) ([db23309](https://github.com/Flagsmith/flagsmith/commit/db23309122168ccf825f6aa44aa7bf41ab83662c))
+* **infra:** Task processor tasks killed during startup by health check ([#7887](https://github.com/Flagsmith/flagsmith/issues/7887)) ([6009697](https://github.com/Flagsmith/flagsmith/commit/6009697b0974bd1b8882ff864a54b3957fb73f6d))
+
 ## [2.247.0](https://github.com/Flagsmith/flagsmith/compare/v2.246.0...v2.247.0) (2026-06-26)
 
 
