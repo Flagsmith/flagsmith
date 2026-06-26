@@ -71,23 +71,42 @@ const ExperimentConfiguration: FC<ExperimentConfigurationProps> = ({
 
   const cancelEditing = () => setIsEditing(false)
 
-  const handleSave = async () => {
-    if (isSaving || !rollout) return
-    try {
-      await updateRollout({
-        body: {
-          enabled: rollout.enabled,
-          feature_state_value: rollout.feature_state_value,
-          multivariate_feature_state_values: draftSplit,
-          rollout_percentage: draftRollout,
-        },
-        environmentId,
-        experimentId: experiment.id,
-      }).unwrap()
-      setIsEditing(false)
-    } catch {
-      toast('Failed to update rollout', 'danger')
-    }
+  const handleSave = () => {
+    if (isSaving) return
+    openConfirm({
+      body: (
+        <>
+          Changing the rollout configuration will immediately affect how traffic
+          is distributed across experiment variations.
+          <br />
+          <br />
+          This may impact the statistical validity of your results.
+        </>
+      ),
+      noText: 'Cancel',
+      onYes: async () => {
+        try {
+          await updateRollout({
+            body: {
+              enabled: rollout?.enabled ?? true,
+              feature_state_value: rollout?.feature_state_value ?? {
+                type: 'string',
+                value: experiment.feature.initial_value ?? '',
+              },
+              multivariate_feature_state_values: draftSplit,
+              rollout_percentage: draftRollout,
+            },
+            environmentId,
+            experimentId: experiment.id,
+          }).unwrap()
+          setIsEditing(false)
+        } catch {
+          toast('Failed to update rollout', 'danger')
+        }
+      },
+      title: 'Update rollout configuration',
+      yesText: 'Update',
+    })
   }
 
   const draftControlPct = isEditing ? getControlPercentage(draftSplit) : 0
@@ -124,22 +143,24 @@ const ExperimentConfiguration: FC<ExperimentConfigurationProps> = ({
       <div className='col-md-4'>
         <ContentCard
           compact
-          title='Variation Split'
+          className='experiment-config-rollout'
+          title='Rollout configuration'
           action={
             !isEditing ? (
               <Button
                 theme='text'
+                size='xSmall'
                 onClick={startEditing}
-                aria-label='Edit variation split'
+                aria-label='Edit rollout configuration'
               >
-                <Icon name='edit' width={14} />
+                Edit <Icon name='edit' width={14} />
               </Button>
             ) : undefined
           }
         >
-          <div className='d-flex flex-column gap-2'>
+          <div className='d-flex flex-column gap-3 mx-0'>
             <div className='d-flex align-items-center justify-content-between'>
-              <span className='text-muted'>Rollout</span>
+              <span>Current rollout</span>
               {isEditing ? (
                 <span className='d-flex align-items-center gap-1'>
                   <Input
@@ -162,6 +183,8 @@ const ExperimentConfiguration: FC<ExperimentConfigurationProps> = ({
                 </span>
               )}
             </div>
+
+            <hr className='my-0 mx-0' />
 
             {identities.map((v, i) => {
               const isControl = i === 0
@@ -225,7 +248,7 @@ const ExperimentConfiguration: FC<ExperimentConfigurationProps> = ({
             })}
 
             {isEditing && (
-              <div className='d-flex justify-content-end gap-2 mt-2'>
+              <div className='d-flex justify-content-end gap-3 mt-2'>
                 <Button
                   theme='text'
                   size='xSmall'
