@@ -12,7 +12,7 @@ export function useFeatureExperimentFreeze(
   featureId: number | undefined,
   environmentId: string,
 ): FeatureExperimentFreeze {
-  const skip = !featureId
+  const skip = !featureId || !environmentId
   const { data, isLoading } = useGetExperimentsQuery(
     { environmentId, status: 'running' },
     { skip },

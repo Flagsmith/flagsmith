@@ -250,43 +250,82 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
               <Loader />
             </div>
           )}
-          {!isComparing &&
-            !showCreateSegment &&
-            !freeze?.isFrozen &&
-            !freeze?.isLoading && <ModalHR className='mt-4' />}
-          {!isComparing &&
-            !showCreateSegment &&
-            !freeze?.isFrozen &&
-            !freeze?.isLoading && (
-              <div>
-                <p className='text-right mt-4 fs-small lh-sm modal-caption'>
-                  Re-order overrides to adjust priority.
-                </p>
-                <p className='text-right mt-4 fs-small lh-sm modal-caption'>
-                  {is4Eyes && isVersioned
-                    ? 'This will create a change request with any value and segment override changes for the environment'
-                    : 'This will update the segment overrides for the environment'}{' '}
-                  <strong>{environmentName}</strong>
-                </p>
-                {is4Eyes && !isVersioned && (
-                  <InfoMessage>
-                    Enable Feature Versioning to gate segment overrides with
-                    Feature Change Requests.{' '}
-                    <a
-                      href='https://docs.flagsmith.com/managing-flags/feature-versioning'
-                      target='_blank'
-                      rel='noreferrer'
-                    >
-                      Learn more
-                    </a>
-                    .
-                  </InfoMessage>
-                )}
-                <div className='text-right'>
-                  {isVersioned && is4Eyes
-                    ? Utils.renderWithPermission(
-                        savePermission,
-                        Utils.getManageFeaturePermissionDescription(is4Eyes),
+          {!isComparing && !showCreateSegment && !freeze?.isFrozen && (
+            <ModalHR className='mt-4' />
+          )}
+          {!isComparing && !showCreateSegment && !freeze?.isFrozen && (
+            <div>
+              <p className='text-right mt-4 fs-small lh-sm modal-caption'>
+                Re-order overrides to adjust priority.
+              </p>
+              <p className='text-right mt-4 fs-small lh-sm modal-caption'>
+                {is4Eyes && isVersioned
+                  ? 'This will create a change request with any value and segment override changes for the environment'
+                  : 'This will update the segment overrides for the environment'}{' '}
+                <strong>{environmentName}</strong>
+              </p>
+              {is4Eyes && !isVersioned && (
+                <InfoMessage>
+                  Enable Feature Versioning to gate segment overrides with
+                  Feature Change Requests.{' '}
+                  <a
+                    href='https://docs.flagsmith.com/managing-flags/feature-versioning'
+                    target='_blank'
+                    rel='noreferrer'
+                  >
+                    Learn more
+                  </a>
+                  .
+                </InfoMessage>
+              )}
+              <div className='text-right'>
+                {isVersioned && is4Eyes
+                  ? Utils.renderWithPermission(
+                      savePermission,
+                      Utils.getManageFeaturePermissionDescription(is4Eyes),
+                      <Button
+                        onClick={() => saveFeatureSegments(false)}
+                        type='button'
+                        data-test='update-feature-segments-btn'
+                        id='update-feature-segments-btn'
+                        disabled={
+                          isSaving ||
+                          !projectFlag.name ||
+                          invalid ||
+                          !savePermission ||
+                          !!freeze?.isLoading
+                        }
+                      >
+                        {getButtonText()}
+                      </Button>,
+                    )
+                  : Utils.renderWithPermission(
+                      manageSegmentOverrides,
+                      Constants.environmentPermissions(
+                        EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
+                      ),
+                      <>
+                        {!is4Eyes && isVersioned && (
+                          <>
+                            <Button
+                              theme='secondary'
+                              onClick={() => saveFeatureSegments(true)}
+                              className='mr-2'
+                              type='button'
+                              data-test='create-change-request'
+                              id='create-change-request-btn'
+                              disabled={
+                                isSaving ||
+                                !projectFlag.name ||
+                                invalid ||
+                                !savePermission ||
+                                !!freeze?.isLoading
+                              }
+                            >
+                              {getScheduleButtonText()}
+                            </Button>
+                          </>
+                        )}
                         <Button
                           onClick={() => saveFeatureSegments(false)}
                           type='button'
@@ -296,57 +335,17 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
                             isSaving ||
                             !projectFlag.name ||
                             invalid ||
-                            !savePermission
+                            !manageSegmentOverrides ||
+                            !!freeze?.isLoading
                           }
                         >
-                          {getButtonText()}
-                        </Button>,
-                      )
-                    : Utils.renderWithPermission(
-                        manageSegmentOverrides,
-                        Constants.environmentPermissions(
-                          EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
-                        ),
-                        <>
-                          {!is4Eyes && isVersioned && (
-                            <>
-                              <Button
-                                theme='secondary'
-                                onClick={() => saveFeatureSegments(true)}
-                                className='mr-2'
-                                type='button'
-                                data-test='create-change-request'
-                                id='create-change-request-btn'
-                                disabled={
-                                  isSaving ||
-                                  !projectFlag.name ||
-                                  invalid ||
-                                  !savePermission
-                                }
-                              >
-                                {getScheduleButtonText()}
-                              </Button>
-                            </>
-                          )}
-                          <Button
-                            onClick={() => saveFeatureSegments(false)}
-                            type='button'
-                            data-test='update-feature-segments-btn'
-                            id='update-feature-segments-btn'
-                            disabled={
-                              isSaving ||
-                              !projectFlag.name ||
-                              invalid ||
-                              !manageSegmentOverrides
-                            }
-                          >
-                            {isSaving ? 'Updating' : 'Update Segment Overrides'}
-                          </Button>
-                        </>,
-                      )}
-                </div>
+                          {isSaving ? 'Updating' : 'Update Segment Overrides'}
+                        </Button>
+                      </>,
+                    )}
               </div>
-            )}
+            </div>
+          )}
         </div>
       </FeatureInPipelineGuard>
     </FormGroup>

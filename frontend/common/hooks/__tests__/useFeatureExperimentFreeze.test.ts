@@ -99,6 +99,18 @@ describe('useFeatureExperimentFreeze', () => {
     )
   })
 
+  it('skips query when environmentId is empty', () => {
+    mockUseGetExperimentsQuery.mockReturnValue(empty)
+
+    const result = useFeatureExperimentFreeze(42, '')
+
+    expect(result.isFrozen).toBe(false)
+    expect(mockUseGetExperimentsQuery).toHaveBeenCalledWith(
+      { environmentId: '', status: 'running' },
+      { skip: true },
+    )
+  })
+
   it('queries only running experiments', () => {
     mockUseGetExperimentsQuery.mockReturnValue(empty)
 
