@@ -11,7 +11,7 @@ export type OnboardingFlagsTableStatus = 'waiting' | 'connected'
 export type OnboardingFlagRow = {
   name: string
   description?: string
-  tags?: Partial<TTag>[]
+  tags?: TTag[]
   enabled: boolean
 }
 
@@ -72,7 +72,7 @@ const OnboardingFlagsTable: FC<OnboardingFlagsTableProps> = ({
               <div className='d-flex align-items-center gap-2'>
                 <FeatureName name={flag.name} />
                 {flag.tags?.map((tag) => (
-                  <Tag key={tag.id ?? tag.label} tag={tag} />
+                  <Tag key={tag.id} tag={tag} />
                 ))}
               </div>
               {flag.description && (

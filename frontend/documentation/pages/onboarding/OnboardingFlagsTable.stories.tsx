@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from 'storybook'
 
+import { Tag } from 'common/types/responses'
 import OnboardingFlagsTable, {
   OnboardingFlagRow,
 } from 'components/pages/onboarding/OnboardingFlagsTable'
@@ -44,6 +45,8 @@ export const Off: Story = {
 
 export const WithTag: Story = {
   args: {
-    flags: [{ ...demoFlag, tags: [{ color: '#6837FC', label: 'demo' }] }],
+    flags: [
+      { ...demoFlag, tags: [{ color: '#6837FC', label: 'demo' } as Tag] },
+    ],
   },
 }
