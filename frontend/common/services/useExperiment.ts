@@ -186,6 +186,20 @@ export const experimentService = service
           url: `environments/${environmentId}/experiments/${experimentId}/`,
         }),
       }),
+      updateExperimentRollout: builder.mutation<
+        Res['experiment'],
+        Req['updateExperimentRollout']
+      >({
+        invalidatesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'Experiment' },
+          { id: 'LIST', type: 'Experiment' },
+        ],
+        query: ({ body, environmentId, experimentId }) => ({
+          body,
+          method: 'PATCH',
+          url: `environments/${environmentId}/experiments/${experimentId}/rollout/`,
+        }),
+      }),
     }),
   })
 
@@ -202,4 +216,5 @@ export const {
   useRefreshExperimentExposuresMutation,
   useStartExperimentMutation,
   useUpdateExperimentMutation,
+  useUpdateExperimentRolloutMutation,
 } = experimentService

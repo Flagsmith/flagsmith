@@ -6,7 +6,7 @@ import Icon from 'components/icons/Icon'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 import { Experiment, ExpectedDirection } from 'common/types/responses'
-import { useUpdateExperimentMutation } from 'common/services/useExperiment'
+import { useUpdateExperimentRolloutMutation } from 'common/services/useExperiment'
 import { getPrimaryMetric } from 'components/experiments/constants'
 import {
   VariationSplitEntry,
@@ -48,35 +48,38 @@ const ExperimentConfiguration: FC<ExperimentConfigurationProps> = ({
       : experiment.feature.multivariate_options?.[index - 1]
           ?.default_percentage_allocation ?? 0
 
-  const [updateExperiment, { isLoading: isSaving }] =
-    useUpdateExperimentMutation()
+  const [updateRollout, { isLoading: isSaving }] =
+    useUpdateExperimentRolloutMutation()
 
   const [isEditing, setIsEditing] = useState(false)
   const [draftRollout, setDraftRollout] = useState(0)
   const [draftSplit, setDraftSplit] = useState<VariationSplitEntry[]>([])
 
+  const rollout = experiment.experiment_rollout
+
   const startEditing = useCallback(() => {
-    setDraftRollout(experiment.rollout_percentage ?? 100)
+    setDraftRollout(rollout?.rollout_percentage ?? 100)
     setDraftSplit(
-      (experiment.feature.multivariate_options ?? []).map((mv) => ({
-        multivariate_feature_option: mv.id,
-        percentage_allocation: mv.default_percentage_allocation,
-      })),
+      rollout?.multivariate_feature_state_values ??
+        (experiment.feature.multivariate_options ?? []).map((mv) => ({
+          multivariate_feature_option: mv.id,
+          percentage_allocation: mv.default_percentage_allocation,
+        })),
     )
     setIsEditing(true)
-  }, [experiment])
+  }, [rollout, experiment.feature.multivariate_options])
 
   const cancelEditing = () => setIsEditing(false)
 
   const handleSave = async () => {
-    if (isSaving) return
+    if (isSaving || !rollout) return
     try {
-      await updateExperiment({
+      await updateRollout({
         body: {
-          experiment_rollout: {
-            multivariate_feature_state_values: draftSplit,
-            rollout_percentage: draftRollout,
-          },
+          enabled: rollout.enabled,
+          feature_state_value: rollout.feature_state_value,
+          multivariate_feature_state_values: draftSplit,
+          rollout_percentage: draftRollout,
         },
         environmentId,
         experimentId: experiment.id,
@@ -155,7 +158,7 @@ const ExperimentConfiguration: FC<ExperimentConfigurationProps> = ({
                 </span>
               ) : (
                 <span className='text-muted'>
-                  {experiment.rollout_percentage ?? 100}%
+                  {rollout?.rollout_percentage ?? 100}%
                 </span>
               )}
             </div>
