@@ -1033,7 +1033,7 @@ export type Req = {
   }
   getExperiments: PagedRequest<{
     environmentId: string
-    status?: ExperimentStatus
+    status?: ExperimentStatus | ExperimentStatus[]
   }>
   createExperiment: {
     environmentId: string
