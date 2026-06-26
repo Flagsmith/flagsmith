@@ -6,6 +6,8 @@ from django.db import IntegrityError
 from django.db.models import Count, Prefetch, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import Throttled, ValidationError
@@ -158,6 +160,54 @@ class WarehouseConnectionViewSet(
         return request.user  # type: ignore[return-value]
 
 
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        tags=["mcp"],
+        parameters=[
+            OpenApiParameter(
+                name="status",
+                location=OpenApiParameter.QUERY,
+                description="Filter by experiment status (DRAFT, RUNNING, PAUSED, COMPLETED).",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="q",
+                location=OpenApiParameter.QUERY,
+                description="Search by experiment or feature name.",
+                required=False,
+                type=str,
+            ),
+        ],
+        operation_id="list_experiments",
+        description="(Beta) Lists experiments for an environment. Supports filtering by status and searching by experiment or feature name.",
+    ),
+)
+@method_decorator(
+    name="retrieve",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="get_experiment",
+        description="(Beta) Retrieves experiment details including feature configuration, attached metrics, and rollout state.",
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="create_experiment",
+        description="(Beta) Creates an experiment for a multivariate feature. Metrics can be attached inline. Only one active experiment per feature is allowed.",
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="update_experiment",
+        description="(Beta) Updates an experiment's name or hypothesis.",
+    ),
+)
 class ExperimentViewSet(
     NestedEnvironmentViewSet[Experiment],
     mixins.ListModelMixin,
@@ -306,6 +356,11 @@ class ExperimentViewSet(
         )
         return Response(self.get_serializer(experiment).data)
 
+    @extend_schema(
+        tags=["mcp"],
+        operation_id="get_experiment_exposures",
+        description="(Beta) Retrieves variant exposure counts for an experiment. Returns null if not yet computed.",
+    )
     @action(detail=True, methods=["get"])
     def exposures(self, request: Request, **kwargs: object) -> Response:
         experiment: Experiment = self.get_object()
@@ -337,6 +392,11 @@ class ExperimentViewSet(
         compute_experiment_exposures.delay(kwargs={"experiment_id": experiment.id})
         return Response(status=status.HTTP_202_ACCEPTED)
 
+    @extend_schema(
+        tags=["mcp"],
+        operation_id="get_experiment_results",
+        description="(Beta) Retrieves statistical results for an experiment's metrics. Returns null if not yet computed.",
+    )
     @action(detail=True, methods=["get"])
     def results(self, request: Request, **kwargs: object) -> Response:
         experiment: Experiment = self.get_object()
@@ -466,6 +526,47 @@ class ExperimentMetricViewSet(
         return super().destroy(request, *args, **kwargs)
 
 
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        tags=["mcp"],
+        parameters=[
+            OpenApiParameter(
+                name="q",
+                location=OpenApiParameter.QUERY,
+                description="Search metrics by name.",
+                required=False,
+                type=str,
+            ),
+        ],
+        operation_id="list_metrics",
+        description="(Beta) Lists experiment metrics for an environment. Supports search by name via the q parameter.",
+    ),
+)
+@method_decorator(
+    name="retrieve",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="get_metric",
+        description="(Beta) Retrieves details of a specific metric, including which experiments use it.",
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="create_metric",
+        description="(Beta) Creates a metric with name, description, aggregation type, expected direction, and event definition.",
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="update_metric",
+        description="(Beta) Updates a metric's properties.",
+    ),
+)
 class MetricViewSet(
     NestedEnvironmentViewSet[Metric],
     mixins.ListModelMixin,
