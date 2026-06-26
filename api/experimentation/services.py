@@ -16,6 +16,7 @@ from rest_framework.exceptions import ValidationError
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.dataclasses import AuthorData
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
@@ -629,6 +630,25 @@ def get_experiment_rollout(experiment: Experiment) -> dict[str, typing.Any] | No
             for mv in feature_state.multivariate_feature_state_values.all()
         ],
     }
+
+
+def enable_experiment_rollout(experiment: Experiment, author: AuthorData) -> None:
+    rollout = get_experiment_rollout(experiment)
+    if rollout is None or rollout["enabled"]:
+        return
+
+    value = rollout["feature_state_value"]
+    update_flag(
+        experiment.environment,
+        experiment.feature,
+        FlagChangeSet(
+            author=author,
+            enabled=True,
+            feature_state_value=value["value"],
+            type_=value["type"],
+            segment_id=experiment.rollout_segment_id,
+        ),
+    )
 
 
 def mark_warehouse_pending_connection(

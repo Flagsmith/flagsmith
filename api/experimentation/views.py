@@ -16,6 +16,7 @@ from rest_framework.serializers import BaseSerializer
 from rest_framework.viewsets import GenericViewSet
 
 from app.pagination import CustomPagination
+from core.dataclasses import AuthorData
 from environments.views import NestedEnvironmentViewSet
 from experimentation.constants import (
     EXPOSURES_REFRESH_MIN_INTERVAL,
@@ -54,6 +55,7 @@ from experimentation.services import (
     create_experiment_audit_log,
     create_metric_audit_log,
     create_warehouse_audit_log,
+    enable_experiment_rollout,
     mark_warehouse_pending_connection,
     refresh_warehouse_connection_status,
     transition_experiment_status,
@@ -285,7 +287,12 @@ class ExperimentViewSet(
 
     @action(detail=True, methods=["post"])
     def start(self, request: Request, **kwargs: object) -> Response:
-        return self._transition_status(ExperimentStatus.RUNNING)
+        response = self._transition_status(ExperimentStatus.RUNNING)
+        if status.is_success(response.status_code):
+            enable_experiment_rollout(
+                self.get_object(), AuthorData.from_request(request)
+            )
+        return response
 
     @action(detail=True, methods=["post"])
     def pause(self, request: Request, **kwargs: object) -> Response:

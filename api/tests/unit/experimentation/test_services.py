@@ -1574,3 +1574,70 @@ def test_get_experiment_rollout__boolean_value__returns_lowercase_string(
     # Then
     assert rollout is not None
     assert rollout["feature_state_value"] == {"type": "boolean", "value": "true"}
+
+
+def test_enable_experiment_rollout__disabled_rollout__enables_and_preserves_allocations(
+    experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given a disabled rollout with a 50/50 multivariate split
+    option_a, option_b, _ = multivariate_options
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=False,
+            rollout_percentage=20.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # When
+    services.enable_experiment_rollout(experiment, AuthorData(user=admin_user))
+
+    # Then the override is enabled with its allocations preserved
+    rollout = services.get_experiment_rollout(experiment)
+    assert rollout is not None
+    assert rollout["enabled"] is True
+    assert {
+        (mv["multivariate_feature_option"], mv["percentage_allocation"])
+        for mv in rollout["multivariate_feature_state_values"]
+    } == {(option_a.id, 50.0), (option_b.id, 50.0)}
+
+
+def test_enable_experiment_rollout__already_enabled__no_op(
+    experiment_with_rollout: Experiment,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+) -> None:
+    # Given a rollout that is already enabled
+    update_flag = mocker.patch("experimentation.services.update_flag")
+
+    # When
+    services.enable_experiment_rollout(
+        experiment_with_rollout, AuthorData(user=admin_user)
+    )
+
+    # Then no flag write is made
+    update_flag.assert_not_called()
+
+
+def test_enable_experiment_rollout__no_rollout__no_op(
+    experiment: Experiment,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+) -> None:
+    # Given an experiment without a rollout
+    update_flag = mocker.patch("experimentation.services.update_flag")
+
+    # When
+    services.enable_experiment_rollout(experiment, AuthorData(user=admin_user))
+
+    # Then nothing is written
+    update_flag.assert_not_called()
