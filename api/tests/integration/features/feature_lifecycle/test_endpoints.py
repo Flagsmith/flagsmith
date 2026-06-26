@@ -139,6 +139,32 @@ def test_feature_lifecycle_counts__no_features__responds_200_with_empty_json_sum
     )
 
 
+def test_feature_lifecycle_counts__archived_feature__excluded_from_summary(
+    admin_client: APIClient,
+    environment: int,
+    log: StructuredLogCapture,
+    organisation: int,
+    project: int,
+) -> None:
+    # Given
+    Feature.objects.create(project_id=project, name="archived", is_archived=True)
+
+    # When
+    response = admin_client.get(
+        f"/api/v1/environments/{environment}/feature-lifecycle-counts/"
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {stage: 0 for stage in LifecycleStage}
+    assert log.has(
+        "summarised",
+        level="info",
+        organisation__id=organisation,
+        environment__id=environment,
+    )
+
+
 def test_feature_lifecycle_counts__anonymous_user__responds_401(
     environment: int,
 ) -> None:
