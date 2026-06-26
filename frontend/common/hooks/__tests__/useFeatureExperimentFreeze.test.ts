@@ -36,18 +36,23 @@ const makeExperiment = (
   ...overrides,
 })
 
+const empty = { data: { results: [] }, isLoading: false } as any
+const loading = { data: undefined, isLoading: true } as any
+
+const withResults = (experiments: Experiment[]) =>
+  ({ data: { results: experiments }, isLoading: false } as any)
+
 describe('useFeatureExperimentFreeze', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   it('returns isFrozen true when a running experiment exists for the feature', () => {
-    mockUseGetExperimentsQuery.mockReturnValue({
-      data: {
-        results: [makeExperiment({ featureId: 42, status: 'running' })],
-      },
-      isLoading: false,
-    } as any)
+    mockUseGetExperimentsQuery
+      .mockReturnValueOnce(
+        withResults([makeExperiment({ featureId: 42, status: 'running' })]),
+      )
+      .mockReturnValueOnce(empty)
 
     const result = useFeatureExperimentFreeze(42, 'env-123')
 
@@ -57,51 +62,21 @@ describe('useFeatureExperimentFreeze', () => {
   })
 
   it('returns isFrozen true when a paused experiment exists for the feature', () => {
-    mockUseGetExperimentsQuery.mockReturnValue({
-      data: {
-        results: [makeExperiment({ featureId: 42, status: 'paused' })],
-      },
-      isLoading: false,
-    } as any)
+    mockUseGetExperimentsQuery
+      .mockReturnValueOnce(empty)
+      .mockReturnValueOnce(
+        withResults([makeExperiment({ featureId: 42, status: 'paused' })]),
+      )
 
     const result = useFeatureExperimentFreeze(42, 'env-123')
 
     expect(result.isFrozen).toBe(true)
   })
 
-  it('returns isFrozen false when experiment is created (not yet started)', () => {
-    mockUseGetExperimentsQuery.mockReturnValue({
-      data: {
-        results: [makeExperiment({ featureId: 42, status: 'created' })],
-      },
-      isLoading: false,
-    } as any)
-
-    const result = useFeatureExperimentFreeze(42, 'env-123')
-
-    expect(result.isFrozen).toBe(false)
-    expect(result.experiment).toBeNull()
-  })
-
-  it('returns isFrozen false when experiment is completed', () => {
-    mockUseGetExperimentsQuery.mockReturnValue({
-      data: {
-        results: [makeExperiment({ featureId: 42, status: 'completed' })],
-      },
-      isLoading: false,
-    } as any)
-
-    const result = useFeatureExperimentFreeze(42, 'env-123')
-
-    expect(result.isFrozen).toBe(false)
-    expect(result.experiment).toBeNull()
-  })
-
   it('returns isFrozen false when no experiments exist', () => {
-    mockUseGetExperimentsQuery.mockReturnValue({
-      data: { results: [] },
-      isLoading: false,
-    } as any)
+    mockUseGetExperimentsQuery
+      .mockReturnValueOnce(empty)
+      .mockReturnValueOnce(empty)
 
     const result = useFeatureExperimentFreeze(42, 'env-123')
 
@@ -110,23 +85,21 @@ describe('useFeatureExperimentFreeze', () => {
   })
 
   it('returns isFrozen false when experiment belongs to a different feature', () => {
-    mockUseGetExperimentsQuery.mockReturnValue({
-      data: {
-        results: [makeExperiment({ featureId: 99, status: 'running' })],
-      },
-      isLoading: false,
-    } as any)
+    mockUseGetExperimentsQuery
+      .mockReturnValueOnce(
+        withResults([makeExperiment({ featureId: 99, status: 'running' })]),
+      )
+      .mockReturnValueOnce(empty)
 
     const result = useFeatureExperimentFreeze(42, 'env-123')
 
     expect(result.isFrozen).toBe(false)
   })
 
-  it('returns isLoading true while experiments are loading', () => {
-    mockUseGetExperimentsQuery.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-    } as any)
+  it('returns isLoading true while either query is loading', () => {
+    mockUseGetExperimentsQuery
+      .mockReturnValueOnce(empty)
+      .mockReturnValueOnce(loading)
 
     const result = useFeatureExperimentFreeze(42, 'env-123')
 
@@ -134,18 +107,43 @@ describe('useFeatureExperimentFreeze', () => {
     expect(result.isLoading).toBe(true)
   })
 
-  it('skips query when featureId is undefined', () => {
-    mockUseGetExperimentsQuery.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-    } as any)
+  it('skips both queries when featureId is undefined', () => {
+    mockUseGetExperimentsQuery
+      .mockReturnValueOnce(empty)
+      .mockReturnValueOnce(empty)
 
     const result = useFeatureExperimentFreeze(undefined, 'env-123')
 
     expect(result.isFrozen).toBe(false)
-    expect(mockUseGetExperimentsQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ environmentId: 'env-123' }),
-      expect.objectContaining({ skip: true }),
+    expect(mockUseGetExperimentsQuery).toHaveBeenCalledTimes(2)
+    expect(mockUseGetExperimentsQuery).toHaveBeenNthCalledWith(
+      1,
+      { environmentId: 'env-123', status: 'running' },
+      { skip: true },
+    )
+    expect(mockUseGetExperimentsQuery).toHaveBeenNthCalledWith(
+      2,
+      { environmentId: 'env-123', status: 'paused' },
+      { skip: true },
+    )
+  })
+
+  it('passes status filter to each query', () => {
+    mockUseGetExperimentsQuery
+      .mockReturnValueOnce(empty)
+      .mockReturnValueOnce(empty)
+
+    useFeatureExperimentFreeze(42, 'env-123')
+
+    expect(mockUseGetExperimentsQuery).toHaveBeenNthCalledWith(
+      1,
+      { environmentId: 'env-123', status: 'running' },
+      { skip: false },
+    )
+    expect(mockUseGetExperimentsQuery).toHaveBeenNthCalledWith(
+      2,
+      { environmentId: 'env-123', status: 'paused' },
+      { skip: false },
     )
   })
 })

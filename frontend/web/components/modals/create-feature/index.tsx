@@ -110,8 +110,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   } = props
   const flagId = props.environmentFlag?.id
 
-  const { experiment: freezingExperiment, isFrozen: experimentFrozen } =
-    useFeatureExperimentFreeze(props.projectFlag?.id, environmentId)
+  const freeze = useFeatureExperimentFreeze(
+    props.projectFlag?.id,
+    environmentId,
+  )
 
   const [projectFlag, setProjectFlag] = useState<any>(() =>
     props.projectFlag
@@ -659,8 +661,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       error={error}
                       projectId={projectId}
                       noPermissions={!!noPermissions}
-                      experimentFrozen={experimentFrozen}
-                      freezingExperiment={freezingExperiment}
+                      freeze={freeze}
                       featureState={environmentFlag}
                       projectFlag={projectFlag}
                       environmentFlag={props.environmentFlag}
@@ -698,8 +699,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         <SegmentOverridesTab
                           projectId={projectId}
                           environmentId={environmentId}
-                          experimentFrozen={experimentFrozen}
-                          freezingExperiment={freezingExperiment}
+                          freeze={freeze}
                           projectFlag={projectFlag}
                           segmentOverrides={segmentOverrides}
                           updateSegments={updateSegments}
@@ -811,8 +811,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       <FeatureSettings
                         identity={identity}
                         projectId={projectId}
-                        experimentFrozen={experimentFrozen}
-                        freezingExperiment={freezingExperiment}
+                        environmentId={environmentId}
+                        freeze={freeze}
                         projectFlag={projectFlag}
                         isSaving={isSaving}
                         invalid={invalid}

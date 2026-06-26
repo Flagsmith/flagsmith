@@ -16,11 +16,12 @@ import CompareSegmentOverride from 'components/diff/CompareSegmentOverride'
 import { FlagValueFooter } from 'components/modals/FlagValueFooter'
 import Utils from 'common/utils/utils'
 import {
-  Experiment,
   FeatureState,
   MultivariateOption,
   ProjectFlag,
 } from 'common/types/responses'
+import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
+import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
 import { useHasPermission } from 'common/providers/Permission'
 import { ProjectPermission } from 'common/types/permissions.types'
 
@@ -40,8 +41,7 @@ type FeatureValueTabProps = {
   projectId: number | string
   identity?: string
   noPermissions: boolean
-  experimentFrozen?: boolean
-  freezingExperiment?: Experiment | null
+  freeze?: FeatureExperimentFreeze
   featureState: FeatureState
   projectFlag: ProjectFlag
   environmentFlag?: FeatureState
@@ -65,9 +65,8 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   environmentName,
   error,
   existingChangeRequest,
-  experimentFrozen,
   featureState,
-  freezingExperiment,
+  freeze,
   identity,
   is4Eyes,
   isSaving,
@@ -82,7 +81,8 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   projectId,
 }) => {
   const isEdit = !!projectFlag?.id
-  const isDisabled = !!noPermissions || !!experimentFrozen
+  const isDisabled =
+    !!noPermissions || !!freeze?.isFrozen || !!freeze?.isLoading
 
   const { permission: createFeature } = useHasPermission({
     id: projectId,
@@ -300,13 +300,12 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 
   return (
     <div className={`${identity ? 'mx-3' : ''}`}>
-      {experimentFrozen && freezingExperiment && (
-        <InfoMessage>
-          This flag is part of the experiment{' '}
-          <strong>{freezingExperiment.name}</strong> which is currently{' '}
-          {freezingExperiment.status}. Editing is restricted to prevent skewing
-          experiment results.
-        </InfoMessage>
+      {freeze?.isFrozen && freeze.experiment && environmentId && (
+        <ExperimentFreezeNotice
+          experiment={freeze.experiment}
+          projectId={projectId}
+          environmentId={environmentId}
+        />
       )}
       <FormGroup className='mb-4'>
         <Tooltip
@@ -507,38 +506,41 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
         </div>
       )}
 
-      {environmentId && onSaveFeatureValue && !experimentFrozen && (
-        <>
-          <JSONReference
-            className='mb-3'
-            showNamesButton
-            title={'Feature'}
-            json={projectFlag}
-          />
-          <JSONReference
-            className='mb-3'
-            title={'Feature state'}
-            json={environmentFlag}
-          />
-          <FlagValueFooter
-            is4Eyes={!!is4Eyes}
-            isVersioned={!!isVersioned}
-            projectId={
-              typeof projectId === 'string'
-                ? parseInt(projectId, 10)
-                : projectId
-            }
-            projectFlag={projectFlag}
-            environmentId={environmentId}
-            environmentName={environmentName || ''}
-            isSaving={!!isSaving}
-            featureName={projectFlag.name}
-            isInvalid={!!invalid}
-            existingChangeRequest={!!existingChangeRequest}
-            onSaveFeatureValue={onSaveFeatureValue}
-          />
-        </>
-      )}
+      {environmentId &&
+        onSaveFeatureValue &&
+        !freeze?.isFrozen &&
+        !freeze?.isLoading && (
+          <>
+            <JSONReference
+              className='mb-3'
+              showNamesButton
+              title={'Feature'}
+              json={projectFlag}
+            />
+            <JSONReference
+              className='mb-3'
+              title={'Feature state'}
+              json={environmentFlag}
+            />
+            <FlagValueFooter
+              is4Eyes={!!is4Eyes}
+              isVersioned={!!isVersioned}
+              projectId={
+                typeof projectId === 'string'
+                  ? parseInt(projectId, 10)
+                  : projectId
+              }
+              projectFlag={projectFlag}
+              environmentId={environmentId}
+              environmentName={environmentName || ''}
+              isSaving={!!isSaving}
+              featureName={projectFlag.name}
+              isInvalid={!!invalid}
+              existingChangeRequest={!!existingChangeRequest}
+              onSaveFeatureValue={onSaveFeatureValue}
+            />
+          </>
+        )}
     </div>
   )
 }
