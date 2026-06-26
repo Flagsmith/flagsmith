@@ -1,9 +1,15 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { ExpectedDirection, Metric, ProjectFlag } from 'common/types/responses'
-import { useCreateExperimentMutation } from 'common/services/useExperiment'
+import {
+  useCreateExperimentMutation,
+  useStartExperimentMutation,
+} from 'common/services/useExperiment'
 import { useGetFeatureStatesQuery } from 'common/services/useFeatureState'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
-import { METRIC_DIRECTION_TO_EXPECTED_DIRECTION } from './constants'
+import {
+  ENABLE_EXPERIMENT_LIFECYCLE,
+  METRIC_DIRECTION_TO_EXPECTED_DIRECTION,
+} from './constants'
 import WizardStepper from './WizardStepper'
 import WizardNavButtons from './WizardNavButtons'
 import LivePreviewPanel from './LivePreviewPanel'
@@ -75,8 +81,11 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
     )
   }, [selectedFeature, environmentFeatureState])
 
-  const [createExperiment, { isLoading: isSubmitting }] =
+  const [createExperiment, { isLoading: isCreating }] =
     useCreateExperimentMutation()
+  const [startExperiment, { isLoading: isStarting }] =
+    useStartExperimentMutation()
+  const isSubmitting = isCreating || isStarting
 
   const isStep1Valid = useMemo(
     () =>
@@ -135,7 +144,7 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
     try {
       const controlValue =
         selectedFeature.environment_feature_state?.feature_state_value ?? ''
-      await createExperiment({
+      const experiment = await createExperiment({
         body: {
           experiment_rollout: {
             enabled: false,
@@ -155,7 +164,23 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
         },
         environmentId,
       }).unwrap()
-      toast('Experiment created successfully')
+      // Auto-start to skip draft status when lifecycle states are disabled.
+      if (!ENABLE_EXPERIMENT_LIFECYCLE) {
+        try {
+          await startExperiment({
+            environmentId,
+            experimentId: experiment.id,
+          }).unwrap()
+        } catch {
+          toast(
+            'Experiment created but failed to start. You can start it manually from the experiment page.',
+            'danger',
+          )
+          onCreated()
+          return
+        }
+      }
+      toast('Experiment created and started')
       onCreated()
     } catch {
       toast('Failed to create experiment', 'danger')
@@ -170,6 +195,7 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
     rolloutPercentage,
     selectedFeature,
     selectedMetric,
+    startExperiment,
     variationSplit,
   ])
 
@@ -183,7 +209,8 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
           <strong>
             {rolloutPercentage}% of eligible identities in the environment
           </strong>
-          . You can pause or stop the experiment at any time.
+          . While the experiment is running, the flag value will not be
+          editable.
         </span>
       ),
       noText: 'Cancel',
