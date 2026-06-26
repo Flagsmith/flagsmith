@@ -693,6 +693,30 @@ def test_action__start__enables_disabled_rollout(
     assert detail.json()["experiment_rollout"]["enabled"] is True
 
 
+def test_action__start_rollout_enable_fails__rolls_back_transition(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given enabling the rollout will fail while starting
+    enable_features(EXPERIMENT_FLAG)
+    mocker.patch(
+        "experimentation.views.enable_experiment_rollout",
+        side_effect=RuntimeError("boom"),
+    )
+
+    # When
+    with pytest.raises(RuntimeError):
+        admin_client_new.post(_action_url(environment, experiment, "start"))
+
+    # Then the status transition is rolled back
+    experiment.refresh_from_db()
+    assert experiment.status == ExperimentStatus.CREATED
+    assert experiment.started_at is None
+
+
 def test_action__complete__sets_ended_at(
     admin_client_new: APIClient,
     environment: Environment,

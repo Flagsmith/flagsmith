@@ -2,7 +2,7 @@ import logging
 from datetime import timedelta
 from typing import Any
 
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import Count, Prefetch, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -287,11 +287,12 @@ class ExperimentViewSet(
 
     @action(detail=True, methods=["post"])
     def start(self, request: Request, **kwargs: object) -> Response:
-        response = self._transition_status(ExperimentStatus.RUNNING)
-        if status.is_success(response.status_code):
-            enable_experiment_rollout(
-                self.get_object(), AuthorData.from_request(request)
-            )
+        with transaction.atomic():
+            response = self._transition_status(ExperimentStatus.RUNNING)
+            if status.is_success(response.status_code):
+                enable_experiment_rollout(
+                    self.get_object(), AuthorData.from_request(request)
+                )
         return response
 
     @action(detail=True, methods=["post"])
