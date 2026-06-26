@@ -14,6 +14,7 @@ import {
   PagedResponse,
   ProjectFlag,
   ProjectSummary,
+  Tag,
 } from 'common/types/responses'
 import { SmartDefaults } from './useSmartDefaults'
 import { createOrganisationViaAccountStore } from './createOrganisationViaAccountStore'
@@ -137,9 +138,19 @@ async function ensureEnvironments(
     .unwrap()
 }
 
-// Reuse the project's existing flag (keeps a renamed flag and stops piling up
-// duplicates on revisit); only create the demo flag when there are none.
-// Returns the flag so callers see its real name and tags.
+// Find the project's Onboarding tag, if it's been created yet.
+async function findOnboardingTag(
+  store: Store,
+  projectId: number,
+): Promise<Tag | undefined> {
+  const tags = await store
+    .dispatch(tagService.endpoints.getTags.initiate({ projectId }))
+    .unwrap()
+  return tags?.find((t) => t.label === ONBOARDING_TAG.label)
+}
+
+// Reuse the onboarding flag, matched by its Onboarding tag (or its name) so we
+// never grab one of the user's other flags; else create the demo flag.
 async function ensureFlag(
   store: Store,
   project: ProjectSummary,
@@ -151,7 +162,11 @@ async function ensureFlag(
       }),
     )
     .unwrap()
-  const existing = flags?.results?.[0]
+  const onboardingTag = await findOnboardingTag(store, project.id)
+  const existing =
+    (onboardingTag &&
+      flags?.results?.find((f) => f.tags?.includes(onboardingTag.id))) ||
+    flags?.results?.find((f) => f.name === FLAG_NAME)
   if (existing) {
     return existing
   }
@@ -178,13 +193,8 @@ async function ensureOnboardingTag(
   flag: ProjectFlag,
 ): Promise<void> {
   try {
-    const tags = await store
-      .dispatch(
-        tagService.endpoints.getTags.initiate({ projectId: project.id }),
-      )
-      .unwrap()
     const tag =
-      tags?.find((t) => t.label === ONBOARDING_TAG.label) ??
+      (await findOnboardingTag(store, project.id)) ??
       (await store
         .dispatch(
           tagService.endpoints.createTag.initiate({
