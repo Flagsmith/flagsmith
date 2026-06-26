@@ -15,7 +15,7 @@ from organisations.usage_reporting.mappers import (
 
 logger = structlog.get_logger("usage_reporting")
 
-USAGE_ENDPOINT_PATH = "/v1/usage"
+USAGE_ENDPOINT_PATH = "/v1/public/usage"
 REQUEST_TIMEOUT_SECONDS = 30
 
 
