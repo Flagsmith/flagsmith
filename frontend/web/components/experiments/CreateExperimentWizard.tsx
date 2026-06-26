@@ -1,7 +1,13 @@
 import { FC, useCallback, useMemo, useState } from 'react'
 import { ExpectedDirection, Metric, ProjectFlag } from 'common/types/responses'
-import { useCreateExperimentMutation } from 'common/services/useExperiment'
-import { METRIC_DIRECTION_TO_EXPECTED_DIRECTION } from './constants'
+import {
+  useCreateExperimentMutation,
+  useStartExperimentMutation,
+} from 'common/services/useExperiment'
+import {
+  ENABLE_EXPERIMENT_LIFECYCLE,
+  METRIC_DIRECTION_TO_EXPECTED_DIRECTION,
+} from './constants'
 import WizardStepper from './WizardStepper'
 import WizardNavButtons from './WizardNavButtons'
 import LivePreviewPanel from './LivePreviewPanel'
@@ -36,8 +42,11 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
     useState<ExpectedDirection | null>(null)
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
 
-  const [createExperiment, { isLoading: isSubmitting }] =
+  const [createExperiment, { isLoading: isCreating }] =
     useCreateExperimentMutation()
+  const [startExperiment, { isLoading: isStarting }] =
+    useStartExperimentMutation()
+  const isSubmitting = isCreating || isStarting
 
   const isStep1Valid = useMemo(
     () =>
@@ -89,7 +98,7 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
   const doCreate = useCallback(async () => {
     if (!selectedFeature || !selectedMetric || !expectedDirection) return
     try {
-      await createExperiment({
+      const experiment = await createExperiment({
         body: {
           feature: selectedFeature.id,
           hypothesis: hypothesis.trim(),
@@ -103,6 +112,13 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
         },
         environmentId,
       }).unwrap()
+      // Auto-start to skip draft status when lifecycle states are disabled.
+      if (!ENABLE_EXPERIMENT_LIFECYCLE) {
+        await startExperiment({
+          environmentId,
+          experimentId: experiment.id,
+        }).unwrap()
+      }
       toast('Experiment created successfully')
       onCreated()
     } catch {
@@ -117,6 +133,7 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
     onCreated,
     selectedFeature,
     selectedMetric,
+    startExperiment,
   ])
 
   const handleLaunch = useCallback(() => {
