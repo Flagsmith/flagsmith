@@ -118,12 +118,18 @@ const ExperimentActionDropdown: FC<ExperimentActionDropdownProps> = ({
           { label: 'Resume Experiment', onClick: handleStart },
           { label: 'Mark as Completed', onClick: handleComplete },
         ]
+      case 'completed':
+        return [
+          {
+            className: 'text-danger',
+            label: 'Delete',
+            onClick: handleDelete,
+          },
+        ]
       default:
         return []
     }
   }, [status, handleStart, handlePause, handleComplete, handleDelete])
-
-  if (status === 'completed') return null
 
   return <DropdownMenu items={items} />
 }

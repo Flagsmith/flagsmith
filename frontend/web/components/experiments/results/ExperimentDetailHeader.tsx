@@ -14,7 +14,10 @@ import {
 } from 'common/services/useExperiment'
 import { Experiment } from 'common/types/responses'
 import Tooltip from 'components/Tooltip'
-import { getPrimaryMetric } from 'components/experiments/constants'
+import {
+  ENABLE_EXPERIMENT_LIFECYCLE,
+  getPrimaryMetric,
+} from 'components/experiments/constants'
 import 'components/base/SelectableCard/SelectableCard.scss'
 import './results.scss'
 
@@ -170,9 +173,11 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
       case 'running':
         return (
           <ButtonDropdown
-            dropdownItems={[
-              { label: 'Pause Experiment', onClick: handlePause },
-            ]}
+            dropdownItems={
+              ENABLE_EXPERIMENT_LIFECYCLE
+                ? [{ label: 'Pause Experiment', onClick: handlePause }]
+                : []
+            }
             onClick={handleComplete}
             size='small'
             theme='danger'
