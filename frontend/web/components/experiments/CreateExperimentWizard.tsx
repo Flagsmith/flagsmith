@@ -209,7 +209,8 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
           <strong>
             {rolloutPercentage}% of eligible identities in the environment
           </strong>
-          . You can pause or stop the experiment at any time.
+          . While the experiment is running, the flag value will not be
+          editable.
         </span>
       ),
       noText: 'Cancel',
