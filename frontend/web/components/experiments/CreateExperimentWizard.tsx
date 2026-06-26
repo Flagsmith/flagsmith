@@ -166,10 +166,19 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
       }).unwrap()
       // Auto-start to skip draft status when lifecycle states are disabled.
       if (!ENABLE_EXPERIMENT_LIFECYCLE) {
-        await startExperiment({
-          environmentId,
-          experimentId: experiment.id,
-        }).unwrap()
+        try {
+          await startExperiment({
+            environmentId,
+            experimentId: experiment.id,
+          }).unwrap()
+        } catch {
+          toast(
+            'Experiment created but failed to start. You can start it manually from the experiment page.',
+            'danger',
+          )
+          onCreated()
+          return
+        }
       }
       toast('Experiment created successfully')
       onCreated()
