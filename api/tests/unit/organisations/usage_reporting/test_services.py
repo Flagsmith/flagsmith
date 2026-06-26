@@ -112,7 +112,7 @@ def test_push_snapshot__valid_snapshot__sends_bearer_authed_post(
     # Then
     mocked_post.assert_called_once()
     (url,), kwargs = mocked_post.call_args
-    assert url == "https://cp.example.com/v1/usage"
+    assert url == "https://cp.example.com/v1/public/usage"
     assert kwargs["headers"]["Authorization"] == f"Bearer {_build_auth_token('sig')}"
     assert kwargs["headers"]["Content-Type"] == "application/json"
     body = json.loads(kwargs["data"])
