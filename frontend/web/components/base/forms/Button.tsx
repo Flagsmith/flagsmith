@@ -1,6 +1,7 @@
 import React from 'react'
 import cn from 'classnames'
 import { ButtonHTMLAttributes, HTMLAttributeAnchorTarget } from 'react'
+import Loader from 'components/Loader'
 
 export const themeClassNames = {
   danger: 'btn-danger',
@@ -27,6 +28,7 @@ export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
   target?: HTMLAttributeAnchorTarget
   theme?: keyof typeof themeClassNames
   size?: keyof typeof sizeClassNames
+  isLoading?: boolean
 }
 
 export const Button = React.forwardRef<
@@ -37,7 +39,9 @@ export const Button = React.forwardRef<
     {
       children,
       className,
+      disabled,
       href,
+      isLoading = false,
       onMouseUp,
       size = 'default',
       target,
@@ -52,6 +56,7 @@ export const Button = React.forwardRef<
       className,
       themeClassNames[theme],
       sizeClassNames[size],
+      isLoading && 'd-inline-flex align-items-center gap-2',
     )
     return href ? (
       <a
@@ -67,11 +72,13 @@ export const Button = React.forwardRef<
     ) : (
       <button
         {...rest}
+        disabled={disabled || isLoading}
         type={type}
         onMouseUp={onMouseUp}
         className={classes}
         ref={ref as React.RefObject<HTMLButtonElement>}
       >
+        {isLoading && <Loader width='15px' height='15px' />}
         {children}
       </button>
     )

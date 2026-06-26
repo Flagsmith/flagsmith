@@ -3,7 +3,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: var(--font-caption-size, 12px);
+    font-size: 12px;
     margin-bottom: 6px;
   }
 
@@ -70,7 +70,7 @@
 
   &__lift-value {
     flex-shrink: 0;
-    font-size: var(--font-caption-size, 12px);
+    font-size: 12px;
     font-weight: var(--font-weight-regular);
     white-space: nowrap;
   }
@@ -88,7 +88,7 @@
     align-items: center;
     gap: 8px;
     padding: 16px 20px 0;
-    font-size: var(--font-body-sm-size, 13px);
+    font-size: 13px;
   }
 
   &__axis-chart {
@@ -104,7 +104,7 @@
   &__axis-tick-label {
     position: absolute;
     transform: translateX(-50%);
-    font-size: var(--font-caption-size, 12px);
+    font-size: 12px;
     font-weight: var(--font-weight-bold);
     color: var(--color-text-secondary);
     white-space: nowrap;
@@ -147,7 +147,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: var(--font-caption-size, 12px);
+    font-size: 12px;
     color: var(--color-text-default);
     white-space: nowrap;
     padding-right: 6px;
@@ -187,7 +187,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: var(--font-body-sm-size, 13px);
+    font-size: 13px;
     white-space: nowrap;
   }
 
@@ -231,7 +231,7 @@
       border-bottom: 1px solid var(--color-border-default);
 
       .react-tooltip.react-tooltip {
-        font-size: var(--font-body-sm-size, 13px);
+        font-size: 13px;
         font-weight: var(--font-weight-regular);
         text-transform: none;
         letter-spacing: normal;
@@ -244,7 +244,7 @@
 
     td {
       padding: 22px 20px;
-      font-size: var(--font-body-sm-size, 13px);
+      font-size: 13px;
       color: var(--color-text-default);
       border-bottom: 1px solid var(--color-border-default);
       vertical-align: middle;
@@ -280,7 +280,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: var(--font-caption-size, 12px);
+    font-size: 12px;
     color: var(--color-text-secondary);
   }
 }

@@ -110,7 +110,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignor
                     label=tag_by_type_and_state[self.type][state],
                     project=self.feature.project,
                     is_system_tag=True,
-                    type=TagType.GITHUB.value,
+                    type=TagType.GITHUB,
                 )
                 self.feature.tags.add(github_tag)
                 self.feature.save()

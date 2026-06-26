@@ -24,13 +24,13 @@ from experimentation.models import (
 from experimentation.stats import VariantStats
 
 
-def test_warehouse_connection__after_create__enqueues_ingestion_add_task(
+def test_warehouse_connection__after_create__enqueues_ingestion_write_task(
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
     # Given
     mock_task = mocker.patch(
-        "experimentation.tasks.add_environment_key_to_ingestion",
+        "experimentation.tasks.write_environment_ingestion_keys",
     )
 
     # When
@@ -42,26 +42,26 @@ def test_warehouse_connection__after_create__enqueues_ingestion_add_task(
 
     # Then
     mock_task.delay.assert_called_once_with(
-        kwargs={"environment_api_key": environment.api_key},
+        kwargs={"environment_id": environment.id},
     )
 
 
-def test_warehouse_connection__after_delete__enqueues_ingestion_delete_task(
+def test_warehouse_connection__after_delete__enqueues_ingestion_remove_task(
     warehouse_connection: WarehouseConnection,
     mocker: MockerFixture,
 ) -> None:
     # Given
     mock_task = mocker.patch(
-        "experimentation.tasks.delete_environment_key_from_ingestion",
+        "experimentation.tasks.remove_environment_ingestion_keys",
     )
-    environment_api_key = warehouse_connection.environment.api_key
+    environment_id = warehouse_connection.environment_id
 
     # When
     warehouse_connection.delete()
 
     # Then
     mock_task.delay.assert_called_once_with(
-        kwargs={"environment_api_key": environment_api_key},
+        kwargs={"environment_id": environment_id},
     )
 
 

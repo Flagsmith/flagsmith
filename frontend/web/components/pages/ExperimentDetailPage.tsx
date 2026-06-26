@@ -12,6 +12,7 @@ import ExperimentConfiguration from 'components/experiments/results/ExperimentCo
 import ExperimentSummaryScorecard from 'components/experiments/results/ExperimentSummaryScorecard'
 import ExperimentMetricScorecard from 'components/experiments/results/ExperimentMetricScorecard'
 import ExperimentExposuresPanel from 'components/experiments/results/ExperimentExposuresPanel'
+import ExperimentResultsRefreshControl from 'components/experiments/results/ExperimentResultsRefreshControl'
 
 type ExperimentDetailParams = {
   projectId: string
@@ -88,7 +89,14 @@ const ExperimentDetailPage: FC = () => {
 
       {experiment.status !== 'created' && (
         <>
-          <h5 className='mb-3 mt-5'>Results</h5>
+          <div className='d-flex justify-content-between align-items-center mb-3 mt-5'>
+            <h5 className='mb-0'>Results</h5>
+            <ExperimentResultsRefreshControl
+              environmentId={environmentId}
+              experimentId={numericId}
+              status={experiment.status}
+            />
+          </div>
           <ExperimentSummaryScorecard
             experiment={experiment}
             results={results}

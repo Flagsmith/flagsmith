@@ -10,7 +10,7 @@ from integrations.gitlab.services.tagging import (
     clear_tag_for_resource,
 )
 from projects.models import Project
-from projects.tags.models import Tag, TagType
+from projects.tags.models import Tag
 
 
 @pytest.mark.django_db
@@ -26,7 +26,7 @@ def test_clear_tag_for_resource__only_resource_of_kind__removes_tag(
     )
     apply_initial_tag(resource)
     assert sorted(
-        feature.tags.filter(type=TagType.GITLAB.value).values_list("label", flat=True)
+        feature.tags.filter(type="GITLAB").values_list("label", flat=True)
     ) == ["Issue Open"]
 
     # When
@@ -34,12 +34,7 @@ def test_clear_tag_for_resource__only_resource_of_kind__removes_tag(
 
     # Then
     assert (
-        sorted(
-            feature.tags.filter(type=TagType.GITLAB.value).values_list(
-                "label", flat=True
-            )
-        )
-        == []
+        sorted(feature.tags.filter(type="GITLAB").values_list("label", flat=True)) == []
     )
 
 
@@ -62,7 +57,7 @@ def test_clear_tag_for_resource__other_resource_of_same_kind_remains__keeps_tag(
     )
     apply_initial_tag(first)
     assert sorted(
-        feature.tags.filter(type=TagType.GITLAB.value).values_list("label", flat=True)
+        feature.tags.filter(type="GITLAB").values_list("label", flat=True)
     ) == ["Issue Open"]
 
     # When
@@ -70,7 +65,7 @@ def test_clear_tag_for_resource__other_resource_of_same_kind_remains__keeps_tag(
 
     # Then
     assert sorted(
-        feature.tags.filter(type=TagType.GITLAB.value).values_list("label", flat=True)
+        feature.tags.filter(type="GITLAB").values_list("label", flat=True)
     ) == ["Issue Open"]
 
 
@@ -94,7 +89,7 @@ def test_clear_tag_for_resource__different_kind_remains__keeps_other_kind_tag(
     apply_initial_tag(issue)
     apply_initial_tag(mr)
     assert sorted(
-        feature.tags.filter(type=TagType.GITLAB.value).values_list("label", flat=True)
+        feature.tags.filter(type="GITLAB").values_list("label", flat=True)
     ) == ["Issue Open", "MR Open"]
 
     # When
@@ -102,7 +97,7 @@ def test_clear_tag_for_resource__different_kind_remains__keeps_other_kind_tag(
 
     # Then
     assert sorted(
-        feature.tags.filter(type=TagType.GITLAB.value).values_list("label", flat=True)
+        feature.tags.filter(type="GITLAB").values_list("label", flat=True)
     ) == ["MR Open"]
 
 
@@ -113,14 +108,14 @@ def test_clear_tag_for_resource__non_gitlab_type__leaves_tags_intact(
 ) -> None:
     # Given — feature has both a GitHub tag and a GitLab tag already.
     expected_tags = [
-        ("Issue Open", TagType.GITHUB.value),
-        ("Issue Open", TagType.GITLAB.value),
+        ("Issue Open", "GITHUB"),
+        ("Issue Open", "GITLAB"),
     ]
 
     github_tag = Tag.objects.create(
         label="Issue Open",
         project=project,
-        type=TagType.GITHUB.value,
+        type="GITHUB",
         is_system_tag=True,
     )
     gitlab_issue = FeatureExternalResource.objects.create(
