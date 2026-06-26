@@ -180,7 +180,7 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
           return
         }
       }
-      toast('Experiment created successfully')
+      toast('Experiment created and started')
       onCreated()
     } catch {
       toast('Failed to create experiment', 'danger')
