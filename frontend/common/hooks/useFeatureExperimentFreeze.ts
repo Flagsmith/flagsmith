@@ -13,23 +13,15 @@ export function useFeatureExperimentFreeze(
   environmentId: string,
 ): FeatureExperimentFreeze {
   const skip = !featureId
-  const { data: runningData, isLoading: loadingRunning } =
-    useGetExperimentsQuery({ environmentId, status: 'running' }, { skip })
-  const { data: pausedData, isLoading: loadingPaused } = useGetExperimentsQuery(
-    { environmentId, status: 'paused' },
+  const { data, isLoading } = useGetExperimentsQuery(
+    { environmentId, status: 'running' },
     { skip },
   )
 
-  const isLoading = loadingRunning || loadingPaused
-
   const experiment = useMemo(() => {
-    if (!featureId) return null
-    const all = [
-      ...(runningData?.results ?? []),
-      ...(pausedData?.results ?? []),
-    ]
-    return all.find((e) => e.feature?.id === featureId) ?? null
-  }, [runningData?.results, pausedData?.results, featureId])
+    if (!featureId || !data?.results) return null
+    return data.results.find((e) => e.feature?.id === featureId) ?? null
+  }, [data?.results, featureId])
 
   return {
     experiment,
