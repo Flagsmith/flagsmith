@@ -7,11 +7,8 @@ import { useGetTagsQuery } from 'common/services/useTag'
 import { Environment, Tag } from 'common/types/responses'
 import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
 
-// Resolves the onboarding demo flag's Development feature state and exposes a
-// real, persisted toggle (updateFeatureState) for the flags table. Finds the
-// flag by name (the bootstrap returns the name, not the id), then its state in
-// the Dev environment. Also resolves the flag's real tags, so attaching a tag
-// to the flag shows up in the onboarding table automatically.
+// Resolves the demo flag (by name, since bootstrap returns the name) and its
+// Dev feature state, exposing a persisted toggle and the flag's tags.
 export const useOnboardingFlag = (
   environment: Environment | null,
   projectId: number | null,
@@ -39,9 +36,8 @@ export const useOnboardingFlag = (
 
   const [updateFeatureState] = useUpdateFeatureStateMutation()
 
-  // Optimistic toggle, mirroring the product feature row: the switch flips
-  // instantly via displayEnabled and reverts on failure, rather than waiting for
-  // the update + refetch round-trip (which left the switch visibly stuck).
+  // Optimistic (like the product row): displayEnabled flips instantly and
+  // reverts on failure, instead of waiting on the update + refetch.
   const { displayEnabled, isLoading, revertToggle, startToggle } =
     useFeatureRowState(state?.enabled)
 

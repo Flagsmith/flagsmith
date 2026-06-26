@@ -15,12 +15,8 @@ import { useUpdateOrganisationMutation } from 'common/services/useOrganisation'
 import { useUpdateProjectMutation } from 'common/services/useProject'
 import './OnboardingFlow.scss'
 
-// The new single-page onboarding experience, rendered at /getting-started when
-// the `onboarding_quickstart_flow` flag is on (see GettingStartedGate).
-//
-// Resources (org / project / Dev + Prod / first flag) are bootstrapped
-// idempotently by useEnsureOnboardingResources, and the inline header chips
-// persist renames; the verify terminal and flags table render below (#7766).
+// The single-page onboarding flow, rendered at /getting-started when
+// onboarding_quickstart_flow is on (see GettingStartedGate).
 const OnboardingFlow: FC = () => {
   const {
     caseSensitive,
@@ -38,17 +34,15 @@ const OnboardingFlow: FC = () => {
   const [updateOrganisation] = useUpdateOrganisationMutation()
   const [updateProject] = useUpdateProjectMutation()
 
-  // The flow is chromeless (no app nav), so it owns its only way out: skip to
-  // the org's projects and set things up manually.
+  // Chromeless flow, so it owns its only exit.
   const skipToApp = () =>
     history.push(
       organisationId !== null
         ? `/organisation/${organisationId}/projects`
         : '/',
     )
-  // Inline renames are optimistic and revert if the persist fails. The flag name
-  // also drives the connect-panel snippets/prompt, so it defaults to the
-  // bootstrapped flag (its real name, reused on revisit).
+  // Inline renames are optimistic, reverting on failure. featureName drives the
+  // snippets, so it defaults to the bootstrapped flag.
   const [renamedOrganisation, setRenamedOrganisation] = useState<string | null>(
     null,
   )
@@ -63,13 +57,9 @@ const OnboardingFlow: FC = () => {
     projectId,
   })
 
-  // Verify terminal + flags table. The checklist ticks as the user copies the
-  // install / wire snippets; the connection step is stubbed until the
-  // first-evaluation signal lands (#7767, behind useOnboardingConnection); the
-  // Dev toggle is real now.
+  // Connection is stubbed until #7767 (useOnboardingConnection); the toggle is real.
   const connection = useOnboardingConnection()
-  // Session-only and one-way: a reload resets them, so the checklist reflects
-  // what the user did this visit, not durable progress. Fine for onboarding.
+  // Session-only: a reload resets the checklist. Fine for onboarding.
   const [installCopied, setInstallCopied] = useState(false)
   const [snippetCopied, setSnippetCopied] = useState(false)
   const {
@@ -80,8 +70,7 @@ const OnboardingFlow: FC = () => {
     toggle: toggleFlag,
   } = useOnboardingFlag(environment, projectId, featureName)
 
-  // Org/project are single-field PATCHes; the shell nav adopts the new names on
-  // its next load.
+  // Single-field PATCHes; the shell adopts the new names on its next load.
   const renameOrganisation = async (name: string) => {
     if (organisationId === null) {
       return
@@ -113,8 +102,7 @@ const OnboardingFlow: FC = () => {
       toast('Couldn’t update your project name. Please try again.', 'danger')
     }
   }
-  // The flag and its snippet name must stay in lockstep, so this persists
-  // (delete + recreate). Optimistic, reverting on failure.
+  // Flag name and snippet stay in lockstep; persists via delete + recreate.
   const renameFeature = async (name: string) => {
     const previous = featureName
     setRenamedFeature(name)
@@ -122,8 +110,7 @@ const OnboardingFlow: FC = () => {
       toast('Flag name updated')
     } else {
       setRenamedFeature(previous)
-      // Only surface an error for a genuine failure - a rename attempted before
-      // the flag query settles also returns false, and shouldn't alarm the user.
+      // Don't alarm on a rename fired before the flag query settles.
       if (flagReady) {
         toast('Couldn’t rename your flag. Please try again.', 'danger')
       }
@@ -138,9 +125,7 @@ const OnboardingFlow: FC = () => {
     )
   }
 
-  // Bootstrap failed (e.g. a plan org cap, or a network error). Without this the
-  // flow would render with an empty environment key and broken snippets, so show
-  // a recoverable message instead. A reload re-runs the idempotent bootstrap.
+  // Bootstrap failed (e.g. a plan org cap). Recoverable; a reload re-runs it.
   if (status === 'error') {
     return (
       <div className='onboarding-flow mx-auto text-center'>

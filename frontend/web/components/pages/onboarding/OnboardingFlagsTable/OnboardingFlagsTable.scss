@@ -1,12 +1,7 @@
-// "Your flags" card. A normal light/dark surface (unlike the terminal), so it
-// uses the semantic tokens. Connected lifts it with the action/purple border +
-// glow to draw the eye; waiting dims it until the first evaluation lands.
-// Layout (flex / gap), the surface background and the radius are Bootstrap /
-// token utilities in the markup; this file keeps the bits with no utility
-// equivalent: the accent glow, the waiting state, and the non-standard metrics.
+// "Your flags" card. Layout/surface via utilities; this keeps the accent glow,
+// the waiting state, and the non-standard metrics.
 .onboarding-flags {
-  // gap has no standard utility step (14px), so it stays here.
-  gap: 14px;
+  gap: 14px; // no utility step for 14px
 
   &__title {
     color: var(--color-text-default);
@@ -17,8 +12,7 @@
     width: 100%;
     max-width: 760px;
     overflow: hidden;
-    // Accent border + purple glow to lift the connected card (matches the mock).
-    // Derived from the action colour with oklch alpha so it tracks the theme.
+    // Accent glow, oklch-derived from the action colour so it tracks the theme.
     border: 1px solid oklch(from var(--color-border-action) l c h / 0.4);
     box-shadow: 0 18px 44px 2px oklch(from var(--color-border-action) l c h / 0.2),
       var(--shadow-md);
@@ -26,7 +20,6 @@
       box-shadow var(--duration-fast) var(--easing-standard),
       border-color var(--duration-fast) var(--easing-standard);
 
-    // Until the SDK connects the flag is real but quiet: no accent, dimmed.
     &--waiting {
       border-color: var(--color-border-default);
       box-shadow: none;

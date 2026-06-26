@@ -6,15 +6,12 @@ export type OnboardingTerminalProps = {
   featureName: string
   installCopied: boolean
   snippetCopied: boolean
-  // First SDK evaluation received (the connection signal, #7767).
+  // First evaluation received (#7767).
   connected: boolean
 }
 
-// Verify console for the onboarding flow, mirroring the design's "sdk console".
-// The checklist ticks as the user acts: copy install, copy snippet, then the
-// first evaluation flips the badge to LIVE and prints the connection receipt.
-// Always dark - it's a terminal - so it carries its own palette, not the theme
-// tokens.
+// Verify console. Always dark (a terminal reads the same in both modes), so it
+// uses a literal palette rather than theme tokens.
 const OnboardingTerminal: FC<OnboardingTerminalProps> = ({
   connected,
   featureName,

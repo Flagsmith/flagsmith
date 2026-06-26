@@ -1,11 +1,8 @@
-// The onboarding verify console. Always dark (a terminal reads the same in
-// light and dark mode), so it uses the design's literal console palette rather
-// than the theme tokens. Colours match the Pencil "sdk console" frame.
+// Verify console. Always dark in both modes, so it uses a literal palette.
 .onboarding-terminal {
   overflow: hidden;
   border-radius: var(--radius-xl);
   background: #0d1117;
-  // No mono design token exists; a literal stack suits the always-dark console.
   font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   font-size: 13px;
   line-height: 1.6;

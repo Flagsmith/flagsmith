@@ -6,20 +6,15 @@ import { useCopyFeedback } from 'components/pages/onboarding/hooks/useCopyFeedba
 
 export type CodeCardProps = {
   code: string
-  // Syntax language for the body's highlighting (e.g. 'bash', 'javascript').
+  // highlight.js language for the body.
   language: string
-  // Left side of the card header (e.g. the language label or npm/yarn pills).
   headerLeft: ReactNode
-  // Fires when the user copies the code (drives the verify checklist).
+  // Drives the verify checklist.
   onCopy?: () => void
-  // Accessible name for the copy button. The visible label is the same ("Copy
-  // Code") on every card, so this distinguishes them for screen readers;
-  // defaults to the visible label.
+  // Accessible name; the visible "Copy Code" label is identical on every card.
   copyLabel?: string
 }
 
-// Owns its own "Copied" feedback so each card is independent. Highlight escapes
-// the body for display; Copy uses the raw string.
 const CodeCard: FC<CodeCardProps> = ({
   code,
   copyLabel,

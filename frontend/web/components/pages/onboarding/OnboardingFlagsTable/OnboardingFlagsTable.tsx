@@ -19,19 +19,13 @@ export type OnboardingFlagsTableProps = {
   status: OnboardingFlagsTableStatus
   flags: OnboardingFlagRow[]
   onToggle: (flag: OnboardingFlagRow, enabled: boolean) => void
-  // Name of the flag whose toggle is mid-flight, so its Switch disables.
   togglingFlag?: string | null
-  // Whether the flag's state has loaded; the toggle stays disabled until then so
-  // a click can't no-op against an unresolved feature state. Defaults to true.
+  // Defaults true; while false the toggle stays disabled (state not loaded yet).
   togglesReady?: boolean
 }
 
-// The "Your flags" card from the onboarding design: the pre-created flag(s) in a
-// real-looking table that reuses the product FeatureName / Tag / Switch. Prop
-// driven (the page owns the data and the persisted toggle, see
-// useUpdateFeatureStateMutation). `connected` lifts the card with the accent
-// border + glow and enables the toggle; `waiting` dims it until the first
-// evaluation arrives.
+// "Your flags" card: the pre-created flag in a table that reuses the product
+// FeatureName / Tag / Switch. Connected lifts it with a glow; waiting dims it.
 const OnboardingFlagsTable: FC<OnboardingFlagsTableProps> = ({
   flags,
   onToggle,
@@ -40,9 +34,7 @@ const OnboardingFlagsTable: FC<OnboardingFlagsTableProps> = ({
   togglingFlag,
 }) => {
   const waiting = status === 'waiting'
-  // Toggles are interactive only once the app has connected and the flag state
-  // has loaded; before that the table is a dimmed preview and a click would
-  // no-op. (A mid-flight toggle also locks its own row, below.)
+  // Locked until connected and the flag state has loaded (else a click no-ops).
   const togglesLocked = waiting || !togglesReady
   return (
     <section

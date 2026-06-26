@@ -2,13 +2,9 @@ import { test, expect } from '../test-setup';
 import { byId, createHelpers, getFlagsmith, log, visualSnapshot } from '../helpers';
 import { E2E_SIGN_UP_USER, PASSWORD } from '../config';
 
-// The single-page onboarding flow (onboarding_quickstart_flow) a new user lands
-// on at /getting-started. Mirror of the legacy signup test's guard: this runs
-// only when the flag is on, the legacy signup test runs only when it's off.
-//
-// Selectors are accessibility-first (roles / labels / text), not data-test ids:
-// the header inputs expose aria-labels, the copy buttons and the flag switch
-// carry accessible names, and the flags table is a labelled region.
+// The single-page onboarding flow (onboarding_quickstart_flow), at
+// /getting-started. Runs only when the flag is on (the legacy signup test runs
+// when it's off).
 test.describe('Onboarding', () => {
   test('New user connects via the single-page onboarding flow @oss', async ({
     page,
@@ -24,15 +20,12 @@ test.describe('Onboarding', () => {
 
     await addErrorLogging();
 
-    // The flow renders once bootstrap settles (it shows a loader, then an error
-    // heading on failure - so the welcome heading means "ready").
+    // The welcome heading means bootstrap settled (loader, then heading/error).
     const flowReady = async () =>
       page
         .getByRole('heading', { name: /Welcome/ })
         .waitFor({ state: 'visible', timeout: 30000 });
 
-    // Sign up a fresh user; with the flag on, a getting-started user is routed
-    // to /getting-started where the flow bootstraps the org / project / flag.
     log('Sign up');
     await page.goto('/');
     await click(byId('jsSignup'));
@@ -43,9 +36,8 @@ test.describe('Onboarding', () => {
     await setText(byId('password'), PASSWORD);
     await click(byId('signup-btn'));
 
-    // Don't navigate manually - a goto here races the post-signup auth and gets
-    // bounced to /?redirect=. The app redirects a getting-started user to the
-    // flow itself once authenticated, so just wait for it to land there.
+    // Don't navigate manually - a goto races the post-signup auth and bounces to
+    // /?redirect=. The app routes a getting-started user here itself, so just wait.
     log('Land on the onboarding flow');
     await page.waitForURL((url) => url.pathname === '/getting-started', {
       timeout: 30000,
@@ -53,28 +45,23 @@ test.describe('Onboarding', () => {
     await flowReady();
     await visualSnapshot(page, 'onboarding-flow', testInfo);
 
-    // The verify terminal starts pre-connection: LISTENING, nothing ticked.
     await expect(page.getByText('LISTENING')).toBeVisible();
     await expect(page.getByText('Copy install command')).not.toContainText('✓');
 
-    // Copying the install + wire snippets ticks the checklist (the visible
-    // [✓] prefix is the done state).
     log('Copy snippets, checklist ticks');
     await page.getByRole('button', { name: 'Copy install command' }).click();
     await expect(page.getByText('Copy install command')).toContainText('✓');
     await page.getByRole('button', { name: 'Copy code snippet' }).click();
     await expect(page.getByText('Copy code snippet')).toContainText('✓');
 
-    // The flags table is locked until the app connects, and there's no real
-    // first evaluation in a test - so force the connected state via ?connected
-    // (the stub seam for #7767). The badge flips to LIVE and the toggle unlocks.
+    // No real first evaluation in a test, so force the connected state via
+    // ?connected (the #7767 stub); that unlocks the toggle and flips LIVE.
     log('Force the connected state');
     await page.goto('/getting-started?connected');
     await flowReady();
     await expect(page.getByText('LIVE', { exact: true })).toBeVisible();
 
-    // Now the Development toggle is enabled. Two switches on the page (theme +
-    // flag), so scope to the flags region.
+    // Two switches on the page (theme + flag), so scope to the flags region.
     log('Toggle the flag');
     const flagsTable = page.getByRole('region', { name: 'Your flags' });
     const flagSwitch = flagsTable.getByRole('switch');
@@ -98,15 +85,13 @@ test.describe('Onboarding', () => {
     await flagInput.fill('renamed_demo_flag');
     await flagInput.press('Enter');
 
-    // Wait for the rename to persist before reloading - it's a delete + recreate
-    // (two requests), and reloading too early aborts them. The success toast
-    // fires once both land.
+    // Wait for the rename to persist before reloading - it's a delete + recreate,
+    // and reloading too early aborts the requests. The toast fires once both land.
     await expect(page.getByText('Flag name updated')).toBeVisible({
       timeout: 20000,
     });
 
-    // Reload to prove the rename persisted server-side and the tag came with it
-    // (bootstrap is idempotent and reuses the renamed flag on revisit).
+    // Reload to prove it persisted (bootstrap reuses the renamed flag).
     await page.reload();
     await flowReady();
     await expect(page.getByLabel('Flag name')).toHaveValue('renamed_demo_flag');
