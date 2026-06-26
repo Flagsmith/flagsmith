@@ -1060,7 +1060,16 @@ export type Req = {
   updateExperiment: {
     environmentId: string
     experimentId: number
-    body: { hypothesis?: string }
+    body: {
+      hypothesis?: string
+      experiment_rollout?: {
+        rollout_percentage: number
+        multivariate_feature_state_values: {
+          multivariate_feature_option: number
+          percentage_allocation: number
+        }[]
+      }
+    }
   }
   deleteExperiment: { environmentId: string; experimentId: number }
   getExperiment: { environmentId: string; experimentId: number }

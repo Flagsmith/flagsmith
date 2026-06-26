@@ -631,6 +631,7 @@ export type Experiment = {
   updated_at: string
   started_at: string | null
   ended_at: string | null
+  rollout_percentage?: number
 }
 
 export type ExpectedDirection =

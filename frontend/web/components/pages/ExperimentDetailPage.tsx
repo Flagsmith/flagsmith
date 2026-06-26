@@ -85,7 +85,10 @@ const ExperimentDetailPage: FC = () => {
         environmentId={environmentId}
         experiment={experiment}
       />
-      <ExperimentConfiguration experiment={experiment} />
+      <ExperimentConfiguration
+        experiment={experiment}
+        environmentId={environmentId}
+      />
 
       {experiment.status !== 'created' && (
         <>
