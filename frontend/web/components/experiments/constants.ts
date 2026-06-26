@@ -28,7 +28,7 @@ export const TAB_ORDER: FilterTab[] = [
   'completed',
 ]
 
-// Gates draft/paused experiment states; will be replaced by a feature flag.
+// Gates draft/paused experiment states
 export const ENABLE_EXPERIMENT_LIFECYCLE = false
 
 export const VISIBLE_TAB_ORDER: FilterTab[] = ENABLE_EXPERIMENT_LIFECYCLE
