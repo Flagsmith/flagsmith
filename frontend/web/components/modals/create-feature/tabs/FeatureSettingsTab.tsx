@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
-import { ProjectFlag } from 'common/types/responses'
+import { Experiment, ProjectFlag } from 'common/types/responses'
 import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -34,6 +34,8 @@ import { getSupportedContentType } from 'common/services/useSupportedContentType
 type FeatureSettingsTabProps = {
   identity?: string
   projectId: number | string
+  experimentFrozen?: boolean
+  freezingExperiment?: Experiment | null
   projectFlag: ProjectFlag | null
   isSaving?: boolean
   invalid?: boolean
@@ -48,6 +50,8 @@ type FeatureSettingsTabProps = {
 }
 
 const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
+  experimentFrozen,
+  freezingExperiment,
   groupOwnerIds,
   hasMetadataRequired,
   identity,
@@ -121,6 +125,14 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
 
   return (
     <div className={`${identity ? 'mx-3' : ''}`}>
+      {experimentFrozen && freezingExperiment && (
+        <InfoMessage>
+          This flag is part of the experiment{' '}
+          <strong>{freezingExperiment.name}</strong> which is currently{' '}
+          {freezingExperiment.status}. Some settings are restricted to prevent
+          skewing experiment results.
+        </InfoMessage>
+      )}
       {!identity && projectFlag?.tags && (
         <FormGroup className='mb-3 setting'>
           <InputGroup
@@ -175,10 +187,7 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
                 })
                   .unwrap()
                   .catch((e) =>
-                    toast(
-                      e?.data?.[0] || 'Failed to remove owner.',
-                      'danger',
-                    ),
+                    toast(e?.data?.[0] || 'Failed to remove owner.', 'danger'),
                   )
               }
             />
@@ -282,6 +291,7 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
               onChange={(is_server_key_only) =>
                 onChange({ ...projectFlag, is_server_key_only })
               }
+              disabled={!!experimentFrozen}
               className='ml-0'
             />
             <Tooltip
@@ -305,6 +315,7 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
               onChange={(is_archived) =>
                 onChange({ ...projectFlag, is_archived })
               }
+              disabled={!!experimentFrozen}
               className='ml-0'
             />
             <Tooltip

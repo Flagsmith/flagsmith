@@ -16,6 +16,7 @@ import CompareSegmentOverride from 'components/diff/CompareSegmentOverride'
 import { FlagValueFooter } from 'components/modals/FlagValueFooter'
 import Utils from 'common/utils/utils'
 import {
+  Experiment,
   FeatureState,
   MultivariateOption,
   ProjectFlag,
@@ -39,6 +40,8 @@ type FeatureValueTabProps = {
   projectId: number | string
   identity?: string
   noPermissions: boolean
+  experimentFrozen?: boolean
+  freezingExperiment?: Experiment | null
   featureState: FeatureState
   projectFlag: ProjectFlag
   environmentFlag?: FeatureState
@@ -62,7 +65,9 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   environmentName,
   error,
   existingChangeRequest,
+  experimentFrozen,
   featureState,
+  freezingExperiment,
   identity,
   is4Eyes,
   isSaving,
@@ -77,6 +82,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   projectId,
 }) => {
   const isEdit = !!projectFlag?.id
+  const isDisabled = !!noPermissions || !!experimentFrozen
 
   const { permission: createFeature } = useHasPermission({
     id: projectId,
@@ -294,6 +300,14 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 
   return (
     <div className={`${identity ? 'mx-3' : ''}`}>
+      {experimentFrozen && freezingExperiment && (
+        <InfoMessage>
+          This flag is part of the experiment{' '}
+          <strong>{freezingExperiment.name}</strong> which is currently{' '}
+          {freezingExperiment.status}. Editing is restricted to prevent skewing
+          experiment results.
+        </InfoMessage>
+      )}
       <FormGroup className='mb-4'>
         <Tooltip
           title={
@@ -301,7 +315,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               <Switch
                 data-test='toggle-feature-button'
                 defaultChecked={default_enabled}
-                disabled={noPermissions}
+                disabled={isDisabled}
                 checked={default_enabled}
                 onChange={(enabled) => onEnvironmentFlagChange({ enabled })}
                 className='ml-0'
@@ -338,7 +352,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
                   )
                   onEnvironmentFlagChange({ feature_state_value })
                 }}
-                disabled={noPermissions}
+                disabled={isDisabled}
                 placeholder="e.g. 'big' "
               />
             }
@@ -444,7 +458,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
                 Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
                 <AddVariationButton
                   multivariateOptions={multivariate_options}
-                  disabled={!createFeature || noPermissions}
+                  disabled={!createFeature || isDisabled}
                   onClick={addVariation}
                 />,
               )}
@@ -454,7 +468,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
             {(!!environmentVariations || !isEdit) && (
               <VariationOptions
                 canCreateFeature={createFeature}
-                disabled={!!identity || noPermissions}
+                disabled={!!identity || isDisabled}
                 controlValue={featureState.feature_state_value}
                 controlPercentage={controlPercentage}
                 variationOverrides={environmentVariations as any}
@@ -484,7 +498,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
                 Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
                 <AddVariationButton
                   multivariateOptions={multivariate_options}
-                  disabled={!createFeature || noPermissions}
+                  disabled={!createFeature || isDisabled}
                   onClick={addVariation}
                 />,
               )}
@@ -493,7 +507,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
         </div>
       )}
 
-      {environmentId && onSaveFeatureValue && (
+      {environmentId && onSaveFeatureValue && !experimentFrozen && (
         <>
           <JSONReference
             className='mb-3'

@@ -11,7 +11,7 @@ import WarningMessage from 'components/WarningMessage'
 import ModalHR from 'components/modals/ModalHR'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
 import Utils from 'common/utils/utils'
-import { ProjectFlag } from 'common/types/responses'
+import { Experiment, ProjectFlag } from 'common/types/responses'
 import { EnvironmentPermission } from 'common/types/permissions.types'
 
 export type SegmentOverrideValue = {
@@ -34,6 +34,8 @@ type SegmentOverridesTabProps = {
   error: any
   existingChangeRequest?: { id: number }
   noPermissions?: boolean
+  experimentFrozen?: boolean
+  freezingExperiment?: Experiment | null
   disableCreate?: boolean
   highlightSegmentId?: number
 }
@@ -45,6 +47,8 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
   environmentId,
   error,
   existingChangeRequest,
+  experimentFrozen,
+  freezingExperiment,
   highlightSegmentId,
   invalid,
   isSaving,
@@ -159,7 +163,8 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
             {!isComparing &&
               !showCreateSegment &&
               manageSegmentOverrides &&
-              !disableCreate && (
+              !disableCreate &&
+              !experimentFrozen && (
                 <div className='text-right'>
                   <Button
                     size='small'
@@ -172,17 +177,28 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
                   </Button>
                 </div>
               )}
-            {!isComparing && !showCreateSegment && !noPermissions && (
-              <Button
-                onClick={() => changeSegment(segmentOverrides || [])}
-                type='button'
-                theme='secondary'
-                size='small'
-              >
-                {enabledSegment ? 'Enable All' : 'Disable All'}
-              </Button>
-            )}
+            {!isComparing &&
+              !showCreateSegment &&
+              !noPermissions &&
+              !experimentFrozen && (
+                <Button
+                  onClick={() => changeSegment(segmentOverrides || [])}
+                  type='button'
+                  theme='secondary'
+                  size='small'
+                >
+                  {enabledSegment ? 'Enable All' : 'Disable All'}
+                </Button>
+              )}
           </Row>
+          {experimentFrozen && freezingExperiment && (
+            <InfoMessage>
+              This flag is part of the experiment{' '}
+              <strong>{freezingExperiment.name}</strong> which is currently{' '}
+              {freezingExperiment.status}. Editing is restricted to prevent
+              skewing experiment results.
+            </InfoMessage>
+          )}
           <div className='text-muted mb-2'>
             <p>
               Segment Overrides apply when the identity traits match the segment
@@ -206,7 +222,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
               <SegmentOverrides
                 setShowCreateSegment={setShowCreateSegment}
                 onCompareChange={setIsComparing}
-                readOnly={!manageSegmentOverrides}
+                readOnly={!manageSegmentOverrides || !!experimentFrozen}
                 is4Eyes={is4Eyes}
                 showEditSegment
                 showCreateSegment={showCreateSegment}
@@ -229,8 +245,10 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
               <Loader />
             </div>
           )}
-          {!isComparing && !showCreateSegment && <ModalHR className='mt-4' />}
-          {!isComparing && !showCreateSegment && (
+          {!isComparing && !showCreateSegment && !experimentFrozen && (
+            <ModalHR className='mt-4' />
+          )}
+          {!isComparing && !showCreateSegment && !experimentFrozen && (
             <div>
               <p className='text-right mt-4 fs-small lh-sm modal-caption'>
                 Re-order overrides to adjust priority.

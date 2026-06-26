@@ -11,6 +11,7 @@ import moment from 'moment'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { useHasGithubIntegration } from 'common/hooks/useHasGithubIntegration'
 import { useHasGitLabIntegration } from 'common/hooks/useHasGitLabIntegration'
+import { useFeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import FeatureListStore from 'common/stores/feature-list-store'
 import IdentityProvider from 'common/providers/IdentityProvider'
 import FeatureListProvider from 'common/providers/FeatureListProvider'
@@ -108,6 +109,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     updateSegments,
   } = props
   const flagId = props.environmentFlag?.id
+
+  const { experiment: freezingExperiment, isFrozen: experimentFrozen } =
+    useFeatureExperimentFreeze(props.projectFlag?.id, environmentId)
 
   const [projectFlag, setProjectFlag] = useState<any>(() =>
     props.projectFlag
@@ -655,6 +659,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       error={error}
                       projectId={projectId}
                       noPermissions={!!noPermissions}
+                      experimentFrozen={experimentFrozen}
+                      freezingExperiment={freezingExperiment}
                       featureState={environmentFlag}
                       projectFlag={projectFlag}
                       environmentFlag={props.environmentFlag}
@@ -692,6 +698,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         <SegmentOverridesTab
                           projectId={projectId}
                           environmentId={environmentId}
+                          experimentFrozen={experimentFrozen}
+                          freezingExperiment={freezingExperiment}
                           projectFlag={projectFlag}
                           segmentOverrides={segmentOverrides}
                           updateSegments={updateSegments}
@@ -803,6 +811,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       <FeatureSettings
                         identity={identity}
                         projectId={projectId}
+                        experimentFrozen={experimentFrozen}
+                        freezingExperiment={freezingExperiment}
                         projectFlag={projectFlag}
                         isSaving={isSaving}
                         invalid={invalid}
