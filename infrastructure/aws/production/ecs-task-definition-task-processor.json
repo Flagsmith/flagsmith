@@ -29,7 +29,7 @@
                 "interval": 10,
                 "timeout": 2,
                 "retries": 5,
-                "startPeriod": 5
+                "startPeriod": 120
             },
             "essential": true,
             "environment": [
