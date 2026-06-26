@@ -159,7 +159,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         self.is_staff = value
         self.is_superuser = value
 
-    @hook(AFTER_SAVE, condition=(WhenFieldHasChanged("email", has_changed=True)))  # type: ignore[misc]
+    @hook(AFTER_SAVE, condition=(WhenFieldHasChanged("email", has_changed=True)))
     def send_warning_email(self) -> None:
         from users.tasks import send_email_changed_notification_email
 

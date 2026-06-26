@@ -141,8 +141,8 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignor
                 feature_states=feature_states,
             )
 
-    @hook(BEFORE_DELETE, when="type", is_now="GITHUB_ISSUE")  # type: ignore[misc]
-    @hook(BEFORE_DELETE, when="type", is_now="GITHUB_PR")  # type: ignore[misc]
+    @hook(BEFORE_DELETE, when="type", is_now="GITHUB_ISSUE")
+    @hook(BEFORE_DELETE, when="type", is_now="GITHUB_PR")
     def notify_github_on_unlink(self) -> None:
         # Add a comment to GitHub Issue/PR when feature is unlinked to the GH external resource
         if (

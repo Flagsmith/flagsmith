@@ -218,7 +218,7 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
                     args=(feature_state.id,),
                 )
 
-    @hook(BEFORE_DELETE)  # type: ignore[misc]
+    @hook(BEFORE_DELETE)
     def prevent_change_request_delete_if_committed(self) -> None:
         # In the workflows-logic module, we prevent change requests from being
         # deleted but, since this can have unexpected effects on published

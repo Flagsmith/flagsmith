@@ -72,7 +72,7 @@ class GitHubRepository(LifecycleModelMixin, SoftDeleteExportableModel):  # type:
         ]
         ordering = ("id",)
 
-    @hook(BEFORE_DELETE)  # type: ignore[misc]
+    @hook(BEFORE_DELETE)
     def delete_feature_external_resources(
         self,
     ) -> None:
@@ -93,8 +93,8 @@ class GitHubRepository(LifecycleModelMixin, SoftDeleteExportableModel):  # type:
             url__regex=pattern,
         ).delete()
 
-    @hook(AFTER_CREATE)  # type: ignore[misc]
-    @hook(AFTER_UPDATE, when="tagging_enabled", has_changed=True, was=False)  # type: ignore[misc]
+    @hook(AFTER_CREATE)
+    @hook(AFTER_UPDATE, when="tagging_enabled", has_changed=True, was=False)
     def create_github_tags(
         self,
     ) -> None:

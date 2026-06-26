@@ -133,12 +133,12 @@ class AuditLog(LifecycleModel):  # type: ignore[misc]
         if self.environment and self.project is None:
             self.project = self.environment.project
 
-    @hook(BEFORE_CREATE)  # type: ignore[misc]
+    @hook(BEFORE_CREATE)
     def add_created_date(self) -> None:
         if not self.created_date:
             self.created_date = timezone.now()
 
-    @hook(  # type: ignore[misc]
+    @hook(
         AFTER_CREATE,
         priority=priority.HIGHEST_PRIORITY,
         when="environment_document_updated",

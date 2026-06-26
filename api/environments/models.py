@@ -165,30 +165,30 @@ class Environment(
     class Meta:
         ordering = ["id"]
 
-    @hook(AFTER_CREATE)  # type: ignore[misc]
+    @hook(AFTER_CREATE)
     def create_feature_states(self) -> None:
         FeatureState.create_initial_feature_states_for_environment(environment=self)
 
-    @hook(AFTER_UPDATE)  # type: ignore[misc]
+    @hook(AFTER_UPDATE)
     def clear_environment_cache(self) -> None:
         # TODO: this could rebuild the cache itself (using an async task)
         environment_cache.delete_many(
             [self.initial_value("api_key"), *[eak.key for eak in self.api_keys.all()]]
         )
 
-    @hook(AFTER_UPDATE, when="api_key", has_changed=True)  # type: ignore[misc]
+    @hook(AFTER_UPDATE, when="api_key", has_changed=True)
     def update_environment_document_cache(self) -> None:
         environment_document_cache.delete(self.initial_value("api_key"))
         self.write_environment_documents(self.id)
 
-    @hook(AFTER_DELETE)  # type: ignore[misc]
+    @hook(AFTER_DELETE)
     def delete_from_dynamo(self) -> None:
         if self.project.enable_dynamo_db and environment_wrapper.is_enabled:
             from environments.tasks import delete_environment_from_dynamo
 
             delete_environment_from_dynamo.delay(args=(self.api_key, self.id))
 
-    @hook(AFTER_DELETE)  # type: ignore[misc]
+    @hook(AFTER_DELETE)
     def delete_environment_document_from_cache(self) -> None:
         if (
             settings.CACHE_ENVIRONMENT_DOCUMENT_MODE
@@ -199,7 +199,7 @@ class Environment(
 
     # Use the BEFORE_SAVE hook instead of BEFORE_CREATE to account for the logic in the
     # Environment.clone() method
-    @hook(BEFORE_SAVE, when="pk", is_now=None)  # type: ignore[misc]
+    @hook(BEFORE_SAVE, when="pk", is_now=None)
     def enable_v2_versioning(self) -> None:
         if self.use_v2_feature_versioning:
             # if the environment has already been created with versioning enabled,
@@ -727,7 +727,7 @@ class EnvironmentAPIKey(LifecycleModel):  # type: ignore[misc]
     def delete_from_dynamo(self):  # type: ignore[no-untyped-def]
         environment_api_key_wrapper.delete_api_key(self.key)
 
-    @hook(AFTER_SAVE)  # type: ignore[misc]
+    @hook(AFTER_SAVE)
     def sync_to_ingestion_on_save(self) -> None:
         from experimentation.models import WarehouseConnection
         from experimentation.tasks import write_environment_ingestion_key
@@ -740,7 +740,7 @@ class EnvironmentAPIKey(LifecycleModel):  # type: ignore[misc]
             kwargs={"environment_api_key_id": self.id},
         )
 
-    @hook(AFTER_DELETE)  # type: ignore[misc]
+    @hook(AFTER_DELETE)
     def remove_from_ingestion_on_delete(self) -> None:
         from experimentation.models import WarehouseConnection
         from experimentation.tasks import remove_environment_ingestion_key

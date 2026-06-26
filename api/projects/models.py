@@ -164,7 +164,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[d
             list(self.environments.values_list("api_key", flat=True))
         )
 
-    @hook(  # type: ignore[misc]
+    @hook(
         AFTER_SAVE,
         when="edge_v2_migration_status",
         has_changed=True,
@@ -181,7 +181,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[d
     def clean_up_dynamo(self):  # type: ignore[no-untyped-def]
         DynamoProjectMetadata(self.id).delete()  # type: ignore[no-untyped-call]
 
-    @hook(AFTER_DELETE)  # type: ignore[misc]
+    @hook(AFTER_DELETE)
     def handle_cascade_delete(self) -> None:
         handle_cascade_delete.delay(kwargs={"project_id": self.id})
 
