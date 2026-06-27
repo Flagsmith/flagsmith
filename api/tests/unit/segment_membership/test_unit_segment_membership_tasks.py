@@ -43,9 +43,6 @@ def dynamo_identities(
         )
 
 
-# --- seed_organisation_identities ------------------------------------------
-
-
 def test_seed_organisation_identities__no_clickhouse_creds__skips(
     mocker: MockerFixture,
     settings: SettingsWrapper,
@@ -240,9 +237,6 @@ def test_seed_organisation_identities__success__fans_out_refresh_per_project(
     assert dispatched_ids == {project.id, project_b.id}
 
 
-# --- reconcile_segment_membership_seeds ------------------------------------
-
-
 def test_reconcile_segment_membership_seeds__no_clickhouse_creds__skips(
     settings: SettingsWrapper,
     project: Project,
@@ -337,9 +331,6 @@ def test_reconcile_segment_membership_seeds__seed_already_pending__does_not_enqu
         ).count()
         == 1
     )
-
-
-# --- refresh_project_segment_counts (unchanged) ----------------------------
 
 
 def test_refresh_project_segment_counts__no_clickhouse_creds__skips(
