@@ -6,7 +6,7 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-task-processor",
-            "command": ["run-task-processor"],
+            "command": ["start", "task-processor"],
             "portMappings": [
                 {
                     "containerPort": 9100,
@@ -24,7 +24,7 @@
                 "interval": 10,
                 "timeout": 2,
                 "retries": 5,
-                "startPeriod": 120
+                "startPeriod": 30
             },
             "essential": true,
             "environment": [

@@ -1525,3 +1525,20 @@ if CLICKHOUSE_ENABLED:
         },
     }
     DATABASES["clickhouse"] = _clickhouse_db  # type: ignore[assignment]
+
+# Startup verbs (flagsmith-common `flagsmith` entrypoint): which databases each
+# role migrates and waits on. Mirrors the per-role gating run-docker.sh applied —
+# only databases actually configured are included. `DATABASES` is undefined when
+# no `DATABASE_URL` is set (e.g. build-time collectstatic), so guard for that.
+_configured_databases = globals().get("DATABASES", {})
+FLAGSMITH_MIGRATE_DATABASES = [
+    alias
+    for alias in ("default", "analytics", "task_processor", "clickhouse")
+    if alias in _configured_databases
+]
+FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES = [
+    alias
+    for alias in ("default", "analytics", "task_processor")
+    if alias in _configured_databases
+]
+FLAGSMITH_STARTUP_COMMANDS = ["bootstrap"]

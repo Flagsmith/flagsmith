@@ -7,7 +7,8 @@
         {
             "name": "flagsmith-task-processor",
             "command": [
-                "run-task-processor"
+                "start",
+                "task-processor"
             ],
             "portMappings": [
                 {
@@ -29,7 +30,7 @@
                 "interval": 10,
                 "timeout": 2,
                 "retries": 5,
-                "startPeriod": 120
+                "startPeriod": 30
             },
             "essential": true,
             "environment": [

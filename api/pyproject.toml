@@ -155,6 +155,9 @@ explicit = true
 
 [tool.uv.sources]
 flagsmith-private = { index = "flagsmith-pypi-production" }
+# TEMPORARY: track the composite startup verbs branch until flagsmith-common ships them.
+# TODO: revert to the PyPI release once the entrypoint verbs are released.
+flagsmith-common = { git = "https://github.com/Flagsmith/flagsmith-common", branch = "feat/composite-startup-verbs" }
 clickhouse-driver = { git = "https://github.com/Flagsmith/clickhouse-driver", branch = "newjson" }
 # TODO: Revert to the PyPI release once a version closing
 # https://github.com/jayvynl/django-clickhouse-backend/issues/154 is published.
