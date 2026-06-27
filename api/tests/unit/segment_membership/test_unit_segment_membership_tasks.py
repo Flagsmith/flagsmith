@@ -98,14 +98,14 @@ def test_seed_organisation_identities__flag_off__skips(
     project: Project,
     segment: Segment,
 ) -> None:
-    # Given a stale enqueue for an org whose flag is now off
+    # Given
     settings.CLICKHOUSE_ENABLED = True
     spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
 
     # When
     seed_organisation_identities(project.organisation_id)
 
-    # Then the defensive flag re-check stops any data load
+    # Then
     spy.assert_not_called()
     assert not SegmentMembershipSeed.objects.filter(
         organisation=project.organisation, seeded_at__isnull=False
@@ -123,7 +123,7 @@ def test_seed_organisation_identities__insert_fails__logs_and_continues(
     enable_features: EnableFeaturesFixture,
     log: StructuredLogCapture,
 ) -> None:
-    # Given a ClickHouse insert that blows up
+    # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     cursor = MagicMock()
@@ -149,7 +149,7 @@ def test_seed_organisation_identities__matching_identities__inserts_rows_version
     dynamo_identities: None,
     enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given the scan starts at a known instant
+    # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     mocker.patch("segment_membership.tasks.timezone.now", return_value=SCAN_START)
@@ -158,8 +158,7 @@ def test_seed_organisation_identities__matching_identities__inserts_rows_version
     # When
     seed_organisation_identities(project.organisation_id)
 
-    # Then the org's identities land in ClickHouse, every row versioned at scan
-    # start rather than insert time, so a CDC write arriving mid-scan wins dedup
+    # Then
     with connections["clickhouse"].cursor() as cursor:
         cursor.execute(
             "SELECT identifier, identity_key, traits, inserted_at "
@@ -202,7 +201,7 @@ def test_seed_organisation_identities__success__marks_org_seeded(
     # When
     seed_organisation_identities(project.organisation_id)
 
-    # Then the org carries a completed marker, so the reconciler never re-seeds it
+    # Then
     assert SegmentMembershipSeed.objects.filter(
         organisation=project.organisation, seeded_at__isnull=False
     ).exists()
@@ -218,7 +217,7 @@ def test_seed_organisation_identities__success__fans_out_refresh_per_project(
     flagsmith_identities_table: Table,
     enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given an org with two segment-bearing projects
+    # Given
     enable_features("segment_membership_inspection")
     project_b = Project.objects.create(
         name="project-b", organisation=project.organisation
@@ -243,11 +242,14 @@ def test_reconcile_segment_membership_seeds__no_clickhouse_creds__skips(
     segment: Segment,
     enable_features: EnableFeaturesFixture,
 ) -> None:
+    # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = False
 
+    # When
     reconcile_segment_membership_seeds()
 
+    # Then
     assert not Task.objects.filter(
         task_identifier=seed_organisation_identities.task_identifier,
         serialized_args=Task.serialize_data((project.organisation_id,)),
@@ -260,11 +262,14 @@ def test_reconcile_segment_membership_seeds__flagged_unseeded_org__enqueues_seed
     segment: Segment,
     enable_features: EnableFeaturesFixture,
 ) -> None:
+    # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
 
+    # When
     reconcile_segment_membership_seeds()
 
+    # Then
     assert (
         Task.objects.filter(
             task_identifier=seed_organisation_identities.task_identifier,
@@ -280,10 +285,13 @@ def test_reconcile_segment_membership_seeds__flag_off__does_not_enqueue(
     project: Project,
     segment: Segment,
 ) -> None:
+    # Given
     settings.CLICKHOUSE_ENABLED = True
 
+    # When
     reconcile_segment_membership_seeds()
 
+    # Then
     assert not Task.objects.filter(
         task_identifier=seed_organisation_identities.task_identifier,
         serialized_args=Task.serialize_data((project.organisation_id,)),
@@ -296,14 +304,17 @@ def test_reconcile_segment_membership_seeds__already_seeded__does_not_enqueue(
     segment: Segment,
     enable_features: EnableFeaturesFixture,
 ) -> None:
+    # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     SegmentMembershipSeed.objects.create(
         organisation=project.organisation, seeded_at=timezone.now()
     )
 
+    # When
     reconcile_segment_membership_seeds()
 
+    # Then
     assert not Task.objects.filter(
         task_identifier=seed_organisation_identities.task_identifier,
         serialized_args=Task.serialize_data((project.organisation_id,)),
@@ -321,8 +332,10 @@ def test_reconcile_segment_membership_seeds__seed_already_pending__does_not_enqu
     settings.CLICKHOUSE_ENABLED = True
     seed_organisation_identities.delay(args=(project.organisation_id,))
 
+    # When
     reconcile_segment_membership_seeds()
 
+    # Then
     assert (
         Task.objects.filter(
             task_identifier=seed_organisation_identities.task_identifier,
