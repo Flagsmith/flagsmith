@@ -30,12 +30,15 @@ import AccountStore from 'common/stores/account-store'
 import { ProjectPermission } from 'common/types/permissions.types'
 import { getStore } from 'common/store'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
+import { useGetTagsQuery } from 'common/services/useTag'
+import { getRemoveFeatureDisabledReason } from './FeatureSettingsTab.utils'
 
 type FeatureSettingsTabProps = {
   identity?: string
   projectId: number | string
   projectFlag: ProjectFlag | null
   isSaving?: boolean
+  isRemoving?: boolean
   invalid?: boolean
   hasMetadataRequired?: boolean
   ownerIds?: number[]
@@ -44,6 +47,7 @@ type FeatureSettingsTabProps = {
   onGroupOwnerIdsChange?: (ids: number[]) => void
   onChange: (projectFlag: ProjectFlag) => void
   onHasMetadataRequiredChange: (hasMetadataRequired: boolean) => void
+  onRemoveFeature?: () => void
   onSaveSettings?: () => void
 }
 
@@ -52,11 +56,13 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
   hasMetadataRequired,
   identity,
   invalid,
+  isRemoving = false,
   isSaving,
   onChange,
   onGroupOwnerIdsChange,
   onHasMetadataRequiredChange,
   onOwnerIdsChange,
+  onRemoveFeature,
   onSaveSettings,
   ownerIds,
   projectFlag,
@@ -79,6 +85,10 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
     { id: projectFlag?.id ?? 0, project: numericProjectId },
     { skip: !projectFlag?.id },
   )
+  const { data: tags } = useGetTagsQuery(
+    { projectId: numericProjectId },
+    { skip: !projectFlag?.id || !!identity },
+  )
   const [addOwners] = useAddFlagOwnersMutation()
   const [removeOwners] = useRemoveFlagOwnersMutation()
   const [addGroupOwners] = useAddFlagGroupOwnersMutation()
@@ -100,6 +110,32 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
     level: 'project',
     permission: ProjectPermission.CREATE_FEATURE,
   })
+  const { permission: deleteFeature } = useHasPermission({
+    id: projectId,
+    level: 'project',
+    permission: ProjectPermission.DELETE_FEATURE,
+    tags: flagData?.tags ?? projectFlag?.tags,
+  })
+  const featureTags = flagData?.tags ?? projectFlag?.tags ?? []
+  const hasProtectedTags = !!tags?.some(
+    (tag) => tag.is_permanent && featureTags.includes(tag.id),
+  )
+  const removeFeatureDisabledReason = getRemoveFeatureDisabledReason({
+    isProtected: hasProtectedTags,
+    isRemoving,
+    isSaving: !!isSaving,
+  })
+  const removeFeatureButton = onRemoveFeature && deleteFeature && isEdit && (
+    <Button
+      data-test='remove-feature-settings-btn'
+      disabled={!!removeFeatureDisabledReason}
+      id='remove-feature-settings-btn'
+      onClick={onRemoveFeature}
+      theme='danger'
+    >
+      {isRemoving ? 'Removing' : 'Remove Feature'}
+    </Button>
+  )
 
   if (!createFeature) {
     return (
@@ -175,10 +211,7 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
                 })
                   .unwrap()
                   .catch((e) =>
-                    toast(
-                      e?.data?.[0] || 'Failed to remove owner.',
-                      'danger',
-                    ),
+                    toast(e?.data?.[0] || 'Failed to remove owner.', 'danger'),
                   )
               }
             />
@@ -334,9 +367,19 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
           />
           <ModalHR className='mt-4' />
           {isEdit && (
-            <div className='text-right mt-3'>
+            <div className='d-flex align-items-start justify-content-between mt-3'>
+              <div>
+                {removeFeatureButton &&
+                  (removeFeatureDisabledReason ? (
+                    <Tooltip title={removeFeatureButton}>
+                      {removeFeatureDisabledReason}
+                    </Tooltip>
+                  ) : (
+                    removeFeatureButton
+                  ))}
+              </div>
               {createFeature && (
-                <>
+                <div className='text-right'>
                   <p className='text-right modal-caption fs-small lh-sm'>
                     This will save the above settings{' '}
                     <strong>all environments</strong>.
@@ -354,7 +397,7 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
                   >
                     {isSaving ? 'Updating' : 'Update Settings'}
                   </Button>
-                </>
+                </div>
               )}
             </div>
           )}

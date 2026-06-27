@@ -45,6 +45,8 @@ import FeatureUpdateSummary from './components/FeatureUpdateSummary'
 import FeatureNameInput from './components/FeatureNameInput'
 import IdentitySaveFooter from './components/IdentitySaveFooter'
 import { ProjectPermission } from 'common/types/permissions.types'
+import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
+import { useRemoveFeatureWithToast } from 'components/pages/features/hooks/useRemoveFeatureWithToast'
 import type {
   ChangeRequest,
   FeatureState,
@@ -143,6 +145,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const [ownerIds, setOwnerIds] = useState<number[]>([])
   const [groupOwnerIds, setGroupOwnerIds] = useState<number[]>([])
   const [, setTabKey] = useState(0)
+  const [removeFeature, { isLoading: isRemovingFeature }] =
+    useRemoveFeatureWithToast()
 
   const isEdit = !!props.projectFlag
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -210,6 +214,27 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     },
     [environmentId, props.projectFlag?.id],
   )
+
+  const confirmRemoveFeature = useCallback(() => {
+    const featureToRemove = props.projectFlag || projectFlag
+
+    if (!featureToRemove?.id) {
+      return
+    }
+
+    openModal2(
+      'Remove Feature',
+      <ConfirmRemoveFeature
+        projectFlag={featureToRemove}
+        cb={() => {
+          removeFeature(featureToRemove, projectId, {
+            onSuccess: close,
+          }).catch(() => undefined)
+        }}
+      />,
+      'p-0',
+    )
+  }, [close, projectFlag, projectId, props.projectFlag, removeFeature])
 
   // Mount effects
   useEffect(() => {
@@ -806,6 +831,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         projectFlag={projectFlag}
                         isSaving={isSaving}
                         invalid={invalid}
+                        isRemoving={isRemovingFeature}
                         hasMetadataRequired={hasMetadataRequired}
                         onChange={(changes: any) => {
                           setProjectFlag((prev: any) => ({
@@ -817,6 +843,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                           }
                         }}
                         onHasMetadataRequiredChange={setHasMetadataRequired}
+                        onRemoveFeature={
+                          !identity ? confirmRemoveFeature : undefined
+                        }
                         onSaveSettings={saveSettings}
                       />
                     </TabItem>
