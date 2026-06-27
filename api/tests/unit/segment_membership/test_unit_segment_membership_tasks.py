@@ -31,14 +31,14 @@ def dynamo_identities(
     flagsmith_identities_table: Table,
     environment: Environment,
 ) -> None:
-    for identifier, plan in (("alice", "bar"), ("carol", "baz")):
+    for identifier, trait_value in (("alice", "bar"), ("carol", "baz")):
         flagsmith_identities_table.put_item(
             Item={
                 "composite_key": f"{environment.api_key}_{identifier}",
                 "environment_api_key": environment.api_key,
                 "identifier": identifier,
                 "identity_uuid": f"f47ac10b-58cc-4372-a567-0e02b2c3d47{identifier[0]}",
-                "identity_traits": [{"trait_key": "foo", "trait_value": plan}],
+                "identity_traits": [{"trait_key": "foo", "trait_value": trait_value}],
             }
         )
 
