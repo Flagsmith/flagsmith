@@ -365,34 +365,6 @@ Logged at `warning` from:
 
 Attributes:
 
-### `segment_membership.backfill.environment.completed`
-
-Logged at `info` from:
- - `api/segment_membership/tasks.py:110`
-
-Attributes:
- - `environment.id`
- - `project.id`
- - `rows.count`
-
-### `segment_membership.backfill.environment.failed`
-
-Logged at `exception` from:
- - `api/segment_membership/tasks.py:103`
-
-Attributes:
- - `environment.id`
- - `project.id`
-
-### `segment_membership.backfill.skipped`
-
-Logged at `info` from:
- - `api/segment_membership/tasks.py:67`
- - `api/segment_membership/tasks.py:72`
-
-Attributes:
- - `reason`
-
 ### `segment_membership.compute.segment.skipped`
 
 Logged at `error` from:
@@ -415,7 +387,7 @@ Attributes:
 ### `segment_membership.refresh.project.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:185`
+ - `api/segment_membership/tasks.py:253`
 
 Attributes:
  - `membership_counts.count`
@@ -425,7 +397,7 @@ Attributes:
 ### `segment_membership.refresh.project.failed`
 
 Logged at `exception` from:
- - `api/segment_membership/tasks.py:158`
+ - `api/segment_membership/tasks.py:226`
 
 Attributes:
  - `project.id`
@@ -433,11 +405,43 @@ Attributes:
 ### `segment_membership.refresh.project.skipped`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:129`
- - `api/segment_membership/tasks.py:138`
+ - `api/segment_membership/tasks.py:197`
+ - `api/segment_membership/tasks.py:206`
 
 Attributes:
  - `project.id`
+ - `reason`
+
+### `segment_membership.seed.environment.completed`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:120`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+ - `rows.count`
+
+### `segment_membership.seed.environment.failed`
+
+Logged at `exception` from:
+ - `api/segment_membership/tasks.py:113`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+
+### `segment_membership.seed.skipped`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:66`
+ - `api/segment_membership/tasks.py:71`
+ - `api/segment_membership/tasks.py:76`
+
+Attributes:
+ - `organisation.id`
  - `reason`
 
 ### `segments.serializers.segment_revision_created`
