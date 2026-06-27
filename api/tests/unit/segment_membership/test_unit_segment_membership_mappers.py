@@ -5,6 +5,7 @@ import pytest
 from flagsmith_schemas.dynamodb import Identity as DynamoIdentity
 
 from segment_membership.mappers import map_identity_document_to_clickhouse_row
+from segment_membership.types import ClickHouseIdentityRow
 
 UUID_A = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 INSERTED_AT = datetime(2026, 5, 8, 12, 0, 0, tzinfo=timezone.utc)
@@ -92,12 +93,9 @@ INSERTED_AT = datetime(2026, 5, 8, 12, 0, 0, tzinfo=timezone.utc)
 )
 def test_map_identity_document_to_clickhouse_row__cases__return_expected(
     doc: DynamoIdentity,
-    expected: tuple[str, str, str, dict[str, object] | None, datetime],
+    expected: ClickHouseIdentityRow,
 ) -> None:
-    # Given a Dynamo identity document and a scan-start version timestamp
-    # When mapped onto an IDENTITIES row
-    # Then it lines up positionally with the IDENTITIES schema, carrying the
-    # caller-supplied inserted_at as the ReplacingMergeTree version.
+    # Given / When / Then
     assert (
         map_identity_document_to_clickhouse_row("env-key", doc, INSERTED_AT) == expected
     )

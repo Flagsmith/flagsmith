@@ -1,6 +1,11 @@
+from datetime import datetime
+from datetime import timezone as dt_timezone
 from unittest.mock import MagicMock
 
+import pytest
+from django.db import connections
 from django.utils import timezone
+from mypy_boto3_dynamodb.service_resource import Table
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
@@ -18,26 +23,24 @@ from segment_membership.tasks import (
 from segments.models import Segment
 from tests.types import EnableFeaturesFixture
 
-UUID_A = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+SCAN_START = datetime(2026, 6, 1, 12, 0, 0, tzinfo=dt_timezone.utc)
 
 
-def _one_identity_doc(environment: Environment) -> dict[str, object]:
-    return {
-        "identity_uuid": UUID_A,
-        "identifier": "a",
-        "composite_key": "k1",
-        "environment_api_key": environment.api_key,
-        "created_date": "2026-05-08T00:00:00Z",
-        "identity_traits": [],
-    }
-
-
-def _pending_seed_count(organisation_id: int) -> int:
-    return Task.objects.filter(
-        task_identifier=seed_organisation_identities.task_identifier,
-        completed=False,
-        serialized_args=Task.serialize_data((organisation_id,)),
-    ).count()
+@pytest.fixture
+def dynamo_identities(
+    flagsmith_identities_table: Table,
+    environment: Environment,
+) -> None:
+    for identifier, plan in (("alice", "bar"), ("carol", "baz")):
+        flagsmith_identities_table.put_item(
+            Item={
+                "composite_key": f"{environment.api_key}_{identifier}",
+                "environment_api_key": environment.api_key,
+                "identifier": identifier,
+                "identity_uuid": f"f47ac10b-58cc-4372-a567-0e02b2c3d47{identifier[0]}",
+                "identity_traits": [{"trait_key": "foo", "trait_value": plan}],
+            }
+        )
 
 
 # --- seed_organisation_identities ------------------------------------------
@@ -58,7 +61,14 @@ def test_seed_organisation_identities__no_clickhouse_creds__skips(
 
     # Then
     spy.assert_not_called()
-    assert any(e["event"] == "seed.skipped" for e in log.events)
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "seed.skipped",
+            "organisation__id": project.organisation_id,
+            "reason": "clickhouse_not_configured",
+        }
+    ]
 
 
 def test_seed_organisation_identities__dynamo_disabled__skips(
@@ -91,15 +101,14 @@ def test_seed_organisation_identities__flag_off__skips(
     project: Project,
     segment: Segment,
 ) -> None:
-    # Given the org was queued for a seed but its flag is now off -- the task
-    # re-checks the flag defensively so a stale enqueue can't load data.
+    # Given a stale enqueue for an org whose flag is now off
     settings.CLICKHOUSE_ENABLED = True
     spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
 
     # When
     seed_organisation_identities(project.organisation_id)
 
-    # Then
+    # Then the defensive flag re-check stops any data load
     spy.assert_not_called()
     assert not SegmentMembershipSeed.objects.filter(
         organisation=project.organisation, seeded_at__isnull=False
@@ -112,21 +121,18 @@ def test_seed_organisation_identities__insert_fails__logs_and_continues(
     project: Project,
     environment: Environment,
     segment: Segment,
+    flagsmith_identities_table: Table,
+    dynamo_identities: None,
     enable_features: EnableFeaturesFixture,
     log: StructuredLogCapture,
 ) -> None:
-    # Given
+    # Given a ClickHouse insert that blows up
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     cursor = MagicMock()
     cursor.executemany.side_effect = RuntimeError("boom")
     open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
     open_cursor.return_value.__enter__.return_value = cursor
-    wrapper = MagicMock(is_enabled=True)
-    wrapper.iter_all_items_paginated.return_value = iter(
-        [_one_identity_doc(environment)]
-    )
-    mocker.patch.object(tasks, "DynamoIdentityWrapper", return_value=wrapper)
 
     # When
     seed_organisation_identities(project.organisation_id)
@@ -135,72 +141,74 @@ def test_seed_organisation_identities__insert_fails__logs_and_continues(
     assert any(e["event"] == "seed.environment.failed" for e in log.events)
 
 
-def test_seed_organisation_identities__success__stamps_scan_start_inserted_at(
+@pytest.mark.clickhouse
+def test_seed_organisation_identities__matching_identities__inserts_rows_versioned_at_scan_start(
     mocker: MockerFixture,
+    clickhouse_db: None,
     settings: SettingsWrapper,
     project: Project,
     environment: Environment,
     segment: Segment,
+    dynamo_identities: None,
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given the scan starts at a known instant
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
-    scan_start = timezone.now()
-    mocker.patch("segment_membership.tasks.timezone.now", return_value=scan_start)
-    cursor = MagicMock()
-    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
-    open_cursor.return_value.__enter__.return_value = cursor
+    mocker.patch("segment_membership.tasks.timezone.now", return_value=SCAN_START)
     mocker.patch.object(tasks, "refresh_project_segment_counts")
-    wrapper = MagicMock(is_enabled=True)
-    wrapper.iter_all_items_paginated.return_value = iter(
-        [_one_identity_doc(environment)]
-    )
-    mocker.patch.object(tasks, "DynamoIdentityWrapper", return_value=wrapper)
 
     # When
     seed_organisation_identities(project.organisation_id)
 
-    # Then every inserted row is versioned at scan start, not insert time, so
-    # any CDC write landing mid-scan (carrying a later timestamp) wins dedup.
-    inserted_rows = cursor.executemany.call_args.args[1]
-    assert inserted_rows
-    assert all(row[-1] == scan_start for row in inserted_rows)
+    # Then the org's identities land in ClickHouse, every row versioned at scan
+    # start rather than insert time, so a CDC write arriving mid-scan wins dedup
+    with connections["clickhouse"].cursor() as cursor:
+        cursor.execute(
+            "SELECT identifier, identity_key, traits, inserted_at "
+            "FROM IDENTITIES FINAL WHERE environment_id = %(key)s "
+            "ORDER BY identifier",
+            {"key": environment.api_key},
+        )
+        rows = cursor.fetchall()
+    assert rows == [
+        ("alice", f"{environment.api_key}_alice", {"foo": "bar"}, SCAN_START.replace(tzinfo=None)),
+        ("carol", f"{environment.api_key}_carol", {"foo": "baz"}, SCAN_START.replace(tzinfo=None)),
+    ]
 
 
+@pytest.mark.clickhouse
 def test_seed_organisation_identities__success__marks_org_seeded(
     mocker: MockerFixture,
+    clickhouse_db: None,
     settings: SettingsWrapper,
     project: Project,
     segment: Segment,
+    flagsmith_identities_table: Table,
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
-    cursor = MagicMock()
-    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
-    open_cursor.return_value.__enter__.return_value = cursor
     mocker.patch.object(tasks, "refresh_project_segment_counts")
-    wrapper = MagicMock(is_enabled=True)
-    wrapper.iter_all_items_paginated.return_value = iter([])
-    mocker.patch.object(tasks, "DynamoIdentityWrapper", return_value=wrapper)
 
     # When
     seed_organisation_identities(project.organisation_id)
 
-    # Then the org carries a completed seed marker, so the reconciler never
-    # seeds it again.
+    # Then the org carries a completed marker, so the reconciler never re-seeds it
     assert SegmentMembershipSeed.objects.filter(
         organisation=project.organisation, seeded_at__isnull=False
     ).exists()
 
 
+@pytest.mark.clickhouse
 def test_seed_organisation_identities__success__fans_out_refresh_per_project(
     mocker: MockerFixture,
+    clickhouse_db: None,
     settings: SettingsWrapper,
     project: Project,
     segment: Segment,
+    flagsmith_identities_table: Table,
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given an org with two segment-bearing projects
@@ -210,13 +218,7 @@ def test_seed_organisation_identities__success__fans_out_refresh_per_project(
     )
     Segment.objects.create(name="seg-b", project=project_b)
     settings.CLICKHOUSE_ENABLED = True
-    cursor = MagicMock()
-    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
-    open_cursor.return_value.__enter__.return_value = cursor
     refresh_dispatch = mocker.patch.object(tasks, "refresh_project_segment_counts")
-    wrapper = MagicMock(is_enabled=True)
-    wrapper.iter_all_items_paginated.return_value = iter([])
-    mocker.patch.object(tasks, "DynamoIdentityWrapper", return_value=wrapper)
 
     # When
     seed_organisation_identities(project.organisation_id)
@@ -237,15 +239,15 @@ def test_reconcile_segment_membership_seeds__no_clickhouse_creds__skips(
     segment: Segment,
     enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = False
 
-    # When
     reconcile_segment_membership_seeds()
 
-    # Then
-    assert _pending_seed_count(project.organisation_id) == 0
+    assert not Task.objects.filter(
+        task_identifier=seed_organisation_identities.task_identifier,
+        serialized_args=Task.serialize_data((project.organisation_id,)),
+    ).exists()
 
 
 def test_reconcile_segment_membership_seeds__flagged_unseeded_org__enqueues_seed(
@@ -254,15 +256,19 @@ def test_reconcile_segment_membership_seeds__flagged_unseeded_org__enqueues_seed
     segment: Segment,
     enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given an opted-in org with a live segment and no seed yet
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
 
-    # When
     reconcile_segment_membership_seeds()
 
-    # Then exactly one seed is queued for the org
-    assert _pending_seed_count(project.organisation_id) == 1
+    assert (
+        Task.objects.filter(
+            task_identifier=seed_organisation_identities.task_identifier,
+            completed=False,
+            serialized_args=Task.serialize_data((project.organisation_id,)),
+        ).count()
+        == 1
+    )
 
 
 def test_reconcile_segment_membership_seeds__flag_off__does_not_enqueue(
@@ -270,14 +276,14 @@ def test_reconcile_segment_membership_seeds__flag_off__does_not_enqueue(
     project: Project,
     segment: Segment,
 ) -> None:
-    # Given a project with a live segment but the org is not opted in
     settings.CLICKHOUSE_ENABLED = True
 
-    # When
     reconcile_segment_membership_seeds()
 
-    # Then
-    assert _pending_seed_count(project.organisation_id) == 0
+    assert not Task.objects.filter(
+        task_identifier=seed_organisation_identities.task_identifier,
+        serialized_args=Task.serialize_data((project.organisation_id,)),
+    ).exists()
 
 
 def test_reconcile_segment_membership_seeds__already_seeded__does_not_enqueue(
@@ -286,19 +292,18 @@ def test_reconcile_segment_membership_seeds__already_seeded__does_not_enqueue(
     segment: Segment,
     enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given the org was already seeded
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     SegmentMembershipSeed.objects.create(
         organisation=project.organisation, seeded_at=timezone.now()
     )
 
-    # When
     reconcile_segment_membership_seeds()
 
-    # Then no further seed is queued -- the org is loaded once, then CDC keeps
-    # it fresh.
-    assert _pending_seed_count(project.organisation_id) == 0
+    assert not Task.objects.filter(
+        task_identifier=seed_organisation_identities.task_identifier,
+        serialized_args=Task.serialize_data((project.organisation_id,)),
+    ).exists()
 
 
 def test_reconcile_segment_membership_seeds__seed_already_pending__does_not_enqueue(
@@ -312,11 +317,16 @@ def test_reconcile_segment_membership_seeds__seed_already_pending__does_not_enqu
     settings.CLICKHOUSE_ENABLED = True
     seed_organisation_identities.delay(args=(project.organisation_id,))
 
-    # When
     reconcile_segment_membership_seeds()
 
-    # Then the tick does not pile on a second seed
-    assert _pending_seed_count(project.organisation_id) == 1
+    assert (
+        Task.objects.filter(
+            task_identifier=seed_organisation_identities.task_identifier,
+            completed=False,
+            serialized_args=Task.serialize_data((project.organisation_id,)),
+        ).count()
+        == 1
+    )
 
 
 # --- refresh_project_segment_counts (unchanged) ----------------------------
@@ -410,15 +420,12 @@ def test_refresh_project_segment_counts__previously_matching_pair_drops_to_zero_
     cursor = MagicMock()
     open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
     open_cursor.return_value.__enter__.return_value = cursor
-    # ... and a new compute that returns no matches for the same pair (the
-    # rule was edited, the identity set drifted, etc.).
     mocker.patch.object(tasks, "compute_segment_counts_for_project", return_value=[])
 
     # When
     refresh_project_segment_counts(project.id)
 
-    # Then the stale row is gone -- pairs that no longer match drop out of
-    # the table entirely rather than lingering at the previous count.
+    # Then the stale row is gone -- pairs that no longer match drop out entirely
     assert not SegmentMembershipCount.objects.filter(
         segment=segment, environment=environment
     ).exists()
@@ -443,8 +450,7 @@ def test_refresh_project_segment_counts__never_matched_pair__no_row_written(
     # When
     refresh_project_segment_counts(project.id)
 
-    # Then no row is written: refresh upserts matches, drops misses, and
-    # leaves never-matched pairs untouched.
+    # Then
     assert not SegmentMembershipCount.objects.filter(
         segment=segment, environment=environment
     ).exists()
