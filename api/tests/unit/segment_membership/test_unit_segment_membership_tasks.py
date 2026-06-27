@@ -172,8 +172,18 @@ def test_seed_organisation_identities__matching_identities__inserts_rows_version
         )
         rows = cursor.fetchall()
     assert rows == [
-        ("alice", f"{environment.api_key}_alice", {"foo": "bar"}, SCAN_START.replace(tzinfo=None)),
-        ("carol", f"{environment.api_key}_carol", {"foo": "baz"}, SCAN_START.replace(tzinfo=None)),
+        (
+            "alice",
+            f"{environment.api_key}_alice",
+            {"foo": "bar"},
+            SCAN_START.replace(tzinfo=None),
+        ),
+        (
+            "carol",
+            f"{environment.api_key}_carol",
+            {"foo": "baz"},
+            SCAN_START.replace(tzinfo=None),
+        ),
     ]
 
 
