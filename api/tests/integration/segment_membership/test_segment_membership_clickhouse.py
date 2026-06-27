@@ -12,8 +12,8 @@ from segment_membership.services import (
     open_clickhouse_cursor,
 )
 from segment_membership.tasks import (
-    backfill_identities_to_clickhouse,
     refresh_project_segment_counts,
+    seed_organisation_identities,
 )
 from tests.types import EnableFeaturesFixture
 
@@ -65,7 +65,7 @@ def test_refresh_project_segment_counts__matching_identities__upserts_real_count
 
 
 @pytest.mark.clickhouse
-def test_backfill_identities_to_clickhouse__happy_path__rows_land_in_clickhouse(
+def test_seed_organisation_identities__happy_path__rows_land_in_clickhouse(
     clickhouse_db: None,
     settings: SettingsWrapper,
     mocker: MockerFixture,
@@ -106,8 +106,8 @@ def test_backfill_identities_to_clickhouse__happy_path__rows_land_in_clickhouse(
     )
     mocker.patch("segment_membership.tasks.DynamoIdentityWrapper", return_value=wrapper)
 
-    # When the backfill task runs end-to-end against real ClickHouse
-    backfill_identities_to_clickhouse()
+    # When the seed task runs end-to-end against real ClickHouse
+    seed_organisation_identities(Project.objects.get(pk=project).organisation_id)
 
     # Then both identities actually land in IDENTITIES, keyed by env api key
     with open_clickhouse_cursor() as cursor:
@@ -121,7 +121,7 @@ def test_backfill_identities_to_clickhouse__happy_path__rows_land_in_clickhouse(
     # and the project's count refresh is dispatched
     refresh_dispatch.delay.assert_called_once_with(args=(project,))
     assert any(
-        e["event"] == "backfill.environment.completed" and e["rows__count"] == 2
+        e["event"] == "seed.environment.completed" and e["rows__count"] == 2
         for e in log.events
     )
 

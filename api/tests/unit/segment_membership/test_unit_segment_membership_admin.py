@@ -1,9 +1,9 @@
 from django.contrib.admin.sites import AdminSite
 from django.utils import timezone
 from pytest_mock import MockerFixture
-from segment_membership.admin import SegmentMembershipSeedAdmin
 
 from organisations.models import Organisation
+from segment_membership.admin import SegmentMembershipSeedAdmin
 from segment_membership.models import SegmentMembershipSeed
 
 

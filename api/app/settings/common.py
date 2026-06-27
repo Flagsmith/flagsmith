@@ -1477,6 +1477,10 @@ CLICKHOUSE_SECURE = env.bool("CLICKHOUSE_SECURE", default=None)
 
 CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
 
+SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS = env.int(
+    "SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS", default=6
+)
+
 # Always installed: the router fences the `clickhouse` app's migrations off
 # the default Postgres database whether or not a CH alias is configured.
 DATABASE_ROUTERS.append("app.routers.ClickHouseRouter")

@@ -1,7 +1,8 @@
+from datetime import datetime
 from typing import Any, TypedDict
 
-# (environment_key, identifier, identity_key, traits)
-ClickHouseIdentityRow = tuple[str, str, str, dict[str, object] | None]
+# (environment_key, identifier, identity_key, traits, inserted_at)
+ClickHouseIdentityRow = tuple[str, str, str, dict[str, object] | None, datetime]
 
 # (identifier, identity_key, traits)
 ClickHouseReadIdentityRow = tuple[str, str, dict[str, object] | None]

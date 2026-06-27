@@ -10,6 +10,7 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 from task_processor.models import Task
+from task_processor.task_run_method import TaskRunMethod
 
 from environments.models import Environment
 from projects.models import Project
@@ -17,6 +18,7 @@ from segment_membership import tasks
 from segment_membership.models import SegmentMembershipCount, SegmentMembershipSeed
 from segment_membership.tasks import (
     reconcile_segment_membership_seeds,
+    refresh_all_segment_counts,
     refresh_project_segment_counts,
     seed_organisation_identities,
 )
@@ -130,6 +132,7 @@ def test_seed_organisation_identities__insert_fails__logs_and_continues(
     cursor.executemany.side_effect = RuntimeError("boom")
     open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
     open_cursor.return_value.__enter__.return_value = cursor
+    mocker.patch.object(tasks, "enqueue_membership_refresh")
 
     # When
     seed_organisation_identities(project.organisation_id)
@@ -162,7 +165,7 @@ def test_seed_organisation_identities__matching_identities__inserts_rows_version
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     mocker.patch("segment_membership.tasks.timezone.now", return_value=SCAN_START)
-    mocker.patch.object(tasks, "refresh_project_segment_counts")
+    mocker.patch.object(tasks, "enqueue_membership_refresh")
 
     # When
     seed_organisation_identities(project.organisation_id)
@@ -205,7 +208,7 @@ def test_seed_organisation_identities__success__marks_org_seeded(
     # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
-    mocker.patch.object(tasks, "refresh_project_segment_counts")
+    mocker.patch.object(tasks, "enqueue_membership_refresh")
 
     # When
     seed_organisation_identities(project.organisation_id)
@@ -233,15 +236,13 @@ def test_seed_organisation_identities__success__fans_out_refresh_per_project(
     )
     Segment.objects.create(name="seg-b", project=project_b)
     settings.CLICKHOUSE_ENABLED = True
-    refresh_dispatch = mocker.patch.object(tasks, "refresh_project_segment_counts")
+    enqueue = mocker.patch.object(tasks, "enqueue_membership_refresh")
 
     # When
     seed_organisation_identities(project.organisation_id)
 
     # Then
-    dispatched_ids = {
-        call.kwargs["args"][0] for call in refresh_dispatch.delay.call_args_list
-    }
+    dispatched_ids = {call.args[0].id for call in enqueue.call_args_list}
     assert dispatched_ids == {project.id, project_b.id}
 
 
@@ -274,6 +275,7 @@ def test_reconcile_segment_membership_seeds__flagged_unseeded_org__enqueues_seed
     # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
+    settings.TASK_RUN_METHOD = TaskRunMethod.TASK_PROCESSOR
 
     # When
     reconcile_segment_membership_seeds()
@@ -339,6 +341,7 @@ def test_reconcile_segment_membership_seeds__seed_already_pending__does_not_enqu
     # Given a seed for the org is already in flight (a large org still loading)
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
+    settings.TASK_RUN_METHOD = TaskRunMethod.TASK_PROCESSOR
     seed_organisation_identities.delay(args=(project.organisation_id,))
 
     # When
@@ -353,6 +356,46 @@ def test_reconcile_segment_membership_seeds__seed_already_pending__does_not_enqu
         ).count()
         == 1
     )
+
+
+def test_refresh_all_segment_counts__no_clickhouse_creds__skips(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    settings.CLICKHOUSE_ENABLED = False
+    enqueue = mocker.patch.object(tasks, "enqueue_membership_refresh")
+
+    # When
+    refresh_all_segment_counts()
+
+    # Then
+    enqueue.assert_not_called()
+
+
+def test_refresh_all_segment_counts__live_segment_projects__delegates_to_enqueue(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given two projects with live segments (flag + debounce gating is the
+    # helper's job, so refresh_all just delegates one call per project)
+    project_b = Project.objects.create(
+        name="project-b", organisation=project.organisation
+    )
+    Segment.objects.create(name="seg-b", project=project_b)
+    settings.CLICKHOUSE_ENABLED = True
+    enqueue = mocker.patch.object(tasks, "enqueue_membership_refresh")
+
+    # When
+    refresh_all_segment_counts()
+
+    # Then
+    dispatched_ids = {call.args[0].id for call in enqueue.call_args_list}
+    assert dispatched_ids == {project.id, project_b.id}
 
 
 def test_refresh_project_segment_counts__no_clickhouse_creds__skips(
