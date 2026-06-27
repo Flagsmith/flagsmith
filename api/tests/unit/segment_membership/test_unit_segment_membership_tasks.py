@@ -135,7 +135,16 @@ def test_seed_organisation_identities__insert_fails__logs_and_continues(
     seed_organisation_identities(project.organisation_id)
 
     # Then
-    assert any(e["event"] == "seed.environment.failed" for e in log.events)
+    assert log.events == [
+        {
+            "event": "seed.environment.failed",
+            "level": "error",
+            "exc_info": mocker.ANY,
+            "organisation__id": project.organisation_id,
+            "project__id": project.id,
+            "environment__id": environment.id,
+        }
+    ]
 
 
 @pytest.mark.clickhouse
