@@ -95,7 +95,9 @@ def test_map_identity_document_to_clickhouse_row__cases__return_expected(
     doc: DynamoIdentity,
     expected: ClickHouseIdentityRow,
 ) -> None:
-    # Given / When / Then
+    # Given
+    # When
+    # Then
     assert (
         map_identity_document_to_clickhouse_row("env-key", doc, INSERTED_AT) == expected
     )
