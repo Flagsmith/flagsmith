@@ -134,7 +134,9 @@ def test_trigger_feature_state_change_webhooks__environment_created_for_existing
     feature: Feature,
 ) -> None:
     # Given
-    environment = Environment.objects.create(name="Created environment", project=project)
+    environment = Environment.objects.create(
+        name="Created environment", project=project
+    )
     feature_state = FeatureState.objects.get(feature=feature, environment=environment)
 
     mock_call_environment_webhooks = mocker.patch(
