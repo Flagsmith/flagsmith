@@ -921,7 +921,7 @@ class FeatureState(
             and self.environment.use_v2_feature_versioning
             and self.environment.created_date <= self.feature.created_date
         ):
-            feature_state_change_went_live.send(self)
+            feature_state_change_went_live.send(self, feature_created=True)
 
     @classmethod
     def get_next_version_number(  # type: ignore[no-untyped-def]
