@@ -138,85 +138,93 @@ type ExperimentResultsScorecardTableProps = {
 const ExperimentResultsScorecardTable: FC<
   ExperimentResultsScorecardTableProps
 > = ({ identities, liftRange, metric, metricResult, srmBroken, winnerKey }) => (
-  <div className='experiment-results__scorecard mb-4'>
+  <div className='mb-4'>
+    <div className='experiment-results__scorecard'>
+      <table className='experiment-results__scorecard-table'>
+        <thead>
+          <tr>
+            <th style={{ width: '10%' }}>Variant</th>
+            <th style={{ width: '8%' }}>Exposures</th>
+            <th style={{ width: '12%' }}>
+              {AGGREGATION_HEADER[metric.aggregation]}
+            </th>
+            <th style={{ width: '24%' }}>
+              <Tooltip
+                title={
+                  <span className='d-inline-flex align-items-center gap-1 flex-nowrap'>
+                    Delta
+                    <Icon
+                      className='flex-shrink-0'
+                      name='info-outlined'
+                      width={16}
+                      fill={colorIconSecondary}
+                    />
+                  </span>
+                }
+              >
+                How much better or worse a variant performed compared to
+                control, as a percentage of the control's value.
+              </Tooltip>
+            </th>
+            <th style={{ width: '16%' }}>
+              <Tooltip
+                title={
+                  <span className='d-inline-flex align-items-center gap-1 flex-nowrap'>
+                    Credible Interval (95%)
+                    <Icon
+                      className='flex-shrink-0'
+                      name='info-outlined'
+                      width={16}
+                      fill={colorIconSecondary}
+                    />
+                  </span>
+                }
+              >
+                The range we are 95% confident the true lift falls within. If it
+                doesn't cross zero, the result is statistically significant.
+              </Tooltip>
+            </th>
+            <th style={{ width: '16%' }}>Win Probability</th>
+          </tr>
+        </thead>
+        <tbody>
+          {identities.map((v) => {
+            const stats = metricResult?.variants[v.key]
+            const inference = metricResult?.inference[v.key] ?? null
+            return (
+              <tr key={v.key}>
+                <td>
+                  <span className='d-flex align-items-center gap-2'>
+                    <ColorSwatch color={v.colour} shape='circle' size='sm' />
+                    {v.name}
+                  </span>
+                </td>
+                <td>{stats ? stats.n.toLocaleString() : '—'}</td>
+                <td>{renderMetricValue(stats, metric.aggregation)}</td>
+                <td>
+                  {renderLift(
+                    v,
+                    inference,
+                    metric.expected_direction,
+                    liftRange,
+                  )}
+                </td>
+                <td>{renderCI(v, inference)}</td>
+                <td>
+                  {renderWinProbability(v, inference, v.key === winnerKey)}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
     {srmBroken && (
-      <div className='alert alert-danger m-3 mb-0'>
+      <p className='text-danger fst-italic fs-caption mt-1 mb-0'>
         Sample ratio mismatch detected — the variation split looks broken;
         interpret results with caution.
-      </div>
+      </p>
     )}
-
-    <table className='experiment-results__scorecard-table'>
-      <thead>
-        <tr>
-          <th style={{ width: '10%' }}>Variant</th>
-          <th style={{ width: '8%' }}>Exposures</th>
-          <th style={{ width: '12%' }}>
-            {AGGREGATION_HEADER[metric.aggregation]}
-          </th>
-          <th style={{ width: '24%' }}>
-            <Tooltip
-              title={
-                <span className='d-inline-flex align-items-center gap-1 flex-nowrap'>
-                  Delta
-                  <Icon
-                    className='flex-shrink-0'
-                    name='info-outlined'
-                    width={16}
-                    fill={colorIconSecondary}
-                  />
-                </span>
-              }
-            >
-              How much better or worse a variant performed compared to control,
-              as a percentage of the control's value.
-            </Tooltip>
-          </th>
-          <th style={{ width: '16%' }}>
-            <Tooltip
-              title={
-                <span className='d-inline-flex align-items-center gap-1 flex-nowrap'>
-                  Credible Interval (95%)
-                  <Icon
-                    className='flex-shrink-0'
-                    name='info-outlined'
-                    width={16}
-                    fill={colorIconSecondary}
-                  />
-                </span>
-              }
-            >
-              The range we are 95% confident the true lift falls within. If it
-              doesn't cross zero, the result is statistically significant.
-            </Tooltip>
-          </th>
-          <th style={{ width: '16%' }}>Win Probability</th>
-        </tr>
-      </thead>
-      <tbody>
-        {identities.map((v) => {
-          const stats = metricResult?.variants[v.key]
-          const inference = metricResult?.inference[v.key] ?? null
-          return (
-            <tr key={v.key}>
-              <td>
-                <span className='d-flex align-items-center gap-2'>
-                  <ColorSwatch color={v.colour} shape='circle' size='sm' />
-                  {v.name}
-                </span>
-              </td>
-              <td>{stats ? stats.n.toLocaleString() : '—'}</td>
-              <td>{renderMetricValue(stats, metric.aggregation)}</td>
-              <td>
-                {renderLift(v, inference, metric.expected_direction, liftRange)}
-              </td>
-              <td>{renderCI(v, inference)}</td>
-              <td>{renderWinProbability(v, inference, v.key === winnerKey)}</td>
-            </tr>
-          )
-        })}
-      </tbody>
-    </table>
   </div>
 )
 
