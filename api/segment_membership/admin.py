@@ -3,7 +3,6 @@ from django.db.models import QuerySet
 from django.http import HttpRequest
 
 from segment_membership.models import SegmentMembershipSeed
-from segment_membership.tasks import seed_organisation_identities
 
 
 @admin.register(SegmentMembershipSeed)
@@ -19,6 +18,8 @@ class SegmentMembershipSeedAdmin(admin.ModelAdmin[SegmentMembershipSeed]):
         request: HttpRequest,
         queryset: QuerySet[SegmentMembershipSeed],
     ) -> None:
+        from segment_membership.tasks import seed_organisation_identities
+
         queryset.update(seeded_at=None)
         for seed in queryset:
             seed_organisation_identities.delay(args=(seed.organisation_id,))

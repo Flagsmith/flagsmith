@@ -15,7 +15,7 @@ def test_segment_membership_seed_admin_force_reseed__queryset__clears_marker_and
     seed = SegmentMembershipSeed.objects.create(
         organisation=organisation, seeded_at=timezone.now()
     )
-    seed_task = mocker.patch("segment_membership.admin.seed_organisation_identities")
+    seed_task = mocker.patch("segment_membership.tasks.seed_organisation_identities")
     admin = SegmentMembershipSeedAdmin(SegmentMembershipSeed, AdminSite())
 
     # When
