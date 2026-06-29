@@ -1926,6 +1926,71 @@ def test_post__with_experiment_rollout__creates_rollout(
     assert experiment.rollout_segment.is_system_segment is True
 
 
+def test_post__with_experiment_rollout__zeroes_default_allocations(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    option_a, option_b, option_c = multivariate_options
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "Rollout experiment",
+            "hypothesis": "It will work",
+            "experiment_rollout": {
+                "enabled": True,
+                "rollout_percentage": 30,
+                "feature_state_value": {"type": "string", "value": "control"},
+                "multivariate_feature_state_values": [
+                    {
+                        "multivariate_feature_option": option_a.id,
+                        "percentage_allocation": 60,
+                    },
+                    {
+                        "multivariate_feature_option": option_b.id,
+                        "percentage_allocation": 40,
+                    },
+                ],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    experiment = Experiment.objects.get(id=response.json()["id"])
+    env_default_state = FeatureState.objects.get(
+        feature=multivariate_feature,
+        environment=environment,
+        identity__isnull=True,
+        feature_segment__isnull=True,
+    )
+    default_allocations = {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in env_default_state.multivariate_feature_state_values.all()
+    }
+    assert default_allocations == {option_a.id: 0, option_b.id: 0, option_c.id: 0}
+
+    # The rollout segment override keeps the experiment's own split.
+    override = FeatureState.objects.get(
+        feature=multivariate_feature,
+        environment=environment,
+        feature_segment__segment=experiment.rollout_segment,
+    )
+    override_allocations = {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in override.multivariate_feature_state_values.all()
+    }
+    assert override_allocations == {option_a.id: 60.0, option_b.id: 40.0}
+
+
 def test_post__rollout_allocations_exceed_100__returns_400(
     admin_client_new: APIClient,
     environment: Environment,

@@ -1359,6 +1359,99 @@ def test_apply_experiment_rollout__no_segment__creates_segment_and_override(
     assert allocations == {option_a.id: 60.0, option_b.id: 40.0}
 
 
+def test_apply_experiment_rollout__first_rollout__zeroes_default_allocations(
+    experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    option_a, option_b, option_c = multivariate_options
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=42.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # Then
+    experiment.refresh_from_db()
+    default_state = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+    default_allocations = {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in default_state.multivariate_feature_state_values.all()
+    }
+    assert default_allocations == {option_a.id: 0, option_b.id: 0, option_c.id: 0}
+
+    # The rollout segment override keeps the experiment's own split.
+    override = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__segment=experiment.rollout_segment,
+    )
+    override_allocations = {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in override.multivariate_feature_state_values.all()
+    }
+    assert override_allocations == {option_a.id: 60.0, option_b.id: 40.0}
+
+
+def test_apply_experiment_rollout__existing_segment__leaves_default_allocations(
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    experiment = experiment_with_rollout
+    option_a, option_b, _ = multivariate_options
+    default_state = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+    # A later manual edit to the default allocations must survive a rollout update.
+    default_state.multivariate_feature_state_values.filter(
+        multivariate_feature_option=option_a
+    ).update(percentage_allocation=25.0)
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=80.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # Then
+    allocation = default_state.multivariate_feature_state_values.get(
+        multivariate_feature_option=option_a
+    ).percentage_allocation
+    assert allocation == 25.0
+
+
 def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enabled(
     experiment_with_rollout: Experiment,
     multivariate_options: list[MultivariateFeatureOption],
