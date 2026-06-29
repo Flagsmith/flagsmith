@@ -391,6 +391,13 @@ class ExperimentFeatureSerializer(serializers.ModelSerializer):  # type: ignore[
         return options  # type: ignore[return-value]
 
 
+class ExperimentQueryParamSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    status = serializers.ListField(
+        child=serializers.ChoiceField(choices=ExperimentStatus.choices),
+        required=False,
+    )
+
+
 class ExperimentListSerializer(ExperimentSerializer):
     feature = ExperimentFeatureSerializer(read_only=True)
     metrics = ExperimentMetricSerializer(
