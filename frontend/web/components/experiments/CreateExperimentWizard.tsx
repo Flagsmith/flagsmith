@@ -100,7 +100,7 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
 
   const controlPercentage = getControlPercentage(variationSplit)
   const isRolloutValid =
-    rolloutPercentage > 0 && controlPercentage >= 0 && controlPercentage <= 100
+    rolloutPercentage >= 0 && controlPercentage >= 0 && controlPercentage <= 100
 
   const stepValidity: Record<number, boolean> = {
     0: isStep1Valid,
