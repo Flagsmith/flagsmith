@@ -65,7 +65,6 @@ type CreateFeatureModalProps = {
   noPermissions?: boolean
   disableCreate?: boolean
   highlightSegmentId?: number
-  defaultExperiment?: boolean
   history?: History
   multivariate_options?: MultivariateFeatureStateValue[]
 } & Partial<InjectedSegmentOverrideProps>
@@ -95,7 +94,6 @@ const mergeEnvironmentWeights = (options: any[], variations: any[]): any[] =>
 const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const {
     changeRequest: existingChangeRequest,
-    defaultExperiment,
     disableCreate,
     environmentId,
     environmentVariations,
@@ -862,7 +860,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   featureState={props.environmentFlag || environmentFlag}
                   projectFlag={projectFlag}
                   identity={identity}
-                  defaultExperiment={defaultExperiment}
                   overrideFeatureState={
                     props.identityFlag ? environmentFlag : null
                   }
