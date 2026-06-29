@@ -9,8 +9,8 @@ Transport = Literal["http", "stdio"]
 class Settings(BaseSettings):
     model_config = {"use_attribute_docstrings": True}
 
-    environment: str = Field(
-        default="local",
+    environment: str | None = Field(
+        default=None,
     )
     """Deployment environment."""
     flagsmith_api_url: HttpUrl = Field(
