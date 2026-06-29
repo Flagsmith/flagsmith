@@ -61,11 +61,11 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
     auth = None
     if settings.transport == "http" and settings.flagsmith_api_token is None:
         auth = FlagsmithResourceAuth(
-            resource_url=settings.mcp_server_url,
-            authorization_server=settings.flagsmith_api_url,
+            resource_url=str(settings.mcp_server_url),
+            authorization_server=str(settings.flagsmith_api_url),
         )
     api_client = httpx.AsyncClient(
-        base_url=settings.flagsmith_api_url,
+        base_url=str(settings.flagsmith_api_url),
         auth=FlagsmithAuth(settings.flagsmith_api_token),
         event_hooks={"request": [propagate_span_attributes]},
     )
