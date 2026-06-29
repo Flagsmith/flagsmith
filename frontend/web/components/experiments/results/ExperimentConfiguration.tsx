@@ -12,6 +12,7 @@ import {
   VariationSplitEntry,
   getControlPercentage,
 } from 'components/experiments/rollout'
+import isValidPercentage from 'common/utils/isValidPercentage'
 import { getVariantIdentities } from './derive'
 import './results.scss'
 
@@ -110,8 +111,12 @@ const ExperimentConfiguration: FC<ExperimentConfigurationProps> = ({
   }
 
   const draftControlPct = isEditing ? getControlPercentage(draftSplit) : 0
+
   const draftInvalid =
-    isEditing && (draftControlPct < 0 || draftControlPct > 100)
+    isEditing &&
+    (!isValidPercentage(draftControlPct) ||
+      !isValidPercentage(draftRollout) ||
+      draftSplit.some((s) => !isValidPercentage(s.percentage_allocation)))
 
   return (
     <div className='row g-3 mb-4'>
