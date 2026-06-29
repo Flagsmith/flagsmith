@@ -106,10 +106,28 @@ export const experimentService = service
         invalidatesTags: (_res, _err, { experimentId }) => [
           { id: experimentId, type: 'ExperimentResults' },
         ],
-        query: ({ environmentId, experimentId }) => ({
-          method: 'POST',
-          url: `environments/${environmentId}/experiments/${experimentId}/results/refresh/`,
-        }),
+        queryFn: async (
+          { environmentId, experimentId },
+          _api,
+          _extraOptions,
+          baseQuery,
+        ) => {
+          const result = await baseQuery({
+            method: 'POST',
+            url: `environments/${environmentId}/experiments/${experimentId}/results/refresh/`,
+          })
+          if (result.error) {
+            const retryAfter =
+              result.meta?.response?.headers?.get('Retry-After')
+            return {
+              error: {
+                ...result.error,
+                retryAfter: retryAfter ? parseInt(retryAfter, 10) : null,
+              },
+            }
+          }
+          return { data: undefined }
+        },
       }),
       refreshExperimentExposures: builder.mutation<
         Res['experimentExposures'],
@@ -168,6 +186,20 @@ export const experimentService = service
           url: `environments/${environmentId}/experiments/${experimentId}/`,
         }),
       }),
+      updateExperimentRollout: builder.mutation<
+        Res['experiment'],
+        Req['updateExperimentRollout']
+      >({
+        invalidatesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'Experiment' },
+          { id: 'LIST', type: 'Experiment' },
+        ],
+        query: ({ body, environmentId, experimentId }) => ({
+          body,
+          method: 'PATCH',
+          url: `environments/${environmentId}/experiments/${experimentId}/rollout/`,
+        }),
+      }),
     }),
   })
 
@@ -184,4 +216,5 @@ export const {
   useRefreshExperimentExposuresMutation,
   useStartExperimentMutation,
   useUpdateExperimentMutation,
+  useUpdateExperimentRolloutMutation,
 } = experimentService

@@ -111,5 +111,5 @@ class GitHubRepository(LifecycleModelMixin, SoftDeleteExportableModel):  # type:
                 label=tag_label.value,
                 project=self.project,
                 is_system_tag=True,
-                type=TagType.GITHUB.value,
+                type=TagType.GITHUB,
             )

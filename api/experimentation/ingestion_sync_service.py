@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from redis.cluster import RedisCluster
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 INGESTION_ENVIRONMENT_KEY_PREFIX = "experimentation:environment_keys:"
 
@@ -20,11 +24,20 @@ def _get_client() -> RedisCluster:
     )
 
 
-def set_environment_key(environment_api_key: str) -> None:
-    key = f"{INGESTION_ENVIRONMENT_KEY_PREFIX}{environment_api_key}"
-    _get_client().set(key, "")
+def set_ingestion_key(
+    key: str,
+    *,
+    environment_key: str,
+    expires_at: datetime | None = None,
+) -> None:
+    redis_key = f"{INGESTION_ENVIRONMENT_KEY_PREFIX}{key}"
+    _get_client().set(
+        redis_key,
+        environment_key,
+        exat=int(expires_at.timestamp()) if expires_at is not None else None,
+    )
 
 
-def delete_environment_key(environment_api_key: str) -> None:
-    key = f"{INGESTION_ENVIRONMENT_KEY_PREFIX}{environment_api_key}"
-    _get_client().delete(key)
+def delete_ingestion_key(key: str) -> None:
+    redis_key = f"{INGESTION_ENVIRONMENT_KEY_PREFIX}{key}"
+    _get_client().delete(redis_key)

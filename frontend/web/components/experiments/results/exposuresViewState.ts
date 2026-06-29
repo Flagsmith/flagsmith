@@ -1,4 +1,5 @@
 import { ExperimentExposures, ExperimentStatus } from 'common/types/responses'
+import { formatCountdown } from 'common/hooks/useCountdown'
 
 export type ExposuresViewState =
   | { kind: 'empty' }
@@ -12,8 +13,11 @@ export type RefreshAvailability = {
   reason?: RefreshReason
 }
 
+export type RefreshLabel = { message: string; tone: 'muted' | 'danger' }
+
 export const REFRESH_POLL_INTERVAL_MS = 10000
 export const POLL_TIMEOUT_MS = 120000
+export const DEFAULT_RETRY_AFTER_S = 300
 
 const ms = (iso: string | null): number => (iso ? new Date(iso).getTime() : 0)
 
@@ -46,4 +50,23 @@ export const canRefreshExposures = (
     return { canRefresh: false, reason: 'final' }
   }
   return { canRefresh: true }
+}
+
+export const getExposuresRefreshLabel = (
+  retryAfter: number | null,
+  isRefreshing: boolean,
+): RefreshLabel | null => {
+  if (retryAfter !== null) {
+    return {
+      message: `Computing… retry in ${formatCountdown(retryAfter)}`,
+      tone: 'muted',
+    }
+  }
+  if (isRefreshing) {
+    return {
+      message: 'Computing… exposures will update automatically.',
+      tone: 'muted',
+    }
+  }
+  return null
 }

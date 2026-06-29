@@ -67,6 +67,7 @@ const SetupStep: FC<SetupStepProps> = ({
   return (
     <div className='d-flex flex-column gap-4'>
       <ContentCard
+        background='white'
         title='Experiment details'
         description="Name the experiment and capture what you're trying to learn before picking a flag."
       >
@@ -100,6 +101,7 @@ const SetupStep: FC<SetupStepProps> = ({
       </ContentCard>
 
       <ContentCard
+        background='white'
         title='Feature flag'
         description="The flag you're experimenting on. Variations are read-only, defined on the flag itself."
       >

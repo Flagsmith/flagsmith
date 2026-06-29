@@ -70,8 +70,9 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
             <span className='text-success fw-normal'>Recommendation</span>
           </div>
           <div>
-            {summary.winnerName} is outperforming Control with{' '}
-            {summary.chanceToBest} probability of being the best variant.
+            <strong>{summary.winnerName}</strong> is outperforming{' '}
+            <strong>Control</strong> with {summary.chanceToBest} probability of
+            being the best variant.
           </div>
         </div>
       ) : (

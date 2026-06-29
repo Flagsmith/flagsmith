@@ -2,10 +2,12 @@ import logging
 from datetime import timedelta
 from typing import Any
 
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import Count, Prefetch, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import Throttled, ValidationError
@@ -16,6 +18,7 @@ from rest_framework.serializers import BaseSerializer
 from rest_framework.viewsets import GenericViewSet
 
 from app.pagination import CustomPagination
+from core.dataclasses import AuthorData
 from environments.views import NestedEnvironmentViewSet
 from experimentation.constants import (
     EXPOSURES_REFRESH_MIN_INTERVAL,
@@ -42,6 +45,7 @@ from experimentation.serializers import (
     ExperimentExposuresSerializer,
     ExperimentListSerializer,
     ExperimentMetricSerializer,
+    ExperimentQueryParamSerializer,
     ExperimentResultsSerializer,
     ExperimentRolloutSerializer,
     ExperimentSerializer,
@@ -54,6 +58,7 @@ from experimentation.services import (
     create_experiment_audit_log,
     create_metric_audit_log,
     create_warehouse_audit_log,
+    enable_experiment_rollout,
     mark_warehouse_pending_connection,
     refresh_warehouse_connection_status,
     transition_experiment_status,
@@ -158,6 +163,54 @@ class WarehouseConnectionViewSet(
         return request.user  # type: ignore[return-value]
 
 
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        tags=["mcp"],
+        parameters=[
+            OpenApiParameter(
+                name="status",
+                location=OpenApiParameter.QUERY,
+                description="Filter by experiment status (DRAFT, RUNNING, PAUSED, COMPLETED).",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="q",
+                location=OpenApiParameter.QUERY,
+                description="Search by experiment or feature name.",
+                required=False,
+                type=str,
+            ),
+        ],
+        operation_id="list_experiments",
+        description="(Beta) Lists experiments for an environment. Supports filtering by status and searching by experiment or feature name.",
+    ),
+)
+@method_decorator(
+    name="retrieve",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="get_experiment",
+        description="(Beta) Retrieves experiment details including feature configuration, attached metrics, and rollout state.",
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="create_experiment",
+        description="(Beta) Creates an experiment for a multivariate feature. Metrics can be attached inline. Only one active experiment per feature is allowed.",
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="update_experiment",
+        description="(Beta) Updates an experiment's name or hypothesis.",
+    ),
+)
 class ExperimentViewSet(
     NestedEnvironmentViewSet[Experiment],
     mixins.ListModelMixin,
@@ -193,13 +246,10 @@ class ExperimentViewSet(
                 "feature__feature_states__multivariate_feature_state_values",
                 "experiment_metrics__metric",
             )
-        status_filter = self.request.query_params.get("status")
-        if status_filter:
-            if status_filter not in ExperimentStatus.values:
-                raise serializers.ValidationError(
-                    {"status": f"Invalid status '{status_filter}'."}
-                )
-            qs = qs.filter(status=status_filter)
+        query_params = ExperimentQueryParamSerializer(data=self.request.GET)
+        query_params.is_valid(raise_exception=True)
+        if status_filter := query_params.validated_data.get("status"):
+            qs = qs.filter(status__in=status_filter)
 
         q = self.request.query_params.get("q")
         if q:
@@ -285,7 +335,13 @@ class ExperimentViewSet(
 
     @action(detail=True, methods=["post"])
     def start(self, request: Request, **kwargs: object) -> Response:
-        return self._transition_status(ExperimentStatus.RUNNING)
+        with transaction.atomic():
+            response = self._transition_status(ExperimentStatus.RUNNING)
+            if status.is_success(response.status_code):
+                enable_experiment_rollout(
+                    self.get_object(), AuthorData.from_request(request)
+                )
+        return response
 
     @action(detail=True, methods=["post"])
     def pause(self, request: Request, **kwargs: object) -> Response:
@@ -306,6 +362,11 @@ class ExperimentViewSet(
         )
         return Response(self.get_serializer(experiment).data)
 
+    @extend_schema(
+        tags=["mcp"],
+        operation_id="get_experiment_exposures",
+        description="(Beta) Retrieves variant exposure counts for an experiment. Returns null if not yet computed.",
+    )
     @action(detail=True, methods=["get"])
     def exposures(self, request: Request, **kwargs: object) -> Response:
         experiment: Experiment = self.get_object()
@@ -337,6 +398,11 @@ class ExperimentViewSet(
         compute_experiment_exposures.delay(kwargs={"experiment_id": experiment.id})
         return Response(status=status.HTTP_202_ACCEPTED)
 
+    @extend_schema(
+        tags=["mcp"],
+        operation_id="get_experiment_results",
+        description="(Beta) Retrieves statistical results for an experiment's metrics. Returns null if not yet computed.",
+    )
     @action(detail=True, methods=["get"])
     def results(self, request: Request, **kwargs: object) -> Response:
         experiment: Experiment = self.get_object()
@@ -466,6 +532,47 @@ class ExperimentMetricViewSet(
         return super().destroy(request, *args, **kwargs)
 
 
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        tags=["mcp"],
+        parameters=[
+            OpenApiParameter(
+                name="q",
+                location=OpenApiParameter.QUERY,
+                description="Search metrics by name.",
+                required=False,
+                type=str,
+            ),
+        ],
+        operation_id="list_metrics",
+        description="(Beta) Lists experiment metrics for an environment. Supports search by name via the q parameter.",
+    ),
+)
+@method_decorator(
+    name="retrieve",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="get_metric",
+        description="(Beta) Retrieves details of a specific metric, including which experiments use it.",
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="create_metric",
+        description="(Beta) Creates a metric with name, description, aggregation type, expected direction, and event definition.",
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="update_metric",
+        description="(Beta) Updates a metric's properties.",
+    ),
+)
 class MetricViewSet(
     NestedEnvironmentViewSet[Metric],
     mixins.ListModelMixin,

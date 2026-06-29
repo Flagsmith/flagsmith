@@ -40,7 +40,7 @@ class FeatureLifecycleCountsAPIView(APIView):
             return Response(status=403)
 
         features = annotate_feature_queryset_with_lifecycle_stage(
-            environment.project.features.all(),
+            environment.project.features.filter(is_archived=False),
             environment,
         )
 

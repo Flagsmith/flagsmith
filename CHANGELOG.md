@@ -1,5 +1,60 @@
 # Changelog
 
+## [2.249.0](https://github.com/Flagsmith/flagsmith/compare/v2.248.0...v2.249.0) (2026-06-29)
+
+
+### Features
+
+* **experimentation:** support multi-status filter in frontend ([#7894](https://github.com/Flagsmith/flagsmith/issues/7894)) ([5545f43](https://github.com/Flagsmith/flagsmith/commit/5545f43db71b16a4350ba09e1e8e1c7cbcfe0be8))
+* **experimentation:** support multi-status filter on experiments list ([#7893](https://github.com/Flagsmith/flagsmith/issues/7893)) ([fc4a57f](https://github.com/Flagsmith/flagsmith/commit/fc4a57f453a687d40204765490b2d0ebd0c63b78))
+* freeze flag editing when flag is in a running experiment ([#7888](https://github.com/Flagsmith/flagsmith/issues/7888)) ([de2f911](https://github.com/Flagsmith/flagsmith/commit/de2f911afe9d43abc08d0cfef80d8c24fc6697f1))
+
+
+### Bug Fixes
+
+* add regional base URL for Mixpanel ([#7802](https://github.com/Flagsmith/flagsmith/issues/7802)) ([1d1cc9c](https://github.com/Flagsmith/flagsmith/commit/1d1cc9c642ee6c3f9601fd46b0d76f3dae1c2073))
+* detect multivariate differences between environments ([#7635](https://github.com/Flagsmith/flagsmith/issues/7635)) ([68ff940](https://github.com/Flagsmith/flagsmith/commit/68ff940e7615130742d900e10f6bbdcdb9302bdb))
+* **features:** open feature slideout when deep link targets an off-page feature ([#7807](https://github.com/Flagsmith/flagsmith/issues/7807)) ([6fd31d7](https://github.com/Flagsmith/flagsmith/commit/6fd31d7bf2ec4521d1e8ddd6534d3439546236f3))
+* **project-settings:** add spacing between project name input and Update button when hasVariation is False ([#7882](https://github.com/Flagsmith/flagsmith/issues/7882)) ([ea52abb](https://github.com/Flagsmith/flagsmith/commit/ea52abb30a83102d8c0bcf0d22b90db9b66458e0))
+* **Utils:** add guard against null rule value in validateRule ([#7779](https://github.com/Flagsmith/flagsmith/issues/7779)) ([ff21200](https://github.com/Flagsmith/flagsmith/commit/ff21200a468667a7025df417acb08589f231ff8e))
+
+
+### Docs
+
+* [ImgBot] Optimize images ([#7860](https://github.com/Flagsmith/flagsmith/issues/7860)) ([51020e5](https://github.com/Flagsmith/flagsmith/commit/51020e515f4541b819f03c1b079a45dfd758e22b))
+
+## [2.248.0](https://github.com/Flagsmith/flagsmith/compare/v2.247.0...v2.248.0) (2026-06-26)
+
+
+### Features
+
+* **experimentation:** allow updating rollout while experiment is running ([#7886](https://github.com/Flagsmith/flagsmith/issues/7886)) ([1ce5f34](https://github.com/Flagsmith/flagsmith/commit/1ce5f342b95a0763577c0703db1e31f7ccd573ed))
+* **experimentation:** simplify lifecycle by skipping draft and paused states ([#7884](https://github.com/Flagsmith/flagsmith/issues/7884)) ([3e183c5](https://github.com/Flagsmith/flagsmith/commit/3e183c5966b4bcce066062ab1b931370b2fb0dec))
+* **mcp:** expose experimentation endpoints as MCP tools ([#7885](https://github.com/Flagsmith/flagsmith/issues/7885)) ([94ca795](https://github.com/Flagsmith/flagsmith/commit/94ca7953dc9d396a1d505633ddd8f914d895eca7))
+
+
+### Bug Fixes
+
+* **Feature Lifecycle:** Exclude archived features from lifecycle counts ([#7897](https://github.com/Flagsmith/flagsmith/issues/7897)) ([db23309](https://github.com/Flagsmith/flagsmith/commit/db23309122168ccf825f6aa44aa7bf41ab83662c))
+* **infra:** Task processor tasks killed during startup by health check ([#7887](https://github.com/Flagsmith/flagsmith/issues/7887)) ([6009697](https://github.com/Flagsmith/flagsmith/commit/6009697b0974bd1b8882ff864a54b3957fb73f6d))
+
+## [2.247.0](https://github.com/Flagsmith/flagsmith/compare/v2.246.0...v2.247.0) (2026-06-26)
+
+
+### Features
+
+* **clickhouse:** Add ingested_at and source to IDENTITIES ([#7873](https://github.com/Flagsmith/flagsmith/issues/7873)) ([6fcf5c7](https://github.com/Flagsmith/flagsmith/commit/6fcf5c76834d75c5ce76894a9de08bed424e6e84))
+* **clickhouse:** add is_deleted to IDENTITIES ([#7875](https://github.com/Flagsmith/flagsmith/issues/7875)) ([408f05b](https://github.com/Flagsmith/flagsmith/commit/408f05b45072ecb6124f23b907a84d94c5429d35))
+* **experimentation:** enable rollout when an experiment starts ([#7883](https://github.com/Flagsmith/flagsmith/issues/7883)) ([59bc98d](https://github.com/Flagsmith/flagsmith/commit/59bc98d4dbfabec5a568cf5ef980dcf3bcb98a49))
+* **experimentation:** rollout configuration step in experiment wizard ([#7859](https://github.com/Flagsmith/flagsmith/issues/7859)) ([69b4113](https://github.com/Flagsmith/flagsmith/commit/69b41139df91139b1865e776a9658fdc995e8223))
+* **experimentation:** whitelist server-side keys for warehouse ingestion ([#7865](https://github.com/Flagsmith/flagsmith/issues/7865)) ([3fa605c](https://github.com/Flagsmith/flagsmith/commit/3fa605c47878813394b0b38c69bc078676db5c13))
+* **experiments:** wire up results refresh with a shared RefreshControl ([#7857](https://github.com/Flagsmith/flagsmith/issues/7857)) ([0e7eca3](https://github.com/Flagsmith/flagsmith/commit/0e7eca37809689a23e4997731fa301613e9dbe50))
+
+
+### Bug Fixes
+
+* **Tagging:** TagType evaluated incorrectly in database queries ([#7877](https://github.com/Flagsmith/flagsmith/issues/7877)) ([9032039](https://github.com/Flagsmith/flagsmith/commit/903203916abff821ac036e96b732981c0e7a93a3))
+
 ## [2.246.0](https://github.com/Flagsmith/flagsmith/compare/v2.245.0...v2.246.0) (2026-06-25)
 
 

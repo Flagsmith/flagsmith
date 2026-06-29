@@ -2,6 +2,8 @@ import React, { FC, useEffect, useState } from 'react'
 import { ProjectFlag } from 'common/types/responses'
 import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
+import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
+import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
 import InputGroup from 'components/base/forms/InputGroup'
 import AddEditTags from 'components/tags/AddEditTags'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
@@ -34,6 +36,8 @@ import { getSupportedContentType } from 'common/services/useSupportedContentType
 type FeatureSettingsTabProps = {
   identity?: string
   projectId: number | string
+  environmentId?: string
+  freeze?: FeatureExperimentFreeze
   projectFlag: ProjectFlag | null
   isSaving?: boolean
   invalid?: boolean
@@ -48,6 +52,8 @@ type FeatureSettingsTabProps = {
 }
 
 const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
+  environmentId,
+  freeze,
   groupOwnerIds,
   hasMetadataRequired,
   identity,
@@ -121,6 +127,13 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
 
   return (
     <div className={`${identity ? 'mx-3' : ''}`}>
+      {freeze?.isFrozen && freeze.experiment && environmentId && (
+        <ExperimentFreezeNotice
+          experiment={freeze.experiment}
+          projectId={projectId}
+          environmentId={environmentId}
+        />
+      )}
       {!identity && projectFlag?.tags && (
         <FormGroup className='mb-3 setting'>
           <InputGroup
@@ -175,10 +188,7 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
                 })
                   .unwrap()
                   .catch((e) =>
-                    toast(
-                      e?.data?.[0] || 'Failed to remove owner.',
-                      'danger',
-                    ),
+                    toast(e?.data?.[0] || 'Failed to remove owner.', 'danger'),
                   )
               }
             />
@@ -282,6 +292,7 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
               onChange={(is_server_key_only) =>
                 onChange({ ...projectFlag, is_server_key_only })
               }
+              disabled={!!freeze?.isFrozen || !!freeze?.isLoading}
               className='ml-0'
             />
             <Tooltip
@@ -305,6 +316,7 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
               onChange={(is_archived) =>
                 onChange({ ...projectFlag, is_archived })
               }
+              disabled={!!freeze?.isFrozen || !!freeze?.isLoading}
               className='ml-0'
             />
             <Tooltip

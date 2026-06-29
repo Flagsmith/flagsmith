@@ -727,6 +727,32 @@ class EnvironmentAPIKey(LifecycleModel):  # type: ignore[misc]
     def delete_from_dynamo(self):  # type: ignore[no-untyped-def]
         environment_api_key_wrapper.delete_api_key(self.key)
 
+    @hook(AFTER_SAVE)  # type: ignore[misc]
+    def sync_to_ingestion_on_save(self) -> None:
+        from experimentation.models import WarehouseConnection
+        from experimentation.tasks import write_environment_ingestion_key
+
+        if not WarehouseConnection.objects.filter(
+            environment_id=self.environment_id
+        ).exists():
+            return
+        write_environment_ingestion_key.delay(
+            kwargs={"environment_api_key_id": self.id},
+        )
+
+    @hook(AFTER_DELETE)  # type: ignore[misc]
+    def remove_from_ingestion_on_delete(self) -> None:
+        from experimentation.models import WarehouseConnection
+        from experimentation.tasks import remove_environment_ingestion_key
+
+        if not WarehouseConnection.objects.filter(
+            environment_id=self.environment_id
+        ).exists():
+            return
+        remove_environment_ingestion_key.delay(
+            kwargs={"key": self.key},
+        )
+
     @property
     def _should_update_dynamo(self) -> bool:
         return (

@@ -166,6 +166,21 @@ const defaultFlags = {
           'key': 'api_key',
           'label': 'API Key',
         },
+        {
+          'default': 'https://heapanalytics.com',
+          'key': 'base_url',
+          'label': 'Base URL',
+          'options': [
+            {
+              'label': 'US',
+              'value': 'https://heapanalytics.com',
+            },
+            {
+              'label': 'EU',
+              'value': 'https://c.eu.heap-api.com',
+            },
+          ],
+        },
       ],
       'image': '/static/images/integrations/heap.svg',
       'perEnvironment': true,
@@ -204,6 +219,25 @@ const defaultFlags = {
           'hidden': true,
           'key': 'api_key',
           'label': 'Project Token',
+        },
+        {
+          'default': 'https://api.mixpanel.com',
+          'key': 'base_url',
+          'label': 'Base URL',
+          'options': [
+            {
+              'label': 'US',
+              'value': 'https://api.mixpanel.com',
+            },
+            {
+              'label': 'EU',
+              'value': 'https://api-eu.mixpanel.com',
+            },
+            {
+              'label': 'India',
+              'value': 'https://api-in.mixpanel.com',
+            },
+          ],
         },
       ],
       'image': '/static/images/integrations/mp.svg',

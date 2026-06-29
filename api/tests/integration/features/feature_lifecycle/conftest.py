@@ -13,7 +13,7 @@ from app_analytics.models import FeatureEvaluationBucket
 from features.models import Feature
 from projects.code_references.models import ScannedCodeReferences, VCSRepository
 from projects.code_references.types import StoredCodeReference, VCSProvider
-from projects.tags.models import Tag, TagType
+from projects.tags.models import Tag
 
 MakeCodeReferencesFixture = Callable[
     [Feature, list[StoredCodeReference]], ScannedCodeReferences
@@ -26,7 +26,7 @@ def stale_tag(project: int) -> Tag:
     return Tag.objects.create(  # type: ignore[no-any-return]
         project_id=project,
         is_system_tag=True,
-        type=TagType.STALE,
+        type="STALE",
     )
 
 

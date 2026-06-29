@@ -20,6 +20,8 @@ import {
   MultivariateOption,
   ProjectFlag,
 } from 'common/types/responses'
+import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
+import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
 import { useHasPermission } from 'common/providers/Permission'
 import { ProjectPermission } from 'common/types/permissions.types'
 
@@ -39,6 +41,7 @@ type FeatureValueTabProps = {
   projectId: number | string
   identity?: string
   noPermissions: boolean
+  freeze?: FeatureExperimentFreeze
   featureState: FeatureState
   projectFlag: ProjectFlag
   environmentFlag?: FeatureState
@@ -63,6 +66,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   error,
   existingChangeRequest,
   featureState,
+  freeze,
   identity,
   is4Eyes,
   isSaving,
@@ -77,6 +81,8 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   projectId,
 }) => {
   const isEdit = !!projectFlag?.id
+  const isDisabled =
+    !!noPermissions || !!freeze?.isFrozen || !!freeze?.isLoading
 
   const { permission: createFeature } = useHasPermission({
     id: projectId,
@@ -294,6 +300,13 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 
   return (
     <div className={`${identity ? 'mx-3' : ''}`}>
+      {freeze?.isFrozen && freeze.experiment && environmentId && (
+        <ExperimentFreezeNotice
+          experiment={freeze.experiment}
+          projectId={projectId}
+          environmentId={environmentId}
+        />
+      )}
       <FormGroup className='mb-4'>
         <Tooltip
           title={
@@ -301,7 +314,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               <Switch
                 data-test='toggle-feature-button'
                 defaultChecked={default_enabled}
-                disabled={noPermissions}
+                disabled={isDisabled}
                 checked={default_enabled}
                 onChange={(enabled) => onEnvironmentFlagChange({ enabled })}
                 className='ml-0'
@@ -338,7 +351,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
                   )
                   onEnvironmentFlagChange({ feature_state_value })
                 }}
-                disabled={noPermissions}
+                disabled={isDisabled}
                 placeholder="e.g. 'big' "
               />
             }
@@ -444,7 +457,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
                 Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
                 <AddVariationButton
                   multivariateOptions={multivariate_options}
-                  disabled={!createFeature || noPermissions}
+                  disabled={!createFeature || isDisabled}
                   onClick={addVariation}
                 />,
               )}
@@ -454,7 +467,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
             {(!!environmentVariations || !isEdit) && (
               <VariationOptions
                 canCreateFeature={createFeature}
-                disabled={!!identity || noPermissions}
+                disabled={!!identity || isDisabled}
                 controlValue={featureState.feature_state_value}
                 controlPercentage={controlPercentage}
                 variationOverrides={environmentVariations as any}
@@ -484,7 +497,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
                 Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
                 <AddVariationButton
                   multivariateOptions={multivariate_options}
-                  disabled={!createFeature || noPermissions}
+                  disabled={!createFeature || isDisabled}
                   onClick={addVariation}
                 />,
               )}
@@ -493,7 +506,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
         </div>
       )}
 
-      {environmentId && onSaveFeatureValue && (
+      {environmentId && onSaveFeatureValue && !freeze?.isFrozen && (
         <>
           <JSONReference
             className='mb-3'
@@ -517,7 +530,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
             projectFlag={projectFlag}
             environmentId={environmentId}
             environmentName={environmentName || ''}
-            isSaving={!!isSaving}
+            isSaving={!!isSaving || !!freeze?.isLoading}
             featureName={projectFlag.name}
             isInvalid={!!invalid}
             existingChangeRequest={!!existingChangeRequest}
