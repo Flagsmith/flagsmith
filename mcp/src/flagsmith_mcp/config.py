@@ -9,7 +9,7 @@ Transport = Literal["http", "stdio"]
 class Settings(BaseSettings):
     model_config = {"use_attribute_docstrings": True}
 
-    environment: Literal["local", "dev", "staging", "production"] = Field(
+    environment: str = Field(
         default="local",
     )
     """Deployment environment."""
