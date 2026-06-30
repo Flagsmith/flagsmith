@@ -17,6 +17,7 @@ from rest_framework.exceptions import ValidationError
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from core.dataclasses import AuthorData
+from environments.tasks import rebuild_environment_document
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
@@ -57,7 +58,10 @@ from experimentation.stats import (
 from features.models import FeatureState
 from features.value_types import BOOLEAN, INTEGER, STRING
 from features.versioning.dataclasses import FlagChangeSet
-from features.versioning.versioning_service import update_flag
+from features.versioning.versioning_service import (
+    update_flag,
+    update_multivariate_values,
+)
 from integrations.flagsmith.client import get_openfeature_client
 from segments.models import Condition, Segment, SegmentRule
 
@@ -574,6 +578,58 @@ def _sync_rollout_segment(experiment: Experiment, rollout_percentage: float) -> 
     return segment
 
 
+def _get_live_rollout_override(experiment: Experiment) -> FeatureState | None:
+    return (
+        FeatureState.objects.get_live_feature_states(
+            environment=experiment.environment,
+            additional_filters=Q(
+                feature_segment__segment_id=experiment.rollout_segment_id,
+                identity__isnull=True,
+            ),
+            feature_id=experiment.feature_id,
+        )
+        .order_by("-id")
+        .first()
+    )
+
+
+def _update_live_feature_state(
+    feature_state: FeatureState, change_set: FlagChangeSet
+) -> None:
+    feature_state.enabled = change_set.enabled
+    feature_state.save()
+    feature_state.feature_state_value.set_value(
+        change_set.feature_state_value, change_set.type_
+    )
+    feature_state.feature_state_value.save()
+    update_multivariate_values(feature_state, change_set.multivariate_values)
+
+
+def _update_rollout_in_place(experiment: Experiment, change_set: FlagChangeSet) -> None:
+    """Write the rollout-segment override, keeping variant assignment stable.
+
+    Under v2 versioning, ``update_flag`` clones the override into a fresh feature
+    state on every call. Since the multivariate split is salted on the feature
+    state id, that would re-randomise control/variant for already-enrolled
+    identities on each rollout update. Once the override exists, mutate it in
+    place instead and rebuild the environment document by hand (no version is
+    published). Creating the override, and v1 versioning, still go through
+    ``update_flag``, which already reuses the feature state.
+
+    This is a temporary solution until we find a permanent fix for the
+    underlying salting issue: https://github.com/Flagsmith/flagsmith/issues/7913
+    """
+    if experiment.environment.use_v2_feature_versioning and (
+        override := _get_live_rollout_override(experiment)
+    ):
+        _update_live_feature_state(override, change_set)
+        rebuild_environment_document.delay(
+            kwargs={"environment_id": experiment.environment_id}
+        )
+        return
+    update_flag(experiment.environment, experiment.feature, change_set)
+
+
 def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
     if experiment.status == ExperimentStatus.COMPLETED:
         raise ValidationError(
@@ -582,9 +638,8 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
     validate_rollout_spec(experiment, spec)
     with transaction.atomic():
         segment = _sync_rollout_segment(experiment, spec.rollout_percentage)
-        update_flag(
-            experiment.environment,
-            experiment.feature,
+        _update_rollout_in_place(
+            experiment,
             FlagChangeSet(
                 author=spec.author,
                 enabled=spec.enabled,
@@ -638,9 +693,8 @@ def enable_experiment_rollout(experiment: Experiment, author: AuthorData) -> Non
         return
 
     value = rollout["feature_state_value"]
-    update_flag(
-        experiment.environment,
-        experiment.feature,
+    _update_rollout_in_place(
+        experiment,
         FlagChangeSet(
             author=author,
             enabled=True,
