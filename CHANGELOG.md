@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.250.0](https://github.com/Flagsmith/flagsmith/compare/v2.249.0...v2.250.0) (2026-06-30)
+
+
+### Features
+
+* add regional base URL select for Heap and Mixpanel integrations ([#7904](https://github.com/Flagsmith/flagsmith/issues/7904)) ([48ff59c](https://github.com/Flagsmith/flagsmith/commit/48ff59ce944432a5db5b3645cdadc544062f5a29))
+* **experiments:** display rollout on detail page with inline edit ([#7895](https://github.com/Flagsmith/flagsmith/issues/7895)) ([796afbb](https://github.com/Flagsmith/flagsmith/commit/796afbb2c71a726dd152e49d09078112c5dbc254))
+
+
+### Bug Fixes
+
+* **experimentation:** keep variant assignment stable across rollout updates ([#7912](https://github.com/Flagsmith/flagsmith/issues/7912)) ([772b9cb](https://github.com/Flagsmith/flagsmith/commit/772b9cba3cddf68861727516ed5fe0ef501dddd6))
+* **multivariate:** persist variant key in DynamoDB environment document ([#7915](https://github.com/Flagsmith/flagsmith/issues/7915)) ([fe840c5](https://github.com/Flagsmith/flagsmith/commit/fe840c5d86d270af4fe841a334b74c3ffeb52a42))
+* **mypy:** narrow compressed feature_states to bytes in dynamodb mapper test ([#7916](https://github.com/Flagsmith/flagsmith/issues/7916)) ([ee9f182](https://github.com/Flagsmith/flagsmith/commit/ee9f182870cc8db515d82f4f045219322a4b3186))
+
+
+### Dependency Updates
+
+* Update flagsmith-private to 0.10.1 ([#7908](https://github.com/Flagsmith/flagsmith/issues/7908)) ([c393d31](https://github.com/Flagsmith/flagsmith/commit/c393d31c641f6b14a8f7a048e1c4c683851b6a15))
+
 ## [2.249.0](https://github.com/Flagsmith/flagsmith/compare/v2.248.0...v2.249.0) (2026-06-29)
 
 
