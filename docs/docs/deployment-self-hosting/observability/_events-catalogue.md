@@ -466,8 +466,8 @@ Attributes:
 ### `usage_reporting.run.skipped`
 
 Logged at `debug` from:
- - `api/organisations/usage_reporting/services.py:64`
- - `api/organisations/usage_reporting/services.py:67`
+ - `api/organisations/usage_reporting/services.py:60`
+ - `api/organisations/usage_reporting/services.py:63`
 
 Attributes:
  - `reason`
@@ -475,14 +475,14 @@ Attributes:
 ### `usage_reporting.snapshot.errored`
 
 Logged at `exception` from:
- - `api/organisations/usage_reporting/services.py:79`
+ - `api/organisations/usage_reporting/services.py:75`
 
 Attributes:
 
 ### `usage_reporting.snapshot.push_failed`
 
 Logged at `warning` from:
- - `api/organisations/usage_reporting/services.py:59`
+ - `api/organisations/usage_reporting/services.py:55`
 
 Attributes:
  - `status_code`
@@ -490,7 +490,7 @@ Attributes:
 ### `usage_reporting.snapshot.pushed`
 
 Logged at `info` from:
- - `api/organisations/usage_reporting/services.py:57`
+ - `api/organisations/usage_reporting/services.py:53`
 
 Attributes:
  - `status_code`

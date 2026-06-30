@@ -1,4 +1,3 @@
-import base64
 import dataclasses
 import json
 
@@ -11,18 +10,13 @@ from organisations.models import Organisation
 from organisations.usage_reporting.dataclasses import UsageSnapshot
 from organisations.usage_reporting.mappers import (
     map_organisation_to_usage_snapshot,
+    map_signature_to_control_plane_auth_token,
 )
 
 logger = structlog.get_logger("usage_reporting")
 
 USAGE_ENDPOINT_PATH = "/v1/public/usage"
 REQUEST_TIMEOUT_SECONDS = 30
-
-
-def _build_auth_token(signature: str) -> str:
-    return (
-        base64.urlsafe_b64encode(signature.encode("utf-8")).decode("ascii").rstrip("=")
-    )
 
 
 def get_licensed_organisations() -> list[Organisation]:
@@ -41,7 +35,9 @@ def push_snapshot(
 ) -> None:
     url = f"{base_url.rstrip('/')}{USAGE_ENDPOINT_PATH}"
     headers = {
-        "Authorization": f"Bearer {_build_auth_token(signature)}",
+        "Authorization": (
+            f"Bearer {map_signature_to_control_plane_auth_token(signature)}"
+        ),
         "Content-Type": "application/json",
     }
     body = json.dumps(dataclasses.asdict(snapshot), cls=DjangoJSONEncoder)
