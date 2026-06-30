@@ -1,10 +1,16 @@
+from datetime import datetime, timezone
+
 import pytest
 from pytest_mock import MockerFixture
 
 from app_analytics.dataclasses import UsageData
 from organisations.models import Organisation
 from organisations.usage_reporting import mappers
-from organisations.usage_reporting.dataclasses import ProjectUsage
+from organisations.usage_reporting.dataclasses import (
+    ApiCallBreakdown,
+    ProjectUsage,
+    UsageSnapshot,
+)
 from organisations.usage_reporting.mappers import (
     map_organisation_to_usage_snapshot,
 )
@@ -37,20 +43,20 @@ def test_map_organisation_to_usage_snapshot__with_usage__returns_populated_snaps
     snapshot = map_organisation_to_usage_snapshot(organisation)
 
     # Then
-    assert snapshot.timestamp.isoformat() == "2026-06-18T08:00:00+00:00"
-    assert snapshot.seat_count == organisation.num_seats
-    assert snapshot.instance_version == "2.142.3"
-    assert snapshot.api_call_total == 10
-    assert snapshot.api_call_breakdown.flags == 1
-    assert snapshot.api_call_breakdown.identities == 2
-    assert snapshot.api_call_breakdown.traits == 3
-    assert snapshot.api_call_breakdown.environment_documents == 4
-    assert snapshot.project_count == 1
-    assert snapshot.project_usage == [
-        ProjectUsage(project_id=project.id, api_call_count=10)
-    ]
+    assert snapshot == UsageSnapshot(
+        timestamp=datetime(2026, 6, 18, 8, 0, 0, tzinfo=timezone.utc),
+        seat_count=organisation.num_seats,
+        api_call_total=10,
+        api_call_breakdown=ApiCallBreakdown(
+            flags=1, identities=2, traits=3, environment_documents=4
+        ),
+        project_count=1,
+        instance_version="2.142.3",
+        project_usage=[ProjectUsage(project_id=project.id, api_call_count=10)],
+    )
 
 
+@pytest.mark.freeze_time("2026-06-18T09:30:00+00:00")
 def test_map_organisation_to_usage_snapshot__no_analytics__returns_zeroed_snapshot(
     organisation: Organisation,
     project: Project,
@@ -64,13 +70,17 @@ def test_map_organisation_to_usage_snapshot__no_analytics__returns_zeroed_snapsh
     snapshot = map_organisation_to_usage_snapshot(organisation)
 
     # Then
-    assert snapshot.api_call_total == 0
-    assert snapshot.api_call_breakdown.flags == 0
-    assert snapshot.api_call_breakdown.environment_documents == 0
-    assert snapshot.project_count == 1
-    assert snapshot.project_usage == [
-        ProjectUsage(project_id=project.id, api_call_count=0)
-    ]
+    assert snapshot == UsageSnapshot(
+        timestamp=datetime(2026, 6, 18, 8, 0, 0, tzinfo=timezone.utc),
+        seat_count=organisation.num_seats,
+        api_call_total=0,
+        api_call_breakdown=ApiCallBreakdown(
+            flags=0, identities=0, traits=0, environment_documents=0
+        ),
+        project_count=1,
+        instance_version="2.142.3",
+        project_usage=[ProjectUsage(project_id=project.id, api_call_count=0)],
+    )
 
 
 def test_map_organisation_to_usage_snapshot__excess_projects__keeps_highest_usage(

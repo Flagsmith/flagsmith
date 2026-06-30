@@ -107,10 +107,20 @@ def test_push_snapshot__valid_snapshot__sends_bearer_authed_post(
     recovered = base64.urlsafe_b64decode(token + "=" * (-len(token) % 4))
     assert recovered == signature.encode("utf-8")
     assert kwargs["headers"]["Content-Type"] == "application/json"
-    body = json.loads(kwargs["data"])
-    assert body["timestamp"] == "2026-06-18T08:00:00Z"
-    assert body["api_call_breakdown"]["environment_documents"] == 4
-    assert body["project_usage"] == [{"project_id": 1, "api_call_count": 10}]
+    assert json.loads(kwargs["data"]) == {
+        "timestamp": "2026-06-18T08:00:00Z",
+        "seat_count": 3,
+        "api_call_total": 10,
+        "api_call_breakdown": {
+            "flags": 1,
+            "identities": 2,
+            "traits": 3,
+            "environment_documents": 4,
+        },
+        "project_count": 1,
+        "instance_version": "2.142.3",
+        "project_usage": [{"project_id": 1, "api_call_count": 10}],
+    }
 
 
 def test_push_usage_snapshots__control_plane_url_unset__no_op(
