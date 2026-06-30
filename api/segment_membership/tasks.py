@@ -132,6 +132,7 @@ def seed_organisation_identities(organisation_id: int) -> None:
     )
 
 
+# TODO https://github.com/Flagsmith/flagsmith/issues/7917
 @register_recurring_task(
     run_every=timedelta(hours=1),
     timeout=timedelta(minutes=5),
