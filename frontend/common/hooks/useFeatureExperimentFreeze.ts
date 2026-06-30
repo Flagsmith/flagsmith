@@ -13,8 +13,8 @@ export function useFeatureExperimentFreeze(
   featureId: number | undefined,
   environmentId: string,
 ): FeatureExperimentFreeze {
-  const hasExperiments = Utils.getFlagsmithHasFeature('experimental_flags')
-  const skip = !hasExperiments || !featureId || !environmentId
+  const isExperimentEnabled = Utils.getFlagsmithHasFeature('experimental_flags')
+  const skip = !isExperimentEnabled || !featureId || !environmentId
   const { data, isLoading } = useGetExperimentsQuery(
     { environmentId, status: 'running' },
     { skip },
