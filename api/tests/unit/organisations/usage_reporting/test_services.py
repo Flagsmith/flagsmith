@@ -19,7 +19,8 @@ from organisations.usage_reporting.services import (
 )
 
 
-def _snapshot() -> UsageSnapshot:
+@pytest.fixture
+def snapshot() -> UsageSnapshot:
     return UsageSnapshot(
         timestamp=datetime(2026, 6, 18, 8, 0, 0, tzinfo=timezone.utc),
         seat_count=3,
@@ -60,6 +61,7 @@ def test_get_licensed_organisations__licensing_not_installed__returns_empty(
 def test_push_snapshot__status_code__logs_expected_event(
     mocker: MockerFixture,
     log: StructuredLogCapture,
+    snapshot: UsageSnapshot,
     status_code: int,
     event: str,
     level: str,
@@ -72,7 +74,7 @@ def test_push_snapshot__status_code__logs_expected_event(
     # When
     push_snapshot(
         base_url="https://cp.example.com/",
-        snapshot=_snapshot(),
+        snapshot=snapshot,
         signature="sig",
     )
 
@@ -82,6 +84,7 @@ def test_push_snapshot__status_code__logs_expected_event(
 
 def test_push_snapshot__valid_snapshot__sends_bearer_authed_post(
     mocker: MockerFixture,
+    snapshot: UsageSnapshot,
 ) -> None:
     # Given
     mocked_post = mocker.patch("organisations.usage_reporting.services.requests.post")
@@ -91,7 +94,7 @@ def test_push_snapshot__valid_snapshot__sends_bearer_authed_post(
     # When
     push_snapshot(
         base_url="https://cp.example.com/",
-        snapshot=_snapshot(),
+        snapshot=snapshot,
         signature=signature,
     )
 
@@ -151,6 +154,7 @@ def test_push_usage_snapshots__no_licensed_organisations__no_op(
 def test_push_usage_snapshots__licensed_organisations__pushes_each(
     settings: SettingsWrapper,
     mocker: MockerFixture,
+    snapshot: UsageSnapshot,
 ) -> None:
     # Given
     settings.CONTROL_PLANE_URL = "https://cp.example.com"
@@ -160,7 +164,6 @@ def test_push_usage_snapshots__licensed_organisations__pushes_each(
         "organisations.usage_reporting.services.get_licensed_organisations",
         return_value=[org_one, org_two],
     )
-    snapshot = _snapshot()
     mocker.patch(
         "organisations.usage_reporting.services.map_organisation_to_usage_snapshot",
         return_value=snapshot,
@@ -184,6 +187,7 @@ def test_push_usage_snapshots__one_organisation_raises__continues(
     settings: SettingsWrapper,
     mocker: MockerFixture,
     log: StructuredLogCapture,
+    snapshot: UsageSnapshot,
 ) -> None:
     # Given
     settings.CONTROL_PLANE_URL = "https://cp.example.com"
@@ -193,7 +197,6 @@ def test_push_usage_snapshots__one_organisation_raises__continues(
         "organisations.usage_reporting.services.get_licensed_organisations",
         return_value=[org_one, org_two],
     )
-    snapshot = _snapshot()
     mocker.patch(
         "organisations.usage_reporting.services.map_organisation_to_usage_snapshot",
         side_effect=[ValueError("boom"), snapshot],
