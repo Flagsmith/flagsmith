@@ -61,8 +61,6 @@ Annotations for feature-specific events include project tags, user-defined tags,
 
 You can create multiple alert rules pointing to the Feature Health Provider webhook. Ensure they include the `flagsmith_feature` label with a feature flag name from the project you created the Feature Health Provider for, to see Feature Health status changes for your feature flags.
 
-You can integrate Grafana Feature Health with Prometheus Alertmanager. For detailed instructions on adding Flagsmith labels to your alerts in Prometheus, refer to the [Prometheus Alertmanager webhook configuration](https://prometheus.io/docs/alerting/latest/configuration/#webhook_config) and [Alerting rules configuration](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/#defining-alerting-rules) documentation.
-
 The Feature Health UI will display the following information:
 - Alert name
 - Link to the alert instance in your Alertmanager
