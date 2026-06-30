@@ -5,7 +5,7 @@ sidebar_label: Prometheus
 hide_title: true
 ---
 
-Integrate Flagsmith with Prometheus Alertmanager to drive [Feature Health](/advanced-use/feature-health) status from your existing alerts.
+Integrate Flagsmith with Prometheus Alertmanager to drive [Feature Health](/managing-flags/feature-health-metrics) status from your existing alerts.
 
 ## Feature Health Provider Setup
 
