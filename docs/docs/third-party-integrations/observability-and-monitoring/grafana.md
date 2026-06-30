@@ -1,7 +1,7 @@
 ---
-title: Grafana & Prometheus Integration
-description: Integrate Flagsmith with Grafana & Prometheus
-sidebar_label: Grafana & Prometheus
+title: Grafana Integration
+description: Integrate Flagsmith with Grafana
+sidebar_label: Grafana
 hide_title: true
 ---
 
