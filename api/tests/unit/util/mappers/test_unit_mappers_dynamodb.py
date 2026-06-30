@@ -285,9 +285,7 @@ def test_map_environment_to_compressed_environment_document__mv_option_with_key_
         for feature_state in feature_states
         for mv_value in feature_state["multivariate_feature_state_values"]
     ]
-    keyed_option = next(
-        option for option in mv_options if option["id"] == mv_option.id
-    )
+    keyed_option = next(option for option in mv_options if option["id"] == mv_option.id)
     assert keyed_option["key"] == "control"
 
 
