@@ -18,8 +18,6 @@ from organisations.usage_reporting.services import (
     push_usage_snapshots,
 )
 
-SERVICES = "organisations.usage_reporting.services"
-
 
 def _snapshot() -> UsageSnapshot:
     return UsageSnapshot(
@@ -67,7 +65,7 @@ def test_push_snapshot__status_code__logs_expected_event(
     level: str,
 ) -> None:
     # Given
-    mocked_post = mocker.patch(f"{SERVICES}.requests.post")
+    mocked_post = mocker.patch("organisations.usage_reporting.services.requests.post")
     mocked_post.return_value.status_code = status_code
     mocked_post.return_value.ok = status_code < 400
 
@@ -86,7 +84,7 @@ def test_push_snapshot__valid_snapshot__sends_bearer_authed_post(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mocked_post = mocker.patch(f"{SERVICES}.requests.post")
+    mocked_post = mocker.patch("organisations.usage_reporting.services.requests.post")
     mocked_post.return_value.status_code = 201
     signature = "abc+/=def=="
 
@@ -118,8 +116,10 @@ def test_push_usage_snapshots__control_plane_url_unset__no_op(
 ) -> None:
     # Given
     settings.CONTROL_PLANE_URL = None
-    mocked_get_orgs = mocker.patch(f"{SERVICES}.get_licensed_organisations")
-    mocked_push = mocker.patch(f"{SERVICES}.push_snapshot")
+    mocked_get_orgs = mocker.patch(
+        "organisations.usage_reporting.services.get_licensed_organisations"
+    )
+    mocked_push = mocker.patch("organisations.usage_reporting.services.push_snapshot")
 
     # When
     push_usage_snapshots()
@@ -135,8 +135,11 @@ def test_push_usage_snapshots__no_licensed_organisations__no_op(
 ) -> None:
     # Given
     settings.CONTROL_PLANE_URL = "https://cp.example.com"
-    mocker.patch(f"{SERVICES}.get_licensed_organisations", return_value=[])
-    mocked_push = mocker.patch(f"{SERVICES}.push_snapshot")
+    mocker.patch(
+        "organisations.usage_reporting.services.get_licensed_organisations",
+        return_value=[],
+    )
+    mocked_push = mocker.patch("organisations.usage_reporting.services.push_snapshot")
 
     # When
     push_usage_snapshots()
@@ -154,15 +157,15 @@ def test_push_usage_snapshots__licensed_organisations__pushes_each(
     org_one = mocker.Mock(id=1, licence=mocker.Mock(signature="sig-1"))
     org_two = mocker.Mock(id=2, licence=mocker.Mock(signature="sig-2"))
     mocker.patch(
-        f"{SERVICES}.get_licensed_organisations",
+        "organisations.usage_reporting.services.get_licensed_organisations",
         return_value=[org_one, org_two],
     )
     snapshot = _snapshot()
     mocker.patch(
-        f"{SERVICES}.map_organisation_to_usage_snapshot",
+        "organisations.usage_reporting.services.map_organisation_to_usage_snapshot",
         return_value=snapshot,
     )
-    mocked_push = mocker.patch(f"{SERVICES}.push_snapshot")
+    mocked_push = mocker.patch("organisations.usage_reporting.services.push_snapshot")
 
     # When
     push_usage_snapshots()
@@ -187,15 +190,15 @@ def test_push_usage_snapshots__one_organisation_raises__continues(
     org_one = mocker.Mock(id=1, licence=mocker.Mock(signature="sig-1"))
     org_two = mocker.Mock(id=2, licence=mocker.Mock(signature="sig-2"))
     mocker.patch(
-        f"{SERVICES}.get_licensed_organisations",
+        "organisations.usage_reporting.services.get_licensed_organisations",
         return_value=[org_one, org_two],
     )
     snapshot = _snapshot()
     mocker.patch(
-        f"{SERVICES}.map_organisation_to_usage_snapshot",
+        "organisations.usage_reporting.services.map_organisation_to_usage_snapshot",
         side_effect=[ValueError("boom"), snapshot],
     )
-    mocked_push = mocker.patch(f"{SERVICES}.push_snapshot")
+    mocked_push = mocker.patch("organisations.usage_reporting.services.push_snapshot")
 
     # When
     push_usage_snapshots()
