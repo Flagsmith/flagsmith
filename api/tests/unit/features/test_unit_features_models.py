@@ -643,6 +643,191 @@ def test_get_multivariate_feature_state_value__with_identity__returns_correct_va
     assert multivariate_value.value != multivariate_value.initial_value
 
 
+@mock.patch("features.models.get_hashed_percentage_for_object_ids")
+def test_get_multivariate_feature_state_value__no_mv_hashing_salt__seeds_hash_with_id(  # type: ignore[no-untyped-def]
+    mock_get_hashed_percentage,
+    multivariate_feature,
+    environment,
+    identity,
+):
+    # Given
+    mock_get_hashed_percentage.return_value = 0.0
+    feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+    assert feature_state.mv_hashing_salt is None
+    identity_hash_key = identity.get_hash_key()
+
+    # When
+    feature_state.get_multivariate_feature_state_value(
+        identity_hash_key=identity_hash_key
+    )
+
+    # Then the feature state id seeds the hash
+    mock_get_hashed_percentage.assert_called_once_with(
+        [feature_state.id, identity_hash_key]
+    )
+
+
+@mock.patch("features.models.get_hashed_percentage_for_object_ids")
+def test_get_multivariate_feature_state_value__mv_hashing_salt_set__seeds_hash_with_salt(  # type: ignore[no-untyped-def]
+    mock_get_hashed_percentage,
+    multivariate_feature,
+    environment,
+    identity,
+):
+    # Given
+    mock_get_hashed_percentage.return_value = 0.0
+    feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+    feature_state.mv_hashing_salt = 999
+    identity_hash_key = identity.get_hash_key()
+
+    # When
+    feature_state.get_multivariate_feature_state_value(
+        identity_hash_key=identity_hash_key
+    )
+
+    # Then the salt seeds the hash instead of the feature state id
+    mock_get_hashed_percentage.assert_called_once_with([999, identity_hash_key])
+
+
+def test_feature_state_clone__multivariate_feature__keeps_variant_bucketing_stable(
+    multivariate_feature: Feature,
+    environment: Environment,
+    environment_two: Environment,
+) -> None:
+    # Given the environment-default feature state for a multivariate feature, and
+    # the variant each of a range of identities is currently bucketed into
+    feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+    identity_hash_keys = [f"identity-{i}" for i in range(50)]
+    original_assignment = {
+        key: feature_state.get_multivariate_feature_state_value(key).id
+        for key in identity_hash_keys
+    }
+
+    # When the feature state is recreated by cloning it (e.g. publishing a new
+    # version or editing multivariate weights under v2 versioning)
+    cloned_feature_state = feature_state.clone(env=environment_two, as_draft=True)
+
+    # Then the clone keeps the original feature state's id as its bucketing salt
+    assert cloned_feature_state.id != feature_state.id
+    assert cloned_feature_state.mv_hashing_salt == feature_state.id
+
+    # and every identity stays in the same variant as before
+    cloned_assignment = {
+        key: cloned_feature_state.get_multivariate_feature_state_value(key).id
+        for key in identity_hash_keys
+    }
+    assert cloned_assignment == original_assignment
+
+
+def test_feature_state_clone__existing_mv_hashing_salt__is_preserved(
+    feature: Feature,
+    environment: Environment,
+    environment_two: Environment,
+) -> None:
+    # Given a feature state that already carries a bucketing salt
+    feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=feature,
+        identity=None,
+        feature_segment=None,
+    )
+    feature_state.mv_hashing_salt = 12345
+    feature_state.save()
+
+    # When it is cloned
+    cloned_feature_state = feature_state.clone(env=environment_two, as_draft=True)
+
+    # Then the existing salt is carried over rather than the source id
+    assert cloned_feature_state.mv_hashing_salt == 12345
+
+
+def test_feature_state_create__recreates_previous_version_override_directly__raises(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given an initial published version and a later (unpublished) version. The
+    # later version is created before the segment override exists, so the clone
+    # receiver does not copy the override into it.
+    initial_version = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+    later_version = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+
+    # and the previous (initial) version gains a segment override
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=initial_version,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=initial_version,
+        ),
+    )
+
+    # When the same segment's override is recreated directly (not via clone) in
+    # the later version
+    # Then the guard rejects it
+    with pytest.raises(ValidationError):
+        FeatureState.objects.create(
+            feature=feature,
+            environment=environment_v2_versioning,
+            environment_feature_version=later_version,
+            feature_segment=FeatureSegment.objects.create(
+                feature=feature,
+                segment=segment,
+                environment=environment_v2_versioning,
+                environment_feature_version=later_version,
+            ),
+        )
+
+
+def test_feature_state_create__new_segment_override_under_v2__is_allowed(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given a version whose previous version has no override for this segment
+    later_version = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+
+    # When a brand-new override for the segment is created directly
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=later_version,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=later_version,
+        ),
+    )
+
+    # Then it is allowed: a genuinely new override starts a fresh seed
+    assert feature_state.mv_hashing_salt is None
+
+
 @mock.patch.object(FeatureState, "get_multivariate_feature_state_value")
 def test_get_feature_state_value__multivariate_feature__returns_mv_value(  # type: ignore[no-untyped-def]
     mock_get_mv_feature_state_value, environment, multivariate_feature, identity

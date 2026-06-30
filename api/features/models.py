@@ -522,6 +522,13 @@ class FeatureState(
     # to be deprecated!
     version = models.IntegerField(default=1, null=True)
 
+    # Seed for multivariate variant bucketing. Defaults to the feature state's own
+    # id (see get_multivariate_feature_state_value), but is preserved across clones
+    # so that recreating a feature state (e.g. publishing a new version or editing
+    # multivariate weights under v2 versioning) does not re-bucket already-enrolled
+    # identities. See https://github.com/Flagsmith/flagsmith/issues/7913.
+    mv_hashing_salt = models.IntegerField(null=True, blank=True, default=None)
+
     class Meta:
         ordering = ["id"]
 
@@ -669,6 +676,10 @@ class FeatureState(
         clone = deepcopy(self)
         clone.id = None
         clone.uuid = uuid.uuid4()
+        # Preserve the multivariate bucketing seed so that recreating this feature
+        # state does not re-bucket already-enrolled identities. If the source never
+        # had an explicit salt, capture its id (the seed used until now).
+        clone.mv_hashing_salt = self.mv_hashing_salt or self.id
 
         if self.feature_segment:
             # We can only create a new feature segment if we are cloning to another environment,
@@ -769,7 +780,7 @@ class FeatureState(
         mv_options = list(self.multivariate_feature_state_values.all())
 
         percentage_value = get_hashed_percentage_for_object_ids(
-            [self.id, identity_hash_key]
+            [self.mv_hashing_salt or self.id, identity_hash_key]
         )
 
         # Iterate over the mv options in order of id (so we get the same value each
@@ -816,6 +827,50 @@ class FeatureState(
             raise ValidationError(
                 "Feature state already exists for this environment, feature, "
                 "version, segment & identity combination"
+            )
+
+    @hook(BEFORE_CREATE)
+    def check_mv_hashing_salt_preserved(self):  # type: ignore[no-untyped-def]
+        """Fail if a feature state is recreated without keeping its bucketing salt.
+
+        Under v2 versioning a feature state must be recreated via clone(), which
+        copies mv_hashing_salt so multivariate variant assignment stays stable for
+        enrolled identities. clone() always sets a non-null salt, so a freshly
+        created state with no salt that the previous version already had was made
+        some other way and would re-bucket those identities. Raise so the
+        offending path is caught in tests. Identity overrides are skipped: they
+        are not versioned or cloned. See
+        https://github.com/Flagsmith/flagsmith/issues/7913.
+        """
+        if (
+            self.mv_hashing_salt is not None
+            or self.identity_id is not None
+            or not self.environment.use_v2_feature_versioning  # type: ignore[union-attr]
+        ):
+            return
+
+        previous_version = (
+            self.environment_feature_version
+            and self.environment_feature_version.get_previous_version()
+        )
+        if previous_version is None:
+            return
+
+        # A segment override's FeatureSegment row is itself cloned per version, so
+        # match the override by its segment, not by the FeatureSegment row.
+        if self.feature_segment_id is None:
+            already_existed = Q(feature_segment__isnull=True)
+        else:
+            already_existed = Q(
+                feature_segment__segment_id=self.feature_segment.segment_id  # type: ignore[union-attr]
+            )
+
+        if previous_version.feature_states.filter(already_existed).exists():
+            raise ValidationError(
+                "A feature state for this environment, feature and segment existed "
+                "in the previous version; recreate it via FeatureState.clone() so "
+                "the mv_hashing_salt is kept and multivariate variant assignment "
+                "stays stable. See https://github.com/Flagsmith/flagsmith/issues/7913."
             )
 
     @hook(BEFORE_CREATE)

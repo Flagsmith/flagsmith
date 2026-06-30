@@ -152,7 +152,12 @@ def map_feature_state_to_engine(
 
     return FeatureStateModel(
         enabled=feature_state.enabled,
-        django_id=feature_state.pk,
+        # Use the multivariate bucketing salt (falling back to the pk) as the
+        # engine document's django_id. The engine and SDKs seed multivariate
+        # variant allocation on django_id, so feeding it the salt keeps variant
+        # assignment stable when a feature state is recreated, without changing
+        # the engine model or environment document schema. See issue #7913.
+        django_id=feature_state.mv_hashing_salt or feature_state.pk,
         feature_state_value=feature_state.get_feature_state_value(),
         featurestate_uuid=feature_state.uuid,
         feature_segment=feature_segment_model,

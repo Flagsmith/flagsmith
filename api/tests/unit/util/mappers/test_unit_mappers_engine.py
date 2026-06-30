@@ -240,6 +240,20 @@ def test_map_feature_state_to_engine__standard_feature__returns_expected_model(
     assert result == expected_result
 
 
+def test_map_feature_state_to_engine__mv_hashing_salt_set__uses_salt_as_django_id(
+    feature_state: FeatureState,
+) -> None:
+    # Given a feature state carrying a bucketing salt that differs from its id
+    feature_state.mv_hashing_salt = feature_state.id + 1000
+
+    # When
+    result = engine.map_feature_state_to_engine(feature_state, mv_fs_values=[])
+
+    # Then the salt is used as the engine document's django_id so that variant
+    # bucketing stays stable across feature state recreation
+    assert result.django_id == feature_state.mv_hashing_salt
+
+
 def test_map_feature_state_to_engine__feature_segment__return_expected(
     segment_multivariate_feature_state: FeatureState,
     multivariate_feature: "Feature",
@@ -710,7 +724,10 @@ def test_map_environment_to_engine__after_v2_versioning_migration__returns_lates
     assert len(result.feature_states) == 1
     mapped_environment_feature_state = result.feature_states[0]
 
-    assert mapped_environment_feature_state.django_id == v2_environment_feature_state.id
+    assert (
+        mapped_environment_feature_state.featurestate_uuid
+        == v2_environment_feature_state.uuid
+    )
     assert mapped_environment_feature_state.enabled is True
     assert (
         mapped_environment_feature_state.feature_state_value
@@ -721,7 +738,7 @@ def test_map_environment_to_engine__after_v2_versioning_migration__returns_lates
     assert len(result.project.segments[0].feature_states) == 1
 
     mapped_segment_override = result.project.segments[0].feature_states[0]
-    assert mapped_segment_override.django_id == v2_segment_override.id
+    assert mapped_segment_override.featurestate_uuid == v2_segment_override.uuid
     assert mapped_segment_override.enabled is True
     assert mapped_segment_override.feature_state_value == v2_segment_override_value
 
@@ -777,8 +794,8 @@ def test_map_environment_to_engine__v2_versioning_segment_override_removed__retu
     # Then
     assert len(environment_model.project.segments[0].feature_states) == 1
     assert (
-        environment_model.project.segments[0].feature_states[0].django_id
-        == v3_segment_override.id
+        environment_model.project.segments[0].feature_states[0].featurestate_uuid
+        == v3_segment_override.uuid
     )
 
 
