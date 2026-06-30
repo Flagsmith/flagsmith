@@ -25,14 +25,15 @@ def map_usage_data_to_total_api_calls(usage_data: list[UsageData]) -> int:
     )
 
 
-def _aggregate(usage_data: list[UsageData]) -> tuple[int, ApiCallBreakdown]:
-    breakdown = ApiCallBreakdown(
+def map_usage_data_to_api_call_breakdown(
+    usage_data: list[UsageData],
+) -> ApiCallBreakdown:
+    return ApiCallBreakdown(
         flags=sum(data.flags for data in usage_data),
         identities=sum(data.identities for data in usage_data),
         traits=sum(data.traits for data in usage_data),
         environment_documents=sum(data.environment_document for data in usage_data),
     )
-    return map_usage_data_to_total_api_calls(usage_data), breakdown
 
 
 def _project_usage(
@@ -64,15 +65,13 @@ def _project_usage(
 def map_organisation_to_usage_snapshot(organisation: Organisation) -> UsageSnapshot:
     hour_end = timezone.now().replace(minute=0, second=0, microsecond=0)
     hour_start = hour_end - timedelta(hours=1)
-    api_call_total, api_call_breakdown = _aggregate(
-        get_usage_data_for_window(organisation, hour_start, hour_end)
-    )
+    usage_data = get_usage_data_for_window(organisation, hour_start, hour_end)
     projects = organisation.projects.all()
     return UsageSnapshot(
         timestamp=hour_start,
         seat_count=organisation.num_seats,
-        api_call_total=api_call_total,
-        api_call_breakdown=api_call_breakdown,
+        api_call_total=map_usage_data_to_total_api_calls(usage_data),
+        api_call_breakdown=map_usage_data_to_api_call_breakdown(usage_data),
         project_count=projects.count(),
         instance_version=get_version(),
         project_usage=_project_usage(
