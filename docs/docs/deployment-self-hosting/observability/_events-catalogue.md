@@ -34,8 +34,8 @@ Attributes:
 
 Logged at `warning` from:
  - `api/app_analytics/analytics_db_service.py:74`
- - `api/app_analytics/analytics_db_service.py:191`
- - `api/app_analytics/analytics_db_service.py:282`
+ - `api/app_analytics/analytics_db_service.py:187`
+ - `api/app_analytics/analytics_db_service.py:278`
 
 Attributes:
  - `details`

@@ -1,7 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from common.core.utils import get_version
-from django.db.models import QuerySet
 from django.utils import timezone
 
 from app_analytics.analytics_db_service import get_usage_data_for_window
@@ -12,7 +11,6 @@ from organisations.usage_reporting.dataclasses import (
     ProjectUsage,
     UsageSnapshot,
 )
-from projects.models import Project
 
 # The Control Plane rejects payloads with more than this many project_usage rows.
 MAX_PROJECT_USAGE_ROWS = 5_000
@@ -36,26 +34,15 @@ def map_usage_data_to_api_call_breakdown(
     )
 
 
-def _project_usage(
-    *,
-    organisation: Organisation,
-    projects: QuerySet[Project],
-    hour_start: datetime,
-    hour_end: datetime,
+def map_project_usage_data_to_project_usage(
+    usage_data_by_project_id: dict[int, list[UsageData]],
 ) -> list[ProjectUsage]:
     rows = [
         ProjectUsage(
-            project_id=project.id,
-            api_call_count=map_usage_data_to_total_api_calls(
-                get_usage_data_for_window(
-                    organisation,
-                    hour_start,
-                    hour_end,
-                    project_id=project.id,
-                )
-            ),
+            project_id=project_id,
+            api_call_count=map_usage_data_to_total_api_calls(usage_data),
         )
-        for project in projects
+        for project_id, usage_data in usage_data_by_project_id.items()
     ]
     # Highest usage first
     rows.sort(key=lambda row: row.api_call_count, reverse=True)
@@ -65,19 +52,24 @@ def _project_usage(
 def map_organisation_to_usage_snapshot(organisation: Organisation) -> UsageSnapshot:
     hour_end = timezone.now().replace(minute=0, second=0, microsecond=0)
     hour_start = hour_end - timedelta(hours=1)
+    seat_count = organisation.num_seats
+    instance_version = get_version()
     usage_data = get_usage_data_for_window(organisation, hour_start, hour_end)
-    projects = organisation.projects.all()
+    usage_data_by_project_id = {
+        project.id: get_usage_data_for_window(
+            organisation, hour_start, hour_end, project_id=project.id
+        )
+        for project in organisation.projects.all()
+    }
+
+    # No data access past this point!
+
     return UsageSnapshot(
         timestamp=hour_start,
-        seat_count=organisation.num_seats,
+        seat_count=seat_count,
         api_call_total=map_usage_data_to_total_api_calls(usage_data),
         api_call_breakdown=map_usage_data_to_api_call_breakdown(usage_data),
-        project_count=projects.count(),
-        instance_version=get_version(),
-        project_usage=_project_usage(
-            organisation=organisation,
-            projects=projects,
-            hour_start=hour_start,
-            hour_end=hour_end,
-        ),
+        project_count=len(usage_data_by_project_id),
+        instance_version=instance_version,
+        project_usage=map_project_usage_data_to_project_usage(usage_data_by_project_id),
     )
