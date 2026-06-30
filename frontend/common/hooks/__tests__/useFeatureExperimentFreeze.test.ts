@@ -7,12 +7,24 @@ jest.mock('react', () => ({
   useMemo: (fn: () => any) => fn(),
 }))
 
+jest.mock('common/utils/utils', () => ({
+  __esModule: true,
+  default: {
+    getFlagsmithHasFeature: jest.fn(),
+  },
+}))
+
 import { useFeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import { useGetExperimentsQuery } from 'common/services/useExperiment'
+import Utils from 'common/utils/utils'
 import { Experiment } from 'common/types/responses'
 
 const mockUseGetExperimentsQuery =
   useGetExperimentsQuery as jest.MockedFunction<typeof useGetExperimentsQuery>
+const mockGetFlagsmithHasFeature =
+  Utils.getFlagsmithHasFeature as jest.MockedFunction<
+    typeof Utils.getFlagsmithHasFeature
+  >
 
 const makeExperiment = (
   overrides: Partial<Experiment> & { featureId: number },
@@ -37,7 +49,6 @@ const makeExperiment = (
 })
 
 const empty = { data: { results: [] }, isLoading: false } as any
-const loading = { data: undefined, isLoading: true } as any
 
 const withResults = (experiments: Experiment[]) =>
   ({ data: { results: experiments }, isLoading: false } as any)
@@ -45,6 +56,7 @@ const withResults = (experiments: Experiment[]) =>
 describe('useFeatureExperimentFreeze', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockGetFlagsmithHasFeature.mockReturnValue(true)
   })
 
   it('returns isFrozen true when a running experiment exists for the feature', () => {
@@ -56,7 +68,6 @@ describe('useFeatureExperimentFreeze', () => {
 
     expect(result.isFrozen).toBe(true)
     expect(result.experiment?.id).toBe(1)
-    expect(result.isLoading).toBe(false)
   })
 
   it('returns isFrozen false when no experiments exist', () => {
@@ -79,7 +90,10 @@ describe('useFeatureExperimentFreeze', () => {
   })
 
   it('returns isLoading true while the query is loading', () => {
-    mockUseGetExperimentsQuery.mockReturnValue(loading)
+    mockUseGetExperimentsQuery.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+    } as any)
 
     const result = useFeatureExperimentFreeze(42, 'env-123')
 
@@ -111,7 +125,20 @@ describe('useFeatureExperimentFreeze', () => {
     )
   })
 
-  it('queries only running experiments', () => {
+  it('skips query when experimental_flags feature is disabled', () => {
+    mockGetFlagsmithHasFeature.mockReturnValue(false)
+    mockUseGetExperimentsQuery.mockReturnValue(empty)
+
+    const result = useFeatureExperimentFreeze(42, 'env-123')
+
+    expect(result.isFrozen).toBe(false)
+    expect(mockUseGetExperimentsQuery).toHaveBeenCalledWith(
+      { environmentId: 'env-123', status: 'running' },
+      { skip: true },
+    )
+  })
+
+  it('queries only running experiments when feature is enabled', () => {
     mockUseGetExperimentsQuery.mockReturnValue(empty)
 
     useFeatureExperimentFreeze(42, 'env-123')

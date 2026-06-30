@@ -81,8 +81,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   projectId,
 }) => {
   const isEdit = !!projectFlag?.id
-  const isDisabled =
-    !!noPermissions || !!freeze?.isFrozen || !!freeze?.isLoading
+  const isDisabled = !!noPermissions || !!freeze?.isFrozen
 
   const { permission: createFeature } = useHasPermission({
     id: projectId,
@@ -506,38 +505,41 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
         </div>
       )}
 
-      {environmentId && onSaveFeatureValue && !freeze?.isFrozen && (
-        <>
-          <JSONReference
-            className='mb-3'
-            showNamesButton
-            title={'Feature'}
-            json={projectFlag}
-          />
-          <JSONReference
-            className='mb-3'
-            title={'Feature state'}
-            json={environmentFlag}
-          />
-          <FlagValueFooter
-            is4Eyes={!!is4Eyes}
-            isVersioned={!!isVersioned}
-            projectId={
-              typeof projectId === 'string'
-                ? parseInt(projectId, 10)
-                : projectId
-            }
-            projectFlag={projectFlag}
-            environmentId={environmentId}
-            environmentName={environmentName || ''}
-            isSaving={!!isSaving || !!freeze?.isLoading}
-            featureName={projectFlag.name}
-            isInvalid={!!invalid}
-            existingChangeRequest={!!existingChangeRequest}
-            onSaveFeatureValue={onSaveFeatureValue}
-          />
-        </>
-      )}
+      {environmentId &&
+        onSaveFeatureValue &&
+        !freeze?.isFrozen &&
+        !freeze?.isLoading && (
+          <>
+            <JSONReference
+              className='mb-3'
+              showNamesButton
+              title={'Feature'}
+              json={projectFlag}
+            />
+            <JSONReference
+              className='mb-3'
+              title={'Feature state'}
+              json={environmentFlag}
+            />
+            <FlagValueFooter
+              is4Eyes={!!is4Eyes}
+              isVersioned={!!isVersioned}
+              projectId={
+                typeof projectId === 'string'
+                  ? parseInt(projectId, 10)
+                  : projectId
+              }
+              projectFlag={projectFlag}
+              environmentId={environmentId}
+              environmentName={environmentName || ''}
+              isSaving={!!isSaving}
+              featureName={projectFlag.name}
+              isInvalid={!!invalid}
+              existingChangeRequest={!!existingChangeRequest}
+              onSaveFeatureValue={onSaveFeatureValue}
+            />
+          </>
+        )}
     </div>
   )
 }

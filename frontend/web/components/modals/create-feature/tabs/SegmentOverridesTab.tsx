@@ -164,8 +164,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
               !showCreateSegment &&
               manageSegmentOverrides &&
               !disableCreate &&
-              !freeze?.isFrozen &&
-              !freeze?.isLoading && (
+              !freeze?.isFrozen && (
                 <div className='text-right'>
                   <Button
                     size='small'
@@ -181,8 +180,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
             {!isComparing &&
               !showCreateSegment &&
               !noPermissions &&
-              !freeze?.isFrozen &&
-              !freeze?.isLoading && (
+              !freeze?.isFrozen && (
                 <Button
                   onClick={() => changeSegment(segmentOverrides || [])}
                   type='button'
@@ -223,11 +221,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
               <SegmentOverrides
                 setShowCreateSegment={setShowCreateSegment}
                 onCompareChange={setIsComparing}
-                readOnly={
-                  !manageSegmentOverrides ||
-                  !!freeze?.isFrozen ||
-                  !!freeze?.isLoading
-                }
+                readOnly={!manageSegmentOverrides || !!freeze?.isFrozen}
                 is4Eyes={is4Eyes}
                 showEditSegment
                 showCreateSegment={showCreateSegment}

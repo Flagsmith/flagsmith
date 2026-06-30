@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useGetExperimentsQuery } from 'common/services/useExperiment'
 import type { Experiment } from 'common/types/responses'
+import Utils from 'common/utils/utils'
 
 export type FeatureExperimentFreeze = {
   isFrozen: boolean
@@ -12,7 +13,8 @@ export function useFeatureExperimentFreeze(
   featureId: number | undefined,
   environmentId: string,
 ): FeatureExperimentFreeze {
-  const skip = !featureId || !environmentId
+  const hasExperiments = Utils.getFlagsmithHasFeature('experimental_flags')
+  const skip = !hasExperiments || !featureId || !environmentId
   const { data, isLoading } = useGetExperimentsQuery(
     { environmentId, status: 'running' },
     { skip },

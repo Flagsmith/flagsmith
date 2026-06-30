@@ -292,7 +292,7 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
               onChange={(is_server_key_only) =>
                 onChange({ ...projectFlag, is_server_key_only })
               }
-              disabled={!!freeze?.isFrozen || !!freeze?.isLoading}
+              disabled={!!freeze?.isFrozen}
               className='ml-0'
             />
             <Tooltip
@@ -316,7 +316,7 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
               onChange={(is_archived) =>
                 onChange({ ...projectFlag, is_archived })
               }
-              disabled={!!freeze?.isFrozen || !!freeze?.isLoading}
+              disabled={!!freeze?.isFrozen}
               className='ml-0'
             />
             <Tooltip
