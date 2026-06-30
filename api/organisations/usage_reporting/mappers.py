@@ -18,7 +18,7 @@ from projects.models import Project
 MAX_PROJECT_USAGE_ROWS = 5_000
 
 
-def _total_api_calls(usage_data: list[UsageData]) -> int:
+def map_usage_data_to_total_api_calls(usage_data: list[UsageData]) -> int:
     return sum(
         data.flags + data.identities + data.traits + data.environment_document
         for data in usage_data
@@ -32,7 +32,7 @@ def _aggregate(usage_data: list[UsageData]) -> tuple[int, ApiCallBreakdown]:
         traits=sum(data.traits for data in usage_data),
         environment_documents=sum(data.environment_document for data in usage_data),
     )
-    return _total_api_calls(usage_data), breakdown
+    return map_usage_data_to_total_api_calls(usage_data), breakdown
 
 
 def _project_usage(
@@ -45,7 +45,7 @@ def _project_usage(
     rows = [
         ProjectUsage(
             project_id=project.id,
-            api_call_count=_total_api_calls(
+            api_call_count=map_usage_data_to_total_api_calls(
                 get_usage_data_for_window(
                     organisation,
                     hour_start,
