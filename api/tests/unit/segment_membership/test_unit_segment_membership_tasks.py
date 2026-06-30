@@ -62,7 +62,7 @@ def test_seed_organisation_identities__no_clickhouse_creds__skips(
     spy.assert_not_called()
     assert log.events == [
         {
-            "level": "info",
+            "level": "warning",
             "event": "seed.skipped",
             "organisation__id": project.organisation_id,
             "reason": "clickhouse_not_configured",

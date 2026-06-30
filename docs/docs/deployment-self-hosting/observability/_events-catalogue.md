@@ -435,7 +435,7 @@ Attributes:
 
 ### `segment_membership.seed.skipped`
 
-Logged at `info` from:
+Logged at `warning` from:
  - `api/segment_membership/tasks.py:66`
  - `api/segment_membership/tasks.py:71`
  - `api/segment_membership/tasks.py:76`

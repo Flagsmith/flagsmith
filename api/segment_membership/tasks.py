@@ -63,7 +63,7 @@ def seed_organisation_identities(organisation_id: int) -> None:
     """
     log = logger.bind(organisation__id=organisation_id)
     if not settings.CLICKHOUSE_ENABLED:
-        log.info("seed.skipped", reason="clickhouse_not_configured")
+        log.warning("seed.skipped", reason="clickhouse_not_configured")
         return
 
     organisation = Organisation.objects.get(pk=organisation_id)
@@ -73,7 +73,7 @@ def seed_organisation_identities(organisation_id: int) -> None:
 
     wrapper = DynamoIdentityWrapper()
     if not wrapper.is_enabled:
-        log.info("seed.skipped", reason="dynamo_disabled")
+        log.warning("seed.skipped", reason="dynamo_disabled")
         return
 
     scan_started_at = timezone.now()
