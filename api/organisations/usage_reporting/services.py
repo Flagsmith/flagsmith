@@ -22,7 +22,7 @@ REQUEST_TIMEOUT_SECONDS = 30
 def get_licensed_organisations() -> list[Organisation]:
     if not settings.LICENSING_INSTALLED:
         return []
-    return list(  # pragma: no cover - requires the optional licensing package
+    return list(
         Organisation.objects.filter(licence__isnull=False).select_related("licence")
     )
 

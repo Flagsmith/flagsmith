@@ -3,10 +3,12 @@ import json
 from datetime import datetime, timezone
 
 import pytest
+from django.conf import settings as django_settings
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
+from organisations.models import Organisation
 from organisations.usage_reporting.dataclasses import (
     ApiCallBreakdown,
     ProjectUsage,
@@ -41,6 +43,21 @@ def test_get_licensed_organisations__licensing_not_installed__returns_empty(
     settings.LICENSING_INSTALLED = False
 
     # When / Then
+    assert get_licensed_organisations() == []
+
+
+@pytest.mark.skipif(
+    not django_settings.LICENSING_INSTALLED,
+    reason="the licence relation requires the optional licensing package",
+)
+def test_get_licensed_organisations__organisation_without_licence__excluded(
+    settings: SettingsWrapper,
+    organisation: Organisation,
+) -> None:
+    # Given
+    settings.LICENSING_INSTALLED = True
+
+    # When / Then - the unlicensed organisation is filtered out
     assert get_licensed_organisations() == []
 
 
