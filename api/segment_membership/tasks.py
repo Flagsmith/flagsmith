@@ -3,6 +3,7 @@ from typing import cast
 
 import structlog
 from django.conf import settings
+from django.db.models import Exists, OuterRef
 from django.utils import timezone
 from flagsmith_schemas.dynamodb import Identity as DynamoIdentity
 from task_processor.decorators import (
@@ -77,10 +78,10 @@ def seed_organisation_identities(organisation_id: int) -> None:
         return
 
     scan_started_at = timezone.now()
-    project_ids = Segment.live_objects.filter(
-        project__organisation=organisation
-    ).values_list("project_id", flat=True)
-    for project in Project.objects.filter(id__in=project_ids).iterator():
+    projects_with_live_segments = Project.objects.filter(
+        organisation=organisation,
+    ).filter(Exists(Segment.live_objects.filter(project=OuterRef("pk"))))
+    for project in projects_with_live_segments:
         log_comment = (
             "flagsmith:segment_membership:backfill"
             f":org_{organisation_id}"

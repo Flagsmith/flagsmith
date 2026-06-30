@@ -387,7 +387,7 @@ Attributes:
 ### `segment_membership.refresh.project.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:253`
+ - `api/segment_membership/tasks.py:254`
 
 Attributes:
  - `membership_counts.count`
@@ -397,7 +397,7 @@ Attributes:
 ### `segment_membership.refresh.project.failed`
 
 Logged at `exception` from:
- - `api/segment_membership/tasks.py:226`
+ - `api/segment_membership/tasks.py:227`
 
 Attributes:
  - `project.id`
@@ -405,8 +405,8 @@ Attributes:
 ### `segment_membership.refresh.project.skipped`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:197`
- - `api/segment_membership/tasks.py:206`
+ - `api/segment_membership/tasks.py:198`
+ - `api/segment_membership/tasks.py:207`
 
 Attributes:
  - `project.id`
@@ -415,7 +415,7 @@ Attributes:
 ### `segment_membership.seed.environment.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:120`
+ - `api/segment_membership/tasks.py:121`
 
 Attributes:
  - `environment.id`
@@ -426,7 +426,7 @@ Attributes:
 ### `segment_membership.seed.environment.failed`
 
 Logged at `exception` from:
- - `api/segment_membership/tasks.py:113`
+ - `api/segment_membership/tasks.py:114`
 
 Attributes:
  - `environment.id`
@@ -436,9 +436,9 @@ Attributes:
 ### `segment_membership.seed.skipped`
 
 Logged at `warning` from:
- - `api/segment_membership/tasks.py:66`
- - `api/segment_membership/tasks.py:71`
- - `api/segment_membership/tasks.py:76`
+ - `api/segment_membership/tasks.py:67`
+ - `api/segment_membership/tasks.py:72`
+ - `api/segment_membership/tasks.py:77`
 
 Attributes:
  - `organisation.id`
