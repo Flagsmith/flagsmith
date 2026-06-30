@@ -20,6 +20,7 @@ import { withRouter } from 'react-router-dom'
 import { getDarkMode } from 'project/darkMode'
 import { getStore } from 'common/store'
 import { removeProjectFlag } from 'common/services/useProjectFlag'
+import { hasMultivariateChange } from 'common/utils/compareMultivariate'
 
 const featureNameWidth = 300
 
@@ -111,9 +112,14 @@ class CompareEnvironments extends Component {
               }
               change.enabledChanged = change.rightEnabled !== change.leftEnabled
               change.valueChanged = change.rightValue !== change.leftValue
+              change.multivariateChanged = hasMultivariateChange(
+                leftSide,
+                rightSide,
+              )
               if (
                 change.enabledChanged ||
                 change.valueChanged ||
+                change.multivariateChanged ||
                 projectFlagLeft.num_identity_overrides ||
                 projectFlagLeft.num_segment_overrides ||
                 projectFlagRight.num_identity_overrides ||
@@ -412,7 +418,12 @@ class CompareEnvironments extends Component {
                           className='no-pad mt-2'
                           items={this.filter(this.state.changes)}
                           renderRow={(p, i) =>
-                            renderRow(p, i, !p.enabledChanged, !p.valueChanged)
+                            renderRow(
+                              p,
+                              i,
+                              !p.enabledChanged,
+                              !(p.valueChanged || p.multivariateChanged),
+                            )
                           }
                         />
                       </div>
@@ -467,7 +478,7 @@ class CompareEnvironments extends Component {
                                 p,
                                 i,
                                 !p.enabledChanged,
-                                !p.valueChanged,
+                                !(p.valueChanged || p.multivariateChanged),
                               )
                             }
                           />

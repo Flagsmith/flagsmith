@@ -1033,7 +1033,7 @@ export type Req = {
   }
   getExperiments: PagedRequest<{
     environmentId: string
-    status?: ExperimentStatus
+    status?: ExperimentStatus | ExperimentStatus[]
   }>
   createExperiment: {
     environmentId: string
@@ -1061,6 +1061,22 @@ export type Req = {
     environmentId: string
     experimentId: number
     body: { hypothesis?: string }
+  }
+  updateExperimentRollout: {
+    environmentId: string
+    experimentId: number
+    body: {
+      enabled: boolean
+      rollout_percentage: number
+      feature_state_value: {
+        type: 'integer' | 'string' | 'boolean'
+        value: string
+      }
+      multivariate_feature_state_values: {
+        multivariate_feature_option: number
+        percentage_allocation: number
+      }[]
+    }
   }
   deleteExperiment: { environmentId: string; experimentId: number }
   getExperiment: { environmentId: string; experimentId: number }

@@ -21,6 +21,7 @@ import {
   getVariationSplitDefaults,
   toRolloutFeatureValue,
 } from './rollout'
+import isValidPercentage from 'common/utils/isValidPercentage'
 import MeasurementStep from './steps/MeasurementStep'
 import ReviewStep from './steps/ReviewStep'
 
@@ -100,7 +101,7 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
 
   const controlPercentage = getControlPercentage(variationSplit)
   const isRolloutValid =
-    rolloutPercentage > 0 && controlPercentage >= 0 && controlPercentage <= 100
+    isValidPercentage(rolloutPercentage) && isValidPercentage(controlPercentage)
 
   const stepValidity: Record<number, boolean> = {
     0: isStep1Valid,

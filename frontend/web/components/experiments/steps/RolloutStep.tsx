@@ -39,7 +39,7 @@ const RolloutStep: FC<RolloutStepProps> = ({
     <div className='d-flex flex-column gap-4'>
       <ContentCard
         background='white'
-        title='Sample Size'
+        title='Rollout'
         description='What percentage of eligible users enters the experiment?'
       >
         <RolloutSlider value={rolloutPercentage} onChange={onRolloutChange} />

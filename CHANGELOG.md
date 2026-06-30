@@ -1,5 +1,48 @@
 # Changelog
 
+## [2.250.0](https://github.com/Flagsmith/flagsmith/compare/v2.249.0...v2.250.0) (2026-06-30)
+
+
+### Features
+
+* add regional base URL select for Heap and Mixpanel integrations ([#7904](https://github.com/Flagsmith/flagsmith/issues/7904)) ([48ff59c](https://github.com/Flagsmith/flagsmith/commit/48ff59ce944432a5db5b3645cdadc544062f5a29))
+* **experiments:** display rollout on detail page with inline edit ([#7895](https://github.com/Flagsmith/flagsmith/issues/7895)) ([796afbb](https://github.com/Flagsmith/flagsmith/commit/796afbb2c71a726dd152e49d09078112c5dbc254))
+
+
+### Bug Fixes
+
+* **experimentation:** keep variant assignment stable across rollout updates ([#7912](https://github.com/Flagsmith/flagsmith/issues/7912)) ([772b9cb](https://github.com/Flagsmith/flagsmith/commit/772b9cba3cddf68861727516ed5fe0ef501dddd6))
+* **multivariate:** persist variant key in DynamoDB environment document ([#7915](https://github.com/Flagsmith/flagsmith/issues/7915)) ([fe840c5](https://github.com/Flagsmith/flagsmith/commit/fe840c5d86d270af4fe841a334b74c3ffeb52a42))
+* **mypy:** narrow compressed feature_states to bytes in dynamodb mapper test ([#7916](https://github.com/Flagsmith/flagsmith/issues/7916)) ([ee9f182](https://github.com/Flagsmith/flagsmith/commit/ee9f182870cc8db515d82f4f045219322a4b3186))
+
+
+### Dependency Updates
+
+* Update flagsmith-private to 0.10.1 ([#7908](https://github.com/Flagsmith/flagsmith/issues/7908)) ([c393d31](https://github.com/Flagsmith/flagsmith/commit/c393d31c641f6b14a8f7a048e1c4c683851b6a15))
+
+## [2.249.0](https://github.com/Flagsmith/flagsmith/compare/v2.248.0...v2.249.0) (2026-06-29)
+
+
+### Features
+
+* **experimentation:** support multi-status filter in frontend ([#7894](https://github.com/Flagsmith/flagsmith/issues/7894)) ([5545f43](https://github.com/Flagsmith/flagsmith/commit/5545f43db71b16a4350ba09e1e8e1c7cbcfe0be8))
+* **experimentation:** support multi-status filter on experiments list ([#7893](https://github.com/Flagsmith/flagsmith/issues/7893)) ([fc4a57f](https://github.com/Flagsmith/flagsmith/commit/fc4a57f453a687d40204765490b2d0ebd0c63b78))
+* freeze flag editing when flag is in a running experiment ([#7888](https://github.com/Flagsmith/flagsmith/issues/7888)) ([de2f911](https://github.com/Flagsmith/flagsmith/commit/de2f911afe9d43abc08d0cfef80d8c24fc6697f1))
+
+
+### Bug Fixes
+
+* add regional base URL for Mixpanel ([#7802](https://github.com/Flagsmith/flagsmith/issues/7802)) ([1d1cc9c](https://github.com/Flagsmith/flagsmith/commit/1d1cc9c642ee6c3f9601fd46b0d76f3dae1c2073))
+* detect multivariate differences between environments ([#7635](https://github.com/Flagsmith/flagsmith/issues/7635)) ([68ff940](https://github.com/Flagsmith/flagsmith/commit/68ff940e7615130742d900e10f6bbdcdb9302bdb))
+* **features:** open feature slideout when deep link targets an off-page feature ([#7807](https://github.com/Flagsmith/flagsmith/issues/7807)) ([6fd31d7](https://github.com/Flagsmith/flagsmith/commit/6fd31d7bf2ec4521d1e8ddd6534d3439546236f3))
+* **project-settings:** add spacing between project name input and Update button when hasVariation is False ([#7882](https://github.com/Flagsmith/flagsmith/issues/7882)) ([ea52abb](https://github.com/Flagsmith/flagsmith/commit/ea52abb30a83102d8c0bcf0d22b90db9b66458e0))
+* **Utils:** add guard against null rule value in validateRule ([#7779](https://github.com/Flagsmith/flagsmith/issues/7779)) ([ff21200](https://github.com/Flagsmith/flagsmith/commit/ff21200a468667a7025df417acb08589f231ff8e))
+
+
+### Docs
+
+* [ImgBot] Optimize images ([#7860](https://github.com/Flagsmith/flagsmith/issues/7860)) ([51020e5](https://github.com/Flagsmith/flagsmith/commit/51020e515f4541b819f03c1b079a45dfd758e22b))
+
 ## [2.248.0](https://github.com/Flagsmith/flagsmith/compare/v2.247.0...v2.248.0) (2026-06-26)
 
 

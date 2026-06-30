@@ -74,7 +74,7 @@ dependencies = [
     "hubspot-api-client>=12.0.0,<13.0.0",
     "djangorestframework-dataclasses>=1.3.1,<2.0.0",
     "pyotp>=2.9.0,<3.0.0",
-    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.9.1,<4",
+    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.10.1,<4",
     "django-stubs>=5.1.3,<6.0.0",
     "tzdata>=2024.1,<2025.0.0",
     "djangorestframework-simplejwt>=5.5.1,<6.0.0",
@@ -86,7 +86,7 @@ dependencies = [
 
 [project.optional-dependencies]
 private = [
-    "flagsmith-private>=0.10.0,<1",
+    "flagsmith-private>=0.10.1,<1",
 ]
 dev = [
     "django-test-migrations>=1.2.0,<2.0.0",

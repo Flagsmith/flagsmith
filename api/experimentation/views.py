@@ -45,6 +45,7 @@ from experimentation.serializers import (
     ExperimentExposuresSerializer,
     ExperimentListSerializer,
     ExperimentMetricSerializer,
+    ExperimentQueryParamSerializer,
     ExperimentResultsSerializer,
     ExperimentRolloutSerializer,
     ExperimentSerializer,
@@ -245,13 +246,10 @@ class ExperimentViewSet(
                 "feature__feature_states__multivariate_feature_state_values",
                 "experiment_metrics__metric",
             )
-        status_filter = self.request.query_params.get("status")
-        if status_filter:
-            if status_filter not in ExperimentStatus.values:
-                raise serializers.ValidationError(
-                    {"status": f"Invalid status '{status_filter}'."}
-                )
-            qs = qs.filter(status=status_filter)
+        query_params = ExperimentQueryParamSerializer(data=self.request.GET)
+        query_params.is_valid(raise_exception=True)
+        if status_filter := query_params.validated_data.get("status"):
+            qs = qs.filter(status__in=status_filter)
 
         q = self.request.query_params.get("q")
         if q:

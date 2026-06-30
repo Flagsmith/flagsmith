@@ -1156,6 +1156,48 @@ def test_delete__valid_delete__creates_audit_log(
     assert "deleted" in audit.log
 
 
+def test_get_list__filter_by_multiple_statuses__returns_matching(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    project: "Project",
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    second_feature = Feature.objects.create(
+        name="mv_feature_2",
+        project=project,
+        type=MULTIVARIATE,
+        initial_value="control",
+    )
+    for pct in (50, 50):
+        MultivariateFeatureOption.objects.create(
+            feature=second_feature,
+            default_percentage_allocation=pct,
+            type="unicode",
+            string_value=f"option_{pct}",
+        )
+    running_experiment = Experiment.objects.create(
+        environment=environment,
+        feature=second_feature,
+        name="Running Experiment",
+        hypothesis="hypothesis",
+        status=ExperimentStatus.RUNNING,
+    )
+
+    # When — filter for both created and running
+    response = admin_client_new.get(
+        _list_url(environment),
+        {"status": ["created", "running"]},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    result_ids = {r["id"] for r in response.json()["results"]}
+    assert result_ids == {experiment.id, running_experiment.id}
+
+
 def test_get_list__invalid_status__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
@@ -1166,6 +1208,24 @@ def test_get_list__invalid_status__returns_400(
 
     # When
     response = admin_client_new.get(_list_url(environment), {"status": "garbage"})
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_get_list__mixed_valid_and_invalid_status__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(
+        _list_url(environment),
+        {"status": ["running", "garbage"]},
+    )
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST

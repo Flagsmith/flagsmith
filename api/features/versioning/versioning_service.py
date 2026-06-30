@@ -188,7 +188,7 @@ def _update_flag_for_versioning_v2(
         change_set.feature_state_value,
         change_set.type_,
     )
-    _update_multivariate_values(target_feature_state, change_set.multivariate_values)
+    update_multivariate_values(target_feature_state, change_set.multivariate_values)
 
     if change_set.segment_id is not None and change_set.segment_priority is not None:
         _update_segment_priority(target_feature_state, change_set.segment_priority)
@@ -241,7 +241,7 @@ def _update_flag_for_versioning_v1(
         change_set.feature_state_value,
         change_set.type_,
     )
-    _update_multivariate_values(target_feature_state, change_set.multivariate_values)
+    update_multivariate_values(target_feature_state, change_set.multivariate_values)
 
     if change_set.segment_id is not None and change_set.segment_priority is not None:
         _update_segment_priority(target_feature_state, change_set.segment_priority)
@@ -256,7 +256,7 @@ def _update_feature_state_value(
     fsv.save()
 
 
-def _update_multivariate_values(
+def update_multivariate_values(
     feature_state: FeatureState,
     values: list[MultivariateValueChangeSet] | None,
 ) -> None:
@@ -374,7 +374,7 @@ def _update_flag_v2_for_versioning_v2(
                 override.feature_state_value,
                 override.type_,
             )
-            _update_multivariate_values(segment_state, override.multivariate_values)
+            update_multivariate_values(segment_state, override.multivariate_values)
 
             if override.priority is not None:
                 _update_segment_priority(segment_state, override.priority)
@@ -393,7 +393,7 @@ def _update_flag_v2_for_versioning_v2(
                 override.feature_state_value,
                 override.type_,
             )
-            _update_multivariate_values(segment_state, override.multivariate_values)
+            update_multivariate_values(segment_state, override.multivariate_values)
 
     new_version.publish(
         published_by=change_set.author.user,
@@ -445,7 +445,7 @@ def _update_flag_v2_for_versioning_v1(
                 override.feature_state_value,
                 override.type_,
             )
-            _update_multivariate_values(segment_state, override.multivariate_values)
+            update_multivariate_values(segment_state, override.multivariate_values)
         else:
             assert len(segment_states) == 1
             segment_state = list(segment_states.values())[0]
@@ -457,7 +457,7 @@ def _update_flag_v2_for_versioning_v1(
                 override.feature_state_value,
                 override.type_,
             )
-            _update_multivariate_values(segment_state, override.multivariate_values)
+            update_multivariate_values(segment_state, override.multivariate_values)
 
             if override.priority is not None:
                 _update_segment_priority(segment_state, override.priority)

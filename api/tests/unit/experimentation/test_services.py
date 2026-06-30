@@ -2,6 +2,7 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 
 import pytest
+from django.db.models import Q
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -1668,3 +1669,68 @@ def test_enable_experiment_rollout__no_rollout__no_op(
 
     # Then nothing is written
     update_flag.assert_not_called()
+
+
+def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
+    environment_v2_versioning: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given a running experiment whose rollout splits two variants 50/50
+    option_a, option_b, _ = multivariate_options
+    experiment = Experiment.objects.create(
+        environment=environment_v2_versioning,
+        feature=multivariate_feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.RUNNING,
+    )
+    spec = RolloutSpec(
+        enabled=True,
+        rollout_percentage=50.0,
+        feature_state_value="control",
+        value_type="string",
+        multivariate_values=[
+            MultivariateValueChangeSet(option_a.id, 50.0),
+            MultivariateValueChangeSet(option_b.id, 50.0),
+        ],
+        author=AuthorData(user=admin_user),
+    )
+    identity_hash_keys = [f"identity-{i}" for i in range(50)]
+
+    def variant_assignment() -> dict[str, int]:
+        override = (
+            FeatureState.objects.get_live_feature_states(
+                environment=experiment.environment,
+                additional_filters=Q(
+                    feature_segment__segment=experiment.rollout_segment,
+                    identity__isnull=True,
+                ),
+                feature_id=experiment.feature_id,
+            )
+            .prefetch_related(
+                "multivariate_feature_state_values__multivariate_feature_option"
+            )
+            .latest("id")
+        )
+        assignment: dict[str, int] = {}
+        for key in identity_hash_keys:
+            option = override.get_multivariate_feature_state_value(key)
+            # The 50/50 split allocates 100%, so every identity lands on an option.
+            assert isinstance(option, MultivariateFeatureOption)
+            assignment[key] = option.id
+        return assignment
+
+    # When the rollout is applied, then re-applied unchanged (e.g. tuned while
+    # the experiment is running)
+    services.apply_experiment_rollout(experiment, spec)
+    experiment.refresh_from_db()
+    before = variant_assignment()
+
+    services.apply_experiment_rollout(experiment, spec)
+    after = variant_assignment()
+
+    # Then every already-enrolled identity keeps the variant it was first
+    # assigned; tuning the rollout must not re-randomise the split.
+    assert before == after
