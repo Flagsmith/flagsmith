@@ -170,10 +170,7 @@ def reconcile_segment_membership_seeds() -> None:
     timeout=timedelta(minutes=10),
 )
 def refresh_all_segment_counts() -> None:
-    """Refresh counts for every project with a live segment on a slow cadence so
-    cached counts track identities ingested via CDC between segment edits.
-    `enqueue_membership_refresh` is the single flag + debounce gate.
-    """
+    """Refresh counts for every project with a live segment"""
     if not settings.CLICKHOUSE_ENABLED:
         return
 
