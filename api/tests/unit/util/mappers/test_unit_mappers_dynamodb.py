@@ -277,8 +277,10 @@ def test_map_environment_to_compressed_environment_document__mv_option_with_key_
     result = dynamodb.map_environment_to_compressed_environment_document(environment)
 
     # Then
+    compressed_feature_states = result.document["feature_states"]
+    assert isinstance(compressed_feature_states, bytes)
     feature_states = json.loads(
-        gzip.decompress(result.document["feature_states"]).decode("utf-8")
+        gzip.decompress(compressed_feature_states).decode("utf-8")
     )
     mv_options = [
         mv_value["multivariate_feature_option"]
