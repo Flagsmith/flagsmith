@@ -1,4 +1,3 @@
-import base64
 import json
 from datetime import datetime, timezone
 
@@ -119,10 +118,8 @@ def test_push_snapshot__valid_snapshot__sends_bearer_authed_post(
     mocked_post.assert_called_once()
     (url,), kwargs = mocked_post.call_args
     assert url == "https://cp.example.com/v1/public/usage"
-    # The Control Plane recovers the raw signature from the base64url token
-    token = kwargs["headers"]["Authorization"].removeprefix("Bearer ")
-    recovered = base64.urlsafe_b64decode(token + "=" * (-len(token) % 4))
-    assert recovered == signature.encode("utf-8")
+    # The unpadded base64url token the Control Plane receives on the wire
+    assert kwargs["headers"]["Authorization"] == "Bearer YWJjKy89ZGVmPT0"
     assert kwargs["headers"]["Content-Type"] == "application/json"
     assert json.loads(kwargs["data"]) == {
         "timestamp": "2026-06-18T08:00:00Z",
