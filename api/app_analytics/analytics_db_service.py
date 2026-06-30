@@ -146,10 +146,6 @@ def get_usage_data_from_local_db_for_window(
     date_stop: datetime,
     project_id: int | None = None,
 ) -> list[UsageData]:
-    # Filters on the full timestamp (not ``created_at__date``) so that sub-day
-    # windows such as a single hour are honoured. The daily ``get_usage_data``
-    # path keeps its date-truncated filter to leave the billing endpoint
-    # unchanged.
     qs = _get_api_usage_bucket_qs(
         organisation,
         project_id=project_id,
