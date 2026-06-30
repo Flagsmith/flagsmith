@@ -623,8 +623,11 @@ def _update_rollout_in_place(experiment: Experiment, change_set: FlagChangeSet) 
         override := _get_live_rollout_override(experiment)
     ):
         _update_live_feature_state(override, change_set)
-        rebuild_environment_document.delay(
-            kwargs={"environment_id": experiment.environment_id}
+        environment_id = experiment.environment_id
+        transaction.on_commit(
+            lambda env_id=environment_id: rebuild_environment_document.delay(
+                kwargs={"environment_id": env_id}
+            )
         )
         return
     update_flag(experiment.environment, experiment.feature, change_set)
