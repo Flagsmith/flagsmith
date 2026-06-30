@@ -13,7 +13,6 @@ from organisations.usage_reporting.dataclasses import (
     UsageSnapshot,
 )
 from organisations.usage_reporting.services import (
-    _build_auth_token,
     get_licensed_organisations,
     push_snapshot,
     push_usage_snapshots,
@@ -34,18 +33,6 @@ def _snapshot() -> UsageSnapshot:
         instance_version="2.142.3",
         project_usage=[ProjectUsage(project_id=1, api_call_count=10)],
     )
-
-
-def test_build_auth_token__base64url_token__decodes_back_to_signature() -> None:
-    # Given
-    signature = "abc+/=def=="
-
-    # When
-    token = _build_auth_token(signature)
-
-    # Then - the Control Plane recovers the raw signature this way
-    recovered = base64.urlsafe_b64decode(token + "=" * (-len(token) % 4))
-    assert recovered == signature.encode("utf-8")
 
 
 def test_get_licensed_organisations__licensing_not_installed__returns_empty(
@@ -101,19 +88,23 @@ def test_push_snapshot__valid_snapshot__sends_bearer_authed_post(
     # Given
     mocked_post = mocker.patch(f"{SERVICES}.requests.post")
     mocked_post.return_value.status_code = 201
+    signature = "abc+/=def=="
 
     # When
     push_snapshot(
         base_url="https://cp.example.com/",
         snapshot=_snapshot(),
-        signature="sig",
+        signature=signature,
     )
 
     # Then
     mocked_post.assert_called_once()
     (url,), kwargs = mocked_post.call_args
     assert url == "https://cp.example.com/v1/public/usage"
-    assert kwargs["headers"]["Authorization"] == f"Bearer {_build_auth_token('sig')}"
+    # The Control Plane recovers the raw signature from the base64url token
+    token = kwargs["headers"]["Authorization"].removeprefix("Bearer ")
+    recovered = base64.urlsafe_b64decode(token + "=" * (-len(token) % 4))
+    assert recovered == signature.encode("utf-8")
     assert kwargs["headers"]["Content-Type"] == "application/json"
     body = json.loads(kwargs["data"])
     assert body["timestamp"] == "2026-06-18T08:00:00Z"
