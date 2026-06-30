@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     )
     """Public base URL of this MCP server, advertised in OAuth protected-resource
     metadata. Override for HTTP deployments behind a proxy/public hostname."""
-    sentry_dsn: str | None = Field(
+    sentry_dsn: HttpUrl | None = Field(
         default=None,
     )
     """Sentry DSN for error reporting. Error capture is disabled when unset."""

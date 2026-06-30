@@ -78,6 +78,6 @@ def setup_sentry(settings: config.Settings) -> None:
     if not settings.sentry_dsn:
         return
     sentry_sdk.init(
-        dsn=settings.sentry_dsn,
+        dsn=str(settings.sentry_dsn),
         environment=settings.environment,
     )

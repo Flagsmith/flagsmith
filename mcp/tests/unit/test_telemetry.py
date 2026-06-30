@@ -4,6 +4,7 @@ import httpx
 from common.core.otel import add_otel_trace_context
 from opentelemetry import trace
 from opentelemetry.sdk.trace import ReadableSpan
+from pydantic import HttpUrl
 from pytest_mock import MockerFixture
 
 from flagsmith_mcp import config, constants, telemetry
@@ -137,7 +138,7 @@ def test_setup_sentry__dsn_set__initialises_error_capture(
     mocker.patch.dict(os.environ, {}, clear=True)
     sentry_sdk_mock = mocker.patch.object(telemetry, "sentry_sdk", autospec=True)
     settings = config.Settings(
-        sentry_dsn="https://public@sentry.example/1",
+        sentry_dsn=HttpUrl("https://public@sentry.example/1"),
         environment="staging",
     )
 
