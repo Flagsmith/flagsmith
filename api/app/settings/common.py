@@ -1483,9 +1483,6 @@ CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
 SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS = env.int(
     "SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS", default=6
 )
-
-# Edge CDC writes the `is_deleted` tombstone to ClickHouse asynchronously; delay
-# the post-delete recount by this long so it reads state after the tombstone lands.
 SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS = env.int(
     "SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS", default=120
 )
