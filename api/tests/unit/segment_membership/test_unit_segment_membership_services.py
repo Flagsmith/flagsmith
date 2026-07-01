@@ -520,3 +520,27 @@ def test_enqueue_membership_refresh__pending_for_other_project__still_enqueues(
         [mocker.call(project, mocker.ANY), mocker.call(project_b, mocker.ANY)],
         any_order=True,
     )
+
+
+def test_enqueue_membership_refresh__delay_until__forwards_delay_to_task(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    refresh_mock = mocker.patch(
+        "segment_membership.tasks.refresh_project_segment_counts"
+    )
+    refresh_mock.task_identifier = "segment_membership.refresh_project_segment_counts"
+    delay_until = datetime(2099, 1, 1)
+
+    # When
+    enqueue_membership_refresh(project, delay_until=delay_until)
+
+    # Then
+    refresh_mock.delay.assert_called_once_with(
+        args=(project.id,), delay_until=delay_until
+    )

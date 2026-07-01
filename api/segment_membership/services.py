@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from datetime import datetime
 from typing import Any, Iterator
 
 import structlog
@@ -31,9 +32,14 @@ def is_membership_enabled(organisation: Organisation) -> bool:
     )
 
 
-def enqueue_membership_refresh(project: Project) -> None:
-    """Queue a per-project segment membership count refresh after a canonical
-    segment is created or edited.
+def enqueue_membership_refresh(
+    project: Project,
+    *,
+    delay_until: datetime | None = None,
+) -> None:
+    """Queue a per-project segment membership count refresh.
+
+    Pass `delay_until` to schedule the refresh for a future time.
 
     No-op when the org has the feature off, or when a refresh for the project
     is already pending or running.
@@ -51,7 +57,10 @@ def enqueue_membership_refresh(project: Project) -> None:
     ).exists():
         return
 
-    refresh_project_segment_counts.delay(args=(project.id,))
+    refresh_project_segment_counts.delay(
+        args=(project.id,),
+        delay_until=delay_until,
+    )
 
 
 @contextmanager
