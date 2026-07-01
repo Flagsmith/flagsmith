@@ -13,6 +13,7 @@ type RemoveSectionProps = {
   hasFilters: boolean
   onFilterChange: (updates: Partial<FilterState>) => void
   onClearFilters: () => void
+  onFeatureClick?: (flag: ProjectFlag) => void
 }
 
 const RemoveSection: FC<RemoveSectionProps> = ({
@@ -22,6 +23,7 @@ const RemoveSection: FC<RemoveSectionProps> = ({
   hasFilters,
   isLoading,
   onClearFilters,
+  onFeatureClick,
   onFilterChange,
   projectId,
 }) => {
@@ -40,6 +42,7 @@ const RemoveSection: FC<RemoveSectionProps> = ({
       hasFilters={hasFilters}
       onFilterChange={onFilterChange}
       onClearFilters={onClearFilters}
+      onFeatureClick={onFeatureClick}
       emptyLabel='No stale features found with zero code references and zero evaluations in this environment and period.'
       nextPage={nextPage}
       prevPage={prevPage}

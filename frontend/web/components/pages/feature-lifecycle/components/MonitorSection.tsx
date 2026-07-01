@@ -13,6 +13,7 @@ type MonitorSectionProps = {
   hasFilters: boolean
   onFilterChange: (updates: Partial<FilterState>) => void
   onClearFilters: () => void
+  onFeatureClick?: (flag: ProjectFlag) => void
 }
 
 const MonitorSection: FC<MonitorSectionProps> = ({
@@ -22,6 +23,7 @@ const MonitorSection: FC<MonitorSectionProps> = ({
   hasFilters,
   isLoading,
   onClearFilters,
+  onFeatureClick,
   onFilterChange,
   projectId,
 }) => {
@@ -40,6 +42,7 @@ const MonitorSection: FC<MonitorSectionProps> = ({
       hasFilters={hasFilters}
       onFilterChange={onFilterChange}
       onClearFilters={onClearFilters}
+      onFeatureClick={onFeatureClick}
       emptyLabel='No stale features with zero code references are being evaluated in this environment.'
       nextPage={nextPage}
       prevPage={prevPage}

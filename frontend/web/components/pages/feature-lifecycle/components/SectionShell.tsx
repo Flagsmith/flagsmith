@@ -23,6 +23,7 @@ type SectionShellProps = {
   header?: ReactNode
   isSelected?: (flag: ProjectFlag) => boolean
   onSelect?: (flag: ProjectFlag) => void
+  onFeatureClick?: (flag: ProjectFlag) => void
   renderActions?: (flag: ProjectFlag) => ReactNode
 }
 
@@ -39,6 +40,7 @@ const SectionShell: FC<SectionShellProps> = ({
   items,
   nextPage,
   onClearFilters,
+  onFeatureClick,
   onFilterChange,
   onSelect,
   paging,
@@ -68,10 +70,11 @@ const SectionShell: FC<SectionShellProps> = ({
         index={i}
         isSelected={isSelected?.(projectFlag)}
         onSelect={onSelect}
+        onClick={onFeatureClick}
         actions={renderActions?.(projectFlag)}
       />
     ),
-    [isSelected, onSelect, renderActions],
+    [isSelected, onSelect, onFeatureClick, renderActions],
   )
 
   if (error) {

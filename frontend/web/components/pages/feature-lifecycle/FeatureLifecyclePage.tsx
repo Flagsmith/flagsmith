@@ -8,12 +8,14 @@ import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 import CreateFlagModal from 'components/modals/create-feature'
 import LifecycleSidebar from './components/LifecycleSidebar'
+import FeatureUsageModal from './components/FeatureUsageModal'
 import NewSection from './components/NewSection'
 import LiveSection from './components/LiveSection'
 import PermanentSection from './components/PermanentSection'
 import StaleSection from './components/StaleSection'
 import MonitorSection from './components/MonitorSection'
 import RemoveSection from './components/RemoveSection'
+import type { ProjectFlag } from 'common/types/responses'
 import { useLifecycleEnvironment } from './hooks/useLifecycleEnvironment'
 import {
   useLifecycleCounts,
@@ -58,6 +60,21 @@ const FeatureLifecyclePage: FC = () => {
     [],
   )
   const clearFilters = useCallback(() => setFilters(DEFAULT_FILTER_STATE), [])
+
+  const handleFeatureClick = useCallback(
+    (flag: ProjectFlag) => {
+      openModal(
+        flag.name,
+        <FeatureUsageModal
+          projectId={projectIdNum}
+          environmentId={environmentId}
+          projectFlag={flag}
+        />,
+        'side-modal',
+      )
+    },
+    [projectIdNum, environmentId],
+  )
   const hasFilters = hasActiveFilters(filters)
 
   const section = useSectionParam()
@@ -104,6 +121,7 @@ const FeatureLifecyclePage: FC = () => {
     hasFilters,
     isLoading: isLoadingFlags,
     onClearFilters: clearFilters,
+    onFeatureClick: handleFeatureClick,
     onFilterChange: handleFilterChange,
     projectId: projectIdNum,
   }

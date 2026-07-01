@@ -11,6 +11,7 @@ interface ProjectFeatureRowProps {
   index: number
   isSelected?: boolean
   onSelect?: (projectFlag: ProjectFlag) => void
+  onClick?: (projectFlag: ProjectFlag) => void
   className?: string
   actions?: React.ReactNode
 }
@@ -20,6 +21,7 @@ const ProjectFeatureRow: FC<ProjectFeatureRowProps> = ({
   className,
   index,
   isSelected,
+  onClick,
   onSelect,
   projectFlag,
 }) => {
@@ -40,8 +42,10 @@ const ProjectFeatureRow: FC<ProjectFeatureRowProps> = ({
         className={classNames(
           'd-none d-lg-flex align-items-lg-center flex-lg-row list-item py-0 list-item-xs fs-small',
           className,
+          { clickable: !!onClick },
         )}
         data-test={`cleanup-feature-item-${index}`}
+        onClick={onClick ? () => onClick(projectFlag) : undefined}
       >
         {onSelect && (
           <div
@@ -92,7 +96,9 @@ const ProjectFeatureRow: FC<ProjectFeatureRowProps> = ({
       <div
         className={classNames(
           'd-flex flex-column justify-content-center px-2 list-item py-1 d-lg-none',
+          { clickable: !!onClick },
         )}
+        onClick={onClick ? () => onClick(projectFlag) : undefined}
       >
         <div className='d-flex gap-2 align-items-center'>
           {onSelect && (

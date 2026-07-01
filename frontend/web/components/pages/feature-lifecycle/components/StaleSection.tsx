@@ -19,6 +19,7 @@ type StaleSectionProps = {
   hasFilters: boolean
   onFilterChange: (updates: Partial<FilterState>) => void
   onClearFilters: () => void
+  onFeatureClick?: (flag: ProjectFlag) => void
 }
 
 const StaleSection: FC<StaleSectionProps> = ({
@@ -28,6 +29,7 @@ const StaleSection: FC<StaleSectionProps> = ({
   hasFilters,
   isLoading,
   onClearFilters,
+  onFeatureClick,
   onFilterChange,
   projectId,
 }) => {
@@ -124,6 +126,7 @@ const StaleSection: FC<StaleSectionProps> = ({
       hasFilters={hasFilters}
       onFilterChange={onFilterChange}
       onClearFilters={onClearFilters}
+      onFeatureClick={onFeatureClick}
       emptyLabel='No stale features with code references found.'
       nextPage={nextPage}
       prevPage={prevPage}
