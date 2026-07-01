@@ -119,7 +119,7 @@ def test_seed_organisation_identities__happy_path__rows_land_in_clickhouse(
         rows = cursor.fetchall()
     assert [(row[0], row[1]) for row in rows] == [("a", "k1"), ("b", "k2")]
     # and the project's count refresh is dispatched
-    refresh_dispatch.delay.assert_called_once_with(args=(project,))
+    refresh_dispatch.delay.assert_called_once_with(args=(project,), delay_until=None)
     assert any(
         e["event"] == "seed.environment.completed" and e["rows__count"] == 2
         for e in log.events
