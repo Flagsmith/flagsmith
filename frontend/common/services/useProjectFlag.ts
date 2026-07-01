@@ -35,7 +35,13 @@ function recursivePageGet(
 }
 export const projectFlagService = service
   .enhanceEndpoints({
-    addTagTypes: ['ProjectFlag', 'FeatureList', 'FeatureState', 'Environment'],
+    addTagTypes: [
+      'ProjectFlag',
+      'FeatureList',
+      'FeatureState',
+      'Environment',
+      'LifecycleCounts',
+    ],
   })
   .injectEndpoints({
     endpoints: (builder) => ({
@@ -68,6 +74,7 @@ export const projectFlagService = service
         invalidatesTags: [
           { id: 'LIST', type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
+          'LifecycleCounts',
         ],
         query: (query: Req['createProjectFlag']) => ({
           body: query.body,
@@ -136,7 +143,7 @@ export const projectFlagService = service
         Res['lifecycleStatusCounts'],
         Req['getLifecycleStatusCounts']
       >({
-        providesTags: [{ id: 'LIST', type: 'ProjectFlag' }],
+        providesTags: ['LifecycleCounts'],
         query: ({ environment }) => ({
           url: `environments/${environment}/feature-lifecycle-counts/`,
         }),
