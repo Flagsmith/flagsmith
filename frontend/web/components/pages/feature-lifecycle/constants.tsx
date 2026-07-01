@@ -87,7 +87,7 @@ export const SECTIONS: {
   {
     icon: 'shield',
     key: 'monitor',
-    label: 'Needs Monitoring',
+    label: 'To Monitor',
     monitorTooltip: true,
     subtitle:
       'Stale features with no code references but still receiving evaluations.',

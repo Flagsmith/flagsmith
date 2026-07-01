@@ -38,7 +38,7 @@ const LifecycleSidebar: FC<LifecycleSidebarProps> = ({
               place='right'
             >
               Flag evaluations are counted per environment. This affects whether
-              stale flags appear in "Needs Monitoring" or "To Remove".
+              stale flags appear in "To Monitor" or "To Remove".
             </Tooltip>
           </div>
           <EnvironmentSelect
