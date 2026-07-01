@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.251.0](https://github.com/Flagsmith/flagsmith/compare/v2.250.0...v2.251.0) (2026-07-01)
+
+
+### Features
+
+* **MCP:** Set up Sentry error reporting ([#7879](https://github.com/Flagsmith/flagsmith/issues/7879)) ([5c55544](https://github.com/Flagsmith/flagsmith/commit/5c55544b20cc0fb3d91a0d91ae1730cf49f67bc4))
+* **Segment Membership:** Seed identities on Beta opt-in ([#7899](https://github.com/Flagsmith/flagsmith/issues/7899)) ([8c86b8c](https://github.com/Flagsmith/flagsmith/commit/8c86b8c1ec18d14e75db7858223c7706af54a46c))
+* **usage:** push hourly usage snapshots to Control Plane ([#7831](https://github.com/Flagsmith/flagsmith/issues/7831)) ([f5b6273](https://github.com/Flagsmith/flagsmith/commit/f5b627301af6ef1860a310f415a18e153a80e2b6))
+* Use new segment members api ([#7864](https://github.com/Flagsmith/flagsmith/issues/7864)) ([37a682f](https://github.com/Flagsmith/flagsmith/commit/37a682f847de3a4db0eb266c1b009889d70cbc4a))
+
+
+### Bug Fixes
+
+* gate experiment freeze behind feature flag and unblock inputs during loading ([#7919](https://github.com/Flagsmith/flagsmith/issues/7919)) ([5e0043d](https://github.com/Flagsmith/flagsmith/commit/5e0043df081591aefed7754a90263fbc9781130d))
+* **segments:** warn before discarding an unsaved feature-specific seg… ([#7840](https://github.com/Flagsmith/flagsmith/issues/7840)) ([d46e013](https://github.com/Flagsmith/flagsmith/commit/d46e013edc6d3cbe4352397f806f71a05f5a65a0))
+
+
+### Performance Improvements
+
+* **Segment Membership:** Members list improvements ([#7924](https://github.com/Flagsmith/flagsmith/issues/7924)) ([43c99a2](https://github.com/Flagsmith/flagsmith/commit/43c99a21ea218643372aba7ef43e8f6812f4164f))
+
 ## [2.250.0](https://github.com/Flagsmith/flagsmith/compare/v2.249.0...v2.250.0) (2026-06-30)
 
 
