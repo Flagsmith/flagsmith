@@ -82,7 +82,11 @@ export function useLifecycleCounts({
     }
   }, [query.data])
 
-  return { counts, error: query.error, isLoading: query.isLoading }
+  return {
+    counts,
+    error: query.error,
+    isLoading: query.isLoading || query.isFetching,
+  }
 }
 
 // Flags for the currently active section, classified by the backend.
@@ -123,6 +127,6 @@ export function useLifecycleSectionFlags({
   return {
     error: query.error,
     flags: query.data?.results ?? [],
-    isLoading: query.isLoading,
+    isLoading: query.isLoading || query.isFetching,
   }
 }

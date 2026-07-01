@@ -179,7 +179,7 @@ const FeatureLifecyclePage: FC = () => {
                   <Tooltip
                     title={
                       <a
-                        className='d-inline-flex align-items-center gap-1'
+                        className='ms-1 d-inline-flex align-items-center gap-1'
                         href='#'
                         onClick={(e) => e.preventDefault()}
                       >

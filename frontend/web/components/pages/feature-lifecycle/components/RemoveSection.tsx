@@ -1,5 +1,4 @@
-import React, { FC, useCallback, useState } from 'react'
-import Button from 'components/base/forms/Button'
+import React, { FC } from 'react'
 import SectionShell from './SectionShell'
 import { useClientPagination } from 'components/pages/feature-lifecycle/hooks/useClientPagination'
 import type { ProjectFlag } from 'common/types/responses'
@@ -26,27 +25,8 @@ const RemoveSection: FC<RemoveSectionProps> = ({
   onFilterChange,
   projectId,
 }) => {
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
-
   const { goToPage, nextPage, pageItems, paging, prevPage } =
     useClientPagination({ items: flags })
-
-  const handleSelect = useCallback((flag: ProjectFlag) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(flag.id)) {
-        next.delete(flag.id)
-      } else {
-        next.add(flag.id)
-      }
-      return next
-    })
-  }, [])
-
-  const isSelected = useCallback(
-    (flag: ProjectFlag) => selectedIds.has(flag.id),
-    [selectedIds],
-  )
 
   return (
     <SectionShell
@@ -64,22 +44,6 @@ const RemoveSection: FC<RemoveSectionProps> = ({
       nextPage={nextPage}
       prevPage={prevPage}
       goToPage={goToPage}
-      isSelected={isSelected}
-      onSelect={handleSelect}
-      header={
-        selectedIds.size > 0 ? (
-          <Row className='mb-2 justify-content-end'>
-            <Button
-              data-test='remove-flags-btn'
-              onClick={() => {
-                // TODO: implement bulk flag removal
-              }}
-            >
-              {`Remove Flags (${selectedIds.size})`}
-            </Button>
-          </Row>
-        ) : undefined
-      }
     />
   )
 }

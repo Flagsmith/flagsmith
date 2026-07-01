@@ -1,4 +1,3 @@
-import React from 'react'
 import type { IconName } from 'components/icons/Icon'
 import type { FilterState } from 'common/types/featureFilters'
 import type { Section } from './types'
@@ -29,10 +28,10 @@ export const DEFAULT_FILTER_STATE: FilterState = {
 export const STALE_TOOLTIP =
   'If no changes have been made to a feature in any environment within the configured threshold, the feature will be tagged as stale. You will need to enable feature versioning in your environments for stale features to be detected.'
 
-export const MONITOR_TOOLTIP = (
+export const MONITOR_TOOLTIP = `
   <div>
     There could be several reasons:
-    <ul className='mt-1 mb-0 ps-3'>
+    <ul class="mt-1 mb-0 ps-3">
       <li>
         Cached deployments — your application may still be running an older
         version that references this feature.
@@ -47,7 +46,7 @@ export const MONITOR_TOOLTIP = (
       </li>
     </ul>
   </div>
-)
+`
 
 export const SECTIONS: {
   key: Section

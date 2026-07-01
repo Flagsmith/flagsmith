@@ -139,34 +139,36 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
     if (fileData) {
       const createdDate = new Date().toISOString()
       const existingFlags =
-        !!fileData &&
-        !!currentFeatureStates &&
-        currentProjectflags?.map((projectFlag, i) => {
-          const featureState = currentFeatureStates[projectFlag.id]
-          const importItem = fileData.find((v) => v.name === projectFlag.name)
-          let newValue = featureState.value
-          let newEnabled = featureState.enabled
+        fileData && currentFeatureStates && currentProjectflags
+          ? currentProjectflags.map((projectFlag, i) => {
+              const featureState = currentFeatureStates[projectFlag.id]
+              const importItem = fileData.find(
+                (v) => v.name === projectFlag.name,
+              )
+              let newValue = featureState.value
+              let newEnabled = featureState.enabled
 
-          // Overwrite destructive replaces existing feature values
-          if (strategy === 'OVERWRITE_DESTRUCTIVE' && importItem) {
-            // For the targeted environment it will use the imported feature values
-            if (environment === previewEnvironment) {
-              newEnabled = importItem.enabled
-              newValue = importItem.value
-            } else {
-              // For every other environment the features are overwritten with the imported default enabled state and value
-              newEnabled = importItem.default_enabled
-              newValue = importItem.initial_value
-            }
-          }
-          return {
-            ...projectFlag,
-            created_date: projectFlag.created_date,
-            default_enabled: newEnabled,
-            id: i,
-            initial_value: newValue,
-          }
-        })
+              // Overwrite destructive replaces existing feature values
+              if (strategy === 'OVERWRITE_DESTRUCTIVE' && importItem) {
+                // For the targeted environment it will use the imported feature values
+                if (environment === previewEnvironment) {
+                  newEnabled = importItem.enabled
+                  newValue = importItem.value
+                } else {
+                  // For every other environment the features are overwritten with the imported default enabled state and value
+                  newEnabled = importItem.default_enabled
+                  newValue = importItem.initial_value
+                }
+              }
+              return {
+                ...projectFlag,
+                created_date: projectFlag.created_date,
+                default_enabled: newEnabled,
+                id: i,
+                initial_value: newValue,
+              }
+            })
+          : []
 
       const fileFlags = fileData
         .filter((v) => {
