@@ -1,7 +1,9 @@
+from datetime import datetime
 from unittest.mock import MagicMock
 
 import pytest
 from common.test_tools import RunTasksFixture
+from django.db import connections
 from flag_engine.segments.constants import EQUAL
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -184,6 +186,96 @@ def matching_segment(segment: Segment) -> Segment:
     rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
     Condition.objects.create(rule=rule, property="foo", operator=EQUAL, value="bar")
     return segment
+
+
+@pytest.mark.clickhouse
+def test_get_segment_members_page__deleted_identity__excluded(
+    segment_membership_identities: None,
+    matching_segment: Segment,
+    environment: Environment,
+    environment_api_key_str: str,
+) -> None:
+    # Given
+    with connections["clickhouse"].cursor() as cursor:
+        cursor.executemany(
+            "INSERT INTO IDENTITIES "
+            "(environment_id, identifier, identity_key, traits, is_deleted) VALUES",
+            [(environment_api_key_str, "aaron", "aaron_key", {"foo": "bar"}, True)],  # type: ignore[list-item]
+        )
+
+    # When
+    members = get_segment_members_page(
+        matching_segment, environment, cursor=None, limit=100
+    )
+
+    # Then
+    assert [member["identifier"] for member in members] == ["alice", "bob"]
+
+
+@pytest.mark.clickhouse
+def test_get_segment_members_page__duplicate_versions__returns_latest_once(
+    segment_membership_identities: None,
+    matching_segment: Segment,
+    environment: Environment,
+    environment_api_key_str: str,
+) -> None:
+    # Given
+    # a newer version of alice that still matches the segment
+    with connections["clickhouse"].cursor() as cursor:
+        cursor.executemany(
+            "INSERT INTO IDENTITIES "
+            "(environment_id, identifier, identity_key, traits, inserted_at) VALUES",
+            [
+                (  # type: ignore[list-item]
+                    environment_api_key_str,
+                    "alice",
+                    "alice_key",
+                    {"foo": "bar", "version": "new"},
+                    datetime(2099, 1, 1),
+                )
+            ],
+        )
+
+    # When
+    members = get_segment_members_page(
+        matching_segment, environment, cursor=None, limit=100
+    )
+
+    # Then
+    # alice appears once, with the latest version's traits
+    assert members == [
+        SegmentMember(
+            identifier="alice",
+            identity_key="alice_key",
+            traits={"foo": "bar", "version": "new"},
+        ),
+        SegmentMember(identifier="bob", identity_key="bob_key", traits={"foo": "bar"}),
+    ]
+
+
+@pytest.mark.clickhouse
+def test_compute_segment_counts_for_project__deleted_identity__excluded_from_count(
+    segment_membership_identities: None,
+    matching_segment: Segment,
+    project: Project,
+    environment_api_key_str: str,
+) -> None:
+    # Given
+    with connections["clickhouse"].cursor() as cursor:
+        cursor.executemany(
+            "INSERT INTO IDENTITIES "
+            "(environment_id, identifier, identity_key, traits, is_deleted) VALUES",
+            [(environment_api_key_str, "aaron", "aaron_key", {"foo": "bar"}, True)],  # type: ignore[list-item]
+        )
+
+    # When
+    with connections["clickhouse"].cursor() as cursor:
+        counts = compute_segment_counts_for_project(project, cursor)
+
+    # Then
+    assert len(counts) == 1
+    assert counts[0].segment_id == matching_segment.id
+    assert counts[0].count == 2
 
 
 @pytest.mark.clickhouse

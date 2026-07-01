@@ -129,7 +129,8 @@ def compute_segment_counts_for_project(
             f"SELECT {seg.id} AS segment_id, "
             f"i.environment_id AS env_key, count() AS c "
             f"FROM IDENTITIES AS i FINAL "
-            f"WHERE i.environment_id IN %(env_keys)s AND ({predicate}) "
+            f"WHERE i.environment_id IN %(env_keys)s "
+            f"AND i.is_deleted = false AND ({predicate}) "
             f"GROUP BY i.environment_id"
         )
 
@@ -186,7 +187,10 @@ def get_segment_members_page(
         )
         return []
 
-    conditions = ["i.environment_id = %(env_key)s"]
+    conditions = [
+        "i.environment_id = %(env_key)s",
+        "i.is_deleted = false",
+    ]
     params: dict[str, Any] = {"env_key": environment.api_key, "limit": limit}
     if cursor:
         conditions.append("i.identifier > %(cursor)s")
@@ -196,12 +200,28 @@ def get_segment_members_page(
         params["q"] = q
     conditions.append(f"({predicate})")
 
-    sql = (
-        "SELECT i.identifier, i.identity_key, i.traits "
-        "FROM IDENTITIES AS i FINAL "
+    # Why two queries? `traits` is a wide JSON column split over many per-path files.
+    # That fans out into thousands of object-storage requests, which is what
+    # makes a cold read slow. Delegating the `traits` read to an outer query
+    # limits them to the page.
+    #
+    # Besides that, bypass FINAL, which is heavy, in favour of LIMIT 1 BY i.identifier,
+    # which is (tolerably) less correct but substantially faster.
+    inner_sql = (
+        "SELECT i.identifier "
+        "FROM IDENTITIES AS i "
         f"WHERE {' AND '.join(conditions)} "
-        "ORDER BY i.identifier ASC "
+        "ORDER BY i.identifier ASC, i.inserted_at DESC "
+        "LIMIT 1 BY i.identifier "
         "LIMIT %(limit)s"
+    )
+    sql = (
+        "SELECT m.identifier, m.identity_key, m.traits "
+        "FROM IDENTITIES AS m "
+        "WHERE m.environment_id = %(env_key)s AND m.is_deleted = false "
+        f"AND m.identifier IN ({inner_sql}) "
+        "ORDER BY m.identifier ASC, m.inserted_at DESC "
+        "LIMIT 1 BY m.identifier"
     )
     log_comment = (
         "flagsmith:segment_membership:read"

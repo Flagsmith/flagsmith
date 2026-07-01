@@ -379,7 +379,7 @@ Attributes:
 ### `segment_membership.members.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:182`
+ - `api/segment_membership/services.py:183`
 
 Attributes:
  - `reason`
