@@ -744,12 +744,11 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
 
   const isEdge = Utils.getIsEdge()
 
-  // When membership inspection is enabled, the Identities tab uses the
-  // dedicated segment members endpoint, so the legacy identities list (and its
-  // request) is not needed.
-  const membersEnabled = Utils.getFlagsmithHasFeature(
-    'segment_membership_inspection',
-  )
+  // When membership inspection is enabled and the project uses edge, the
+  // Identities tab uses the dedicated segment members endpoint, so the legacy
+  // identities list (and its request) is not needed.
+  const membersEnabled =
+    Utils.getFlagsmithHasFeature('segment_membership_inspection') && isEdge
 
   const { data: identities, isLoading: identitiesLoading } =
     useGetIdentitiesQuery(
