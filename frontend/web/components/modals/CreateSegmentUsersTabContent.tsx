@@ -176,6 +176,7 @@ const CreateSegmentUsersTabContent: React.FC<
               projectId={projectId}
               segmentId={segmentId}
               environmentId={selectedEnv.id}
+              environmentApiKey={selectedEnv.api_key}
               count={selectedMembership?.count}
             />
           ) : (

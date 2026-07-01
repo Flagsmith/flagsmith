@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import PanelSearch from 'components/PanelSearch'
 import Utils from 'common/utils/utils'
 import useDebouncedSearch from 'common/useDebouncedSearch'
@@ -11,6 +12,7 @@ type SegmentMembersListProps = {
   projectId: string | number
   segmentId: number
   environmentId: number
+  environmentApiKey: string
   // Total members for the selected environment, from the segment's
   // membership_counts. The list endpoint is cursor-paginated and returns no
   // count, so this drives the title total rather than the pager.
@@ -24,6 +26,7 @@ type SegmentMembersListProps = {
 // response carries the `next`/`previous` flags (via `transformCursorPaging`).
 const SegmentMembersList: FC<SegmentMembersListProps> = ({
   count,
+  environmentApiKey,
   environmentId,
   projectId,
   segmentId,
@@ -74,14 +77,15 @@ const SegmentMembersList: FC<SegmentMembersListProps> = ({
         // Cursor pagination cannot jump to an arbitrary page.
       }}
       renderRow={({ identifier }: SegmentMember, index: number) => (
-        <Row
-          className='list-item list-item-sm clickable'
+        <Link
+          to={`/project/${projectId}/environment/${environmentApiKey}/identities/${encodeURIComponent(
+            identifier,
+          )}`}
+          className='list-item list-item-sm clickable d-flex align-items-center px-3'
           data-test={`segment-member-${index}`}
         >
-          <Row space className='px-3'>
-            <div className='font-weight-medium'>{identifier}</div>
-          </Row>
-        </Row>
+          <div className='font-weight-medium'>{identifier}</div>
+        </Link>
       )}
       filterRow={() => true}
       search={searchInput}
