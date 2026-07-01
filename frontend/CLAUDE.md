@@ -33,7 +33,6 @@ For detailed guidance on specific topics:
 - **Quick Start**: `.claude/context/quick-reference.md` - Common tasks, commands, patterns
 - **API Integration**: `.claude/context/api-integration.md` - Adding endpoints, RTK Query (required reading for API work)
 - **Backend**: `.claude/context/backend-integration.md` - Finding endpoints, backend structure
-- **Testing vs PR backend**: `.claude/context/testing-against-pr-backend.md` - Run an unmerged backend PR's Docker image locally and point the dev server at it
 - **UI Patterns**: `.claude/context/ui-patterns.md` - Tables, tabs, modals, confirmations (required reading for UI work)
 - **Feature Flags**: `.claude/context/feature-flags/` - Using Flagsmith flags (optional, only when requested)
 - **Code Patterns**: `.claude/context/patterns/` - Complete examples, best practices
