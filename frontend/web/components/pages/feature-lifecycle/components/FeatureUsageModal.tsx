@@ -20,25 +20,23 @@ const FeatureUsageModal: FC<FeatureUsageModalProps> = ({
     useState<ProjectFlag>(projectFlag)
 
   return (
-    <div id='create-feature-modal'>
-      <Tabs>
-        <TabItem tabLabel='Usage'>
-          <UsageTab
-            projectId={projectId}
-            featureId={projectFlag.id}
-            environmentId={environmentId}
-          />
-        </TabItem>
-        <TabItem tabLabel='Settings'>
-          <FeatureSettingsTab
-            projectId={projectId}
-            projectFlag={localProjectFlag}
-            onChange={setLocalProjectFlag}
-            onHasMetadataRequiredChange={() => {}}
-          />
-        </TabItem>
-      </Tabs>
-    </div>
+    <Tabs>
+      <TabItem tabLabel='Usage'>
+        <UsageTab
+          projectId={projectId}
+          featureId={projectFlag.id}
+          environmentId={environmentId}
+        />
+      </TabItem>
+      <TabItem tabLabel='Settings'>
+        <FeatureSettingsTab
+          projectId={projectId}
+          projectFlag={localProjectFlag}
+          onChange={setLocalProjectFlag}
+          onHasMetadataRequiredChange={() => {}}
+        />
+      </TabItem>
+    </Tabs>
   )
 }
 

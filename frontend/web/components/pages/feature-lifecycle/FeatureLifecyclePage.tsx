@@ -70,7 +70,7 @@ const FeatureLifecyclePage: FC = () => {
           environmentId={environmentId}
           projectFlag={flag}
         />,
-        'side-modal',
+        'side-modal create-feature-modal',
       )
     },
     [projectIdNum, environmentId],
