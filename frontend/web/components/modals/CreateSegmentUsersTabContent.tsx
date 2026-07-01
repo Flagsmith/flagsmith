@@ -9,7 +9,7 @@ import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import { Res, SegmentMembership } from 'common/types/responses'
 import Icon from 'components/icons/Icon'
-import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import {
   identitySegmentService,
   useGetIdentitySegmentsQuery,
@@ -103,14 +103,7 @@ const CreateSegmentUsersTabContent: React.FC<
   setPage,
   setSearchInput,
 }) => {
-  const { data: environmentsData } = useGetEnvironmentsQuery(
-    { projectId: Number(projectId) },
-    { skip: !projectId },
-  )
-  const envs = React.useMemo(
-    () => environmentsData?.results ?? [],
-    [environmentsData?.results],
-  )
+  const { getEnvironment } = useProjectEnvironments(Number(projectId))
 
   const membershipByEnvId = React.useMemo(() => {
     const map = new Map<number, SegmentMembership>()
@@ -136,8 +129,8 @@ const CreateSegmentUsersTabContent: React.FC<
   }
 
   const selectedEnv = React.useMemo(
-    () => envs.find((e) => e.api_key === environmentId) ?? null,
-    [environmentId, envs],
+    () => getEnvironment(environmentId) ?? null,
+    [environmentId, getEnvironment],
   )
 
   const selectedMembership = React.useMemo(
