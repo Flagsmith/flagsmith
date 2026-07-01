@@ -29,7 +29,7 @@ def set_gitlab_tag(feature: Feature, new_label: GitLabTagLabel) -> None:
 
     feature.tags.remove(
         *feature.tags.filter(
-            type=TagType.GITLAB.value,
+            type=TagType.GITLAB,
             label__startswith=GITLAB_TAG_KIND_BY_LABEL[new_label],
         )
     )
@@ -37,7 +37,7 @@ def set_gitlab_tag(feature: Feature, new_label: GitLabTagLabel) -> None:
         label=label_value,
         project=feature.project,
         is_system_tag=True,
-        type=TagType.GITLAB.value,
+        type=TagType.GITLAB,
         defaults={
             "color": GITLAB_TAG_COLOR,
             "description": GITLAB_TAG_DESCRIPTION_BY_LABEL[new_label],
@@ -98,7 +98,7 @@ def clear_tag_for_resource(resource: FeatureExternalResource) -> None:
         return
     resource.feature.tags.remove(
         *resource.feature.tags.filter(
-            type=TagType.GITLAB.value,
+            type=TagType.GITLAB,
             label__startswith=kind,
         )
     )

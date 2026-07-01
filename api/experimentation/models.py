@@ -1,6 +1,6 @@
-import typing
 from dataclasses import asdict
 from datetime import datetime
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from django.db import models
 from django.db.models import Q
@@ -14,10 +14,16 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 
 from core.models import SoftDeleteExportableModel
 from environments.models import Environment
+from experimentation.dataclasses import (
+    ExposuresSummary,
+    ResultsSummary,
+    WarehouseEventStats,
+)
 from experimentation.types import MetricDefinition
 
-if typing.TYPE_CHECKING:
-    from experimentation.dataclasses import ExposuresSummary, WarehouseEventStats
+# A computation's payload is the serialised form of its summary dataclass; the
+# concrete subclass binds which one, so record_refresh stays type-safe per panel.
+SummaryT = TypeVar("SummaryT", ExposuresSummary, ResultsSummary)
 
 
 class WarehouseType(models.TextChoices):
@@ -69,18 +75,18 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
 
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def sync_to_ingestion_on_create(self) -> None:
-        from experimentation.tasks import add_environment_key_to_ingestion
+        from experimentation.tasks import write_environment_ingestion_keys
 
-        add_environment_key_to_ingestion.delay(
-            kwargs={"environment_api_key": self.environment.api_key},
+        write_environment_ingestion_keys.delay(
+            kwargs={"environment_id": self.environment_id},
         )
 
     @hook(AFTER_DELETE)  # type: ignore[misc]
     def sync_to_ingestion_on_delete(self) -> None:
-        from experimentation.tasks import delete_environment_key_from_ingestion
+        from experimentation.tasks import remove_environment_ingestion_keys
 
-        delete_environment_key_from_ingestion.delay(
-            kwargs={"environment_api_key": self.environment.api_key},
+        remove_environment_ingestion_keys.delay(
+            kwargs={"environment_id": self.environment_id},
         )
 
 
@@ -121,6 +127,13 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
     updated_at = models.DateTimeField(auto_now=True)
     started_at = models.DateTimeField(null=True, blank=True)
     ended_at = models.DateTimeField(null=True, blank=True)
+    rollout_segment = models.OneToOneField(
+        "segments.Segment",
+        on_delete=models.SET_NULL,
+        related_name="experiment_rollout",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         constraints = [
@@ -132,18 +145,25 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
         ]
 
 
-class ExperimentExposures(models.Model):
-    experiment = models.OneToOneField(
-        Experiment,
-        on_delete=models.CASCADE,
-        related_name="exposures",
-    )
+class ExperimentComputation(models.Model, Generic[SummaryT]):
+    """One cached, refreshable warehouse computation per experiment: a single row
+    updated in place, frozen once ``is_final``. A failed refresh preserves the
+    last good payload so the UI keeps showing real data with a staleness note."""
+
     as_of = models.DateTimeField(null=True, blank=True)
     payload: models.JSONField[dict[str, object] | None, dict[str, object] | None] = (
         models.JSONField(null=True, blank=True)
     )
     last_error_at = models.DateTimeField(null=True, blank=True)
     refresh_requested_at = models.DateTimeField(null=True, blank=True)
+
+    if TYPE_CHECKING:
+        # Each concrete subclass defines this as a OneToOneField; declared here
+        # so is_final can read the experiment without the field assignment.
+        experiment: "models.OneToOneField[Experiment, Experiment]"
+
+    class Meta:
+        abstract = True
 
     @property
     def is_final(self) -> bool:
@@ -152,7 +172,7 @@ class ExperimentExposures(models.Model):
             ended_at is not None and self.as_of is not None and self.as_of >= ended_at
         )
 
-    def record_refresh(self, summary: "ExposuresSummary", as_of: datetime) -> None:
+    def record_refresh(self, summary: SummaryT, as_of: datetime) -> None:
         self.payload = asdict(summary)
         self.as_of = as_of
         self.last_error_at = None
@@ -165,6 +185,22 @@ class ExperimentExposures(models.Model):
     def record_refresh_request(self) -> None:
         self.refresh_requested_at = timezone.now()
         self.save(update_fields=["refresh_requested_at"])
+
+
+class ExperimentExposures(ExperimentComputation[ExposuresSummary]):
+    experiment = models.OneToOneField(
+        Experiment,
+        on_delete=models.CASCADE,
+        related_name="exposures",
+    )
+
+
+class ExperimentResults(ExperimentComputation[ResultsSummary]):
+    experiment = models.OneToOneField(
+        Experiment,
+        on_delete=models.CASCADE,
+        related_name="results",
+    )
 
 
 class MetricAggregation(models.TextChoices):

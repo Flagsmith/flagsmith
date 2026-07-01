@@ -29,12 +29,9 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v5
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
+      - uses: ./.github/actions/install-uv
         with:
-          python-version: "3.14"
-          enable-cache: true
-          cache-dependency-glob: mcp/uv.lock
+          working-directory: mcp
 
       - name: Install dependencies
         run: make install

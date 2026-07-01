@@ -13,9 +13,11 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
 from respx import MockRouter
+from starlette.middleware import Middleware
 
 from flagsmith_mcp import config, constants
 from flagsmith_mcp import server as server_module
+from flagsmith_mcp.middleware import RootRouterMiddleware
 from flagsmith_mcp.telemetry import ClientInfoSpanProcessor
 
 HTTPClientFactoryFixture = Callable[[FastMCP], AsyncIterator[httpx.AsyncClient]]
@@ -89,7 +91,12 @@ async def client(server: FastMCP) -> AsyncIterator[Client[FastMCPTransport]]:
 @pytest.fixture
 def http_client_factory() -> HTTPClientFactoryFixture:
     async def factory(server: FastMCP) -> AsyncIterator[httpx.AsyncClient]:
-        transport = httpx.ASGITransport(app=server.http_app())
+        transport = httpx.ASGITransport(
+            app=server.http_app(
+                path=constants.STREAMABLE_HTTP_PATH,
+                middleware=[Middleware(RootRouterMiddleware)],
+            )
+        )
         async with httpx.AsyncClient(
             transport=transport, base_url="http://testserver"
         ) as connected:

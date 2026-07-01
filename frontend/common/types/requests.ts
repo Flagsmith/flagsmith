@@ -664,6 +664,7 @@ export type Req = {
     id: string
   }
   getProject: { id: number }
+  createProject: { name: string; organisation: number }
   updateProject: { id: number; body: UpdateProjectBody }
   deleteProject: { id: number }
   migrateProject: { id: number }
@@ -727,6 +728,7 @@ export type Req = {
     feature_id: number
     group_ids: number[]
   }
+  createEnvironment: { name: string; project: number }
   updateEnvironment: { id: number; body: Environment }
   createCloneIdentityFeatureStates: {
     environment_id: string
@@ -1036,7 +1038,7 @@ export type Req = {
   }
   getExperiments: PagedRequest<{
     environmentId: string
-    status?: ExperimentStatus
+    status?: ExperimentStatus | ExperimentStatus[]
   }>
   createExperiment: {
     environmentId: string
@@ -1045,10 +1047,51 @@ export type Req = {
       hypothesis: string
       feature: number
       metrics: { metric: number; expected_direction: ExpectedDirection }[]
+      experiment_rollout: {
+        enabled: boolean
+        rollout_percentage: number
+        feature_state_value: {
+          type: 'integer' | 'string' | 'boolean'
+          value: string
+        }
+        multivariate_feature_state_values: {
+          multivariate_feature_option: number
+          percentage_allocation: number
+        }[]
+      }
     }
   }
   experimentAction: { environmentId: string; experimentId: number }
+  updateExperiment: {
+    environmentId: string
+    experimentId: number
+    body: { hypothesis?: string }
+  }
+  updateExperimentRollout: {
+    environmentId: string
+    experimentId: number
+    body: {
+      enabled: boolean
+      rollout_percentage: number
+      feature_state_value: {
+        type: 'integer' | 'string' | 'boolean'
+        value: string
+      }
+      multivariate_feature_state_values: {
+        multivariate_feature_option: number
+        percentage_allocation: number
+      }[]
+    }
+  }
   deleteExperiment: { environmentId: string; experimentId: number }
+  getExperiment: { environmentId: string; experimentId: number }
+  getExperimentExposures: { environmentId: string; experimentId: number }
+  refreshExperimentExposures: { environmentId: string; experimentId: number }
+  getExperimentBayesianResults: { environmentId: string; experimentId: number }
+  refreshExperimentBayesianResults: {
+    environmentId: string
+    experimentId: number
+  }
   getMetrics: PagedRequest<{
     environmentId: string
     q?: string

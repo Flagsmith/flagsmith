@@ -4,7 +4,7 @@ from core.models import AbstractBaseExportableModel
 from projects.models import Project
 
 
-class TagType(models.Choices):
+class TagType(models.TextChoices):
     NONE = "NONE"
     STALE = "STALE"
     GITHUB = "GITHUB"
@@ -29,7 +29,7 @@ class Tag(AbstractBaseExportableModel):
         help_text="When applied to a feature, it means this feature should be excluded from stale flags logic.",
     )
     type = models.CharField(
-        default=TagType.NONE.value,
+        default=TagType.NONE,
         choices=TagType.choices,
         help_text="Field used to provide a consistent identifier for the FE and API to use for business logic.",
         max_length=100,

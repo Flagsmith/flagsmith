@@ -82,7 +82,18 @@ Attributes:
 ### `experimentation.exposures.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:46`
+ - `api/experimentation/tasks.py:100`
+
+Attributes:
+ - `environment.id`
+ - `exc_info`
+ - `experiment.id`
+ - `organisation.id`
+
+### `experimentation.results.compute_failed`
+
+Logged at `error` from:
+ - `api/experimentation/tasks.py:135`
 
 Attributes:
  - `environment.id`
@@ -118,6 +129,15 @@ Logged at `warning` from:
 
 Attributes:
  - `path`
+
+### `feature_lifecycle.summarised`
+
+Logged at `info` from:
+ - `api/features/feature_lifecycle/views.py:52`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
 
 ### `gitlab.api_call.failed`
 
@@ -345,48 +365,29 @@ Logged at `warning` from:
 
 Attributes:
 
-### `segment_membership.backfill.environment.completed`
-
-Logged at `info` from:
- - `api/segment_membership/tasks.py:110`
-
-Attributes:
- - `environment.id`
- - `project.id`
- - `rows.count`
-
-### `segment_membership.backfill.environment.failed`
-
-Logged at `exception` from:
- - `api/segment_membership/tasks.py:103`
-
-Attributes:
- - `environment.id`
- - `project.id`
-
-### `segment_membership.backfill.skipped`
-
-Logged at `info` from:
- - `api/segment_membership/tasks.py:67`
- - `api/segment_membership/tasks.py:72`
-
-Attributes:
- - `reason`
-
 ### `segment_membership.compute.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:96`
+ - `api/segment_membership/services.py:121`
 
 Attributes:
  - `project.id`
  - `reason`
  - `segment.id`
 
+### `segment_membership.members.segment.skipped`
+
+Logged at `error` from:
+ - `api/segment_membership/services.py:182`
+
+Attributes:
+ - `reason`
+ - `segment.id`
+
 ### `segment_membership.refresh.project.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:185`
+ - `api/segment_membership/tasks.py:252`
 
 Attributes:
  - `membership_counts.count`
@@ -396,7 +397,7 @@ Attributes:
 ### `segment_membership.refresh.project.failed`
 
 Logged at `exception` from:
- - `api/segment_membership/tasks.py:158`
+ - `api/segment_membership/tasks.py:225`
 
 Attributes:
  - `project.id`
@@ -404,17 +405,49 @@ Attributes:
 ### `segment_membership.refresh.project.skipped`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:129`
- - `api/segment_membership/tasks.py:138`
+ - `api/segment_membership/tasks.py:196`
+ - `api/segment_membership/tasks.py:205`
 
 Attributes:
  - `project.id`
  - `reason`
 
+### `segment_membership.seed.environment.completed`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:121`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+ - `rows.count`
+
+### `segment_membership.seed.environment.failed`
+
+Logged at `exception` from:
+ - `api/segment_membership/tasks.py:114`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+
+### `segment_membership.seed.skipped`
+
+Logged at `warning` from:
+ - `api/segment_membership/tasks.py:67`
+ - `api/segment_membership/tasks.py:72`
+ - `api/segment_membership/tasks.py:77`
+
+Attributes:
+ - `organisation.id`
+ - `reason`
+
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:155`
+ - `api/segments/serializers.py:158`
 
 Attributes:
  - `revision_id`
@@ -465,7 +498,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:345`
+ - `api/experimentation/services.py:738`
 
 Attributes:
  - `environment.id`
@@ -474,11 +507,31 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:325`
+ - `api/experimentation/services.py:718`
 
 Attributes:
  - `environment.id`
  - `organisation.id`
+
+### `warehouse.srm.overallocated`
+
+Logged at `error` from:
+ - `api/experimentation/services.py:396`
+
+Attributes:
+ - `environment.id`
+ - `experiment.id`
+ - `feature.id`
+
+### `warehouse.srm.unkeyed_variant`
+
+Logged at `error` from:
+ - `api/experimentation/services.py:382`
+
+Attributes:
+ - `environment.id`
+ - `experiment.id`
+ - `feature.id`
 
 ### `workflows.change_request.committed`
 

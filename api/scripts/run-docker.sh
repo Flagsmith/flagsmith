@@ -3,7 +3,7 @@ set -e
 
 # common environment variables
 ACCESS_LOG_FORMAT=${ACCESS_LOG_FORMAT:-'%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %({origin}i)s %({access-control-allow-origin}o)s'}
-APPLICATION_LOGGERS=${APPLICATION_LOGGERS:-"app_analytics,audit,code_references,common,core,dynamodb,edge_api,environments,features,import_export,integrations,mcp,oauth2_metadata,organisations,projects,segments,task_processor,users,webhooks,workflows"}
+APPLICATION_LOGGERS=${APPLICATION_LOGGERS:-"app_analytics,audit,code_references,common,core,dynamodb,edge_api,environments,features,import_export,integrations,mcp,oauth2_metadata,organisations,projects,segment_membership,segments,task_processor,users,webhooks,workflows"}
 
 waitfordb() {
   if [ -z "${SKIP_WAIT_FOR_DB}" ]; then
@@ -44,9 +44,6 @@ run_task_processor() {
     fi
     if [ -n "$TASK_PROCESSOR_DATABASE_URL" ] || [ -n "$TASK_PROCESSOR_DATABASE_NAME" ]; then
         waitfordb --waitfor 30 --migrations --database task_processor
-    fi
-    if [ -n "$CLICKHOUSE_URL" ] || [ -n "$CLICKHOUSE_HOST" ]; then
-        waitfordb --waitfor 30 --migrations --database clickhouse
     fi
     exec flagsmith start \
              --bind 0.0.0.0:8000 \

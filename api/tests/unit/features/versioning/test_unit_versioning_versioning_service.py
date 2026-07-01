@@ -1,10 +1,13 @@
 from datetime import timedelta
 
+import pytest
 from django.db.models import Q
 from django.utils import timezone
 from pytest_django import DjangoAssertNumQueries
+from rest_framework.exceptions import ValidationError
 
 from core.constants import STRING
+from core.dataclasses import AuthorData
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
@@ -12,12 +15,20 @@ from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
+from features.versioning.dataclasses import (
+    FlagChangeSet,
+    FlagChangeSetV2,
+    MultivariateValueChangeSet,
+    SegmentOverrideChangeSet,
+)
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.versioning_service import (
     get_current_live_environment_feature_version,
     get_environment_flags_list,
     get_environment_flags_queryset,
     get_updated_feature_states_for_version,
+    update_flag,
+    update_flag_v2,
 )
 from projects.models import Project
 from segments.models import Segment
@@ -621,3 +632,298 @@ def test_get_environment_flags_list__from_replica__returns_feature_states(
     # Then
     assert len(result) >= 1
     assert result[0].feature == feature
+
+
+def _mv_change_set(
+    author: AuthorData,
+    segment: Segment,
+    *,
+    multivariate_values: list[MultivariateValueChangeSet] | None,
+) -> FlagChangeSetV2:
+    return FlagChangeSetV2(
+        author=author,
+        environment_default_enabled=True,
+        environment_default_value="control",
+        environment_default_type="string",
+        segment_overrides=[
+            SegmentOverrideChangeSet(
+                segment_id=segment.id,
+                enabled=True,
+                feature_state_value="control",
+                type_="string",
+                multivariate_values=multivariate_values,
+            )
+        ],
+    )
+
+
+def _get_live_override(
+    environment: Environment, feature: Feature, segment: Segment
+) -> FeatureState:
+    if environment.use_v2_feature_versioning:
+        version = get_current_live_environment_feature_version(
+            environment_id=environment.id, feature_id=feature.id
+        )
+        assert version is not None
+        override: FeatureState = version.feature_states.get(
+            feature_segment__segment=segment
+        )
+        return override
+    override = FeatureState.objects.get(
+        environment=environment, feature=feature, feature_segment__segment=segment
+    )
+    return override
+
+
+def _override_allocations(override: FeatureState) -> dict[int, float]:
+    return {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in override.multivariate_feature_state_values.all()
+    }
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_update_flag_v2__new_segment_override_with_mv__creates_mv_values(
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    segment: Segment,
+    admin_user: FFAdminUser,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    option_a, option_b, _ = multivariate_options
+    change_set = _mv_change_set(
+        AuthorData(user=admin_user),
+        segment,
+        multivariate_values=[
+            MultivariateValueChangeSet(option_a.id, 60.0),
+            MultivariateValueChangeSet(option_b.id, 40.0),
+        ],
+    )
+
+    # When
+    update_flag_v2(environment, multivariate_feature, change_set)
+
+    # Then
+    override = _get_live_override(environment, multivariate_feature, segment)
+    assert _override_allocations(override) == {option_a.id: 60.0, option_b.id: 40.0}
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_update_flag_v2__existing_override_mv_changed__updates_allocations(
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    segment: Segment,
+    admin_user: FFAdminUser,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    author = AuthorData(user=admin_user)
+    option_a, option_b, _ = multivariate_options
+    update_flag_v2(
+        environment,
+        multivariate_feature,
+        _mv_change_set(
+            author,
+            segment,
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+            ],
+        ),
+    )
+
+    # When
+    update_flag_v2(
+        environment,
+        multivariate_feature,
+        _mv_change_set(
+            author,
+            segment,
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 70.0),
+                MultivariateValueChangeSet(option_b.id, 30.0),
+            ],
+        ),
+    )
+
+    # Then
+    override = _get_live_override(environment, multivariate_feature, segment)
+    assert _override_allocations(override) == {option_a.id: 70.0, option_b.id: 30.0}
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_update_flag_v2__option_not_passed__is_retained(
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    segment: Segment,
+    admin_user: FFAdminUser,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    author = AuthorData(user=admin_user)
+    option_a, option_b, _ = multivariate_options
+    update_flag_v2(
+        environment,
+        multivariate_feature,
+        _mv_change_set(
+            author,
+            segment,
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+        ),
+    )
+
+    # When only option_a is passed
+    update_flag_v2(
+        environment,
+        multivariate_feature,
+        _mv_change_set(
+            author,
+            segment,
+            multivariate_values=[MultivariateValueChangeSet(option_a.id, 30.0)],
+        ),
+    )
+
+    # Then option_b is left untouched
+    override = _get_live_override(environment, multivariate_feature, segment)
+    assert _override_allocations(override) == {option_a.id: 30.0, option_b.id: 50.0}
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_update_flag_v2__no_mv_values__leaves_existing_mv_untouched(
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    segment: Segment,
+    admin_user: FFAdminUser,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    author = AuthorData(user=admin_user)
+    option_a, option_b, _ = multivariate_options
+    update_flag_v2(
+        environment,
+        multivariate_feature,
+        _mv_change_set(
+            author,
+            segment,
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+            ],
+        ),
+    )
+
+    # When
+    update_flag_v2(
+        environment,
+        multivariate_feature,
+        _mv_change_set(author, segment, multivariate_values=None),
+    )
+
+    # Then
+    override = _get_live_override(environment, multivariate_feature, segment)
+    assert _override_allocations(override) == {option_a.id: 60.0, option_b.id: 40.0}
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_update_flag__segment_override_with_mv__sets_mv_values(
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    segment: Segment,
+    admin_user: FFAdminUser,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    update_flag(
+        environment,
+        multivariate_feature,
+        FlagChangeSet(
+            author=AuthorData(user=admin_user),
+            enabled=True,
+            feature_state_value="control",
+            type_="string",
+            segment_id=segment.id,
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 70.0),
+                MultivariateValueChangeSet(option_b.id, 30.0),
+            ],
+        ),
+    )
+
+    # Then
+    override = _get_live_override(environment, multivariate_feature, segment)
+    assert _override_allocations(override) == {option_a.id: 70.0, option_b.id: 30.0}
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_update_flag_v2__retained_plus_passed_exceeds_100__raises(
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    segment: Segment,
+    admin_user: FFAdminUser,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given an override allocating option_a 80% and option_b 20%
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    author = AuthorData(user=admin_user)
+    option_a, option_b, _ = multivariate_options
+    update_flag_v2(
+        environment,
+        multivariate_feature,
+        _mv_change_set(
+            author,
+            segment,
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 80.0),
+                MultivariateValueChangeSet(option_b.id, 20.0),
+            ],
+        ),
+    )
+
+    # When option_b alone is raised to 100% (retained option_a 80% → 180% total)
+    # Then it is rejected
+    with pytest.raises(ValidationError):
+        update_flag_v2(
+            environment,
+            multivariate_feature,
+            _mv_change_set(
+                author,
+                segment,
+                multivariate_values=[MultivariateValueChangeSet(option_b.id, 100.0)],
+            ),
+        )

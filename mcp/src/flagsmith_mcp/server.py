@@ -8,6 +8,7 @@ from fastmcp.utilities.openapi.models import HttpMethod, HTTPRoute
 from mcp.types import ToolAnnotations
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from prometheus_client import start_http_server
+from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 
@@ -15,8 +16,13 @@ from flagsmith_mcp import config, constants
 from flagsmith_mcp.auth import FlagsmithAuth
 from flagsmith_mcp.events import EventLoggingMiddleware
 from flagsmith_mcp.metrics import PrometheusMiddleware
+from flagsmith_mcp.middleware import RootRouterMiddleware
 from flagsmith_mcp.oauth import FlagsmithResourceAuth
-from flagsmith_mcp.telemetry import propagate_span_attributes, setup_telemetry
+from flagsmith_mcp.telemetry import (
+    propagate_span_attributes,
+    setup_sentry,
+    setup_telemetry,
+)
 
 ROUTE_MAPS = [
     RouteMap(tags={"mcp"}, mcp_type=MCPType.TOOL),
@@ -55,11 +61,11 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
     auth = None
     if settings.transport == "http" and settings.flagsmith_api_token is None:
         auth = FlagsmithResourceAuth(
-            resource_url=settings.mcp_server_url,
-            authorization_server=settings.flagsmith_api_url,
+            resource_url=str(settings.mcp_server_url),
+            authorization_server=str(settings.flagsmith_api_url),
         )
     api_client = httpx.AsyncClient(
-        base_url=settings.flagsmith_api_url,
+        base_url=str(settings.flagsmith_api_url),
         auth=FlagsmithAuth(settings.flagsmith_api_token),
         event_hooks={"request": [propagate_span_attributes]},
     )
@@ -90,6 +96,7 @@ def create_server(settings: config.Settings) -> FastMCP[None]:
 def run() -> None:
     settings = config.Settings()
     setup_telemetry(settings)
+    setup_sentry(settings)
     server = create_server(settings)
     if settings.metrics_port is not None:
         start_http_server(settings.metrics_port)
@@ -97,6 +104,8 @@ def run() -> None:
         server.run(
             transport=settings.transport,
             show_banner=False,
+            path=constants.STREAMABLE_HTTP_PATH,
+            middleware=[Middleware(RootRouterMiddleware)],
             # Let uvicorn log records propagate to the root logger so they
             # are rendered by the configured formatter.
             uvicorn_config={"log_config": None},

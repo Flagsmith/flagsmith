@@ -416,7 +416,6 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return EnvironmentPermissionDescriptions.UPDATE_FEATURE_STATE
   },
-
   getNextPlan: () => {
     const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
     if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
@@ -437,6 +436,7 @@ const Utils = Object.assign({}, BaseUtils, {
       }
     }
   },
+
   getOrganisationHomePage(id?: string) {
     const orgId = id || AccountStore.getOrganisation()?.id
     if (!orgId) {
@@ -444,11 +444,11 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return `/organisation/${orgId}/projects`
   },
-
   getOrganisationIdFromUrl(match: any) {
     const organisationId = match?.params?.organisationId
     return organisationId ? parseInt(organisationId) : null
   },
+
   getOverridePermission: (
     level: 'identity' | 'segment',
   ): {
@@ -470,6 +470,7 @@ const Utils = Object.assign({}, BaseUtils, {
         }
     }
   },
+
   getPlanName: (_plan: string) => {
     const plan = (_plan || '')?.toLowerCase()
     if (plan.includes('free')) {
@@ -492,6 +493,7 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return planNames.free
   },
+
   getPlanPermission: (plan: string, feature: PaidFeature) => {
     const planName = Utils.getPlanName(plan)
     if (!plan || planName === planNames.free) {
@@ -511,6 +513,7 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return true
   },
+
   getPlansPermission: (feature: PaidFeature) => {
     const isOrgPermission = feature !== '2FA'
     let plans
@@ -530,6 +533,7 @@ const Utils = Object.assign({}, BaseUtils, {
     )
     return !!found
   },
+
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
@@ -682,6 +686,13 @@ const Utils = Object.assign({}, BaseUtils, {
       (permission) => permission.permission_key === key,
     )
   },
+  hasIntegration(key: string) {
+    const data = Utils.getIntegrationData() as
+      | Record<string, unknown>
+      | null
+      | undefined
+    return !!data && !!data[key]
+  },
   //todo: Remove when migrating to RTK
   isEnterpriseImage: () =>
     selectBuildVersion(getStore().getState())?.backend.is_enterprise,
@@ -695,6 +706,8 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return false
   },
+  isOrgOnFreePlan: (): boolean =>
+    Utils.getPlanName(AccountStore.getActiveOrgPlan()) === planNames.free,
   isSaas: () => selectBuildVersion(getStore().getState())?.backend?.is_saas,
 
   isValidNumber(value: any) {
@@ -810,6 +823,9 @@ const Utils = Object.assign({}, BaseUtils, {
     }
 
     if (operatorObj?.value?.toLowerCase?.().includes('semver')) {
+      if (!rule.value) {
+        return false
+      }
       return !!semver.valid(`${rule.value.split(':')[0]}`)
     }
 
@@ -830,6 +846,9 @@ const Utils = Object.assign({}, BaseUtils, {
         }
       }
       case 'MODULO': {
+        if (!rule.value) {
+          return false
+        }
         const valueSplit = rule.value.split('|')
         if (valueSplit.length === 2) {
           const [divisor, remainder] = [

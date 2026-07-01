@@ -19,17 +19,25 @@ from environments.models import Environment
 from experimentation.constants import (
     EXPERIMENT_FLAG,
     EXPOSURES_REFRESH_MIN_INTERVAL,
+    RESULTS_REFRESH_MIN_INTERVAL,
 )
 from experimentation.models import (
     ExpectedDirection,
     Experiment,
     ExperimentExposures,
     ExperimentMetric,
+    ExperimentResults,
     ExperimentStatus,
     Metric,
 )
+from experimentation.serializers import ExperimentFeatureSerializer
 from features.feature_types import MULTIVARIATE
-from features.models import Feature
+from features.models import Feature, FeatureState
+from features.multivariate.models import (
+    MultivariateFeatureOption,
+    MultivariateFeatureStateValue,
+)
+from segments.models import Condition
 from tests.types import EnableFeaturesFixture
 
 if TYPE_CHECKING:
@@ -644,6 +652,71 @@ def test_action__start__sets_started_at(
     assert response.json()["started_at"] is not None
 
 
+def test_action__start__enables_disabled_rollout(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given an experiment whose rollout override is disabled
+    enable_features(EXPERIMENT_FLAG)
+    option_a, option_b, _ = multivariate_options
+    admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data={
+            "enabled": False,
+            "rollout_percentage": 20,
+            "feature_state_value": {"type": "string", "value": "control"},
+            "multivariate_feature_state_values": [
+                {
+                    "multivariate_feature_option": option_a.id,
+                    "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_b.id,
+                    "percentage_allocation": 50,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # When the experiment is started
+    response = admin_client_new.post(
+        _action_url(environment, experiment_with_rollout, "start")
+    )
+
+    # Then the rollout override is enabled
+    assert response.status_code == status.HTTP_200_OK
+    detail = admin_client_new.get(_detail_url(environment, experiment_with_rollout))
+    assert detail.json()["experiment_rollout"]["enabled"] is True
+
+
+def test_action__start_rollout_enable_fails__rolls_back_transition(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given enabling the rollout will fail while starting
+    enable_features(EXPERIMENT_FLAG)
+    mocker.patch(
+        "experimentation.views.enable_experiment_rollout",
+        side_effect=RuntimeError("boom"),
+    )
+
+    # When
+    with pytest.raises(RuntimeError):
+        admin_client_new.post(_action_url(environment, experiment, "start"))
+
+    # Then the status transition is rolled back
+    experiment.refresh_from_db()
+    assert experiment.status == ExperimentStatus.CREATED
+    assert experiment.started_at is None
+
+
 def test_action__complete__sets_ended_at(
     admin_client_new: APIClient,
     environment: Environment,
@@ -700,6 +773,7 @@ def test_exposures__computed_row__returns_row(
             "last_error_at": None,
             "refresh_requested_at": None,
             "payload": payload,
+            "is_final": False,
         }
     }
 
@@ -751,6 +825,7 @@ def test_exposures__failed_refresh__returns_error_marker_with_last_payload(
             "last_error_at": "2026-06-11T12:00:00Z",
             "refresh_requested_at": None,
             "payload": payload,
+            "is_final": False,
         }
     }
 
@@ -1081,6 +1156,48 @@ def test_delete__valid_delete__creates_audit_log(
     assert "deleted" in audit.log
 
 
+def test_get_list__filter_by_multiple_statuses__returns_matching(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    project: "Project",
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    second_feature = Feature.objects.create(
+        name="mv_feature_2",
+        project=project,
+        type=MULTIVARIATE,
+        initial_value="control",
+    )
+    for pct in (50, 50):
+        MultivariateFeatureOption.objects.create(
+            feature=second_feature,
+            default_percentage_allocation=pct,
+            type="unicode",
+            string_value=f"option_{pct}",
+        )
+    running_experiment = Experiment.objects.create(
+        environment=environment,
+        feature=second_feature,
+        name="Running Experiment",
+        hypothesis="hypothesis",
+        status=ExperimentStatus.RUNNING,
+    )
+
+    # When — filter for both created and running
+    response = admin_client_new.get(
+        _list_url(environment),
+        {"status": ["created", "running"]},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    result_ids = {r["id"] for r in response.json()["results"]}
+    assert result_ids == {experiment.id, running_experiment.id}
+
+
 def test_get_list__invalid_status__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
@@ -1091,6 +1208,24 @@ def test_get_list__invalid_status__returns_400(
 
     # When
     response = admin_client_new.get(_list_url(environment), {"status": "garbage"})
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_get_list__mixed_valid_and_invalid_status__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(
+        _list_url(environment),
+        {"status": ["running", "garbage"]},
+    )
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -1373,3 +1508,718 @@ def test_post__concurrent_create_race__returns_409(
 
     # Then
     assert response.status_code == status.HTTP_409_CONFLICT
+
+
+def test_results__computed_row__returns_row(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a previously computed results row
+    enable_features(EXPERIMENT_FLAG)
+    payload = {
+        "srm_p_value": 0.42,
+        "metrics": [
+            {
+                "metric_id": 7,
+                "variants": {
+                    "control": {"n": 1000, "sum": 100.0, "sum_squares": 100.0}
+                },
+                "inference": {},
+            }
+        ],
+    }
+    ExperimentResults.objects.create(
+        experiment=experiment,
+        as_of=datetime(2026, 6, 11, 12, tzinfo=dt_timezone.utc),
+        payload=payload,
+    )
+
+    # When
+    response = admin_client_new.get(_action_url(environment, experiment, "results"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "results": {
+            "as_of": "2026-06-11T12:00:00Z",
+            "last_error_at": None,
+            "refresh_requested_at": None,
+            "payload": payload,
+            "is_final": False,
+        }
+    }
+
+
+def test_results__never_computed__returns_null(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(_action_url(environment, experiment, "results"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"results": None}
+
+
+def test_results__failed_refresh__returns_error_marker_with_last_payload(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a row whose last refresh failed after an earlier success
+    enable_features(EXPERIMENT_FLAG)
+    payload: dict[str, object] = {"srm_p_value": None, "metrics": []}
+    ExperimentResults.objects.create(
+        experiment=experiment,
+        as_of=datetime(2026, 6, 11, 11, tzinfo=dt_timezone.utc),
+        payload=payload,
+        last_error_at=datetime(2026, 6, 11, 12, tzinfo=dt_timezone.utc),
+    )
+
+    # When
+    response = admin_client_new.get(_action_url(environment, experiment, "results"))
+
+    # Then the stale data and the error marker are both surfaced
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "results": {
+            "as_of": "2026-06-11T11:00:00Z",
+            "last_error_at": "2026-06-11T12:00:00Z",
+            "refresh_requested_at": None,
+            "payload": payload,
+            "is_final": False,
+        }
+    }
+
+
+def test_results__admin_without_flag__returns_403(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+) -> None:
+    # Given — feature flag not enabled
+
+    # When
+    response = admin_client_new.get(_action_url(environment, experiment, "results"))
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_results__staff_user_with_flag__returns_403(
+    staff_client: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = staff_client.get(_action_url(environment, experiment, "results"))
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_refresh_results__started_experiment__enqueues_compute(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_results")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-results")
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    mock_compute.delay.assert_called_once_with(
+        kwargs={"experiment_id": experiment.id},
+    )
+    results = ExperimentResults.objects.get(experiment=experiment)
+    assert results.refresh_requested_at is not None
+
+
+@freeze_time("2026-06-11T12:00:00Z")
+def test_refresh_results__requested_recently__returns_429_with_retry_after(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given a refresh was requested a minute ago
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentResults.objects.create(
+        experiment=experiment,
+        refresh_requested_at=timezone.now() - timedelta(minutes=1),
+    )
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_results")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-results")
+    )
+
+    # Then the client is told when to retry
+    assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+    assert response.headers["Retry-After"] == "240"
+    mock_compute.delay.assert_not_called()
+
+
+def test_refresh_results__last_request_beyond_interval__enqueues_compute(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given the last refresh request is older than the minimum interval
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentResults.objects.create(
+        experiment=experiment,
+        refresh_requested_at=timezone.now() - RESULTS_REFRESH_MIN_INTERVAL,
+    )
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_results")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-results")
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    mock_compute.delay.assert_called_once()
+
+
+def test_refresh_results__completed_with_final_row__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given a completed experiment whose row already covers the full window
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
+    experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentResults.objects.create(
+        experiment=experiment,
+        as_of=experiment.ended_at,
+        payload={"srm_p_value": None, "metrics": []},
+    )
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_results")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-results")
+    )
+
+    # Then a final row is not recomputed
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    mock_compute.delay.assert_not_called()
+
+
+def test_refresh_results__completed_with_stale_row__enqueues_compute(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given a completed experiment last computed before it ended
+    enable_features(EXPERIMENT_FLAG)
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
+    experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentResults.objects.create(
+        experiment=experiment,
+        as_of=datetime(2026, 6, 7, tzinfo=dt_timezone.utc),
+        payload={"srm_p_value": None, "metrics": []},
+    )
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_results")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-results")
+    )
+
+    # Then the finalising refresh is allowed
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    mock_compute.delay.assert_called_once()
+
+
+def test_refresh_results__not_started_experiment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given a created experiment that has never started
+    enable_features(EXPERIMENT_FLAG)
+    mock_compute = mocker.patch("experimentation.views.compute_experiment_results")
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "refresh-results")
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    mock_compute.delay.assert_not_called()
+
+
+def test_refresh_results__staff_user_with_flag__returns_403(
+    staff_client: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = staff_client.post(
+        _action_url(environment, experiment, "refresh-results")
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_get_detail__env_level_allocations__returns_environment_percentages(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    multivariate_feature: Feature,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    env_fs = FeatureState.objects.get(
+        feature=multivariate_feature,
+        environment=environment,
+        identity__isnull=True,
+        feature_segment__isnull=True,
+    )
+    env_allocations = [10.0, 20.0, 70.0]
+    for mv_fsv, alloc in zip(
+        MultivariateFeatureStateValue.objects.filter(feature_state=env_fs).order_by(
+            "multivariate_feature_option_id"
+        ),
+        env_allocations,
+    ):
+        mv_fsv.percentage_allocation = alloc
+        mv_fsv.save()
+
+    # When
+    response = admin_client_new.get(_detail_url(environment, experiment))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    options = response.json()["feature"]["multivariate_options"]
+    returned_allocs = sorted(o["default_percentage_allocation"] for o in options)
+    assert returned_allocs == sorted(env_allocations)
+
+
+def test_experiment_feature_serializer__no_environment_context__raises(
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    serializer = ExperimentFeatureSerializer(multivariate_feature, context={})
+
+    # When / Then
+    with pytest.raises(ValueError, match="requires 'environment' in context"):
+        serializer.data
+
+
+def test_experiment_feature_serializer__no_env_feature_state__raises(
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    FeatureState.objects.filter(
+        feature=multivariate_feature,
+        environment=environment,
+        identity__isnull=True,
+        feature_segment__isnull=True,
+    ).delete()
+    serializer = ExperimentFeatureSerializer(
+        multivariate_feature, context={"environment": environment}
+    )
+
+    # When / Then
+    with pytest.raises(ValueError, match="No environment feature state found"):
+        serializer.data
+
+
+def test_post__with_experiment_rollout__creates_rollout(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "Rollout experiment",
+            "hypothesis": "It will work",
+            "experiment_rollout": {
+                "enabled": True,
+                "rollout_percentage": 30,
+                "feature_state_value": {"type": "string", "value": "control"},
+                "multivariate_feature_state_values": [
+                    {
+                        "multivariate_feature_option": option_a.id,
+                        "percentage_allocation": 60,
+                    },
+                    {
+                        "multivariate_feature_option": option_b.id,
+                        "percentage_allocation": 40,
+                    },
+                ],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    experiment = Experiment.objects.get(id=response.json()["id"])
+    assert experiment.rollout_segment is not None
+    assert experiment.rollout_segment.is_system_segment is True
+
+
+def test_post__rollout_allocations_exceed_100__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    option_a, option_b, _ = multivariate_options
+
+    # When the allocations sum to more than 100%
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "Rollout experiment",
+            "hypothesis": "It will work",
+            "experiment_rollout": {
+                "enabled": True,
+                "rollout_percentage": 30,
+                "feature_state_value": {"type": "string", "value": "control"},
+                "multivariate_feature_state_values": [
+                    {
+                        "multivariate_feature_option": option_a.id,
+                        "percentage_allocation": 60,
+                    },
+                    {
+                        "multivariate_feature_option": option_b.id,
+                        "percentage_allocation": 60,
+                    },
+                ],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "exceed" in str(response.json()).lower()
+
+
+def test_post__rollout_mv_option_not_on_feature__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "Rollout experiment",
+            "hypothesis": "It will work",
+            "experiment_rollout": {
+                "enabled": True,
+                "rollout_percentage": 30,
+                "feature_state_value": {"type": "string", "value": "control"},
+                "multivariate_feature_state_values": [
+                    {
+                        "multivariate_feature_option": 999999,
+                        "percentage_allocation": 100,
+                    },
+                ],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "do not belong to the feature" in str(response.json())
+
+
+def test_action_rollout__valid__updates_percentage(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data={
+            "enabled": False,
+            "rollout_percentage": 75,
+            "feature_state_value": {"type": "string", "value": "control"},
+            "multivariate_feature_state_values": [
+                {
+                    "multivariate_feature_option": option_a.id,
+                    "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_b.id,
+                    "percentage_allocation": 50,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    condition = Condition.objects.get(
+        rule__segment=experiment_with_rollout.rollout_segment
+    )
+    assert condition.value == "75.0"
+
+
+def test_action_rollout__running_experiment__updates_percentage(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    experiment_with_rollout.status = ExperimentStatus.RUNNING
+    experiment_with_rollout.save()
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data={
+            "enabled": True,
+            "rollout_percentage": 75,
+            "feature_state_value": {"type": "string", "value": "control"},
+            "multivariate_feature_state_values": [
+                {
+                    "multivariate_feature_option": option_a.id,
+                    "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_b.id,
+                    "percentage_allocation": 50,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    condition = Condition.objects.get(
+        rule__segment=experiment_with_rollout.rollout_segment
+    )
+    assert condition.value == "75.0"
+
+
+def test_action_rollout__completed_experiment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    experiment_with_rollout.status = ExperimentStatus.COMPLETED
+    experiment_with_rollout.save()
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data={
+            "enabled": True,
+            "rollout_percentage": 75,
+            "feature_state_value": {"type": "string", "value": "control"},
+            "multivariate_feature_state_values": [
+                {
+                    "multivariate_feature_option": option_a.id,
+                    "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_b.id,
+                    "percentage_allocation": 50,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_action_rollout__mv_option_not_on_feature__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data={
+            "enabled": True,
+            "rollout_percentage": 75,
+            "feature_state_value": {"type": "string", "value": "control"},
+            "multivariate_feature_state_values": [
+                {
+                    "multivariate_feature_option": 999999,
+                    "percentage_allocation": 100,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "do not belong to the feature" in str(response.json())
+
+
+def test_patch__experiment_rollout_on_update__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.patch(
+        _detail_url(environment, experiment),
+        data={
+            "experiment_rollout": {
+                "enabled": True,
+                "rollout_percentage": 30,
+                "feature_state_value": {"type": "string", "value": "control"},
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Cannot change the rollout" in str(response.json())
+
+
+def test_get_detail__with_rollout__returns_rollout(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    response = admin_client_new.get(_detail_url(environment, experiment_with_rollout))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    rollout = response.json()["experiment_rollout"]
+    assert rollout["enabled"] is True
+    assert rollout["rollout_percentage"] == 20.0
+    assert rollout["feature_state_value"] == {"type": "string", "value": "control"}
+    assert {
+        (mv["multivariate_feature_option"], mv["percentage_allocation"])
+        for mv in rollout["multivariate_feature_state_values"]
+    } == {(option_a.id, 50.0), (option_b.id, 50.0)}
+
+
+def test_get_detail__without_rollout__returns_null(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.get(_detail_url(environment, experiment))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["experiment_rollout"] is None

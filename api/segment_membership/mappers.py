@@ -1,17 +1,17 @@
+from datetime import datetime
 from decimal import Decimal
 
 from flagsmith_schemas import dynamodb
 
-# (environment_id, identifier, identity_key, traits)
-ClickHouseIdentityRow = tuple[str, str, str, dict[str, object] | None]
+from segment_membership.types import ClickHouseIdentityRow
 
 
 def map_identity_document_to_clickhouse_row(
     env_key: str,
     identity_doc: dynamodb.Identity,
+    inserted_at: datetime,
 ) -> ClickHouseIdentityRow:
-    """Project a Dynamo identity document onto an IDENTITIES row tuple
-    `(environment_id, identifier, identity_key, traits)`."""
+    """Project a Dynamo identity document onto an IDENTITIES row tuple."""
     identifier = identity_doc["identifier"]
     composite_key = identity_doc["composite_key"]
     raw_traits = identity_doc.get("identity_traits")
@@ -21,6 +21,7 @@ def map_identity_document_to_clickhouse_row(
         identifier,
         composite_key,
         traits,
+        inserted_at,
     )
 
 

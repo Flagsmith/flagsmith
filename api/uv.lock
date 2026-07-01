@@ -882,14 +882,10 @@ wheels = [
 [[package]]
 name = "django-clickhouse-backend"
 version = "1.6"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/jayvynl/django-clickhouse-backend?rev=d884c7d#d884c7d8d89fd94d79fca440e3965a931aa69435" }
 dependencies = [
     { name = "clickhouse-driver" },
     { name = "django" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/c1/db/55e54cc0793e391ae0f7797f010771ce31348e89629d4db7dec2aebb66f8/django_clickhouse_backend-1.6.tar.gz", hash = "sha256:fd4840b8789f571838fbc8a4c323e9600fed0ee34113fa761ef7a4f231298e10", size = 76500, upload-time = "2026-01-12T06:26:10.073Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/56/995c790c736c2016fe0ae6418a84b65b201bd3134d81e50868d36a43f640/django_clickhouse_backend-1.6-py3-none-any.whl", hash = "sha256:6e1ddba09d7c2bcbb3dd2a9c80606c75c5b42c6f9d220104751857c925a9a5e0", size = 88911, upload-time = "2026-01-12T06:26:08.744Z" },
 ]
 
 [[package]]
@@ -1525,7 +1521,7 @@ requires-dist = [
     { name = "django", specifier = ">=5,<6" },
     { name = "django-admin-sso", specifier = ">=5.2.0,<5.3.0" },
     { name = "django-axes", specifier = ">=8.1.0,<9.0.0" },
-    { name = "django-clickhouse-backend", specifier = ">=1.4,<2.0" },
+    { name = "django-clickhouse-backend", git = "https://github.com/jayvynl/django-clickhouse-backend?rev=d884c7d" },
     { name = "django-cockroachdb", specifier = ">=4.2,<4.3.0" },
     { name = "django-cors-headers", specifier = ">=3.5.0,<3.6.0" },
     { name = "django-debug-toolbar", marker = "extra == 'dev'" },
@@ -1556,11 +1552,11 @@ requires-dist = [
     { name = "email-validator", marker = "extra == 'dev'", specifier = ">=2.0.0" },
     { name = "environs", specifier = ">=14.1.1,<15.0.0" },
     { name = "flagsmith", specifier = ">=5.3.0,<6.0.0" },
-    { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.9.1,<4" },
+    { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.10.1,<4" },
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
     { name = "flagsmith-flag-engine", specifier = ">=10.1.0,<11.0.0" },
-    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.9.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
-    { name = "flagsmith-sql-flag-engine", specifier = ">=0.1.0,<0.2.0" },
+    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.10.1,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
+    { name = "flagsmith-sql-flag-engine", specifier = ">=0.1.2,<0.2.0" },
     { name = "google-api-python-client", specifier = ">=1.12.5,<1.13.0" },
     { name = "google-re2", specifier = ">=1.0,<2.0.0" },
     { name = "gunicorn", specifier = ">=23.0.0,<23.1.0" },
@@ -1627,11 +1623,11 @@ provides-extras = ["private", "dev"]
 
 [[package]]
 name = "flagsmith-common"
-version = "3.9.1"
+version = "3.10.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/77/02/6db44d9089832b0267f9b8bac73cf57eeb3769364e6a523112273ee5cbea/flagsmith_common-3.9.1.tar.gz", hash = "sha256:2b78015b290c571d20e2ba59ee621346cf7ec8340bfc01acf3620af3725d9318", size = 59166, upload-time = "2026-05-11T16:46:29.797Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/37/88/69b64381dd5c27eab67da364b5163bc40fc500fb45804d9ba6824a2e3d1d/flagsmith_common-3.10.1.tar.gz", hash = "sha256:d07b8bdac4e2b7913daed2538c5fec7512a08f10e6f64fc5a2bb1016f9493a7b", size = 59260, upload-time = "2026-06-30T10:06:07.926Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/06/fd/67f602c3859eba1baf30fc1916d0997cb3541b71acea5964d47c2b4b5a3e/flagsmith_common-3.9.1-py3-none-any.whl", hash = "sha256:32bd530a32ecd0ff7a6e868341b60d7e778d56ebf0a7ed0623ecdfcabd87fef8", size = 96771, upload-time = "2026-05-11T16:46:28.271Z" },
+    { url = "https://files.pythonhosted.org/packages/88/b1/0527d883b246b4b600d5595a1648d5bda34110747962c88377d5c2301eb0/flagsmith_common-3.10.1-py3-none-any.whl", hash = "sha256:ea03bd41c7842d00bfbf65546f371b9e3d602b1e772cb33e9e86d9bcfd732236", size = 96851, upload-time = "2026-06-30T10:06:06.324Z" },
 ]
 
 [package.optional-dependencies]
@@ -1693,7 +1689,7 @@ wheels = [
 
 [[package]]
 name = "flagsmith-private"
-version = "0.9.0"
+version = "0.10.1"
 source = { registry = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" }
 dependencies = [
     { name = "cryptography" },
@@ -1703,22 +1699,22 @@ dependencies = [
     { name = "pysaml2" },
     { name = "scim2-filter-parser" },
 ]
-sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.9.0/flagsmith_private-0.9.0.tar.gz", hash = "sha256:fc7b11ff24205f07e8eca8debbbf71807ec1da456a2572df4ec6815a4cce8ade" }
+sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.10.1/flagsmith_private-0.10.1.tar.gz", hash = "sha256:f0996ef2a98aff82d471c13d6d4b81b979955eed511bf733d47d3530b468072e", upload-time = "2026-06-29T16:14:43.532Z" }
 wheels = [
-    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.9.0/flagsmith_private-0.9.0-py3-none-any.whl", hash = "sha256:6e3fa41790af07cc3296cd45c498e73c35f5b8645a59679627e8287717dcdc95" },
+    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.10.1/flagsmith_private-0.10.1-py3-none-any.whl", hash = "sha256:3d79a82031a9e7006908c036d4ea3a00a1becc45c6b7446f9175da8d6606befe", upload-time = "2026-06-29T16:14:43.158Z" },
 ]
 
 [[package]]
 name = "flagsmith-sql-flag-engine"
-version = "0.1.1"
+version = "0.1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "flagsmith-flag-engine" },
     { name = "jsonpath-rfc9535" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b5/0f/e14afc677c1c74526057b40dabd17d701788b7e31b60bfbaca592d891b42/flagsmith_sql_flag_engine-0.1.1.tar.gz", hash = "sha256:faa10ae559766e142496964971b612a4ad6f463f92fce318380766aef4607c90", size = 17980, upload-time = "2026-05-27T14:45:32.01Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/19/d8/04ee9fb1cd78b2c4cf4d450893abe83dbfbd840432b14a8a652198ceffe2/flagsmith_sql_flag_engine-0.1.2.tar.gz", hash = "sha256:2c940891314a52916916529db44da16b7bd59355c2037e99c9a4896b84f66a70", size = 17951, upload-time = "2026-06-30T10:23:24.062Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1e/b9/b831078e3f4e10e2efdc8a42eb79395858a57d56a91c79c358d4f59b3c62/flagsmith_sql_flag_engine-0.1.1-py3-none-any.whl", hash = "sha256:66dae61a54bab6680562b7eccceb829f6661381a3af47eb38ffc110a707c794d", size = 21738, upload-time = "2026-05-27T14:45:30.763Z" },
+    { url = "https://files.pythonhosted.org/packages/83/38/920188ffd74f6aa251fa70914e659f1b33d0aed1b5b26fa1488b2dc7ee63/flagsmith_sql_flag_engine-0.1.2-py3-none-any.whl", hash = "sha256:404625b59e7b9d654f9985a6587b071dfc64ebcd7ee3637454632a838b17866f", size = 21724, upload-time = "2026-06-30T10:23:22.782Z" },
 ]
 
 [[package]]

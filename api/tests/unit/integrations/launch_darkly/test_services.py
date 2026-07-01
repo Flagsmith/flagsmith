@@ -9,6 +9,7 @@ from common.test_tools import SnapshotFixture
 from django.conf import settings
 from django.core import signing
 from flag_engine.segments import constants as segment_constants
+from pytest_mock import MockerFixture
 from requests.exceptions import HTTPError, RequestException, Timeout
 
 from environments.identities.models import Identity
@@ -646,3 +647,21 @@ def test_serialize_variation_value__various_types__returns_expected(
 
     # Then
     assert result == expected
+
+
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__import__enqueues_membership_refresh(
+    import_request: LaunchDarklyImportRequest,
+    project: Project,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enqueue_membership_refresh_mock = mocker.patch(
+        "integrations.launch_darkly.services.enqueue_membership_refresh"
+    )
+
+    # When
+    process_import_request(import_request)
+
+    # Then
+    enqueue_membership_refresh_mock.assert_called_once_with(project)

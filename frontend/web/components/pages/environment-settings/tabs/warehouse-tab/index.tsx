@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 import {
   useCreateWarehouseConnectionMutation,
   useDeleteWarehouseConnectionMutation,
@@ -30,12 +30,30 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     { environmentId, exclude_event_stats: true },
     { skip: !environmentId },
   )
+  const { data: connectionsWithStats, isFetching: isFetchingStats } =
+    useGetWarehouseConnectionsQuery(
+      { environmentId, exclude_event_stats: false },
+      { skip: !environmentId },
+    )
   const [createConnection, { isLoading: isCreating }] =
     useCreateWarehouseConnectionMutation()
   const [deleteConnection] = useDeleteWarehouseConnectionMutation()
   const [updateConnection] = useUpdateWarehouseConnectionMutation()
 
-  const connection = connections?.[0]
+  const baseConnection = connections?.[0]
+  const connection = useMemo(() => {
+    if (!baseConnection) return undefined
+    const statsConnection = connectionsWithStats?.find(
+      (item) => item.id === baseConnection.id,
+    )
+    return statsConnection
+      ? {
+          ...baseConnection,
+          total_events_received: statsConnection.total_events_received,
+          unique_events_count: statsConnection.unique_events_count,
+        }
+      : baseConnection
+  }, [baseConnection, connectionsWithStats])
   const connectionId = connection?.id
   const connectionStatus = connection?.status
 
@@ -183,6 +201,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
         }
         onSendTestEvent={handleSendTestEvent}
         isSendingTestEvent={isSendingTestEvent}
+        isLoadingStats={isFetchingStats}
       />
     </div>
   )

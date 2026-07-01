@@ -74,6 +74,7 @@ urlpatterns = [
         name="environment-document",
     ),
     re_path("", include("features.versioning.urls", namespace="versioning")),
+    path("", include("features.feature_lifecycle.urls", namespace="feature-lifecycle")),
     # API documentation
     path(
         "swagger.json",

@@ -1,0 +1,129 @@
+.onboarding-connect {
+  padding: 24px;
+
+  &__step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    background-color: var(--color-icon-action);
+    color: #ffffff;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  &__prompt-text {
+    color: var(--color-text-default);
+    font-family: var(--font-family-mono, monospace);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    background: transparent;
+    white-space: pre-wrap;
+  }
+
+  &__steps {
+    padding-left: 18px;
+
+    li {
+      margin-bottom: 4px;
+    }
+  }
+
+  // Code cards - theme-adaptive via semantic tokens (light editor in light mode,
+  // dark in dark mode). Surface, base text and every syntax colour map to
+  // semantic tokens that flip with the theme, so there's no hardcoded hex and no
+  // per-theme override. TODO(#6606): lift this palette into the shared `.hljs`
+  // theme so all code blocks app-wide adapt the same way.
+  &__codecard {
+    border-radius: 10px;
+    overflow: hidden;
+
+    .hljs {
+      // Inherit the card surface; base text adapts with the theme.
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      color: var(--color-text-default);
+      // Reserve the scrollbar gutter permanently so hover doesn't shove the
+      // layout (the global dark-scroll mixin toggles display:none on a
+      // space-reserving webkit bar otherwise).
+      overflow-x: scroll;
+      overflow-y: hidden;
+
+      &::-webkit-scrollbar,
+      &:hover::-webkit-scrollbar {
+        display: block !important;
+      }
+
+      // Unmapped tokens (tags, attributes, params, punctuation) inherit the
+      // readable base instead of the global hljs greys; the semantic palette
+      // below re-colours the specific token types.
+      * {
+        color: inherit;
+      }
+    }
+
+    .hljs-keyword,
+    .hljs-built_in,
+    .hljs-literal,
+    .hljs-selector-tag {
+      color: var(--color-text-action);
+    }
+    .hljs-string,
+    .hljs-regexp {
+      color: var(--color-text-success);
+    }
+    .hljs-attr,
+    .hljs-attribute,
+    .hljs-property,
+    .hljs-number,
+    .hljs-type {
+      color: var(--color-text-info);
+    }
+    .hljs-title,
+    .hljs-name,
+    .hljs-section {
+      color: var(--color-text-default);
+    }
+    .hljs-comment,
+    .hljs-quote,
+    .hljs-meta {
+      color: var(--color-text-secondary);
+    }
+  }
+
+  &__codecard-head {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  &__codecard-lang {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+
+  &__pm {
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--color-border-default);
+  }
+
+  &__pm-opt {
+    background: transparent;
+    border: 0;
+    padding: 3px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+
+    &--active {
+      background-color: var(--color-icon-action);
+      color: #ffffff;
+    }
+  }
+}

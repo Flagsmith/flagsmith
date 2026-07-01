@@ -117,6 +117,19 @@
       "feature_state_value": null,
       "featurestate_uuid": "fe8067b9-efef-4f02-a6d9-0d1ed901f7fa",
       "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1468106,
+      "enabled": true,
+      "feature": {
+        "id": 216082,
+        "name": "feature_lifecycle",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "93aeeaf9-492a-4fbf-badd-7dafb26cb553",
+      "multivariate_feature_state_values": []
     }
   ],
   "id": 0,

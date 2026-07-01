@@ -4,6 +4,7 @@ import httpx
 from common.core.otel import add_otel_trace_context
 from opentelemetry import trace
 from opentelemetry.sdk.trace import ReadableSpan
+from pydantic import HttpUrl
 from pytest_mock import MockerFixture
 
 from flagsmith_mcp import config, constants, telemetry
@@ -114,6 +115,40 @@ def test_client_info_span_processor__outside_request_context__service_identity_o
     # Then
     span.set_attribute.assert_called_once_with(
         "flagsmith.client.name", constants.FLAGSMITH_CLIENT_NAME
+    )
+
+
+def test_setup_sentry__no_dsn__init_not_called(mocker: MockerFixture) -> None:
+    # Given
+    mocker.patch.dict(os.environ, {}, clear=True)
+    sentry_sdk_mock = mocker.patch.object(telemetry, "sentry_sdk", autospec=True)
+    empty_settings = config.Settings()
+
+    # When
+    telemetry.setup_sentry(empty_settings)
+
+    # Then
+    sentry_sdk_mock.init.assert_not_called()
+
+
+def test_setup_sentry__dsn_set__initialises_error_capture(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch.dict(os.environ, {}, clear=True)
+    sentry_sdk_mock = mocker.patch.object(telemetry, "sentry_sdk", autospec=True)
+    settings = config.Settings(
+        sentry_dsn=HttpUrl("https://public@sentry.example/1"),
+        environment="staging",
+    )
+
+    # When
+    telemetry.setup_sentry(settings)
+
+    # Then
+    sentry_sdk_mock.init.assert_called_once_with(
+        dsn="https://public@sentry.example/1",
+        environment="staging",
     )
 
 

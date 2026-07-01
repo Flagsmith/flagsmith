@@ -44,7 +44,7 @@ dependencies = [
     "drf-writable-nested>=0.6.2,<0.7.0",
     "django-filter>=2.4.0,<2.5.0",
     "flagsmith-flag-engine>=10.1.0,<11.0.0",
-    "flagsmith-sql-flag-engine>=0.1.0,<0.2.0",
+    "flagsmith-sql-flag-engine>=0.1.2,<0.2.0",
     "django-clickhouse-backend>=1.4,<2.0",
     "clickhouse-driver",
     "boto3>=1.35.95,<1.36.0",
@@ -74,7 +74,7 @@ dependencies = [
     "hubspot-api-client>=12.0.0,<13.0.0",
     "djangorestframework-dataclasses>=1.3.1,<2.0.0",
     "pyotp>=2.9.0,<3.0.0",
-    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.9.1,<4",
+    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.10.1,<4",
     "django-stubs>=5.1.3,<6.0.0",
     "tzdata>=2024.1,<2025.0.0",
     "djangorestframework-simplejwt>=5.5.1,<6.0.0",
@@ -86,7 +86,7 @@ dependencies = [
 
 [project.optional-dependencies]
 private = [
-    "flagsmith-private>=0.9.0,<1",
+    "flagsmith-private>=0.10.1,<1",
 ]
 dev = [
     "django-test-migrations>=1.2.0,<2.0.0",
@@ -156,6 +156,9 @@ explicit = true
 [tool.uv.sources]
 flagsmith-private = { index = "flagsmith-pypi-production" }
 clickhouse-driver = { git = "https://github.com/Flagsmith/clickhouse-driver", branch = "newjson" }
+# TODO: Revert to the PyPI release once a version closing
+# https://github.com/jayvynl/django-clickhouse-backend/issues/154 is published.
+django-clickhouse-backend = { git = "https://github.com/jayvynl/django-clickhouse-backend", rev = "d884c7d" }
 
 [tool.uv]
 required-version = ">=0.11.18"  # Ensure this matches the version in .pre-commit-config.yaml
@@ -484,6 +487,9 @@ addopts = [
 ]
 console_output_style = 'count'
 log_level = 'INFO'
+markers = [
+  "clickhouse: test requires a live ClickHouse database (see the clickhouse_db fixture)",
+]
 
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]

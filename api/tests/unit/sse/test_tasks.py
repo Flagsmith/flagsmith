@@ -1,5 +1,5 @@
 from datetime import datetime
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 from pytest_django import DjangoAssertNumQueries
@@ -94,9 +94,10 @@ def test_get_auth_header__token_not_set__raises_sse_auth_token_not_set(settings)
 
 
 def test_update_sse_usage__valid_and_invalid_logs__writes_only_valid_to_influxdb(  # type: ignore[no-untyped-def]
-    mocker: MockerFixture,
     environment: Environment,
     django_assert_num_queries: DjangoAssertNumQueries,
+    mock_influxdb_client: Mock,
+    mocker: MockerFixture,
     settings: SettingsWrapper,
 ):
     # Given - two valid logs
@@ -113,7 +114,6 @@ def test_update_sse_usage__valid_and_invalid_logs__writes_only_valid_to_influxdb
     influxdb_bucket = "test_bucket"
     settings.INFLUXDB_BUCKET = influxdb_bucket
 
-    mocked_influx_db_client = mocker.patch("sse.tasks.influxdb_client")
     mocked_influx_point = mocker.patch("sse.tasks.Point")
 
     # When
@@ -155,7 +155,7 @@ def test_update_sse_usage__valid_and_invalid_logs__writes_only_valid_to_influxdb
 
     # Only valid logs were written to InfluxDB
     write_method = (
-        mocked_influx_db_client.write_api.return_value.__enter__.return_value.write
+        mock_influxdb_client.write_api.return_value.__enter__.return_value.write
     )
 
     assert write_method.call_count == 1

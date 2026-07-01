@@ -1,20 +1,31 @@
 from __future__ import annotations
 
 import typing
+from dataclasses import replace
 from functools import lru_cache
 
 import structlog
 from clickhouse_driver import Client
 from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
+from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
+from flag_engine.segments.constants import PERCENTAGE_SPLIT
+from rest_framework.exceptions import ValidationError
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.dataclasses import AuthorData
+from environments.tasks import rebuild_environment_document
 from experimentation.constants import (
+    CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
     EXPOSURE_EVENT_NAME,
     EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
+    RESULTS_MIN_CONVERSIONS_PER_VARIANT,
+    RESULTS_MIN_IDENTITIES_PER_VARIANT,
+    SRM_MIN_TOTAL_IDENTITIES,
     WAREHOUSE_CONNECTION_FLAG,
 )
 from experimentation.dataclasses import (
@@ -22,15 +33,39 @@ from experimentation.dataclasses import (
     ExposuresSummary,
     ExposuresTimeseries,
     ExposuresTimeseriesPoint,
+    MetricResult,
+    MetricSpec,
+    ResultsAggregates,
+    ResultsSummary,
+    RolloutSpec,
     WarehouseEventStats,
 )
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
     ExperimentStatus,
+    MetricAggregation,
+    MetricDirection,
     WarehouseConnectionStatus,
     WarehouseType,
 )
+from experimentation.results_query import _EXPOSURES_CTE, ResultsQueryBuilder
+from experimentation.stats import (
+    Inference,
+    VariantStats,
+    compare_to_control,
+    srm_p_value,
+)
+from features.models import FeatureState
+from features.value_types import BOOLEAN, INTEGER, STRING
+from features.versioning.dataclasses import FlagChangeSet
+from features.versioning.versioning_service import (
+    update_flag,
+    update_multivariate_values,
+)
 from integrations.flagsmith.client import get_openfeature_client
+from segments.models import Condition, Segment, SegmentRule
+
+_ROLLOUT_VALUE_TYPE = {INTEGER: "integer", STRING: "string", BOOLEAN: "boolean"}
 
 if typing.TYPE_CHECKING:
     from collections.abc import Sequence
@@ -103,23 +138,9 @@ def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
     )
 
 
-# Events are delivered at-least-once; first-exposure dedup keeps duplicates
-# from inflating identity counts.
-EXPOSURE_BUCKETS_QUERY = """
-WITH exposures AS (
-    SELECT
-        identifier,
-        if(uniqExact(value) > 1, '', any(value)) AS variant,
-        uniqExact(value) > 1 AS quarantined,
-        min(timestamp) AS first_exposure
-    FROM events
-    WHERE environment_key = %(environment_key)s
-        AND event = %(exposure_event)s
-        AND feature_name = %(feature_name)s
-        AND timestamp >= %(window_start)s
-        AND timestamp < %(window_end)s
-    GROUP BY identifier
-)
+EXPOSURE_BUCKETS_QUERY = (
+    _EXPOSURES_CTE
+    + """
 SELECT
     quarantined,
     variant,
@@ -129,6 +150,7 @@ FROM exposures
 GROUP BY quarantined, variant, bucket
 ORDER BY bucket
 """
+)
 
 _EXPOSURE_BUCKET_FUNCTIONS: dict[str, str] = {
     "hour": "toStartOfHour",
@@ -227,6 +249,199 @@ def get_exposure_buckets(
     ]
 
 
+def get_metric_variant_stats(
+    *,
+    environment_key: str,
+    feature_name: str,
+    window_start: datetime,
+    window_end: datetime,
+    specs: Sequence[MetricSpec],
+) -> ResultsAggregates:
+    """Run the warehouse query, returning per-variant identity counts and, per
+    metric, per-variant sufficient statistics."""
+    builder = ResultsQueryBuilder(specs)
+    params: dict[str, object] = {
+        "environment_key": environment_key,
+        "exposure_event": EXPOSURE_EVENT_NAME,
+        "feature_name": feature_name,
+        "window_start": window_start,
+        "window_end": window_end,
+    }
+    builder.add_metric_params(params)
+
+    rows, columns = _get_clickhouse_client().execute(
+        builder.build_query(), params, with_column_types=True
+    )
+    exposure_counts, metric_stats = builder.decode_rows(
+        rows, [name for name, _type in columns]
+    )
+
+    return ResultsAggregates(
+        specs=list(specs),
+        exposure_counts=exposure_counts,
+        metric_stats=metric_stats,
+    )
+
+
+def build_results_summary(
+    aggregates: ResultsAggregates,
+    *,
+    expected_shares: dict[str, float],
+) -> ResultsSummary:
+    exposure_counts = aggregates.exposure_counts
+    total = sum(exposure_counts.values())
+    if expected_shares and total >= SRM_MIN_TOTAL_IDENTITIES:
+        srm = srm_p_value(
+            [exposure_counts.get(variant, 0) for variant in expected_shares],
+            list(expected_shares.values()),
+        )
+    else:
+        srm = None
+    return ResultsSummary(
+        srm_p_value=srm,
+        metrics=[
+            MetricResult(
+                metric_id=spec.metric_id,
+                variants=aggregates.metric_stats.get(spec.metric_id, {}),
+                inference=_metric_inference(
+                    spec, aggregates.metric_stats.get(spec.metric_id, {})
+                ),
+            )
+            for spec in aggregates.specs
+        ],
+    )
+
+
+def compute_results_summary(
+    experiment: "Experiment",
+    *,
+    window_start: "datetime",
+    window_end: "datetime",
+) -> ResultsSummary:
+    """Gather an experiment's metric statistics from the warehouse and reduce
+    them to the stored results payload."""
+    specs = _experiment_metric_specs(experiment)
+    aggregates = get_metric_variant_stats(
+        environment_key=experiment.environment.api_key,
+        feature_name=experiment.feature.name,
+        window_start=window_start,
+        window_end=window_end,
+        specs=specs,
+    )
+    return build_results_summary(
+        aggregates,
+        expected_shares=_expected_variant_shares(experiment),
+    )
+
+
+def _experiment_metric_specs(experiment: "Experiment") -> list[MetricSpec]:
+    return [
+        MetricSpec(
+            metric_id=experiment_metric.metric_id,
+            event=experiment_metric.metric.definition["event"],
+            aggregation=experiment_metric.metric.aggregation,
+            lower_is_better=(
+                experiment_metric.metric.direction == MetricDirection.DOWN
+            ),
+        )
+        for experiment_metric in experiment.experiment_metrics.select_related("metric")
+    ]
+
+
+def _expected_variant_shares(experiment: "Experiment") -> dict[str, float]:
+    """The traffic split SRM tests against: each multivariate option's
+    environment allocation, with ``control`` taking the unallocated remainder.
+    Empty when the feature has no usable allocations, skipping the SRM check."""
+    # TODO: read the split from the percentage-split segment override feature
+    # state once that's implemented, rather than the environment default.
+    feature_state = (
+        FeatureState.objects.get_live_feature_states(
+            environment=experiment.environment,
+            additional_filters=Q(feature_segment__isnull=True, identity__isnull=True),
+            feature_id=experiment.feature_id,
+        )
+        .prefetch_related(
+            "multivariate_feature_state_values__multivariate_feature_option"
+        )
+        # Highest id is the current version, matching how Environment selects
+        # active feature states (Max("id")); the default ordering is ascending.
+        .order_by("-id")
+        .first()
+    )
+    if feature_state is None:
+        return {}
+
+    shares: dict[str, float] = {}
+    allocated = 0.0
+    for mv_value in feature_state.multivariate_feature_state_values.all():
+        key = mv_value.multivariate_feature_option.key
+        if key is None:
+            # An unkeyed option's traffic can't be attributed to a variant;
+            # counting it as control would inflate control's expected share and
+            # raise a false SRM alarm, so skip the check entirely.
+            logger.error(
+                "srm.unkeyed_variant",
+                experiment__id=experiment.id,
+                environment__id=experiment.environment_id,
+                feature__id=experiment.feature_id,
+            )
+            return {}
+        shares[key] = mv_value.percentage_allocation / 100
+        allocated += mv_value.percentage_allocation
+    if not shares:
+        return {}
+    if allocated > 100:
+        # A misconfigured feature whose options over-allocate; control's share
+        # would be negative, so there's no valid split to test against.
+        logger.error(
+            "srm.overallocated",
+            experiment__id=experiment.id,
+            environment__id=experiment.environment_id,
+            feature__id=experiment.feature_id,
+        )
+        return {}
+    shares[CONTROL_VARIANT_KEY] = (100 - allocated) / 100
+    return shares
+
+
+def _metric_inference(
+    spec: MetricSpec,
+    variants: dict[str, VariantStats],
+) -> dict[str, Inference | None]:
+    control = variants.get(CONTROL_VARIANT_KEY)
+    return {
+        variant_key: _infer_treatment(spec, control, treatment)
+        for variant_key, treatment in variants.items()
+        if variant_key != CONTROL_VARIANT_KEY
+    }
+
+
+def _infer_treatment(
+    spec: MetricSpec,
+    control: VariantStats | None,
+    treatment: VariantStats,
+) -> Inference | None:
+    # Product floor for showing a result at all; compare_to_control applies its
+    # own independent guards (e.g. zero control mean) on top of this.
+    if (
+        control is None
+        or control.n < RESULTS_MIN_IDENTITIES_PER_VARIANT
+        or treatment.n < RESULTS_MIN_IDENTITIES_PER_VARIANT
+    ):
+        return None
+    if spec.aggregation == MetricAggregation.OCCURRENCE and (
+        control.sum < RESULTS_MIN_CONVERSIONS_PER_VARIANT
+        or treatment.sum < RESULTS_MIN_CONVERSIONS_PER_VARIANT
+    ):
+        return None
+    inference = compare_to_control(control, treatment)
+    if inference is not None and spec.lower_is_better:
+        # "Winning" means moving the metric the good way; for a lower-is-better
+        # metric that's a fall, so the chance of winning is the chance lift < 0.
+        inference = replace(inference, chance_to_win=1.0 - inference.chance_to_win)
+    return inference
+
+
 def _resolve_audit_log_author(
     user: FFAdminUser,
 ) -> dict[str, int | None]:
@@ -310,6 +525,184 @@ def transition_experiment_status(
     experiment.save()
     create_experiment_audit_log(experiment, user, action=target_status)
     return experiment
+
+
+def _create_rollout_segment(
+    experiment: Experiment, rollout_percentage: float
+) -> Segment:
+    segment: Segment = Segment.objects.create(
+        name=f"experiment-{experiment.id}-rollout",
+        project=experiment.feature.project,
+        is_system_segment=True,
+    )
+    rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(
+        rule=rule,
+        operator=PERCENTAGE_SPLIT,
+        property="$.identity.key",
+        value=str(rollout_percentage),
+    )
+    return segment
+
+
+def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
+    option_ids = [v.multivariate_feature_option_id for v in spec.multivariate_values]
+    if len(option_ids) != len(set(option_ids)):
+        raise ValidationError("Multivariate options must be unique")
+    valid_option_ids = set(
+        experiment.feature.multivariate_options.values_list("id", flat=True)
+    )
+    if invalid := set(option_ids) - valid_option_ids:
+        raise ValidationError(
+            f"Multivariate options {sorted(invalid)} do not belong to the feature"
+        )
+    total = sum(v.percentage_allocation for v in spec.multivariate_values)
+    if total > 100:
+        raise ValidationError(
+            f"Multivariate allocations must not exceed 100%, got {total}%."
+        )
+
+
+def _sync_rollout_segment(experiment: Experiment, rollout_percentage: float) -> Segment:
+    segment = experiment.rollout_segment
+    if segment is not None:
+        condition = Condition.objects.get(
+            rule__segment=segment, operator=PERCENTAGE_SPLIT
+        )
+        condition.value = str(rollout_percentage)
+        condition.save()
+        return segment
+    segment = _create_rollout_segment(experiment, rollout_percentage)
+    experiment.rollout_segment = segment
+    experiment.save()
+    return segment
+
+
+def _get_live_rollout_override(experiment: Experiment) -> FeatureState | None:
+    return (
+        FeatureState.objects.get_live_feature_states(
+            environment=experiment.environment,
+            additional_filters=Q(
+                feature_segment__segment_id=experiment.rollout_segment_id,
+                identity__isnull=True,
+            ),
+            feature_id=experiment.feature_id,
+        )
+        .order_by("-id")
+        .first()
+    )
+
+
+def _update_live_feature_state(
+    feature_state: FeatureState, change_set: FlagChangeSet
+) -> None:
+    feature_state.enabled = change_set.enabled
+    feature_state.save()
+    feature_state.feature_state_value.set_value(
+        change_set.feature_state_value, change_set.type_
+    )
+    feature_state.feature_state_value.save()
+    update_multivariate_values(feature_state, change_set.multivariate_values)
+
+
+def _update_rollout_in_place(experiment: Experiment, change_set: FlagChangeSet) -> None:
+    """Write the rollout-segment override, keeping variant assignment stable.
+
+    Under v2 versioning, ``update_flag`` clones the override into a fresh feature
+    state on every call. Since the multivariate split is salted on the feature
+    state id, that would re-randomise control/variant for already-enrolled
+    identities on each rollout update. Once the override exists, mutate it in
+    place instead and rebuild the environment document by hand (no version is
+    published). Creating the override, and v1 versioning, still go through
+    ``update_flag``, which already reuses the feature state.
+
+    This is a temporary solution until we find a permanent fix for the
+    underlying salting issue: https://github.com/Flagsmith/flagsmith/issues/7913
+    """
+    if experiment.environment.use_v2_feature_versioning and (
+        override := _get_live_rollout_override(experiment)
+    ):
+        _update_live_feature_state(override, change_set)
+        rebuild_environment_document.delay(
+            kwargs={"environment_id": experiment.environment_id}
+        )
+        return
+    update_flag(experiment.environment, experiment.feature, change_set)
+
+
+def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
+    if experiment.status == ExperimentStatus.COMPLETED:
+        raise ValidationError(
+            f"Cannot change the rollout of a {experiment.status} experiment."
+        )
+    validate_rollout_spec(experiment, spec)
+    with transaction.atomic():
+        segment = _sync_rollout_segment(experiment, spec.rollout_percentage)
+        _update_rollout_in_place(
+            experiment,
+            FlagChangeSet(
+                author=spec.author,
+                enabled=spec.enabled,
+                feature_state_value=spec.feature_state_value,
+                type_=spec.value_type,
+                segment_id=segment.id,
+                multivariate_values=spec.multivariate_values,
+            ),
+        )
+
+
+def get_experiment_rollout(experiment: Experiment) -> dict[str, typing.Any] | None:
+    segment_id = experiment.rollout_segment_id
+    if segment_id is None:
+        return None
+
+    feature_state = FeatureState.objects.get_live_feature_states(
+        environment=experiment.environment,
+        additional_filters=Q(
+            feature_segment__segment_id=segment_id, identity__isnull=True
+        ),
+        feature_id=experiment.feature_id,
+    ).latest("id")
+
+    condition = Condition.objects.get(
+        rule__segment_id=segment_id, operator=PERCENTAGE_SPLIT
+    )
+    value = feature_state.feature_state_value
+    return {
+        "enabled": feature_state.enabled,
+        "rollout_percentage": float(condition.value or 0),
+        "feature_state_value": {
+            "type": _ROLLOUT_VALUE_TYPE.get(value.type or STRING, "string"),
+            "value": (
+                str(value.value).lower() if value.type == BOOLEAN else str(value.value)
+            ),
+        },
+        "multivariate_feature_state_values": [
+            {
+                "multivariate_feature_option": mv.multivariate_feature_option_id,
+                "percentage_allocation": mv.percentage_allocation,
+            }
+            for mv in feature_state.multivariate_feature_state_values.all()
+        ],
+    }
+
+
+def enable_experiment_rollout(experiment: Experiment, author: AuthorData) -> None:
+    rollout = get_experiment_rollout(experiment)
+    if rollout is None or rollout["enabled"]:
+        return
+
+    value = rollout["feature_state_value"]
+    _update_rollout_in_place(
+        experiment,
+        FlagChangeSet(
+            author=author,
+            enabled=True,
+            feature_state_value=value["value"],
+            type_=value["type"],
+            segment_id=experiment.rollout_segment_id,
+        ),
+    )
 
 
 def mark_warehouse_pending_connection(

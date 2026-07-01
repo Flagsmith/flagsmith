@@ -29,6 +29,7 @@ const MeasurementStep: FC<MeasurementStepProps> = ({
   return (
     <div className='d-flex flex-column gap-4'>
       <ContentCard
+        background='white'
         title='Metrics'
         description='Select the primary metric this experiment will be judged on.'
       >
