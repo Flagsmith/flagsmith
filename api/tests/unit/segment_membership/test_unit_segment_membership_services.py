@@ -1,12 +1,15 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytest
 from common.test_tools import RunTasksFixture
 from django.db import connections
+from django.utils import timezone
 from flag_engine.segments.constants import EQUAL
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from task_processor.models import Task
+from task_processor.task_run_method import TaskRunMethod
 
 from environments.models import Environment
 from organisations.models import Organisation
@@ -544,3 +547,76 @@ def test_enqueue_membership_refresh__delay_until__forwards_delay_to_task(
     refresh_mock.delay.assert_called_once_with(
         args=(project.id,), delay_until=delay_until
     )
+
+
+def test_enqueue_membership_refresh__pending_scheduled_sooner__reschedules_to_delay_until(
+    settings: SettingsWrapper,
+    project: Project,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    settings.TASK_RUN_METHOD = TaskRunMethod.TASK_PROCESSOR
+    sooner = timezone.now()
+    later = sooner + timedelta(seconds=120)
+    refresh_project_segment_counts.delay(args=(project.id,), delay_until=sooner)
+
+    # When
+    enqueue_membership_refresh(project, delay_until=later)
+
+    # Then
+    # the pending task is pushed out rather than a second one being enqueued
+    task = Task.objects.get(
+        task_identifier=refresh_project_segment_counts.task_identifier,
+        serialized_args=Task.serialize_data((project.id,)),
+    )
+    assert task.scheduled_for == later
+
+
+def test_enqueue_membership_refresh__pending_scheduled_later__leaves_schedule(
+    settings: SettingsWrapper,
+    project: Project,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    settings.TASK_RUN_METHOD = TaskRunMethod.TASK_PROCESSOR
+    later = timezone.now() + timedelta(hours=1)
+    refresh_project_segment_counts.delay(args=(project.id,), delay_until=later)
+
+    # When
+    enqueue_membership_refresh(
+        project, delay_until=timezone.now() + timedelta(seconds=120)
+    )
+
+    # Then
+    task = Task.objects.get(
+        task_identifier=refresh_project_segment_counts.task_identifier,
+        serialized_args=Task.serialize_data((project.id,)),
+    )
+    assert task.scheduled_for == later
+
+
+def test_enqueue_membership_refresh__pending_and_no_delay__leaves_schedule(
+    settings: SettingsWrapper,
+    project: Project,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    settings.TASK_RUN_METHOD = TaskRunMethod.TASK_PROCESSOR
+    scheduled = timezone.now() + timedelta(seconds=120)
+    refresh_project_segment_counts.delay(args=(project.id,), delay_until=scheduled)
+
+    # When
+    enqueue_membership_refresh(project, delay_until=None)
+
+    # Then
+    task = Task.objects.get(
+        task_identifier=refresh_project_segment_counts.task_identifier,
+        serialized_args=Task.serialize_data((project.id,)),
+    )
+    assert task.scheduled_for == scheduled

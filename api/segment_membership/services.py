@@ -5,6 +5,7 @@ from typing import Any, Iterator
 import structlog
 from django.db import connections
 from django.db.backends.utils import CursorWrapper
+from django.db.models import Q
 from flag_engine.context.types import EvaluationContext
 from flagsmith_sql_flag_engine import TranslateContext, translate_segment
 from flagsmith_sql_flag_engine.dialects import ClickHouseDialect
@@ -39,22 +40,29 @@ def enqueue_membership_refresh(
 ) -> None:
     """Queue a per-project segment membership count refresh.
 
-    Pass `delay_until` to schedule the refresh for a future time.
+    Pass `delay_until` to schedule the refresh for a future time, e.g. to let an
+    Edge CDC tombstone land in ClickHouse before recounting.
 
-    No-op when the org has the feature off, or when a refresh for the project
-    is already pending or running.
+    No-op when the org has the feature off, or when a refresh for the project is
+    already pending. A pending refresh scheduled sooner than `delay_until` is
+    pushed out to it.
     """
     if not is_membership_enabled(project.organisation):
         return
 
     from segment_membership.tasks import refresh_project_segment_counts
 
-    if Task.objects.filter(
+    pending = Task.objects.filter(
         task_identifier=refresh_project_segment_counts.task_identifier,
         completed=False,
         num_failures__lt=3,
         serialized_args=Task.serialize_data((project.id,)),
-    ).exists():
+    )
+    if pending.exists():
+        if delay_until is not None:
+            pending.filter(
+                Q(scheduled_for__isnull=True) | Q(scheduled_for__lt=delay_until),
+            ).update(scheduled_for=delay_until)
         return
 
     refresh_project_segment_counts.delay(
