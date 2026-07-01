@@ -612,9 +612,9 @@ def _update_rollout_in_place(experiment: Experiment, change_set: FlagChangeSet) 
     state on every call. Since the multivariate split is salted on the feature
     state id, that would re-randomise control/variant for already-enrolled
     identities on each rollout update. Once the override exists, mutate it in
-    place instead and rebuild the environment document by hand (no version is
-    published). Creating the override, and v1 versioning, still go through
-    ``update_flag``, which already reuses the feature state.
+    place instead (no version is published). Creating the override, and v1
+    versioning, still go through ``update_flag``, which already reuses the
+    feature state.
 
     This is a temporary solution until we find a permanent fix for the
     underlying salting issue: https://github.com/Flagsmith/flagsmith/issues/7913
@@ -623,12 +623,6 @@ def _update_rollout_in_place(experiment: Experiment, change_set: FlagChangeSet) 
         override := _get_live_rollout_override(experiment)
     ):
         _update_live_feature_state(override, change_set)
-        environment_id = experiment.environment_id
-        transaction.on_commit(
-            lambda env_id=environment_id: rebuild_environment_document.delay(
-                kwargs={"environment_id": env_id}
-            )
-        )
         return
     update_flag(experiment.environment, experiment.feature, change_set)
 
@@ -639,6 +633,7 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
             f"Cannot change the rollout of a {experiment.status} experiment."
         )
     validate_rollout_spec(experiment, spec)
+    environment_id = experiment.environment_id
     with transaction.atomic():
         segment = _sync_rollout_segment(experiment, spec.rollout_percentage)
         _update_rollout_in_place(
@@ -651,6 +646,12 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
                 segment_id=segment.id,
                 multivariate_values=spec.multivariate_values,
             ),
+        )
+        # Segment condition changes don't trigger a rebuild on their own.
+        transaction.on_commit(
+            lambda: rebuild_environment_document.delay(
+                kwargs={"environment_id": environment_id}
+            )
         )
 
 

@@ -1,5 +1,6 @@
 from dataclasses import asdict
 from datetime import datetime, timezone
+from unittest.mock import MagicMock
 
 import pytest
 from django.db.models import Q
@@ -43,6 +44,7 @@ from features.value_types import STRING
 from features.versioning.dataclasses import MultivariateValueChangeSet
 from segments.models import Condition
 from users.models import FFAdminUser
+from util.mappers import map_environment_to_environment_document
 
 
 def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
@@ -1506,6 +1508,129 @@ def test_apply_experiment_rollout__update_flag_fails__rolls_back(
         rule__segment=experiment.rollout_segment, operator=PERCENTAGE_SPLIT
     )
     assert condition.value == "20.0"
+
+
+def _rollout_percentage_in_written_document(
+    mock_dynamo_env_wrapper: MagicMock,
+) -> str | None:
+    environments = mock_dynamo_env_wrapper.write_environments.call_args[0][0]
+    document = map_environment_to_environment_document(list(environments)[0])
+
+    values: list[str] = []
+
+    def _walk(node: object) -> None:
+        if isinstance(node, dict):
+            if node.get("operator") == PERCENTAGE_SPLIT:
+                values.append(node.get("value"))  # type: ignore[arg-type]
+            for child in node.values():
+                _walk(child)
+        elif isinstance(node, list):
+            for child in node:
+                _walk(child)
+
+    _walk(document)
+    return values[0] if values else None
+
+
+def test_apply_experiment_rollout__update_under_v2__rebuilds_environment_document(  # type: ignore[no-untyped-def]
+    environment_v2_versioning: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+    django_capture_on_commit_callbacks,
+) -> None:
+    # Given
+    mock_dynamo_env_wrapper = mocker.patch("environments.models.environment_wrapper")
+    environment = environment_v2_versioning
+    environment.project.enable_dynamo_db = True
+    environment.project.save()
+
+    option_a, option_b, _ = multivariate_options
+    experiment = Experiment.objects.create(
+        environment=environment,
+        feature=multivariate_feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.RUNNING,
+    )
+
+    def _spec(rollout_percentage: float) -> RolloutSpec:
+        return RolloutSpec(
+            enabled=True,
+            rollout_percentage=rollout_percentage,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+            author=AuthorData(user=admin_user),
+        )
+
+    with django_capture_on_commit_callbacks(execute=True):
+        services.apply_experiment_rollout(experiment, _spec(20.0))
+    experiment.refresh_from_db()
+
+    assert _rollout_percentage_in_written_document(mock_dynamo_env_wrapper) == "20.0"
+
+    # When
+    mock_dynamo_env_wrapper.reset_mock()
+    with django_capture_on_commit_callbacks(execute=True):
+        services.apply_experiment_rollout(experiment, _spec(15.0))
+
+    # Then
+    assert mock_dynamo_env_wrapper.write_environments.called
+    assert _rollout_percentage_in_written_document(mock_dynamo_env_wrapper) == "15.0"
+
+
+def test_apply_experiment_rollout__update_under_v1__rebuilds_environment_document(  # type: ignore[no-untyped-def]
+    environment: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+    django_capture_on_commit_callbacks,
+) -> None:
+    # Given
+    mock_dynamo_env_wrapper = mocker.patch("environments.models.environment_wrapper")
+    environment.project.enable_dynamo_db = True
+    environment.project.save()
+
+    option_a, option_b, _ = multivariate_options
+    experiment = Experiment.objects.create(
+        environment=environment,
+        feature=multivariate_feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.RUNNING,
+    )
+
+    def _spec(rollout_percentage: float) -> RolloutSpec:
+        return RolloutSpec(
+            enabled=True,
+            rollout_percentage=rollout_percentage,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+            author=AuthorData(user=admin_user),
+        )
+
+    with django_capture_on_commit_callbacks(execute=True):
+        services.apply_experiment_rollout(experiment, _spec(20.0))
+    experiment.refresh_from_db()
+
+    # When
+    mock_dynamo_env_wrapper.reset_mock()
+    with django_capture_on_commit_callbacks(execute=True):
+        services.apply_experiment_rollout(experiment, _spec(15.0))
+
+    # Then
+    assert mock_dynamo_env_wrapper.write_environments.called
+    assert _rollout_percentage_in_written_document(mock_dynamo_env_wrapper) == "15.0"
 
 
 def test_get_experiment_rollout__rollout_exists__returns_representation(
