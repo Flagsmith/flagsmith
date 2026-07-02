@@ -76,6 +76,66 @@ INSERTED_AT = datetime(2026, 5, 8, 12, 0, 0, tzinfo=timezone.utc)
                 "composite_key": "env_x_alice",
                 "created_date": "2026-05-08T00:00:00Z",
                 "identity_traits": [
+                    {"trait_key": "bigint", "trait_value": Decimal(2**63)},
+                ],
+            },
+            (
+                "env-key",
+                "alice",
+                "env_x_alice",
+                {"bigint": "9223372036854775808"},
+                INSERTED_AT,
+            ),
+            id="int above Int64 max stored as string",
+        ),
+        pytest.param(
+            {
+                "identity_uuid": UUID_A,
+                "identifier": "alice",
+                "environment_api_key": "env-key",
+                "composite_key": "env_x_alice",
+                "created_date": "2026-05-08T00:00:00Z",
+                "identity_traits": [
+                    {"trait_key": "bigint", "trait_value": Decimal(-(2**63) - 1)},
+                ],
+            },
+            (
+                "env-key",
+                "alice",
+                "env_x_alice",
+                {"bigint": "-9223372036854775809"},
+                INSERTED_AT,
+            ),
+            id="int below Int64 min stored as string",
+        ),
+        pytest.param(
+            {
+                "identity_uuid": UUID_A,
+                "identifier": "alice",
+                "environment_api_key": "env-key",
+                "composite_key": "env_x_alice",
+                "created_date": "2026-05-08T00:00:00Z",
+                "identity_traits": [
+                    {"trait_key": "bigint", "trait_value": Decimal(2**63 - 1)},
+                ],
+            },
+            (
+                "env-key",
+                "alice",
+                "env_x_alice",
+                {"bigint": 9223372036854775807},
+                INSERTED_AT,
+            ),
+            id="int at Int64 max kept as int",
+        ),
+        pytest.param(
+            {
+                "identity_uuid": UUID_A,
+                "identifier": "alice",
+                "environment_api_key": "env-key",
+                "composite_key": "env_x_alice",
+                "created_date": "2026-05-08T00:00:00Z",
+                "identity_traits": [
                     {"trait_key": "plan", "trait_value": "growth"},
                     {"trait_key": "team", "trait_value": "alpha"},
                 ],
