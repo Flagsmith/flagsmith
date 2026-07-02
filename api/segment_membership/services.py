@@ -7,7 +7,12 @@ from django.db import connections
 from django.db.backends.utils import CursorWrapper
 from django.db.models import Q
 from flag_engine.context.types import EvaluationContext
-from flagsmith_sql_flag_engine import TranslateContext, translate_segment
+from flagsmith_sql_flag_engine import (
+    Binder,
+    PyformatParamStyle,
+    TranslateContext,
+    translate_segment,
+)
 from flagsmith_sql_flag_engine.dialects import ClickHouseDialect
 from task_processor.models import Task
 
@@ -122,6 +127,12 @@ def compute_segment_counts_for_project(
         return []
 
     dialect = ClickHouseDialect()
+    # One binder across the whole UNION ALL: it mints unique placeholder
+    # names (p0, p1, …) per bound literal, so segment values — including
+    # regex patterns whose `%` would otherwise break clickhouse-driver's
+    # `query % params` substitution — travel as query parameters, never
+    # inlined into the SQL text.
+    binder = Binder(PyformatParamStyle())
     select_clauses: list[str] = []
     for seg in segments:
         translate_ctx = TranslateContext(
@@ -129,6 +140,7 @@ def compute_segment_counts_for_project(
                 environment={"key": "_count", "name": project.name}
             ),
             dialect=dialect,
+            binder=binder,
         )
         predicate = translate_segment(
             map_segment_to_segment_context(map_segment_to_engine(seg)),
@@ -155,7 +167,7 @@ def compute_segment_counts_for_project(
         return []
 
     sql = "\nUNION ALL\n".join(select_clauses)
-    cursor.execute(sql, {"env_keys": tuple(env_id_by_key)})
+    cursor.execute(sql, {"env_keys": tuple(env_id_by_key), **binder.params})
     rows: list[tuple[Any, ...]] = cursor.fetchall()
     membership_counts: list[SegmentMembershipCount] = []
     for row in rows:
@@ -186,11 +198,15 @@ def get_segment_members_page(
     Provide identifier as `cursor` to get a page after that identifier.
     Provide `q` to filter to identifiers containing it (case-insensitive).
     """
+    # See `compute_segment_counts_for_project`: the binder keeps segment
+    # values (regex patterns especially) out of the SQL text as bound params.
+    binder = Binder(PyformatParamStyle())
     translate_ctx = TranslateContext(
         evaluation_context=EvaluationContext(
             environment={"key": "_members", "name": segment.project.name}
         ),
         dialect=ClickHouseDialect(),
+        binder=binder,
     )
     predicate = translate_segment(
         map_segment_to_segment_context(map_segment_to_engine(segment)),
@@ -208,7 +224,11 @@ def get_segment_members_page(
         "i.environment_id = %(env_key)s",
         "i.is_deleted = false",
     ]
-    params: dict[str, Any] = {"env_key": environment.api_key, "limit": limit}
+    params: dict[str, Any] = {
+        "env_key": environment.api_key,
+        "limit": limit,
+        **binder.params,
+    }
     if cursor:
         conditions.append("i.identifier > %(cursor)s")
         params["cursor"] = cursor

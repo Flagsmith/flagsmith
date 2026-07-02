@@ -5,7 +5,7 @@ import pytest
 from common.test_tools import RunTasksFixture
 from django.db import connections
 from django.utils import timezone
-from flag_engine.segments.constants import EQUAL
+from flag_engine.segments.constants import EQUAL, REGEX
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from task_processor.models import Task
@@ -191,6 +191,17 @@ def matching_segment(segment: Segment) -> Segment:
     return segment
 
 
+@pytest.fixture
+def percent_regex_segment(segment: Segment) -> Segment:
+    # A REGEX condition whose pattern carries a literal `%`. The `[b%]`
+    # class still matches the seeded "bar" trait, while the `%` is what
+    # used to crash clickhouse-driver's `query % params` substitution
+    # when the pattern was inlined into the SQL text.
+    rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(rule=rule, property="foo", operator=REGEX, value="[b%]ar")
+    return segment
+
+
 @pytest.mark.clickhouse
 def test_get_segment_members_page__deleted_identity__excluded(
     segment_membership_identities: None,
@@ -278,6 +289,37 @@ def test_compute_segment_counts_for_project__deleted_identity__excluded_from_cou
     # Then
     assert len(counts) == 1
     assert counts[0].segment_id == matching_segment.id
+    assert counts[0].count == 2
+
+
+@pytest.mark.clickhouse
+def test_get_segment_members_page__regex_with_percent__returns_matches(
+    segment_membership_identities: None,
+    percent_regex_segment: Segment,
+    environment: Environment,
+) -> None:
+    # Given / When
+    members = get_segment_members_page(
+        percent_regex_segment, environment, cursor=None, limit=100
+    )
+
+    # Then
+    assert [member["identifier"] for member in members] == ["alice", "bob"]
+
+
+@pytest.mark.clickhouse
+def test_compute_segment_counts_for_project__regex_with_percent__counts_matches(
+    segment_membership_identities: None,
+    percent_regex_segment: Segment,
+    project: Project,
+) -> None:
+    # Given / When
+    with connections["clickhouse"].cursor() as cursor:
+        counts = compute_segment_counts_for_project(project, cursor)
+
+    # Then
+    assert len(counts) == 1
+    assert counts[0].segment_id == percent_regex_segment.id
     assert counts[0].count == 2
 
 

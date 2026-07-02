@@ -1556,7 +1556,7 @@ requires-dist = [
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
     { name = "flagsmith-flag-engine", specifier = ">=10.1.0,<11.0.0" },
     { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.10.1,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
-    { name = "flagsmith-sql-flag-engine", specifier = ">=0.1.3,<0.2.0" },
+    { name = "flagsmith-sql-flag-engine", specifier = ">=0.2.0,<0.3.0" },
     { name = "google-api-python-client", specifier = ">=1.12.5,<1.13.0" },
     { name = "google-re2", specifier = ">=1.0,<2.0.0" },
     { name = "gunicorn", specifier = ">=23.0.0,<23.1.0" },
@@ -1706,15 +1706,15 @@ wheels = [
 
 [[package]]
 name = "flagsmith-sql-flag-engine"
-version = "0.1.3"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "flagsmith-flag-engine" },
     { name = "jsonpath-rfc9535" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f4/bd/6647e7d6598b57b7edd4685fd28b27fb477a7bdf93525a1351cdd4fcdd86/flagsmith_sql_flag_engine-0.1.3.tar.gz", hash = "sha256:33b7203d25ded9f00c213910294030b6e102d34230c7fa51b43ccc9ec913f5c6", size = 17992, upload-time = "2026-07-01T19:08:46.985Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/34/961758e0946ffd430cf90480dce67fd7b548269749b174961d6380f2fb57/flagsmith_sql_flag_engine-0.2.0.tar.gz", hash = "sha256:38af827ba846795b04d7504e47498875bbfb6951c26177427b0e6378eaebed52", size = 19396, upload-time = "2026-07-02T17:40:02.645Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/13/1f/19219272e2b2ee3e44aca4c881c290b0399086c60c6733091d25f6faaa75/flagsmith_sql_flag_engine-0.1.3-py3-none-any.whl", hash = "sha256:6da33dc77636924a523df8c265a7e196fec886b5d0a87e5b37a3cb20e71dd77f", size = 21736, upload-time = "2026-07-01T19:08:45.767Z" },
+    { url = "https://files.pythonhosted.org/packages/22/59/6ea43aba79109cbd4feaad3623a7554d4364c1b825d1989ba6410764aa0f/flagsmith_sql_flag_engine-0.2.0-py3-none-any.whl", hash = "sha256:a30658d740a3c7f8111c3475005f8ec75a9f9ad7ce4ab58e4fd300364dca139c", size = 23742, upload-time = "2026-07-02T17:40:01.263Z" },
 ]
 
 [[package]]
