@@ -175,12 +175,41 @@ def refresh_all_segment_counts() -> None:
         return
 
     project_ids = Segment.live_objects.values_list("project_id", flat=True)
-    for project in (
+    num_orgs = (
+        Project.objects.filter(id__in=project_ids)
+        .values("organisation_id")
+        .distinct()
+        .count()
+    )
+    if not num_orgs:
+        return
+
+    org_spacing = timedelta(
+        hours=settings.SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS
+    ) / (num_orgs + 1)
+    project_spacing = timedelta(
+        seconds=settings.SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_SECONDS
+    )
+    now = timezone.now()
+
+    org_index = -1
+    project_index = 0
+    current_org_id = None
+    projects = (
         Project.objects.filter(id__in=project_ids)
         .select_related("organisation")
-        .iterator()
-    ):
-        enqueue_membership_refresh(project)
+        .order_by("organisation_id", "id")
+    )
+    for project in projects.iterator():
+        if project.organisation_id != current_org_id:
+            current_org_id = project.organisation_id
+            org_index += 1
+            project_index = 0
+        enqueue_membership_refresh(
+            project,
+            delay_until=now + org_spacing * org_index + project_spacing * project_index,
+        )
+        project_index += 1
 
 
 @register_task_handler(

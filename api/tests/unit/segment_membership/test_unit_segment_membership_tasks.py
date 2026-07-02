@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from datetime import timezone as dt_timezone
 from unittest.mock import MagicMock
 
@@ -13,6 +13,7 @@ from task_processor.models import Task
 from task_processor.task_run_method import TaskRunMethod
 
 from environments.models import Environment
+from organisations.models import Organisation
 from projects.models import Project
 from segment_membership import tasks
 from segment_membership.models import SegmentMembershipCount, SegmentMembershipSeed
@@ -394,8 +395,51 @@ def test_refresh_all_segment_counts__live_segment_projects__delegates_to_enqueue
     refresh_all_segment_counts()
 
     # Then
-    dispatched_ids = {call.args[0].id for call in enqueue.call_args_list}
-    assert dispatched_ids == {project.id, project_b.id}
+    calls = enqueue.call_args_list
+    assert {call.args[0].id for call in calls} == {project.id, project_b.id}
+    # enqueues are staggered across the refresh window, not fired all at once
+    delays = sorted(call.kwargs["delay_until"] for call in calls)
+    window = timedelta(
+        hours=settings.SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS
+    )
+    assert delays[0] < delays[1]
+    assert delays[-1] - delays[0] < window
+
+
+def test_refresh_all_segment_counts__multiple_orgs__staggers_by_org_then_project(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given org A with two live-segment projects and org B with one
+    project_a2 = Project.objects.create(name="a2", organisation=project.organisation)
+    Segment.objects.create(name="seg-a2", project=project_a2)
+    org_b = Organisation.objects.create(name="org-b")
+    project_b = Project.objects.create(name="b1", organisation=org_b)
+    Segment.objects.create(name="seg-b", project=project_b)
+    settings.CLICKHOUSE_ENABLED = True
+    # Distinct stagger window (< interval) so the assertion pins the code to the
+    # window setting, not the refresh interval.
+    settings.SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS = 6
+    settings.SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS = 3
+    settings.SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_SECONDS = 10
+    enqueue = mocker.patch.object(tasks, "enqueue_membership_refresh")
+
+    # When
+    refresh_all_segment_counts()
+
+    # Then
+    delay_by_id = {
+        call.args[0].id: call.kwargs["delay_until"] for call in enqueue.call_args_list
+    }
+    assert set(delay_by_id) == {project.id, project_a2.id, project_b.id}
+    # org A's projects cluster a project-stagger apart
+    org_a = sorted([delay_by_id[project.id], delay_by_id[project_a2.id]])
+    assert org_a[1] - org_a[0] == timedelta(seconds=10)
+    # org B sits a full window-slot (window / (orgs + 1)) away, not a project-stagger
+    org_spacing = timedelta(hours=3) / 3
+    assert abs(delay_by_id[project_b.id] - org_a[0]) == org_spacing
 
 
 def test_refresh_project_segment_counts__no_clickhouse_creds__skips(

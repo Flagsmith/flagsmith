@@ -1483,6 +1483,24 @@ CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
 SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS = env.int(
     "SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS", default=6
 )
+# The recurring refresh staggers its fan-out to avoid a burst of concurrent count
+# queries on ClickHouse: organisations are spread across this window, and within
+# an organisation projects are spread this many seconds apart. The window must
+# not exceed the refresh interval, or consecutive cycles would overlap.
+SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS = env.int(
+    "SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS", default=1
+)
+if (
+    SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS
+    > SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS
+):
+    raise ImproperlyConfigured(
+        "SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS must not exceed "
+        "SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS."
+    )
+SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_SECONDS = env.int(
+    "SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_SECONDS", default=10
+)
 SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS = env.int(
     "SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS",
     default=120,  # We can expect the identity deletion to propagate by T+120 seconds based on Edge CDC SLO.
