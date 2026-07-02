@@ -91,7 +91,7 @@ def test_push_snapshot__status_code__logs_expected_event(
     push_snapshot(
         base_url="https://cp.example.com/",
         snapshot=snapshot,
-        signature="sig",
+        signature="c2ln",
     )
 
     # Then
@@ -105,7 +105,7 @@ def test_push_snapshot__valid_snapshot__sends_bearer_authed_post(
     # Given
     mocked_post = mocker.patch("organisations.usage_reporting.services.requests.post")
     mocked_post.return_value.status_code = 201
-    signature = "abc+/=def=="
+    signature = "++++ABE="
 
     # When
     push_snapshot(
@@ -118,8 +118,8 @@ def test_push_snapshot__valid_snapshot__sends_bearer_authed_post(
     mocked_post.assert_called_once()
     (url,), kwargs = mocked_post.call_args
     assert url == "https://cp.example.com/v1/public/usage"
-    # The unpadded base64url token the Control Plane receives on the wire
-    assert kwargs["headers"]["Authorization"] == "Bearer YWJjKy89ZGVmPT0"
+    # The signature's raw bytes, unpadded base64url-encoded for the wire.
+    assert kwargs["headers"]["Authorization"] == "Bearer ----ABE"
     assert kwargs["headers"]["Content-Type"] == "application/json"
     assert json.loads(kwargs["data"]) == {
         "timestamp": "2026-06-18T08:00:00Z",
