@@ -37,6 +37,39 @@ class CustomEnvironmentFeatureVersionFeatureStateSerializer(
             + ("feature",)  # type: ignore[assignment]
         )
 
+    def create(self, validated_data: dict) -> "FeatureState":  # type: ignore[type-arg]
+        # A state created directly in a version may supersede an override the
+        # previous version already had (e.g. one deleted from this draft and
+        # recreated), so carry over the multivariate bucketing seed to keep
+        # variant assignment stable for enrolled identities.
+        if validated_data.get("mv_hashing_salt") is None and (
+            inherited_salt := self._get_inherited_mv_hashing_salt(validated_data)
+        ):
+            validated_data["mv_hashing_salt"] = inherited_salt
+        return super().create(validated_data)
+
+    def _get_inherited_mv_hashing_salt(
+        self,
+        validated_data: dict,  # type: ignore[type-arg]
+    ) -> int | None:
+        version: EnvironmentFeatureVersion | None = validated_data.get(
+            "environment_feature_version"
+        )
+        feature_segment_data = validated_data.get("feature_segment")
+        if version is None or feature_segment_data is None:
+            return None
+
+        previous_version = version.get_previous_version()
+        if previous_version is None:
+            return None
+
+        superseded: "FeatureState | None" = previous_version.feature_states.filter(
+            feature_segment__segment=feature_segment_data["segment"]
+        ).first()
+        if superseded is None:
+            return None
+        return superseded.get_mv_hashing_salt_for_successor()
+
     def save(self, **kwargs):  # type: ignore[no-untyped-def]
         response = super().save(**kwargs)  # type: ignore[no-untyped-call]
 
