@@ -677,9 +677,8 @@ class FeatureState(
         clone.id = None
         clone.uuid = uuid.uuid4()
         # Preserve the multivariate bucketing seed so that recreating this feature
-        # state does not re-bucket already-enrolled identities. If the source never
-        # had an explicit salt, capture its id (the seed used until now).
-        clone.mv_hashing_salt = self.mv_hashing_salt or self.id
+        # state does not re-bucket already-enrolled identities.
+        clone.mv_hashing_salt = self.get_mv_hashing_salt_for_successor()
 
         if self.feature_segment:
             # We can only create a new feature segment if we are cloning to another environment,
@@ -770,6 +769,45 @@ class FeatureState(
         key_name = self.get_feature_state_key_name(type_)
 
         return {"type": type_, key_name: parse_func(value)}
+
+    def get_mv_hashing_salt_for_successor(self) -> int:
+        """Return the multivariate bucketing seed a feature state superseding
+        this one must carry to keep variant assignment stable. If this state
+        never had an explicit salt, its id is the seed used until now.
+        See https://github.com/Flagsmith/flagsmith/issues/7913.
+        """
+        return self.mv_hashing_salt or self.id
+
+    def get_superseded_live_feature_state(self) -> typing.Optional["FeatureState"]:
+        """Return the live feature state of this state's lineage (same
+        environment, feature and segment) that this state supersedes when it
+        goes live. Only meaningful for v1 versioning; identity overrides have
+        no versioned lineage.
+        """
+        # A segment override's FeatureSegment row can be recreated with it, so
+        # match the lineage by its segment, not by the FeatureSegment row.
+        if self.feature_segment_id is None:
+            lineage_filter = Q(feature_segment__isnull=True)
+        else:
+            lineage_filter = Q(
+                feature_segment__segment_id=self.feature_segment.segment_id  # type: ignore[union-attr]
+            )
+
+        superseded: FeatureState | None = (
+            FeatureState.objects.filter(
+                lineage_filter,
+                environment_id=self.environment_id,
+                feature_id=self.feature_id,
+                identity__isnull=True,
+                version__isnull=False,
+                live_from__isnull=False,
+                live_from__lte=timezone.now(),
+            )
+            .exclude(id=self.id)
+            .order_by("-version")
+            .first()
+        )
+        return superseded
 
     def get_multivariate_feature_state_value(
         self, identity_hash_key: str

@@ -828,6 +828,35 @@ def test_feature_state_create__new_segment_override_under_v2__is_allowed(
     assert feature_state.mv_hashing_salt is None
 
 
+def test_get_superseded_live_feature_state__segment_override_draft__returns_live_override(
+    environment: Environment,
+    multivariate_feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given a live segment override, and an (uncommitted) draft feature state
+    # recreating it
+    feature_segment = FeatureSegment.objects.create(
+        feature=multivariate_feature, segment=segment, environment=environment
+    )
+    live_override = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        feature_segment=feature_segment,
+    )
+    draft = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        version=None,
+    )
+
+    # When
+    superseded = draft.get_superseded_live_feature_state()
+
+    # Then
+    assert superseded == live_override
+
+
 @mock.patch.object(FeatureState, "get_multivariate_feature_state_value")
 def test_get_feature_state_value__multivariate_feature__returns_mv_value(  # type: ignore[no-untyped-def]
     mock_get_mv_feature_state_value, environment, multivariate_feature, identity
