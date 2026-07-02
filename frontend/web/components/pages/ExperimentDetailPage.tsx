@@ -9,6 +9,7 @@ import {
 import { getHeadlineTotal } from 'components/experiments/results/derive'
 import ExperimentDetailHeader from 'components/experiments/results/ExperimentDetailHeader'
 import ExperimentConfiguration from 'components/experiments/results/ExperimentConfiguration'
+import ExperimentRecommendation from 'components/experiments/results/ExperimentRecommendation'
 import ExperimentSummaryScorecard from 'components/experiments/results/ExperimentSummaryScorecard'
 import ExperimentMetricScorecard from 'components/experiments/results/ExperimentMetricScorecard'
 import ExperimentExposuresPanel from 'components/experiments/results/ExperimentExposuresPanel'
@@ -85,6 +86,9 @@ const ExperimentDetailPage: FC = () => {
         environmentId={environmentId}
         experiment={experiment}
       />
+      {experiment.status !== 'created' && (
+        <ExperimentRecommendation experiment={experiment} results={results} />
+      )}
       <ExperimentConfiguration
         experiment={experiment}
         environmentId={environmentId}

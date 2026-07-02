@@ -1,7 +1,5 @@
 import { FC, useMemo } from 'react'
-import Icon from 'components/icons/Icon'
 import InfoMessage from 'components/InfoMessage'
-import { colorTextSuccess } from 'common/theme/tokens'
 import { BayesianResultsSummary, Experiment } from 'common/types/responses'
 import { getPrimaryMetric } from 'components/experiments/constants'
 import {
@@ -19,14 +17,16 @@ type ExperimentSummaryScorecardProps = {
   results?: BayesianResultsSummary
 }
 
-type SummaryStats = {
+export type SummaryStats = {
   winnerName: string
+  winnerColour: string
+  controlColour: string
   chanceToBest: string
   liftVsControl: string
   liftFavourable: boolean
 }
 
-const deriveSummary = (
+export const deriveSummary = (
   experiment: Experiment,
   results: BayesianResultsSummary,
 ): SummaryStats | null => {
@@ -39,13 +39,18 @@ const deriveSummary = (
   const winner = getWinningVariant(metricResult, identities)
   if (!winner) return null
 
+  const winnerIdentity = identities.find((v) => v.key === winner.key)
+  const controlIdentity = identities.find((v) => v.isControl)
+
   return {
     chanceToBest: `${Math.round(winner.chanceToWin * 100)}%`,
+    controlColour: controlIdentity?.colour ?? '',
     liftFavourable: isLiftFavourable(
       winner.inference.lift,
       metric.expected_direction,
     ),
     liftVsControl: formatLiftPct(winner.inference.lift),
+    winnerColour: winnerIdentity?.colour ?? '',
     winnerName: winner.name,
   }
 }
@@ -63,25 +68,11 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
 
   return (
     <>
-      {summary ? (
-        <div className='alert alert-success mb-3'>
-          <div className='d-flex align-items-center gap-2 mb-1'>
-            <Icon name='checkmark-circle' width={20} fill={colorTextSuccess} />
-            <span className='text-success fw-normal'>Recommendation</span>
-          </div>
-          <div>
-            <strong>{summary.winnerName}</strong> is outperforming{' '}
-            <strong>Control</strong> with {summary.chanceToBest} probability of
-            being the best variant.
-          </div>
-        </div>
-      ) : (
-        hasResults && (
-          <InfoMessage title='Collecting data'>
-            The experiment is still gathering data. Results will appear once
-            there is enough traffic for statistically meaningful analysis.
-          </InfoMessage>
-        )
+      {!summary && hasResults && (
+        <InfoMessage title='Collecting data'>
+          The experiment is still gathering data. Results will appear once there
+          is enough traffic for statistically meaningful analysis.
+        </InfoMessage>
       )}
       <div className='row g-3 mb-4'>
         <div className='col-md-3'>
