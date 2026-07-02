@@ -53,6 +53,13 @@ class ChangeRequestCommitService:
             if not fs.live_from or fs.live_from < now:
                 fs.live_from = now
 
+            # The draft is a brand new row about to replace the live feature
+            # state, so carry over the multivariate bucketing seed to keep
+            # variant assignment stable for enrolled identities.
+            if fs.mv_hashing_salt is None and fs.identity_id is None:
+                if superseded := fs.get_superseded_live_feature_state():
+                    fs.mv_hashing_salt = superseded.get_mv_hashing_salt_for_successor()
+
             fs.version = fs.get_next_version_number(
                 environment_id=fs.environment_id,  # type: ignore[arg-type]
                 feature_id=fs.feature_id,
@@ -61,7 +68,9 @@ class ChangeRequestCommitService:
             )
 
         if feature_states:
-            type(fs).objects.bulk_update(feature_states, ["live_from", "version"])
+            type(fs).objects.bulk_update(
+                feature_states, ["live_from", "version", "mv_hashing_salt"]
+            )
 
     def _publish_environment_feature_versions(
         self, published_by: "FFAdminUser"
