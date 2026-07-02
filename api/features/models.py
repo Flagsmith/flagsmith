@@ -705,9 +705,11 @@ class FeatureState(
         self.feature_state_value.clone(clone)
 
         if self.feature.type == MULTIVARIATE:
+            # Clone in id order so the new rows keep the same relative id order,
+            # which variant bucketing iterates over.
             mv_values = [
                 mv_value.clone(feature_state=clone, persist=False)
-                for mv_value in self.multivariate_feature_state_values.all()
+                for mv_value in self.multivariate_feature_state_values.order_by("id")
             ]
             MultivariateFeatureStateValue.objects.bulk_create(mv_values)
 
