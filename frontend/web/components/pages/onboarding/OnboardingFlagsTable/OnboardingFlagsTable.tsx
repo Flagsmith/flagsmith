@@ -4,6 +4,7 @@ import { Tag as TTag } from 'common/types/responses'
 import FeatureName from 'components/feature-summary/FeatureName'
 import Tag from 'components/tags/Tag'
 import Switch from 'components/Switch'
+import Icon from 'components/icons/Icon'
 import './OnboardingFlagsTable.scss'
 
 export type OnboardingFlagsTableStatus = 'waiting' | 'connected'
@@ -41,12 +42,20 @@ const OnboardingFlagsTable: FC<OnboardingFlagsTableProps> = ({
       className='onboarding-flags d-flex flex-column align-items-center'
       aria-labelledby='onboarding-flags-title'
     >
-      <h3
-        className='onboarding-flags__title m-0 fw-bold'
-        id='onboarding-flags-title'
-      >
-        Your flags
-      </h3>
+      <div className='onboarding-flags__heading d-flex align-items-center gap-2'>
+        <h3
+          className='onboarding-flags__title m-0 fw-bold'
+          id='onboarding-flags-title'
+        >
+          Your flags
+        </h3>
+        {waiting && (
+          <span className='onboarding-flags__hint d-flex align-items-center gap-1'>
+            <Icon name='lock' width={13} />
+            Flip it once your app connects
+          </span>
+        )}
+      </div>
       <div
         className={classNames(
           'onboarding-flags__table bg-surface-default rounded-xl',
