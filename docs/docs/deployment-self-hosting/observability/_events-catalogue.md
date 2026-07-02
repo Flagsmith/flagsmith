@@ -369,7 +369,7 @@ Attributes:
 ### `segment_membership.compute.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:138`
+ - `api/segment_membership/services.py:150`
 
 Attributes:
  - `project.id`
@@ -379,7 +379,7 @@ Attributes:
 ### `segment_membership.members.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:200`
+ - `api/segment_membership/services.py:216`
 
 Attributes:
  - `reason`
