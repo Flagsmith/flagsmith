@@ -376,6 +376,22 @@ def test_refresh_all_segment_counts__no_clickhouse_creds__skips(
     enqueue.assert_not_called()
 
 
+def test_refresh_all_segment_counts__no_live_segments__does_nothing(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+) -> None:
+    # Given a project but no live segments, so there are no organisations to seed
+    settings.CLICKHOUSE_ENABLED = True
+    enqueue = mocker.patch.object(tasks, "enqueue_membership_refresh")
+
+    # When
+    refresh_all_segment_counts()
+
+    # Then
+    enqueue.assert_not_called()
+
+
 def test_refresh_all_segment_counts__live_segment_projects__delegates_to_enqueue(
     mocker: MockerFixture,
     settings: SettingsWrapper,
