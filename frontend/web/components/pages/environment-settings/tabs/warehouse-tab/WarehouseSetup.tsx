@@ -15,7 +15,7 @@ type WarehouseSetupProps = {
 
 type WarehouseTypeOption = WarehouseType | 'bigquery' | 'databricks'
 
-const CONFIGURABLE_TYPES: WarehouseTypeOption[] = ['flagsmith', 'snowflake']
+const CONFIGURABLE_TYPES: WarehouseTypeOption[] = ['flagsmith']
 
 const WarehouseSetup: FC<WarehouseSetupProps> = ({
   isCreating,
@@ -51,9 +51,11 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
               icon={<Icon name='flash' width={20} />}
               title='Snowflake'
               description='Cloud data warehouse'
-              selected={selectedType === 'snowflake'}
-              onClick={() => setSelectedType('snowflake')}
+              selected={false}
+              onClick={() => {}}
+              disabled
             />
+            <span className='warehouse-setup__coming-soon'>Coming Soon</span>
           </div>
           <div className='warehouse-setup__type-card'>
             <SelectableCard
