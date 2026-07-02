@@ -8,6 +8,7 @@ from django.db.utils import IntegrityError
 from django.utils import timezone
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -826,6 +827,80 @@ def test_feature_state_create__new_segment_override_under_v2__is_allowed(
 
     # Then it is allowed: a genuinely new override starts a fresh seed
     assert feature_state.mv_hashing_salt is None
+
+
+def test_feature_state_create__v1_recreates_live_multivariate_state_directly__logs_warning(
+    environment: Environment,
+    multivariate_feature: Feature,
+    log: StructuredLogCapture,
+) -> None:
+    # Given the live feature state of a multivariate feature in a v1
+    # versioning environment
+    live_feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+
+    # When a new version of the feature state is created directly, outside any
+    # sanctioned recreation flow
+    feature_state = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        version=2,
+    )
+
+    # Then no salt is inherited, and the re-bucketing is logged for operators
+    assert feature_state.mv_hashing_salt is None
+    assert log.has(
+        "feature_state.mv_variants_rebucketed",
+        level="warning",
+        environment__id=environment.id,
+        feature__id=multivariate_feature.id,
+        superseded_feature_state__id=live_feature_state.id,
+    )
+
+
+def test_feature_state_create__v1_change_request_draft__does_not_log_warning(
+    environment: Environment,
+    multivariate_feature: Feature,
+    admin_user: FFAdminUser,
+    log: StructuredLogCapture,
+) -> None:
+    # Given a change request
+    change_request = ChangeRequest.objects.create(
+        title="Test CR", environment=environment, user=admin_user
+    )
+
+    # When a draft feature state is created for it
+    FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        change_request=change_request,
+        version=None,
+    )
+
+    # Then no warning is logged: the draft inherits its salt at commit time
+    assert not log.has("feature_state.mv_variants_rebucketed")
+
+
+def test_feature_state_create__v1_recreates_live_standard_state_directly__does_not_log_warning(
+    environment: Environment,
+    feature: Feature,
+    log: StructuredLogCapture,
+) -> None:
+    # When a new version of a standard feature's state is created directly
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        version=2,
+    )
+
+    # Then nothing is logged: bucketing seeds only matter for multivariate
+    # features
+    assert feature_state.mv_hashing_salt is None
+    assert not log.has("feature_state.mv_variants_rebucketed")
 
 
 def test_get_superseded_live_feature_state__segment_override_draft__returns_live_override(
