@@ -48,6 +48,11 @@ test.describe('Onboarding', () => {
     await expect(page.getByText('LISTENING')).toBeVisible();
     await expect(page.getByText('Copy install command')).not.toContainText('✓');
 
+    // Before the first evaluation, the next-quest cards are locked.
+    await expect(
+      page.getByText('Unlocks after your first evaluation'),
+    ).toBeVisible();
+
     log('Copy snippets, checklist ticks');
     await page.getByRole('button', { name: 'Copy install command' }).click();
     await expect(page.getByText('Copy install command')).toContainText('✓');
@@ -101,5 +106,27 @@ test.describe('Onboarding', () => {
         .getByText('Onboarding', { exact: true }),
     ).toBeVisible();
     await visualSnapshot(page, 'onboarding-renamed', testInfo);
+
+    // The next-quest cards unlock once connected, each deep-linking to the
+    // flag's real config (nothing faked).
+    log('Next-quest cards link to the real config');
+    await expect(
+      page.getByRole('heading', { name: 'Choose your next quest' }),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: /Gradual rollout/ }).click();
+    await expect(page).toHaveURL(
+      /\/features\?feature=\d+&tab=segment-overrides/,
+    );
+
+    await page.goto('/getting-started?connected');
+    await flowReady();
+    await page.getByRole('button', { name: /Remote config/ }).click();
+    await expect(page).toHaveURL(/\/features\?feature=\d+&tab=value/);
+
+    await page.goto('/getting-started?connected');
+    await flowReady();
+    await page.getByRole('button', { name: /Experiment/ }).click();
+    await expect(page).toHaveURL(/\/experiments$/);
   });
 });
