@@ -17,8 +17,8 @@ from organisations.usage_reporting.dataclasses import (
 MAX_PROJECT_USAGE_ROWS = 5_000
 
 
-def map_signature_to_control_plane_auth_token(signature: str) -> str:
-    raw_signature = base64.b64decode(signature)
+def map_signature_to_control_plane_auth_token(signature_b64: str) -> str:
+    raw_signature = base64.b64decode(signature_b64)
     return base64.urlsafe_b64encode(raw_signature).decode("ascii").rstrip("=")
 
 
