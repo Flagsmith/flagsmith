@@ -31,12 +31,12 @@ def push_snapshot(
     *,
     base_url: str,
     snapshot: UsageSnapshot,
-    signature: str,
+    signature_b64: str,
 ) -> None:
     url = f"{base_url.rstrip('/')}{USAGE_ENDPOINT_PATH}"
     headers = {
         "Authorization": (
-            f"Bearer {map_signature_to_control_plane_auth_token(signature)}"
+            f"Bearer {map_signature_to_control_plane_auth_token(signature_b64)}"
         ),
         "Content-Type": "application/json",
     }
@@ -69,7 +69,7 @@ def push_usage_snapshots() -> None:
                 push_snapshot(
                     base_url=base_url,
                     snapshot=map_organisation_to_usage_snapshot(organisation),
-                    signature=organisation.licence.signature,
+                    signature_b64=organisation.licence.signature,
                 )
             except Exception:
                 logger.exception("snapshot.errored")

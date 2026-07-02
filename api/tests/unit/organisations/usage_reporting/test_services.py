@@ -91,7 +91,7 @@ def test_push_snapshot__status_code__logs_expected_event(
     push_snapshot(
         base_url="https://cp.example.com/",
         snapshot=snapshot,
-        signature="c2ln",
+        signature_b64="c2ln",
     )
 
     # Then
@@ -105,13 +105,13 @@ def test_push_snapshot__valid_snapshot__sends_bearer_authed_post(
     # Given
     mocked_post = mocker.patch("organisations.usage_reporting.services.requests.post")
     mocked_post.return_value.status_code = 201
-    signature = "++++ABE="
+    signature_b64 = "++++ABE="
 
     # When
     push_snapshot(
         base_url="https://cp.example.com/",
         snapshot=snapshot,
-        signature=signature,
+        signature_b64=signature_b64,
     )
 
     # Then
@@ -200,10 +200,10 @@ def test_push_usage_snapshots__licensed_organisations__pushes_each(
     # Then
     assert mocked_push.call_count == 2
     mocked_push.assert_any_call(
-        base_url="https://cp.example.com", snapshot=snapshot, signature="sig-1"
+        base_url="https://cp.example.com", snapshot=snapshot, signature_b64="sig-1"
     )
     mocked_push.assert_any_call(
-        base_url="https://cp.example.com", snapshot=snapshot, signature="sig-2"
+        base_url="https://cp.example.com", snapshot=snapshot, signature_b64="sig-2"
     )
 
 
@@ -233,5 +233,5 @@ def test_push_usage_snapshots__one_organisation_raises__continues(
     # Then - first organisation failed (logged) but second still pushed
     assert log.has("snapshot.errored", level="error")
     mocked_push.assert_called_once_with(
-        base_url="https://cp.example.com", snapshot=snapshot, signature="sig-2"
+        base_url="https://cp.example.com", snapshot=snapshot, signature_b64="sig-2"
     )
