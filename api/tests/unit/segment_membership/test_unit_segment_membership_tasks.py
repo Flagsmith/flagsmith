@@ -456,6 +456,42 @@ def test_refresh_all_segment_counts__multiple_orgs__staggers_by_org_then_project
     assert abs(delay_by_id[project_b.id] - org_a[0]) == org_spacing
 
 
+def test_refresh_all_segment_counts__org_overflows_slot__no_cross_org_collision(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given org A with three live-segment projects and org B with one, and a
+    # project stagger wide enough that A's projects overflow its window slot
+    # (org_spacing = 1h / 3 = 20min, but the projects are 1h apart).
+    project_a2 = Project.objects.create(name="a2", organisation=project.organisation)
+    Segment.objects.create(name="seg-a2", project=project_a2)
+    project_a3 = Project.objects.create(name="a3", organisation=project.organisation)
+    Segment.objects.create(name="seg-a3", project=project_a3)
+    org_b = Organisation.objects.create(name="org-b")
+    project_b = Project.objects.create(name="b1", organisation=org_b)
+    Segment.objects.create(name="seg-b", project=project_b)
+    settings.CLICKHOUSE_ENABLED = True
+    settings.SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS = 1
+    settings.SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_SECONDS = 3600
+    enqueue = mocker.patch.object(tasks, "enqueue_membership_refresh")
+
+    # When
+    refresh_all_segment_counts()
+
+    # Then
+    delay_by_id = {
+        call.args[0].id: call.kwargs["delay_until"] for call in enqueue.call_args_list
+    }
+    org_a = sorted(delay_by_id[p] for p in (project.id, project_a2.id, project_a3.id))
+    # org A's projects stay a project-stagger apart, overflowing the 20min slot
+    assert org_a[1] - org_a[0] == timedelta(seconds=3600)
+    assert org_a[2] - org_a[1] == timedelta(seconds=3600)
+    # org B never schedules before org A's last project, so the two don't collide
+    assert delay_by_id[project_b.id] >= org_a[-1]
+
+
 def test_refresh_project_segment_counts__no_clickhouse_creds__skips(
     mocker: MockerFixture,
     settings: SettingsWrapper,

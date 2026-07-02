@@ -192,8 +192,12 @@ def refresh_all_segment_counts() -> None:
     )
     now = timezone.now()
 
+    # Accumulate the delay so it never moves backwards: each organisation starts
+    # at its window slot or after the previous organisation's last project,
+    # whichever is later. This keeps an organisation with many projects from
+    # spilling its stagger into the next organisation's slot.
+    cumulative_delay = timedelta(0)
     org_index = -1
-    project_index = 0
     current_org_id = None
     projects = (
         Project.objects.filter(id__in=project_ids)
@@ -204,12 +208,10 @@ def refresh_all_segment_counts() -> None:
         if project.organisation_id != current_org_id:
             current_org_id = project.organisation_id
             org_index += 1
-            project_index = 0
-        enqueue_membership_refresh(
-            project,
-            delay_until=now + org_spacing * org_index + project_spacing * project_index,
-        )
-        project_index += 1
+            cumulative_delay = max(cumulative_delay, org_spacing * org_index)
+        else:
+            cumulative_delay += project_spacing
+        enqueue_membership_refresh(project, delay_until=now + cumulative_delay)
 
 
 @register_task_handler(
