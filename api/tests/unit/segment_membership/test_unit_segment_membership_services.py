@@ -193,10 +193,6 @@ def matching_segment(segment: Segment) -> Segment:
 
 @pytest.fixture
 def percent_regex_segment(segment: Segment) -> Segment:
-    # A REGEX condition whose pattern carries a literal `%`. The `[b%]`
-    # class still matches the seeded "bar" trait, while the `%` is what
-    # used to crash clickhouse-driver's `query % params` substitution
-    # when the pattern was inlined into the SQL text.
     rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
     Condition.objects.create(rule=rule, property="foo", operator=REGEX, value="[b%]ar")
     return segment

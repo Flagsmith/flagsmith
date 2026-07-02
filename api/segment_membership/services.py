@@ -127,11 +127,6 @@ def compute_segment_counts_for_project(
         return []
 
     dialect = ClickHouseDialect()
-    # One binder across the whole UNION ALL: it mints unique placeholder
-    # names (p0, p1, …) per bound literal, so segment values — including
-    # regex patterns whose `%` would otherwise break clickhouse-driver's
-    # `query % params` substitution — travel as query parameters, never
-    # inlined into the SQL text.
     binder = Binder(PyformatParamStyle())
     select_clauses: list[str] = []
     for seg in segments:
@@ -198,8 +193,6 @@ def get_segment_members_page(
     Provide identifier as `cursor` to get a page after that identifier.
     Provide `q` to filter to identifiers containing it (case-insensitive).
     """
-    # See `compute_segment_counts_for_project`: the binder keeps segment
-    # values (regex patterns especially) out of the SQL text as bound params.
     binder = Binder(PyformatParamStyle())
     translate_ctx = TranslateContext(
         evaluation_context=EvaluationContext(
