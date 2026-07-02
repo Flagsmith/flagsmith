@@ -22,7 +22,7 @@ const ExperimentRecommendation: FC<ExperimentRecommendationProps> = ({
   if (!summary) return null
 
   return (
-    <div className='alert alert-success mb-3' style={{ fontSize: 16 }}>
+    <div className='alert alert-success experiment-recommendation mb-3'>
       <div className='d-flex align-items-center gap-2 mb-2'>
         <Icon name='checkmark-circle' width={20} fill={colorTextSuccess} />
         <span className='text-success fw-semibold'>

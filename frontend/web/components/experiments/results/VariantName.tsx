@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import ColorSwatch from 'components/ColorSwatch'
 
 type VariantNameProps = {
   name: string
@@ -7,15 +8,11 @@ type VariantNameProps = {
 
 const VariantName: FC<VariantNameProps> = ({ colour, name }) => (
   <span>
-    <span
-      className='d-inline-block rounded-circle'
-      style={{
-        backgroundColor: colour,
-        height: 8,
-        marginRight: 3,
-        verticalAlign: 'middle',
-        width: 8,
-      }}
+    <ColorSwatch
+      color={colour}
+      shape='circle'
+      size='sm'
+      className='me-1 align-middle'
     />
     <strong>{name}</strong>
   </span>
