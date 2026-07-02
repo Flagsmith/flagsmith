@@ -1483,10 +1483,6 @@ CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
 SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS = env.int(
     "SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS", default=6
 )
-# The recurring refresh staggers its fan-out to avoid a burst of concurrent count
-# queries on ClickHouse: organisations are spread across this window, and within
-# an organisation projects are spread this many seconds apart. The window must
-# not exceed the refresh interval, or consecutive cycles would overlap.
 SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS = env.int(
     "SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS", default=1
 )

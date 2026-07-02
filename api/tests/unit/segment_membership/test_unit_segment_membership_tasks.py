@@ -419,8 +419,6 @@ def test_refresh_all_segment_counts__multiple_orgs__staggers_by_org_then_project
     project_b = Project.objects.create(name="b1", organisation=org_b)
     Segment.objects.create(name="seg-b", project=project_b)
     settings.CLICKHOUSE_ENABLED = True
-    # Distinct stagger window (< interval) so the assertion pins the code to the
-    # window setting, not the refresh interval.
     settings.SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS = 6
     settings.SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS = 3
     settings.SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_SECONDS = 10
