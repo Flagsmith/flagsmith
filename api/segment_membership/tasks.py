@@ -174,44 +174,23 @@ def refresh_all_segment_counts() -> None:
     if not settings.CLICKHOUSE_ENABLED:
         return
 
-    project_ids = Segment.live_objects.values_list("project_id", flat=True)
-    num_orgs = (
-        Project.objects.filter(id__in=project_ids)
-        .values("organisation_id")
-        .distinct()
-        .count()
-    )
-    if not num_orgs:
-        return
-
-    org_spacing = timedelta(
-        hours=settings.SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS
-    ) / (num_orgs + 1)
-    project_spacing = timedelta(
-        seconds=settings.SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_SECONDS
-    )
-    now = timezone.now()
-
-    # Accumulate the delay so it never moves backwards: each organisation starts
-    # at its window slot or after the previous organisation's last project,
-    # whichever is later. This keeps an organisation with many projects from
-    # spilling its stagger into the next organisation's slot.
-    cumulative_delay = timedelta(0)
-    org_index = -1
-    current_org_id = None
     projects = (
-        Project.objects.filter(id__in=project_ids)
+        Project.objects.filter(
+            Exists(Segment.live_objects.filter(project=OuterRef("pk")))
+        )
         .select_related("organisation")
         .order_by("organisation_id", "id")
     )
-    for project in projects.iterator():
-        if project.organisation_id != current_org_id:
-            current_org_id = project.organisation_id
-            org_index += 1
-            cumulative_delay = max(cumulative_delay, org_spacing * org_index)
-        else:
-            cumulative_delay += project_spacing
-        enqueue_membership_refresh(project, delay_until=now + cumulative_delay)
+    total = projects.count()
+    if not total:
+        return
+
+    spacing = timedelta(
+        hours=settings.SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS
+    ) / (total + 1)
+    now = timezone.now()
+    for index, project in enumerate(projects.iterator()):
+        enqueue_membership_refresh(project, delay_until=now + spacing * index)
 
 
 @register_task_handler(
