@@ -1,5 +1,36 @@
 # Changelog
 
+## [2.252.0](https://github.com/Flagsmith/flagsmith/compare/v2.251.0...v2.252.0) (2026-07-03)
+
+
+### Features
+
+* **code-references:** prompt users to add required integrations ([#7844](https://github.com/Flagsmith/flagsmith/issues/7844)) ([27e76f0](https://github.com/Flagsmith/flagsmith/commit/27e76f0aaca1e73189a10c5d45ce6b6c0825d14e))
+* **Flagsmith-on-Flagsmith:** Send organisation trait to Flagsmith on identify ([#7932](https://github.com/Flagsmith/flagsmith/issues/7932)) ([0bc9f7a](https://github.com/Flagsmith/flagsmith/commit/0bc9f7aa4bfe7b0c7abc507142d2203451417d5c))
+* improve experiment recommendation and disable Snowflake warehouse ([#7940](https://github.com/Flagsmith/flagsmith/issues/7940)) ([31c9dc9](https://github.com/Flagsmith/flagsmith/commit/31c9dc9267095446c81b4848133b13e27b2dad3e))
+* **onboarding:** connection terminal and flags table ([#7856](https://github.com/Flagsmith/flagsmith/issues/7856)) ([ece3b36](https://github.com/Flagsmith/flagsmith/commit/ece3b3618da148e70002fb710c444ad68d0663b3))
+* **Segment Membership:** Recount after identity delete ([#7933](https://github.com/Flagsmith/flagsmith/issues/7933)) ([b8b25c1](https://github.com/Flagsmith/flagsmith/commit/b8b25c1fbbc95596996025fe7d39fec103b0ed64))
+
+
+### Bug Fixes
+
+* **experimentation:** rebuild environment document on rollout change ([#7929](https://github.com/Flagsmith/flagsmith/issues/7929)) ([c9a5f54](https://github.com/Flagsmith/flagsmith/commit/c9a5f54c01b957fb2a9d42a5fba0db85c273b564))
+* **organisation:** disable delete button when active subscription exists ([#7809](https://github.com/Flagsmith/flagsmith/issues/7809)) ([44206a2](https://github.com/Flagsmith/flagsmith/commit/44206a2c7517567c5135e1c180035049e5efd6a2))
+* **Segment Membership:** Oversized numeric traits fail identity seeding ([#7938](https://github.com/Flagsmith/flagsmith/issues/7938)) ([cbc295a](https://github.com/Flagsmith/flagsmith/commit/cbc295a4d86533214a9487551280818c7e2bc841))
+* **Segment Membership:** Percent sign in regex condition crashes segment count refresh ([#7944](https://github.com/Flagsmith/flagsmith/issues/7944)) ([e77c851](https://github.com/Flagsmith/flagsmith/commit/e77c851fa2079708b23c55f798601b4ca67be656))
+* **Segment Membership:** Stagger the recurring count refresh fan-out ([#7943](https://github.com/Flagsmith/flagsmith/issues/7943)) ([9105ae0](https://github.com/Flagsmith/flagsmith/commit/9105ae0b171bcb71093893c65ade60ae08023bdb))
+* **usage:** Send raw licence signature bytes in Control Plane auth token ([#7936](https://github.com/Flagsmith/flagsmith/issues/7936)) ([6849e3f](https://github.com/Flagsmith/flagsmith/commit/6849e3f1101b8f0a4fefcd88661266389c33843a))
+
+
+### Dependency Updates
+
+* **api:** Bump flagsmith-sql-flag-engine to 0.1.3 ([#7935](https://github.com/Flagsmith/flagsmith/issues/7935)) ([946df88](https://github.com/Flagsmith/flagsmith/commit/946df88aef0a24e72a07bb2b4e754ce403707dee))
+
+
+### Docs
+
+* **integrations:** Split Grafana and Prometheus integration pages ([#7921](https://github.com/Flagsmith/flagsmith/issues/7921)) ([d80e457](https://github.com/Flagsmith/flagsmith/commit/d80e45772b7279b3af1182fc57105fb3d32ebe46))
+
 ## [2.251.0](https://github.com/Flagsmith/flagsmith/compare/v2.250.0...v2.251.0) (2026-07-01)
 
 
