@@ -17,7 +17,7 @@ The main benefit to running server side SDKs in [Local Evaluation Mode](/integra
 
 :::info
 
-The Edge Proxy has the same [caveats as running our SDK in Local Evaluation mode.](/integrating-with-flagsmith/integration-overview).
+The Edge Proxy has the same [caveats as running our SDK in Local Evaluation mode](/integrating-with-flagsmith/sdks/#for-local-evaluation).
 
 :::
 
