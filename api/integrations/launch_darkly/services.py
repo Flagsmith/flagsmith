@@ -1106,6 +1106,17 @@ def create_import_request(
 def process_import_request(
     import_request: LaunchDarklyImportRequest,
 ) -> None:
+    if import_request.completed_at is not None:
+        # `_complete_import_request` clears `ld_token` once an import request is
+        # completed, so re-running this (e.g. a stale/duplicate task delivery)
+        # would otherwise crash trying to unsign an empty value instead of being
+        # a harmless no-op.
+        logger.warning(
+            "Ignoring already-completed LaunchDarkly import request %d.",
+            import_request.id,
+        )
+        return
+
     with _complete_import_request(import_request):
         ld_token = _unsign_ld_value(
             import_request.ld_token,
