@@ -6,6 +6,7 @@ import requests
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from features.models import FeatureState
+from integrations.common.services import record_integration_health
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
 from .constants import DEFAULT_MIXPANEL_API_URL
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper[MixpanelUserData]):
     def __init__(self, config: MixpanelConfiguration):
+        self.config = config
         self.api_key = config.api_key
         base_url = (config.base_url or DEFAULT_MIXPANEL_API_URL).rstrip("/")
         self.url = f"{base_url}/engage#profile-set"
@@ -31,6 +33,7 @@ class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper[MixpanelUserData]):
 
     def _identify_user(self, user_data: MixpanelUserData) -> None:
         response = requests.post(self.url, headers=self.headers, json=user_data)
+        record_integration_health(self.config, response.status_code)
         logger.debug(
             "Sent event to Mixpanel. Response code was: %s" % response.status_code
         )

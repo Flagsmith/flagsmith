@@ -4,7 +4,9 @@ import logging
 import requests
 
 from audit.models import AuditLog
+from integrations.common.services import record_integration_health
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
+from integrations.new_relic.models import NewRelicConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -12,16 +14,18 @@ EVENTS_API_URI = "v2/applications/"
 
 
 class NewRelicWrapper(AbstractBaseEventIntegrationWrapper):
-    def __init__(self, base_url: str, api_key: str, app_id: str):
-        self.base_url = base_url
-        self.api_key = api_key
-        self.app_id = app_id
+    def __init__(self, config: NewRelicConfiguration):
+        self.config = config
+        self.base_url = config.base_url
+        self.api_key = config.api_key
+        self.app_id = config.app_id
         self.url = f"{self.base_url}{EVENTS_API_URI}{self.app_id}/deployments.json"
 
     def _track_event(self, event: dict) -> None:  # type: ignore[type-arg]
         response = requests.post(
             self.url, headers=self._headers(), data=json.dumps(event)
         )
+        record_integration_health(self.config, response.status_code)
         logger.debug(
             "Sent event to NewRelic. Response code was %s" % response.status_code
         )

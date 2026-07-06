@@ -7,6 +7,7 @@ import requests
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from features.models import FeatureState
+from integrations.common.services import record_integration_health
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
 from .models import AmplitudeConfiguration
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class AmplitudeWrapper(AbstractBaseIdentityIntegrationWrapper[AmplitudeUserData]):
     def __init__(self, config: AmplitudeConfiguration):
+        self.config = config
         self.api_key = config.api_key
         self.url = f"{config.base_url}/identify"
 
@@ -25,6 +27,7 @@ class AmplitudeWrapper(AbstractBaseIdentityIntegrationWrapper[AmplitudeUserData]
         payload = {"api_key": self.api_key, "identification": json.dumps([user_data])}
 
         response = requests.post(self.url, data=payload)
+        record_integration_health(self.config, response.status_code)
         logger.debug(
             "Sent event to Amplitude. Response code was: %s" % response.status_code
         )

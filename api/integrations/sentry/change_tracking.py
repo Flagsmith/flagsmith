@@ -7,7 +7,9 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 from core.signing import sign_payload
 from features.models import FeatureState
+from integrations.common.services import record_integration_health
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
+from integrations.sentry.models import SentryChangeTrackingConfiguration
 
 logger = structlog.get_logger("sentry_change_tracking")
 
@@ -26,9 +28,10 @@ class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
     - ...deleting the flag because deleting means saving the model instance with a deleted_at timestamp.
     """
 
-    def __init__(self, webhook_url: str, secret: str) -> None:
-        self.webhook_url = webhook_url
-        self.secret = secret
+    def __init__(self, config: SentryChangeTrackingConfiguration) -> None:
+        self.config = config
+        self.webhook_url = config.webhook_url
+        self.secret = config.secret
 
     @staticmethod
     def generate_event_data(feature_state: FeatureState) -> dict[str, Any]:
@@ -94,6 +97,7 @@ class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
                 headers=headers,
                 data=json_payload,
             )
+            record_integration_health(self.config, response.status_code)
             response.raise_for_status()  # NOTE: This is for future-proofing, as Sentry won't respond 4xx.
         except requests.exceptions.RequestException as error:
             log.warning(

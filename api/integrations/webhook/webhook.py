@@ -2,6 +2,7 @@ import logging
 import typing
 
 from environments.identities.traits.serializers import TraitSerializerBasic
+from integrations.common.services import record_integration_health
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 from webhooks.webhooks import call_integration_webhook
 
@@ -23,6 +24,7 @@ class WebhookWrapper(AbstractBaseIdentityIntegrationWrapper):  # type: ignore[ty
     def _identify_user(self, data: typing.Mapping) -> None:  # type: ignore[type-arg]
         response = call_integration_webhook(self.config, data)
         if response:
+            record_integration_health(self.config, response.status_code)
             logger.debug(
                 "Sent event to Webhook. Response code was: %s" % response.status_code
             )
