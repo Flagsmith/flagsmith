@@ -1,22 +1,71 @@
-from integrations.amplitude.models import AmplitudeConfiguration
-from integrations.common.models import IntegrationHealthRecord
-from integrations.common.services import record_integration_health
+from django.utils import timezone
+
+from integrations.common.services import (
+    get_latest_integration_health,
+    record_integration_health,
+)
+from integrations.webhook.models import WebhookConfiguration
 
 
-def test_record_integration_health__valid_integration_config__creates_health_record(
-    environment,
-):  # type: ignore[no-untyped-def]
+def test_get_latest_integration_health__no_record__returns_none(environment):
     # Given
-    amplitude_config = AmplitudeConfiguration.objects.create(
-        api_key="test_amplitude",
-        environment=environment,
+    webhook_config = WebhookConfiguration.objects.create(
+        environment=environment, url="https://webhook.url"
     )
-    status_code = 200
 
     # When
-    record_integration_health(amplitude_config, status_code)
+    result = get_latest_integration_health(webhook_config)
 
     # Then
-    health_record = IntegrationHealthRecord.objects.get()
-    assert health_record.content_object == amplitude_config
-    assert health_record.status_code == status_code
+    assert result is None
+
+
+def test_get_latest_integration_health__has_record__returns_health_dict(environment):
+    # Given
+    webhook_config = WebhookConfiguration.objects.create(
+        environment=environment, url="https://webhook.url"
+    )
+    record_integration_health(webhook_config, 200)
+
+    # When
+    result = get_latest_integration_health(webhook_config)
+
+    # Then
+    assert result is not None
+    assert result["status_code"] == 200
+    assert result["is_healthy"] is True
+    assert "created_at" in result
+    assert result["created_at"] is not None
+
+
+def test_get_latest_integration_health__multiple_records__returns_latest(
+    environment,
+):
+    # Given
+    webhook_config = WebhookConfiguration.objects.create(
+        environment=environment, url="https://webhook.url"
+    )
+    record_integration_health(webhook_config, 500)
+    record_integration_health(webhook_config, 200)
+
+    # When
+    result = get_latest_integration_health(webhook_config)
+
+    # Then
+    assert result["status_code"] == 200
+    assert result["is_healthy"] is True
+
+
+def test_get_latest_integration_health__non_healthy_status(environment):
+    # Given
+    webhook_config = WebhookConfiguration.objects.create(
+        environment=environment, url="https://webhook.url"
+    )
+    record_integration_health(webhook_config, 500)
+
+    # When
+    result = get_latest_integration_health(webhook_config)
+
+    # Then
+    assert result["status_code"] == 500
+    assert result["is_healthy"] is False
