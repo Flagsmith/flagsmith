@@ -24,6 +24,7 @@ import each from 'lodash/each'
 import { useGetProjectQuery } from 'common/services/useProject'
 import API from 'project/api'
 import Constants from 'common/constants'
+import BooleanDotIndicator from 'components/BooleanDotIndicator'
 
 type IntegrationAction = {
   label: string
@@ -341,6 +342,18 @@ const Integration: FC<IntegrationProps> = (props) => {
                   integration={props.integration}
                 />
               </Flex>
+              <div className='d-flex align-items-center gap-2 mt-1 mr-3'>
+                <BooleanDotIndicator
+                  enabled={integration.latest_health?.is_healthy ?? false}
+                />
+                <span className='fs-small text-muted'>
+                  {integration.latest_health
+                    ? integration.latest_health.is_healthy
+                      ? 'Healthy'
+                      : 'Unhealthy'
+                    : 'No health data'}
+                </span>
+              </div>
               <div onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu
                   items={[
