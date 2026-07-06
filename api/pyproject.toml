@@ -74,7 +74,7 @@ dependencies = [
     "hubspot-api-client>=12.0.0,<13.0.0",
     "djangorestframework-dataclasses>=1.3.1,<2.0.0",
     "pyotp>=2.9.0,<3.0.0",
-    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.10.1,<4",
+    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.11.0,<4",
     "django-stubs>=5.1.3,<6.0.0",
     "tzdata>=2024.1,<2025.0.0",
     "djangorestframework-simplejwt>=5.5.1,<6.0.0",
@@ -155,9 +155,6 @@ explicit = true
 
 [tool.uv.sources]
 flagsmith-private = { index = "flagsmith-pypi-production" }
-# TEMPORARY: track the composite startup verbs branch until flagsmith-common ships them.
-# TODO: revert to the PyPI release once the entrypoint verbs are released.
-flagsmith-common = { git = "https://github.com/Flagsmith/flagsmith-common", branch = "feat/composite-startup-verbs" }
 clickhouse-driver = { git = "https://github.com/Flagsmith/clickhouse-driver", branch = "newjson" }
 # TODO: Revert to the PyPI release once a version closing
 # https://github.com/jayvynl/django-clickhouse-backend/issues/154 is published.

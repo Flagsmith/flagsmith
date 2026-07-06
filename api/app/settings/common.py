@@ -183,6 +183,11 @@ DJANGO_DB_CONN_MAX_AGE = 0 if db_conn_max_age == -1 else db_conn_max_age
 DJANGO_DB_CONN_HEALTH_CHECKS = env.bool("DJANGO_DB_CONN_HEALTH_CHECKS", False)
 
 DATABASE_ROUTERS: list[str] = []
+
+FLAGSMITH_MIGRATE_DATABASES: list[str] = []
+FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES: list[str] = []
+FLAGSMITH_STARTUP_COMMANDS = ["bootstrap"]
+
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
     DATABASES = {
@@ -192,6 +197,8 @@ if "DATABASE_URL" in os.environ:
             conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         ),
     }
+    FLAGSMITH_MIGRATE_DATABASES.append("default")
+    FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("default")
     REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
     REPLICA_DATABASE_URLS = (
         env.list(
@@ -249,6 +256,8 @@ if "DATABASE_URL" in os.environ:
             conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         )
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
+        FLAGSMITH_MIGRATE_DATABASES.append("analytics")
+        FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("analytics")
 elif "DJANGO_DB_NAME" in os.environ:
     # If there is no DATABASE_URL configured, check for old style DB config parameters
     DATABASES = {
@@ -263,6 +272,8 @@ elif "DJANGO_DB_NAME" in os.environ:
             "CONN_HEALTH_CHECKS": DJANGO_DB_CONN_HEALTH_CHECKS,
         },
     }
+    FLAGSMITH_MIGRATE_DATABASES.append("default")
+    FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("default")
     if "DJANGO_DB_NAME_ANALYTICS" in os.environ:
         DATABASES["analytics"] = {
             "ENGINE": "django.db.backends.postgresql",
@@ -276,6 +287,8 @@ elif "DJANGO_DB_NAME" in os.environ:
         }
 
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
+        FLAGSMITH_MIGRATE_DATABASES.append("analytics")
+        FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("analytics")
 
 # Task processor database — OPTIONALLY SEPARATED
 TASK_PROCESSOR_DATABASE_URL = env("TASK_PROCESSOR_DATABASE_URL", default=None)
@@ -305,6 +318,8 @@ if TASK_PROCESSOR_DATABASE_URL or TASK_PROCESSOR_DATABASE_NAME:
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
         }
     DATABASE_ROUTERS.insert(0, "task_processor.routers.TaskProcessorRouter")
+    FLAGSMITH_MIGRATE_DATABASES.append("task_processor")
+    FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("task_processor")
 
     # Consume any remaining tasks from 'default' when opting in to 'task_processor' database
     _task_processor_databases = ["default", "task_processor"]
@@ -1525,20 +1540,4 @@ if CLICKHOUSE_ENABLED:
         },
     }
     DATABASES["clickhouse"] = _clickhouse_db  # type: ignore[assignment]
-
-# Startup verbs (flagsmith-common `flagsmith` entrypoint): which databases each
-# role migrates and waits on. Mirrors the per-role gating run-docker.sh applied —
-# only databases actually configured are included. `DATABASES` is undefined when
-# no `DATABASE_URL` is set (e.g. build-time collectstatic), so guard for that.
-_configured_databases = globals().get("DATABASES", {})
-FLAGSMITH_MIGRATE_DATABASES = [
-    alias
-    for alias in ("default", "analytics", "task_processor", "clickhouse")
-    if alias in _configured_databases
-]
-FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES = [
-    alias
-    for alias in ("default", "analytics", "task_processor")
-    if alias in _configured_databases
-]
-FLAGSMITH_STARTUP_COMMANDS = ["bootstrap"]
+    FLAGSMITH_MIGRATE_DATABASES.append("clickhouse")

@@ -1552,7 +1552,7 @@ requires-dist = [
     { name = "email-validator", marker = "extra == 'dev'", specifier = ">=2.0.0" },
     { name = "environs", specifier = ">=14.1.1,<15.0.0" },
     { name = "flagsmith", specifier = ">=5.3.0,<6.0.0" },
-    { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.10.1,<4" },
+    { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.11.0,<4" },
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
     { name = "flagsmith-flag-engine", specifier = ">=10.1.0,<11.0.0" },
     { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.10.1,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
@@ -1623,11 +1623,11 @@ provides-extras = ["private", "dev"]
 
 [[package]]
 name = "flagsmith-common"
-version = "3.10.1"
+version = "3.11.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/37/88/69b64381dd5c27eab67da364b5163bc40fc500fb45804d9ba6824a2e3d1d/flagsmith_common-3.10.1.tar.gz", hash = "sha256:d07b8bdac4e2b7913daed2538c5fec7512a08f10e6f64fc5a2bb1016f9493a7b", size = 59260, upload-time = "2026-06-30T10:06:07.926Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5c/10/5bcec25cfa4e86ad25fa0c97269b74633bf0305abc181c1d439a26bd9864/flagsmith_common-3.11.0.tar.gz", hash = "sha256:178f908c5355e41ad5bed8839943de28b37fcf69131fac464751a8e3d6bf3301", size = 61027, upload-time = "2026-07-06T11:51:10.344Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/88/b1/0527d883b246b4b600d5595a1648d5bda34110747962c88377d5c2301eb0/flagsmith_common-3.10.1-py3-none-any.whl", hash = "sha256:ea03bd41c7842d00bfbf65546f371b9e3d602b1e772cb33e9e86d9bcfd732236", size = 96851, upload-time = "2026-06-30T10:06:06.324Z" },
+    { url = "https://files.pythonhosted.org/packages/af/60/83c432cd1368281a483eb94a13ba789180c48d576e57222fce8e289004be/flagsmith_common-3.11.0-py3-none-any.whl", hash = "sha256:c4b637887cb22a89cc8fe7083342cc32ad8ccc5e7f8d050bd0bb1e4155a73651", size = 99115, upload-time = "2026-07-06T11:51:08.932Z" },
 ]
 
 [package.optional-dependencies]
@@ -1665,6 +1665,7 @@ task-processor = [
     { name = "backoff" },
     { name = "django" },
     { name = "django-health-check" },
+    { name = "environs" },
     { name = "opentelemetry-api" },
     { name = "prometheus-client" },
 ]

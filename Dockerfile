@@ -136,7 +136,7 @@ ARG ACCESS_LOG_LOCATION="/dev/null"
 ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION} \
   PROMETHEUS_MULTIPROC_DIR=${PROMETHEUS_MULTIPROC_DIR} \
   DJANGO_SETTINGS_MODULE=app.settings.production \
-  APPLICATION_LOGGERS="app_analytics,audit,code_references,common,core,dynamodb,edge_api,environments,features,import_export,integrations,mcp,oauth2_metadata,organisations,projects,segments,task_processor,users,webhooks,workflows"
+  APPLICATION_LOGGERS="app_analytics,audit,code_references,common,core,dynamodb,edge_api,environments,features,import_export,integrations,mcp,oauth2_metadata,organisations,projects,segment_membership,segments,task_processor,users,webhooks,workflows"
 
 ARG CI_COMMIT_SHA
 RUN echo ${CI_COMMIT_SHA} > /app/CI_COMMIT_SHA && \
