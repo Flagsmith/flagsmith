@@ -377,6 +377,11 @@ export type IntegrationData = {
 export type ActiveIntegration = {
   id: string
   flagsmithEnvironment?: string
+  latest_health?: {
+    status_code: number
+    is_healthy: boolean
+    created_at: string
+  } | null
 }
 
 export type GithubRepository = {
