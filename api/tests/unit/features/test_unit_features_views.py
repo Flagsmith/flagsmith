@@ -3246,6 +3246,30 @@ def test_update_feature_state__change_feature__returns_400(
     )
 
 
+def test_update_feature_state__null_environment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    url = reverse("api-v1:features:featurestates-detail", args=[feature_state.id])
+    data = {
+        "enabled": True,
+        "environment": None,
+        "feature": feature.id,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "environment" in response.json()
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
