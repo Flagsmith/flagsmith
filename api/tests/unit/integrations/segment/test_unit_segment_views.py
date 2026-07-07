@@ -109,7 +109,7 @@ def test_list_segment_config__existing_config__returns_200(
     response = admin_client.get(url)
 
     # Then
-    expected_response = {"api_key": config.api_key, "id": config.id, "base_url": None}
+    expected_response = {"api_key": config.api_key, "id": config.id, "base_url": None, "latest_health": None}
     assert response.status_code == status.HTTP_200_OK
     assert response.data == [expected_response]
 
