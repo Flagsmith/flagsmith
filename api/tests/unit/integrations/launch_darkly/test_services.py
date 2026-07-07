@@ -270,8 +270,6 @@ def test_process_import_request__already_completed__does_not_reprocess(
     import_request: LaunchDarklyImportRequest,
 ) -> None:
     # Given
-    # Simulate a request that has already finished (and had its token wiped),
-    # e.g. because of a duplicate/stale task delivery.
     import_request.status["result"] = "success"
     import_request.completed_at = timezone.now()
     import_request.ld_token = ""
@@ -282,8 +280,6 @@ def test_process_import_request__already_completed__does_not_reprocess(
     process_import_request(import_request)
 
     # Then
-    # The request wasn't reprocessed: the LD client was never (re)instantiated,
-    # and trying to unsign the (already blank) token didn't raise.
     ld_client_class_mock.assert_not_called()
     ld_client_mock.get_environments.assert_not_called()
 
