@@ -1882,28 +1882,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/api-keys/':
     get:
       operationId: api_v1_environments_api_keys_list
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage server-side SDK keys for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -1926,28 +1905,7 @@ paths:
         - Environments
     post:
       operationId: api_v1_environments_api_keys_create
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage server-side SDK keys for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -1981,28 +1939,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/api-keys/{id}/':
     put:
       operationId: api_v1_environments_api_keys_update
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage server-side SDK keys for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -2041,28 +1978,7 @@ paths:
         - Environments
     patch:
       operationId: api_v1_environments_api_keys_partial_update
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage server-side SDK keys for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -2100,28 +2016,7 @@ paths:
         - Environments
     delete:
       operationId: api_v1_environments_api_keys_destroy
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage server-side SDK keys for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -2846,28 +2741,7 @@ paths:
         - mcp
     patch:
       operationId: api_v1_environments_experiment_metrics_partial_update
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage experiment metrics for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -2905,28 +2779,7 @@ paths:
         - Environments
     delete:
       operationId: api_v1_environments_experiment_metrics_destroy
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage experiment metrics for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3027,6 +2880,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/experiments/{experiment_experiment_id}/metrics/':
     get:
       operationId: api_v1_environments_experiments_metrics_list
+      description: Manage metrics for an experiment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3054,6 +2908,7 @@ paths:
         - Environments
     post:
       operationId: api_v1_environments_experiments_metrics_create
+      description: Manage metrics for an experiment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3092,6 +2947,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/experiments/{experiment_experiment_id}/metrics/{id}/':
     get:
       operationId: api_v1_environments_experiments_metrics_retrieve
+      description: Manage metrics for an experiment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3122,6 +2978,7 @@ paths:
         - Environments
     put:
       operationId: api_v1_environments_experiments_metrics_update
+      description: Manage metrics for an experiment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3164,6 +3021,7 @@ paths:
         - Environments
     patch:
       operationId: api_v1_environments_experiments_metrics_partial_update
+      description: Manage metrics for an experiment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3205,6 +3063,7 @@ paths:
         - Environments
     delete:
       operationId: api_v1_environments_experiments_metrics_destroy
+      description: Manage metrics for an experiment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3298,28 +3157,7 @@ paths:
         - mcp
     patch:
       operationId: api_v1_environments_experiments_partial_update
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage experiments for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3357,28 +3195,7 @@ paths:
         - Environments
     delete:
       operationId: api_v1_environments_experiments_destroy
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage experiments for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3402,28 +3219,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/experiments/{experiment_id}/complete/':
     post:
       operationId: api_v1_environments_experiments_complete_create
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage experiments for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3491,28 +3287,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/experiments/{experiment_id}/exposures/refresh/':
     post:
       operationId: api_v1_environments_experiments_exposures_refresh_create
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage experiments for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3552,28 +3327,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/experiments/{experiment_id}/pause/':
     post:
       operationId: api_v1_environments_experiments_pause_create
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage experiments for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3641,28 +3395,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/experiments/{experiment_id}/results/refresh/':
     post:
       operationId: api_v1_environments_experiments_results_refresh_create
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage experiments for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3702,28 +3435,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/experiments/{experiment_id}/rollout/':
     patch:
       operationId: api_v1_environments_experiments_rollout_partial_update
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage experiments for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3762,28 +3474,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/experiments/{experiment_id}/start/':
     post:
       operationId: api_v1_environments_experiments_start_create
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage experiments for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -7177,28 +6868,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/warehouse-connections/':
     get:
       operationId: api_v1_environments_warehouse_connections_list
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage data warehouse connections for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -7221,28 +6891,7 @@ paths:
         - Environments
     post:
       operationId: api_v1_environments_warehouse_connections_create
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage data warehouse connections for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -7276,28 +6925,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/warehouse-connections/{connection_id}/':
     get:
       operationId: api_v1_environments_warehouse_connections_retrieve
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage data warehouse connections for an environment.
       parameters:
         - name: connection_id
           in: path
@@ -7324,28 +6952,7 @@ paths:
         - Environments
     put:
       operationId: api_v1_environments_warehouse_connections_update
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage data warehouse connections for an environment.
       parameters:
         - name: connection_id
           in: path
@@ -7384,28 +6991,7 @@ paths:
         - Environments
     patch:
       operationId: api_v1_environments_warehouse_connections_partial_update
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage data warehouse connections for an environment.
       parameters:
         - name: connection_id
           in: path
@@ -7443,28 +7029,7 @@ paths:
         - Environments
     delete:
       operationId: api_v1_environments_warehouse_connections_destroy
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage data warehouse connections for an environment.
       parameters:
         - name: connection_id
           in: path
@@ -7488,28 +7053,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/warehouse-connections/{connection_id}/test-warehouse-connection/':
     post:
       operationId: api_v1_environments_warehouse_connections_test_warehouse_connection_create
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage data warehouse connections for an environment.
       parameters:
         - name: connection_id
           in: path
@@ -7549,28 +7093,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/webhooks/':
     get:
       operationId: api_v1_environments_webhooks_list
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage webhooks for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -7593,28 +7116,7 @@ paths:
         - Webhooks
     post:
       operationId: api_v1_environments_webhooks_create
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage webhooks for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -7648,28 +7150,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/webhooks/{id}/':
     put:
       operationId: api_v1_environments_webhooks_update
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage webhooks for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -7708,28 +7189,7 @@ paths:
         - Webhooks
     patch:
       operationId: api_v1_environments_webhooks_partial_update
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage webhooks for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -7767,28 +7227,7 @@ paths:
         - Webhooks
     delete:
       operationId: api_v1_environments_webhooks_destroy
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Manage webhooks for an environment.
       parameters:
         - name: environment_api_key
           in: path

@@ -80,6 +80,8 @@ class WarehouseConnectionViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
+    """Manage data warehouse connections for an environment."""
+
     serializer_class = WarehouseConnectionSerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, WarehouseConnectionPermission]
@@ -219,6 +221,8 @@ class ExperimentViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
+    """Manage experiments for an environment."""
+
     serializer_class = ExperimentSerializer
     pagination_class = CustomPagination
     permission_classes = [IsAuthenticated, ExperimentPermission]
@@ -489,6 +493,8 @@ class ExperimentMetricViewSet(
     mixins.DestroyModelMixin,
     GenericViewSet[ExperimentMetric],
 ):
+    """Manage metrics for an experiment."""
+
     serializer_class = ExperimentMetricSerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, ExperimentPermission]
@@ -581,6 +587,8 @@ class MetricViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
+    """Manage experiment metrics for an environment."""
+
     serializer_class = MetricSerializer
     pagination_class = CustomPagination
     permission_classes = [IsAuthenticated, MetricPermission]
