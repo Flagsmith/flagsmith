@@ -1,5 +1,3 @@
-from django.utils import timezone
-
 from integrations.common.services import (
     get_latest_integration_health,
     record_integration_health,

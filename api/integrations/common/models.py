@@ -1,4 +1,7 @@
 import logging
+
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_SAVE,
@@ -8,8 +11,6 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 )
 
 from core.models import SoftDeleteExportableModel
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
 from environments.models import Environment
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ class EnvironmentIntegrationModel(LifecycleModelMixin, IntegrationsModel):  # ty
     @hook(AFTER_UPDATE)
     def clear_environment_cache(self):  # type: ignore[no-untyped-def]
         self.environment.clear_environment_cache()
+
 
 class IntegrationHealthRecord(models.Model):
     created_at = models.DateTimeField("Created At", auto_now_add=True)

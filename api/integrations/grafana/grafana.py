@@ -26,7 +26,9 @@ class GrafanaWrapper(AbstractBaseEventIntegrationWrapper):
         config: GrafanaProjectConfiguration | GrafanaOrganisationConfiguration,
     ) -> None:
         self.config = config
-        base_url = config.base_url[:-1] if config.base_url.endswith("/") else config.base_url
+        base_url = (
+            config.base_url[:-1] if config.base_url.endswith("/") else config.base_url
+        )
         self.url = f"{base_url}{ROUTE_API_ANNOTATIONS}"
         self.api_key = config.api_key
 

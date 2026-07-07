@@ -84,7 +84,9 @@ def test_amplitude_wrapper__identify_user__records_healthy_status(
 ) -> None:
     # Given
     post_mock.return_value.status_code = 200
-    config = AmplitudeConfiguration.objects.create(environment=environment, api_key="123key")
+    config = AmplitudeConfiguration.objects.create(
+        environment=environment, api_key="123key"
+    )
     amplitude_wrapper = AmplitudeWrapper(config)
 
     # When
@@ -103,7 +105,9 @@ def test_amplitude_wrapper__identify_user__records_unhealthy_status(
 ) -> None:
     # Given
     post_mock.return_value.status_code = 500
-    config = AmplitudeConfiguration.objects.create(environment=environment, api_key="123key")
+    config = AmplitudeConfiguration.objects.create(
+        environment=environment, api_key="123key"
+    )
     amplitude_wrapper = AmplitudeWrapper(config)
 
     # When

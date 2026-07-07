@@ -1,9 +1,10 @@
+import pytest
+
 from audit.models import AuditLog
 from environments.models import Environment
-import pytest
 from integrations.common.models import IntegrationHealthRecord
-from integrations.new_relic.new_relic import EVENTS_API_URI, NewRelicWrapper
 from integrations.new_relic.models import NewRelicConfiguration
+from integrations.new_relic.new_relic import EVENTS_API_URI, NewRelicWrapper
 
 
 def test_new_relic_wrapper__valid_config__initializes_correctly():  # type: ignore[no-untyped-def]
