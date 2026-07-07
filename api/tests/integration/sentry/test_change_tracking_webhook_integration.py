@@ -15,6 +15,7 @@ from audit.tasks import create_feature_state_updated_by_change_request_audit_log
 from features.models import FeatureState
 from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
+from integrations.common.models import IntegrationHealthRecord
 from integrations.sentry.models import SentryChangeTrackingConfiguration
 from users.models import FFAdminUser
 
@@ -97,6 +98,10 @@ def test_sentry_change_tracking__flag_created__sends_update_to_sentry(
             "sentry_action": "created",
         },
     ]
+    health_record = IntegrationHealthRecord.objects.get(
+        object_id=sentry_configuration.id
+    )
+    assert health_record.status_code == 200
 
 
 def test_sentry_change_tracking__flag_state_change__sends_update_to_sentry(

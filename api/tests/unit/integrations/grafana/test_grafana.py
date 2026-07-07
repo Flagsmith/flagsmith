@@ -5,23 +5,36 @@ import responses
 from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
+from integrations.common.models import IntegrationHealthRecord
 from integrations.grafana.grafana import GrafanaWrapper
+from integrations.grafana.models import GrafanaProjectConfiguration
 
 
 @pytest.mark.parametrize("base_url", ["test.com", "test.com/"])
 def test_grafana_wrapper__base_url__expected_url(base_url: str) -> None:
     # Given / When
-    wrapper = GrafanaWrapper(base_url=base_url, api_key="any")
+    wrapper = GrafanaWrapper(
+        GrafanaProjectConfiguration(base_url=base_url, api_key="any")
+    )
 
     # Then
     assert wrapper.url == "test.com/api/annotations"
 
 
+@pytest.mark.django_db
 @responses.activate()
-def test_grafana_wrapper__track_event__expected_api_call() -> None:
+def test_grafana_wrapper__track_event__expected_api_call(
+    mocker: MockerFixture,
+) -> None:
     # Given
-    wrapper = GrafanaWrapper(base_url="https://test.com", api_key="any")
+    wrapper = GrafanaWrapper(
+        GrafanaProjectConfiguration(base_url="https://test.com", api_key="any")
+    )
     event = {"sample": "event"}
+    record_integration_health_mock = mocker.patch(
+        "integrations.grafana.grafana.record_integration_health",
+        autospec=True,
+    )
 
     responses.add(url="https://test.com/api/annotations", method="POST", status=200)
 
@@ -33,6 +46,27 @@ def test_grafana_wrapper__track_event__expected_api_call() -> None:
     assert responses.calls[0].request.headers["Authorization"] == "Bearer any"  # type: ignore[union-attr]
     assert responses.calls[0].request.headers["Content-Type"] == "application/json"  # type: ignore[union-attr]
     assert json.loads(responses.calls[0].request.body) == event  # type: ignore[union-attr]
+    record_integration_health_mock.assert_called_once_with(wrapper.config, 200)
+
+
+@pytest.mark.django_db
+@responses.activate()
+def test_grafana_wrapper__track_event__records_health_status(project) -> None:
+    # Given
+    config = GrafanaProjectConfiguration.objects.create(
+        project=project,
+        base_url="https://test.com",
+        api_key="any",
+    )
+    wrapper = GrafanaWrapper(config)
+    responses.add(url="https://test.com/api/annotations", method="POST", status=200)
+
+    # When
+    wrapper._track_event({"sample": "event"})
+
+    # Then
+    health_record = IntegrationHealthRecord.objects.get(object_id=config.id)
+    assert health_record.status_code == 200
 
 
 def test_grafana_wrapper__generate_event_data__return_expected(

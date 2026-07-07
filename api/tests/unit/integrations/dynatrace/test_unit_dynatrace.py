@@ -9,24 +9,26 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.models import Feature, FeatureState
+from integrations.common.models import IntegrationHealthRecord
 from integrations.dynatrace.dynatrace import EVENTS_API_URI, DynatraceWrapper
+from integrations.dynatrace.models import DynatraceConfiguration
 from projects.models import Project
 from segments.models import Segment
 
 
 def test_dynatrace_wrapper__valid_config__initializes_correctly():  # type: ignore[no-untyped-def]
     # Given
-    api_key = "123key"
-    base_url = "http://test.com"
-    entity_selector = "type(APPLICATION),entityName(docs)"
-
-    # When initialized
-    dynatrace = DynatraceWrapper(
-        base_url=base_url, api_key=api_key, entity_selector=entity_selector
+    config = DynatraceConfiguration(
+        api_key="123key",
+        base_url="http://test.com",
+        entity_selector="type(APPLICATION),entityName(docs)",
     )
 
+    # When initialized
+    dynatrace = DynatraceWrapper(config)
+
     # Then
-    expected_url = f"{base_url}{EVENTS_API_URI}?api-token={api_key}"
+    expected_url = f"{config.base_url}{EVENTS_API_URI}?api-token={config.api_key}"
     assert dynatrace.url == expected_url
 
 
@@ -79,9 +81,11 @@ def test_dynatrace_generate_event_data__correct_values__returns_expected(
     )
 
     dynatrace = DynatraceWrapper(
-        base_url="http://test.com",
-        api_key="123key",
-        entity_selector="type(APPLICATION),entityName(docs)",
+        DynatraceConfiguration(
+            api_key="123key",
+            base_url="http://test.com",
+            entity_selector="type(APPLICATION),entityName(docs)",
+        )
     )
 
     # When
@@ -108,9 +112,11 @@ def test_dynatrace_generate_event_data__missing_author__returns_system_user():  
     audit_log_record = AuditLog(log=log, environment=environment)
 
     dynatrace = DynatraceWrapper(
-        base_url="http://test.com",
-        api_key="123key",
-        entity_selector="type(APPLICATION),entityName(docs)",
+        DynatraceConfiguration(
+            api_key="123key",
+            base_url="http://test.com",
+            entity_selector="type(APPLICATION),entityName(docs)",
+        )
     )
 
     # When
@@ -138,9 +144,11 @@ def test_dynatrace_generate_event_data__missing_environment__returns_unknown(  #
     )
 
     dynatrace = DynatraceWrapper(
-        base_url="http://test.com",
-        api_key="123key",
-        entity_selector="type(APPLICATION),entityName(docs)",
+        DynatraceConfiguration(
+            api_key="123key",
+            base_url="http://test.com",
+            entity_selector="type(APPLICATION),entityName(docs)",
+        )
     )
 
     # When
@@ -150,3 +158,27 @@ def test_dynatrace_generate_event_data__missing_environment__returns_unknown(  #
     expected_event_text = f"{log} by user {author.email}"
     assert event_data["properties"]["event"] == expected_event_text
     assert event_data["properties"]["environment"] == "unknown"
+
+
+@pytest.mark.django_db
+def test_dynatrace_track_event__records_health_status(
+    mocker: MockerFixture,
+    environment: Environment,
+) -> None:
+    # Given
+    config = DynatraceConfiguration.objects.create(
+        environment=environment,
+        api_key="123key",
+        base_url="http://test.com/",
+        entity_selector="type(APPLICATION),entityName(docs)",
+    )
+    dynatrace = DynatraceWrapper(config)
+    mocked_post = mocker.patch("integrations.dynatrace.dynatrace.requests.post")
+    mocked_post.return_value.status_code = 200
+
+    # When
+    dynatrace._track_event({"eventType": "CUSTOM_DEPLOYMENT"})
+
+    # Then
+    health_record = IntegrationHealthRecord.objects.get(object_id=config.id)
+    assert health_record.status_code == 200
