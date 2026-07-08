@@ -38,7 +38,7 @@ const createStore = () => {
         key: 'root',
         storage,
         version: 1,
-        whitelist: ['user'],
+        whitelist: ['user', 'lifecycleEnvironment'],
       },
       reducer,
     ),
