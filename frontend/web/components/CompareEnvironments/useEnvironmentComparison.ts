@@ -4,7 +4,13 @@ import data from 'common/data/base/_data'
 import Project from 'common/project'
 import ProjectStore from 'common/stores/project-store'
 import { hasMultivariateChange } from 'common/utils/compareMultivariate'
-import { Environment, FeatureState, ProjectFlag } from 'common/types/responses'
+import { recursivePageGet } from 'common/services/useProjectFlag'
+import {
+  Environment,
+  FeatureState,
+  PagedResponse,
+  ProjectFlag,
+} from 'common/types/responses'
 import { FeatureChange } from './types'
 
 type UseEnvironmentComparisonArgs = {
@@ -12,6 +18,13 @@ type UseEnvironmentComparisonArgs = {
   leftEnvironmentKey: string
   rightEnvironmentKey: string
 }
+
+// Adapt _data.get to the baseQuery contract recursivePageGet expects: it reads
+// `results`/`next` straight off the resolved body, which is what _data.get returns
+const pagedGet = <T>(url: string) =>
+  recursivePageGet(url, null, (arg) =>
+    data.get((arg as { url: string }).url),
+  ) as Promise<PagedResponse<T>>
 
 const deriveChanges = (
   leftProjectFlags: ProjectFlag[],
@@ -91,17 +104,17 @@ export const useEnvironmentComparison = ({
     try {
       const [leftProjectFlags, rightProjectFlags, leftFlags, rightFlags] =
         await Promise.all([
-          data.get(
-            `${Project.api}projects/${projectId}/features/?page_size=999&environment=${leftEnvironmentId}`,
+          pagedGet<ProjectFlag>(
+            `${Project.api}projects/${projectId}/features/?environment=${leftEnvironmentId}`,
           ),
-          data.get(
-            `${Project.api}projects/${projectId}/features/?page_size=999&environment=${rightEnvironmentId}`,
+          pagedGet<ProjectFlag>(
+            `${Project.api}projects/${projectId}/features/?environment=${rightEnvironmentId}`,
           ),
-          data.get(
-            `${Project.api}environments/${leftEnvironmentKey}/featurestates/?page_size=999`,
+          pagedGet<FeatureState>(
+            `${Project.api}environments/${leftEnvironmentKey}/featurestates/`,
           ),
-          data.get(
-            `${Project.api}environments/${rightEnvironmentKey}/featurestates/?page_size=999`,
+          pagedGet<FeatureState>(
+            `${Project.api}environments/${rightEnvironmentKey}/featurestates/`,
           ),
         ])
 

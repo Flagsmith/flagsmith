@@ -9,7 +9,7 @@ import { sortMultivariateOptions } from 'common/utils/multivariate'
  */
 export const FEATURES_PAGE_SIZE = 50
 
-function recursivePageGet(
+export function recursivePageGet(
   url: string,
   parentRes: null | PagedResponse<ProjectFlag>,
   baseQuery: (arg: unknown) => any, // matches rtk types,
