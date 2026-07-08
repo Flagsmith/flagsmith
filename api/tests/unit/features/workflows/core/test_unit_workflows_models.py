@@ -22,7 +22,7 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from core.helpers import get_current_site_url
 from environments.models import Environment
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import (
     EnvironmentFeatureVersion,
     VersionChangeSet,
@@ -1221,3 +1221,39 @@ def test_change_request_commit__v1_multivariate_feature__keeps_variant_bucketing
         for key in identity_hash_keys
     }
     assert new_assignment == original_assignment
+
+
+def test_change_request_commit__v1_segment_override_draft__inherits_mv_hashing_salt(
+    environment: Environment,
+    multivariate_feature: Feature,
+    segment: Segment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given a live segment override for a multivariate feature
+    feature_segment = FeatureSegment.objects.create(
+        feature=multivariate_feature, segment=segment, environment=environment
+    )
+    live_override = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        feature_segment=feature_segment,
+    )
+
+    # and a change request carrying a draft feature state recreating the override
+    change_request = ChangeRequest.objects.create(
+        title="Test CR", environment=environment, user=admin_user
+    )
+    draft_feature_state = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        change_request=change_request,
+        version=None,
+    )
+
+    # When the change request is committed
+    change_request.commit(committed_by=admin_user)
+
+    # Then the draft carries the superseded override's id as its bucketing salt
+    draft_feature_state.refresh_from_db()
+    assert draft_feature_state.mv_hashing_salt == live_override.id
