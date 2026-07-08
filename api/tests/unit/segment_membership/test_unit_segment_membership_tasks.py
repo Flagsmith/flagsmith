@@ -449,23 +449,36 @@ def test_refresh_project_segment_counts__no_clickhouse_creds__skips(
     )
 
 
-def test_refresh_project_segment_counts__ff_disabled__skips(
+def test_refresh_project_segment_counts__ff_disabled__skips_and_purges_stale_counts(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     project: Project,
+    environment: Environment,
+    segment: Segment,
     log: StructuredLogCapture,
 ) -> None:
     # Given
     settings.CLICKHOUSE_ENABLED = True
     spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    SegmentMembershipCount.objects.create(
+        segment=segment,
+        environment=environment,
+        count=15,
+        last_synced_at=timezone.now(),
+    )
 
     # When
     refresh_project_segment_counts(project.id)
 
     # Then
     spy.assert_not_called()
+    assert not SegmentMembershipCount.objects.filter(
+        segment=segment, environment=environment
+    ).exists()
     assert any(
-        e["event"] == "refresh.project.skipped" and e["reason"] == "ff_disabled"
+        e["event"] == "refresh.project.skipped"
+        and e["reason"] == "ff_disabled"
+        and e["stale_counts__count"] == 1
         for e in log.events
     )
 

@@ -1,9 +1,17 @@
-import React from 'react'
 import type { IconName } from 'components/icons/Icon'
 import type { FilterState } from 'common/types/featureFilters'
 import type { Section } from './types'
 import { SortOrder } from 'common/types/requests'
-import { TagStrategy } from 'common/types/responses'
+import { LifecycleStage, TagStrategy } from 'common/types/responses'
+
+export const SECTION_TO_STAGE: Record<Section, LifecycleStage> = {
+  live: 'live',
+  monitor: 'needs_monitoring',
+  new: 'new',
+  permanent: 'permanent',
+  remove: 'to_remove',
+  stale: 'stale',
+}
 
 export const DEFAULT_FILTER_STATE: FilterState = {
   group_owners: [],
@@ -17,26 +25,13 @@ export const DEFAULT_FILTER_STATE: FilterState = {
   value_search: '',
 }
 
-export const PERIOD_VALUES = [1, 7, 14, 30, 90]
-
-function dayLabel(days: number): string {
-  return days === 1 ? '1 day' : `${days} days`
-}
-
-export function buildPeriodOptions(prefix: string) {
-  return PERIOD_VALUES.map((v) => ({
-    label: `${prefix} ${dayLabel(v)}`,
-    value: v,
-  }))
-}
-
 export const STALE_TOOLTIP =
   'If no changes have been made to a feature in any environment within the configured threshold, the feature will be tagged as stale. You will need to enable feature versioning in your environments for stale features to be detected.'
 
-export const MONITOR_TOOLTIP = (
+export const MONITOR_TOOLTIP = `
   <div>
     There could be several reasons:
-    <ul className='mt-1 mb-0 ps-3'>
+    <ul class="mt-1 mb-0 ps-3">
       <li>
         Cached deployments — your application may still be running an older
         version that references this feature.
@@ -51,7 +46,7 @@ export const MONITOR_TOOLTIP = (
       </li>
     </ul>
   </div>
-)
+`
 
 export const SECTIONS: {
   key: Section
@@ -92,7 +87,7 @@ export const SECTIONS: {
   {
     icon: 'shield',
     key: 'monitor',
-    label: 'Needs Monitoring',
+    label: 'To Monitor',
     monitorTooltip: true,
     subtitle:
       'Stale features with no code references but still receiving evaluations.',

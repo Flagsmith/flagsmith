@@ -212,10 +212,14 @@ def refresh_project_segment_counts(project_id: int) -> None:
 
     project = Project.objects.select_related("organisation").get(pk=project_id)
     if not is_membership_enabled(project.organisation):
+        deleted, _ = SegmentMembershipCount.objects.filter(
+            segment__project=project
+        ).delete()
         logger.info(
             "refresh.project.skipped",
             project__id=project_id,
             reason="ff_disabled",
+            stale_counts__count=deleted,
         )
         return
 

@@ -35,7 +35,13 @@ function recursivePageGet(
 }
 export const projectFlagService = service
   .enhanceEndpoints({
-    addTagTypes: ['ProjectFlag', 'FeatureList', 'FeatureState', 'Environment'],
+    addTagTypes: [
+      'ProjectFlag',
+      'FeatureList',
+      'FeatureState',
+      'Environment',
+      'LifecycleCounts',
+    ],
   })
   .injectEndpoints({
     endpoints: (builder) => ({
@@ -68,6 +74,7 @@ export const projectFlagService = service
         invalidatesTags: [
           { id: 'LIST', type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
+          'LifecycleCounts',
         ],
         query: (query: Req['createProjectFlag']) => ({
           body: query.body,
@@ -129,6 +136,16 @@ export const projectFlagService = service
               feature.multivariate_options,
             ),
           })),
+        }),
+      }),
+
+      getLifecycleStatusCounts: builder.query<
+        Res['lifecycleStatusCounts'],
+        Req['getLifecycleStatusCounts']
+      >({
+        providesTags: ['LifecycleCounts'],
+        query: ({ environment }) => ({
+          url: `environments/${environment}/feature-lifecycle-counts/`,
         }),
       }),
 
@@ -198,6 +215,7 @@ export const projectFlagService = service
           { id: 'LIST', type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
           { id: 'METRICS', type: 'Environment' },
+          'LifecycleCounts',
         ],
         query: ({ flag_id, project_id }) => ({
           method: 'DELETE',
@@ -213,6 +231,7 @@ export const projectFlagService = service
           { id: 'LIST', type: 'ProjectFlag' },
           { id: res?.id, type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
+          'LifecycleCounts',
         ],
         query: (query: Req['updateProjectFlag']) => ({
           body: query.body,
@@ -284,6 +303,7 @@ export const {
   useAddFlagOwnersMutation,
   useCreateProjectFlagMutation,
   useGetFeatureListQuery,
+  useGetLifecycleStatusCountsQuery,
   useGetProjectFlagQuery,
   useGetProjectFlagsQuery,
   useRemoveFlagGroupOwnersMutation,
