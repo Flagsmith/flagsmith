@@ -1,5 +1,6 @@
 import React, { FC, useState } from 'react'
 import classNames from 'classnames'
+import Chip from 'components/base/Chip'
 import CodeCard from './CodeCard'
 import SdkPicker from './SdkPicker'
 import { getSdkSnippet } from './sdkSnippets'
@@ -8,6 +9,18 @@ import { SDK_LANGS, SdkLang } from './sdkLangs'
 type PackageManager = 'npm' | 'yarn'
 
 const PACKAGE_MANAGERS: PackageManager[] = ['npm', 'yarn']
+
+// The chosen SDK as an accent badge (logo + label), matching the picker's
+// selected chip - the code card labels its language with this.
+const SdkBadge: FC<{ lang: SdkLang }> = ({ lang }) => {
+  const Logo = lang.logo
+  return (
+    <Chip variant='accent' className='fw-semibold'>
+      <Logo />
+      {lang.label}
+    </Chip>
+  )
+}
 
 export type ConnectYourCodePanelProps = {
   environmentKey: string
@@ -64,9 +77,7 @@ const ConnectYourCodePanel: FC<ConnectYourCodePanelProps> = ({
                 ))}
               </div>
             ) : (
-              <span className='onboarding-connect__codecard-lang'>
-                {sdkLang.label}
-              </span>
+              <SdkBadge lang={sdkLang} />
             )
           }
         />
@@ -83,11 +94,7 @@ const ConnectYourCodePanel: FC<ConnectYourCodePanelProps> = ({
           language={sdkSnippet.language}
           onCopy={onCopyWire}
           copyLabel='Copy code snippet'
-          headerLeft={
-            <span className='onboarding-connect__codecard-lang'>
-              {sdkLang.label}
-            </span>
-          }
+          headerLeft={<SdkBadge lang={sdkLang} />}
         />
       </div>
     </>
