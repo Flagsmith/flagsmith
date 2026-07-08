@@ -39,14 +39,14 @@ That being said, there are use-cases for real time flags. Using our [real-time f
 
 ### Local Evaluation Mode
 
-The most efficient way of evaluating feature flags on the server is using [local evaluation mode](/integrating-with-flagsmith/integration-overview). There are [some caveats](/integrating-with-flagsmith/integration-overview), so please be aware of them!
+The most efficient way of evaluating feature flags on the server is using [local evaluation mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode). There are [some caveats](/integrating-with-flagsmith/sdks/#for-local-evaluation), so please be aware of them!
 
 ### CDN Usage
 
 There are 3 main API calls the Flagsmith SDK can make:
 
 1. Get the [Environment Document](/integrating-with-flagsmith/integration-overview) for
-   [Local Evaluation mode](/integrating-with-flagsmith/integration-overview).
+   [Local Evaluation mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode).
 2. Get the Flags for an Environment.
 3. Get the Flags for an Identity.
 

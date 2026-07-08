@@ -57,7 +57,7 @@ In addition to this, by default our client-sde SDKs will only make a network cal
 
 ### Server side SDKs and local evaluation mode
 
-If you need sub-millisecond latency for end-to-end flag evaluation, for example in the event that you are running a multi-variate test on a landing page of your website, you can employ one of our Server Side SDKs running in [local evaluation mode](/integrating-with-flagsmith/integration-overview) mode. This will provide sub-millisecond latency of the entire flag evaluation rules engine, running locally within your server infrastructure, allowing you to run multivariate tests with zero latency impact.
+If you need sub-millisecond latency for end-to-end flag evaluation, for example in the event that you are running a multi-variate test on a landing page of your website, you can employ one of our Server Side SDKs running in [local evaluation mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode). This will provide sub-millisecond latency of the entire flag evaluation rules engine, running locally within your server infrastructure, allowing you to run multivariate tests with zero latency impact.
 
 ### No proxy-server required
 
