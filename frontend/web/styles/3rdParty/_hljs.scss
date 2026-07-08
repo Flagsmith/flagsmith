@@ -62,7 +62,7 @@
         font-weight: 500;
       }
       &.primary {
-        color: $primary !important;
+        color: $primary;
       }
     }
   }
@@ -298,6 +298,6 @@ code.txt {
 }
 
 code[contenteditable='false'].hljs {
-  cursor: default !important;
+  cursor: default;
   @include customScrollDark();
 }
