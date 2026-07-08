@@ -143,7 +143,7 @@ Attributes:
 ### `features.feature_state.mv_variants_rebucketed`
 
 Logged at `warning` from:
- - `api/features/models.py:902`
+ - `api/features/models.py:901`
 
 Attributes:
  - `environment.id`
