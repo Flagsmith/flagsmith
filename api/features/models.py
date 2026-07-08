@@ -897,8 +897,7 @@ class FeatureState(
             if (
                 self.change_request_id is None
                 and self.feature.type == MULTIVARIATE
-                and (superseded := self.get_superseded_live_feature_state())
-                is not None
+                and (superseded := self.get_superseded_live_feature_state()) is not None
             ):
                 event_logger.warning(
                     "feature_state.mv_variants_rebucketed",

@@ -1828,9 +1828,7 @@ def test_create_feature_version_feature_state__override_recreated_in_draft__inhe
     draft_version = EnvironmentFeatureVersion.objects.create(
         environment=environment_v2_versioning, feature=multivariate_feature
     )
-    cloned_override = draft_version.feature_states.get(
-        feature_segment__segment=segment
-    )
+    cloned_override = draft_version.feature_states.get(feature_segment__segment=segment)
     cloned_override.feature_segment.delete()
 
     # When the override is recreated in the draft version via the API
