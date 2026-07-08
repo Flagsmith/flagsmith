@@ -61,17 +61,27 @@ export const useOverflowVisibleCount = ({
     const itemsCont = itemsContainerRef.current
     if (!itemsCont) return
 
+    // Coalesce a burst of resize entries into a single re-measure per frame,
+    // and ignore sub-pixel drift so fractional rounding doesn't churn
+    let frame = 0
     const ro = new ResizeObserver(() => {
-      const childEls = Array.from(itemsCont.children) as HTMLElement[]
-      const changed = childEls.some(
-        (el, i) => Math.abs(measureWidth(el) - widths[i]) > 0.5,
-      )
-      if (changed) {
-        setWidths([])
-      }
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        const childEls = Array.from(itemsCont.children) as HTMLElement[]
+        const changed = childEls.some(
+          (el, i) => Math.abs(measureWidth(el) - widths[i]) > 0.5,
+        )
+        if (changed) {
+          setWidths([])
+        }
+      })
     })
     Array.from(itemsCont.children).forEach((el) => ro.observe(el))
-    return () => ro.disconnect()
+    return () => {
+      if (frame) cancelAnimationFrame(frame)
+      ro.disconnect()
+    }
   }, [widths, force, itemsContainerRef])
 
   // Calculate visible count based
