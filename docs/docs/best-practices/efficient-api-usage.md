@@ -45,7 +45,7 @@ The most efficient way of evaluating feature flags on the server is using [local
 
 There are 3 main API calls the Flagsmith SDK can make:
 
-1. Get the [Environment Document](/integrating-with-flagsmith/integration-overview) for
+1. Get the [Environment Document](/integrating-with-flagsmith/sdks/#the-environment-document) for
    [Local Evaluation mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode).
 2. Get the Flags for an Environment.
 3. Get the Flags for an Identity.

@@ -16,7 +16,7 @@ This glossary provides concise definitions for some of the key concepts within F
 
 - [**Environment**](/flagsmith-concepts/data-model#environments): Environments are a way to separate the configuration of your features. A project can have any number of environments.
 
-- [**Environment Document**](/integrating-with-flagsmith/integration-overview): A JSON document containing all configuration for feature flags in an environment.
+- [**Environment Document**](/integrating-with-flagsmith/sdks/#the-environment-document): A JSON document containing all configuration for feature flags in an environment.
 
 - [**Feature**](/flagsmith-concepts/data-model#features): A configuration that can be enabled, disabled, or set to a specific value. Features are shared across all Environments in a project, but their values/states can be modified between Environments.
 
