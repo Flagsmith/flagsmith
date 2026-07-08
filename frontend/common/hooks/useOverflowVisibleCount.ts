@@ -3,6 +3,10 @@ import { useState, useLayoutEffect, RefObject } from 'react'
 
 const GAP_MULTIPLIER = 5
 
+// offsetWidth rounds to integers; use fractional widths so sums don't
+// underestimate and let items clip instead of overflowing
+const measureWidth = (el: HTMLElement) => el.getBoundingClientRect().width
+
 type UseOverflowVisibleCountOptions = {
   outerContainerRef: RefObject<HTMLDivElement>
   itemsContainerRef: RefObject<HTMLDivElement>
@@ -43,9 +47,32 @@ export const useOverflowVisibleCount = ({
     if (!itemsCont) return
 
     const childEls = Array.from(itemsCont.children) as HTMLElement[]
-    const newWidths = childEls.map((el) => el.offsetWidth)
+    const newWidths = childEls.map(measureWidth)
     setWidths(newWidths)
   }, [itemCount, force, widths.length, itemsContainerRef])
+
+  // Re-measure when a visible item changes size (e.g. async content such as
+  // permission-gated links or count badges rendering after the first measure)
+  useLayoutEffect(() => {
+    if (force || widths.length === 0) {
+      return
+    }
+
+    const itemsCont = itemsContainerRef.current
+    if (!itemsCont) return
+
+    const ro = new ResizeObserver(() => {
+      const childEls = Array.from(itemsCont.children) as HTMLElement[]
+      const changed = childEls.some(
+        (el, i) => Math.abs(measureWidth(el) - widths[i]) > 0.5,
+      )
+      if (changed) {
+        setWidths([])
+      }
+    })
+    Array.from(itemsCont.children).forEach((el) => ro.observe(el))
+    return () => ro.disconnect()
+  }, [widths, force, itemsContainerRef])
 
   // Calculate visible count based
   useLayoutEffect(() => {
@@ -57,7 +84,15 @@ export const useOverflowVisibleCount = ({
       const outerCont = outerContainerRef.current
       if (!outerCont) return
 
-      const gapPx = gap * GAP_MULTIPLIER
+      // Read the real flex gap; the gap * GAP_MULTIPLIER guess undershoots
+      // (e.g. gap-3 is 16px, not 15px) which lets items clip off-screen
+      const itemsCont = itemsContainerRef.current
+      const computedGap = itemsCont
+        ? parseFloat(getComputedStyle(itemsCont).columnGap)
+        : NaN
+      const gapPx = Number.isNaN(computedGap)
+        ? gap * GAP_MULTIPLIER
+        : computedGap
 
       const sumWidths = (count: number) => {
         if (count === 0) return 0
@@ -68,7 +103,12 @@ export const useOverflowVisibleCount = ({
         return totalWidths + totalGaps
       }
 
-      const containerWidth = outerCont.clientWidth
+      // clientWidth includes padding, which is not available to items
+      const outerStyle = getComputedStyle(outerCont)
+      const containerWidth =
+        outerCont.clientWidth -
+        (parseFloat(outerStyle.paddingLeft) || 0) -
+        (parseFloat(outerStyle.paddingRight) || 0)
       // All items fit
       if (sumWidths(widths.length) <= containerWidth) {
         setVisibleCount(widths.length)
@@ -93,7 +133,15 @@ export const useOverflowVisibleCount = ({
       ro.observe(outerContainerRef.current)
     }
     return () => ro.disconnect()
-  }, [widths, force, gap, itemCount, extraWidth, outerContainerRef])
+  }, [
+    widths,
+    force,
+    gap,
+    itemCount,
+    extraWidth,
+    outerContainerRef,
+    itemsContainerRef,
+  ])
 
   const isMeasuring = !force && widths.length === 0 && itemCount > 0
 
