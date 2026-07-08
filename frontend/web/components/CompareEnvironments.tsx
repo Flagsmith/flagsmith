@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useMemo, useState } from 'react'
 import sortBy from 'lodash/sortBy'
+import { useHistory } from 'react-router-dom'
 import EnvironmentSelect from './EnvironmentSelect'
 import data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
@@ -14,6 +15,9 @@ import { useGetFeatureStatesQuery } from 'common/services/useFeatureState'
 import FeatureName from './feature-summary/FeatureName'
 import FeatureValue from './feature-summary/FeatureValue'
 import SegmentsIcon from './icons/SegmentsIcon'
+import Button from './base/forms/Button'
+import CreateFlagModal from './modals/create-feature'
+import Utils from 'common/utils/utils'
 import {
   Environment,
   FeatureState,
@@ -111,6 +115,7 @@ const CompareEnvironments: FC<CompareEnvironmentsProps> = ({
   environmentId: initialEnvironmentId,
   projectId,
 }) => {
+  const history = useHistory()
   const [environmentLeft, setEnvironmentLeft] = useState<string>(
     initialEnvironmentId || '',
   )
@@ -121,6 +126,44 @@ const CompareEnvironments: FC<CompareEnvironmentsProps> = ({
   const [filters, setFilters] = useState<FilterState>(getFiltersFromParams({}))
 
   const projectIdNum = parseInt(projectId)
+
+  const editFeature = (
+    projectFlag: ProjectFlag,
+    environmentFlag: FeatureState,
+    environmentId: string,
+    environmentName?: string,
+  ) => {
+    openModal(
+      <Row className='align-items-center'>
+        <span>
+          Edit Feature: {projectFlag.name}
+          {environmentName && (
+            <span className='text-muted ms-2'>({environmentName})</span>
+          )}
+        </span>
+        <Button
+          onClick={() => {
+            Utils.copyToClipboard(projectFlag.name)
+          }}
+          theme='icon'
+          className='ms-2'
+        >
+          <Icon name='copy' />
+        </Button>
+      </Row>,
+      <CreateFlagModal
+        environmentFlag={environmentFlag}
+        environmentId={environmentId}
+        projectFlag={projectFlag}
+        projectId={projectId}
+        history={history}
+      />,
+      'side-modal create-feature-modal',
+      () => {
+        fetch()
+      },
+    )
+  }
 
   const fetch = useCallback(async () => {
     if (!environmentLeft || !environmentRight) {
@@ -374,6 +417,22 @@ const CompareEnvironments: FC<CompareEnvironmentsProps> = ({
           >
             <Switch checked={item.leftEnabled} disabled />
             <FeatureValue value={item.leftValue} />
+            <div className='flex-fill' />
+            <Button
+              theme='text'
+              size='xSmall'
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation()
+                editFeature(
+                  item.projectFlagLeft,
+                  item.leftEnvironmentFlag,
+                  environmentLeft,
+                  envLeft?.name,
+                )
+              }}
+            >
+              Edit
+            </Button>
           </div>
 
           <div
@@ -382,6 +441,22 @@ const CompareEnvironments: FC<CompareEnvironmentsProps> = ({
           >
             <Switch checked={item.rightEnabled} disabled />
             <FeatureValue value={item.rightValue} />
+            <div className='flex-fill' />
+            <Button
+              theme='text'
+              size='xSmall'
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation()
+                editFeature(
+                  item.projectFlagRight,
+                  item.rightEnvironmentFlag,
+                  environmentRight,
+                  envRight?.name,
+                )
+              }}
+            >
+              Edit
+            </Button>
           </div>
 
           <div
