@@ -457,7 +457,7 @@ def test_refresh_project_segment_counts__ff_disabled__skips_and_purges_stale_cou
     segment: Segment,
     log: StructuredLogCapture,
 ) -> None:
-    # Given a count left over from when the org was still enabled
+    # Given
     settings.CLICKHOUSE_ENABLED = True
     spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
     SegmentMembershipCount.objects.create(
