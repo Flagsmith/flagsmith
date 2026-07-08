@@ -145,3 +145,11 @@ We tend to add our own layers in the following modules:
 - `services.py` for encapsulated business logic. Our goal with this layer is to make the views, models and serialisers leaner, so that the business logic is more clearly defined and easier to compose.
 - `tasks.py` for defining asynchronous and recurring tasks.
 - `types.py` for custom type definitions, including typed dicts.
+
+### Code guidelines: models
+
+Avoid implementing business logic inside `models` modules. The `models` modules should act as a repository only, and business logic should be contained to `services` modules. 
+
+### Code guidelines: asynchronous dispatch
+
+Avoid using lifecycle hooks and django signals where possible in favour of explicit dispatching of logic. 
