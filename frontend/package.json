@@ -114,7 +114,6 @@
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.2.3",
     "react-markdown": "^8.0.5",
-    "react-maskedinput": "4.0.1",
     "react-redux": "8.0.2",
     "react-router": "5.3.3",
     "react-router-dom": "5.3.3",
