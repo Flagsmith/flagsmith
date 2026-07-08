@@ -69,11 +69,11 @@
 }
 .hljs {
   a {
-    color: white !important;
+    color: var(--color-text-action) !important;
     text-decoration: underline;
     .hljs-regexp,
     .hljs-comment {
-      color: white !important;
+      color: var(--color-text-action) !important;
     }
   }
   cursor: text;
@@ -83,9 +83,11 @@
   overflow-x: auto;
   @include customScrollDark();
   padding: 0.5em;
-  background: $code-bg;
+  // #6606 spike: theme-adaptive code surface (light in light mode, dark in
+  // dark) via semantic tokens, replacing the hardcoded dark $code-bg.
+  background: var(--color-surface-subtle);
   border-radius: $border-radius;
-  border: 1px solid $basic-alpha-8;
+  border: 1px solid var(--color-border-default);
   &.no-pad {
     margin-bottom: 0;
   }
@@ -99,13 +101,13 @@
 }
 .yaml {
   .hljs-bullet {
-    color: #eee;
+    color: var(--color-text-default);
   }
   .hljs-attr {
-    color: #64c77c;
+    color: var(--color-text-success);
   }
   .hljs-string {
-    color: #4c96ec;
+    color: var(--color-text-info);
   }
 }
 .hljs-container {
@@ -177,7 +179,7 @@
 }
 
 .hljs {
-  color: $code-color;
+  color: var(--color-text-default);
   padding: 18px;
 }
 
@@ -186,7 +188,7 @@
 }
 .hljs-strong,
 .hljs-emphasis {
-  color: #a8a8a2;
+  color: var(--color-text-secondary);
 }
 
 .hljs-bullet,
@@ -195,12 +197,12 @@
 .hljs-number,
 .hljs-regexp,
 .hljs-literal {
-  color: $info;
+  color: var(--color-text-info);
 }
 
 .hljs-code,
 .hljs-selector-class {
-  color: #a6e22e;
+  color: var(--color-text-success);
 }
 
 .hljs-emphasis {
@@ -213,15 +215,15 @@
 .hljs-attribute,
 .hljs-name,
 .hljs-variable {
-  color: $warning;
+  color: var(--color-text-action);
 }
 
 .hljs-params {
-  color: #b9b9b9;
+  color: var(--color-text-secondary);
 }
 
 .hljs-string {
-  color: $success;
+  color: var(--color-text-success);
 }
 
 .hljs-subst,
@@ -235,13 +237,13 @@
 .hljs-template-tag,
 .hljs-template-variable,
 .hljs-addition {
-  color: $secondary400;
+  color: var(--color-text-info);
 }
 
 .hljs-comment,
 .hljs-deletion,
 .hljs-meta {
-  color: #7f7f7f;
+  color: var(--color-text-secondary);
 }
 .value-editor pre {
   overflow: hidden;
