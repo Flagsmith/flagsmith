@@ -101,7 +101,7 @@ corresponding client-side key.
 
 #### `api_url`
 
-The URL that edge proxy uses to retrieve the environment document, and poll the Flagmsith API for changes. Defaults to `https://edge.api.flagsmith.com/api/v1`.
+The URL that edge proxy uses to retrieve the environment document, and poll the Flagsmith API for changes. Defaults to `https://edge.api.flagsmith.com/api/v1`.
 
 If you are self-hosting Flagsmith, set this to your API URL:
 
