@@ -449,23 +449,37 @@ def test_refresh_project_segment_counts__no_clickhouse_creds__skips(
     )
 
 
-def test_refresh_project_segment_counts__ff_disabled__skips(
+def test_refresh_project_segment_counts__ff_disabled__skips_and_purges_stale_counts(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     project: Project,
+    environment: Environment,
+    segment: Segment,
     log: StructuredLogCapture,
 ) -> None:
-    # Given
+    # Given a count left over from when the org was still enabled
     settings.CLICKHOUSE_ENABLED = True
     spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    SegmentMembershipCount.objects.create(
+        segment=segment,
+        environment=environment,
+        count=15,
+        last_synced_at=timezone.now(),
+    )
 
     # When
     refresh_project_segment_counts(project.id)
 
-    # Then
+    # Then the compute path is skipped and the stale row is purged, so the
+    # dashboard stops showing the feature for the now-disabled org
     spy.assert_not_called()
+    assert not SegmentMembershipCount.objects.filter(
+        segment=segment, environment=environment
+    ).exists()
     assert any(
-        e["event"] == "refresh.project.skipped" and e["reason"] == "ff_disabled"
+        e["event"] == "refresh.project.skipped"
+        and e["reason"] == "ff_disabled"
+        and e["stale_counts__count"] == 1
         for e in log.events
     )
 

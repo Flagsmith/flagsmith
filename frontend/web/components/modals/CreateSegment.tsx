@@ -757,11 +757,14 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
 
   const isEdge = Utils.getIsEdge()
 
-  // When membership inspection is enabled and the project uses edge, the
-  // Identities tab uses the dedicated segment members endpoint, so the legacy
-  // identities list (and its request) is not needed.
+  // Availability is derived strictly from the backend: membership counts are
+  // only present for membership-enabled orgs (see `is_membership_enabled`), so
+  // their presence gates the UI without a separate frontend flag. When enabled
+  // and the project uses edge, the Identities tab uses the dedicated segment
+  // members endpoint, so the legacy identities list (and its request) is not
+  // needed.
   const membersEnabled =
-    Utils.getFlagsmithHasFeature('segment_membership_inspection') && isEdge
+    (segmentData?.membership_counts?.length ?? 0) > 0 && isEdge
 
   const { data: identities, isLoading: identitiesLoading } =
     useGetIdentitiesQuery(
