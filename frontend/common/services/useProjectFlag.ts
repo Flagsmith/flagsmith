@@ -215,6 +215,7 @@ export const projectFlagService = service
           { id: 'LIST', type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
           { id: 'METRICS', type: 'Environment' },
+          'LifecycleCounts',
         ],
         query: ({ flag_id, project_id }) => ({
           method: 'DELETE',
@@ -230,6 +231,7 @@ export const projectFlagService = service
           { id: 'LIST', type: 'ProjectFlag' },
           { id: res?.id, type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
+          'LifecycleCounts',
         ],
         query: (query: Req['updateProjectFlag']) => ({
           body: query.body,

@@ -27,6 +27,15 @@ const ProjectFeatureRow: FC<ProjectFeatureRowProps> = ({
 }) => {
   const { description } = projectFlag
 
+  const handleKeyDown = onClick
+    ? (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick(projectFlag)
+        }
+      }
+    : undefined
+
   const hasScannedCodeReferences =
     projectFlag?.code_references_counts?.length > 0
   const codeReferencesCounts =
@@ -46,6 +55,9 @@ const ProjectFeatureRow: FC<ProjectFeatureRowProps> = ({
         )}
         data-test={`cleanup-feature-item-${index}`}
         onClick={onClick ? () => onClick(projectFlag) : undefined}
+        onKeyDown={handleKeyDown}
+        role={onClick ? 'button' : undefined}
+        tabIndex={onClick ? 0 : undefined}
       >
         {onSelect && (
           <div
@@ -99,6 +111,9 @@ const ProjectFeatureRow: FC<ProjectFeatureRowProps> = ({
           { clickable: !!onClick },
         )}
         onClick={onClick ? () => onClick(projectFlag) : undefined}
+        onKeyDown={handleKeyDown}
+        role={onClick ? 'button' : undefined}
+        tabIndex={onClick ? 0 : undefined}
       >
         <div className='d-flex gap-2 align-items-center'>
           {onSelect && (
