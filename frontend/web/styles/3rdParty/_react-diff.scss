@@ -95,3 +95,27 @@
     color: $body-color-dark !important;
   }
 }
+
+// Environment name legend for diff headers
+.diff-removed-header {
+  background-color: $danger-alfa-16;
+  color: $danger;
+  font-weight: 500;
+  font-size: $font-caption;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.diff-added-header {
+  background-color: $success-alfa-16;
+  color: $success;
+  font-weight: 500;
+  font-size: $font-caption;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.diff-sign {
+  font-weight: bold;
+  margin-right: 4px;
+}
