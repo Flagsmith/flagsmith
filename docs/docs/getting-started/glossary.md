@@ -24,7 +24,7 @@ This glossary provides concise definitions for some of the key concepts within F
 
 - [**Identity**](/flagsmith-concepts/data-model#identities): An entity within a particular environment, against which you can manage and override feature settings.
 
-- [**Local Evaluation Mode**](/integrating-with-flagsmith/integration-overview): A mode where the SDK evaluates feature flags locally using a downloaded environment document, reducing latency and API calls.
+- [**Local Evaluation Mode**](/integrating-with-flagsmith/sdks/#local-evaluation): A mode where the SDK evaluates feature flags locally using a downloaded environment document, reducing latency and API calls.
 
 - [**Multivariate Flag**](/managing-flags/core-management): A feature flag that can take on multiple values (not just on/off), useful for A/B testing.
 

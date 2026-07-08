@@ -7,11 +7,11 @@ sidebar_position: 10
 The Flagsmith Edge Proxy is a service that you host yourself, that allows you to run an instance of the Flagsmith Engine close to your servers. If you are running Flagsmith within a server-side environment and you want to have very low latency flags, you have two options:
 
 1. Run the Edge Proxy within in your own infrastructure and connect to it from your server-side SDKs
-2. Run your server-side SDKs in [Local Evaluation Mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode).
+2. Run your server-side SDKs in [Local Evaluation Mode](/integrating-with-flagsmith/sdks/#local-evaluation).
 
 The main benefit to running the Edge Proxy is that you reduce your polling requests against the Flagsmith API itself.
 
-The main benefit to running server side SDKs in [Local Evaluation Mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode) is that you get the lowest possible latency.
+The main benefit to running server side SDKs in [Local Evaluation Mode](/integrating-with-flagsmith/sdks/#local-evaluation) is that you get the lowest possible latency.
 
 ## How does it work
 
@@ -21,7 +21,7 @@ The Edge Proxy has the same [caveats as running our SDK in Local Evaluation mode
 
 :::
 
-You can think of the Edge Proxy as a copy of our Python Server Side SDK, running in [Local Evaluation Mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode), with an API interface that is compatible with the Flagsmith SDK API.
+You can think of the Edge Proxy as a copy of our Python Server Side SDK, running in [Local Evaluation Mode](/integrating-with-flagsmith/sdks/#local-evaluation), with an API interface that is compatible with the Flagsmith SDK API.
 
 The Edge Proxy runs as a lightweight Docker container. It connects to the Flagsmith API (either powered by us at `edge.api.flagsmith.com` or self hosted by you) to get environment flags and segment rules. You can then point the Flagsmith SDKs to your Edge Proxy; it implements all the current SDK endpoints. This means you can serve a very large number of requests close to your infrastructure and users, at very low latency. Check out the [architecture below](#architecture).
 
