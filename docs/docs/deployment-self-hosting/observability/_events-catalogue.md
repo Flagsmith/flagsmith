@@ -140,6 +140,16 @@ Attributes:
  - `environment.id`
  - `organisation.id`
 
+### `features.feature_state.mv_variants_rebucketed`
+
+Logged at `warning` from:
+ - `api/features/models.py:902`
+
+Attributes:
+ - `environment.id`
+ - `feature.id`
+ - `superseded_feature_state.id`
+
 ### `gitlab.api_call.failed`
 
 Logged at `error` from:
@@ -580,7 +590,7 @@ Attributes:
 ### `workflows.missing_live_segment`
 
 Logged at `warning` from:
- - `api/core/workflows_services.py:114`
+ - `api/core/workflows_services.py:123`
 
 Attributes:
  - `draft_segment`
@@ -588,7 +598,7 @@ Attributes:
 ### `workflows.segment_revision_created`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:119`
+ - `api/core/workflows_services.py:128`
 
 Attributes:
  - `revision_id`
