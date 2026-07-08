@@ -470,8 +470,7 @@ def test_refresh_project_segment_counts__ff_disabled__skips_and_purges_stale_cou
     # When
     refresh_project_segment_counts(project.id)
 
-    # Then the compute path is skipped and the stale row is purged, so the
-    # dashboard stops showing the feature for the now-disabled org
+    # Then
     spy.assert_not_called()
     assert not SegmentMembershipCount.objects.filter(
         segment=segment, environment=environment
