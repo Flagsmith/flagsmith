@@ -890,15 +890,16 @@ def test_feature_state_create__v1_recreates_live_standard_state_directly__does_n
     feature: Feature,
     log: StructuredLogCapture,
 ) -> None:
-    # When a new version of a standard feature's state is created directly
+    # Given
+
+    # When
     feature_state = FeatureState.objects.create(
         feature=feature,
         environment=environment,
         version=2,
     )
 
-    # Then nothing is logged: bucketing seeds only matter for multivariate
-    # features
+    # Then
     assert feature_state.mv_hashing_salt is None
     assert not log.has("feature_state.mv_variants_rebucketed")
 
