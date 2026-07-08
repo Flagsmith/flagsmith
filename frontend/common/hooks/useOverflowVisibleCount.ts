@@ -3,10 +3,6 @@ import { useState, useLayoutEffect, RefObject } from 'react'
 
 const GAP_MULTIPLIER = 5
 
-// offsetWidth rounds to integers; use fractional widths so sums don't
-// underestimate and let items clip instead of overflowing
-const measureWidth = (el: HTMLElement) => el.getBoundingClientRect().width
-
 type UseOverflowVisibleCountOptions = {
   outerContainerRef: RefObject<HTMLDivElement>
   itemsContainerRef: RefObject<HTMLDivElement>
@@ -47,42 +43,9 @@ export const useOverflowVisibleCount = ({
     if (!itemsCont) return
 
     const childEls = Array.from(itemsCont.children) as HTMLElement[]
-    const newWidths = childEls.map(measureWidth)
+    const newWidths = childEls.map((el) => el.offsetWidth)
     setWidths(newWidths)
   }, [itemCount, force, widths.length, itemsContainerRef])
-
-  // Re-measure when a visible item changes size (e.g. async content such as
-  // permission-gated links or count badges rendering after the first measure)
-  useLayoutEffect(() => {
-    if (force || widths.length === 0) {
-      return
-    }
-
-    const itemsCont = itemsContainerRef.current
-    if (!itemsCont) return
-
-    // Coalesce a burst of resize entries into a single re-measure per frame,
-    // and ignore sub-pixel drift so fractional rounding doesn't churn
-    let frame = 0
-    const ro = new ResizeObserver(() => {
-      if (frame) return
-      frame = requestAnimationFrame(() => {
-        frame = 0
-        const childEls = Array.from(itemsCont.children) as HTMLElement[]
-        const changed = childEls.some(
-          (el, i) => Math.abs(measureWidth(el) - widths[i]) > 0.5,
-        )
-        if (changed) {
-          setWidths([])
-        }
-      })
-    })
-    Array.from(itemsCont.children).forEach((el) => ro.observe(el))
-    return () => {
-      if (frame) cancelAnimationFrame(frame)
-      ro.disconnect()
-    }
-  }, [widths, force, itemsContainerRef])
 
   // Calculate visible count based
   useLayoutEffect(() => {
@@ -94,15 +57,7 @@ export const useOverflowVisibleCount = ({
       const outerCont = outerContainerRef.current
       if (!outerCont) return
 
-      // Read the real flex gap; the gap * GAP_MULTIPLIER guess undershoots
-      // (e.g. gap-3 is 16px, not 15px) which lets items clip off-screen
-      const itemsCont = itemsContainerRef.current
-      const computedGap = itemsCont
-        ? parseFloat(getComputedStyle(itemsCont).columnGap)
-        : NaN
-      const gapPx = Number.isNaN(computedGap)
-        ? gap * GAP_MULTIPLIER
-        : computedGap
+      const gapPx = gap * GAP_MULTIPLIER
 
       const sumWidths = (count: number) => {
         if (count === 0) return 0
@@ -113,7 +68,9 @@ export const useOverflowVisibleCount = ({
         return totalWidths + totalGaps
       }
 
-      // clientWidth includes padding, which is not available to items
+      // clientWidth includes the container's horizontal padding, which the items
+      // can't actually occupy. Subtract it so padded navbars don't over-estimate
+      // the available width and let items clip off-screen.
       const outerStyle = getComputedStyle(outerCont)
       const containerWidth =
         outerCont.clientWidth -
@@ -143,15 +100,7 @@ export const useOverflowVisibleCount = ({
       ro.observe(outerContainerRef.current)
     }
     return () => ro.disconnect()
-  }, [
-    widths,
-    force,
-    gap,
-    itemCount,
-    extraWidth,
-    outerContainerRef,
-    itemsContainerRef,
-  ])
+  }, [widths, force, gap, itemCount, extraWidth, outerContainerRef])
 
   const isMeasuring = !force && widths.length === 0 && itemCount > 0
 
