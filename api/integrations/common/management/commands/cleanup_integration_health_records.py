@@ -21,4 +21,6 @@ class Command(BaseCommand):
         deleted, _ = IntegrationHealthRecord.objects.filter(
             created_at__lt=cutoff
         ).delete()
-        self.stdout.write(f"Deleted {deleted} integration health record(s) older than {days} days.")
+        self.stdout.write(
+            f"Deleted {deleted} integration health record(s) older than {days} days."
+        )
