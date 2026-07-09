@@ -18,7 +18,7 @@ from features.workflows.core.models import ChangeRequest
 from integrations.common.models import IntegrationHealthRecord
 from integrations.sentry.models import SentryChangeTrackingConfiguration
 from users.models import FFAdminUser
-
+from django.contrib.contenttypes.models import ContentType
 
 @pytest.fixture(autouse=True)
 def sentry_configuration(environment: int) -> SentryChangeTrackingConfiguration:
@@ -99,6 +99,7 @@ def test_sentry_change_tracking__flag_created__sends_update_to_sentry(
         },
     ]
     health_record = IntegrationHealthRecord.objects.get(
+        content_type=ContentType.objects.get_for_model(sentry_configuration),
         object_id=sentry_configuration.id
     )
     assert health_record.status_code == 200
