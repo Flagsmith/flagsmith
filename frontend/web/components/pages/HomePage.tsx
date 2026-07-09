@@ -31,6 +31,21 @@ import AccountStore from 'common/stores/account-store'
 import { LoginRequest, RegisterRequest } from 'common/types/requests'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import { useUTMs } from 'common/useUTMs'
+import flagsmith from '@flagsmith/flagsmith'
+import { storageGet, storageSet } from 'common/safeLocalStorage'
+
+const SIGNUP_CORPORATE_ONLY_FLAG = 'signup_corporate_only'
+const SIGNUP_CORPORATE_ONLY_VARIANT = 'signup_corporate_only'
+const SIGNUP_ANONYMOUS_ID_KEY = 'signup_anonymous_id'
+
+const recordSignupExperimentExposure = () => {
+  const id = storageGet(SIGNUP_ANONYMOUS_ID_KEY) || crypto.randomUUID()
+  storageSet(SIGNUP_ANONYMOUS_ID_KEY, id)
+  // transient is missing from the SDK's identify type
+  ;(flagsmith.identify as any)(id, {}, true).then(() =>
+    flagsmith.getExperimentFlag(SIGNUP_CORPORATE_ONLY_FLAG),
+  )
+}
 
 const HomePage: React.FC = () => {
   const history = useHistory()
@@ -180,6 +195,26 @@ const HomePage: React.FC = () => {
       currentLocation.indexOf('signup') !== -1)
   const disableSignup = preventSignup && isSignup
   const preventEmailPassword = Project.preventEmailPassword
+
+  useEffect(() => {
+    if (
+      isSignup &&
+      !isInvite &&
+      !preventEmailPassword &&
+      !AccountStore.getUser()
+    ) {
+      recordSignupExperimentExposure()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSignup, isInvite, preventEmailPassword])
+
+  const signupFlag = flagsmith.getAllFlags()?.[SIGNUP_CORPORATE_ONLY_FLAG]
+  const blockGenericEmailDomain =
+    isSignup &&
+    !isInvite &&
+    !!signupFlag?.enabled &&
+    signupFlag.variant === SIGNUP_CORPORATE_ONLY_VARIANT &&
+    isFreeEmailDomain(email)
   const disableForgotPassword = Project.preventForgotPassword
   const oauths: React.ReactNode[] = []
   const disableOauthRegister = Utils.getFlagsmithHasFeature(
@@ -627,12 +662,16 @@ const HomePage: React.FC = () => {
                                   name='email'
                                   id='email'
                                 />
-                                {isFreeEmailDomain(email) && (
-                                  <InfoMessage>
-                                    Signing up with a work email makes it easier
-                                    for co-workers to join your Flagsmith
-                                    organisation.
-                                  </InfoMessage>
+                                {blockGenericEmailDomain ? (
+                                  <ErrorMessage error='Please use your work email address to create your account.' />
+                                ) : (
+                                  isFreeEmailDomain(email) && (
+                                    <InfoMessage>
+                                      Signing up with a work email makes it
+                                      easier for co-workers to join your
+                                      Flagsmith organisation.
+                                    </InfoMessage>
+                                  )
                                 )}
                                 <InputGroup
                                   title='Password'
@@ -663,7 +702,8 @@ const HomePage: React.FC = () => {
                                     disabled={
                                       isLoading ||
                                       isSaving ||
-                                      !allRequirementsMet
+                                      !allRequirementsMet ||
+                                      blockGenericEmailDomain
                                     }
                                     className='px-4 mt-3 full-width'
                                     type='submit'
