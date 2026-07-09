@@ -27,7 +27,10 @@ class AmplitudeWrapper(AbstractBaseIdentityIntegrationWrapper[AmplitudeUserData]
         payload = {"api_key": self.api_key, "identification": json.dumps([user_data])}
 
         response = requests.post(self.url, data=payload, timeout=10)
-        record_integration_health(self.config, response.status_code)
+        try:
+            record_integration_health(self.config, response.status_code)
+        except Exception:
+            logger.warning("Failed to record Amplitude integration health")
         logger.debug(
             "Sent event to Amplitude. Response code was: %s" % response.status_code
         )
