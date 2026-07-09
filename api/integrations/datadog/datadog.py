@@ -21,9 +21,7 @@ class DataDogWrapper(AbstractBaseEventIntegrationWrapper):
         session: requests.Session = None,  # type: ignore[assignment]
     ) -> None:
         self.config = config
-        self.base_url = config.base_url
-        if self.base_url[-1] != "/":
-            self.base_url += "/"
+        self.base_url = (config.base_url or "").rstrip("/") + "/"
         self.events_url = f"{self.base_url}{EVENTS_API_URI}"
         self.use_custom_source = config.use_custom_source
 
