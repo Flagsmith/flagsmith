@@ -4,8 +4,6 @@ import {
   useCreateExperimentMutation,
   useStartExperimentMutation,
 } from 'common/services/useExperiment'
-import { useGetFeatureStatesQuery } from 'common/services/useFeatureState'
-import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import {
   ENABLE_EXPERIMENT_LIFECYCLE,
   METRIC_DIRECTION_TO_EXPECTED_DIRECTION,
@@ -18,7 +16,7 @@ import RolloutStep from './steps/RolloutStep'
 import {
   VariationSplitEntry,
   getControlPercentage,
-  getVariationSplitDefaults,
+  getEvenSplit,
   toRolloutFeatureValue,
 } from './rollout'
 import isValidPercentage from 'common/utils/isValidPercentage'
@@ -55,32 +53,11 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
   )
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
 
-  const { getEnvironmentIdFromKey } = useProjectEnvironments(projectId)
-  const numericEnvId = getEnvironmentIdFromKey(environmentId)
-
-  const { data: featureStatesData } = useGetFeatureStatesQuery(
-    { environment: numericEnvId, feature: selectedFeature?.id },
-    { skip: !selectedFeature || !numericEnvId },
-  )
-
-  const environmentFeatureState = useMemo(
-    () =>
-      featureStatesData?.results?.find(
-        (state) => !state.feature_segment && !state.identity,
-      ),
-    [featureStatesData],
-  )
-
   useEffect(() => {
     setVariationSplit(
-      selectedFeature
-        ? getVariationSplitDefaults(
-            selectedFeature.multivariate_options,
-            environmentFeatureState?.multivariate_feature_state_values,
-          )
-        : [],
+      selectedFeature ? getEvenSplit(selectedFeature.multivariate_options) : [],
     )
-  }, [selectedFeature, environmentFeatureState])
+  }, [selectedFeature])
 
   const [createExperiment, { isLoading: isCreating }] =
     useCreateExperimentMutation()
