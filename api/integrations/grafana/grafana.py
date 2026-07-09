@@ -48,8 +48,11 @@ class GrafanaWrapper(AbstractBaseEventIntegrationWrapper):
             headers=self._headers(),
             data=json.dumps(event),
         )
-        record_integration_health(self.config, response.status_code)
 
+        try:
+            record_integration_health(self.config, response.status_code)
+        except Exception:
+            logger.warning("Failed to record Grafana integration health")
         logger.debug(
             "Sent event to Grafana. Response code was %s" % response.status_code
         )
