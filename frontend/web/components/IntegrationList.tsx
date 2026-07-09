@@ -326,34 +326,35 @@ const Integration: FC<IntegrationProps> = (props) => {
       )}
 
       {activeIntegrations &&
-        activeIntegrations.map((integration) => (
-          <div
-            key={integration.id}
-            className='list-integrations clickable p-3 mt-3'
-            onClick={() => edit(integration)}
-          >
-            <Row space>
-              <Flex>
-                <CreateEditIntegration
-                  readOnly
-                  organisationId={props.organisationId}
-                  projectId={props.projectId}
-                  data={integration}
-                  integration={props.integration}
-                />
-              </Flex>
-              <div className='d-flex align-items-center gap-2 mt-1 mr-3'>
-                <BooleanDotIndicator
-                  enabled={integration.latest_health?.is_healthy ?? false}
-                />
-                <span className='fs-small text-muted'>
-                  {integration.latest_health
-                    ? integration.latest_health.is_healthy
-                      ? 'Healthy'
-                      : 'Unhealthy'
-                    : 'No health data'}
-                </span>
-              </div>
+        activeIntegrations.map((integration) => {
+          const healthStatusText = !integration.latest_health
+            ? 'No health data'
+            : integration.latest_health.is_healthy
+            ? 'Healthy'
+            : 'Unhealthy'
+
+          return (
+            <div
+              key={integration.id}
+              className='list-integrations clickable p-3 mt-3'
+              onClick={() => edit(integration)}
+            >
+              <Row space>
+                <Flex>
+                  <CreateEditIntegration
+                    readOnly
+                    organisationId={props.organisationId}
+                    projectId={props.projectId}
+                    data={integration}
+                    integration={props.integration}
+                  />
+                </Flex>
+                <div className='d-flex align-items-center gap-2 mt-1 mr-3'>
+                  <BooleanDotIndicator
+                    enabled={integration.latest_health?.is_healthy ?? false}
+                  />
+                  <span className='fs-small text-muted'>{healthStatusText}</span>
+                </div>
               <div onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu
                   items={[
@@ -372,7 +373,8 @@ const Integration: FC<IntegrationProps> = (props) => {
               </div>
             </Row>
           </div>
-        ))}
+          )
+        })}
     </div>
   )
 }
