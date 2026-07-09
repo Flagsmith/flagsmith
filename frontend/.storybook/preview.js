@@ -17,7 +17,6 @@ import ReactSelect, { components as selectComponents } from 'react-select'
 import Tooltip from '../web/components/Tooltip'
 import Row from '../web/components/base/grid/Row'
 import FormGroup from '../web/components/base/grid/FormGroup'
-import Button from '../web/components/base/forms/Button'
 
 window.React = React
 window.propTypes = PropTypes
@@ -56,7 +55,6 @@ global.Select = (props) =>
 window.Tooltip = Tooltip
 window.Row = Row
 window.FormGroup = FormGroup
-window.Button = Button
 
 /** @type { import('storybook').Preview } */
 const preview = {
