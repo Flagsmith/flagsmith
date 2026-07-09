@@ -23,7 +23,7 @@ class HeapWrapper(AbstractBaseIdentityIntegrationWrapper):  # type: ignore[type-
         self.url = f"{base_url}/api/track"
 
     def _identify_user(self, user_data: dict) -> None:  # type: ignore[type-arg]
-        response = requests.post(self.url, json=user_data)
+        response = requests.post(self.url, json=user_data, timeout=10)
 
         try:
             record_integration_health(self.config, response.status_code)
