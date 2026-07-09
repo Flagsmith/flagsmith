@@ -21,17 +21,17 @@ class NewRelicWrapper(AbstractBaseEventIntegrationWrapper):
         self.app_id = config.app_id
         self.url = f"{self.base_url}{EVENTS_API_URI}{self.app_id}/deployments.json"
 
-    def _track_event(self, event: dict) -> None:  # type: ignore[type-arg]  
-        try:  
-            response = requests.post(  
-                self.url, headers=self._headers(), data=json.dumps(event), timeout=10  
-            )  
-        except requests.exceptions.RequestException:  
-            logger.warning("Failed to send event to NewRelic", exc_info=True)  
-            return  
-        record_integration_health(self.config, response.status_code)  
-        logger.debug(  
-            "Sent event to NewRelic. Response code was %s" % response.status_code  
+    def _track_event(self, event: dict) -> None:  # type: ignore[type-arg]
+        try:
+            response = requests.post(
+                self.url, headers=self._headers(), data=json.dumps(event), timeout=10
+            )
+        except requests.exceptions.RequestException:
+            logger.warning("Failed to send event to NewRelic", exc_info=True)
+            return
+        record_integration_health(self.config, response.status_code)
+        logger.debug(
+            "Sent event to NewRelic. Response code was %s" % response.status_code
         )
 
     def _headers(self) -> dict:  # type: ignore[type-arg]

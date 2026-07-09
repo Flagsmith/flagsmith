@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from django.contrib.contenttypes.models import ContentType
@@ -5,21 +6,19 @@ from django.db import models
 
 from integrations.common.models import IntegrationHealthRecord
 
-import logging  
-  
 logger = logging.getLogger(__name__)
 
 
-def record_integration_health(  
-    integration_config: models.Model,  
-    status_code: int,  
-) -> None:  
-    try:  
-        IntegrationHealthRecord.objects.create(  
-            content_object=integration_config,  
-            status_code=status_code,  
-        )  
-    except Exception:  
+def record_integration_health(
+    integration_config: models.Model,
+    status_code: int,
+) -> None:
+    try:
+        IntegrationHealthRecord.objects.create(
+            content_object=integration_config,
+            status_code=status_code,
+        )
+    except Exception:
         logger.exception("Failed to record integration health.")
 
 
