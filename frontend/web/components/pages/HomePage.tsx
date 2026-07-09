@@ -675,6 +675,8 @@ const HomePage: React.FC = () => {
                                       isLoading ||
                                       isSaving ||
                                       !allRequirementsMet ||
+                                      !firstName.trim() ||
+                                      !lastName.trim() ||
                                       blockGenericEmailDomain
                                     }
                                     className='px-4 mt-3 full-width'
