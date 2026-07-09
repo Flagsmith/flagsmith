@@ -110,6 +110,14 @@ export const getHeadlineTotal = (summary: ExposuresSummary): number =>
     0,
   )
 
+export const getResultsTotalUsers = (
+  results: BayesianResultsSummary,
+): number => {
+  const firstMetric = results.metrics[0]
+  if (!firstMetric) return 0
+  return Object.values(firstMetric.variants).reduce((sum, v) => sum + v.n, 0)
+}
+
 export const isLiftFavourable = (
   lift: number,
   direction: ExpectedDirection,

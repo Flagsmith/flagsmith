@@ -6,7 +6,10 @@ import {
   useGetExperimentExposuresQuery,
   useGetExperimentQuery,
 } from 'common/services/useExperiment'
-import { getHeadlineTotal } from 'components/experiments/results/derive'
+import {
+  getHeadlineTotal,
+  getResultsTotalUsers,
+} from 'components/experiments/results/derive'
 import ExperimentDetailHeader from 'components/experiments/results/ExperimentDetailHeader'
 import ExperimentConfiguration from 'components/experiments/results/ExperimentConfiguration'
 import ExperimentRecommendation from 'components/experiments/results/ExperimentRecommendation'
@@ -76,9 +79,11 @@ const ExperimentDetailPage: FC = () => {
     )
   }
 
-  const usersEnrolled = exposures?.payload
+  const resultsTotalUsers = results ? getResultsTotalUsers(results) : 0
+  const exposuresTotalUsers = exposures?.payload
     ? getHeadlineTotal(exposures.payload)
-    : null
+    : 0
+  const usersEnrolled = resultsTotalUsers || exposuresTotalUsers || null
 
   return (
     <div className='app-container container mt-4'>
