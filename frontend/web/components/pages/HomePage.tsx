@@ -34,17 +34,15 @@ import { useUTMs } from 'common/useUTMs'
 import flagsmith from '@flagsmith/flagsmith'
 import { storageGet, storageSet } from 'common/safeLocalStorage'
 
-const SIGNUP_CORPORATE_ONLY_FLAG = 'signup_corporate_only'
-const SIGNUP_CORPORATE_ONLY_VARIANT = 'signup_corporate_only'
-const SIGNUP_ANONYMOUS_ID_KEY = 'signup_anonymous_id'
-
-const recordSignupExperimentExposure = () => {
-  const id = storageGet(SIGNUP_ANONYMOUS_ID_KEY) || crypto.randomUUID()
-  storageSet(SIGNUP_ANONYMOUS_ID_KEY, id)
-  // transient is missing from the SDK's identify type
-  ;(flagsmith.identify as any)(id, {}, true).then(() =>
-    flagsmith.getExperimentFlag(SIGNUP_CORPORATE_ONLY_FLAG),
-  )
+const identifySignupVisitor = async () => {
+  const id = storageGet('signup_anonymous_id') || crypto.randomUUID()
+  storageSet('signup_anonymous_id', id)
+  // @ts-expect-error transient is missing from the SDK's identify type
+  await flagsmith.identify(id, {}, true)
+  const variant = Utils.getFlagsmithVariant('signup_corporate_only')
+  if (variant) {
+    flagsmith.trackExposureEvent('signup_corporate_only', { value: variant })
+  }
 }
 
 const HomePage: React.FC = () => {
@@ -203,17 +201,15 @@ const HomePage: React.FC = () => {
       !preventEmailPassword &&
       !AccountStore.getUser()
     ) {
-      recordSignupExperimentExposure()
+      identifySignupVisitor()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignup, isInvite, preventEmailPassword])
 
-  const signupFlag = flagsmith.getAllFlags()?.[SIGNUP_CORPORATE_ONLY_FLAG]
   const blockGenericEmailDomain =
-    isSignup &&
     !isInvite &&
-    !!signupFlag?.enabled &&
-    signupFlag.variant === SIGNUP_CORPORATE_ONLY_VARIANT &&
+    Utils.getFlagsmithVariant('signup_corporate_only') ===
+      'signup_corporate_only' &&
     isFreeEmailDomain(email)
   const disableForgotPassword = Project.preventForgotPassword
   const oauths: React.ReactNode[] = []
