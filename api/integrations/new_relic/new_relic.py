@@ -16,7 +16,7 @@ EVENTS_API_URI = "v2/applications/"
 class NewRelicWrapper(AbstractBaseEventIntegrationWrapper):
     def __init__(self, config: NewRelicConfiguration):
         self.config = config
-        self.base_url = config.base_url
+        self.base_url = config.base_url.rstrip("/") + "/"
         self.api_key = config.api_key
         self.app_id = config.app_id
         self.url = f"{self.base_url}{EVENTS_API_URI}{self.app_id}/deployments.json"
