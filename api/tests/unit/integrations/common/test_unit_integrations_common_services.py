@@ -5,7 +5,7 @@ from integrations.common.services import (
 from integrations.webhook.models import WebhookConfiguration
 
 
-def test_get_latest_integration_health__no_record__returns_none(environment):
+def test_get_latest_integration_health__no_record__returns_none(environment) -> None:
     # Given
     webhook_config = WebhookConfiguration.objects.create(
         environment=environment, url="https://webhook.url"
