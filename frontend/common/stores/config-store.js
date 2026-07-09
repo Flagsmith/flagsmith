@@ -45,15 +45,6 @@ flagsmith
     environmentID: Project.flagsmith,
     onChange: controller.loaded,
     realtime: window.E2E ? false : Project.flagsmithRealtime,
-    ...(!window.E2E &&
-    Project.flagsmithAnalytics &&
-    Project.flagsmithClientEventsAPI
-      ? {
-          eventProcessorConfig: {
-            eventsApiUrl: Project.flagsmithClientEventsAPI,
-          },
-        }
-      : {}),
     ...(Project.evaluationAnalyticsServerUrl
       ? {
           evaluationAnalyticsConfig: {
