@@ -50,3 +50,8 @@ class IntegrationHealthRecord(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
     status_code = models.PositiveIntegerField()
+    
+    class Meta:  
+        indexes = [  
+            models.Index(fields=["content_type", "object_id", "-created_at"]),  
+        ]
