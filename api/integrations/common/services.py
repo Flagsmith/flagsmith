@@ -16,7 +16,9 @@ def record_integration_health(
     )
 
 
-def get_latest_integration_health(integration_config: models.Model) -> dict[str, Any] | None:
+def get_latest_integration_health(
+    integration_config: models.Model,
+) -> dict[str, Any] | None:
     latest_record = (
         IntegrationHealthRecord.objects.filter(
             content_type=ContentType.objects.get_for_model(integration_config),
