@@ -32,7 +32,7 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
     def _track_event(self, event: dict) -> None:  # type: ignore[type-arg]
         event["entitySelector"] = self.entity_selector
         response = requests.post(
-            self.url, headers=self._headers(), data=json.dumps(event)
+            self.url, headers=self._headers(), data=json.dumps(event), timeout=10
         )
 
         try:
