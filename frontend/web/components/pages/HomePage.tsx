@@ -31,19 +31,7 @@ import AccountStore from 'common/stores/account-store'
 import { LoginRequest, RegisterRequest } from 'common/types/requests'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import { useUTMs } from 'common/useUTMs'
-import flagsmith from '@flagsmith/flagsmith'
-import { storageGet, storageSet } from 'common/safeLocalStorage'
-
-const identifySignupVisitor = async () => {
-  const id = storageGet('signup_anonymous_id') || crypto.randomUUID()
-  storageSet('signup_anonymous_id', id)
-  // @ts-expect-error transient is missing from the SDK's identify type
-  await flagsmith.identify(id, {}, true)
-  const variant = Utils.getFlagsmithVariant('signup_corporate_only')
-  if (variant) {
-    flagsmith.trackExposureEvent('signup_corporate_only', { value: variant })
-  }
-}
+import useSignupExperiment from 'common/useSignupExperiment'
 
 const HomePage: React.FC = () => {
   const history = useHistory()
@@ -194,23 +182,11 @@ const HomePage: React.FC = () => {
   const disableSignup = preventSignup && isSignup
   const preventEmailPassword = Project.preventEmailPassword
 
-  useEffect(() => {
-    if (
-      isSignup &&
-      !isInvite &&
-      !preventEmailPassword &&
-      !AccountStore.getUser()
-    ) {
-      identifySignupVisitor()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSignup, isInvite, preventEmailPassword])
-
+  const signupVariant = useSignupExperiment(
+    !isSignup || isInvite || !!preventEmailPassword || !!AccountStore.getUser(),
+  )
   const blockGenericEmailDomain =
-    !isInvite &&
-    Utils.getFlagsmithVariant('signup_corporate_only') ===
-      'signup_corporate_only' &&
-    isFreeEmailDomain(email)
+    signupVariant === 'signup_corporate_only' && isFreeEmailDomain(email)
   const disableForgotPassword = Project.preventForgotPassword
   const oauths: React.ReactNode[] = []
   const disableOauthRegister = Utils.getFlagsmithHasFeature(
