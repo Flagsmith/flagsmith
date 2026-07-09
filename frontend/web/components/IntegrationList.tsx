@@ -24,7 +24,7 @@ import each from 'lodash/each'
 import { useGetProjectQuery } from 'common/services/useProject'
 import API from 'project/api'
 import Constants from 'common/constants'
-import BooleanDotIndicator from './BooleanDotIndicator'
+import BooleanDotIndicator from 'components/BooleanDotIndicator'
 
 type IntegrationAction = {
   label: string
