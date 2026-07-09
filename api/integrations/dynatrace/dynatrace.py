@@ -34,7 +34,11 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
         response = requests.post(
             self.url, headers=self._headers(), data=json.dumps(event)
         )
-        record_integration_health(self.config, response.status_code)
+
+        try:
+            record_integration_health(self.config, response.status_code)
+        except Exception:
+            logger.warning("Failed to record Dynatrace integration health")
         logger.debug(
             "Sent event to Dynatrace. Response code was %s" % response.status_code
         )
