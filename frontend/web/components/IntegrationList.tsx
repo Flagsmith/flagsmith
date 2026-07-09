@@ -24,7 +24,7 @@ import each from 'lodash/each'
 import { useGetProjectQuery } from 'common/services/useProject'
 import API from 'project/api'
 import Constants from 'common/constants'
-import BooleanDotIndicator from 'components/BooleanDotIndicator'
+import BooleanDotIndicator from './BooleanDotIndicator'
 
 type IntegrationAction = {
   label: string
@@ -353,26 +353,28 @@ const Integration: FC<IntegrationProps> = (props) => {
                   <BooleanDotIndicator
                     enabled={integration.latest_health?.is_healthy ?? false}
                   />
-                  <span className='fs-small text-muted'>{healthStatusText}</span>
+                  <span className='fs-small text-muted'>
+                    {healthStatusText}
+                  </span>
                 </div>
-              <div onClick={(e) => e.stopPropagation()}>
-                <DropdownMenu
-                  items={[
-                    {
-                      dataTest: 'edit-integration',
-                      label: 'Edit',
-                      onClick: () => edit(integration),
-                    },
-                    {
-                      dataTest: 'delete-integration',
-                      label: 'Delete',
-                      onClick: () => remove(integration),
-                    },
-                  ]}
-                />
-              </div>
-            </Row>
-          </div>
+                <div onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu
+                    items={[
+                      {
+                        dataTest: 'edit-integration',
+                        label: 'Edit',
+                        onClick: () => edit(integration),
+                      },
+                      {
+                        dataTest: 'delete-integration',
+                        label: 'Delete',
+                        onClick: () => remove(integration),
+                      },
+                    ]}
+                  />
+                </div>
+              </Row>
+            </div>
           )
         })}
     </div>
