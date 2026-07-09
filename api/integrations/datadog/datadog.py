@@ -49,7 +49,11 @@ class DataDogWrapper(AbstractBaseEventIntegrationWrapper):
         response = self.session.post(
             f"{self.events_url}?api_key={self.api_key}", data=json.dumps(event)
         )
-        record_integration_health(self.config, response.status_code)
+
+        try:
+            record_integration_health(self.config, response.status_code)
+        except Exception:
+            logger.warning("Failed to record DataDog integration health")
         logger.debug(
             "Sent event to DataDog. Response code was %s" % response.status_code
         )
