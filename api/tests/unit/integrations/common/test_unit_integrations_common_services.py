@@ -50,6 +50,7 @@ def test_get_latest_integration_health__multiple_records__returns_latest(
     result = get_latest_integration_health(webhook_config)
 
     # Then
+    assert result is not None
     assert result["status_code"] == 200
     assert result["is_healthy"] is True
 
