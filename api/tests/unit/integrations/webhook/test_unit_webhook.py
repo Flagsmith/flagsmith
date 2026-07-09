@@ -1,4 +1,7 @@
+import requests
+
 from core.constants import STRING
+from django.contrib.contenttypes.models import ContentType
 from environments.identities.traits.models import Trait
 from environments.identities.traits.serializers import TraitSerializerBasic
 from features.models import Feature, FeatureState
@@ -85,7 +88,14 @@ def test_webhook_identify_user__records_health_status(  # type: ignore[no-untype
 ):
     # Given
     webhook_wrapper = WebhookWrapper(integration_webhook_config)
-    response = mocker.MagicMock(status_code=200)
+
+    response = mocker.MagicMock(spec=requests.Response, status_code=200)
+
+    def bool_true(self):
+        return True
+
+    response.__bool__ = bool_true.__get__(response)
+
     mocker.patch(
         "integrations.webhook.webhook.call_integration_webhook",
         return_value=response,
@@ -96,6 +106,37 @@ def test_webhook_identify_user__records_health_status(  # type: ignore[no-untype
 
     # Then
     health_record = IntegrationHealthRecord.objects.get(
-        object_id=integration_webhook_config.id
+        object_id=integration_webhook_config.id,
+        content_type=ContentType.objects.get_for_model(integration_webhook_config),
     )
     assert health_record.status_code == 200
+
+
+def test_webhook_identify_user__unhealthy_status__records_health(
+    mocker,
+    integration_webhook_config,
+):
+    # Given
+    webhook_wrapper = WebhookWrapper(integration_webhook_config)
+
+    response = mocker.MagicMock(spec=requests.Response, status_code=500)
+
+    def bool_true(self):
+        return True
+
+    response.__bool__ = bool_true.__get__(response)
+
+    mocker.patch(
+        "integrations.webhook.webhook.call_integration_webhook",
+        return_value=response,
+    )
+
+    # When
+    webhook_wrapper._identify_user({"identity": "identity-1"})
+
+    # Then
+    health_record = IntegrationHealthRecord.objects.get(
+        object_id=integration_webhook_config.id,
+        content_type=ContentType.objects.get_for_model(integration_webhook_config),
+    )
+    assert health_record.status_code == 500
