@@ -581,6 +581,10 @@ const HomePage: React.FC = () => {
                                 </div>
                               )}
                               <fieldset id='details'>
+                                {/* TODO: remove experiment debug output */}
+                                <div className='text-muted'>
+                                  variant: {signupVariant || 'control'}
+                                </div>
                                 <InputGroup
                                   title='First Name'
                                   data-test='firstName'
