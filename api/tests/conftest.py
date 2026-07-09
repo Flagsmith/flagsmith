@@ -147,7 +147,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
-@pytest.hookimpl(trylast=True)  # type: ignore[misc]
+@pytest.hookimpl(trylast=True)
 def pytest_configure(config: pytest.Config) -> None:
     if (
         config.option.ci
