@@ -1,7 +1,7 @@
 import requests
+from django.contrib.contenttypes.models import ContentType
 
 from core.constants import STRING
-from django.contrib.contenttypes.models import ContentType
 from environments.identities.traits.models import Trait
 from environments.identities.traits.serializers import TraitSerializerBasic
 from features.models import Feature, FeatureState
