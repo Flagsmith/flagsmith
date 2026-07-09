@@ -29,7 +29,11 @@ class NewRelicWrapper(AbstractBaseEventIntegrationWrapper):
         except requests.exceptions.RequestException:
             logger.warning("Failed to send event to NewRelic", exc_info=True)
             return
-        record_integration_health(self.config, response.status_code)
+
+        try:
+            record_integration_health(self.config, response.status_code)
+        except Exception:
+            logger.warning("Failed to record New Relic integration health")
         logger.debug(
             "Sent event to NewRelic. Response code was %s" % response.status_code
         )
