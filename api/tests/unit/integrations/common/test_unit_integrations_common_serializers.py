@@ -77,6 +77,26 @@ def test_base_environment_integration_model_serializer__latest_health__has_recor
     assert data["latest_health"]["created_at"] is not None
 
 
+def test_base_environment_integration_model_serializer__latest_health__unhealthy_status(
+    environment,
+):
+    # Given
+    webhook_config = WebhookConfiguration.objects.create(
+        environment=environment, url="https://webhook.url"
+    )
+    record_integration_health(webhook_config, 500)
+
+    # When
+    serializer = WebhookConfigurationSerializer(webhook_config)
+    data = serializer.data
+
+    # Then
+    assert data["latest_health"] is not None
+    assert data["latest_health"]["status_code"] == 500
+    assert data["latest_health"]["is_healthy"] is False
+    assert data["latest_health"]["created_at"] is not None
+
+
 def test_base_project_integration_model_serializer__soft_deleted_exists__updates_existing(  # type: ignore[no-untyped-def]  # noqa: E501
     project,
 ):
