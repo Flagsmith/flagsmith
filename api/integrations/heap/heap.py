@@ -24,7 +24,11 @@ class HeapWrapper(AbstractBaseIdentityIntegrationWrapper):  # type: ignore[type-
 
     def _identify_user(self, user_data: dict) -> None:  # type: ignore[type-arg]
         response = requests.post(self.url, json=user_data)
-        record_integration_health(self.config, response.status_code)
+
+        try:
+            record_integration_health(self.config, response.status_code)
+        except Exception:
+            logger.warning("Failed to record Heap integration health")
         logger.debug("Sent event to Heap. Response code was: %s" % response.status_code)
 
     def generate_user_data(
