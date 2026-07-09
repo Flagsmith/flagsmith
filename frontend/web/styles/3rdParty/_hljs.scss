@@ -181,69 +181,51 @@
 .hljs {
   color: var(--color-text-default);
   padding: 18px;
+  // Unmapped tokens fall back to the readable base colour instead of the
+  // highlight.js greys; the semantic palette below re-colours specific types.
+  // Kept intentionally restrained (five groups) - this is the palette lifted
+  // from the onboarding code card, now the shared standard (#6606).
+  * {
+    color: inherit;
+  }
 }
 
 .json {
   border: none;
 }
-.hljs-strong,
-.hljs-emphasis {
-  color: var(--color-text-secondary);
+
+.hljs-keyword,
+.hljs-built_in,
+.hljs-literal,
+.hljs-selector-tag {
+  color: var(--color-text-action);
 }
 
-.hljs-bullet,
-.hljs-quote,
-.hljs-link,
+.hljs-string,
+.hljs-regexp {
+  color: var(--color-text-success);
+}
+
+.hljs-attr,
+.hljs-attribute,
+.hljs-property,
 .hljs-number,
-.hljs-regexp,
-.hljs-literal {
+.hljs-type {
   color: var(--color-text-info);
 }
 
-.hljs-code,
-.hljs-selector-class {
-  color: var(--color-text-success);
+.hljs-comment,
+.hljs-quote,
+.hljs-meta {
+  color: var(--color-text-secondary);
 }
 
 .hljs-emphasis {
   font-style: italic;
 }
 
-.hljs-keyword,
-.hljs-selector-tag,
-.hljs-section,
-.hljs-attribute,
-.hljs-name,
-.hljs-variable {
-  color: var(--color-text-action);
-}
-
-.hljs-params {
-  color: var(--color-text-secondary);
-}
-
-.hljs-string {
-  color: var(--color-text-success);
-}
-
-.hljs-subst,
-.hljs-type,
-.hljs-built_in,
-.hljs-builtin-name,
-.hljs-symbol,
-.hljs-selector-id,
-.hljs-selector-attr,
-.hljs-selector-pseudo,
-.hljs-template-tag,
-.hljs-template-variable,
-.hljs-addition {
-  color: var(--color-text-info);
-}
-
-.hljs-comment,
-.hljs-deletion,
-.hljs-meta {
-  color: var(--color-text-secondary);
+.hljs-strong {
+  font-weight: bold;
 }
 .value-editor pre {
   overflow: hidden;
@@ -300,4 +282,23 @@ code.txt {
 code[contenteditable='false'].hljs {
   cursor: default;
   @include customScrollDark();
+}
+
+// Code that sits inside a container which already provides the surface (e.g.
+// the onboarding code card). The container owns the background, border and
+// rounding; the code block itself is transparent and only scrolls sideways.
+.hljs--embedded {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  // Reserve the horizontal scrollbar gutter so hovering doesn't shift the
+  // layout - the default dark-scroll bar toggles display and reflows. The
+  // !important beats customScrollDark's display:none on non-editable code.
+  overflow-x: scroll;
+  overflow-y: hidden;
+
+  &::-webkit-scrollbar,
+  &:hover::-webkit-scrollbar {
+    display: block !important;
+  }
 }

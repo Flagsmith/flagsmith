@@ -47,7 +47,7 @@ const CodeCard: FC<CodeCardProps> = ({
           </span>
         </Button>
       </div>
-      <Highlight forceExpanded className={language}>
+      <Highlight forceExpanded className={`${language} hljs--embedded`}>
         {code}
       </Highlight>
     </div>
