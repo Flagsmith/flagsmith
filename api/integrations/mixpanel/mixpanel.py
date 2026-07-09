@@ -33,7 +33,11 @@ class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper[MixpanelUserData]):
 
     def _identify_user(self, user_data: MixpanelUserData) -> None:
         response = requests.post(self.url, headers=self.headers, json=user_data)
-        record_integration_health(self.config, response.status_code)
+
+        try:
+            record_integration_health(self.config, response.status_code)
+        except Exception:
+            logger.warning("Failed to record Mixpanel integration health")
         logger.debug(
             "Sent event to Mixpanel. Response code was: %s" % response.status_code
         )
