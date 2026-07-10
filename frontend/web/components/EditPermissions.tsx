@@ -825,7 +825,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               <div className='mb-2'>
                 <Row className={role ? 'py-2' : ''}>
                   <Flex>
-                    <div className='font-weight-medium text-dark mb-1'>
+                    <div className='font-weight-medium text-default mb-1'>
                       Administrator
                     </div>
                   </Flex>
@@ -898,7 +898,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               )}
             />
 
-            <p className='text-right mt-5 text-dark'>
+            <p className='text-right mt-5 text-default'>
               This will edit the permissions for{' '}
               <strong>{getEditText()}</strong>.
             </p>

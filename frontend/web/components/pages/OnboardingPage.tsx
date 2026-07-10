@@ -120,7 +120,7 @@ const OnboardingPage: FC<OnboardingPageProps> = () => {
               <br />
               View our{' '}
               <a
-                className='text-primary'
+                className='text-action'
                 href='https://docs.flagsmith.com/deployment'
                 target={'_blank'}
                 rel='noreferrer'
@@ -129,7 +129,7 @@ const OnboardingPage: FC<OnboardingPageProps> = () => {
               </a>{' '}
               or{' '}
               <a
-                className='text-primary'
+                className='text-action'
                 target='_blank'
                 href='https://www.flagsmith.com/contact-us'
                 rel='noreferrer'

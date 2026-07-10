@@ -110,7 +110,7 @@ const Option = (props) => {
       >
         <div>{labelContent}</div>
         {props.isSelected && (
-          <IonIcon icon={checkmarkCircle} className='text-primary' />
+          <IonIcon icon={checkmarkCircle} className='icon-action' />
         )}
       </div>
     </components.Option>

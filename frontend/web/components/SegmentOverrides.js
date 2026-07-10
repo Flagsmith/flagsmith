@@ -133,7 +133,7 @@ const SegmentOverrideInner = class Override extends React.Component {
           >
             {this.props.id ? (
               <>
-                <Row className='font-weight-medium text-dark mb-1'>
+                <Row className='font-weight-medium text-default mb-1'>
                   {projectFlag.description ? (
                     <Tooltip
                       title={
@@ -173,7 +173,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                   width={16}
                   height={16}
                 />
-                <span className='ms-2 fw-bold text-body mb-0'>
+                <span className='ms-2 fw-bold text-default mb-0'>
                   {name || v.segment_name}
                 </span>
                 {v.is_feature_specific && (

@@ -51,7 +51,7 @@ export const PricingPanel = ({
               {headerContent && (
                 <span
                   className={classNames('featured', {
-                    'text-body': !isEnterprise,
+                    'text-default': !isEnterprise,
                     'text-white': isEnterprise,
                   })}
                 >
@@ -127,7 +127,7 @@ export const PricingPanel = ({
             })}
           >
             All from{' '}
-            <span className={isEnterprise ? 'pricing-accent' : 'text-primary'}>
+            <span className={isEnterprise ? 'pricing-accent' : 'text-action'}>
               {includesFrom},
             </span>{' '}
             plus

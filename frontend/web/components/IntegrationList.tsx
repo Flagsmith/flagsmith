@@ -306,7 +306,7 @@ const Integration: FC<IntegrationProps> = (props) => {
             <Link
               to={`/project/${props.lastSaved.projectId}/integrations`}
               data-test='view-project-integrations-link'
-              className='text-primary'
+              className='text-action'
             >
               Manage in project integrations
             </Link>

@@ -125,7 +125,7 @@ const ItemList: FC<ItemListType> = ({
               </span>
             </div>
             {isActive && (
-              <IonIcon className='text-primary' icon={checkmarkCircle} />
+              <IonIcon className='icon-action' icon={checkmarkCircle} />
             )}
           </a>
         )

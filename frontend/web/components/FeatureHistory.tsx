@@ -114,7 +114,7 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
                       >
                         <Button
                           theme='text'
-                          className='px-0 text-primary'
+                          className='px-0 text-action'
                           size='xSmall'
                         >
                           View Details
@@ -131,7 +131,7 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
                                 setSelected(null)
                                 setDiff(diff === v.uuid ? null : v.uuid)
                               }}
-                              className='px-0 text-primary'
+                              className='px-0 text-action'
                               theme='text'
                               size='xSmall'
                             >
@@ -151,7 +151,7 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
                                     setOpen(true)
                                   }
                                 }}
-                                className='px-0 text-primary'
+                                className='px-0 text-action'
                                 theme='text'
                                 size='xSmall'
                               >

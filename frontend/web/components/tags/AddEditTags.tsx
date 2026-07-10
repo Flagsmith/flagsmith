@@ -254,7 +254,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
               {!!filter && !exactTag ? (
                 <div
                   onClick={submit}
-                  className='text-center flex-row text-dark justify-content-center'
+                  className='text-center flex-row text-default justify-content-center'
                 >
                   <div className='me-2'>Create</div>
                   <Tag
@@ -267,7 +267,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
                 </div>
               ) : null}
               {noTags && (
-                <div className='text-center text-dark mt-4'>
+                <div className='text-center text-default mt-4'>
                   You have no tags yet
                 </div>
               )}

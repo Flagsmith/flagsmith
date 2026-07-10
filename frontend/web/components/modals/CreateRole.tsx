@@ -509,7 +509,7 @@ const CreateRole: FC<CreateRoleType> = ({
                 ))}
               </div>
             </div>
-            <p className='text-right mt-5 text-dark'>
+            <p className='text-right mt-5 text-default'>
               This will edit the members for <strong>{role?.name}</strong>.
             </p>
           </div>

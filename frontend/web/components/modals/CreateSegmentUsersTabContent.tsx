@@ -66,7 +66,7 @@ const UserRow: FC<UserRowType> = ({
         <div className='font-weight-medium'>{identifier}</div>
         <Row
           className={`font-weight-medium fs-small lh-sm ${
-            inSegment ? 'text-primary' : 'faint'
+            inSegment ? 'text-action' : 'faint'
           }`}
         >
           {inSegment ? (
