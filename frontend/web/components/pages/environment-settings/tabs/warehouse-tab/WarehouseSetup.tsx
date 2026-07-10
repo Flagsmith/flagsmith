@@ -90,6 +90,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
           </p>
           <div>
             <Button
+              id='warehouse-enable'
               theme='primary'
               size='small'
               disabled={isCreating}

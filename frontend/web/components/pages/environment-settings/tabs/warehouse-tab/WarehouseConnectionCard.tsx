@@ -96,6 +96,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
         <div className='d-flex flex-row align-items-center gap-2'>
           {onEdit && (
             <Button
+              id='warehouse-connection-edit'
               size='xSmall'
               className='btn btn-with-icon'
               onClick={onEdit}
@@ -104,6 +105,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
             </Button>
           )}
           <Button
+            id='warehouse-connection-delete'
             size='xSmall'
             className='btn btn-with-icon'
             onClick={handleDelete}
@@ -133,12 +135,18 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
       <WarehouseEventCodeHelp />
       <div className='d-flex justify-content-end mt-3'>
         {!isFlagsmith && (
-          <Button theme='outline' size='small' disabled>
+          <Button
+            id='warehouse-connection-test'
+            theme='outline'
+            size='small'
+            disabled
+          >
             Test connection
           </Button>
         )}
         {isFlagsmith && !isPending && !isConnected && (
           <Button
+            id='warehouse-send-first-event'
             theme='primary'
             size='small'
             onClick={onSendTestEvent}

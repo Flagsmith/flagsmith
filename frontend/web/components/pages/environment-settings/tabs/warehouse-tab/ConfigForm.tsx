@@ -185,10 +185,17 @@ const ConfigForm: FC<ConfigFormProps> = ({
         )}
 
         <div className='wh-config-form__actions'>
-          <Button theme='outline' size='small' onClick={onCancel} type='button'>
+          <Button
+            id='warehouse-config-cancel'
+            theme='outline'
+            size='small'
+            onClick={onCancel}
+            type='button'
+          >
             Cancel
           </Button>
           <Button
+            id='warehouse-config-save'
             theme='primary'
             size='small'
             type='submit'
