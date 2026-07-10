@@ -16,6 +16,19 @@
 // 4. Optionally include utilities API last to generate classes based on the Sass map in `_utilities.scss`
 
 @import "../project/spacing-utils";
+
+// Colour is owned by the design-system token utilities (_token-utilities.scss).
+// Drop `secondary` from Bootstrap's text-colour utility so `.text-secondary`
+// resolves to `--color-text-secondary` (the token) instead of `$secondary`
+// (the brand yellow). Without this, Bootstrap's `!important` copy wins the
+// cascade and the token utility is dead.
+$_color-util: map-get($utilities, "color");
+$_color-util: map-merge(
+  $_color-util,
+  (values: map-remove(map-get($_color-util, "values"), "secondary"))
+);
+$utilities: map-merge($utilities, ("color": $_color-util));
+
 @import "~bootstrap/scss/utilities/api";
 
 // 5. Include any optional Bootstrap CSS as needed

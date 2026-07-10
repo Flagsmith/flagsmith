@@ -2,6 +2,12 @@
   border-radius: 4px;
 }
 
+// Enterprise brand accent, previously Bootstrap's `.text-secondary` ($secondary).
+// Kept local so `.text-secondary` can be reclaimed for the design-system token.
+.pricing-accent {
+  color: $secondary;
+}
+
 .pricing-panel-content {
   background-color: rgba(39, 171, 149, 0.08);
   min-height: 320px;

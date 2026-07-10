@@ -85,7 +85,7 @@ export const PricingPanel = ({
 
               {isEnterprise && (
                 <Row className='pt-3 justify-content-center'>
-                  <div className='pricing-type text-secondary'>
+                  <div className='pricing-type pricing-accent'>
                     Maximum security and control
                   </div>
                 </Row>
@@ -127,14 +127,14 @@ export const PricingPanel = ({
             })}
           >
             All from{' '}
-            <span className={isEnterprise ? 'text-secondary' : 'text-primary'}>
+            <span className={isEnterprise ? 'pricing-accent' : 'text-primary'}>
               {includesFrom},
             </span>{' '}
             plus
           </h5>
           <PricingFeaturesList
             features={features}
-            iconClass={isEnterprise ? 'text-secondary' : undefined}
+            iconClass={isEnterprise ? 'pricing-accent' : undefined}
           />
         </div>
       </div>
