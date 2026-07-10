@@ -21,12 +21,10 @@
 // Drop the overlapping keys from Bootstrap's text-colour utility so `.text-*`
 // resolve to the tokens, not Bootstrap's `$theme-colors`. Otherwise Bootstrap's
 // `!important` copy wins the cascade and the token utility is dead.
-//
 // - secondary/success/danger/warning/info: token utilities take over. Values are
 //   identical to Bootstrap (secondary excepted, that is the intended yellow->grey
 //   fix), so this is a no-op for the others.
 // - light/black/white-50/black-50: unused, no token equivalent, dropped.
-//
 // Not touched here (see DARK_MODE_TEXT_COLOUR_PLAN_6606.md): primary, dark, body,
 // muted, white, reset.
 $_color-util: map-get($utilities, "color");
