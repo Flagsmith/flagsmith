@@ -51,6 +51,7 @@ const RolloutStep: FC<RolloutStepProps> = ({
         description='Distribute sampled identities across control and treatment variations. Control takes one of the slots; weights must sum to 100.'
         action={
           <Button
+            id='experiment-wizard-rollout-split-evenly'
             theme='outline'
             size='xSmall'
             onClick={() =>

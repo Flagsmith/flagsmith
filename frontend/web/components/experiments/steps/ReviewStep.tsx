@@ -42,7 +42,12 @@ const ReviewStep: FC<ReviewStepProps> = ({
         background='white'
         title='Setup'
         action={
-          <Button theme='text' size='xSmall' onClick={onEditSetup}>
+          <Button
+            id='experiment-wizard-review-edit-setup'
+            theme='text'
+            size='xSmall'
+            onClick={onEditSetup}
+          >
             Edit
           </Button>
         }
@@ -81,7 +86,12 @@ const ReviewStep: FC<ReviewStepProps> = ({
           background='white'
           title='Rollout'
           action={
-            <Button theme='text' size='xSmall' onClick={onEditRollout}>
+            <Button
+              id='experiment-wizard-review-edit-rollout'
+              theme='text'
+              size='xSmall'
+              onClick={onEditRollout}
+            >
               Edit
             </Button>
           }
@@ -99,7 +109,12 @@ const ReviewStep: FC<ReviewStepProps> = ({
         background='white'
         title={selectedMetric ? 'Measurement (1 metric)' : 'Measurement'}
         action={
-          <Button theme='text' size='xSmall' onClick={onEditMeasurement}>
+          <Button
+            id='experiment-wizard-review-edit-measurement'
+            theme='text'
+            size='xSmall'
+            onClick={onEditMeasurement}
+          >
             Edit
           </Button>
         }
