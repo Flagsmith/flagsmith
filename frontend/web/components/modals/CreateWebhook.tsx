@@ -102,7 +102,7 @@ const CreateWebhook: FC<CreateWebhookProps> = ({
             <label>
               Secret (Optional) -{' '}
               <a
-                className='text-info'
+                className='text-action'
                 target='_blank'
                 href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks'
                 rel='noreferrer'

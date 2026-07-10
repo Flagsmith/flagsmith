@@ -104,7 +104,7 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
             <label>
               Secret (Optional) -{' '}
               <a
-                className='text-info'
+                className='text-action'
                 target='_blank'
                 href='https://docs.flagsmith.com/system-administration/webhooks#web-hook-signature'
                 rel='noreferrer'
