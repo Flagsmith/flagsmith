@@ -318,12 +318,8 @@ class FeatureSegment(
             + str(self.priority)
         )
 
-    def __lt__(self, other):  # type: ignore[no-untyped-def]
-        """
-        Kind of counter intuitive but since priority 1 is highest, we want to check if priority is GREATER than the
-        priority of the other feature segment.
-        """
-        return other and self.priority > other.priority
+    def __lt__(self, other: "FeatureSegment") -> bool:
+        return bool(other) and self.priority > other.priority  # Lowest wins
 
     def clone(
         self,
