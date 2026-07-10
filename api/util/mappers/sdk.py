@@ -19,13 +19,27 @@ SDK_DOCUMENT_EXCLUDE = [
 ]
 
 
-def map_environment_to_sdk_document(environment: "Environment") -> SDKDocument:
+def map_environment_to_sdk_document(
+    environment: "Environment",
+    *,
+    include_scheduled: bool = False,
+) -> SDKDocument:
     """
     Map an `environments.models.Environment` instance to an SDK document
     used by SDKs with local evaluation mode.
 
     It's virtually the same data that gets indexed in DynamoDB,
     except it presents identity overrides and omits integrations configurations.
+
+    :param include_scheduled: opt-in. When True, every feature
+        state in the resulting document additionally carries a
+        `scheduled_change` field describing its next not-yet-live version, if
+        any. Defaults to False, in which case the SDK-facing shape is
+        unchanged.
+
+        Not every scheduled-change shape is surfaced — see the consolidated
+        "Known limitations" note on `map_environment_to_engine` in
+        `util/mappers/engine.py`.
     """
     # Read relationships.
     identities_with_overrides = {}
@@ -37,13 +51,21 @@ def map_environment_to_sdk_document(environment: "Environment") -> SDKDocument:
                 identities_with_overrides[identity_id] = feature_state.identity
 
     # Get the engine data.
-    engine_environment = map_environment_to_engine(environment, with_integrations=False)
+    engine_environment = map_environment_to_engine(
+        environment,
+        with_integrations=False,
+        include_scheduled=include_scheduled,
+    )
 
     # No reading from ORM past this point!
 
     # Prepare relationships.
     engine_environment.identity_overrides = [
-        map_identity_to_engine(identity, with_traits=False)
+        map_identity_to_engine(
+            identity,
+            with_traits=False,
+            include_scheduled=include_scheduled,
+        )
         for identity in identities_with_overrides.values()
     ]
 

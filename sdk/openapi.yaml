@@ -18,6 +18,12 @@ paths:
       description: |-
         Retrieve the environment document.
         Used by SDKs in local evaluation mode, and Edge Proxy.
+      parameters:
+        - name: include_scheduled
+          in: query
+          description: 'Opt-in. When true, each feature state in the response carries an additional `scheduled_change` field describing its next not-yet-live version, if any. Defaults to false, in which case the response shape is unchanged. Note: not every scheduled-change shape is currently surfaced (e.g. v2 segment overrides via the versioning flow, brand-new segment overrides, scheduled deletions, and multivariate weight changes).'
+          schema:
+            type: boolean
       responses:
         '200':
           description: ''
