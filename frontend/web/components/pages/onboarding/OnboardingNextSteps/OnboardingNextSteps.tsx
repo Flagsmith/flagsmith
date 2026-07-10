@@ -1,5 +1,5 @@
 import React, { FC, ReactNode } from 'react'
-import classNames from 'classnames'
+import cn from 'classnames'
 import Icon from 'components/icons/Icon'
 import SelectableCard from 'components/base/SelectableCard/SelectableCard'
 import './OnboardingNextSteps.scss'
@@ -80,7 +80,7 @@ const OnboardingNextSteps: FC<OnboardingNextStepsProps> = ({
       </span>
     )}
     <div
-      className={classNames('d-flex flex-column gap-3', {
+      className={cn('d-flex flex-column gap-3', {
         'onboarding-next-steps__body--locked': locked,
       })}
       inert={locked || undefined}
