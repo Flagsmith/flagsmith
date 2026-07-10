@@ -54,7 +54,7 @@ const GhostInput = ({
         className={classNames(
           'ghost-input__field fw-normal m-0 p-0 border-0 bg-transparent',
           className,
-          { 'text-muted': !value },
+          { 'text-secondary': !value },
         )}
         value={value}
         placeholder={placeholder}

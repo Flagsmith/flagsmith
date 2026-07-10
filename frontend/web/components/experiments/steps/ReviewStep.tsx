@@ -48,19 +48,19 @@ const ReviewStep: FC<ReviewStepProps> = ({
         }
       >
         <div className='review-row review-row--block'>
-          <span className='text-muted'>Name</span>
+          <span className='text-secondary'>Name</span>
           <span className='review-row__value'>{name}</span>
         </div>
         {hypothesis && (
           <div className='review-row review-row--block'>
-            <span className='text-muted'>Hypothesis</span>
+            <span className='text-secondary'>Hypothesis</span>
             <span className='review-row__hypothesis'>{hypothesis}</span>
           </div>
         )}
         {selectedFeature && (
           <>
             <div className='review-row review-row--block'>
-              <span className='text-muted'>Feature Flag</span>
+              <span className='text-secondary'>Feature Flag</span>
               <span className='review-row__value review-row__value--flag'>
                 {selectedFeature.name}
               </span>
@@ -124,7 +124,7 @@ const ReviewStep: FC<ReviewStepProps> = ({
             <span className='review-metric-card__badge'>Primary</span>
           </div>
         ) : (
-          <p className='text-muted mb-0'>No metric selected.</p>
+          <p className='text-secondary mb-0'>No metric selected.</p>
         )}
       </ContentCard>
     </div>

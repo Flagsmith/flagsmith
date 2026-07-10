@@ -39,7 +39,7 @@ const UsageTab: FC<UsageTabProps> = ({
             New
           </span>
         </div>
-        <div className='text-muted mb-2'>
+        <div className='text-secondary mb-2'>
           Code references allow you to track where feature flags are being used
           within your code.{' '}
           <a

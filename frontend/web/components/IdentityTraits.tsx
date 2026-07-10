@@ -224,7 +224,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
             }
           >
             <div className='search-list'>
-              <Row className='list-item text-muted px-3'>
+              <Row className='list-item text-secondary px-3'>
                 This user has no traits.
               </Row>
             </div>

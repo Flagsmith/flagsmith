@@ -57,10 +57,10 @@ const ExperimentsTable: FC<ExperimentsTableProps> = ({
                 <StatusBadge status={exp.status} />
               </td>
               <td>{(exp.feature?.multivariate_options?.length ?? 0) + 1}</td>
-              <td className='text-muted'>
+              <td className='text-secondary'>
                 {primaryMetric?.metric_name ?? <>&mdash;</>}
               </td>
-              <td className='text-muted'>{moment(exp.updated_at).fromNow()}</td>
+              <td className='text-secondary'>{moment(exp.updated_at).fromNow()}</td>
               <td
                 className='experiments-table__actions'
                 onClick={(e) => e.stopPropagation()}

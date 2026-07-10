@@ -47,7 +47,7 @@ export default class Paging extends PureComponent {
         style={isLoading ? { opacity: 0.5 } : {}}
       >
         {!!paging.count && (
-          <span className='fs-caption text-muted'>
+          <span className='fs-caption text-secondary'>
             {currentIndex * paging.pageSize + 1}-
             {Math.min((currentIndex + 1) * paging.pageSize, paging.count)} of{' '}
             {paging.count}

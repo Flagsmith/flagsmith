@@ -54,7 +54,7 @@ const StageFeatureDetail = ({
     return (
       <>
         <h6>Features (0)</h6>
-        <p className='text-muted'>No features at this stage.</p>
+        <p className='text-secondary'>No features at this stage.</p>
       </>
     )
   }
@@ -83,10 +83,10 @@ const StageFeatureDetail = ({
     const part = moment.duration(duration.asMilliseconds() * partsRemaining)
     return (
       <div className='mt-1'>
-        <div className='text-muted text-small'>
+        <div className='text-secondary text-small'>
           Rollout currently at {feature.phased_rollout_state.current_split}%
         </div>
-        <div className='text-muted text-small'>
+        <div className='text-secondary text-small'>
           {part.humanize()} remaining for complete rollout
         </div>
       </div>
@@ -99,7 +99,7 @@ const StageFeatureDetail = ({
       {projectFlags?.map((flag) => (
         <div key={flag.id}>
           <b
-            className={classNames('text-muted', {
+            className={classNames('text-secondary', {
               'cursor-pointer': !!environmentKey,
             })}
             onClick={() => handleFeatureClick(flag)}

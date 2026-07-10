@@ -105,7 +105,7 @@ const Option = (props) => {
     <components.Option {...props}>
       <div
         className={`d-flex justify-content-between align-items-center ${
-          props.data.isDisabled ? 'text-muted cursor-not-allowed' : ''
+          props.data.isDisabled ? 'text-secondary cursor-not-allowed' : ''
         }`}
       >
         <div>{labelContent}</div>

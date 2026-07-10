@@ -19,12 +19,12 @@ const Breadcrumb: FC<BreadcrumbType> = ({
           <Link className='text-primary h6 mb-0' to={item.url}>
             {item.title}
           </Link>
-          <div className='text-muted mx-2 h6 mb-0'>/</div>
+          <div className='text-secondary mx-2 h6 mb-0'>/</div>
         </>
       ))}
       {isCurrentPageMuted ? (
         <div
-          className='active h6 text-muted mb-0'
+          className='active h6 text-secondary mb-0'
           aria-current='page'
           style={{ opacity: 0.6 }}
         >

@@ -680,7 +680,7 @@ const HomePage: React.FC = () => {
                   </div>
                 )}
               </div>
-              <div className='mt-4 text-center text-small text-muted'>
+              <div className='mt-4 text-center text-small text-secondary'>
                 By signing up you agree to our{' '}
                 <a
                   style={{ opacity: 0.8 }}

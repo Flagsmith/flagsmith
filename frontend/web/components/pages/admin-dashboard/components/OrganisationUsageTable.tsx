@@ -12,7 +12,7 @@ interface OrganisationUsageTableProps {
 
 const overageCell = (apiCalls: number, allowed: number) => {
   if (allowed === 0) {
-    return <span className='text-muted'>—</span>
+    return <span className='text-secondary'>—</span>
   }
   const diff = apiCalls - allowed
   const pct = Math.round((diff / allowed) * 100)
@@ -63,20 +63,20 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
             style={{ paddingBottom: 8, paddingLeft: 80, paddingTop: 8 }}
           >
             <div className='flex-fill'>
-              <span className='text-muted' style={{ fontSize: 13 }}>
+              <span className='text-secondary' style={{ fontSize: 13 }}>
                 {env.name}
               </span>
             </div>
             <div style={{ width: 120 }} />
             <div style={{ width: 120 }} />
             <div
-              className='table-column text-muted'
+              className='table-column text-secondary'
               style={{ fontSize: 13, width: 160 }}
             >
               {Utils.numberWithCommas(env.api_calls_30d)}
             </div>
             <div
-              className='table-column text-muted'
+              className='table-column text-secondary'
               style={{ fontSize: 13, width: 140 }}
             >
               {envPct}% of org usage
@@ -118,25 +118,25 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
                   <span className='font-weight-medium' style={{ fontSize: 13 }}>
                     {project.name}
                   </span>
-                  <span className='text-muted' style={{ fontSize: 12 }}>
+                  <span className='text-secondary' style={{ fontSize: 12 }}>
                     ({project.environments.length} environments)
                   </span>
                 </div>
                 <div
-                  className='table-column text-muted'
+                  className='table-column text-secondary'
                   style={{ fontSize: 13, width: 120 }}
                 >
                   {project.flags}
                 </div>
                 <div style={{ width: 120 }} />
                 <div
-                  className='table-column text-muted'
+                  className='table-column text-secondary'
                   style={{ fontSize: 13, width: 160 }}
                 >
                   {Utils.numberWithCommas(project.api_calls_30d)}
                 </div>
                 <div
-                  className='table-column text-muted'
+                  className='table-column text-secondary'
                   style={{ fontSize: 13, width: 140 }}
                 >
                   {projectPct}% of org usage
@@ -202,7 +202,7 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
               />
               <div>
                 <div className='font-weight-medium mb-1'>{org.name}</div>
-                <div className='text-muted' style={{ fontSize: 13 }}>
+                <div className='text-secondary' style={{ fontSize: 13 }}>
                   {Utils.numberWithCommas(org.active_users_30d)} active users
                 </div>
               </div>
@@ -215,7 +215,7 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
                 {Utils.numberWithCommas(org.total_flags)}
               </div>
               {org.stale_flags > 0 && (
-                <div className='text-muted' style={{ fontSize: 12 }}>
+                <div className='text-secondary' style={{ fontSize: 12 }}>
                   {Utils.numberWithCommas(org.stale_flags)} stale
                 </div>
               )}
@@ -227,7 +227,7 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
               <div className='font-weight-medium'>
                 {Utils.numberWithCommas(org.total_users)}
               </div>
-              <div className='text-muted' style={{ fontSize: 12 }}>
+              <div className='text-secondary' style={{ fontSize: 12 }}>
                 {Utils.numberWithCommas(org.active_users_30d)} active
               </div>
             </div>

@@ -41,11 +41,11 @@ const MetricsTable: FC<MetricsTableProps> = ({ metrics, onDelete, onEdit }) => {
                 {getMetricSubline(metric)}
               </span>
             </td>
-            <td className='text-muted'>{metric.description || '—'}</td>
-            <td className='text-muted'>
+            <td className='text-secondary'>{metric.description || '—'}</td>
+            <td className='text-secondary'>
               {getMetricUsageLabel(metric.experiments?.length ?? 0)}
             </td>
-            <td className='text-muted'>
+            <td className='text-secondary'>
               {moment(metric.updated_at).fromNow()}
             </td>
             <td className='metrics-table__actions'>

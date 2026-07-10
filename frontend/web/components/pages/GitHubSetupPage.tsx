@@ -285,7 +285,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
       ) : (
         <div className='text-center py-5'>
           <h1 className='mb-3'>GitHub installation completed!</h1>
-          <p className='text-muted'>You can close this window.</p>
+          <p className='text-secondary'>You can close this window.</p>
         </div>
       )}
     </div>

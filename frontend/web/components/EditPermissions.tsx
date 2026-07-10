@@ -133,7 +133,7 @@ const withAdminPermissions = (InnerComponent: any) => {
     if (!permission) {
       return (
         <div
-          className='my-4 text-center text-muted'
+          className='my-4 text-center text-secondary'
           data-test='no-organisation-permissions'
         >
           To manage permissions you need to be admin of this {level}.
@@ -1315,7 +1315,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                 renderNoResults={
                   <Panel title={'Roles'} className='no-pad'>
                     <div className='search-list'>
-                      <Row className='list-item p-3 text-muted'>
+                      <Row className='list-item p-3 text-secondary'>
                         {`You currently have no roles.`}
                       </Row>
                     </div>

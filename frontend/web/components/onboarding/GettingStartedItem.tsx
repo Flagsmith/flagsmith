@@ -87,7 +87,7 @@ const GettingStartedItem: FC<GettingStartedItemType> = (data) => {
                     {title}
                   </span>
 
-                  <h6 className='fw-normal d-flex fs-small text-muted flex-1 mb-0'>
+                  <h6 className='fw-normal d-flex fs-small text-secondary flex-1 mb-0'>
                     {description}
                   </h6>
                 </div>

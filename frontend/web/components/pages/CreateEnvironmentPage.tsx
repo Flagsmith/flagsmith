@@ -296,7 +296,7 @@ const CreateEnvironmentPage: React.FC = () => {
                             <label className='form-label mb-1'>
                               Environment administrators
                             </label>
-                            <div className='text-muted text-small mb-3'>
+                            <div className='text-secondary text-small mb-3'>
                               Optionally grant other users or roles
                               administrator access to this environment.
                               Organisation administrators already have full
@@ -343,7 +343,7 @@ const CreateEnvironmentPage: React.FC = () => {
                                         </Row>
                                       ))}
                                       {!selectedAdmins.length && (
-                                        <div className='text-muted'>
+                                        <div className='text-secondary'>
                                           No users assigned
                                         </div>
                                       )}
@@ -395,7 +395,7 @@ const CreateEnvironmentPage: React.FC = () => {
                                         </Row>
                                       ))}
                                       {!selectedRoles.length && (
-                                        <div className='text-muted'>
+                                        <div className='text-secondary'>
                                           No roles assigned
                                         </div>
                                       )}

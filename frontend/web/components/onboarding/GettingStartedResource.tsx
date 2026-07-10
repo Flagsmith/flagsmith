@@ -26,7 +26,7 @@ const GettingStartedResource: FC<Resource> = ({
           <div className='h-100 d-flex flex-column justify-content-center p-3'>
             <h6 className={`d-flex align-items-center gap-1`}>{title}</h6>
 
-            <span className='fw-normal fs-small  text-muted '>
+            <span className='fw-normal fs-small  text-secondary '>
               {description}
             </span>
           </div>

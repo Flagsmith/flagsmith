@@ -9,8 +9,8 @@ const ExecutiveViewPage: FC = () => {
       </PageTitle>
 
       <div className='text-center py-5'>
-        <h2 className='text-muted'>Coming Soon</h2>
-        <p className='text-muted mt-3'>
+        <h2 className='text-secondary'>Coming Soon</h2>
+        <p className='text-secondary mt-3'>
           This view will provide executive-level insights and analytics.
         </p>
       </div>

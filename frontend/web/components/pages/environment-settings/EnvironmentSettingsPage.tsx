@@ -893,7 +893,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                               }
                             >
                               <div className='search-list'>
-                                <Row className='list-item p-3 text-muted'>
+                                <Row className='list-item p-3 text-secondary'>
                                   You currently have no Feature Webhooks
                                   configured for this Environment.
                                 </Row>

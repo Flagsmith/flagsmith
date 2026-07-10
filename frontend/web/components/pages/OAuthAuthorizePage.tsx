@@ -81,7 +81,7 @@ const OAuthAuthorizePage = () => {
       return (
         <div className='oauth-authorize__card card shadow p-4'>
           <h3>Invalid authorisation request</h3>
-          <p className='text-muted'>
+          <p className='text-secondary'>
             Required OAuth parameters are missing. Please return to the
             application and try again.
           </p>
@@ -103,7 +103,7 @@ const OAuthAuthorizePage = () => {
       return (
         <div className='oauth-authorize__card card shadow p-4'>
           <h3>Authorisation error</h3>
-          <p className='text-muted'>
+          <p className='text-secondary'>
             The authorisation request is invalid. The application may have
             provided incorrect parameters.
           </p>
@@ -158,7 +158,7 @@ const OAuthAuthorizePage = () => {
           </div>
         </div>
 
-        <p className='oauth-authorize__redirect-text text-muted text-center mb-4'>
+        <p className='oauth-authorize__redirect-text text-secondary text-center mb-4'>
           You will be redirected to:
           <br />
           <code className='oauth-authorize__redirect-uri'>

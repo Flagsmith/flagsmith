@@ -100,7 +100,7 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
                     >
                       <div className='font-weight-medium d-flex gap-2 align-items-center mb-1'>
                         {moment(v.live_from).format('HH:mma')}
-                        <div className='text-muted fw-normal text-small'>
+                        <div className='text-secondary fw-normal text-small'>
                           {user ? `${getUserDisplayName(user)} ` : 'System '}
                         </div>
                         {!i && <span className='chip chip--xs px-2'>Live</span>}

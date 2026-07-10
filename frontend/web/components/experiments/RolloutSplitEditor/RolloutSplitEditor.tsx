@@ -64,7 +64,7 @@ const RolloutSplitEditor: FC<RolloutSplitEditorProps> = ({
               readOnly
               value={Math.max(0, controlPercentage)}
             />
-            <span className='text-muted'>%</span>
+            <span className='text-secondary'>%</span>
           </span>
         </div>
 
@@ -92,13 +92,13 @@ const RolloutSplitEditor: FC<RolloutSplitEditorProps> = ({
                   setPercentage(option.id, val ? parseFloat(val) : 0)
                 }}
               />
-              <span className='text-muted'>%</span>
+              <span className='text-secondary'>%</span>
             </span>
           </div>
         ))}
       </div>
 
-      <p className='rollout-split__hint text-muted mb-0'>
+      <p className='rollout-split__hint text-secondary mb-0'>
         Bucketing is deterministic on the SDK identifier. The same identity
         always lands in the same variation.
       </p>

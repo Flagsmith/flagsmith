@@ -137,10 +137,10 @@ const ExperimentsPage: FC = () => {
           <Icon
             name='setting'
             width={48}
-            className='text-muted mb-3 d-block mx-auto'
+            className='text-secondary mb-3 d-block mx-auto'
           />
           <h5>Data warehouse not configured</h5>
-          <p className='text-muted mb-4'>
+          <p className='text-secondary mb-4'>
             Experiments require a data warehouse connection to collect and
             analyse results. Configure one in your environment settings to get
             started.
@@ -157,10 +157,10 @@ const ExperimentsPage: FC = () => {
           <Icon
             name='flask'
             width={48}
-            className='text-muted mb-3 d-block mx-auto'
+            className='text-secondary mb-3 d-block mx-auto'
           />
           <h5>No experiments yet</h5>
-          <p className='text-muted mb-4'>
+          <p className='text-secondary mb-4'>
             Create your first experiment to start testing hypotheses with your
             feature flags.
           </p>
@@ -193,7 +193,7 @@ const ExperimentsPage: FC = () => {
           />
         ) : (
           <div className='text-center py-5'>
-            <p className='text-muted'>
+            <p className='text-secondary'>
               No experiments match your {search ? 'search' : 'filter'}.
             </p>
           </div>

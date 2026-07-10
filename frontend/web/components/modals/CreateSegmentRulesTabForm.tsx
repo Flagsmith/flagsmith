@@ -221,7 +221,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
             </Row>
             {topLevelRuleType === 'ANY' &&
               Utils.getFlagsmithValue('segment_any_rule_type') && (
-                <div className='fs-small fst-italic text-muted mb-3'>
+                <div className='fs-small fst-italic text-secondary mb-3'>
                   {Utils.getFlagsmithValue('segment_any_rule_type')}
                 </div>
               )}

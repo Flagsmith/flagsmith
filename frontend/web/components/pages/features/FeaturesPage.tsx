@@ -382,7 +382,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
         {error || projectEnvError ? (
           <div className='text-center'>
             <h4 className='mb-3'>Unable to Load Features</h4>
-            <p className='text-muted mb-3'>
+            <p className='text-secondary mb-3'>
               We couldn't load your feature flags. This might be due to a
               network issue or a temporary server problem.
             </p>

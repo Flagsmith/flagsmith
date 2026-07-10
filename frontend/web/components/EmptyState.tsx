@@ -31,7 +31,7 @@ const EmptyState: FC<EmptyStateProps> = ({
       )}
       <h5 className='empty-state__title'>{title}</h5>
       {description && (
-        <div className='empty-state__description text-muted'>{description}</div>
+        <div className='empty-state__description text-secondary'>{description}</div>
       )}
       {docsUrl && (
         <a

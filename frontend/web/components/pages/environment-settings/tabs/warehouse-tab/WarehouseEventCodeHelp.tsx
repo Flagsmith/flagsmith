@@ -118,7 +118,7 @@ const enabledSnippets = Object.fromEntries(
 
 const WarehouseEventCodeHelp: FC = () => (
   <div>
-    <p className='text-muted fw-bold'>
+    <p className='text-secondary fw-bold'>
       Use our SDKs to send your first experimentation events.
     </p>
     <CodeHelp

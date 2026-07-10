@@ -49,7 +49,7 @@ const StageInfo = ({
           <div>
             <h5>{stageData?.name}</h5>
             <p>{environmentData?.name}</p>
-            <p className='text-muted'>
+            <p className='text-secondary'>
               {getTriggerText(
                 stageData?.trigger?.trigger_type,
                 stageData?.trigger?.trigger_body,

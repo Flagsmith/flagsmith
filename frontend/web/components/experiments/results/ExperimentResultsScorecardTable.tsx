@@ -52,10 +52,10 @@ const renderLift = (
   liftRange: number,
 ): ReactNode => {
   if (identity.isControl) {
-    return <span className='text-muted fs-caption'>Baseline</span>
+    return <span className='text-secondary fs-caption'>Baseline</span>
   }
   if (!inference) {
-    return <span className='text-muted fs-caption'>Collecting data…</span>
+    return <span className='text-secondary fs-caption'>Collecting data…</span>
   }
   const colour = getLiftColour(inference.lift, direction)
   const left = liftToPercent(inference.ci_low, liftRange)
@@ -94,7 +94,7 @@ const renderCI = (
   inference: Inference | null,
 ): ReactNode => {
   if (identity.isControl) {
-    return <span className='text-muted fs-caption'>Baseline</span>
+    return <span className='text-secondary fs-caption'>Baseline</span>
   }
   if (!inference) return '—'
   return (

@@ -9,8 +9,8 @@ const DevViewPage: FC = () => {
       </PageTitle>
 
       <div className='text-center py-5'>
-        <h2 className='text-muted'>Coming Soon</h2>
-        <p className='text-muted mt-3'>
+        <h2 className='text-secondary'>Coming Soon</h2>
+        <p className='text-secondary mt-3'>
           This view will provide developer-focused tools and workflows.
         </p>
       </div>

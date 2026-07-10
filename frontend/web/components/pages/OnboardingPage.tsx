@@ -103,7 +103,7 @@ const OnboardingPage: FC<OnboardingPageProps> = () => {
                 <div className='text-center'>
                   <Logo size={100} />
                   <h3 className='fw-semibold mt-2'>Welcome to Flagsmith</h3>
-                  <h5 className='fw-normal text-muted'>
+                  <h5 className='fw-normal text-secondary'>
                     You've successfully installed Flagsmith v{version?.tag},
                     let's get started!
                   </h5>

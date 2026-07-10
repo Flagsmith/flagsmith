@@ -30,7 +30,7 @@ import RefreshControl from './RefreshControl'
 import './results.scss'
 
 const AsOfLabel: FC<{ asOf: string | null }> = ({ asOf }) => (
-  <span className='text-muted fs-caption'>
+  <span className='text-secondary fs-caption'>
     {asOf ? `As of ${moment.utc(asOf).format('D MMM YYYY, HH:mm')} UTC` : ''}
   </span>
 )
@@ -213,7 +213,7 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
 
       {payload && !hasData && (
         <>
-          <div className='text-muted text-center py-5'>
+          <div className='text-secondary text-center py-5'>
             No exposures collected yet.
           </div>
           <div className='d-flex justify-content-center gap-3 fs-caption mb-2'>
@@ -256,7 +256,7 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
       )}
 
       {!payload && viewState.kind !== 'error' && (
-        <div className='text-muted text-center py-4'>
+        <div className='text-secondary text-center py-4'>
           {isRefreshing
             ? 'Computing exposures…'
             : 'No exposure data computed yet.'}

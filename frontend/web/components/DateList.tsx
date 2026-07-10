@@ -64,7 +64,7 @@ const DateList = <T extends { [key: string]: any }>({
               <Icon name='clock' fill='#9DA4AE' />
               <div style={{ height: 15, width: 1 }} className='border-1' />
             </div>
-            <div className='text-muted py-1 fs-caption'>{formatDate(date)}</div>
+            <div className='text-secondary py-1 fs-caption'>{formatDate(date)}</div>
           </div>
 
           <div className='border-1 rounded'>

@@ -31,7 +31,7 @@ const InstanceMetricsCards: FC<InstanceMetricsCardsProps> = ({
           label='Organisations'
           value={summary.total_organisations}
         />
-        <small className='text-muted d-block mt-1'>
+        <small className='text-secondary d-block mt-1'>
           {summary.active_organisations} active in last {days} days
         </small>
       </div>
@@ -42,14 +42,14 @@ const InstanceMetricsCards: FC<InstanceMetricsCardsProps> = ({
           label='Total Flags'
           value={summary.total_flags}
         />
-        <small className='text-muted d-block mt-1'>
+        <small className='text-secondary d-block mt-1'>
           Across {summary.total_projects} projects
         </small>
       </div>
 
       <div className='flex-fill'>
         <StatItem icon='people' label='Seats' value={summary.total_users} />
-        <small className='text-muted d-block mt-1'>
+        <small className='text-secondary d-block mt-1'>
           {summary.active_users} active of {summary.total_users}
         </small>
       </div>
@@ -60,7 +60,7 @@ const InstanceMetricsCards: FC<InstanceMetricsCardsProps> = ({
           label='API Calls'
           value={summary.total_api_calls_30d}
         />
-        <small className='text-muted d-block mt-1'>
+        <small className='text-secondary d-block mt-1'>
           Across {summary.total_environments} environments
         </small>
       </div>
@@ -71,7 +71,7 @@ const InstanceMetricsCards: FC<InstanceMetricsCardsProps> = ({
           label='Integrations'
           value={summary.total_integrations}
         />
-        <small className='text-muted d-block mt-1'>
+        <small className='text-secondary d-block mt-1'>
           Across {summary.total_organisations} organisations
         </small>
       </div>

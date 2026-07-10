@@ -265,7 +265,7 @@ const UserGroupList: FC<UserGroupListType> = ({
         renderNoResults={
           <Panel title={noTitle ? '' : 'Groups'} className='no-pad'>
             <div className='search-list'>
-              <Row className='list-item p-3 text-muted'>
+              <Row className='list-item p-3 text-secondary'>
                 You have no groups in your organisation.
               </Row>
             </div>

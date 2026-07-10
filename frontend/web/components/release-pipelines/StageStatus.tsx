@@ -108,7 +108,7 @@ const StageStatus = ({
       <span>
         <b>{stageName}</b>
       </span>
-      {envName && <p className='text-muted'>{envName}</p>}
+      {envName && <p className='text-secondary'>{envName}</p>}
     </div>
   )
 }

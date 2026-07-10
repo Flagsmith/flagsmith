@@ -203,7 +203,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
             goToPage={(p: number) => setOrgPage(p)}
             renderNoResults={
               <div className='search-list'>
-                <Row className='list-item p-3 text-muted'>
+                <Row className='list-item p-3 text-secondary'>
                   <RedirectCreateCustomFields
                     organisationId={organisationId}
                     organisationOnly
@@ -229,7 +229,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
             goToPage={(p: number) => setProjectPage(p)}
             renderNoResults={
               <div className='search-list'>
-                <Row className='list-item p-3 text-muted'>
+                <Row className='list-item p-3 text-secondary'>
                   No project-level custom fields configured.
                 </Row>
               </div>
@@ -276,7 +276,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
           renderNoResults={
             <Panel className='no-pad' title={'Custom Fields'}>
               <div className='search-list'>
-                <Row className='list-item p-3 text-muted'>
+                <Row className='list-item p-3 text-secondary'>
                   You currently have no custom fields configured.
                 </Row>
               </div>

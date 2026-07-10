@@ -146,7 +146,7 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
               }
             >
               <div className='search-list'>
-                <Row className='list-item p-3 text-muted'>
+                <Row className='list-item p-3 text-secondary'>
                   You currently have no webhooks configured for this
                   organisation.
                 </Row>

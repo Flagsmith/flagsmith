@@ -99,12 +99,12 @@ const MCPIntegration: FC = () => {
                   </div>
                 )}
                 {tab.configHint && (
-                  <div className='text-muted mb-1'>{tab.configHint}</div>
+                  <div className='text-secondary mb-1'>{tab.configHint}</div>
                 )}
                 <MCPSnippet code={tab.snippet} language={tab.language} />
                 {!isSaas && (
                   <>
-                    <p className='text-muted mt-2 mb-0'>
+                    <p className='text-secondary mt-2 mb-0'>
                       Replace{' '}
                       <InlineCode>
                         <span className='fw-bold'>
@@ -113,7 +113,7 @@ const MCPIntegration: FC = () => {
                       </InlineCode>{' '}
                       with your MCP server&apos;s base URL.
                     </p>
-                    <p className='text-muted mt-1 mb-0'>
+                    <p className='text-secondary mt-1 mb-0'>
                       See{' '}
                       <a
                         href={SELF_HOSTING_DOCS_URL}
@@ -127,12 +127,12 @@ const MCPIntegration: FC = () => {
                   </>
                 )}
                 {effectiveConnection === 'apiKey' ? (
-                  <p className='text-muted mt-2 mb-0'>
+                  <p className='text-secondary mt-2 mb-0'>
                     Generate an API key in {apiKeysLink} and use it in place of{' '}
                     <InlineCode>&lt;your-api-key&gt;</InlineCode>.
                   </p>
                 ) : (
-                  <p className='text-muted mt-2 mb-0'>
+                  <p className='text-secondary mt-2 mb-0'>
                     The first time you connect, your editor opens an OAuth flow
                     to authorise Flagsmith.
                   </p>

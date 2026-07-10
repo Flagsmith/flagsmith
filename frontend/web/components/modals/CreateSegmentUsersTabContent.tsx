@@ -160,7 +160,7 @@ const CreateSegmentUsersTabContent: React.FC<
                   }}
                   formatOptionLabel={renderEnvOption}
                 />
-                <div className='text-muted fs-small mt-2'>
+                <div className='text-secondary fs-small mt-2'>
                   Last synced:{' '}
                   {selectedMembership
                     ? moment(selectedMembership.last_synced_at).format(

@@ -27,7 +27,7 @@ const LaunchedCard = ({
         <Icon name='checkmark-circle' width={30} fill='#27AB95' />
         <h5 className='mb-0'>Launched</h5>
       </Row>
-      <p className='text-muted'>
+      <p className='text-secondary'>
         Features that completed this pipeline in the last 30 days
       </p>
       <StageFeatureDetail features={completedFeatures} projectId={projectId} />

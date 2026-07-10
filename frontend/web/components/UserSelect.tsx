@@ -96,7 +96,7 @@ const UserSelect: React.FC<UserSelectProps> = ({
                   )}
                 >
                   {v.first_name} {v.last_name}
-                  <div className='text-muted text-small'>{v.email}</div>
+                  <div className='text-secondary text-small'>{v.email}</div>
                 </div>
                 {selectedValue.includes(v.id) && (
                   <span className='mr-1'>

@@ -97,7 +97,7 @@ const EnvironmentRow: FC<EnvironmentRowProps> = ({
       </td>
       <td className='text-center'>
         {isLoading ? (
-          <small className='text-muted'>...</small>
+          <small className='text-secondary'>...</small>
         ) : (
           <Switch checked={enabled} disabled className='switch-sm' />
         )}
@@ -237,7 +237,7 @@ const FlagEnvironmentsPage: FC = () => {
   if (!flag) {
     return (
       <div className='app-container container'>
-        <div className='text-center text-muted py-5'>Flag not found</div>
+        <div className='text-center text-secondary py-5'>Flag not found</div>
       </div>
     )
   }
@@ -264,7 +264,7 @@ const FlagEnvironmentsPage: FC = () => {
 
       <PageTitle title={flag.name}>
         {flag.description && (
-          <div className='text-muted mt-2'>{flag.description}</div>
+          <div className='text-secondary mt-2'>{flag.description}</div>
         )}
       </PageTitle>
 
@@ -416,7 +416,7 @@ const FlagEnvironmentsPage: FC = () => {
               {(!environments?.results ||
                 environments.results.length === 0) && (
                 <tr>
-                  <td colSpan={6} className='text-center text-muted py-4'>
+                  <td colSpan={6} className='text-center text-secondary py-4'>
                     No environments found
                   </td>
                 </tr>

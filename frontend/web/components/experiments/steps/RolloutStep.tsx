@@ -28,7 +28,7 @@ const RolloutStep: FC<RolloutStepProps> = ({
   if (!selectedFeature) {
     return (
       <ContentCard background='white' title='Rollout configuration'>
-        <p className='text-muted mb-0'>
+        <p className='text-secondary mb-0'>
           Select a feature flag in the Setup step to configure the rollout.
         </p>
       </ContentCard>

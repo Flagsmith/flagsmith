@@ -130,7 +130,7 @@ const OnboardingFlow: FC = () => {
     return (
       <div className='onboarding-flow mx-auto text-center'>
         <h2 className='mb-2'>We couldn’t set up your workspace</h2>
-        <p className='text-muted mb-3'>
+        <p className='text-secondary mb-3'>
           Something went wrong creating your starter project. Please try again.
         </p>
         <Button onClick={() => window.location.reload()}>Try again</Button>

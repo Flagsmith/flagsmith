@@ -217,10 +217,10 @@ const MetricsPage: FC = () => {
           <Icon
             name='bar-chart'
             width={48}
-            className='text-muted mb-3 d-block mx-auto'
+            className='text-secondary mb-3 d-block mx-auto'
           />
           <h5>No metrics yet</h5>
-          <p className='text-muted mb-4'>
+          <p className='text-secondary mb-4'>
             Create your first metric to measure experiment outcomes.
           </p>
           <Button onClick={() => history.push(`${metricsPath}?create=true`)}>
@@ -291,7 +291,7 @@ const MetricsPage: FC = () => {
           </>
         ) : (
           <div className='text-center py-5'>
-            <p className='text-muted'>No metrics match your search.</p>
+            <p className='text-secondary'>No metrics match your search.</p>
           </div>
         )}
       </>

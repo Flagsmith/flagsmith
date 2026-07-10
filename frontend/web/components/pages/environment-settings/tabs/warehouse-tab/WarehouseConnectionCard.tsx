@@ -84,7 +84,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
             </Tooltip>
           </div>
           {typeLabel && (
-            <span className='fst-italic text-muted' style={{ fontSize: 13 }}>
+            <span className='fst-italic text-secondary' style={{ fontSize: 13 }}>
               {typeLabel}
               {connection.config &&
                 'account_identifier' in connection.config &&
@@ -122,7 +122,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
       />
       <hr className='my-4' />
       {connection.status === 'pending_connection' && (
-        <div className='d-flex flex-row flex-nowrap align-items-center gap-2 text-muted mb-2'>
+        <div className='d-flex flex-row flex-nowrap align-items-center gap-2 text-secondary mb-2'>
           <Icon name='info' width={14} fill='#656D7B' />
           <span>
             Your test event is on its way. It can take up to a few hours to

@@ -198,7 +198,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
               environmentId={environmentId}
             />
           )}
-          <div className='text-muted mb-2'>
+          <div className='text-secondary mb-2'>
             <p>
               Segment Overrides apply when the identity traits match the segment
               rules.

@@ -51,7 +51,7 @@ const StatItem: FC<StatItemProps> = ({
         <h4 className='mb-0'>
           {formattedValue}
           {limit !== null && limit !== undefined && (
-            <span className='text-muted fs-small fw-normal'>
+            <span className='text-secondary fs-small fw-normal'>
               {' '}
               / {formatNumber(limit)}
             </span>
@@ -75,7 +75,7 @@ const StatItem: FC<StatItemProps> = ({
                 <Icon name='checkmark' width={10} fill='white' />
               )}
             </div>
-            <span className='text-muted fs-small'>Visible</span>
+            <span className='text-secondary fs-small'>Visible</span>
           </div>
         )}
       </div>

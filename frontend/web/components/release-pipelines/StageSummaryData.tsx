@@ -62,7 +62,7 @@ const StageSummaryData = ({
             </div>
           </Row>
           {isTimeLeft && (
-            <div className='text-muted ml-4 mt-1'>
+            <div className='text-secondary ml-4 mt-1'>
               {moment.duration(timeRemainingDuration).humanize()} remaining
             </div>
           )}

@@ -79,7 +79,7 @@ const Step: FC<StepProps> = ({
         </h5>
       </div>
 
-      {isActive && description && <p className='text-muted'>{description}</p>}
+      {isActive && description && <p className='text-secondary'>{description}</p>}
       {isActive && (
         <>
           <hr />

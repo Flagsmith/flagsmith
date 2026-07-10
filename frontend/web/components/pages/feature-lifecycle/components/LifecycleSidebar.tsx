@@ -31,7 +31,7 @@ const LifecycleSidebar: FC<LifecycleSidebarProps> = ({
     <div className='border-md-right home-aside d-flex flex-column pe-0 me-0'>
       <div className='flex-1 flex-column ms-0 me-2'>
         <div className='px-2 pt-2'>
-          <div className='text-muted fs-captionXSmall mb-1 d-flex align-items-center gap-1'>
+          <div className='text-secondary fs-captionXSmall mb-1 d-flex align-items-center gap-1'>
             Measure evaluations from
             <Tooltip
               title={<Icon name='info-outlined' width={12} />}
@@ -62,7 +62,7 @@ const LifecycleSidebar: FC<LifecycleSidebarProps> = ({
                 {s.label}
                 <span
                   className={classNames('ms-1 px-2 unread rounded d-inline', {
-                    'bg-light300 text-muted': activeSection !== s.key,
+                    'bg-light300 text-secondary': activeSection !== s.key,
                   })}
                 >
                   {isLoading ? '...' : counts[s.key] ?? 0}

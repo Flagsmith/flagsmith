@@ -87,7 +87,7 @@ const ItemList: FC<ItemListType> = ({
       className={classNames('overflow-auto custom-scroll', className)}
       style={{ maxHeight: 400 }}
     >
-      <div className='mb-2 text-muted'>{title}</div>
+      <div className='mb-2 text-secondary'>{title}</div>
       {isLoading && (
         <div className='text-center'>
           <Loader />
@@ -281,12 +281,12 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
           <IonIcon
             style={{ marginBottom: -2 }}
             icon={chevronUp}
-            className='text-muted'
+            className='text-secondary'
           />
           <IonIcon
             style={{ marginTop: -2 }}
             icon={chevronDown}
-            className='text-muted'
+            className='text-secondary'
           />
         </span>
       )}

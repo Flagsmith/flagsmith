@@ -39,7 +39,7 @@ const AdminDashboardPage: FC = () => {
     return (
       <div className='app-container text-center py-5'>
         <h3>Access Denied</h3>
-        <p className='text-muted'>
+        <p className='text-secondary'>
           This page is only accessible to instance administrators.
         </p>
       </div>
@@ -50,7 +50,7 @@ const AdminDashboardPage: FC = () => {
     <div className='app-container container'>
       <div className='py-2' style={{ marginBottom: -48 }}>
         <h2 className='mb-0'>Platform Hub</h2>
-        <p className='text-muted mb-0'>
+        <p className='text-secondary mb-0'>
           Centralised view of platform-wide usage, lifecycle, and adoption data
         </p>
       </div>

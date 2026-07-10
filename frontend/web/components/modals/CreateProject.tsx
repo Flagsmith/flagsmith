@@ -208,7 +208,7 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
                   <label className='form-label mb-1'>
                     Project administrators
                   </label>
-                  <div className='text-muted text-small mb-3'>
+                  <div className='text-secondary text-small mb-3'>
                     Optionally grant other users or roles administrator access
                     to this project. Organisation administrators already have
                     full access to all projects.
@@ -250,7 +250,7 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
                               </Row>
                             ))}
                             {!selectedAdmins.length && (
-                              <div className='text-muted'>
+                              <div className='text-secondary'>
                                 No users assigned
                               </div>
                             )}
@@ -300,7 +300,7 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
                               </Row>
                             ))}
                             {!selectedRoles.length && (
-                              <div className='text-muted'>
+                              <div className='text-secondary'>
                                 No roles assigned
                               </div>
                             )}

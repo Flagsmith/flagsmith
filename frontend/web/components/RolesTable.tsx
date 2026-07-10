@@ -174,7 +174,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
         renderNoResults={
           <Panel title={'Organisation roles'} className='no-pad'>
             <div className='search-list'>
-              <Row className='list-item p-3 text-muted'>
+              <Row className='list-item p-3 text-secondary'>
                 You currently have no organisation roles
               </Row>
             </div>

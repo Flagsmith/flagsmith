@@ -146,10 +146,10 @@ const ExperimentRolloutCard: FC<ExperimentRolloutCardProps> = ({
                   setDraftRollout(val ? parseFloat(val) : 0)
                 }}
               />
-              <span className='text-muted'>%</span>
+              <span className='text-secondary'>%</span>
             </span>
           ) : (
-            <span className='text-muted'>
+            <span className='text-secondary'>
               {rollout?.rollout_percentage ?? 100}%
             </span>
           )}
@@ -209,10 +209,10 @@ const ExperimentRolloutCard: FC<ExperimentRolloutCardProps> = ({
                       )
                     }}
                   />
-                  <span className='text-muted'>%</span>
+                  <span className='text-secondary'>%</span>
                 </span>
               ) : (
-                <span className='text-muted'>{Math.round(currentPct)}%</span>
+                <span className='text-secondary'>{Math.round(currentPct)}%</span>
               )}
             </div>
           )

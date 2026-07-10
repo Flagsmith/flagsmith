@@ -241,7 +241,7 @@ const IntegrationAdoptionTable: FC<IntegrationAdoptionTableProps> = ({
                   style={{ gap: 8, width: '100%' }}
                 >
                   <span
-                    className='text-muted'
+                    className='text-secondary'
                     style={{ fontSize: 11, minWidth: 90, textAlign: 'right' }}
                   >
                     {SCOPE_LABELS[detail.scope]}
@@ -268,7 +268,7 @@ const IntegrationAdoptionTable: FC<IntegrationAdoptionTableProps> = ({
                     />
                   </div>
                   <span
-                    className='text-muted'
+                    className='text-secondary'
                     style={{ fontSize: 11, minWidth: 120, textAlign: 'right' }}
                   >
                     {renderScopeLabel(detail)}
@@ -276,7 +276,7 @@ const IntegrationAdoptionTable: FC<IntegrationAdoptionTableProps> = ({
                 </div>
               ))}
               {org.scope_details.length === 0 && (
-                <span className='text-muted' style={{ fontSize: 12 }}>
+                <span className='text-secondary' style={{ fontSize: 12 }}>
                   Not installed
                 </span>
               )}
@@ -407,7 +407,7 @@ const IntegrationAdoptionTable: FC<IntegrationAdoptionTableProps> = ({
                 </span>
               </div>
               <div
-                className='table-column text-muted'
+                className='table-column text-secondary'
                 style={{ fontSize: 13, width: 200 }}
               >
                 {renderBreakdownSummary(row)}

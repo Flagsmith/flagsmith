@@ -183,7 +183,7 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
             </Button>
           )}
         </Row>
-        <div className='text-muted mb-2'>
+        <div className='text-secondary mb-2'>
           Identity Overrides apply to all individual identities listed here.{' '}
           <a
             target='_blank'

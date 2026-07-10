@@ -333,7 +333,7 @@ const IdentitiesPage: FC<{ props: any }> = (props) => {
           />
         </FormGroup>
         <FormGroup>
-          <p className='text-muted col-md-8 fs-small lh-sm mt-4'>
+          <p className='text-secondary col-md-8 fs-small lh-sm mt-4'>
             Identities are created for your environment automatically when
             calling identify/get flags from any of the SDKs. We've created{' '}
             <strong>user_123456</strong> for you so you always have an example

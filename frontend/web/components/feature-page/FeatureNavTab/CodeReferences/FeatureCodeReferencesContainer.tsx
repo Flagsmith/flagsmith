@@ -70,7 +70,7 @@ const FeatureCodeReferencesContainer: React.FC<
   if (!data || data.length === 0) {
     if (!hasGithubIntegration && !hasGitlabIntegration) {
       return (
-        <div className='text-center text-muted'>
+        <div className='text-center text-secondary'>
           Set up{' '}
           <a href={`/organisation/${organisationId}/integrations`}>GitHub</a> or{' '}
           <a href={`/project/${projectId}/integrations`}>GitLab</a> integration
@@ -79,7 +79,7 @@ const FeatureCodeReferencesContainer: React.FC<
       )
     }
     return (
-      <div className='text-center text-muted'>
+      <div className='text-center text-secondary'>
         No code references found for this feature.
       </div>
     )

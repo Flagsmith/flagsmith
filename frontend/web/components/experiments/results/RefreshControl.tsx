@@ -32,7 +32,7 @@ const RefreshControl: FC<RefreshControlProps> = ({
       {children ?? 'Refresh'}
     </Button>
     {label ? (
-      <div className='text-muted fs-caption mt-1 text-end'>{label}</div>
+      <div className='text-secondary fs-caption mt-1 text-end'>{label}</div>
     ) : null}
   </div>
 )

@@ -46,7 +46,7 @@ const ExperimentConfiguration: FC<ExperimentConfigurationProps> = ({
               </div>
             </div>
           ) : (
-            <span className='text-muted'>—</span>
+            <span className='text-secondary'>—</span>
           )}
         </ContentCard>
       </div>

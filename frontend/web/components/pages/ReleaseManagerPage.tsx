@@ -101,7 +101,7 @@ const ReleaseManagerPage: FC = () => {
       </div>
 
       {!hasSearched && (
-        <div className='text-center text-muted py-5'>
+        <div className='text-center text-secondary py-5'>
           Enter a search query and click Search to find flags across all
           projects
         </div>
@@ -252,7 +252,7 @@ const FlagsTable: FC<FlagsTableProps> = ({ projects, searchQuery }) => {
       }
     >
       {filteredFlags.length === 0 ? (
-        <div className='text-center text-muted py-4'>
+        <div className='text-center text-secondary py-4'>
           No flags found matching "{searchQuery}"
         </div>
       ) : (
@@ -272,7 +272,7 @@ const FlagsTable: FC<FlagsTableProps> = ({ projects, searchQuery }) => {
                     className='text-center'
                     style={{ minWidth: '80px' }}
                   >
-                    <small className='text-muted'>{envName}</small>
+                    <small className='text-secondary'>{envName}</small>
                   </th>
                 ))}
                 <th className='text-center' style={{ minWidth: '100px' }}>
@@ -330,7 +330,7 @@ const EnvironmentCell: FC<EnvironmentCellProps> = ({
   return (
     <td className='text-center'>
       {isLoading ? (
-        <small className='text-muted'>...</small>
+        <small className='text-secondary'>...</small>
       ) : (
         <Switch checked={enabled} disabled className='switch-sm' />
       )}
@@ -371,20 +371,20 @@ const FlagRow: FC<FlagRowProps> = ({
             <strong>{flag.name}</strong>
           </div>
           {flag.description && (
-            <small className='text-muted d-block mt-1'>
+            <small className='text-secondary d-block mt-1'>
               {flag.description}
             </small>
           )}
         </Link>
       </td>
       <td>
-        <small className='text-muted'>{flag.projectName}</small>
+        <small className='text-secondary'>{flag.projectName}</small>
       </td>
       <td>
         {flag.tags && flag.tags.length > 0 ? (
           <TagValues projectId={String(flag.projectId)} value={flag.tags} />
         ) : (
-          <span className='text-muted'>-</span>
+          <span className='text-secondary'>-</span>
         )}
       </td>
       {uniqueEnvNames.map((envName) => {
@@ -395,7 +395,7 @@ const FlagRow: FC<FlagRowProps> = ({
           // This environment doesn't exist in this flag's project
           return (
             <td key={envName} className='text-center'>
-              <span className='text-muted'>-</span>
+              <span className='text-secondary'>-</span>
             </td>
           )
         }
@@ -410,7 +410,7 @@ const FlagRow: FC<FlagRowProps> = ({
         )
       })}
       <td className='text-center'>
-        <small className='text-muted'>
+        <small className='text-secondary'>
           {new Date(flag.created_date).toLocaleDateString('en-GB')}
         </small>
       </td>

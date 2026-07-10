@@ -77,7 +77,7 @@ const UsersGroups: FC<UsersGroupsType> = ({ orgId, user }) => {
             <Row className='list-item' key={id}>
               <Flex className='table-column px-3'>
                 <div className='font-weight-medium'>{name}</div>
-                <div className='text-muted'>{external_id}</div>
+                <div className='text-secondary'>{external_id}</div>
               </Flex>
               <div className='table-column' style={{ width: widths[0] }}>
                 <Switch

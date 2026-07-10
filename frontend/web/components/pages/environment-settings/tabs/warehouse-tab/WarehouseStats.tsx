@@ -40,15 +40,15 @@ const WarehouseStats: FC<WarehouseStatsProps> = ({
       </div>
     )}
     <div className='d-flex flex-row gap-2'>
-      <span className='text-muted'>Last event received:</span>
+      <span className='text-secondary'>Last event received:</span>
       <span className='font-weight-medium'>{lastEventReceived}</span>
     </div>
     <div className='d-flex flex-row align-items-center gap-2'>
-      <span className='text-muted'>Total events received:</span>
+      <span className='text-secondary'>Total events received:</span>
       <StatValue loading={loading} value={totalEventsReceived} />
     </div>
     <div className='d-flex flex-row align-items-center gap-2'>
-      <span className='text-muted'>Number of unique events:</span>
+      <span className='text-secondary'>Number of unique events:</span>
       <StatValue loading={loading} value={uniqueEventsCount} />
     </div>
   </div>

@@ -137,7 +137,7 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
 
       <div className='create-metric-form__field'>
         <label className='create-metric-form__label'>Data Source</label>
-        <span className='create-metric-form__hint text-muted fs-small'>
+        <span className='create-metric-form__hint text-secondary fs-small'>
           Where this metric is collected from. Reads from your connected
           warehouse.
         </span>

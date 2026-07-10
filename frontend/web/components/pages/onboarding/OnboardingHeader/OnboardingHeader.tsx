@@ -25,13 +25,13 @@ const OnboardingHeader: FC<OnboardingHeaderProps> = ({
   projectName,
 }) => (
   <header className='onboarding-header'>
-    <div className='onboarding-header__crumb text-muted'>
+    <div className='onboarding-header__crumb text-secondary'>
       Onboarding / Connect your app
     </div>
     <h1 className='onboarding-header__title mb-0'>
       Welcome, let’s get you live 👋
     </h1>
-    <p className='onboarding-header__subtitle text-muted mb-0'>
+    <p className='onboarding-header__subtitle text-secondary mb-0'>
       We created your organisation{' '}
       <InlineInput
         label='Organisation'

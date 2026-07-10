@@ -81,7 +81,7 @@ const SectionShell: FC<SectionShellProps> = ({
     return (
       <div className='text-center'>
         <h4 className='mb-3'>Unable to Load Features</h4>
-        <p className='text-muted mb-3'>
+        <p className='text-secondary mb-3'>
           We couldn&apos;t load your feature flags. This might be due to a
           network issue or a temporary server problem.
         </p>
@@ -95,7 +95,7 @@ const SectionShell: FC<SectionShellProps> = ({
   if (hasNoResults) {
     return (
       <div className='text-center py-5'>
-        <p className='text-muted'>{emptyLabel}</p>
+        <p className='text-secondary'>{emptyLabel}</p>
       </div>
     )
   }

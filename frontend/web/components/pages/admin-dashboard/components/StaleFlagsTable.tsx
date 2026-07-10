@@ -41,7 +41,7 @@ const StaleFlagsTable: FC<StaleFlagsTableProps> = ({ data }) => {
         >
           <div className='flex-fill' style={{ paddingLeft: 20 }}>
             <div className='font-weight-medium'>{row.project_name}</div>
-            <div className='text-muted' style={{ fontSize: 12 }}>
+            <div className='text-secondary' style={{ fontSize: 12 }}>
               {row.organisation_name}
             </div>
           </div>

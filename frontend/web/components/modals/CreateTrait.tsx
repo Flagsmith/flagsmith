@@ -171,7 +171,7 @@ const CreateTrait: FC<CreateTraitProps> = ({
               </strong>
             </p>
 
-            <FormGroup className='text-muted'>
+            <FormGroup className='text-secondary'>
               <label>Example SDK response:</label>
               <Highlight forceExpanded className='json no-pad'>
                 {JSON.stringify({

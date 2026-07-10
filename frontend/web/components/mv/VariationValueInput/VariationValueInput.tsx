@@ -138,7 +138,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
               step='any'
             />
           </div>
-          <span className='text-muted'>%</span>
+          <span className='text-secondary'>%</span>
         </div>
       </Row>
       {!!apiError && (

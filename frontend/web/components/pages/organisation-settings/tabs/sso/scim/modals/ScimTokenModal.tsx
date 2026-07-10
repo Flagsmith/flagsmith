@@ -32,7 +32,7 @@ const ScimTokenModal: FC<ScimTokenModalProps> = ({ token }) => {
       />
       {isConfirming ? (
         <div className='mt-4 d-flex align-items-center justify-content-end gap-2'>
-          <span className='me-auto text-muted'>
+          <span className='me-auto text-secondary'>
             Have you saved the token? It cannot be retrieved later.
           </span>
           <Button
