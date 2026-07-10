@@ -79,11 +79,12 @@ const ExperimentDetailPage: FC = () => {
     )
   }
 
-  const resultsTotalUsers = results ? getResultsTotalUsers(results) : 0
+  const resultsTotalUsers =
+    results && results.metrics.length > 0 ? getResultsTotalUsers(results) : null
   const exposuresTotalUsers = exposures?.payload
     ? getHeadlineTotal(exposures.payload)
-    : 0
-  const usersEnrolled = resultsTotalUsers || exposuresTotalUsers || null
+    : null
+  const usersEnrolled = resultsTotalUsers ?? exposuresTotalUsers
 
   return (
     <div className='app-container container mt-4'>

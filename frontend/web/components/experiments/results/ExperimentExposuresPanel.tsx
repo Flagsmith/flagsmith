@@ -82,10 +82,13 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
   const hasData = !!payload && headline > 0
 
   const handleComputeNow = useCallback(async () => {
-    await refreshExposures({
+    const result = await refreshExposures({
       environmentId,
       experimentId: experiment.id,
     })
+    if ('error' in result && result.error) {
+      toast('Failed to compute exposures', 'danger')
+    }
   }, [refreshExposures, environmentId, experiment.id])
 
   const asOf = exposures?.as_of ?? null

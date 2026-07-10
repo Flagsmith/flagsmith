@@ -126,12 +126,15 @@ const ExperimentResultsRefreshControl: FC<
     }
     if (errors.length > 0) {
       const seconds = getMaxRetryAfter(errors)
+      const hasNonRetryable = errors.some((e) => parseRetryAfter(e) === null)
+      if (hasNonRetryable) {
+        toast('Failed to refresh experiment data', 'danger')
+      }
       if (seconds !== null) {
         startRetryCountdown(seconds)
       } else {
         setRefreshRequested(false)
         setPollStartedAt(null)
-        toast('Failed to refresh experiment data', 'danger')
       }
     }
   }, [
