@@ -23,8 +23,8 @@ export type InlineInputProps = {
 }
 
 // Onboarding-local inline editable value (GhostInput + pencil) for the welcome
-// sentence: an action underline + pencil mark it editable, it commits on
-// blur/Enter, and an empty value reverts. Shares the VariationKeyLabel inline
+// sentence: a resting fill, action underline and pencil mark it editable; it
+// commits on blur/Enter, and an empty value reverts. Shares the VariationKeyLabel inline
 // edit's visual language but drops its buttons/validation to stay prose-like;
 // feature-local for now, both should converge on one primitive.
 const InlineInput: FC<InlineInputProps> = ({
