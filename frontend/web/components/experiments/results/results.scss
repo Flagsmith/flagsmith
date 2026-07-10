@@ -4,6 +4,17 @@
 
 .experiment-recommendation {
   font-size: 16px;
+  color: var(--color-text-default);
+}
+
+.experiment-results__tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: var(--font-weight-regular);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-emphasis);
+  color: var(--color-text-secondary);
 }
 
 .experiment-results {

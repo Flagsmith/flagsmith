@@ -28,7 +28,7 @@ const ExperimentConfiguration: FC<ExperimentConfigurationProps> = ({
       <div className='col-md-4'>
         <ContentCard compact title='Feature flag'>
           <div>
-            <span className='selectable-card__tag'>
+            <span className='experiment-results__tag'>
               {experiment.feature.name}
             </span>
           </div>
@@ -40,7 +40,7 @@ const ExperimentConfiguration: FC<ExperimentConfigurationProps> = ({
             <div>
               <div>{metric.metric_name}</div>
               <div className='mt-3'>
-                <span className='selectable-card__tag'>
+                <span className='experiment-results__tag'>
                   {EXPECTED_DIRECTION_CHIP[metric.expected_direction]}
                 </span>
               </div>
