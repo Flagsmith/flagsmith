@@ -267,9 +267,11 @@ const controller = {
       .then(async (res) => {
         data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         API.trackEvent(Constants.events.REGISTER)
+        const freeEmailDomain = isFreeEmailDomain(user.email)
         flagsmith.trackEvent('new_signup', {
           metadata: {
-            free_email_domain: isFreeEmailDomain(user.email),
+            ...(freeEmailDomain && { domain: user.email.split('@')[1] }),
+            free_email_domain: freeEmailDomain,
             invite: !!API.getInvite(),
             signup_method: 'email',
             utm_source: user.utm_data?.utm_source,
