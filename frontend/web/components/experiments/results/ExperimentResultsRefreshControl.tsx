@@ -2,7 +2,9 @@ import { FC, useCallback, useEffect, useState } from 'react'
 import useCountdown from 'common/hooks/useCountdown'
 import {
   useGetExperimentBayesianResultsQuery,
+  useGetExperimentExposuresQuery,
   useRefreshExperimentBayesianResultsMutation,
+  useRefreshExperimentExposuresMutation,
 } from 'common/services/useExperiment'
 import { ExperimentStatus } from 'common/types/responses'
 import RefreshControl from './RefreshControl'
@@ -14,6 +16,7 @@ import {
   deriveResultsViewState,
   getResultsRefreshLabel,
 } from './resultsViewState'
+import { deriveExposuresViewState } from './exposuresViewState'
 
 const parseRetryAfter = (err: unknown): number | null => {
   const fetchErr = err as {
@@ -23,6 +26,17 @@ const parseRetryAfter = (err: unknown): number | null => {
   if (fetchErr.status !== 429) return null
   if (fetchErr.retryAfter) return fetchErr.retryAfter
   return DEFAULT_RETRY_AFTER_S
+}
+
+const getMaxRetryAfter = (errors: unknown[]): number | null => {
+  let max: number | null = null
+  for (const err of errors) {
+    const seconds = parseRetryAfter(err)
+    if (seconds !== null && (max === null || seconds > max)) {
+      max = seconds
+    }
+  }
+  return max
 }
 
 type ExperimentResultsRefreshControlProps = {
@@ -48,27 +62,40 @@ const ExperimentResultsRefreshControl: FC<
     { environmentId, experimentId },
     { pollingInterval: pollInterval },
   )
-  const [refresh, { isLoading: isSubmitting }] =
+  const { data: exposures } = useGetExperimentExposuresQuery(
+    { environmentId, experimentId },
+    { pollingInterval: pollInterval },
+  )
+  const [refreshResults, { isLoading: isSubmittingResults }] =
     useRefreshExperimentBayesianResultsMutation()
+  const [refreshExposures, { isLoading: isSubmittingExposures }] =
+    useRefreshExperimentExposuresMutation()
 
-  const viewState = deriveResultsViewState(results)
+  const resultsViewState = deriveResultsViewState(results)
+  const exposuresViewState = deriveExposuresViewState(exposures)
   const availability = canRefreshResults(status, results)
+
+  const eitherRefreshing =
+    resultsViewState.kind === 'refreshing' ||
+    exposuresViewState.kind === 'refreshing'
+  const bothSettled =
+    resultsViewState.kind !== 'refreshing' &&
+    exposuresViewState.kind !== 'refreshing'
 
   const pollTimedOut =
     pollStartedAt !== null && Date.now() - pollStartedAt > POLL_TIMEOUT_MS
-  const shouldPoll =
-    !pollTimedOut && (viewState.kind === 'refreshing' || refreshRequested)
+  const shouldPoll = !pollTimedOut && (eitherRefreshing || refreshRequested)
   const nextPollInterval = shouldPoll ? REFRESH_POLL_INTERVAL_MS : 0
   useEffect(() => {
     setPollInterval(nextPollInterval)
   }, [nextPollInterval])
 
   useEffect(() => {
-    if (viewState.kind === 'loaded' || viewState.kind === 'error') {
+    if (refreshRequested && bothSettled) {
       setRefreshRequested(false)
       setPollStartedAt(null)
     }
-  }, [viewState.kind])
+  }, [refreshRequested, bothSettled])
 
   useEffect(() => {
     if (pollTimedOut) {
@@ -78,25 +105,48 @@ const ExperimentResultsRefreshControl: FC<
   }, [pollTimedOut])
 
   const isRefreshing =
-    refreshRequested || viewState.kind === 'refreshing' || isSubmitting
+    refreshRequested ||
+    eitherRefreshing ||
+    isSubmittingResults ||
+    isSubmittingExposures
 
   const handleRefresh = useCallback(async () => {
     setRefreshRequested(true)
     setPollStartedAt(Date.now())
-    const result = await refresh({ environmentId, experimentId })
-    if ('error' in result && result.error) {
-      setRefreshRequested(false)
-      setPollStartedAt(null)
-      const seconds = parseRetryAfter(result.error)
+    const [resultsResult, exposuresResult] = await Promise.all([
+      refreshResults({ environmentId, experimentId }),
+      refreshExposures({ environmentId, experimentId }),
+    ])
+    const errors: unknown[] = []
+    if ('error' in resultsResult && resultsResult.error) {
+      errors.push(resultsResult.error)
+    }
+    if ('error' in exposuresResult && exposuresResult.error) {
+      errors.push(exposuresResult.error)
+    }
+    if (errors.length > 0) {
+      const seconds = getMaxRetryAfter(errors)
       if (seconds !== null) {
         startRetryCountdown(seconds)
       } else {
-        toast('Failed to refresh results', 'danger')
+        setRefreshRequested(false)
+        setPollStartedAt(null)
+        toast('Failed to refresh experiment data', 'danger')
       }
     }
-  }, [refresh, environmentId, experimentId, startRetryCountdown])
+  }, [
+    refreshResults,
+    refreshExposures,
+    environmentId,
+    experimentId,
+    startRetryCountdown,
+  ])
 
-  const label = getResultsRefreshLabel(retryAfter, isRefreshing, viewState)
+  const label = getResultsRefreshLabel(
+    retryAfter,
+    isRefreshing,
+    resultsViewState,
+  )
 
   return (
     <RefreshControl
@@ -116,7 +166,7 @@ const ExperimentResultsRefreshControl: FC<
       }
       onRefresh={handleRefresh}
     >
-      Refresh results
+      Refresh
     </RefreshControl>
   )
 }

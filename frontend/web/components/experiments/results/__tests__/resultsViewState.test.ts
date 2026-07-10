@@ -86,7 +86,7 @@ describe('getResultsRefreshLabel', () => {
   it('prefers a retry countdown over everything else', () => {
     expect(
       getResultsRefreshLabel(90, true, { kind: 'error', staleAvailable: true }),
-    ).toEqual({ message: 'Computing… retry in 1m 30s', tone: 'muted' })
+    ).toEqual({ message: 'Refresh available in 1m 30s', tone: 'muted' })
   })
 
   it('shows an in-progress message while refreshing', () => {
