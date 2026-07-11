@@ -434,10 +434,10 @@ def test_send_test_webhook__various_error_status_codes__returns_correct_response
     mock_post.assert_called_once()
     response_json = response.json()
     assert response_json["status"] == external_api_response_status
-    assert response_json["detail"] == "Webhook returned invalid status"
+    assert response_json["detail"] == "Webhook returned error status"
     assert (
         response_json["body"]
-        == "Please check the webhook endpoint to validate it returns a 200 OK."
+        == f"Webhook returned HTTP {external_api_response_status}."
     )
 
 
