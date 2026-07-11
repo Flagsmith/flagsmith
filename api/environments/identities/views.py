@@ -169,8 +169,9 @@ class SDKIdentities(SDKAPIView):
         identifier = request.query_params.get("identifier")
         if not identifier:
             return Response(
-                {"detail": "Missing identifier"}
-            )  # TODO: add 400 status - will this break the clients?
+                {"detail": "Missing identifier"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if request.query_params.get("transient"):
             identity = Identity(
