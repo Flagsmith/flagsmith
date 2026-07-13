@@ -67,7 +67,7 @@ const InlineInput: FC<InlineInputProps> = ({
         value={draft}
         placeholder={label}
         maxLength={maxLength}
-        aria-label={`${label} name`}
+        aria-label={`Edit ${label.toLowerCase()}`}
         onChange={(e) => {
           const raw = e.target.value
           setDraft(transform ? transform(raw) : raw)
