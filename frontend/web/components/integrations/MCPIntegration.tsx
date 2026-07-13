@@ -2,7 +2,7 @@ import React, { FC, useState } from 'react'
 import Button from 'components/base/forms/Button'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
-import LabelWithTooltip from 'components/base/LabelWithTooltip'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import Utils from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
 import MCPSnippet from './mcp/MCPSnippet'
@@ -73,12 +73,12 @@ const MCPIntegration: FC = () => {
               <div className='mt-3 mx-0 px-0'>
                 {tab.supportsApiKey && (
                   <div className='mb-3' style={{ maxWidth: 240 }}>
-                    <label className='mb-1 d-block'>
-                      <LabelWithTooltip
-                        label='Authentication'
-                        tooltip={CONNECTION_TOOLTIP}
-                      />
-                    </label>
+                    <FieldLabel
+                      className='mb-1 d-block'
+                      tooltip={CONNECTION_TOOLTIP}
+                    >
+                      Authentication
+                    </FieldLabel>
                     <Select
                       value={CONNECTION_OPTIONS.find(
                         (o) => o.value === connection,
