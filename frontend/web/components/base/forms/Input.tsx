@@ -144,23 +144,24 @@ const Input: React.FC<InputProps> = ({
         autoComplete={enableAutoComplete ?? autocomplete}
       />
       {typeProp === 'password' && (
-        <span
+        <button
+          type='button'
+          aria-label={type === 'password' ? 'Show password' : 'Hide password'}
+          aria-pressed={type === 'text'}
+          disabled={disabled}
           className={cn(
             { 'clickable': true, 'input-icon-right': true },
+            'border-0 bg-transparent p-0',
             sizeClassName,
           )}
-          onClick={() => {
-            if (!disabled) {
-              setType(type === 'password' ? 'text' : 'password')
-            }
-          }}
+          onClick={() => setType(type === 'password' ? 'text' : 'password')}
         >
           <Icon
             name={type === 'password' ? 'eye' : 'eye-off'}
             fill={invalid ? colorIconDanger : undefined}
             width={iconWidth}
           />
-        </span>
+        </button>
       )}
       {search && (
         <span className={cn({ 'input-icon-right': true }, sizeClassName)}>

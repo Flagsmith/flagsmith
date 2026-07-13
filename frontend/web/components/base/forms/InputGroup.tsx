@@ -19,6 +19,8 @@ export interface InputGroupMethods {
   focus: () => void
 }
 
+type InputGroupValidity = boolean | number | string | null
+
 interface InputGroupProps {
   className?: string
   noMargin?: boolean
@@ -34,7 +36,7 @@ interface InputGroupProps {
   textarea?: boolean
   // Legacy: consumers pass truthy/falsy non-booleans (e.g. `name && name.length`);
   // coerced to a boolean before it reaches Input.
-  isValid?: boolean | number | string | null
+  isValid?: InputGroupValidity
   disabled?: boolean
   value?: InputProps['value']
   defaultValue?: InputProps['defaultValue']

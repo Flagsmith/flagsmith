@@ -38,6 +38,7 @@ textarea {
     background-color: transparent;
     padding-left: 8px;
     padding-right: 8px;
+
     // _forms.scss re-applies a full border shorthand on hover/focus.
     &:hover {
       border: none;
@@ -198,7 +199,7 @@ textarea {
 .dark textarea {
   background-color: var(--color-surface-default);
   color: var(--color-text-default);
-  border-color: var(--color-surface-default);
+  border-color: var(--color-border-default);
   &::placeholder {
     color: var(--color-text-tertiary) !important;
   }

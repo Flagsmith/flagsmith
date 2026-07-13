@@ -30,6 +30,7 @@
             border: 1px solid var(--color-border-default);
             background-color: var(--color-surface-default);
             color: var(--color-text-default);
+
             // Dark hover/focus stay action-coloured (was $primary) — the light
             // rule uses --color-border-strong on hover, so this override keeps
             // the existing dark behaviour rather than inheriting it.
@@ -82,6 +83,7 @@
         &:focus {
             border: 1px solid var(--color-border-action);
         }
+
         border-radius: $border-radius;
         color: var(--color-text-default);
         height: $input-height;

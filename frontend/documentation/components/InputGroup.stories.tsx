@@ -20,7 +20,8 @@ const Field = ({ initialValue, ...props }: FieldProps) => {
   )
 }
 
-const meta: Meta = {
+const meta: Meta<typeof InputGroup> = {
+  component: InputGroup,
   decorators: [
     (Story: React.FC) => (
       <div style={{ width: 320 }}>
@@ -33,7 +34,7 @@ const meta: Meta = {
 }
 export default meta
 
-type Story = StoryObj
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   render: () => <Field title='Email' placeholder='you@example.com' />,
