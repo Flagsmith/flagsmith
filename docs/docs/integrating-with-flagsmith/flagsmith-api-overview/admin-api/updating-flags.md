@@ -5,11 +5,7 @@ sidebar_position: 3
 ---
 
 These experimental endpoints let you update feature flag values and segment overrides via the Admin API. They're meant
-as a simpler alternative to the current endpoints, which were designed with our dashboard user experience in mind:
-
-- Convenient to use in automation via CLI
-- Need no prior feature ID lookup — accepts name
-- Work the same regardless of Feature Versioning
+as a simpler alternative to the current endpoints, which were designed with our dashboard user experience in mind.
 
 :::caution
 
@@ -232,10 +228,11 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
 
 Set up multivariate flags and customise weights per segment.
 
-- The `multivariate_feature_state_values` list is absolute: omitting an option means deleting it.
-- Segment overrides can only re-weight options configured in the environment.
-- Deleting a multivariate option also deletes it in every segment override.
-- Segments already overriding multivariate options do not gain new variants added to the environment automatically.
+Multivariate options can only be added, deleted, or updated in the environment. The `multivariate_feature_state_values`
+list is absolute: omitting an option means deleting it.
+
+Segment overrides can only re-weight existing variants. They cannot update the variant value, or add or delete
+multivariate options.
 
 **Option A** —
 [`POST /api/experiments/environments/{environment_key}/update-flag-v1/`](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_update_flag_v1_create)
