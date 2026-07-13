@@ -1,14 +1,18 @@
+import datetime
+import logging
 from collections.abc import Iterable
 from itertools import chain
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, TypeVar, cast
 from uuid import UUID
 
+from common.core.utils import using_database_replica
+from django.utils import timezone
 from flag_engine.context import types as engine_types
 from flag_engine.segments.types import ConditionOperator, RuleType
 from pydantic import TypeAdapter
 
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
-from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.models import EnvironmentFeatureVersion, VersionChangeSet
 from segments.types import SegmentEngineMetadata
 from util.engine_models.environments.integrations.models import IntegrationModel
 from util.engine_models.environments.models import (
@@ -22,6 +26,7 @@ from util.engine_models.features.models import (
     FeatureStateModel,
     MultivariateFeatureOptionModel,
     MultivariateFeatureStateValueModel,
+    ScheduledChangeModel,
 )
 from util.engine_models.identities.models import IdentityModel
 from util.engine_models.identities.traits.models import TraitModel
@@ -49,6 +54,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from organisations.models import Organisation
     from projects.models import Project
     from segments.models import Condition, Segment, SegmentRule
+
+
+logger = logging.getLogger(__name__)
 
 
 __all__ = (
@@ -135,10 +143,282 @@ def map_webhook_config_to_engine(
     )
 
 
+def _get_effective_live_from(
+    feature_state: "FeatureState",
+) -> Optional[datetime.datetime]:
+    """
+    Resolve `live_from` consistently across both versioning systems.
+
+    V1 (legacy): the timestamp lives directly on the FeatureState.
+    V2 (`use_v2_feature_versioning`): it lives on the linked
+    EnvironmentFeatureVersion instead — FeatureState.live_from isn't
+    guaranteed to be populated there.
+
+    Mirrors the branching already used by `FeatureState.is_live`, which
+    doesn't expose this comparison as a reusable, version-agnostic helper.
+    """
+    if feature_state.environment_feature_version_id is not None:
+        environment_feature_version = feature_state.environment_feature_version
+        return (
+            environment_feature_version.live_from
+            if environment_feature_version
+            else None
+        )
+    return feature_state.live_from
+
+
+def _is_scheduled_change_locked_in(feature_state: "FeatureState") -> bool:
+    """
+    Whether a not-yet-live feature state is actually committed to going
+    live, mirroring the publication half of `FeatureState.is_live`'s V1/V2
+    branching (`_get_effective_live_from` mirrors its timestamp half).
+
+    A future `live_from` alone doesn't mean "scheduled":
+
+    V2: `live_from` is writable on an *unpublished* EnvironmentFeatureVersion
+    (the versioning API accepts it at draft-create time), so its auto-cloned
+    feature states carry a future timestamp before anyone decides to publish.
+    Require `published_at` to be set.
+
+    V1: feature states belonging to an uncommitted change request have
+    `version=None` but already carry their target `live_from`. Require a
+    real version number.
+
+    Either way, a draft isn't locked in yet and must not be advertised to
+    SDKs as a scheduled change (matching the committed-only filter the
+    VersionChangeSet mechanism applies).
+    """
+    if feature_state.environment_feature_version_id is not None:
+        environment_feature_version = feature_state.environment_feature_version
+        # `select_related` joins straight onto the FK column, bypassing
+        # `EnvironmentFeatureVersion`'s soft-delete manager — a cancelled
+        # (soft-deleted) version can still come back here, so `deleted_at`
+        # must be checked explicitly rather than relying on the manager.
+        return (
+            environment_feature_version is not None
+            and environment_feature_version.published_at is not None
+            and environment_feature_version.deleted_at is None
+        )
+    return feature_state.version is not None
+
+
+def _parse_changeset_feature_state_value(
+    value_dict: object,
+) -> object:
+    if not isinstance(value_dict, dict):
+        return None
+    for key in ("string_value", "integer_value", "boolean_value"):
+        value = value_dict.get(key)
+        if value is not None:
+            return value
+    return None
+
+
+def _get_valid_changeset_entries(
+    change_set: VersionChangeSet,
+    field_name: str,
+    *,
+    feature_segment_required: bool,
+) -> List[Dict[str, object]]:
+    """
+    `feature_states_to_create`/`feature_states_to_update` store
+    `json.dumps()` of *raw client JSON* at CR-create time — that JSON is only
+    validated at publish time (`features/versioning/tasks.py`). This
+    parser runs on the SDK hot read path (the environment-document endpoint),
+    so a malformed blob must degrade to "skip and log", never propagate: one
+    garbage changeset must not 500 the document build — nor hide scheduled
+    changes for the environment's other, well-formed changesets.
+    """
+    try:
+        entries = getattr(change_set, f"get_parsed_{field_name}")()
+    except (ValueError, TypeError) as exc:
+        logger.warning(
+            "Skipping unparseable %s JSON on VersionChangeSet id=%s "
+            "(feature id=%s, change request id=%s): %s",
+            field_name,
+            change_set.id,
+            change_set.feature_id,
+            change_set.change_request_id,
+            exc,
+        )
+        return []
+    if not isinstance(entries, list):
+        logger.warning(
+            "Skipping %s on VersionChangeSet id=%s (feature id=%s, change "
+            "request id=%s): expected a JSON list, got %s",
+            field_name,
+            change_set.id,
+            change_set.feature_id,
+            change_set.change_request_id,
+            type(entries).__name__,
+        )
+        return []
+    return [
+        entry
+        for entry in entries
+        if _is_valid_changeset_entry(
+            entry,
+            change_set,
+            field_name,
+            feature_segment_required=feature_segment_required,
+        )
+    ]
+
+
+def _is_valid_changeset_entry(
+    entry: object,
+    change_set: VersionChangeSet,
+    field_name: str,
+    *,
+    feature_segment_required: bool,
+) -> bool:
+    """
+    Shape-check a single changeset feature-state entry so the caller can use
+    plain subscripts safely. `enabled` is genuinely optional client-side (the
+    upstream serializer leaves it to a model default), so its absence here is
+    an expected malformed-at-rest shape, not a can't-happen guard.
+    """
+
+    def _skip(reason: str) -> bool:
+        logger.warning(
+            "Skipping malformed %s entry on VersionChangeSet id=%s "
+            "(feature id=%s, change request id=%s): %s",
+            field_name,
+            change_set.id,
+            change_set.feature_id,
+            change_set.change_request_id,
+            reason,
+        )
+        return False
+
+    if not isinstance(entry, dict):
+        return _skip(f"expected an object, got {type(entry).__name__}")
+    if not isinstance(entry.get("enabled"), bool):
+        return _skip("missing or non-boolean 'enabled'")
+    feature_state_value = entry.get("feature_state_value")
+    if feature_state_value is not None and not isinstance(feature_state_value, dict):
+        return _skip("'feature_state_value' is not an object")
+    feature_segment = entry.get("feature_segment")
+    if feature_segment is None:
+        if feature_segment_required:
+            return _skip("missing 'feature_segment'")
+        return True
+    if not isinstance(feature_segment, dict):
+        return _skip("'feature_segment' is not an object")
+    segment_id = feature_segment.get("segment")
+    if not isinstance(segment_id, int) or isinstance(segment_id, bool):
+        return _skip("'feature_segment.segment' is not an integer")
+    return True
+
+
+_ScheduledChangeKeyT = TypeVar("_ScheduledChangeKeyT")
+
+
+def _keep_earliest_scheduled_change(
+    by_key: Dict[_ScheduledChangeKeyT, ScheduledChangeModel],
+    key: _ScheduledChangeKeyT,
+    candidate: ScheduledChangeModel,
+) -> None:
+    existing = by_key.get(key)
+    if existing is None or candidate.live_from < existing.live_from:
+        by_key[key] = candidate
+
+
+def _get_pending_version_change_set_scheduled_changes(
+    environment: "Environment",
+) -> Tuple[
+    Dict[int, ScheduledChangeModel], Dict[Tuple[int, int], ScheduledChangeModel]
+]:
+    """
+    Change-request-driven scheduled changes are staged
+    as a `VersionChangeSet` (a JSON diff of the change request) rather than
+    a real FeatureState row. A background task only materialises the actual
+    FeatureState/EnvironmentFeatureVersion at `live_from`, so between commit
+    and go-live there is nothing for `_get_prioritised_feature_states` to
+    find. This reads those pending diffs directly.
+
+    Only changesets tied to an already-*committed* change request are
+    surfaced — a change still in draft/review isn't locked in yet and
+    shouldn't be advertised to SDKs as a scheduled change.
+
+    Returns a 2-tuple: (environment-default changes by feature id,
+    segment-override changes by (feature id, segment id)).
+    """
+    environment_default_by_feature_id: Dict[int, ScheduledChangeModel] = {}
+    segment_override_by_feature_and_segment_id: Dict[
+        Tuple[int, int], ScheduledChangeModel
+    ] = {}
+
+    # `change_request__...` is a JOIN condition, not a query through
+    # ChangeRequest's own soft-delete manager — a soft-deleted change
+    # request would still match here unless excluded explicitly.
+    pending_change_sets = using_database_replica(VersionChangeSet.objects).filter(
+        environment=environment,
+        published_at__isnull=True,
+        live_from__isnull=False,
+        live_from__gt=timezone.now(),
+        change_request__committed_at__isnull=False,
+        change_request__deleted_at__isnull=True,
+    )
+
+    for change_set in pending_change_sets:
+        # The changeset JSON is raw, publish-time-validated client input —
+        # `_get_valid_changeset_entries` shape-checks every entry (skipping
+        # and logging bad ones), so the subscripts below can't raise.
+        for fs_update in _get_valid_changeset_entries(
+            change_set, "feature_states_to_update", feature_segment_required=False
+        ):
+            candidate = ScheduledChangeModel(
+                live_from=change_set.live_from,
+                enabled=bool(fs_update["enabled"]),
+                feature_state_value=_parse_changeset_feature_state_value(
+                    fs_update.get("feature_state_value")
+                ),
+            )
+            feature_segment = fs_update.get("feature_segment")
+            if feature_segment is None:
+                _keep_earliest_scheduled_change(
+                    environment_default_by_feature_id,
+                    change_set.feature_id,
+                    candidate,
+                )
+            else:
+                segment_id = cast(Dict[str, object], feature_segment)["segment"]
+                _keep_earliest_scheduled_change(
+                    segment_override_by_feature_and_segment_id,
+                    (change_set.feature_id, cast(int, segment_id)),
+                    candidate,
+                )
+
+        # feature states to create are always segment overrides — an
+        # environment default always already exists, so it's updated,
+        # never created. Hence `feature_segment_required`.
+        for fs_create in _get_valid_changeset_entries(
+            change_set, "feature_states_to_create", feature_segment_required=True
+        ):
+            feature_segment = cast(Dict[str, object], fs_create["feature_segment"])
+            candidate = ScheduledChangeModel(
+                live_from=change_set.live_from,
+                enabled=bool(fs_create["enabled"]),
+                feature_state_value=_parse_changeset_feature_state_value(
+                    fs_create.get("feature_state_value")
+                ),
+            )
+            _keep_earliest_scheduled_change(
+                segment_override_by_feature_and_segment_id,
+                (change_set.feature_id, cast(int, feature_segment["segment"])),
+                candidate,
+            )
+
+    return environment_default_by_feature_id, segment_override_by_feature_and_segment_id
+
+
 def map_feature_state_to_engine(
     feature_state: "FeatureState",
     *,
     mv_fs_values: Optional[Iterable["MultivariateFeatureStateValue"]] = None,
+    scheduled_feature_state: Optional["FeatureState"] = None,
+    scheduled_change_override: Optional[ScheduledChangeModel] = None,
 ) -> FeatureStateModel:
     feature = feature_state.feature
     feature_segment: Optional["FeatureSegment"] = feature_state.feature_segment
@@ -150,6 +430,31 @@ def map_feature_state_to_engine(
     else:
         feature_segment_model = None
 
+    # Surface the next not-yet-live version of this feature state, if the
+    # caller opted in and one exists. Without opting in, non-live feature
+    # states are never mapped at all.
+    scheduled_change_model: Optional[ScheduledChangeModel] = None
+    if scheduled_feature_state is not None:
+        scheduled_live_from = _get_effective_live_from(scheduled_feature_state)
+        if scheduled_live_from is not None:
+            scheduled_change_model = ScheduledChangeModel(
+                live_from=scheduled_live_from,
+                enabled=scheduled_feature_state.enabled,
+                feature_state_value=scheduled_feature_state.get_feature_state_value(),
+            )
+
+    # A change-request-scheduled change has no
+    # FeatureState row yet — it's staged as a VersionChangeSet JSON diff
+    # until a background task materialises it at `live_from`. The caller
+    # resolves that from `_get_pending_version_change_set_scheduled_changes`
+    # and passes the winner here, since there's no ORM object to compare
+    # against `scheduled_feature_state` this deep in the call stack.
+    if scheduled_change_override is not None and (
+        scheduled_change_model is None
+        or scheduled_change_override.live_from < scheduled_change_model.live_from
+    ):
+        scheduled_change_model = scheduled_change_override
+
     return FeatureStateModel(
         enabled=feature_state.enabled,
         django_id=feature_state.pk,
@@ -160,6 +465,7 @@ def map_feature_state_to_engine(
         multivariate_feature_state_values=[  # type: ignore[arg-type]
             map_mv_fs_value_to_engine(mv_fs_value) for mv_fs_value in mv_fs_values or []
         ],
+        scheduled_change=scheduled_change_model,
     )
 
 
@@ -194,6 +500,7 @@ def map_environment_to_engine(
     environment: "Environment",
     *,
     with_integrations: bool = True,
+    include_scheduled: bool = False,
 ) -> EnvironmentModel:
     """
     Maps Core API's `environments.models.Environment` model instance to the
@@ -202,6 +509,40 @@ def map_environment_to_engine(
     feature versions.
 
     :param Environment environment: the environment to map
+    :param include_scheduled: opt-in. When True, each returned
+        FeatureStateModel additionally carries a `scheduled_change` field
+        describing the next not-yet-live version of that feature state, if
+        any. Defaults to False, in which case the response shape is
+        unchanged.
+
+        Known limitations — shapes of genuinely scheduled change that are
+        *not* surfaced (a consumer cannot distinguish "nothing scheduled"
+        from "scheduled, but in an unsupported shape"):
+
+        * v2 segment overrides via the versioning flow: a future *published*
+          EnvironmentFeatureVersion's segment overrides hang off that
+          version's own FeatureSegment clones, which the
+          `latest_environment_feature_version_uuids` filter in
+          `_get_segment_feature_states` excludes before the scheduled scan
+          ever sees them. The FeatureState-based mechanism therefore covers
+          v2 environment defaults and V1 feature states (any scope), but
+          never v2 segment overrides.
+        * Brand-new segment overrides staged in a changeset
+          (`feature_states_to_create`): there is no live FeatureStateModel
+          to attach the `scheduled_change` to until the override exists —
+          see the test docstring on
+          `test_include_scheduled__surfaces_pending_update_to_existing_segment_override`
+          in `tests/unit/util/mappers/test_scheduled_changes.py`.
+        * Scheduled deletions: `segment_ids_to_delete_overrides` in a
+          committed changeset is never read, so a scheduled *removal* of a
+          segment override surfaces nothing.
+        * Multivariate values: `ScheduledChangeModel` carries only `enabled`
+          and the control `feature_state_value` — a scheduled change to MV
+          weights alone advertises no meaningful diff.
+        * Identity overrides: effectively V1-only. v2 identity feature
+          states are always live, so the `include_scheduled` threading
+          through `map_identity_to_engine` rarely has anything to surface
+          under v2.
     :rtype EnvironmentModel
     """
     project: "Project" = environment.project
@@ -213,7 +554,10 @@ def map_environment_to_engine(
         ps for ps in project.segments.all() if ps.id == ps.version_of_id
     ]
 
-    project_segment_feature_states_by_segment_id = _get_segment_feature_states(
+    (
+        project_segment_feature_states_by_segment_id,
+        project_segment_scheduled_by_segment_id,
+    ) = _get_segment_feature_states(
         project_segments,
         environment.pk,
         latest_environment_feature_version_uuids=(
@@ -226,6 +570,7 @@ def map_environment_to_engine(
             if environment.use_v2_feature_versioning
             else []
         ),
+        include_scheduled=include_scheduled,
     )
     # Drop feature-specific segments that have no FeatureSegment in this
     # environment — without one, they have no evaluation path here, and
@@ -240,13 +585,16 @@ def map_environment_to_engine(
         int,
         Iterable["SegmentRule"],
     ] = {segment.pk: segment.rules.all() for segment in project_segments}
-    environment_feature_states: List["FeatureState"] = _get_prioritised_feature_states(
-        [
-            feature_state
-            for feature_state in environment.feature_states.all()
-            if feature_state.feature_segment_id is None
-            and feature_state.identity_id is None
-        ]
+    environment_feature_states, environment_scheduled_by_feature_id = (
+        _get_prioritised_feature_states(
+            [
+                feature_state
+                for feature_state in environment.feature_states.all()
+                if feature_state.feature_segment_id is None
+                and feature_state.identity_id is None
+            ],
+            include_scheduled=include_scheduled,
+        )
     )
     all_environment_feature_states = (
         *environment_feature_states,
@@ -256,6 +604,17 @@ def map_environment_to_engine(
         feature_state.pk: feature_state.multivariate_feature_state_values.all()
         for feature_state in all_environment_feature_states
     }
+
+    # Change-request-scheduled changes have no
+    # FeatureState row yet — see `_get_pending_version_change_set_scheduled_changes`.
+    (
+        changeset_environment_default_by_feature_id,
+        changeset_segment_override_by_feature_and_segment_id,
+    ) = (
+        _get_pending_version_change_set_scheduled_changes(environment)
+        if include_scheduled
+        else ({}, {})
+    )
 
     # Read integrations.
     integration_configs: dict[
@@ -291,6 +650,12 @@ def map_environment_to_engine(
                     mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
                         feature_state.pk,
                     ),
+                    scheduled_feature_state=project_segment_scheduled_by_segment_id.get(
+                        segment.pk, {}
+                    ).get(feature_state.feature_id),
+                    scheduled_change_override=changeset_segment_override_by_feature_and_segment_id.get(
+                        (feature_state.feature_id, segment.pk)
+                    ),
                 )
                 for feature_state in project_segment_feature_states_by_segment_id.pop(
                     segment.pk
@@ -317,6 +682,12 @@ def map_environment_to_engine(
             feature_state,
             mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
                 feature_state.pk,
+            ),
+            scheduled_feature_state=environment_scheduled_by_feature_id.get(
+                feature_state.feature_id
+            ),
+            scheduled_change_override=changeset_environment_default_by_feature_id.get(
+                feature_state.feature_id
             ),
         )
         for feature_state in environment_feature_states
@@ -390,13 +761,17 @@ def map_identity_to_engine(
     *,
     with_overrides: bool = True,
     with_traits: bool = True,
+    include_scheduled: bool = False,
 ) -> IdentityModel:
     environment_api_key = identity.environment.api_key
 
     # Read relationships - grab all the data needed from the ORM here.
     if with_overrides:
-        identity_feature_states: List["FeatureState"] = _get_prioritised_feature_states(
-            identity.identity_features.all(),
+        identity_feature_states, identity_scheduled_by_feature_id = (
+            _get_prioritised_feature_states(
+                identity.identity_features.all(),
+                include_scheduled=include_scheduled,
+            )
         )
         multivariate_feature_state_values_by_feature_state_id = {
             feature_state.pk: feature_state.multivariate_feature_state_values.all()
@@ -404,6 +779,7 @@ def map_identity_to_engine(
         }
     else:
         identity_feature_states = []
+        identity_scheduled_by_feature_id = {}
         multivariate_feature_state_values_by_feature_state_id = {}
 
     identity_traits: Iterable["Trait"] = (
@@ -416,6 +792,9 @@ def map_identity_to_engine(
             feature_state,
             mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
                 feature_state.pk,
+            ),
+            scheduled_feature_state=identity_scheduled_by_feature_id.get(
+                feature_state.feature_id
             ),
         )
         for feature_state in identity_feature_states
@@ -509,13 +888,37 @@ def map_condition_to_segment_condition(
 
 def _get_prioritised_feature_states(
     feature_states: Iterable["FeatureState"],
-) -> List["FeatureState"]:
+    *,
+    include_scheduled: bool = False,
+) -> Tuple[List["FeatureState"], Dict[int, "FeatureState"]]:
+    """
+    Returns a 2-tuple of (prioritised live feature states, next-scheduled
+    feature state by feature id).
+
+    The second element is only ever populated when
+    `include_scheduled=True`. When it's not, non-live
+    feature states (including future-scheduled ones) are silently discarded
+    with no way to recover them from this function's result.
+    """
     prioritised_feature_state_by_feature_id = {}  # type: ignore[var-annotated]
+    scheduled_feature_state_by_feature_id: Dict[int, "FeatureState"] = {}
     for feature_state in feature_states:
         # TODO: this call to is_live was causing an N+1 issue.
         #  For now, we have solved it with an extra select_related, but
         #  there is probably a neater solution here.
         if not feature_state.is_live:
+            if include_scheduled and _is_scheduled_change_locked_in(feature_state):
+                live_from = _get_effective_live_from(feature_state)
+                if live_from is not None and live_from > timezone.now():
+                    existing_scheduled = scheduled_feature_state_by_feature_id.get(
+                        feature_state.feature_id
+                    )
+                    if existing_scheduled is None or live_from < (
+                        _get_effective_live_from(existing_scheduled) or live_from
+                    ):
+                        scheduled_feature_state_by_feature_id[
+                            feature_state.feature_id
+                        ] = feature_state
             continue
         if existing_feature_state := prioritised_feature_state_by_feature_id.get(
             feature_state.feature_id
@@ -525,18 +928,25 @@ def _get_prioritised_feature_states(
         prioritised_feature_state_by_feature_id[feature_state.feature_id] = (
             feature_state
         )
-    return list(prioritised_feature_state_by_feature_id.values())
+    return (
+        list(prioritised_feature_state_by_feature_id.values()),
+        scheduled_feature_state_by_feature_id,
+    )
 
 
 def _get_segment_feature_states(
     segments: Iterable["Segment"],
     environment_id: int,
     latest_environment_feature_version_uuids: Iterable[UUID],
-) -> Dict[int, List["FeatureState"]]:
+    *,
+    include_scheduled: bool = False,
+) -> Tuple[Dict[int, List["FeatureState"]], Dict[int, Dict[int, "FeatureState"]]]:
     feature_states_by_segment_id = {}  # type: ignore[var-annotated]
+    scheduled_by_segment_id: Dict[int, Dict[int, "FeatureState"]] = {}
 
     for segment in segments:
         segment_feature_states = feature_states_by_segment_id.setdefault(segment.pk, [])
+        segment_scheduled = scheduled_by_segment_id.setdefault(segment.pk, {})
 
         for feature_segment in segment.feature_segments.all():
             if feature_segment.environment_id != environment_id:
@@ -549,8 +959,11 @@ def _get_segment_feature_states(
             ):
                 continue
 
-            segment_feature_states += _get_prioritised_feature_states(
-                feature_segment.feature_states.all()
+            live_states, scheduled_states = _get_prioritised_feature_states(
+                feature_segment.feature_states.all(),
+                include_scheduled=include_scheduled,
             )
+            segment_feature_states += live_states
+            segment_scheduled.update(scheduled_states)
 
-    return feature_states_by_segment_id
+    return feature_states_by_segment_id, scheduled_by_segment_id

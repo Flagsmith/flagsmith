@@ -1,3 +1,4 @@
+import datetime
 import time
 from typing import TYPE_CHECKING
 from unittest.mock import ANY
@@ -317,3 +318,86 @@ def test_get_environment_document__if_modified_since_header__returns_304_or_200(
     # Then - actual environment is returned with a 200
     assert response4.status_code == status.HTTP_200_OK
     assert len(response4.content) > 0
+
+
+def test_get_environment_document__include_scheduled_query_param__feature_state_carries_scheduled_change(
+    organisation_one: "Organisation",
+    organisation_one_project_one: "Project",
+) -> None:
+    # Given
+    project = organisation_one_project_one
+    environment = Environment.objects.create(name="Test Environment", project=project)
+    api_key = EnvironmentAPIKey.objects.create(environment=environment).key
+    feature = Feature.objects.create(name="test_feature", project=project)
+
+    live_from = timezone.now() + datetime.timedelta(hours=1)
+    FeatureState.objects.create(
+        environment=environment,
+        feature=feature,
+        version=2,
+        live_from=live_from,
+        enabled=True,
+    )
+
+    client = APIClient()
+    client.credentials(HTTP_X_ENVIRONMENT_KEY=api_key)
+    url = reverse("api-v1:environment-document")
+
+    # When - opted in via the query param
+    response = client.get(url, {"include_scheduled": "true"})
+
+    # Then - the feature state carries the scheduled change
+    assert response.status_code == status.HTTP_200_OK
+    [feature_state] = [
+        fs
+        for fs in response.data["feature_states"]
+        if fs["feature"]["id"] == feature.id
+    ]
+    assert feature_state["scheduled_change"] == {
+        "live_from": live_from,
+        "enabled": True,
+        "feature_state_value": None,
+    }
+
+    # When - not opted in
+    default_response = client.get(url)
+
+    # Then - the field is omitted entirely, not present-and-null
+    [default_feature_state] = [
+        fs
+        for fs in default_response.data["feature_states"]
+        if fs["feature"]["id"] == feature.id
+    ]
+    assert "scheduled_change" not in default_feature_state
+
+
+def test_get_environment_document__include_scheduled_query_param__bypasses_conditional_get(
+    organisation_one: "Organisation",
+    organisation_one_project_one: "Project",
+) -> None:
+    # Given
+    project = organisation_one_project_one
+    environment = Environment.objects.create(name="Test Environment", project=project)
+    api_key = EnvironmentAPIKey.objects.create(environment=environment).key
+
+    client = APIClient()
+    client.credentials(HTTP_X_ENVIRONMENT_KEY=api_key)
+    url = reverse("api-v1:environment-document")
+
+    # a cached If-Modified-Since value that matches the environment's
+    # current state, so a plain request would 304
+    if_modified_since = http_date(environment.updated_at.timestamp())
+    baseline_response = client.get(url, HTTP_IF_MODIFIED_SINCE=if_modified_since)
+    assert baseline_response.status_code == status.HTTP_304_NOT_MODIFIED
+
+    # When - an opted-in request with the same If-Modified-Since header
+    scheduled_response = client.get(
+        url,
+        {"include_scheduled": "true"},
+        HTTP_IF_MODIFIED_SINCE=if_modified_since,
+    )
+
+    # Then - it's never short-circuited to 304, and carries no Last-Modified
+    # header for a client to cache against
+    assert scheduled_response.status_code == status.HTTP_200_OK
+    assert "Last-Modified" not in scheduled_response.headers

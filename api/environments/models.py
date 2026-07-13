@@ -534,7 +534,25 @@ class Environment(
     def get_environment_document(
         cls,
         api_key: str,
+        *,
+        include_scheduled: bool = False,
     ) -> dict[str, typing.Any]:
+        """
+        :param include_scheduled: opt-in. When True, feature states in the
+            returned document carry an additional `scheduled_change` field
+            describing their next not-yet-live version, if any. Defaults to
+            False, in which case the response shape is unchanged.
+        """
+        # No cache entry is ever refreshed by a schedule maturing (its
+        # `live_from` passing) — that's a pure time-based transition with no
+        # DB write to hang a cache-invalidation hook off. A cached document
+        # could therefore describe a `scheduled_change` as still upcoming
+        # long after it has actually gone live. Opted-in requests bypass
+        # caching entirely so they're always resolved fresh from the DB.
+        if include_scheduled:
+            return cls._get_environment_document_from_db(
+                api_key, include_scheduled=True
+            )
         if (
             settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0
             or settings.CACHE_ENVIRONMENT_DOCUMENT_MODE
@@ -575,6 +593,8 @@ class Environment(
     def _get_environment_document_from_db(
         cls,
         api_key: str,
+        *,
+        include_scheduled: bool = False,
     ) -> dict[str, typing.Any]:
         manager = using_database_replica(cls.objects)
         environment = manager.filter_for_document_builder(
@@ -611,7 +631,9 @@ class Environment(
                 ),
             ],
         ).get()
-        return map_environment_to_sdk_document(environment)
+        return map_environment_to_sdk_document(
+            environment, include_scheduled=include_scheduled
+        )
 
     def _get_environment(self):  # type: ignore[no-untyped-def]
         return self

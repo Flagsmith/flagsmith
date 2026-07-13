@@ -1,8 +1,9 @@
+import datetime
 import typing
 import uuid
 
 from annotated_types import Ge, Le, SupportsLt
-from pydantic import UUID4, BaseModel, Field, model_validator
+from pydantic import UUID4, BaseModel, Field, model_serializer, model_validator
 from pydantic_collections import BaseCollectionModel  # type: ignore[import-untyped]
 from typing_extensions import Annotated
 
@@ -66,6 +67,19 @@ class MultivariateFeatureStateValueList(
         super().append(multivariate_feature_state_value)
 
 
+class ScheduledChangeModel(BaseModel):
+    """
+    A future FeatureState for the same feature/segment/identity that hasn't
+    gone live yet (`live_from` is in the future). Only ever populated when the
+    SDK explicitly opts in — see `include_scheduled` on the
+    environment-document endpoint.
+    """
+
+    live_from: datetime.datetime
+    enabled: bool
+    feature_state_value: typing.Any = None
+
+
 class FeatureStateModel(BaseModel, validate_assignment=True):
     feature: FeatureModel
     enabled: bool
@@ -76,6 +90,25 @@ class FeatureStateModel(BaseModel, validate_assignment=True):
     multivariate_feature_state_values: MultivariateFeatureStateValueList = Field(
         default_factory=MultivariateFeatureStateValueList
     )
+    # Next not-yet-live version of this feature state, if any and if
+    # requested. Never populated unless explicitly opted in.
+    scheduled_change: typing.Optional[ScheduledChangeModel] = None
+
+    @model_serializer(mode="wrap")
+    def _omit_scheduled_change_when_absent(
+        self,
+        handler: typing.Callable[["FeatureStateModel"], typing.Dict[str, typing.Any]],
+    ) -> typing.Dict[str, typing.Any]:
+        # When `scheduled_change` is unpopulated (the default, i.e. nobody
+        # opted in), drop the key entirely so that every serialized shape —
+        # SDK environment documents, DynamoDB documents, any other
+        # `model_dump()` caller — stays byte-for-byte identical to callers
+        # that never opted in: emitting `"scheduled_change": null` would be a
+        # shape change for callers that never asked for this feature.
+        data = handler(self)
+        if self.scheduled_change is None:
+            data.pop("scheduled_change", None)
+        return data
 
     def set_value(self, value: typing.Any) -> None:
         self.feature_state_value = value
