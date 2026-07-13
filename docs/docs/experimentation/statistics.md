@@ -1,12 +1,8 @@
 ---
-title: Experiment Statistics
-sidebar_label: Experiment Statistics
-sidebar_position: 5
+title: Statistics Glossary
+sidebar_label: Statistics Glossary
+sidebar_position: 7
 ---
-
-Flagsmith's statistics engine answers three questions about an experiment: **Am I winning?** (is the variant better than
-control), **by how much?** (the lift), and **can I trust it?** (is the difference real, and was traffic split fairly).
-This page explains the terms you'll see, in plain language — no statistics background needed.
 
 :::info Coming soon — Enterprise beta
 
@@ -15,6 +11,10 @@ Experiment statistics aren't generally available yet. They are launching as a be
 release; it previews what the feature will do.
 
 :::
+
+Flagsmith's statistics engine answers three questions about an experiment: **Am I winning?** (is the variant better than
+control), **by how much?** (the lift), and **can I trust it?** (is the difference real, and was traffic split fairly).
+This page explains the terms you'll see, in plain language — no statistics background needed.
 
 ## Terms you'll see
 
@@ -143,5 +143,5 @@ Nothing here is generally available yet — the table shows what the upcoming En
 | Risk / decision banner / trend chart            | Not currently planned |
 | Frequentist engine                              | Deferred              |
 
-For experiment setup — multivariate flags, bucketing, identities — see
-[Experimentation (A/B Testing)](/experimentation-ab-testing) and [managing identities](/flagsmith-concepts/identities).
+For experiment setup, see [Create an Experiment](/experimentation/create-an-experiment) and
+[managing identities](/flagsmith-concepts/identities).
