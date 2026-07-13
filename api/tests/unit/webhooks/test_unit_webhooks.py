@@ -365,7 +365,7 @@ def test_send_test_webhook__200_response_from_webhook__returns_correct_response(
 ) -> None:
     # Given
     webhook_url = "http://test.webhook.com"
-    mock_post = mocker.patch("requests.post")
+    mock_post = mocker.patch("webhooks.webhooks.requests.post")
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.text = "success"
@@ -408,7 +408,7 @@ def test_send_test_webhook__various_2xx_status_codes__returns_success(
 ) -> None:
     # Given
     webhook_url = "http://test.webhook.com"
-    mock_post = mocker.patch("requests.post")
+    mock_post = mocker.patch("webhooks.webhooks.requests.post")
     mock_response = MagicMock()
     mock_response.status_code = external_api_response_status
     mock_response.text = "success"
@@ -453,7 +453,7 @@ def test_send_test_webhook__various_error_status_codes__returns_correct_response
 ) -> None:
     # Given
     webhook_url = "http://test.webhook.com"
-    mock_post = mocker.patch("requests.post")
+    mock_post = mocker.patch("webhooks.webhooks.requests.post")
     mock_response = MagicMock()
     mock_response.status_code = external_api_response_status
     mock_response.text = external_api_error_text
@@ -518,7 +518,7 @@ def test_send_test_webhook__various_secrets__sends_correct_payload(
 ) -> None:
     # Given
     webhook_url = "http://test.webhook.com"
-    mock_post = mocker.patch("requests.post")
+    mock_post = mocker.patch("webhooks.webhooks.requests.post")
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_post.return_value = mock_response
@@ -557,7 +557,7 @@ def test_send_test_webhook__request_exception__returns_error_response(
 ) -> None:
     # Given
     webhook_url = "http://test.webhook.com"
-    mock_post = mocker.patch("requests.post")
+    mock_post = mocker.patch("webhooks.webhooks.requests.post")
     mock_post.side_effect = requests.exceptions.RequestException(
         "Some internal exception details that should not be exposed!"
     )
