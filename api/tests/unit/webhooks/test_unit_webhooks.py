@@ -393,6 +393,49 @@ def test_send_test_webhook__200_response_from_webhook__returns_correct_response(
 
 
 @pytest.mark.parametrize(
+    "external_api_response_status",
+    [
+        201,
+        202,
+        204,
+    ],
+)
+def test_send_test_webhook__various_2xx_status_codes__returns_success(
+    mocker: MockerFixture,
+    admin_client: APIClient,
+    external_api_response_status: int,
+    organisation: Organisation,
+) -> None:
+    # Given
+    webhook_url = "http://test.webhook.com"
+    mock_post = mocker.patch("requests.post")
+    mock_response = MagicMock()
+    mock_response.status_code = external_api_response_status
+    mock_response.text = "success"
+    mock_post.return_value = mock_response
+
+    url = reverse("api-v1:webhooks:webhooks-test")
+
+    data = {
+        "webhook_url": webhook_url,
+        "secret": "some-secret",
+        "scope": {"type": "organisation", "id": organisation.id},
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 200
+    mock_post.assert_called_once()
+    response_json = response.json()
+    assert response_json["status"] == external_api_response_status
+    assert response_json["detail"] == "Webhook test successful"
+
+
+@pytest.mark.parametrize(
     "external_api_response_status, external_api_error_text, expected_final_status",
     [
         (400, "wrong-payload", 400),
