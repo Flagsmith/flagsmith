@@ -369,6 +369,7 @@ def test_send_test_webhook__200_response_from_webhook__returns_correct_response(
     mock_post = mocker.patch("webhooks.webhooks.requests.post")
     mock_response = MagicMock()
     mock_response.status_code = 200
+    mock_response.ok = True
     mock_response.text = "success"
     mock_post.return_value = mock_response
     mocker.patch(
@@ -416,6 +417,7 @@ def test_send_test_webhook__various_2xx_status_codes__returns_success(
     mock_post = mocker.patch("webhooks.webhooks.requests.post")
     mock_response = MagicMock()
     mock_response.status_code = external_api_response_status
+    mock_response.ok = external_api_response_status < 400
     mock_response.text = "success"
     mock_post.return_value = mock_response
     mocker.patch(
@@ -465,6 +467,7 @@ def test_send_test_webhook__various_error_status_codes__returns_correct_response
     mock_post = mocker.patch("webhooks.webhooks.requests.post")
     mock_response = MagicMock()
     mock_response.status_code = external_api_response_status
+    mock_response.ok = external_api_response_status < 400
     mock_response.text = external_api_error_text
     mock_post.return_value = mock_response
     mocker.patch(
@@ -534,6 +537,7 @@ def test_send_test_webhook__various_secrets__sends_correct_payload(
     mock_post = mocker.patch("webhooks.webhooks.requests.post")
     mock_response = MagicMock()
     mock_response.status_code = 200
+    mock_response.ok = True
     mock_post.return_value = mock_response
     mocker.patch(
         "webhooks.fields.socket.getaddrinfo",
