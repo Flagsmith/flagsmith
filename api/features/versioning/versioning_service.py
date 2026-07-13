@@ -1,4 +1,5 @@
 import typing
+from collections.abc import Sequence
 
 from common.core.utils import using_database_replica
 from django.db import transaction
@@ -19,9 +20,12 @@ from features.versioning.dataclasses import (
     FeatureValue,
     FlagChangeSetOptionA,
     FlagChangeSetOptionB,
+    KeyedMultivariateOptionChangeSet,
+    MultivariateKeyValueChangeSet,
     MultivariateOptionUpdateChangeSet,
     MultivariateValueChangeSet,
     NewMultivariateOptionChangeSet,
+    SegmentMultivariateValueChangeSet,
 )
 from features.versioning.exceptions import DirectFeatureStateWriteNotAllowedError
 from features.versioning.models import EnvironmentFeatureVersion
@@ -327,18 +331,50 @@ def _update_feature_state_value(fsv: FeatureStateValue, value: FeatureValue) -> 
 
 def update_multivariate_values(
     feature_state: FeatureState,
-    values: list[MultivariateValueChangeSet] | None,
+    values: Sequence[SegmentMultivariateValueChangeSet] | None,
 ) -> None:
     if values is None:
         return
+
+    keys = {
+        value.key
+        for value in values
+        if isinstance(value, MultivariateKeyValueChangeSet)
+    }
+    option_id_by_key: dict[str, int] = {}
+    if keys:
+        option_id_by_key = {
+            key: option_id
+            for key, option_id in MultivariateFeatureOption.objects.filter(
+                feature_id=feature_state.feature_id, key__in=keys
+            ).values_list("key", "id")
+            if key is not None
+        }
+        if unknown_keys := keys - option_id_by_key.keys():
+            raise ValidationError(
+                f"Multivariate keys {sorted(unknown_keys)} do not belong to the feature"
+            )
+    resolved_values = [
+        value
+        if isinstance(value, MultivariateValueChangeSet)
+        else MultivariateValueChangeSet(
+            multivariate_feature_option_id=option_id_by_key[value.key],
+            percentage_allocation=value.percentage_allocation,
+        )
+        for value in values
+    ]
 
     existing = {
         mv.multivariate_feature_option_id: mv
         for mv in feature_state.multivariate_feature_state_values.all()
     }
 
-    passed_option_ids = {value.multivariate_feature_option_id for value in values}
-    effective_total = sum(value.percentage_allocation for value in values) + sum(
+    passed_option_ids = {
+        value.multivariate_feature_option_id for value in resolved_values
+    }
+    effective_total = sum(
+        value.percentage_allocation for value in resolved_values
+    ) + sum(
         mv.percentage_allocation
         for option_id, mv in existing.items()
         if option_id not in passed_option_ids
@@ -349,7 +385,7 @@ def update_multivariate_values(
             f"100%, got {effective_total}%."
         )
 
-    for value in values:
+    for value in resolved_values:
         mv = existing.get(value.multivariate_feature_option_id)
         if mv is None:
             MultivariateFeatureStateValue.objects.create(
@@ -379,8 +415,15 @@ def update_environment_multivariate_options(
         for value in values
         if isinstance(value, MultivariateOptionUpdateChangeSet)
     }
+    listed_keys = {
+        value.key
+        for value in values
+        if isinstance(value, KeyedMultivariateOptionChangeSet)
+    }
     # Instance-level deletes so django-lifecycle hooks fire
-    for option in feature.multivariate_options.exclude(id__in=listed_option_ids):
+    for option in feature.multivariate_options.all():
+        if option.id in listed_option_ids or option.key in listed_keys:
+            continue
         option.delete()
 
     reweighted_values = []
@@ -392,6 +435,8 @@ def update_environment_multivariate_options(
             )
             option.set_value(value.value.value, value.value.type_)
             option.save()
+        elif isinstance(value, KeyedMultivariateOptionChangeSet):
+            option = _upsert_multivariate_option_by_key(feature, value)
         else:
             option = feature.multivariate_options.get(
                 id=value.multivariate_feature_option_id
@@ -408,6 +453,30 @@ def update_environment_multivariate_options(
         )
 
     update_multivariate_values(feature_state, reweighted_values)
+
+
+def _upsert_multivariate_option_by_key(
+    feature: Feature,
+    value: KeyedMultivariateOptionChangeSet,
+) -> MultivariateFeatureOption:
+    try:
+        option = feature.multivariate_options.get(key=value.key)
+    except MultivariateFeatureOption.DoesNotExist:
+        if value.value is None:
+            raise ValidationError("A new multivariate option requires a 'value'.")
+        option = MultivariateFeatureOption(
+            feature=feature,
+            key=value.key,
+            default_percentage_allocation=value.percentage_allocation,
+        )
+        option.set_value(value.value.value, value.value.type_)
+        option.save()
+        return option
+    option.default_percentage_allocation = value.percentage_allocation
+    if value.value is not None:
+        option.set_value(value.value.value, value.value.type_)
+    option.save()
+    return option
 
 
 def _create_segment_override(

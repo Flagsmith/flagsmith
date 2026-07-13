@@ -15,6 +15,7 @@ from features.versioning.tasks import enable_v2_versioning
 from tests.integration.helpers import create_mv_option_with_api
 
 FeatureUpdatePayload: TypeAlias = dict[str, Any]
+VariantIdentifier: TypeAlias = dict[str, Any]
 UpdateFlagEndpointOption = Literal["update-flag-v1", "update-flag-v2"]
 
 
@@ -38,6 +39,7 @@ def versioned_environment(
                 "value": {"type": "string", "value": "control"},
                 "multivariate_feature_state_values": [
                     {
+                        "key": "one-half",
                         "percentage_allocation": 50,
                         "value": {"type": "string", "value": "half"},
                     },
@@ -57,6 +59,7 @@ def versioned_environment(
                     "value": {"type": "string", "value": "control"},
                     "multivariate_feature_state_values": [
                         {
+                            "key": "one-half",
                             "percentage_allocation": 50,
                             "value": {"type": "string", "value": "half"},
                         },
@@ -99,18 +102,33 @@ def test_update_flag__environment_defaults__adds_multivariate_options(
             "multivariate_feature_option__string_value", "percentage_allocation"
         )
     ) == {"half": 50, "bit more": 10}
+    assert dict(
+        MultivariateFeatureOption.objects.filter(feature_id=feature).values_list(
+            "string_value", "key"
+        )
+    ) == {"half": "one-half", "bit more": None}
 
 
+@pytest.mark.parametrize(
+    "variant_identifier",
+    [
+        pytest.param(
+            lambda option_id, option_key: {"multivariate_feature_option": option_id},
+            id="by_id",
+        ),
+        pytest.param(lambda option_id, option_key: {"key": option_key}, id="by_key"),
+    ],
+)
 @pytest.mark.parametrize(
     "endpoint,payload",
     [
         pytest.param(
             "update-flag-v1",
-            lambda feature, option: {
+            lambda feature, identifier: {
                 "feature": {"id": feature},
                 "multivariate_feature_state_values": [
                     {
-                        "multivariate_feature_option": option,
+                        **identifier,
                         "percentage_allocation": 25,
                         "value": {"type": "string", "value": "halfer"},
                     },
@@ -120,12 +138,12 @@ def test_update_flag__environment_defaults__adds_multivariate_options(
         ),
         pytest.param(
             "update-flag-v2",
-            lambda feature, option: {
+            lambda feature, identifier: {
                 "feature": {"id": feature},
                 "environment_default": {
                     "multivariate_feature_state_values": [
                         {
-                            "multivariate_feature_option": option,
+                            **identifier,
                             "percentage_allocation": 25,
                             "value": {"type": "string", "value": "halfer"},
                         },
@@ -141,14 +159,16 @@ def test_update_flag__environment_defaults__updates_multivariate_options(
     environment_api_key: str,
     feature: int,
     mv_option_50_percent: int,
+    mv_option_key: str,
     versioned_environment: Environment,
     endpoint: UpdateFlagEndpointOption,
-    payload: Callable[[int, int], FeatureUpdatePayload],
+    payload: Callable[[int, VariantIdentifier], FeatureUpdatePayload],
+    variant_identifier: Callable[[int, str], VariantIdentifier],
 ) -> None:
     # Given / When
     response = admin_client.post(
         f"/api/experiments/environments/{environment_api_key}/{endpoint}/",
-        payload(feature, mv_option_50_percent),
+        payload(feature, variant_identifier(mv_option_50_percent, mv_option_key)),
         format="json",
     )
 
@@ -174,34 +194,38 @@ def test_update_flag__environment_defaults__updates_multivariate_options(
 
 
 @pytest.mark.parametrize(
+    "variant_identifier",
+    [
+        pytest.param(
+            lambda option_id, option_key: {"multivariate_feature_option": option_id},
+            id="by_id",
+        ),
+        pytest.param(lambda option_id, option_key: {"key": option_key}, id="by_key"),
+    ],
+)
+@pytest.mark.parametrize(
     "endpoint,payload",
     [
         pytest.param(
             "update-flag-v1",
-            lambda feature, segment, option: {
+            lambda feature, segment, identifier: {
                 "feature": {"id": feature},
                 "segment": {"id": segment},
                 "multivariate_feature_state_values": [
-                    {
-                        "multivariate_feature_option": option,
-                        "percentage_allocation": 80,
-                    },
+                    {**identifier, "percentage_allocation": 80},
                 ],
             },
             id="option_a",
         ),
         pytest.param(
             "update-flag-v2",
-            lambda feature, segment, option: {
+            lambda feature, segment, identifier: {
                 "feature": {"id": feature},
                 "segment_overrides": [
                     {
                         "segment_id": segment,
                         "multivariate_feature_state_values": [
-                            {
-                                "multivariate_feature_option": option,
-                                "percentage_allocation": 80,
-                            },
+                            {**identifier, "percentage_allocation": 80},
                         ],
                     },
                 ],
@@ -216,15 +240,19 @@ def test_update_flag__segment_override__updates_multivariate_options(
     feature: int,
     mv_option_value: str,
     mv_option_50_percent: int,
+    mv_option_key: str,
     segment: int,
     versioned_environment: Environment,
     endpoint: UpdateFlagEndpointOption,
-    payload: Callable[[int, int, int], FeatureUpdatePayload],
+    payload: Callable[[int, int, VariantIdentifier], FeatureUpdatePayload],
+    variant_identifier: Callable[[int, str], VariantIdentifier],
 ) -> None:
     # Given / When
     response = admin_client.post(
         f"/api/experiments/environments/{environment_api_key}/{endpoint}/",
-        payload(feature, segment, mv_option_50_percent),
+        payload(
+            feature, segment, variant_identifier(mv_option_50_percent, mv_option_key)
+        ),
         format="json",
     )
 
@@ -251,31 +279,35 @@ def test_update_flag__segment_override__updates_multivariate_options(
 
 
 @pytest.mark.parametrize(
+    "variant_identifier",
+    [
+        pytest.param(
+            lambda option_id, option_key: {"multivariate_feature_option": option_id},
+            id="by_id",
+        ),
+        pytest.param(lambda option_id, option_key: {"key": option_key}, id="by_key"),
+    ],
+)
+@pytest.mark.parametrize(
     "endpoint,payload",
     [
         pytest.param(
             "update-flag-v1",
-            lambda feature, kept_option: {
+            lambda feature, identifier: {
                 "feature": {"id": feature},
                 "multivariate_feature_state_values": [
-                    {
-                        "multivariate_feature_option": kept_option,
-                        "percentage_allocation": 50,
-                    },
+                    {**identifier, "percentage_allocation": 50},
                 ],
             },
             id="option_a",
         ),
         pytest.param(
             "update-flag-v2",
-            lambda feature, kept_option: {
+            lambda feature, identifier: {
                 "feature": {"id": feature},
                 "environment_default": {
                     "multivariate_feature_state_values": [
-                        {
-                            "multivariate_feature_option": kept_option,
-                            "percentage_allocation": 50,
-                        },
+                        {**identifier, "percentage_allocation": 50},
                     ],
                 },
             },
@@ -289,8 +321,10 @@ def test_update_flag__environment_defaults__deletes_multivariate_options(
     project: int,
     feature: int,
     mv_option_50_percent: int,
+    mv_option_key: str,
     endpoint: UpdateFlagEndpointOption,
-    payload: Callable[[int, int], FeatureUpdatePayload],
+    payload: Callable[[int, VariantIdentifier], FeatureUpdatePayload],
+    variant_identifier: Callable[[int, str], VariantIdentifier],
 ) -> None:
     # Given
     deleted_option = create_mv_option_with_api(
@@ -300,7 +334,7 @@ def test_update_flag__environment_defaults__deletes_multivariate_options(
     # When
     response = admin_client.post(
         f"/api/experiments/environments/{environment_api_key}/{endpoint}/",
-        payload(feature, mv_option_50_percent),
+        payload(feature, variant_identifier(mv_option_50_percent, mv_option_key)),
         format="json",
     )
 
@@ -447,6 +481,150 @@ def test_update_flag__multivariate_percentage_allocation_exceeds_100__responds_4
                 ],
             ),
             SimpleNamespace(
+                id="both-id-and-key",
+                payload=lambda multivariate_option_id, multivariate_option_key, **_: {
+                    "multivariate_feature_state_values": [
+                        {
+                            "multivariate_feature_option": multivariate_option_id,
+                            "key": multivariate_option_key,
+                            "percentage_allocation": 50,
+                        },
+                    ],
+                },
+                expected_errors=[
+                    {  # Option A
+                        "multivariate_feature_state_values": [
+                            {
+                                "non_field_errors": [
+                                    "Provide either 'multivariate_feature_option' or 'key', not both"
+                                ]
+                            }
+                        ]
+                    },
+                    {  # Option B
+                        "environment_default": {
+                            "multivariate_feature_state_values": [
+                                {
+                                    "non_field_errors": [
+                                        "Provide either 'multivariate_feature_option' or 'key', not both"
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                ],
+            ),
+            SimpleNamespace(
+                id="new-key-without-value",
+                payload=lambda **_: {
+                    "multivariate_feature_state_values": [
+                        {"key": "brand-new", "percentage_allocation": 50},
+                    ],
+                },
+                expected_errors=[
+                    {
+                        "multivariate_feature_state_values": [
+                            "A new multivariate option requires a 'value'."
+                        ]
+                    },
+                ],
+            ),
+            SimpleNamespace(
+                id="reserved-key",
+                payload=lambda **_: {
+                    "multivariate_feature_state_values": [
+                        {
+                            "key": "control",
+                            "percentage_allocation": 50,
+                            "value": {"type": "string", "value": "variant"},
+                        },
+                    ],
+                },
+                expected_errors=[
+                    {  # Option A
+                        "multivariate_feature_state_values": [
+                            {"key": ['"control" is a reserved variant key.']}
+                        ]
+                    },
+                    {  # Option B
+                        "environment_default": {
+                            "multivariate_feature_state_values": [
+                                {"key": ['"control" is a reserved variant key.']}
+                            ]
+                        }
+                    },
+                ],
+            ),
+            SimpleNamespace(
+                id="invalid-slug-key",
+                payload=lambda **_: {
+                    "multivariate_feature_state_values": [
+                        {
+                            "key": "not a key!",
+                            "percentage_allocation": 50,
+                            "value": {"type": "string", "value": "variant"},
+                        },
+                    ],
+                },
+                expected_errors=[
+                    {  # Option A
+                        "multivariate_feature_state_values": [
+                            {
+                                "key": [
+                                    'Enter a valid "slug" consisting of letters, numbers, underscores or hyphens.'
+                                ]
+                            }
+                        ]
+                    },
+                    {  # Option B
+                        "environment_default": {
+                            "multivariate_feature_state_values": [
+                                {
+                                    "key": [
+                                        'Enter a valid "slug" consisting of letters, numbers, underscores or hyphens.'
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                ],
+            ),
+            SimpleNamespace(
+                id="duplicate-key",
+                payload=lambda multivariate_option_key, **_: {
+                    "multivariate_feature_state_values": [
+                        {"key": multivariate_option_key, "percentage_allocation": 60},
+                        {"key": multivariate_option_key, "percentage_allocation": 40},
+                    ],
+                },
+                expected_errors=[
+                    {
+                        "multivariate_feature_state_values": [
+                            "Multivariate options must be unique"
+                        ]
+                    },
+                ],
+            ),
+            SimpleNamespace(
+                id="duplicate-mixed-id-and-key",
+                payload=lambda multivariate_option_id, multivariate_option_key, **_: {
+                    "multivariate_feature_state_values": [
+                        {
+                            "multivariate_feature_option": multivariate_option_id,
+                            "percentage_allocation": 60,
+                        },
+                        {"key": multivariate_option_key, "percentage_allocation": 40},
+                    ],
+                },
+                expected_errors=[
+                    {
+                        "multivariate_feature_state_values": [
+                            "Multivariate options must be unique"
+                        ]
+                    },
+                ],
+            ),
+            SimpleNamespace(
                 id="duplicate",
                 payload=lambda multivariate_option_id, **_: {
                     "multivariate_feature_state_values": [
@@ -494,6 +672,7 @@ def test_update_flag__invalid_environment_multivariate_options__responds_400(
     expected_errors: list[Any],
     feature: int,
     mv_option_50_percent: int,
+    mv_option_key: str,
     payload: Callable[..., FeatureUpdatePayload],
 ) -> None:
     # Given / When
@@ -501,7 +680,10 @@ def test_update_flag__invalid_environment_multivariate_options__responds_400(
         f"/api/experiments/environments/{environment_api_key}/{endpoint}/",
         data={
             "feature": {"id": feature},
-            **payload(multivariate_option_id=mv_option_50_percent),
+            **payload(
+                multivariate_option_id=mv_option_50_percent,
+                multivariate_option_key=mv_option_key,
+            ),
         },
         format="json",
     )
@@ -517,7 +699,7 @@ def test_update_flag__invalid_environment_multivariate_options__responds_400(
         test_case
         for scenario in [
             SimpleNamespace(
-                id="without-id",
+                id="without-identifier",
                 payload=lambda **_: {
                     "multivariate_feature_state_values": [
                         {
@@ -529,7 +711,7 @@ def test_update_flag__invalid_environment_multivariate_options__responds_400(
                 expected_errors=[
                     {  # Option A
                         "multivariate_feature_state_values": [
-                            "Segment overrides require a variant 'id'."
+                            "Segment overrides require a variant 'id' or 'key'."
                         ]
                     },
                     {  # Option B
@@ -537,12 +719,63 @@ def test_update_flag__invalid_environment_multivariate_options__responds_400(
                             {
                                 "multivariate_feature_state_values": [
                                     {
-                                        "multivariate_feature_option": [
-                                            "This field is required."
+                                        "non_field_errors": [
+                                            "Segment overrides require a variant 'id' or 'key'."
                                         ]
                                     }
                                 ]
                             }
+                        ]
+                    },
+                ],
+            ),
+            SimpleNamespace(
+                id="both-id-and-key",
+                payload=lambda multivariate_option_id, multivariate_option_key, **_: {
+                    "multivariate_feature_state_values": [
+                        {
+                            "multivariate_feature_option": multivariate_option_id,
+                            "key": multivariate_option_key,
+                            "percentage_allocation": 50,
+                        },
+                    ],
+                },
+                expected_errors=[
+                    {  # Option A
+                        "multivariate_feature_state_values": [
+                            {
+                                "non_field_errors": [
+                                    "Provide either 'multivariate_feature_option' or 'key', not both"
+                                ]
+                            }
+                        ]
+                    },
+                    {  # Option B
+                        "segment_overrides": [
+                            {
+                                "multivariate_feature_state_values": [
+                                    {
+                                        "non_field_errors": [
+                                            "Provide either 'multivariate_feature_option' or 'key', not both"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                ],
+            ),
+            SimpleNamespace(
+                id="unknown-key",
+                payload=lambda **_: {
+                    "multivariate_feature_state_values": [
+                        {"key": "ghost", "percentage_allocation": 50},
+                    ],
+                },
+                expected_errors=[
+                    {
+                        "multivariate_feature_state_values": [
+                            "Multivariate keys ['ghost'] do not belong to the feature"
                         ]
                     },
                 ],
@@ -577,6 +810,22 @@ def test_update_flag__invalid_environment_multivariate_options__responds_400(
                             "multivariate_feature_option": multivariate_option_id,
                             "percentage_allocation": 40,
                         },
+                    ],
+                },
+                expected_errors=[
+                    {
+                        "multivariate_feature_state_values": [
+                            "Multivariate options must be unique"
+                        ]
+                    },
+                ],
+            ),
+            SimpleNamespace(
+                id="duplicate-key",
+                payload=lambda multivariate_option_key, **_: {
+                    "multivariate_feature_state_values": [
+                        {"key": multivariate_option_key, "percentage_allocation": 60},
+                        {"key": multivariate_option_key, "percentage_allocation": 40},
                     ],
                 },
                 expected_errors=[
@@ -640,6 +889,7 @@ def test_update_flag__invalid_segment_multivariate_options__responds_400(
     expected_errors: list[Any],
     feature: int,
     mv_option_50_percent: int,
+    mv_option_key: str,
     payload: Callable[..., FeatureUpdatePayload],
     segment: int,
 ) -> None:
@@ -648,7 +898,11 @@ def test_update_flag__invalid_segment_multivariate_options__responds_400(
         f"/api/experiments/environments/{environment_api_key}/{endpoint}/",
         data={
             "feature": {"id": feature},
-            **payload(multivariate_option_id=mv_option_50_percent, segment_id=segment),
+            **payload(
+                multivariate_option_id=mv_option_50_percent,
+                multivariate_option_key=mv_option_key,
+                segment_id=segment,
+            ),
         },
         format="json",
     )
@@ -795,12 +1049,24 @@ def test_update_flag__new_segment_override_without_enabled_and_value__inherits_e
     assert override_feature_state.get_feature_state_value() == "control"
 
 
+@pytest.mark.parametrize(
+    "variant_identifier",
+    [
+        pytest.param(
+            lambda option_id, option_key: {"multivariate_feature_option": option_id},
+            id="by_id",
+        ),
+        pytest.param(lambda option_id, option_key: {"key": option_key}, id="by_key"),
+    ],
+)
 def test_update_flag_option_b__segment_override_reweights_option_deleted_from_environment__responds_400(
     admin_client: APIClient,
     environment_api_key: str,
     feature: int,
     mv_option_50_percent: int,
+    mv_option_key: str,
     segment: int,
+    variant_identifier: Callable[[int, str], VariantIdentifier],
 ) -> None:
     # Given / When
     response = admin_client.post(
@@ -820,7 +1086,7 @@ def test_update_flag_option_b__segment_override_reweights_option_deleted_from_en
                     "segment_id": segment,
                     "multivariate_feature_state_values": [
                         {
-                            "multivariate_feature_option": mv_option_50_percent,
+                            **variant_identifier(mv_option_50_percent, mv_option_key),
                             "percentage_allocation": 80,
                         },
                     ],
@@ -889,3 +1155,140 @@ def test_update_flag__unknown_feature_with_multivariate_options__responds_400(
     # Then
     assert response.status_code == 400
     assert "not found in project" in str(response.json())
+
+
+def test_update_flag_option_b__keyed_variants_in_single_request__configures_environment_and_overrides_segment(
+    admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        f"/api/experiments/environments/{environment_api_key}/update-flag-v2/",
+        {
+            "feature": {"id": feature},
+            "environment_default": {
+                "enabled": True,
+                "value": {"type": "string", "value": "control"},
+                "multivariate_feature_state_values": [
+                    {
+                        "key": "gold",
+                        "percentage_allocation": 30,
+                        "value": {"type": "string", "value": "#ffd700"},
+                    },
+                    {
+                        "key": "silver",
+                        "percentage_allocation": 10,
+                        "value": {"type": "string", "value": "#c0c0c0"},
+                    },
+                ],
+            },
+            "segment_overrides": [
+                {
+                    "segment_id": segment,
+                    "multivariate_feature_state_values": [
+                        {"key": "gold", "percentage_allocation": 100},
+                        {"key": "silver", "percentage_allocation": 0},
+                    ],
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 204
+    live_feature_states = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+    )
+    assert dict(
+        live_feature_states.get(
+            feature_segment=None
+        ).multivariate_feature_state_values.values_list(
+            "multivariate_feature_option__key", "percentage_allocation"
+        )
+    ) == {"gold": 30, "silver": 10}
+    assert dict(
+        live_feature_states.get(
+            feature_segment__segment_id=segment
+        ).multivariate_feature_state_values.values_list(
+            "multivariate_feature_option__key", "percentage_allocation"
+        )
+    ) == {"gold": 100, "silver": 0}
+
+
+@pytest.mark.parametrize(
+    "endpoint,payload",
+    [
+        pytest.param(
+            "update-flag-v1",
+            lambda feature: {
+                "feature": {"id": feature},
+                "multivariate_feature_state_values": [
+                    {
+                        "key": "gold",
+                        "percentage_allocation": 30,
+                        "value": {"type": "string", "value": "#ffd700"},
+                    },
+                ],
+            },
+            id="option_a",
+        ),
+        pytest.param(
+            "update-flag-v2",
+            lambda feature: {
+                "feature": {"id": feature},
+                "environment_default": {
+                    "multivariate_feature_state_values": [
+                        {
+                            "key": "gold",
+                            "percentage_allocation": 30,
+                            "value": {"type": "string", "value": "#ffd700"},
+                        },
+                    ],
+                },
+            },
+            id="option_b",
+        ),
+    ],
+)
+def test_update_flag__repeated_keyed_multivariate_payload__preserves_variant_identities(
+    admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    endpoint: UpdateFlagEndpointOption,
+    payload: Callable[[int], FeatureUpdatePayload],
+) -> None:
+    # Given
+    setup_response = admin_client.post(
+        f"/api/experiments/environments/{environment_api_key}/{endpoint}/",
+        payload(feature),
+        format="json",
+    )
+    assert setup_response.status_code == 204
+    option_ids = set(
+        MultivariateFeatureOption.objects.filter(feature_id=feature).values_list(
+            "id", flat=True
+        )
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/experiments/environments/{environment_api_key}/{endpoint}/",
+        payload(feature),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 204
+    assert (
+        set(
+            MultivariateFeatureOption.objects.filter(feature_id=feature).values_list(
+                "id", flat=True
+            )
+        )
+        == option_ids
+    )

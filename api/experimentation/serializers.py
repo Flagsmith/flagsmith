@@ -26,12 +26,10 @@ from experimentation.services import (
 from experimentation.types import (
     SNOWFLAKE_DEFAULTS,
     MetricExperimentResult,
+    RolloutMultivariateValuePayload,
     SnowflakeConfig,
 )
-from features.feature_states.serializers import (
-    FeatureValueSerializer,
-    SegmentOverrideMultivariateValueSerializer,
-)
+from features.feature_states.serializers import FeatureValueSerializer
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
 from features.multivariate.serializers import NestedMultivariateFeatureOptionSerializer
@@ -217,13 +215,22 @@ class ExperimentMetricInlineSerializer(serializers.Serializer):  # type: ignore[
     expected_direction = serializers.ChoiceField(choices=ExpectedDirection.choices)
 
 
+class RolloutMultivariateValueSerializer(
+    serializers.Serializer[RolloutMultivariateValuePayload]
+):
+    multivariate_feature_option = serializers.IntegerField(required=True)
+    percentage_allocation = serializers.FloatField(
+        required=True, min_value=0, max_value=100
+    )
+
+
 class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-arg]
     enabled = serializers.BooleanField(required=True)
     rollout_percentage = serializers.FloatField(
         required=True, min_value=0, max_value=100
     )
     feature_state_value = FeatureValueSerializer(required=True)
-    multivariate_feature_state_values = SegmentOverrideMultivariateValueSerializer(
+    multivariate_feature_state_values = RolloutMultivariateValueSerializer(
         many=True, required=False
     )
 

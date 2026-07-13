@@ -35,21 +35,43 @@ class BaseMultivariateValuePayload(TypedDict):
 
 class NewMultivariateOptionPayload(BaseMultivariateValuePayload):
     multivariate_feature_option: NotRequired[Never]
+    key: NotRequired[Never]
     value: FeatureValuePayload
+
+
+class KeyedMultivariateOptionPayload(BaseMultivariateValuePayload):
+    multivariate_feature_option: NotRequired[Never]
+    key: str
+    value: NotRequired[FeatureValuePayload]
 
 
 class MultivariateOptionUpdatePayload(BaseMultivariateValuePayload):
     multivariate_feature_option: int
+    key: NotRequired[Never]
     value: NotRequired[FeatureValuePayload]
 
 
 EnvironmentMultivariateValuePayload: TypeAlias = (
-    NewMultivariateOptionPayload | MultivariateOptionUpdatePayload
+    NewMultivariateOptionPayload
+    | KeyedMultivariateOptionPayload
+    | MultivariateOptionUpdatePayload
 )
 
 
-class SegmentOverrideMultivariateValuePayload(BaseMultivariateValuePayload):
+class SegmentOverrideMultivariateValueByIdPayload(BaseMultivariateValuePayload):
     multivariate_feature_option: int
+    key: NotRequired[Never]
+
+
+class SegmentOverrideMultivariateValueByKeyPayload(BaseMultivariateValuePayload):
+    multivariate_feature_option: NotRequired[Never]
+    key: str
+
+
+SegmentOverrideMultivariateValuePayload: TypeAlias = (
+    SegmentOverrideMultivariateValueByIdPayload
+    | SegmentOverrideMultivariateValueByKeyPayload
+)
 
 
 class UpdateFlagOptionAPayload(TypedDict):

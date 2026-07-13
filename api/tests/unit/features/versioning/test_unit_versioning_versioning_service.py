@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import timedelta
 
 import pytest
@@ -20,7 +21,10 @@ from features.versioning.dataclasses import (
     FeatureValue,
     FlagChangeSetOptionA,
     FlagChangeSetOptionB,
+    KeyedMultivariateOptionChangeSet,
+    MultivariateKeyValueChangeSet,
     MultivariateValueChangeSet,
+    SegmentMultivariateValueChangeSet,
     SegmentOverrideChangeSet,
 )
 from features.versioning.models import EnvironmentFeatureVersion
@@ -640,7 +644,7 @@ def _mv_change_set(
     author: AuthorData,
     segment: Segment,
     *,
-    multivariate_values: list[MultivariateValueChangeSet] | None,
+    multivariate_values: Sequence[SegmentMultivariateValueChangeSet] | None,
 ) -> FlagChangeSetOptionB:
     return FlagChangeSetOptionB(
         author=author,
@@ -928,3 +932,63 @@ def test_update_flag_option_b__retained_plus_passed_exceeds_100__raises(
                 multivariate_values=[MultivariateValueChangeSet(option_b.id, 100.0)],
             ),
         )
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_update_flag_option_b__segment_override_reweights_unknown_key__raises(
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    segment: Segment,
+    admin_user: FFAdminUser,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    change_set = _mv_change_set(
+        AuthorData(user=admin_user),
+        segment,
+        multivariate_values=[
+            MultivariateKeyValueChangeSet(key="ghost", percentage_allocation=50.0)
+        ],
+    )
+
+    # When / Then
+    with pytest.raises(ValidationError, match="do not belong to the feature"):
+        update_flag_option_b(environment, multivariate_feature, change_set)
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_update_flag_option_b__new_keyed_environment_option_without_value__raises(
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    change_set = FlagChangeSetOptionB(
+        author=AuthorData(user=admin_user),
+        environment_default=EnvironmentDefaultChangeSet(
+            enabled=True,
+            value=FeatureValue(type_="string", value="control"),
+            multivariate_values=[
+                KeyedMultivariateOptionChangeSet(
+                    key="brand-new", percentage_allocation=50.0
+                ),
+            ],
+        ),
+    )
+
+    # When / Then
+    with pytest.raises(
+        ValidationError, match="A new multivariate option requires a 'value'."
+    ):
+        update_flag_option_b(environment, multivariate_feature, change_set)

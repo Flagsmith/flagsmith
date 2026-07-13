@@ -8,10 +8,9 @@ from features.feature_states.serializers import (
     FeatureValueSerializer,
     UpdateFlagOptionASerializer,
     UpdateFlagOptionBSerializer,
-    validate_multivariate_state_values,
 )
-from features.feature_states.types import SegmentOverrideMultivariateValuePayload
 from features.models import Feature
+from features.versioning.dataclasses import MultivariateValueChangeSet
 from projects.models import Project
 from segments.models import Segment
 
@@ -265,16 +264,6 @@ def test_update_flag_option_b_serializer__duplicate_mv_option__returns_invalid(
     assert "must be unique" in str(serializer.errors)
 
 
-def test_validate_multivariate_state_values__empty_list__is_noop(
-    feature: Feature,
-) -> None:
-    # Given
-    multivariate_values: list[SegmentOverrideMultivariateValuePayload] = []
-
-    # When / Then no exception is raised
-    validate_multivariate_state_values(feature, multivariate_values)
-
-
 def test_update_flag_option_b_serializer__valid_mv_option__change_set_carries_mv(
     multivariate_feature: Feature,
     multivariate_options: list,  # type: ignore[type-arg]
@@ -319,5 +308,7 @@ def test_update_flag_option_b_serializer__valid_mv_option__change_set_carries_mv
     assert is_valid is True
     mv_values = change_set.segment_overrides[0].multivariate_values
     assert mv_values is not None
-    assert mv_values[0].multivariate_feature_option_id == option.id
-    assert mv_values[0].percentage_allocation == 75
+    assert mv_values[0] == MultivariateValueChangeSet(
+        multivariate_feature_option_id=option.id,
+        percentage_allocation=75,
+    )
