@@ -854,7 +854,7 @@ def test_update_flag_option_b__no_mv_values__leaves_existing_mv_untouched(
     "environment_fixture_name",
     ["environment", "environment_v2_versioning"],
 )
-def test_update_flag__segment_override_with_mv__sets_mv_values(
+def test_update_flag_option_a__segment_override_with_mv__sets_mv_values(
     environment_fixture_name: str,
     multivariate_feature: Feature,
     multivariate_options: list[MultivariateFeatureOption],

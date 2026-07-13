@@ -596,15 +596,16 @@ def _get_live_rollout_override(experiment: Experiment) -> FeatureState | None:
 def _update_live_feature_state(
     feature_state: FeatureState, change_set: FlagChangeSetOptionA
 ) -> None:
-    if change_set.enabled is not None:
-        feature_state.enabled = change_set.enabled
-        feature_state.save()
-    if change_set.value is not None:
-        feature_state.feature_state_value.set_value(
-            change_set.value.value, change_set.value.type_
-        )
-        feature_state.feature_state_value.save()
-    update_multivariate_values(feature_state, change_set.multivariate_values)
+    with transaction.atomic():
+        if change_set.enabled is not None:
+            feature_state.enabled = change_set.enabled
+            feature_state.save()
+        if change_set.value is not None:
+            feature_state.feature_state_value.set_value(
+                change_set.value.value, change_set.value.type_
+            )
+            feature_state.feature_state_value.save()
+        update_multivariate_values(feature_state, change_set.multivariate_values)
 
 
 def _update_rollout_in_place(
