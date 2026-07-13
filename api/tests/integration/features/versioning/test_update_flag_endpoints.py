@@ -8,7 +8,8 @@ import pytest
 from rest_framework.test import APIClient
 
 from environments.models import Environment
-from features.models import FeatureState
+from features.feature_types import STANDARD
+from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.tasks import enable_v2_versioning
 from tests.integration.helpers import create_mv_option_with_api
@@ -655,3 +656,236 @@ def test_update_flag__invalid_segment_multivariate_options__responds_400(
     # Then
     assert response.status_code == 400
     assert response.json() in expected_errors
+
+
+@pytest.mark.parametrize(
+    "endpoint,payload",
+    [
+        pytest.param(
+            "update-flag-v1",
+            lambda feature: {
+                "feature": {"id": feature},
+                "multivariate_feature_state_values": [],
+            },
+            id="option_a",
+        ),
+        pytest.param(
+            "update-flag-v2",
+            lambda feature: {
+                "feature": {"id": feature},
+                "environment_default": {"multivariate_feature_state_values": []},
+            },
+            id="option_b",
+        ),
+    ],
+)
+def test_update_flag__empty_multivariate_list__deletes_all_options(
+    admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    mv_option_50_percent: int,
+    versioned_environment: Environment,
+    endpoint: UpdateFlagEndpointOption,
+    payload: Callable[[int], FeatureUpdatePayload],
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        f"/api/experiments/environments/{environment_api_key}/{endpoint}/",
+        payload(feature),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 204
+    assert not MultivariateFeatureOption.objects.filter(feature_id=feature).exists()
+    assert Feature.objects.get(id=feature).type == STANDARD
+    assert not (
+        FeatureState.objects.get_live_feature_states(
+            environment=versioned_environment,
+            feature_id=feature,
+            feature_segment=None,
+        )
+        .get()
+        .multivariate_feature_state_values.exists()
+    )
+
+
+@pytest.mark.parametrize(
+    "endpoint,setup_payload,payload",
+    [
+        pytest.param(
+            "update-flag-v1",
+            lambda feature: {
+                "feature": {"id": feature},
+                "enabled": True,
+                "value": {"type": "string", "value": "control"},
+            },
+            lambda feature, segment, option: {
+                "feature": {"id": feature},
+                "segment": {"id": segment},
+                "multivariate_feature_state_values": [
+                    {
+                        "multivariate_feature_option": option,
+                        "percentage_allocation": 80,
+                    },
+                ],
+            },
+            id="option_a",
+        ),
+        pytest.param(
+            "update-flag-v2",
+            lambda feature: {
+                "feature": {"id": feature},
+                "environment_default": {
+                    "enabled": True,
+                    "value": {"type": "string", "value": "control"},
+                },
+            },
+            lambda feature, segment, option: {
+                "feature": {"id": feature},
+                "segment_overrides": [
+                    {
+                        "segment_id": segment,
+                        "multivariate_feature_state_values": [
+                            {
+                                "multivariate_feature_option": option,
+                                "percentage_allocation": 80,
+                            },
+                        ],
+                    },
+                ],
+            },
+            id="option_b",
+        ),
+    ],
+)
+def test_update_flag__new_segment_override_without_enabled_and_value__inherits_environment_default(
+    admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    mv_option_50_percent: int,
+    segment: int,
+    versioned_environment: Environment,
+    endpoint: UpdateFlagEndpointOption,
+    setup_payload: Callable[[int], FeatureUpdatePayload],
+    payload: Callable[[int, int, int], FeatureUpdatePayload],
+) -> None:
+    # Given
+    setup_response = admin_client.post(
+        f"/api/experiments/environments/{environment_api_key}/{endpoint}/",
+        setup_payload(feature),
+        format="json",
+    )
+    assert setup_response.status_code == 204
+
+    # When
+    response = admin_client.post(
+        f"/api/experiments/environments/{environment_api_key}/{endpoint}/",
+        payload(feature, segment, mv_option_50_percent),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 204
+    override_feature_state = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+    ).get(feature_segment__segment_id=segment)
+    assert override_feature_state.enabled is True
+    assert override_feature_state.get_feature_state_value() == "control"
+
+
+def test_update_flag_v2__segment_override_reweights_option_deleted_from_environment__responds_400(
+    admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    mv_option_50_percent: int,
+    segment: int,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        f"/api/experiments/environments/{environment_api_key}/update-flag-v2/",
+        {
+            "feature": {"id": feature},
+            "environment_default": {
+                "multivariate_feature_state_values": [
+                    {
+                        "percentage_allocation": 30,
+                        "value": {"type": "string", "value": "replacement"},
+                    },
+                ],
+            },
+            "segment_overrides": [
+                {
+                    "segment_id": segment,
+                    "multivariate_feature_state_values": [
+                        {
+                            "multivariate_feature_option": mv_option_50_percent,
+                            "percentage_allocation": 80,
+                        },
+                    ],
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "multivariate_feature_state_values": [
+            "Segment overrides can only re-weight existing variants."
+        ]
+    }
+
+
+@pytest.mark.parametrize(
+    "endpoint,payload",
+    [
+        pytest.param(
+            "update-flag-v1",
+            lambda option: {
+                "feature": {"name": "unknown_feature"},
+                "multivariate_feature_state_values": [
+                    {
+                        "multivariate_feature_option": option,
+                        "percentage_allocation": 50,
+                    },
+                ],
+            },
+            id="option_a",
+        ),
+        pytest.param(
+            "update-flag-v2",
+            lambda option: {
+                "feature": {"name": "unknown_feature"},
+                "environment_default": {
+                    "multivariate_feature_state_values": [
+                        {
+                            "multivariate_feature_option": option,
+                            "percentage_allocation": 50,
+                        },
+                    ],
+                },
+            },
+            id="option_b",
+        ),
+    ],
+)
+def test_update_flag__unknown_feature_with_multivariate_options__responds_400(
+    admin_client: APIClient,
+    environment_api_key: str,
+    mv_option_50_percent: int,
+    endpoint: UpdateFlagEndpointOption,
+    payload: Callable[[int], FeatureUpdatePayload],
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        f"/api/experiments/environments/{environment_api_key}/{endpoint}/",
+        payload(mv_option_50_percent),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert "not found in project" in str(response.json())

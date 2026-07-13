@@ -30,7 +30,7 @@ from experimentation.types import (
 )
 from features.feature_states.serializers import (
     FeatureValueSerializer,
-    MultivariateValueSerializer,
+    SegmentOverrideMultivariateValueSerializer,
 )
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
@@ -223,7 +223,7 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
         required=True, min_value=0, max_value=100
     )
     feature_state_value = FeatureValueSerializer(required=True)
-    multivariate_feature_state_values = MultivariateValueSerializer(
+    multivariate_feature_state_values = SegmentOverrideMultivariateValueSerializer(
         many=True, required=False
     )
 

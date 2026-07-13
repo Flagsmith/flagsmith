@@ -16,7 +16,9 @@ from features.multivariate.models import (
     MultivariateFeatureStateValue,
 )
 from features.versioning.dataclasses import (
-    FlagChangeSet,
+    EnvironmentDefaultChangeSet,
+    FeatureValue,
+    FlagChangeSetV1,
     FlagChangeSetV2,
     MultivariateValueChangeSet,
     SegmentOverrideChangeSet,
@@ -27,7 +29,7 @@ from features.versioning.versioning_service import (
     get_environment_flags_list,
     get_environment_flags_queryset,
     get_updated_feature_states_for_version,
-    update_flag,
+    update_flag_v1,
     update_flag_v2,
 )
 from projects.models import Project
@@ -642,15 +644,15 @@ def _mv_change_set(
 ) -> FlagChangeSetV2:
     return FlagChangeSetV2(
         author=author,
-        environment_default_enabled=True,
-        environment_default_value="control",
-        environment_default_type="string",
+        environment_default=EnvironmentDefaultChangeSet(
+            enabled=True,
+            value=FeatureValue(type_="string", value="control"),
+        ),
         segment_overrides=[
             SegmentOverrideChangeSet(
                 segment_id=segment.id,
                 enabled=True,
-                feature_state_value="control",
-                type_="string",
+                value=FeatureValue(type_="string", value="control"),
                 multivariate_values=multivariate_values,
             )
         ],
@@ -865,14 +867,13 @@ def test_update_flag__segment_override_with_mv__sets_mv_values(
     option_a, option_b, _ = multivariate_options
 
     # When
-    update_flag(
+    update_flag_v1(
         environment,
         multivariate_feature,
-        FlagChangeSet(
+        FlagChangeSetV1(
             author=AuthorData(user=admin_user),
             enabled=True,
-            feature_state_value="control",
-            type_="string",
+            value=FeatureValue(type_="string", value="control"),
             segment_id=segment.id,
             multivariate_values=[
                 MultivariateValueChangeSet(option_a.id, 70.0),

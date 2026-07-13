@@ -6,10 +6,11 @@ from rest_framework import serializers
 from environments.models import Environment
 from features.feature_states.serializers import (
     FeatureValueSerializer,
-    UpdateFlagSerializer,
+    UpdateFlagV1Serializer,
     UpdateFlagV2Serializer,
     validate_multivariate_state_values,
 )
+from features.feature_states.types import SegmentOverrideMultivariateValuePayload
 from features.models import Feature
 from projects.models import Project
 from segments.models import Segment
@@ -19,7 +20,7 @@ def test_get_feature__no_environment_in_context__raises_validation_error(
     feature: Feature,
 ) -> None:
     # Given
-    serializer = UpdateFlagSerializer(
+    serializer = UpdateFlagV1Serializer(
         data={
             "feature": {"name": feature.name},
             "enabled": True,
@@ -78,7 +79,7 @@ def test_feature_value_serializer__invalid_boolean__returns_not_valid() -> None:
     "serializer_class,data_factory",
     [
         (
-            UpdateFlagSerializer,
+            UpdateFlagV1Serializer,
             lambda feature, segment_id: {
                 "feature": {"name": feature.name},
                 "segment": {"id": segment_id},
@@ -129,7 +130,7 @@ def test_update_flag_serializer__nonexistent_segment__returns_invalid(
     "serializer_class,data_factory",
     [
         (
-            UpdateFlagSerializer,
+            UpdateFlagV1Serializer,
             lambda feature, segment_id: {
                 "feature": {"name": feature.name},
                 "segment": {"id": segment_id},
@@ -268,7 +269,7 @@ def test_validate_multivariate_state_values__empty_list__is_noop(
     feature: Feature,
 ) -> None:
     # Given
-    multivariate_values: list[dict[str, typing.Any]] = []
+    multivariate_values: list[SegmentOverrideMultivariateValuePayload] = []
 
     # When / Then no exception is raised
     validate_multivariate_state_values(feature, multivariate_values)

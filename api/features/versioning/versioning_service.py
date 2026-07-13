@@ -1,19 +1,27 @@
 import typing
 
 from common.core.utils import using_database_replica
+from django.db import transaction
 from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 from rest_framework.exceptions import NotFound, ValidationError
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
-from features.feature_states.models import FeatureValueType
 from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
-from features.multivariate.models import MultivariateFeatureStateValue
+from features.multivariate.models import (
+    MultivariateFeatureOption,
+    MultivariateFeatureStateValue,
+)
 from features.versioning.dataclasses import (
-    FlagChangeSet,
+    EnvironmentDefaultChangeSet,
+    EnvironmentMultivariateValueChangeSet,
+    FeatureValue,
+    FlagChangeSetV1,
     FlagChangeSetV2,
+    MultivariateOptionUpdateChangeSet,
     MultivariateValueChangeSet,
+    NewMultivariateOptionChangeSet,
 )
 from features.versioning.exceptions import DirectFeatureStateWriteNotAllowedError
 from features.versioning.models import EnvironmentFeatureVersion
@@ -131,17 +139,18 @@ def get_current_live_environment_feature_version(
     )
 
 
-def update_flag(
-    environment: Environment, feature: Feature, change_set: FlagChangeSet
+def update_flag_v1(
+    environment: Environment, feature: Feature, change_set: FlagChangeSetV1
 ) -> FeatureState:
-    if environment.use_v2_feature_versioning:
-        return _update_flag_for_versioning_v2(environment, feature, change_set)
-    else:
-        return _update_flag_for_versioning_v1(environment, feature, change_set)
+    with transaction.atomic():
+        if environment.use_v2_feature_versioning:
+            return _update_flag_v1_for_versioning_v2(environment, feature, change_set)
+        else:
+            return _update_flag_v1_for_versioning_v1(environment, feature, change_set)
 
 
-def _update_flag_for_versioning_v2(
-    environment: Environment, feature: Feature, change_set: FlagChangeSet
+def _update_flag_v1_for_versioning_v2(
+    environment: Environment, feature: Feature, change_set: FlagChangeSetV1
 ) -> FeatureState:
     from features.models import FeatureSegment, FeatureState
 
@@ -166,13 +175,22 @@ def _update_flag_for_versioning_v2(
                 environment_feature_version=new_version,
             )
 
+            enabled, inherited_value = _resolve_new_override_inheritance(
+                change_set.enabled,
+                change_set.value,
+                lambda: new_version.feature_states.get(
+                    feature_segment__isnull=True, identity_id=None
+                ),
+            )
             target_feature_state = FeatureState.objects.create(
                 feature=feature,
                 environment=environment,
                 feature_segment=feature_segment,
                 environment_feature_version=new_version,
-                enabled=change_set.enabled,
+                enabled=enabled,
             )
+            if inherited_value is not None:
+                target_feature_state.feature_state_value.copy_from(inherited_value)
     else:
         # Environment default - always exists
         target_feature_state = new_version.feature_states.get(
@@ -180,15 +198,21 @@ def _update_flag_for_versioning_v2(
             identity_id=None,
         )
 
-    target_feature_state.enabled = change_set.enabled
-    target_feature_state.save()
+    if change_set.enabled is not None:
+        target_feature_state.enabled = change_set.enabled
+        target_feature_state.save()
 
-    _update_feature_state_value(
-        target_feature_state.feature_state_value,
-        change_set.feature_state_value,
-        change_set.type_,
-    )
-    update_multivariate_values(target_feature_state, change_set.multivariate_values)
+    if change_set.value is not None:
+        _update_feature_state_value(
+            target_feature_state.feature_state_value, change_set.value
+        )
+
+    if change_set.segment_id is not None:
+        update_multivariate_values(target_feature_state, change_set.multivariate_values)
+    else:
+        update_environment_multivariate_options(
+            target_feature_state, feature, change_set.environment_multivariate_values
+        )
 
     if change_set.segment_id is not None and change_set.segment_priority is not None:
         _update_segment_priority(target_feature_state, change_set.segment_priority)
@@ -201,8 +225,8 @@ def _update_flag_for_versioning_v2(
     return target_feature_state
 
 
-def _update_flag_for_versioning_v1(
-    environment: Environment, feature: Feature, change_set: FlagChangeSet
+def _update_flag_v1_for_versioning_v1(
+    environment: Environment, feature: Feature, change_set: FlagChangeSetV1
 ) -> FeatureState:
     from features.models import FeatureSegment, FeatureState
 
@@ -224,24 +248,37 @@ def _update_flag_for_versioning_v1(
             environment=environment,
         )
 
+        enabled, inherited_value = _resolve_new_override_inheritance(
+            change_set.enabled,
+            change_set.value,
+            lambda: _get_environment_default_feature_state(environment, feature),
+        )
         target_feature_state: FeatureState = FeatureState.objects.create(
             feature=feature,
             environment=environment,
             feature_segment=feature_segment,
-            enabled=change_set.enabled,
+            enabled=enabled,
         )
+        if inherited_value is not None:
+            target_feature_state.feature_state_value.copy_from(inherited_value)
     else:
         assert len(latest_feature_states) == 1
         target_feature_state = list(latest_feature_states.values())[0]
-        target_feature_state.enabled = change_set.enabled
-        target_feature_state.save()
+        if change_set.enabled is not None:
+            target_feature_state.enabled = change_set.enabled
+            target_feature_state.save()
 
-    _update_feature_state_value(
-        target_feature_state.feature_state_value,
-        change_set.feature_state_value,
-        change_set.type_,
-    )
-    update_multivariate_values(target_feature_state, change_set.multivariate_values)
+    if change_set.value is not None:
+        _update_feature_state_value(
+            target_feature_state.feature_state_value, change_set.value
+        )
+
+    if change_set.segment_id is not None:
+        update_multivariate_values(target_feature_state, change_set.multivariate_values)
+    else:
+        update_environment_multivariate_options(
+            target_feature_state, feature, change_set.environment_multivariate_values
+        )
 
     if change_set.segment_id is not None and change_set.segment_priority is not None:
         _update_segment_priority(target_feature_state, change_set.segment_priority)
@@ -249,10 +286,38 @@ def _update_flag_for_versioning_v1(
     return target_feature_state
 
 
-def _update_feature_state_value(
-    fsv: FeatureStateValue, value: str, type_: FeatureValueType
-) -> None:
-    fsv.set_value(value, type_)
+def _get_environment_default_feature_state(
+    environment: Environment, feature: Feature
+) -> FeatureState:
+    environment_default_states = get_environment_flags_dict(
+        environment=environment,
+        feature_name=feature.name,
+        additional_filters=Q(feature_segment__isnull=True, identity_id__isnull=True),
+    )
+    assert len(environment_default_states) == 1
+    return list(environment_default_states.values())[0]
+
+
+def _resolve_new_override_inheritance(
+    enabled: bool | None,
+    value: FeatureValue | None,
+    get_environment_default: typing.Callable[[], FeatureState],
+) -> tuple[bool, FeatureStateValue | None]:
+    """
+    Resolve a new segment override's enabled flag and, when its value is
+    omitted, the environment default FeatureStateValue to copy it from.
+    """
+    if enabled is not None and value is not None:
+        return enabled, None
+    environment_default = get_environment_default()
+    return (
+        enabled if enabled is not None else environment_default.enabled,
+        environment_default.feature_state_value if value is None else None,
+    )
+
+
+def _update_feature_state_value(fsv: FeatureStateValue, value: FeatureValue) -> None:
+    fsv.set_value(value.value, value.type_)
     fsv.save()
 
 
@@ -291,6 +356,54 @@ def update_multivariate_values(
         elif mv.percentage_allocation != value.percentage_allocation:
             mv.percentage_allocation = value.percentage_allocation
             mv.save()
+
+
+def update_environment_multivariate_options(
+    feature_state: FeatureState,
+    feature: Feature,
+    values: list[EnvironmentMultivariateValueChangeSet] | None,
+) -> None:
+    """
+    Reconcile the feature's multivariate options with the given absolute list,
+    then re-weight the given environment default feature state accordingly.
+    """
+    if values is None:
+        return
+
+    listed_option_ids = {
+        value.multivariate_feature_option_id
+        for value in values
+        if isinstance(value, MultivariateOptionUpdateChangeSet)
+    }
+    # Instance-level deletes so django-lifecycle hooks fire
+    for option in feature.multivariate_options.exclude(id__in=listed_option_ids):
+        option.delete()
+
+    reweighted_values = []
+    for value in values:
+        if isinstance(value, NewMultivariateOptionChangeSet):
+            option = MultivariateFeatureOption(
+                feature=feature,
+                default_percentage_allocation=value.percentage_allocation,
+            )
+            option.set_value(value.value.value, value.value.type_)
+            option.save()
+        else:
+            option = feature.multivariate_options.get(
+                id=value.multivariate_feature_option_id
+            )
+            option.default_percentage_allocation = value.percentage_allocation
+            if value.value is not None:
+                option.set_value(value.value.value, value.value.type_)
+            option.save()
+        reweighted_values.append(
+            MultivariateValueChangeSet(
+                multivariate_feature_option_id=option.id,
+                percentage_allocation=value.percentage_allocation,
+            )
+        )
+
+    update_multivariate_values(feature_state, reweighted_values)
 
 
 def _create_segment_override(
@@ -333,10 +446,30 @@ def _update_segment_priority(feature_state: FeatureState, priority: int) -> None
 def update_flag_v2(
     environment: Environment, feature: Feature, change_set: FlagChangeSetV2
 ) -> None:
-    if environment.use_v2_feature_versioning:
-        _update_flag_v2_for_versioning_v2(environment, feature, change_set)
-    else:
-        _update_flag_v2_for_versioning_v1(environment, feature, change_set)
+    with transaction.atomic():
+        if environment.use_v2_feature_versioning:
+            _update_flag_v2_for_versioning_v2(environment, feature, change_set)
+        else:
+            _update_flag_v2_for_versioning_v1(environment, feature, change_set)
+
+
+def _apply_environment_default_change_set(
+    env_default_state: FeatureState,
+    feature: Feature,
+    environment_default: EnvironmentDefaultChangeSet,
+) -> None:
+    if environment_default.enabled is not None:
+        env_default_state.enabled = environment_default.enabled
+        env_default_state.save()
+
+    if environment_default.value is not None:
+        _update_feature_state_value(
+            env_default_state.feature_state_value, environment_default.value
+        )
+
+    update_environment_multivariate_options(
+        env_default_state, feature, environment_default.multivariate_values
+    )
 
 
 def _update_flag_v2_for_versioning_v2(
@@ -349,50 +482,55 @@ def _update_flag_v2_for_versioning_v2(
         created_by_api_key=change_set.author.api_key,
     )
 
-    env_default_state = new_version.feature_states.get(
-        feature_segment__isnull=True, identity_id=None
-    )
-    env_default_state.enabled = change_set.environment_default_enabled
-    env_default_state.save()
+    def get_environment_default() -> FeatureState:
+        environment_default: FeatureState = new_version.feature_states.get(
+            feature_segment__isnull=True, identity_id=None
+        )
+        return environment_default
 
-    _update_feature_state_value(
-        env_default_state.feature_state_value,
-        change_set.environment_default_value,
-        change_set.environment_default_type,
-    )
+    if change_set.environment_default is not None:
+        _apply_environment_default_change_set(
+            get_environment_default(), feature, change_set.environment_default
+        )
 
     for override in change_set.segment_overrides:
         try:
             segment_state = new_version.feature_states.get(
                 feature_segment__segment_id=override.segment_id
             )
-            segment_state.enabled = override.enabled
-            segment_state.save()
+            if override.enabled is not None:
+                segment_state.enabled = override.enabled
+                segment_state.save()
 
-            _update_feature_state_value(
-                segment_state.feature_state_value,
-                override.feature_state_value,
-                override.type_,
-            )
+            if override.value is not None:
+                _update_feature_state_value(
+                    segment_state.feature_state_value, override.value
+                )
             update_multivariate_values(segment_state, override.multivariate_values)
 
             if override.priority is not None:
                 _update_segment_priority(segment_state, override.priority)
         except FeatureState.DoesNotExist:
+            enabled, inherited_value = _resolve_new_override_inheritance(
+                override.enabled,
+                override.value,
+                get_environment_default,
+            )
             segment_state = _create_segment_override(
                 feature=feature,
                 environment=environment,
                 segment_id=override.segment_id,
-                enabled=override.enabled,
+                enabled=enabled,
                 priority=override.priority,
                 version=new_version,
             )
 
-            _update_feature_state_value(
-                segment_state.feature_state_value,
-                override.feature_state_value,
-                override.type_,
-            )
+            if override.value is not None:
+                _update_feature_state_value(
+                    segment_state.feature_state_value, override.value
+                )
+            elif inherited_value is not None:
+                segment_state.feature_state_value.copy_from(inherited_value)
             update_multivariate_values(segment_state, override.multivariate_values)
 
     new_version.publish(
@@ -404,22 +542,12 @@ def _update_flag_v2_for_versioning_v2(
 def _update_flag_v2_for_versioning_v1(
     environment: Environment, feature: Feature, change_set: FlagChangeSetV2
 ) -> None:
-    env_default_states = get_environment_flags_dict(
-        environment=environment,
-        feature_name=feature.name,
-        additional_filters=Q(feature_segment__isnull=True, identity_id__isnull=True),
-    )
-    assert len(env_default_states) == 1
-
-    env_default_state = list(env_default_states.values())[0]
-    env_default_state.enabled = change_set.environment_default_enabled
-    env_default_state.save()
-
-    _update_feature_state_value(
-        env_default_state.feature_state_value,
-        change_set.environment_default_value,
-        change_set.environment_default_type,
-    )
+    if change_set.environment_default is not None:
+        _apply_environment_default_change_set(
+            _get_environment_default_feature_state(environment, feature),
+            feature,
+            change_set.environment_default,
+        )
 
     for override in change_set.segment_overrides:
         # TODO: optimise this once this is out of the
@@ -431,32 +559,38 @@ def _update_flag_v2_for_versioning_v1(
         )
 
         if len(segment_states) == 0:
+            enabled, inherited_value = _resolve_new_override_inheritance(
+                override.enabled,
+                override.value,
+                lambda: _get_environment_default_feature_state(environment, feature),
+            )
             segment_state = _create_segment_override(
                 feature=feature,
                 environment=environment,
                 segment_id=override.segment_id,
-                enabled=override.enabled,
+                enabled=enabled,
                 priority=override.priority,
                 version=None,  # V1 versioning doesn't use versions
             )
 
-            _update_feature_state_value(
-                segment_state.feature_state_value,
-                override.feature_state_value,
-                override.type_,
-            )
+            if override.value is not None:
+                _update_feature_state_value(
+                    segment_state.feature_state_value, override.value
+                )
+            elif inherited_value is not None:
+                segment_state.feature_state_value.copy_from(inherited_value)
             update_multivariate_values(segment_state, override.multivariate_values)
         else:
             assert len(segment_states) == 1
             segment_state = list(segment_states.values())[0]
-            segment_state.enabled = override.enabled
-            segment_state.save()
+            if override.enabled is not None:
+                segment_state.enabled = override.enabled
+                segment_state.save()
 
-            _update_feature_state_value(
-                segment_state.feature_state_value,
-                override.feature_state_value,
-                override.type_,
-            )
+            if override.value is not None:
+                _update_feature_state_value(
+                    segment_state.feature_state_value, override.value
+                )
             update_multivariate_values(segment_state, override.multivariate_values)
 
             if override.priority is not None:

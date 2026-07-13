@@ -57,9 +57,9 @@ from experimentation.stats import (
 )
 from features.models import FeatureState
 from features.value_types import BOOLEAN, INTEGER, STRING
-from features.versioning.dataclasses import FlagChangeSet
+from features.versioning.dataclasses import FeatureValue, FlagChangeSetV1
 from features.versioning.versioning_service import (
-    update_flag,
+    update_flag_v1,
     update_multivariate_values,
 )
 from integrations.flagsmith.client import get_openfeature_client
@@ -594,26 +594,30 @@ def _get_live_rollout_override(experiment: Experiment) -> FeatureState | None:
 
 
 def _update_live_feature_state(
-    feature_state: FeatureState, change_set: FlagChangeSet
+    feature_state: FeatureState, change_set: FlagChangeSetV1
 ) -> None:
-    feature_state.enabled = change_set.enabled
-    feature_state.save()
-    feature_state.feature_state_value.set_value(
-        change_set.feature_state_value, change_set.type_
-    )
-    feature_state.feature_state_value.save()
+    if change_set.enabled is not None:
+        feature_state.enabled = change_set.enabled
+        feature_state.save()
+    if change_set.value is not None:
+        feature_state.feature_state_value.set_value(
+            change_set.value.value, change_set.value.type_
+        )
+        feature_state.feature_state_value.save()
     update_multivariate_values(feature_state, change_set.multivariate_values)
 
 
-def _update_rollout_in_place(experiment: Experiment, change_set: FlagChangeSet) -> None:
+def _update_rollout_in_place(
+    experiment: Experiment, change_set: FlagChangeSetV1
+) -> None:
     """Write the rollout-segment override, keeping variant assignment stable.
 
-    Under v2 versioning, ``update_flag`` clones the override into a fresh feature
+    Under v2 versioning, ``update_flag_v1`` clones the override into a fresh feature
     state on every call. Since the multivariate split is salted on the feature
     state id, that would re-randomise control/variant for already-enrolled
     identities on each rollout update. Once the override exists, mutate it in
     place instead (no version is published). Creating the override, and v1
-    versioning, still go through ``update_flag``, which already reuses the
+    versioning, still go through ``update_flag_v1``, which already reuses the
     feature state.
 
     This is a temporary solution until we find a permanent fix for the
@@ -624,7 +628,7 @@ def _update_rollout_in_place(experiment: Experiment, change_set: FlagChangeSet) 
     ):
         _update_live_feature_state(override, change_set)
         return
-    update_flag(experiment.environment, experiment.feature, change_set)
+    update_flag_v1(experiment.environment, experiment.feature, change_set)
 
 
 def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
@@ -638,11 +642,12 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
         segment = _sync_rollout_segment(experiment, spec.rollout_percentage)
         _update_rollout_in_place(
             experiment,
-            FlagChangeSet(
+            FlagChangeSetV1(
                 author=spec.author,
                 enabled=spec.enabled,
-                feature_state_value=spec.feature_state_value,
-                type_=spec.value_type,
+                value=FeatureValue(
+                    type_=spec.value_type, value=spec.feature_state_value
+                ),
                 segment_id=segment.id,
                 multivariate_values=spec.multivariate_values,
             ),
@@ -699,11 +704,10 @@ def enable_experiment_rollout(experiment: Experiment, author: AuthorData) -> Non
     value = rollout["feature_state_value"]
     _update_rollout_in_place(
         experiment,
-        FlagChangeSet(
+        FlagChangeSetV1(
             author=author,
             enabled=True,
-            feature_state_value=value["value"],
-            type_=value["type"],
+            value=FeatureValue(type_=value["type"], value=value["value"]),
             segment_id=experiment.rollout_segment_id,
         ),
     )

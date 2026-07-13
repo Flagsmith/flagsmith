@@ -11,7 +11,7 @@ from environments.models import Environment
 from .permissions import EnvironmentUpdateFeatureStatePermission
 from .serializers import (
     DeleteSegmentOverrideSerializer,
-    UpdateFlagSerializer,
+    UpdateFlagV1Serializer,
     UpdateFlagV2Serializer,
 )
 
@@ -58,7 +58,7 @@ def _check_workflow_not_enabled(environment: Environment) -> None:
             required=True,
         )
     ],
-    request=UpdateFlagSerializer,
+    request=UpdateFlagV1Serializer,
     responses={204: None},
     tags=["experimental"],
 )
@@ -68,7 +68,7 @@ def update_flag_v1(request: Request, environment_key: str) -> Response:
     environment = Environment.objects.get(api_key=environment_key)
     _check_workflow_not_enabled(environment)
 
-    serializer = UpdateFlagSerializer(
+    serializer = UpdateFlagV1Serializer(
         data=request.data,
         context={"request": request, "environment": environment},
     )
