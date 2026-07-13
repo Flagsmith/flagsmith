@@ -463,7 +463,7 @@ class FeatureState(
     LifecycleModelMixin,  # type: ignore[misc]
     abstract_base_auditable_model_factory(  # type: ignore[misc]
         historical_records_excluded_fields=["uuid"],
-        change_details_excluded_fields=["live_from", "version"],
+        change_details_excluded_fields=["live_from", "version", "mv_hashing_salt"],
         show_change_details_for_create=True,
     ),
 ):
