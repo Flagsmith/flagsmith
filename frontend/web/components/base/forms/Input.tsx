@@ -9,7 +9,7 @@ import React, {
 import cn from 'classnames'
 import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
-import { colorIconDanger } from 'common/theme/tokens'
+import { colorIconDanger, colorIconDefault } from 'common/theme/tokens'
 
 export type InputSize = 'default' | 'large' | 'small' | 'xSmall'
 
@@ -158,7 +158,7 @@ const Input: React.FC<InputProps> = ({
         >
           <Icon
             name={type === 'password' ? 'eye' : 'eye-off'}
-            fill={invalid ? colorIconDanger : undefined}
+            fill={invalid ? colorIconDanger : colorIconDefault}
             width={iconWidth}
           />
         </button>
