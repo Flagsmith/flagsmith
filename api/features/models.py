@@ -831,7 +831,7 @@ class FeatureState(
 
     @hook(BEFORE_CREATE)
     def check_mv_hashing_salt_preserved(self):  # type: ignore[no-untyped-def]
-        """Fail if a feature state is recreated without keeping its bucketing salt.
+        """Fail if a segment override is recreated without keeping its bucketing salt.
 
         Under v2 versioning a feature state must be recreated via clone(), which
         copies mv_hashing_salt so multivariate variant assignment stays stable for
@@ -839,12 +839,15 @@ class FeatureState(
         created state with no salt that the previous version already had was made
         some other way and would re-bucket those identities. Raise so the
         offending path is caught in tests. Identity overrides are skipped: they
-        are not versioned or cloned. See
-        https://github.com/Flagsmith/flagsmith/issues/7913.
+        are not versioned or cloned. Environment defaults are skipped: the clone
+        receiver copies one into every new version, so a direct create duplicates
+        it and is rejected by check_for_duplicate_feature_state before this guard
+        runs. See https://github.com/Flagsmith/flagsmith/issues/7913.
         """
         if (
             self.mv_hashing_salt is not None
             or self.identity_id is not None
+            or self.feature_segment_id is None
             or not self.environment.use_v2_feature_versioning  # type: ignore[union-attr]
         ):
             return
@@ -858,14 +861,9 @@ class FeatureState(
 
         # A segment override's FeatureSegment row is itself cloned per version, so
         # match the override by its segment, not by the FeatureSegment row.
-        if self.feature_segment_id is None:
-            already_existed = Q(feature_segment__isnull=True)
-        else:
-            already_existed = Q(
-                feature_segment__segment_id=self.feature_segment.segment_id  # type: ignore[union-attr]
-            )
-
-        if previous_version.feature_states.filter(already_existed).exists():
+        if previous_version.feature_states.filter(
+            feature_segment__segment_id=self.feature_segment.segment_id  # type: ignore[union-attr]
+        ).exists():
             raise ValidationError(
                 "A feature state for this environment, feature and segment existed "
                 "in the previous version; recreate it via FeatureState.clone() so "

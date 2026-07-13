@@ -675,7 +675,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
 
     class Meta:
         model = FeatureState
-        fields = "__all__"
+        exclude = ("mv_hashing_salt",)
         read_only_fields = ("version", "created_at", "updated_at", "status")
 
     @extend_schema_field(

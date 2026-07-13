@@ -787,7 +787,7 @@ def test_feature_state_create__recreates_previous_version_override_directly__rai
     # When the same segment's override is recreated directly (not via clone) in
     # the later version
     # Then the guard rejects it
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="recreate it via FeatureState"):
         FeatureState.objects.create(
             feature=feature,
             environment=environment_v2_versioning,
