@@ -25,8 +25,8 @@
 //   identical to Bootstrap (secondary excepted, that is the intended yellow->grey
 //   fix), so this is a no-op for the others.
 // - light/black/white-50/black-50: unused, no token equivalent, dropped.
-// Not touched here (see DARK_MODE_TEXT_COLOUR_PLAN_6606.md): primary, dark, body,
-// muted, white, reset.
+// Not removed: primary, dark, body, muted, white, reset. Bootstrap still
+// generates these; muted resolves to the token via $text-muted (_variables.scss).
 $_color-util: map-get($utilities, "color");
 $_color-util: map-merge(
   $_color-util,
