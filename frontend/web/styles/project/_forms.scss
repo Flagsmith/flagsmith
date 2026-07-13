@@ -55,9 +55,6 @@
             }
         }
     }
-    .label-switch {
-        color: $text-icon-light;
-    }
 }
 
 .input-container,
@@ -121,7 +118,7 @@
 }
 
 .label-switch {
-    color: $body-color;
+    color: var(--color-text-default);
     font-weight: 500;
 }
 
@@ -151,13 +148,8 @@ label {
     margin-bottom: 6px;
 }
 label {
-    color: $body-color;
+    color: var(--color-text-default);
     font-weight: 500;
-}
-.dark {
-    label {
-        color: $white;
-    }
 }
 
 .hljs,
