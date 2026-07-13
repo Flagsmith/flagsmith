@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import json
+import socket
 from typing import Callable, Type
 from unittest import mock
 from unittest.mock import MagicMock
@@ -370,6 +371,10 @@ def test_send_test_webhook__200_response_from_webhook__returns_correct_response(
     mock_response.status_code = 200
     mock_response.text = "success"
     mock_post.return_value = mock_response
+    mocker.patch(
+        "webhooks.fields.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
+    )
 
     url = reverse("api-v1:webhooks:webhooks-test")
 
@@ -413,6 +418,10 @@ def test_send_test_webhook__various_2xx_status_codes__returns_success(
     mock_response.status_code = external_api_response_status
     mock_response.text = "success"
     mock_post.return_value = mock_response
+    mocker.patch(
+        "webhooks.fields.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
+    )
 
     url = reverse("api-v1:webhooks:webhooks-test")
 
@@ -458,6 +467,10 @@ def test_send_test_webhook__various_error_status_codes__returns_correct_response
     mock_response.status_code = external_api_response_status
     mock_response.text = external_api_error_text
     mock_post.return_value = mock_response
+    mocker.patch(
+        "webhooks.fields.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
+    )
 
     url = reverse("api-v1:webhooks:webhooks-test")
 
@@ -522,6 +535,10 @@ def test_send_test_webhook__various_secrets__sends_correct_payload(
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_post.return_value = mock_response
+    mocker.patch(
+        "webhooks.fields.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
+    )
 
     url = reverse("api-v1:webhooks:webhooks-test")
 
@@ -560,6 +577,10 @@ def test_send_test_webhook__request_exception__returns_error_response(
     mock_post = mocker.patch("webhooks.webhooks.requests.post")
     mock_post.side_effect = requests.exceptions.RequestException(
         "Some internal exception details that should not be exposed!"
+    )
+    mocker.patch(
+        "webhooks.fields.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
     )
 
     url = reverse("api-v1:webhooks:webhooks-test")
