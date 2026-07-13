@@ -233,7 +233,7 @@ textarea {
   top: 12px;
   &:hover {
     path {
-      fill: $primary;
+      fill: var(--color-icon-action);
     }
   }
   &.input-sm {
