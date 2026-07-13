@@ -52,7 +52,7 @@ class SegmentOverrideMultivariateValuePayload(BaseMultivariateValuePayload):
     multivariate_feature_option: int
 
 
-class UpdateFlagV1Payload(TypedDict):
+class UpdateFlagOptionAPayload(TypedDict):
     feature: FeatureIdentifierPayload
     segment: NotRequired[SegmentReferencePayload]
     enabled: NotRequired[bool]
@@ -80,7 +80,7 @@ class SegmentOverridePayload(TypedDict):
     ]
 
 
-class UpdateFlagV2Payload(TypedDict):
+class UpdateFlagOptionBPayload(TypedDict):
     feature: FeatureIdentifierPayload
     environment_default: NotRequired[EnvironmentDefaultPayload]
     segment_overrides: NotRequired[list[SegmentOverridePayload]]

@@ -11,8 +11,8 @@ from environments.models import Environment
 from .permissions import EnvironmentUpdateFeatureStatePermission
 from .serializers import (
     DeleteSegmentOverrideSerializer,
-    UpdateFlagV1Serializer,
-    UpdateFlagV2Serializer,
+    UpdateFlagOptionASerializer,
+    UpdateFlagOptionBSerializer,
 )
 
 
@@ -58,17 +58,17 @@ def _check_workflow_not_enabled(environment: Environment) -> None:
             required=True,
         )
     ],
-    request=UpdateFlagV1Serializer,
+    request=UpdateFlagOptionASerializer,
     responses={204: None},
     tags=["experimental"],
 )
 @api_view(http_method_names=["POST"])
 @permission_classes([IsAuthenticated, EnvironmentUpdateFeatureStatePermission])
-def update_flag_v1(request: Request, environment_key: str) -> Response:
+def update_flag_option_a(request: Request, environment_key: str) -> Response:
     environment = Environment.objects.get(api_key=environment_key)
     _check_workflow_not_enabled(environment)
 
-    serializer = UpdateFlagV1Serializer(
+    serializer = UpdateFlagOptionASerializer(
         data=request.data,
         context={"request": request, "environment": environment},
     )
@@ -120,17 +120,17 @@ def update_flag_v1(request: Request, environment_key: str) -> Response:
             required=True,
         )
     ],
-    request=UpdateFlagV2Serializer,
+    request=UpdateFlagOptionBSerializer,
     responses={204: None},
     tags=["experimental"],
 )
 @api_view(http_method_names=["POST"])
 @permission_classes([IsAuthenticated, EnvironmentUpdateFeatureStatePermission])
-def update_flag_v2(request: Request, environment_key: str) -> Response:
+def update_flag_option_b(request: Request, environment_key: str) -> Response:
     environment = Environment.objects.get(api_key=environment_key)
     _check_workflow_not_enabled(environment)
 
-    serializer = UpdateFlagV2Serializer(
+    serializer = UpdateFlagOptionBSerializer(
         data=request.data,
         context={"request": request, "environment": environment},
     )

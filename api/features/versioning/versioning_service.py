@@ -17,8 +17,8 @@ from features.versioning.dataclasses import (
     EnvironmentDefaultChangeSet,
     EnvironmentMultivariateValueChangeSet,
     FeatureValue,
-    FlagChangeSetV1,
-    FlagChangeSetV2,
+    FlagChangeSetOptionA,
+    FlagChangeSetOptionB,
     MultivariateOptionUpdateChangeSet,
     MultivariateValueChangeSet,
     NewMultivariateOptionChangeSet,
@@ -139,18 +139,22 @@ def get_current_live_environment_feature_version(
     )
 
 
-def update_flag_v1(
-    environment: Environment, feature: Feature, change_set: FlagChangeSetV1
+def update_flag_option_a(
+    environment: Environment, feature: Feature, change_set: FlagChangeSetOptionA
 ) -> FeatureState:
     with transaction.atomic():
         if environment.use_v2_feature_versioning:
-            return _update_flag_v1_for_versioning_v2(environment, feature, change_set)
+            return _update_flag_option_a_for_versioning_v2(
+                environment, feature, change_set
+            )
         else:
-            return _update_flag_v1_for_versioning_v1(environment, feature, change_set)
+            return _update_flag_option_a_for_versioning_v1(
+                environment, feature, change_set
+            )
 
 
-def _update_flag_v1_for_versioning_v2(
-    environment: Environment, feature: Feature, change_set: FlagChangeSetV1
+def _update_flag_option_a_for_versioning_v2(
+    environment: Environment, feature: Feature, change_set: FlagChangeSetOptionA
 ) -> FeatureState:
     from features.models import FeatureSegment, FeatureState
 
@@ -225,8 +229,8 @@ def _update_flag_v1_for_versioning_v2(
     return target_feature_state
 
 
-def _update_flag_v1_for_versioning_v1(
-    environment: Environment, feature: Feature, change_set: FlagChangeSetV1
+def _update_flag_option_a_for_versioning_v1(
+    environment: Environment, feature: Feature, change_set: FlagChangeSetOptionA
 ) -> FeatureState:
     from features.models import FeatureSegment, FeatureState
 
@@ -443,14 +447,14 @@ def _update_segment_priority(feature_state: FeatureState, priority: int) -> None
         feature_segment.to(priority)
 
 
-def update_flag_v2(
-    environment: Environment, feature: Feature, change_set: FlagChangeSetV2
+def update_flag_option_b(
+    environment: Environment, feature: Feature, change_set: FlagChangeSetOptionB
 ) -> None:
     with transaction.atomic():
         if environment.use_v2_feature_versioning:
-            _update_flag_v2_for_versioning_v2(environment, feature, change_set)
+            _update_flag_option_b_for_versioning_v2(environment, feature, change_set)
         else:
-            _update_flag_v2_for_versioning_v1(environment, feature, change_set)
+            _update_flag_option_b_for_versioning_v1(environment, feature, change_set)
 
 
 def _apply_environment_default_change_set(
@@ -472,8 +476,8 @@ def _apply_environment_default_change_set(
     )
 
 
-def _update_flag_v2_for_versioning_v2(
-    environment: Environment, feature: Feature, change_set: FlagChangeSetV2
+def _update_flag_option_b_for_versioning_v2(
+    environment: Environment, feature: Feature, change_set: FlagChangeSetOptionB
 ) -> None:
     new_version = EnvironmentFeatureVersion.objects.create(
         environment=environment,
@@ -539,8 +543,8 @@ def _update_flag_v2_for_versioning_v2(
     )
 
 
-def _update_flag_v2_for_versioning_v1(
-    environment: Environment, feature: Feature, change_set: FlagChangeSetV2
+def _update_flag_option_b_for_versioning_v1(
+    environment: Environment, feature: Feature, change_set: FlagChangeSetOptionB
 ) -> None:
     if change_set.environment_default is not None:
         _apply_environment_default_change_set(

@@ -99,13 +99,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateFlagV1'
+              $ref: '#/components/schemas/UpdateFlagOptionA'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/UpdateFlagV1'
+              $ref: '#/components/schemas/UpdateFlagOptionA'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/UpdateFlagV1'
+              $ref: '#/components/schemas/UpdateFlagOptionA'
       responses:
         '204':
           description: No response body
@@ -162,13 +162,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateFlagV2'
+              $ref: '#/components/schemas/UpdateFlagOptionB'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/UpdateFlagV2'
+              $ref: '#/components/schemas/UpdateFlagOptionB'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/UpdateFlagV2'
+              $ref: '#/components/schemas/UpdateFlagOptionB'
       responses:
         '204':
           description: No response body
@@ -27024,7 +27024,7 @@ components:
           allOf:
             - $ref: '#/components/schemas/LifecycleStageEnum'
           readOnly: true
-    UpdateFlagV1:
+    UpdateFlagOptionA:
       type: object
       properties:
         feature:
@@ -27041,7 +27041,7 @@ components:
             $ref: '#/components/schemas/EnvironmentMultivariateValue'
       required:
         - feature
-    UpdateFlagV2:
+    UpdateFlagOptionB:
       type: object
       properties:
         feature:

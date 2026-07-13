@@ -1485,7 +1485,7 @@ def test_apply_experiment_rollout__update_flag_fails__rolls_back(
     # Given
     experiment = experiment_with_rollout
     mocker.patch(
-        "experimentation.services.update_flag_v1",
+        "experimentation.services.update_flag_option_a",
         side_effect=RuntimeError("boom"),
     )
 
@@ -1770,7 +1770,7 @@ def test_enable_experiment_rollout__already_enabled__no_op(
     mocker: MockerFixture,
 ) -> None:
     # Given a rollout that is already enabled
-    update_flag_v1 = mocker.patch("experimentation.services.update_flag_v1")
+    update_flag_option_a = mocker.patch("experimentation.services.update_flag_option_a")
 
     # When
     services.enable_experiment_rollout(
@@ -1778,7 +1778,7 @@ def test_enable_experiment_rollout__already_enabled__no_op(
     )
 
     # Then no flag write is made
-    update_flag_v1.assert_not_called()
+    update_flag_option_a.assert_not_called()
 
 
 def test_enable_experiment_rollout__no_rollout__no_op(
@@ -1787,13 +1787,13 @@ def test_enable_experiment_rollout__no_rollout__no_op(
     mocker: MockerFixture,
 ) -> None:
     # Given an experiment without a rollout
-    update_flag_v1 = mocker.patch("experimentation.services.update_flag_v1")
+    update_flag_option_a = mocker.patch("experimentation.services.update_flag_option_a")
 
     # When
     services.enable_experiment_rollout(experiment, AuthorData(user=admin_user))
 
     # Then nothing is written
-    update_flag_v1.assert_not_called()
+    update_flag_option_a.assert_not_called()
 
 
 def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(

@@ -795,7 +795,7 @@ def test_update_flag__new_segment_override_without_enabled_and_value__inherits_e
     assert override_feature_state.get_feature_state_value() == "control"
 
 
-def test_update_flag_v2__segment_override_reweights_option_deleted_from_environment__responds_400(
+def test_update_flag_option_b__segment_override_reweights_option_deleted_from_environment__responds_400(
     admin_client: APIClient,
     environment_api_key: str,
     feature: int,

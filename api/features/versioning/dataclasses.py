@@ -28,7 +28,7 @@ class FeatureValue:
 
 
 @dataclass
-class FlagChangeSetV1:
+class FlagChangeSetOptionA:
     author: AuthorData
     enabled: bool | None = None
     value: FeatureValue | None = None
@@ -82,7 +82,7 @@ class EnvironmentDefaultChangeSet:
 
 
 @dataclass
-class FlagChangeSetV2:
+class FlagChangeSetOptionB:
     author: AuthorData
     environment_default: EnvironmentDefaultChangeSet | None = None
 

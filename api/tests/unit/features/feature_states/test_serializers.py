@@ -6,8 +6,8 @@ from rest_framework import serializers
 from environments.models import Environment
 from features.feature_states.serializers import (
     FeatureValueSerializer,
-    UpdateFlagV1Serializer,
-    UpdateFlagV2Serializer,
+    UpdateFlagOptionASerializer,
+    UpdateFlagOptionBSerializer,
     validate_multivariate_state_values,
 )
 from features.feature_states.types import SegmentOverrideMultivariateValuePayload
@@ -20,7 +20,7 @@ def test_get_feature__no_environment_in_context__raises_validation_error(
     feature: Feature,
 ) -> None:
     # Given
-    serializer = UpdateFlagV1Serializer(
+    serializer = UpdateFlagOptionASerializer(
         data={
             "feature": {"name": feature.name},
             "enabled": True,
@@ -40,7 +40,7 @@ def test_get_feature__no_environment_in_context__raises_validation_error(
 
 def test_validate_segment_overrides__empty_list__returns_empty_list() -> None:
     # Given
-    serializer = UpdateFlagV2Serializer()
+    serializer = UpdateFlagOptionBSerializer()
 
     # When
     result = serializer.validate_segment_overrides([])
@@ -79,7 +79,7 @@ def test_feature_value_serializer__invalid_boolean__returns_not_valid() -> None:
     "serializer_class,data_factory",
     [
         (
-            UpdateFlagV1Serializer,
+            UpdateFlagOptionASerializer,
             lambda feature, segment_id: {
                 "feature": {"name": feature.name},
                 "segment": {"id": segment_id},
@@ -88,7 +88,7 @@ def test_feature_value_serializer__invalid_boolean__returns_not_valid() -> None:
             },
         ),
         (
-            UpdateFlagV2Serializer,
+            UpdateFlagOptionBSerializer,
             lambda feature, segment_id: {
                 "feature": {"name": feature.name},
                 "environment_default": {
@@ -130,7 +130,7 @@ def test_update_flag_serializer__nonexistent_segment__returns_invalid(
     "serializer_class,data_factory",
     [
         (
-            UpdateFlagV1Serializer,
+            UpdateFlagOptionASerializer,
             lambda feature, segment_id: {
                 "feature": {"name": feature.name},
                 "segment": {"id": segment_id},
@@ -139,7 +139,7 @@ def test_update_flag_serializer__nonexistent_segment__returns_invalid(
             },
         ),
         (
-            UpdateFlagV2Serializer,
+            UpdateFlagOptionBSerializer,
             lambda feature, segment_id: {
                 "feature": {"name": feature.name},
                 "environment_default": {
@@ -183,13 +183,13 @@ def test_update_flag_serializer__cross_project_segment__returns_invalid(
     assert "not found in project" in str(serializer.errors)
 
 
-def test_update_flag_v2_serializer__mv_option_not_on_feature__returns_invalid(
+def test_update_flag_option_b_serializer__mv_option_not_on_feature__returns_invalid(
     multivariate_feature: Feature,
     environment: Environment,
     segment: Segment,
 ) -> None:
     # Given
-    serializer = UpdateFlagV2Serializer(
+    serializer = UpdateFlagOptionBSerializer(
         data={
             "feature": {"name": multivariate_feature.name},
             "environment_default": {
@@ -221,7 +221,7 @@ def test_update_flag_v2_serializer__mv_option_not_on_feature__returns_invalid(
     assert "do not belong to the feature" in str(serializer.errors)
 
 
-def test_update_flag_v2_serializer__duplicate_mv_option__returns_invalid(
+def test_update_flag_option_b_serializer__duplicate_mv_option__returns_invalid(
     multivariate_feature: Feature,
     multivariate_options: list[typing.Any],
     environment: Environment,
@@ -229,7 +229,7 @@ def test_update_flag_v2_serializer__duplicate_mv_option__returns_invalid(
 ) -> None:
     # Given the same multivariate option is passed twice
     option = multivariate_options[0]
-    serializer = UpdateFlagV2Serializer(
+    serializer = UpdateFlagOptionBSerializer(
         data={
             "feature": {"name": multivariate_feature.name},
             "environment_default": {
@@ -275,7 +275,7 @@ def test_validate_multivariate_state_values__empty_list__is_noop(
     validate_multivariate_state_values(feature, multivariate_values)
 
 
-def test_update_flag_v2_serializer__valid_mv_option__change_set_carries_mv(
+def test_update_flag_option_b_serializer__valid_mv_option__change_set_carries_mv(
     multivariate_feature: Feature,
     multivariate_options: list,  # type: ignore[type-arg]
     environment: Environment,
@@ -287,7 +287,7 @@ def test_update_flag_v2_serializer__valid_mv_option__change_set_carries_mv(
     option = multivariate_options[0]
     request = rf.post("/")
     request.user = admin_user
-    serializer = UpdateFlagV2Serializer(
+    serializer = UpdateFlagOptionBSerializer(
         data={
             "feature": {"name": multivariate_feature.name},
             "environment_default": {
@@ -313,7 +313,7 @@ def test_update_flag_v2_serializer__valid_mv_option__change_set_carries_mv(
 
     # When
     is_valid = serializer.is_valid()
-    change_set = serializer.change_set_v2
+    change_set = serializer.change_set_option_b
 
     # Then
     assert is_valid is True

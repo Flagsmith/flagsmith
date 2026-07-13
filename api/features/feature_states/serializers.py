@@ -15,16 +15,16 @@ from features.feature_states.types import (
     SegmentOverrideMultivariateValuePayload,
     SegmentOverridePayload,
     SegmentReferencePayload,
-    UpdateFlagV1Payload,
-    UpdateFlagV2Payload,
+    UpdateFlagOptionAPayload,
+    UpdateFlagOptionBPayload,
 )
 from features.models import Feature, FeatureState
 from features.versioning.dataclasses import (
     EnvironmentDefaultChangeSet,
     EnvironmentMultivariateValueChangeSet,
     FeatureValue,
-    FlagChangeSetV1,
-    FlagChangeSetV2,
+    FlagChangeSetOptionA,
+    FlagChangeSetOptionB,
     MultivariateOptionUpdateChangeSet,
     MultivariateValueChangeSet,
     NewMultivariateOptionChangeSet,
@@ -32,8 +32,8 @@ from features.versioning.dataclasses import (
 )
 from features.versioning.versioning_service import (
     delete_segment_override,
-    update_flag_v1,
-    update_flag_v2,
+    update_flag_option_a,
+    update_flag_option_b,
 )
 from segments.models import Segment
 
@@ -200,7 +200,7 @@ def _to_environment_multivariate_value_change_set(
     )
 
 
-class UpdateFlagV1Serializer(BaseFeatureUpdateSerializer[FeatureState]):
+class UpdateFlagOptionASerializer(BaseFeatureUpdateSerializer[FeatureState]):
     feature = FeatureIdentifierSerializer(required=True)
     segment = SegmentReferenceSerializer(required=False)
     enabled = serializers.BooleanField(required=False)
@@ -215,7 +215,7 @@ class UpdateFlagV1Serializer(BaseFeatureUpdateSerializer[FeatureState]):
         self.validate_segment_id(value["id"])
         return value
 
-    def validate(self, attrs: UpdateFlagV1Payload) -> UpdateFlagV1Payload:
+    def validate(self, attrs: UpdateFlagOptionAPayload) -> UpdateFlagOptionAPayload:
         multivariate_values = attrs.get("multivariate_feature_state_values")
         if multivariate_values is None:
             return attrs
@@ -259,8 +259,8 @@ class UpdateFlagV1Serializer(BaseFeatureUpdateSerializer[FeatureState]):
         return attrs
 
     @property
-    def change_set_v1(self) -> FlagChangeSetV1:
-        validated_data = cast(UpdateFlagV1Payload, self.validated_data)
+    def change_set_option_a(self) -> FlagChangeSetOptionA:
+        validated_data = cast(UpdateFlagOptionAPayload, self.validated_data)
         value_data = validated_data.get("value")
         segment_data = validated_data.get("segment")
         multivariate_values = validated_data.get("multivariate_feature_state_values")
@@ -287,7 +287,7 @@ class UpdateFlagV1Serializer(BaseFeatureUpdateSerializer[FeatureState]):
                     for mv in multivariate_values
                 ]
 
-        return FlagChangeSetV1(
+        return FlagChangeSetOptionA(
             author=AuthorData.from_request(self.context["request"]),
             enabled=validated_data.get("enabled"),
             value=(
@@ -305,7 +305,7 @@ class UpdateFlagV1Serializer(BaseFeatureUpdateSerializer[FeatureState]):
 
     def save(self, **kwargs: object) -> FeatureState:
         feature = self.get_feature()
-        return update_flag_v1(self.environment, feature, self.change_set_v1)
+        return update_flag_option_a(self.environment, feature, self.change_set_option_a)
 
 
 class EnvironmentDefaultSerializer(serializers.Serializer[EnvironmentDefaultPayload]):
@@ -326,7 +326,7 @@ class SegmentOverrideSerializer(serializers.Serializer[SegmentOverridePayload]):
     )
 
 
-class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer[None]):
+class UpdateFlagOptionBSerializer(BaseFeatureUpdateSerializer[None]):
     feature = FeatureIdentifierSerializer(required=True)
     environment_default = EnvironmentDefaultSerializer(required=False)
     segment_overrides = SegmentOverrideSerializer(many=True, required=False)
@@ -350,7 +350,7 @@ class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer[None]):
 
         return value
 
-    def validate(self, attrs: UpdateFlagV2Payload) -> UpdateFlagV2Payload:
+    def validate(self, attrs: UpdateFlagOptionBPayload) -> UpdateFlagOptionBPayload:
         multivariate_value_lists: list[
             Sequence[
                 EnvironmentMultivariateValuePayload
@@ -423,8 +423,8 @@ class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer[None]):
         return attrs
 
     @property
-    def change_set_v2(self) -> FlagChangeSetV2:
-        validated_data = cast(UpdateFlagV2Payload, self.validated_data)
+    def change_set_option_b(self) -> FlagChangeSetOptionB:
+        validated_data = cast(UpdateFlagOptionBPayload, self.validated_data)
 
         environment_default_data = validated_data.get("environment_default")
         environment_default: EnvironmentDefaultChangeSet | None = None
@@ -485,7 +485,7 @@ class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer[None]):
                 )
             )
 
-        return FlagChangeSetV2(
+        return FlagChangeSetOptionB(
             author=AuthorData.from_request(self.context["request"]),
             environment_default=environment_default,
             segment_overrides=segment_overrides,
@@ -493,7 +493,7 @@ class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer[None]):
 
     def save(self, **kwargs: object) -> None:
         feature = self.get_feature()
-        update_flag_v2(self.environment, feature, self.change_set_v2)
+        update_flag_option_b(self.environment, feature, self.change_set_option_b)
 
 
 class SegmentIdentifierSerializer(serializers.Serializer[SegmentIdentifierPayload]):

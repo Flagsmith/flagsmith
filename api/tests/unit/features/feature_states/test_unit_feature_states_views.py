@@ -31,7 +31,7 @@ from tests.types import WithEnvironmentPermissionsCallable
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_v1__by_feature_name__updates_feature_state(
+def test_update_flag_option_a__by_feature_name__updates_feature_state(
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -43,7 +43,7 @@ def test_update_flag_v1__by_feature_name__updates_feature_state(
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     url = reverse(
-        "api-experiments:update-flag-v1",
+        "api-experiments:update-flag-option-a",
         kwargs={"environment_key": environment_.api_key},
     )
 
@@ -73,7 +73,7 @@ def test_update_flag_v1__by_feature_name__updates_feature_state(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_v1__by_feature_id__updates_feature_state(
+def test_update_flag_option_a__by_feature_id__updates_feature_state(
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -82,7 +82,7 @@ def test_update_flag_v1__by_feature_id__updates_feature_state(
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     url = reverse(
-        "api-experiments:update-flag-v1",
+        "api-experiments:update-flag-option-a",
         kwargs={"environment_key": environment_.api_key},
     )
 
@@ -112,7 +112,7 @@ def test_update_flag_v1__by_feature_id__updates_feature_state(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_v1__both_name_and_id_provided__returns_400(
+def test_update_flag_option_a__both_name_and_id_provided__returns_400(
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -121,7 +121,7 @@ def test_update_flag_v1__both_name_and_id_provided__returns_400(
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     url = reverse(
-        "api-experiments:update-flag-v1",
+        "api-experiments:update-flag-option-a",
         kwargs={"environment_key": environment_.api_key},
     )
 
@@ -147,7 +147,7 @@ def test_update_flag_v1__both_name_and_id_provided__returns_400(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_v1__both_name_and_id_for_different_features__returns_400(
+def test_update_flag_option_a__both_name_and_id_for_different_features__returns_400(
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -163,7 +163,7 @@ def test_update_flag_v1__both_name_and_id_for_different_features__returns_400(
     )
 
     url = reverse(
-        "api-experiments:update-flag-v1",
+        "api-experiments:update-flag-option-a",
         kwargs={"environment_key": environment_.api_key},
     )
 
@@ -189,7 +189,7 @@ def test_update_flag_v1__both_name_and_id_for_different_features__returns_400(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_v1__neither_name_nor_id_provided__returns_400(
+def test_update_flag_option_a__neither_name_nor_id_provided__returns_400(
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -198,7 +198,7 @@ def test_update_flag_v1__neither_name_nor_id_provided__returns_400(
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     url = reverse(
-        "api-experiments:update-flag-v1",
+        "api-experiments:update-flag-option-a",
         kwargs={"environment_key": environment_.api_key},
     )
 
@@ -224,7 +224,7 @@ def test_update_flag_v1__neither_name_nor_id_provided__returns_400(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_v1__feature_not_found_by_name__returns_400(
+def test_update_flag_option_a__feature_not_found_by_name__returns_400(
     staff_client: APIClient,
     environment_: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -232,7 +232,7 @@ def test_update_flag_v1__feature_not_found_by_name__returns_400(
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     url = reverse(
-        "api-experiments:update-flag-v1",
+        "api-experiments:update-flag-option-a",
         kwargs={"environment_key": environment_.api_key},
     )
 
@@ -256,7 +256,7 @@ def test_update_flag_v1__feature_not_found_by_name__returns_400(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_v1__feature_not_found_by_id__returns_400(
+def test_update_flag_option_a__feature_not_found_by_id__returns_400(
     staff_client: APIClient,
     environment_: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -264,7 +264,7 @@ def test_update_flag_v1__feature_not_found_by_id__returns_400(
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     url = reverse(
-        "api-experiments:update-flag-v1",
+        "api-experiments:update-flag-option-a",
         kwargs={"environment_key": environment_.api_key},
     )
 
@@ -288,7 +288,7 @@ def test_update_flag_v1__feature_not_found_by_id__returns_400(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_v1__segment_override_by_name__creates_override(
+def test_update_flag_option_a__segment_override_by_name__creates_override(
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -303,7 +303,7 @@ def test_update_flag_v1__segment_override_by_name__creates_override(
     )
 
     url = reverse(
-        "api-experiments:update-flag-v1",
+        "api-experiments:update-flag-option-a",
         kwargs={"environment_key": environment_.api_key},
     )
 
@@ -339,7 +339,7 @@ def test_update_flag_v1__segment_override_by_name__creates_override(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_v1__segment_override_no_existing_feature_segment__creates_feature_segment(
+def test_update_flag_option_a__segment_override_no_existing_feature_segment__creates_feature_segment(
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -361,7 +361,7 @@ def test_update_flag_v1__segment_override_no_existing_feature_segment__creates_f
     ).exists()
 
     url = reverse(
-        "api-experiments:update-flag-v1",
+        "api-experiments:update-flag-option-a",
         kwargs={"environment_key": environment_.api_key},
     )
 
@@ -395,7 +395,7 @@ def test_update_flag_v1__segment_override_no_existing_feature_segment__creates_f
     assert segment_override.feature_segment.priority == 10
 
 
-def test_update_flag_v1__new_segment_override_at_priority_zero__reorders_existing_priorities(
+def test_update_flag_option_a__new_segment_override_at_priority_zero__reorders_existing_priorities(
     staff_client: APIClient,
     feature: Feature,
     environment: Environment,
@@ -423,7 +423,7 @@ def test_update_flag_v1__new_segment_override_at_priority_zero__reorders_existin
     )
 
     url = reverse(
-        "api-experiments:update-flag-v1",
+        "api-experiments:update-flag-option-a",
         kwargs={"environment_key": environment.api_key},
     )
 
@@ -459,7 +459,7 @@ def test_update_flag_v1__new_segment_override_at_priority_zero__reorders_existin
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_v2__new_segment_overrides__creates_overrides(
+def test_update_flag_option_b__new_segment_overrides__creates_overrides(
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -486,7 +486,7 @@ def test_update_flag_v2__new_segment_overrides__creates_overrides(
     ).exists()
 
     url = reverse(
-        "api-experiments:update-flag-v2",
+        "api-experiments:update-flag-option-b",
         kwargs={"environment_key": environment_.api_key},
     )
 
@@ -547,7 +547,7 @@ def test_update_flag_v2__new_segment_overrides__creates_overrides(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_v2__environment_default_only__updates_default_state(
+def test_update_flag_option_b__environment_default_only__updates_default_state(
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -556,7 +556,7 @@ def test_update_flag_v2__environment_default_only__updates_default_state(
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     url = reverse(
-        "api-experiments:update-flag-v2",
+        "api-experiments:update-flag-option-b",
         kwargs={"environment_key": environment_.api_key},
     )
 
@@ -588,7 +588,7 @@ def test_update_flag_v2__environment_default_only__updates_default_state(
     assert env_default.get_feature_state_value() == 100
 
 
-def test_update_flag_v2__duplicate_segment_ids__returns_400(
+def test_update_flag_option_b__duplicate_segment_ids__returns_400(
     staff_client: APIClient,
     feature: Feature,
     environment: Environment,
@@ -601,7 +601,7 @@ def test_update_flag_v2__duplicate_segment_ids__returns_400(
     segment1 = Segment.objects.create(name="segment1", project=project)
 
     url = reverse(
-        "api-experiments:update-flag-v2",
+        "api-experiments:update-flag-option-b",
         kwargs={"environment_key": environment.api_key},
     )
 
@@ -640,7 +640,7 @@ def test_update_flag_v2__duplicate_segment_ids__returns_400(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_v1__existing_segment_override_with_new_priority__updates_priority(
+def test_update_flag_option_a__existing_segment_override_with_new_priority__updates_priority(
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -668,7 +668,7 @@ def test_update_flag_v1__existing_segment_override_with_new_priority__updates_pr
     )
 
     url = reverse(
-        "api-experiments:update-flag-v1",
+        "api-experiments:update-flag-option-a",
         kwargs={"environment_key": environment_.api_key},
     )
 
@@ -702,7 +702,7 @@ def test_update_flag_v1__existing_segment_override_with_new_priority__updates_pr
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_v2__existing_segment_override_with_new_priority__updates_priority(
+def test_update_flag_option_b__existing_segment_override_with_new_priority__updates_priority(
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -731,7 +731,7 @@ def test_update_flag_v2__existing_segment_override_with_new_priority__updates_pr
 
     # When - Update the existing segment override using V2 endpoint
     v2_url = reverse(
-        "api-experiments:update-flag-v2",
+        "api-experiments:update-flag-option-b",
         kwargs={"environment_key": environment_.api_key},
     )
     update_data = {
@@ -768,7 +768,7 @@ def test_update_flag_v2__existing_segment_override_with_new_priority__updates_pr
     assert feature_segment.priority == 2
 
 
-def test_update_flag_v2__new_segment_override_at_priority_zero__reorders_existing_priorities(
+def test_update_flag_option_b__new_segment_override_at_priority_zero__reorders_existing_priorities(
     staff_client: APIClient,
     feature: Feature,
     environment: Environment,
@@ -796,7 +796,7 @@ def test_update_flag_v2__new_segment_override_at_priority_zero__reorders_existin
     )
 
     url = reverse(
-        "api-experiments:update-flag-v2",
+        "api-experiments:update-flag-option-b",
         kwargs={"environment_key": environment.api_key},
     )
 
@@ -834,7 +834,7 @@ def test_update_flag_v2__new_segment_override_at_priority_zero__reorders_existin
     assert feature_segment1.priority == 1
 
 
-def test_update_flag_v1__workflow_enabled__returns_403(
+def test_update_flag_option_a__workflow_enabled__returns_403(
     staff_client: APIClient,
     feature: Feature,
     environment: Environment,
@@ -846,7 +846,7 @@ def test_update_flag_v1__workflow_enabled__returns_403(
     environment.save()
 
     url = reverse(
-        "api-experiments:update-flag-v1",
+        "api-experiments:update-flag-option-a",
         kwargs={"environment_key": environment.api_key},
     )
 
@@ -866,7 +866,7 @@ def test_update_flag_v1__workflow_enabled__returns_403(
     assert "change requests are enabled" in str(response.json())
 
 
-def test_update_flag_v2__workflow_enabled__returns_403(
+def test_update_flag_option_b__workflow_enabled__returns_403(
     staff_client: APIClient,
     feature: Feature,
     environment: Environment,
@@ -878,7 +878,7 @@ def test_update_flag_v2__workflow_enabled__returns_403(
     environment.save()
 
     url = reverse(
-        "api-experiments:update-flag-v2",
+        "api-experiments:update-flag-option-b",
         kwargs={"environment_key": environment.api_key},
     )
 
@@ -900,7 +900,7 @@ def test_update_flag_v2__workflow_enabled__returns_403(
     assert "change requests are enabled" in str(response.json())
 
 
-def test_update_flag_v2__existing_segment_override_with_v2_versioning__updates_override(
+def test_update_flag_option_b__existing_segment_override_with_v2_versioning__updates_override(
     staff_client: APIClient,
     feature: Feature,
     environment_v2_versioning: Environment,
@@ -931,7 +931,7 @@ def test_update_flag_v2__existing_segment_override_with_v2_versioning__updates_o
     )
 
     url = reverse(
-        "api-experiments:update-flag-v2",
+        "api-experiments:update-flag-option-b",
         kwargs={"environment_key": environment_v2_versioning.api_key},
     )
 
@@ -974,14 +974,14 @@ def test_update_flag_v2__existing_segment_override_with_v2_versioning__updates_o
     assert segment_override.feature_segment.priority == 1
 
 
-def test_update_flag_v1__no_permission__returns_403(
+def test_update_flag_option_a__no_permission__returns_403(
     staff_client: APIClient,
     feature: Feature,
     environment: Environment,
 ) -> None:
     # Given - no permissions granted
     url = reverse(
-        "api-experiments:update-flag-v1",
+        "api-experiments:update-flag-option-a",
         kwargs={"environment_key": environment.api_key},
     )
 
@@ -1000,14 +1000,14 @@ def test_update_flag_v1__no_permission__returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_update_flag_v2__no_permission__returns_403(
+def test_update_flag_option_b__no_permission__returns_403(
     staff_client: APIClient,
     feature: Feature,
     environment: Environment,
 ) -> None:
     # Given - no permissions granted
     url = reverse(
-        "api-experiments:update-flag-v2",
+        "api-experiments:update-flag-option-b",
         kwargs={"environment_key": environment.api_key},
     )
 
@@ -1028,12 +1028,12 @@ def test_update_flag_v2__no_permission__returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_update_flag_v1__nonexistent_environment__returns_403(
+def test_update_flag_option_a__nonexistent_environment__returns_403(
     staff_client: APIClient,
 ) -> None:
     # Given
     url = reverse(
-        "api-experiments:update-flag-v1",
+        "api-experiments:update-flag-option-a",
         kwargs={"environment_key": "nonexistent_key"},
     )
 
