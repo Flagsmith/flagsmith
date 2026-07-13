@@ -1,8 +1,8 @@
 ---
 title: Experimentation
 description:
-    Run A/B tests natively in Flagsmith: serve variations, collect events, and analyse results with built-in Bayesian
-    statistics.
+ 'Run A/B tests natively in Flagsmith: serve variations, collect events, and analyse results with built-in Bayesian
+ statistics.'
 ---
 
 :::info Enterprise beta
