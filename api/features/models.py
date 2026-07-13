@@ -833,16 +833,11 @@ class FeatureState(
     def check_mv_hashing_salt_preserved(self):  # type: ignore[no-untyped-def]
         """Fail if a segment override is recreated without keeping its bucketing salt.
 
-        Under v2 versioning a feature state must be recreated via clone(), which
-        copies mv_hashing_salt so multivariate variant assignment stays stable for
-        enrolled identities. clone() always sets a non-null salt, so a freshly
-        created state with no salt that the previous version already had was made
-        some other way and would re-bucket those identities. Raise so the
-        offending path is caught in tests. Identity overrides are skipped: they
-        are not versioned or cloned. Environment defaults are skipped: the clone
-        receiver copies one into every new version, so a direct create duplicates
-        it and is rejected by check_for_duplicate_feature_state before this guard
-        runs. See https://github.com/Flagsmith/flagsmith/issues/7913.
+        Under v2 versioning, recreation must go through clone(), which always
+        sets mv_hashing_salt; a salt-less state whose segment was overridden in
+        the previous version came from some other path and would re-bucket
+        enrolled identities (#7913). Identity overrides are not versioned;
+        environment defaults are covered by check_for_duplicate_feature_state.
         """
         if (
             self.mv_hashing_salt is not None
