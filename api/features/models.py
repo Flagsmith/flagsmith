@@ -798,17 +798,16 @@ class FeatureState(
             )
 
         superseded: FeatureState | None = (
-            FeatureState.objects.filter(
-                lineage_filter,
-                environment_id=self.environment_id,
+            FeatureState.objects.get_live_feature_states(
+                environment=self.environment,  # type: ignore[arg-type]
+                additional_filters=lineage_filter,
                 feature_id=self.feature_id,
                 identity__isnull=True,
-                version__isnull=False,
-                live_from__isnull=False,
-                live_from__lte=timezone.now(),
             )
             .exclude(id=self.id)
-            .order_by("-version")
+            # Mirror __gt__: among live states, the latest live_from wins,
+            # with version as the tie-break.
+            .order_by("-live_from", "-version")
             .first()
         )
         return superseded

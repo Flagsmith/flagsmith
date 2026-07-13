@@ -933,6 +933,41 @@ def test_get_superseded_live_feature_state__segment_override_draft__returns_live
     assert superseded == live_override
 
 
+def test_get_superseded_live_feature_state__scheduled_change_gone_live__returns_latest_live_from_state(
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given a state committed last (highest version) that went live first, and
+    # a previously committed scheduled state whose live_from has since passed
+    FeatureState.objects.filter(
+        feature=multivariate_feature, environment=environment
+    ).update(live_from=now - timedelta(hours=3))
+    committed_last = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        version=3,
+        live_from=now - timedelta(hours=2),
+    )
+    scheduled = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        version=2,
+        live_from=now - timedelta(hours=1),
+    )
+    draft = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        version=None,
+    )
+
+    # When
+    superseded = draft.get_superseded_live_feature_state()
+
+    # Then the state with the latest live_from is live, not the highest version
+    assert superseded == scheduled
+    assert superseded != committed_last
+
+
 @mock.patch.object(FeatureState, "get_multivariate_feature_state_value")
 def test_get_feature_state_value__multivariate_feature__returns_mv_value(  # type: ignore[no-untyped-def]
     mock_get_mv_feature_state_value, environment, multivariate_feature, identity
