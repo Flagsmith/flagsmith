@@ -78,8 +78,7 @@ and events stay consistent; see [Identities](/flagsmith-concepts/identities).
 
 ## 5. Read the results and roll out
 
-On the experiment page, check the **Exposures** panel: enrolment should track about 10% of checkout traffic, split
-50/50. Then watch the results as conversions arrive; see
-[Analyse an Experiment](/experimentation/analyse-an-experiment).
+On the experiment page, check the **Exposures** panel: enrolment should track about 10% of your identities, split 50/50.
+Then watch the results as conversions arrive; see [Analyse an Experiment](/experimentation/analyse-an-experiment).
 
 When the result is conclusive, end the experiment, roll the PayPal button out to everyone, and clean up the flag.

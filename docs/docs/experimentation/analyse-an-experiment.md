@@ -49,8 +49,6 @@ The **Exposures** panel charts enrolment over time, per variation, with each var
 Identities that were served more than one variation are quarantined and shown as excluded. A small number is normal; a
 growing one means users are slipping between variations.
 
-<!-- Screenshot: exposures panel with enrolment chart -->
-
 ## Ending the experiment
 
 When you have a conclusive result, click **End Experiment**. Results are frozen as final and the flag is unlocked.

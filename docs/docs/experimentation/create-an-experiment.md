@@ -17,8 +17,8 @@ and measures the impact on a metric.
 ## 0. Pre-requisites
 
 - A [connected warehouse](/experimentation/connect-a-warehouse).
-- A **multivariate flag** with a variation for each treatment you want to test. The flag's current value acts as the
-  **control**. A flag can only be in one active experiment at a time.
+- A [**multivariate flag**](/managing-flags/core-management) with a variation for each treatment you want to test. The
+  flag's current value acts as the **control**. A flag can only be in one active experiment at a time.
 - A [metric](/experimentation/create-metrics). You can also create one from inside the wizard.
 
 On the **Experiments** page, click **Create Experiment**. The wizard has four steps.
@@ -58,7 +58,8 @@ Review the configuration and click **Create Experiment**. The experiment starts 
 
 :::caution
 
-While an experiment is running, its flag is locked and cannot be edited.
+While an experiment is running, its flag configuration and variations are locked. The rollout percentage can still be
+edited from the experiment page.
 
 :::
 

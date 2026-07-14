@@ -36,6 +36,8 @@ is useful for checking that your instrumentation is arriving.
 
 ### Connection statuses
 
+The current status is shown on the warehouse card in **Environment Settings > Warehouse**.
+
 - **Created**: the connection exists but no events have been received yet.
 - **Pending Connection**: waiting for the first event to arrive.
 - **Connected**: events have been received; you are ready to run experiments.
