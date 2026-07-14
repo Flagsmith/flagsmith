@@ -141,7 +141,7 @@ if (process.env.FLAGSMITH_PROXY_API_URL) {
     const { createProxyMiddleware } = require('http-proxy-middleware')
     app.use(
       createProxyMiddleware({
-        pathFilter: '/api/v1/',
+        pathFilter: (pathname) => pathname === '/api/v1' || pathname.startsWith('/api/v1/'),
         changeOrigin: true,
         target: process.env.FLAGSMITH_PROXY_API_URL,
         xfwd: true,
