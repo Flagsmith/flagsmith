@@ -66,17 +66,16 @@ module.exports = function setupRoutes(app) {
 
   // Optionally proxy the API
   if (process.env.FLAGSMITH_PROXY_API_URL) {
-    const { createProxyMiddleware } = require('http-proxy-middleware')
-    app.use(
-      
-createProxyMiddleware({
-        pathFilter: '/api/v1/', 
-        changeOrigin: true,
-        target: process.env.FLAGSMITH_PROXY_API_URL,
-        xfwd: true,
-      }),
-        )
-  }
+      const { createProxyMiddleware } = require('http-proxy-middleware')
+      app.use(
+        createProxyMiddleware({
+          pathFilter: '/api/v1/',
+          changeOrigin: true,
+          target: process.env.FLAGSMITH_PROXY_API_URL,
+          xfwd: true,
+        })
+      )
+    }
 
   app.use(bodyParser.json())
 
