@@ -1028,7 +1028,8 @@ export type Req = {
     environmentId: string
     warehouse_type: string
     name?: string
-    config?: Record<string, string>
+    config?: Record<string, string | number | boolean>
+    credentials?: { password: string }
   }
   deleteWarehouseConnection: { environmentId: string; id: number }
   testWarehouseConnection: { environmentId: string; id: number }
@@ -1036,7 +1037,8 @@ export type Req = {
     environmentId: string
     id: number
     name?: string
-    config?: Record<string, string>
+    config?: Record<string, string | number | boolean>
+    credentials?: { password: string }
   }
   getExperiments: PagedRequest<{
     environmentId: string

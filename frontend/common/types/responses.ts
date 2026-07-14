@@ -1259,12 +1259,20 @@ export type SnowflakeConfig = {
   user: string
 }
 
+export type ClickHouseConfig = {
+  host: string
+  port: number
+  database: string
+  username: string
+  secure: boolean
+}
+
 export type WarehouseConnection = {
   id: number
   warehouse_type: WarehouseType
   status: WarehouseConnectionStatus
   name: string
-  config: SnowflakeConfig | Record<string, never>
+  config: SnowflakeConfig | ClickHouseConfig | Record<string, never>
   created_at: string
   total_events_received: number | null
   unique_events_count: number | null
