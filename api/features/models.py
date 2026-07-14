@@ -522,11 +522,7 @@ class FeatureState(
     # to be deprecated!
     version = models.IntegerField(default=1, null=True)
 
-    # Seed for multivariate variant bucketing. Defaults to the feature state's own
-    # id (see get_multivariate_feature_state_value), but is preserved across clones
-    # so that recreating a feature state (e.g. publishing a new version or editing
-    # multivariate weights under v2 versioning) does not re-bucket already-enrolled
-    # identities. See https://github.com/Flagsmith/flagsmith/issues/7913.
+    # Multivariate bucketing seed, kept stable across recreation (#7913) — see mv_hashing_seed.
     mv_hashing_salt = models.IntegerField(null=True, blank=True, default=None)
 
     class Meta:
