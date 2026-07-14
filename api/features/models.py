@@ -776,7 +776,7 @@ class FeatureState(
         their variant (#7913). States predating the salt column fall back to
         their own id, the seed used until now.
         """
-        return self.mv_hashing_salt or self.id  # type: ignore[return-value]
+        return self.mv_hashing_salt or self.id
 
     def get_superseded_live_feature_state(self) -> typing.Optional["FeatureState"]:
         """Return the live feature state of this state's lineage (same
