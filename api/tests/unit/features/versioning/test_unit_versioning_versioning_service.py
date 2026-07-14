@@ -927,3 +927,72 @@ def test_update_flag_v2__retained_plus_passed_exceeds_100__raises(
                 multivariate_values=[MultivariateValueChangeSet(option_b.id, 100.0)],
             ),
         )
+
+
+def test_update_flag__v2_versioning_multivariate_weight_increase__keeps_enrolled_identities_in_variant(
+    environment_v2_versioning: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given a multivariate feature split 50/50 between two variants, and the
+    # variant each of a range of identities is bucketed into
+    author = AuthorData(user=admin_user)
+    option_a, option_b, option_c = multivariate_options
+    feature_state = update_flag(
+        environment_v2_versioning,
+        multivariate_feature,
+        FlagChangeSet(
+            author=author,
+            enabled=True,
+            feature_state_value="control",
+            type_="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+                MultivariateValueChangeSet(option_c.id, 0.0),
+            ],
+        ),
+    )
+    identity_hash_keys = [f"identity-{i}" for i in range(100)]
+    original_assignment = {
+        key: feature_state.get_multivariate_feature_state_value(key).pk
+        for key in identity_hash_keys
+    }
+
+    # When the first variant's allocation is increased to 60/40
+    new_feature_state = update_flag(
+        environment_v2_versioning,
+        multivariate_feature,
+        FlagChangeSet(
+            author=author,
+            enabled=True,
+            feature_state_value="control",
+            type_="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+                MultivariateValueChangeSet(option_c.id, 0.0),
+            ],
+        ),
+    )
+
+    # Then identities already in the grown variant stay in it, and the only
+    # movement is from the shrunk variant into the grown one
+    new_assignment = {
+        key: new_feature_state.get_multivariate_feature_state_value(key).pk
+        for key in identity_hash_keys
+    }
+    movers = {
+        key
+        for key in identity_hash_keys
+        if new_assignment[key] != original_assignment[key]
+    }
+    assert movers
+    assert all(original_assignment[key] == option_b.id for key in movers)
+    assert all(new_assignment[key] == option_a.id for key in movers)
+    assert all(
+        new_assignment[key] == original_assignment[key]
+        for key in identity_hash_keys
+        if key not in movers
+    )

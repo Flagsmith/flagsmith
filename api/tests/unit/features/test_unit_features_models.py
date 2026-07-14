@@ -1514,3 +1514,67 @@ def test_feature_delete__with_gitlab_resources__dispatches_deleted_comment_task(
     assert mock_task.delay.call_args_list == [
         mocker.call(args=(expected_name, expected_id, expected_project_id)),
     ]
+
+
+def test_get_superseded_live_feature_state__segment_override_draft__returns_live_override(
+    environment: Environment,
+    multivariate_feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given a live segment override, and an (uncommitted) draft feature state
+    # recreating it
+    feature_segment = FeatureSegment.objects.create(
+        feature=multivariate_feature, segment=segment, environment=environment
+    )
+    live_override = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        feature_segment=feature_segment,
+    )
+    draft = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        version=None,
+    )
+
+    # When
+    superseded = draft.get_superseded_live_feature_state()
+
+    # Then
+    assert superseded == live_override
+
+
+def test_get_superseded_live_feature_state__scheduled_change_gone_live__returns_latest_live_from_state(
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given a state committed last (highest version) that went live first, and
+    # a previously committed scheduled state whose live_from has since passed
+    FeatureState.objects.filter(
+        feature=multivariate_feature, environment=environment
+    ).update(live_from=now - timedelta(hours=3))
+    committed_last = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        version=3,
+        live_from=now - timedelta(hours=2),
+    )
+    scheduled = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        version=2,
+        live_from=now - timedelta(hours=1),
+    )
+    draft = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        version=None,
+    )
+
+    # When
+    superseded = draft.get_superseded_live_feature_state()
+
+    # Then the state with the latest live_from is live, not the highest version
+    assert superseded == scheduled
+    assert superseded != committed_last
