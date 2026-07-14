@@ -1555,7 +1555,7 @@ requires-dist = [
     { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.11.0,<4" },
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
     { name = "flagsmith-flag-engine", specifier = ">=10.1.0,<11.0.0" },
-    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.10.1,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
+    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.11.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
     { name = "flagsmith-sql-flag-engine", specifier = ">=0.2.0,<0.3.0" },
     { name = "google-api-python-client", specifier = ">=1.12.5,<1.13.0" },
     { name = "google-re2", specifier = ">=1.0,<2.0.0" },
@@ -1690,7 +1690,7 @@ wheels = [
 
 [[package]]
 name = "flagsmith-private"
-version = "0.10.1"
+version = "0.11.0"
 source = { registry = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" }
 dependencies = [
     { name = "cryptography" },
@@ -1700,9 +1700,9 @@ dependencies = [
     { name = "pysaml2" },
     { name = "scim2-filter-parser" },
 ]
-sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.10.1/flagsmith_private-0.10.1.tar.gz", hash = "sha256:f0996ef2a98aff82d471c13d6d4b81b979955eed511bf733d47d3530b468072e", upload-time = "2026-06-29T16:14:43.532Z" }
+sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.11.0/flagsmith_private-0.11.0.tar.gz", hash = "sha256:98a54d3b01d7f1731b8070521d4f342cbfcba608565b88789d3683e7fe227452", upload-time = "2026-07-14T17:31:17.917Z" }
 wheels = [
-    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.10.1/flagsmith_private-0.10.1-py3-none-any.whl", hash = "sha256:3d79a82031a9e7006908c036d4ea3a00a1becc45c6b7446f9175da8d6606befe", upload-time = "2026-06-29T16:14:43.158Z" },
+    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.11.0/flagsmith_private-0.11.0-py3-none-any.whl", hash = "sha256:68c15d3d39b2c7736573bcf3ea89d3f798396ca8cca3659c9b1c3edcde8dd1b5", upload-time = "2026-07-14T17:31:17.442Z" },
 ]
 
 [[package]]
