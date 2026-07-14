@@ -296,6 +296,7 @@ override-dependencies = [
     "openfeature-sdk==0.9.0",
     "opentelemetry-api==1.40.0",
     "opentelemetry-exporter-otlp-proto-common==1.40.0",
+    "opentelemetry-exporter-otlp-proto-grpc==1.40.0",
     "opentelemetry-exporter-otlp-proto-http==1.40.0",
     "opentelemetry-instrumentation==0.61b0",
     "opentelemetry-instrumentation-dbapi==0.61b0",
