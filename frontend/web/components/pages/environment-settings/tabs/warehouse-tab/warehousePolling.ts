@@ -2,9 +2,7 @@ import { WarehouseConnectionStatus } from 'common/types/responses'
 
 export const WAREHOUSE_POLL_INTERVAL_MS = 60000
 
-// RTK Query treats a pollingInterval of 0 as "do not poll". We poll until the
-// warehouse has received its first event, whether the connection is freshly
-// created or a test event is on its way.
+// Poll until the warehouse has received its first event.
 export const getWarehousePollingInterval = (
   status: WarehouseConnectionStatus | undefined,
 ): number =>
