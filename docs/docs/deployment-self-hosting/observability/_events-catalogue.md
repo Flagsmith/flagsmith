@@ -71,6 +71,14 @@ Attributes:
  - `feature.count`
  - `organisation.id`
 
+### `core.encrypted_field.decrypt_failed`
+
+Logged at `warning` from:
+ - `api/core/fields.py:41`
+
+Attributes:
+ - `exc_info`
+
 ### `dynamodb.environment_document_compressed`
 
 Logged at `info` from:

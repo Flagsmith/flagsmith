@@ -1505,6 +1505,11 @@ CLICKHOUSE_CONNECTION_CLIENT_NAME = "flagsmith-core-api"
 #  https://github.com/Flagsmith/flagsmith/issues/8033
 EXPERIMENTATION_CLICKHOUSE_URL = env.str("EXPERIMENTATION_CLICKHOUSE_URL", default=None)
 
+# Comma-separated Fernet keys: the first encrypts, all decrypt (rotation).
+CREDENTIALS_ENCRYPTION_KEYS: list[str] = env.list(
+    "CREDENTIALS_ENCRYPTION_KEYS", default=[]
+)
+
 SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS = env.int(
     "SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS", default=6
 )
