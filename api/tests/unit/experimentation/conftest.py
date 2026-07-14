@@ -1,5 +1,7 @@
 import pytest
+from cryptography.fernet import Fernet
 from django.urls import reverse
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from core.dataclasses import AuthorData
@@ -91,3 +93,31 @@ def experiment_with_rollout(
         ),
     )
     return experiment
+
+
+@pytest.fixture()
+def credentials_encryption_keys(settings: SettingsWrapper) -> list[str]:
+    keys = [Fernet.generate_key().decode()]
+    settings.CREDENTIALS_ENCRYPTION_KEYS = keys
+    return keys
+
+
+@pytest.fixture()
+def clickhouse_connection(
+    environment: Environment,
+    credentials_encryption_keys: list[str],
+) -> WarehouseConnection:
+    connection: WarehouseConnection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.CLICKHOUSE,
+        name="Production ClickHouse",
+        config={
+            "host": "ch.example.com",
+            "port": 9440,
+            "database": "flagsmith",
+            "username": "default",
+            "secure": True,
+        },
+        credentials={"password": "hunter2"},
+    )
+    return connection

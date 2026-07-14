@@ -3,6 +3,7 @@ from datetime import datetime
 from datetime import timezone as dt_timezone
 
 import pytest
+from django.db import connection as django_db_connection
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
@@ -241,3 +242,22 @@ def test_experiment_results__is_final__reflects_window_coverage(
     # When / Then the row is final only once it covers the experiment's end
     results = ExperimentResults(experiment=experiment, as_of=as_of)
     assert results.is_final is expected
+
+
+def test_warehouse_connection_credentials__saved__ciphertext_in_db_and_roundtrips(
+    clickhouse_connection: WarehouseConnection,
+) -> None:
+    # Given: the fixture-created ClickHouse connection
+
+    # When: reading the raw column value
+    with django_db_connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT credentials FROM experimentation_warehouseconnection WHERE id = %s",
+            [clickhouse_connection.id],
+        )
+        raw = cursor.fetchone()[0]
+
+    # Then: the DB stores ciphertext, and the ORM decrypts on load
+    assert "hunter2" not in raw
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.credentials == {"password": "hunter2"}

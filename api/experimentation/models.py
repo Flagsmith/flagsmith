@@ -12,6 +12,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     hook,
 )
 
+from core.fields import EncryptedJSONField
 from core.models import SoftDeleteExportableModel
 from environments.models import Environment
 from experimentation.dataclasses import (
@@ -58,6 +59,7 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
     config: models.JSONField[dict[str, object] | None, dict[str, object] | None] = (
         models.JSONField(null=True, blank=True)
     )
+    credentials = EncryptedJSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Populated at serialization time for flagsmith connections from ClickHouse;
