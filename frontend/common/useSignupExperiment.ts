@@ -10,7 +10,9 @@ export default function useSignupExperiment(useEnvironmentFlag: boolean) {
       return
     }
     const identifyAndExpose = async () => {
-      const id = storageGet('signup_anonymous_id') || crypto.randomUUID()
+      const id =
+        storageGet('signup_anonymous_id') ||
+        (crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`)
       storageSet('signup_anonymous_id', id)
       // @ts-expect-error transient is missing from the SDK's identify type
       await flagsmith.identify(id, {}, true)
