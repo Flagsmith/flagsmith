@@ -677,9 +677,8 @@ class FeatureState(
         clone.id = None
         clone.uuid = uuid.uuid4()
         # Preserve the multivariate bucketing seed so that recreating this feature
-        # state does not re-bucket already-enrolled identities. If the source never
-        # had an explicit salt, capture its id (the seed used until now).
-        clone.mv_hashing_salt = self.mv_hashing_salt or self.id
+        # state does not re-bucket already-enrolled identities.
+        clone.mv_hashing_salt = self.mv_hashing_seed
 
         if self.feature_segment:
             # We can only create a new feature segment if we are cloning to another environment,
@@ -706,9 +705,11 @@ class FeatureState(
         self.feature_state_value.clone(clone)
 
         if self.feature.type == MULTIVARIATE:
+            # Clone in id order so the new rows keep the same relative id order,
+            # which variant bucketing iterates over.
             mv_values = [
                 mv_value.clone(feature_state=clone, persist=False)
-                for mv_value in self.multivariate_feature_state_values.all()
+                for mv_value in self.multivariate_feature_state_values.order_by("id")
             ]
             MultivariateFeatureStateValue.objects.bulk_create(mv_values)
 
@@ -771,6 +772,44 @@ class FeatureState(
 
         return {"type": type_, key_name: parse_func(value)}
 
+    @property
+    def mv_hashing_seed(self) -> int:
+        """The seed for multivariate variant bucketing: a lineage constant — the
+        id of the first state created for this (environment, feature, segment)
+        lineage, carried forward on every recreation so enrolled identities keep
+        their variant (#7913). States predating the salt column fall back to
+        their own id, the seed used until now.
+        """
+        return self.mv_hashing_salt or self.id  # type: ignore[return-value]
+
+    def get_superseded_live_feature_state(self) -> typing.Optional["FeatureState"]:
+        """Return the live feature state of this state's lineage (same
+        environment, feature and segment) that this state supersedes.
+        """
+        # A segment override's FeatureSegment row is recreated with it, so match
+        # the lineage by its segment, not by the FeatureSegment row.
+        if self.feature_segment_id is None:
+            lineage_filter = Q(feature_segment__isnull=True)
+        else:
+            lineage_filter = Q(
+                feature_segment__segment_id=self.feature_segment.segment_id  # type: ignore[union-attr]
+            )
+
+        superseded: FeatureState | None = (
+            FeatureState.objects.get_live_feature_states(
+                environment=self.environment,  # type: ignore[arg-type]
+                additional_filters=lineage_filter,
+                feature_id=self.feature_id,
+                identity__isnull=True,
+            )
+            .exclude(id=self.id)
+            # Mirror __gt__: among live states, the latest live_from wins, with
+            # version as the tie-break.
+            .order_by("-live_from", "-version")
+            .first()
+        )
+        return superseded
+
     def get_multivariate_feature_state_value(
         self, identity_hash_key: str
     ) -> AbstractBaseFeatureValueModel:
@@ -780,7 +819,7 @@ class FeatureState(
         mv_options = list(self.multivariate_feature_state_values.all())
 
         percentage_value = get_hashed_percentage_for_object_ids(
-            [self.mv_hashing_salt or self.id, identity_hash_key]
+            [self.mv_hashing_seed, identity_hash_key]
         )
 
         # Iterate over the mv options in order of id (so we get the same value each
@@ -830,41 +869,21 @@ class FeatureState(
             )
 
     @hook(BEFORE_CREATE)
-    def check_mv_hashing_salt_preserved(self):  # type: ignore[no-untyped-def]
-        """Fail if a segment override is recreated without keeping its bucketing salt.
-
-        Under v2 versioning, recreation must go through clone(), which always
-        sets mv_hashing_salt; a salt-less state whose segment was overridden in
-        the previous version came from some other path and would re-bucket
-        enrolled identities (#7913). Identity overrides are not versioned;
-        environment defaults are covered by check_for_duplicate_feature_state.
+    def inherit_mv_hashing_salt(self):  # type: ignore[no-untyped-def]
+        """Keep multivariate bucketing stable across recreation: a new row
+        superseding a live state in its lineage adopts that state's seed
+        (#7913). Identity overrides have no versioned lineage; the feature type
+        check confines the lineage query to rows where bucketing matters.
         """
         if (
             self.mv_hashing_salt is not None
             or self.identity_id is not None
-            or self.feature_segment_id is None
-            or not self.environment.use_v2_feature_versioning  # type: ignore[union-attr]
+            or self.feature.type != MULTIVARIATE
         ):
             return
 
-        previous_version = (
-            self.environment_feature_version
-            and self.environment_feature_version.get_previous_version()
-        )
-        if previous_version is None:
-            return
-
-        # A segment override's FeatureSegment row is itself cloned per version, so
-        # match the override by its segment, not by the FeatureSegment row.
-        if previous_version.feature_states.filter(
-            feature_segment__segment_id=self.feature_segment.segment_id  # type: ignore[union-attr]
-        ).exists():
-            raise ValidationError(
-                "A feature state for this environment, feature and segment existed "
-                "in the previous version; recreate it via FeatureState.clone() so "
-                "the mv_hashing_salt is kept and multivariate variant assignment "
-                "stays stable. See https://github.com/Flagsmith/flagsmith/issues/7913."
-            )
+        if superseded := self.get_superseded_live_feature_state():
+            self.mv_hashing_salt = superseded.mv_hashing_seed
 
     @hook(BEFORE_CREATE)
     def set_live_from(self):  # type: ignore[no-untyped-def]

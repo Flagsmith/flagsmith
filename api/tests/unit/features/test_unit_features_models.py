@@ -756,28 +756,26 @@ def test_feature_state_clone__existing_mv_hashing_salt__is_preserved(
     assert cloned_feature_state.mv_hashing_salt == 12345
 
 
-def test_feature_state_create__recreates_previous_version_override_directly__raises(
+def test_feature_state_create__recreates_live_segment_override_directly__inherits_salt(
     environment_v2_versioning: Environment,
-    feature: Feature,
+    multivariate_feature: Feature,
     segment: Segment,
 ) -> None:
-    # Given an initial published version and a later (unpublished) version. The
-    # later version is created before the segment override exists, so the clone
-    # receiver does not copy the override into it.
+    # Given a live segment override, and a later (unpublished) version created
+    # before the override existed, so the clone receiver did not copy the
+    # override into it
     initial_version = EnvironmentFeatureVersion.objects.get(
-        feature=feature, environment=environment_v2_versioning
+        feature=multivariate_feature, environment=environment_v2_versioning
     )
     later_version = EnvironmentFeatureVersion.objects.create(
-        feature=feature, environment=environment_v2_versioning
+        feature=multivariate_feature, environment=environment_v2_versioning
     )
-
-    # and the previous (initial) version gains a segment override
-    FeatureState.objects.create(
-        feature=feature,
+    live_override = FeatureState.objects.create(
+        feature=multivariate_feature,
         environment=environment_v2_versioning,
         environment_feature_version=initial_version,
         feature_segment=FeatureSegment.objects.create(
-            feature=feature,
+            feature=multivariate_feature,
             segment=segment,
             environment=environment_v2_versioning,
             environment_feature_version=initial_version,
@@ -786,45 +784,71 @@ def test_feature_state_create__recreates_previous_version_override_directly__rai
 
     # When the same segment's override is recreated directly (not via clone) in
     # the later version
-    # Then the guard rejects it
-    with pytest.raises(ValidationError, match="recreate it via FeatureState"):
-        FeatureState.objects.create(
-            feature=feature,
-            environment=environment_v2_versioning,
-            environment_feature_version=later_version,
-            feature_segment=FeatureSegment.objects.create(
-                feature=feature,
-                segment=segment,
-                environment=environment_v2_versioning,
-                environment_feature_version=later_version,
-            ),
-        )
-
-
-def test_feature_state_create__new_segment_override_under_v2__is_allowed(
-    environment_v2_versioning: Environment,
-    feature: Feature,
-    segment: Segment,
-) -> None:
-    # Given a version whose previous version has no override for this segment
-    later_version = EnvironmentFeatureVersion.objects.create(
-        feature=feature, environment=environment_v2_versioning
-    )
-
-    # When a brand-new override for the segment is created directly
     feature_state = FeatureState.objects.create(
-        feature=feature,
+        feature=multivariate_feature,
         environment=environment_v2_versioning,
         environment_feature_version=later_version,
         feature_segment=FeatureSegment.objects.create(
-            feature=feature,
+            feature=multivariate_feature,
             segment=segment,
             environment=environment_v2_versioning,
             environment_feature_version=later_version,
         ),
     )
 
-    # Then it is allowed: a genuinely new override starts a fresh seed
+    # Then it adopts the live override's bucketing seed
+    assert feature_state.mv_hashing_salt == live_override.mv_hashing_seed
+
+
+def test_feature_state_create__v1_recreates_live_state_directly__inherits_salt(
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given the live feature state of a multivariate feature in a v1
+    # versioning environment
+    live_feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+
+    # When a new version of the feature state is created directly, the way a
+    # change request draft is
+    feature_state = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        version=None,
+    )
+
+    # Then it adopts the live state's bucketing seed
+    assert feature_state.mv_hashing_salt == live_feature_state.mv_hashing_seed
+
+
+def test_feature_state_create__new_segment_override_under_v2__no_salt_inherited(
+    environment_v2_versioning: Environment,
+    multivariate_feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given a version whose lineage has no live override for this segment
+    later_version = EnvironmentFeatureVersion.objects.create(
+        feature=multivariate_feature, environment=environment_v2_versioning
+    )
+
+    # When a brand-new override for the segment is created directly
+    feature_state = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=later_version,
+        feature_segment=FeatureSegment.objects.create(
+            feature=multivariate_feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=later_version,
+        ),
+    )
+
+    # Then a genuinely new override starts a fresh seed
     assert feature_state.mv_hashing_salt is None
 
 
