@@ -575,6 +575,7 @@ def test_handle_api_usage_notifications__stale_cache_lower_than_subscription_lim
     # Then
     # Because usage (95) is evaluated against the true allowance (50,000),
     # it is < 1%, so no notification should be sent.
+    mock_api_usage.assert_not_called()
     assert len(mailoutbox) == 0
 
     assert (
