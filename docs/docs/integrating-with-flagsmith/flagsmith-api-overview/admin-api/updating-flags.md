@@ -4,12 +4,11 @@ sidebar_label: Updating Flags (Experimental)
 sidebar_position: 3
 ---
 
-These experimental endpoints let you update feature flag values and segment overrides via the Admin API. They're meant
-as a simpler alternative to the current endpoints, which were designed with our dashboard user experience in mind.
+These endpoints let you update feature flags, segment overrides, and variant allocations via the Admin API.
 
 :::caution
 
-These endpoints are experimental and may change without notice. They cannot be used when
+**These endpoints are experimental and may change without notice.** They cannot be used when
 [change requests](/administration-and-security/governance-and-compliance/change-requests) are enabled.
 
 :::
@@ -22,6 +21,7 @@ in one request). Each scenario below shows both. Try them and
 
 - Identify features by `name` or `id` (pick one, not both).
 - All endpoints return **204 No Content** on success.
+- Omitted fields are treated as "no change" (e.g. if `enabled` is omitted, the feature's enabled state is unchanged).
 - Values are passed as a `value` object with `type` and `value` (always a string):
 
 | Type      | Example                                |
