@@ -5,25 +5,32 @@ import { WarehouseType } from 'common/types/responses'
 import { ConfigFormData } from './ConfigForm'
 import SelectableCard from 'components/base/SelectableCard'
 import ConfigForm from './ConfigForm'
+import Utils from 'common/utils/utils'
+import ClickHouseConfigForm from './ClickHouseConfigForm'
+import { ClickHouseFormData } from './clickhouseConfig'
 import './WarehouseSetup.scss'
 
 type WarehouseSetupProps = {
   onEnableFlagsmith: () => void
   onCreateSnowflake: (data: ConfigFormData) => Promise<unknown>
+  onCreateClickHouse: (data: ClickHouseFormData) => Promise<unknown>
   isCreating: boolean
 }
 
 type WarehouseTypeOption = WarehouseType | 'bigquery' | 'databricks'
 
-const CONFIGURABLE_TYPES: WarehouseTypeOption[] = ['flagsmith']
-
 const WarehouseSetup: FC<WarehouseSetupProps> = ({
   isCreating,
+  onCreateClickHouse,
   onCreateSnowflake,
   onEnableFlagsmith,
 }) => {
   const [selectedType, setSelectedType] =
     useState<WarehouseTypeOption>('flagsmith')
+  const clickhouseEnabled = Utils.getFlagsmithHasFeature('clickhouse_warehouse')
+  const configurableTypes: WarehouseTypeOption[] = clickhouseEnabled
+    ? ['flagsmith', 'clickhouse']
+    : ['flagsmith']
 
   return (
     <div className='warehouse-setup'>
@@ -45,6 +52,19 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
               selected={selectedType === 'flagsmith'}
               onClick={() => setSelectedType('flagsmith')}
             />
+          </div>
+          <div className='warehouse-setup__type-card'>
+            <SelectableCard
+              icon={<Icon name='layers' width={20} />}
+              title='ClickHouse'
+              description='Open-source OLAP database'
+              selected={selectedType === 'clickhouse'}
+              onClick={() => clickhouseEnabled && setSelectedType('clickhouse')}
+              disabled={!clickhouseEnabled}
+            />
+            {!clickhouseEnabled && (
+              <span className='warehouse-setup__coming-soon'>Coming Soon</span>
+            )}
           </div>
           <div className='warehouse-setup__type-card'>
             <SelectableCard
@@ -109,7 +129,14 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
         />
       )}
 
-      {!CONFIGURABLE_TYPES.includes(selectedType) && (
+      {selectedType === 'clickhouse' && (
+        <ClickHouseConfigForm
+          onSave={onCreateClickHouse}
+          onCancel={() => setSelectedType('flagsmith')}
+        />
+      )}
+
+      {!configurableTypes.includes(selectedType) && (
         <div className='warehouse-setup__flagsmith-card'>
           <p className='warehouse-setup__flagsmith-description'>
             Coming soon. This warehouse type is not yet available.

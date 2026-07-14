@@ -16,6 +16,7 @@ type WarehouseConnectionCardProps = {
   onDelete: () => void
   onEdit?: () => void
   onSendTestEvent: () => void
+  onTestConnection?: () => void
   isSendingTestEvent: boolean
   isLoadingStats?: boolean
 }
@@ -46,6 +47,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   onDelete,
   onEdit,
   onSendTestEvent,
+  onTestConnection,
 }) => {
   const typeLabel =
     connection.warehouse_type !== 'flagsmith'
@@ -90,6 +92,10 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
                 'account_identifier' in connection.config &&
                 connection.config.account_identifier &&
                 `: ${connection.config.account_identifier}`}
+              {connection.config &&
+                'host' in connection.config &&
+                connection.config.host &&
+                `: ${connection.config.host}`}
             </span>
           )}
         </div>
@@ -139,9 +145,10 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
             id='warehouse-connection-test'
             theme='outline'
             size='small'
-            disabled
+            onClick={onTestConnection}
+            disabled={!onTestConnection || isSendingTestEvent}
           >
-            Test connection
+            {isSendingTestEvent ? 'Testing...' : 'Test connection'}
           </Button>
         )}
         {isFlagsmith && !isPending && !isConnected && (
