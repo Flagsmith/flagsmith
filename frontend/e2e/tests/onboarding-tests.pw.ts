@@ -101,7 +101,7 @@ test.describe('Onboarding', () => {
     // Rename the flag. Names are immutable, so this delete + recreates; the
     // Onboarding tag must survive (the recreate carries the old flag's tags).
     log('Rename the flag');
-    const flagInput = page.getByLabel('Flag name');
+    const flagInput = page.getByLabel('Edit flag');
     await flagInput.fill('renamed_demo_flag');
     await flagInput.press('Enter');
 
@@ -114,7 +114,7 @@ test.describe('Onboarding', () => {
     // Reload to prove it persisted (bootstrap reuses the renamed flag).
     await page.reload();
     await flowReady();
-    await expect(page.getByLabel('Flag name')).toHaveValue('renamed_demo_flag');
+    await expect(page.getByLabel('Edit flag')).toHaveValue('renamed_demo_flag');
     await expect(
       page
         .getByRole('region', { name: 'Your flags' })
