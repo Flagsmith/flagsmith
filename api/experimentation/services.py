@@ -40,6 +40,9 @@ from experimentation.dataclasses import (
     RolloutSpec,
     WarehouseEventStats,
 )
+from experimentation.metrics import (
+    flagsmith_experimentation_warehouse_connection_verifications_total,
+)
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
     Experiment,
@@ -56,6 +59,7 @@ from experimentation.stats import (
     compare_to_control,
     srm_p_value,
 )
+from experimentation.types import ClickHouseConfig, ClickHouseCredentials
 from features.models import FeatureState
 from features.value_types import BOOLEAN, INTEGER, STRING
 from features.versioning.dataclasses import FlagChangeSet, MultivariateValueChangeSet
@@ -786,6 +790,45 @@ def mark_warehouse_pending_connection(
         organisation__id=connection.environment.project.organisation_id,
     )
     return connection
+
+
+def verify_clickhouse_connection(connection: WarehouseConnection) -> None:
+    """Run SELECT 1 against the customer's ClickHouse and set the status to
+    connected or errored; never raises."""
+    log = logger.bind(environment__id=connection.environment_id)
+    try:
+        log = log.bind(organisation__id=connection.environment.project.organisation_id)
+        config = typing.cast(ClickHouseConfig, connection.config or {})
+        credentials = typing.cast(ClickHouseCredentials, connection.credentials or {})
+        client = Client(
+            config["host"],
+            port=config["port"],
+            user=config["username"],
+            password=credentials["password"],
+            database=config["database"],
+            secure=config["secure"],
+            connect_timeout=CLICKHOUSE_CONNECT_TIMEOUT_SECONDS,
+            send_receive_timeout=CLICKHOUSE_QUERY_TIMEOUT_SECONDS,
+        )
+        try:
+            client.execute("SELECT 1")
+        finally:
+            client.disconnect()
+    except Exception:
+        connection.status = WarehouseConnectionStatus.ERRORED
+        connection.save(update_fields=["status"])
+        flagsmith_experimentation_warehouse_connection_verifications_total.labels(
+            result="failure"
+        ).inc()
+        log.warning("connection.verification_failed", exc_info=True)
+        return
+
+    connection.status = WarehouseConnectionStatus.CONNECTED
+    connection.save(update_fields=["status"])
+    flagsmith_experimentation_warehouse_connection_verifications_total.labels(
+        result="success"
+    ).inc()
+    log.info("connection.verification_succeeded")
 
 
 def refresh_warehouse_connection_status(

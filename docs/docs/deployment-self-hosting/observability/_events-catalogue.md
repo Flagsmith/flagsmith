@@ -97,13 +97,12 @@ Attributes:
  - `environment.id`
  - `exc_info`
  - `experiment.id`
- - `feature.id`
  - `organisation.id`
 
 ### `experimentation.results.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:136`
+ - `api/experimentation/tasks.py:135`
 
 Attributes:
  - `environment.id`
@@ -378,7 +377,7 @@ Attributes:
 ### `segment_membership.compute.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:149`
+ - `api/segment_membership/services.py:145`
 
 Attributes:
  - `project.id`
@@ -388,7 +387,7 @@ Attributes:
 ### `segment_membership.members.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:215`
+ - `api/segment_membership/services.py:209`
 
 Attributes:
  - `reason`
@@ -541,7 +540,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:803`
+ - `api/experimentation/services.py:785`
 
 Attributes:
  - `environment.id`
@@ -550,7 +549,26 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:783`
+ - `api/experimentation/services.py:726`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
+### `warehouse.connection.verification_failed`
+
+Logged at `warning` from:
+ - `api/experimentation/services.py:762`
+
+Attributes:
+ - `environment.id`
+ - `exc_info`
+ - `organisation.id`
+
+### `warehouse.connection.verification_succeeded`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:770`
 
 Attributes:
  - `environment.id`
@@ -559,7 +577,7 @@ Attributes:
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:405`
+ - `api/experimentation/services.py:400`
 
 Attributes:
  - `environment.id`
@@ -569,7 +587,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:391`
+ - `api/experimentation/services.py:386`
 
 Attributes:
  - `environment.id`

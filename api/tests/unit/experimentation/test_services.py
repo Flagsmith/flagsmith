@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from django.db.models import Q
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
+from prometheus_client import REGISTRY
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
@@ -36,6 +37,7 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.results_query import _MetricSlot
+from experimentation.services import verify_clickhouse_connection
 from experimentation.stats import VariantStats
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
@@ -2005,3 +2007,112 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
     # Then every already-enrolled identity keeps the variant it was first
     # assigned; tuning the rollout must not re-randomise the split.
     assert before == after
+
+
+def _verification_count(result: str) -> float:
+    return (
+        REGISTRY.get_sample_value(
+            "flagsmith_experimentation_warehouse_connection_verifications_total",
+            {"result": result},
+        )
+        or 0.0
+    )
+
+
+def test_verify_clickhouse_connection__reachable__sets_connected(
+    clickhouse_connection: WarehouseConnection,
+    log: StructuredLogCapture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = mocker.patch("experimentation.services.Client")
+    success_count_before = _verification_count("success")
+
+    # When
+    verify_clickhouse_connection(clickhouse_connection)
+
+    # Then
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
+    mock_client.assert_called_once_with(
+        "ch.example.com",
+        port=9440,
+        user="default",
+        password="hunter2",
+        database="flagsmith",
+        secure=True,
+        connect_timeout=5,
+        send_receive_timeout=30,
+    )
+    mock_client.return_value.execute.assert_called_once_with("SELECT 1")
+    mock_client.return_value.disconnect.assert_called_once_with()
+    assert _verification_count("success") == success_count_before + 1
+    assert {
+        "level": "info",
+        "event": "connection.verification_succeeded",
+        "environment__id": clickhouse_connection.environment_id,
+        "organisation__id": (clickhouse_connection.environment.project.organisation_id),
+    } in log.events
+
+
+def test_verify_clickhouse_connection__driver_error__sets_errored(
+    clickhouse_connection: WarehouseConnection,
+    log: StructuredLogCapture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = mocker.patch("experimentation.services.Client")
+    mock_client.return_value.execute.side_effect = Exception("connection refused")
+    failure_count_before = _verification_count("failure")
+
+    # When
+    verify_clickhouse_connection(clickhouse_connection)
+
+    # Then
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
+    mock_client.return_value.disconnect.assert_called_once_with()
+    assert _verification_count("failure") == failure_count_before + 1
+    assert any(
+        event["event"] == "connection.verification_failed" for event in log.events
+    )
+
+
+def test_verify_clickhouse_connection__missing_credentials__sets_errored(
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given: credentials lost (e.g. undecryptable — the field loads them as None)
+    mocker.patch("experimentation.services.Client")
+    clickhouse_connection.credentials = None
+    clickhouse_connection.save()
+
+    # When
+    verify_clickhouse_connection(clickhouse_connection)
+
+    # Then
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
+
+
+def test_verify_clickhouse_connection__environment_lookup_fails__sets_errored(
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch("experimentation.services.Client")
+    mocker.patch.object(
+        Environment,
+        "project",
+        new_callable=mocker.PropertyMock,
+        side_effect=Exception("database unavailable"),
+    )
+    failure_count_before = _verification_count("failure")
+
+    # When
+    verify_clickhouse_connection(clickhouse_connection)
+
+    # Then
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
+    assert _verification_count("failure") == failure_count_before + 1
