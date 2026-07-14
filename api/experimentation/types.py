@@ -44,3 +44,24 @@ SNOWFLAKE_DEFAULTS: SnowflakeConfig = {
     "role": "FLAGSMITH_LOADER",
     "user": "FLAGSMITH_SERVICE",
 }
+
+
+class ClickHouseConfig(TypedDict):
+    host: str
+    port: int
+    database: str
+    username: str
+    secure: bool
+
+
+CLICKHOUSE_DEFAULTS: ClickHouseConfig = {
+    "host": "",
+    "port": 9440,
+    "database": "flagsmith",
+    "username": "default",
+    "secure": True,
+}
+
+
+class ClickHouseCredentials(TypedDict):
+    password: str

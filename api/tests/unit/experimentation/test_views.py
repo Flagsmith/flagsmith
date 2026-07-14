@@ -1126,3 +1126,314 @@ def test_get__clickhouse_errors__returns_200_without_stats(
     assert data["unique_events_count"] is None
     # connection stays pending (GET never writes)
     assert data["status"] == "pending_connection"
+
+
+def test_post__clickhouse_minimal_config__applies_defaults(
+    admin_client: APIClient,
+    credentials_encryption_keys: list[str],
+    enable_features: EnableFeaturesFixture,
+    environment: Environment,
+    mocker: MockerFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    mocker.patch("experimentation.services.Client")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "name": "Production ClickHouse",
+            "config": {"host": "ch.example.com"},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["config"] == {
+        "host": "ch.example.com",
+        "port": 9440,
+        "database": "flagsmith",
+        "username": "default",
+        "secure": True,
+    }
+    assert "credentials" not in response.json()
+
+
+def test_post__clickhouse_missing_host__returns_400(
+    admin_client: APIClient,
+    credentials_encryption_keys: list[str],
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "host" in response.json()["config"]
+
+
+@pytest.mark.parametrize("port", [0, 65536, "not-a-port", True])
+def test_post__clickhouse_invalid_port__returns_400(
+    admin_client: APIClient,
+    credentials_encryption_keys: list[str],
+    enable_features: EnableFeaturesFixture,
+    port: object,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "ch.example.com", "port": port},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "port" in response.json()["config"]
+
+
+def test_post__clickhouse_missing_password__returns_400(
+    admin_client: APIClient,
+    credentials_encryption_keys: list[str],
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "ch.example.com"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "password" in response.json()["credentials"]
+
+
+def test_post__clickhouse_no_encryption_keys__returns_400(
+    admin_client: APIClient,
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    settings.CREDENTIALS_ENCRYPTION_KEYS = []
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "ch.example.com"},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "credentials": [
+            "Credentials encryption is not configured on this installation."
+        ]
+    }
+
+
+@pytest.mark.parametrize(
+    "warehouse_type, config",
+    [
+        ("flagsmith", None),
+        ("snowflake", {"account_identifier": "xy12345.us-east-1"}),
+    ],
+    ids=["flagsmith", "snowflake"],
+)
+def test_post__non_clickhouse_with_credentials__returns_400(
+    admin_client: APIClient,
+    credentials_encryption_keys: list[str],
+    enable_features: EnableFeaturesFixture,
+    warehouse_type: str,
+    config: dict[str, str] | None,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": warehouse_type,
+            "config": config,
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "credentials": ["Only ClickHouse connections accept credentials."]
+    }
+
+
+def test_post__clickhouse_no_name__auto_generates_name(
+    admin_client: APIClient,
+    credentials_encryption_keys: list[str],
+    enable_features: EnableFeaturesFixture,
+    environment: Environment,
+    mocker: MockerFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    mocker.patch("experimentation.services.Client")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "ch.example.com"},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["name"] == f"ClickHouse Warehouse - {environment.name}"
+
+
+def test_post__clickhouse_non_dict_credentials__returns_400(
+    admin_client: APIClient,
+    credentials_encryption_keys: list[str],
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "ch.example.com"},
+            "credentials": "hunter2",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "credentials" in response.json()
+
+
+def test_post__clickhouse_non_dict_config__returns_400(
+    admin_client: APIClient,
+    credentials_encryption_keys: list[str],
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": "not-a-dict",
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "config" in response.json()
+
+
+def test_patch__flagsmith_to_clickhouse_without_credentials__returns_400(
+    admin_client: APIClient,
+    credentials_encryption_keys: list[str],
+    enable_features: EnableFeaturesFixture,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "ch.example.com"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "password" in response.json()["credentials"]
+
+
+def test_post__flagsmith_empty_credentials__returns_400(
+    admin_client: APIClient,
+    credentials_encryption_keys: list[str],
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "flagsmith",
+            "credentials": {},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "credentials": ["Only ClickHouse connections accept credentials."]
+    }

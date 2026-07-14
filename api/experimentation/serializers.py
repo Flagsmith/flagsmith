@@ -1,5 +1,6 @@
 from typing import Any
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import QuerySet
 from rest_framework import serializers
@@ -24,7 +25,10 @@ from experimentation.services import (
     get_experiment_rollout,
 )
 from experimentation.types import (
+    CLICKHOUSE_DEFAULTS,
     SNOWFLAKE_DEFAULTS,
+    ClickHouseConfig,
+    ClickHouseCredentials,
     MetricExperimentResult,
     SnowflakeConfig,
 )
@@ -41,6 +45,9 @@ from features.versioning.dataclasses import MultivariateValueChangeSet
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     name = serializers.CharField(max_length=255, required=False)
     config = serializers.JSONField(default=None, required=False, allow_null=True)
+    credentials = serializers.JSONField(
+        default=None, required=False, allow_null=True, write_only=True
+    )
     total_events_received = serializers.SerializerMethodField()
     unique_events_count = serializers.SerializerMethodField()
 
@@ -52,6 +59,7 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             "status",
             "name",
             "config",
+            "credentials",
             "created_at",
             "total_events_received",
             "unique_events_count",
@@ -64,6 +72,8 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             getattr(self.instance, "warehouse_type", ""),
         )
 
+        self._validate_credentials(attrs, warehouse_type)
+
         if "config" not in attrs and self.instance is not None:
             return attrs
 
@@ -71,6 +81,8 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
 
         if warehouse_type == WarehouseType.SNOWFLAKE:
             attrs["config"] = self._validate_snowflake_config(config or {})
+        elif warehouse_type == WarehouseType.CLICKHOUSE:
+            attrs["config"] = self._validate_clickhouse_config(config or {})
         elif warehouse_type == WarehouseType.FLAGSMITH:
             if config:
                 raise serializers.ValidationError(
@@ -78,6 +90,67 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
                 )
             attrs["config"] = None
         return attrs
+
+    def _validate_credentials(self, attrs: dict[str, Any], warehouse_type: str) -> None:
+        credentials: dict[str, Any] | None = attrs.get("credentials")
+        if warehouse_type != WarehouseType.CLICKHOUSE:
+            if credentials is not None:
+                raise serializers.ValidationError(
+                    {"credentials": "Only ClickHouse connections accept credentials."}
+                )
+            return
+        if not settings.CREDENTIALS_ENCRYPTION_KEYS:
+            raise serializers.ValidationError(
+                {
+                    "credentials": (
+                        "Credentials encryption is not configured on this installation."
+                    )
+                }
+            )
+        if (
+            credentials is None
+            and self.instance is not None
+            and getattr(self.instance, "warehouse_type", "") == WarehouseType.CLICKHOUSE
+        ):
+            attrs.pop("credentials", None)
+            return
+        attrs["credentials"] = self._validate_clickhouse_credentials(credentials or {})
+
+    @staticmethod
+    def _validate_clickhouse_credentials(
+        credentials: dict[str, Any],
+    ) -> ClickHouseCredentials:
+        if not isinstance(credentials, dict):
+            raise serializers.ValidationError({"credentials": "Must be an object."})
+        password = credentials.get("password")
+        if not password or not isinstance(password, str):
+            raise serializers.ValidationError(
+                {"credentials": {"password": "This field is required."}}
+            )
+        return {"password": password}
+
+    @staticmethod
+    def _validate_clickhouse_config(config: dict[str, Any]) -> ClickHouseConfig:
+        if not isinstance(config, dict):
+            raise serializers.ValidationError({"config": "Must be an object."})
+        if not config.get("host"):
+            raise serializers.ValidationError(
+                {"config": {"host": "This field is required."}}
+            )
+        merged: ClickHouseConfig = {
+            **CLICKHOUSE_DEFAULTS,
+            **config,  # type: ignore[typeddict-item]
+        }
+        port = merged["port"]
+        if (
+            isinstance(port, bool)
+            or not isinstance(port, int)
+            or not (1 <= port <= 65535)
+        ):
+            raise serializers.ValidationError(
+                {"config": {"port": "Enter a valid port number (1-65535)."}}
+            )
+        return merged
 
     def create(
         self,
