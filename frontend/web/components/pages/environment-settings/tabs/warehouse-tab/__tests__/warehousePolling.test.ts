@@ -9,8 +9,8 @@ describe('getWarehousePollingInterval', () => {
     expect(getWarehousePollingInterval('connected')).toBe(0)
   })
 
-  it('does not poll for created', () => {
-    expect(getWarehousePollingInterval('created')).toBe(0)
+  it('polls every minute while created', () => {
+    expect(getWarehousePollingInterval('created')).toBe(60000)
   })
 
   it('does not poll for errored', () => {
