@@ -11,6 +11,12 @@ Feature Flags generally have two lifecycles:
 
 Lets go over each type in detail.
 
+:::tip
+
+For the wider context on managing features over time, read [What Is Product Lifecycle Management?](https://www.flagsmith.com/blog/product-lifecycle-management) on our blog.
+
+:::
+
 ## Short-Lived Flags
 
 Short-lived flags are designed to be removed from your code and from Flagsmith at some point in the future. Their typical lifecycle is normally something like:

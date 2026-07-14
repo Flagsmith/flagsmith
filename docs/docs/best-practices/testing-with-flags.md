@@ -6,6 +6,12 @@ sidebar_position: 3
 
 Feature flags are an invaluable tool for testing new functionality in a controlled and safe manner. They allow you to test in production-like environments, release features to specific user groups for beta testing, and run experiments to gather data before a full roll-out.
 
+:::tip
+
+Going deeper on testing strategy? See [Why It's Time to Test in Production](https://www.flagsmith.com/blog/testing-in-production) and [What Is Continuous Testing](https://www.flagsmith.com/blog/continuous-testing) on our blog.
+
+:::
+
 ## Testing in Production
 
 One of the most powerful uses of feature flags is the ability to test new code in your production environment before it's released to all users.

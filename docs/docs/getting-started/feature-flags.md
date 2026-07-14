@@ -6,6 +6,12 @@ sidebar_position: 1
 
 Feature Flags are a development methodology that allow you to ship code and features in your application before they are finished. A feature flag is a control point in your code that determines whether a particular feature or behaviour is active. Flags can be simple on/off (boolean) switches, or multivariate, allowing you to select from multiple options or variants.
 
+:::tip
+
+New to feature flags? Our blog post [Feature Flags in DevOps: What They Are, Why You Need Them](https://www.flagsmith.com/blog/what-are-feature-flags-in-devops) covers the concept and its benefits in more depth.
+
+:::
+
 ### What do Feature Flags enable?
 
 - **Decouple deployment from release:** Ship code to production with features hidden behind flags, then enable them for users when ready.

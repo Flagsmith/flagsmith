@@ -8,6 +8,12 @@ sidebar_position: 2
 
 This method increases confidence in rolling out a new feature. If issues arise, you can disable the feature flag, thus hiding the feature flag within your application.
 
+:::tip
+
+Planning a staged rollout strategy? Our blog explains [canary deployments](https://www.flagsmith.com/blog/canary-deployment) and [progressive delivery](https://www.flagsmith.com/blog/progressive-delivery) in more depth.
+
+:::
+
 ## Prerequisites
 
 :::important

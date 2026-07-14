@@ -6,6 +6,12 @@ sidebar_position: 8
 
 One of the first decisions you'll make when adopting Flagsmith is how to structure your projects. This guide helps you answer the question: **"How do I logically separate my teams, services and microservices into different projects?"**
 
+:::tip
+
+Scaling feature flags across a larger or regulated organisation? Our free e-book [Scaling Feature Flags: A Roadmap for Safer Releases & Faster Development](https://www.flagsmith.com/ebook/scaling-feature-flags-a-roadmap) covers structuring and governance as you grow.
+
+:::
+
 ## Understanding Flagsmith's data model
 
 Before diving into recommendations, it's helpful to understand how Flagsmith organises your feature flags:

@@ -6,6 +6,12 @@ sidebar_position: 2
 
 Feature Flags are a powerful tool for modern software development. They allow teams to modify system behaviour without changing code and deploying new versions. But when exactly should you use them? This guide covers the common use cases for feature flags.
 
+:::tip
+
+New to feature flags? Our free e-book [Flip the Switch on Modern Software Development with Feature Flags](https://www.flagsmith.com/ebook/flip-the-switch-on-modern-software-development-with-feature-flags) is a good primer on where and why to use them.
+
+:::
+
 ## Decouple Deployment from Release
 
 The most common reason to use feature flags is to separate the act of deploying code to production from the act of releasing a feature to users.

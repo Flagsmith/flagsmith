@@ -8,6 +8,12 @@ sidebar_label: Targeting & Rollouts
 
 Flagsmith provides powerful targeting and rollout capabilities to help you deliver features safely, progressively, and with maximum control. This page explains the concepts and available operations for targeting and rollouts.
 
+:::tip
+
+Choosing a rollout strategy? Our blog compares [8 deployment strategies](https://www.flagsmith.com/blog/deployment-strategies) and walks through the [ring deployment model](https://www.flagsmith.com/blog/ring-deployment).
+
+:::
+
 ## What is Targeting?
 
 **Targeting** is the practice of controlling feature flag states for specific users or groups, rather than for all users at once. This enables you to:

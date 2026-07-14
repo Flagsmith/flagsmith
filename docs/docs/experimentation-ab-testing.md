@@ -6,6 +6,12 @@ sidebar_position: 4
 
 A/B testing enables you to experiment with design and functionality variants of your application. The data generated will allow you to make modifications to your app, safe in the knowledge that it will have a net positive effect.
 
+:::tip
+
+Want the bigger picture? [A/B Testing with Feature Flags and Your Existing Stack](https://www.flagsmith.com/blog/get-the-analytics-you-need-a-b-testing-with-feature-flags-and-your-existing-stack) and [Introducing Multivariate Flags](https://www.flagsmith.com/blog/introducing-multivariate-flags) cover the strategy behind these tests.
+
+:::
+
 You can use Flagsmith to perform A/B tests. Using a combination of [multivariate flags](/managing-flags/core-management) and a 3rd party analytics tool like [Amplitude](https://amplitude.com/) or [Mixpanel](https://mixpanel.com/), you can easily perform complex A/B tests that will help improve your product.
 
 Running A/B tests require two main components: a bucketing engine and an analytics platform. The bucketing engine is used to put users into a particular A/B testing bucket. These buckets will control the specific user experience that is being tested. The analytics platform will receive a stream of event data derived from the behaviour of the user. Combining these two concepts allows you to deliver seamless A/B test.

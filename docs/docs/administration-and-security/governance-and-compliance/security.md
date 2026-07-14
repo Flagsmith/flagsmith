@@ -4,6 +4,12 @@ sidebar_label: Security
 sidebar_position: 40
 ---
 
+:::tip
+
+Working in a regulated industry? Our free e-book [Modern Development Practices in Banking: A Playbook](https://www.flagsmith.com/ebook/modern-development-practices-in-banking-a-playbook) covers governance and compliance patterns for feature management.
+
+:::
+
 ## Preventing Client SDKS from setting Traits
 
 There may be use-cases where you want to prevent client-side SDKs from setting traits of users. For example, if you are
