@@ -34,6 +34,12 @@
       "matchFileNames": [".github/**"],
       "addLabels": ["ci", "dependencies"],
       "semanticCommitScope": "CI"
+    },
+    {
+      "description": "Eagerly bump internal Flagsmith packages on every release",
+      "matchPackageNames": ["flagsmith-common", "flagsmith-private"],
+      "enabled": true,
+      "rangeStrategy": "bump"
     }
   ],
   "semanticCommitScope": ""
