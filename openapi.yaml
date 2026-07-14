@@ -19678,6 +19678,9 @@ components:
           minimum: 0
         multivariate_feature_option:
           type: integer
+        key:
+          type: string
+          pattern: '^[-a-zA-Z0-9_]+$'
         value:
           $ref: '#/components/schemas/FeatureValue'
       required:
@@ -20187,7 +20190,7 @@ components:
         multivariate_feature_state_values:
           type: array
           items:
-            $ref: '#/components/schemas/SegmentOverrideMultivariateValue'
+            $ref: '#/components/schemas/RolloutMultivariateValue'
       required:
         - enabled
         - feature_state_value
@@ -25858,6 +25861,19 @@ components:
       required:
         - permissions
         - project
+    RolloutMultivariateValue:
+      type: object
+      properties:
+        multivariate_feature_option:
+          type: integer
+        percentage_allocation:
+          type: number
+          format: double
+          maximum: 100
+          minimum: 0
+      required:
+        - multivariate_feature_option
+        - percentage_allocation
     RudderstackConfiguration:
       type: object
       properties:
@@ -26248,10 +26264,12 @@ components:
           minimum: 0
         multivariate_feature_option:
           type: integer
+        key:
+          type: string
+          pattern: '^[-a-zA-Z0-9_]+$'
         value:
           $ref: '#/components/schemas/FeatureValue'
       required:
-        - multivariate_feature_option
         - percentage_allocation
     SegmentReference:
       type: object

@@ -26,6 +26,11 @@ def mv_option_value():  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
+def mv_option_key() -> str:
+    return "test-mv-key"
+
+
+@pytest.fixture()
 def django_client():  # type: ignore[no-untyped-def]
     return DjangoClient()
 
@@ -304,9 +309,11 @@ def feature_2(admin_client, project, default_feature_value, feature_2_name):  # 
 
 
 @pytest.fixture()
-def mv_option_50_percent(project, admin_client, feature, mv_option_value):  # type: ignore[no-untyped-def]
+def mv_option_50_percent(  # type: ignore[no-untyped-def]
+    project, admin_client, feature, mv_option_value, mv_option_key
+):
     return create_mv_option_with_api(
-        admin_client, project, feature, 50, mv_option_value
+        admin_client, project, feature, 50, mv_option_value, key=mv_option_key
     )
 
 

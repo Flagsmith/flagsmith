@@ -1,10 +1,11 @@
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import TypeVar, cast
 
 from rest_framework import serializers
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
+from features.constants import CONTROL_VARIANT_KEY, RESERVED_VARIANT_KEY_MESSAGE
 from features.feature_states.types import (
     DeleteSegmentOverridePayload,
     EnvironmentDefaultPayload,
@@ -25,9 +26,12 @@ from features.versioning.dataclasses import (
     FeatureValue,
     FlagChangeSetOptionA,
     FlagChangeSetOptionB,
+    KeyedMultivariateOptionChangeSet,
+    MultivariateKeyValueChangeSet,
     MultivariateOptionUpdateChangeSet,
     MultivariateValueChangeSet,
     NewMultivariateOptionChangeSet,
+    SegmentMultivariateValueChangeSet,
     SegmentOverrideChangeSet,
 )
 from features.versioning.versioning_service import (
@@ -120,32 +124,59 @@ class BaseMultivariateValueSerializer(serializers.Serializer[_IN]):
     percentage_allocation = serializers.FloatField(
         required=True, min_value=0, max_value=100
     )
+    multivariate_feature_option = serializers.IntegerField(required=False)
+    key = serializers.SlugField(required=False)
+
+    def validate_key(self, value: str) -> str:
+        if value == CONTROL_VARIANT_KEY:
+            raise serializers.ValidationError(RESERVED_VARIANT_KEY_MESSAGE)
+        return value
+
+
+def _validate_single_variant_identifier(attrs: Mapping[str, object]) -> None:
+    if "multivariate_feature_option" in attrs and "key" in attrs:
+        raise serializers.ValidationError(
+            "Provide either 'multivariate_feature_option' or 'key', not both"
+        )
 
 
 class SegmentOverrideMultivariateValueSerializer(
     BaseMultivariateValueSerializer[SegmentOverrideMultivariateValuePayload]
 ):
-    multivariate_feature_option = serializers.IntegerField(required=True)
     value = FeatureValueSerializer(required=False)  # Raises ValidationError if provided
+
+    def validate(
+        self, attrs: SegmentOverrideMultivariateValuePayload
+    ) -> SegmentOverrideMultivariateValuePayload:
+        _validate_single_variant_identifier(attrs)
+        if "multivariate_feature_option" not in attrs and "key" not in attrs:
+            raise serializers.ValidationError(
+                "Segment overrides require a variant 'id' or 'key'."
+            )
+        return attrs
 
 
 class EnvironmentMultivariateValueSerializer(
     BaseMultivariateValueSerializer[EnvironmentMultivariateValuePayload]
 ):
-    multivariate_feature_option = serializers.IntegerField(required=False)
     value = FeatureValueSerializer(required=False)
 
     def validate(
         self, attrs: EnvironmentMultivariateValuePayload
     ) -> EnvironmentMultivariateValuePayload:
-        if "multivariate_feature_option" not in attrs and "value" not in attrs:
+        _validate_single_variant_identifier(attrs)
+        if (
+            "multivariate_feature_option" not in attrs
+            and "key" not in attrs
+            and "value" not in attrs
+        ):
             raise serializers.ValidationError(
                 "A new multivariate option requires a 'value'."
             )
         return attrs
 
 
-def validate_multivariate_state_values(
+def _validate_multivariate_option_references(
     feature: Feature,
     multivariate_values: Sequence[
         EnvironmentMultivariateValuePayload | SegmentOverrideMultivariateValuePayload
@@ -156,9 +187,21 @@ def validate_multivariate_state_values(
         for mv in multivariate_values
         if "multivariate_feature_option" in mv
     ]
-    if not option_ids:
+    keys = [mv["key"] for mv in multivariate_values if "key" in mv]
+    if not option_ids and not keys:
         return
-    if len(option_ids) != len(set(option_ids)):
+    option_key_by_id: dict[int, str | None] = dict(
+        feature.multivariate_options.values_list("id", "key")
+    )
+    option_id_by_key = {
+        key: option_id for option_id, key in option_key_by_id.items() if key is not None
+    }
+    referenced_option_ids = option_ids + [
+        option_id_by_key[key] for key in keys if key in option_id_by_key
+    ]
+    if len(keys) != len(set(keys)) or len(referenced_option_ids) != len(
+        set(referenced_option_ids)
+    ):
         raise serializers.ValidationError(
             {
                 "multivariate_feature_state_values": [
@@ -166,12 +209,96 @@ def validate_multivariate_state_values(
                 ]
             }
         )
-    valid = set(feature.multivariate_options.values_list("id", flat=True))
-    if invalid := set(option_ids) - valid:
+    if invalid := set(option_ids) - option_key_by_id.keys():
         raise serializers.ValidationError(
             {
                 "multivariate_feature_state_values": [
                     f"Multivariate options {sorted(invalid)} do not belong to the feature"
+                ]
+            }
+        )
+
+
+def _validate_multivariate_keys_exist(
+    feature: Feature,
+    multivariate_values: Sequence[
+        EnvironmentMultivariateValuePayload | SegmentOverrideMultivariateValuePayload
+    ],
+) -> None:
+    keys = {mv["key"] for mv in multivariate_values if "key" in mv}
+    if not keys:
+        return
+    existing_keys = set(
+        feature.multivariate_options.filter(key__in=keys).values_list("key", flat=True)
+    )
+    if unknown_keys := keys - existing_keys:
+        raise serializers.ValidationError(
+            {
+                "multivariate_feature_state_values": [
+                    f"Multivariate keys {sorted(unknown_keys)} do not belong to the feature"
+                ]
+            }
+        )
+
+
+def _validate_overrides_reweight_environment_options(
+    feature: Feature,
+    environment_multivariate_values: Sequence[EnvironmentMultivariateValuePayload],
+    override_multivariate_value_lists: Sequence[
+        Sequence[SegmentOverrideMultivariateValuePayload]
+    ],
+) -> None:
+    option_id_by_key: dict[str, int] = {
+        key: option_id
+        for key, option_id in feature.multivariate_options.filter(
+            key__isnull=False
+        ).values_list("key", "id")
+        if key is not None
+    }
+    allowed_keys = {mv["key"] for mv in environment_multivariate_values if "key" in mv}
+    allowed_option_ids = {
+        mv["multivariate_feature_option"]
+        for mv in environment_multivariate_values
+        if "multivariate_feature_option" in mv
+    } | {option_id_by_key[key] for key in allowed_keys if key in option_id_by_key}
+    for multivariate_values in override_multivariate_value_lists:
+        for mv in multivariate_values:
+            if "multivariate_feature_option" in mv:
+                allowed = mv["multivariate_feature_option"] in allowed_option_ids
+            else:
+                allowed = (
+                    mv["key"] in allowed_keys
+                    or option_id_by_key.get(mv["key"]) in allowed_option_ids
+                )
+            if not allowed:
+                raise serializers.ValidationError(
+                    {
+                        "multivariate_feature_state_values": [
+                            "Segment overrides can only re-weight existing variants."
+                        ]
+                    }
+                )
+
+
+def _validate_new_keyed_options_have_values(
+    feature: Feature,
+    multivariate_values: Sequence[EnvironmentMultivariateValuePayload],
+) -> None:
+    keys_without_value = {
+        mv["key"] for mv in multivariate_values if "key" in mv and "value" not in mv
+    }
+    if not keys_without_value:
+        return
+    existing_keys = set(
+        feature.multivariate_options.filter(key__in=keys_without_value).values_list(
+            "key", flat=True
+        )
+    )
+    if keys_without_value - existing_keys:
+        raise serializers.ValidationError(
+            {
+                "multivariate_feature_state_values": [
+                    "A new multivariate option requires a 'value'."
                 ]
             }
         )
@@ -186,6 +313,17 @@ def _to_environment_multivariate_value_change_set(
             multivariate_feature_option_id=multivariate_value[
                 "multivariate_feature_option"
             ],
+            percentage_allocation=multivariate_value["percentage_allocation"],
+            value=(
+                FeatureValue(type_=value["type"], value=value["value"])
+                if value is not None
+                else None
+            ),
+        )
+    if "key" in multivariate_value:
+        value = multivariate_value.get("value")
+        return KeyedMultivariateOptionChangeSet(
+            key=multivariate_value["key"],
             percentage_allocation=multivariate_value["percentage_allocation"],
             value=(
                 FeatureValue(type_=value["type"], value=value["value"])
@@ -222,12 +360,13 @@ class UpdateFlagOptionASerializer(BaseFeatureUpdateSerializer[FeatureState]):
 
         if "segment" in attrs:
             if any(
-                "multivariate_feature_option" not in mv for mv in multivariate_values
+                "multivariate_feature_option" not in mv and "key" not in mv
+                for mv in multivariate_values
             ):
                 raise serializers.ValidationError(
                     {
                         "multivariate_feature_state_values": [
-                            "Segment overrides require a variant 'id'."
+                            "Segment overrides require a variant 'id' or 'key'."
                         ]
                     }
                 )
@@ -254,7 +393,11 @@ class UpdateFlagOptionASerializer(BaseFeatureUpdateSerializer[FeatureState]):
             )
         except Feature.DoesNotExist:
             return attrs
-        validate_multivariate_state_values(feature, multivariate_values)
+        if "segment" in attrs:
+            _validate_multivariate_keys_exist(feature, multivariate_values)
+        else:
+            _validate_new_keyed_options_have_values(feature, multivariate_values)
+        _validate_multivariate_option_references(feature, multivariate_values)
 
         return attrs
 
@@ -265,7 +408,9 @@ class UpdateFlagOptionASerializer(BaseFeatureUpdateSerializer[FeatureState]):
         segment_data = validated_data.get("segment")
         multivariate_values = validated_data.get("multivariate_feature_state_values")
 
-        segment_multivariate_values: list[MultivariateValueChangeSet] | None = None
+        segment_multivariate_values: list[SegmentMultivariateValueChangeSet] | None = (
+            None
+        )
         environment_multivariate_values: (
             list[EnvironmentMultivariateValueChangeSet] | None
         ) = None
@@ -278,8 +423,12 @@ class UpdateFlagOptionASerializer(BaseFeatureUpdateSerializer[FeatureState]):
                         ],
                         percentage_allocation=mv["percentage_allocation"],
                     )
-                    for mv in multivariate_values
                     if "multivariate_feature_option" in mv
+                    else MultivariateKeyValueChangeSet(
+                        key=mv["key"],
+                        percentage_allocation=mv["percentage_allocation"],
+                    )
+                    for mv in multivariate_values
                 ]
             else:
                 environment_multivariate_values = [
@@ -350,55 +499,18 @@ class UpdateFlagOptionBSerializer(BaseFeatureUpdateSerializer[None]):
 
         return value
 
-    def validate(self, attrs: UpdateFlagOptionBPayload) -> UpdateFlagOptionBPayload:
+    @staticmethod
+    def _collect_override_multivariate_values(
+        overrides: Sequence[SegmentOverridePayload],
+    ) -> list[Sequence[SegmentOverrideMultivariateValuePayload]]:
         multivariate_value_lists: list[
-            Sequence[
-                EnvironmentMultivariateValuePayload
-                | SegmentOverrideMultivariateValuePayload
-            ]
+            Sequence[SegmentOverrideMultivariateValuePayload]
         ] = []
-
-        environment_option_ids: set[int] | None = None
-        if (environment_default := attrs.get("environment_default")) is not None:
-            environment_default_multivariate_values = environment_default.get(
-                "multivariate_feature_state_values"
-            )
-            if environment_default_multivariate_values is not None:
-                if (
-                    sum(
-                        mv["percentage_allocation"]
-                        for mv in environment_default_multivariate_values
-                    )
-                    > 100
-                ):
-                    raise serializers.ValidationError(
-                        {
-                            "multivariate_feature_state_values": [
-                                "Multivariate percentage values exceed 100%."
-                            ]
-                        }
-                    )
-                environment_option_ids = {
-                    mv["multivariate_feature_option"]
-                    for mv in environment_default_multivariate_values
-                    if "multivariate_feature_option" in mv
-                }
-                multivariate_value_lists.append(environment_default_multivariate_values)
-
-        for override in attrs.get("segment_overrides") or []:
-            override_multivariate_values = override.get(
-                "multivariate_feature_state_values"
-            )
-            if override_multivariate_values is None:
+        for override in overrides:
+            multivariate_values = override.get("multivariate_feature_state_values")
+            if multivariate_values is None:
                 continue
-            if any("value" in mv for mv in override_multivariate_values) or (
-                # The environment list is absolute: it deletes unlisted options.
-                environment_option_ids is not None
-                and any(
-                    mv["multivariate_feature_option"] not in environment_option_ids
-                    for mv in override_multivariate_values
-                )
-            ):
+            if any("value" in mv for mv in multivariate_values):
                 raise serializers.ValidationError(
                     {
                         "multivariate_feature_state_values": [
@@ -406,9 +518,40 @@ class UpdateFlagOptionBSerializer(BaseFeatureUpdateSerializer[None]):
                         ]
                     }
                 )
-            multivariate_value_lists.append(override_multivariate_values)
+            multivariate_value_lists.append(multivariate_values)
+        return multivariate_value_lists
 
-        if not multivariate_value_lists:
+    def validate(self, attrs: UpdateFlagOptionBPayload) -> UpdateFlagOptionBPayload:
+        environment_multivariate_values: (
+            Sequence[EnvironmentMultivariateValuePayload] | None
+        ) = None
+        if (environment_default := attrs.get("environment_default")) is not None:
+            environment_multivariate_values = environment_default.get(
+                "multivariate_feature_state_values"
+            )
+            if environment_multivariate_values is not None and (
+                sum(
+                    mv["percentage_allocation"]
+                    for mv in environment_multivariate_values
+                )
+                > 100
+            ):
+                raise serializers.ValidationError(
+                    {
+                        "multivariate_feature_state_values": [
+                            "Multivariate percentage values exceed 100%."
+                        ]
+                    }
+                )
+
+        override_multivariate_value_lists = self._collect_override_multivariate_values(
+            attrs.get("segment_overrides") or []
+        )
+
+        if (
+            environment_multivariate_values is None
+            and not override_multivariate_value_lists
+        ):
             return attrs
 
         try:
@@ -417,8 +560,23 @@ class UpdateFlagOptionBSerializer(BaseFeatureUpdateSerializer[None]):
             )
         except Feature.DoesNotExist:
             return attrs
-        for multivariate_values in multivariate_value_lists:
-            validate_multivariate_state_values(feature, multivariate_values)
+        if environment_multivariate_values is not None:
+            _validate_new_keyed_options_have_values(
+                feature, environment_multivariate_values
+            )
+            _validate_multivariate_option_references(
+                feature, environment_multivariate_values
+            )
+            _validate_overrides_reweight_environment_options(
+                feature,
+                environment_multivariate_values,
+                override_multivariate_value_lists,
+            )
+        else:
+            for multivariate_values in override_multivariate_value_lists:
+                _validate_multivariate_keys_exist(feature, multivariate_values)
+        for multivariate_values in override_multivariate_value_lists:
+            _validate_multivariate_option_references(feature, multivariate_values)
 
         return attrs
 
@@ -475,6 +633,11 @@ class UpdateFlagOptionBSerializer(BaseFeatureUpdateSerializer[None]):
                                 multivariate_feature_option_id=mv[
                                     "multivariate_feature_option"
                                 ],
+                                percentage_allocation=mv["percentage_allocation"],
+                            )
+                            if "multivariate_feature_option" in mv
+                            else MultivariateKeyValueChangeSet(
+                                key=mv["key"],
                                 percentage_allocation=mv["percentage_allocation"],
                             )
                             for mv in override_multivariate_data

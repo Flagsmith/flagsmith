@@ -595,6 +595,7 @@ def test_edge_identities_update_mv_featurestate__new_allocation__updates_documen
     feature: Feature,
     mv_option_50_percent: MultivariateFeatureOption,
     mv_option_value: str,
+    mv_option_key: str,
     webhook_mock: mock.MagicMock,
     flagsmith_identities_table: Table,
 ):
@@ -661,7 +662,7 @@ def test_edge_identities_update_mv_featurestate__new_allocation__updates_documen
             "multivariate_feature_option": {
                 "id": mv_option_50_percent,
                 "value": mv_option_value,
-                "key": None,
+                "key": mv_option_key,
             },
             "mv_fs_value_uuid": mock.ANY,
         }

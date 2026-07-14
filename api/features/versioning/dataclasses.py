@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TypeAlias
@@ -35,7 +36,7 @@ class FlagChangeSetOptionA:
 
     segment_id: int | None = None
     segment_priority: int | None = None
-    multivariate_values: list[MultivariateValueChangeSet] | None = None
+    multivariate_values: Sequence[SegmentMultivariateValueChangeSet] | None = None
     environment_multivariate_values: (
         list[EnvironmentMultivariateValueChangeSet] | None
     ) = None
@@ -48,9 +49,27 @@ class MultivariateValueChangeSet:
 
 
 @dataclass
+class MultivariateKeyValueChangeSet:
+    key: str
+    percentage_allocation: float
+
+
+SegmentMultivariateValueChangeSet: TypeAlias = (
+    MultivariateValueChangeSet | MultivariateKeyValueChangeSet
+)
+
+
+@dataclass
 class NewMultivariateOptionChangeSet:
     percentage_allocation: float
     value: FeatureValue
+
+
+@dataclass
+class KeyedMultivariateOptionChangeSet:
+    key: str
+    percentage_allocation: float
+    value: FeatureValue | None = None
 
 
 @dataclass
@@ -61,7 +80,9 @@ class MultivariateOptionUpdateChangeSet:
 
 
 EnvironmentMultivariateValueChangeSet: TypeAlias = (
-    NewMultivariateOptionChangeSet | MultivariateOptionUpdateChangeSet
+    NewMultivariateOptionChangeSet
+    | KeyedMultivariateOptionChangeSet
+    | MultivariateOptionUpdateChangeSet
 )
 
 
@@ -71,7 +92,7 @@ class SegmentOverrideChangeSet:
     enabled: bool | None = None
     value: FeatureValue | None = None
     priority: int | None = None
-    multivariate_values: list[MultivariateValueChangeSet] | None = None
+    multivariate_values: Sequence[SegmentMultivariateValueChangeSet] | None = None
 
 
 @dataclass

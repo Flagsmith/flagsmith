@@ -4582,7 +4582,7 @@
           "multivariate_feature_state_values": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/SegmentOverrideMultivariateValue"
+              "$ref": "#/components/schemas/RolloutMultivariateValue"
             }
           }
         },
@@ -6799,6 +6799,24 @@
           "USER"
         ]
       },
+      "RolloutMultivariateValue": {
+        "type": "object",
+        "properties": {
+          "multivariate_feature_option": {
+            "type": "integer"
+          },
+          "percentage_allocation": {
+            "type": "number",
+            "format": "double",
+            "maximum": 100,
+            "minimum": 0
+          }
+        },
+        "required": [
+          "multivariate_feature_option",
+          "percentage_allocation"
+        ]
+      },
       "Segment": {
         "description": "Functionality for serializers that need to handle metadata",
         "type": "object",
@@ -6896,27 +6914,6 @@
             "readOnly": true
           }
         }
-      },
-      "SegmentOverrideMultivariateValue": {
-        "type": "object",
-        "properties": {
-          "percentage_allocation": {
-            "type": "number",
-            "format": "double",
-            "maximum": 100,
-            "minimum": 0
-          },
-          "multivariate_feature_option": {
-            "type": "integer"
-          },
-          "value": {
-            "$ref": "#/components/schemas/FeatureValue"
-          }
-        },
-        "required": [
-          "multivariate_feature_option",
-          "percentage_allocation"
-        ]
       },
       "SegmentRule": {
         "description": "Adds nested create feature",

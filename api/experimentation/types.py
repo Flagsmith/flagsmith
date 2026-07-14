@@ -3,6 +3,11 @@ from typing import Literal, TypedDict
 ExposureGranularity = Literal["hour", "day"]
 
 
+class RolloutMultivariateValuePayload(TypedDict):
+    multivariate_feature_option: int
+    percentage_allocation: float
+
+
 class MetricDefinitionV1(TypedDict):
     """The recipe a metric is computed from.
 
