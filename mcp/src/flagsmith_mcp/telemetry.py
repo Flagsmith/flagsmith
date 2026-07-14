@@ -50,6 +50,7 @@ def setup_telemetry(settings: config.Settings) -> None:
         log_provider = build_otel_log_provider(
             endpoint=f"{endpoint}/v1/logs",
             service_name=settings.otel_service_name,
+            protocol="http/protobuf",
         )
         otel_processors = [
             add_otel_trace_context,
@@ -58,6 +59,7 @@ def setup_telemetry(settings: config.Settings) -> None:
         tracer_provider = build_tracer_provider(
             endpoint=f"{endpoint}/v1/traces",
             service_name=settings.otel_service_name,
+            protocol="http/protobuf",
         )
     else:
         # No exporter: spans stay in-process, but still feed the API

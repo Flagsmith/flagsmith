@@ -77,10 +77,12 @@ def test_setup_telemetry__otlp_endpoint__exports_logs_and_traces(
     build_otel_log_provider_mock.assert_called_once_with(
         endpoint="http://collector:4318/v1/logs",
         service_name="flagsmith-mcp-test",
+        protocol="http/protobuf",
     )
     build_tracer_provider_mock.assert_called_once_with(
         endpoint="http://collector:4318/v1/traces",
         service_name="flagsmith-mcp-test",
+        protocol="http/protobuf",
     )
     make_structlog_otel_processor_mock.assert_called_once_with(
         build_otel_log_provider_mock.return_value
