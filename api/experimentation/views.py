@@ -62,6 +62,7 @@ from experimentation.services import (
     mark_warehouse_pending_connection,
     refresh_warehouse_connection_status,
     transition_experiment_status,
+    verify_clickhouse_connection,
 )
 from experimentation.tasks import (
     compute_experiment_exposures,
@@ -96,12 +97,19 @@ class WarehouseConnectionViewSet(
         create_warehouse_audit_log(
             connection, self._get_user(self.request), action="created"
         )
+        if connection.warehouse_type == WarehouseType.CLICKHOUSE:
+            verify_clickhouse_connection(connection)
 
     def perform_update(self, serializer: BaseSerializer[WarehouseConnection]) -> None:
         connection: WarehouseConnection = serializer.save()
         create_warehouse_audit_log(
             connection, self._get_user(self.request), action="updated"
         )
+        if connection.warehouse_type == WarehouseType.CLICKHOUSE and (
+            "config" in serializer.validated_data
+            or "credentials" in serializer.validated_data
+        ):
+            verify_clickhouse_connection(connection)
 
     def perform_destroy(self, instance: WarehouseConnection) -> None:
         create_warehouse_audit_log(
@@ -130,6 +138,9 @@ class WarehouseConnectionViewSet(
     @action(detail=True, methods=["post"], url_path="test-warehouse-connection")
     def test_warehouse_connection(self, request: Request, **kwargs: object) -> Response:
         connection: WarehouseConnection = self.get_object()
+        if connection.warehouse_type == WarehouseType.CLICKHOUSE:
+            verify_clickhouse_connection(connection)
+            return Response(self.get_serializer(connection).data)
         if connection.warehouse_type != WarehouseType.FLAGSMITH:
             return Response(
                 {"detail": "Test events are only supported for Flagsmith warehouses."},

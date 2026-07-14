@@ -74,6 +74,13 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
 
         self._validate_credentials(attrs, warehouse_type)
 
+        if (
+            warehouse_type != WarehouseType.CLICKHOUSE
+            and self.instance is not None
+            and getattr(self.instance, "credentials", None) is not None
+        ):
+            attrs["credentials"] = None
+
         if "config" not in attrs and self.instance is not None:
             return attrs
 

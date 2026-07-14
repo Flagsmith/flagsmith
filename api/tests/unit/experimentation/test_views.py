@@ -1,4 +1,5 @@
 import pytest
+from django.db import connection as django_db_connection
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -1437,3 +1438,219 @@ def test_post__flagsmith_empty_credentials__returns_400(
     assert response.json() == {
         "credentials": ["Only ClickHouse connections accept credentials."]
     }
+
+
+def test_post__clickhouse_reachable__returns_201_connected(
+    admin_client: APIClient,
+    credentials_encryption_keys: list[str],
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    mock_client = mocker.patch("experimentation.services.Client")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "name": "Production ClickHouse",
+            "config": {"host": "ch.example.com"},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["status"] == "connected"
+    assert "credentials" not in response.json()
+    mock_client.return_value.execute.assert_called_once_with("SELECT 1")
+
+
+def test_post__clickhouse_unreachable__returns_201_errored(
+    admin_client: APIClient,
+    credentials_encryption_keys: list[str],
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    mock_client = mocker.patch("experimentation.services.Client")
+    mock_client.return_value.execute.side_effect = Exception("unreachable")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "ch.example.com"},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["status"] == "errored"
+
+
+def test_post__clickhouse__password_stored_encrypted(
+    admin_client: APIClient,
+    credentials_encryption_keys: list[str],
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    mocker.patch("experimentation.services.Client")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "ch.example.com"},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    with django_db_connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT credentials FROM experimentation_warehouseconnection WHERE id = %s",
+            [response.json()["id"]],
+        )
+        raw = cursor.fetchone()[0]
+    assert "hunter2" not in raw
+
+
+def test_get__clickhouse__credentials_not_in_response(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+
+    # When
+    response = admin_client.get(warehouse_connection_url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    (data,) = response.json()
+    assert "credentials" not in data
+    assert "password" not in str(data)
+
+
+def test_patch__clickhouse_config_without_credentials__keeps_stored_password(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    enable_features: EnableFeaturesFixture,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    mock_client = mocker.patch("experimentation.services.Client")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"config": {"host": "ch.example.com", "port": 9000}},
+        format="json",
+    )
+
+    # Then: re-verified with the stored password
+    assert response.status_code == status.HTTP_200_OK
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.credentials == {"password": "hunter2"}
+    assert mock_client.call_args.kwargs["password"] == "hunter2"
+    assert mock_client.call_args.kwargs["port"] == 9000
+
+
+def test_patch__clickhouse_name_only__does_not_reverify(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    enable_features: EnableFeaturesFixture,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    mock_client = mocker.patch("experimentation.services.Client")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(url, data={"name": "Renamed"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_client.assert_not_called()
+
+
+def test_test_warehouse_connection__clickhouse__reverifies_and_returns_status(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    enable_features: EnableFeaturesFixture,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given: a previously errored connection whose warehouse is now reachable
+    enable_features("experimentation_warehouse_connection")
+    clickhouse_connection.status = WarehouseConnectionStatus.ERRORED
+    clickhouse_connection.save()
+    mocker.patch("experimentation.services.Client")
+    url = reverse(
+        "api-v1:environments:experimentation:"
+        "warehouse-connections-test-warehouse-connection",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.post(url, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["status"] == "connected"
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
+
+
+def test_patch__clickhouse_to_flagsmith__clears_stored_credentials(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    enable_features: EnableFeaturesFixture,
+    environment: Environment,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"warehouse_type": "flagsmith"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.credentials is None
