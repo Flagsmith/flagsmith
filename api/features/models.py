@@ -799,8 +799,7 @@ class FeatureState(
                 identity__isnull=True,
             )
             .exclude(id=self.id)
-            # Mirror __gt__: among live states, the latest live_from wins, with
-            # version as the tie-break.
+            # Match __gt__'s precedence: latest live_from wins, version breaks ties.
             .order_by("-live_from", "-version")
             .first()
         )
