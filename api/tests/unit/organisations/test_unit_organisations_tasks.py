@@ -498,6 +498,38 @@ def test_handle_api_usage_notifications__usage_below_100_percent__sends_90_perce
         },
     )
 
+    assert email.from_email == "noreply@flagsmith.com"
+    # Only admin because threshold is under 100.
+    assert email.to == ["admin@example.com"]
+
+    assert (
+        OrganisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 1
+    )
+    api_usage_notification = OrganisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+    ).first()
+
+    assert api_usage_notification.percent_usage == 90  # type: ignore[union-attr]
+
+    # Now re-run the usage to make sure the notification isn't resent.
+    handle_api_usage_notifications()
+
+    assert (
+        OrganisationAPIUsageNotification.objects.filter(
+            organisation=organisation,
+        ).count()
+        == 1
+    )
+    assert (
+        OrganisationAPIUsageNotification.objects.filter(
+            organisation=organisation
+        ).first()
+        == api_usage_notification
+    )
+
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_handle_api_usage_notifications__stale_cache_lower_than_subscription_limit__sends_no_email(
@@ -615,6 +647,7 @@ def test_handle_api_usage_notifications__usage_above_100_percent__sends_limit_no
     now = timezone.now()
     organisation.subscription.plan = SCALE_UP
     organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.max_api_calls = allowance
     organisation.subscription.save()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
@@ -758,6 +791,8 @@ def test_handle_api_usage_notifications__free_account_over_limit__sends_limit_no
     assert organisation.is_paid is False
     assert organisation.subscription.is_free_plan is True
     assert organisation.subscription.max_api_calls == MAX_API_CALLS_IN_FREE_PLAN
+    organisation.subscription.max_api_calls = MAX_API_CALLS_IN_FREE_PLAN
+    organisation.subscription.save()
 
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
