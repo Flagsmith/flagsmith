@@ -642,11 +642,6 @@ def _reset_default_allocations_to_control(
     Run once, when the rollout segment is first created: identities outside the
     rollout cohort should all receive control while the experiment runs.
     """
-    option_ids = list(
-        experiment.feature.multivariate_options.values_list("id", flat=True)
-    )
-    if not option_ids:
-        return
     default_state = FeatureState.objects.get_live_feature_states(
         environment=experiment.environment,
         additional_filters=Q(feature_segment__isnull=True, identity__isnull=True),
@@ -668,7 +663,9 @@ def _reset_default_allocations_to_control(
                     multivariate_feature_option_id=option_id,
                     percentage_allocation=0,
                 )
-                for option_id in option_ids
+                for option_id in experiment.feature.multivariate_options.values_list(
+                    "id", flat=True
+                )
             ],
         ),
     )
