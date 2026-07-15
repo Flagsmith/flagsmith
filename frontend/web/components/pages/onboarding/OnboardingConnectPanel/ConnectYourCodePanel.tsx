@@ -15,7 +15,7 @@ const PACKAGE_MANAGERS: PackageManager[] = ['npm', 'yarn']
 const SdkBadge: FC<{ lang: SdkLang }> = ({ lang }) => {
   const Logo = lang.logo
   return (
-    <Chip variant='accent' className='font-weight-semibold'>
+    <Chip variant='accent' className='font-weight-medium'>
       <Logo />
       {lang.label}
     </Chip>
