@@ -354,13 +354,16 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
                 placeholder="e.g. 'big' "
               />
             }
-            tooltip={`${Constants.strings.REMOTE_CONFIG_DESCRIPTION}${
-              !isEdit
-                ? '<br/>Setting this when creating a feature will set the value for all environments. You can edit this individually for each environment once the feature is created.'
-                : ''
-            }`}
+            tooltip={
+              hasVariations
+                ? undefined
+                : `${Constants.strings.REMOTE_CONFIG_DESCRIPTION}${
+                    !isEdit
+                      ? '<br/>Setting this when creating a feature will set the value for all environments. You can edit this individually for each environment once the feature is created.'
+                      : ''
+                  }`
+            }
             title={valueTitle}
-            hideTooltipIcon={hasVariations}
           />
           {canCompareValue && (
             <div className='text-end mt-2'>

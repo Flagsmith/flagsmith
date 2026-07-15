@@ -29,7 +29,6 @@ interface InputGroupProps {
   title?: ReactNode
   tooltip?: string
   tooltipPlace?: TooltipProps['place']
-  hideTooltipIcon?: boolean
   unsaved?: boolean
   // Render an arbitrary control instead of the default Input/textarea.
   component?: ReactNode
@@ -65,7 +64,6 @@ const InputGroup: FC<InputGroupProps> = ({
   'data-test': dataTest,
   defaultValue,
   disabled,
-  hideTooltipIcon,
   id: idProp,
   inputProps,
   isInvalid,
@@ -116,7 +114,7 @@ const InputGroup: FC<InputGroupProps> = ({
             <FieldLabel
               htmlFor={id}
               className='cols-sm-2'
-              tooltip={hideTooltipIcon ? undefined : tooltip}
+              tooltip={tooltip}
               tooltipPlace={tooltipPlace}
             >
               {title}
