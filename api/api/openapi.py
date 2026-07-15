@@ -15,7 +15,6 @@ from typing_extensions import is_typeddict
 from environments.identities.traits.constants import (
     TRAIT_STRING_VALUE_MAX_LENGTH,
 )
-from oauth2_metadata.dataclasses import OAuthConfig
 
 
 def append_meta(schema: dict[str, Any], meta: dict[str, Any]) -> dict[str, Any]:
