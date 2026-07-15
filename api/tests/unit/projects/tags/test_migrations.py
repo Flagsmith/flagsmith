@@ -61,7 +61,7 @@ def test_unique_system_tags__duplicate_system_tags__deduplicated_and_features_re
     NewFeature = new_state.apps.get_model("features", "Feature")
 
     surviving_tag = NewTag.objects.get(
-        project_id=project.id, label="PR Open", type="GITHUB"
+        project_id=project.id, label="PR Open", type="GITHUB", is_system_tag=True
     )
     assert surviving_tag.id == canonical_tag.id
 
