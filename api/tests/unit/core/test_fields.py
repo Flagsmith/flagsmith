@@ -65,13 +65,13 @@ def test_get_prep_value__no_keys_configured__raises_improperly_configured(
 def test_from_db_value__new_key_prepended__old_token_still_decrypts(
     settings: SettingsWrapper,
 ) -> None:
-    # Given: a value encrypted under the original key
+    # Given
     old_key = Fernet.generate_key().decode()
     settings.CREDENTIALS_ENCRYPTION_KEYS = [old_key]
     field = EncryptedJSONField()
     stored = field.get_prep_value({"password": "hunter2"})
 
-    # When: a new primary key is prepended to the ring
+    # When
     settings.CREDENTIALS_ENCRYPTION_KEYS = [Fernet.generate_key().decode(), old_key]
 
     # Then
@@ -82,7 +82,7 @@ def test_from_db_value__token_key_removed_from_ring__returns_none_and_logs(
     settings: SettingsWrapper,
     log: StructuredLogCapture,
 ) -> None:
-    # Given: a value encrypted under a key no longer in the ring
+    # Given
     settings.CREDENTIALS_ENCRYPTION_KEYS = [Fernet.generate_key().decode()]
     field = EncryptedJSONField()
     stored = field.get_prep_value({"password": "hunter2"})
@@ -103,7 +103,7 @@ def test_from_db_value__malformed_key_in_ring__returns_none_and_logs(
     settings: SettingsWrapper,
     log: StructuredLogCapture,
 ) -> None:
-    # Given: a valid token, then a malformed key lands in the ring
+    # Given
     settings.CREDENTIALS_ENCRYPTION_KEYS = [Fernet.generate_key().decode()]
     field = EncryptedJSONField()
     stored = field.get_prep_value({"password": "hunter2"})
@@ -121,7 +121,7 @@ def test_from_db_value__no_keys_configured__returns_none_and_logs(
     settings: SettingsWrapper,
     log: StructuredLogCapture,
 ) -> None:
-    # Given: a stored token but an empty key ring
+    # Given
     settings.CREDENTIALS_ENCRYPTION_KEYS = [Fernet.generate_key().decode()]
     field = EncryptedJSONField()
     stored = field.get_prep_value({"password": "hunter2"})

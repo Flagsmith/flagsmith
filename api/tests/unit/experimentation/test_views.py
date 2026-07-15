@@ -1571,7 +1571,7 @@ def test_patch__clickhouse_config_without_credentials__keeps_stored_password(
         format="json",
     )
 
-    # Then: re-verified with the stored password
+    # Then
     assert response.status_code == status.HTTP_200_OK
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.credentials == {"password": "hunter2"}
@@ -1609,7 +1609,7 @@ def test_test_warehouse_connection__clickhouse__reverifies_and_returns_status(
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
-    # Given: a previously errored connection whose warehouse is now reachable
+    # Given
     enable_features("experimentation_warehouse_connection")
     clickhouse_connection.status = WarehouseConnectionStatus.ERRORED
     clickhouse_connection.save()

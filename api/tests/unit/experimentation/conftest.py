@@ -112,10 +112,10 @@ def clickhouse_connection(
         warehouse_type=WarehouseType.CLICKHOUSE,
         name="Production ClickHouse",
         config={
-            "host": "ch.example.com",
+            "host": "ch.acme-corp.example",
             "port": 9440,
-            "database": "flagsmith",
-            "username": "default",
+            "database": "acme_dwh",
+            "username": "acme_svc",
             "secure": True,
         },
         credentials={"password": "hunter2"},

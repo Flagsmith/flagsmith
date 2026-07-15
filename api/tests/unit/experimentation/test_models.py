@@ -247,9 +247,9 @@ def test_experiment_results__is_final__reflects_window_coverage(
 def test_warehouse_connection_credentials__saved__ciphertext_in_db_and_roundtrips(
     clickhouse_connection: WarehouseConnection,
 ) -> None:
-    # Given: the fixture-created ClickHouse connection
+    # Given
 
-    # When: reading the raw column value
+    # When
     with django_db_connection.cursor() as cursor:
         cursor.execute(
             "SELECT credentials FROM experimentation_warehouseconnection WHERE id = %s",
@@ -257,7 +257,7 @@ def test_warehouse_connection_credentials__saved__ciphertext_in_db_and_roundtrip
         )
         raw = cursor.fetchone()[0]
 
-    # Then: the DB stores ciphertext, and the ORM decrypts on load
+    # Then
     assert "hunter2" not in raw
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.credentials == {"password": "hunter2"}

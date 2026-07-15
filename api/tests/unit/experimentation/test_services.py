@@ -2035,11 +2035,11 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
     mock_client.assert_called_once_with(
-        "ch.example.com",
+        "ch.acme-corp.example",
         port=9440,
-        user="default",
+        user="acme_svc",
         password="hunter2",
-        database="flagsmith",
+        database="acme_dwh",
         secure=True,
         connect_timeout=5,
         send_receive_timeout=30,
@@ -2082,7 +2082,7 @@ def test_verify_clickhouse_connection__missing_credentials__sets_errored(
     clickhouse_connection: WarehouseConnection,
     mocker: MockerFixture,
 ) -> None:
-    # Given: credentials lost (e.g. undecryptable — the field loads them as None)
+    # Given
     mocker.patch("experimentation.services.Client")
     clickhouse_connection.credentials = None
     clickhouse_connection.save()
