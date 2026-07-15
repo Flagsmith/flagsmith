@@ -1,14 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import flagsmith from '@flagsmith/flagsmith'
+import isFreeEmailDomain from './utils/isFreeEmailDomain'
 import { storageGet, storageSet } from './safeLocalStorage'
 
-export default function useSignupExperiment(useEnvironmentFlag: boolean) {
+// The experiment only starts (identify + exposure) once the visitor types a
+// free email domain — corporate-email visitors never enter the experiment.
+export default function useSignupExperiment(
+  useEnvironmentFlag: boolean,
+  email: string,
+) {
   const [variant, setVariant] = useState<string>()
+  const started = useRef(false)
 
   useEffect(() => {
-    if (useEnvironmentFlag) {
+    if (useEnvironmentFlag || started.current || !isFreeEmailDomain(email)) {
       return
     }
+    started.current = true
     const identifyAndExpose = async () => {
       const id =
         storageGet('signup_anonymous_id') ||
@@ -19,8 +27,10 @@ export default function useSignupExperiment(useEnvironmentFlag: boolean) {
       const flag = flagsmith.getExperimentFlag('signup_corporate_only')
       setVariant(flag?.enabled ? flag.variant : undefined)
     }
-    identifyAndExpose()
-  }, [useEnvironmentFlag])
+    identifyAndExpose().catch(() => {
+      started.current = false
+    })
+  }, [useEnvironmentFlag, email])
 
   return variant
 }

@@ -184,6 +184,7 @@ const HomePage: React.FC = () => {
 
   const signupVariant = useSignupExperiment(
     !isSignup || isInvite || !!preventEmailPassword || !!AccountStore.getUser(),
+    email,
   )
   const blockGenericEmailDomain =
     signupVariant === 'signup_corporate_only' && isFreeEmailDomain(email)

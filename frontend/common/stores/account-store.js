@@ -246,6 +246,18 @@ const controller = {
         }
 
         data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
+        if (res.is_new_user) {
+          try {
+            flagsmith.trackEvent('new_signup', {
+              metadata: {
+                invite: !!API.getInvite(),
+                signup_method: type,
+              },
+            })
+          } catch (e) {
+            // never let analytics break the login flow
+          }
+        }
         return controller.onLogin()
       })
       .catch((e) => API.ajaxHandler(store, e))
@@ -268,15 +280,19 @@ const controller = {
         data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         API.trackEvent(Constants.events.REGISTER)
         const freeEmailDomain = isFreeEmailDomain(user.email)
-        flagsmith.trackEvent('new_signup', {
-          metadata: {
-            ...(freeEmailDomain && { domain: user.email.split('@')[1] }),
-            free_email_domain: freeEmailDomain,
-            invite: !!API.getInvite(),
-            signup_method: 'email',
-            utm_source: user.utm_data?.utm_source,
-          },
-        })
+        try {
+          flagsmith.trackEvent('new_signup', {
+            metadata: {
+              ...(freeEmailDomain && { domain: user.email.split('@')[1] }),
+              free_email_domain: freeEmailDomain,
+              invite: !!API.getInvite(),
+              signup_method: 'email',
+              utm_source: user.utm_data?.utm_source,
+            },
+          })
+        } catch (e) {
+          // never let analytics break the signup flow
+        }
         if (API.getReferrer()) {
           API.trackEvent(
             Constants.events.REFERRER_REGISTERED(API.getReferrer().utm_source),
