@@ -59,9 +59,7 @@ type FeatureValueTabProps = {
   onRemoveMultivariateOption?: (id: number) => void
 }
 
-// The remote-config value has no single value when the feature uses variations,
-// so the tooltip only applies without them. On create, add a note that the
-// value seeds every environment.
+// No tooltip when using variations (no single value to describe).
 const getValueTooltip = (
   hasVariations: boolean,
   isEdit: boolean,
