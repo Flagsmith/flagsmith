@@ -43,8 +43,8 @@ const sizeClassNames: Record<InputSize, string> = {
 }
 
 // Width of the password reveal / search icons per input size.
-const iconWidthBySize: Record<InputSize, number | undefined> = {
-  default: undefined,
+const iconWidthBySize: Record<InputSize, number> = {
+  default: 20,
   large: 24,
   small: 20,
   xSmall: 18,
@@ -126,7 +126,7 @@ const Input: React.FC<InputProps> = ({
     inputClassName,
     sizeClassName,
   )
-  const iconWidth = size ? iconWidthBySize[size] : undefined
+  const iconWidth = iconWidthBySize[size ?? 'default']
 
   return (
     <div className={containerClassName}>
