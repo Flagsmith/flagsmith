@@ -6,8 +6,10 @@ import { PagedResponse } from 'common/types/responses'
 export function recursivePageGet<T>(
   url: string,
   parentRes: null | PagedResponse<T>,
-  baseQuery: (arg: unknown) => any, // matches rtk types,
-): Promise<{ data: PagedResponse<T> } | { error: any }> {
+  baseQuery: (
+    arg: unknown,
+  ) => MaybePromise<QueryReturnValue<PagedResponse<T>, unknown>>,
+): Promise<QueryReturnValue<PagedResponse<T>, unknown>> {
   return baseQuery({
     method: 'GET',
     url,
