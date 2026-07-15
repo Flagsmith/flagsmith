@@ -113,8 +113,7 @@ def compute_segment_counts_for_project(
     `project`, scanning each environment once.
 
     A single `GROUP BY environment_id` over `IDENTITIES FINAL` counts every
-    segment in one pass via `countIf(<predicate>)` per segment, instead of
-    re-scanning (and re-deduping) the environment once per segment.
+    segment in one pass via `countIf(<predicate>)` per segment.
 
     Returns unsaved `SegmentMembershipCount` instances with `count` and
     keys populated; the caller stamps `last_synced_at` consistently
