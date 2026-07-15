@@ -210,7 +210,7 @@ class WarehouseConnectionViewSet(
     decorator=extend_schema(
         tags=["mcp"],
         operation_id="update_experiment",
-        description="(Beta) Updates an experiment's name or hypothesis.",
+        description="(Beta) Updates an experiment's name or its hypothesis.",
     ),
 )
 class ExperimentViewSet(

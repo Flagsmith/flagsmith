@@ -996,7 +996,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
     )
     def get(self, request, identifier=None, *args, **kwargs):  # type: ignore[no-untyped-def]
         """
-        Retrieve the flags for an environment.
+        Retrieve the feature flags for an environment.
 
         ---
         *Note*: when providing the `feature` query argument, this endpoint will

@@ -101,6 +101,7 @@ def compute_experiment_exposures(experiment_id: int) -> None:
             "exposures.compute_failed",
             exc_info=exc,
             experiment__id=experiment.id,
+            feature__id=experiment.feature_id,
             environment__id=experiment.environment_id,
             organisation__id=experiment.environment.project.organisation_id,
         )
