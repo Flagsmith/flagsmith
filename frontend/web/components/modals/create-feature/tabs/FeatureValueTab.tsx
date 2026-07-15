@@ -59,6 +59,20 @@ type FeatureValueTabProps = {
   onRemoveMultivariateOption?: (id: number) => void
 }
 
+// The remote-config value has no single value when the feature uses variations,
+// so the tooltip only applies without them. On create, add a note that the
+// value seeds every environment.
+const getValueTooltip = (
+  hasVariations: boolean,
+  isEdit: boolean,
+): string | undefined => {
+  if (hasVariations) return undefined
+  const seedsAllEnvironments = isEdit
+    ? ''
+    : '<br/>Setting this when creating a feature will set the value for all environments. You can edit this individually for each environment once the feature is created.'
+  return `${Constants.strings.REMOTE_CONFIG_DESCRIPTION}${seedsAllEnvironments}`
+}
+
 const FeatureValueTab: FC<FeatureValueTabProps> = ({
   environmentFlag,
   environmentId,
@@ -354,15 +368,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
                 placeholder="e.g. 'big' "
               />
             }
-            tooltip={
-              hasVariations
-                ? undefined
-                : `${Constants.strings.REMOTE_CONFIG_DESCRIPTION}${
-                    !isEdit
-                      ? '<br/>Setting this when creating a feature will set the value for all environments. You can edit this individually for each environment once the feature is created.'
-                      : ''
-                  }`
-            }
+            tooltip={getValueTooltip(hasVariations, isEdit)}
             title={valueTitle}
           />
           {canCompareValue && (
