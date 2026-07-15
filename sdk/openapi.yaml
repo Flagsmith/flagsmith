@@ -449,6 +449,7 @@ components:
             - type: number
             - type: boolean
             - type: string
+              maxLength: 2000
             - type: 'null'
           title: Trait Value
         transient:
@@ -517,6 +518,7 @@ components:
             - type: number
             - type: boolean
             - type: string
+              maxLength: 2000
             - type: 'null'
           title: Trait Value
       required:
