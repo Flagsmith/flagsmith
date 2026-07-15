@@ -86,7 +86,7 @@ dependencies = [
 
 [project.optional-dependencies]
 private = [
-    "flagsmith-private>=0.11.0,<1",
+    "flagsmith-private>=0.11.1,<1",
 ]
 dev = [
     "django-test-migrations>=1.2.0,<2.0.0",
