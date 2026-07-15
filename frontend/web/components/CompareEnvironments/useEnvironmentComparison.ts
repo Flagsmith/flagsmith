@@ -1,16 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import sortBy from 'lodash/sortBy'
-import data from 'common/data/base/_data'
-import Project from 'common/project'
 import ProjectStore from 'common/stores/project-store'
 import { hasMultivariateChange } from 'common/utils/compareMultivariate'
-import { recursivePageGet } from 'common/services/useProjectFlag'
-import {
-  Environment,
-  FeatureState,
-  PagedResponse,
-  ProjectFlag,
-} from 'common/types/responses'
+import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
+import { useGetAllEnvironmentFeatureStatesQuery } from 'common/services/useFeatureState'
+import { Environment, FeatureState, ProjectFlag } from 'common/types/responses'
 import { FeatureChange } from './types'
 
 type UseEnvironmentComparisonArgs = {
@@ -19,12 +13,9 @@ type UseEnvironmentComparisonArgs = {
   rightEnvironmentKey: string
 }
 
-// Adapt _data.get to the baseQuery contract recursivePageGet expects: it reads
-// `results`/`next` straight off the resolved body, which is what _data.get returns
-const pagedGet = <T>(url: string) =>
-  recursivePageGet(url, null, (arg) =>
-    data.get((arg as { url: string }).url),
-  ) as Promise<PagedResponse<T>>
+// ProjectStore.getEnvironment returns null while the project is loading and
+// undefined for unknown keys
+type StoredEnvironment = Environment | undefined | null
 
 const deriveChanges = (
   leftProjectFlags: ProjectFlag[],
@@ -79,87 +70,98 @@ export const useEnvironmentComparison = ({
   projectId,
   rightEnvironmentKey,
 }: UseEnvironmentComparisonArgs) => {
-  const [changes, setChanges] = useState<FeatureChange[] | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState(false)
+  const leftEnvironmentId =
+    ProjectStore.getEnvironmentIdFromKey(leftEnvironmentKey)
+  const rightEnvironmentId =
+    ProjectStore.getEnvironmentIdFromKey(rightEnvironmentKey)
 
-  // Bumped on every run so a slow earlier response can't overwrite the
-  // result of a newer comparison (overlapping-fetch guard)
-  const requestId = useRef(0)
+  const {
+    currentData: leftProjectFlags,
+    isError: leftProjectFlagsError,
+    isFetching: leftProjectFlagsFetching,
+    refetch: refetchLeftProjectFlags,
+  } = useGetProjectFlagsQuery(
+    { environment: leftEnvironmentId, project: projectId },
+    { skip: !leftEnvironmentId },
+  )
 
-  const refresh = useCallback(async () => {
-    if (!leftEnvironmentKey || !rightEnvironmentKey) {
-      return
+  const {
+    currentData: rightProjectFlags,
+    isError: rightProjectFlagsError,
+    isFetching: rightProjectFlagsFetching,
+    refetch: refetchRightProjectFlags,
+  } = useGetProjectFlagsQuery(
+    { environment: rightEnvironmentId, project: projectId },
+    { skip: !rightEnvironmentId },
+  )
+
+  const {
+    currentData: leftFlags,
+    isError: leftFlagsError,
+    isFetching: leftFlagsFetching,
+    refetch: refetchLeftFlags,
+  } = useGetAllEnvironmentFeatureStatesQuery(
+    { environmentKey: leftEnvironmentKey },
+    { skip: !leftEnvironmentKey },
+  )
+
+  const {
+    currentData: rightFlags,
+    isError: rightFlagsError,
+    isFetching: rightFlagsFetching,
+    refetch: refetchRightFlags,
+  } = useGetAllEnvironmentFeatureStatesQuery(
+    { environmentKey: rightEnvironmentKey },
+    { skip: !rightEnvironmentKey },
+  )
+
+  const changes = useMemo(() => {
+    if (!leftProjectFlags || !rightProjectFlags || !leftFlags || !rightFlags) {
+      return null
     }
+    return deriveChanges(
+      leftProjectFlags.results || [],
+      rightProjectFlags.results || [],
+      leftFlags.results || [],
+      rightFlags.results || [],
+    )
+  }, [leftProjectFlags, rightProjectFlags, leftFlags, rightFlags])
 
-    const currentRequest = ++requestId.current
-    setIsLoading(true)
-    setError(false)
+  const refresh = useCallback(() => {
+    refetchLeftProjectFlags()
+    refetchRightProjectFlags()
+    refetchLeftFlags()
+    refetchRightFlags()
+  }, [
+    refetchLeftProjectFlags,
+    refetchRightProjectFlags,
+    refetchLeftFlags,
+    refetchRightFlags,
+  ])
 
-    const leftEnvironmentId =
-      ProjectStore.getEnvironmentIdFromKey(leftEnvironmentKey)
-    const rightEnvironmentId =
-      ProjectStore.getEnvironmentIdFromKey(rightEnvironmentKey)
-
-    try {
-      const [leftProjectFlags, rightProjectFlags, leftFlags, rightFlags] =
-        await Promise.all([
-          pagedGet<ProjectFlag>(
-            `${Project.api}projects/${projectId}/features/?environment=${leftEnvironmentId}`,
-          ),
-          pagedGet<ProjectFlag>(
-            `${Project.api}projects/${projectId}/features/?environment=${rightEnvironmentId}`,
-          ),
-          pagedGet<FeatureState>(
-            `${Project.api}environments/${leftEnvironmentKey}/featurestates/`,
-          ),
-          pagedGet<FeatureState>(
-            `${Project.api}environments/${rightEnvironmentKey}/featurestates/`,
-          ),
-        ])
-
-      if (currentRequest !== requestId.current) return
-
-      setChanges(
-        deriveChanges(
-          leftProjectFlags.results || [],
-          rightProjectFlags.results || [],
-          leftFlags.results || [],
-          rightFlags.results || [],
-        ),
-      )
-    } catch {
-      if (currentRequest !== requestId.current) return
-      setError(true)
-    } finally {
-      if (currentRequest === requestId.current) {
-        setIsLoading(false)
-      }
-    }
-  }, [leftEnvironmentKey, rightEnvironmentKey, projectId])
-
-  useEffect(() => {
-    refresh()
-  }, [refresh])
-
-  const leftEnvironment = ProjectStore.getEnvironment(leftEnvironmentKey) as
-    | Environment
-    | undefined
-    | null
-  const rightEnvironment = ProjectStore.getEnvironment(rightEnvironmentKey) as
-    | Environment
-    | undefined
-    | null
+  const leftEnvironment = ProjectStore.getEnvironment(
+    leftEnvironmentKey,
+  ) as StoredEnvironment
+  const rightEnvironment = ProjectStore.getEnvironment(
+    rightEnvironmentKey,
+  ) as StoredEnvironment
 
   return {
     changes,
-    error,
-    isLoading,
+    error:
+      leftProjectFlagsError ||
+      rightProjectFlagsError ||
+      leftFlagsError ||
+      rightFlagsError,
+    isLoading:
+      leftProjectFlagsFetching ||
+      rightProjectFlagsFetching ||
+      leftFlagsFetching ||
+      rightFlagsFetching,
     leftEnvironment,
-    leftEnvironmentId: ProjectStore.getEnvironmentIdFromKey(leftEnvironmentKey),
+    leftEnvironmentId,
     refresh,
     rightEnvironment,
-    rightEnvironmentId:
-      ProjectStore.getEnvironmentIdFromKey(rightEnvironmentKey),
+    rightEnvironmentId,
   }
 }

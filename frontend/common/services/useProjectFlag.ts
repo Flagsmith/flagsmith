@@ -1,38 +1,14 @@
-import { PagedResponse, ProjectFlag, Res } from 'common/types/responses'
+import { ProjectFlag, Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 import { sortMultivariateOptions } from 'common/utils/multivariate'
+import { recursivePageGet } from 'common/utils/recursivePageGet'
 
 /**
  * Number of features to display per page in the features list.
  */
 export const FEATURES_PAGE_SIZE = 50
-
-export function recursivePageGet(
-  url: string,
-  parentRes: null | PagedResponse<ProjectFlag>,
-  baseQuery: (arg: unknown) => any, // matches rtk types,
-) {
-  return baseQuery({
-    method: 'GET',
-    url,
-  }).then((res: Res['projectFlags']) => {
-    let response
-    if (parentRes) {
-      response = {
-        ...parentRes,
-        results: parentRes.results.concat(res.results),
-      }
-    } else {
-      response = res
-    }
-    if (res.next) {
-      return recursivePageGet(res.next, response, baseQuery)
-    }
-    return Promise.resolve(response)
-  })
-}
 export const projectFlagService = service
   .enhanceEndpoints({
     addTagTypes: ['ProjectFlag', 'FeatureList', 'FeatureState', 'Environment'],
@@ -158,7 +134,7 @@ export const projectFlagService = service
           },
         ],
         queryFn: async (args, _, _2, baseQuery) => {
-          return await recursivePageGet(
+          return await recursivePageGet<ProjectFlag>(
             `projects/${args.project}/features/?${Utils.toParam({
               ...args,
               page_size: 999,

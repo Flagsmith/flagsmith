@@ -21,23 +21,36 @@ const ExpandedRow: FC<ExpandedRowProps> = ({
   oldEnvName,
   projectId,
 }) => {
-  const { data: leftStates, isLoading: leftLoading } = useGetFeatureStatesQuery(
-    {
-      environment: environmentLeftId,
-      feature: item.projectFlagLeft.id,
-    },
-  )
+  const {
+    data: leftStates,
+    isError: leftError,
+    isLoading: leftLoading,
+  } = useGetFeatureStatesQuery({
+    environment: environmentLeftId,
+    feature: item.projectFlagLeft.id,
+  })
 
-  const { data: rightStates, isLoading: rightLoading } =
-    useGetFeatureStatesQuery({
-      environment: environmentRightId,
-      feature: item.projectFlagLeft.id,
-    })
+  const {
+    data: rightStates,
+    isError: rightError,
+    isLoading: rightLoading,
+  } = useGetFeatureStatesQuery({
+    environment: environmentRightId,
+    feature: item.projectFlagLeft.id,
+  })
 
   if (leftLoading || rightLoading) {
     return (
       <div className='p-4 text-center'>
         <Loader />
+      </div>
+    )
+  }
+
+  if (leftError || rightError) {
+    return (
+      <div className='p-4 text-center text-danger'>
+        Could not load the comparison for this feature.
       </div>
     )
   }

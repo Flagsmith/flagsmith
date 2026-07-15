@@ -758,6 +758,9 @@ export type Req = {
     environment?: number
     feature?: number
   }
+  getAllEnvironmentFeatureStates: {
+    environmentKey: string
+  }
   getFeatureSegment: { id: number }
   getSamlConfiguration: { name: string }
   getSamlConfigurations: { organisation_id: number }
