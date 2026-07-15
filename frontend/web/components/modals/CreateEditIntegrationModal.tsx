@@ -156,6 +156,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
     if (previousProjectRef.current === selectedProjectId) return
     previousProjectRef.current = selectedProjectId
     setLoadedIntegration(null)
+    setCustomUrlFields(new Set())
     setFormData(buildDefaultFormData())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProjectId])
@@ -163,6 +164,10 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
   useEffect(() => {
     if (!requiresProjectSelection || !id || !integrationQueryArgs) return
     if (isFetchingIntegration) return
+    // Stale custom-URL selections must not leak into the freshly loaded (or
+    // reset) form; saved custom values still render as Custom URL because
+    // they won't match any preset option.
+    setCustomUrlFields(new Set())
     const existing = existingIntegrations?.[0]
     if (existing) {
       setLoadedIntegration(existing)
@@ -352,10 +357,15 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
     const selected = options.find(
       (v: IntegrationFieldOption) => v.value === formData[field.key],
     )
+    // Only fields that offer the 'custom' sentinel get custom-URL handling;
+    // other option fields (e.g. Slack channels) fall back to 'Please select'
+    // when the saved value is missing from the options.
+    const supportsCustomUrl = options.some((o) => o.value === 'custom')
     const isCustomUrl =
-      customUrlFields.has(field.key) ||
-      (!!formData[field.key] &&
-        !options.find((o) => o.value === formData[field.key]))
+      supportsCustomUrl &&
+      (customUrlFields.has(field.key) ||
+        (!!formData[field.key] &&
+          !options.find((o) => o.value === formData[field.key])))
     let selectValue: { label: string; value?: string } = {
       label: 'Please select',
     }

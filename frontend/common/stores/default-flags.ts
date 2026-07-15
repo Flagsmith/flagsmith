@@ -51,12 +51,12 @@ const defaultFlags = {
           'key': 'base_url',
           'label': 'Base URL',
           'options': [
-            { 'label': 'US1', 'value': 'https://api.datadoghw.com' },
-            { 'label': 'US3', 'value': 'https://us3.datadoghq.com' },
-            { 'label': 'US5', 'value': 'https://us5.datadoghq.com' },
-            { 'label': 'EU1', 'value': 'https://app.datadoghq.eu' },
-            { 'label': 'US1-FED', 'value': 'https://app.ddog-gov.com' },
-            { 'label': 'AP1', 'value': 'https://ap1.datadoghq.com' },
+            { 'label': 'US1', 'value': 'https://api.datadoghq.com' },
+            { 'label': 'US3', 'value': 'https://api.us3.datadoghq.com' },
+            { 'label': 'US5', 'value': 'https://api.us5.datadoghq.com' },
+            { 'label': 'EU1', 'value': 'https://api.datadoghq.eu' },
+            { 'label': 'US1-FED', 'value': 'https://api.ddog-gov.com' },
+            { 'label': 'AP1', 'value': 'https://api.ap1.datadoghq.com' },
             { 'label': 'Custom URL', 'value': 'custom' },
           ],
         },
@@ -216,13 +216,15 @@ const defaultFlags = {
           'key': 'base_url',
           'label': 'Base URL',
           'options': [
+            // The backend appends v2/applications/... directly, so these need
+            // the REST API host with a trailing slash (see NewRelicWrapper).
             {
               'label': 'US',
-              'value': 'https://insights-collector.newrelic.com',
+              'value': 'https://api.newrelic.com/',
             },
             {
               'label': 'EU',
-              'value': 'https://insights-collector.eu01.nr-data.net',
+              'value': 'https://api.eu.newrelic.com/',
             },
             { 'label': 'Custom URL', 'value': 'custom' },
           ],
