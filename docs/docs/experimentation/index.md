@@ -15,8 +15,7 @@ Flagsmith Experimentation lets you run A/B tests end to end on the platform: ser
 [multivariate flag](/managing-flags/core-management), collect events from your application into a managed data
 warehouse, and read the results with a built-in Bayesian statistics engine.
 
-Experiments are scoped to an **environment**: the warehouse connection, metrics and experiments all live at the
-environment level.
+Experiments are scoped to an [**environment**](/flagsmith-concepts/data-model#environments).
 
 ## Set up and run an experiment
 
@@ -33,9 +32,17 @@ environment level.
 
 Prefer to see it end to end? Follow the [PayPal button example](/experimentation/example-paypal-button).
 
-Unfamiliar with a term? The [Statistics Glossary](/experimentation/statistics) explains every concept in plain language.
+Unfamiliar with a term? See the [Statistics Glossary](/experimentation/statistics).
+
+:::note SDK availability
+
+Event collection is currently available in the **JavaScript** and **Python** SDKs, with more to follow. Check
+[Run an Experiment](/experimentation/run-an-experiment) for instrumentation details.
+
+:::
 
 ## A/B testing without the Experimentation feature
 
 You can also run A/B tests with multivariate flags and your own analytics platform. See
-[Experimentation (A/B Testing)](/experimentation-ab-testing).
+[A/B Testing with Integrations](/experimentation-ab-testing). The self-managed approach remains fully supported and is
+not going away.

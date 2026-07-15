@@ -40,7 +40,11 @@ The analysis table breaks each variation down against control:
 While a variation has fewer than 50 identities (or fewer than 5 conversions, for occurrence metrics), it shows
 **Collecting data**. Keep the experiment running.
 
+:::warning Sample ratio mismatch
+
 If a **sample ratio mismatch** warning appears, traffic didn't split the way you configured. Don't act on the results.
+
+:::
 
 ## Exposures
 

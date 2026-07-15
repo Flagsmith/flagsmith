@@ -63,4 +63,5 @@ edited from the experiment page.
 
 :::
 
-A running experiment can be **ended** at any time. Its results are frozen as final, and this cannot be undone.
+A running experiment can be **ended** at any time. Once ended, the results are frozen as final and the experiment cannot
+be restarted — you would need to create a new one.

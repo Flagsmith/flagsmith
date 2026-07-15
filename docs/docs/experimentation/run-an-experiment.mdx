@@ -22,8 +22,8 @@ jobs:
 
 ## Instrument your application
 
-Event collection is currently available in the **JavaScript** and **Python** SDKs, with more to follow. Enable it with
-the `enableEvents` / `enable_events` option.
+Event collection is currently available in the **JavaScript** and **Python** SDKs, with more to follow. Enable it by
+passing the `enableEvents` / `enable_events` option when you initialise the client.
 
 Users must be [identified](/flagsmith-concepts/identities). Exposures and conversion events are joined per identity, so
 use the same identifier for flags and events.
@@ -90,8 +90,8 @@ exposure more than once is safe.
 
 `trackEvent` / `track_event` sends a named event, optionally with a numeric `value`, traits and metadata.
 
-Any event whose name matches a metric's event name feeds that metric. Conversions are attributed post-exposure: an
-identity's events only count after its first exposure.
+The event name is **case-sensitive** and must exactly match the metric's configured event name. Unmatched events are
+silently ignored. Conversions are attributed post-exposure: an identity's events only count after its first exposure.
 
 ## While it runs
 

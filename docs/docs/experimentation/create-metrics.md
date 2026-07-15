@@ -14,10 +14,10 @@ Experimentation is in beta on **Enterprise** plans. [Get in touch](https://www.f
 A metric defines an outcome you measure, computed from the events your application sends to the warehouse. Metrics are
 defined per environment and can be reused across experiments.
 
-To create one, go to the **Metrics** page and click **Create Metric**, or click **Create Metric** in the experiment
-wizard's Measurement step.
+To create one, go to the **Metrics** page and click **Create Metric**. Alternatively, you can create a metric from
+inside the experiment wizard's Measurement step.
 
-<!-- Screenshot: Create Metric form -->
+![The Create Metric form with name, description, aggregation type, direction and event name fields](/img/experimentation/create-metric-form.png)
 
 ## Fields
 

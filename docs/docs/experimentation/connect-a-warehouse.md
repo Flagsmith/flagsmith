@@ -16,7 +16,8 @@ warehouse connection, and it must be in place before you can create experiments.
 
 ## Connect the Flagsmith warehouse
 
-The **Flagsmith** warehouse is managed and hosted by Flagsmith. There is nothing to provision or configure.
+The **Flagsmith** warehouse is managed and hosted by Flagsmith. There is nothing to provision or configure, and there is
+no additional cost — it is included in your Enterprise plan.
 
 1. Go to **Environment Settings > Warehouse**.
 2. Select **Flagsmith** and click **Enable**, then confirm.
@@ -26,11 +27,17 @@ The **Flagsmith** warehouse is managed and hosted by Flagsmith. There is nothing
 The connection is created immediately. To verify that events can flow, click **Send your first event** and Flagsmith
 sends a test event on your behalf. The connection shows **Pending Connection** while it waits for the first event, and
 switches to **Connected** as soon as the environment's first event arrives; an event sent from your own application
-counts too, not just the test event. Processing the first event can take up to a few hours, and the status refreshes
-about once a minute while you keep the Warehouse tab open.
+counts too, not just the test event.
+
+:::note
+
+Processing the first event can take up to a few hours. The status refreshes about once a minute while you keep the
+Warehouse tab open.
+
+:::
 
 Once connected, the warehouse card shows the total number of events received and the number of unique event names, which
-is useful for checking that your instrumentation is arriving.
+is useful to verify that instrumentation data is arriving.
 
 <!-- Screenshot: connected warehouse card with event stats -->
 
@@ -41,7 +48,7 @@ The current status is shown on the warehouse card in **Environment Settings > Wa
 - **Created**: the connection exists but no events have been received yet.
 - **Pending Connection**: waiting for the first event to arrive.
 - **Connected**: events have been received; you are ready to run experiments.
-- **Errored**: something went wrong; contact support.
+- **Errored**: something went wrong; [contact support](/support/).
 
 ## Coming soon
 

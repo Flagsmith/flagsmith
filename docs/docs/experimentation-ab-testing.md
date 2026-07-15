@@ -1,6 +1,6 @@
 ---
-title: Experimentation (A/B Testing)
-sidebar_label: Experimentation (A/B Testing)
+title: A/B Testing with Integrations
+sidebar_label: A/B Testing with Integrations
 sidebar_position: 4
 ---
 
@@ -25,8 +25,7 @@ being tested. The analytics platform will receive a stream of event data derived
 Combining these two concepts allows you to deliver seamless A/B test.
 
 We have [integrations](/third-party-integrations/analytics/segment) with a number of analytics platforms. If we don't
-integrate with the platform you are using, you can still manually send the test data to the downstream platform
-manually.
+integrate with the platform you are using, you can still send test data to the downstream platform.
 
 By the end of this tutorial, you will be able to:
 
