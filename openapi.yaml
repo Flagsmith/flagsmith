@@ -24569,6 +24569,7 @@ components:
             * `GITHUB` - Github
             * `UNHEALTHY` - Unhealthy
             * `GITLAB` - Gitlab
+          default: NONE
           allOf:
             - $ref: '#/components/schemas/TagTypeEnum'
           readOnly: true
@@ -26575,6 +26576,7 @@ components:
             * `GITHUB` - Github
             * `UNHEALTHY` - Unhealthy
             * `GITLAB` - Gitlab
+          default: NONE
           allOf:
             - $ref: '#/components/schemas/TagTypeEnum'
           readOnly: true
