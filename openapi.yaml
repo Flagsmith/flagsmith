@@ -497,7 +497,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CustomToken'
+                $ref: '#/components/schemas/OAuthToken'
         '502':
           description: ''
           content:
@@ -531,7 +531,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CustomToken'
+                $ref: '#/components/schemas/OAuthToken'
         '502':
           description: ''
           content:
@@ -22049,6 +22049,15 @@ components:
         - app_id
     NullEnum:
       type: 'null'
+    OAuthToken:
+      type: object
+      properties:
+        key:
+          type: string
+          readOnly: true
+        is_new_user:
+          type: boolean
+          readOnly: true
     OrganisationAPIUsageNotification:
       type: object
       properties:
