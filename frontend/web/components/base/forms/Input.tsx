@@ -22,12 +22,7 @@ export interface InputMethods {
 export interface InputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   autoValidate?: boolean
-  // Custom lowercase alias for the standard `autoComplete`, kept for back-compat.
-  autocomplete?: string
   centered?: boolean
-  // Toggle for the native `autoComplete` attribute; use `autocomplete` for an
-  // explicit token like 'new-password'.
-  enableAutoComplete?: boolean
   inputClassName?: string
   isValid?: boolean
   ref?: Ref<InputMethods>
@@ -54,11 +49,9 @@ const iconWidthBySize: Record<InputSize, number> = {
 
 const Input: React.FC<InputProps> = ({
   autoValidate,
-  autocomplete,
   centered,
   className = '',
   disabled,
-  enableAutoComplete,
   inputClassName,
   isValid = true,
   onBlur: onBlurProp,
@@ -129,14 +122,6 @@ const Input: React.FC<InputProps> = ({
     sizeClassName,
   )
   const iconWidth = iconWidthBySize[size ?? 'default']
-  // Map the enableAutoComplete toggle to a valid token, falling back to the
-  // explicit `autocomplete` prop.
-  let resolvedAutoComplete: string | undefined
-  if (typeof enableAutoComplete === 'boolean') {
-    resolvedAutoComplete = enableAutoComplete ? 'on' : 'off'
-  } else {
-    resolvedAutoComplete = autocomplete
-  }
 
   return (
     <div className={containerClassName}>
@@ -151,7 +136,6 @@ const Input: React.FC<InputProps> = ({
         value={value}
         className={innerClassName}
         disabled={disabled}
-        autoComplete={resolvedAutoComplete}
       />
       {typeProp === 'password' && (
         <button

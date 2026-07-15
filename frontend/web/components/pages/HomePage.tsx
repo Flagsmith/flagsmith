@@ -408,8 +408,8 @@ const HomePage: React.FC = () => {
                                   <InputGroup
                                     title='Password'
                                     inputProps={{
+                                      autoComplete: 'on',
                                       className: 'full-width',
-                                      enableAutoComplete: true,
                                       error: error?.password,
                                       name: 'password',
                                     }}
@@ -609,8 +609,8 @@ const HomePage: React.FC = () => {
                                   title='Email Address'
                                   data-test='email'
                                   inputProps={{
+                                    autoComplete: 'on',
                                     className: 'full-width',
-                                    enableAutoComplete: true,
                                     error: error && error.email,
                                     name: 'email',
                                   }}

@@ -376,7 +376,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
       isValid={!!formData[field.key]}
       type={field.hidden ? 'password' : field.inputType || 'text'}
       className='full-width mb-2'
-      autocomplete={field.hidden ? 'new-password' : 'off'}
+      autoComplete={field.hidden ? 'new-password' : 'off'}
     />
   )
 
@@ -501,7 +501,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
               isValid={!!formData.channel_id}
               type='text'
               className='full-width mt-2'
-              autocomplete='off'
+              autoComplete='off'
             />
           </div>
         )}
