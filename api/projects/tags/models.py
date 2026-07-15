@@ -37,6 +37,13 @@ class Tag(AbstractBaseExportableModel):
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "label", "type"],
+                condition=models.Q(is_system_tag=True),
+                name="unique_project_label_type_system_tag",
+            )
+        ]
 
     def __str__(self):  # type: ignore[no-untyped-def]
         return "Tag %s" % self.label

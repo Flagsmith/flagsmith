@@ -7,6 +7,9 @@ import ThemeToggle from 'components/pages/onboarding/ThemeToggle'
 import OnboardingConnectPanel from 'components/pages/onboarding/OnboardingConnectPanel'
 import OnboardingTerminal from 'components/pages/onboarding/OnboardingTerminal'
 import OnboardingFlagsTable from 'components/pages/onboarding/OnboardingFlagsTable'
+import OnboardingNextSteps, {
+  OnboardingNextStep,
+} from 'components/pages/onboarding/OnboardingNextSteps'
 import { useEnsureOnboardingResources } from 'components/pages/onboarding/hooks/useEnsureOnboardingResources'
 import { useOnboardingFlagRename } from 'components/pages/onboarding/hooks/useOnboardingFlagRename'
 import { useOnboardingFlag } from 'components/pages/onboarding/hooks/useOnboardingFlag'
@@ -64,6 +67,7 @@ const OnboardingFlow: FC = () => {
   const [snippetCopied, setSnippetCopied] = useState(false)
   const {
     enabled: flagEnabled,
+    flagId,
     isToggling,
     ready: flagStateReady,
     tags: flagTags,
@@ -115,6 +119,24 @@ const OnboardingFlow: FC = () => {
         toast('Couldn’t rename your flag. Please try again.', 'danger')
       }
     }
+  }
+
+  // Each next-step card deep-links to the flag's real config; nothing faked.
+  const goToNextStep = (step: OnboardingNextStep) => {
+    if (projectId === null) {
+      return
+    }
+    const base = `/project/${projectId}/environment/${environmentKey}`
+    if (step === 'experiment') {
+      history.push(`${base}/experiments`)
+      return
+    }
+    if (flagId === null) {
+      return
+    }
+    // Tab param is the slugified tab label (see TabMenu/Tabs urlParam).
+    const tab = step === 'rollout' ? 'segment-overrides' : 'value'
+    history.push(`${base}/features?feature=${flagId}&tab=${tab}`)
   }
 
   if (status === 'creating') {
@@ -177,6 +199,10 @@ const OnboardingFlow: FC = () => {
         onToggle={(_flag, next) => toggleFlag(next)}
         togglingFlag={isToggling ? featureName : null}
         togglesReady={flagStateReady}
+      />
+      <OnboardingNextSteps
+        locked={connection !== 'connected'}
+        onSelect={goToNextStep}
       />
       <div className='d-flex justify-content-end'>
         <Button theme='text' onClick={skipToApp}>

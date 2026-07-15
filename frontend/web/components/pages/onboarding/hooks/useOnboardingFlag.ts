@@ -59,6 +59,8 @@ export const useOnboardingFlag = (
 
   return {
     enabled: !!displayEnabled,
+    // The flag's id, so the next-step cards can deep-link to its config.
+    flagId: flag?.id ?? null,
     isToggling: isLoading,
     ready: !!state,
     tags,

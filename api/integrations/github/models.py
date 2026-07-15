@@ -105,11 +105,13 @@ class GitHubRepository(LifecycleModelMixin, SoftDeleteExportableModel):  # type:
         from projects.tags.models import Tag, TagType
 
         for tag_label in GitHubTag:
-            tag, created = Tag.objects.get_or_create(
-                color=GITHUB_TAG_COLOR,
-                description=github_tag_description[tag_label.value],
+            Tag.objects.get_or_create(
                 label=tag_label.value,
                 project=self.project,
                 is_system_tag=True,
                 type=TagType.GITHUB,
+                defaults={
+                    "color": GITHUB_TAG_COLOR,
+                    "description": github_tag_description[tag_label.value],
+                },
             )

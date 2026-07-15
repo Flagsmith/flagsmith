@@ -79,12 +79,16 @@ def tag_feature_per_github_event(
             action = "merged"
         # Get or create the corresponding project Tag to tag the feature
         github_tag, _ = Tag.objects.get_or_create(
-            color=GITHUB_TAG_COLOR,
-            description=github_tag_description[tag_by_event_type[event_type][action]],
             label=tag_by_event_type[event_type][action],
             project=feature.project,
             is_system_tag=True,
             type=TagType.GITHUB,
+            defaults={
+                "color": GITHUB_TAG_COLOR,
+                "description": github_tag_description[
+                    tag_by_event_type[event_type][action]
+                ],
+            },
         )
         tag_label_pattern = "Issue" if event_type == "issues" else "PR"
         # Remove all GITHUB tags from the feature which label starts with issue or pr depending on event_type
