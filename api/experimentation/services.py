@@ -42,6 +42,7 @@ from experimentation.dataclasses import (
 )
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
+    Experiment,
     ExperimentStatus,
     MetricAggregation,
     MetricDirection,
@@ -75,7 +76,7 @@ if typing.TYPE_CHECKING:
     from collections.abc import Sequence
     from datetime import datetime
 
-    from experimentation.models import Experiment, Metric, WarehouseConnection
+    from experimentation.models import Metric, WarehouseConnection
     from experimentation.types import ExposureGranularity
     from features.feature_states.models import FeatureValueType
     from features.models import FeatureStateValue
@@ -678,8 +679,9 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
         )
     validate_rollout_spec(experiment, spec)
     environment_id = experiment.environment_id
-    is_first_rollout = experiment.rollout_segment_id is None
     with transaction.atomic():
+        locked_experiment = Experiment.objects.select_for_update().get(pk=experiment.pk)
+        is_first_rollout = locked_experiment.rollout_segment_id is None
         segment = _sync_rollout_segment(experiment, spec.rollout_percentage)
         if is_first_rollout:
             _reset_default_allocations_to_control(experiment, spec.author)
