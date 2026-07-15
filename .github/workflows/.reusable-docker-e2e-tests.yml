@@ -200,7 +200,14 @@ jobs:
         with:
           header: playwright-e2e-results
           append: true
-          message: ${{ steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary }}
+          # Collapses the <details> blocks of previous runs, keeping only the latest expanded
+          hide_details: true
+          message: |
+            <details open><summary>${{ steps.report-summary-success.outputs.summary && '✅' || '❌' }} Playwright Test Results (${{ steps.test-type.outputs.label }} - ${{ inputs.runs-on }}) — run #${{ github.run_number }} (attempt ${{ github.run_attempt }})</summary>
+
+            ${{ steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary }}
+
+            </details>
 
       # Visual regression: after all E2E retries, run comparison and upload results
       - name: Upload visual regression baselines (main branch)
