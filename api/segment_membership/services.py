@@ -159,8 +159,6 @@ def compute_segment_counts_for_project(
     if not count_columns:
         return []
 
-    # One scan per environment: dedupe with FINAL once, then count every segment
-    # in the same pass via `countIf`, rather than re-scanning per segment.
     sql = (
         f"SELECT i.environment_id AS env_key, {', '.join(count_columns)} "
         f"FROM IDENTITIES AS i FINAL "

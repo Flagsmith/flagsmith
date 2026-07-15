@@ -131,7 +131,6 @@ def test_compute_segment_counts_for_project__unknown_env_key_in_row__skips(
         return_value="TRUE",
     )
     cursor = MagicMock()
-    # New row shape: (env_key, count-per-segment...); env_key is unknown here
     cursor.fetchall.return_value = [("ghost-env", 99)]
 
     # When
@@ -321,7 +320,6 @@ def test_compute_segment_counts_for_project__multiple_segments__maps_each_count_
         counts = compute_segment_counts_for_project(project, cursor)
 
     # Then
-    # each column maps to its own segment and the zero-match one is absent
     by_segment = {c.segment_id: c.count for c in counts}
     assert by_segment == {
         three_segments["bar"].id: 2,
