@@ -680,8 +680,8 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
     validate_rollout_spec(experiment, spec)
     environment_id = experiment.environment_id
     with transaction.atomic():
-        locked_experiment = Experiment.objects.select_for_update().get(pk=experiment.pk)
-        is_first_rollout = locked_experiment.rollout_segment_id is None
+        experiment.refresh_from_db(from_queryset=Experiment.objects.select_for_update())
+        is_first_rollout = experiment.rollout_segment_id is None
         segment = _sync_rollout_segment(experiment, spec.rollout_percentage)
         if is_first_rollout:
             _reset_default_allocations_to_control(experiment, spec.author)
