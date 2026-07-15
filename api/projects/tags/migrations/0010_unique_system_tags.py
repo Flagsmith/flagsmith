@@ -3,6 +3,8 @@ from django.db import migrations, models
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.models import Count
 
+from core.migration_helpers import PostgresOnlyRunSQL
+
 
 def deduplicate_system_tags(
     apps: Apps,
@@ -13,11 +15,14 @@ def deduplicate_system_tags(
 
     # Block concurrent writes until the transaction commits, so no duplicate
     # can be inserted between this cleanup and the constraint creation below.
-    # Reads are unaffected.
-    schema_editor.execute(
-        "LOCK TABLE %s IN EXCLUSIVE MODE"
-        % schema_editor.quote_name(Tag._meta.db_table)
-    )
+    # Reads are unaffected. Downstream forks may run other database vendors,
+    # where the partial unique constraint is not supported and not created,
+    # so the lock is only taken where the constraint exists to protect.
+    if schema_editor.connection.vendor == "postgresql":
+        schema_editor.execute(
+            "LOCK TABLE %s IN EXCLUSIVE MODE"
+            % schema_editor.quote_name(Tag._meta.db_table)
+        )
 
     duplicate_groups = (
         Tag.objects.filter(is_system_tag=True)
@@ -70,7 +75,7 @@ class Migration(migrations.Migration):
         ),
         # Fire the deferred foreign key triggers queued by the deletes above,
         # so the unique index can be created in the same transaction.
-        migrations.RunSQL(
+        PostgresOnlyRunSQL(
             sql="SET CONSTRAINTS ALL IMMEDIATE",
             reverse_sql=migrations.RunSQL.noop,
         ),
