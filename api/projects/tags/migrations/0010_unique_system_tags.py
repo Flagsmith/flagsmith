@@ -11,6 +11,14 @@ def deduplicate_system_tags(
     Tag = apps.get_model("tags", "Tag")
     FeatureTag = apps.get_model("features", "Feature").tags.through
 
+    # Block concurrent writes until the transaction commits, so no duplicate
+    # can be inserted between this cleanup and the constraint creation below.
+    # Reads are unaffected.
+    schema_editor.execute(
+        "LOCK TABLE %s IN EXCLUSIVE MODE"
+        % schema_editor.quote_name(Tag._meta.db_table)
+    )
+
     duplicate_groups = (
         Tag.objects.filter(is_system_tag=True)
         .values("project_id", "label", "type")
