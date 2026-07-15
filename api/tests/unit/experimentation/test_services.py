@@ -1445,11 +1445,25 @@ def test_apply_experiment_rollout__existing_segment__leaves_default_allocations(
         ),
     )
 
-    # Then
+    # Then the manual edit to the default allocations survives...
     allocation = default_state.multivariate_feature_state_values.get(
         multivariate_feature_option=option_a
     ).percentage_allocation
     assert allocation == 25.0
+
+    # ...while the rollout update itself is applied
+    condition = Condition.objects.get(rule__segment=experiment.rollout_segment)
+    assert condition.value == "80.0"
+    override = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__segment=experiment.rollout_segment,
+    )
+    override_allocations = {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in override.multivariate_feature_state_values.all()
+    }
+    assert override_allocations == {option_a.id: 50.0, option_b.id: 50.0}
 
 
 def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enabled(
