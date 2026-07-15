@@ -13,6 +13,15 @@ test.describe('Signup', () => {
     const { addErrorLogging, click, logout, setText, waitForElementVisible } = createHelpers(page);
     const flagsmith = await getFlagsmith();
 
+    // The new single-page onboarding flow (onboarding_quickstart_flow) replaces
+    // the legacy getting-started page that this test drives, so the legacy
+    // signup-to-integration-to-project path doesn't exist when the flag is on.
+    // Skip it in that case; the new flow gets its own coverage.
+    test.skip(
+      flagsmith.hasFeature('onboarding_quickstart_flow'),
+      'Legacy signup flow superseded by onboarding_quickstart_flow',
+    );
+
     // Add error logging
     await addErrorLogging();
 

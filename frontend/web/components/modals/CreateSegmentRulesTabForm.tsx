@@ -184,7 +184,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
           />
           <span
             style={{ fontWeight: 'normal', marginLeft: '12px' }}
-            className='mb-0 fs-small text-dark'
+            className='mb-0 fs-small text-default'
           >
             Show condition descriptions
           </span>

@@ -1,8 +1,11 @@
 import copy
 import typing
 from contextlib import suppress
+from datetime import timedelta
 
+from django.conf import settings
 from django.db.models import Prefetch, Q
+from django.utils import timezone
 
 from api_keys.user import APIKeyUser
 from edge_api.identities.tasks import (
@@ -194,6 +197,19 @@ class EdgeIdentity:
             user=user,
         )
         self._reset_initial_state()  # type: ignore[no-untyped-call]
+
+        if settings.CLICKHOUSE_ENABLED:
+            from segment_membership.services import enqueue_membership_refresh
+
+            enqueue_membership_refresh(
+                self.environment.project,
+                delay_until=(
+                    timezone.now()
+                    + timedelta(
+                        seconds=settings.SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS
+                    )
+                ),
+            )
 
     def synchronise_features(self, valid_feature_names: typing.Collection[str]) -> None:
         identity_feature_names = {

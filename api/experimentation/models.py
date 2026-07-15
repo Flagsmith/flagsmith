@@ -75,18 +75,18 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
 
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def sync_to_ingestion_on_create(self) -> None:
-        from experimentation.tasks import add_environment_key_to_ingestion
+        from experimentation.tasks import write_environment_ingestion_keys
 
-        add_environment_key_to_ingestion.delay(
-            kwargs={"environment_api_key": self.environment.api_key},
+        write_environment_ingestion_keys.delay(
+            kwargs={"environment_id": self.environment_id},
         )
 
     @hook(AFTER_DELETE)  # type: ignore[misc]
     def sync_to_ingestion_on_delete(self) -> None:
-        from experimentation.tasks import delete_environment_key_from_ingestion
+        from experimentation.tasks import remove_environment_ingestion_keys
 
-        delete_environment_key_from_ingestion.delay(
-            kwargs={"environment_api_key": self.environment.api_key},
+        remove_environment_ingestion_keys.delay(
+            kwargs={"environment_id": self.environment_id},
         )
 
 
@@ -127,6 +127,13 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
     updated_at = models.DateTimeField(auto_now=True)
     started_at = models.DateTimeField(null=True, blank=True)
     ended_at = models.DateTimeField(null=True, blank=True)
+    rollout_segment = models.OneToOneField(
+        "segments.Segment",
+        on_delete=models.SET_NULL,
+        related_name="experiment_rollout",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         constraints = [

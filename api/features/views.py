@@ -59,6 +59,10 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
+from features.feature_lifecycle.services import (
+    annotate_feature_queryset_with_lifecycle_stage,
+    is_feature_lifecycle_enabled,
+)
 from features.value_types import BOOLEAN, INTEGER, STRING
 from projects.code_references.services import (
     annotate_feature_queryset_with_code_references_summary,
@@ -172,7 +176,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             "partial_update": UpdateFeatureSerializer,
         }.get(self.action, ProjectFeatureSerializer)
 
-    def get_queryset(self):  # type: ignore[no-untyped-def]
+    def get_queryset(self):  # type: ignore[no-untyped-def]  # noqa: C901
         if getattr(self, "swagger_fake_view", False):
             return Feature.objects.none()
 
@@ -261,8 +265,14 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         queryset = queryset.order_by(*override_ordering, sort)
 
         if environment_id:
-            page = self.paginate_queryset(queryset)
             self.environment = Environment.objects.get(id=environment_id)
+            if is_feature_lifecycle_enabled(project.organisation):
+                queryset = annotate_feature_queryset_with_lifecycle_stage(
+                    queryset, self.environment
+                )
+                if lifecycle_stage := query_data.get("lifecycle_stage"):
+                    queryset = queryset.filter(lifecycle_stage=lifecycle_stage)
+            page = self.paginate_queryset(queryset)
             self.feature_ids = [feature.id for feature in page]
             feature_states_query = Q(
                 feature_id__in=self.feature_ids,

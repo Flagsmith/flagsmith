@@ -12,8 +12,6 @@ from pydantic import TypeAdapter
 from rest_framework.request import Request
 from typing_extensions import is_typeddict
 
-from oauth2_metadata.dataclasses import OAuthConfig
-
 
 def append_meta(schema: dict[str, Any], meta: dict[str, Any]) -> dict[str, Any]:
     """
@@ -67,92 +65,24 @@ class SchemaGenerator(generators.SchemaGenerator):
         }
 
 
-class MCPSchemaGenerator(SchemaGenerator):
+MINIMUM_PLAN_EXTENSION = "x-flagsmith-minimum-plan"
+
+
+class AutoSchema(openapi.AutoSchema):
     """
-    Schema generator that filters to only include operations tagged with "mcp".
-
-    Uses x-gram extension for Gram-native tool naming and descriptions.
-    Gram reads x-gram directly from the spec.
+    Tags plan-gated operations with the minimum subscription plan they require.
     """
 
-    MCP_TAG = "mcp"
-
-    def get_schema(
-        self, request: Request | None = None, public: bool = False
-    ) -> dict[str, Any]:
-        oauth = OAuthConfig.from_settings()
-        schema = super().get_schema(request, public)
-        schema["paths"] = self._filter_paths(schema.get("paths", {}))
-        schema = self._update_security_for_mcp(schema, oauth)
-        schema.pop("$schema", None)
-        info = schema.pop("info").copy()
-        info["title"] = "mcp_openapi"
-        return {
-            "openapi": schema.pop("openapi"),
-            "info": info,
-            "servers": [{"url": oauth.api_url}],
-            **schema,
-        }
-
-    def _filter_paths(self, paths: dict[str, Any]) -> dict[str, Any]:
-        """Filter paths to only include operations tagged with 'mcp'."""
-        filtered_paths: dict[str, Any] = {}
-
-        for path, path_item in paths.items():
-            filtered_operations: dict[str, Any] = {}
-            has_any_mcp_tag = False
-
-            for method, operation in path_item.items():
-                if not isinstance(operation, dict):
-                    filtered_operations[method] = operation
-                    continue
-
-                tags = operation.get("tags", [])
-                if self.MCP_TAG in tags:
-                    filtered_operations[method] = self._transform_for_mcp(operation)
-                    has_any_mcp_tag = True
-
-            if has_any_mcp_tag:
-                filtered_paths[path] = filtered_operations
-
-        return filtered_paths
-
-    def _transform_for_mcp(self, operation: dict[str, Any]) -> dict[str, Any]:
-        """Apply MCP-specific transformations to an operation."""
-        operation = operation.copy()
-        # Remove operation-level security (use global MCP security instead)
-        operation.pop("security", None)
+    def get_operation(self, *args: Any, **kwargs: Any) -> dict[str, Any] | None:
+        operation: dict[str, Any] | None = super().get_operation(*args, **kwargs)
+        if operation is None:
+            return None
+        for permission_class in getattr(self.view, "permission_classes", []):
+            minimum_plan = getattr(permission_class, "minimum_plan_family", None)
+            if minimum_plan is not None:
+                operation[MINIMUM_PLAN_EXTENSION] = minimum_plan
+                break
         return operation
-
-    def _update_security_for_mcp(
-        self, schema: dict[str, Any], oauth: OAuthConfig
-    ) -> dict[str, Any]:
-        """Update security schemes for MCP (OAuth + API Key fallback)."""
-        schema = schema.copy()
-        schema["components"] = schema.get("components", {}).copy()
-        schema["components"]["securitySchemes"] = {
-            "oauth2": {
-                "type": "oauth2",
-                "flows": {
-                    "authorizationCode": {
-                        "authorizationUrl": f"{oauth.frontend_url}/oauth/authorize/",
-                        "tokenUrl": f"{oauth.api_url}/o/token/",
-                        "scopes": oauth.scopes,
-                    },
-                },
-            },
-            "TOKEN_AUTH": {
-                "type": "apiKey",
-                "in": "header",
-                "name": "Authorization",
-                "description": "Organisation API Key. Format: Api-Key <key>",
-            },
-        }
-        schema["security"] = [
-            {"oauth2": list(oauth.scopes.keys())},
-            {"TOKEN_AUTH": []},
-        ]
-        return schema
 
 
 class TypedDictSchemaExtension(OpenApiSerializerExtension):

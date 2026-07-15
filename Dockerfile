@@ -135,7 +135,10 @@ ARG PROMETHEUS_MULTIPROC_DIR="/tmp/prometheus"
 ARG ACCESS_LOG_LOCATION="/dev/null"
 ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION} \
   PROMETHEUS_MULTIPROC_DIR=${PROMETHEUS_MULTIPROC_DIR} \
-  DJANGO_SETTINGS_MODULE=app.settings.production
+  DJANGO_SETTINGS_MODULE=app.settings.production \
+  GUNICORN_WORKERS=3 \
+  GUNICORN_THREADS=2 \
+  APPLICATION_LOGGERS="app_analytics,audit,code_references,common,core,dynamodb,edge_api,environments,features,import_export,integrations,mcp,oauth2_metadata,organisations,projects,segment_membership,segments,task_processor,users,webhooks,workflows"
 
 ARG CI_COMMIT_SHA
 RUN echo ${CI_COMMIT_SHA} > /app/CI_COMMIT_SHA && \
@@ -144,7 +147,7 @@ RUN echo ${CI_COMMIT_SHA} > /app/CI_COMMIT_SHA && \
 
 EXPOSE 8000
 
-ENTRYPOINT ["/app/scripts/run-docker.sh"]
+ENTRYPOINT ["flagsmith"]
 
 CMD ["migrate-and-serve"]
 

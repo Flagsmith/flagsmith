@@ -1,17 +1,18 @@
+from datetime import datetime
 from decimal import Decimal
 
 from flagsmith_schemas import dynamodb
 
-# (environment_id, identifier, identity_key, traits)
-ClickHouseIdentityRow = tuple[str, str, str, dict[str, object] | None]
+from segment_membership.constants import INT64_MAX, INT64_MIN
+from segment_membership.types import ClickHouseIdentityRow
 
 
 def map_identity_document_to_clickhouse_row(
     env_key: str,
     identity_doc: dynamodb.Identity,
+    inserted_at: datetime,
 ) -> ClickHouseIdentityRow:
-    """Project a Dynamo identity document onto an IDENTITIES row tuple
-    `(environment_id, identifier, identity_key, traits)`."""
+    """Project a Dynamo identity document onto an IDENTITIES row tuple."""
     identifier = identity_doc["identifier"]
     composite_key = identity_doc["composite_key"]
     raw_traits = identity_doc.get("identity_traits")
@@ -21,6 +22,7 @@ def map_identity_document_to_clickhouse_row(
         identifier,
         composite_key,
         traits,
+        inserted_at,
     )
 
 
@@ -29,9 +31,17 @@ def _coerce_trait_value(value: object) -> object:
     # stores a typed numeric subcolumn instead of failing to serialise.
     if isinstance(value, Decimal):
         if value == value.to_integral_value():
-            return int(value)
+            return _coerce_int(int(value))
         return float(value)
+    if isinstance(value, int) and not isinstance(value, bool):
+        return _coerce_int(value)
     return value
+
+
+def _coerce_int(value: int) -> int | str:
+    if INT64_MIN <= value <= INT64_MAX:
+        return value
+    return str(value)
 
 
 def _flatten_traits(

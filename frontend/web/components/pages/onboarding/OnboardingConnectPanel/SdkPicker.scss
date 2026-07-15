@@ -1,0 +1,22 @@
+// The overflow (long-tail) row animates open/close by transitioning the grid
+// row from 0fr to 1fr - animates to the content's natural height without a
+// magic max-height. The inner row clips while collapsed.
+.sdk-picker {
+  &__overflow {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--duration-fast) var(--easing-standard);
+
+    > * {
+      overflow: hidden;
+    }
+
+    &--open {
+      grid-template-rows: 1fr;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+}

@@ -1,0 +1,68 @@
+// "Your flags" card. Layout/surface via utilities; this keeps the accent glow,
+// the waiting state, and the non-standard metrics.
+.onboarding-flags {
+  gap: 14px; // no utility step for 14px
+
+  &__title {
+    color: var(--color-text-default);
+    font-size: 16px;
+  }
+
+  &__table {
+    width: 100%;
+    max-width: 760px;
+    overflow: hidden;
+    // Accent glow, oklch-derived from the action colour so it tracks the theme.
+    border: 1px solid oklch(from var(--color-border-action) l c h / 0.4);
+    box-shadow: 0 18px 44px 2px oklch(from var(--color-border-action) l c h / 0.2),
+      var(--shadow-md);
+    transition: opacity var(--duration-fast) var(--easing-standard),
+      box-shadow var(--duration-fast) var(--easing-standard),
+      border-color var(--duration-fast) var(--easing-standard);
+
+    &--waiting {
+      border-color: var(--color-border-default);
+      box-shadow: none;
+      opacity: 0.7;
+    }
+  }
+
+  &__head {
+    gap: 12px;
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  &__col {
+    color: var(--color-text-secondary);
+    font-size: 11px;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.5px;
+
+    &--feature {
+      flex: 1;
+    }
+    &--enabled {
+      width: 96px;
+    }
+  }
+
+  &__row {
+    gap: 12px;
+    padding: 14px 20px;
+  }
+
+  &__feature {
+    flex: 1;
+  }
+
+  &__desc {
+    color: var(--color-text-secondary);
+    font-size: 12px;
+  }
+
+  // Match the ENABLED header column width so the toggle lines up under it.
+  &__toggle {
+    width: 96px;
+  }
+}

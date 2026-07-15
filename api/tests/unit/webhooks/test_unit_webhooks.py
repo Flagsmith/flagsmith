@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import json
+import socket
 from typing import Callable, Type
 from unittest import mock
 from unittest.mock import MagicMock
@@ -364,12 +365,17 @@ def test_send_test_webhook__200_response_from_webhook__returns_correct_response(
     organisation: Organisation,
 ) -> None:
     # Given
-    webhook_url = "http://test.webhook.com"
-    mock_post = mocker.patch("requests.post")
+    webhook_url = "https://example.com"
+    mock_post = mocker.patch("webhooks.webhooks.requests.post")
     mock_response = MagicMock()
     mock_response.status_code = 200
+    mock_response.ok = True
     mock_response.text = "success"
     mock_post.return_value = mock_response
+    mocker.patch(
+        "webhooks.fields.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
+    )
 
     url = reverse("api-v1:webhooks:webhooks-test")
 
@@ -393,6 +399,54 @@ def test_send_test_webhook__200_response_from_webhook__returns_correct_response(
 
 
 @pytest.mark.parametrize(
+    "external_api_response_status",
+    [
+        201,
+        202,
+        204,
+    ],
+)
+def test_send_test_webhook__various_2xx_status_codes__returns_success(
+    mocker: MockerFixture,
+    admin_client: APIClient,
+    external_api_response_status: int,
+    organisation: Organisation,
+) -> None:
+    # Given
+    webhook_url = "https://example.com"
+    mock_post = mocker.patch("webhooks.webhooks.requests.post")
+    mock_response = MagicMock()
+    mock_response.status_code = external_api_response_status
+    mock_response.ok = external_api_response_status < 400
+    mock_response.text = "success"
+    mock_post.return_value = mock_response
+    mocker.patch(
+        "webhooks.fields.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
+    )
+
+    url = reverse("api-v1:webhooks:webhooks-test")
+
+    data = {
+        "webhook_url": webhook_url,
+        "secret": "some-secret",
+        "scope": {"type": "organisation", "id": organisation.id},
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 200
+    mock_post.assert_called_once()
+    response_json = response.json()
+    assert response_json["status"] == external_api_response_status
+    assert response_json["detail"] == "Webhook test successful"
+
+
+@pytest.mark.parametrize(
     "external_api_response_status, external_api_error_text, expected_final_status",
     [
         (400, "wrong-payload", 400),
@@ -409,12 +463,17 @@ def test_send_test_webhook__various_error_status_codes__returns_correct_response
     organisation: Organisation,
 ) -> None:
     # Given
-    webhook_url = "http://test.webhook.com"
-    mock_post = mocker.patch("requests.post")
+    webhook_url = "https://example.com"
+    mock_post = mocker.patch("webhooks.webhooks.requests.post")
     mock_response = MagicMock()
     mock_response.status_code = external_api_response_status
+    mock_response.ok = external_api_response_status < 400
     mock_response.text = external_api_error_text
     mock_post.return_value = mock_response
+    mocker.patch(
+        "webhooks.fields.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
+    )
 
     url = reverse("api-v1:webhooks:webhooks-test")
 
@@ -434,10 +493,10 @@ def test_send_test_webhook__various_error_status_codes__returns_correct_response
     mock_post.assert_called_once()
     response_json = response.json()
     assert response_json["status"] == external_api_response_status
-    assert response_json["detail"] == "Webhook returned invalid status"
+    assert response_json["detail"] == "Webhook returned error status"
     assert (
         response_json["body"]
-        == "Please check the webhook endpoint to validate it returns a 200 OK."
+        == f"Webhook returned HTTP {external_api_response_status}."
     )
 
 
@@ -474,11 +533,16 @@ def test_send_test_webhook__various_secrets__sends_correct_payload(
     secret: str,
 ) -> None:
     # Given
-    webhook_url = "http://test.webhook.com"
-    mock_post = mocker.patch("requests.post")
+    webhook_url = "https://example.com"
+    mock_post = mocker.patch("webhooks.webhooks.requests.post")
     mock_response = MagicMock()
     mock_response.status_code = 200
+    mock_response.ok = True
     mock_post.return_value = mock_response
+    mocker.patch(
+        "webhooks.fields.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
+    )
 
     url = reverse("api-v1:webhooks:webhooks-test")
 
@@ -513,10 +577,14 @@ def test_send_test_webhook__request_exception__returns_error_response(
     organisation: Organisation,
 ) -> None:
     # Given
-    webhook_url = "http://test.webhook.com"
-    mock_post = mocker.patch("requests.post")
+    webhook_url = "https://example.com"
+    mock_post = mocker.patch("webhooks.webhooks.requests.post")
     mock_post.side_effect = requests.exceptions.RequestException(
         "Some internal exception details that should not be exposed!"
+    )
+    mocker.patch(
+        "webhooks.fields.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
     )
 
     url = reverse("api-v1:webhooks:webhooks-test")

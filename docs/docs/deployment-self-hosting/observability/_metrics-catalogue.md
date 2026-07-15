@@ -86,6 +86,14 @@ Total identities mirrored from Dynamo to ClickHouse by the segment-membership ba
 
 Labels:
 
+### `flagsmith_segment_membership_read_duration_seconds`
+
+Histogram.
+
+Duration of a single segment membership page read.
+
+Labels:
+
 ### `flagsmith_segment_membership_refresh_duration_seconds`
 
 Histogram.

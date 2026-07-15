@@ -288,7 +288,7 @@ These keys are not secret and can be considered public.
 
 ### Server-Side SDK
 
-Server-side SDK Keys give server-side SDKs access to [Local Evaluation](#remote-evaluation) mode.
+Server-side SDK Keys give server-side SDKs access to [Local Evaluation](#local-evaluation) mode.
 
 These keys are secret and should not be shared.
 

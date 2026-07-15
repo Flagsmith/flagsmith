@@ -1,12 +1,18 @@
 import {
   CONTROL_VARIANT_KEY,
+  buildTicks,
+  computeLiftRange,
+  computeAxisRange,
   buildExposuresChartData,
   formatBucketLabel,
   getHeadlineTotal,
   getVariantIdentities,
   getVariantTotals,
+  liftToPercent,
+  valueToPercent,
 } from 'components/experiments/results/derive'
 import {
+  BayesianMetricResult,
   ExperimentFeature,
   ExposuresSummary,
   MultivariateOption,
@@ -182,5 +188,87 @@ describe('formatBucketLabel', () => {
     expect(formatBucketLabel('2026-06-12T14:00:00+00:00', 'hour')).toBe(
       '12 Jun 14:00',
     )
+  })
+})
+
+const metricResult: BayesianMetricResult = {
+  inference: {
+    b: {
+      chance_to_win: 0.75,
+      ci_high: 0.24,
+      ci_low: -0.12,
+      lift: 0.08,
+    },
+    c: {
+      chance_to_win: 0.25,
+      ci_high: 0.08,
+      ci_low: -0.06,
+      lift: -0.02,
+    },
+  },
+  metric_id: 1,
+  variants: {},
+}
+
+describe('axis helpers', () => {
+  it('pads the axis range around treatment credible intervals', () => {
+    expect(computeAxisRange(identities, metricResult)).toEqual({
+      max: 0.294,
+      min: -0.174,
+    })
+  })
+
+  it('uses the default balanced range when there is no inference data', () => {
+    expect(computeAxisRange(identities)).toEqual({
+      max: 0.13,
+      min: -0.13,
+    })
+  })
+
+  it('converts values to percentages within an axis range', () => {
+    expect(valueToPercent(0, { max: 0.3, min: -0.3 })).toBe(50)
+    expect(valueToPercent(0.15, { max: 0.3, min: -0.3 })).toBe(75)
+  })
+
+  it('builds readable ticks for compact percentage ranges', () => {
+    expect(buildTicks({ max: 0.13, min: -0.13 })).toEqual([
+      -0.1, -0.05, 0, 0.05, 0.1,
+    ])
+  })
+})
+
+describe('liftToPercent', () => {
+  it('centres zero and clamps values outside the range', () => {
+    expect(liftToPercent(0, 0.3)).toBe(50)
+    expect(liftToPercent(0.15, 0.3)).toBe(75)
+    expect(liftToPercent(-0.6, 0.3)).toBe(0)
+    expect(liftToPercent(0.6, 0.3)).toBe(100)
+  })
+})
+
+describe('computeLiftRange', () => {
+  it('pads the largest treatment interval magnitude beyond the default range', () => {
+    expect(
+      computeLiftRange(identities, {
+        ...metricResult,
+        inference: {
+          ...metricResult.inference,
+          b: {
+            chance_to_win: 0.75,
+            ci_high: 0.5,
+            ci_low: -0.12,
+            lift: 0.08,
+          },
+        },
+      }),
+    ).toBeCloseTo(0.55)
+  })
+
+  it('keeps a stable default range when there is no inference data', () => {
+    expect(computeLiftRange(identities)).toBe(0.33)
+  })
+
+  it('keeps the stable default range for compact intervals', () => {
+    expect(computeLiftRange(identities, metricResult)).toBe(0.33)
   })
 })

@@ -1,6 +1,7 @@
 const defaultFlags = {
   integration_data: {
     'amplitude': {
+      'categories': ['Analytics'],
       'description': 'Sends data on what flags served to each identity.',
       'docs': 'https://docs.flagsmith.com/integrations/analytics/amplitude',
       'fields': [
@@ -21,10 +22,11 @@ const defaultFlags = {
       ],
       'image': '/static/images/integrations/amplitude.svg',
       'perEnvironment': true,
-      'tags': ['analytics'],
+      'project': true,
       'title': 'Amplitude',
     },
     'backstage': {
+      'categories': ['Enterprise tools'],
       'description':
         'View your Flagsmith feature flags inside your Backstage developer portal.',
       'docs': 'https://docs.flagsmith.com/third-party-integrations/backstage',
@@ -34,6 +36,7 @@ const defaultFlags = {
       'title': 'Backstage',
     },
     'code-references': {
+      'categories': ['Developer tools'],
       'description':
         'Integrate with Code References to track feature flag usage in your codebase, and unlock new functionality in Flagsmith.',
       'docs': 'https://docs.flagsmith.com/managing-flags/code-references',
@@ -43,6 +46,7 @@ const defaultFlags = {
       'title': 'Code References',
     },
     'datadog': {
+      'categories': ['Monitoring'],
       'description':
         'Sends events to Datadog for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
       'docs': 'https://docs.flagsmith.com/integrations/apm/datadog',
@@ -74,10 +78,11 @@ const defaultFlags = {
       ],
       'image': '/static/images/integrations/datadog.svg',
       'perEnvironment': false,
-      'tags': ['logging'],
+      'project': true,
       'title': 'Datadog',
     },
     'dynatrace': {
+      'categories': ['Monitoring'],
       'description':
         'Sends events to Dynatrace for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
       'docs': 'https://docs.flagsmith.com/integrations/apm/dynatrace',
@@ -98,8 +103,21 @@ const defaultFlags = {
       ],
       'image': '/static/images/integrations/dynatrace.svg',
       'perEnvironment': true,
-      'tags': ['logging'],
+      'project': true,
       'title': 'Dynatrace',
+    },
+    'github': {
+      'categories': ['CI/CD'],
+      'description':
+        'View your Flagsmith Flags inside your GitHub Issues and Pull Request.',
+      'docs':
+        'https://docs.flagsmith.com/integrations/project-management/github',
+      'external': true,
+      'image': '/static/images/integrations/github.svg',
+      'isExternalInstallation': true,
+      'organisation': true,
+      'perEnvironment': false,
+      'title': 'GitHub',
     },
     'gitlab': {
       'categories': ['CI/CD'],
@@ -130,6 +148,7 @@ const defaultFlags = {
       'title': 'GitLab',
     },
     'grafana': {
+      'categories': ['Monitoring'],
       'description':
         'Receive Flagsmith annotations to your Grafana instance on feature flag and segment changes.',
       'docs': 'https://docs.flagsmith.com/integrations/apm/grafana',
@@ -146,70 +165,89 @@ const defaultFlags = {
         },
       ],
       'image': '/static/images/integrations/grafana.svg',
+      'organisation': true,
       'perEnvironment': false,
-      'tags': ['logging'],
+      'project': true,
       'title': 'Grafana',
     },
     'heap': {
+      'categories': ['Analytics'],
       'description': 'Sends data on what flags served to each identity.',
       'docs': 'https://docs.flagsmith.com/integrations/analytics/heap',
       'fields': [
-        {
-          'key': 'base_url',
-          'label': 'Base URL',
-          'options': [
-            { 'label': 'US', 'value': 'https://heapanalytics.com' },
-            // Heap's EU Track API host is c.eu.heap-api.com, not a .eu TLD:
-            // https://developers.heap.io/reference/track-1
-            { 'label': 'EU', 'value': 'https://c.eu.heap-api.com' },
-            { 'label': 'Custom URL', 'value': 'custom' },
-          ],
-        },
         {
           'hidden': true,
           'key': 'api_key',
           'label': 'API Key',
         },
-      ],
-      'image': '/static/images/integrations/heap.svg',
-      'perEnvironment': true,
-      'tags': ['analytics'],
-      'title': 'Heap Analytics',
-    },
-    'jira': {
-      'description': 'View your Flagsmith Flags inside Jira.',
-      'docs': 'https://docs.flagsmith.com/integrations/project-management/jira',
-      'external': true,
-      'image': 'https://docs.flagsmith.com/img/integrations/jira/jira-logo.svg',
-      'perEnvironment': false,
-      'title': 'Jira',
-    },
-    'mixpanel': {
-      'description': 'Sends data on what flags served to each identity.',
-      'docs': 'https://docs.flagsmith.com/integrations/analytics/mixpanel',
-      'fields': [
         {
+          'default': 'https://heapanalytics.com',
           'key': 'base_url',
           'label': 'Base URL',
           'options': [
-            { 'label': 'US', 'value': 'https://api.mixpanel.com' },
-            { 'label': 'EU', 'value': 'https://api-eu.mixpanel.com' },
-            { 'label': 'IN', 'value': 'https://api-in.mixpanel.com' },
+            { 'label': 'US', 'value': 'https://heapanalytics.com' },
+            { 'label': 'EU', 'value': 'https://c.eu.heap-api.com' },
             { 'label': 'Custom URL', 'value': 'custom' },
           ],
         },
+      ],
+      'image': '/static/images/integrations/heap.svg',
+      'perEnvironment': true,
+      'project': true,
+      'title': 'Heap Analytics',
+    },
+    'jira': {
+      'categories': ['Project Management'],
+      'description': 'View your Flagsmith Flags inside Jira.',
+      'docs': 'https://docs.flagsmith.com/integrations/project-management/jira',
+      'external': true,
+      'image': '/static/images/integrations/jira.svg',
+      'organisation': true,
+      'perEnvironment': false,
+      'project': true,
+      'title': 'Jira',
+    },
+    'mcp': {
+      'categories': ['AI'],
+      'customUI': true,
+      'description':
+        'Allow AI assistants and agents to interact with your feature flag infrastructure, including managing flags, segments, and release workflows.',
+      'docs':
+        'https://docs.flagsmith.com/integrating-with-flagsmith/mcp-server',
+      'external': false,
+      'image': '/static/images/integrations/mcp.svg',
+      'organisation': true,
+      'title': 'Flagsmith MCP Server',
+    },
+    'mixpanel': {
+      'categories': ['Analytics'],
+      'description': 'Sends data on what flags served to each identity.',
+      'docs': 'https://docs.flagsmith.com/integrations/analytics/mixpanel',
+      'fields': [
         {
           'hidden': true,
           'key': 'api_key',
           'label': 'Project Token',
         },
+        {
+          'default': 'https://api.mixpanel.com',
+          'key': 'base_url',
+          'label': 'Base URL',
+          'options': [
+            { 'label': 'US', 'value': 'https://api.mixpanel.com' },
+            { 'label': 'EU', 'value': 'https://api-eu.mixpanel.com' },
+            { 'label': 'India', 'value': 'https://api-in.mixpanel.com' },
+            { 'label': 'Custom URL', 'value': 'custom' },
+          ],
+        },
       ],
       'image': '/static/images/integrations/mp.svg',
       'perEnvironment': true,
-      'tags': ['analytics'],
+      'project': true,
       'title': 'Mixpanel',
     },
     'new-relic': {
+      'categories': ['Monitoring'],
       'description':
         'Sends events to New Relic for when flags are created, updated and removed.',
       'docs': 'https://docs.flagsmith.com/integrations/apm/newrelic',
@@ -243,10 +281,11 @@ const defaultFlags = {
       ],
       'image': '/static/images/integrations/new_relic.svg',
       'perEnvironment': false,
-      'tags': ['analytics'],
+      'project': true,
       'title': 'New Relic',
     },
     'rudderstack': {
+      'categories': ['Analytics'],
       'description': 'Sends data on what flags served to each identity.',
       'docs': 'https://docs.flagsmith.com/integrations/analytics/rudderstack',
       'fields': [
@@ -262,10 +301,11 @@ const defaultFlags = {
       ],
       'image': '/static/images/integrations/rudderstack.svg',
       'perEnvironment': true,
-      'tags': ['analytics'],
+      'project': true,
       'title': 'Rudderstack',
     },
     'segment': {
+      'categories': ['Analytics'],
       'description': 'Sends data on what flags served to each identity.',
       'docs': 'https://docs.flagsmith.com/integrations/analytics/segment',
       'fields': [
@@ -277,13 +317,13 @@ const defaultFlags = {
       ],
       'image': '/static/images/integrations/segment.svg',
       'perEnvironment': true,
-      'tags': ['analytics'],
+      'project': true,
       'title': 'Segment',
     },
     'sentry': {
+      'categories': ['Monitoring'],
       'description': 'Send flag change events to Sentry.',
-      'docs':
-        'https://docs.flagsmith.com/third-party-integrations/observability-and-monitoring/sentry',
+      'docs': 'https://docs.flagsmith.com/integrations/apm/sentry',
       'fields': [
         {
           'key': 'webhook_url',
@@ -297,20 +337,21 @@ const defaultFlags = {
       ],
       'image': '/static/images/integrations/sentry.svg',
       'perEnvironment': true,
-      'tags': ['Monitoring'],
       'title': 'Sentry',
     },
     'slack': {
+      'categories': ['Messaging'],
       'description':
         'Sends messages to Slack when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
       'docs': 'https://docs.flagsmith.com/integrations/slack',
       'image': '/static/images/integrations/slack.svg',
       'isOauth': true,
       'perEnvironment': true,
-      'tags': ['messaging'],
+      'project': true,
       'title': 'Slack',
     },
     'webhook': {
+      'categories': ['Webhooks'],
       'description':
         'Sends data on what flags served to each identity to a Webhook Endpoint you provide.',
       'docs': 'https://docs.flagsmith.com/integrations/webhook',
@@ -327,7 +368,7 @@ const defaultFlags = {
       ],
       'image': '/static/images/integrations/webhooks.svg',
       'perEnvironment': true,
-      'tags': ['analytics'],
+      'project': true,
       'title': 'Webhook',
     },
   },

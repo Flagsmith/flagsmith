@@ -93,7 +93,7 @@
     "highlight.js": "11.0.1",
     "history": "4.10.1",
     "html-webpack-plugin": "5.5.0",
-    "http-proxy-middleware": "^2.0.9",
+    "http-proxy-middleware": "^3.0.0",
     "ionicons": "^7.2.1",
     "jquery": "^3.7.1",
     "js-cookie": "3.0.7",

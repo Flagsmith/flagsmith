@@ -20,6 +20,7 @@ import {
   FeaturesTableFilters,
   FeaturesSDKIntegration,
 } from './components'
+import { useDeepLinkedFeature } from './hooks/useDeepLinkedFeature'
 import { useFeatureFilters } from './hooks/useFeatureFilters'
 import { useRemoveFeatureWithToast } from './hooks/useRemoveFeatureWithToast'
 import { useToggleFeatureWithToast } from './hooks/useToggleFeatureWithToast'
@@ -27,7 +28,11 @@ import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { useFeatureListWithApiKey } from 'common/hooks/useFeatureListWithApiKey'
 import { useViewMode } from 'common/useViewMode'
 import type { Pagination } from './types'
-import type { ProjectFlag, FeatureState } from 'common/types/responses'
+import type {
+  FeatureListProviderData,
+  FeatureState,
+  ProjectFlag,
+} from 'common/types/responses'
 import { ProjectPermission } from 'common/types/permissions.types'
 
 const DEFAULT_PAGINATION: Pagination = {
@@ -88,6 +93,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
   const {
     error: projectEnvError,
     getEnvironment,
+    getEnvironmentIdFromKey,
     project,
   } = useProjectEnvironments(projectId)
   const { currentData, data, error, isFetching, isLoading, refetch } =
@@ -174,6 +180,16 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
     [data?.pagination],
   )
 
+  // Deep-link support: open the slideout for a `?feature=` target that isn't on
+  // the current page by fetching it and rendering a hidden FeatureRow below.
+  const deepLinkedFeature = useDeepLinkedFeature({
+    environmentApiKey: environmentId,
+    getEnvironmentIdFromKey,
+    isListLoaded: !!data && !isFetching,
+    projectFlags,
+    projectId,
+  })
+
   usePageTracking({
     context: {
       environmentId,
@@ -245,39 +261,37 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
     [projectFlags, environmentFlags],
   )
 
-  const renderFeatureRow = useCallback(
-    (projectFlag: ProjectFlag | SkeletonItem, i: number) => {
-      if (isSkeletonItem(projectFlag)) {
-        return <FeatureRowSkeleton key={`skeleton-${i}`} />
-      }
-
-      return (
-        <Permission
-          key={projectFlag.id}
-          level='environment'
-          tags={projectFlag.tags}
-          permission={Utils.getManageFeaturePermission(
-            Utils.changeRequestsEnabled(minimumChangeRequestApprovals),
-          )}
-          id={environmentId}
-        >
-          {({ permission }) => (
-            <FeatureRow
-              environmentFlags={environmentFlags}
-              permission={permission}
-              environmentId={environmentId}
-              projectId={projectId}
-              index={i}
-              toggleFlag={toggleFlag}
-              removeFlag={removeFlag}
-              projectFlag={projectFlag}
-              isCompact={isCompact}
-              experimentMode={defaultExperiment}
-            />
-          )}
-        </Permission>
-      )
-    },
+  const renderPermissionedFeatureRow = useCallback(
+    (
+      projectFlag: ProjectFlag,
+      i: number,
+      environmentFlagsOverride?: FeatureListProviderData['environmentFlags'],
+    ) => (
+      <Permission
+        key={projectFlag.id}
+        level='environment'
+        tags={projectFlag.tags}
+        permission={Utils.getManageFeaturePermission(
+          Utils.changeRequestsEnabled(minimumChangeRequestApprovals),
+        )}
+        id={environmentId}
+      >
+        {({ permission }) => (
+          <FeatureRow
+            environmentFlags={environmentFlagsOverride ?? environmentFlags}
+            permission={permission}
+            environmentId={environmentId}
+            projectId={projectId}
+            index={i}
+            toggleFlag={toggleFlag}
+            removeFlag={removeFlag}
+            projectFlag={projectFlag}
+            isCompact={isCompact}
+            experimentMode={defaultExperiment}
+          />
+        )}
+      </Permission>
+    ),
     [
       environmentFlags,
       environmentId,
@@ -288,6 +302,17 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
       isCompact,
       defaultExperiment,
     ],
+  )
+
+  const renderFeatureRow = useCallback(
+    (projectFlag: ProjectFlag | SkeletonItem, i: number) => {
+      if (isSkeletonItem(projectFlag)) {
+        return <FeatureRowSkeleton key={`skeleton-${i}`} />
+      }
+
+      return renderPermissionedFeatureRow(projectFlag, i)
+    },
+    [renderPermissionedFeatureRow],
   )
 
   const handleNextPage = () => {
@@ -377,6 +402,21 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
             />
 
             <FormGroup className='mb-4'>{renderFeaturesList()}</FormGroup>
+
+            {deepLinkedFeature && (
+              <div className='d-none' data-test='deep-linked-feature'>
+                {renderPermissionedFeatureRow(
+                  deepLinkedFeature.projectFlag,
+                  -1,
+                  deepLinkedFeature.environmentFlag
+                    ? {
+                        [deepLinkedFeature.projectFlag.id]:
+                          deepLinkedFeature.environmentFlag,
+                      }
+                    : {},
+                )}
+              </div>
+            )}
 
             <FeaturesSDKIntegration
               projectId={projectId}

@@ -19,5 +19,6 @@ features/workflows/logic/
 /tests/ldap_integration_tests/
 /tests/saml_unit_tests/
 
-# Unit test coverage
+# Code maintenance
 .coverage
+.mypy_cache

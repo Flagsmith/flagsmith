@@ -12,9 +12,14 @@
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-lg);
 
+  &--white {
+    background: var(--color-surface-default);
+  }
+
   &__heading {
     display: flex;
     flex-direction: column;
+    gap: 8px;
   }
 
   &__header {
@@ -35,7 +40,7 @@
 
   &__title {
     font-size: var(--font-body-size, 0.875rem);
-    font-weight: var(--font-weight-regular, 400);
+    font-weight: var(--font-weight-semibold);
     color: var(--color-text-secondary);
     margin: 0;
   }

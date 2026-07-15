@@ -101,7 +101,7 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
             }
           >
             This feature is specifically associated with the segment{' '}
-            <strong className='text-primary'>{segment?.name}</strong>.
+            <strong className='text-action'>{segment?.name}</strong>.
           </PageTitle>
         </div>
         <div className='panel panel-without-heading no-pad overflow-visible'>
@@ -143,8 +143,8 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
           }
         >
           This will highlight any feature overridden by the segment{' '}
-          <strong className='text-primary'>{segment?.name}</strong> in the
-          chosen environment.
+          <strong className='text-action'>{segment?.name}</strong> in the chosen
+          environment.
         </PageTitle>
       </div>
       {projectFlagsLoading ? (

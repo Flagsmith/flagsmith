@@ -172,8 +172,23 @@ integrate-private-tests:
 	mv ./flagsmith-private/unit_tests/saml tests/saml_unit_tests
 	rm -rf ./flagsmith-private
 
+CORE_OPENAPI_SERVERS := [{"url": "https://api.flagsmith.com", "description": "Flagsmith API"}]
+
+.PHONY: generate-full-openapi
+generate-full-openapi: OPENAPI_SERVERS=$(CORE_OPENAPI_SERVERS)
+generate-full-openapi:
+	uv run python manage.py spectacular | \
+	  npx openapi-format@${OPENAPI_FORMAT_VERSION} /dev/fd/0 \
+	    --output ../openapi.yaml
+
+.PHONY: generate-mcp-openapi
+generate-mcp-openapi:
+	npx openapi-format@${OPENAPI_FORMAT_VERSION} ../openapi.yaml \
+	  --filterFile openapi-filter-mcp.yaml \
+	  --output ../mcp/src/flagsmith_mcp/openapi.json
+
 .PHONY: generate-docs
-generate-docs: generate-flagsmith-sdk-openapi
+generate-docs: generate-flagsmith-sdk-openapi generate-mcp-openapi
 	uv run flagsmith docgen metrics > ../docs/docs/deployment-self-hosting/observability/_metrics-catalogue.md
 	uv run flagsmith docgen events > ../docs/docs/deployment-self-hosting/observability/_events-catalogue.md
 	uv run python manage.py generate_mcp_tool_catalogue > ../docs/docs/integrating-with-flagsmith/_mcp-tool-catalogue.md

@@ -139,7 +139,7 @@ export const Payment: FC<PaymentProps> = ({
               <>
                 Optional{' '}
                 <a
-                  className='text-primary fw-bold'
+                  className='text-action fw-bold'
                   target='_blank'
                   href={ON_PREMISE_HOSTING_URL}
                   rel='noreferrer'
@@ -148,7 +148,7 @@ export const Payment: FC<PaymentProps> = ({
                 </a>{' '}
                 or{' '}
                 <a
-                  className='text-primary fw-bold'
+                  className='text-action fw-bold'
                   target='_blank'
                   href={ON_PREMISE_HOSTING_URL}
                   rel='noreferrer'

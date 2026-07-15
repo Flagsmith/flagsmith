@@ -162,10 +162,16 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
       </div>
 
       <div className='create-metric-form__actions d-flex justify-content-end gap-2 pt-2'>
-        <Button theme='outline' onClick={handleCancel} disabled={isSaving}>
+        <Button
+          id='metric-form-cancel'
+          theme='outline'
+          onClick={handleCancel}
+          disabled={isSaving}
+        >
           Cancel
         </Button>
         <Button
+          id='metric-form-submit'
           theme='primary'
           onClick={handleSubmit}
           disabled={!canSubmitMetric(state) || isSaving}

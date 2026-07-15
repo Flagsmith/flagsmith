@@ -27,6 +27,7 @@ import {
 } from 'common/services/useIntegration'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import { useGetProjectQuery } from 'common/services/useProject'
+import MCPIntegration from 'components/integrations/MCPIntegration'
 
 const GITHUB_INSTALLATION_UPDATE = 'update'
 
@@ -421,10 +422,9 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
     const value = formData[field.key]
     if (field.inputType === 'checkbox') return value ? 'Yes' : 'No'
     if (field.options) {
-      return (
-        field.options.find((o) => o.value === value)?.label ??
-        String(value ?? '')
-      )
+      const match = field.options.find((o) => o.value === value)
+      if (match) return field.key === 'base_url' ? match.value : match.label
+      return String(value ?? '')
     }
     if (field.hidden && typeof value === 'string') {
       return value.replace(/./g, '*')
@@ -457,6 +457,14 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
           </label>
         </div>
         {field.options ? renderFieldSelect(field) : renderFieldInput(field)}
+      </div>
+    )
+  }
+
+  if (integration.customUI) {
+    return (
+      <div className={classNames({ 'p-4': !!modal })}>
+        {id === 'mcp' && <MCPIntegration />}
       </div>
     )
   }

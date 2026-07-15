@@ -71,8 +71,15 @@ const OverflowNav: FC<OverflowNavProps> = ({
           'd-flex align-items-center',
         )}
       >
+        {/* Wrappers keep DOM children 1:1 with items so measured widths align,
+            even when an item renders nothing or multiple elements */}
         {(isMeasuring ? items : visible).map((child, idx) => (
-          <React.Fragment key={idx}>{child}</React.Fragment>
+          <div
+            key={idx}
+            className={`d-flex align-items-center gap-${gap} flex-shrink-0`}
+          >
+            {child}
+          </div>
         ))}
       </div>
 

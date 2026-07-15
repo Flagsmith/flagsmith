@@ -5,7 +5,7 @@ from typing import Any
 
 from django.core.management.base import BaseCommand
 
-from api.openapi import MCPSchemaGenerator
+from api.openapi import SchemaGenerator
 
 _TOOL_NAME_RE = re.compile(r"^\| `([^`]+)`")
 
@@ -29,14 +29,14 @@ class Command(BaseCommand):
 
     def handle(self, *args: Any, exclude: Path | None = None, **options: Any) -> None:
         excluded = _read_tool_names(exclude) if exclude else set()
-        generator = MCPSchemaGenerator()
-        schema = generator.get_schema(request=None, public=True)
+        schema = SchemaGenerator().get_schema(request=None, public=True)
 
         rows = sorted(
             (operation["operationId"], _one_line(operation.get("description", "")))
             for path_item in schema.get("paths", {}).values()
             for operation in path_item.values()
             if isinstance(operation, dict) and "operationId" in operation
+            if "mcp" in operation.get("tags", [])
             if operation["operationId"] not in excluded
         )
 

@@ -165,6 +165,15 @@ export type SegmentMembership = {
   count: number
   last_synced_at: string
 }
+export type SegmentMember = {
+  identifier: string
+  identity_key: string
+  traits: Record<string, FlagsmithValue> | null
+}
+export type SegmentMembersResponse = PagedResponse<SegmentMember> & {
+  // Pass as `cursor` to fetch the next page; null when there are no more rows.
+  next_cursor: string | null
+}
 export type Segment = {
   id: number
   rules: SegmentRule[]
@@ -362,6 +371,7 @@ export type IntegrationData = {
   organisation?: string
   project?: string
   isOauth?: boolean
+  customUI?: boolean
 }
 
 export type ActiveIntegration = {
@@ -404,6 +414,8 @@ export type User = {
   last_login: string
   uuid: string
   onboarding: Onboarding
+  // Set client-side at login, not returned by the API.
+  isGettingStarted?: boolean
   // TODO: Use enum
   role: string
 }
@@ -630,6 +642,20 @@ export type Experiment = {
   updated_at: string
   started_at: string | null
   ended_at: string | null
+  experiment_rollout?: ExperimentRollout
+}
+
+export type ExperimentRollout = {
+  enabled: boolean
+  rollout_percentage: number
+  feature_state_value: {
+    type: 'integer' | 'string' | 'boolean'
+    value: string
+  }
+  multivariate_feature_state_values: {
+    multivariate_feature_option: number
+    percentage_allocation: number
+  }[]
 }
 
 export type ExpectedDirection =
@@ -672,6 +698,14 @@ export type ExperimentExposures = {
   last_error_at: string | null
   refresh_requested_at: string | null
   payload: ExposuresSummary | null
+}
+
+export type ExperimentBayesianResults = {
+  as_of: string | null
+  last_error_at: string | null
+  refresh_requested_at: string | null
+  payload: BayesianResultsSummary | null
+  is_final: boolean
 }
 
 // --- Bayesian results (defined now, consumed when the endpoint ships) ---
@@ -793,7 +827,18 @@ export type ProjectFlag = {
     last_successful_repository_scanned_at: string
     last_feature_found_at: string
   }[]
+  lifecycle_stage?: LifecycleStage | null
 }
+
+export type LifecycleStage =
+  | 'new'
+  | 'live'
+  | 'permanent'
+  | 'stale'
+  | 'needs_monitoring'
+  | 'to_remove'
+
+export type LifecycleStatusCounts = Record<LifecycleStage, number>
 
 export type FeatureListProviderData = {
   projectFlags: ProjectFlag[] | null
@@ -1251,6 +1296,7 @@ export type WarehouseConnection = {
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
+  segmentMembers: SegmentMembersResponse
   auditLogs: PagedResponse<AuditLogItem>
   organisationLicence: {}
   organisation: Organisation
@@ -1321,6 +1367,7 @@ export type Res = {
   rolePermission: PagedResponse<RolePermission>
   projectFlags: PagedResponse<ProjectFlag>
   projectFlag: ProjectFlag
+  lifecycleStatusCounts: LifecycleStatusCounts
   identityFeatureStatesAll: IdentityFeatureState[]
   createRolesPermissionUsers: RolePermissionUser
   rolesPermissionUsers: PagedResponse<RolePermissionUser>
@@ -1480,7 +1527,7 @@ export type Res = {
   }
   experiment: Experiment
   experimentExposures: ExperimentExposures
-  experimentBayesianResults: BayesianResultsSummary
+  experimentBayesianResults: ExperimentBayesianResults
   metric: Metric
   metrics: PagedResponse<Metric>
   multivariateOption: MultivariateOption

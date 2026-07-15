@@ -1,12 +1,25 @@
-import { FC, useCallback, useMemo, useState } from 'react'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { ExpectedDirection, Metric, ProjectFlag } from 'common/types/responses'
-import { useCreateExperimentMutation } from 'common/services/useExperiment'
-import { METRIC_DIRECTION_TO_EXPECTED_DIRECTION } from './constants'
+import {
+  useCreateExperimentMutation,
+  useStartExperimentMutation,
+} from 'common/services/useExperiment'
+import {
+  ENABLE_EXPERIMENT_LIFECYCLE,
+  METRIC_DIRECTION_TO_EXPECTED_DIRECTION,
+} from './constants'
 import WizardStepper from './WizardStepper'
 import WizardNavButtons from './WizardNavButtons'
 import LivePreviewPanel from './LivePreviewPanel'
 import SetupStep from './steps/SetupStep'
-import AudienceStep from './steps/AudienceStep'
+import RolloutStep from './steps/RolloutStep'
+import {
+  VariationSplitEntry,
+  getControlPercentage,
+  getEvenSplit,
+  toRolloutFeatureValue,
+} from './rollout'
+import isValidPercentage from 'common/utils/isValidPercentage'
 import MeasurementStep from './steps/MeasurementStep'
 import ReviewStep from './steps/ReviewStep'
 
@@ -34,10 +47,23 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
   const [selectedMetric, setSelectedMetric] = useState<Metric | null>(null)
   const [expectedDirection, setExpectedDirection] =
     useState<ExpectedDirection | null>(null)
+  const [rolloutPercentage, setRolloutPercentage] = useState(100)
+  const [variationSplit, setVariationSplit] = useState<VariationSplitEntry[]>(
+    [],
+  )
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
 
-  const [createExperiment, { isLoading: isSubmitting }] =
+  useEffect(() => {
+    setVariationSplit(
+      selectedFeature ? getEvenSplit(selectedFeature.multivariate_options) : [],
+    )
+  }, [selectedFeature])
+
+  const [createExperiment, { isLoading: isCreating }] =
     useCreateExperimentMutation()
+  const [startExperiment, { isLoading: isStarting }] =
+    useStartExperimentMutation()
+  const isSubmitting = isCreating || isStarting
 
   const isStep1Valid = useMemo(
     () =>
@@ -50,9 +76,14 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
   const isMeasurementValid =
     selectedMetric !== null && expectedDirection !== null
 
+  const controlPercentage = getControlPercentage(variationSplit)
+  const isRolloutValid =
+    isValidPercentage(rolloutPercentage) && isValidPercentage(controlPercentage)
+
   const stepValidity: Record<number, boolean> = {
     0: isStep1Valid,
-    3: isStep1Valid && isMeasurementValid,
+    1: isRolloutValid,
+    3: isStep1Valid && isRolloutValid && isMeasurementValid,
     [MEASUREMENT_STEP]: isMeasurementValid,
   }
   const canContinue = stepValidity[currentStep] ?? true
@@ -89,8 +120,16 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
   const doCreate = useCallback(async () => {
     if (!selectedFeature || !selectedMetric || !expectedDirection) return
     try {
-      await createExperiment({
+      const controlValue =
+        selectedFeature.environment_feature_state?.feature_state_value ?? ''
+      const experiment = await createExperiment({
         body: {
+          experiment_rollout: {
+            enabled: false,
+            feature_state_value: toRolloutFeatureValue(controlValue),
+            multivariate_feature_state_values: variationSplit,
+            rollout_percentage: rolloutPercentage,
+          },
           feature: selectedFeature.id,
           hypothesis: hypothesis.trim(),
           metrics: [
@@ -103,7 +142,23 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
         },
         environmentId,
       }).unwrap()
-      toast('Experiment created successfully')
+      // Auto-start to skip draft status when lifecycle states are disabled.
+      if (!ENABLE_EXPERIMENT_LIFECYCLE) {
+        try {
+          await startExperiment({
+            environmentId,
+            experimentId: experiment.id,
+          }).unwrap()
+        } catch {
+          toast(
+            'Experiment created but failed to start. You can start it manually from the experiment page.',
+            'danger',
+          )
+          onCreated()
+          return
+        }
+      }
+      toast('Experiment created and started')
       onCreated()
     } catch {
       toast('Failed to create experiment', 'danger')
@@ -115,8 +170,11 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
     hypothesis,
     name,
     onCreated,
+    rolloutPercentage,
     selectedFeature,
     selectedMetric,
+    startExperiment,
+    variationSplit,
   ])
 
   const handleLaunch = useCallback(() => {
@@ -126,8 +184,11 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
         <span>
           This will start serving variations of{' '}
           <strong>{selectedFeature.name}</strong> to{' '}
-          <strong>100% of all users in the environment</strong>. You can pause
-          or stop the experiment at any time.
+          <strong>
+            {rolloutPercentage}% of eligible identities in the environment
+          </strong>
+          . While the experiment is running, the flag value will not be
+          editable.
         </span>
       ),
       noText: 'Cancel',
@@ -135,7 +196,7 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
       title: 'Create experiment?',
       yesText: 'Create',
     })
-  }, [selectedFeature, isMeasurementValid, doCreate])
+  }, [selectedFeature, isMeasurementValid, rolloutPercentage, doCreate])
 
   const renderStep = () => {
     switch (currentStep) {
@@ -153,7 +214,15 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
           />
         )
       case 1:
-        return <AudienceStep />
+        return (
+          <RolloutStep
+            selectedFeature={selectedFeature}
+            rolloutPercentage={rolloutPercentage}
+            variationSplit={variationSplit}
+            onRolloutChange={setRolloutPercentage}
+            onSplitChange={setVariationSplit}
+          />
+        )
       case 2:
         return (
           <MeasurementStep
@@ -172,8 +241,11 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
             selectedFeature={selectedFeature}
             selectedMetric={selectedMetric}
             expectedDirection={expectedDirection}
+            rolloutPercentage={rolloutPercentage}
+            variationSplit={variationSplit}
             onEditSetup={() => setCurrentStep(0)}
             onEditMeasurement={() => setCurrentStep(MEASUREMENT_STEP)}
+            onEditRollout={() => setCurrentStep(1)}
           />
         )
       default:

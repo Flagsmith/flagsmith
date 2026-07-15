@@ -16,7 +16,7 @@ import ExperimentsListControls from 'components/experiments/ExperimentsListContr
 import {
   FilterTab,
   TAB_LABELS,
-  TAB_ORDER,
+  VISIBLE_TAB_ORDER,
 } from 'components/experiments/constants'
 import Icon from 'components/icons/Icon'
 
@@ -171,7 +171,7 @@ const ExperimentsPage: FC = () => {
         </div>
       )
     }
-    const tabs = TAB_ORDER.map((value) => ({
+    const tabs = VISIBLE_TAB_ORDER.map((value) => ({
       label: getTabLabel(value),
       value,
     }))

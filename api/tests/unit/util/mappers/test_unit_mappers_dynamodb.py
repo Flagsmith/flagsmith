@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
     from environments.models import Environment, EnvironmentAPIKey
-    from features.models import FeatureState
+    from features.models import Feature, FeatureState
 
 
 def test_map_environment_to_environment_document__valid_environment__returns_expected_document(
@@ -261,6 +261,34 @@ def test_map_environment_to_compressed_environment_document__valid_environment__
         json.loads(gzip.decompress(compressed_feature_states).decode("utf-8"))
         == uncompressed_document["feature_states"]
     )
+
+
+def test_map_environment_to_compressed_environment_document__mv_option_with_key__key_preserved(
+    environment: "Environment",
+    multivariate_feature: "Feature",
+) -> None:
+    # Given
+    mv_option = multivariate_feature.multivariate_options.first()
+    assert mv_option is not None
+    mv_option.key = "control"
+    mv_option.save()
+
+    # When
+    result = dynamodb.map_environment_to_compressed_environment_document(environment)
+
+    # Then
+    compressed_feature_states = result.document["feature_states"]
+    assert isinstance(compressed_feature_states, bytes)
+    feature_states = json.loads(
+        gzip.decompress(compressed_feature_states).decode("utf-8")
+    )
+    mv_options = [
+        mv_value["multivariate_feature_option"]
+        for feature_state in feature_states
+        for mv_value in feature_state["multivariate_feature_state_values"]
+    ]
+    keyed_option = next(option for option in mv_options if option["id"] == mv_option.id)
+    assert keyed_option["key"] == "control"
 
 
 def test_map_environment_to_compressed_environment_v2_document__valid_environment__returns_compressed_fields(

@@ -172,6 +172,10 @@ Permissions can be assigned at four levels: user group, organisation, project, a
 | Delete feature     | Allows deleting features from all environments.                                                                                              | Yes           |
 | Manage segments    | Grants write access to segments in this project.                                                                                             |               |
 | View audit log     | Allows viewing all audit log entries for this project.                                                                                       |               |
+| Manage tags        | Allows managing tags in this project.                                                                                                        |               |
+| Create project level change requests | Allows creating project-level (segment) change requests. |               |
+| Approve project level change requests | Allows approving project-level (segment) change requests. |               |
+| Manage project level change requests | Allows managing and publishing project-level (segment) change requests. |               |
 
 ### Environment
 

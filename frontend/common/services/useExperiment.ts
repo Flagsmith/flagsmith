@@ -5,7 +5,9 @@ import Utils from 'common/utils/utils'
 import transformCorePaging from 'common/transformCorePaging'
 
 export const experimentService = service
-  .enhanceEndpoints({ addTagTypes: ['Experiment', 'ExperimentExposures'] })
+  .enhanceEndpoints({
+    addTagTypes: ['Experiment', 'ExperimentExposures', 'ExperimentResults'],
+  })
   .injectEndpoints({
     endpoints: (builder) => ({
       completeExperiment: builder.mutation<
@@ -47,6 +49,20 @@ export const experimentService = service
           url: `environments/${environmentId}/experiments/${experimentId}/`,
         }),
       }),
+      getExperimentBayesianResults: builder.query<
+        Res['experimentBayesianResults'] | null,
+        Req['getExperimentBayesianResults']
+      >({
+        providesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'ExperimentResults' },
+        ],
+        query: ({ environmentId, experimentId }) => ({
+          url: `environments/${environmentId}/experiments/${experimentId}/results/`,
+        }),
+        transformResponse: (res: {
+          results: Res['experimentBayesianResults'] | null
+        }) => res.results,
+      }),
       getExperimentExposures: builder.query<
         Res['experimentExposures'] | null,
         Req['getExperimentExposures']
@@ -82,6 +98,36 @@ export const experimentService = service
           method: 'POST',
           url: `environments/${environmentId}/experiments/${experimentId}/pause/`,
         }),
+      }),
+      refreshExperimentBayesianResults: builder.mutation<
+        void,
+        Req['refreshExperimentBayesianResults']
+      >({
+        invalidatesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'ExperimentResults' },
+        ],
+        queryFn: async (
+          { environmentId, experimentId },
+          _api,
+          _extraOptions,
+          baseQuery,
+        ) => {
+          const result = await baseQuery({
+            method: 'POST',
+            url: `environments/${environmentId}/experiments/${experimentId}/results/refresh/`,
+          })
+          if (result.error) {
+            const retryAfter =
+              result.meta?.response?.headers?.get('Retry-After')
+            return {
+              error: {
+                ...result.error,
+                retryAfter: retryAfter ? parseInt(retryAfter, 10) : null,
+              },
+            }
+          }
+          return { data: undefined }
+        },
       }),
       refreshExperimentExposures: builder.mutation<
         Res['experimentExposures'],
@@ -140,6 +186,20 @@ export const experimentService = service
           url: `environments/${environmentId}/experiments/${experimentId}/`,
         }),
       }),
+      updateExperimentRollout: builder.mutation<
+        Res['experiment'],
+        Req['updateExperimentRollout']
+      >({
+        invalidatesTags: (_res, _err, { experimentId }) => [
+          { id: experimentId, type: 'Experiment' },
+          { id: 'LIST', type: 'Experiment' },
+        ],
+        query: ({ body, environmentId, experimentId }) => ({
+          body,
+          method: 'PATCH',
+          url: `environments/${environmentId}/experiments/${experimentId}/rollout/`,
+        }),
+      }),
     }),
   })
 
@@ -147,11 +207,14 @@ export const {
   useCompleteExperimentMutation,
   useCreateExperimentMutation,
   useDeleteExperimentMutation,
+  useGetExperimentBayesianResultsQuery,
   useGetExperimentExposuresQuery,
   useGetExperimentQuery,
   useGetExperimentsQuery,
   usePauseExperimentMutation,
+  useRefreshExperimentBayesianResultsMutation,
   useRefreshExperimentExposuresMutation,
   useStartExperimentMutation,
   useUpdateExperimentMutation,
+  useUpdateExperimentRolloutMutation,
 } = experimentService

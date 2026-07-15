@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, HttpUrl, model_validator
 from pydantic_settings import BaseSettings
 
 Transport = Literal["http", "stdio"]
@@ -9,8 +9,12 @@ Transport = Literal["http", "stdio"]
 class Settings(BaseSettings):
     model_config = {"use_attribute_docstrings": True}
 
-    flagsmith_api_url: str = Field(
-        default="https://api.flagsmith.com",
+    environment: str | None = Field(
+        default=None,
+    )
+    """Deployment environment."""
+    flagsmith_api_url: HttpUrl = Field(
+        default=HttpUrl("https://api.flagsmith.com"),
     )
     """Flagsmith API base URL."""
     flagsmith_api_token: str | None = Field(
@@ -42,11 +46,15 @@ class Settings(BaseSettings):
         default="flagsmith-mcp",
     )
     """Service name reported to OpenTelemetry."""
-    mcp_server_url: str = Field(
-        default="http://127.0.0.1:8000",
+    mcp_server_url: HttpUrl = Field(
+        default=HttpUrl("http://127.0.0.1:8000"),
     )
     """Public base URL of this MCP server, advertised in OAuth protected-resource
     metadata. Override for HTTP deployments behind a proxy/public hostname."""
+    sentry_dsn: HttpUrl | None = Field(
+        default=None,
+    )
+    """Sentry DSN for error reporting. Error capture is disabled when unset."""
 
     @model_validator(mode="after")
     def validate_stdio_token(self) -> "Settings":

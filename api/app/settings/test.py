@@ -1,5 +1,14 @@
 from app.settings.common import *  # noqa
-from app.settings.common import INSTALLED_APPS, LDAP_INSTALLED, REST_FRAMEWORK
+from app.settings.common import (
+    DATABASES,
+    INSTALLED_APPS,
+    LDAP_INSTALLED,
+    REST_FRAMEWORK,
+)
+
+# TODO: remove once permissions are an enum --
+# https://github.com/Flagsmith/flagsmith/issues/7850
+DATABASES["default"]["ENGINE"] = "core.db_backends.postgresql"
 
 if LDAP_INSTALLED:
     INSTALLED_APPS = INSTALLED_APPS + ["flagsmith_ldap"]

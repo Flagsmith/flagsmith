@@ -1,0 +1,101 @@
+---
+title: Run an Experiment
+sidebar_label: Run an Experiment
+sidebar_position: 5
+description: Instrument your application to record exposures and conversion events while the experiment runs.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+:::info Enterprise beta
+
+Experimentation is in beta on **Enterprise** plans. [Get in touch](https://www.flagsmith.com/contact-us) to join.
+
+:::
+
+Once an experiment is running, Flagsmith serves the variations automatically through the flag. Your application has two
+jobs:
+
+1. **Record exposures**: tell Flagsmith when an identity actually experienced a variation.
+2. **Record conversion events**: send the events your metrics aggregate.
+
+## Instrument your application
+
+Event collection is currently available in the **JavaScript** and **Python** SDKs, with more to follow. Enable it with
+the `enableEvents` / `enable_events` option.
+
+Users must be [identified](/flagsmith-concepts/identities). Exposures and conversion events are joined per identity, so
+use the same identifier for flags and events.
+
+<Tabs groupId="language">
+<TabItem value="js" label="JavaScript">
+
+```javascript
+import flagsmith from '@flagsmith/flagsmith';
+
+await flagsmith.init({
+    environmentID: 'YOUR_CLIENT_SIDE_ENVIRONMENT_KEY',
+    enableEvents: true,
+});
+await flagsmith.identify('user_42');
+
+// Evaluate the flag and record an exposure in one call
+const flag = flagsmith.getExperimentFlag('checkout_button');
+// ...render based on flag.value
+
+// Record a conversion event; the name must match your metric's event name
+flagsmith.trackEvent('purchase', { value: 99.5 });
+```
+
+In React, the `useExperiment` hook resolves the flag and records the exposure:
+
+```javascript
+const flag = useExperiment('checkout_button');
+```
+
+</TabItem>
+<TabItem value="py" label="Python">
+
+```python
+from flagsmith import Flagsmith
+
+flagsmith = Flagsmith(
+    environment_key="YOUR_ENVIRONMENT_KEY",
+    enable_events=True,
+)
+
+# Evaluate the flag and record an exposure in one call
+flag = flagsmith.get_experiment_flag("checkout_button", identifier="user_42")
+
+# Record a conversion event; the name must match your metric's event name
+flagsmith.track_event("purchase", identifier="user_42", value=99.5)
+```
+
+</TabItem>
+</Tabs>
+
+### Exposures
+
+An exposure is the moment an identity is served a variation; it is what enrols them in the results. `getExperimentFlag`
+/ `get_experiment_flag` evaluates the flag and records the exposure in one call.
+
+Record the exposure where the user actually experiences the change; if you evaluate in one place and render in another,
+call `trackExposureEvent` / `track_exposure_event` at the point of display instead.
+
+Exposures are deduplicated per identity: each identity is counted once, in the variation it saw first, so recording an
+exposure more than once is safe.
+
+### Conversion events
+
+`trackEvent` / `track_event` sends a named event, optionally with a numeric `value`, traits and metadata.
+
+Any event whose name matches a metric's event name feeds that metric. Conversions are attributed post-exposure: an
+identity's events only count after its first exposure.
+
+## While it runs
+
+-   The flag is locked while the experiment is running.
+-   Monitor enrolment on the experiment page's **Exposures** panel to confirm data is arriving.
+-   You can edit the rollout from the experiment page, but changing it mid-experiment can affect the statistical
+    validity of your results.

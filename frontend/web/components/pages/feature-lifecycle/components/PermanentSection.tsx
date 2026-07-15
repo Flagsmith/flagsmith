@@ -13,6 +13,7 @@ type PermanentSectionProps = {
   hasFilters: boolean
   onFilterChange: (updates: Partial<FilterState>) => void
   onClearFilters: () => void
+  onFeatureClick?: (flag: ProjectFlag) => void
 }
 
 const PermanentSection: FC<PermanentSectionProps> = ({
@@ -22,6 +23,7 @@ const PermanentSection: FC<PermanentSectionProps> = ({
   hasFilters,
   isLoading,
   onClearFilters,
+  onFeatureClick,
   onFilterChange,
   projectId,
 }) => {
@@ -40,6 +42,7 @@ const PermanentSection: FC<PermanentSectionProps> = ({
       hasFilters={hasFilters}
       onFilterChange={onFilterChange}
       onClearFilters={onClearFilters}
+      onFeatureClick={onFeatureClick}
       emptyLabel='No permanent features found.'
       nextPage={nextPage}
       prevPage={prevPage}

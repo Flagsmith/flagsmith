@@ -223,7 +223,10 @@ const MetricsPage: FC = () => {
           <p className='text-muted mb-4'>
             Create your first metric to measure experiment outcomes.
           </p>
-          <Button onClick={() => history.push(`${metricsPath}?create=true`)}>
+          <Button
+            id='metrics-page-create-empty'
+            onClick={() => history.push(`${metricsPath}?create=true`)}
+          >
             <Icon name='plus' width={16} />
             Create Metric
           </Button>
@@ -261,7 +264,10 @@ const MetricsPage: FC = () => {
               search
             />
           </div>
-          <Button onClick={() => history.push(`${metricsPath}?create=true`)}>
+          <Button
+            id='metrics-page-create'
+            onClick={() => history.push(`${metricsPath}?create=true`)}
+          >
             <Icon name='plus' width={16} />
             Create Metric
           </Button>

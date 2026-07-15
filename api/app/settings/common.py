@@ -183,6 +183,11 @@ DJANGO_DB_CONN_MAX_AGE = 0 if db_conn_max_age == -1 else db_conn_max_age
 DJANGO_DB_CONN_HEALTH_CHECKS = env.bool("DJANGO_DB_CONN_HEALTH_CHECKS", False)
 
 DATABASE_ROUTERS: list[str] = []
+
+FLAGSMITH_MIGRATE_DATABASES: list[str] = []
+FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES: list[str] = []
+FLAGSMITH_STARTUP_COMMANDS = ["bootstrap"]
+
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
     DATABASES = {
@@ -192,6 +197,8 @@ if "DATABASE_URL" in os.environ:
             conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         ),
     }
+    FLAGSMITH_MIGRATE_DATABASES.append("default")
+    FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("default")
     REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
     REPLICA_DATABASE_URLS = (
         env.list(
@@ -249,6 +256,8 @@ if "DATABASE_URL" in os.environ:
             conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         )
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
+        FLAGSMITH_MIGRATE_DATABASES.append("analytics")
+        FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("analytics")
 elif "DJANGO_DB_NAME" in os.environ:
     # If there is no DATABASE_URL configured, check for old style DB config parameters
     DATABASES = {
@@ -263,6 +272,8 @@ elif "DJANGO_DB_NAME" in os.environ:
             "CONN_HEALTH_CHECKS": DJANGO_DB_CONN_HEALTH_CHECKS,
         },
     }
+    FLAGSMITH_MIGRATE_DATABASES.append("default")
+    FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("default")
     if "DJANGO_DB_NAME_ANALYTICS" in os.environ:
         DATABASES["analytics"] = {
             "ENGINE": "django.db.backends.postgresql",
@@ -276,6 +287,8 @@ elif "DJANGO_DB_NAME" in os.environ:
         }
 
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
+        FLAGSMITH_MIGRATE_DATABASES.append("analytics")
+        FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("analytics")
 
 # Task processor database — OPTIONALLY SEPARATED
 TASK_PROCESSOR_DATABASE_URL = env("TASK_PROCESSOR_DATABASE_URL", default=None)
@@ -305,6 +318,8 @@ if TASK_PROCESSOR_DATABASE_URL or TASK_PROCESSOR_DATABASE_NAME:
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
         }
     DATABASE_ROUTERS.insert(0, "task_processor.routers.TaskProcessorRouter")
+    FLAGSMITH_MIGRATE_DATABASES.append("task_processor")
+    FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("task_processor")
 
     # Consume any remaining tasks from 'default' when opting in to 'task_processor' database
     _task_processor_databases = ["default", "task_processor"]
@@ -352,7 +367,7 @@ REST_FRAMEWORK = {
         "util.renderers.PydanticJSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
-    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_SCHEMA_CLASS": "api.openapi.AutoSchema",
 }
 MIDDLEWARE = [
     "common.core.middleware.APIResponseVersionHeaderMiddleware",
@@ -394,6 +409,9 @@ INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
 USE_CACHE_FOR_USAGE_DATA = env.bool("USE_CACHE_FOR_USAGE_DATA", default=True)
+
+# Base URL of the Control Plane that licensed Instances report usage snapshots to.
+CONTROL_PLANE_URL = env.str("CONTROL_PLANE_URL", default=None)
 
 API_USAGE_CACHE_SECONDS = env.int("API_USAGE_CACHE_SECONDS", default=0)
 
@@ -1477,13 +1495,32 @@ CLICKHOUSE_SECURE = env.bool("CLICKHOUSE_SECURE", default=None)
 
 CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
 
+SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS = env.int(
+    "SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS", default=6
+)
+SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS = env.int(
+    "SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS", default=1
+)
+if (
+    SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS
+    > SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS
+):
+    raise ImproperlyConfigured(
+        "SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS must not exceed "
+        "SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS."
+    )
+SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS = env.int(
+    "SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS",
+    default=120,  # We can expect the identity deletion to propagate by T+120 seconds based on Edge CDC SLO.
+)
+
 # Always installed: the router fences the `clickhouse` app's migrations off
 # the default Postgres database whether or not a CH alias is configured.
 DATABASE_ROUTERS.append("app.routers.ClickHouseRouter")
 
 if CLICKHOUSE_ENABLED:
     _clickhouse_db: dict[str, Any] = {
-        "ENGINE": "clickhouse_backend.backend",
+        "ENGINE": "core.db_backends.clickhouse",
         "HOST": CLICKHOUSE_HOST,
         "PORT": CLICKHOUSE_PORT,
         "USER": CLICKHOUSE_USER,
@@ -1495,7 +1532,12 @@ if CLICKHOUSE_ENABLED:
             "settings": {
                 # ClickHouse Cloud 25.12 requires this for `JSON`-column DDL.
                 "allow_experimental_json_type": 1,
+                # Block each DDL statement until every replica has applied it.
+                # Prevents replicated deployments (e.g. ClickHouse Cloud)
+                # from breaking migrations with Error 517.
+                "alter_sync": 2,
             },
         },
     }
     DATABASES["clickhouse"] = _clickhouse_db  # type: ignore[assignment]
+    FLAGSMITH_MIGRATE_DATABASES.append("clickhouse")

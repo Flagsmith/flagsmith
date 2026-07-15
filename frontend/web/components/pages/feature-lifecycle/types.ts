@@ -1,5 +1,3 @@
-import type { ProjectFlag } from 'common/types/responses'
-
 export type Section =
   | 'new'
   | 'live'
@@ -17,21 +15,3 @@ export type Pagination = {
 }
 
 export type LifecycleCounts = Partial<Record<Section, number>>
-
-type EvaluationResult = {
-  featureId: number
-  environmentId: string
-  hasEvaluations: boolean
-}
-
-type LifecycleData = {
-  newFlags: ProjectFlag[]
-  liveFlags: ProjectFlag[]
-  permanentFlags: ProjectFlag[]
-  staleFlags: ProjectFlag[]
-  staleNoCodeFlags: ProjectFlag[]
-  counts: LifecycleCounts
-  isLoading: boolean
-  error: unknown
-  refetch: () => void
-}

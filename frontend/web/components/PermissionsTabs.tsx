@@ -177,7 +177,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
               />
             )}
           </div>
-          <p className='text-right mt-5 text-dark'>
+          <p className='text-right mt-5 text-default'>
             This will edit the permissions for{' '}
             <strong>the {group?.name} group</strong>.
           </p>

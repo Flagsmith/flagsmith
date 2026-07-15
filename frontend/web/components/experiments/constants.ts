@@ -28,6 +28,13 @@ export const TAB_ORDER: FilterTab[] = [
   'completed',
 ]
 
+// Gates draft/paused experiment states
+export const ENABLE_EXPERIMENT_LIFECYCLE = false
+
+export const VISIBLE_TAB_ORDER: FilterTab[] = ENABLE_EXPERIMENT_LIFECYCLE
+  ? TAB_ORDER
+  : TAB_ORDER.filter((tab) => tab !== 'created' && tab !== 'paused')
+
 export const METRIC_DIRECTION_LABELS: Record<MetricDirection, string> = {
   down: '↓ lower is better',
   informational: 'informational',

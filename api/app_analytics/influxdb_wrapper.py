@@ -1,3 +1,4 @@
+import functools
 import json
 import logging
 import typing
@@ -21,20 +22,9 @@ from app_analytics.mappers import (
     map_flux_tables_to_usage_data,
     map_labels_to_influx_record_values,
 )
-from app_analytics.types import Labels
+from app_analytics.types import DownsampleSize, Labels
 
 logger = logging.getLogger(__name__)
-
-url = settings.INFLUXDB_URL
-token = settings.INFLUXDB_TOKEN
-influx_org = settings.INFLUXDB_ORG
-read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
-
-retries = Retry(connect=3, read=3, redirect=3)
-# Set a timeout to prevent threads being potentially stuck open due to network weirdness
-influxdb_client = InfluxDBClient(
-    url=url, token=token, org=influx_org, retries=retries, timeout=30000
-)
 
 DEFAULT_DROP_COLUMNS = (
     "organisation",
@@ -52,18 +42,35 @@ GET_MULTIPLE_EVENTS_LIST_GROUP_CLAUSE = (
 )
 
 
-def get_range_bucket_mappings(date_start: datetime) -> str:
-    now = timezone.now()
-    if (now - date_start).days > 10:
-        return settings.INFLUXDB_BUCKET + "_downsampled_1h"
-    return settings.INFLUXDB_BUCKET + "_downsampled_15m"
-
-
 class InfluxDBWrapper:
+    client = None
+
     def __init__(self, name):  # type: ignore[no-untyped-def]
         self.name = name
         self.records = []
-        self.write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
+
+    @classmethod
+    @functools.cache
+    def get_client(cls) -> InfluxDBClient:
+        """A singleton InfluxDB client instance"""
+        retries = Retry(connect=3, read=3, redirect=3)
+        return InfluxDBClient(
+            url=settings.INFLUXDB_URL,
+            token=settings.INFLUXDB_TOKEN,
+            org=settings.INFLUXDB_ORG,
+            retries=retries,
+            timeout=30000,  # Hard stop to prevent hanging requests
+        )
+
+    @classmethod
+    def get_downsampled_bucket(cls, size: DownsampleSize) -> str:
+        return f"{settings.INFLUXDB_BUCKET}_downsampled_{size}"
+
+    @classmethod
+    def select_downsampled_bucket(cls, date_start: datetime) -> str:
+        if (timezone.now() - date_start).days > 10:
+            return cls.get_downsampled_bucket(DownsampleSize.ONE_HOUR)
+        return cls.get_downsampled_bucket(DownsampleSize.FIFTEEN_MINUTES)
 
     def add_data_point(
         self,
@@ -85,8 +92,12 @@ class InfluxDBWrapper:
         self.records.append(point)
 
     def write(self) -> None:
+        """Persist collected data points to InfluxDB"""
         try:
-            self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
+            self.get_client().write_api(write_options=SYNCHRONOUS).write(
+                bucket=settings.INFLUXDB_BUCKET,
+                record=self.records,
+            )
         except (HTTPError, InfluxDBError) as e:
             logger.warning(
                 "Failed to write records to Influx: %s",
@@ -99,15 +110,20 @@ class InfluxDBWrapper:
                 settings.INFLUXDB_BUCKET,
             )
 
-    @staticmethod
+    @classmethod
     def influx_query_manager(
+        cls,
         date_start: datetime | None = None,
         date_stop: datetime | None = None,
         drop_columns: tuple[str, ...] = DEFAULT_DROP_COLUMNS,
         filters: str = "|> filter(fn:(r) => r._measurement == 'api_call')",
         extra: str = "",
-        bucket: str = read_bucket,
+        bucket: str | None = None,
     ) -> list[FluxTable]:
+        if bucket is None:
+            # NOTE: Legacy default
+            bucket = cls.get_downsampled_bucket(DownsampleSize.FIFTEEN_MINUTES)
+
         now = timezone.now()
         if date_start is None:
             date_start = now - timedelta(days=30)
@@ -119,7 +135,7 @@ class InfluxDBWrapper:
         if date_start == date_stop:
             return []
 
-        query_api = influxdb_client.query_api()
+        query_api = cls.get_client().query_api()
         drop_columns_input = str(list(drop_columns)).replace("'", '"')
 
         query = (
@@ -132,7 +148,7 @@ class InfluxDBWrapper:
         logger.debug("Running query in influx: \n\n %s", query)
 
         try:
-            return query_api.query(org=influx_org, query=query)
+            return query_api.query(org=settings.INFLUXDB_ORG, query=query)
         except HTTPError as e:
             capture_exception(e)
             return []
@@ -390,7 +406,7 @@ def get_top_organisations(
     if limit:
         limit = f"|> limit(n:{limit})"
 
-    bucket = get_range_bucket_mappings(date_start)
+    bucket = InfluxDBWrapper.select_downsampled_bucket(date_start)
     results = InfluxDBWrapper.influx_query_manager(
         date_start=date_start,
         bucket=bucket,
@@ -432,7 +448,7 @@ def get_current_api_usage(
 
     :return: number of current api calls
     """
-    bucket = read_bucket
+    bucket = InfluxDBWrapper.get_downsampled_bucket(DownsampleSize.FIFTEEN_MINUTES)
     results = InfluxDBWrapper.influx_query_manager(
         date_start=date_start,
         bucket=bucket,
@@ -474,7 +490,7 @@ def get_platform_usage_trends(
 
     org_id_set = ", ".join(f'"{oid}"' for oid in organisation_ids)
 
-    bucket = get_range_bucket_mappings(date_start)
+    bucket = InfluxDBWrapper.select_downsampled_bucket(date_start)
     results = InfluxDBWrapper.influx_query_manager(
         date_start=date_start,
         date_stop=date_stop,

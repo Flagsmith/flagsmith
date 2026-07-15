@@ -21,7 +21,7 @@ const SegmentOverrideDescription: FC<SegmentOverrideDescriptionType> = ({
   // If neither enabled nor value override is shown, show a generic message
   if (!showEnabledOverride && !showValueOverride) {
     return (
-      <span className='d-flex list-item-subtitle text-primary align-items-center'>
+      <span className='d-flex list-item-subtitle text-action align-items-center'>
         <SegmentsIcon className='me-1' width={16} fill='#6837fc' />
         {`This feature is being overridden by ${
           level === 'segment' ? 'this segment' : 'a segment'
@@ -36,7 +36,7 @@ const SegmentOverrideDescription: FC<SegmentOverrideDescriptionType> = ({
         <div className='list-item-subtitle'>
           <Row>
             <Flex>
-              <span className='list-item-subtitle d-flex text-primary align-items-center'>
+              <span className='list-item-subtitle d-flex text-action align-items-center'>
                 <SegmentsIcon className='me-1' width={16} fill='#6837fc' />
                 {`This feature is being overridden by ${
                   level === 'segment' ? 'this segment' : 'a segment'
@@ -51,7 +51,7 @@ const SegmentOverrideDescription: FC<SegmentOverrideDescriptionType> = ({
         </div>
       )}
       {showValueOverride && (
-        <span className='d-flex list-item-subtitle text-primary align-items-center'>
+        <span className='d-flex list-item-subtitle text-action align-items-center'>
           <SegmentsIcon className='me-1' width={16} fill='#6837fc' />
           {`This feature is being overridden by ${
             level === 'segment' ? 'this segment' : 'a segment'

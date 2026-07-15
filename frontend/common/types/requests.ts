@@ -32,6 +32,7 @@ import {
   FlagsmithValue,
   TagStrategy,
   FeatureType,
+  LifecycleStage,
 } from './responses'
 import { UtmsType } from './utms'
 
@@ -263,6 +264,12 @@ export type Req = {
     tag: Omit<Tag, 'id' | 'project' | 'type' | 'is_system_tag' | 'is_permanent'>
   }
   getSegment: { projectId: number; id: number }
+  getSegmentMembers: PagedRequest<{
+    projectId: number
+    id: number
+    environment: number
+    pages?: (string | undefined)[]
+  }>
   updateAccount: Account
   deleteAccount: {
     current_password: string
@@ -395,6 +402,10 @@ export type Req = {
     group_owners?: number[]
     sort_field?: string
     sort_direction?: SortOrder
+    lifecycle_stage?: LifecycleStage
+  }
+  getLifecycleStatusCounts: {
+    environment: number
   }
   getProjectFlag: { project: number; id: number }
   getRolesPermissionUsers: { organisation_id: number; role_id: number }
@@ -659,6 +670,7 @@ export type Req = {
     id: string
   }
   getProject: { id: number }
+  createProject: { name: string; organisation: number }
   updateProject: { id: number; body: UpdateProjectBody }
   deleteProject: { id: number }
   migrateProject: { id: number }
@@ -722,6 +734,7 @@ export type Req = {
     feature_id: number
     group_ids: number[]
   }
+  createEnvironment: { name: string; project: number }
   updateEnvironment: { id: number; body: Environment }
   createCloneIdentityFeatureStates: {
     environment_id: string
@@ -1031,7 +1044,7 @@ export type Req = {
   }
   getExperiments: PagedRequest<{
     environmentId: string
-    status?: ExperimentStatus
+    status?: ExperimentStatus | ExperimentStatus[]
   }>
   createExperiment: {
     environmentId: string
@@ -1040,6 +1053,18 @@ export type Req = {
       hypothesis: string
       feature: number
       metrics: { metric: number; expected_direction: ExpectedDirection }[]
+      experiment_rollout: {
+        enabled: boolean
+        rollout_percentage: number
+        feature_state_value: {
+          type: 'integer' | 'string' | 'boolean'
+          value: string
+        }
+        multivariate_feature_state_values: {
+          multivariate_feature_option: number
+          percentage_allocation: number
+        }[]
+      }
     }
   }
   experimentAction: { environmentId: string; experimentId: number }
@@ -1048,10 +1073,31 @@ export type Req = {
     experimentId: number
     body: { hypothesis?: string }
   }
+  updateExperimentRollout: {
+    environmentId: string
+    experimentId: number
+    body: {
+      enabled: boolean
+      rollout_percentage: number
+      feature_state_value: {
+        type: 'integer' | 'string' | 'boolean'
+        value: string
+      }
+      multivariate_feature_state_values: {
+        multivariate_feature_option: number
+        percentage_allocation: number
+      }[]
+    }
+  }
   deleteExperiment: { environmentId: string; experimentId: number }
   getExperiment: { environmentId: string; experimentId: number }
   getExperimentExposures: { environmentId: string; experimentId: number }
   refreshExperimentExposures: { environmentId: string; experimentId: number }
+  getExperimentBayesianResults: { environmentId: string; experimentId: number }
+  refreshExperimentBayesianResults: {
+    environmentId: string
+    experimentId: number
+  }
   getMetrics: PagedRequest<{
     environmentId: string
     q?: string

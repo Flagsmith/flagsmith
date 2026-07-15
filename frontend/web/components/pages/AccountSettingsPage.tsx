@@ -107,7 +107,7 @@ const AccountSettingsPage: FC = () => {
       body: (
         <div>
           Invalidating your token will generate a new token to use with our API,{' '}
-          <span className='text-dark font-weight-medium'>
+          <span className='text-default font-weight-medium'>
             your current token will no longer work
           </span>
           . Performing this action will also log you out, are you sure you wish

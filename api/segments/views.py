@@ -1,11 +1,13 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
+from common.environments.permissions import VIEW_IDENTITIES
 from common.projects.permissions import VIEW_PROJECT
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -22,13 +24,22 @@ from features.serializers import (
 )
 from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project
-from segment_membership.services import enqueue_membership_refresh
+from segment_membership.metrics import (
+    flagsmith_segment_membership_read_duration_seconds,
+)
+from segment_membership.services import (
+    enqueue_membership_refresh,
+    get_segment_members_page,
+    is_membership_enabled,
+)
 
 from .models import Segment
 from .permissions import SegmentPermissions
 from .serializers import (
     CloneSegmentSerializer,
     SegmentListQuerySerializer,
+    SegmentMembersQuerySerializer,
+    SegmentMembersResponseSerializer,
     SegmentSerializer,
 )
 from .services import delete_segment
@@ -159,6 +170,49 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    @extend_schema(
+        parameters=[SegmentMembersQuerySerializer],
+        responses={200: SegmentMembersResponseSerializer},
+    )
+    @action(detail=True, methods=["GET"], url_path="members")
+    def members(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        user: "FFAdminUser" = request.user  # type: ignore[assignment]
+        project = self.get_project()
+        # Fetch by pk directly rather than via get_object()/get_queryset(): the
+        # latter applies the list endpoint's `q` (segment-name search), which
+        # would filter this segment out when `q` is used here to search members.
+        segment = get_object_or_404(
+            Segment.live_objects.filter(project=project, is_system_segment=False),
+            pk=self.kwargs["pk"],
+        )
+        self.check_object_permissions(request, segment)
+        if not is_membership_enabled(project.organisation):
+            raise NotFound()
+
+        query_serializer = SegmentMembersQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+        environment = get_object_or_404(
+            Environment.objects.filter(project=project),
+            pk=query_serializer.validated_data["environment"],
+        )
+        if not user.has_environment_permission(VIEW_IDENTITIES, environment):
+            raise PermissionDenied()
+
+        limit = query_serializer.validated_data["limit"]
+        cursor = query_serializer.validated_data.get("cursor")
+        q = query_serializer.validated_data.get("q")
+        with flagsmith_segment_membership_read_duration_seconds.time():
+            # Fetch one extra row to detect whether a further page exists, so the
+            # last page doesn't advertise a phantom (empty) next page.
+            members = get_segment_members_page(
+                segment, environment, cursor=cursor, limit=limit + 1, q=q
+            )
+
+        has_more = len(members) > limit
+        members = members[:limit]
+        next_cursor = members[-1]["identifier"] if has_more else None
+        return Response({"results": members, "next_cursor": next_cursor})
 
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         segment = self.get_object()

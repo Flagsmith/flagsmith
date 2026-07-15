@@ -8,11 +8,16 @@ import structlog
 from clickhouse_driver import Client
 from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
+from flag_engine.segments.constants import PERCENTAGE_SPLIT
+from rest_framework.exceptions import ValidationError
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.dataclasses import AuthorData
+from environments.tasks import rebuild_environment_document
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
@@ -32,6 +37,7 @@ from experimentation.dataclasses import (
     MetricSpec,
     ResultsAggregates,
     ResultsSummary,
+    RolloutSpec,
     WarehouseEventStats,
 )
 from experimentation.models import (
@@ -50,7 +56,16 @@ from experimentation.stats import (
     srm_p_value,
 )
 from features.models import FeatureState
+from features.value_types import BOOLEAN, INTEGER, STRING
+from features.versioning.dataclasses import FlagChangeSet
+from features.versioning.versioning_service import (
+    update_flag,
+    update_multivariate_values,
+)
 from integrations.flagsmith.client import get_openfeature_client
+from segments.models import Condition, Segment, SegmentRule
+
+_ROLLOUT_VALUE_TYPE = {INTEGER: "integer", STRING: "string", BOOLEAN: "boolean"}
 
 if typing.TYPE_CHECKING:
     from collections.abc import Sequence
@@ -510,6 +525,188 @@ def transition_experiment_status(
     experiment.save()
     create_experiment_audit_log(experiment, user, action=target_status)
     return experiment
+
+
+def _create_rollout_segment(
+    experiment: Experiment, rollout_percentage: float
+) -> Segment:
+    segment: Segment = Segment.objects.create(
+        name=f"experiment-{experiment.id}-rollout",
+        project=experiment.feature.project,
+        is_system_segment=True,
+    )
+    rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(
+        rule=rule,
+        operator=PERCENTAGE_SPLIT,
+        property="$.identity.key",
+        value=str(rollout_percentage),
+    )
+    return segment
+
+
+def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
+    option_ids = [v.multivariate_feature_option_id for v in spec.multivariate_values]
+    if len(option_ids) != len(set(option_ids)):
+        raise ValidationError("Multivariate options must be unique")
+    valid_option_ids = set(
+        experiment.feature.multivariate_options.values_list("id", flat=True)
+    )
+    if invalid := set(option_ids) - valid_option_ids:
+        raise ValidationError(
+            f"Multivariate options {sorted(invalid)} do not belong to the feature"
+        )
+    total = sum(v.percentage_allocation for v in spec.multivariate_values)
+    if total > 100:
+        raise ValidationError(
+            f"Multivariate allocations must not exceed 100%, got {total}%."
+        )
+
+
+def _sync_rollout_segment(experiment: Experiment, rollout_percentage: float) -> Segment:
+    segment = experiment.rollout_segment
+    if segment is not None:
+        condition = Condition.objects.get(
+            rule__segment=segment, operator=PERCENTAGE_SPLIT
+        )
+        condition.value = str(rollout_percentage)
+        condition.save()
+        return segment
+    segment = _create_rollout_segment(experiment, rollout_percentage)
+    experiment.rollout_segment = segment
+    experiment.save()
+    return segment
+
+
+def _get_live_rollout_override(experiment: Experiment) -> FeatureState | None:
+    return (
+        FeatureState.objects.get_live_feature_states(
+            environment=experiment.environment,
+            additional_filters=Q(
+                feature_segment__segment_id=experiment.rollout_segment_id,
+                identity__isnull=True,
+            ),
+            feature_id=experiment.feature_id,
+        )
+        .order_by("-id")
+        .first()
+    )
+
+
+def _update_live_feature_state(
+    feature_state: FeatureState, change_set: FlagChangeSet
+) -> None:
+    feature_state.enabled = change_set.enabled
+    feature_state.save()
+    feature_state.feature_state_value.set_value(
+        change_set.feature_state_value, change_set.type_
+    )
+    feature_state.feature_state_value.save()
+    update_multivariate_values(feature_state, change_set.multivariate_values)
+
+
+def _update_rollout_in_place(experiment: Experiment, change_set: FlagChangeSet) -> None:
+    """Write the rollout-segment override, keeping variant assignment stable.
+
+    Under v2 versioning, ``update_flag`` clones the override into a fresh feature
+    state on every call. Since the multivariate split is salted on the feature
+    state id, that would re-randomise control/variant for already-enrolled
+    identities on each rollout update. Once the override exists, mutate it in
+    place instead (no version is published). Creating the override, and v1
+    versioning, still go through ``update_flag``, which already reuses the
+    feature state.
+
+    This is a temporary solution until we find a permanent fix for the
+    underlying salting issue: https://github.com/Flagsmith/flagsmith/issues/7913
+    """
+    if experiment.environment.use_v2_feature_versioning and (
+        override := _get_live_rollout_override(experiment)
+    ):
+        _update_live_feature_state(override, change_set)
+        return
+    update_flag(experiment.environment, experiment.feature, change_set)
+
+
+def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
+    if experiment.status == ExperimentStatus.COMPLETED:
+        raise ValidationError(
+            f"Cannot change the rollout of a {experiment.status} experiment."
+        )
+    validate_rollout_spec(experiment, spec)
+    environment_id = experiment.environment_id
+    with transaction.atomic():
+        segment = _sync_rollout_segment(experiment, spec.rollout_percentage)
+        _update_rollout_in_place(
+            experiment,
+            FlagChangeSet(
+                author=spec.author,
+                enabled=spec.enabled,
+                feature_state_value=spec.feature_state_value,
+                type_=spec.value_type,
+                segment_id=segment.id,
+                multivariate_values=spec.multivariate_values,
+            ),
+        )
+        # Segment condition changes don't trigger a rebuild on their own.
+        transaction.on_commit(
+            lambda: rebuild_environment_document.delay(
+                kwargs={"environment_id": environment_id}
+            )
+        )
+
+
+def get_experiment_rollout(experiment: Experiment) -> dict[str, typing.Any] | None:
+    segment_id = experiment.rollout_segment_id
+    if segment_id is None:
+        return None
+
+    feature_state = FeatureState.objects.get_live_feature_states(
+        environment=experiment.environment,
+        additional_filters=Q(
+            feature_segment__segment_id=segment_id, identity__isnull=True
+        ),
+        feature_id=experiment.feature_id,
+    ).latest("id")
+
+    condition = Condition.objects.get(
+        rule__segment_id=segment_id, operator=PERCENTAGE_SPLIT
+    )
+    value = feature_state.feature_state_value
+    return {
+        "enabled": feature_state.enabled,
+        "rollout_percentage": float(condition.value or 0),
+        "feature_state_value": {
+            "type": _ROLLOUT_VALUE_TYPE.get(value.type or STRING, "string"),
+            "value": (
+                str(value.value).lower() if value.type == BOOLEAN else str(value.value)
+            ),
+        },
+        "multivariate_feature_state_values": [
+            {
+                "multivariate_feature_option": mv.multivariate_feature_option_id,
+                "percentage_allocation": mv.percentage_allocation,
+            }
+            for mv in feature_state.multivariate_feature_state_values.all()
+        ],
+    }
+
+
+def enable_experiment_rollout(experiment: Experiment, author: AuthorData) -> None:
+    rollout = get_experiment_rollout(experiment)
+    if rollout is None or rollout["enabled"]:
+        return
+
+    value = rollout["feature_state_value"]
+    _update_rollout_in_place(
+        experiment,
+        FlagChangeSet(
+            author=author,
+            enabled=True,
+            feature_state_value=value["value"],
+            type_=value["type"],
+            segment_id=experiment.rollout_segment_id,
+        ),
+    )
 
 
 def mark_warehouse_pending_connection(

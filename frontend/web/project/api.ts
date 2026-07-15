@@ -134,9 +134,15 @@ const API = {
     const user = AccountStore.model as unknown as AccountModel
     if (!user) return
 
+    const currentOrganisation = AccountStore.getOrganisation()
+
     return flagsmith
       .identify(`${user.id}`, {
         email: user.email,
+        'organisation.id': currentOrganisation
+          ? String(currentOrganisation.id)
+          : null,
+        'organisation.name': currentOrganisation?.name ?? null,
         organisations: user.organisations
           ? user.organisations.map((o) => String(o.id)).join(',')
           : '',

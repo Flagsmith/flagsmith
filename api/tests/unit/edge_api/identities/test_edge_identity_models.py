@@ -6,8 +6,10 @@ import shortuuid
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
+from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
+from task_processor.task_run_method import TaskRunMethod
 
 from api_keys.user import APIKeyUser
 from edge_api.identities.models import EdgeIdentity
@@ -15,7 +17,9 @@ from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
+from projects.models import Project
 from segments.models import Segment
+from tests.types import EnableFeaturesFixture
 from users.models import FFAdminUser
 from util.engine_models.features.models import FeatureModel, FeatureStateModel
 
@@ -549,3 +553,72 @@ def test_get_all_feature_states__post_v2_versioning_migration__returns_latest_ov
     # Then
     assert len(feature_states) == 1
     assert feature_states[0] == v2_segment_override
+
+
+def test_delete__clickhouse_enabled__schedules_delayed_recount(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    environment: Environment,
+    edge_identity_model: EdgeIdentity,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    settings.TASK_RUN_METHOD = TaskRunMethod.TASK_PROCESSOR
+    settings.SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS = 120
+    enqueue_membership_refresh_mock = mocker.patch(
+        "segment_membership.services.enqueue_membership_refresh"
+    )
+
+    # When
+    with freeze_time("2099-01-01T00:00:00Z"):
+        edge_identity_model.delete(user=mocker.MagicMock())
+        expected_delay_until = timezone.now() + timedelta(seconds=120)
+
+    # Then
+    enqueue_membership_refresh_mock.assert_called_once_with(
+        project, delay_until=expected_delay_until
+    )
+
+
+def test_delete__clickhouse_disabled__does_not_schedule_recount(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    edge_identity_model: EdgeIdentity,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+) -> None:
+    # Given
+    settings.CLICKHOUSE_ENABLED = False
+    enqueue_membership_refresh_mock = mocker.patch(
+        "segment_membership.services.enqueue_membership_refresh"
+    )
+
+    # When
+    edge_identity_model.delete(user=mocker.MagicMock())
+
+    # Then
+    enqueue_membership_refresh_mock.assert_not_called()
+
+
+def test_delete__membership_flag_off__does_not_enqueue_refresh(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    edge_identity_model: EdgeIdentity,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+) -> None:
+    # Given
+    settings.CLICKHOUSE_ENABLED = True
+    settings.TASK_RUN_METHOD = TaskRunMethod.TASK_PROCESSOR
+    refresh_mock = mocker.patch(
+        "segment_membership.tasks.refresh_project_segment_counts"
+    )
+    refresh_mock.task_identifier = "segment_membership.refresh_project_segment_counts"
+
+    # When
+    edge_identity_model.delete(user=mocker.MagicMock())
+
+    # Then
+    refresh_mock.delay.assert_not_called()

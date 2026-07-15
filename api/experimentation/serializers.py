@@ -4,8 +4,9 @@ from django.db import transaction
 from django.db.models import QuerySet
 from rest_framework import serializers
 
+from core.dataclasses import AuthorData
 from environments.models import Environment
-from experimentation.dataclasses import WarehouseEventStats
+from experimentation.dataclasses import RolloutSpec, WarehouseEventStats
 from experimentation.metric_definitions import validate_metric_definition
 from experimentation.models import (
     ExpectedDirection,
@@ -18,14 +19,23 @@ from experimentation.models import (
     WarehouseConnection,
     WarehouseType,
 )
+from experimentation.services import (
+    apply_experiment_rollout,
+    get_experiment_rollout,
+)
 from experimentation.types import (
     SNOWFLAKE_DEFAULTS,
     MetricExperimentResult,
     SnowflakeConfig,
 )
+from features.feature_states.serializers import (
+    FeatureValueSerializer,
+    MultivariateValueSerializer,
+)
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
 from features.multivariate.serializers import NestedMultivariateFeatureOptionSerializer
+from features.versioning.dataclasses import MultivariateValueChangeSet
 
 
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -207,6 +217,35 @@ class ExperimentMetricInlineSerializer(serializers.Serializer):  # type: ignore[
     expected_direction = serializers.ChoiceField(choices=ExpectedDirection.choices)
 
 
+class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    enabled = serializers.BooleanField(required=True)
+    rollout_percentage = serializers.FloatField(
+        required=True, min_value=0, max_value=100
+    )
+    feature_state_value = FeatureValueSerializer(required=True)
+    multivariate_feature_state_values = MultivariateValueSerializer(
+        many=True, required=False
+    )
+
+    @staticmethod
+    def to_spec(data: dict[str, Any], request: Any) -> RolloutSpec:
+        value = data["feature_state_value"]
+        return RolloutSpec(
+            enabled=data["enabled"],
+            rollout_percentage=data["rollout_percentage"],
+            feature_state_value=value["value"],
+            value_type=value["type"],
+            multivariate_values=[
+                MultivariateValueChangeSet(
+                    multivariate_feature_option_id=mv["multivariate_feature_option"],
+                    percentage_allocation=mv["percentage_allocation"],
+                )
+                for mv in data.get("multivariate_feature_state_values", [])
+            ],
+            author=AuthorData.from_request(request),
+        )
+
+
 class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     # Annotated with the common base type so ExperimentListSerializer can
     # override the field with a read-only representation.
@@ -214,6 +253,9 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
         many=True,
         required=False,
         write_only=True,
+    )
+    experiment_rollout: Any = ExperimentRolloutSerializer(
+        required=False, write_only=True
     )
 
     class Meta:
@@ -225,6 +267,7 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
             "hypothesis",
             "status",
             "metrics",
+            "experiment_rollout",
             "created_at",
             "updated_at",
             "started_at",
@@ -260,6 +303,15 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
             raise serializers.ValidationError(
                 {"metrics": "Cannot change the metrics of an existing experiment."}
             )
+        if self.instance is not None and "experiment_rollout" in attrs:
+            raise serializers.ValidationError(
+                {
+                    "experiment_rollout": (
+                        "Cannot change the rollout via this endpoint; "
+                        "use the rollout endpoint instead."
+                    )
+                }
+            )
         self._validate_metrics(attrs.get("metrics") or [])
         return attrs
 
@@ -272,6 +324,7 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
 
     def create(self, validated_data: dict[str, Any]) -> Experiment:
         metrics: list[dict[str, Any]] = validated_data.pop("metrics", [])
+        rollout: dict[str, Any] | None = validated_data.pop("experiment_rollout", None)
         with transaction.atomic():
             experiment: Experiment = super().create(validated_data)
             ExperimentMetric.objects.bulk_create(
@@ -282,6 +335,13 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
                 )
                 for entry in metrics
             )
+            if rollout is not None:
+                apply_experiment_rollout(
+                    experiment,
+                    ExperimentRolloutSerializer.to_spec(
+                        rollout, self.context["request"]
+                    ),
+                )
         return experiment
 
 
@@ -331,6 +391,13 @@ class ExperimentFeatureSerializer(serializers.ModelSerializer):  # type: ignore[
         return options  # type: ignore[return-value]
 
 
+class ExperimentQueryParamSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    status = serializers.ListField(
+        child=serializers.ChoiceField(choices=ExperimentStatus.choices),
+        required=False,
+    )
+
+
 class ExperimentListSerializer(ExperimentSerializer):
     feature = ExperimentFeatureSerializer(read_only=True)
     metrics = ExperimentMetricSerializer(
@@ -338,6 +405,13 @@ class ExperimentListSerializer(ExperimentSerializer):
         many=True,
         read_only=True,
     )
+
+
+class ExperimentDetailSerializer(ExperimentListSerializer):
+    experiment_rollout = serializers.SerializerMethodField()
+
+    def get_experiment_rollout(self, experiment: Experiment) -> dict[str, Any] | None:
+        return get_experiment_rollout(experiment)
 
 
 class ExperimentExposuresSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]

@@ -3246,6 +3246,30 @@ def test_update_feature_state__change_feature__returns_400(
     )
 
 
+def test_update_feature_state__null_environment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    url = reverse("api-v1:features:featurestates-detail", args=[feature_state.id])
+    data = {
+        "enabled": True,
+        "environment": None,
+        "feature": feature.id,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "environment" in response.json()
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
@@ -3555,7 +3579,7 @@ def test_list_features__without_rbac__no_n_plus_1(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=17,
+        num_queries=18,
     )
 
 
@@ -3580,7 +3604,7 @@ def test_list_features__with_rbac__no_n_plus_1(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=18,
+        num_queries=19,
     )
 
 
@@ -4214,7 +4238,7 @@ def test_list_features__last_modified_without_rbac__returns_expected(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=19,
+        num_queries=20,
     )
 
 
@@ -4242,7 +4266,7 @@ def test_list_features__last_modified_with_rbac__returns_expected(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=20,
+        num_queries=21,
     )
 
 

@@ -169,7 +169,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
                 <Tooltip
                   title={
                     <IonIcon
-                      className='text-primary'
+                      className='icon-action'
                       icon={cloudDownloadOutline}
                       style={{ fontSize: '18px' }}
                     />

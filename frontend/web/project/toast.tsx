@@ -85,10 +85,10 @@ const Message: FC<MessageProps> = ({
 
   return (
     <div className={className}>
-      <div className='my-2 w-100 d-flex flex-nowrap  text-body gap-2'>
+      <div className='my-2 w-100 d-flex flex-nowrap  text-default gap-2'>
         <ToastIcon theme={theme} />
         <div className='flex-1 flex-column'>
-          <div className='text-body mb-1 fw-semibold'>
+          <div className='text-default mb-1 fw-semibold'>
             {theme === 'success' ? 'Success' : 'Error'}
           </div>
           <div className='fw-normal mb-1'>{children} </div>

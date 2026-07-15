@@ -1,5 +1,5 @@
 from dataclasses import asdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from datetime import timezone as dt_timezone
 
 from django.utils import timezone
@@ -7,6 +7,7 @@ from freezegun import freeze_time
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
+from environments.models import Environment, EnvironmentAPIKey
 from experimentation.dataclasses import (
     ExposuresSummary,
     ExposuresTimeseries,
@@ -22,41 +23,195 @@ from experimentation.models import (
 )
 from experimentation.stats import VariantStats
 from experimentation.tasks import (
-    add_environment_key_to_ingestion,
     compute_experiment_exposures,
     compute_experiment_results,
-    delete_environment_key_from_ingestion,
+    remove_environment_ingestion_key,
+    remove_environment_ingestion_keys,
+    write_environment_ingestion_key,
+    write_environment_ingestion_keys,
 )
 
 
-def test_add_environment_key_to_ingestion__valid_key__calls_service(
+def test_write_environment_ingestion_keys__valid_keys__whitelists_client_and_server(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given an environment with a valid server-side key, an inactive one, and an
+    # expired one
+    valid_key = EnvironmentAPIKey.objects.create(
+        environment=environment,
+        name="active",
+        expires_at=timezone.now() + timedelta(days=30),
+    )
+    EnvironmentAPIKey.objects.create(
+        environment=environment, name="inactive", active=False
+    )
+    EnvironmentAPIKey.objects.create(
+        environment=environment,
+        name="expired",
+        expires_at=timezone.now() - timedelta(days=1),
+    )
+    mock_set = mocker.patch(
+        "experimentation.tasks.ingestion_sync_service.set_ingestion_key",
+    )
+
+    # When
+    write_environment_ingestion_keys(environment_id=environment.id)
+
+    # Then only the client key and the valid server-side key are whitelisted
+    assert mock_set.call_args_list == [
+        mocker.call(environment.api_key, environment_key=environment.api_key),
+        mocker.call(
+            valid_key.key,
+            environment_key=environment.api_key,
+            expires_at=valid_key.expires_at,
+        ),
+    ]
+
+
+def test_write_environment_ingestion_keys__missing_environment__does_nothing(
+    db: None,
     mocker: MockerFixture,
 ) -> None:
     # Given
     mock_set = mocker.patch(
-        "experimentation.tasks.ingestion_sync_service.set_environment_key",
+        "experimentation.tasks.ingestion_sync_service.set_ingestion_key",
     )
 
     # When
-    add_environment_key_to_ingestion(environment_api_key="test-env-key-001")
+    write_environment_ingestion_keys(environment_id=404404)
 
     # Then
-    mock_set.assert_called_once_with("test-env-key-001")
+    mock_set.assert_not_called()
 
 
-def test_delete_environment_key_from_ingestion__valid_key__calls_service(
+def test_remove_environment_ingestion_keys__client_and_server_keys__all_removed(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given an environment with active and inactive server-side keys
+    active_key = EnvironmentAPIKey.objects.create(
+        environment=environment, name="active"
+    )
+    inactive_key = EnvironmentAPIKey.objects.create(
+        environment=environment, name="inactive", active=False
+    )
+    mock_delete = mocker.patch(
+        "experimentation.tasks.ingestion_sync_service.delete_ingestion_key",
+    )
+
+    # When
+    remove_environment_ingestion_keys(environment_id=environment.id)
+
+    # Then the client key and every server-side key are removed regardless of state
+    assert mock_delete.call_args_list == [
+        mocker.call(environment.api_key),
+        mocker.call(active_key.key),
+        mocker.call(inactive_key.key),
+    ]
+
+
+def test_remove_environment_ingestion_keys__missing_environment__does_nothing(
+    db: None,
     mocker: MockerFixture,
 ) -> None:
     # Given
     mock_delete = mocker.patch(
-        "experimentation.tasks.ingestion_sync_service.delete_environment_key",
+        "experimentation.tasks.ingestion_sync_service.delete_ingestion_key",
     )
 
     # When
-    delete_environment_key_from_ingestion(environment_api_key="test-env-key-001")
+    remove_environment_ingestion_keys(environment_id=404404)
 
     # Then
-    mock_delete.assert_called_once_with("test-env-key-001")
+    mock_delete.assert_not_called()
+
+
+def test_write_environment_ingestion_key__valid_key__whitelists_it(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given a valid server-side key
+    api_key = EnvironmentAPIKey.objects.create(
+        environment=environment,
+        name="active",
+        expires_at=timezone.now() + timedelta(days=30),
+    )
+    mock_set = mocker.patch(
+        "experimentation.tasks.ingestion_sync_service.set_ingestion_key",
+    )
+    mock_delete = mocker.patch(
+        "experimentation.tasks.ingestion_sync_service.delete_ingestion_key",
+    )
+
+    # When
+    write_environment_ingestion_key(environment_api_key_id=api_key.id)
+
+    # Then it is whitelisted under the environment's client key
+    mock_set.assert_called_once_with(
+        api_key.key,
+        environment_key=environment.api_key,
+        expires_at=api_key.expires_at,
+    )
+    mock_delete.assert_not_called()
+
+
+def test_write_environment_ingestion_key__invalid_key__removes_it(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given an inactive server-side key
+    api_key = EnvironmentAPIKey.objects.create(
+        environment=environment, name="inactive", active=False
+    )
+    mock_set = mocker.patch(
+        "experimentation.tasks.ingestion_sync_service.set_ingestion_key",
+    )
+    mock_delete = mocker.patch(
+        "experimentation.tasks.ingestion_sync_service.delete_ingestion_key",
+    )
+
+    # When
+    write_environment_ingestion_key(environment_api_key_id=api_key.id)
+
+    # Then it is removed from the whitelist
+    mock_delete.assert_called_once_with(api_key.key)
+    mock_set.assert_not_called()
+
+
+def test_write_environment_ingestion_key__missing_key__does_nothing(
+    db: None,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_set = mocker.patch(
+        "experimentation.tasks.ingestion_sync_service.set_ingestion_key",
+    )
+    mock_delete = mocker.patch(
+        "experimentation.tasks.ingestion_sync_service.delete_ingestion_key",
+    )
+
+    # When
+    write_environment_ingestion_key(environment_api_key_id=404404)
+
+    # Then
+    mock_set.assert_not_called()
+    mock_delete.assert_not_called()
+
+
+def test_remove_environment_ingestion_key__valid_key__calls_service(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_delete = mocker.patch(
+        "experimentation.tasks.ingestion_sync_service.delete_ingestion_key",
+    )
+
+    # When
+    remove_environment_ingestion_key(key="ser.test-key-001")
+
+    # Then
+    mock_delete.assert_called_once_with("ser.test-key-001")
 
 
 def _summary() -> ExposuresSummary:
