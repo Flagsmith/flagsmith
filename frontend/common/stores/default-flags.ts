@@ -159,7 +159,9 @@ const defaultFlags = {
           'label': 'Base URL',
           'options': [
             { 'label': 'US', 'value': 'https://heapanalytics.com' },
-            { 'label': 'EU', 'value': 'https://heapanalytics.eu' },
+            // Heap's EU Track API host is c.eu.heap-api.com, not a .eu TLD:
+            // https://developers.heap.io/reference/track-1
+            { 'label': 'EU', 'value': 'https://c.eu.heap-api.com' },
             { 'label': 'Custom URL', 'value': 'custom' },
           ],
         },
