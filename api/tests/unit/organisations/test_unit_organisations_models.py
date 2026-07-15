@@ -215,7 +215,13 @@ def test_over_plan_seats_limit__licence_seats_exceeded__returns_true(
         num_seats=1,
         num_projects=None,
     )
-    organisation.licence = licence
+    mocker.patch.object(
+        Organisation,
+        "licence",
+        new_callable=mocker.PropertyMock,
+        return_value=licence,
+        create=True,
+    )
     mocker.patch("organisations.models.is_enterprise", return_value=True)
     mocker.patch("organisations.models.is_saas", return_value=False)
 
@@ -236,7 +242,13 @@ def test_over_plan_seats_limit__licence_seats_available__returns_false(
         num_seats=5,
         num_projects=None,
     )
-    organisation.licence = licence
+    mocker.patch.object(
+        Organisation,
+        "licence",
+        new_callable=mocker.PropertyMock,
+        return_value=licence,
+        create=True,
+    )
     mocker.patch("organisations.models.is_enterprise", return_value=True)
     mocker.patch("organisations.models.is_saas", return_value=False)
 
