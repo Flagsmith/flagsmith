@@ -32,7 +32,7 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
 
   return (
     <>
-      <span className='text-default fw-semibold'>
+      <span className='text-default font-weight-semibold'>
         Paste this into your AI coding agent’s chat
       </span>
       <div className='bg-surface-muted p-3 d-flex align-items-start gap-3 rounded-md'>
@@ -50,7 +50,9 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
         </Button>
       </div>
       <div>
-        <span className='text-default fw-semibold'>What happens next</span>
+        <span className='text-default font-weight-semibold'>
+          What happens next
+        </span>
         <ul className='onboarding-connect__steps text-muted mt-2 mb-0'>
           <li>Detects your stack: language, framework and package manager.</li>
           <li>Installs the Flagsmith SDK and wires it into your code.</li>

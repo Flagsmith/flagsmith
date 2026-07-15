@@ -15,7 +15,7 @@ const PACKAGE_MANAGERS: PackageManager[] = ['npm', 'yarn']
 const SdkBadge: FC<{ lang: SdkLang }> = ({ lang }) => {
   const Logo = lang.logo
   return (
-    <Chip variant='accent' className='fw-semibold'>
+    <Chip variant='accent' className='font-weight-semibold'>
       <Logo />
       {lang.label}
     </Chip>
@@ -53,7 +53,9 @@ const ConnectYourCodePanel: FC<ConnectYourCodePanelProps> = ({
       <div>
         <div className='onboarding-connect__step-head d-flex align-items-center gap-2 mb-2'>
           <span className='onboarding-connect__step-num'>1</span>
-          <span className='text-default fw-semibold'>Install the SDK</span>
+          <span className='text-default font-weight-semibold'>
+            Install the SDK
+          </span>
         </div>
         <CodeCard
           code={installCode}
@@ -85,7 +87,7 @@ const ConnectYourCodePanel: FC<ConnectYourCodePanelProps> = ({
       <div>
         <div className='onboarding-connect__step-head d-flex align-items-center gap-2 mb-2'>
           <span className='onboarding-connect__step-num'>2</span>
-          <span className='text-default fw-semibold'>
+          <span className='text-default font-weight-semibold'>
             Wire it in &amp; take instant control of what users see
           </span>
         </div>

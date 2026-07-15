@@ -69,7 +69,7 @@ const SdkPicker: FC<SdkPickerProps> = ({ onSelect, selected }) => {
         ref={(el) => {
           refs.current[lang.label] = el
         }}
-        className='fw-semibold'
+        className='font-weight-semibold'
         role='radio'
         aria-checked={isSelected}
         tabIndex={lang.label === tabStopLabel ? 0 : -1}
@@ -92,7 +92,7 @@ const SdkPicker: FC<SdkPickerProps> = ({ onSelect, selected }) => {
       <div className='d-flex flex-wrap align-items-center gap-2'>
         {popularLangs.map(renderOption)}
         <Chip
-          className='fw-semibold'
+          className='font-weight-semibold'
           onClick={() => setMoreOpen((open) => !open)}
           aria-expanded={moreOpen}
         >
