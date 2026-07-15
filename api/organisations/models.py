@@ -134,14 +134,9 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
             },
         )
 
-    def over_plan_seats_limit(self, additional_seats: int = 0):  # type: ignore[no-untyped-def]
-        if self.has_paid_subscription():
-            susbcription_metadata = self.subscription.get_subscription_metadata()
-            return self.num_seats + additional_seats > susbcription_metadata.seats
-
-        return self.num_seats + additional_seats > getattr(
-            self.subscription, "max_seats", MAX_SEATS_IN_FREE_PLAN
-        )
+    def over_plan_seats_limit(self, additional_seats: int = 0) -> bool:
+        subscription_metadata = self.subscription.get_subscription_metadata()
+        return self.num_seats + additional_seats > subscription_metadata.seats
 
     def reset_alert_status(self):  # type: ignore[no-untyped-def]
         self.alerted_over_plan_limit = False
@@ -434,9 +429,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         return cb_metadata
 
     def _get_subscription_metadata_for_self_hosted(self) -> BaseSubscriptionMetadata:
-        if is_enterprise() and hasattr(
-            self.organisation, "licence"
-        ):  # pragma: no cover
+        if is_enterprise() and hasattr(self.organisation, "licence"):
             licence_information = self.organisation.licence.get_licence_information()
             return BaseSubscriptionMetadata(
                 seats=licence_information.num_seats,

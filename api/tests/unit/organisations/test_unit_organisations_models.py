@@ -191,21 +191,57 @@ def test_over_plan_seats_limit__over_limit__returns_true(  # type: ignore[no-unt
     mocked_get_subscription_metadata.assert_called_once_with(chargebee_subscription)
 
 
-def test_over_plan_seats_limit__no_subscription_metadata__returns_true(  # type: ignore[no-untyped-def]
-    organisation, mocker, admin_user
-):  # noqa: E501
+def test_over_plan_seats_limit__free_plan_default__returns_true(
+    organisation: Organisation,
+) -> None:
     # Given
-    organisation.subscription.max_seats = 0
-    organisation.subscription.save()
-
-    mocked_get_subscription_metadata = mocker.patch(
-        "organisations.models.Subscription.get_subscription_metadata",
-        autospec=True,
-    )
+    # The `organisation` fixture links an admin and a staff user, so num_seats
+    # is 2 while the default free plan grants a single seat.
 
     # When / Then
     assert organisation.over_plan_seats_limit() is True
-    mocked_get_subscription_metadata.assert_not_called()
+
+
+def test_over_plan_seats_limit__licence_seats_exceeded__returns_true(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    organisation.subscription.plan = "enterprise"
+    organisation.subscription.save()
+
+    licence = mocker.Mock()
+    licence.get_licence_information.return_value = mocker.Mock(
+        num_seats=1,
+        num_projects=None,
+    )
+    organisation.licence = licence
+    mocker.patch("organisations.models.is_enterprise", return_value=True)
+    mocker.patch("organisations.models.is_saas", return_value=False)
+
+    # When / Then
+    assert organisation.over_plan_seats_limit() is True
+
+
+def test_over_plan_seats_limit__licence_seats_available__returns_false(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    organisation.subscription.plan = "enterprise"
+    organisation.subscription.save()
+
+    licence = mocker.Mock()
+    licence.get_licence_information.return_value = mocker.Mock(
+        num_seats=5,
+        num_projects=None,
+    )
+    organisation.licence = licence
+    mocker.patch("organisations.models.is_enterprise", return_value=True)
+    mocker.patch("organisations.models.is_saas", return_value=False)
+
+    # When / Then
+    assert organisation.over_plan_seats_limit() is False
 
 
 @pytest.mark.saas_mode
