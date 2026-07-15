@@ -1,27 +1,22 @@
+import base64
+import hashlib
 import json
 from typing import Any
 
 import structlog
-from cryptography.fernet import Fernet, InvalidToken, MultiFernet
+from cryptography.fernet import Fernet, InvalidToken
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
 logger = structlog.get_logger("core")
 
 
-def _get_fernet() -> MultiFernet:
-    if not settings.CREDENTIALS_ENCRYPTION_KEYS:
-        raise ImproperlyConfigured(
-            "CREDENTIALS_ENCRYPTION_KEYS must be set to store encrypted fields."
-        )
-    return MultiFernet([Fernet(key) for key in settings.CREDENTIALS_ENCRYPTION_KEYS])
+def _get_fernet() -> Fernet:
+    digest = hashlib.sha256(settings.SECRET_KEY.encode()).digest()
+    return Fernet(base64.urlsafe_b64encode(digest))
 
 
 class EncryptedJSONField(models.TextField[Any, Any]):
-    """A JSON value stored Fernet-encrypted in a text column; a value whose
-    key left the ring loads as None rather than raising."""
-
     def get_prep_value(self, value: Any) -> str | None:
         if value is None:
             return None
@@ -37,7 +32,7 @@ class EncryptedJSONField(models.TextField[Any, Any]):
             return None
         try:
             plaintext = _get_fernet().decrypt(value.encode())
-        except (InvalidToken, ImproperlyConfigured, ValueError):
+        except InvalidToken:
             logger.warning("encrypted_field.decrypt_failed", exc_info=True)
             return None
         return json.loads(plaintext)

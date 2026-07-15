@@ -1,5 +1,4 @@
 import pytest
-from cryptography.fernet import Fernet
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -96,16 +95,15 @@ def experiment_with_rollout(
 
 
 @pytest.fixture()
-def credentials_encryption_keys(settings: SettingsWrapper) -> list[str]:
-    keys = [Fernet.generate_key().decode()]
-    settings.CREDENTIALS_ENCRYPTION_KEYS = keys
-    return keys
+def stable_secret_key(settings: SettingsWrapper) -> None:
+    settings.SECRET_KEY = "test-django-secret-key"
+    settings.SECRET_KEY_IS_EPHEMERAL = False
 
 
 @pytest.fixture()
 def clickhouse_connection(
     environment: Environment,
-    credentials_encryption_keys: list[str],
+    stable_secret_key: None,
 ) -> WarehouseConnection:
     connection: WarehouseConnection = WarehouseConnection.objects.create(
         environment=environment,

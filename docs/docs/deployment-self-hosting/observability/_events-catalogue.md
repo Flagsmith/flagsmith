@@ -74,7 +74,7 @@ Attributes:
 ### `core.encrypted_field.decrypt_failed`
 
 Logged at `warning` from:
- - `api/core/fields.py:41`
+ - `api/core/fields.py:36`
 
 Attributes:
  - `exc_info`

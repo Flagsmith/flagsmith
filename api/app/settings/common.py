@@ -56,7 +56,10 @@ ENABLE_TELEMETRY = env.bool("ENABLE_TELEMETRY", default=True)
 # Enables gzip compression
 ENABLE_GZIP_COMPRESSION = env.bool("ENABLE_GZIP_COMPRESSION", default=False)
 
-SECRET_KEY = env("DJANGO_SECRET_KEY", default=get_random_secret_key())
+SECRET_KEY = env.str("DJANGO_SECRET_KEY", default="")
+SECRET_KEY_IS_EPHEMERAL = not SECRET_KEY
+if SECRET_KEY_IS_EPHEMERAL:
+    SECRET_KEY = get_random_secret_key()
 
 HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
 
@@ -1504,11 +1507,6 @@ CLICKHOUSE_CONNECTION_CLIENT_NAME = "flagsmith-core-api"
 # TODO: consolidate connection management across the two CH use cases
 #  https://github.com/Flagsmith/flagsmith/issues/8033
 EXPERIMENTATION_CLICKHOUSE_URL = env.str("EXPERIMENTATION_CLICKHOUSE_URL", default=None)
-
-# Comma-separated Fernet keys: the first encrypts, all decrypt (rotation).
-CREDENTIALS_ENCRYPTION_KEYS: list[str] = env.list(
-    "CREDENTIALS_ENCRYPTION_KEYS", default=[]
-)
 
 SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS = env.int(
     "SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS", default=6

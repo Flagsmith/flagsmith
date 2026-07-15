@@ -83,11 +83,12 @@ def validate_credentials(
         if instance is not None and instance.credentials is not None:
             attrs["credentials"] = None
         return
-    if not settings.CREDENTIALS_ENCRYPTION_KEYS:
+    if settings.SECRET_KEY_IS_EPHEMERAL:
         raise serializers.ValidationError(
             {
                 "credentials": (
-                    "Credentials encryption is not configured on this installation."
+                    "Storing credentials requires the DJANGO_SECRET_KEY "
+                    "environment variable to be set."
                 )
             }
         )
