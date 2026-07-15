@@ -110,7 +110,11 @@ def compute_segment_counts_for_project(
     project: Project, cursor: CursorWrapper
 ) -> list[SegmentMembershipCount]:
     """Count identity matches per (canonical-segment, environment) for
-    `project` in one `UNION ALL` query.
+    `project`, scanning each environment once.
+
+    A single `GROUP BY environment_id` over `IDENTITIES FINAL` counts every
+    segment in one pass via `countIf(<predicate>)` per segment, instead of
+    re-scanning (and re-deduping) the environment once per segment.
 
     Returns unsaved `SegmentMembershipCount` instances with `count` and
     keys populated; the caller stamps `last_synced_at` consistently
@@ -128,7 +132,8 @@ def compute_segment_counts_for_project(
 
     dialect = ClickHouseDialect()
     binder = Binder(PyformatParamStyle())
-    select_clauses: list[str] = []
+    count_columns: list[str] = []
+    counted_segment_ids: list[int] = []
     for seg in segments:
         translate_ctx = TranslateContext(
             evaluation_context=EvaluationContext(
@@ -149,33 +154,37 @@ def compute_segment_counts_for_project(
                 reason="untranslatable",
             )
             continue
-        select_clauses.append(
-            f"SELECT {seg.id} AS segment_id, "
-            f"i.environment_id AS env_key, count() AS c "
-            f"FROM IDENTITIES AS i FINAL "
-            f"WHERE i.environment_id IN %(env_keys)s "
-            f"AND i.is_deleted = false AND ({predicate}) "
-            f"GROUP BY i.environment_id"
-        )
+        count_columns.append(f"countIf({predicate}) AS c{seg.id}")
+        counted_segment_ids.append(seg.id)
 
-    if not select_clauses:
+    if not count_columns:
         return []
 
-    sql = "\nUNION ALL\n".join(select_clauses)
+    # One scan per environment: dedupe with FINAL once, then count every segment
+    # in the same pass via `countIf`, rather than re-scanning per segment.
+    sql = (
+        f"SELECT i.environment_id AS env_key, {', '.join(count_columns)} "
+        f"FROM IDENTITIES AS i FINAL "
+        f"WHERE i.environment_id IN %(env_keys)s AND i.is_deleted = false "
+        f"GROUP BY i.environment_id"
+    )
     cursor.execute(sql, {"env_keys": tuple(env_id_by_key), **binder.params})
     rows: list[tuple[Any, ...]] = cursor.fetchall()
     membership_counts: list[SegmentMembershipCount] = []
     for row in rows:
-        env_id = env_id_by_key.get(str(row[1]))
+        env_id = env_id_by_key.get(str(row[0]))
         if env_id is None:
             continue
-        membership_counts.append(
-            SegmentMembershipCount(
-                segment_id=int(row[0]),
-                environment_id=env_id,
-                count=int(row[2]),
-            )
-        )
+        # Columns line up with counted_segment_ids; a zero-match pair is absent.
+        for segment_id, count in zip(counted_segment_ids, row[1:]):
+            if count:
+                membership_counts.append(
+                    SegmentMembershipCount(
+                        segment_id=segment_id,
+                        environment_id=env_id,
+                        count=int(count),
+                    )
+                )
     return membership_counts
 
 

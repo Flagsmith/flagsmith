@@ -131,7 +131,8 @@ def test_compute_segment_counts_for_project__unknown_env_key_in_row__skips(
         return_value="TRUE",
     )
     cursor = MagicMock()
-    cursor.fetchall.return_value = [(segment.id, "ghost-env", 99)]
+    # New row shape: (env_key, count-per-segment...); env_key is unknown here
+    cursor.fetchall.return_value = [("ghost-env", 99)]
 
     # When
     result = compute_segment_counts_for_project(project, cursor)
@@ -286,6 +287,40 @@ def test_compute_segment_counts_for_project__deleted_identity__excluded_from_cou
     assert len(counts) == 1
     assert counts[0].segment_id == matching_segment.id
     assert counts[0].count == 2
+
+
+@pytest.mark.clickhouse
+def test_compute_segment_counts_for_project__multiple_segments__maps_each_count_drops_zeros(
+    segment_membership_identities: None,
+    matching_segment: Segment,
+    project: Project,
+    environment: Environment,
+) -> None:
+    # Given, alongside matching_segment (foo == bar -> alice, bob), a segment
+    # matching a different value and one matching nobody
+    seg_baz = Segment.objects.create(name="baz", project=project)
+    Condition.objects.create(
+        rule=SegmentRule.objects.create(segment=seg_baz, type=SegmentRule.ALL_RULE),
+        property="foo",
+        operator=EQUAL,
+        value="baz",
+    )
+    seg_none = Segment.objects.create(name="none", project=project)
+    Condition.objects.create(
+        rule=SegmentRule.objects.create(segment=seg_none, type=SegmentRule.ALL_RULE),
+        property="foo",
+        operator=EQUAL,
+        value="zzz",
+    )
+
+    # When one scan counts all three segments
+    with connections["clickhouse"].cursor() as cursor:
+        counts = compute_segment_counts_for_project(project, cursor)
+
+    # Then each column maps to its own segment and the zero-match one is absent
+    by_segment = {c.segment_id: c.count for c in counts}
+    assert by_segment == {matching_segment.id: 2, seg_baz.id: 1}
+    assert seg_none.id not in by_segment
 
 
 @pytest.mark.clickhouse
