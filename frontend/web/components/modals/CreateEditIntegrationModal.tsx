@@ -10,7 +10,7 @@ import { getGithubRepos } from 'common/services/useGithub'
 import Project from 'common/project'
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
-import { normaliseIntegrationBaseUrl } from 'common/utils/normaliseIntegrationBaseUrl'
+import { ensureTrailingSlash } from 'common/utils/ensureTrailingSlash'
 import Input from 'components/base/forms/Input'
 import {
   IntegrationData,
@@ -289,7 +289,12 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
       organisationId,
       projectId: integration.perEnvironment ? undefined : projectId,
     }
-    const body = normaliseIntegrationBaseUrl(id, formData)
+    // NewRelicWrapper appends v2/applications/... directly to base_url, so a
+    // custom URL must be slash-terminated.
+    const body =
+      id === 'new-relic' && formData.base_url
+        ? { ...formData, base_url: ensureTrailingSlash(formData.base_url) }
+        : formData
     const request = isEdit
       ? updateIntegration({
           ...mutationArgs,
