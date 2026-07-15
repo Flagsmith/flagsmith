@@ -10,6 +10,11 @@ on:
       - api/**
     branches:
       - main
+  # DROPME: temporary trigger to validate the fix behaviour in a PR.
+  pull_request:
+    paths:
+      - api/**
+    types: [opened, synchronize, reopened, ready_for_review]
 
 concurrency:
   group: ${{ github.workflow }}
@@ -38,7 +43,8 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v7
         with:
-          ref: main
+          # DROPME: push to the PR branch while validating; restore `main`.
+          ref: ${{ github.event.pull_request.head.ref || 'main' }}
           token: ${{ steps.app-token.outputs.token }}
 
       - uses: ./.github/actions/install-uv
