@@ -6,6 +6,7 @@ import Icon from 'components/icons/Icon'
 import Panel from 'components/base/grid/Panel'
 import Button from 'components/base/forms/Button'
 import CreateFlagModal from 'components/modals/create-feature'
+import FeatureListStore from 'common/stores/feature-list-store'
 import { FeaturesTableFilters } from 'components/pages/features/components'
 import Utils from 'common/utils/utils'
 import { TagStrategy } from 'common/types/responses'
@@ -16,6 +17,7 @@ import {
   hasActiveFilters,
 } from 'common/utils/featureFilterParams'
 import CompareFeatureRow, { EditFeatureHandler } from './CompareFeatureRow'
+import { ENV_COLUMN_WIDTH, SEGMENTS_COLUMN_WIDTH } from './constants'
 import { FeatureChange } from './types'
 import { useEnvironmentComparison } from './useEnvironmentComparison'
 
@@ -129,6 +131,17 @@ const CompareEnvironments: FC<CompareEnvironmentsProps> = ({
     setExpandedRows(new Set())
   }, [changes])
 
+  // The edit modal saves through the legacy Flux store, which RTK Query
+  // can't observe — refetch when it reports a change
+  useEffect(() => {
+    FeatureListStore.on('saved', refresh)
+    FeatureListStore.on('removed', refresh)
+    return () => {
+      FeatureListStore.off('saved', refresh)
+      FeatureListStore.off('removed', refresh)
+    }
+  }, [refresh])
+
   const editFeature: EditFeatureHandler = useCallback(
     (projectFlag, environmentFlag, environmentKey, environmentName) => {
       openModal(
@@ -157,12 +170,9 @@ const CompareEnvironments: FC<CompareEnvironmentsProps> = ({
           history={history}
         />,
         'side-modal create-feature-modal',
-        () => {
-          refresh()
-        },
       )
     },
-    [history, projectIdNum, refresh],
+    [history, projectIdNum],
   )
 
   const filteredItems = useMemo(
@@ -221,7 +231,9 @@ const CompareEnvironments: FC<CompareEnvironmentsProps> = ({
   )
 
   const renderResults = () => {
-    if (isLoading) {
+    // Only show the full loader when there is nothing to display yet;
+    // refreshes keep the table visible and dim it instead
+    if (isLoading && !changes) {
       return (
         <div className='text-center py-4'>
           <Loader />
@@ -241,7 +253,7 @@ const CompareEnvironments: FC<CompareEnvironmentsProps> = ({
     }
 
     return (
-      <>
+      <div className={isLoading ? 'opacity-50 pe-none' : undefined}>
         <Panel className='no-pad mb-4'>
           <div className='search-list'>
             <FeaturesTableFilters
@@ -271,7 +283,7 @@ const CompareEnvironments: FC<CompareEnvironmentsProps> = ({
             </div>
           </Panel>
         )}
-      </>
+      </div>
     )
   }
 
@@ -281,13 +293,16 @@ const CompareEnvironments: FC<CompareEnvironmentsProps> = ({
         {label}
         <span className='unread px-1'>{count}</span>
       </div>
-      <div className='table-column' style={{ width: 280 }}>
+      <div className='table-column' style={{ width: ENV_COLUMN_WIDTH }}>
         {leftEnvironment?.name}
       </div>
-      <div className='table-column' style={{ width: 280 }}>
+      <div className='table-column' style={{ width: ENV_COLUMN_WIDTH }}>
         {rightEnvironment?.name}
       </div>
-      <div className='table-column text-end pe-3' style={{ width: 140 }}>
+      <div
+        className='table-column text-end pe-3'
+        style={{ width: SEGMENTS_COLUMN_WIDTH }}
+      >
         Segment changes
       </div>
     </Row>

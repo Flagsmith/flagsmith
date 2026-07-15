@@ -5,8 +5,8 @@ import Switch from 'components/Switch'
 import FeatureName from 'components/feature-summary/FeatureName'
 import FeatureValue from 'components/feature-summary/FeatureValue'
 import SegmentsIcon from 'components/icons/SegmentsIcon'
-import Button from 'components/base/forms/Button'
 import ExpandedRow from './ExpandedRow'
+import { ENV_COLUMN_WIDTH, SEGMENTS_COLUMN_WIDTH } from './constants'
 import { FeatureChange } from './types'
 
 export type EditFeatureHandler = (
@@ -31,6 +31,40 @@ type CompareFeatureRowProps = {
   rightEnvironmentName?: string
 }
 
+type EnvironmentStateCellProps = {
+  enabled: boolean
+  value: FeatureChange['leftValue']
+  onEdit: () => void
+}
+
+// The switch and value are read-only representations — clicking either opens
+// the edit modal rather than toggling in place
+const EnvironmentStateCell: FC<EnvironmentStateCellProps> = ({
+  enabled,
+  onEdit,
+  value,
+}) => (
+  <div
+    className='clickable d-flex align-items-center gap-2 overflow-hidden'
+    role='button'
+    tabIndex={0}
+    onClick={(e: React.MouseEvent) => {
+      e.stopPropagation()
+      onEdit()
+    }}
+    onKeyDown={(e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        e.stopPropagation()
+        onEdit()
+      }
+    }}
+  >
+    <Switch className='flex-shrink-0 pe-none' checked={enabled} disabled />
+    <FeatureValue className='overflow-hidden' value={value} />
+  </div>
+)
+
 const CompareFeatureRow: FC<CompareFeatureRowProps> = ({
   index,
   isExpanded,
@@ -52,6 +86,24 @@ const CompareFeatureRow: FC<CompareFeatureRowProps> = ({
   )
   const toggle = () => onToggle(featureId)
 
+  const editLeft = () =>
+    onEdit(
+      item.projectFlagLeft,
+      item.leftEnvironmentFlag,
+      leftEnvironmentKey,
+      leftEnvironmentName,
+    )
+
+  const editRight = () =>
+    onEdit(
+      // Fall back to the left project flag so the modal edits the
+      // existing feature instead of switching to create mode
+      item.projectFlagRight || item.projectFlagLeft,
+      item.rightEnvironmentFlag,
+      rightEnvironmentKey,
+      rightEnvironmentName,
+    )
+
   return (
     <div className='list-item list-item-xs'>
       <div
@@ -62,6 +114,9 @@ const CompareFeatureRow: FC<CompareFeatureRowProps> = ({
         aria-expanded={isExpanded}
         onClick={toggle}
         onKeyDown={(e: React.KeyboardEvent) => {
+          // Ignore keydowns bubbling from the environment state cells,
+          // otherwise activating them via keyboard would also toggle the row
+          if (e.target !== e.currentTarget) return
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()
             toggle()
@@ -78,58 +133,30 @@ const CompareFeatureRow: FC<CompareFeatureRowProps> = ({
         </div>
 
         <div
-          className='table-column d-flex align-items-center gap-2'
-          style={{ width: 280 }}
+          className='table-column d-flex align-items-center overflow-hidden'
+          style={{ width: ENV_COLUMN_WIDTH }}
         >
-          <Switch checked={item.leftEnabled} disabled />
-          <FeatureValue value={item.leftValue} />
-          <div className='flex-fill' />
-          <Button
-            theme='text'
-            size='xSmall'
-            onClick={(e: React.MouseEvent) => {
-              e.stopPropagation()
-              onEdit(
-                item.projectFlagLeft,
-                item.leftEnvironmentFlag,
-                leftEnvironmentKey,
-                leftEnvironmentName,
-              )
-            }}
-          >
-            Edit
-          </Button>
+          <EnvironmentStateCell
+            enabled={item.leftEnabled}
+            value={item.leftValue}
+            onEdit={editLeft}
+          />
         </div>
 
         <div
-          className='table-column d-flex align-items-center gap-2'
-          style={{ width: 280 }}
+          className='table-column d-flex align-items-center overflow-hidden'
+          style={{ width: ENV_COLUMN_WIDTH }}
         >
-          <Switch checked={item.rightEnabled} disabled />
-          <FeatureValue value={item.rightValue} />
-          <div className='flex-fill' />
-          <Button
-            theme='text'
-            size='xSmall'
-            onClick={(e: React.MouseEvent) => {
-              e.stopPropagation()
-              onEdit(
-                // Fall back to the left project flag so the modal edits the
-                // existing feature instead of switching to create mode
-                item.projectFlagRight || item.projectFlagLeft,
-                item.rightEnvironmentFlag,
-                rightEnvironmentKey,
-                rightEnvironmentName,
-              )
-            }}
-          >
-            Edit
-          </Button>
+          <EnvironmentStateCell
+            enabled={item.rightEnabled}
+            value={item.rightValue}
+            onEdit={editRight}
+          />
         </div>
 
         <div
           className='table-column d-flex justify-content-end pe-3'
-          style={{ width: 140 }}
+          style={{ width: SEGMENTS_COLUMN_WIDTH }}
         >
           {totalSegments > 0 && (
             <span className='chip chip--xs bg-primary text-white d-inline-flex align-items-center gap-1'>
