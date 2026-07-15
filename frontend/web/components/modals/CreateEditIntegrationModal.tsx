@@ -356,6 +356,14 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
       customUrlFields.has(field.key) ||
       (!!formData[field.key] &&
         !options.find((o) => o.value === formData[field.key]))
+    let selectValue: { label: string; value?: string } = {
+      label: 'Please select',
+    }
+    if (isCustomUrl) {
+      selectValue = { label: 'Custom URL', value: 'custom' }
+    } else if (selected) {
+      selectValue = { label: selected.label, value: selected.value }
+    }
     return (
       <div className='full-width mb-2'>
         <Select
@@ -373,13 +381,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
             }
           }}
           options={options}
-          value={
-            isCustomUrl
-              ? { label: 'Custom URL', value: 'custom' }
-              : selected
-              ? { label: selected.label, value: selected.value }
-              : { label: 'Please select' }
-          }
+          value={selectValue}
         />
         {isCustomUrl && <div className='mt-2'>{renderFieldInput(field)}</div>}
       </div>
