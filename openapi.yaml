@@ -19140,14 +19140,6 @@ components:
             $ref: '#/components/schemas/MultivariateFeatureStateValue'
       required:
         - feature_state_value
-    CustomToken:
-      type: object
-      properties:
-        key:
-          type: string
-          maxLength: 40
-      required:
-        - key
     CustomUserCreate:
       type: object
       properties:
