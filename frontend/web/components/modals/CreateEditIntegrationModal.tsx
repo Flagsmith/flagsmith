@@ -10,6 +10,7 @@ import { getGithubRepos } from 'common/services/useGithub'
 import Project from 'common/project'
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
+import { normaliseIntegrationBaseUrl } from 'common/utils/normaliseIntegrationBaseUrl'
 import Input from 'components/base/forms/Input'
 import {
   IntegrationData,
@@ -288,13 +289,14 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
       organisationId,
       projectId: integration.perEnvironment ? undefined : projectId,
     }
+    const body = normaliseIntegrationBaseUrl(id, formData)
     const request = isEdit
       ? updateIntegration({
           ...mutationArgs,
-          body: formData,
+          body,
           id: `${existingId}`,
         }).unwrap()
-      : createIntegration({ ...mutationArgs, body: formData }).unwrap()
+      : createIntegration({ ...mutationArgs, body }).unwrap()
     request
       .then(() => {
         const integrationName = integration.title || 'Integration'
