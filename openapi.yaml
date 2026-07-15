@@ -99,13 +99,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateFlag'
+              $ref: '#/components/schemas/UpdateFlagOptionA'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/UpdateFlag'
+              $ref: '#/components/schemas/UpdateFlagOptionA'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/UpdateFlag'
+              $ref: '#/components/schemas/UpdateFlagOptionA'
       responses:
         '204':
           description: No response body
@@ -162,13 +162,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateFlagV2'
+              $ref: '#/components/schemas/UpdateFlagOptionB'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/UpdateFlagV2'
+              $ref: '#/components/schemas/UpdateFlagOptionB'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/UpdateFlagV2'
+              $ref: '#/components/schemas/UpdateFlagOptionB'
       responses:
         '204':
           description: No response body
@@ -19473,9 +19473,10 @@ components:
           type: boolean
         value:
           $ref: '#/components/schemas/FeatureValue'
-      required:
-        - enabled
-        - value
+        multivariate_feature_state_values:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnvironmentMultivariateValue'
     EnvironmentFeatureVersion:
       type: object
       properties:
@@ -19667,6 +19668,20 @@ components:
           items:
             $ref: '#/components/schemas/MetricItem'
           readOnly: true
+    EnvironmentMultivariateValue:
+      type: object
+      properties:
+        percentage_allocation:
+          type: number
+          format: double
+          maximum: 100
+          minimum: 0
+        multivariate_feature_option:
+          type: integer
+        value:
+          $ref: '#/components/schemas/FeatureValue'
+      required:
+        - percentage_allocation
     EnvironmentRetrieveSerializerWithMetadata:
       description: Functionality for serializers that need to handle metadata
       type: object
@@ -20172,7 +20187,7 @@ components:
         multivariate_feature_state_values:
           type: array
           items:
-            $ref: '#/components/schemas/MultivariateValue'
+            $ref: '#/components/schemas/SegmentOverrideMultivariateValue'
       required:
         - enabled
         - feature_state_value
@@ -20855,17 +20870,6 @@ components:
           type:
             - boolean
             - 'null'
-    FeatureUpdateSegmentData:
-      type: object
-      properties:
-        id:
-          type: integer
-        priority:
-          type:
-            - integer
-            - 'null'
-      required:
-        - id
     FeatureValue:
       type: object
       properties:
@@ -21964,19 +21968,6 @@ components:
             - type: boolean
             - type: 'null'
           readOnly: true
-    MultivariateValue:
-      type: object
-      properties:
-        multivariate_feature_option:
-          type: integer
-        percentage_allocation:
-          type: number
-          format: double
-          maximum: 100
-          minimum: 0
-      required:
-        - multivariate_feature_option
-        - percentage_allocation
     NameEnum:
       description: |-
         * `Webhook` - Webhook
@@ -26245,11 +26236,35 @@ components:
         multivariate_feature_state_values:
           type: array
           items:
-            $ref: '#/components/schemas/MultivariateValue'
+            $ref: '#/components/schemas/SegmentOverrideMultivariateValue'
       required:
-        - enabled
         - segment_id
-        - value
+    SegmentOverrideMultivariateValue:
+      type: object
+      properties:
+        percentage_allocation:
+          type: number
+          format: double
+          maximum: 100
+          minimum: 0
+        multivariate_feature_option:
+          type: integer
+        value:
+          $ref: '#/components/schemas/FeatureValue'
+      required:
+        - multivariate_feature_option
+        - percentage_allocation
+    SegmentReference:
+      type: object
+      properties:
+        id:
+          type: integer
+        priority:
+          type:
+            - integer
+            - 'null'
+      required:
+        - id
     SegmentRule:
       description: Adds nested create feature
       type: object
@@ -27011,22 +27026,24 @@ components:
           allOf:
             - $ref: '#/components/schemas/LifecycleStageEnum'
           readOnly: true
-    UpdateFlag:
+    UpdateFlagOptionA:
       type: object
       properties:
         feature:
           $ref: '#/components/schemas/FeatureIdentifier'
         segment:
-          $ref: '#/components/schemas/FeatureUpdateSegmentData'
+          $ref: '#/components/schemas/SegmentReference'
         enabled:
           type: boolean
         value:
           $ref: '#/components/schemas/FeatureValue'
+        multivariate_feature_state_values:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnvironmentMultivariateValue'
       required:
-        - enabled
         - feature
-        - value
-    UpdateFlagV2:
+    UpdateFlagOptionB:
       type: object
       properties:
         feature:
@@ -27038,7 +27055,6 @@ components:
           items:
             $ref: '#/components/schemas/SegmentOverride'
       required:
-        - environment_default
         - feature
     UpdateSubscription:
       type: object

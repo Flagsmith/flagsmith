@@ -9,8 +9,8 @@ from django.urls import path
 
 from features.feature_states.views import (
     delete_segment_override,
-    update_flag_v1,
-    update_flag_v2,
+    update_flag_option_a,
+    update_flag_option_b,
 )
 
 app_name = "experiments"
@@ -18,13 +18,13 @@ app_name = "experiments"
 urlpatterns = [
     path(
         "environments/<str:environment_key>/update-flag-v1/",
-        update_flag_v1,
-        name="update-flag-v1",
+        update_flag_option_a,
+        name="update-flag-option-a",
     ),
     path(
         "environments/<str:environment_key>/update-flag-v2/",
-        update_flag_v2,
-        name="update-flag-v2",
+        update_flag_option_b,
+        name="update-flag-option-b",
     ),
     path(
         "environments/<str:environment_key>/delete-segment-override/",

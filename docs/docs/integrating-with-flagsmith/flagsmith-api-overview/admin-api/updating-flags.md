@@ -4,14 +4,12 @@ sidebar_label: Updating Flags (Experimental)
 sidebar_position: 3
 ---
 
-These experimental endpoints let you update feature flag values and segment overrides via the Admin API. They're
-purpose-built for automation and CI/CD — minimal payloads, no need to look up internal IDs, and they work the same
-regardless of whether your environment has Feature Versioning enabled.
+These endpoints let you update feature flags, segment overrides, and variant allocations via the Admin API.
 
 :::caution
 
-These endpoints are experimental and may change without notice. They do not support multivariate values and cannot be
-used when [change requests](/administration-and-security/governance-and-compliance/change-requests) are enabled.
+**These endpoints are experimental and may change without notice.** They cannot be used when
+[change requests](/administration-and-security/governance-and-compliance/change-requests) are enabled.
 
 :::
 
@@ -23,13 +21,14 @@ in one request). Each scenario below shows both. Try them and
 
 - Identify features by `name` or `id` (pick one, not both).
 - All endpoints return **204 No Content** on success.
+- Omitted fields are treated as "no change" (e.g. if `enabled` is omitted, the feature's enabled state is unchanged).
 - Values are passed as a `value` object with `type` and `value` (always a string):
 
-| Type      | Example                                          |
-| --------- | ------------------------------------------------ |
-| `string`  | `{"type": "string", "value": "hello"}`           |
-| `integer` | `{"type": "integer", "value": "42"}`             |
-| `boolean` | `{"type": "boolean", "value": "true"}`           |
+| Type      | Example                                |
+| --------- | -------------------------------------- |
+| `string`  | `{"type": "string", "value": "hello"}` |
+| `integer` | `{"type": "integer", "value": "42"}`   |
+| `boolean` | `{"type": "boolean", "value": "true"}` |
 
 ---
 
@@ -37,7 +36,8 @@ in one request). Each scenario below shows both. Try them and
 
 The simplest case — flip a feature flag in an environment.
 
-**Option A** — [`POST /api/experiments/environments/{environment_key}/update-flag-v1/`](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_update_flag_v1_create)
+**Option A** —
+[`POST /api/experiments/environments/{environment_key}/update-flag-v1/`](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_update_flag_v1_create)
 
 ```bash
 curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v1/' \
@@ -50,7 +50,8 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
   }'
 ```
 
-**Option B** — [`POST /api/experiments/environments/{environment_key}/update-flag-v2/`](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_update_flag_v2_create)
+**Option B** —
+[`POST /api/experiments/environments/{environment_key}/update-flag-v2/`](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_update_flag_v2_create)
 
 ```bash
 curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v2/' \
@@ -71,7 +72,8 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
 
 Change a feature's value — for example, setting a rate limit.
 
-**Option A**
+**Option A** —
+[`POST /api/experiments/environments/{environment_key}/update-flag-v1/`](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_update_flag_v1_create)
 
 ```bash
 curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v1/' \
@@ -84,7 +86,8 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
   }'
 ```
 
-**Option B**
+**Option B** —
+[`POST /api/experiments/environments/{environment_key}/update-flag-v2/`](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_update_flag_v2_create)
 
 ```bash
 curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v2/' \
@@ -105,7 +108,8 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
 
 Enable a feature for a specific segment (e.g. beta users) while keeping it off for everyone else.
 
-**Option A**
+**Option A** —
+[`POST /api/experiments/environments/{environment_key}/update-flag-v1/`](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_update_flag_v1_create)
 
 ```bash
 curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v1/' \
@@ -119,7 +123,8 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
   }'
 ```
 
-**Option B** — single request:
+**Option B** —
+[`POST /api/experiments/environments/{environment_key}/update-flag-v2/`](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_update_flag_v2_create)
 
 ```bash
 curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v2/' \
@@ -141,7 +146,8 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
   }'
 ```
 
-The `priority` field on segment overrides is optional. Omit it to add at the lowest priority. Priority `1` is highest.
+The `priority` field on segment overrides is optional. Omit it to add at the lowest priority. The lowest number has the
+highest priority.
 
 ---
 
@@ -149,10 +155,11 @@ The `priority` field on segment overrides is optional. Omit it to add at the low
 
 Set different values per segment — for example, pricing tiers.
 
-**Option A** — one request per segment override plus one for the default:
+**Option A** —
+[`POST /api/experiments/environments/{environment_key}/update-flag-v1/`](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_update_flag_v1_create)
 
 ```bash
-# Default
+# Set environment default
 curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v1/' \
   -H 'Authorization: Api-Key <your_token>' \
   -H 'Content-Type: application/json' \
@@ -162,7 +169,7 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
     "value": {"type": "string", "value": "standard"}
   }'
 
-# Enterprise segment (highest priority)
+# Set override for segment "Enterprise" (higher priority)
 curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v1/' \
   -H 'Authorization: Api-Key <your_token>' \
   -H 'Content-Type: application/json' \
@@ -173,7 +180,7 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
     "value": {"type": "string", "value": "enterprise"}
   }'
 
-# Premium segment
+# Set override for segment "Premium"
 curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v1/' \
   -H 'Authorization: Api-Key <your_token>' \
   -H 'Content-Type: application/json' \
@@ -185,7 +192,8 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
   }'
 ```
 
-**Option B** — single request:
+**Option B** —
+[`POST /api/experiments/environments/{environment_key}/update-flag-v2/`](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_update_flag_v2_create)
 
 ```bash
 curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v2/' \
@@ -216,6 +224,169 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
 
 ---
 
+## Configure A/B/n experiments (multivariate flags)
+
+Set up multivariate flags and customise weights per segment.
+
+Multivariate options can only be added, deleted, or updated in the environment. The `multivariate_feature_state_values`
+list is absolute: omitting an option means deleting it.
+
+Segment overrides can only re-weight existing variants. They cannot update the variant value, or add or delete
+multivariate options.
+
+**Option A** —
+[`POST /api/experiments/environments/{environment_key}/update-flag-v1/`](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_update_flag_v1_create)
+
+```bash
+# First, configure multivariate flags in the environment
+curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v1/' \
+  -H 'Authorization: Api-Key <your_token>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "feature": {"name": "new_payment_gateway_experiment"},
+    "enabled": true,
+    "value": {"type": "string", "value": "default"},
+    "multivariate_feature_state_values": [
+      {
+        "percentage_allocation": 20,
+        "value": {"type": "string", "value": "sharp_payments"}
+      },
+      {
+        "percentage_allocation": 10,
+        "value": {"type": "string", "value": "gemstone_express"}
+      }
+    ]
+  }'
+
+# Multivariate option `id`s can be fetched via the admin API
+curl -X GET '/api/v1/projects/{project_id}/features/{feature_id}/mv-options/' \
+  -H 'Authorization: Api-Key <your_token>' \
+  -H 'Content-Type: application/json'
+
+# You can update (add, delete, re-weight) multivariate options in the environment
+curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v1/' \
+  -H 'Authorization: Api-Key <your_token>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "feature": {"name": "new_payment_gateway_experiment"},
+    "multivariate_feature_state_values": [
+      {
+        "multivariate_feature_option": 991,
+        "percentage_allocation": 20,
+        "value": {"type": "string", "value": "sharp_payments"}
+      },
+      {
+        "percentage_allocation": 5,
+        "value": {"type": "string", "value": "e-z-pay"}
+      }
+    ]
+  }'
+
+# Segment overrides can re-weight multivariate options (but can't add, delete, or update values)
+curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v1/' \
+  -H 'Authorization: Api-Key <your_token>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "feature": {"name": "new_payment_gateway_experiment"},
+    "segment": {"id": 101, "priority": 1},
+    "multivariate_feature_state_values": [
+      {"multivariate_feature_option": 991, "percentage_allocation": 0},
+      {"multivariate_feature_option": 993, "percentage_allocation": 100}
+    ]
+  }'
+```
+
+**Option B** —
+[`POST /api/experiments/environments/{environment_key}/update-flag-v2/`](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_update_flag_v2_create)
+
+```bash
+# Configure the environment default and its multivariate options
+curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v2/' \
+  -H 'Authorization: Api-Key <your_token>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "feature": {"name": "new_payment_gateway_experiment"},
+    "environment_default": {
+      "enabled": true,
+      "value": {"type": "string", "value": "default"},
+      "multivariate_feature_state_values": [
+        {
+          "percentage_allocation": 20,
+          "value": {"type": "string", "value": "sharp_payments"}
+        },
+        {
+          "percentage_allocation": 10,
+          "value": {"type": "string", "value": "gemstone_express"}
+        }
+      ]
+    }
+  }'
+
+# Multivariate option `id`s can be fetched via the admin API
+curl -X GET '/api/v1/projects/{project_id}/features/{feature_id}/mv-options/' \
+  -H 'Authorization: Api-Key <your_token>' \
+  -H 'Content-Type: application/json'
+
+# Segment overrides can re-weight multivariate options (but can't add, delete, or update values)
+curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v2/' \
+  -H 'Authorization: Api-Key <your_token>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "feature": {"name": "new_payment_gateway_experiment"},
+    "segment_overrides": [
+      {
+        "segment_id": 101,
+        "multivariate_feature_state_values": [
+          {"multivariate_feature_option": 991, "percentage_allocation": 50},
+          {"multivariate_feature_option": 992, "percentage_allocation": 50}
+        ]
+      }
+    ]
+  }'
+
+# Re-weight the environment default and segment overrides in a single request
+curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag-v2/' \
+  -H 'Authorization: Api-Key <your_token>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "feature": {"name": "new_payment_gateway_experiment"},
+    "environment_default": {
+      "multivariate_feature_state_values": [
+        {
+          "multivariate_feature_option": 991,
+          "percentage_allocation": 30,
+          "value": {"type": "string", "value": "sharp_payments"}
+        },
+        {
+          "multivariate_feature_option": 992,
+          "percentage_allocation": 5,
+          "value": {"type": "string", "value": "gemstone_express"}
+        }
+      ]
+    },
+    "segment_overrides": [
+      {
+        "segment_id": 101,
+        "priority": 1,
+        "multivariate_feature_state_values": [
+          {"multivariate_feature_option": 991, "percentage_allocation": 100},
+          {"multivariate_feature_option": 992, "percentage_allocation": 0}
+        ]
+      },
+      {
+        "segment_id": 202,
+        "priority": 2,
+        "multivariate_feature_state_values": [
+          {"multivariate_feature_option": 991, "percentage_allocation": 0},
+          {"multivariate_feature_option": 992, "percentage_allocation": 100}
+        ]
+      }
+    ]
+  }'
+```
+
+---
+
 ## Remove a segment override
 
 A separate endpoint for removing a segment override from a feature:
@@ -231,17 +402,3 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
     "segment": {"id": 202}
   }'
 ```
-
----
-
-## Quick reference
-
-| Aspect               | Details                                                                      |
-| -------------------- | ---------------------------------------------------------------------------- |
-| Feature ID           | `name` or `id` — use one, not both                                           |
-| Value types          | `string`, `integer`, `boolean`                                               |
-| Segment priority     | Optional — omit to add at lowest priority; `1` is highest                    |
-| Feature Versioning   | Works the same whether enabled or not                                        |
-| Success response     | `204 No Content`                                                             |
-| Limitations          | No multivariate support; incompatible with change requests                   |
-| Full API schema      | [Swagger Explorer](https://api.flagsmith.com/api/v1/docs/)                   |

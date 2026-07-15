@@ -4582,7 +4582,7 @@
           "multivariate_feature_state_values": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MultivariateValue"
+              "$ref": "#/components/schemas/SegmentOverrideMultivariateValue"
             }
           }
         },
@@ -5608,24 +5608,6 @@
             "type": "integer",
             "readOnly": true
           },
-          "multivariate_feature_option": {
-            "type": "integer"
-          },
-          "percentage_allocation": {
-            "type": "number",
-            "format": "double",
-            "maximum": 100,
-            "minimum": 0
-          }
-        },
-        "required": [
-          "multivariate_feature_option",
-          "percentage_allocation"
-        ]
-      },
-      "MultivariateValue": {
-        "type": "object",
-        "properties": {
           "multivariate_feature_option": {
             "type": "integer"
           },
@@ -6914,6 +6896,27 @@
             "readOnly": true
           }
         }
+      },
+      "SegmentOverrideMultivariateValue": {
+        "type": "object",
+        "properties": {
+          "percentage_allocation": {
+            "type": "number",
+            "format": "double",
+            "maximum": 100,
+            "minimum": 0
+          },
+          "multivariate_feature_option": {
+            "type": "integer"
+          },
+          "value": {
+            "$ref": "#/components/schemas/FeatureValue"
+          }
+        },
+        "required": [
+          "multivariate_feature_option",
+          "percentage_allocation"
+        ]
       },
       "SegmentRule": {
         "description": "Adds nested create feature",
