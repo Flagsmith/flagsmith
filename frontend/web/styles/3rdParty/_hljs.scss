@@ -83,8 +83,7 @@
   overflow-x: auto;
   @include customScrollDark();
   padding: 0.5em;
-  // #6606 spike: theme-adaptive code surface (light in light mode, dark in
-  // dark) via semantic tokens, replacing the hardcoded dark $code-bg.
+  // Theme-adaptive surface: light in light mode, dark in dark, via tokens.
   background: var(--color-surface-subtle);
   border-radius: $border-radius;
   border: 1px solid var(--color-border-default);
@@ -181,10 +180,8 @@
 .hljs {
   color: var(--color-text-default);
   padding: 18px;
-  // Unmapped tokens fall back to the readable base colour instead of the
-  // highlight.js greys; the semantic palette below re-colours specific types.
-  // Kept intentionally restrained (five groups) - this is the palette lifted
-  // from the onboarding code card, now the shared standard (#6606).
+  // Unmapped tokens inherit the base colour instead of the highlight.js greys;
+  // the palette below re-colours specific types.
   * {
     color: inherit;
   }
@@ -284,16 +281,14 @@ code[contenteditable='false'].hljs {
   @include customScrollDark();
 }
 
-// Code that sits inside a container which already provides the surface (e.g.
-// the onboarding code card). The container owns the background, border and
-// rounding; the code block itself is transparent and only scrolls sideways.
+// For code inside a container that already provides the surface: transparent,
+// no border/radius; the container owns the frame.
 .hljs--embedded {
   background: transparent;
   border: 0;
   border-radius: 0;
-  // Reserve the horizontal scrollbar gutter so hovering doesn't shift the
-  // layout - the default dark-scroll bar toggles display and reflows. The
-  // !important beats customScrollDark's display:none on non-editable code.
+  // Reserve the scrollbar gutter so hover doesn't shift layout; !important
+  // beats customScrollDark's display:none on non-editable code.
   overflow-x: scroll;
   overflow-y: hidden;
 

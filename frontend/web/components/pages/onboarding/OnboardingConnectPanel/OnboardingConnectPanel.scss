@@ -32,10 +32,8 @@
     }
   }
 
-  // The code card owns the surface and rounding; the code block inside opts
-  // into the shared `.hljs--embedded` modifier (transparent, no border/radius,
-  // gutter-reserved scrollbar). Palette and theme adaptation now come from the
-  // shared `.hljs` theme (#6606) - no per-card overrides.
+  // The card owns the surface + rounding; the code block opts into the shared
+  // `.hljs--embedded` modifier for its palette and theme adaptation.
   &__codecard {
     border-radius: 10px;
     overflow: hidden;
