@@ -15,6 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
+from rest_framework.throttling import BaseThrottle, ScopedRateThrottle
 from rest_framework.viewsets import GenericViewSet
 
 from app.pagination import CustomPagination
@@ -89,6 +90,12 @@ class WarehouseConnectionViewSet(
     model_class = WarehouseConnection
     lookup_field = "id"
     lookup_url_kwarg = "connection_id"
+
+    def get_throttles(self) -> list[BaseThrottle]:
+        if self.action == "test_warehouse_connection":
+            self.throttle_scope = "warehouse_connection_test"
+            return [ScopedRateThrottle()]
+        return super().get_throttles()
 
     def perform_create(self, serializer: BaseSerializer[WarehouseConnection]) -> None:
         connection: WarehouseConnection = serializer.save(

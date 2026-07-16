@@ -7,6 +7,7 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
+from rest_framework.throttling import ScopedRateThrottle
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
@@ -18,6 +19,7 @@ from experimentation.models import (
     WarehouseConnectionStatus,
     WarehouseType,
 )
+from experimentation.views import WarehouseConnectionViewSet
 from tests.types import EnableFeaturesFixture
 
 pytestmark = pytest.mark.django_db
@@ -1048,6 +1050,38 @@ def test_test_warehouse_connection__non_admin__returns_403(
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_get_throttles__test_connection_action__returns_scoped_throttle() -> None:
+    # Given
+    view = WarehouseConnectionViewSet()
+    view.action = "test_warehouse_connection"
+
+    # When
+    throttles = view.get_throttles()
+
+    # Then
+    assert len(throttles) == 1
+    assert isinstance(throttles[0], ScopedRateThrottle)
+    assert view.throttle_scope == "warehouse_connection_test"
+
+
+@pytest.mark.parametrize(
+    "action",
+    ["list", "retrieve", "create", "update", "destroy"],
+)
+def test_get_throttles__other_actions__returns_view_default_throttles(
+    action: str,
+) -> None:
+    # Given
+    view = WarehouseConnectionViewSet()
+    view.action = action
+
+    # When
+    throttles = view.get_throttles()
+
+    # Then
+    assert [type(throttle) for throttle in throttles] == list(view.throttle_classes)
 
 
 def test_get__clickhouse_unconfigured__returns_200_without_stats(
