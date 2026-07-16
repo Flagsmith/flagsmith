@@ -960,7 +960,7 @@ OAUTH2_PROVIDER = {
     "ALLOWED_CODE_CHALLENGE_METHODS": ["S256"],
     "SCOPES": {
         "mcp": "MCP access",
-        "management-api": "Management API access",
+        "admin-api": "Admin API access",
     },
     "DEFAULT_SCOPES": ["mcp"],
     "SCOPES_BACKEND_CLASS": "oauth2_metadata.scopes.FlagsmithScopes",

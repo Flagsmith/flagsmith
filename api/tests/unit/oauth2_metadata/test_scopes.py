@@ -3,7 +3,7 @@ from oauth2_provider.scopes import get_scopes_backend
 
 from oauth2_metadata.constants import (
     FLAGSMITH_CLI_CLIENT_ID,
-    SCOPE_MANAGEMENT_API,
+    SCOPE_ADMIN_API,
     SCOPE_MCP,
 )
 from oauth2_metadata.scopes import FlagsmithScopes
@@ -28,7 +28,7 @@ def test_get_available_scopes__flagsmith_cli_application__management_api_only(
     scopes = FlagsmithScopes().get_available_scopes(application=application)
 
     # Then
-    assert set(scopes) == {SCOPE_MANAGEMENT_API}
+    assert set(scopes) == {SCOPE_ADMIN_API}
 
 
 def test_get_available_scopes__dcr_registered_application__excludes_management_api(

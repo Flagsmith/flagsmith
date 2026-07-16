@@ -293,7 +293,7 @@ def test_get__third_party_application_requests_management_api__returns_invalid_s
             "client_id": oauth_application.client_id,
             "response_type": "code",
             "redirect_uri": "https://example.com/callback",
-            "scope": "management-api",
+            "scope": "admin-api",
             "code_challenge": challenge,
             "code_challenge_method": "S256",
         },
@@ -320,7 +320,7 @@ def test_get__flagsmith_cli_requests_management_api__returns_application_info(
             "client_id": application.client_id,
             "response_type": "code",
             "redirect_uri": "http://127.0.0.1:53682/callback",
-            "scope": "management-api",
+            "scope": "admin-api",
             "code_challenge": challenge,
             "code_challenge_method": "S256",
         },
@@ -330,5 +330,5 @@ def test_get__flagsmith_cli_requests_management_api__returns_application_info(
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["application"]["client_id"] == FLAGSMITH_CLI_CLIENT_ID
-    assert "management-api" in data["scopes"]
+    assert "admin-api" in data["scopes"]
     assert data["is_verified"] is True
