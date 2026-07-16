@@ -1,82 +1,118 @@
 import {
   FC,
+  ReactNode,
   useCallback,
   useEffect,
   useState,
   useSyncExternalStore,
 } from 'react'
-import ModalDefault from './ModalDefault'
-import Confirm from './ModalConfirm'
+import Dialog, { DialogSize } from 'components/base/Dialog'
+import Button from 'components/base/forms/Button'
 import {
   clearConfirm,
   closeModalByKey,
   ConfirmEntry,
   getModalState,
+  interceptClose,
   ModalEntry,
   ModalState,
+  registerModalTitleSetter,
+  setInterceptClose,
   subscribeModals,
 } from './modalController'
 
-// PoC (spike): renders active modals in-tree via reactstrap's `container`
-// prop pointed at #app, so the DOM lands inside the app root (not <body>) and
-// context flows down. Mounted once from App.js inside the store <Provider>.
+// PoC (spike): renders the imperative modal stack with the DS Dialog (native
+// <dialog>, top layer). Mounted once from App.js under the store <Provider>.
 
 const legacyGlobal = global as typeof globalThis &
   Record<'closeModal' | 'closeModal2', (() => void) | undefined>
+
+// Map the legacy openModal className to a Dialog size/variant.
+const sizeFor = (className?: string): DialogSize => {
+  if (!className) return 'md'
+  if (className.includes('side-modal')) return 'side'
+  if (className.includes('modal-full-screen')) return 'full'
+  if (className.includes('modal-lg')) return 'lg'
+  if (className.includes('modal-sm')) return 'sm'
+  return 'md'
+}
 
 const ModalSlot: FC<{ entry: ModalEntry; index: number }> = ({
   entry,
   index,
 }) => {
-  const [isOpen, setIsOpen] = useState(true)
-  const toggle = useCallback(() => setIsOpen(false), [])
+  const [title, setTitle] = useState<ReactNode>(entry.title)
 
-  // Levels 0 and 1 keep the imperative globals working (closeModal/closeModal2).
+  // The main modal (index 0) owns the dynamic-title setter, matching the old
+  // ModalDefault behaviour.
+  useEffect(() => {
+    if (index !== 0) return undefined
+    registerModalTitleSetter(setTitle)
+    return () => registerModalTitleSetter(null)
+  }, [index])
+
+  const requestClose = useCallback(async () => {
+    // Only the main modal runs the unsaved-changes guard.
+    if (index === 0 && interceptClose) {
+      const shouldClose = await interceptClose()
+      if (!shouldClose) return
+      setInterceptClose(null)
+    }
+    entry.onClose?.()
+    closeModalByKey(entry.key)
+  }, [entry, index])
+
+  // Keep the imperative globals working (closeModal()/closeModal2()).
   useEffect(() => {
     const pointer = (['closeModal', 'closeModal2'] as const)[index]
-    if (!pointer) return
-    legacyGlobal[pointer] = toggle
+    if (!pointer) return undefined
+    legacyGlobal[pointer] = requestClose
     return () => {
-      if (legacyGlobal[pointer] === toggle) legacyGlobal[pointer] = undefined
+      if (legacyGlobal[pointer] === requestClose) {
+        legacyGlobal[pointer] = undefined
+      }
     }
-  }, [index, toggle])
+  }, [index, requestClose])
 
   return (
-    <ModalDefault
-      container='app'
-      isOpen={isOpen}
-      zIndex={1050 + index * 20}
-      title={entry.title}
+    <Dialog
+      open
+      size={sizeFor(entry.className)}
       className={entry.className}
-      toggle={toggle}
-      onClosed={() => {
-        entry.onClose?.()
-        closeModalByKey(entry.key)
-      }}
+      onClose={requestClose}
     >
-      {entry.body}
-    </ModalDefault>
+      <Dialog.Header>{title}</Dialog.Header>
+      <Dialog.Body>{entry.body}</Dialog.Body>
+    </Dialog>
   )
 }
 
 const ConfirmSlot: FC<{ entry: ConfirmEntry }> = ({ entry }) => {
-  const [isOpen, setIsOpen] = useState(true)
-  const toggle = useCallback(() => setIsOpen(false), [])
+  const no = () => {
+    entry.onNo?.()
+    clearConfirm()
+  }
+  const yes = () => {
+    entry.onYes?.()
+    clearConfirm()
+  }
   return (
-    <Confirm
-      container='app'
-      isOpen={isOpen}
-      isDanger={entry.destructive}
-      title={entry.title}
-      yesText={entry.yesText}
-      noText={entry.noText}
-      onYes={entry.onYes}
-      onNo={entry.onNo}
-      toggle={toggle}
-      onClosed={clearConfirm}
-    >
-      {entry.body}
-    </Confirm>
+    <Dialog open size='sm' onClose={no}>
+      <Dialog.Header>{entry.title}</Dialog.Header>
+      <Dialog.Body>{entry.body}</Dialog.Body>
+      <Dialog.Footer>
+        <Button theme='secondary' id='confirm-btn-no' onClick={no}>
+          {entry.noText ?? 'Cancel'}
+        </Button>
+        <Button
+          theme={entry.destructive ? 'danger' : 'primary'}
+          id='confirm-btn-yes'
+          onClick={yes}
+        >
+          {entry.yesText ?? 'OK'}
+        </Button>
+      </Dialog.Footer>
+    </Dialog>
   )
 }
 

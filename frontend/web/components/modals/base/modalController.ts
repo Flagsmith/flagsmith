@@ -102,6 +102,24 @@ export const clearConfirm = () => {
   emit()
 }
 
+// Unsaved-changes guard: a modal registers a gate that runs before it closes.
+// Lives here (not on ModalDefault) so the in-tree manager can honour it.
+export let interceptClose: (() => Promise<boolean>) | null = null
+export const setInterceptClose = (fn: (() => Promise<any>) | null) => {
+  interceptClose = fn
+}
+
+// Dynamic title: the active modal registers a setter; setModalTitle updates it.
+let titleSetter: ((title: ReactNode) => void) | null = null
+export const registerModalTitleSetter = (
+  fn: ((title: ReactNode) => void) | null,
+) => {
+  titleSetter = fn
+}
+export const setModalTitle = (title: ReactNode) => {
+  titleSetter?.(title)
+}
+
 // Legacy call sites reach these via window.openModal* (wired in main.js) and
 // bare globals set up in project-components.js. Keep them populated.
 const legacyGlobal = global as typeof globalThis & {

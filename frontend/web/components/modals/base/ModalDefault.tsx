@@ -1,6 +1,17 @@
 import { Modal, ModalBody } from 'reactstrap'
-import React, { FC, ReactNode, useState } from 'react'
+import React, { FC, ReactNode, useEffect, useState } from 'react'
 import ModalHeader from './ModalHeader'
+import {
+  interceptClose,
+  registerModalTitleSetter,
+  setInterceptClose,
+  setModalTitle,
+} from './modalController'
+
+// interceptClose / setInterceptClose / setModalTitle now live in the controller
+// so the in-tree manager can honour them. Re-exported here for existing imports
+// (~15 call sites still import them from this path).
+export { interceptClose, setInterceptClose, setModalTitle }
 
 interface ModalDefault {
   title: ReactNode
@@ -16,15 +27,6 @@ interface ModalDefault {
   container?: string
 }
 
-export let interceptClose: (() => Promise<boolean>) | null = null
-export const setInterceptClose = (promise: (() => Promise<any>) | null) => {
-  interceptClose = promise
-}
-
-let cb: ((title: ReactNode) => void) | undefined
-export const setModalTitle = (title: string) => {
-  cb?.(title)
-}
 const ModalDefault: FC<ModalDefault> = ({
   children,
   className,
@@ -37,14 +39,17 @@ const ModalDefault: FC<ModalDefault> = ({
   zIndex,
 }) => {
   const [title, setTitle] = useState(_title)
-  cb = setTitle
+  useEffect(() => {
+    registerModalTitleSetter(setTitle)
+    return () => registerModalTitleSetter(null)
+  }, [])
   const onDismissClick = async () => {
     if (interceptClose) {
       const shouldClose = await interceptClose()
       if (!shouldClose) {
         return
       }
-      interceptClose = null
+      setInterceptClose(null)
     }
     if (onDismiss) {
       onDismiss()
