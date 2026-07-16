@@ -497,9 +497,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             len(owner_ids & existing_owner_ids) if owner_ids else 0
         )
         actual_group_owners_to_remove = (
-            len(group_owner_ids & existing_group_owner_ids)
-            if group_owner_ids
-            else 0
+            len(group_owner_ids & existing_group_owner_ids) if group_owner_ids else 0
         )
 
         remaining = (
