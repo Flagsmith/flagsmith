@@ -1,30 +1,8 @@
-import ipaddress
-import socket
 from urllib.parse import urlparse
 
 from rest_framework import serializers
 
-
-def is_internal_address(hostname: str) -> bool:
-    try:
-        ips = [ipaddress.ip_address(hostname)]
-    except ValueError:
-        # hostname is a name rather than a literal IP — resolve it.
-        try:
-            results = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC)
-            ips = [ipaddress.ip_address(str(r[4][0]).split("%")[0]) for r in results]
-        except socket.gaierror:
-            # Unresolvable hostname; leave it to the URL validator.
-            return False
-
-    return any(
-        ip.is_loopback
-        or ip.is_private
-        or ip.is_link_local
-        or ip.is_reserved
-        or ip.is_multicast
-        for ip in ips
-    )
+from core.network import is_internal_address
 
 
 class NoSSRFURLField(serializers.URLField):

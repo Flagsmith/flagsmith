@@ -373,7 +373,7 @@ def test_send_test_webhook__200_response_from_webhook__returns_correct_response(
     mock_response.text = "success"
     mock_post.return_value = mock_response
     mocker.patch(
-        "webhooks.fields.socket.getaddrinfo",
+        "core.network.socket.getaddrinfo",
         return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
     )
 
@@ -421,7 +421,7 @@ def test_send_test_webhook__various_2xx_status_codes__returns_success(
     mock_response.text = "success"
     mock_post.return_value = mock_response
     mocker.patch(
-        "webhooks.fields.socket.getaddrinfo",
+        "core.network.socket.getaddrinfo",
         return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
     )
 
@@ -471,7 +471,7 @@ def test_send_test_webhook__various_error_status_codes__returns_correct_response
     mock_response.text = external_api_error_text
     mock_post.return_value = mock_response
     mocker.patch(
-        "webhooks.fields.socket.getaddrinfo",
+        "core.network.socket.getaddrinfo",
         return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
     )
 
@@ -540,7 +540,7 @@ def test_send_test_webhook__various_secrets__sends_correct_payload(
     mock_response.ok = True
     mock_post.return_value = mock_response
     mocker.patch(
-        "webhooks.fields.socket.getaddrinfo",
+        "core.network.socket.getaddrinfo",
         return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
     )
 
@@ -583,7 +583,7 @@ def test_send_test_webhook__request_exception__returns_error_response(
         "Some internal exception details that should not be exposed!"
     )
     mocker.patch(
-        "webhooks.fields.socket.getaddrinfo",
+        "core.network.socket.getaddrinfo",
         return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
     )
 

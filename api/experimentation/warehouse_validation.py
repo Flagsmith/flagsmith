@@ -2,6 +2,7 @@ from typing import Any, Callable
 
 from rest_framework import serializers
 
+from core.network import is_internal_address
 from experimentation.models import WarehouseConnection, WarehouseType
 from experimentation.types import (
     CLICKHOUSE_DEFAULTS,
@@ -10,7 +11,6 @@ from experimentation.types import (
     ClickHouseCredentials,
     SnowflakeConfig,
 )
-from webhooks.fields import is_internal_address
 
 
 def validate_clickhouse_credentials(
