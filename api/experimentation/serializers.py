@@ -53,6 +53,7 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             "id",
             "warehouse_type",
             "status",
+            "status_detail",
             "name",
             "config",
             "credentials",
@@ -60,7 +61,7 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             "total_events_received",
             "unique_events_count",
         )
-        read_only_fields = ("id", "status", "created_at")
+        read_only_fields = ("id", "status", "status_detail", "created_at")
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         warehouse_type: str = attrs.get(

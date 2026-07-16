@@ -55,6 +55,7 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
         choices=WarehouseConnectionStatus.choices,
         default=WarehouseConnectionStatus.CREATED,
     )
+    status_detail = models.CharField(max_length=255, null=True, blank=True)
     name = models.CharField(max_length=255)
     config: models.JSONField[dict[str, object] | None, dict[str, object] | None] = (
         models.JSONField(null=True, blank=True)

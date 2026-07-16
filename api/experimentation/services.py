@@ -6,6 +6,7 @@ from functools import lru_cache
 
 import structlog
 from clickhouse_driver import Client
+from clickhouse_driver import errors as clickhouse_errors
 from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
 from django.db import transaction
@@ -792,6 +793,22 @@ def mark_warehouse_pending_connection(
     return connection
 
 
+def _describe_verification_error(error: Exception) -> str:
+    if isinstance(error, clickhouse_errors.ServerException):
+        if error.code == 516:
+            return "Authentication failed."
+        if error.code == 81:
+            return "Database does not exist."
+        return "The ClickHouse server rejected the request."
+    if isinstance(error, (clickhouse_errors.SocketTimeoutError, TimeoutError)):
+        return "The connection timed out."
+    if isinstance(error, clickhouse_errors.NetworkError):
+        return "Could not connect to the host."
+    if isinstance(error, KeyError):
+        return "Stored connection details are incomplete."
+    return "Verification failed."
+
+
 def verify_clickhouse_connection(connection: WarehouseConnection) -> None:
     """Run SELECT 1 against the customer's ClickHouse and set the status to
     connected or errored; never raises."""
@@ -814,9 +831,10 @@ def verify_clickhouse_connection(connection: WarehouseConnection) -> None:
             client.execute("SELECT 1")
         finally:
             client.disconnect()
-    except Exception:
+    except Exception as error:
         connection.status = WarehouseConnectionStatus.ERRORED
-        connection.save(update_fields=["status"])
+        connection.status_detail = _describe_verification_error(error)
+        connection.save(update_fields=["status", "status_detail"])
         flagsmith_experimentation_warehouse_connection_verifications_total.labels(
             result="failure"
         ).inc()
@@ -824,7 +842,8 @@ def verify_clickhouse_connection(connection: WarehouseConnection) -> None:
         return
 
     connection.status = WarehouseConnectionStatus.CONNECTED
-    connection.save(update_fields=["status"])
+    connection.status_detail = None
+    connection.save(update_fields=["status", "status_detail"])
     flagsmith_experimentation_warehouse_connection_verifications_total.labels(
         result="success"
     ).inc()

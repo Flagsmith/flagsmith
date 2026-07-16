@@ -1519,6 +1519,7 @@ def test_post__clickhouse_reachable__returns_201_connected(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["status"] == "connected"
+    assert response.json()["status_detail"] is None
     assert "credentials" not in response.json()
     mock_client.return_value.execute.assert_called_once_with("SELECT 1")
 
@@ -1548,6 +1549,7 @@ def test_post__clickhouse_unreachable__returns_201_errored(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["status"] == "errored"
+    assert response.json()["status_detail"]
 
 
 def test_post__clickhouse__password_stored_encrypted(

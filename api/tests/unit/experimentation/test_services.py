@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
 import pytest
+from clickhouse_driver import errors as clickhouse_errors
 from django.db.models import Q
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from prometheus_client import REGISTRY
@@ -37,7 +38,10 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.results_query import _MetricSlot
-from experimentation.services import verify_clickhouse_connection
+from experimentation.services import (
+    _describe_verification_error,
+    verify_clickhouse_connection,
+)
 from experimentation.stats import VariantStats
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
@@ -2027,6 +2031,8 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
     # Given
     mock_client = mocker.patch("experimentation.services.Client")
     success_count_before = _verification_count("success")
+    clickhouse_connection.status_detail = "stale detail"
+    clickhouse_connection.save()
 
     # When
     verify_clickhouse_connection(clickhouse_connection)
@@ -2034,6 +2040,7 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
     # Then
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
+    assert clickhouse_connection.status_detail is None
     mock_client.assert_called_once_with(
         "ch.acme-corp.example",
         port=9440,
@@ -2071,6 +2078,7 @@ def test_verify_clickhouse_connection__driver_error__sets_errored(
     # Then
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
+    assert clickhouse_connection.status_detail == "Verification failed."
     mock_client.return_value.disconnect.assert_called_once_with()
     assert _verification_count("failure") == failure_count_before + 1
     assert any(
@@ -2093,6 +2101,10 @@ def test_verify_clickhouse_connection__missing_credentials__sets_errored(
     # Then
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
+    assert (
+        clickhouse_connection.status_detail
+        == "Stored connection details are incomplete."
+    )
 
 
 def test_verify_clickhouse_connection__environment_lookup_fails__sets_errored(
@@ -2115,4 +2127,65 @@ def test_verify_clickhouse_connection__environment_lookup_fails__sets_errored(
     # Then
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
+    assert clickhouse_connection.status_detail == "Verification failed."
     assert _verification_count("failure") == failure_count_before + 1
+
+
+@pytest.mark.parametrize(
+    "error,expected_detail",
+    [
+        (
+            clickhouse_errors.ServerException("Authentication failed", code=516),
+            "Authentication failed.",
+        ),
+        (
+            clickhouse_errors.ServerException(
+                "Database not_a_real_db does not exist", code=81
+            ),
+            "Database does not exist.",
+        ),
+        (
+            clickhouse_errors.ServerException("Some other server error", code=999),
+            "The ClickHouse server rejected the request.",
+        ),
+        (
+            clickhouse_errors.SocketTimeoutError("(10.255.255.1:9000)"),
+            "The connection timed out.",
+        ),
+        (
+            TimeoutError("timed out"),
+            "The connection timed out.",
+        ),
+        (
+            clickhouse_errors.NetworkError("Connection refused"),
+            "Could not connect to the host.",
+        ),
+        (
+            KeyError("host"),
+            "Stored connection details are incomplete.",
+        ),
+        (
+            ValueError("unexpected"),
+            "Verification failed.",
+        ),
+    ],
+    ids=[
+        "server_exception_auth_failure",
+        "server_exception_unknown_database",
+        "server_exception_other",
+        "socket_timeout_error",
+        "builtin_timeout_error",
+        "network_error",
+        "key_error",
+        "generic_exception",
+    ],
+)
+def test_describe_verification_error__known_error_types__returns_expected_detail(
+    error: Exception,
+    expected_detail: str,
+) -> None:
+    # Given / When
+    detail = _describe_verification_error(error)
+
+    # Then
+    assert detail == expected_detail
