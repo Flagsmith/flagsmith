@@ -50,7 +50,7 @@
     "@amplitude/analytics-browser": "^2.11.3",
     "@amplitude/engagement-browser": "^0.0.5",
     "@amplitude/plugin-session-replay-browser": "^1.6.24",
-    "@babel/core": "7.20.7",
+    "@babel/core": "7.29.6",
     "@babel/plugin-proposal-class-properties": "^7.12.1",
     "@babel/plugin-transform-modules-commonjs": "^7.12.1",
     "@babel/plugin-transform-react-constant-elements": "^7.12.1",
