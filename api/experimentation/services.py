@@ -60,6 +60,7 @@ from features.models import FeatureState
 from features.value_types import BOOLEAN, INTEGER, STRING
 from features.versioning.dataclasses import FlagChangeSet, MultivariateValueChangeSet
 from features.versioning.versioning_service import (
+    get_environment_flags_list,
     update_flag,
     update_multivariate_values,
 )
@@ -586,18 +587,15 @@ def _sync_rollout_segment(experiment: Experiment, rollout_percentage: float) -> 
 
 
 def _get_live_rollout_override(experiment: Experiment) -> FeatureState | None:
-    return (
-        FeatureState.objects.get_live_feature_states(
-            environment=experiment.environment,
-            additional_filters=Q(
-                feature_segment__segment_id=experiment.rollout_segment_id,
-                identity__isnull=True,
-            ),
+    flags = get_environment_flags_list(
+        environment=experiment.environment,
+        additional_filters=Q(
             feature_id=experiment.feature_id,
-        )
-        .order_by("-id")
-        .first()
+            feature_segment__segment_id=experiment.rollout_segment_id,
+            identity__isnull=True,
+        ),
     )
+    return flags[0] if flags else None
 
 
 def _update_live_feature_state(
@@ -643,11 +641,14 @@ def _reset_default_allocations_to_control(
     Run once, when the rollout segment is first created: identities outside the
     rollout cohort should all receive control while the experiment runs.
     """
-    default_state = FeatureState.objects.get_live_feature_states(
+    (default_state,) = get_environment_flags_list(
         environment=experiment.environment,
-        additional_filters=Q(feature_segment__isnull=True, identity__isnull=True),
-        feature_id=experiment.feature_id,
-    ).latest("id")
+        additional_filters=Q(
+            feature_id=experiment.feature_id,
+            feature_segment__isnull=True,
+            identity__isnull=True,
+        ),
+    )
     str_value, value_type = _serialize_feature_state_value(
         default_state.feature_state_value
     )
