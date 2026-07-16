@@ -7,6 +7,7 @@ import {
   useSyncExternalStore,
 } from 'react'
 import Dialog, { DialogSize } from 'components/base/Dialog'
+import Drawer from 'components/base/Drawer'
 import Button from 'components/base/forms/Button'
 import {
   clearConfirm,
@@ -27,10 +28,9 @@ import {
 const legacyGlobal = global as typeof globalThis &
   Record<'closeModal' | 'closeModal2', (() => void) | undefined>
 
-// Map the legacy openModal className to a Dialog size/variant.
+// Map the legacy openModal className to a Dialog size.
 const sizeFor = (className?: string): DialogSize => {
   if (!className) return 'md'
-  if (className.includes('side-modal')) return 'side'
   if (className.includes('modal-full-screen')) return 'full'
   if (className.includes('modal-lg')) return 'lg'
   if (className.includes('modal-sm')) return 'sm'
@@ -73,6 +73,21 @@ const ModalSlot: FC<{ entry: ModalEntry; index: number }> = ({
       }
     }
   }, [index, requestClose])
+
+  // Legacy side-modal maps to the Drawer; everything else is a centred Dialog.
+  if (entry.className?.includes('side-modal')) {
+    return (
+      <Drawer
+        open
+        width={entry.className.includes('narrow') ? 'narrow' : 'default'}
+        className={entry.className}
+        onClose={requestClose}
+      >
+        <Drawer.Header>{title}</Drawer.Header>
+        <Drawer.Body>{entry.body}</Drawer.Body>
+      </Drawer>
+    )
+  }
 
   return (
     <Dialog

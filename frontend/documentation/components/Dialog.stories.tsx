@@ -66,12 +66,3 @@ export const Large: Story = {
     </Dialog>
   ),
 }
-
-export const Side: Story = {
-  render: () => (
-    <Dialog open size='side' onClose={noop}>
-      <Dialog.Header>Create feature</Dialog.Header>
-      <Dialog.Body>{body}</Dialog.Body>
-    </Dialog>
-  ),
-}

@@ -1,0 +1,39 @@
+// Right-anchored drawer on the shared dialog chrome (Dialog.scss provides the
+// panel + slots). Native <dialog> top layer.
+dialog.drawer {
+  padding: 0;
+  border: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  max-height: 100dvh;
+  background: transparent;
+  color: inherit;
+
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  &[open] {
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-end;
+  }
+}
+
+// Overrides the shared .dialog__panel: full-height, edge-anchored, no radius.
+.drawer__panel {
+  width: 800px;
+  max-width: 100vw;
+  height: 100%;
+  max-height: 100dvh;
+  border: 0;
+  border-left: 1px solid var(--color-border-default);
+  border-radius: 0;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.16);
+}
+
+.drawer--narrow .drawer__panel {
+  width: 640px;
+}

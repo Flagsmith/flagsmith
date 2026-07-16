@@ -1,49 +1,51 @@
 import { FC, ReactNode } from 'react'
-import { useNativeDialog } from './useNativeDialog'
+import { useNativeDialog } from 'components/base/Dialog/useNativeDialog'
 import {
   DialogBody,
   DialogContext,
   DialogFooter,
   DialogHeader,
-} from './DialogSlots'
-import './Dialog.scss'
+} from 'components/base/Dialog/DialogSlots'
+import 'components/base/Dialog/Dialog.scss'
+import './Drawer.scss'
 
-export type DialogSize = 'sm' | 'md' | 'lg' | 'full'
+export type DrawerWidth = 'default' | 'narrow'
 
-export type DialogProps = {
+export type DrawerProps = {
   open: boolean
   onClose: () => void
-  size?: DialogSize
+  width?: DrawerWidth
   className?: string
   children: ReactNode
 }
 
-const DialogRoot: FC<DialogProps> = ({
+const DrawerRoot: FC<DrawerProps> = ({
   children,
   className,
   onClose,
   open,
-  size = 'md',
+  width = 'default',
 }) => {
   const { onCancel, onClick, ref } = useNativeDialog(open, onClose)
   return (
     <DialogContext.Provider value={{ onClose }}>
       <dialog
         ref={ref}
-        className={`dialog dialog--${size} ${className ?? ''}`}
+        className={`drawer drawer--${width} ${className ?? ''}`}
         onCancel={onCancel}
         onClick={onClick}
       >
-        <div className='dialog__panel'>{children}</div>
+        <div className='dialog__panel drawer__panel'>{children}</div>
       </dialog>
     </DialogContext.Provider>
   )
 }
 
-const Dialog = Object.assign(DialogRoot, {
+// Drawer shares Dialog's header/body/footer slots.
+const Drawer = Object.assign(DrawerRoot, {
   Body: DialogBody,
   Footer: DialogFooter,
   Header: DialogHeader,
 })
 
-export default Dialog
+export default Drawer
