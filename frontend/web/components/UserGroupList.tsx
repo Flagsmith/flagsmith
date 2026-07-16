@@ -66,10 +66,9 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
     if (onClick) {
       onClick(group)
     } else {
-      openModal(
+      openDrawer(
         'Edit Group',
         <CreateGroup isEdit orgId={orgId} group={group} />,
-        'side-modal',
       )
     }
   }

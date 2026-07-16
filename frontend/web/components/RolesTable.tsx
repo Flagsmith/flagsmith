@@ -62,7 +62,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
   }
 
   const editRole = (role: Role) => {
-    openModal(
+    openDrawer(
       'Edit Role and Permissions',
       <CreateRole
         organisationId={role.organisation}
@@ -75,7 +75,6 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
         groups={groups?.results || []}
         history={history}
       />,
-      'side-modal',
     )
   }
   return (

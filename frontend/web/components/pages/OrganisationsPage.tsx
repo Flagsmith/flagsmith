@@ -16,7 +16,7 @@ const OrganisationsPage: FC = () => {
   const history = useHistory()
 
   const handleCreateOrganisationClick = useCallback(() => {
-    openModal('Create Organisation', <CreateOrganisationModal />, 'side-modal')
+    openDrawer('Create Organisation', <CreateOrganisationModal />)
   }, [])
 
   const onSave = (id: number) => {

@@ -45,6 +45,12 @@ declare global {
     className?: string,
     onClose?: () => void,
   ) => void
+  const openDrawer: (
+    title: ReactNode,
+    body?: ReactNode,
+    className?: string,
+    onClose?: () => void,
+  ) => void
   const openConfirm: (data: OpenConfirm) => void
   const Row: typeof Component
   const toast: (

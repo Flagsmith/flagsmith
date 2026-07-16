@@ -47,10 +47,10 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
     //eslint-disable-next-line
   }, [organisationId, organisation, canCreateProject, create])
   const handleCreateProjectClick = useCallback(() => {
-    openModal(
+    openDrawer(
       'Create Project',
       <CreateProjectModal history={history} />,
-      'p-0 side-modal',
+      'p-0',
     )
   }, [history])
 
