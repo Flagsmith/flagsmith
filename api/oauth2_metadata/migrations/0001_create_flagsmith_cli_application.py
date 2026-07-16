@@ -27,14 +27,6 @@ def create_flagsmith_cli_application(
     )
 
 
-def delete_flagsmith_cli_application(
-    apps: Apps,
-    schema_editor: BaseDatabaseSchemaEditor,
-) -> None:
-    Application = apps.get_model("oauth2_provider", "Application")
-    Application.objects.filter(client_id=FLAGSMITH_CLI_CLIENT_ID).delete()
-
-
 class Migration(migrations.Migration):
     initial = True
 
@@ -45,6 +37,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(
             create_flagsmith_cli_application,
-            delete_flagsmith_cli_application,
+            migrations.RunPython.noop,
         ),
     ]

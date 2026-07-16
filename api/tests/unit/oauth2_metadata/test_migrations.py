@@ -11,10 +11,10 @@ from oauth2_metadata.constants import (
 def test_0001__fresh_install__creates_flagsmith_cli_application(
     migrator: Migrator,
 ) -> None:
-    # Given — reversing to zero removes the application
+    # Given — a fresh install: no application at the pre-migration state
     old_state = migrator.apply_initial_migration(("oauth2_metadata", None))
     OldApplication = old_state.apps.get_model("oauth2_provider", "Application")
-    assert not OldApplication.objects.filter(client_id=FLAGSMITH_CLI_CLIENT_ID).exists()
+    OldApplication.objects.filter(client_id=FLAGSMITH_CLI_CLIENT_ID).delete()
 
     # When
     new_state = migrator.apply_tested_migration(
@@ -40,6 +40,7 @@ def test_0001__application_already_exists__does_not_overwrite(
     # Given
     old_state = migrator.apply_initial_migration(("oauth2_metadata", None))
     OldApplication = old_state.apps.get_model("oauth2_provider", "Application")
+    OldApplication.objects.filter(client_id=FLAGSMITH_CLI_CLIENT_ID).delete()
     OldApplication.objects.create(
         client_id=FLAGSMITH_CLI_CLIENT_ID,
         name="Pre-existing Application",
