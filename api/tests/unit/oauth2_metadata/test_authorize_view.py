@@ -5,14 +5,11 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 from django.contrib.auth.models import AbstractUser
-from django.urls import reverse
 from oauth2_provider.models import Application
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from oauth2_metadata.constants import FLAGSMITH_CLI_CLIENT_ID
-
-AUTHORIZE_URL = "oauth-authorize"
 
 
 def _pkce_pair() -> tuple[str, str]:
@@ -65,7 +62,7 @@ def test_get__valid_params__returns_application_info(
 ) -> None:
     # Given
     _verifier, challenge = pkce_pair
-    url = reverse(AUTHORIZE_URL)
+    url = "/api/v1/oauth/authorize/"
 
     # When
     response = auth_client.get(
@@ -97,7 +94,7 @@ def test_get__verified_application__returns_is_verified_true(
 ) -> None:
     # Given
     _verifier, challenge = pkce_pair
-    url = reverse(AUTHORIZE_URL)
+    url = "/api/v1/oauth/authorize/"
 
     # When
     response = auth_client.get(
@@ -124,11 +121,10 @@ def test_get__invalid_client_id__returns_400(
 ) -> None:
     # Given
     _verifier, challenge = pkce_pair
-    url = reverse(AUTHORIZE_URL)
 
     # When
     response = auth_client.get(
-        url,
+        "/api/v1/oauth/authorize/",
         {
             "client_id": "nonexistent-client-id",
             "response_type": "code",
@@ -151,7 +147,7 @@ def test_post__invalid_client_id__returns_400(
 ) -> None:
     # Given
     _verifier, challenge = pkce_pair
-    url = reverse(AUTHORIZE_URL)
+    url = "/api/v1/oauth/authorize/"
 
     # When
     response = auth_client.post(
@@ -180,11 +176,10 @@ def test_authorize__unauthenticated__returns_401(
 ) -> None:
     # Given
     client = APIClient()
-    url = reverse(AUTHORIZE_URL)
 
     # When
     response = getattr(client, method)(
-        url,
+        "/api/v1/oauth/authorize/",
         {"client_id": "some-id", "response_type": "code"},
     )
 
@@ -209,11 +204,10 @@ def test_post__consent_decision__returns_redirect(
 ) -> None:
     # Given
     _verifier, challenge = pkce_pair
-    url = reverse(AUTHORIZE_URL)
 
     # When
     response = auth_client.post(
-        url,
+        "/api/v1/oauth/authorize/",
         {
             "allow": allow,
             "client_id": oauth_application.client_id,
@@ -242,11 +236,10 @@ def test_post__pkce_params_preserved__code_exchangeable(
 ) -> None:
     # Given
     code_verifier, code_challenge = _pkce_pair()
-    authorize_url = reverse(AUTHORIZE_URL)
 
     # When
     response = auth_client.post(
-        authorize_url,
+        "/api/v1/oauth/authorize/",
         {
             "allow": True,
             "client_id": oauth_application.client_id,
@@ -265,10 +258,9 @@ def test_post__pkce_params_preserved__code_exchangeable(
     query_params = parse_qs(parsed.query)
     code = query_params["code"][0]
 
-    token_url = reverse("oauth2_provider:token")
     token_client = APIClient()
     token_response = token_client.post(
-        token_url,
+        "/o/token/",
         {
             "grant_type": "authorization_code",
             "code": code,
@@ -293,11 +285,10 @@ def test_get__third_party_application_requests_management_api__returns_invalid_s
 ) -> None:
     # Given
     _verifier, challenge = pkce_pair
-    url = reverse(AUTHORIZE_URL)
 
     # When
     response = auth_client.get(
-        url,
+        "/api/v1/oauth/authorize/",
         {
             "client_id": oauth_application.client_id,
             "response_type": "code",
@@ -321,11 +312,10 @@ def test_get__flagsmith_cli_requests_management_api__returns_application_info(
     # Given
     application = Application.objects.get(client_id=FLAGSMITH_CLI_CLIENT_ID)
     _verifier, challenge = pkce_pair
-    url = reverse(AUTHORIZE_URL)
 
     # When
     response = auth_client.get(
-        url,
+        "/api/v1/oauth/authorize/",
         {
             "client_id": application.client_id,
             "response_type": "code",
