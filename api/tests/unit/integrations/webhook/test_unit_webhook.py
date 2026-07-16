@@ -90,11 +90,7 @@ def test_webhook_identify_user__records_health_status(  # type: ignore[no-untype
     webhook_wrapper = WebhookWrapper(integration_webhook_config)
 
     response = mocker.MagicMock(spec=requests.Response, status_code=200)
-
-    def bool_true(self):  # type: ignore[no-untyped-def]
-        return True
-
-    response.__bool__ = bool_true.__get__(response)
+    response.__bool__.return_value = True
 
     mocker.patch(
         "integrations.webhook.webhook.call_integration_webhook",
@@ -120,11 +116,7 @@ def test_webhook_identify_user__unhealthy_status__records_health(  # type: ignor
     webhook_wrapper = WebhookWrapper(integration_webhook_config)
 
     response = mocker.MagicMock(spec=requests.Response, status_code=500)
-
-    def bool_true(self):  # type: ignore[no-untyped-def]
-        return True
-
-    response.__bool__ = bool_true.__get__(response)
+    response.__bool__.return_value = True
 
     mocker.patch(
         "integrations.webhook.webhook.call_integration_webhook",
