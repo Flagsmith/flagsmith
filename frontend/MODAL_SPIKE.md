@@ -111,11 +111,17 @@ Both own folders + barrels + co-located SCSS (matching `base/CenteredModal`). St
    helpers moved to the controller. The reactstrap `<Modal>` portal is gone from the modal path
    (reactstrap's `ModalBody`/`ModalFooter` helper divs still appear in modal *content* — dropping
    the dep entirely is a separate follow-up).
-4. **Variant CSS + runtime QA** — the remaining work, and it needs a running app:
-   ~50 components still render `.modal-body`/`.modal-footer`/`side-modal` markup styled by
-   `_modals.scss`; `create-feature` (drawer + tab height calcs) is the hotspot. `Dialog.Header`/
-   `Body` mirror the old `ModalHeader`/`ModalBody`, so plain centred modals should be close.
-   Enter/exit animations (`@starting-style`) and the drawer slide are not done yet.
+4. **Variant CSS migrated** — done (but unverified). `_modals.scss` retargeted from bootstrap's
+   `.modal-dialog`/`.modal-content`/`.modal-body` to the new `.dialog__panel`/`.dialog__body`;
+   the legacy `openModal` className (`side-modal`, `create-feature-modal`, `p-0`, `modal-full-screen`)
+   passes through to the dialog element, so those hooks still land. Dead reactstrap-portal rules
+   removed, colours moved to `--color-*` tokens (the `.dark` overrides drop out). Content JSX is
+   unchanged — standard `.modal-footer` divs keep bootstrap's base styling inside `Dialog.Body`.
+   Animations (fade-up / drawer slide) done via `@starting-style`.
+
+The only thing left is **runtime QA** — this CSS was written without a browser, so the
+`create-feature` drawer (absolute tab-height calcs) and general visual parity need checking
+against a running app.
 
 ### QA checklist (needs a dev server)
 
