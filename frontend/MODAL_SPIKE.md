@@ -94,14 +94,32 @@ matching `base/CenteredModal`). Storybook: `documentation/components/Dialog.stor
 
 ### Sequence
 
-1. **DS `Dialog` component** (this PoC) — usable now for new declarative modals.
-2. **Point the imperative manager at `Dialog`** (retire reactstrap in the `openModal` path). This
-   is the next step, not done here, because it needs two behaviours re-plumbed off `ModalDefault`:
-   `interceptClose` (the unsaved-changes guard, ~12 call sites) and `setModalTitle` (dynamic
-   titles, incl. create-feature). Swapping blind would silently regress both.
-3. **Migrate the variant CSS** — `side-modal`, `modal-full-screen`, `#modal2` z-index, and the
-   `.modal-open` body effects are all keyed to bootstrap's `.modal*` structure and must be
-   re-expressed against the new dialog. This is the bulk of the remaining effort.
+1. **DS `Dialog` component** — done. Usable for new declarative modals.
+2. **Point the imperative manager at `Dialog`** — done. `ModalManager` renders `Dialog`
+   (default stack + inline confirm) instead of reactstrap. `interceptClose` and `setModalTitle`
+   moved to the controller (the manager honours them); `ModalDefault` is a re-export shim;
+   `ModalConfirm` removed. `openModal`/`openModal2`/`openConfirm` signatures unchanged.
+3. **Other reactstrap modal consumers migrated** — done. `IntegrationSelect`,
+   `useFormNotSavedModal`, `CenteredModal` now use `Dialog`. The reactstrap `<Modal>` portal is
+   no longer used in the modal path (reactstrap's `ModalBody`/`ModalFooter` helper divs remain in
+   modal content — dropping the dep entirely is a separate follow-up).
+4. **Variant CSS + runtime QA** — the remaining work, and it needs a running app:
+   `side-modal`/`create-feature` layouts, `modal-full-screen`, `#modal2`, and the `.modal-open`
+   body effects are keyed to bootstrap's `.modal*` structure and must be re-expressed against the
+   new `.dialog__*`. `Dialog.Header`/`Body` mirror the old `ModalHeader`/`ModalBody`, so plain
+   centred modals should be close; the drawer flows are the hotspot.
+
+### QA checklist (needs a dev server)
+
+- [ ] Plain modals open/close: Esc, backdrop click, close button, and programmatic `closeModal()`.
+- [ ] `openConfirm` yes/no + destructive styling.
+- [ ] Stacked `openModal2` on top of a modal (z-index via the top layer).
+- [ ] Unsaved-changes guard (`interceptClose`) on create/edit modals.
+- [ ] Dynamic title (`setModalTitle`) in create-feature / create-experiment.
+- [ ] **side-modal / create-feature drawer** — layout, tabs, height calcs (the hotspot).
+- [ ] Padding parity vs the old `$modal-*-padding` tokens; dark mode.
+- [ ] `.modal-open` body effects: scroll lock, support-chat hidden.
+- [ ] E2E modal-heavy flows + Chromatic.
 
 ## Effort
 
