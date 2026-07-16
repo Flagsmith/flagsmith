@@ -35,9 +35,14 @@ type CreateProjectSavedData = {
 type CreateProjectProps = {
   history: RouteComponentProps['history']
   onSave?: (data: CreateProjectSavedData) => void
+  onClose?: () => void
 }
 
-const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
+const CreateProject: FC<CreateProjectProps> = ({
+  history,
+  onClose,
+  onSave,
+}) => {
   const [name, setName] = useState<string>('')
   const [adminIds, setAdminIds] = useState<number[]>([])
   const [adminRoleIds, setAdminRoleIds] = useState<number[]>([])
@@ -144,7 +149,7 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
         )
       }
     }
-    closeModal()
+    onClose?.()
     if (data) {
       history.push(
         `/project/${projectId}/environment/${environmentId}/features?new=true`,
