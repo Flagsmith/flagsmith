@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.254.0](https://github.com/Flagsmith/flagsmith/compare/v2.253.0...v2.254.0) (2026-07-16)
+
+
+### Features
+
+* **auth:** surface is_new_user in OAuth login responses ([#8011](https://github.com/Flagsmith/flagsmith/issues/8011)) ([2c000a2](https://github.com/Flagsmith/flagsmith/commit/2c000a2d3a7caf2377a0524e50307d1d98b2253f))
+* **experimentation:** default to control when rollout segment is created ([#7905](https://github.com/Flagsmith/flagsmith/issues/7905)) ([d53e0d7](https://github.com/Flagsmith/flagsmith/commit/d53e0d7868e1344a5a84fb50eb5b0b31094ebd4a))
+* **onboarding:** "next quest" cards ([#7941](https://github.com/Flagsmith/flagsmith/issues/7941)) ([403b292](https://github.com/Flagsmith/flagsmith/commit/403b292c020d6b15d60d47a53a5dadee21c0ff9f))
+
+
+### Bug Fixes
+
+* **e2e:** staging E2E failures from shared-project pollution and onboarding flag race ([#8027](https://github.com/Flagsmith/flagsmith/issues/8027)) ([df9a777](https://github.com/Flagsmith/flagsmith/commit/df9a777ece3e6aeaef9f96321f8a34d8359d52ec))
+* **organisations:** Enforce seat limit against licence-derived metadata ([#8014](https://github.com/Flagsmith/flagsmith/issues/8014)) ([3b840fd](https://github.com/Flagsmith/flagsmith/commit/3b840fdc1420ed2946b5558e90a1f495700fc5fd))
+* **scim:** Arbitrary usernames accepted via SCIM ([#8019](https://github.com/Flagsmith/flagsmith/issues/8019)) ([0e3c8c7](https://github.com/Flagsmith/flagsmith/commit/0e3c8c7c551323a3c4421df7389f658f1f81e6c3))
+* **tags:** Duplicate system tags wedge GitHub tagging with MultipleObjectsReturned ([#8013](https://github.com/Flagsmith/flagsmith/issues/8013)) ([8aa41ab](https://github.com/Flagsmith/flagsmith/commit/8aa41abcfb484278b71ccedcc656209687f05311))
+
+
+### Performance Improvements
+
+* **Segment Membership:** Count all segments in one scan per environment ([#8018](https://github.com/Flagsmith/flagsmith/issues/8018)) ([b51e6b7](https://github.com/Flagsmith/flagsmith/commit/b51e6b7676f13b5061125ceb806735cd3014e589))
+
 ## [2.253.0](https://github.com/Flagsmith/flagsmith/compare/v2.252.0...v2.253.0) (2026-07-15)
 
 
