@@ -17,6 +17,7 @@ from experimentation.models import (
     ExperimentStatus,
     Metric,
     WarehouseConnection,
+    WarehouseConnectionStatus,
     WarehouseType,
 )
 from experimentation.services import (
@@ -68,10 +69,14 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             "warehouse_type",
             getattr(self.instance, "warehouse_type", ""),
         )
+        type_changed = (
+            self.instance is not None
+            and getattr(self.instance, "warehouse_type", "") != warehouse_type
+        )
 
         validate_credentials(attrs, warehouse_type, self.instance)  # type: ignore[arg-type]
 
-        if "config" not in attrs and self.instance is not None:
+        if "config" not in attrs and self.instance is not None and not type_changed:
             return attrs
 
         config: dict[str, Any] | None = attrs.get("config")
@@ -84,6 +89,10 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
                     {"config": "Flagsmith warehouse does not accept configuration."}
                 )
             attrs["config"] = None
+
+        if type_changed:
+            attrs["status"] = WarehouseConnectionStatus.CREATED
+            attrs["status_detail"] = None
         return attrs
 
     def create(

@@ -377,7 +377,7 @@ Attributes:
 ### `segment_membership.compute.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:145`
+ - `api/segment_membership/services.py:149`
 
 Attributes:
  - `project.id`
@@ -387,7 +387,7 @@ Attributes:
 ### `segment_membership.members.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:209`
+ - `api/segment_membership/services.py:215`
 
 Attributes:
  - `reason`
@@ -540,7 +540,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:804`
+ - `api/experimentation/services.py:876`
 
 Attributes:
  - `environment.id`
@@ -549,7 +549,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:727`
+ - `api/experimentation/services.py:789`
 
 Attributes:
  - `environment.id`
@@ -558,7 +558,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:780`
+ - `api/experimentation/services.py:852`
 
 Attributes:
  - `environment.id`
@@ -568,7 +568,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:789`
+ - `api/experimentation/services.py:861`
 
 Attributes:
  - `environment.id`
@@ -577,7 +577,7 @@ Attributes:
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:401`
+ - `api/experimentation/services.py:411`
 
 Attributes:
  - `environment.id`
@@ -587,7 +587,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:387`
+ - `api/experimentation/services.py:397`
 
 Attributes:
  - `environment.id`

@@ -92,8 +92,13 @@ class WarehouseConnectionViewSet(
     lookup_url_kwarg = "connection_id"
 
     def get_throttles(self) -> list[BaseThrottle]:
-        if self.action == "test_warehouse_connection":
-            self.throttle_scope = "warehouse_connection_test"
+        if self.action in (
+            "create",
+            "update",
+            "partial_update",
+            "test_warehouse_connection",
+        ):
+            self.throttle_scope = "warehouse_connection_write"
             return [ScopedRateThrottle()]
         return super().get_throttles()
 

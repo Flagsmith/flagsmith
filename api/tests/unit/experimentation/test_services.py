@@ -39,6 +39,7 @@ from experimentation.models import (
 )
 from experimentation.results_query import _MetricSlot
 from experimentation.services import (
+    InternalAddressError,
     _describe_verification_error,
     verify_clickhouse_connection,
 )
@@ -2049,7 +2050,7 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
         database="acme_dwh",
         secure=True,
         connect_timeout=5,
-        send_receive_timeout=30,
+        send_receive_timeout=5,
     )
     mock_client.return_value.execute.assert_called_once_with("SELECT 1")
     mock_client.return_value.disconnect.assert_called_once_with()
@@ -2102,6 +2103,31 @@ def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
     )
 
 
+def test_verify_clickhouse_connection__internal_host__sets_errored_without_connecting(
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = mocker.patch("experimentation.services.Client")
+    clickhouse_connection.config = {
+        **(clickhouse_connection.config or {}),
+        "host": "10.0.0.5",
+    }
+    clickhouse_connection.save()
+
+    # When
+    verify_clickhouse_connection(clickhouse_connection)
+
+    # Then
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
+    assert (
+        clickhouse_connection.status_detail
+        == "Host must not target internal or private network addresses."
+    )
+    mock_client.assert_not_called()
+
+
 @pytest.mark.parametrize(
     "error,expected_detail",
     [
@@ -2132,6 +2158,10 @@ def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
             "Could not connect to the host.",
         ),
         (
+            InternalAddressError("10.0.0.5"),
+            "Host must not target internal or private network addresses.",
+        ),
+        (
             KeyError("host"),
             "Stored connection details are incomplete.",
         ),
@@ -2147,6 +2177,7 @@ def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
         "socket_timeout_error",
         "builtin_timeout_error",
         "network_error",
+        "internal_address_error",
         "key_error",
         "generic_exception",
     ],

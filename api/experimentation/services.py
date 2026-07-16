@@ -18,6 +18,7 @@ from rest_framework.exceptions import ValidationError
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from core.dataclasses import AuthorData
+from core.network import is_internal_address
 from environments.tasks import rebuild_environment_document
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
@@ -93,6 +94,7 @@ logger = structlog.get_logger("warehouse")
 
 CLICKHOUSE_CONNECT_TIMEOUT_SECONDS = 5
 CLICKHOUSE_QUERY_TIMEOUT_SECONDS = 30
+CLICKHOUSE_VERIFY_TIMEOUT_SECONDS = 5
 
 
 def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
@@ -793,6 +795,10 @@ def mark_warehouse_pending_connection(
     return connection
 
 
+class InternalAddressError(Exception):
+    pass
+
+
 def _describe_verification_error(error: Exception) -> str:
     if isinstance(error, clickhouse_errors.ServerException):
         if error.code == 516:
@@ -804,6 +810,8 @@ def _describe_verification_error(error: Exception) -> str:
         return "The connection timed out."
     if isinstance(error, clickhouse_errors.NetworkError):
         return "Could not connect to the host."
+    if isinstance(error, InternalAddressError):
+        return "Host must not target internal or private network addresses."
     if isinstance(error, KeyError):
         return "Stored connection details are incomplete."
     return "Verification failed."
@@ -817,6 +825,10 @@ def verify_clickhouse_connection(connection: WarehouseConnection) -> None:
         log = log.bind(organisation__id=connection.environment.project.organisation_id)
         config = typing.cast(ClickHouseConfig, connection.config or {})
         credentials = typing.cast(ClickHouseCredentials, connection.credentials or {})
+        # Re-check right before connecting: DNS may resolve differently than it
+        # did at validation time, and rows may predate host validation.
+        if is_internal_address(config["host"]):
+            raise InternalAddressError(config["host"])
         client = Client(
             config["host"],
             port=config["port"],
@@ -825,7 +837,7 @@ def verify_clickhouse_connection(connection: WarehouseConnection) -> None:
             database=config["database"],
             secure=config["secure"],
             connect_timeout=CLICKHOUSE_CONNECT_TIMEOUT_SECONDS,
-            send_receive_timeout=CLICKHOUSE_QUERY_TIMEOUT_SECONDS,
+            send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
         )
         try:
             client.execute("SELECT 1")

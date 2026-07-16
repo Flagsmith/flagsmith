@@ -1051,10 +1051,14 @@ def test_test_warehouse_connection__non_admin__returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_get_throttles__test_connection_action__returns_scoped_throttle() -> None:
+@pytest.mark.parametrize(
+    "action",
+    ["create", "update", "partial_update", "test_warehouse_connection"],
+)
+def test_get_throttles__write_actions__returns_scoped_throttle(action: str) -> None:
     # Given
     view = WarehouseConnectionViewSet()
-    view.action = "test_warehouse_connection"
+    view.action = action
 
     # When
     throttles = view.get_throttles()
@@ -1062,12 +1066,12 @@ def test_get_throttles__test_connection_action__returns_scoped_throttle() -> Non
     # Then
     assert len(throttles) == 1
     assert isinstance(throttles[0], ScopedRateThrottle)
-    assert view.throttle_scope == "warehouse_connection_test"
+    assert view.throttle_scope == "warehouse_connection_write"
 
 
 @pytest.mark.parametrize(
     "action",
-    ["list", "retrieve", "create", "update", "destroy"],
+    ["list", "retrieve", "destroy"],
 )
 def test_get_throttles__other_actions__returns_view_default_throttles(
     action: str,
@@ -1312,6 +1316,38 @@ def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
             ("credentials",),
             id="flagsmith_empty_credentials",
         ),
+        pytest.param(
+            {
+                "warehouse_type": "clickhouse",
+                "config": {"host": "ch.example.com", "password": "oops"},
+                "credentials": {"password": "hunter2"},
+            },
+            ("config", "password"),
+            id="unknown_config_key",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "clickhouse",
+                "config": {"host": "ch.example.com", "secure": "false"},
+                "credentials": {"password": "hunter2"},
+            },
+            ("config", "secure"),
+            id="secure_not_boolean",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "clickhouse",
+                "config": {"host": "ch.example.com", "database": 123},
+                "credentials": {"password": "hunter2"},
+            },
+            ("config", "database"),
+            id="database_not_string",
+        ),
+        pytest.param(
+            {"warehouse_type": "snowflake", "config": "not-a-dict"},
+            ("config",),
+            id="snowflake_non_dict_config",
+        ),
     ],
 )
 def test_post__invalid_payload__returns_400(
@@ -1534,7 +1570,7 @@ def test_test_warehouse_connection__clickhouse__reverifies_and_returns_status(
     assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
 
 
-def test_patch__clickhouse_to_flagsmith__clears_stored_credentials(
+def test_patch__clickhouse_to_flagsmith__resets_connection_state(
     admin_client: APIClient,
     clickhouse_connection: WarehouseConnection,
     enable_features: EnableFeaturesFixture,
@@ -1542,6 +1578,9 @@ def test_patch__clickhouse_to_flagsmith__clears_stored_credentials(
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
+    clickhouse_connection.status = WarehouseConnectionStatus.ERRORED
+    clickhouse_connection.status_detail = "Authentication failed."
+    clickhouse_connection.save()
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, clickhouse_connection.id],
@@ -1558,3 +1597,61 @@ def test_patch__clickhouse_to_flagsmith__clears_stored_credentials(
     assert response.status_code == status.HTTP_200_OK
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.credentials is None
+    assert clickhouse_connection.config is None
+    assert clickhouse_connection.status == WarehouseConnectionStatus.CREATED
+    assert clickhouse_connection.status_detail is None
+
+
+def test_patch__flagsmith_to_clickhouse_without_config__returns_400(
+    admin_client: APIClient,
+    enable_features: EnableFeaturesFixture,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={
+            "warehouse_type": "clickhouse",
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "host" in response.json()["config"]
+
+
+def test_patch__clickhouse_null_credentials__returns_400(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    enable_features: EnableFeaturesFixture,
+    environment: Environment,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"credentials": None},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "password" in response.json()["credentials"]
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.credentials == {"password": "hunter2"}

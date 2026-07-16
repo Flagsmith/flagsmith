@@ -1,4 +1,4 @@
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
 from rest_framework import serializers
 
@@ -29,11 +29,16 @@ def validate_clickhouse_credentials(
 def validate_clickhouse_config(config: dict[str, Any]) -> ClickHouseConfig:
     if not isinstance(config, dict):
         raise serializers.ValidationError({"config": "Must be an object."})
-    if not config.get("host"):
+    if unknown_keys := set(config) - set(CLICKHOUSE_DEFAULTS):
+        raise serializers.ValidationError(
+            {"config": {key: "Unknown field." for key in sorted(unknown_keys)}}
+        )
+    merged: dict[str, Any] = {**CLICKHOUSE_DEFAULTS, **config}
+    if not merged["host"] or not isinstance(merged["host"], str):
         raise serializers.ValidationError(
             {"config": {"host": "This field is required."}}
         )
-    if is_internal_address(str(config["host"])):
+    if is_internal_address(merged["host"]):
         raise serializers.ValidationError(
             {
                 "config": {
@@ -43,19 +48,24 @@ def validate_clickhouse_config(config: dict[str, Any]) -> ClickHouseConfig:
                 }
             }
         )
-    merged: ClickHouseConfig = {
-        **CLICKHOUSE_DEFAULTS,
-        **config,  # type: ignore[typeddict-item]
-    }
     port = merged["port"]
     if isinstance(port, bool) or not isinstance(port, int) or not (1 <= port <= 65535):
         raise serializers.ValidationError(
             {"config": {"port": "Enter a valid port number (1-65535)."}}
         )
-    return merged
+    for key in ("database", "username"):
+        if not merged[key] or not isinstance(merged[key], str):
+            raise serializers.ValidationError(
+                {"config": {key: "Must be a non-empty string."}}
+            )
+    if not isinstance(merged["secure"], bool):
+        raise serializers.ValidationError({"config": {"secure": "Must be a boolean."}})
+    return cast(ClickHouseConfig, merged)
 
 
 def validate_snowflake_config(config: dict[str, Any]) -> SnowflakeConfig:
+    if not isinstance(config, dict):
+        raise serializers.ValidationError({"config": "Must be an object."})
     account_identifier = config.get("account_identifier", "")
     if not account_identifier:
         raise serializers.ValidationError(
@@ -94,10 +104,9 @@ def validate_credentials(
             attrs["credentials"] = None
         return
     if (
-        credentials is None
+        "credentials" not in attrs
         and instance is not None
         and instance.warehouse_type == warehouse_type
     ):
-        attrs.pop("credentials", None)
         return
     attrs["credentials"] = validator(credentials or {})
