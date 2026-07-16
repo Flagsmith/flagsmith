@@ -126,10 +126,7 @@ def test_send_audit_log_event_to_grafana__project_grafana_config__calls_expected
     send_audit_log_event_to_grafana(AuditLog, audit_log_record)
 
     # Then
-    grafana_wrapper_mock.assert_called_once_with(
-        base_url=grafana_config.base_url,
-        api_key=grafana_config.api_key,
-    )
+    grafana_wrapper_mock.assert_called_once_with(grafana_config)
     grafana_wrapper_instance_mock.generate_event_data.assert_called_once_with(
         audit_log_record
     )
@@ -160,10 +157,7 @@ def test_send_audit_log_event_to_grafana__organisation_grafana_config__calls_exp
     send_audit_log_event_to_grafana(AuditLog, audit_log_record)
 
     # Then
-    grafana_wrapper_mock.assert_called_once_with(
-        base_url=grafana_config.base_url,
-        api_key=grafana_config.api_key,
-    )
+    grafana_wrapper_mock.assert_called_once_with(grafana_config)
     grafana_wrapper_instance_mock.generate_event_data.assert_called_once_with(
         audit_log_record
     )
@@ -277,11 +271,7 @@ def test_send_audit_log_event_to_dynatrace__environment_dynatrace_config__calls_
     send_audit_log_event_to_dynatrace(AuditLog, audit_log_record)
 
     # Then
-    dynatrace_wrapper_mock.assert_called_once_with(
-        base_url=dynatrace_config.base_url,
-        api_key=dynatrace_config.api_key,
-        entity_selector=dynatrace_config.entity_selector,
-    )
+    dynatrace_wrapper_mock.assert_called_once_with(dynatrace_config)
     dynatrace_wrapper_instance_mock.generate_event_data.assert_called_once_with(
         audit_log_record
     )
@@ -311,7 +301,7 @@ def test_send_audit_log_event_to_dynatrace__environment_feature_version__sends_e
 
     responses.add(
         method=responses.POST,
-        url=f"{base_url}{EVENTS_API_URI}?api-token={api_key}",
+        url=f"{base_url}/{EVENTS_API_URI}?api-token={api_key}",
         status=201,
         json={
             "reportCount": 1,
