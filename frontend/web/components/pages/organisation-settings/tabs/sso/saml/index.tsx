@@ -24,10 +24,10 @@ const SamlSection: FC<SamlSectionProps> = ({ organisationId }) => {
     organisationId: number,
     name?: string,
   ) => {
-    openModal(
+    openDrawer(
       title,
       <CreateSAML organisationId={organisationId} samlName={name || ''} />,
-      'p-0 side-modal',
+      'p-0',
     )
   }
 

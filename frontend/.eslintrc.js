@@ -87,6 +87,7 @@ module.exports = {
     'moment': true,
     'oneOfType': true,
     'openConfirm': true,
+    'openDrawer': true,
     'openModal': true,
     'openModal2': true,
     'pact': true,

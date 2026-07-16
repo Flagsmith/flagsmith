@@ -363,7 +363,7 @@ export default class AdminAPIKeys extends PureComponent {
   }
 
   createAPIKey = () => {
-    openModal(
+    openDrawer(
       'New Admin API Key',
       <CreateAPIKey
         organisationId={this.props.organisationId}
@@ -371,12 +371,12 @@ export default class AdminAPIKeys extends PureComponent {
           this.fetch()
         }}
       />,
-      'p-0 side-modal',
+      'p-0',
     )
   }
 
   editAPIKey = (name, masterAPIKey, prefix) => {
-    openModal(
+    openDrawer(
       `${name} API Key`,
       <CreateAPIKey
         isEdit
@@ -389,7 +389,7 @@ export default class AdminAPIKeys extends PureComponent {
           toast('API key Updated')
         }}
       />,
-      'p-0 side-modal',
+      'p-0',
     )
   }
 

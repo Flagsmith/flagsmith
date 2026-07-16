@@ -28,7 +28,7 @@ const OrganisationUsersTable: React.FC<OrganisationUsersTableProps> = ({
   widths,
 }) => {
   const editUserPermissions = (user: User, organisationId: number) => {
-    openModal(
+    openDrawer(
       user.first_name || user.last_name
         ? `${user.first_name} ${user.last_name}`
         : `${user.email}`,
@@ -52,12 +52,12 @@ const OrganisationUsersTable: React.FC<OrganisationUsersTableProps> = ({
           </TabItem>
         </Tabs>
       </div>,
-      'p-0 side-modal',
+      'p-0',
     )
   }
 
   const inspectPermissions = (user: User, organisationId: number) => {
-    openModal(
+    openDrawer(
       getUserDisplayName(user),
       <div>
         <Tabs uncontrolled hideNavOnSingleTab className='mt-4 ml-3'>
@@ -72,7 +72,7 @@ const OrganisationUsersTable: React.FC<OrganisationUsersTableProps> = ({
           </TabItem>
         </Tabs>
       </div>,
-      'p-0 side-modal',
+      'p-0',
     )
   }
 

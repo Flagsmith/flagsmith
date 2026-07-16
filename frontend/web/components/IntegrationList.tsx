@@ -523,7 +523,7 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
     // against the organisation — the user must pick a project in the modal.
     const requiresProjectSelection =
       !!props.organisationId && !integration.organisation
-    openModal(
+    openDrawer(
       `${integration.title} Integration`,
       <CreateEditIntegration
         id={id}
@@ -559,7 +559,6 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
           }
         }}
       />,
-      'side-modal',
     )
   }
 

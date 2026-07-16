@@ -366,10 +366,9 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                       size='small'
                       onClick={() => {
                         setOpen(false)
-                        openModal(
+                        openDrawer(
                           'Create Organisation',
                           <CreateOrganisationModal />,
-                          'side-modal',
                         )
                       }}
                     >
