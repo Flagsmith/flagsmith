@@ -120,13 +120,39 @@ export const setModalTitle = (title: ReactNode) => {
   titleSetter?.(title)
 }
 
+// Close the modal at a stack index, honouring the unsaved-changes guard on the
+// main modal. Powers both the imperative closeModal()/closeModal2() globals and
+// each dialog's own dismiss (Esc / backdrop / close button).
+export const requestCloseModal = async (index: number) => {
+  const entry = state.modals[index]
+  if (!entry) return
+  if (index === 0 && interceptClose) {
+    const shouldClose = await interceptClose()
+    if (!shouldClose) return
+    setInterceptClose(null)
+  }
+  entry.onClose?.()
+  closeModalByKey(entry.key)
+}
+
 // Legacy call sites reach these via window.openModal* (wired in main.js) and
-// bare globals set up in project-components.js. Keep them populated.
+// bare globals set up in project-components.js. closeModal/closeModal2 are
+// referenced bare during render across the app, so they are stable functions
+// defined once at load (never per-modal) that target the current stack — this
+// avoids a ReferenceError when nothing is open and keeps captured handlers live.
 const legacyGlobal = global as typeof globalThis & {
   openModal: typeof openModal
   openModal2: typeof openModal2
   openConfirm: typeof openConfirm
+  closeModal: () => void
+  closeModal2: () => void
 }
 legacyGlobal.openModal = openModal
 legacyGlobal.openModal2 = openModal2
 legacyGlobal.openConfirm = openConfirm
+legacyGlobal.closeModal = () => {
+  requestCloseModal(0)
+}
+legacyGlobal.closeModal2 = () => {
+  requestCloseModal(1)
+}

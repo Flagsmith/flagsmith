@@ -1,31 +1,21 @@
-import {
-  FC,
-  ReactNode,
-  useCallback,
-  useEffect,
-  useState,
-  useSyncExternalStore,
-} from 'react'
+import { FC, ReactNode, useEffect, useState, useSyncExternalStore } from 'react'
 import Dialog, { ConfirmDialog, DialogSize } from 'components/base/Dialog'
 import Drawer from 'components/base/Drawer'
 import {
   clearConfirm,
-  closeModalByKey,
   ConfirmEntry,
   getModalState,
-  interceptClose,
   ModalEntry,
   ModalState,
   registerModalTitleSetter,
-  setInterceptClose,
+  requestCloseModal,
   subscribeModals,
 } from './modalController'
 
 // PoC (spike): renders the imperative modal stack with the DS Dialog (native
 // <dialog>, top layer). Mounted once from App.js under the store <Provider>.
-
-const legacyGlobal = global as typeof globalThis &
-  Record<'closeModal' | 'closeModal2', (() => void) | undefined>
+// Close is owned by the controller (stable closeModal/closeModal2 globals), so
+// dismiss just routes through requestCloseModal by stack index.
 
 // Map the legacy openModal className to a Dialog size.
 const sizeFor = (className?: string): DialogSize => {
@@ -50,28 +40,7 @@ const ModalSlot: FC<{ entry: ModalEntry; index: number }> = ({
     return () => registerModalTitleSetter(null)
   }, [index])
 
-  const requestClose = useCallback(async () => {
-    // Only the main modal runs the unsaved-changes guard.
-    if (index === 0 && interceptClose) {
-      const shouldClose = await interceptClose()
-      if (!shouldClose) return
-      setInterceptClose(null)
-    }
-    entry.onClose?.()
-    closeModalByKey(entry.key)
-  }, [entry, index])
-
-  // Keep the imperative globals working (closeModal()/closeModal2()).
-  useEffect(() => {
-    const pointer = (['closeModal', 'closeModal2'] as const)[index]
-    if (!pointer) return undefined
-    legacyGlobal[pointer] = requestClose
-    return () => {
-      if (legacyGlobal[pointer] === requestClose) {
-        legacyGlobal[pointer] = undefined
-      }
-    }
-  }, [index, requestClose])
+  const onClose = () => requestCloseModal(index)
 
   // Legacy side-modal maps to the Drawer; everything else is a centred Dialog.
   if (entry.className?.includes('side-modal')) {
@@ -80,7 +49,7 @@ const ModalSlot: FC<{ entry: ModalEntry; index: number }> = ({
         open
         width={entry.className.includes('narrow') ? 'narrow' : 'default'}
         className={entry.className}
-        onClose={requestClose}
+        onClose={onClose}
       >
         <Drawer.Header>{title}</Drawer.Header>
         <Drawer.Body>{entry.body}</Drawer.Body>
@@ -93,7 +62,7 @@ const ModalSlot: FC<{ entry: ModalEntry; index: number }> = ({
       open
       size={sizeFor(entry.className)}
       className={entry.className}
-      onClose={requestClose}
+      onClose={onClose}
     >
       <Dialog.Header>{title}</Dialog.Header>
       <Dialog.Body>{entry.body}</Dialog.Body>

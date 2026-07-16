@@ -70,4 +70,27 @@ describe('modalController', () => {
     ctrl.setInterceptClose(null)
     expect(ctrl.interceptClose).toBeNull()
   })
+
+  it('requestCloseModal removes the modal and fires its onClose', async () => {
+    const onClose = jest.fn()
+    ctrl.openModal('A', 'a', undefined, onClose)
+    await ctrl.requestCloseModal(0)
+    expect(onClose).toHaveBeenCalledTimes(1)
+    expect(ctrl.getModalState().modals).toHaveLength(0)
+  })
+
+  it('requestCloseModal honours the intercept-close guard', async () => {
+    ctrl.openModal('A', 'a')
+    ctrl.setInterceptClose(() => Promise.resolve(false))
+    await ctrl.requestCloseModal(0)
+    expect(ctrl.getModalState().modals).toHaveLength(1)
+    ctrl.setInterceptClose(() => Promise.resolve(true))
+    await ctrl.requestCloseModal(0)
+    expect(ctrl.getModalState().modals).toHaveLength(0)
+  })
+
+  it('requestCloseModal is a no-op for an empty index', async () => {
+    await ctrl.requestCloseModal(1)
+    expect(ctrl.getModalState().modals).toHaveLength(0)
+  })
 })
