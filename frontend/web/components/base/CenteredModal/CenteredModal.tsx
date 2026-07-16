@@ -1,6 +1,5 @@
 import { FC, ReactNode } from 'react'
-import { Modal, ModalBody } from 'reactstrap'
-import ModalHeader from 'components/modals/base/ModalHeader'
+import Dialog from 'components/base/Dialog'
 import './CenteredModal.scss'
 
 type CenteredModalProps = {
@@ -18,15 +17,15 @@ const CenteredModal: FC<CenteredModalProps> = ({
   onClose,
   title,
 }) => (
-  <Modal
-    className={`modal-dialog-centered centered-modal ${className ?? ''}`}
-    isOpen={isOpen}
-    toggle={onClose}
-    unmountOnClose
+  <Dialog
+    open={isOpen}
+    onClose={onClose}
+    size='full'
+    className={`centered-modal ${className ?? ''}`}
   >
-    <ModalHeader onDismissClick={onClose}>{title}</ModalHeader>
-    <ModalBody>{children}</ModalBody>
-  </Modal>
+    <Dialog.Header>{title}</Dialog.Header>
+    <Dialog.Body>{children}</Dialog.Body>
+  </Dialog>
 )
 
 export default CenteredModal

@@ -10,7 +10,7 @@ import { sortBy, uniqBy } from 'lodash'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Button from './base/forms/Button'
 import classNames from 'classnames'
-import ModalDefault from './modals/base/ModalDefault'
+import Dialog from './base/Dialog'
 import { IonIcon } from '@ionic/react'
 import { close } from 'ionicons/icons'
 import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
@@ -229,36 +229,39 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
           </div>
         </div>
       </div>
-      <ModalDefault
-        title={'Add your favourite tool'}
-        isOpen={showCustomTool}
-        onDismiss={() => {
+      <Dialog
+        open={showCustomTool}
+        onClose={() => {
           setCustomTool('')
           setShowCustomTool(false)
         }}
-        toggle={() => setShowCustomTool(!showCustomTool)}
       >
-        <p>Let us know what tool you would love to use with Flagsmith</p>
-        <Input
-          className='w-100'
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            setCustomTool(Utils.safeParseEventValue(e))
-          }}
-          value={customTool}
-          placeholder='Enter a name...'
-        />
-        <div className={'text-end mt-4'}>
-          <Button
-            onClick={() => {
-              setShowCustomTool(false)
-              setCustomTool('')
-              setSelectedIntegrations(selectedIntegrations.concat([customTool]))
+        <Dialog.Header>Add your favourite tool</Dialog.Header>
+        <Dialog.Body>
+          <p>Let us know what tool you would love to use with Flagsmith</p>
+          <Input
+            className='w-100'
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setCustomTool(Utils.safeParseEventValue(e))
             }}
-          >
-            Confirm
-          </Button>
-        </div>
-      </ModalDefault>
+            value={customTool}
+            placeholder='Enter a name...'
+          />
+          <div className={'text-end mt-4'}>
+            <Button
+              onClick={() => {
+                setShowCustomTool(false)
+                setCustomTool('')
+                setSelectedIntegrations(
+                  selectedIntegrations.concat([customTool]),
+                )
+              }}
+            >
+              Confirm
+            </Button>
+          </div>
+        </Dialog.Body>
+      </Dialog>
     </div>
   )
 }

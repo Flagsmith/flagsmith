@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useHistory } from 'react-router-dom'
-import { Modal, ModalHeader, ModalBody } from 'reactstrap'
+import Dialog from 'components/base/Dialog'
 import Button from 'components/base/forms/Button'
 
 /**
@@ -93,18 +93,18 @@ const useFormNotSavedModal = (
   }, [isDirty, warningMessage])
 
   const DirtyFormModal = () => (
-    <Modal isOpen={isDirty && isNavigating} toggle={cancelNavigation}>
-      <ModalHeader>Unsaved Changes</ModalHeader>
-      <ModalBody>{warningMessage}</ModalBody>
-      <div className='modal-footer'>
-        <Button theme='secondary' className='mr-2' onClick={cancelNavigation}>
+    <Dialog open={isDirty && isNavigating} onClose={cancelNavigation} size='sm'>
+      <Dialog.Header>Unsaved Changes</Dialog.Header>
+      <Dialog.Body>{warningMessage}</Dialog.Body>
+      <Dialog.Footer>
+        <Button theme='secondary' onClick={cancelNavigation}>
           Cancel
         </Button>
         <Button theme='danger' onClick={discardAndConfirmNavigation}>
           Yes, discard changes
         </Button>
-      </div>
-    </Modal>
+      </Dialog.Footer>
+    </Dialog>
   )
 
   return [DirtyFormModal, setIsDirty, isDirty]
