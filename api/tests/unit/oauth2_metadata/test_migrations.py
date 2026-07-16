@@ -5,7 +5,7 @@ from django_test_migrations.migrator import Migrator
 def test_0001__fresh_install__creates_flagsmith_cli_application(
     migrator: Migrator,
 ) -> None:
-    # Given — a fresh install: no application at the pre-migration state
+    # Given
     old_state = migrator.apply_initial_migration(("oauth2_metadata", None))
     OldApplication = old_state.apps.get_model("oauth2_provider", "Application")
     OldApplication.objects.filter(client_id="flagsmith-cli").delete()
@@ -40,9 +40,9 @@ def test_0001__application_already_exists__does_not_overwrite(
     OldApplication.objects.create(
         client_id="flagsmith-cli",
         name="Pre-existing Application",
-        client_type="public",
-        authorization_grant_type="authorization-code",
-        client_secret="",
+        client_type="confidential",
+        authorization_grant_type="client-credentials",
+        client_secret="pre-existing-secret",
         redirect_uris="https://example.com/callback",
         skip_authorization=False,
     )
@@ -56,4 +56,8 @@ def test_0001__application_already_exists__does_not_overwrite(
     Application = new_state.apps.get_model("oauth2_provider", "Application")
     application = Application.objects.get(client_id="flagsmith-cli")
     assert application.name == "Pre-existing Application"
+    assert application.client_type == "confidential"
+    assert application.authorization_grant_type == "client-credentials"
+    assert check_password("pre-existing-secret", application.client_secret)
+    assert application.redirect_uris == "https://example.com/callback"
     assert application.skip_authorization is False
