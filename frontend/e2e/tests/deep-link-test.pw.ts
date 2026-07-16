@@ -20,12 +20,10 @@ test.describe('Deep link to feature slideout', () => {
     const { login } = createHelpers(page)
     const api = Project.api
 
-    // Given - an authenticated API session and a dedicated project with
-    // > PAGE_SIZE features. The project is created per run: seeding the shared
-    // "My Test Project" fills page 1 of its feature list with e2e_deeplink_*
-    // rows, which hides features that concurrently running tests create (they
-    // sort after "e" and land on page 2). The e2etests teardown deletes all of
-    // the E2E user's organisations, so nothing here needs explicit cleanup.
+    // Given - an authenticated API session and a dedicated per-run project
+    // with > PAGE_SIZE features. Seeding a shared project would push other
+    // tests' features off page 1 of the list; the e2etests teardown deletes
+    // the E2E user's organisations, so no cleanup is needed here.
     log('Authenticate against the API')
     const loginRes = await request.post(`${api}auth/login/`, {
       data: { email: E2E_USER, password: PASSWORD },
