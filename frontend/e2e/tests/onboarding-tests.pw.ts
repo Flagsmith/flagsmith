@@ -26,6 +26,21 @@ test.describe('Onboarding', () => {
         .getByRole('heading', { name: /Welcome/ })
         .waitFor({ state: 'visible', timeout: 30000 });
 
+    // The features page syncs the slideout state to the URL with
+    // history.replace, which aborts a full navigation that is still in
+    // flight - let the page settle and retry.
+    const gotoOnboarding = async () => {
+      for (let attempt = 0; ; attempt++) {
+        try {
+          await page.goto('/getting-started?connected');
+          return;
+        } catch (e) {
+          if (attempt >= 2) throw e;
+          await page.waitForTimeout(1000);
+        }
+      }
+    };
+
     log('Sign up');
     await page.goto('/');
     await click(byId('jsSignup'));
@@ -62,7 +77,7 @@ test.describe('Onboarding', () => {
     // No real first evaluation in a test, so force the connected state via
     // ?connected (the #7767 stub); that unlocks the toggle and flips LIVE.
     log('Force the connected state');
-    await page.goto('/getting-started?connected');
+    await gotoOnboarding();
     await flowReady();
     await expect(page.getByText('LIVE', { exact: true })).toBeVisible();
 
@@ -119,12 +134,12 @@ test.describe('Onboarding', () => {
       /\/features\?feature=\d+&tab=segment-overrides/,
     );
 
-    await page.goto('/getting-started?connected');
+    await gotoOnboarding();
     await flowReady();
     await page.getByRole('button', { name: /Remote config/ }).click();
     await expect(page).toHaveURL(/\/features\?feature=\d+&tab=value/);
 
-    await page.goto('/getting-started?connected');
+    await gotoOnboarding();
     await flowReady();
     await page.getByRole('button', { name: /Experiment/ }).click();
     await expect(page).toHaveURL(/\/experiments$/);

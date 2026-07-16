@@ -139,14 +139,23 @@ const App = class extends Component {
       // New users with no organisation go through the single-page onboarding
       // flow when it's enabled - it creates the organisation itself, so it
       // replaces the legacy /create page. Everyone else still gets /create.
-      if (
-        AccountStore.getUser()?.isGettingStarted &&
-        Utils.getFlagsmithHasFeature('onboarding_quickstart_flow')
-      ) {
-        this.props.history.replace('/getting-started')
-      } else {
-        this.props.history.replace(`/create${query}`)
-      }
+      // The flag must be evaluated for the identified user, not whatever the
+      // SDK last held, so wait for identify to settle before routing.
+      // Capped at 2s: a degraded flags API falls back to routing with the
+      // already-loaded flags instead of blocking the redirect.
+      Promise.race([
+        Promise.resolve(API.flagsmithIdentify()).catch(() => {}),
+        new Promise((resolve) => setTimeout(resolve, 2000)),
+      ]).then(() => {
+        if (
+          AccountStore.getUser()?.isGettingStarted &&
+          Utils.getFlagsmithHasFeature('onboarding_quickstart_flow')
+        ) {
+          this.props.history.replace('/getting-started')
+        } else {
+          this.props.history.replace(`/create${query}`)
+        }
+      })
       return
     }
 
