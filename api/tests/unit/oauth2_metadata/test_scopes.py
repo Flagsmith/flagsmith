@@ -18,7 +18,7 @@ def test_get_scopes_backend__default_settings__returns_flagsmith_scopes() -> Non
     assert isinstance(backend, FlagsmithScopes)
 
 
-def test_get_available_scopes__flagsmith_cli_application__management_api_only(
+def test_get_available_scopes__flagsmith_cli_application__admin_api_only(
     db: None,
 ) -> None:
     # Given
@@ -31,7 +31,7 @@ def test_get_available_scopes__flagsmith_cli_application__management_api_only(
     assert set(scopes) == {SCOPE_ADMIN_API}
 
 
-def test_get_available_scopes__dcr_registered_application__excludes_management_api(
+def test_get_available_scopes__dcr_registered_application__excludes_admin_api(
     db: None,
 ) -> None:
     # Given
@@ -47,7 +47,7 @@ def test_get_available_scopes__dcr_registered_application__excludes_management_a
     assert set(scopes) == {SCOPE_MCP}
 
 
-def test_get_available_scopes__no_application__excludes_management_api() -> None:
+def test_get_available_scopes__no_application__excludes_admin_api() -> None:
     # Given / When
     scopes = FlagsmithScopes().get_available_scopes()
 

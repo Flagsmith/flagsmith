@@ -278,7 +278,7 @@ def test_post__pkce_params_preserved__code_exchangeable(
     assert token_data["token_type"] == "Bearer"
 
 
-def test_get__third_party_application_requests_management_api__returns_invalid_scope(
+def test_get__third_party_application_requests_admin_api__returns_invalid_scope(
     auth_client: APIClient,
     oauth_application: Application,
     pkce_pair: tuple[str, str],
@@ -304,7 +304,7 @@ def test_get__third_party_application_requests_management_api__returns_invalid_s
     assert response.json()["error"] == "invalid_scope"
 
 
-def test_get__flagsmith_cli_requests_management_api__returns_application_info(
+def test_get__flagsmith_cli_requests_admin_api__returns_application_info(
     auth_client: APIClient,
     pkce_pair: tuple[str, str],
     db: None,
