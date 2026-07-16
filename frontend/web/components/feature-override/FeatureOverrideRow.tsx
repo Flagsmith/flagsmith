@@ -122,7 +122,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
     })
     history.replace(`${document.location.pathname}?${newParams}`)
     API.trackEvent(Constants.events.VIEW_USER_FEATURE)
-    openModal(
+    openDrawer(
       <span>
         <Row>
           Edit User Feature:{' '}
@@ -151,7 +151,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
         environmentFlag={environmentFeatureState}
         highlightSegmentId={highlightSegmentId}
       />,
-      'side-modal create-feature-modal overflow-y-auto',
+      'create-feature-modal overflow-y-auto',
       () => {
         const params = Utils.fromParam()
         const newParams = Utils.toParam({

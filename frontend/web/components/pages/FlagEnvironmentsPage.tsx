@@ -218,7 +218,7 @@ const FlagEnvironmentsPage: FC = () => {
       })
     }
 
-    openModal(
+    openDrawer(
       flag?.name || 'Edit Feature',
       <CreateFlagModal
         environmentId={environmentId}
@@ -228,7 +228,7 @@ const FlagEnvironmentsPage: FC = () => {
         history={history}
         isEdit
       />,
-      'side-modal create-feature-modal',
+      'create-feature-modal',
       () => {
         // Clear tab parameter when modal closes
         const searchParams = new URLSearchParams(location.search)

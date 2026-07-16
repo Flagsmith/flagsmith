@@ -107,7 +107,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const { data: roles } = useGetRolesQuery({ organisation_id: organisation.id })
 
   const editGroup = (group: UserGroupSummary) => {
-    openModal(
+    openDrawer(
       'Edit Group',
       <CreateGroup
         roles={roles}
@@ -115,7 +115,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
         orgId={AccountStore.getOrganisation().id}
         group={group}
       />,
-      'side-modal',
     )
   }
   const meta = subscriptionMeta || organisation.subscription || { max_seats: 1 }

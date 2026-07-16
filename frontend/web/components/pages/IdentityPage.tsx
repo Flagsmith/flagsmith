@@ -117,7 +117,7 @@ const IdentityPage: FC = () => {
   const editSegment = (segment: any) => {
     API.trackEvent(Constants.events.VIEW_SEGMENT)
     if (!projectId) return
-    openModal(
+    openDrawer(
       `Segment - ${segment.name}`,
       <CreateSegmentModal
         segment={segment.id}
@@ -125,7 +125,7 @@ const IdentityPage: FC = () => {
         environmentId={environmentId}
         projectId={projectId}
       />,
-      'side-modal create-segment-modal',
+      'create-segment-modal',
     )
   }
 
