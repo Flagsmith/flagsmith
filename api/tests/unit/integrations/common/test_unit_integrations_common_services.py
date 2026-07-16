@@ -1,3 +1,4 @@
+from environments.models import Environment
 from integrations.common.services import (
     get_latest_integration_health,
     record_integration_health,
@@ -5,7 +6,9 @@ from integrations.common.services import (
 from integrations.webhook.models import WebhookConfiguration
 
 
-def test_get_latest_integration_health__no_record__returns_none(environment) -> None:
+def test_get_latest_integration_health__no_record__returns_none(
+    environment: Environment,
+) -> None:
     # Given
     webhook_config = WebhookConfiguration.objects.create(
         environment=environment, url="https://webhook.url"
@@ -18,7 +21,9 @@ def test_get_latest_integration_health__no_record__returns_none(environment) -> 
     assert result is None
 
 
-def test_get_latest_integration_health__has_record__returns_health_dict(environment):
+def test_get_latest_integration_health__has_record__returns_health_dict(
+    environment: Environment,
+) -> None:
     # Given
     webhook_config = WebhookConfiguration.objects.create(
         environment=environment, url="https://webhook.url"
@@ -37,8 +42,8 @@ def test_get_latest_integration_health__has_record__returns_health_dict(environm
 
 
 def test_get_latest_integration_health__multiple_records__returns_latest(
-    environment,
-):
+    environment: Environment,
+) -> None:
     # Given
     webhook_config = WebhookConfiguration.objects.create(
         environment=environment, url="https://webhook.url"
@@ -55,7 +60,9 @@ def test_get_latest_integration_health__multiple_records__returns_latest(
     assert result["is_healthy"] is True
 
 
-def test_get_latest_integration_health__non_healthy_status(environment):
+def test_get_latest_integration_health__non_healthy_status(
+    environment: Environment,
+) -> None:
     # Given
     webhook_config = WebhookConfiguration.objects.create(
         environment=environment, url="https://webhook.url"
@@ -66,5 +73,6 @@ def test_get_latest_integration_health__non_healthy_status(environment):
     result = get_latest_integration_health(webhook_config)
 
     # Then
+    assert result is not None
     assert result["status_code"] == 500
     assert result["is_healthy"] is False

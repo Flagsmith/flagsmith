@@ -91,7 +91,7 @@ def test_webhook_identify_user__records_health_status(  # type: ignore[no-untype
 
     response = mocker.MagicMock(spec=requests.Response, status_code=200)
 
-    def bool_true(self):
+    def bool_true(self):  # type: ignore[no-untyped-def]
         return True
 
     response.__bool__ = bool_true.__get__(response)
@@ -112,7 +112,7 @@ def test_webhook_identify_user__records_health_status(  # type: ignore[no-untype
     assert health_record.status_code == 200
 
 
-def test_webhook_identify_user__unhealthy_status__records_health(
+def test_webhook_identify_user__unhealthy_status__records_health(  # type: ignore[no-untyped-def]
     mocker,
     integration_webhook_config,
 ):
@@ -121,7 +121,7 @@ def test_webhook_identify_user__unhealthy_status__records_health(
 
     response = mocker.MagicMock(spec=requests.Response, status_code=500)
 
-    def bool_true(self):
+    def bool_true(self):  # type: ignore[no-untyped-def]
         return True
 
     response.__bool__ = bool_true.__get__(response)
