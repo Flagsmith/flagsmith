@@ -1,0 +1,97 @@
+// DS Dialog: native <dialog> + showModal() (top layer, built-in focus/Esc).
+// Chrome is tokenised so it themes light/dark with no bootstrap dependency.
+dialog.dialog {
+  padding: 0;
+  border: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  max-height: 100dvh;
+  background: transparent;
+  color: inherit;
+
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  // The dialog element is the flex centrer, so a click on its free space is a
+  // backdrop click (see onClick in Dialog.tsx).
+  &[open] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.75rem;
+  }
+
+  &__panel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    background: var(--color-surface-default);
+    color: var(--color-text-default);
+    border: 1px solid var(--color-border-default);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+  }
+
+  &--sm &__panel {
+    max-width: 400px;
+  }
+  &--md &__panel {
+    max-width: 560px;
+  }
+  &--lg &__panel {
+    max-width: 800px;
+  }
+  &--full &__panel {
+    max-width: 75vw;
+  }
+
+  // Slide-in drawer from the right (replaces the legacy .side-modal).
+  &--side {
+    &[open] {
+      align-items: stretch;
+      justify-content: flex-end;
+      padding: 0;
+    }
+    .dialog__panel {
+      width: 800px;
+      max-width: 100vw;
+      height: 100%;
+      max-height: 100dvh;
+      border: 0;
+      border-radius: 0;
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  &__body {
+    padding: 24px;
+    overflow-y: auto;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--color-border-default);
+  }
+}

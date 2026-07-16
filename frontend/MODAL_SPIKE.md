@@ -77,7 +77,34 @@ Sources: [react.dev createPortal](https://react.dev/reference/react-dom/createPo
 [Radix Dialog](https://www.radix-ui.com/primitives/docs/components/dialog),
 [caniuse dialog](https://caniuse.com/dialog).
 
+## DS Dialog component (native `<dialog>`)
+
+Rather than hack native `<dialog>` into the reactstrap-based `ModalDefault`, this PoC adds a
+reusable DS component: `web/components/base/Dialog/` (own folder + barrel + co-located SCSS,
+matching `base/CenteredModal`). Storybook: `documentation/components/Dialog.stories.tsx`.
+
+- **Native `<dialog>` + `showModal()`** — top layer (no z-index, no portal target), built-in
+  focus trap and Esc, `::backdrop`.
+- **Compound API** — `Dialog` + `Dialog.Header` / `Dialog.Body` / `Dialog.Footer`, the shape the
+  industry standardises on (Radix, MUI Base, Chakra).
+- **Tokenised chrome** — `--color-surface-*` / `--color-border-*` / radius, so it themes
+  light/dark with no bootstrap dependency. `size`: `sm | md | lg | full | side`.
+- **Declarative** — the parent owns `open`; `onClose` fires on Esc, backdrop click, and the close
+  button. New modal code can use it directly today.
+
+### Sequence
+
+1. **DS `Dialog` component** (this PoC) — usable now for new declarative modals.
+2. **Point the imperative manager at `Dialog`** (retire reactstrap in the `openModal` path). This
+   is the next step, not done here, because it needs two behaviours re-plumbed off `ModalDefault`:
+   `interceptClose` (the unsaved-changes guard, ~12 call sites) and `setModalTitle` (dynamic
+   titles, incl. create-feature). Swapping blind would silently regress both.
+3. **Migrate the variant CSS** — `side-modal`, `modal-full-screen`, `#modal2` z-index, and the
+   `.modal-open` body effects are all keyed to bootstrap's `.modal*` structure and must be
+   re-expressed against the new dialog. This is the bulk of the remaining effort.
+
 ## Effort
 
 Small-to-medium: the base is done here. Remaining is runtime QA across the modal surface
-(~35 modal components), removing the dead template roots, and simplifying the `.hljs` scope.
+(~35 modal components), removing the dead template roots, simplifying the `.hljs` scope, and
+the CSS variant re-mapping above (which dominates).
