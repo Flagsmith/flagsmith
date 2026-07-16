@@ -42,12 +42,13 @@ const ModalSlot: FC<{ entry: ModalEntry; index: number }> = ({
 
   const onClose = () => requestCloseModal(index)
 
-  // Legacy side-modal maps to the Drawer; everything else is a centred Dialog.
-  if (entry.className?.includes('side-modal')) {
+  // Drawers render as the Drawer; everything else is a centred Dialog. The
+  // side-modal className is still honoured for callers not yet on openDrawer.
+  if (entry.variant === 'drawer' || entry.className?.includes('side-modal')) {
     return (
       <Drawer
         open
-        width={entry.className.includes('narrow') ? 'narrow' : 'default'}
+        width={entry.className?.includes('narrow') ? 'narrow' : 'default'}
         className={entry.className}
         onClose={onClose}
       >

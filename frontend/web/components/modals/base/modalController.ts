@@ -28,6 +28,7 @@ export type ModalEntry = {
   body: ReactNode
   className?: string
   onClose?: () => void
+  variant?: 'modal' | 'drawer'
 }
 
 export type ConfirmEntry = { key: number } & ConfirmParams
@@ -80,6 +81,25 @@ export const openModal2 = (
   state = {
     ...state,
     modals: [...state.modals, { body, className, key: ++key, onClose, title }],
+  }
+  emit()
+}
+
+// Open a right-anchored Drawer (the modern replacement for the 'side-modal'
+// className). Same shape as openModal; the className now only carries layout
+// hooks (create-feature-modal, p-0, ...), not the side-modal routing string.
+export const openDrawer = (
+  title: string,
+  body: ReactNode,
+  className?: string,
+  onClose?: () => void,
+) => {
+  state.modals.forEach((entry) => entry.onClose?.())
+  state = {
+    ...state,
+    modals: [
+      { body, className, key: ++key, onClose, title, variant: 'drawer' },
+    ],
   }
   emit()
 }
@@ -143,12 +163,14 @@ export const requestCloseModal = async (index: number) => {
 const legacyGlobal = global as typeof globalThis & {
   openModal: typeof openModal
   openModal2: typeof openModal2
+  openDrawer: typeof openDrawer
   openConfirm: typeof openConfirm
   closeModal: () => void
   closeModal2: () => void
 }
 legacyGlobal.openModal = openModal
 legacyGlobal.openModal2 = openModal2
+legacyGlobal.openDrawer = openDrawer
 legacyGlobal.openConfirm = openConfirm
 legacyGlobal.closeModal = () => {
   requestCloseModal(0)
