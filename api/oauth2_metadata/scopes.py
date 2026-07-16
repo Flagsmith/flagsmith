@@ -29,6 +29,7 @@ class FlagsmithScopes(SettingsScopes):  # type: ignore[misc]
         *args: Any,
         **kwargs: Any,
     ) -> list[str]:
+        """What may a client request."""
         allowed_scopes = self.get_allowed_scopes(application)
         scopes: list[str] = super().get_available_scopes(
             application, request, *args, **kwargs
@@ -42,6 +43,7 @@ class FlagsmithScopes(SettingsScopes):  # type: ignore[misc]
         *args: Any,
         **kwargs: Any,
     ) -> list[str]:
+        """What does a client get when it doesn't request for any particular scopes."""
         allowed_scopes = self.get_allowed_scopes(application)
         scopes: list[str] = super().get_default_scopes(
             application, request, *args, **kwargs

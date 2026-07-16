@@ -58,8 +58,7 @@ def test_get_available_scopes__no_application__excludes_management_api() -> None
 def test_get_default_scopes__flagsmith_cli_application__no_defaults(
     db: None,
 ) -> None:
-    # Given — the settings default ("mcp") is outside the CLI's ceiling,
-    # so a scope-less request must not fall back to an MCP token
+    # Given
     application = Application.objects.get(client_id=FLAGSMITH_CLI_CLIENT_ID)
 
     # When
