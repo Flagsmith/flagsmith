@@ -1,135 +1,55 @@
 @import "../mixins/custom-scrollbar";
 
-#modal2 {
-  .modal {
-    z-index: 20000000;
-    background-color: rgba(0, 0, 0, 0.25);
-  }
+// Modals render via the DS Dialog/Drawer (native <dialog>, see base/Dialog and
+// base/Drawer). The legacy openModal className (side-modal, create-feature-modal,
+// p-0, modal-full-screen, ...) is passed through to the dialog element, so these
+// rules hook onto it and target the new .dialog__panel / .dialog__body structure.
+// The Dialog/Drawer components own the surface, slide, sizing, and backdrop; what
+// remains here is content layout that used to be keyed to bootstrap's .modal*.
+
+// Content still renders raw .modal-footer divs (bootstrap styles the base); keep
+// the app's padding. p-0 removes the body padding for flush content.
+.modal-footer {
+  padding: $modal-header-padding-y $modal-header-padding-x;
+}
+.p-0 .dialog__body {
+  padding: 0;
 }
 
-.modal {
-  z-index: 100000;
-  .modal-content {
-    border-radius: $modal-border-radius;
-    border: none;
-  }
-  .modal-header,
-  .modal-footer {
-    padding-right: $modal-header-padding-x;
-    padding-left: $modal-header-padding-x;
-    padding-top: $modal-header-padding-y;
-    padding-bottom: $modal-header-padding-y;
-  }
-  .modal-body {
-    padding-right: $modal-body-padding-x;
-    padding-left: $modal-body-padding-x;
-    padding-top: $modal-body-padding-y;
-    padding-bottom: $modal-body-padding-y;
-  }
-  &.p-0 {
-    .modal-content > .modal-body {
-      padding: 0;
-    }
-  }
-}
 .modal-caption {
-  color: $body-color;
+  color: var(--color-text-default);
 }
-.inline-modal-right {
-  left: auto;
-  right: 0;
-}
-$side-width: 800px;
-.dark {
-  .inline-modal {
-    background: $modal-bg-dark;
-    box-shadow: rgba(0, 0, 0, 0.25) 0px 1px 6px 0px,
-      rgba(0, 0, 0, 0.25) 0px 1px 4px 0px;
-
-    .assignees-list-item {
-      color: $text-icon-light;
-    }
-  }
-  .modal-content {
-    box-shadow: rgba(0, 0, 0, 0.25) 0px 1px 6px 0px,
-      rgba(0, 0, 0, 0.25) 0px 1px 4px 0px;
-    background: $modal-bg-dark;
-    color: $modal-content-color-dark;
-  }
-  .modal-caption {
-    color: $text-icon-light;
-  }
+.modal-back-btn {
+  margin-right: 12px;
 }
 
+// --- Drawer (legacy .side-modal) content layout --------------------------
+// The Drawer component owns the slide/width/full-height; these tune the body
+// and the create-feature / segment content that lives inside it.
 @include media-breakpoint-up(md) {
   .side-modal {
-    overflow-y: hidden !important;
-    opacity: 1 !important;
-    z-index: 10000000;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-
-    .modal-body {
+    .dialog__body {
+      flex: 1 1 auto;
       padding: 0;
-      height: calc(100% - 60px);
       overflow-y: auto;
     }
 
-    .modal-dialog {
-      box-shadow: rgba(75, 75, 75, 0.11) 0px 1px 6px 0px,
-      rgba(75, 75, 75, 0.11) 0px 1px 4px 0px;
-      transition: transform 0.2s ease-out;
-      transform: translate(100%, 0%) !important;
-      position: absolute;
-      max-width: 1000px;
-      width: $side-width !important;
-      height: 100% !important;
-      max-height: 100% !important;
-      margin: 0;
-      right: 0;
-      left: auto;
-    }
-
-    &.show {
-      .modal-dialog {
-        transform: translate(0%, 0%) !important;
-      }
-    }
-
-    .modal-content {
-      border-radius: 0;
-      width: 100%;
-      height: 100%;
-    }
-
     &.create-feature-modal {
-      .modal-body {
+      .dialog__body {
         overflow-y: hidden;
       }
-
-      &.overflow-y-auto {
-        overflow-y: hidden;
-
-        .modal-body {
-          overflow-y: auto;
+      &.overflow-y-auto .dialog__body {
+        overflow-y: auto;
+      }
+      .tabs .tab-item {
+        padding-top: 24px;
+        padding-bottom: 24px;
+        overflow-y: auto;
+        height: calc(100vh - 110px);
+        &.p-0 {
+          height: auto;
         }
       }
-
-      .tabs {
-        .tab-item {
-          padding-top: 24px;
-          padding-bottom: 24px;
-          overflow-y: auto;
-          height: calc(100vh - 110px);
-
-          &.p-0 {
-            height: auto;
-          }
-        }
-      }
-
       .create-feature-tab {
         margin-top: 16px;
         overflow-y: auto;
@@ -139,34 +59,134 @@ $side-width: 800px;
   }
 }
 
-.disable-transitions {
-  .modal,
-  .modal-dialog,
-  .modal-content,
-  .modal-backdrop,
-  .side-modal .modal-dialog {
-    transition: none !important;
-    animation: none !important;
-    transform: none !important;
-  }
-
-  .modal-backdrop {
-    opacity: 0.5 !important;
-  }
-
-  .modal.fade {
-    opacity: 1 !important;
+.create-segment-modal .dialog__body {
+  overflow-y: hidden !important;
+  .tab-item {
+    height: calc(100vh - 100px);
+    overflow-y: auto;
   }
 }
 
+@media (max-width: 600px) {
+  .side-modal__footer {
+    position: relative !important;
+  }
+  .side-modal #create-feature-modal {
+    height: 100%;
+  }
+}
+
+// --- Tabs inside a dialog body -------------------------------------------
+.dialog__body {
+  .tabs-nav {
+    margin: 1rem 1.5rem 0;
+    @include customScroll();
+
+    /* Hide scrollbar completely */
+    &::-webkit-scrollbar {
+      width: 0px;
+      background: transparent;
+    }
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .tab-item {
+    padding: 0 1.5rem;
+  }
+  .tab-nav-hr {
+    margin: 0 1.5rem;
+  }
+  .tabs-nav button,
+  .tabs-nav button.btn,
+  .tabs-nav button.btn-primary {
+    font-size: $font-sm;
+    padding: 0 14px;
+  }
+}
+
+// --- Full-screen modal ---------------------------------------------------
+.modal-full-screen {
+  hr {
+    display: none;
+  }
+  .dialog__header {
+    display: none;
+  }
+  .dialog__panel {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+  }
+  .dialog__body {
+    background: transparent;
+    padding: 0;
+  }
+}
+
+// --- Mobile: centred dialogs go full-screen ------------------------------
+@include media-breakpoint-down(md) {
+  dialog.dialog[open] {
+    padding: 0;
+  }
+  dialog.dialog .dialog__panel {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+}
+
+// --- Body state while a modal is open ------------------------------------
+.modal-open {
+  position: relative;
+  padding-right: 0;
+  overflow: hidden;
+
+  #crisp-chatbox [data-chat-status='initial'] {
+    display: none !important;
+  }
+  #crisp-chatbox,
+  #pylon-chat-bubble {
+    opacity: 0;
+    pointer-events: none;
+  }
+  #toast {
+    transform: translate(-50%);
+  }
+}
+
+// E2E disables animations.
+.disable-transitions {
+  dialog.dialog,
+  dialog.drawer {
+    transition: none !important;
+    animation: none !important;
+  }
+  dialog.dialog::backdrop,
+  dialog.drawer::backdrop {
+    transition: none !important;
+  }
+}
+
+// --- Inline modal (positioned popover — unrelated to Dialog/Drawer) ------
+.inline-modal-right {
+  left: auto;
+  right: 0;
+}
+.dark .inline-modal {
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 1px 6px 0px,
+    rgba(0, 0, 0, 0.25) 0px 1px 4px 0px;
+}
 .inline-modal {
   position: absolute;
-  background: $body-bg;
+  background: var(--color-surface-default);
   border-radius: $border-radius;
   z-index: 200000000000;
   box-shadow: rgba(75, 75, 75, 0.11) 0px 1px 6px 0px,
     rgba(75, 75, 75, 0.11) 0px 1px 4px 0px;
-  border: 1px solid $input-border-color;
+  border: 1px solid var(--color-border-default);
   &__title {
     padding: 1rem 1.5rem;
   }
@@ -175,16 +195,16 @@ $side-width: 800px;
     line-height: $line-height-sm;
   }
   .assignees-list-item {
-    color: $bg-dark100;
+    color: var(--color-text-default);
     font-weight: 500;
     padding: 8px 0;
-    border-bottom: 1px solid $basic-alpha-16;
+    border-bottom: 1px solid var(--color-border-default);
   }
   &.right {
-    right:0;
+    right: 0;
   }
   &.table-filter {
-    top:12px;
+    top: 12px;
   }
   &--lg {
     width: 355px;
@@ -207,7 +227,6 @@ $side-width: 800px;
       }
     }
   }
-
   &__list {
     overflow-y: auto;
     max-height: 350px;
@@ -217,7 +236,8 @@ $side-width: 800px;
   .inline-modal__list {
     max-height: none;
   }
-  .inline-modal, .inline-modal.table-filter {
+  .inline-modal,
+  .inline-modal.table-filter {
     position: fixed;
     overflow-y: auto;
     top: 0;
@@ -235,91 +255,6 @@ $side-width: 800px;
     max-height: none !important;
   }
 }
-.modal-back-btn {
-  margin-right: 12px;
-}
-
-.modal-backdrop {
-  bottom: 0;
-}
-
-.modal-open {
-  position: relative;
-  padding-right: 0;
-  overflow: hidden;
-}
-
-.modal-open #crisp-chatbox [data-chat-status='initial'] {
-  display: none !important;
-}
-
-@include media-breakpoint-up(md) {
-  .side-modal--narrow .modal-dialog {
-    width: 640px !important;
-  }
-}
-
-@media (max-width: 600px) {
-  /* portrait tablets, portrait iPad, e-readers (Nook/Kindle), landscape 800x480 phones (Android) */
-  .side-modal__footer {
-    position: relative !important;
-  }
-  .side-modal #create-feature-modal {
-    height: 100%;
-  }
-}
-
-.modal-body {
-  .tabs-nav {
-    margin: 0 1.5rem;
-    margin-top: 1rem;
-    @include customScroll();
-
-  /* Hide scrollbar completely */
-  &::-webkit-scrollbar {
-    width: 0px;
-    background: transparent;
-  }
-
-  scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  .tab-item {
-    padding: 0 1.5rem;
-  }
-
-  .tab-nav-hr {
-    margin: 0 1.5rem;
-  }
-
-  .tabs-nav button,
-  .tabs-nav button.btn,
-  .tabs-nav button.btn-primary {
-    font-size: $font-sm;
-    padding: 0 14px;
-  }
-}
-
-.create-segment-modal.modal-open,
-.create-segment-modal .modal-body {
-  overflow-y: hidden !important;
-  .tab-item {
-    height: calc(100vh - 100px);
-    overflow-y: auto;
-  }
-}
-
-.modal-open {
-  #crisp-chatbox, #pylon-chat-bubble {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  #toast {
-    transform: translate(-50%);
-  }
-
-}
 .table-filter-list {
   overflow-y: auto;
   max-height: 350px;
@@ -329,46 +264,8 @@ $side-width: 800px;
 }
 .table-filter-item {
   display: block;
-  border-bottom: 1px solid $input-border-color;
+  border-bottom: 1px solid var(--color-border-default);
   &:last-of-type {
     border-bottom: none;
-  }
-}
-.dark {
-
-  .table-filter-item {
-    border-color: $white-alpha-8;
-  }
-}
-
-@include media-breakpoint-down(md) {
-  .modal-dialog {
-    margin:0;
-    .modal-content {
-      border-radius:0;
-      height: 100vh;
-    }
-  }
-}
-
-.modal-full-screen {
-  .modal-dialog {
-    max-width: 75vw;
-  }
-  hr {
-    display: none;
-  }
-  .modal-header {
-    display: none;
-  }
-  .modal-content {
-    background: transparent;
-    box-shadow: none;
-    border: none;
-    padding: 0;
-    .modal-body {
-      background: transparent;
-      padding: 0;
-    }
   }
 }
