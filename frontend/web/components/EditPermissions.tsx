@@ -1021,7 +1021,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
   const [tab, setTab] = useState()
   const hasRbac = !!Utils.getPlansPermission('RBAC')
   const inspectUserPermissions = (user: User) => {
-    openModal(
+    openDrawer(
       getUserDisplayName(user),
       <div className='p-4'>
         <Permissions
@@ -1031,11 +1031,11 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
           projectId={level === 'environment' ? Number(parentId) : Number(id)}
         />
       </div>,
-      'p-0 side-modal',
+      'p-0',
     )
   }
   const editUserPermissions = (user: User) => {
-    openModal(
+    openDrawer(
       `Edit ${Format.camelCase(level)} Permissions`,
       <EditPermissionsModal
         name={`${getUserDisplayName(user)}`}
@@ -1047,12 +1047,12 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         parentSettingsLink={parentSettingsLink}
         user={user}
       />,
-      'p-0 side-modal',
+      'p-0',
     )
   }
 
   const editGroupPermissions = (group: UserGroup) => {
-    openModal(
+    openDrawer(
       `Edit ${Format.camelCase(level)} Permissions`,
       <EditPermissionsModal
         name={`${group.name}`}
@@ -1065,11 +1065,11 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         parentSettingsLink={parentSettingsLink}
         group={group}
       />,
-      'p-0 side-modal',
+      'p-0',
     )
   }
   const editRolePermissions = (role: Role) => {
-    openModal(
+    openDrawer(
       `Edit ${Format.camelCase(level)} Role Permissions`,
       <EditPermissionsModal
         name={`${role.name}`}
@@ -1078,7 +1078,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         level={level}
         role={role}
       />,
-      'p-0 side-modal',
+      'p-0',
     )
   }
   return (
