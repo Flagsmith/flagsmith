@@ -24889,6 +24889,11 @@ components:
           allOf:
             - $ref: '#/components/schemas/WarehouseConnectionStatusEnum'
           readOnly: true
+        status_detail:
+          type:
+            - string
+            - 'null'
+          readOnly: true
         name:
           type: string
           maxLength: 255
@@ -24896,6 +24901,11 @@ components:
           oneOf:
             - {}
             - type: 'null'
+        credentials:
+          oneOf:
+            - {}
+            - type: 'null'
+          writeOnly: true
         created_at:
           type: string
           format: date-time
@@ -27807,6 +27817,11 @@ components:
           allOf:
             - $ref: '#/components/schemas/WarehouseConnectionStatusEnum'
           readOnly: true
+        status_detail:
+          type:
+            - string
+            - 'null'
+          readOnly: true
         name:
           type: string
           maxLength: 255
@@ -27814,6 +27829,11 @@ components:
           oneOf:
             - {}
             - type: 'null'
+        credentials:
+          oneOf:
+            - {}
+            - type: 'null'
+          writeOnly: true
         created_at:
           type: string
           format: date-time
