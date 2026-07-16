@@ -19,19 +19,12 @@ def test_get_prep_value__json_value__returns_ciphertext_that_roundtrips() -> Non
     assert field.from_db_value(stored, None, None) == value
 
 
-def test_get_prep_value__none__returns_none() -> None:
+def test_field_methods__none__returns_none() -> None:
     # Given
     field = EncryptedJSONField()
 
     # When & Then
     assert field.get_prep_value(None) is None
-
-
-def test_from_db_value__none__returns_none() -> None:
-    # Given
-    field = EncryptedJSONField()
-
-    # When & Then
     assert field.from_db_value(None, None, None) is None
 
 

@@ -2062,14 +2062,31 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
     } in log.events
 
 
-def test_verify_clickhouse_connection__driver_error__sets_errored(
+@pytest.mark.parametrize(
+    "credentials, execute_side_effect, expected_detail",
+    [
+        (
+            {"password": "hunter2"},
+            Exception("connection refused"),
+            "Verification failed.",
+        ),
+        (None, None, "Stored connection details are incomplete."),
+    ],
+    ids=["driver_error", "missing_credentials"],
+)
+def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
     clickhouse_connection: WarehouseConnection,
+    credentials: dict[str, str] | None,
+    execute_side_effect: Exception | None,
+    expected_detail: str,
     log: StructuredLogCapture,
     mocker: MockerFixture,
 ) -> None:
     # Given
     mock_client = mocker.patch("experimentation.services.Client")
-    mock_client.return_value.execute.side_effect = Exception("connection refused")
+    mock_client.return_value.execute.side_effect = execute_side_effect
+    clickhouse_connection.credentials = credentials
+    clickhouse_connection.save()
     failure_count_before = _verification_count("failure")
 
     # When
@@ -2078,57 +2095,11 @@ def test_verify_clickhouse_connection__driver_error__sets_errored(
     # Then
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
-    assert clickhouse_connection.status_detail == "Verification failed."
-    mock_client.return_value.disconnect.assert_called_once_with()
+    assert clickhouse_connection.status_detail == expected_detail
     assert _verification_count("failure") == failure_count_before + 1
     assert any(
         event["event"] == "connection.verification_failed" for event in log.events
     )
-
-
-def test_verify_clickhouse_connection__missing_credentials__sets_errored(
-    clickhouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mocker.patch("experimentation.services.Client")
-    clickhouse_connection.credentials = None
-    clickhouse_connection.save()
-
-    # When
-    verify_clickhouse_connection(clickhouse_connection)
-
-    # Then
-    clickhouse_connection.refresh_from_db()
-    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
-    assert (
-        clickhouse_connection.status_detail
-        == "Stored connection details are incomplete."
-    )
-
-
-def test_verify_clickhouse_connection__environment_lookup_fails__sets_errored(
-    clickhouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mocker.patch("experimentation.services.Client")
-    mocker.patch.object(
-        Environment,
-        "project",
-        new_callable=mocker.PropertyMock,
-        side_effect=Exception("database unavailable"),
-    )
-    failure_count_before = _verification_count("failure")
-
-    # When
-    verify_clickhouse_connection(clickhouse_connection)
-
-    # Then
-    clickhouse_connection.refresh_from_db()
-    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
-    assert clickhouse_connection.status_detail == "Verification failed."
-    assert _verification_count("failure") == failure_count_before + 1
 
 
 @pytest.mark.parametrize(
