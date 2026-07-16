@@ -1,12 +1,6 @@
 from django.contrib.auth.hashers import check_password
 from django_test_migrations.migrator import Migrator
 
-from oauth2_metadata.constants import (
-    FLAGSMITH_CLI_CLIENT_ID,
-    FLAGSMITH_CLI_CLIENT_NAME,
-    FLAGSMITH_CLI_REDIRECT_URIS,
-)
-
 
 def test_0001__fresh_install__creates_flagsmith_cli_application(
     migrator: Migrator,
@@ -14,7 +8,7 @@ def test_0001__fresh_install__creates_flagsmith_cli_application(
     # Given — a fresh install: no application at the pre-migration state
     old_state = migrator.apply_initial_migration(("oauth2_metadata", None))
     OldApplication = old_state.apps.get_model("oauth2_provider", "Application")
-    OldApplication.objects.filter(client_id=FLAGSMITH_CLI_CLIENT_ID).delete()
+    OldApplication.objects.filter(client_id="flagsmith-cli").delete()
 
     # When
     new_state = migrator.apply_tested_migration(
@@ -23,14 +17,16 @@ def test_0001__fresh_install__creates_flagsmith_cli_application(
 
     # Then
     Application = new_state.apps.get_model("oauth2_provider", "Application")
-    application = Application.objects.get(client_id=FLAGSMITH_CLI_CLIENT_ID)
-    assert application.name == FLAGSMITH_CLI_CLIENT_NAME
+    application = Application.objects.get(client_id="flagsmith-cli")
+    assert application.name == "Flagsmith CLI"
     assert application.client_type == "public"
     assert application.authorization_grant_type == "authorization-code"
     # The client_secret field hashes on save; the stored value must be the
     # hash of an empty secret (public client, token_endpoint_auth "none").
     assert check_password("", application.client_secret)
-    assert application.redirect_uris == FLAGSMITH_CLI_REDIRECT_URIS
+    assert (
+        application.redirect_uris == "http://127.0.0.1/callback http://[::1]/callback"
+    )
     assert application.skip_authorization is True
 
 
@@ -40,9 +36,9 @@ def test_0001__application_already_exists__does_not_overwrite(
     # Given
     old_state = migrator.apply_initial_migration(("oauth2_metadata", None))
     OldApplication = old_state.apps.get_model("oauth2_provider", "Application")
-    OldApplication.objects.filter(client_id=FLAGSMITH_CLI_CLIENT_ID).delete()
+    OldApplication.objects.filter(client_id="flagsmith-cli").delete()
     OldApplication.objects.create(
-        client_id=FLAGSMITH_CLI_CLIENT_ID,
+        client_id="flagsmith-cli",
         name="Pre-existing Application",
         client_type="public",
         authorization_grant_type="authorization-code",
@@ -58,6 +54,6 @@ def test_0001__application_already_exists__does_not_overwrite(
 
     # Then
     Application = new_state.apps.get_model("oauth2_provider", "Application")
-    application = Application.objects.get(client_id=FLAGSMITH_CLI_CLIENT_ID)
+    application = Application.objects.get(client_id="flagsmith-cli")
     assert application.name == "Pre-existing Application"
     assert application.skip_authorization is False

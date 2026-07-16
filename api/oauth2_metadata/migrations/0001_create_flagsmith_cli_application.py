@@ -2,11 +2,6 @@ from django.apps.registry import Apps
 from django.db import migrations
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 
-from oauth2_metadata.constants import (
-    FLAGSMITH_CLI_CLIENT_ID,
-    FLAGSMITH_CLI_CLIENT_NAME,
-    FLAGSMITH_CLI_REDIRECT_URIS,
-)
 
 
 def create_flagsmith_cli_application(
@@ -15,13 +10,13 @@ def create_flagsmith_cli_application(
 ) -> None:
     Application = apps.get_model("oauth2_provider", "Application")
     Application.objects.get_or_create(
-        client_id=FLAGSMITH_CLI_CLIENT_ID,
+        client_id="flagsmith-cli",
         defaults={
-            "name": FLAGSMITH_CLI_CLIENT_NAME,
+            "name": "Flagsmith CLI",
             "client_type": "public",
             "authorization_grant_type": "authorization-code",
             "client_secret": "",
-            "redirect_uris": FLAGSMITH_CLI_REDIRECT_URIS,
+            "redirect_uris": "http://127.0.0.1/callback http://[::1]/callback",
             "skip_authorization": True,
         },
     )

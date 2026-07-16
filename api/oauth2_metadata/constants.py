@@ -1,7 +1,4 @@
 FLAGSMITH_CLI_CLIENT_ID = "flagsmith-cli"
-FLAGSMITH_CLI_CLIENT_NAME = "Flagsmith CLI"
-
-FLAGSMITH_CLI_REDIRECT_URIS = "http://127.0.0.1/callback http://[::1]/callback"
 
 SCOPE_MCP = "mcp"
 SCOPE_MANAGEMENT_API = "management-api"
