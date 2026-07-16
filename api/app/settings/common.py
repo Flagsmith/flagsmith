@@ -954,10 +954,15 @@ OAUTH2_PROVIDER = {
     "ACCESS_TOKEN_EXPIRE_SECONDS": 60 * 15,  # 15 minutes
     "REFRESH_TOKEN_EXPIRE_SECONDS": 60 * 60 * 24 * 30,  # 30 days
     "ROTATE_REFRESH_TOKEN": True,
+    "REFRESH_TOKEN_GRACE_PERIOD_SECONDS": 60 * 2,
     "PKCE_REQUIRED": True,
     "ALLOWED_CODE_CHALLENGE_METHODS": ["S256"],
-    "SCOPES": {"mcp": "MCP access"},
+    "SCOPES": {
+        "mcp": "MCP access",
+        "management-api": "Management API access",
+    },
     "DEFAULT_SCOPES": ["mcp"],
+    "SCOPES_BACKEND_CLASS": "oauth2_metadata.scopes.FlagsmithScopes",
     "ALLOWED_GRANT_TYPES": [
         "authorization_code",
         "refresh_token",

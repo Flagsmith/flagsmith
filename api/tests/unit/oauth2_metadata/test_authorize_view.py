@@ -10,6 +10,8 @@ from oauth2_provider.models import Application
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from oauth2_metadata.constants import FLAGSMITH_CLI_CLIENT_ID
+
 AUTHORIZE_URL = "oauth-authorize"
 
 
@@ -282,3 +284,62 @@ def test_post__pkce_params_preserved__code_exchangeable(
     assert "access_token" in token_data
     assert "refresh_token" in token_data
     assert token_data["token_type"] == "Bearer"
+
+
+def test_get__third_party_application_requests_management_api__returns_invalid_scope(
+    auth_client: APIClient,
+    oauth_application: Application,
+    pkce_pair: tuple[str, str],
+) -> None:
+    # Given
+    _verifier, challenge = pkce_pair
+    url = reverse(AUTHORIZE_URL)
+
+    # When
+    response = auth_client.get(
+        url,
+        {
+            "client_id": oauth_application.client_id,
+            "response_type": "code",
+            "redirect_uri": "https://example.com/callback",
+            "scope": "management-api",
+            "code_challenge": challenge,
+            "code_challenge_method": "S256",
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "invalid_scope"
+
+
+def test_get__flagsmith_cli_requests_management_api__returns_application_info(
+    auth_client: APIClient,
+    pkce_pair: tuple[str, str],
+    db: None,
+) -> None:
+    # Given — the well-known CLI application created by data migration,
+    # with an RFC 8252 loopback redirect on an ephemeral port
+    application = Application.objects.get(client_id=FLAGSMITH_CLI_CLIENT_ID)
+    _verifier, challenge = pkce_pair
+    url = reverse(AUTHORIZE_URL)
+
+    # When
+    response = auth_client.get(
+        url,
+        {
+            "client_id": application.client_id,
+            "response_type": "code",
+            "redirect_uri": "http://127.0.0.1:53682/callback",
+            "scope": "management-api",
+            "code_challenge": challenge,
+            "code_challenge_method": "S256",
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["application"]["client_id"] == FLAGSMITH_CLI_CLIENT_ID
+    assert "management-api" in data["scopes"]
+    assert data["is_verified"] is True
