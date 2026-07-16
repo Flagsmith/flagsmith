@@ -1537,6 +1537,7 @@ if CLICKHOUSE_ENABLED:
                 # from breaking migrations with Error 517.
                 "alter_sync": 2,
             },
+            "client_name": "flagsmith-core-api",
         },
     }
     DATABASES["clickhouse"] = _clickhouse_db  # type: ignore[assignment]
