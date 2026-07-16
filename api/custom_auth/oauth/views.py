@@ -39,7 +39,11 @@ def login_with_google(request):  # type: ignore[no-untyped-def]
         token = serializer.save()
         if settings.COOKIE_AUTH_ENABLED:
             return authorise_response(token.user, Response(status=HTTP_204_NO_CONTENT))
-        return Response(data={"key": token.key, "is_new_user": serializer.is_new_user})
+        return Response(
+            data=OAuthTokenSerializer(
+                {"key": token.key, "is_new_user": serializer.is_new_user}
+            ).data
+        )
     except GoogleError as e:
         logger.warning("%s: %s" % (GOOGLE_AUTH_ERROR_MESSAGE, str(e)))
         return Response(
@@ -63,7 +67,11 @@ def login_with_github(request):  # type: ignore[no-untyped-def]
         token = serializer.save()
         if settings.COOKIE_AUTH_ENABLED:
             return authorise_response(token.user, Response(status=HTTP_204_NO_CONTENT))
-        return Response(data={"key": token.key, "is_new_user": serializer.is_new_user})
+        return Response(
+            data=OAuthTokenSerializer(
+                {"key": token.key, "is_new_user": serializer.is_new_user}
+            ).data
+        )
     except GithubError as e:
         logger.warning("%s: %s" % (GITHUB_AUTH_ERROR_MESSAGE, str(e)))
         return Response(
