@@ -36,7 +36,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
     permission: 'ADMIN',
   })
   const createRole = () => {
-    openModal(
+    openDrawer(
       'Create Role',
       <CreateRole
         organisationId={organisationId}
@@ -45,7 +45,6 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
           closeModal()
         }}
       />,
-      'side-modal',
     )
   }
   const deleteRole = (role: Role) => {

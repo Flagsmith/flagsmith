@@ -113,10 +113,9 @@ const IdentitiesPage: FC<{ props: any }> = (props) => {
   })
 
   const newUser = () => {
-    openModal(
+    openDrawer(
       'New Identities',
       <CreateUserModal environmentId={environmentId} />,
-      'side-modal',
     )
   }
 

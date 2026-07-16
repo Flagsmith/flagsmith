@@ -28,23 +28,21 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
       { skip: !organisationId },
     )
   const createWebhook = () => {
-    openModal(
+    openDrawer(
       'New Webhook',
       <CreateAuditWebhookModal
         organisationId={AccountStore.getOrganisation().id}
       />,
-      'side-modal',
     )
   }
 
   const editWebhook = (webhook: Webhook) => {
-    openModal(
+    openDrawer(
       'Edit Webhook',
       <CreateAuditWebhookModal
         webhook={webhook}
         organisationId={AccountStore.getOrganisation().id}
       />,
-      'side-modal',
     )
   }
 
