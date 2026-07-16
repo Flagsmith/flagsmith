@@ -77,20 +77,26 @@ Sources: [react.dev createPortal](https://react.dev/reference/react-dom/createPo
 [Radix Dialog](https://www.radix-ui.com/primitives/docs/components/dialog),
 [caniuse dialog](https://caniuse.com/dialog).
 
-## DS Dialog component (native `<dialog>`)
+## DS Dialog + Drawer (native `<dialog>`)
 
-Rather than hack native `<dialog>` into the reactstrap-based `ModalDefault`, this PoC adds a
-reusable DS component: `web/components/base/Dialog/` (own folder + barrel + co-located SCSS,
-matching `base/CenteredModal`). Storybook: `documentation/components/Dialog.stories.tsx`.
+Two distinct patterns, two components sharing one native-`<dialog>` base
+(`useNativeDialog` + shared `Dialog.Header/Body/Footer` slots):
+
+- **`base/Dialog/`** — centred modal, sizes `sm|md|lg|full`.
+- **`base/Drawer/`** — right-anchored drawer (replaces the legacy `side-modal`), `width`
+  `default|narrow`.
+
+Both own folders + barrels + co-located SCSS (matching `base/CenteredModal`). Storybook:
+`documentation/components/Dialog.stories.tsx`, `Drawer.stories.tsx`.
 
 - **Native `<dialog>` + `showModal()`** — top layer (no z-index, no portal target), built-in
   focus trap and Esc, `::backdrop`.
 - **Compound API** — `Dialog` + `Dialog.Header` / `Dialog.Body` / `Dialog.Footer`, the shape the
   industry standardises on (Radix, MUI Base, Chakra).
 - **Tokenised chrome** — `--color-surface-*` / `--color-border-*` / radius, so it themes
-  light/dark with no bootstrap dependency. `size`: `sm | md | lg | full | side`.
+  light/dark with no bootstrap dependency.
 - **Declarative** — the parent owns `open`; `onClose` fires on Esc, backdrop click, and the close
-  button. New modal code can use it directly today.
+  button. New modal code can use `Dialog` or `Drawer` directly today.
 
 ### Sequence
 
@@ -99,15 +105,17 @@ matching `base/CenteredModal`). Storybook: `documentation/components/Dialog.stor
    (default stack + inline confirm) instead of reactstrap. `interceptClose` and `setModalTitle`
    moved to the controller (the manager honours them); `ModalDefault` is a re-export shim;
    `ModalConfirm` removed. `openModal`/`openModal2`/`openConfirm` signatures unchanged.
-3. **Other reactstrap modal consumers migrated** — done. `IntegrationSelect`,
-   `useFormNotSavedModal`, `CenteredModal` now use `Dialog`. The reactstrap `<Modal>` portal is
-   no longer used in the modal path (reactstrap's `ModalBody`/`ModalFooter` helper divs remain in
-   modal content — dropping the dep entirely is a separate follow-up).
+3. **Other reactstrap consumers migrated + `side` split into `Drawer`** — done.
+   `IntegrationSelect`, `useFormNotSavedModal`, `CenteredModal` use `Dialog`; the manager routes
+   legacy `side-modal` to `Drawer`. `ModalDefault`/`ModalConfirm` are deleted and the guard/title
+   helpers moved to the controller. The reactstrap `<Modal>` portal is gone from the modal path
+   (reactstrap's `ModalBody`/`ModalFooter` helper divs still appear in modal *content* — dropping
+   the dep entirely is a separate follow-up).
 4. **Variant CSS + runtime QA** — the remaining work, and it needs a running app:
-   `side-modal`/`create-feature` layouts, `modal-full-screen`, `#modal2`, and the `.modal-open`
-   body effects are keyed to bootstrap's `.modal*` structure and must be re-expressed against the
-   new `.dialog__*`. `Dialog.Header`/`Body` mirror the old `ModalHeader`/`ModalBody`, so plain
-   centred modals should be close; the drawer flows are the hotspot.
+   ~50 components still render `.modal-body`/`.modal-footer`/`side-modal` markup styled by
+   `_modals.scss`; `create-feature` (drawer + tab height calcs) is the hotspot. `Dialog.Header`/
+   `Body` mirror the old `ModalHeader`/`ModalBody`, so plain centred modals should be close.
+   Enter/exit animations (`@starting-style`) and the drawer slide are not done yet.
 
 ### QA checklist (needs a dev server)
 
