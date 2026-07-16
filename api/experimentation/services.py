@@ -674,14 +674,14 @@ def _reset_default_allocations_to_control(
 
 
 def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
-    if experiment.status == ExperimentStatus.COMPLETED:
-        raise ValidationError(
-            f"Cannot change the rollout of a {experiment.status} experiment."
-        )
     validate_rollout_spec(experiment, spec)
     environment_id = experiment.environment_id
     with transaction.atomic():
         experiment.refresh_from_db(from_queryset=Experiment.objects.select_for_update())
+        if experiment.status == ExperimentStatus.COMPLETED:
+            raise ValidationError(
+                f"Cannot change the rollout of a {experiment.status} experiment."
+            )
         is_first_rollout = experiment.rollout_segment_id is None
         segment = _sync_rollout_segment(experiment, spec.rollout_percentage)
         if is_first_rollout:
