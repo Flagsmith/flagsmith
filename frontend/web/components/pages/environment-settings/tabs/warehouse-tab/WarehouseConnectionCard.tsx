@@ -82,7 +82,11 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
               }
               place='top'
             >
-              {STATUS_LABEL[connection.status]}
+              {connection.status === 'errored' && connection.status_detail
+                ? `${STATUS_LABEL[connection.status]}: ${
+                    connection.status_detail
+                  }`
+                : STATUS_LABEL[connection.status]}
             </Tooltip>
           </div>
           {typeLabel && (

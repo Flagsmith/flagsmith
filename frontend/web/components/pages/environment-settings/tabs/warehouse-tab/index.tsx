@@ -163,7 +163,11 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
         if (result.status === 'connected') {
           toast('Connection verified')
         } else {
-          toast('Connection failed — check your credentials', 'danger')
+          toast(
+            result.status_detail ||
+              'Connection failed — check your credentials',
+            'danger',
+          )
         }
       })
       .catch(() => toast('Failed to test connection', 'danger'))

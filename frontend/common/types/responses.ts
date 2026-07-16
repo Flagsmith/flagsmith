@@ -1271,6 +1271,7 @@ export type WarehouseConnection = {
   id: number
   warehouse_type: WarehouseType
   status: WarehouseConnectionStatus
+  status_detail: string | null
   name: string
   config: SnowflakeConfig | ClickHouseConfig | Record<string, never>
   created_at: string
