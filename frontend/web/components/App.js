@@ -14,6 +14,7 @@ import AccountSettingsPage from './pages/AccountSettingsPage'
 import ProjectStore from 'common/stores/project-store'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
+import ModalManager from './modals/base/ModalManager'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import AccountStore from 'common/stores/account-store'
 import OrganisationLimit from './OrganisationLimit'
@@ -267,6 +268,7 @@ const App = class extends Component {
     }
     return (
       <Provider store={getStore()}>
+        <ModalManager />
         <AccountProvider
           onNoUser={this.onNoUser}
           onLogout={this.onLogout}

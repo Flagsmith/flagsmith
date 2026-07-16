@@ -17,10 +17,13 @@ interface Confirm {
   disabledYes?: boolean
   yesText?: string
   toggle: () => void
+  container?: string
+  children?: ReactNode
 }
 
 const Confirm: FC<Confirm> = ({
   children,
+  container = 'app',
   disabled,
   disabledYes,
   isDanger,
@@ -45,6 +48,7 @@ const Confirm: FC<Confirm> = ({
   return (
     <Modal
       className='modal-dialog-centered modal-sm'
+      container={container}
       unmountOnClose
       isOpen={isOpen}
       toggle={no}
