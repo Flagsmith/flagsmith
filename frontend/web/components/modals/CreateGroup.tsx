@@ -8,7 +8,7 @@ import {
   useUpdateGroupMutation,
 } from 'common/services/useGroup'
 import { components } from 'react-select'
-import { setInterceptClose } from './base/ModalDefault'
+import { setInterceptClose } from './base/modalController'
 import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
 import { IonIcon } from '@ionic/react'

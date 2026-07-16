@@ -18,7 +18,7 @@ import {
 } from 'common/services/useRole'
 
 import { Role, User, UserGroup } from 'common/types/responses'
-import { setInterceptClose } from './base/ModalDefault'
+import { setInterceptClose } from './base/modalController'
 import UserSelect from 'components/UserSelect'
 import MyGroupsSelect from 'components/MyGroupsSelect'
 import {
@@ -374,11 +374,8 @@ const CreateRole: FC<CreateRoleType> = ({
             data-test='save-role'
             disabled={isSaving || !roleName}
           >
-            {isSaving && isEdit
-              ? 'Updating'
-              : isSaving && !isEdit
-              ? 'Creating'
-              : buttonText}
+            {isSaving && (isEdit ? 'Updating' : 'Creating')}
+            {!isSaving && buttonText}
           </Button>
         </div>
       </div>

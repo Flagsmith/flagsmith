@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ES6Component from 'common/ES6Component'
-import { setModalTitle } from 'components/modals/base/ModalDefault'
+import { setModalTitle } from 'components/modals/base/modalController'
 
 // TODO: Migrate to a custom hook once we move away from Flux stores.
 // This class component is necessary because it uses ES6Component/listenTo

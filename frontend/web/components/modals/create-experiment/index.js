@@ -14,7 +14,7 @@ import Permission from 'common/providers/Permission'
 import {
   setInterceptClose,
   setModalTitle,
-} from 'components/modals/base/ModalDefault'
+} from 'components/modals/base/modalController'
 import { getStore } from 'common/store'
 import Button from 'components/base/forms/Button'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
