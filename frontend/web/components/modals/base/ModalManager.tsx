@@ -6,9 +6,8 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
-import Dialog, { DialogSize } from 'components/base/Dialog'
+import Dialog, { ConfirmDialog, DialogSize } from 'components/base/Dialog'
 import Drawer from 'components/base/Drawer'
-import Button from 'components/base/forms/Button'
 import {
   clearConfirm,
   closeModalByKey,
@@ -112,22 +111,17 @@ const ConfirmSlot: FC<{ entry: ConfirmEntry }> = ({ entry }) => {
     clearConfirm()
   }
   return (
-    <Dialog open size='sm' onClose={no}>
-      <Dialog.Header>{entry.title}</Dialog.Header>
-      <Dialog.Body>{entry.body}</Dialog.Body>
-      <Dialog.Footer>
-        <Button theme='secondary' id='confirm-btn-no' onClick={no}>
-          {entry.noText ?? 'Cancel'}
-        </Button>
-        <Button
-          theme={entry.destructive ? 'danger' : 'primary'}
-          id='confirm-btn-yes'
-          onClick={yes}
-        >
-          {entry.yesText ?? 'OK'}
-        </Button>
-      </Dialog.Footer>
-    </Dialog>
+    <ConfirmDialog
+      open
+      title={entry.title}
+      destructive={entry.destructive}
+      yesText={entry.yesText}
+      noText={entry.noText}
+      onYes={yes}
+      onNo={no}
+    >
+      {entry.body}
+    </ConfirmDialog>
   )
 }
 

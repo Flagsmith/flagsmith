@@ -1,4 +1,4 @@
-import { FC, ReactNode } from 'react'
+import { FC, ReactNode, useId } from 'react'
 import { useNativeDialog } from 'components/base/Dialog/useNativeDialog'
 import {
   DialogBody,
@@ -27,10 +27,12 @@ const DrawerRoot: FC<DrawerProps> = ({
   width = 'default',
 }) => {
   const { onCancel, onClick, ref } = useNativeDialog(open, onClose)
+  const titleId = useId()
   return (
-    <DialogContext.Provider value={{ onClose }}>
+    <DialogContext.Provider value={{ onClose, titleId }}>
       <dialog
         ref={ref}
+        aria-labelledby={titleId}
         className={`drawer drawer--${width} ${className ?? ''}`}
         onCancel={onCancel}
         onClick={onClick}

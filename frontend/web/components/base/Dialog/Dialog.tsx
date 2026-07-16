@@ -1,4 +1,4 @@
-import { FC, ReactNode } from 'react'
+import { FC, ReactNode, useId } from 'react'
 import { useNativeDialog } from './useNativeDialog'
 import {
   DialogBody,
@@ -26,10 +26,12 @@ const DialogRoot: FC<DialogProps> = ({
   size = 'md',
 }) => {
   const { onCancel, onClick, ref } = useNativeDialog(open, onClose)
+  const titleId = useId()
   return (
-    <DialogContext.Provider value={{ onClose }}>
+    <DialogContext.Provider value={{ onClose, titleId }}>
       <dialog
         ref={ref}
+        aria-labelledby={titleId}
         className={`dialog dialog--${size} ${className ?? ''}`}
         onCancel={onCancel}
         onClick={onClick}

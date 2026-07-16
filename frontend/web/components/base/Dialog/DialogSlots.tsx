@@ -2,7 +2,11 @@ import { createContext, FC, ReactNode, useContext } from 'react'
 import ModalClose from 'components/modals/base/ModalClose'
 
 // Shared header/body/footer slots + close context for Dialog and Drawer.
-export const DialogContext = createContext<{ onClose: () => void }>({
+// titleId links the header title to the dialog via aria-labelledby.
+export const DialogContext = createContext<{
+  onClose: () => void
+  titleId?: string
+}>({
   onClose: () => undefined,
 })
 
@@ -12,10 +16,12 @@ type SlotProps = {
 }
 
 export const DialogHeader: FC<SlotProps> = ({ children, className }) => {
-  const { onClose } = useContext(DialogContext)
+  const { onClose, titleId } = useContext(DialogContext)
   return (
     <div className={`dialog__header ${className ?? ''}`}>
-      <h5 className='dialog__title'>{children}</h5>
+      <h5 id={titleId} className='dialog__title'>
+        {children}
+      </h5>
       <ModalClose onClick={onClose} />
     </div>
   )
