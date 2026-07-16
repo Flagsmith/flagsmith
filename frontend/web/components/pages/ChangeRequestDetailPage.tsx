@@ -213,7 +213,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       }
     }
 
-    openModal(
+    openDrawer(
       'Edit Change Request',
       <CreateFeatureModal
         history={history}
@@ -229,7 +229,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
             : undefined
         }
       />,
-      'side-modal create-feature-modal',
+      'create-feature-modal',
     )
   }
 

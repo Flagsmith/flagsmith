@@ -266,13 +266,13 @@ const FeatureLifecyclePage: FC = () => {
                   section === 'new' ? (
                     <Button
                       onClick={() => {
-                        openModal(
+                        openDrawer(
                           'New Feature',
                           <CreateFlagModal
                             environmentId={defaultEnvironmentApiKey}
                             projectId={projectId}
                           />,
-                          'side-modal create-feature-modal',
+                          'create-feature-modal',
                         )
                       }}
                       data-test='create-feature-btn'

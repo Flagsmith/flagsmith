@@ -86,7 +86,7 @@ const SegmentsPage: FC = () => {
   }, [showFeatureSpecific, history])
 
   const newSegment = () => {
-    openModal(
+    openDrawer(
       'New Segment',
       <CreateSegmentModal
         onComplete={() => {
@@ -95,7 +95,7 @@ const SegmentsPage: FC = () => {
         environmentId={environmentId!}
         projectId={projectId}
       />,
-      'side-modal create-new-segment-modal',
+      'create-new-segment-modal',
     )
   }
 

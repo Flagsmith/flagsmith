@@ -1,11 +1,11 @@
 @import "../mixins/custom-scrollbar";
 
 // Modals render via the DS Dialog/Drawer (native <dialog>, see base/Dialog and
-// base/Drawer). The legacy openModal className (side-modal, create-feature-modal,
-// p-0, modal-full-screen, ...) is passed through to the dialog element, so these
-// rules hook onto it and target the new .dialog__panel / .dialog__body structure.
-// The Dialog/Drawer components own the surface, slide, sizing, and backdrop; what
-// remains here is content layout that used to be keyed to bootstrap's .modal*.
+// base/Drawer). openModal/openDrawer pass a className (create-feature-modal, p-0,
+// modal-full-screen, ...) through to the dialog element, so these rules hook onto
+// it and target the new .dialog__panel / .dialog__body structure. The Dialog/
+// Drawer components own the surface, slide, sizing, and backdrop; what remains
+// here is content layout that used to be keyed to bootstrap's .modal*.
 
 // Content still renders raw .modal-footer divs (bootstrap styles the base); keep
 // the app's padding. p-0 removes the body padding for flush content.
@@ -23,11 +23,12 @@
   margin-right: 12px;
 }
 
-// --- Drawer (legacy .side-modal) content layout --------------------------
+// --- Drawer content layout -----------------------------------------------
 // The Drawer component owns the slide/width/full-height; these tune the body
-// and the create-feature / segment content that lives inside it.
+// and the create-feature / segment content that lives inside it. The drawer
+// carries the openDrawer className (create-feature-modal, p-0, ...) as a hook.
 @include media-breakpoint-up(md) {
-  .side-modal {
+  dialog.drawer {
     .dialog__body {
       flex: 1 1 auto;
       padding: 0;
@@ -71,7 +72,7 @@
   .side-modal__footer {
     position: relative !important;
   }
-  .side-modal #create-feature-modal {
+  dialog.drawer #create-feature-modal {
     height: 100%;
   }
 }

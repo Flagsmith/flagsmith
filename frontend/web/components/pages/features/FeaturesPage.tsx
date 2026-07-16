@@ -185,7 +185,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
   })
 
   const openNewFlagModal = () => {
-    openModal(
+    openDrawer(
       'New Feature',
       <CreateFlagModal
         environmentId={environmentId}
@@ -193,7 +193,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
         projectId={projectId}
         defaultExperiment={defaultExperiment}
       />,
-      'side-modal create-feature-modal',
+      'create-feature-modal',
     )
   }
 

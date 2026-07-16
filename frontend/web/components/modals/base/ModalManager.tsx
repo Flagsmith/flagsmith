@@ -42,9 +42,8 @@ const ModalSlot: FC<{ entry: ModalEntry; index: number }> = ({
 
   const onClose = () => requestCloseModal(index)
 
-  // Drawers render as the Drawer; everything else is a centred Dialog. The
-  // side-modal className is still honoured for callers not yet on openDrawer.
-  if (entry.variant === 'drawer' || entry.className?.includes('side-modal')) {
+  // Drawers render as the Drawer; everything else is a centred Dialog.
+  if (entry.variant === 'drawer') {
     return (
       <Drawer
         open

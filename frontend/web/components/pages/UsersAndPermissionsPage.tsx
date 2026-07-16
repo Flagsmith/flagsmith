@@ -204,10 +204,10 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                             }
                             id='btn-invite'
                             onClick={() =>
-                              openModal(
+                              openDrawer(
                                 'Invite Users',
                                 <InviteUsersModal />,
-                                'p-0 side-modal',
+                                'p-0',
                               )
                             }
                             type='button'
@@ -551,10 +551,9 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                               id='btn-invite-groups'
                               disabled={!manageGroupsPermission.permission}
                               onClick={() =>
-                                openModal(
+                                openDrawer(
                                   'Create Group',
                                   <CreateGroup orgId={organisation.id} />,
-                                  'side-modal',
                                 )
                               }
                               type='button'

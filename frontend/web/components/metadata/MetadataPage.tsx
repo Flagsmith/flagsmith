@@ -61,7 +61,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
     closeModal()
   }
   const openCreateMetadataField = () => {
-    openModal(
+    openDrawer(
       `Create Custom Field`,
       <CreateMetadataField
         onComplete={metadataCreatedToast}
@@ -69,7 +69,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         projectId={projectId}
         isEdit={false}
       />,
-      'side-modal create-feature-modal',
+      'create-feature-modal',
     )
   }
 
@@ -77,7 +77,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
     id: string,
     contentTypeList: MetadataFieldModelField[],
   ) => {
-    openModal(
+    openDrawer(
       `Edit Custom Field`,
       <CreateMetadataField
         isEdit={true}
@@ -89,7 +89,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         organisationId={organisationId}
         projectId={projectId}
       />,
-      'side-modal create-feature-modal',
+      'create-feature-modal',
     )
   }
 

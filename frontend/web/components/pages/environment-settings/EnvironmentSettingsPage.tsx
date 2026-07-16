@@ -273,7 +273,7 @@ const EnvironmentSettingsPage: React.FC = () => {
   }
 
   const handleCreateWebhook = () => {
-    openModal(
+    openDrawer(
       'New Webhook',
       <CreateWebhookModal
         environmentId={match.params.environmentId}
@@ -285,12 +285,11 @@ const EnvironmentSettingsPage: React.FC = () => {
           })
         }
       />,
-      'side-modal',
     )
   }
 
   const handleEditWebhook = (webhook: Webhook) => {
-    openModal(
+    openDrawer(
       'Edit Webhook',
       <CreateWebhookModal
         webhook={webhook}
@@ -301,7 +300,6 @@ const EnvironmentSettingsPage: React.FC = () => {
           saveWebhook({ ...webhook, environmentId: match.params.environmentId })
         }
       />,
-      'side-modal',
     )
   }
 

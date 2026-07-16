@@ -206,8 +206,8 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       ? CreateExperimentModal
       : CreateFlagModal
     const modalCssClass = experimentMode
-      ? 'side-modal create-feature-modal create-experiment-modal'
-      : 'side-modal create-feature-modal'
+      ? 'create-feature-modal create-experiment-modal'
+      : 'create-feature-modal'
 
     const modalProps = experimentMode
       ? {
@@ -245,7 +245,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         ]
       : []
 
-    openModal(
+    openDrawer(
       <Row className='align-items-center'>
         <span>
           {permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
