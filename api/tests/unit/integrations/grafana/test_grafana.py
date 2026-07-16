@@ -8,6 +8,7 @@ from audit.models import AuditLog
 from integrations.common.models import IntegrationHealthRecord
 from integrations.grafana.grafana import GrafanaWrapper
 from integrations.grafana.models import GrafanaProjectConfiguration
+from projects.models import Project
 
 
 @pytest.mark.parametrize("base_url", ["test.com", "test.com/"])
@@ -51,7 +52,9 @@ def test_grafana_wrapper__track_event__expected_api_call(
 
 @pytest.mark.django_db
 @responses.activate()
-def test_grafana_wrapper__track_event__records_health_status(project) -> None:
+def test_grafana_wrapper__track_event__records_health_status(
+    project: Project,
+) -> None:
     # Given
     config = GrafanaProjectConfiguration.objects.create(
         project=project,

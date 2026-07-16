@@ -40,7 +40,7 @@ def test_base_environment_integration_model_serializer__soft_deleted_exists__upd
     assert updated_webhook_config.deleted_at is None
 
 
-def test_base_environment_integration_model_serializer__latest_health__no_record(
+def test_base_environment_integration_model_serializer__latest_health__no_record(  # type: ignore[no-untyped-def]
     environment,
 ):
     # Given
@@ -57,7 +57,7 @@ def test_base_environment_integration_model_serializer__latest_health__no_record
     assert data["latest_health"] is None
 
 
-def test_base_environment_integration_model_serializer__latest_health__has_record(
+def test_base_environment_integration_model_serializer__latest_health__has_record(  # type: ignore[no-untyped-def]
     environment,
 ):
     # Given
@@ -77,7 +77,7 @@ def test_base_environment_integration_model_serializer__latest_health__has_recor
     assert data["latest_health"]["created_at"] is not None
 
 
-def test_base_environment_integration_model_serializer__latest_health__unhealthy_status(
+def test_base_environment_integration_model_serializer__latest_health__unhealthy_status(  # type: ignore[no-untyped-def]  # noqa: E501
     environment,
 ):
     # Given

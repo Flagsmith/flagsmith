@@ -12,6 +12,7 @@ from integrations.datadog.datadog import (
     DataDogWrapper,
 )
 from integrations.datadog.models import DataDogConfiguration
+from projects.models import Project
 
 
 @pytest.mark.parametrize(
@@ -165,7 +166,7 @@ def test_generate_event_data__missing_environment__returns_unknown_env(  # type:
 @pytest.mark.django_db
 def test_datadog_track_event__records_health_status(
     mocker: MockerFixture,
-    project,
+    project: Project,
 ) -> None:
     # Given
     config = DataDogConfiguration.objects.create(

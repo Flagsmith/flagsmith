@@ -115,7 +115,7 @@ def test_new_relic_generate_event_data__missing_environment__returns_unknown_env
 
 
 @pytest.mark.django_db
-def test_new_relic_track_event__records_health_status(
+def test_new_relic_track_event__records_health_status(  # type: ignore[no-untyped-def]
     mocker,
     project,
 ):
