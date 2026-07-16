@@ -10,6 +10,7 @@ from experimentation.types import (
     ClickHouseCredentials,
     SnowflakeConfig,
 )
+from webhooks.fields import is_internal_address
 
 
 def validate_clickhouse_credentials(
@@ -31,6 +32,16 @@ def validate_clickhouse_config(config: dict[str, Any]) -> ClickHouseConfig:
     if not config.get("host"):
         raise serializers.ValidationError(
             {"config": {"host": "This field is required."}}
+        )
+    if is_internal_address(str(config["host"])):
+        raise serializers.ValidationError(
+            {
+                "config": {
+                    "host": (
+                        "Host must not target internal or private network addresses."
+                    )
+                }
+            }
         )
     merged: ClickHouseConfig = {
         **CLICKHOUSE_DEFAULTS,

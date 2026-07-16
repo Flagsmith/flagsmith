@@ -1,3 +1,5 @@
+import socket
+
 import pytest
 from django.db import connection as django_db_connection
 from django.urls import reverse
@@ -1177,6 +1179,64 @@ def test_post__clickhouse_missing_host__returns_400(
         warehouse_connection_url,
         data={
             "warehouse_type": "clickhouse",
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "host" in response.json()["config"]
+
+
+@pytest.mark.parametrize(
+    "host",
+    ["127.0.0.1", "10.0.0.1", "169.254.169.254"],
+)
+def test_post__clickhouse_internal_host__returns_400(
+    admin_client: APIClient,
+    enable_features: EnableFeaturesFixture,
+    host: str,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": host},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "host" in response.json()["config"]
+
+
+def test_post__clickhouse_hostname_resolves_to_internal_ip__returns_400(
+    admin_client: APIClient,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    mocker.patch(
+        "webhooks.fields.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("192.168.1.100", 0))],
+    )
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "internal.example.com"},
             "credentials": {"password": "hunter2"},
         },
         format="json",
