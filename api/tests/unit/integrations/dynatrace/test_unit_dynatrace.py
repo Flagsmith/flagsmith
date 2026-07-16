@@ -28,7 +28,7 @@ def test_dynatrace_wrapper__valid_config__initializes_correctly():  # type: igno
     dynatrace = DynatraceWrapper(config)
 
     # Then
-    expected_url = f"{config.base_url}{EVENTS_API_URI}?api-token={config.api_key}"
+    expected_url = f"{config.base_url}/{EVENTS_API_URI}?api-token={config.api_key}"
     assert dynatrace.url == expected_url
 
 

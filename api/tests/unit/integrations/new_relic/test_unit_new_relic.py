@@ -19,7 +19,7 @@ def test_new_relic_wrapper__valid_config__initializes_correctly():  # type: igno
     new_relic = NewRelicWrapper(config)
 
     # Then
-    expected_url = f"{config.base_url}{EVENTS_API_URI}{config.app_id}/deployments.json"
+    expected_url = f"{config.base_url}/{EVENTS_API_URI}{config.app_id}/deployments.json"
     assert new_relic.url == expected_url
 
 
