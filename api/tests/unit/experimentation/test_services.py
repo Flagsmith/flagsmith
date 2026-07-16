@@ -1359,6 +1359,43 @@ def test_apply_experiment_rollout__no_segment__creates_segment_and_override(
     assert allocations == {option_a.id: 60.0, option_b.id: 40.0}
 
 
+def test_apply_experiment_rollout__null_default_value__serialised_as_empty_string(
+    experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given the environment default has no value stored
+    option_a, option_b, _ = multivariate_options
+    default_state = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+    default_state.feature_state_value.string_value = None
+    default_state.feature_state_value.save()
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=42.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # Then the default value is not rewritten as the string "None"
+    default_state.refresh_from_db()
+    assert default_state.get_feature_state_value() == ""
+
+
 def test_apply_experiment_rollout__first_rollout__zeroes_default_allocations(
     experiment: Experiment,
     multivariate_options: list[MultivariateFeatureOption],

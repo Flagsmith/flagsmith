@@ -709,6 +709,8 @@ def _serialize_feature_state_value(
 ) -> tuple[str, FeatureValueType]:
     """Render a stored feature state value as the (string, API type) pair that
     a `FlagChangeSet` expects."""
+    if value.value is None:
+        return "", "string"
     return (
         str(value.value).lower() if value.type == BOOLEAN else str(value.value),
         _ROLLOUT_VALUE_TYPE.get(value.type or STRING, "string"),
