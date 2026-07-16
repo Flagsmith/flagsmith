@@ -2,7 +2,7 @@ import logging
 from typing import Any
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
+from django.db import models, transaction
 
 from integrations.common.models import IntegrationHealthRecord
 
@@ -14,10 +14,11 @@ def record_integration_health(
     status_code: int,
 ) -> None:
     try:
-        IntegrationHealthRecord.objects.create(
-            content_object=integration_config,
-            status_code=status_code,
-        )
+        with transaction.atomic():
+            IntegrationHealthRecord.objects.create(
+                content_object=integration_config,
+                status_code=status_code,
+            )
     except Exception:
         logger.exception("Failed to record integration health.")
 
