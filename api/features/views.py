@@ -433,8 +433,8 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.is_valid(raise_exception=True)
         self._validate_owner_removal(
             feature,
-            owners_to_remove=0,
-            group_owners_to_remove=len(serializer.validated_data["group_ids"]),
+            owner_ids=set(),
+            group_owner_ids=set(serializer.validated_data["group_ids"]),
         )
         serializer.remove_group_owners(feature)
         response = Response(self.get_serializer(instance=feature).data)
@@ -471,8 +471,8 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         feature = self.get_object()
         self._validate_owner_removal(
             feature,
-            owners_to_remove=len(serializer.validated_data["user_ids"]),
-            group_owners_to_remove=0,
+            owner_ids=set(serializer.validated_data["user_ids"]),
+            group_owner_ids=set(),
         )
         serializer.remove_users(feature)
 
@@ -481,16 +481,32 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     def _validate_owner_removal(
         self,
         feature: Feature,
-        owners_to_remove: int,
-        group_owners_to_remove: int,
+        owner_ids: set[int],
+        group_owner_ids: set[int],
     ) -> None:
         if not feature.project.enforce_feature_owners:
             return
+
+        existing_owners = list(feature.owners.all())
+        existing_group_owners = list(feature.group_owners.all())
+
+        existing_owner_ids = {o.id for o in existing_owners}
+        existing_group_owner_ids = {g.id for g in existing_group_owners}
+
+        actual_owners_to_remove = (
+            len(owner_ids & existing_owner_ids) if owner_ids else 0
+        )
+        actual_group_owners_to_remove = (
+            len(group_owner_ids & existing_group_owner_ids)
+            if group_owner_ids
+            else 0
+        )
+
         remaining = (
-            feature.owners.count()
-            - owners_to_remove
-            + feature.group_owners.count()
-            - group_owners_to_remove
+            len(existing_owners)
+            - actual_owners_to_remove
+            + len(existing_group_owners)
+            - actual_group_owners_to_remove
         )
         if remaining < 1:
             raise serializers.ValidationError(
