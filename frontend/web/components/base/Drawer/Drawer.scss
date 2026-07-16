@@ -11,14 +11,39 @@ dialog.drawer {
   background: transparent;
   color: inherit;
 
+  // Slide in from the right. allow-discrete keeps it in the top layer for exit.
+  transform: translateX(100%);
+  transition:
+    transform 0.2s ease,
+    overlay 0.2s ease allow-discrete,
+    display 0.2s ease allow-discrete;
+
   &::backdrop {
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0);
+    transition:
+      background 0.2s ease,
+      overlay 0.2s ease allow-discrete,
+      display 0.2s ease allow-discrete;
   }
 
   &[open] {
     display: flex;
     align-items: stretch;
     justify-content: flex-end;
+    transform: translateX(0);
+
+    &::backdrop {
+      background: rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  @starting-style {
+    &[open] {
+      transform: translateX(100%);
+    }
+    &[open]::backdrop {
+      background: rgba(0, 0, 0, 0);
+    }
   }
 }
 

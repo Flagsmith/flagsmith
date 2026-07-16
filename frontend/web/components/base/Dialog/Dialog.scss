@@ -11,8 +11,22 @@ dialog.dialog {
   background: transparent;
   color: inherit;
 
+  // Fade + rise on enter/exit. display and overlay are discrete properties, so
+  // allow-discrete keeps the element in the top layer for the exit transition.
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    overlay 0.15s ease allow-discrete,
+    display 0.15s ease allow-discrete;
+
   &::backdrop {
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0);
+    transition:
+      background 0.15s ease,
+      overlay 0.15s ease allow-discrete,
+      display 0.15s ease allow-discrete;
   }
 
   // The dialog element is the flex centrer, so a click on its free space is a
@@ -22,6 +36,23 @@ dialog.dialog {
     align-items: center;
     justify-content: center;
     padding: 1.75rem;
+    opacity: 1;
+    transform: translateY(0);
+
+    &::backdrop {
+      background: rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  // Starting state applied on the first frame after the dialog opens.
+  @starting-style {
+    &[open] {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    &[open]::backdrop {
+      background: rgba(0, 0, 0, 0);
+    }
   }
 }
 
@@ -78,4 +109,11 @@ dialog.dialog {
   gap: 8px;
   padding: 16px 24px;
   border-top: 1px solid var(--color-border-default);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.dialog,
+  dialog.drawer {
+    transition: none;
+  }
 }
