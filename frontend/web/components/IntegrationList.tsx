@@ -327,11 +327,12 @@ const Integration: FC<IntegrationProps> = (props) => {
 
       {activeIntegrations &&
         activeIntegrations.map((integration) => {
-          const healthStatusText = !integration.latest_health
-            ? 'No health data'
-            : integration.latest_health.is_healthy
-            ? 'Healthy'
-            : 'Unhealthy'
+          let healthStatusText = 'No health data'
+          if (integration.latest_health) {
+            healthStatusText = integration.latest_health.is_healthy
+              ? 'Healthy'
+              : 'Unhealthy'
+          }
 
           return (
             <div
