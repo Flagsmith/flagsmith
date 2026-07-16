@@ -51,6 +51,32 @@ Net deletion: the per-root `createRoot`, the `withModal` HOC, and the `<Provider
 - Fully declarative slots (`<Dialog open>`) remain the long-term target; they'd touch call
   sites and are out of scope for this contained step.
 
+## How the industry does this
+
+A survey of modern React practice and established design systems (MUI, Radix/shadcn, Ant,
+Chakra v3, React Aria, Polaris, Carbon, Atlassian) puts this approach in the mainstream:
+
+- **Portal into a configurable container is the norm.** Radix (`Portal container`), MUI
+  (`container`), Ant (`getContainer`), Chakra v3 all expose a per-instance target that defaults
+  to `<body>`. reactstrap's `container` is the same lever; pointing it at `#app` is a standard move.
+- **Our controller is essentially `@ebay/nice-modal-react`.** That library is the reference
+  pattern for an imperative "open from anywhere" API over an in-tree provider (promise-based,
+  addressable by id, ~2KB). If we would rather not maintain our own controller, adopting it is a
+  credible off-the-shelf swap. Trade-off: its `show(id, props)` API differs from our `openModal`,
+  so it is not a drop-in for the untouched-call-sites goal.
+- **Imperative APIs are the minority.** Most systems are declarative-only (`<Dialog open>`);
+  the fully declarative slot approach (`<Dialog open>` rendered in place) is the long-term target
+  but touches every call site — out of scope here.
+- **If reactstrap is ever replaced, use a headless primitive** (Radix / React Aria) rather than
+  hand-rolling focus-trap, scroll-lock, and ARIA.
+- **The 2026+ frontier is native `<dialog>` + top layer** (~96% support; Atlassian is migrating
+  behind a flag). It makes stacking and z-index free, which would retire our manual modal stack.
+
+Sources: [react.dev createPortal](https://react.dev/reference/react-dom/createPortal),
+[nice-modal-react](https://github.com/eBay/nice-modal-react),
+[Radix Dialog](https://www.radix-ui.com/primitives/docs/components/dialog),
+[caniuse dialog](https://caniuse.com/dialog).
+
 ## Effort
 
 Small-to-medium: the base is done here. Remaining is runtime QA across the modal surface
