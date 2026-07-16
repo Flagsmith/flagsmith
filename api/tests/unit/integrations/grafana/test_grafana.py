@@ -72,6 +72,29 @@ def test_grafana_wrapper__track_event__records_health_status(
     assert health_record.status_code == 200
 
 
+@pytest.mark.django_db
+@responses.activate()
+def test_grafana_wrapper__track_event__record_health_raises__does_not_propagate(
+    mocker: MockerFixture,
+    project: Project,
+) -> None:
+    # Given
+    config = GrafanaProjectConfiguration.objects.create(
+        project=project,
+        base_url="https://test.com",
+        api_key="any",
+    )
+    wrapper = GrafanaWrapper(config)
+    responses.add(url="https://test.com/api/annotations", method="POST", status=200)
+    mocker.patch(
+        "integrations.grafana.grafana.record_integration_health",
+        side_effect=Exception("boom"),
+    )
+
+    # When
+    wrapper._track_event({"sample": "event"})  # does not raise
+
+
 def test_grafana_wrapper__generate_event_data__return_expected(
     mocker: MockerFixture,
 ) -> None:

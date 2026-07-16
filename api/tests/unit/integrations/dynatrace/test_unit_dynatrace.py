@@ -182,3 +182,27 @@ def test_dynatrace_track_event__records_health_status(
     # Then
     health_record = IntegrationHealthRecord.objects.get(object_id=config.id)
     assert health_record.status_code == 200
+
+
+@pytest.mark.django_db
+def test_dynatrace_track_event__record_health_raises__does_not_propagate(
+    mocker: MockerFixture,
+    environment: Environment,
+) -> None:
+    # Given
+    config = DynatraceConfiguration.objects.create(
+        environment=environment,
+        api_key="123key",
+        base_url="http://test.com/",
+        entity_selector="type(APPLICATION),entityName(docs)",
+    )
+    dynatrace = DynatraceWrapper(config)
+    mocked_post = mocker.patch("integrations.dynatrace.dynatrace.requests.post")
+    mocked_post.return_value.status_code = 200
+    mocker.patch(
+        "integrations.dynatrace.dynatrace.record_integration_health",
+        side_effect=Exception("boom"),
+    )
+
+    # When
+    dynatrace._track_event({"eventType": "CUSTOM_DEPLOYMENT"})  # does not raise

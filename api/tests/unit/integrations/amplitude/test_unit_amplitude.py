@@ -116,3 +116,25 @@ def test_amplitude_wrapper__identify_user__records_unhealthy_status(
     # Then
     health_record = IntegrationHealthRecord.objects.get(object_id=config.id)
     assert health_record.status_code == 500
+
+
+@pytest.mark.django_db
+@mock.patch("integrations.amplitude.amplitude.record_integration_health")
+@mock.patch("integrations.amplitude.amplitude.requests.post")
+def test_amplitude_wrapper__identify_user__record_health_raises__does_not_propagate(
+    post_mock: mock.Mock,
+    record_integration_health_mock: mock.Mock,
+    environment: Environment,
+) -> None:
+    # Given
+    post_mock.return_value.status_code = 200
+    record_integration_health_mock.side_effect = Exception("boom")
+    config = AmplitudeConfiguration.objects.create(
+        environment=environment, api_key="123key"
+    )
+    amplitude_wrapper = AmplitudeWrapper(config)
+
+    # When
+    amplitude_wrapper._identify_user(
+        {"user_id": "identity-1", "user_properties": {}}
+    )  # does not raise

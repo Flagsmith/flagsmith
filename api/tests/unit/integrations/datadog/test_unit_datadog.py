@@ -184,3 +184,26 @@ def test_datadog_track_event__records_health_status(
     # Then
     health_record = IntegrationHealthRecord.objects.get(object_id=config.id)
     assert health_record.status_code == 200
+
+
+@pytest.mark.django_db
+def test_datadog_track_event__record_health_raises__does_not_propagate(
+    mocker: MockerFixture,
+    project: Project,
+) -> None:
+    # Given
+    config = DataDogConfiguration.objects.create(
+        project=project,
+        api_key="123key",
+        base_url="https://test.com",
+    )
+    mock_session = mocker.MagicMock()
+    mock_session.post.return_value.status_code = 200
+    datadog = DataDogWrapper(config, session=mock_session)
+    mocker.patch(
+        "integrations.datadog.datadog.record_integration_health",
+        side_effect=Exception("boom"),
+    )
+
+    # When
+    datadog._track_event({"foo": "bar"})  # does not raise

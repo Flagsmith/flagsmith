@@ -122,3 +122,22 @@ def test_heap_wrapper__identify_user__records_health_status(
     # Then
     health_record = IntegrationHealthRecord.objects.get(object_id=config.id)
     assert health_record.status_code == 200
+
+
+@pytest.mark.django_db
+def test_heap_wrapper__identify_user__record_health_raises__does_not_propagate(
+    mocker: "MockerFixture",
+    environment: Environment,
+) -> None:
+    # Given
+    config = HeapConfiguration.objects.create(environment=environment, api_key="123key")
+    heap_wrapper = HeapWrapper(config)
+    mocked_post = mocker.patch("integrations.heap.heap.requests.post")
+    mocked_post.return_value.status_code = 200
+    mocker.patch(
+        "integrations.heap.heap.record_integration_health",
+        side_effect=Exception("boom"),
+    )
+
+    # When
+    heap_wrapper._identify_user({"identity": "identity-1"})  # does not raise
