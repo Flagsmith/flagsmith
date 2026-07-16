@@ -1131,7 +1131,6 @@ def test_get__clickhouse_errors__returns_200_without_stats(
 
 def test_post__clickhouse_minimal_config__applies_defaults(
     admin_client: APIClient,
-    stable_secret_key: None,
     enable_features: EnableFeaturesFixture,
     environment: Environment,
     mocker: MockerFixture,
@@ -1167,7 +1166,6 @@ def test_post__clickhouse_minimal_config__applies_defaults(
 
 def test_post__clickhouse_missing_host__returns_400(
     admin_client: APIClient,
-    stable_secret_key: None,
     enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
@@ -1192,7 +1190,6 @@ def test_post__clickhouse_missing_host__returns_400(
 @pytest.mark.parametrize("port", [0, 65536, "not-a-port", True])
 def test_post__clickhouse_invalid_port__returns_400(
     admin_client: APIClient,
-    stable_secret_key: None,
     enable_features: EnableFeaturesFixture,
     port: object,
     warehouse_connection_url: str,
@@ -1218,7 +1215,6 @@ def test_post__clickhouse_invalid_port__returns_400(
 
 def test_post__clickhouse_missing_password__returns_400(
     admin_client: APIClient,
-    stable_secret_key: None,
     enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
@@ -1240,32 +1236,6 @@ def test_post__clickhouse_missing_password__returns_400(
     assert "password" in response.json()["credentials"]
 
 
-def test_post__clickhouse_ephemeral_secret_key__returns_400(
-    admin_client: APIClient,
-    enable_features: EnableFeaturesFixture,
-    settings: SettingsWrapper,
-    warehouse_connection_url: str,
-) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-    settings.SECRET_KEY_IS_EPHEMERAL = True
-
-    # When
-    response = admin_client.post(
-        warehouse_connection_url,
-        data={
-            "warehouse_type": "clickhouse",
-            "config": {"host": "ch.example.com"},
-            "credentials": {"password": "hunter2"},
-        },
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "credentials" in response.json()
-
-
 @pytest.mark.parametrize(
     "warehouse_type, config",
     [
@@ -1276,7 +1246,6 @@ def test_post__clickhouse_ephemeral_secret_key__returns_400(
 )
 def test_post__non_clickhouse_with_credentials__returns_400(
     admin_client: APIClient,
-    stable_secret_key: None,
     enable_features: EnableFeaturesFixture,
     warehouse_type: str,
     config: dict[str, str] | None,
@@ -1305,7 +1274,6 @@ def test_post__non_clickhouse_with_credentials__returns_400(
 
 def test_post__clickhouse_no_name__auto_generates_name(
     admin_client: APIClient,
-    stable_secret_key: None,
     enable_features: EnableFeaturesFixture,
     environment: Environment,
     mocker: MockerFixture,
@@ -1333,7 +1301,6 @@ def test_post__clickhouse_no_name__auto_generates_name(
 
 def test_post__clickhouse_non_dict_credentials__returns_400(
     admin_client: APIClient,
-    stable_secret_key: None,
     enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
@@ -1358,7 +1325,6 @@ def test_post__clickhouse_non_dict_credentials__returns_400(
 
 def test_post__clickhouse_non_dict_config__returns_400(
     admin_client: APIClient,
-    stable_secret_key: None,
     enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
@@ -1383,7 +1349,6 @@ def test_post__clickhouse_non_dict_config__returns_400(
 
 def test_patch__flagsmith_to_clickhouse_without_credentials__returns_400(
     admin_client: APIClient,
-    stable_secret_key: None,
     enable_features: EnableFeaturesFixture,
     environment: Environment,
     warehouse_connection: WarehouseConnection,
@@ -1412,7 +1377,6 @@ def test_patch__flagsmith_to_clickhouse_without_credentials__returns_400(
 
 def test_post__flagsmith_empty_credentials__returns_400(
     admin_client: APIClient,
-    stable_secret_key: None,
     enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
@@ -1438,7 +1402,6 @@ def test_post__flagsmith_empty_credentials__returns_400(
 
 def test_post__clickhouse_reachable__returns_201_connected(
     admin_client: APIClient,
-    stable_secret_key: None,
     enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
     warehouse_connection_url: str,
@@ -1468,7 +1431,6 @@ def test_post__clickhouse_reachable__returns_201_connected(
 
 def test_post__clickhouse_unreachable__returns_201_errored(
     admin_client: APIClient,
-    stable_secret_key: None,
     enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
     warehouse_connection_url: str,
@@ -1496,7 +1458,6 @@ def test_post__clickhouse_unreachable__returns_201_errored(
 
 def test_post__clickhouse__password_stored_encrypted(
     admin_client: APIClient,
-    stable_secret_key: None,
     enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
     warehouse_connection_url: str,

@@ -56,10 +56,7 @@ ENABLE_TELEMETRY = env.bool("ENABLE_TELEMETRY", default=True)
 # Enables gzip compression
 ENABLE_GZIP_COMPRESSION = env.bool("ENABLE_GZIP_COMPRESSION", default=False)
 
-SECRET_KEY = env.str("DJANGO_SECRET_KEY", default="")
-SECRET_KEY_IS_EPHEMERAL = not SECRET_KEY
-if SECRET_KEY_IS_EPHEMERAL:
-    SECRET_KEY = get_random_secret_key()
+SECRET_KEY = env("DJANGO_SECRET_KEY", default=get_random_secret_key())
 
 HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
 

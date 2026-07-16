@@ -1,6 +1,5 @@
 from typing import Any, Callable
 
-from django.conf import settings
 from rest_framework import serializers
 
 from experimentation.models import WarehouseConnection, WarehouseType
@@ -83,15 +82,6 @@ def validate_credentials(
         if instance is not None and instance.credentials is not None:
             attrs["credentials"] = None
         return
-    if settings.SECRET_KEY_IS_EPHEMERAL:
-        raise serializers.ValidationError(
-            {
-                "credentials": (
-                    "Storing credentials requires the DJANGO_SECRET_KEY "
-                    "environment variable to be set."
-                )
-            }
-        )
     if (
         credentials is None
         and instance is not None

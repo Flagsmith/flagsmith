@@ -1,6 +1,5 @@
 import pytest
 from django.urls import reverse
-from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from core.dataclasses import AuthorData
@@ -95,15 +94,8 @@ def experiment_with_rollout(
 
 
 @pytest.fixture()
-def stable_secret_key(settings: SettingsWrapper) -> None:
-    settings.SECRET_KEY = "test-django-secret-key"
-    settings.SECRET_KEY_IS_EPHEMERAL = False
-
-
-@pytest.fixture()
 def clickhouse_connection(
     environment: Environment,
-    stable_secret_key: None,
 ) -> WarehouseConnection:
     connection: WarehouseConnection = WarehouseConnection.objects.create(
         environment=environment,

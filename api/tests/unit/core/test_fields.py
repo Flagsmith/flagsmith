@@ -5,14 +5,7 @@ from pytest_structlog import StructuredLogCapture
 from core.fields import EncryptedJSONField
 
 
-@pytest.fixture()
-def stable_secret_key(settings: SettingsWrapper) -> None:
-    settings.SECRET_KEY = "test-django-secret-key"
-
-
-def test_get_prep_value__json_value__returns_ciphertext_that_roundtrips(
-    stable_secret_key: None,
-) -> None:
+def test_get_prep_value__json_value__returns_ciphertext_that_roundtrips() -> None:
     # Given
     field = EncryptedJSONField()
     value = {"password": "hunter2"}
@@ -26,9 +19,7 @@ def test_get_prep_value__json_value__returns_ciphertext_that_roundtrips(
     assert field.from_db_value(stored, None, None) == value
 
 
-def test_get_prep_value__none__returns_none(
-    stable_secret_key: None,
-) -> None:
+def test_get_prep_value__none__returns_none() -> None:
     # Given
     field = EncryptedJSONField()
 
@@ -36,9 +27,7 @@ def test_get_prep_value__none__returns_none(
     assert field.get_prep_value(None) is None
 
 
-def test_from_db_value__none__returns_none(
-    stable_secret_key: None,
-) -> None:
+def test_from_db_value__none__returns_none() -> None:
     # Given
     field = EncryptedJSONField()
 
@@ -67,9 +56,7 @@ def test_from_db_value__secret_key_changed__returns_none_and_logs(
     } in [{"level": e["level"], "event": e["event"]} for e in log.events]
 
 
-def test_get_lookup__non_isnull__raises_not_implemented(
-    stable_secret_key: None,
-) -> None:
+def test_get_lookup__non_isnull__raises_not_implemented() -> None:
     # Given
     field = EncryptedJSONField()
 
