@@ -135,6 +135,45 @@ against a running app.
 - [ ] `.modal-open` body effects: scroll lock, support-chat hidden.
 - [ ] E2E modal-heavy flows + Chromatic.
 
+## Eliminating the imperative API (declarative components)
+
+The imperative `openModal`/`openModal2`/`openDrawer`/`openConfirm` globals still exist as a
+compatibility facade over the DS components. They are not the legacy *implementation* (that is
+gone) — they are the public API the ~177 call sites use. The modern end-state is to drop them and
+use the components directly. Several places already do (`IntegrationSelect`, `CenteredModal`,
+`useFormNotSavedModal`, every Storybook story), and `ProjectManageWidget` is a worked example of
+converting an imperative site:
+
+```tsx
+// before — imperative global
+const create = () => openDrawer('Create Project', <CreateProjectModal history={h} />, 'p-0')
+
+// after — declarative component (ProjectManageWidget + CreateProject)
+const [open, setOpen] = useState(false)
+// trigger: onClick={() => setOpen(true)}
+{open && (
+  <Drawer open onClose={() => setOpen(false)} className='p-0'>
+    <Drawer.Header>Create Project</Drawer.Header>
+    <Drawer.Body>
+      <CreateProjectModal history={h} onClose={() => setOpen(false)} />
+    </Drawer.Body>
+  </Drawer>
+)}
+```
+
+Per conversion: the trigger owns `open` state and renders the component; the content component
+takes an `onClose` prop instead of calling the global `closeModal()`. `{open && ...}` matches the
+old `unmountOnClose` (content mounts on open).
+
+Path to remove the imperative API entirely:
+1. New code: declarative only (`<Dialog>`/`<Drawer>`); lint-ban new `openModal*`.
+2. Migrate call sites as they are touched (trigger → local state; content `closeModal()` → `onClose`).
+3. When the last global call is gone, delete `openModal`/`openModal2`/`openDrawer`/`openConfirm`,
+   the controller's `legacyGlobal` wiring, the `global.d.ts` entries, and the eslint globals.
+
+This is the incremental long tail, not a mechanical sweep (each content component's close changes).
+Its payoff is idiomatic React + type-safety, not correctness — so migrate-as-you-touch, not big-bang.
+
 ## Effort
 
 Small-to-medium: the base is done here. Remaining is runtime QA across the modal surface
