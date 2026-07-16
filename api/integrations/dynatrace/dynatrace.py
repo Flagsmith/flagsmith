@@ -24,7 +24,7 @@ DEFAULT_DEPLOYMENT_NAME = "Deployment"
 class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
     def __init__(self, config: DynatraceConfiguration):
         self.config = config
-        self.base_url = config.base_url.rstrip("/") + "/"
+        self.base_url = (config.base_url or "").rstrip("/") + "/"
         self.api_key = config.api_key
         self.entity_selector = config.entity_selector
         self.url = f"{self.base_url}{EVENTS_API_URI}?api-token={self.api_key}"
