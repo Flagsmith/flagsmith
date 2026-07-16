@@ -60,22 +60,6 @@ jobs:
           make integrate-private-tests
           rm -rf ${HOME}/.git-credentials
 
-      - name: Check MCP enterprise tool catalogue is up to date
-        env:
-          DOTENV_OVERRIDE_FILE: .env-ci
-        run: |
-          uv run python manage.py generate_mcp_tool_catalogue \
-            --exclude ../docs/docs/integrating-with-flagsmith/_mcp-tool-catalogue.md \
-            > ../docs/docs/integrating-with-flagsmith/_mcp-tool-catalogue-enterprise.md
-          git diff --exit-code ../docs/docs/integrating-with-flagsmith/_mcp-tool-catalogue-enterprise.md
-
-      - name: Check full OpenAPI schema is up to date
-        env:
-          DOTENV_OVERRIDE_FILE: .env-ci
-        run: |
-          make generate-full-openapi
-          git diff --exit-code ../openapi.yaml
-
       - name: Run Tests
         env:
           DOTENV_OVERRIDE_FILE: .env-ci

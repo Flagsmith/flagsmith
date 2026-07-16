@@ -1,0 +1,78 @@
+name: API Documentation Artefacts Auto-Update
+
+permissions:
+  contents: read # For actions/checkout
+  id-token: write # For CodeArtifact OIDC
+
+on:
+  push:
+    paths:
+      - api/**
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: api
+
+env:
+  DOTENV_OVERRIDE_FILE: .env-ci
+
+jobs:
+  fix-docs-artefacts:
+    runs-on: depot-ubuntu-latest
+    name: Fix Documentation Artefacts
+
+    steps:
+      - name: Generate GitHub App token with push access
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.FLAGSMITH_ENGINEERING_GH_APP_ID }}
+          private-key: ${{ secrets.FLAGSMITH_ENGINEERING_GH_APP_PRIVATE_KEY }}
+
+      - name: Cloning repo
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          token: ${{ steps.app-token.outputs.token }}
+
+      - uses: ./.github/actions/install-uv
+        with:
+          working-directory: api
+
+      - name: Install SAML Dependencies
+        run: sudo apt-get install -y xmlsec1
+
+      - name: Generate public documentation artefacts
+        run: |
+          make install-packages opts='--extra dev'
+          make generate-docs
+
+      - name: Authenticate with CodeArtifact
+        uses: ./.github/actions/codeartifact-login
+
+      - name: Generate private documentation artefacts
+        run: |
+          make install-packages opts='--extra dev --extra private'
+          make generate-full-openapi
+          make generate-mcp-openapi
+          uv run python manage.py generate_mcp_tool_catalogue \
+            --exclude ../docs/docs/integrating-with-flagsmith/_mcp-tool-catalogue.md \
+            > ../docs/docs/integrating-with-flagsmith/_mcp-tool-catalogue-enterprise.md
+
+      - name: Commit and push fixes
+        run: |
+          git add --all
+          if git diff --cached --quiet; then
+            echo "Documentation artefacts are up to date."
+            exit 0
+          fi
+          git config user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+          git config user.email '${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+          git commit --message 'chore: Update documentation artefacts'
+          git push || { git pull --rebase && git push; }
