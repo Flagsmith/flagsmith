@@ -318,8 +318,7 @@ def test_get__flagsmith_cli_requests_management_api__returns_application_info(
     pkce_pair: tuple[str, str],
     db: None,
 ) -> None:
-    # Given — the well-known CLI application created by data migration,
-    # with an RFC 8252 loopback redirect on an ephemeral port
+    # Given
     application = Application.objects.get(client_id=FLAGSMITH_CLI_CLIENT_ID)
     _verifier, challenge = pkce_pair
     url = reverse(AUTHORIZE_URL)
