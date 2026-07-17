@@ -1,5 +1,6 @@
 import React from 'react'
 import hljs from 'highlight.js'
+import Button from './base/forms/Button'
 
 function escapeHtml(unsafe) {
   if (!unsafe || !unsafe.__html) return unsafe
@@ -103,12 +104,20 @@ class Highlight extends React.Component {
     this.props.onBlur?.()
   }
 
+  // The value to render before escaping: the live edit while focused, the
+  // current value when there's content, otherwise a disabled/empty placeholder.
+  getRawHtml = () => {
+    if (this.state.focus) return this.state.value
+    if (this.props.children) return { ...this.state.value }
+    return this.props.disabled ? defaultDisabledValue : defaultValue
+  }
+
   render() {
     const {
       children,
       className,
-      disabled,
       element: Element,
+      embedded,
       innerHTML,
     } = this.props
     const props = { className, ref: this.setEl }
@@ -125,23 +134,8 @@ class Highlight extends React.Component {
       return <Element {...props}>{children}</Element>
     }
 
-    const html = this.props.preventEscape
-      ? this.state.focus
-        ? this.state.value
-        : this.props.children
-        ? { ...this.state.value }
-        : disabled
-        ? defaultDisabledValue
-        : defaultValue
-      : escapeHtml(
-          this.state.focus
-            ? this.state.value
-            : this.props.children
-            ? { ...this.state.value }
-            : disabled
-            ? defaultDisabledValue
-            : defaultValue,
-        )
+    const raw = this.getRawHtml()
+    const html = this.props.preventEscape ? raw : escapeHtml(raw)
     return (
       <div className={this.state.expandable ? 'expandable' : ''}>
         <pre
@@ -167,7 +161,7 @@ class Highlight extends React.Component {
             onBlur={this.onBlur}
             onFocus={this.onFocus}
             onInput={this._handleInput}
-            className={`${className} ${
+            className={`${className}${embedded ? ' hljs--embedded' : ''} ${
               !this.state.value || !this.state.value.__html ? 'empty' : ''
             }`}
             dangerouslySetInnerHTML={html}
