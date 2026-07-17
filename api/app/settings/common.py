@@ -806,6 +806,14 @@ REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
 # Redis Cluster URL used to communicate with the event ingestion server.
 INGESTION_REDIS_URL = env.str("INGESTION_REDIS_URL", default="")
 
+# Name prefix for per-organisation experiment events S3 buckets.
+INGESTION_EVENTS_BUCKET_PREFIX = env.str("INGESTION_EVENTS_BUCKET_PREFIX", default="")
+
+# ARN of the IAM role Firehose assumes to deliver experiment events to S3.
+INGESTION_FIREHOSE_DELIVERY_ROLE_ARN = env.str(
+    "INGESTION_FIREHOSE_DELIVERY_ROLE_ARN", default=""
+)
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",

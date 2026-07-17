@@ -80,3 +80,9 @@ class MetricResult:
 class ResultsSummary:
     srm_p_value: float | None
     metrics: list[MetricResult]
+
+
+@dataclass(frozen=True)
+class IngestionInfrastructure:
+    bucket_name: str
+    stream_name: str
