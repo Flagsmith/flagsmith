@@ -217,11 +217,17 @@
   }
 
   .hljs-section,
-  .hljs-name,
-  .hljs-selector-tag,
   .hljs-deletion,
   .hljs-subst {
     color: var(--color-code-name);
+  }
+
+  // Markup tag names are deliberately not red (red reads as an error or a
+  // deletion). The < > punctuation (.hljs-tag) stays base text via the
+  // catch-all above, so tags render like an IDE: grey brackets, blue name.
+  .hljs-name,
+  .hljs-selector-tag {
+    color: var(--color-code-title);
   }
 
   .hljs-literal {
