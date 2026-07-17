@@ -5,15 +5,14 @@ permissions:
   id-token: write # For CodeArtifact OIDC
 
 on:
-  push:
+  pull_request:
     paths:
       - api/**
-    branches:
-      - main
+    types: [opened, synchronize, reopened, ready_for_review]
 
 concurrency:
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 defaults:
   run:
@@ -38,7 +37,7 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v7
         with:
-          ref: main
+          ref: ${{ github.event.pull_request.head.ref }}
           token: ${{ steps.app-token.outputs.token }}
 
       - uses: ./.github/actions/install-uv
@@ -57,13 +56,7 @@ jobs:
         uses: ./.github/actions/codeartifact-login
 
       - name: Generate private documentation artefacts
-        run: |
-          make install-packages opts='--extra dev --extra private'
-          make generate-full-openapi
-          make generate-mcp-openapi
-          uv run python manage.py generate_mcp_tool_catalogue \
-            --exclude ../docs/docs/integrating-with-flagsmith/_mcp-tool-catalogue.md \
-            > ../docs/docs/integrating-with-flagsmith/_mcp-tool-catalogue-enterprise.md
+        run: make generate-docs-private
 
       - name: Commit and push fixes
         run: |
