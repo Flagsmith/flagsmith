@@ -196,7 +196,8 @@ generate-docs: generate-flagsmith-sdk-openapi generate-mcp-openapi
 .PHONY: generate-docs-private
 generate-docs-private:
 	$(MAKE) install-packages opts="--extra dev --extra private"
-	$(MAKE) generate-full-openapi generate-mcp-openapi
+	$(MAKE) generate-full-openapi
+	$(MAKE) generate-mcp-openapi
 	uv run python manage.py generate_mcp_tool_catalogue \
 	  --exclude ../docs/docs/integrating-with-flagsmith/_mcp-tool-catalogue.md \
 	  > ../docs/docs/integrating-with-flagsmith/_mcp-tool-catalogue-enterprise.md
