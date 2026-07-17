@@ -98,6 +98,7 @@ def test_get_clickhouse_client__dsn_timeouts__are_preserved(
         database="db",
         connect_timeout=1,
         send_receive_timeout=2,
+        client_name=settings.CLICKHOUSE_CONNECTION_CLIENT_NAME,
     )
     services._get_clickhouse_client.cache_clear()
 
