@@ -117,6 +117,7 @@ def _get_clickhouse_client() -> Client:
     host, kwargs = parse_url(settings.EXPERIMENTATION_CLICKHOUSE_URL)
     kwargs.setdefault("connect_timeout", CLICKHOUSE_CONNECT_TIMEOUT_SECONDS)
     kwargs.setdefault("send_receive_timeout", CLICKHOUSE_QUERY_TIMEOUT_SECONDS)
+    kwargs.setdefault("client_name", settings.CLICKHOUSE_CONNECTION_CLIENT_NAME)
     return Client(host, **kwargs)
 
 

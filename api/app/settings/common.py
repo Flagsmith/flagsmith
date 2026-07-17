@@ -806,9 +806,6 @@ REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
 # Redis Cluster URL used to communicate with the event ingestion server.
 INGESTION_REDIS_URL = env.str("INGESTION_REDIS_URL", default="")
 
-# DSN for the ClickHouse instance holding ingested experimentation events.
-EXPERIMENTATION_CLICKHOUSE_URL = env.str("EXPERIMENTATION_CLICKHOUSE_URL", default=None)
-
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -1501,6 +1498,13 @@ CLICKHOUSE_SECURE = env.bool("CLICKHOUSE_SECURE", default=None)
 
 CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
 
+CLICKHOUSE_CONNECTION_CLIENT_NAME = "flagsmith-core-api"
+
+# DSN for the ClickHouse instance holding ingested experimentation events.
+# TODO: consolidate connection management across the two CH use cases
+#  https://github.com/Flagsmith/flagsmith/issues/8033
+EXPERIMENTATION_CLICKHOUSE_URL = env.str("EXPERIMENTATION_CLICKHOUSE_URL", default=None)
+
 SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS = env.int(
     "SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS", default=6
 )
@@ -1543,7 +1547,7 @@ if CLICKHOUSE_ENABLED:
                 # from breaking migrations with Error 517.
                 "alter_sync": 2,
             },
-            "client_name": "flagsmith-core-api",
+            "client_name": CLICKHOUSE_CONNECTION_CLIENT_NAME,
         },
     }
     DATABASES["clickhouse"] = _clickhouse_db  # type: ignore[assignment]
