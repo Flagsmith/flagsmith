@@ -52,6 +52,16 @@ const yaml = `flags:
     enabled: true
     value: 42`
 
+// Mirrors the React SDK snippet in code-help: markup tags inside JavaScript.
+const jsx = `export function HomePage() {
+  const flags = useFlags(['banner_size'])
+  return (
+    <Row className="banner">
+      <Flag name="banner_size" size={flags.banner_size.value} />
+    </Row>
+  )
+}`
+
 export const JavaScript: Story = {
   args: { children: js, className: 'javascript', forceExpanded: true },
 }
@@ -66,6 +76,10 @@ export const Json: Story = {
 
 export const Yaml: Story = {
   args: { children: yaml, className: 'yaml', forceExpanded: true },
+}
+
+export const Jsx: Story = {
+  args: { children: jsx, className: 'javascript', forceExpanded: true },
 }
 
 // Embedded variant: transparent, for code whose container owns the surface.
