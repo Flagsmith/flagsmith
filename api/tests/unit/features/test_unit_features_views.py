@@ -5354,26 +5354,17 @@ def test_remove_owners__enforce_owners_with_nonexistent_user_ids__still_blocks_w
     feature: Feature,
     admin_user: FFAdminUser,
 ) -> None:
-    # Given — feature has only one owner, enforce_feature_owners is on
     project.enforce_feature_owners = True
     project.save()
-    # Create a real user who is NOT an owner of this feature
     non_owner = FFAdminUser.objects.create_user(email="nonowner@example.com")  # type: ignore[no-untyped-call]
     feature.owners.add(admin_user)
 
-    url = reverse(
-        "api-v1:projects:project-features-remove-owners",
-        args=[project.id, feature.id],
-    )
-    # Request removes the real owner AND a user who is not an owner
-    data = {"user_ids": [admin_user.id, non_owner.id]}
-
-    # When
     response = admin_client_new.post(
-        url, data=json.dumps(data), content_type="application/json"
+        f"/api/v1/projects/{project.id}/features/{feature.id}/remove-owners/",
+        data={"user_ids": [admin_user.id, non_owner.id]},
+        format="json",
     )
 
-    # Then — should still block because the real owner would be removed
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     feature.refresh_from_db()
     assert admin_user in feature.owners.all()
@@ -5386,32 +5377,23 @@ def test_remove_group_owners__enforce_owners_with_nonexistent_group_ids__allows_
     admin_user: FFAdminUser,
     organisation: Organisation,
 ) -> None:
-    # Given — feature has one user owner and one group owner
     project.enforce_feature_owners = True
     project.save()
     group = UserPermissionGroup.objects.create(
         name="Test Group", organisation=organisation
     )
-    # Create a real group that is NOT an owner of this feature
     non_owner_group = UserPermissionGroup.objects.create(
         name="Non Owner Group", organisation=organisation
     )
     feature.owners.add(admin_user)
     feature.group_owners.add(group)
 
-    url = reverse(
-        "api-v1:projects:project-features-remove-group-owners",
-        args=[project.id, feature.id],
-    )
-    # Request removes the real group and a group that is not an owner
-    data = {"group_ids": [group.id, non_owner_group.id]}
-
-    # When
     response = admin_client_new.post(
-        url, data=json.dumps(data), content_type="application/json"
+        f"/api/v1/projects/{project.id}/features/{feature.id}/remove-group-owners/",
+        data={"group_ids": [group.id, non_owner_group.id]},
+        format="json",
     )
 
-    # Then — should allow because admin_user remains as owner
     assert response.status_code == status.HTTP_200_OK
     feature.refresh_from_db()
     assert group not in feature.group_owners.all()

@@ -487,26 +487,15 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         if not feature.project.enforce_feature_owners:
             return
 
-        existing_owners = list(feature.owners.all())
-        existing_group_owners = list(feature.group_owners.all())
-
-        existing_owner_ids = {o.id for o in existing_owners}
-        existing_group_owner_ids = {g.id for g in existing_group_owners}
-
-        actual_owners_to_remove = (
-            len(owner_ids & existing_owner_ids) if owner_ids else 0
-        )
-        actual_group_owners_to_remove = (
-            len(group_owner_ids & existing_group_owner_ids) if group_owner_ids else 0
+        existing_owner_ids = set(feature.owners.values_list("id", flat=True))
+        existing_group_owner_ids = set(
+            feature.group_owners.values_list("id", flat=True)
         )
 
-        remaining = (
-            len(existing_owners)
-            - actual_owners_to_remove
-            + len(existing_group_owners)
-            - actual_group_owners_to_remove
-        )
-        if remaining < 1:
+        if not (
+            (existing_owner_ids - owner_ids)
+            or (existing_group_owner_ids - group_owner_ids)
+        ):
             raise serializers.ValidationError(
                 "This project requires at least one owner or group owner per feature."
             )
