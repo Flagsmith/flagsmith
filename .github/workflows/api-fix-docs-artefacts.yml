@@ -1,9 +1,5 @@
 name: API Documentation Artefacts Auto-Update
 
-permissions:
-  contents: read # For actions/checkout
-  id-token: write # For CodeArtifact OIDC
-
 on:
   pull_request:
     paths:
@@ -25,6 +21,9 @@ jobs:
   fix-docs-artefacts:
     runs-on: depot-ubuntu-latest
     name: Fix Documentation Artefacts
+    permissions:
+      contents: read # For actions/checkout
+      id-token: write # For CodeArtifact OIDC
 
     steps:
       - name: Generate GitHub App token with push access
