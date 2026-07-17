@@ -11,16 +11,16 @@ export function HomePage() {
   const ${FEATURE_NAME} = flags.${FEATURE_NAME}.enabled
   const ${FEATURE_NAME_ALT} = flags.${FEATURE_NAME_ALT}.value
   return (
-    &lt;>
+    <>
       {\`${FEATURE_NAME}: \${${FEATURE_NAME}}\`}
       {\`${FEATURE_NAME_ALT}: \${${FEATURE_NAME_ALT}}\`}
-    &lt;/>
+    </>
   );
 }
 
 export default function App() {
   return (
-    &lt;FlagsmithProvider
+    <FlagsmithProvider
       options={{
         environmentID: '${envId}',${
   Constants.isCustomFlagsmithUrl()
@@ -28,8 +28,8 @@ export default function App() {
     : ''
 }
       }}
-      flagsmith={${LIB_NAME}}&gt;
-      &lt;HomePage /&gt;
-    &lt;/FlagsmithProvider&gt;
+      flagsmith={${LIB_NAME}}>
+      <HomePage />
+    </FlagsmithProvider>
   );
 }`
