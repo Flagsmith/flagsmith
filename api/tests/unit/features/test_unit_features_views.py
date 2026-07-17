@@ -5354,17 +5354,20 @@ def test_remove_owners__enforce_owners_with_nonexistent_user_ids__still_blocks_w
     feature: Feature,
     admin_user: FFAdminUser,
 ) -> None:
+    # Given
     project.enforce_feature_owners = True
     project.save()
     non_owner = FFAdminUser.objects.create_user(email="nonowner@example.com")  # type: ignore[no-untyped-call]
     feature.owners.add(admin_user)
 
+    # When
     response = admin_client_new.post(
         f"/api/v1/projects/{project.id}/features/{feature.id}/remove-owners/",
         data={"user_ids": [admin_user.id, non_owner.id]},
         format="json",
     )
 
+    # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     feature.refresh_from_db()
     assert admin_user in feature.owners.all()
@@ -5377,6 +5380,7 @@ def test_remove_group_owners__enforce_owners_with_nonexistent_group_ids__allows_
     admin_user: FFAdminUser,
     organisation: Organisation,
 ) -> None:
+    # Given
     project.enforce_feature_owners = True
     project.save()
     group = UserPermissionGroup.objects.create(
@@ -5388,12 +5392,14 @@ def test_remove_group_owners__enforce_owners_with_nonexistent_group_ids__allows_
     feature.owners.add(admin_user)
     feature.group_owners.add(group)
 
+    # When
     response = admin_client_new.post(
         f"/api/v1/projects/{project.id}/features/{feature.id}/remove-group-owners/",
         data={"group_ids": [group.id, non_owner_group.id]},
         format="json",
     )
 
+    # Then
     assert response.status_code == status.HTTP_200_OK
     feature.refresh_from_db()
     assert group not in feature.group_owners.all()
