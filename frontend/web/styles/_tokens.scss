@@ -114,6 +114,17 @@
   --color-text-tertiary: var(--slate-300);
   --color-text-warning: var(--orange-500);
 
+  // Code
+  --color-code-builtin: var(--gold-700);
+  --color-code-comment: var(--slate-300);
+  --color-code-keyword: var(--purple-600);
+  --color-code-literal: var(--blue-600);
+  --color-code-name: var(--red-500);
+  --color-code-string: var(--green-500);
+  --color-code-text: var(--slate-700);
+  --color-code-title: var(--blue-500);
+  --color-code-variable: var(--orange-700);
+
   // Border
   --color-border-action: var(--purple-600);
   --color-border-danger: var(--red-500);
@@ -201,6 +212,15 @@
   --color-text-disabled: oklch(from var(--slate-0) l c h / 0.32);
   --color-text-secondary: var(--slate-300);
   --color-text-tertiary: oklch(from var(--slate-0) l c h / 0.48);
+  --color-code-builtin: var(--gold-400);
+  --color-code-comment: var(--slate-500);
+  --color-code-keyword: var(--purple-400);
+  --color-code-literal: var(--blue-400);
+  --color-code-name: var(--red-400);
+  --color-code-string: var(--green-400);
+  --color-code-text: var(--slate-300);
+  --color-code-title: var(--blue-300);
+  --color-code-variable: var(--orange-400);
   --color-border-action: var(--purple-400);
   --color-border-default: oklch(from var(--slate-0) l c h / 0.16);
   --color-border-disabled: oklch(from var(--slate-0) l c h / 0.08);
