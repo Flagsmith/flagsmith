@@ -89,12 +89,13 @@ Attributes:
  - `environment.id`
  - `exc_info`
  - `experiment.id`
+ - `feature.id`
  - `organisation.id`
 
 ### `experimentation.results.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:135`
+ - `api/experimentation/tasks.py:136`
 
 Attributes:
  - `environment.id`

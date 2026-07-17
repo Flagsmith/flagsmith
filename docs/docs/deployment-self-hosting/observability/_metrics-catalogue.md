@@ -90,7 +90,7 @@ Labels:
 
 Histogram.
 
-Duration of a single segment membership page read.
+Duration of one segment membership page read.
 
 Labels:
 

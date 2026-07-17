@@ -3118,7 +3118,7 @@ paths:
         - mcp
     put:
       operationId: update_experiment
-      description: (Beta) Updates an experiment's name or hypothesis.
+      description: (Beta) Updates an experiment's name or its hypothesis.
       parameters:
         - name: environment_api_key
           in: path
@@ -8425,7 +8425,7 @@ paths:
     get:
       operationId: sdk_v1_flags
       description: |-
-        Retrieve the flags for an environment.
+        Retrieve the feature flags for an environment.
 
         ---
         *Note*: when providing the `feature` query argument, this endpoint will
@@ -8513,7 +8513,7 @@ paths:
     get:
       operationId: sdk_v1_flags_2
       description: |-
-        Retrieve the flags for an environment.
+        Retrieve the feature flags for an environment.
 
         ---
         *Note*: when providing the `feature` query argument, this endpoint will
