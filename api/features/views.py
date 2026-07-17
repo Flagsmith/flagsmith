@@ -487,10 +487,11 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         if not feature.project.enforce_feature_owners:
             return
 
-        existing_owner_ids = set(feature.owners.values_list("id", flat=True))
-        existing_group_owner_ids = set(
-            feature.group_owners.values_list("id", flat=True)
-        )
+        existing_owners = feature.owners.all()
+        existing_group_owners = feature.group_owners.all()
+
+        existing_owner_ids = {owner.id for owner in existing_owners}
+        existing_group_owner_ids = {group.id for group in existing_group_owners}
 
         if not (
             (existing_owner_ids - owner_ids)
