@@ -349,9 +349,10 @@ code[contenteditable='false'].hljs {
   background: transparent;
   border: 0;
   border-radius: 0;
-  // Reserve the scrollbar gutter so hover doesn't shift layout; !important
-  // beats customScrollDark's display:none on non-editable code.
-  overflow-x: scroll;
+  // Scroll only when the code overflows. When it does, the webkit rule below
+  // forces the bar visible over customScrollDark (which display:none-s it on
+  // hover), so a long snippet's bar doesn't flicker.
+  overflow-x: auto;
   overflow-y: hidden;
 
   &::-webkit-scrollbar,
