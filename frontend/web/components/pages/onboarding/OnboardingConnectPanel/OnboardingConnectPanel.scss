@@ -32,67 +32,11 @@
     }
   }
 
-  // Code cards - theme-adaptive via semantic tokens (light editor in light mode,
-  // dark in dark mode). Surface, base text and every syntax colour map to
-  // semantic tokens that flip with the theme, so there's no hardcoded hex and no
-  // per-theme override. TODO(#6606): lift this palette into the shared `.hljs`
-  // theme so all code blocks app-wide adapt the same way.
+  // The card owns the surface + rounding; the code block opts into the shared
+  // embedded modifier (Highlight's `embedded` prop) for its transparent variant.
   &__codecard {
     border-radius: 10px;
     overflow: hidden;
-
-    .hljs {
-      // Inherit the card surface; base text adapts with the theme.
-      background: transparent;
-      border: 0;
-      border-radius: 0;
-      color: var(--color-text-default);
-      // Reserve the scrollbar gutter permanently so hover doesn't shove the
-      // layout (the global dark-scroll mixin toggles display:none on a
-      // space-reserving webkit bar otherwise).
-      overflow-x: scroll;
-      overflow-y: hidden;
-
-      &::-webkit-scrollbar,
-      &:hover::-webkit-scrollbar {
-        display: block !important;
-      }
-
-      // Unmapped tokens (tags, attributes, params, punctuation) inherit the
-      // readable base instead of the global hljs greys; the semantic palette
-      // below re-colours the specific token types.
-      * {
-        color: inherit;
-      }
-    }
-
-    .hljs-keyword,
-    .hljs-built_in,
-    .hljs-literal,
-    .hljs-selector-tag {
-      color: var(--color-text-action);
-    }
-    .hljs-string,
-    .hljs-regexp {
-      color: var(--color-text-success);
-    }
-    .hljs-attr,
-    .hljs-attribute,
-    .hljs-property,
-    .hljs-number,
-    .hljs-type {
-      color: var(--color-text-info);
-    }
-    .hljs-title,
-    .hljs-name,
-    .hljs-section {
-      color: var(--color-text-default);
-    }
-    .hljs-comment,
-    .hljs-quote,
-    .hljs-meta {
-      color: var(--color-text-secondary);
-    }
   }
 
   &__codecard-head {
