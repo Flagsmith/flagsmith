@@ -19,7 +19,9 @@ class MasterAPIKeyViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         return MasterAPIKey.objects.filter(
-            organisation_id=self.kwargs.get("organisation_pk"), revoked=False
+            organisation_id=self.kwargs.get("organisation_pk"),
+            revoked=False,
+            trust_relationship__isnull=True,
         )
 
     def get_authenticators(self) -> list[BaseAuthentication]:

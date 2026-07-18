@@ -134,6 +134,7 @@ INSTALLED_APPS = [
     "projects.code_references",
     "projects.tags",
     "api_keys",
+    "trust_relationships",
     "webhooks",
     "metrics",
     "onboarding",
