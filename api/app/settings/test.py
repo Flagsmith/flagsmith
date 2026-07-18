@@ -21,6 +21,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = ["core.throttling.UserRateThrottle"
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "login": "100/min",
     "dcr_register": "100/min",
+    "oidc_token_exchange": "100/min",
     "mfa_code": "5/min",
     "invite": "10/min",
     "signup": "100/min",

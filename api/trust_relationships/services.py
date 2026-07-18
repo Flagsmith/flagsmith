@@ -1,10 +1,25 @@
-from typing import Any
+import uuid
+from datetime import datetime, timedelta, timezone
+from typing import Any, cast
 
+import jwt
 import structlog
+from django.conf import settings
 from django.db import transaction
 
 from api_keys.models import MasterAPIKey
+from trust_relationships.constants import (
+    ACCESS_TOKEN_TYPE,
+    ALLOWED_SIGNING_ALGORITHMS,
+)
+from trust_relationships.dataclasses import TokenExchangeResult
+from trust_relationships.exceptions import (
+    InvalidTokenError,
+    NoMatchingTrustRelationshipError,
+)
 from trust_relationships.models import TrustRelationship
+from trust_relationships.oidc import get_jwks_client, match_claim_rules
+from trust_relationships.types import AccessTokenClaims
 from users.models import FFAdminUser
 
 logger = structlog.get_logger("trust_relationships")
@@ -96,3 +111,121 @@ def delete_trust_relationship(*, trust_relationship: TrustRelationship) -> None:
         organisation__id=trust_relationship.organisation_id,
         trust_relationship__id=trust_relationship.id,
     )
+
+
+def mint_access_token(
+    trust_relationship: TrustRelationship,
+    *,
+    sub: str,
+) -> TokenExchangeResult:
+    """Mint a short-lived HS256 access token bound to a trust relationship."""
+    now = datetime.now(tz=timezone.utc)
+    expires_in: int = settings.TRUST_RELATIONSHIP_ACCESS_TOKEN_LIFETIME_SECONDS
+    access_token = jwt.encode(
+        {
+            "token_type": ACCESS_TOKEN_TYPE,
+            "jti": uuid.uuid4().hex,
+            "sub": sub,
+            "trust_relationship_id": trust_relationship.id,
+            "iat": now,
+            "exp": now + timedelta(seconds=expires_in),
+        },
+        settings.SECRET_KEY,
+        algorithm="HS256",
+    )
+    return TokenExchangeResult(access_token=access_token, expires_in=expires_in)
+
+
+def decode_access_token(token: str) -> AccessTokenClaims:
+    """Decode and verify a minted access token.
+
+    Raises `jwt.InvalidTokenError` for any token not minted by
+    `mint_access_token`, including other HS256 JWTs signed with SECRET_KEY
+    (identified via the `token_type` claim).
+    """
+    claims: dict[str, Any] = jwt.decode(
+        token,
+        settings.SECRET_KEY,
+        algorithms=["HS256"],
+        options={"require": ["exp", "iat", "jti"]},
+    )
+    if claims.get("token_type") != ACCESS_TOKEN_TYPE:
+        raise jwt.InvalidTokenError("Not a trust relationship access token.")
+    if "trust_relationship_id" not in claims:
+        raise jwt.InvalidTokenError("Missing trust_relationship_id claim.")
+    return cast(AccessTokenClaims, claims)
+
+
+def exchange_oidc_token(token: str) -> TokenExchangeResult:
+    """Exchange an external OIDC token for a short-lived access token.
+
+    The external token's issuer, audience and claims are checked against the
+    configured trust relationships; exactly one must match.
+    """
+    try:
+        header = jwt.get_unverified_header(token)
+        unverified_claims = jwt.decode(token, options={"verify_signature": False})
+    except jwt.InvalidTokenError as exc:
+        logger.info("token.rejected", reason="malformed", token__issuer=None)
+        raise InvalidTokenError("Token is not a valid JWT.") from exc
+
+    if header.get("alg") not in ALLOWED_SIGNING_ALGORITHMS:
+        logger.info("token.rejected", reason="disallowed_algorithm", token__issuer=None)
+        raise InvalidTokenError("Token signing algorithm is not allowed.")
+
+    issuer = str(unverified_claims.get("iss", "")).rstrip("/")
+    candidates = list(
+        TrustRelationship.objects.filter(issuer=issuer).select_related("master_api_key")
+    )
+    if not candidates:
+        logger.info("token.rejected", reason="unknown_issuer", token__issuer=issuer)
+        raise NoMatchingTrustRelationshipError()
+
+    jwks_client = get_jwks_client(issuer)
+    try:
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+        claims = jwt.decode(
+            token,
+            signing_key.key,
+            algorithms=ALLOWED_SIGNING_ALGORITHMS,
+            options={"verify_aud": False, "require": ["exp", "iat"]},
+        )
+    except jwt.PyJWKClientError as exc:
+        logger.info(
+            "token.rejected", reason="signing_key_not_found", token__issuer=issuer
+        )
+        raise InvalidTokenError("Unable to resolve issuer signing keys.") from exc
+    except jwt.InvalidTokenError as exc:
+        logger.info(
+            "token.rejected", reason="verification_failed", token__issuer=issuer
+        )
+        raise InvalidTokenError("Token validation failed.") from exc
+
+    audiences = claims.get("aud") or []
+    if not isinstance(audiences, list):
+        audiences = [audiences]
+    matched = [
+        trust_relationship
+        for trust_relationship in candidates
+        if trust_relationship.audience in audiences
+        and match_claim_rules(claims, trust_relationship.claim_rules)
+    ]
+
+    if not matched:
+        logger.info("token.rejected", reason="no_match", token__issuer=issuer)
+        raise NoMatchingTrustRelationshipError()
+    if len(matched) > 1:
+        # Only reachable with a multi-audience token (RFC 7519 allows `aud`
+        # to be an array)
+        logger.info("token.rejected", reason="ambiguous", token__issuer=issuer)
+        raise InvalidTokenError("Token audience matches multiple trust relationships.")
+
+    trust_relationship = matched[0]
+    result = mint_access_token(trust_relationship, sub=str(claims.get("sub", "")))
+    logger.info(
+        "token.exchanged",
+        organisation__id=trust_relationship.organisation_id,
+        trust_relationship__id=trust_relationship.id,
+        token__sub=str(claims.get("sub", "")),
+    )
+    return result
