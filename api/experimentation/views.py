@@ -155,7 +155,7 @@ class WarehouseConnectionViewSet(
             return Response(self.get_serializer(connection).data)
         if connection.warehouse_type != WarehouseType.FLAGSMITH:
             return Response(
-                {"detail": "Test events are only supported for Flagsmith warehouses."},
+                {"detail": "Connection testing is not supported for this warehouse type."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         mark_warehouse_pending_connection(connection)

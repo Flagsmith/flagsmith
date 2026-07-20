@@ -38,7 +38,7 @@ def validate_clickhouse_config(config: dict[str, Any]) -> ClickHouseConfig:
         raise serializers.ValidationError(
             {"config": {"host": "This field is required."}}
         )
-    if is_internal_address(merged["host"]):
+    if is_internal_address(merged["host"], include_shared=True):
         raise serializers.ValidationError(
             {
                 "config": {

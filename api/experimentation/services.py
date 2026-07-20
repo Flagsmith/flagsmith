@@ -801,9 +801,10 @@ class InternalAddressError(Exception):
 
 def _describe_verification_error(error: Exception) -> str:
     if isinstance(error, clickhouse_errors.ServerException):
+        # 516 = AUTHENTICATION_FAILED (not in clickhouse_driver.errors.ErrorCodes)
         if error.code == 516:
             return "Authentication failed."
-        if error.code == 81:
+        if error.code == clickhouse_errors.ErrorCodes.UNKNOWN_DATABASE:
             return "Database does not exist."
         return "The ClickHouse server rejected the request."
     if isinstance(error, (clickhouse_errors.SocketTimeoutError, TimeoutError)):
@@ -827,7 +828,7 @@ def verify_clickhouse_connection(connection: WarehouseConnection) -> None:
         credentials = typing.cast(ClickHouseCredentials, connection.credentials or {})
         # Re-check right before connecting: DNS may resolve differently than it
         # did at validation time, and rows may predate host validation.
-        if is_internal_address(config["host"]):
+        if is_internal_address(config["host"], include_shared=True):
             raise InternalAddressError(config["host"])
         client = Client(
             config["host"],
