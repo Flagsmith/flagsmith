@@ -5,7 +5,6 @@ from functools import lru_cache
 
 import boto3
 import structlog
-from botocore.exceptions import ClientError
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
@@ -83,22 +82,17 @@ def get_stream_name(organisation_id: int) -> str:
     return f"{STREAM_NAME_PREFIX}{organisation_id}"
 
 
-def _ensure_events_bucket(bucket_name: str, *, organisation_id: int) -> None:
+def _create_events_bucket(bucket_name: str, *, organisation_id: int) -> None:
     s3 = _get_s3_client()
-    try:
-        s3.create_bucket(
-            Bucket=bucket_name,
-            CreateBucketConfiguration={"LocationConstraint": AWS_REGION},
-        )
-    except ClientError as exc:
-        if exc.response["Error"]["Code"] != "BucketAlreadyOwnedByYou":
-            raise
-    else:
-        logger.info(
-            "ingestion_infra.bucket_created",
-            organisation__id=organisation_id,
-            bucket__name=bucket_name,
-        )
+    s3.create_bucket(
+        Bucket=bucket_name,
+        CreateBucketConfiguration={"LocationConstraint": AWS_REGION},
+    )
+    logger.info(
+        "ingestion_infra.bucket_created",
+        organisation__id=organisation_id,
+        bucket__name=bucket_name,
+    )
     s3.put_public_access_block(
         Bucket=bucket_name,
         PublicAccessBlockConfiguration={
@@ -165,44 +159,41 @@ def _expected_destination_configuration(bucket_name: str) -> dict[str, Any]:
     }
 
 
-def _ensure_delivery_stream(
+def _create_delivery_stream(
     stream_name: str,
     *,
     bucket_name: str,
     organisation_id: int,
 ) -> None:
-    try:
-        _get_firehose_client().create_delivery_stream(
-            DeliveryStreamName=stream_name,
-            DeliveryStreamType="DirectPut",
-            ExtendedS3DestinationConfiguration=_expected_destination_configuration(
-                bucket_name
-            ),
-        )
-    except ClientError as exc:
-        if exc.response["Error"]["Code"] != "ResourceInUseException":
-            raise
-    else:
-        logger.info(
-            "ingestion_infra.stream_created",
-            organisation__id=organisation_id,
-            stream__name=stream_name,
-            bucket__name=bucket_name,
-        )
+    _get_firehose_client().create_delivery_stream(
+        DeliveryStreamName=stream_name,
+        DeliveryStreamType="DirectPut",
+        ExtendedS3DestinationConfiguration=_expected_destination_configuration(
+            bucket_name
+        ),
+    )
+    logger.info(
+        "ingestion_infra.stream_created",
+        organisation__id=organisation_id,
+        stream__name=stream_name,
+        bucket__name=bucket_name,
+    )
 
 
 def provision_ingestion_infrastructure(
     organisation_id: int,
 ) -> IngestionInfrastructure:
-    """Idempotently create the organisation's events S3 bucket and Firehose
-    delivery stream; existing resources are left untouched."""
+    """Create the organisation's events S3 bucket and Firehose delivery
+    stream. Both are created unconditionally; if a resource already exists
+    the underlying client error propagates to the caller, which is
+    responsible for tracking whether provisioning has already run."""
     if not settings.INGESTION_FIREHOSE_DELIVERY_ROLE_ARN:
         raise ImproperlyConfigured("INGESTION_FIREHOSE_DELIVERY_ROLE_ARN is not set")
     bucket_name = get_bucket_name(organisation_id)
     stream_name = get_stream_name(organisation_id)
 
-    _ensure_events_bucket(bucket_name, organisation_id=organisation_id)
-    _ensure_delivery_stream(
+    _create_events_bucket(bucket_name, organisation_id=organisation_id)
+    _create_delivery_stream(
         stream_name,
         bucket_name=bucket_name,
         organisation_id=organisation_id,

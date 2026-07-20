@@ -95,7 +95,7 @@ Attributes:
 ### `experimentation.ingestion_infra.bucket_created`
 
 Logged at `info` from:
- - `api/experimentation/ingestion_infra_service.py:97`
+ - `api/experimentation/ingestion_infra_service.py:91`
 
 Attributes:
  - `bucket.name`
@@ -104,7 +104,7 @@ Attributes:
 ### `experimentation.ingestion_infra.stream_created`
 
 Logged at `info` from:
- - `api/experimentation/ingestion_infra_service.py:186`
+ - `api/experimentation/ingestion_infra_service.py:175`
 
 Attributes:
  - `bucket.name`

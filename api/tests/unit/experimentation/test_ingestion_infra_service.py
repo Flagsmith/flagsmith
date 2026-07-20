@@ -178,27 +178,6 @@ def test_provision_ingestion_infrastructure__bucket_creation__sends_account_regi
     assert captured_headers[0]["x-amz-bucket-namespace"] == "account-regional"
 
 
-def test_provision_ingestion_infrastructure__already_provisioned__is_idempotent(
-    ingestion_infra_settings: SettingsWrapper,
-    aws_backends: None,
-    log: StructuredLogCapture,
-) -> None:
-    # Given
-    first = ingestion_infra_service.provision_ingestion_infrastructure(
-        organisation_id=42,
-    )
-    events_after_first_run = list(log.events)
-
-    # When
-    second = ingestion_infra_service.provision_ingestion_infrastructure(
-        organisation_id=42,
-    )
-
-    # Then
-    assert second == first
-    assert log.events == events_after_first_run
-
-
 def test_provision_ingestion_infrastructure__bucket_creation_fails__propagates_client_error(
     ingestion_infra_settings: SettingsWrapper,
     mocker: MockerFixture,
@@ -208,14 +187,14 @@ def test_provision_ingestion_infrastructure__bucket_creation_fails__propagates_c
         "experimentation.ingestion_infra_service._get_account_id",
         return_value="123456789012",
     )
-    mock_s3 = mocker.Mock()
-    mock_s3.create_bucket.side_effect = ClientError(
+    mock_s3_client = mocker.Mock()
+    mock_s3_client.create_bucket.side_effect = ClientError(
         {"Error": {"Code": "AccessDenied", "Message": "nope"}},
         "CreateBucket",
     )
     mocker.patch(
         "experimentation.ingestion_infra_service._get_s3_client",
-        return_value=mock_s3,
+        return_value=mock_s3_client,
     )
 
     # When / Then
