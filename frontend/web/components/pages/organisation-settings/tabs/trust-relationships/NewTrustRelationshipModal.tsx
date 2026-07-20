@@ -32,7 +32,12 @@ const NewTrustRelationshipModal: FC<NewTrustRelationshipModalProps> = ({
       <div
         className='panel--grey p-3 mb-3 clickable'
         data-test='provider-github'
+        role='button'
+        tabIndex={0}
         onClick={() => setProvider('github')}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') setProvider('github')
+        }}
       >
         <h6 className='mb-1'>GitHub Actions</h6>
         <div className='text-muted fs-small'>
@@ -43,7 +48,12 @@ const NewTrustRelationshipModal: FC<NewTrustRelationshipModalProps> = ({
       <div
         className='panel--grey p-3 clickable'
         data-test='provider-other'
+        role='button'
+        tabIndex={0}
         onClick={() => setProvider('other')}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') setProvider('other')
+        }}
       >
         <h6 className='mb-1'>Other OIDC provider</h6>
         <div className='text-muted fs-small'>
