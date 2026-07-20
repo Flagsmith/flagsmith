@@ -18,8 +18,11 @@ def get_jwks_client(issuer: str) -> jwt.PyJWKClient:
     keys internally.
     """
     try:
+        # Strip any trailing slash here so discovery hits
+        # `.../.well-known/openid-configuration`, not `...//.well-known/...`.
+        base_url = issuer.rstrip("/")
         response = requests.get(
-            f"{issuer}/.well-known/openid-configuration",
+            f"{base_url}/.well-known/openid-configuration",
             timeout=DISCOVERY_TIMEOUT_SECONDS,
         )
         response.raise_for_status()

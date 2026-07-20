@@ -173,7 +173,9 @@ def exchange_oidc_token(token: str) -> TokenExchangeResult:
         logger.info("token.rejected", reason="disallowed_algorithm", token__issuer=None)
         raise InvalidTokenError("Token signing algorithm is not allowed.")
 
-    issuer = str(unverified_claims.get("iss", "")).rstrip("/")
+    # Preserve the exact `iss` for the lookup: OIDC requires exact string
+    # matching, and issuers such as Auth0 legitimately end in a slash.
+    issuer = str(unverified_claims.get("iss", ""))
     candidates = list(
         TrustRelationship.objects.filter(issuer=issuer).select_related("master_api_key")
     )

@@ -1,5 +1,7 @@
 import jwt
 import pytest
+import responses as responses_lib
+from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
 from organisations.models import Organisation
@@ -42,6 +44,38 @@ def test_exchange_oidc_token__matching_token__returns_access_token(
         trust_relationship__id=github_trust_relationship.id,
         token__sub="repo:Flagsmith/flagsmith:ref:refs/heads/main",
     )
+
+
+def test_exchange_oidc_token__issuer_with_trailing_slash__matches(
+    organisation: Organisation,
+    responses: responses_lib.RequestsMock,
+    mocker: MockerFixture,
+) -> None:
+    # Given: a trust relationship whose issuer ends in a slash, as Auth0's does
+    issuer = "https://tenant.eu.auth0.com/"
+    trust_relationship = create_trust_relationship(
+        organisation_id=organisation.id,
+        name="Auth0",
+        issuer=issuer,
+        audience="https://api.flagsmith.com",
+        is_admin=True,
+        claim_rules=[],
+    )
+    oidc_issuer = OIDCIssuerStub(issuer)
+    responses.add(
+        responses_lib.GET,
+        "https://tenant.eu.auth0.com/.well-known/openid-configuration",
+        json={"jwks_uri": "https://tenant.eu.auth0.com/.well-known/jwks"},
+    )
+    mocker.patch.object(jwt.PyJWKClient, "fetch_data", return_value=oidc_issuer.jwks)
+    token = oidc_issuer.sign_token(aud="https://api.flagsmith.com")
+
+    # When
+    result = exchange_oidc_token(token)
+
+    # Then
+    access_token_claims = decode_access_token(result.access_token)
+    assert access_token_claims["trust_relationship_id"] == trust_relationship.id
 
 
 def test_exchange_oidc_token__unknown_issuer__raises_no_match(
