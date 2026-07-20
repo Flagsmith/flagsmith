@@ -21,6 +21,9 @@ class TrustRelationshipViewSet(
     permission_classes = [IsAuthenticated, NestedIsOrganisationAdminPermission]
 
     def get_queryset(self) -> QuerySet[TrustRelationship]:
+        if getattr(self, "swagger_fake_view", False):
+            empty: QuerySet[TrustRelationship] = TrustRelationship.objects.none()
+            return empty
         queryset: QuerySet[TrustRelationship] = TrustRelationship.objects.filter(
             organisation_id=self.kwargs["organisation_pk"]
         ).select_related("master_api_key")
