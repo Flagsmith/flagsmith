@@ -10,6 +10,7 @@ from trust_relationships.services import delete_trust_relationship
 class TrustRelationshipAdmin(admin.ModelAdmin[TrustRelationship]):
     list_display = ("name", "organisation", "issuer", "audience", "created_at")
     list_filter = ("issuer",)
+    list_select_related = ("organisation",)
     search_fields = ("name", "issuer", "audience")
 
     # Deletes must go through the service layer so the backing key is revoked.
