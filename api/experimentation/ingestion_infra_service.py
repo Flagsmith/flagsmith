@@ -42,7 +42,7 @@ ERRORS_PREFIX = (
 BUFFERING_SIZE_MB = 64
 BUFFERING_INTERVAL_SECONDS = 300
 DYNAMIC_PARTITIONING_RETRY_SECONDS = 300
-ERROR_OBJECT_EXPIRATION_DAYS = 30
+OBJECT_EXPIRATION_DAYS = 30
 
 
 def _add_account_regional_namespace_header(
@@ -113,10 +113,10 @@ def _ensure_events_bucket(bucket_name: str, *, organisation_id: int) -> None:
         LifecycleConfiguration={
             "Rules": [
                 {
-                    "ID": "expire-delivery-errors",
-                    "Filter": {"Prefix": "errors/"},
+                    "ID": "expire-objects",
+                    "Filter": {"Prefix": ""},
                     "Status": "Enabled",
-                    "Expiration": {"Days": ERROR_OBJECT_EXPIRATION_DAYS},
+                    "Expiration": {"Days": OBJECT_EXPIRATION_DAYS},
                 }
             ]
         },

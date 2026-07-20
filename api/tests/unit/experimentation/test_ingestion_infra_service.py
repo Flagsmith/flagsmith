@@ -81,8 +81,8 @@ def test_provision_ingestion_infrastructure__fresh_account__creates_bucket_and_s
     lifecycle = s3.get_bucket_lifecycle_configuration(Bucket=result.bucket_name)
     assert lifecycle["Rules"] == [
         {
-            "ID": "expire-delivery-errors",
-            "Filter": {"Prefix": "errors/"},
+            "ID": "expire-objects",
+            "Filter": {"Prefix": ""},
             "Status": "Enabled",
             "Expiration": {"Days": 30},
         }
