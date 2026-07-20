@@ -1,6 +1,6 @@
 import React, { FC, useState } from 'react'
-import GithubTrustRelationshipForm from './GithubTrustRelationshipForm'
-import TrustRelationshipModal from './TrustRelationshipModal'
+import GithubTrustRelationshipForm from 'components/pages/organisation-settings/tabs/trust-relationships/GithubTrustRelationshipForm'
+import TrustRelationshipModal from 'components/pages/organisation-settings/tabs/trust-relationships/TrustRelationshipModal'
 
 type Provider = 'github' | 'other'
 

@@ -23,8 +23,10 @@ import {
 } from 'common/services/useMasterAPIKeyWithMasterAPIKeyRole'
 import TrustRelationshipPermissionsFields, {
   SelectedRole,
-} from './TrustRelationshipPermissionsFields'
-import WorkflowSetupSnippet, { GITHUB_ISSUER } from './WorkflowSetupSnippet'
+} from 'components/pages/organisation-settings/tabs/trust-relationships/TrustRelationshipPermissionsFields'
+import WorkflowSetupSnippet, {
+  GITHUB_ISSUER,
+} from 'components/pages/organisation-settings/tabs/trust-relationships/WorkflowSetupSnippet'
 
 type GithubTrustRelationshipFormProps = {
   organisationId: number
