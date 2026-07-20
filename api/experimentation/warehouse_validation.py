@@ -86,9 +86,7 @@ def validate_snowflake_config(
         )
     for key, value in config.items():
         if not isinstance(value, str):
-            raise serializers.ValidationError(
-                {"config": {key: "Must be a string."}}
-            )
+            raise serializers.ValidationError({"config": {key: "Must be a string."}})
     base = stored if stored is not None else dict(SNOWFLAKE_DEFAULTS)
     merged: SnowflakeConfig = {
         **base,  # type: ignore[typeddict-item]
