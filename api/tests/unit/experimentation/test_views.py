@@ -1064,8 +1064,7 @@ def test_get_throttles__write_actions__returns_scoped_throttle(action: str) -> N
     throttles = view.get_throttles()
 
     # Then
-    assert len(throttles) == 1
-    assert isinstance(throttles[0], ScopedRateThrottle)
+    assert any(isinstance(t, ScopedRateThrottle) for t in throttles)
     assert view.throttle_scope == "warehouse_connection_write"
 
 
@@ -1348,6 +1347,31 @@ def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
             ("config",),
             id="snowflake_non_dict_config",
         ),
+        pytest.param(
+            {
+                "warehouse_type": "snowflake",
+                "config": {"account_identifier": "xy12345", "extra": "bad"},
+            },
+            ("config", "extra"),
+            id="snowflake_unknown_key",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "snowflake",
+                "config": {"account_identifier": "xy12345", "warehouse": 123},
+            },
+            ("config", "warehouse"),
+            id="snowflake_non_string_value",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "clickhouse",
+                "config": {"host": "100.64.0.1"},
+                "credentials": {"password": "hunter2"},
+            },
+            ("config", "host"),
+            id="shared_address_space_host",
+        ),
     ],
 )
 def test_post__invalid_payload__returns_400(
@@ -1540,6 +1564,38 @@ def test_patch__clickhouse_name_only__does_not_reverify(
     # Then
     assert response.status_code == status.HTTP_200_OK
     mock_client.assert_not_called()
+
+
+def test_put__clickhouse_name_only__preserves_config_and_credentials(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    enable_features: EnableFeaturesFixture,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    mocker.patch("experimentation.services.Client")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.put(
+        url,
+        data={
+            "warehouse_type": "clickhouse",
+            "name": "Renamed",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.config is not None
+    assert clickhouse_connection.credentials == {"password": "hunter2"}
 
 
 def test_test_warehouse_connection__clickhouse__reverifies_and_returns_status(

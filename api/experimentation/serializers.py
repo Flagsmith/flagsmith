@@ -41,9 +41,9 @@ from features.versioning.dataclasses import MultivariateValueChangeSet
 
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     name = serializers.CharField(max_length=255, required=False)
-    config = serializers.JSONField(default=None, required=False, allow_null=True)
+    config = serializers.JSONField(required=False, allow_null=True)
     credentials = serializers.JSONField(
-        default=None, required=False, allow_null=True, write_only=True
+        required=False, allow_null=True, write_only=True
     )
     total_events_received = serializers.SerializerMethodField()
     unique_events_count = serializers.SerializerMethodField()

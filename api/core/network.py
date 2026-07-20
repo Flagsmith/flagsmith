@@ -16,11 +16,14 @@ def is_internal_address(hostname: str) -> bool:
         except socket.gaierror:
             return False
 
+    _SHARED_ADDRESS_SPACE = ipaddress.ip_network("100.64.0.0/10")
+
     return any(
         ip.is_loopback
         or ip.is_private
         or ip.is_link_local
         or ip.is_reserved
         or ip.is_multicast
+        or ip in _SHARED_ADDRESS_SPACE
         for ip in ips
     )
