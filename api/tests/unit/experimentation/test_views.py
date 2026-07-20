@@ -636,6 +636,43 @@ def test_patch__snowflake_update_config__returns_200(
     assert data["config"]["warehouse"] == "BIG_WH"
 
 
+def test_patch__snowflake_partial_config__preserves_stored_account_identifier(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    create_response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "My Snowflake",
+            "config": {"account_identifier": "xy12345.us-east-1"},
+        },
+        format="json",
+    )
+    connection_id = create_response.json()["id"]
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, connection_id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"config": {"warehouse": "BIG_WH"}},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["config"]["account_identifier"] == "xy12345.us-east-1"
+    assert data["config"]["warehouse"] == "BIG_WH"
+
+
 def test_patch__snowflake_update_name__returns_200(
     admin_client: APIClient,
     environment: Environment,

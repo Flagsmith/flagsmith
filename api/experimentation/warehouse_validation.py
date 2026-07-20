@@ -79,11 +79,6 @@ def validate_snowflake_config(
         raise serializers.ValidationError(
             {"config": {key: "Unknown field." for key in sorted(unknown_keys)}}
         )
-    account_identifier = config.get("account_identifier", "")
-    if not account_identifier:
-        raise serializers.ValidationError(
-            {"config": {"account_identifier": "This field is required."}}
-        )
     for key, value in config.items():
         if not isinstance(value, str):
             raise serializers.ValidationError({"config": {key: "Must be a string."}})
@@ -92,6 +87,10 @@ def validate_snowflake_config(
         **base,  # type: ignore[typeddict-item]
         **config,
     }
+    if not merged.get("account_identifier"):
+        raise serializers.ValidationError(
+            {"config": {"account_identifier": "This field is required."}}
+        )
     return merged
 
 
