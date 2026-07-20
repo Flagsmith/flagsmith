@@ -82,7 +82,14 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
         config: dict[str, Any] | None = attrs.get("config")
 
         if config_validator := CONFIG_VALIDATORS.get(warehouse_type):
-            attrs["config"] = config_validator(config or {})
+            stored = (
+                getattr(self.instance, "config", None)
+                if self.instance is not None
+                and not type_changed
+                and isinstance(getattr(self.instance, "config", None), dict)
+                else None
+            )
+            attrs["config"] = config_validator(config or {}, stored=stored)
         elif warehouse_type == WarehouseType.FLAGSMITH:
             if config:
                 raise serializers.ValidationError(

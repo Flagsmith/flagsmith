@@ -26,14 +26,19 @@ def validate_clickhouse_credentials(
     return {"password": password}
 
 
-def validate_clickhouse_config(config: dict[str, Any]) -> ClickHouseConfig:
+def validate_clickhouse_config(
+    config: dict[str, Any],
+    *,
+    stored: dict[str, Any] | None = None,
+) -> ClickHouseConfig:
     if not isinstance(config, dict):
         raise serializers.ValidationError({"config": "Must be an object."})
     if unknown_keys := set(config) - set(CLICKHOUSE_DEFAULTS):
         raise serializers.ValidationError(
             {"config": {key: "Unknown field." for key in sorted(unknown_keys)}}
         )
-    merged: dict[str, Any] = {**CLICKHOUSE_DEFAULTS, **config}
+    base = stored if stored is not None else dict(CLICKHOUSE_DEFAULTS)
+    merged: dict[str, Any] = {**base, **config}
     if not merged["host"] or not isinstance(merged["host"], str):
         raise serializers.ValidationError(
             {"config": {"host": "This field is required."}}
@@ -63,7 +68,11 @@ def validate_clickhouse_config(config: dict[str, Any]) -> ClickHouseConfig:
     return cast(ClickHouseConfig, merged)
 
 
-def validate_snowflake_config(config: dict[str, Any]) -> SnowflakeConfig:
+def validate_snowflake_config(
+    config: dict[str, Any],
+    *,
+    stored: dict[str, Any] | None = None,
+) -> SnowflakeConfig:
     if not isinstance(config, dict):
         raise serializers.ValidationError({"config": "Must be an object."})
     if unknown_keys := set(config) - set(SNOWFLAKE_DEFAULTS):
@@ -80,14 +89,15 @@ def validate_snowflake_config(config: dict[str, Any]) -> SnowflakeConfig:
             raise serializers.ValidationError(
                 {"config": {key: "Must be a string."}}
             )
+    base = stored if stored is not None else dict(SNOWFLAKE_DEFAULTS)
     merged: SnowflakeConfig = {
-        **SNOWFLAKE_DEFAULTS,
-        **config,  # type: ignore[typeddict-item]
+        **base,  # type: ignore[typeddict-item]
+        **config,
     }
     return merged
 
 
-CONFIG_VALIDATORS: dict[str, Callable[[dict[str, Any]], Any]] = {
+CONFIG_VALIDATORS: dict[str, Callable[..., Any]] = {
     WarehouseType.SNOWFLAKE: validate_snowflake_config,
     WarehouseType.CLICKHOUSE: validate_clickhouse_config,
 }

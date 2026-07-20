@@ -1539,6 +1539,8 @@ def test_patch__clickhouse_config_without_credentials__keeps_stored_password(
     assert response.status_code == status.HTTP_200_OK
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.credentials == {"password": "hunter2"}
+    assert clickhouse_connection.config["database"] == "acme_dwh"
+    assert clickhouse_connection.config["port"] == 9000
     assert mock_client.call_args.kwargs["password"] == "hunter2"
     assert mock_client.call_args.kwargs["port"] == 9000
 
