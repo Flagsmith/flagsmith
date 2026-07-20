@@ -11,6 +11,7 @@ import {
   ClickHouseFormState,
   isClickHouseFormValid,
 } from './clickhouseConfig'
+import { getButtonLabel } from './warehouseFormUtils'
 import './ConfigForm.scss'
 
 type ClickHouseConfigFormProps = {
@@ -19,11 +20,6 @@ type ClickHouseConfigFormProps = {
   isEdit?: boolean
   initialConfig?: ClickHouseConfig
   initialName?: string
-}
-
-const getButtonLabel = (isEdit: boolean, isSaving: boolean): string => {
-  if (isSaving) return isEdit ? 'Saving...' : 'Creating...'
-  return isEdit ? 'Save changes' : 'Save and continue'
 }
 
 const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
@@ -169,10 +165,17 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
         )}
 
         <div className='wh-config-form__actions'>
-          <Button theme='outline' size='small' onClick={onCancel} type='button'>
+          <Button
+            id='warehouse-config-cancel'
+            theme='outline'
+            size='small'
+            onClick={onCancel}
+            type='button'
+          >
             Cancel
           </Button>
           <Button
+            id='warehouse-config-save'
             theme='primary'
             size='small'
             type='submit'

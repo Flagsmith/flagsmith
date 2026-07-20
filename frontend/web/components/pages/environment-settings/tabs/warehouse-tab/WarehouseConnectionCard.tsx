@@ -144,13 +144,13 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
       )}
       <WarehouseEventCodeHelp />
       <div className='d-flex justify-content-end mt-3'>
-        {!isFlagsmith && (
+        {onTestConnection && (
           <Button
             id='warehouse-connection-test'
             theme='outline'
             size='small'
             onClick={onTestConnection}
-            disabled={!onTestConnection || isSendingTestEvent}
+            disabled={isSendingTestEvent}
           >
             {isSendingTestEvent ? 'Testing...' : 'Test connection'}
           </Button>

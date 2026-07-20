@@ -147,6 +147,8 @@ export interface PipelineStageRequest {
   actions: StageActionRequest[]
 }
 
+type WarehouseConfigValue = string | number | boolean
+
 export type Req = {
   getFeatureCodeReferences: {
     projectId: number
@@ -1028,7 +1030,7 @@ export type Req = {
     environmentId: string
     warehouse_type: string
     name?: string
-    config?: Record<string, string | number | boolean>
+    config?: Record<string, WarehouseConfigValue>
     credentials?: { password: string }
   }
   deleteWarehouseConnection: { environmentId: string; id: number }
@@ -1037,7 +1039,7 @@ export type Req = {
     environmentId: string
     id: number
     name?: string
-    config?: Record<string, string | number | boolean>
+    config?: Record<string, WarehouseConfigValue>
     credentials?: { password: string }
   }
   getExperiments: PagedRequest<{

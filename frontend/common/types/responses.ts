@@ -1267,13 +1267,18 @@ export type ClickHouseConfig = {
   secure: boolean
 }
 
+export type WarehouseConfigResponse =
+  | SnowflakeConfig
+  | ClickHouseConfig
+  | Record<string, never>
+
 export type WarehouseConnection = {
   id: number
   warehouse_type: WarehouseType
   status: WarehouseConnectionStatus
   status_detail: string | null
   name: string
-  config: SnowflakeConfig | ClickHouseConfig | Record<string, never>
+  config: WarehouseConfigResponse
   created_at: string
   total_events_received: number | null
   unique_events_count: number | null
