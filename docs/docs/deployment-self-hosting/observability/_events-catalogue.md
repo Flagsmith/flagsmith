@@ -606,7 +606,7 @@ Attributes:
 ### `trust_relationships.token.exchanged`
 
 Logged at `info` from:
- - `api/trust_relationships/services.py:225`
+ - `api/trust_relationships/services.py:227`
 
 Attributes:
  - `organisation.id`
@@ -618,11 +618,11 @@ Attributes:
 Logged at `info` from:
  - `api/trust_relationships/services.py:169`
  - `api/trust_relationships/services.py:173`
- - `api/trust_relationships/services.py:181`
- - `api/trust_relationships/services.py:194`
- - `api/trust_relationships/services.py:199`
- - `api/trust_relationships/services.py:215`
- - `api/trust_relationships/services.py:220`
+ - `api/trust_relationships/services.py:183`
+ - `api/trust_relationships/services.py:196`
+ - `api/trust_relationships/services.py:201`
+ - `api/trust_relationships/services.py:217`
+ - `api/trust_relationships/services.py:222`
 
 Attributes:
  - `reason`
