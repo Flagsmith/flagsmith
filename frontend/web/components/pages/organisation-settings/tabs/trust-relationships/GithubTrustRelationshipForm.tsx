@@ -135,25 +135,42 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
   ])
 
   const addRole = (role: SelectedRole) => {
-    if (isEdit) {
-      createRoleMasterApiKey(getStore(), {
-        body: { master_api_key: trustRelationship.master_api_key_id },
-        org_id: organisationId,
-        role_id: role.id,
-      }).then(() => toast('Role assigned'))
+    if (!isEdit) {
+      // Roles are assigned after the trust relationship is created (see save).
+      setRoles((selected) => [...selected, { id: role.id, name: role.name }])
+      return
     }
-    setRoles((selected) => [...selected, { id: role.id, name: role.name }])
+    createRoleMasterApiKey(getStore(), {
+      body: { master_api_key: trustRelationship.master_api_key_id },
+      org_id: organisationId,
+      role_id: role.id,
+    }).then((res) => {
+      if (res.error) {
+        toast('Could not assign role', 'danger')
+        return
+      }
+      setRoles((selected) => [...selected, { id: role.id, name: role.name }])
+      toast('Role assigned')
+    })
   }
 
   const removeRole = (roleId: number) => {
-    if (isEdit) {
-      deleteMasterAPIKeyWithMasterAPIKeyRoles(getStore(), {
-        org_id: organisationId,
-        prefix: trustRelationship.master_api_key_prefix,
-        role_id: roleId,
-      }).then(() => toast('Role removed'))
+    if (!isEdit) {
+      setRoles((selected) => selected.filter((role) => role.id !== roleId))
+      return
     }
-    setRoles((selected) => selected.filter((role) => role.id !== roleId))
+    deleteMasterAPIKeyWithMasterAPIKeyRoles(getStore(), {
+      org_id: organisationId,
+      prefix: trustRelationship.master_api_key_prefix,
+      role_id: roleId,
+    }).then((res) => {
+      if (res.error) {
+        toast('Could not remove role', 'danger')
+        return
+      }
+      setRoles((selected) => selected.filter((role) => role.id !== roleId))
+      toast('Role removed')
+    })
   }
 
   const save = () => {
@@ -208,8 +225,15 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
             ),
           ),
         )
-        .then(() => {
-          toast('Trust relationship created')
+        .then((results) => {
+          if (results.some((res) => res.error)) {
+            toast(
+              'Trust relationship created, but some roles could not be assigned',
+              'danger',
+            )
+          } else {
+            toast('Trust relationship created')
+          }
           closeModal()
         })
         .catch(() => null)
