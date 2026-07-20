@@ -18,6 +18,11 @@ logger = structlog.get_logger("experimentation")
 
 AWS_REGION = "eu-west-2"
 STREAM_NAME_PREFIX = "events-ingestion-org-"
+# Buckets are created in the account regional namespace, so the name only has
+# to be unique within our account and must follow the
+# {prefix}-{account_id}-{region}-an convention.
+BUCKET_NAME_PREFIX = "flagsmith-events-lake-org-"
+BUCKET_NAMESPACE_HEADER = "x-amz-bucket-namespace"
 
 # S3 object keys are namespaced per environment via Firehose dynamic
 # partitioning on each record's environment_key field.
@@ -40,9 +45,23 @@ DYNAMIC_PARTITIONING_RETRY_SECONDS = 300
 ERROR_OBJECT_EXPIRATION_DAYS = 30
 
 
+def _add_account_regional_namespace_header(
+    params: dict[str, Any],
+    **kwargs: Any,
+) -> None:
+    params["headers"][BUCKET_NAMESPACE_HEADER] = "account-regional"
+
+
 @lru_cache(maxsize=1)
 def _get_s3_client() -> "Any":
-    return boto3.client("s3", region_name=AWS_REGION)
+    # The pinned boto3 version predates the CreateBucket BucketNamespace
+    # parameter, so the corresponding header is injected directly.
+    client = boto3.client("s3", region_name=AWS_REGION)
+    client.meta.events.register(
+        "before-call.s3.CreateBucket",
+        _add_account_regional_namespace_header,
+    )
+    return client
 
 
 @lru_cache(maxsize=1)
@@ -50,10 +69,14 @@ def _get_firehose_client() -> "Any":
     return boto3.client("firehose", region_name=AWS_REGION)
 
 
+@lru_cache(maxsize=1)
+def _get_account_id() -> str:
+    sts = boto3.client("sts", region_name=AWS_REGION)
+    return sts.get_caller_identity()["Account"]  # type: ignore[no-any-return]
+
+
 def get_bucket_name(organisation_id: int) -> str:
-    if not settings.INGESTION_EVENTS_BUCKET_PREFIX:
-        raise ImproperlyConfigured("INGESTION_EVENTS_BUCKET_PREFIX is not set")
-    return f"{settings.INGESTION_EVENTS_BUCKET_PREFIX}-org-{organisation_id}"
+    return f"{BUCKET_NAME_PREFIX}{organisation_id}-{_get_account_id()}-{AWS_REGION}-an"
 
 
 def get_stream_name(organisation_id: int) -> str:

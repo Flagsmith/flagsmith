@@ -5,7 +5,11 @@ import boto3
 import pytest
 from botocore.exceptions import ClientError
 from django.core.exceptions import ImproperlyConfigured
-from moto import mock_firehose, mock_s3  # type: ignore[import-untyped]
+from moto import (  # type: ignore[import-untyped]
+    mock_firehose,
+    mock_s3,
+    mock_sts,
+)
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
@@ -18,30 +22,22 @@ DELIVERY_ROLE_ARN = "arn:aws:iam::123456789012:role/firehose-events-delivery"
 
 @pytest.fixture()
 def ingestion_infra_settings(settings: SettingsWrapper) -> SettingsWrapper:
-    settings.INGESTION_EVENTS_BUCKET_PREFIX = "flagsmith-events-lake-test"
     settings.INGESTION_FIREHOSE_DELIVERY_ROLE_ARN = DELIVERY_ROLE_ARN
     return settings
 
 
+def _clear_client_caches() -> None:
+    ingestion_infra_service._get_s3_client.cache_clear()
+    ingestion_infra_service._get_firehose_client.cache_clear()
+    ingestion_infra_service._get_account_id.cache_clear()
+
+
 @pytest.fixture()
 def aws_backends(aws_credentials: None) -> Iterator[None]:
-    ingestion_infra_service._get_s3_client.cache_clear()
-    ingestion_infra_service._get_firehose_client.cache_clear()
-    with mock_s3(), mock_firehose():
+    _clear_client_caches()
+    with mock_s3(), mock_firehose(), mock_sts():
         yield
-    ingestion_infra_service._get_s3_client.cache_clear()
-    ingestion_infra_service._get_firehose_client.cache_clear()
-
-
-def test_provision_ingestion_infrastructure__no_bucket_prefix__raises_improperly_configured(
-    ingestion_infra_settings: SettingsWrapper,
-) -> None:
-    # Given
-    ingestion_infra_settings.INGESTION_EVENTS_BUCKET_PREFIX = ""
-
-    # When / Then
-    with pytest.raises(ImproperlyConfigured):
-        ingestion_infra_service.provision_ingestion_infrastructure(organisation_id=42)
+    _clear_client_caches()
 
 
 def test_provision_ingestion_infrastructure__no_delivery_role_arn__raises_improperly_configured(
@@ -60,14 +56,17 @@ def test_provision_ingestion_infrastructure__fresh_account__creates_bucket_and_s
     aws_backends: None,
     log: StructuredLogCapture,
 ) -> None:
+    # Given
+    organisation_id = 42
+
     # When
     result = ingestion_infra_service.provision_ingestion_infrastructure(
-        organisation_id=42,
+        organisation_id=organisation_id,
     )
 
     # Then
     assert result == IngestionInfrastructure(
-        bucket_name="flagsmith-events-lake-test-org-42",
+        bucket_name="flagsmith-events-lake-org-42-123456789012-eu-west-2-an",
         stream_name="events-ingestion-org-42",
     )
 
@@ -96,7 +95,10 @@ def test_provision_ingestion_infrastructure__fresh_account__creates_bucket_and_s
     assert stream["DeliveryStreamType"] == "DirectPut"
     destination = stream["Destinations"][0]["ExtendedS3DestinationDescription"]
     assert destination["RoleARN"] == DELIVERY_ROLE_ARN
-    assert destination["BucketARN"] == "arn:aws:s3:::flagsmith-events-lake-test-org-42"
+    assert (
+        destination["BucketARN"]
+        == "arn:aws:s3:::flagsmith-events-lake-org-42-123456789012-eu-west-2-an"
+    )
     assert destination["Prefix"] == (
         "events/env_key=!{partitionKeyFromQuery:env_key}/"
         "year=!{timestamp:yyyy}/month=!{timestamp:MM}/"
@@ -146,16 +148,34 @@ def test_provision_ingestion_infrastructure__fresh_account__creates_bucket_and_s
             "level": "info",
             "event": "ingestion_infra.bucket_created",
             "organisation__id": 42,
-            "bucket__name": "flagsmith-events-lake-test-org-42",
+            "bucket__name": "flagsmith-events-lake-org-42-123456789012-eu-west-2-an",
         },
         {
             "level": "info",
             "event": "ingestion_infra.stream_created",
             "organisation__id": 42,
             "stream__name": "events-ingestion-org-42",
-            "bucket__name": "flagsmith-events-lake-test-org-42",
+            "bucket__name": "flagsmith-events-lake-org-42-123456789012-eu-west-2-an",
         },
     ]
+
+
+def test_provision_ingestion_infrastructure__bucket_creation__sends_account_regional_namespace_header(
+    ingestion_infra_settings: SettingsWrapper,
+    aws_backends: None,
+) -> None:
+    # Given
+    captured_headers: list[dict[str, str]] = []
+    ingestion_infra_service._get_s3_client().meta.events.register(
+        "before-call.s3.CreateBucket",
+        lambda params, **kwargs: captured_headers.append(params["headers"]),
+    )
+
+    # When
+    ingestion_infra_service.provision_ingestion_infrastructure(organisation_id=42)
+
+    # Then
+    assert captured_headers[0]["x-amz-bucket-namespace"] == "account-regional"
 
 
 def test_provision_ingestion_infrastructure__already_provisioned__is_idempotent(
@@ -184,6 +204,10 @@ def test_provision_ingestion_infrastructure__bucket_creation_fails__propagates_c
     mocker: MockerFixture,
 ) -> None:
     # Given
+    mocker.patch(
+        "experimentation.ingestion_infra_service._get_account_id",
+        return_value="123456789012",
+    )
     mock_s3 = mocker.Mock()
     mock_s3.create_bucket.side_effect = ClientError(
         {"Error": {"Code": "AccessDenied", "Message": "nope"}},
@@ -204,6 +228,10 @@ def test_provision_ingestion_infrastructure__stream_creation_fails__propagates_c
     mocker: MockerFixture,
 ) -> None:
     # Given
+    mocker.patch(
+        "experimentation.ingestion_infra_service._get_account_id",
+        return_value="123456789012",
+    )
     mocker.patch(
         "experimentation.ingestion_infra_service._get_s3_client",
         return_value=mocker.Mock(),
