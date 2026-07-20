@@ -12,7 +12,8 @@ logger = structlog.get_logger("core")
 
 
 def _get_fernet() -> Fernet:
-    digest = hashlib.sha256(settings.SECRET_KEY.encode()).digest()
+    secret: str = settings.WAREHOUSE_CREDENTIALS_SECRET
+    digest = hashlib.sha256(secret.encode()).digest()
     return Fernet(base64.urlsafe_b64encode(digest))
 
 

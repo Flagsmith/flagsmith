@@ -33,10 +33,10 @@ def test_from_db_value__secret_key_changed__returns_none_and_logs(
     log: StructuredLogCapture,
 ) -> None:
     # Given
-    settings.SECRET_KEY = "old-secret"
+    settings.WAREHOUSE_CREDENTIALS_SECRET = "old-secret"
     field = EncryptedJSONField()
     stored = field.get_prep_value({"password": "hunter2"})
-    settings.SECRET_KEY = "new-secret"
+    settings.WAREHOUSE_CREDENTIALS_SECRET = "new-secret"
 
     # When
     value = field.from_db_value(stored, None, None)
