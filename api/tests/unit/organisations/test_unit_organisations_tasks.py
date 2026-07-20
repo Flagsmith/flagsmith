@@ -431,7 +431,7 @@ def test_handle_api_usage_notifications__usage_below_100_percent__sends_90_perce
     now = timezone.now()
     organisation.subscription.plan = SCALE_UP
     organisation.subscription.subscription_id = "fancy_id"
-    organisation.subscription.max_api_calls = 100  # Updated to fix broken test
+    organisation.subscription.max_api_calls = 100
     organisation.subscription.save()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
