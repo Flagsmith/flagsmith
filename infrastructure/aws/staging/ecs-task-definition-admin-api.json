@@ -233,6 +233,10 @@
                 {
                     "name": "INGESTION_REDIS_URL",
                     "value": "rediss://serverless-redis-cache-7u3xil.serverless.euw2.cache.amazonaws.com:6379"
+                },
+                {
+                    "name": "INGESTION_FIREHOSE_DELIVERY_ROLE_ARN",
+                    "value": "arn:aws:iam::302456015006:role/experiment-events-firehose-delivery-external-warehouse"
                 }
             ],
             "secrets": [
