@@ -12579,7 +12579,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
         - name: page
           in: query
           description: A page number within the paginated result set.
@@ -12604,7 +12604,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
       requestBody:
         required: true
         content:
@@ -12634,14 +12634,15 @@ paths:
       parameters:
         - name: id
           in: path
+          description: A unique integer value identifying this trust relationship.
           required: true
           schema:
-            type: string
+            type: integer
         - name: organisation_pk
           in: path
           required: true
           schema:
-            type: string
+            type: integer
       responses:
         '200':
           description: ''
@@ -12658,14 +12659,15 @@ paths:
       parameters:
         - name: id
           in: path
+          description: A unique integer value identifying this trust relationship.
           required: true
           schema:
-            type: string
+            type: integer
         - name: organisation_pk
           in: path
           required: true
           schema:
-            type: string
+            type: integer
       requestBody:
         required: true
         content:
@@ -12694,14 +12696,15 @@ paths:
       parameters:
         - name: id
           in: path
+          description: A unique integer value identifying this trust relationship.
           required: true
           schema:
-            type: string
+            type: integer
         - name: organisation_pk
           in: path
           required: true
           schema:
-            type: string
+            type: integer
       requestBody:
         content:
           application/json:
@@ -12729,14 +12732,15 @@ paths:
       parameters:
         - name: id
           in: path
+          description: A unique integer value identifying this trust relationship.
           required: true
           schema:
-            type: string
+            type: integer
         - name: organisation_pk
           in: path
           required: true
           schema:
-            type: string
+            type: integer
       responses:
         '204':
           description: No response body
