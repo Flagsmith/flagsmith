@@ -38,9 +38,27 @@ class Migration(migrations.Migration):
                         null=True,
                     ),
                 ),
-                ("name", models.CharField(max_length=100)),
-                ("issuer", models.URLField(max_length=500)),
-                ("audience", models.CharField(max_length=500)),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Display name for this trust relationship.",
+                        max_length=100,
+                    ),
+                ),
+                (
+                    "issuer",
+                    models.URLField(
+                        help_text="OIDC issuer URL expected in exchanged tokens' `iss` claim.",
+                        max_length=500,
+                    ),
+                ),
+                (
+                    "audience",
+                    models.CharField(
+                        help_text="Expected value of the `aud` claim in exchanged tokens.",
+                        max_length=500,
+                    ),
+                ),
                 ("claim_rules", models.JSONField(blank=True, default=list)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 (

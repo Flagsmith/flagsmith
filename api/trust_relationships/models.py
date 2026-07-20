@@ -11,9 +11,18 @@ class TrustRelationship(SoftDeleteObject):  # type: ignore[misc]
         on_delete=models.CASCADE,
         related_name="trust_relationships",
     )
-    name = models.CharField(max_length=100)  # type: ignore[var-annotated]
-    issuer = models.URLField(max_length=500)  # type: ignore[var-annotated]
-    audience = models.CharField(max_length=500)  # type: ignore[var-annotated]
+    name = models.CharField(  # type: ignore[var-annotated]
+        max_length=100,
+        help_text="Display name for this trust relationship.",
+    )
+    issuer = models.URLField(  # type: ignore[var-annotated]
+        max_length=500,
+        help_text="OIDC issuer URL expected in exchanged tokens' `iss` claim.",
+    )
+    audience = models.CharField(  # type: ignore[var-annotated]
+        max_length=500,
+        help_text="Expected value of the `aud` claim in exchanged tokens.",
+    )
     claim_rules = models.JSONField(default=list, blank=True)
     master_api_key = models.OneToOneField(  # type: ignore[var-annotated]
         MasterAPIKey,

@@ -25130,13 +25130,16 @@ components:
           type: integer
           readOnly: true
         name:
+          description: Display name for this trust relationship.
           type: string
           maxLength: 100
         issuer:
+          description: OIDC issuer URL expected in exchanged tokens' `iss` claim.
           type: string
           format: uri
           maxLength: 500
         audience:
+          description: Expected value of the `aud` claim in exchanged tokens.
           type: string
           maxLength: 500
         claim_rules:
@@ -27320,13 +27323,16 @@ components:
           type: integer
           readOnly: true
         name:
+          description: Display name for this trust relationship.
           type: string
           maxLength: 100
         issuer:
+          description: OIDC issuer URL expected in exchanged tokens' `iss` claim.
           type: string
           format: uri
           maxLength: 500
         audience:
+          description: Expected value of the `aud` claim in exchanged tokens.
           type: string
           maxLength: 500
         claim_rules:
