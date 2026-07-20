@@ -34,13 +34,16 @@ jobs:
 
       - name: Compute Renovate force override
         id: force
+        shell: python
         env:
           PACKAGES: ${{ inputs.packages }}
         run: |
-          if [ -n "$PACKAGES" ]; then
-            names=$(jq -Rc 'split(",") | map(gsub("^\\s+|\\s+$";"")) | map(select(length > 0))' <<< "$PACKAGES")
-            printf 'value={"packageRules":[{"matchPackageNames":%s,"enabled":true,"rangeStrategy":"bump"}]}\n' "$names" >> "$GITHUB_OUTPUT"
-          fi
+          import json, os
+          names = [n for part in os.environ["PACKAGES"].split(",") if (n := part.strip())]
+          if names:
+              value = {"packageRules": [{"matchPackageNames": names, "enabled": True, "rangeStrategy": "bump"}]}
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write(f"value={json.dumps(value)}\n")
 
       - name: Run Renovate
         uses: renovatebot/github-action@3064367f740a1a91cca218698a63902689cce200
