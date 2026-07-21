@@ -9,9 +9,9 @@ import { FeatureFlagProvider } from "./components/FeatureFlagProvider";
 
 export default async function RootLayout({
   children,
-}: Readonly<{
+}: Readonly&lt;{
   children: React.ReactNode;
-}>) {
+}&gt;) {
   await flagsmith.init({
     environmentID: "${envId}",${
   Constants.isCustomFlagsmithUrl()
@@ -21,16 +21,16 @@ export default async function RootLayout({
   const serverState = flagsmith.getState();
 
   return (
-    <html lang="en">
-      <head>
-        <meta name="viewport" content="initial-scale=1, width=device-width" />
-      </head>
-      <body>
-        <FeatureFlagProvider serverState={serverState}>
+    &lt;html lang="en"&gt;
+      &lt;head&gt;
+        &lt;meta name="viewport" content="initial-scale=1, width=device-width" /&gt;
+      &lt;/head&gt;
+      &lt;body&gt;
+        &lt;FeatureFlagProvider serverState={serverState}&gt;
           {children}
-        </FeatureFlagProvider>
-      </body>
-    </html>
+        &lt;/FeatureFlagProvider&gt;
+      &lt;/body&gt;
+    &lt;/html&gt;
   );
 }
 
@@ -48,13 +48,13 @@ export const FeatureFlagProvider = ({
 }: {
   serverState: IState;
   children: ReactNode;
-}) => {
+}) =&gt; {
   const flagsmithInstance = useRef(createFlagsmithInstance());
   
   return (
-    <FlagsmithProvider flagsmith={flagsmithInstance.current} serverState={serverState}>
-      <>{children}</>
-    </FlagsmithProvider>
+    &lt;FlagsmithProvider flagsmith={flagsmithInstance.current} serverState={serverState}>
+      &lt;&gt;{children}&lt;/&gt;
+    &lt;/FlagsmithProvider&gt;
   );
 };
 
@@ -69,6 +69,6 @@ export default function HomePage() {
   const ${FEATURE_NAME_ALT} = flags.${FEATURE_NAME_ALT}.value
   
   return (
-    <>{...}</>
+    &lt;&gt;{...}&lt;/&gt;
   );
 }`

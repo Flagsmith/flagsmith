@@ -1,6 +1,5 @@
 import React from 'react'
 import hljs from 'highlight.js'
-import Button from './base/forms/Button'
 
 function escapeHtml(unsafe) {
   if (!unsafe || !unsafe.__html) return unsafe
@@ -135,7 +134,7 @@ class Highlight extends React.Component {
     }
 
     const raw = this.getRawHtml()
-    const html = escapeHtml(raw)
+    const html = this.props.preventEscape ? raw : escapeHtml(raw)
     return (
       <div className={this.state.expandable ? 'expandable' : ''}>
         <pre

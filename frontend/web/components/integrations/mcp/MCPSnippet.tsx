@@ -11,7 +11,7 @@ type MCPSnippetProps = {
 
 const MCPSnippet: FC<MCPSnippetProps> = ({ code, language = 'bash' }) => (
   <div className='hljs-container mt-2'>
-    <Highlight forceExpanded className={language}>
+    <Highlight forceExpanded preventEscape className={language}>
       {code}
     </Highlight>
     <div className='flex-column hljs-docs'>
