@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.255.1](https://github.com/Flagsmith/flagsmith/compare/v2.255.0...v2.255.1) (2026-07-21)
+
+
+### Bug Fixes
+
+* block HubSpot and Google Analytics in E2E runs ([#8056](https://github.com/Flagsmith/flagsmith/issues/8056)) ([fff78d9](https://github.com/Flagsmith/flagsmith/commit/fff78d9dc15bec69dd7c89adfbf90598657e6fba))
+
 ## [2.255.0](https://github.com/Flagsmith/flagsmith/compare/v2.254.0...v2.255.0) (2026-07-21)
 
 
