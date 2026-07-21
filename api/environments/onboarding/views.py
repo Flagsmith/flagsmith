@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -18,13 +19,12 @@ class EnvironmentOnboardingStatusAPIView(APIView):
 
     def get(self, _: Request, environment_api_key: str) -> Response:
         """Obtain information on whether features for this environment have been evaluated yet."""
-        environment = (
-            Environment.objects.select_related(None)
-            .only(
+        environment = get_object_or_404(
+            Environment.objects.select_related(None).only(
                 "first_evaluated_at",
                 "first_evaluated_sdk_label",
-            )
-            .get(api_key=environment_api_key)
+            ),
+            api_key=environment_api_key,
         )
         serializer = EnvironmentOnboardingStatusSerializer(environment)
         return Response(serializer.data)

@@ -62,6 +62,17 @@ def test_get_onboarding_status__evaluated__responds_200(
     }
 
 
+@pytest.mark.django_db
+def test_get_onboarding_status__unknown_environment__responds_404(
+    api_client: APIClient,
+) -> None:
+    # Given / When
+    response = api_client.get("/api/v1/environments/unknown-api-key/onboarding-status/")
+
+    # Then
+    assert response.status_code == 404
+
+
 @pytest.mark.parametrize(
     "either_environment",
     (lazy_fixture("environment"), lazy_fixture("onboarded_environment")),
