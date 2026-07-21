@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -17,6 +18,7 @@ class EnvironmentOnboardingStatusAPIView(APIView):
     permission_classes = ()
     throttle_classes = []
 
+    @extend_schema(responses={200: EnvironmentOnboardingStatusSerializer})
     def get(self, _: Request, environment_api_key: str) -> Response:
         """Obtain information on whether features for this environment have been evaluated yet."""
         environment = get_object_or_404(
@@ -29,6 +31,10 @@ class EnvironmentOnboardingStatusAPIView(APIView):
         serializer = EnvironmentOnboardingStatusSerializer(environment)
         return Response(serializer.data)
 
+    @extend_schema(
+        request=EnvironmentOnboardingStatusUpdateSerializer,
+        responses={204: None},
+    )
     def put(self, request: Request, environment_api_key: str) -> Response:
         """Mark this environment as having been evaluated by a client SDK."""
         serializer = EnvironmentOnboardingStatusUpdateSerializer(data=request.data)
