@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import freezegun
 import pytest
 from django.utils import timezone
@@ -18,6 +20,11 @@ def onboarded_environment(environment: Environment) -> Environment:
     environment.first_evaluated_sdk_label = "flagsmith-python-sdk"
     environment.save(update_fields=["first_evaluated_at", "first_evaluated_sdk_label"])
     return environment
+
+
+@pytest.fixture(autouse=True)
+def write_environment_documents(mocker: MockerFixture) -> Mock:
+    return mocker.patch.object(Environment, "write_environment_documents")
 
 
 def test_get_onboarding_status__never_evaluated__responds_200(
@@ -132,6 +139,44 @@ def test_put_onboarding_status_sync__evaluated__does_not_update_environment(
     onboarded_environment.refresh_from_db()
     assert "2077" in onboarded_environment.first_evaluated_at.isoformat()
     assert "python" in onboarded_environment.first_evaluated_sdk_label
+
+
+def test_put_onboarding_status_sync__never_evaluated__writes_environment_document(
+    api_client: APIClient,
+    environment: Environment,
+    write_environment_documents: Mock,
+) -> None:
+    # Given / When
+    response = api_client.put(
+        f"/api/v1/environments/{environment.api_key}/onboarding-status/",
+        data={
+            "first_evaluated_sdk_label": "flagsmith-python-sdk",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 204
+    write_environment_documents.assert_called_once_with(api_key=environment.api_key)
+
+
+def test_put_onboarding_status_sync__evaluated__skips_environment_document(
+    api_client: APIClient,
+    onboarded_environment: Environment,
+    write_environment_documents: Mock,
+) -> None:
+    # Given / When
+    response = api_client.put(
+        f"/api/v1/environments/{onboarded_environment.api_key}/onboarding-status/",
+        data={
+            "first_evaluated_sdk_label": "flagsmith-python-sdk",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 204
+    write_environment_documents.assert_not_called()
 
 
 def test_put_onboarding_status__invalid_sdk_label__responds_400(

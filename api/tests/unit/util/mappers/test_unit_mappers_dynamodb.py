@@ -4,6 +4,8 @@ import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from django.utils import timezone
+
 from environments.dynamodb.constants import (
     ENVIRONMENTS_V2_ENVIRONMENT_META_DOCUMENT_KEY,
 )
@@ -59,6 +61,7 @@ def test_map_environment_to_environment_document__valid_environment__returns_exp
         "id": Decimal(environment.pk),
         "mixpanel_config": None,
         "name": "Test Environment",
+        "onboarding_pending": True,
         "project": {
             "enable_realtime_updates": False,
             "hide_disabled_flags": False,
@@ -81,6 +84,20 @@ def test_map_environment_to_environment_document__valid_environment__returns_exp
         "use_identity_overrides_in_local_eval": True,
         "webhook_config": None,
     }
+
+
+def test_map_environment_to_environment_document__first_evaluated__onboarding_pending_false(
+    environment: "Environment",
+) -> None:
+    # Given
+    environment.first_evaluated_at = timezone.now()
+    environment.save(update_fields=["first_evaluated_at"])
+
+    # When
+    result = dynamodb.map_environment_to_environment_document(environment)
+
+    # Then
+    assert result["onboarding_pending"] is False
 
 
 def test_map_environment_api_key_to_environment_api_key_document__valid_key__returns_expected_document(
@@ -179,6 +196,7 @@ def test_map_environment_to_environment_v2_document__valid_environment__returns_
         "id": Decimal(environment.pk),
         "mixpanel_config": None,
         "name": "Test Environment",
+        "onboarding_pending": True,
         "project": {
             "enable_realtime_updates": False,
             "hide_disabled_flags": False,

@@ -12,10 +12,13 @@ def record_environment_first_evaluation(
     sdk_label: KnownSDK,
 ) -> None:
     """Mark this environment as having been evaluated by a client SDK."""
-    Environment.objects.filter(
+    updated = Environment.objects.filter(
         api_key=api_key,
         first_evaluated_at__isnull=True,
     ).update(
         first_evaluated_at=timezone.now(),
         first_evaluated_sdk_label=sdk_label,
     )
+
+    if updated:
+        Environment.write_environment_documents(api_key=api_key)
