@@ -2,6 +2,7 @@ import logging
 import typing
 import uuid
 from copy import deepcopy
+from datetime import datetime
 from typing import TYPE_CHECKING, Literal
 
 from common.core.utils import using_database_replica
@@ -24,6 +25,7 @@ from rest_framework.request import Request
 from softdelete.models import SoftDeleteObject  # type: ignore[import-untyped]
 
 from app.utils import create_hash
+from app_analytics.types import KnownSDK
 from audit.constants import (
     ENVIRONMENT_CREATED_MESSAGE,
     ENVIRONMENT_UPDATED_MESSAGE,
@@ -158,6 +160,19 @@ class Environment(
     is_creating = models.BooleanField(  # type: ignore[var-annotated]
         default=False,
         help_text="Attribute used to indicate when an environment is still being created (via clone for example)",
+    )
+
+    first_evaluated_at = models.DateTimeField[datetime | None, datetime | None](
+        null=True,
+        blank=True,
+        help_text="When the environment's flags were first evaluated by an SDK.",
+    )
+
+    first_evaluated_sdk_label = models.CharField[KnownSDK, KnownSDK](
+        null=True,
+        blank=True,
+        max_length=100,
+        help_text="SDK that first evaluated the environment's flags.",
     )
 
     objects = EnvironmentManager()
