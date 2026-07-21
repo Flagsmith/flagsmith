@@ -596,3 +596,33 @@ def test_send_feature_flag_went_live_signal__non_feature_state_instance__skips_s
 
     # Then
     mock_signal_send.assert_not_called()
+
+def test_send_audit_log_event_to_grafana__edge_identity__calls_expected(
+    mocker: MockerFixture,
+    project: Project,
+) -> None:
+    # Given
+    audit_log_record = AuditLog.objects.create(
+        project=project,
+        related_object_type=RelatedObjectType.EDGE_IDENTITY.name,
+    )
+    grafana_wrapper_mock = mocker.patch("audit.signals.GrafanaWrapper", autospec=True)
+    grafana_wrapper_instance_mock = grafana_wrapper_mock.return_value
+
+    grafana_config = GrafanaProjectConfiguration(base_url="test.com", api_key="test")
+    project.grafana_config = grafana_config
+
+    # When
+    send_audit_log_event_to_grafana(AuditLog, audit_log_record)
+
+    # Then
+    grafana_wrapper_mock.assert_called_once_with(
+        base_url=grafana_config.base_url,
+        api_key=grafana_config.api_key,
+    )
+    grafana_wrapper_instance_mock.generate_event_data.assert_called_once_with(
+        audit_log_record
+    )
+    grafana_wrapper_instance_mock.track_event_async.assert_called_once_with(
+        event=grafana_wrapper_instance_mock.generate_event_data.return_value
+    )
