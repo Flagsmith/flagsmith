@@ -304,7 +304,7 @@ def _export_entities(
     *export_configs: _EntityExportConfig,
 ) -> Iterator[dict[str, typing.Any]]:
     for config in export_configs:
-        args = ("python", config.model_class.objects.filter(config.qs_filter))
+        queryset = config.model_class.objects.filter(config.qs_filter)
         kwargs: dict[str, typing.Any] = {}
         if config.exclude_fields:
             kwargs["fields"] = [
@@ -312,7 +312,12 @@ def _export_entities(
                 for f in config.model_class._meta.get_fields()
                 if f.name not in config.exclude_fields
             ]
-        yield from _serialize_natural(*args, **kwargs)
+        # Serialise one instance at a time over an iterator so a single large
+        # table is never fully materialised in memory. Django's "python"
+        # serializer buffers its entire output into a list, so passing the
+        # whole queryset would defeat the streaming export.
+        for instance in queryset.iterator():
+            yield from _serialize_natural("python", [instance], **kwargs)
 
 
 _serialize_natural = functools.partial(

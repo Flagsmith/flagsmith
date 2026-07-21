@@ -13,23 +13,28 @@ class S3MultipartUploadWriter:
     """
     A file-like writer that streams data to S3 using multipart upload.
 
-    Buffers data until the minimum part size (5MB) is reached, then uploads
-    each part. This allows streaming large exports without holding the entire
+    Buffers data until the part size threshold is reached, then uploads each
+    part. This allows streaming large exports without holding the entire
     payload in memory.
     """
 
-    # S3 multipart upload minimum part size is 5MB (except for the last part)
-    MIN_PART_SIZE = 5 * 1024 * 1024
+    # S3 allows a maximum of 10,000 parts per multipart upload, so the part
+    # size also sets the ceiling on the total object size. We use 64MB (well
+    # above S3's 5MB minimum) to keep memory bounded while reducing the number
+    # of network round trips and pushing the size ceiling out to ~640GB.
+    MIN_PART_SIZE = 64 * 1024 * 1024
 
     def __init__(
         self,
         s3_client: "S3Client",
         bucket_name: str,
         key: str,
+        min_part_size: int = MIN_PART_SIZE,
     ) -> None:
         self._s3_client = s3_client
         self._bucket_name = bucket_name
         self._key = key
+        self._min_part_size = min_part_size
         self._buffer = io.BytesIO()
         self._parts: list[CompletedPartTypeDef] = []
         self._part_number = 1
@@ -78,7 +83,7 @@ class S3MultipartUploadWriter:
 
     def write(self, data: bytes) -> None:
         self._buffer.write(data)
-        if self._buffer.tell() >= self.MIN_PART_SIZE:
+        if self._buffer.tell() >= self._min_part_size:
             self._upload_part()
 
     def _upload_part(self) -> None:

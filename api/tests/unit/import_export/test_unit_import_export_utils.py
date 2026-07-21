@@ -1,4 +1,5 @@
 import boto3
+import pytest
 from moto import mock_s3  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 
@@ -35,10 +36,11 @@ def test_s3_multipart_upload_writer__multiple_parts__uploads_each_part(
     # Given
     bucket_name = "test-bucket"
     key = "test-key"
-    # Create data larger than MIN_PART_SIZE (5MB)
-    chunk_size = S3MultipartUploadWriter.MIN_PART_SIZE
-    first_chunk = b"a" * chunk_size
-    second_chunk = b"b" * chunk_size
+    # Create data larger than the part size threshold. S3 requires parts to be
+    # at least 5MB (except the last), so use that as the test threshold.
+    part_size = 5 * 1024 * 1024
+    first_chunk = b"a" * part_size
+    second_chunk = b"b" * part_size
     final_chunk = b"final"
 
     s3_resource = boto3.resource("s3", region_name="eu-west-2")
@@ -50,7 +52,9 @@ def test_s3_multipart_upload_writer__multiple_parts__uploads_each_part(
     upload_part_spy = mocker.spy(s3_client, "upload_part")
 
     # When
-    with S3MultipartUploadWriter(s3_client, bucket_name, key) as writer:
+    with S3MultipartUploadWriter(
+        s3_client, bucket_name, key, min_part_size=part_size
+    ) as writer:
         writer.write(first_chunk)
         writer.write(second_chunk)
         writer.write(final_chunk)
@@ -75,8 +79,9 @@ def test_s3_multipart_upload_writer__accumulates_small_writes__uploads_correctly
     # Given
     bucket_name = "test-bucket"
     key = "test-key"
+    part_size = 5 * 1024 * 1024
     small_chunk = b"x" * 1000  # 1KB
-    writes_to_reach_threshold = (S3MultipartUploadWriter.MIN_PART_SIZE // 1000) + 1
+    writes_to_reach_threshold = (part_size // 1000) + 1
 
     s3_resource = boto3.resource("s3", region_name="eu-west-2")
     s3_resource.create_bucket(
@@ -87,7 +92,9 @@ def test_s3_multipart_upload_writer__accumulates_small_writes__uploads_correctly
     upload_part_spy = mocker.spy(s3_client, "upload_part")
 
     # When
-    with S3MultipartUploadWriter(s3_client, bucket_name, key) as writer:
+    with S3MultipartUploadWriter(
+        s3_client, bucket_name, key, min_part_size=part_size
+    ) as writer:
         for _ in range(writes_to_reach_threshold):
             writer.write(small_chunk)
         writer.write(b"final")
@@ -115,12 +122,10 @@ def test_s3_multipart_upload_writer__error_during_write__aborts_upload() -> None
     s3_client = boto3.client("s3", region_name="eu-west-2")
 
     # When
-    try:
+    with pytest.raises(ValueError, match="test error"):
         with S3MultipartUploadWriter(s3_client, bucket_name, key) as writer:
             writer.write(b"some data")
             raise ValueError("test error")
-    except ValueError:
-        pass
 
     # Then - the object should not exist (upload was aborted)
     objects = s3_client.list_objects_v2(Bucket=bucket_name)
