@@ -218,6 +218,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     return (
       <div className='mt-4 col-md-12'>
         <WarehouseSetup
+          environmentId={environmentId}
           onEnableFlagsmith={handleEnableFlagsmith}
           onCreateSnowflake={handleCreateSnowflake}
           onCreateClickHouse={handleCreateClickHouse}
@@ -246,6 +247,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
       <div className='mt-4 col-md-12'>
         <ClickHouseConfigForm
           isEdit
+          environmentId={environmentId}
           initialConfig={connection.config as ClickHouseConfig}
           initialName={connection.name}
           onSave={handleUpdateClickHouse}

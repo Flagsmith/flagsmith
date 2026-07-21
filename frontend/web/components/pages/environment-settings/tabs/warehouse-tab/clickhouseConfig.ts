@@ -58,3 +58,27 @@ export const buildClickHousePayload = (
   credentials: form.password ? { password: form.password } : undefined,
   name: form.name,
 })
+
+export const canTestClickHouseConnection = (
+  form: ClickHouseFormState,
+): boolean =>
+  !!form.host &&
+  isValidPort(form.port) &&
+  !!form.database &&
+  !!form.username &&
+  !!form.password
+
+export const isClickHouseConfigDirty = (
+  form: ClickHouseFormState,
+  initialConfig: ClickHouseConfig | undefined,
+): boolean => {
+  const initial = { ...CLICKHOUSE_DEFAULTS, ...initialConfig }
+  return (
+    form.host !== initial.host ||
+    form.port !== String(initial.port) ||
+    form.database !== initial.database ||
+    form.username !== initial.username ||
+    form.secure !== initial.secure ||
+    !!form.password
+  )
+}

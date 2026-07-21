@@ -1035,6 +1035,13 @@ export type Req = {
   }
   deleteWarehouseConnection: { environmentId: string; id: number }
   testWarehouseConnection: { environmentId: string; id: number }
+  testWarehouseConnectionConfig: {
+    environmentId: string
+    warehouse_type: string
+    name?: string
+    config?: Record<string, WarehouseConfigValue>
+    credentials?: { password: string }
+  }
   updateWarehouseConnection: {
     environmentId: string
     id: number

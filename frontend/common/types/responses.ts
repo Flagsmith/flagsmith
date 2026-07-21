@@ -1272,6 +1272,11 @@ export type WarehouseConfigResponse =
   | ClickHouseConfig
   | Record<string, never>
 
+export type WarehouseConnectionTestResult = {
+  status: WarehouseConnectionStatus
+  status_detail: string | null
+}
+
 export type WarehouseConnection = {
   id: number
   warehouse_type: WarehouseType
@@ -1510,6 +1515,7 @@ export type Res = {
   gitlabIssues: PagedResponse<GitLabIssue>
   gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
   warehouseConnections: WarehouseConnection[]
+  warehouseConnectionTestResult: WarehouseConnectionTestResult
   experiments: PagedResponse<Experiment> & {
     currentPage: number
     pageSize: number

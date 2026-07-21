@@ -11,6 +11,7 @@ import { ClickHouseFormData } from './clickhouseConfig'
 import './WarehouseSetup.scss'
 
 type WarehouseSetupProps = {
+  environmentId: string
   onEnableFlagsmith: () => void
   onCreateSnowflake: (data: ConfigFormData) => Promise<unknown>
   onCreateClickHouse: (data: ClickHouseFormData) => Promise<unknown>
@@ -20,6 +21,7 @@ type WarehouseSetupProps = {
 type WarehouseTypeOption = WarehouseType | 'bigquery' | 'databricks'
 
 const WarehouseSetup: FC<WarehouseSetupProps> = ({
+  environmentId,
   isCreating,
   onCreateClickHouse,
   onCreateSnowflake,
@@ -131,8 +133,8 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
 
       {selectedType === 'clickhouse' && (
         <ClickHouseConfigForm
+          environmentId={environmentId}
           onSave={onCreateClickHouse}
-          onCancel={() => setSelectedType('flagsmith')}
         />
       )}
 

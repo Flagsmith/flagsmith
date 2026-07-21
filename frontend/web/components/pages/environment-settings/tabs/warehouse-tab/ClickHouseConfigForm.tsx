@@ -4,25 +4,32 @@ import Input from 'components/base/forms/Input'
 import Switch from 'components/Switch'
 import ErrorMessage from 'components/ErrorMessage'
 import { ClickHouseConfig } from 'common/types/responses'
+import { useTestWarehouseConnectionConfigMutation } from 'common/services/useWarehouseConnection'
 import {
   buildClickHousePayload,
+  canTestClickHouseConnection,
   CLICKHOUSE_DEFAULTS,
   ClickHouseFormData,
   ClickHouseFormState,
+  isClickHouseConfigDirty,
   isClickHouseFormValid,
 } from './clickhouseConfig'
 import { getButtonLabel } from './warehouseFormUtils'
 import './ConfigForm.scss'
 
 type ClickHouseConfigFormProps = {
+  environmentId: string
   onSave: (data: ClickHouseFormData) => Promise<unknown>
-  onCancel: () => void
+  onCancel?: () => void
   isEdit?: boolean
   initialConfig?: ClickHouseConfig
   initialName?: string
 }
 
+type TestState = 'idle' | 'connected' | 'errored'
+
 const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
+  environmentId,
   initialConfig,
   initialName = '',
   isEdit = false,
@@ -39,6 +46,11 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
   const [secure, setSecure] = useState(defaults.secure)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState(false)
+  const [testState, setTestState] = useState<TestState>('idle')
+  const [testDetail, setTestDetail] = useState<string | null>(null)
+
+  const [testConnectionConfig, { isLoading: isTesting }] =
+    useTestWarehouseConnectionConfigMutation()
 
   const form: ClickHouseFormState = {
     database,
@@ -50,10 +62,40 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
     username,
   }
   const isValid = isClickHouseFormValid(form, isEdit)
+  const requiresTest = !isEdit || isClickHouseConfigDirty(form, initialConfig)
+  const canTest = canTestClickHouseConnection(form)
+  const canSave = isValid && (!requiresTest || testState === 'connected')
+
+  const setField =
+    <T,>(setter: (value: T) => void) =>
+    (value: T) => {
+      setter(value)
+      setTestState('idle')
+      setTestDetail(null)
+    }
+
+  const handleTest = async () => {
+    if (!canTest || isTesting) return
+    setError(false)
+    try {
+      const { config, credentials } = buildClickHousePayload(form)
+      const result = await testConnectionConfig({
+        config,
+        credentials,
+        environmentId,
+        warehouse_type: 'clickhouse',
+      }).unwrap()
+      setTestState(result.status === 'connected' ? 'connected' : 'errored')
+      setTestDetail(result.status_detail)
+    } catch {
+      setTestState('errored')
+      setTestDetail(null)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isValid) return
+    if (!canSave || isSaving) return
 
     setIsSaving(true)
     setError(false)
@@ -73,7 +115,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
           <Input
             value={host}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setHost(e.target.value)
+              setField(setHost)(e.target.value)
             }
             placeholder='your-instance.clickhouse.cloud'
             disabled={isEdit}
@@ -102,7 +144,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
             <Input
               value={port}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setPort(e.target.value)
+                setField(setPort)(e.target.value)
               }
               placeholder='9440'
             />
@@ -112,7 +154,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
             <Input
               value={database}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setDatabase(e.target.value)
+                setField(setDatabase)(e.target.value)
               }
               placeholder='flagsmith'
             />
@@ -124,7 +166,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
           <Input
             value={username}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setUsername(e.target.value)
+              setField(setUsername)(e.target.value)
             }
             placeholder='default'
           />
@@ -135,26 +177,41 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
           <Input
             value={password}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setPassword(e.target.value)
+              setField(setPassword)(e.target.value)
             }
             type='password'
             placeholder={isEdit ? '••••••••' : 'Password'}
           />
           {isEdit && (
             <span className='wh-config-form__hint'>
-              Leave blank to keep the current password.
+              {requiresTest && !password
+                ? 'Enter your password to test the connection before saving.'
+                : 'Leave blank to keep the current password.'}
             </span>
           )}
         </div>
 
         <div className='wh-config-form__field'>
           <div className='d-flex flex-row align-items-center gap-2'>
-            <Switch checked={secure} onChange={setSecure} />
+            <Switch checked={secure} onChange={setField(setSecure)} />
             <label className='wh-config-form__label mb-0'>
               Secure connection (TLS)
             </label>
           </div>
         </div>
+
+        {testState === 'errored' && (
+          <ErrorMessage
+            error={
+              testDetail || 'Connection failed — check your connection details.'
+            }
+          />
+        )}
+        {testState === 'connected' && (
+          <span className='wh-config-form__hint text-success'>
+            Connection verified. You can now save.
+          </span>
+        )}
 
         {error && (
           <ErrorMessage
@@ -165,21 +222,35 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
         )}
 
         <div className='wh-config-form__actions'>
-          <Button
-            id='warehouse-config-cancel'
-            theme='outline'
-            size='small'
-            onClick={onCancel}
-            type='button'
-          >
-            Cancel
-          </Button>
+          {isEdit && onCancel && (
+            <Button
+              id='warehouse-config-cancel'
+              theme='outline'
+              size='small'
+              onClick={onCancel}
+              type='button'
+            >
+              Cancel
+            </Button>
+          )}
+          {requiresTest && (
+            <Button
+              id='warehouse-config-test'
+              theme='outline'
+              size='small'
+              type='button'
+              onClick={handleTest}
+              disabled={!canTest || isTesting}
+            >
+              {isTesting ? 'Testing...' : 'Test connection'}
+            </Button>
+          )}
           <Button
             id='warehouse-config-save'
             theme='primary'
             size='small'
             type='submit'
-            disabled={isSaving || !isValid}
+            disabled={isSaving || !canSave}
           >
             {getButtonLabel(isEdit, isSaving)}
           </Button>
