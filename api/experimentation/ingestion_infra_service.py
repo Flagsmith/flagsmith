@@ -194,10 +194,6 @@ def _create_delivery_stream(
 def provision_ingestion_infrastructure(
     organisation_id: int,
 ) -> IngestionInfrastructure:
-    """Create the organisation's events S3 bucket and Firehose delivery
-    stream. Both are created unconditionally; if a resource already exists
-    the underlying client error propagates to the caller, which is
-    responsible for tracking whether provisioning has already run."""
     if not settings.INGESTION_FIREHOSE_DELIVERY_ROLE_ARN:
         raise ImproperlyConfigured("INGESTION_FIREHOSE_DELIVERY_ROLE_ARN is not set")
     bucket_name = get_bucket_name(organisation_id)
