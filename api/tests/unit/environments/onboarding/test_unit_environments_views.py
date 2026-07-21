@@ -6,6 +6,7 @@ from django.utils import timezone
 from pytest_django.fixtures import DjangoAssertNumQueries
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 from rest_framework.test import APIClient
 
 from environments.models import Environment
@@ -177,6 +178,83 @@ def test_put_onboarding_status_sync__evaluated__skips_environment_document(
     # Then
     assert response.status_code == 204
     write_environment_documents.assert_not_called()
+
+
+def test_put_onboarding_status_sync__never_evaluated__logs_first_evaluation(
+    api_client: APIClient,
+    environment: Environment,
+    log: StructuredLogCapture,
+) -> None:
+    # Given / When
+    response = api_client.put(
+        f"/api/v1/environments/{environment.api_key}/onboarding-status/",
+        data={
+            "first_evaluated_sdk_label": "flagsmith-python-sdk",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 204
+    assert log.has(
+        "environment.first_evaluated",
+        level="info",
+        environment__id=environment.id,
+        project__id=environment.project_id,
+        organisation__id=environment.project.organisation_id,
+        sdk__label="flagsmith-python-sdk",
+    )
+
+
+def test_put_onboarding_status_sync__evaluated__logs_already_evaluated(
+    api_client: APIClient,
+    onboarded_environment: Environment,
+    log: StructuredLogCapture,
+) -> None:
+    # Given / When
+    response = api_client.put(
+        f"/api/v1/environments/{onboarded_environment.api_key}/onboarding-status/",
+        data={
+            "first_evaluated_sdk_label": "flagsmith-php-sdk",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 204
+    assert log.has(
+        "environment.already_evaluated",
+        level="info",
+        environment__id=onboarded_environment.id,
+        project__id=onboarded_environment.project_id,
+        organisation__id=onboarded_environment.project.organisation_id,
+        sdk__label="flagsmith-php-sdk",
+    )
+    assert not log.has("environment.first_evaluated")
+
+
+@pytest.mark.django_db
+def test_put_onboarding_status_sync__unknown_environment__logs_not_found(
+    api_client: APIClient,
+    log: StructuredLogCapture,
+) -> None:
+    # Given / When
+    response = api_client.put(
+        "/api/v1/environments/unknown-api-key/onboarding-status/",
+        data={
+            "first_evaluated_sdk_label": "flagsmith-python-sdk",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 204
+    assert log.has(
+        "environment.not_found",
+        level="warning",
+        api_key="unknown-api-key",
+    )
+    assert not log.has("environment.first_evaluated")
 
 
 def test_put_onboarding_status__invalid_sdk_label__responds_400(
