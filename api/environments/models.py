@@ -168,7 +168,7 @@ class Environment(
         help_text="When the environment's flags were first evaluated by an SDK.",
     )
 
-    first_evaluated_sdk_label = models.CharField[KnownSDK, KnownSDK](
+    first_evaluated_sdk_label = models.CharField[KnownSDK | None, KnownSDK | None](
         null=True,
         blank=True,
         max_length=100,
@@ -255,6 +255,8 @@ class Environment(
         clone.name = name
         clone.api_key = api_key if api_key else create_hash()
         clone.is_creating = True
+        clone.first_evaluated_at = None
+        clone.first_evaluated_sdk_label = None
         clone.save()
 
         from environments.tasks import clone_environment_feature_states
