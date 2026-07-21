@@ -1,6 +1,7 @@
 import socket
 
 import pytest
+from clickhouse_driver import errors as clickhouse_errors
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -1090,7 +1091,13 @@ def test_test_warehouse_connection__non_admin__returns_403(
 
 @pytest.mark.parametrize(
     "action",
-    ["create", "update", "partial_update", "test_warehouse_connection"],
+    [
+        "create",
+        "update",
+        "partial_update",
+        "test_warehouse_connection",
+        "test_warehouse_connection_config",
+    ],
 )
 def test_get_throttles__write_actions__returns_scoped_throttle(action: str) -> None:
     # Given
@@ -1664,6 +1671,74 @@ def test_test_warehouse_connection__clickhouse__reverifies_and_returns_status(
     assert response.json()["status"] == "connected"
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
+
+
+CLICKHOUSE_TEST_PAYLOAD = {
+    "warehouse_type": "clickhouse",
+    "config": {"host": "ch.example.com"},
+    "credentials": {"password": "hunter2"},
+}
+
+
+@pytest.mark.parametrize(
+    "data, client_side_effect, expected_status_code, expected_response",
+    [
+        pytest.param(
+            CLICKHOUSE_TEST_PAYLOAD,
+            None,
+            status.HTTP_200_OK,
+            {"status": "connected", "status_detail": None},
+            id="reachable",
+        ),
+        pytest.param(
+            CLICKHOUSE_TEST_PAYLOAD,
+            clickhouse_errors.NetworkError("boom"),
+            status.HTTP_200_OK,
+            {"status": "errored", "status_detail": "Could not connect to the host."},
+            id="unreachable",
+        ),
+        pytest.param(
+            {"warehouse_type": "flagsmith"},
+            None,
+            status.HTTP_400_BAD_REQUEST,
+            {"detail": "Connection testing is not supported for this warehouse type."},
+            id="non_clickhouse_type",
+        ),
+        pytest.param(
+            {"warehouse_type": "clickhouse", "config": {"host": "ch.example.com"}},
+            None,
+            status.HTTP_400_BAD_REQUEST,
+            {"credentials": {"password": "This field is required."}},
+            id="invalid_payload",
+        ),
+    ],
+)
+def test_test_warehouse_connection_config__payload__returns_expected_response(
+    admin_client: APIClient,
+    client_side_effect: Exception | None,
+    data: dict[str, object],
+    enable_features: EnableFeaturesFixture,
+    environment: Environment,
+    expected_response: dict[str, object],
+    expected_status_code: int,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    mocker.patch("experimentation.services.Client", side_effect=client_side_effect)
+    url = reverse(
+        "api-v1:environments:experimentation:"
+        "warehouse-connections-test-warehouse-connection-config",
+        args=[environment.api_key],
+    )
+
+    # When
+    response = admin_client.post(url, data=data, format="json")
+
+    # Then
+    assert response.status_code == expected_status_code
+    assert response.json() == expected_response
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
 
 
 def test_patch__clickhouse_to_flagsmith__resets_connection_state(

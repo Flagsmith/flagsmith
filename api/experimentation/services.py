@@ -818,9 +818,13 @@ def _describe_verification_error(error: Exception) -> str:
     return "Verification failed."
 
 
-def verify_clickhouse_connection(connection: WarehouseConnection) -> None:
+def verify_clickhouse_connection(
+    connection: WarehouseConnection,
+    persist: bool = True,
+) -> None:
     """Run SELECT 1 against the customer's ClickHouse and set the status to
-    connected or errored; never raises."""
+    connected or errored; never raises. With persist=False, the status is only
+    set on the in-memory instance, allowing unsaved connections to be tested."""
     log = logger.bind(environment__id=connection.environment_id)
     try:
         log = log.bind(organisation__id=connection.environment.project.organisation_id)
@@ -847,7 +851,8 @@ def verify_clickhouse_connection(connection: WarehouseConnection) -> None:
     except Exception as error:
         connection.status = WarehouseConnectionStatus.ERRORED
         connection.status_detail = _describe_verification_error(error)
-        connection.save(update_fields=["status", "status_detail"])
+        if persist:
+            connection.save(update_fields=["status", "status_detail"])
         flagsmith_experimentation_warehouse_connection_verifications_total.labels(
             result="failure"
         ).inc()
@@ -856,7 +861,8 @@ def verify_clickhouse_connection(connection: WarehouseConnection) -> None:
 
     connection.status = WarehouseConnectionStatus.CONNECTED
     connection.status_detail = None
-    connection.save(update_fields=["status", "status_detail"])
+    if persist:
+        connection.save(update_fields=["status", "status_detail"])
     flagsmith_experimentation_warehouse_connection_verifications_total.labels(
         result="success"
     ).inc()

@@ -7090,6 +7090,40 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+  '/api/v1/environments/{environment_api_key}/warehouse-connections/test-warehouse-connection/':
+    post:
+      operationId: api_v1_environments_warehouse_connections_test_warehouse_connection_config_create
+      description: Manage data warehouse connections for an environment.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WarehouseConnection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WarehouseConnection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WarehouseConnection'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseConnection'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
   '/api/v1/environments/{environment_api_key}/webhooks/':
     get:
       operationId: api_v1_environments_webhooks_list
