@@ -142,6 +142,12 @@ TRACK_HEADERS: dict[str, InputLabel] = {
     "Flagsmith-SDK-User-Agent": "sdk_user_agent",
     "User-Agent": "user_agent",
 }
+
+SDK_USER_AGENT_HEADERS: list[str] = [
+    "Flagsmith-SDK-User-Agent",  # Exists because browsers own `User-Agent`
+    "User-Agent",
+]
+
 LABELS: tuple[Label, ...] = get_args(Label)
 
 NO_ANALYTICS_DATABASE_CONFIGURED_WARNING = (

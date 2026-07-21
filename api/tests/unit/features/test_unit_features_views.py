@@ -1415,6 +1415,97 @@ def test_get_flags__user_throttle_set__is_not_throttled(  # type: ignore[no-unty
         assert response.status_code == status.HTTP_200_OK
 
 
+@pytest.mark.parametrize(
+    "headers,expected_sdk_label",
+    [
+        (
+            {"Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/9.3.1"},
+            "flagsmith-js-sdk",
+        ),
+        (
+            {"User-Agent": "flagsmith-python-sdk/6.0.0"},
+            "flagsmith-python-sdk",
+        ),
+        (
+            {
+                "Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/9.3.1",
+                "User-Agent": "flagsmith-python-sdk/6.0.0",
+            },
+            "flagsmith-js-sdk",
+        ),
+    ],
+)
+def test_get_flags__environment_never_evaluated__records_first_evaluation(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+    headers: dict[str, str],
+    expected_sdk_label: str,
+) -> None:
+    # Given
+    task = mocker.patch.object(views, "record_environment_first_evaluation")
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/", headers=headers)
+
+    # Then
+    assert response.status_code == 200
+    task.delay.assert_called_once_with(
+        args=(environment.api_key, expected_sdk_label),
+    )
+
+
+@pytest.mark.parametrize(
+    "headers",
+    [
+        {},
+        {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15"
+        },
+    ],
+)
+def test_get_flags__sdk_not_identified__does_not_record_first_evaluation(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+    headers: dict[str, str],
+) -> None:
+    # Given
+    task = mocker.patch.object(views, "record_environment_first_evaluation")
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/", headers=headers)
+
+    # Then
+    assert response.status_code == 200
+    task.delay.assert_not_called()
+
+
+def test_get_flags__environment_already_evaluated__does_not_record_first_evaluation(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    task = mocker.patch.object(views, "record_environment_first_evaluation")
+    environment.first_evaluated_at = timezone.now()
+    environment.first_evaluated_sdk_label = "flagsmith-js-sdk"
+    environment.save(update_fields=["first_evaluated_at", "first_evaluated_sdk_label"])
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(
+        "/api/v1/flags/",
+        headers={"Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/9.3.1"},
+    )
+
+    # Then
+    assert response.status_code == 200
+    task.delay.assert_not_called()
+
+
 def test_list_feature_states__simple_view_set__returns_expected_count(
     environment: Environment,
     feature: Feature,

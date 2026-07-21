@@ -8,6 +8,7 @@ from pydantic import BeforeValidator, Field, create_model
 from app_analytics.constants import (
     LABELS,
     SDK_INFLUX_IDS_BY_USER_AGENT,
+    SDK_USER_AGENT_HEADERS,
     SDK_USER_AGENT_KNOWN_VERSIONS,
     SDK_USER_AGENTS_BY_INFLUX_ID,
     TRACK_HEADERS,
@@ -36,10 +37,19 @@ def map_user_agent_to_sdk_user_agent(value: str) -> str | None:
     return None
 
 
+def map_request_to_sdk_label(request: HttpRequest) -> KnownSDK | None:
+    for header in SDK_USER_AGENT_HEADERS:
+        if (value := request.headers.get(header)) and (
+            sdk_user_agent := map_user_agent_to_sdk_user_agent(value)
+        ):
+            return cast(KnownSDK, sdk_user_agent.partition("/")[0])
+    return None
+
+
 _request_header_labels_model_fields: dict[str, Any] = {
     str(label): (
         Annotated[str | None, BeforeValidator(map_user_agent_to_sdk_user_agent)]
-        if label in ("user_agent", "sdk_user_agent")
+        if header in SDK_USER_AGENT_HEADERS
         else str | None,
         Field(default=None, alias=header),
     )

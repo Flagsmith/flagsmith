@@ -42,6 +42,7 @@ from rest_framework.response import Response
 from app.pagination import CustomPagination
 from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
+from app_analytics.mappers import map_request_to_sdk_label
 from app_analytics.throttles import InfluxQueryThrottle
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
 from core.request_origin import RequestOrigin
@@ -55,6 +56,7 @@ from environments.identities.serializers import (
     IdentitySourceIdentityRequestSerializer,
 )
 from environments.models import Environment
+from environments.onboarding.tasks import record_environment_first_evaluation
 from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
@@ -1007,6 +1009,13 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         *Note*: using this endpoint with an identifier is deprecated.
         Please use `/api/v1/identities/?identifier=<identifier>` instead.
         """
+        if request.environment.first_evaluated_at is None and (
+            sdk_label := map_request_to_sdk_label(request)
+        ):
+            record_environment_first_evaluation.delay(
+                args=(request.environment.api_key, sdk_label),
+            )
+
         if identifier:
             return self._get_flags_response_with_identifier(request, identifier)
 
