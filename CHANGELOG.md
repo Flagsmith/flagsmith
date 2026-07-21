@@ -1,5 +1,43 @@
 # Changelog
 
+## [2.255.0](https://github.com/Flagsmith/flagsmith/compare/v2.254.0...v2.255.0) (2026-07-21)
+
+
+### Features
+
+* ClickHouse bring-your-own-warehouse connections ([#8020](https://github.com/Flagsmith/flagsmith/issues/8020)) ([10a36ab](https://github.com/Flagsmith/flagsmith/commit/10a36abffa4cf655c5d55d666aaf9fbca62a08e6))
+* **experimentation:** add per-organisation ingestion infrastructure service ([#8035](https://github.com/Flagsmith/flagsmith/issues/8035)) ([7266074](https://github.com/Flagsmith/flagsmith/commit/72660745890e86af0516166a8fad05cf7abc8a24))
+* **oauth:** First-party CLI client and per-client scope policy ([#8029](https://github.com/Flagsmith/flagsmith/issues/8029)) ([4df9bfb](https://github.com/Flagsmith/flagsmith/commit/4df9bfb553c9007d919213b44473778d5a5457a8))
+* signup corporate-only experiment with exposure and new_signup events ([#7979](https://github.com/Flagsmith/flagsmith/issues/7979)) ([af83f8e](https://github.com/Flagsmith/flagsmith/commit/af83f8e42dd1265b750daff97c624c144c05e0dd))
+* unify base URL config and add region dropdown with manual override ([#7842](https://github.com/Flagsmith/flagsmith/issues/7842)) ([11a02b6](https://github.com/Flagsmith/flagsmith/commit/11a02b6735453824a851a3a86b2ff80a3fb0d42f))
+
+
+### Bug Fixes
+
+* import is free email domains json directly ([#8053](https://github.com/Flagsmith/flagsmith/issues/8053)) ([5785e8c](https://github.com/Flagsmith/flagsmith/commit/5785e8c49c8e17ec6ee68f49ed94a2bef196acfe))
+
+
+### Dependency Updates
+
+* **API:** Bump clickhouse-driver to 0.2.11 ([#8049](https://github.com/Flagsmith/flagsmith/issues/8049)) ([f388ee8](https://github.com/Flagsmith/flagsmith/commit/f388ee82130343fe345a260085070de23354baf2))
+* **frontend:** update dependency @babel/core to v7.29.6 [security] ([#8050](https://github.com/Flagsmith/flagsmith/issues/8050)) ([e072d63](https://github.com/Flagsmith/flagsmith/commit/e072d63cc610476fab11fe6fd68a1d20a1d70ad9))
+* **frontend:** update dependency body-parser to v2.3.0 [security] ([#8051](https://github.com/Flagsmith/flagsmith/issues/8051)) ([a0e79ea](https://github.com/Flagsmith/flagsmith/commit/a0e79ea774c318e4506540c148fab57d652b6723))
+
+
+### CI
+
+* **E2E:** Collapse previous Playwright result entries in the sticky PR comment ([#8012](https://github.com/Flagsmith/flagsmith/issues/8012)) ([0838195](https://github.com/Flagsmith/flagsmith/commit/08381958fe355428bf9b936bb0f3c849204eb527))
+* Fix documentation artefacts automatically ([#8024](https://github.com/Flagsmith/flagsmith/issues/8024)) ([ea9f723](https://github.com/Flagsmith/flagsmith/commit/ea9f723802bd3d5cb6e69a34e20b75a488c3d732))
+* pre-commit autoupdate ([#7482](https://github.com/Flagsmith/flagsmith/issues/7482)) ([552fd04](https://github.com/Flagsmith/flagsmith/commit/552fd04eb6fca90dde7084e8e3a129b7837f406c))
+* **Renovate:** Add force-update input to Renovate workflow ([#8048](https://github.com/Flagsmith/flagsmith/issues/8048)) ([b349c60](https://github.com/Flagsmith/flagsmith/commit/b349c60cf6b4445872a93abf46f54580567c6b30))
+
+
+### Docs
+
+* add enterprise license upload documentation ([#7196](https://github.com/Flagsmith/flagsmith/issues/7196)) ([5dc98a2](https://github.com/Flagsmith/flagsmith/commit/5dc98a2d78dca3616e065503618ce7d5f2828094))
+* address review feedback on experimentation guides ([#8016](https://github.com/Flagsmith/flagsmith/issues/8016)) ([4932b51](https://github.com/Flagsmith/flagsmith/commit/4932b514d38ef52a1aecfb1b1d41638beaff07b7))
+* **images:** optimize images ([#8010](https://github.com/Flagsmith/flagsmith/issues/8010)) ([fb2a6ef](https://github.com/Flagsmith/flagsmith/commit/fb2a6ef527f508dedad5aabcbcdc4b121e1e0541))
+
 ## [2.254.0](https://github.com/Flagsmith/flagsmith/compare/v2.253.0...v2.254.0) (2026-07-16)
 
 
