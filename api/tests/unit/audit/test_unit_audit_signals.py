@@ -597,6 +597,7 @@ def test_send_feature_flag_went_live_signal__non_feature_state_instance__skips_s
     # Then
     mock_signal_send.assert_not_called()
 
+
 def test_send_audit_log_event_to_grafana__edge_identity__calls_expected(
     mocker: MockerFixture,
     project: Project,
