@@ -622,7 +622,7 @@ def test_send_audit_log_event_to_grafana__edge_identity__calls_expected(
         api_key=grafana_config.api_key,
     )
     grafana_wrapper_instance_mock.generate_event_data.assert_called_once_with(
-        audit_log_record
+        audit_log_record=audit_log_record
     )
     grafana_wrapper_instance_mock.track_event_async.assert_called_once_with(
         event=grafana_wrapper_instance_mock.generate_event_data.return_value
