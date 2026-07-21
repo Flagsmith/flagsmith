@@ -43,6 +43,10 @@ BUFFERING_INTERVAL_SECONDS = 300
 DYNAMIC_PARTITIONING_RETRY_SECONDS = 300
 OBJECT_EXPIRATION_DAYS = 30
 
+# Cost-allocation tag applied to per-organisation resources so AWS billing can
+# be attributed per organisation.
+ORGANISATION_TAG_KEY = "organisation_id"
+
 
 def _add_account_regional_namespace_header(
     params: dict[str, Any],
@@ -115,6 +119,12 @@ def _create_events_bucket(bucket_name: str, *, organisation_id: int) -> None:
             ]
         },
     )
+    s3.put_bucket_tagging(
+        Bucket=bucket_name,
+        Tagging={
+            "TagSet": [{"Key": ORGANISATION_TAG_KEY, "Value": str(organisation_id)}]
+        },
+    )
 
 
 def _expected_destination_configuration(bucket_name: str) -> dict[str, Any]:
@@ -171,6 +181,7 @@ def _create_delivery_stream(
         ExtendedS3DestinationConfiguration=_expected_destination_configuration(
             bucket_name
         ),
+        Tags=[{"Key": ORGANISATION_TAG_KEY, "Value": str(organisation_id)}],
     )
     logger.info(
         "ingestion_infra.stream_created",

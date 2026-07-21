@@ -87,6 +87,8 @@ def test_provision_ingestion_infrastructure__fresh_account__creates_bucket_and_s
             "Expiration": {"Days": 30},
         }
     ]
+    tagging = s3.get_bucket_tagging(Bucket=result.bucket_name)
+    assert tagging["TagSet"] == [{"Key": "organisation_id", "Value": "42"}]
 
     firehose = boto3.client("firehose", region_name="eu-west-2")
     stream = firehose.describe_delivery_stream(DeliveryStreamName=result.stream_name)[
@@ -142,6 +144,10 @@ def test_provision_ingestion_infrastructure__fresh_account__creates_bucket_and_s
             },
         ],
     }
+    stream_tags = firehose.list_tags_for_delivery_stream(
+        DeliveryStreamName=result.stream_name
+    )
+    assert stream_tags["Tags"] == [{"Key": "organisation_id", "Value": "42"}]
 
     assert log.events == [
         {
