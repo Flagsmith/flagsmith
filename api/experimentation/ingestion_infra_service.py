@@ -206,3 +206,30 @@ def provision_ingestion_infrastructure(
         organisation_id=organisation_id,
     )
     return IngestionInfrastructure(bucket_name=bucket_name, stream_name=stream_name)
+
+
+def _delete_events_bucket(bucket_name: str) -> None:
+    s3 = _get_s3_client()
+    paginator = s3.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=bucket_name):
+        objects = [{"Key": obj["Key"]} for obj in page.get("Contents", [])]
+        if objects:
+            s3.delete_objects(Bucket=bucket_name, Delete={"Objects": objects})
+    s3.delete_bucket(Bucket=bucket_name)
+
+
+def deprovision_ingestion_infrastructure(organisation_id: int) -> None:
+    bucket_name = get_bucket_name(organisation_id)
+    stream_name = get_stream_name(organisation_id)
+
+    _get_firehose_client().delete_delivery_stream(
+        DeliveryStreamName=stream_name,
+        AllowForceDelete=True,
+    )
+    _delete_events_bucket(bucket_name)
+    logger.info(
+        "ingestion_infra.deprovisioned",
+        organisation__id=organisation_id,
+        bucket__name=bucket_name,
+        stream__name=stream_name,
+    )

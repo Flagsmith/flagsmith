@@ -47,6 +47,32 @@ def test_warehouse_connection__after_create__enqueues_ingestion_write_task(
     )
 
 
+def test_warehouse_connection__after_create_external_type__enqueues_provision_task(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_provision = mocker.patch(
+        "experimentation.tasks.provision_external_warehouse_ingestion_infrastructure",
+    )
+    mock_write_keys = mocker.patch(
+        "experimentation.tasks.write_environment_ingestion_keys",
+    )
+
+    # When
+    WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.CLICKHOUSE,
+        name="external warehouse",
+    )
+
+    # Then the per-org infrastructure is provisioned, which chains the key sync
+    mock_provision.delay.assert_called_once_with(
+        kwargs={"environment_id": environment.id},
+    )
+    mock_write_keys.delay.assert_not_called()
+
+
 def test_warehouse_connection__after_delete__enqueues_ingestion_remove_task(
     warehouse_connection: WarehouseConnection,
     mocker: MockerFixture,

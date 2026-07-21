@@ -25,8 +25,10 @@ from experimentation.stats import VariantStats
 from experimentation.tasks import (
     compute_experiment_exposures,
     compute_experiment_results,
+    provision_external_warehouse_ingestion_infrastructure,
     remove_environment_ingestion_key,
     remove_environment_ingestion_keys,
+    teardown_organisation_ingestion_infrastructure,
     write_environment_ingestion_key,
     write_environment_ingestion_keys,
 )
@@ -561,3 +563,58 @@ def test_compute_experiment_results__experiment_deleted_after_enqueue__skips(
 
     # Then the task exits without raising into the task processor
     mock_compute.assert_not_called()
+
+
+def test_provision_external_warehouse_ingestion_infrastructure__valid_environment__enables_and_syncs_keys(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_enable = mocker.patch(
+        "experimentation.tasks.enable_ingestion_for_organisation",
+    )
+    mock_write_keys = mocker.patch(
+        "experimentation.tasks.write_environment_ingestion_keys",
+    )
+
+    # When
+    provision_external_warehouse_ingestion_infrastructure(environment_id=environment.id)
+
+    # Then the org infrastructure is provisioned before the keys are synced
+    mock_enable.assert_called_once_with(environment.project.organisation)
+    mock_write_keys.assert_called_once_with(environment.id)
+
+
+def test_provision_external_warehouse_ingestion_infrastructure__missing_environment__does_nothing(
+    db: None,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_enable = mocker.patch(
+        "experimentation.tasks.enable_ingestion_for_organisation",
+    )
+    mock_write_keys = mocker.patch(
+        "experimentation.tasks.write_environment_ingestion_keys",
+    )
+
+    # When
+    provision_external_warehouse_ingestion_infrastructure(environment_id=999999)
+
+    # Then
+    mock_enable.assert_not_called()
+    mock_write_keys.assert_not_called()
+
+
+def test_teardown_organisation_ingestion_infrastructure__any_organisation__disables_ingestion(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_disable = mocker.patch(
+        "experimentation.tasks.disable_ingestion_for_organisation",
+    )
+
+    # When
+    teardown_organisation_ingestion_infrastructure(organisation_id=42)
+
+    # Then
+    mock_disable.assert_called_once_with(42)

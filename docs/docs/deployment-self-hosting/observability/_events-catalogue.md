@@ -91,7 +91,7 @@ Attributes:
 ### `experimentation.exposures.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:100`
+ - `api/experimentation/tasks.py:123`
 
 Attributes:
  - `environment.id`
@@ -109,6 +109,35 @@ Attributes:
  - `bucket.name`
  - `organisation.id`
 
+### `experimentation.ingestion_infra.deprovisioned`
+
+Logged at `info` from:
+ - `api/experimentation/ingestion_infra_service.py:230`
+
+Attributes:
+ - `bucket.name`
+ - `organisation.id`
+ - `stream.name`
+
+### `experimentation.ingestion_infra.provision_failed`
+
+Logged at `error` from:
+ - `api/experimentation/organisation_ingestion_service.py:41`
+
+Attributes:
+ - `exc_info`
+ - `organisation.id`
+
+### `experimentation.ingestion_infra.provisioned`
+
+Logged at `info` from:
+ - `api/experimentation/organisation_ingestion_service.py:52`
+
+Attributes:
+ - `bucket.name`
+ - `organisation.id`
+ - `stream.name`
+
 ### `experimentation.ingestion_infra.stream_created`
 
 Logged at `info` from:
@@ -119,10 +148,18 @@ Attributes:
  - `organisation.id`
  - `stream.name`
 
+### `experimentation.ingestion_infra.torn_down`
+
+Logged at `info` from:
+ - `api/experimentation/organisation_ingestion_service.py:70`
+
+Attributes:
+ - `organisation.id`
+
 ### `experimentation.results.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:136`
+ - `api/experimentation/tasks.py:159`
 
 Attributes:
  - `environment.id`

@@ -26,6 +26,17 @@ def mock_ingestion_redis_client(mocker: MockerFixture) -> None:
     mocker.patch("experimentation.ingestion_sync_service.RedisCluster.from_url")
 
 
+@pytest.fixture(autouse=True)
+def mock_provision_external_warehouse_ingestion_infrastructure(
+    mocker: MockerFixture,
+) -> None:
+    # Creating an external warehouse connection enqueues provisioning, which
+    # runs synchronously under test; stub it so tests don't reach AWS.
+    mocker.patch(
+        "experimentation.tasks.provision_external_warehouse_ingestion_infrastructure",
+    )
+
+
 @pytest.fixture()
 def warehouse_connection(environment: Environment) -> WarehouseConnection:
     connection: WarehouseConnection = WarehouseConnection.objects.create(

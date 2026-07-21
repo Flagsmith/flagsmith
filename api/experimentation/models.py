@@ -78,9 +78,18 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
 
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def sync_to_ingestion_on_create(self) -> None:
-        from experimentation.tasks import write_environment_ingestion_keys
+        from experimentation.tasks import (
+            provision_external_warehouse_ingestion_infrastructure,
+            write_environment_ingestion_keys,
+        )
 
-        write_environment_ingestion_keys.delay(
+        if self.warehouse_type == WarehouseType.FLAGSMITH:
+            write_environment_ingestion_keys.delay(
+                kwargs={"environment_id": self.environment_id},
+            )
+            return
+
+        provision_external_warehouse_ingestion_infrastructure.delay(
             kwargs={"environment_id": self.environment_id},
         )
 
@@ -91,6 +100,29 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
         remove_environment_ingestion_keys.delay(
             kwargs={"environment_id": self.environment_id},
         )
+
+
+class IngestionInfrastructureStatus(models.TextChoices):
+    PENDING = "pending", "Pending"
+    CREATED = "created", "Created"
+    ERRORED = "errored", "Errored"
+
+
+class OrganisationIngestionInfrastructure(models.Model):
+    organisation = models.OneToOneField(
+        "organisations.Organisation",
+        on_delete=models.CASCADE,
+        related_name="ingestion_infrastructure",
+    )
+    status = models.CharField(
+        max_length=50,
+        choices=IngestionInfrastructureStatus.choices,
+        default=IngestionInfrastructureStatus.PENDING,
+    )
+    bucket_name = models.CharField(max_length=255, null=True, blank=True)
+    stream_name = models.CharField(max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class ExperimentStatus(models.TextChoices):

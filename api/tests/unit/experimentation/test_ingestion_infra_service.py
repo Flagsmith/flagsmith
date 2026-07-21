@@ -234,3 +234,57 @@ def test_provision_ingestion_infrastructure__stream_creation_fails__propagates_c
     # When / Then
     with pytest.raises(ClientError, match="LimitExceededException"):
         ingestion_infra_service.provision_ingestion_infrastructure(organisation_id=42)
+
+
+def test_deprovision_ingestion_infrastructure__existing_resources__deletes_bucket_and_stream(
+    ingestion_infra_settings: SettingsWrapper,
+    aws_backends: None,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    result = ingestion_infra_service.provision_ingestion_infrastructure(
+        organisation_id=42,
+    )
+
+    # When
+    ingestion_infra_service.deprovision_ingestion_infrastructure(organisation_id=42)
+
+    # Then
+    s3 = boto3.client("s3", region_name="eu-west-2")
+    bucket_names = [bucket["Name"] for bucket in s3.list_buckets()["Buckets"]]
+    assert result.bucket_name not in bucket_names
+
+    firehose = boto3.client("firehose", region_name="eu-west-2")
+    with pytest.raises(ClientError):
+        firehose.describe_delivery_stream(DeliveryStreamName=result.stream_name)
+
+    assert {
+        "level": "info",
+        "event": "ingestion_infra.deprovisioned",
+        "organisation__id": 42,
+        "bucket__name": result.bucket_name,
+        "stream__name": result.stream_name,
+    } in log.events
+
+
+def test_deprovision_ingestion_infrastructure__bucket_with_objects__empties_and_deletes_bucket(
+    ingestion_infra_settings: SettingsWrapper,
+    aws_backends: None,
+) -> None:
+    # Given
+    result = ingestion_infra_service.provision_ingestion_infrastructure(
+        organisation_id=42,
+    )
+    s3 = boto3.client("s3", region_name="eu-west-2")
+    s3.put_object(
+        Bucket=result.bucket_name,
+        Key="events/env_key=abc/data.json.gz",
+        Body=b"{}",
+    )
+
+    # When
+    ingestion_infra_service.deprovision_ingestion_infrastructure(organisation_id=42)
+
+    # Then
+    bucket_names = [bucket["Name"] for bucket in s3.list_buckets()["Buckets"]]
+    assert result.bucket_name not in bucket_names

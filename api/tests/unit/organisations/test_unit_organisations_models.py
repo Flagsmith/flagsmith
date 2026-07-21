@@ -9,6 +9,7 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from environments.models import Environment
+from experimentation.models import OrganisationIngestionInfrastructure
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
     Organisation,
@@ -893,3 +894,39 @@ def test_update_plan__valid_plan_id__updates_fields_from_chargebee(
     assert subscription.max_seats == 5
     assert subscription.max_api_calls == 500000
     assert subscription.cancellation_date is None
+
+
+def test_organisation__after_delete_with_infrastructure__enqueues_teardown(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    OrganisationIngestionInfrastructure.objects.create(organisation=organisation)
+    mock_task = mocker.patch(
+        "experimentation.tasks.teardown_organisation_ingestion_infrastructure",
+    )
+    organisation_id = organisation.id
+
+    # When
+    organisation.delete()
+
+    # Then
+    mock_task.delay.assert_called_once_with(
+        kwargs={"organisation_id": organisation_id},
+    )
+
+
+def test_organisation__after_delete_without_infrastructure__does_nothing(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_task = mocker.patch(
+        "experimentation.tasks.teardown_organisation_ingestion_infrastructure",
+    )
+
+    # When
+    organisation.delete()
+
+    # Then
+    mock_task.delay.assert_not_called()

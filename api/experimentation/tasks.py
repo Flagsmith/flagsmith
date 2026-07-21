@@ -5,6 +5,10 @@ from task_processor.decorators import register_task_handler
 from environments.models import Environment, EnvironmentAPIKey
 from experimentation import ingestion_sync_service
 from experimentation.models import Experiment, ExperimentExposures, ExperimentResults
+from experimentation.organisation_ingestion_service import (
+    disable_ingestion_for_organisation,
+    enable_ingestion_for_organisation,
+)
 from experimentation.services import compute_exposures_summary, compute_results_summary
 
 logger = structlog.get_logger("experimentation")
@@ -46,6 +50,25 @@ def remove_environment_ingestion_keys(environment_id: int) -> None:
     ingestion_sync_service.delete_ingestion_key(environment.api_key)
     for api_key in environment.api_keys.all():
         ingestion_sync_service.delete_ingestion_key(api_key.key)
+
+
+@register_task_handler()
+def provision_external_warehouse_ingestion_infrastructure(environment_id: int) -> None:
+    environment = (
+        Environment.objects.select_related("project__organisation")
+        .filter(id=environment_id)
+        .first()
+    )
+    if environment is None:
+        return
+
+    enable_ingestion_for_organisation(environment.project.organisation)
+    write_environment_ingestion_keys(environment_id)
+
+
+@register_task_handler()
+def teardown_organisation_ingestion_infrastructure(organisation_id: int) -> None:
+    disable_ingestion_for_organisation(organisation_id)
 
 
 @register_task_handler()
