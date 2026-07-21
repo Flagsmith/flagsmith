@@ -16,7 +16,11 @@ import { useOnboardingFlag } from 'components/pages/onboarding/hooks/useOnboardi
 import { useOnboardingConnection } from 'components/pages/onboarding/hooks/useOnboardingConnection'
 import { useUpdateOrganisationMutation } from 'common/services/useOrganisation'
 import { useUpdateProjectMutation } from 'common/services/useProject'
+import API from 'project/api'
+import Constants from 'common/constants'
 import './OnboardingFlow.scss'
+
+type OnboardingSnippet = 'install' | 'wire'
 
 // The single-page onboarding flow, rendered at /getting-started when
 // onboarding_quickstart_flow is on (see GettingStartedGate).
@@ -139,6 +143,38 @@ const OnboardingFlow: FC = () => {
     history.push(`${base}/features?feature=${flagId}&tab=${tab}`)
   }
 
+  const diagnosticIds = {
+    environment_id: environment?.id,
+    organisation_id: organisationId,
+    project_id: projectId,
+  }
+  const trackSnippetCopied = (snippet: OnboardingSnippet) =>
+    API.trackEvent({
+      ...Constants.events.ONBOARDING_SNIPPET_COPIED,
+      extra: { ...diagnosticIds, snippet },
+    })
+  const handleCopyInstall = () => {
+    trackSnippetCopied('install')
+    setInstallCopied(true)
+  }
+  const handleCopyWire = () => {
+    trackSnippetCopied('wire')
+    setSnippetCopied(true)
+  }
+  const handleCopyPrompt = () =>
+    API.trackEvent({
+      ...Constants.events.ONBOARDING_AI_CONNECT,
+      extra: diagnosticIds,
+    })
+  const handleToggleFlag = async (enabled: boolean) => {
+    if (await toggleFlag(enabled)) {
+      API.trackEvent({
+        ...Constants.events.ONBOARDING_FLAG_TOGGLED,
+        extra: { ...diagnosticIds, enabled },
+      })
+    }
+  }
+
   if (status === 'creating') {
     return (
       <div className='onboarding-flow mx-auto text-center'>
@@ -177,8 +213,9 @@ const OnboardingFlow: FC = () => {
       <OnboardingConnectPanel
         environmentKey={environmentKey}
         featureName={featureName}
-        onCopyInstall={() => setInstallCopied(true)}
-        onCopyWire={() => setSnippetCopied(true)}
+        onCopyInstall={handleCopyInstall}
+        onCopyWire={handleCopyWire}
+        onCopyPrompt={handleCopyPrompt}
       />
       <OnboardingTerminal
         featureName={featureName}
@@ -196,7 +233,7 @@ const OnboardingFlow: FC = () => {
             tags: flagTags,
           },
         ]}
-        onToggle={(_flag, next) => toggleFlag(next)}
+        onToggle={(_flag, next) => handleToggleFlag(next)}
         togglingFlag={isToggling ? featureName : null}
         togglesReady={flagStateReady}
       />

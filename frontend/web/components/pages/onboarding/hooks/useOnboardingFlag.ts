@@ -41,9 +41,9 @@ export const useOnboardingFlag = (
   const { displayEnabled, isLoading, revertToggle, startToggle } =
     useFeatureRowState(state?.enabled)
 
-  const toggle = async (enabled: boolean) => {
+  const toggle = async (enabled: boolean): Promise<boolean> => {
     if (!environment || !state || !startToggle(enabled)) {
-      return
+      return false
     }
     try {
       await updateFeatureState({
@@ -51,9 +51,11 @@ export const useOnboardingFlag = (
         environmentFlagId: state.id,
         environmentId: environment.api_key,
       }).unwrap()
+      return true
     } catch {
       revertToggle()
       toast('Couldn’t update your flag. Please try again.', 'danger')
+      return false
     }
   }
 

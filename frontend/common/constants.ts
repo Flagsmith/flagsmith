@@ -260,6 +260,18 @@ const Constants = {
       'category': 'User',
       'event': `User oauth ${type}`,
     }),
+    'ONBOARDING_AI_CONNECT': {
+      'category': 'Onboarding',
+      'event': 'Onboarding AI connect used',
+    },
+    'ONBOARDING_FLAG_TOGGLED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding flag toggled',
+    },
+    'ONBOARDING_SNIPPET_COPIED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding snippet copied',
+    },
     'REFERRER_CONVERSION': (referrer: string) => ({
       'category': 'Referrer',
       'event': `${referrer} converted`,

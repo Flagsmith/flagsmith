@@ -7,6 +7,7 @@ import { useCopyFeedback } from 'components/pages/onboarding/hooks/useCopyFeedba
 export type ConnectWithAiPanelProps = {
   environmentKey: string
   featureName: string
+  onCopyPrompt?: () => void
 }
 
 // "Connect with AI" tab: an agent-agnostic prompt the user pastes into their
@@ -18,6 +19,7 @@ export type ConnectWithAiPanelProps = {
 const ConnectWithAiPanel: FC<ConnectWithAiPanelProps> = ({
   environmentKey,
   featureName,
+  onCopyPrompt,
 }) => {
   const { copied, copy } = useCopyFeedback()
 
@@ -39,7 +41,14 @@ Detect my stack, install the SDK, and wire ${featureName} into one place. Then r
         <code className='onboarding-connect__prompt-text flex-fill'>
           {aiPrompt}
         </code>
-        <Button theme='outline' size='small' onClick={() => copy(aiPrompt)}>
+        <Button
+          theme='outline'
+          size='small'
+          onClick={() => {
+            copy(aiPrompt)
+            onCopyPrompt?.()
+          }}
+        >
           <span
             className='d-inline-flex align-items-center gap-1'
             aria-live='polite'
