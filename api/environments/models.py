@@ -317,24 +317,15 @@ class Environment(
         return environment
 
     @classmethod
-    def write_environment_documents(  # noqa: C901
+    def write_environment_documents(
         cls,
-        environment_id: int | None = None,
-        project_id: int | None = None,
-        api_key: str | None = None,
+        environment_id: int = None,  # type: ignore[assignment]
+        project_id: int = None,  # type: ignore[assignment]
     ) -> None:
-        if environment_id:
-            environments_filter = Q(id=environment_id)
-        elif project_id:
-            environments_filter = Q(project_id=project_id)
-        elif api_key:
-            environments_filter = Q(api_key=api_key)
-        else:
-            raise TypeError(
-                "One of environment_id, project_id, api_key must be provided"
-            )
-
         # use a list to make sure the entire qs is evaluated up front
+        environments_filter = (
+            Q(id=environment_id) if environment_id else Q(project_id=project_id)
+        )
         environments = list(
             cls.objects.filter_for_document_builder(
                 environments_filter,

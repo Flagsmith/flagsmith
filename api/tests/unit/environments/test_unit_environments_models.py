@@ -461,10 +461,11 @@ def test_trait_persistence_allowed__parametrised_origins__returns_expected(  # t
     assert result == expected_result
 
 
-def test_write_environment_documents__environment_id__writes_single_environment(
-    dynamo_enabled_project_environment_one: Environment,
-    mock_dynamo_env_wrapper: Mock,
-) -> None:
+def test_write_environment_documents__single_environment__writes_correct_queryset(  # type: ignore[no-untyped-def]
+    dynamo_enabled_project,
+    dynamo_enabled_project_environment_one,
+    mock_dynamo_env_wrapper,
+):
     # Given
     mock_dynamo_env_wrapper.reset_mock()
 
@@ -474,18 +475,21 @@ def test_write_environment_documents__environment_id__writes_single_environment(
     )
 
     # Then
-    [(args, kwargs)] = mock_dynamo_env_wrapper.write_environments.call_args_list
+    args, kwargs = mock_dynamo_env_wrapper.write_environments.call_args
     assert kwargs == {}
-    (queryset,) = args
-    assert list(queryset) == [dynamo_enabled_project_environment_one]
+    assert len(args) == 1
+    assert_queryset_equal(
+        args[0],
+        Environment.objects.filter(id=dynamo_enabled_project_environment_one.id),
+    )
 
 
-def test_write_environment_documents__project_id__writes_all_project_environments(
-    dynamo_enabled_project: Project,
-    dynamo_enabled_project_environment_one: Environment,
-    dynamo_enabled_project_environment_two: Environment,
-    mock_dynamo_env_wrapper: Mock,
-) -> None:
+def test_write_environment_documents__project_id__writes_all_project_environments(  # type: ignore[no-untyped-def]
+    dynamo_enabled_project,
+    dynamo_enabled_project_environment_one,
+    dynamo_enabled_project_environment_two,
+    mock_dynamo_env_wrapper,
+):
     # Given
     mock_dynamo_env_wrapper.reset_mock()
 
@@ -493,42 +497,35 @@ def test_write_environment_documents__project_id__writes_all_project_environment
     Environment.write_environment_documents(project_id=dynamo_enabled_project.id)
 
     # Then
-    [(args, kwargs)] = mock_dynamo_env_wrapper.write_environments.call_args_list
+    args, kwargs = mock_dynamo_env_wrapper.write_environments.call_args
     assert kwargs == {}
-    (queryset,) = args
-    assert list(queryset) == [
-        dynamo_enabled_project_environment_one,
-        dynamo_enabled_project_environment_two,
-    ]
+    assert len(args) == 1
+    assert_queryset_equal(
+        args[0], Environment.objects.filter(project=dynamo_enabled_project)
+    )
 
 
-def test_write_environment_documents__api_key__writes_single_environment(
-    dynamo_enabled_project_environment_one: Environment,
-    mock_dynamo_env_wrapper: Mock,
-) -> None:
+def test_write_environment_documents__environment_id_provided__writes_single_environment(  # type: ignore[no-untyped-def]
+    dynamo_enabled_project,
+    dynamo_enabled_project_environment_one,
+    mock_dynamo_env_wrapper,
+):
     # Given
     mock_dynamo_env_wrapper.reset_mock()
 
     # When
     Environment.write_environment_documents(
-        api_key=dynamo_enabled_project_environment_one.api_key
+        environment_id=dynamo_enabled_project_environment_one.id
     )
 
     # Then
-    [(args, kwargs)] = mock_dynamo_env_wrapper.write_environments.call_args_list
+    args, kwargs = mock_dynamo_env_wrapper.write_environments.call_args
     assert kwargs == {}
-    (queryset,) = args
-    assert list(queryset) == [dynamo_enabled_project_environment_one]
-
-
-def test_write_environment_documents__no_filters__raises() -> None:
-    # Given / When
-    # Then
-    with pytest.raises(
-        TypeError,
-        match="One of environment_id, project_id, api_key must be provided",
-    ):
-        Environment.write_environment_documents()
+    assert len(args) == 1
+    assert_queryset_equal(
+        args[0],
+        Environment.objects.filter(id=dynamo_enabled_project_environment_one.id),
+    )
 
 
 def test_write_environments_to_dynamodb__project_environments_v2_migrated__call_expected(

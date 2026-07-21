@@ -144,10 +144,8 @@ def realtime_enabled_project_environment_two(realtime_enabled_project):  # type:
 
 
 @pytest.fixture()
-def dynamo_enabled_project_environment_one(
-    dynamo_enabled_project: Project,
-) -> Environment:
-    return Environment.objects.create(  # type: ignore[no-any-return]
+def dynamo_enabled_project_environment_one(dynamo_enabled_project):  # type: ignore[no-untyped-def]
+    return Environment.objects.create(
         name="Env 1", project=dynamo_enabled_project, api_key="env-1-key"
     )
 

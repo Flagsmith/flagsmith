@@ -158,7 +158,7 @@ def test_put_onboarding_status_sync__never_evaluated__writes_environment_documen
 
     # Then
     assert response.status_code == 204
-    write_environment_documents.assert_called_once_with(api_key=environment.api_key)
+    write_environment_documents.assert_called_once_with(environment_id=environment.id)
 
 
 def test_put_onboarding_status_sync__evaluated__skips_environment_document(

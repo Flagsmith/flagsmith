@@ -36,6 +36,6 @@ def record_environment_first_evaluation(
     environment.first_evaluated_sdk_label = sdk_label
     environment.save(update_fields=["first_evaluated_at", "first_evaluated_sdk_label"])
 
-    Environment.write_environment_documents(api_key=api_key)
+    Environment.write_environment_documents(environment_id=environment.id)
 
     log.info("environment.first_evaluated")
