@@ -2,6 +2,7 @@ import csv
 import io
 import json
 from operator import attrgetter
+from typing import cast
 from unittest.mock import MagicMock
 
 import pytest
@@ -17,8 +18,10 @@ from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from features.models import Feature, FeatureState
+from integrations.launch_darkly import types as ld_types
 from integrations.launch_darkly.models import LaunchDarklyImportRequest
 from integrations.launch_darkly.services import (
+    _create_boolean_feature_states_with_segments_identities,
     _serialize_variation_value,
     create_import_request,
     process_import_request,
@@ -261,6 +264,60 @@ def test_process_import_request__success__expected_status(  # type: ignore[no-un
     # Tags are imported correctly.
     tagged_feature = Feature.objects.get(project=project, name="flag5")
     [tag.label for tag in tagged_feature.tags.all()] == ["testtag", "testtag2"]
+
+
+@pytest.mark.parametrize(
+    ("is_on", "default_config", "expected_enabled"),
+    [
+        (True, {"fallthrough": {"variation": 1}}, False),
+        (False, {"offVariation": 0}, True),
+    ],
+)
+def test_create_boolean_feature_states__served_variation__sets_expected_state(
+    is_on: bool,
+    default_config: dict[str, object],
+    expected_enabled: bool,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    ld_flag = cast(
+        ld_types.FeatureFlag,
+        {
+            "kind": "boolean",
+            "variations": [{"value": True}, {"value": False}],
+            "environments": {
+                "test": {
+                    "on": is_on,
+                    **default_config,
+                }
+            },
+        },
+    )
+    environment = cast(Environment, MagicMock(spec=Environment))
+    feature_state = MagicMock(spec=FeatureState)
+    feature_state_manager = mocker.patch(
+        "integrations.launch_darkly.services.FeatureState.objects.update_or_create",
+        return_value=(feature_state, True),
+    )
+    mocker.patch(
+        "integrations.launch_darkly.services.FeatureStateValue.objects.update_or_create"
+    )
+    mocker.patch("integrations.launch_darkly.services._import_targets")
+    mocker.patch("integrations.launch_darkly.services._import_rules")
+
+    # When
+    _create_boolean_feature_states_with_segments_identities(
+        import_request=MagicMock(spec=LaunchDarklyImportRequest),
+        ld_flag=ld_flag,
+        feature=MagicMock(spec=Feature),
+        environments_by_ld_environment_key={"test": environment},
+        segments_by_ld_key={},
+    )
+
+    # Then
+    assert feature_state_manager.call_args.kwargs["defaults"] == {
+        "enabled": expected_enabled
+    }
 
 
 @pytest.mark.django_db(transaction=True)
