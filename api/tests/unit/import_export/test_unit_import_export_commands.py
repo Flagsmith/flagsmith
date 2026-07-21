@@ -2,7 +2,9 @@ from django.core.management import call_command
 from pytest_mock import MockerFixture
 
 
-def test_dumporganisationtos3_command__calls_exporter(mocker: MockerFixture) -> None:
+def test_dumporganisationtos3_command__valid_args__calls_exporter(
+    mocker: MockerFixture,
+) -> None:
     # Given
     mock_exporter = mocker.MagicMock()
     mocker.patch(
