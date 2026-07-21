@@ -18,17 +18,16 @@ import {
 } from 'common/types/responses'
 import { SmartDefaults } from './useSmartDefaults'
 import { createOrganisationViaAccountStore } from './createOrganisationViaAccountStore'
+import API from 'project/api'
+import Constants from 'common/constants'
 
 type Store = ReturnType<typeof getStore>
 
 const FLAG_NAME = 'show_demo_button'
 const DEFAULT_ORG_NAME = 'My organisation'
 const DEFAULT_PROJECT_NAME = 'My first project'
-// Written on create and matched by name on reuse, so the two must stay in step.
 const DEV_ENVIRONMENT_NAME = 'Development'
 const PROD_ENVIRONMENT_NAME = 'Production'
-// Attached to the demo flag so the flags table shows an "Onboarding" badge.
-// Green from the product tag palette (Constants.tagColors), not an arbitrary hex.
 const ONBOARDING_TAG = {
   color: '#3cb371',
   description: 'Created during onboarding',
@@ -50,13 +49,12 @@ export type OnboardingBootstrap = {
   featureName: string
 }
 
-// Reuse the loaded org, or create one only when the user has none (the plan
-// org cap rejects extra creates with a 403). Create goes through the legacy
-// AccountStore so the shell's current-org selection is populated.
 async function ensureOrganisation(
   store: Store,
   { defaults, existingOrg }: BootstrapInput,
 ): Promise<ExistingOrg> {
+  // Create only when the user has none: the plan org cap rejects extra creates
+  // with a 403. Goes through AccountStore so the shell adopts the new org.
   if (existingOrg) {
     return existingOrg
   }
@@ -71,8 +69,6 @@ async function ensureOrganisation(
   return { id, name }
 }
 
-// Reuse the first project, else create one with Development + Production
-// environments. Avoids stacking up duplicate projects on revisits.
 async function ensureProject(
   store: Store,
   organisationId: number,
@@ -93,6 +89,7 @@ async function ensureProject(
       }),
     )
     .unwrap()
+  API.trackEvent(Constants.events.CREATE_FIRST_PROJECT)
   await store
     .dispatch(
       environmentService.endpoints.createEnvironment.initiate({
@@ -112,8 +109,6 @@ async function ensureProject(
   return project
 }
 
-// Surface an environment key: reuse one (preferring Development), or create it
-// only if the reused project somehow has none.
 async function ensureEnvironments(
   store: Store,
   project: ProjectSummary,
@@ -138,7 +133,6 @@ async function ensureEnvironments(
     .unwrap()
 }
 
-// Find the project's Onboarding tag, if it's been created yet.
 async function findOnboardingTag(
   store: Store,
   projectId: number,
@@ -149,8 +143,6 @@ async function findOnboardingTag(
   return tags?.find((t) => t.label === ONBOARDING_TAG.label)
 }
 
-// Reuse the onboarding flag, matched by its Onboarding tag (or its name) so we
-// never grab one of the user's other flags; else create the demo flag.
 async function ensureFlag(
   store: Store,
   project: ProjectSummary,
@@ -170,7 +162,8 @@ async function ensureFlag(
   if (existing) {
     return existing
   }
-  return store
+  const isFirstFeature = !flags?.results?.length
+  const created = await store
     .dispatch(
       projectFlagService.endpoints.createProjectFlag.initiate({
         body: {
@@ -182,11 +175,12 @@ async function ensureFlag(
       }),
     )
     .unwrap()
+  if (isFirstFeature) {
+    API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
+  }
+  return created
 }
 
-// Attach the "Onboarding" tag to the demo flag (find-or-create), so the flags
-// table shows the badge from the design. Best-effort: tagging is cosmetic and
-// must never block the bootstrap.
 async function ensureOnboardingTag(
   store: Store,
   project: ProjectSummary,
@@ -215,14 +209,10 @@ async function ensureOnboardingTag(
         .unwrap()
     }
   } catch {
-    // Cosmetic only - never block onboarding on tagging.
+    // Cosmetic: tagging must never block onboarding.
   }
 }
 
-// Idempotently bring up everything the single-page flow needs: org, project,
-// Development + Production environments, and a first flag, reusing whatever
-// already exists. Split into ensure* steps so each concern is testable and the
-// reuse-vs-create decisions are obvious.
 export async function bootstrapOnboarding(
   store: Store,
   input: BootstrapInput,
@@ -234,7 +224,6 @@ export async function bootstrapOnboarding(
   if (flag) {
     await ensureOnboardingTag(store, project, flag)
   }
-  // Refresh the legacy org store so the shell sees the project.
   AppActions.refreshOrganisation()
   return {
     environment,
