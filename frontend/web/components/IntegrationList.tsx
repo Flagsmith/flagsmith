@@ -24,7 +24,12 @@ import each from 'lodash/each'
 import { useGetProjectQuery } from 'common/services/useProject'
 import API from 'project/api'
 import Constants from 'common/constants'
-import BooleanDotIndicator from './BooleanDotIndicator'
+import ColorSwatch from './ColorSwatch'
+import {
+  colorIconDisabled,
+  colorTextDanger,
+  colorTextSuccess,
+} from 'common/theme/tokens'
 
 type IntegrationAction = {
   label: string
@@ -328,10 +333,14 @@ const Integration: FC<IntegrationProps> = (props) => {
       {activeIntegrations &&
         activeIntegrations.map((integration) => {
           let healthStatusText = 'No health data'
+          let healthColor = colorIconDisabled
           if (integration.latest_health) {
             healthStatusText = integration.latest_health.is_healthy
               ? 'Healthy'
               : 'Unhealthy'
+            healthColor = integration.latest_health.is_healthy
+              ? colorTextSuccess
+              : colorTextDanger
           }
 
           return (
@@ -351,9 +360,7 @@ const Integration: FC<IntegrationProps> = (props) => {
                   />
                 </Flex>
                 <div className='d-flex align-items-center gap-2 mt-1 mr-3'>
-                  <BooleanDotIndicator
-                    enabled={integration.latest_health?.is_healthy ?? false}
-                  />
+                  <ColorSwatch color={healthColor} shape='circle' size='lg' />
                   <span className='fs-small text-muted'>
                     {healthStatusText}
                   </span>
