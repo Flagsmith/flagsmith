@@ -74,7 +74,7 @@ from users.models import FFAdminUser, UserPermissionGroup
         ),
     ),
 )
-def test_project_permissions_calculator_get_permission_data(  # type: ignore[no-untyped-def]
+def test_get_project_permission_data__parametrised_user_and_group_perms__returns_expected(  # type: ignore[no-untyped-def]
     project,
     organisation,
     django_user_model,
@@ -120,7 +120,7 @@ def test_project_permissions_calculator_get_permission_data(  # type: ignore[no-
     assert user_permission_data.inherited_admin_roles == []
 
 
-def test_project_permissions_calculator_get_permission_data_for_organisation_admin(
+def test_get_project_permission_data__organisation_admin__returns_admin_true(
     project: Project, organisation: Organisation, django_user_model: FFAdminUser
 ) -> None:
     # Given
@@ -182,7 +182,7 @@ def test_project_permissions_calculator_get_permission_data_for_organisation_adm
         ),
     ),
 )
-def test_environment_permissions_calculator_get_permission_data(  # type: ignore[no-untyped-def]
+def test_get_environment_permission_data__parametrised_user_and_group_perms__returns_expected(  # type: ignore[no-untyped-def]
     environment,
     organisation,
     django_user_model,
@@ -238,7 +238,7 @@ def test_environment_permissions_calculator_get_permission_data(  # type: ignore
     assert user_permission_data.inherited_admin_roles == []
 
 
-def test_environment_permissions_calculator_get_permission_data_for_direct_project_admin(
+def test_get_environment_permission_data__direct_project_admin__returns_admin_true(
     environment: Environment,
     project: Project,
     organisation: Organisation,
@@ -259,7 +259,7 @@ def test_environment_permissions_calculator_get_permission_data_for_direct_proje
     assert user_permission_data.admin is True
 
 
-def test_environment_permissions_calculator_get_permission_data_for_project_admin_through_group(
+def test_get_environment_permission_data__project_admin_through_group__returns_admin_with_inherited_groups(
     environment: Environment,
     project: Project,
     organisation: Organisation,
@@ -293,7 +293,7 @@ def test_environment_permissions_calculator_get_permission_data_for_project_admi
     assert user_permission_data.inherited_admin_roles == []
 
 
-def test_environment_permissions_calculator_get_permission_data_for_project_admin_through_role(
+def test_get_environment_permission_data__project_admin_through_role__returns_admin_with_inherited_roles(
     environment: Environment,
     project: Project,
     organisation: Organisation,
@@ -334,7 +334,7 @@ def test_environment_permissions_calculator_get_permission_data_for_project_admi
     assert user_permission_data.inherited_admin_roles == [admin_role]
 
 
-def test_environment_permissions_calculator_get_permission_data_for_organisation_admin(
+def test_get_environment_permission_data__organisation_admin__returns_admin_true(
     environment: Environment,
     organisation: Organisation,
     django_user_model: FFAdminUser,
@@ -376,7 +376,7 @@ def test_environment_permissions_calculator_get_permission_data_for_organisation
         ),
     ),
 )
-def test_organisation_permissions_calculator_get_permission_data(  # type: ignore[no-untyped-def]
+def test_get_organisation_permission_data__parametrised_user_and_group_perms__returns_expected(  # type: ignore[no-untyped-def]
     organisation,
     django_user_model,
     user_permissions,
@@ -431,7 +431,9 @@ def test_organisation_permissions_calculator_get_permission_data(  # type: ignor
     assert user_permission_data.inherited_admin_roles == []
 
 
-def test_permission_data_to_detailed_permissions_data() -> None:
+def test_to_detailed_permissions_data__multiple_groups_and_roles__returns_correct_derived_from() -> (
+    None
+):
     # Given
     user_permission_data = UserPermissionData(
         admin=True, permissions={CREATE_CHANGE_REQUEST}

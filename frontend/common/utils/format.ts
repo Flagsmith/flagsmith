@@ -1,5 +1,3 @@
-import moment from 'moment'
-
 type Person = {
   firstName?: string
   lastName?: string
@@ -37,23 +35,6 @@ const Format = {
     return fn
       ? `${Format.camelCase(fn)} ${Format.camelCase(sn)}`
       : Format.camelCase(sn)
-  },
-
-  moment(
-    value: string | null | undefined,
-    format: string,
-  ): string | null | undefined {
-    // DATE, hh:mm > 23:00
-    if (value) {
-      const m = moment(value)
-      return m.format(format)
-    }
-    return value
-  },
-
-  nearestTen(value: number): string | number {
-    // 11 > 10
-    return value >= 10 ? value : `0${value}`
   },
 
   newLineDelimiter: '↵',

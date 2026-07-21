@@ -18,7 +18,7 @@ Example applications for a variety of React, React Native and Next.js can be fou
 ### NPM
 
 ```bash
-npm i flagsmith --save
+npm i @flagsmith/flagsmith --save
 ```
 
 ### NPM for React Native
@@ -32,7 +32,7 @@ AsyncStorage to be provided (e.g. @react-native-community/async-storage) in orde
 :::
 
 ```bash
-npm i react-native-flagsmith --save
+npm i @flagsmith/react-native --save
 ```
 
 ## Basic Usage
@@ -46,8 +46,8 @@ Wrapping your application with our FlagsmithProvider component provides a React 
 that you can use the hooks `useFlagsmith` and `useFlags`.
 
 ```javascript
-import flagsmith from 'flagsmith'
-import {FlagsmithProvider} from 'flagsmith/react'
+import flagsmith from '@flagsmith/flagsmith'
+import {FlagsmithProvider} from '@flagsmith/flagsmith/react'
 
 export function AppRoot() {
   <FlagsmithProvider options={{
@@ -75,7 +75,7 @@ Components that have been wrapped in a FlagsmithProvider will be able to evaluat
 well as user traits via the `useFlags` hook.
 
 ```javascript
-import { useFlags } from 'flagsmith/react';
+import { useFlags } from '@flagsmith/flagsmith/react';
 
 export function MyComponent() {
  const flags = useFlags(['font_size'], ['example_trait']); // only causes re-render if specified flag values / traits change
@@ -112,7 +112,7 @@ Components that have been wrapped in a FlagsmithProvider will be able to access 
 
 ```javascript
 import React from 'react';
-import { useFlags, useFlagsmith } from 'flagsmith/react';
+import { useFlags, useFlagsmith } from '@flagsmith/flagsmith/react';
 
 export function MyComponent() {
  const flags = useFlags(['font_size'], ['example_trait']); // only causes re-render if specified flag values / traits change

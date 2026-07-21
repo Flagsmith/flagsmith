@@ -1,4 +1,4 @@
-module.exports = (envId, { TRAIT_NAME }, userId) => `using Flagsmith;
+export default (envId, { TRAIT_NAME }, userId) => `using Flagsmith;
 
 FlagsmithClient _flagsmithClient;
 _flagsmithClient = new("${envId}");

@@ -7,13 +7,26 @@ from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from edge_api.utils import is_edge_enabled
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.models import Project
+from segment_membership.constants import MAX_SEGMENT_MEMBERS_PAGE_SIZE
+from segment_membership.models import SegmentMembershipCount
+from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule
 
-logger = structlog.get_logger()
+logger = structlog.get_logger(__name__)
 
 DictList = list[dict[str, Any]]
+
+
+class SegmentMembershipCountSerializer(
+    serializers.ModelSerializer[SegmentMembershipCount]
+):
+    class Meta:
+        model = SegmentMembershipCount
+        fields = ["environment", "count", "last_synced_at"]
+        read_only_fields = ["environment", "count", "last_synced_at"]
 
 
 class ConditionSerializer(serializers.ModelSerializer[Condition]):
@@ -81,6 +94,7 @@ class SegmentRuleSerializer(_BaseSegmentRuleSerializer):
 class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
     rules = SegmentRuleSerializer(many=True, required=True, allow_empty=False)
     metadata = MetadataSerializer(required=False, many=True)
+    membership_counts = SegmentMembershipCountSerializer(many=True, read_only=True)
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """
@@ -111,14 +125,20 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             "version_of",
             "rules",
             "metadata",
+            "membership_counts",
         ]
+        read_only_fields = ["membership_counts"]
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)
-        project = self.instance.project if self.instance else attrs["project"]  # type: ignore[union-attr]
+        metadata = attrs.get("metadata", [])
+
+        # TODO: Make "project" read-only — https://github.com/Flagsmith/flagsmith-workflows/issues/102
+        project_pk = self.context["view"].kwargs["project_pk"]
+        project = attrs["project"] = Project.objects.get(pk=project_pk)
         organisation = project.organisation
 
-        self._validate_required_metadata(organisation, attrs.get("metadata", []))
+        self._validate_required_metadata(organisation, metadata, project)
         self._validate_segment_rules_conditions_limit(attrs["rules"])
         self._validate_project_segment_limit(project)
         return attrs
@@ -127,6 +147,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         metadata_data = validated_data.pop("metadata", [])
         segment = super().create(validated_data)  # type: ignore[no-untyped-call]
         self._update_metadata(segment, metadata_data)
+        enqueue_membership_refresh(segment.project)
         return segment
 
     def update(self, segment: Segment, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
@@ -141,6 +162,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                 )
             segment = super().update(segment, validated_data)  # type: ignore[no-untyped-call]
         self._update_metadata(segment, metadata)
+        enqueue_membership_refresh(segment.project)
         return segment
 
     def _get_rules_and_conditions_without_deleted(
@@ -173,6 +195,8 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         ]
 
     def _validate_project_segment_limit(self, project: Project) -> None:
+        if not is_edge_enabled():
+            return
         segment_count = Segment.live_objects.filter(project=project).count()
         if segment_count >= project.max_segments_allowed:
             raise ValidationError(
@@ -223,3 +247,38 @@ class CloneSegmentSerializer(serializers.ModelSerializer[Segment]):
     class Meta:
         model = Segment
         fields = ("name",)
+
+
+class SegmentMembersQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
+    environment = serializers.IntegerField(
+        help_text="The id of the environment to list segment members for.",
+    )
+    cursor = serializers.CharField(
+        required=False,
+        help_text="The identifier of the previous page's last row; omit for the first page.",
+    )
+    q = serializers.CharField(
+        required=False,
+        help_text="Case-insensitive substring to filter members by identifier.",
+    )
+    limit = serializers.IntegerField(
+        required=False,
+        default=100,
+        min_value=1,
+        max_value=MAX_SEGMENT_MEMBERS_PAGE_SIZE,
+        help_text=f"Page size, up to {MAX_SEGMENT_MEMBERS_PAGE_SIZE}.",
+    )
+
+
+class SegmentMemberSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    identifier = serializers.CharField()
+    identity_key = serializers.CharField()
+    traits = serializers.JSONField()
+
+
+class SegmentMembersResponseSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    results = SegmentMemberSerializer(many=True)
+    next_cursor = serializers.CharField(
+        allow_null=True,
+        help_text="Pass as `cursor` to fetch the next page; null when there are no more rows.",
+    )

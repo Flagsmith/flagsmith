@@ -1,4 +1,4 @@
-const EventEmitter = require('events').EventEmitter
+import { EventEmitter } from 'events'
 
 const DEFAULT_CHANGE_EVENT = 'change'
 
@@ -12,7 +12,7 @@ const DEFAULT_SAVING_EVENT = 'saving'
 
 const DEFAULT_ERROR_EVENT = 'problem'
 
-module.exports = Object.assign({}, EventEmitter.prototype, {
+export default Object.assign({}, EventEmitter.prototype, {
   _maxListeners: Number.MAX_VALUE,
   changed() {
     this.trigger(DEFAULT_CHANGE_EVENT)

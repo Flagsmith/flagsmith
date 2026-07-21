@@ -11,7 +11,7 @@ from pytest_django.fixtures import SettingsWrapper
     test_settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_create_whitelisted_segments_migration(
+def test_create_whitelisted_segments_migration__segment_exceeds_limit__adds_to_whitelist(
     migrator: Migrator,
     settings: SettingsWrapper,
 ) -> None:
@@ -110,7 +110,9 @@ def test_create_whitelisted_segments_migration(
     test_settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_add_versioning_to_segments_forwards(migrator: Migrator) -> None:
+def test_add_versioning_to_segments__forwards__sets_version_of_to_self(
+    migrator: Migrator,
+) -> None:
     # Given - The migration state is at 0021 (before the migration we want to test).
     old_state = migrator.apply_initial_migration(
         ("segments", "0022_add_soft_delete_to_segment_rules_and_conditions")
@@ -162,7 +164,9 @@ def test_add_versioning_to_segments_forwards(migrator: Migrator) -> None:
     test_settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_add_versioning_to_segments_reverse(migrator: Migrator) -> None:
+def test_add_versioning_to_segments__reverse__deletes_historical_versions(
+    migrator: Migrator,
+) -> None:
     # Given - The migration state is at 0023 (after the migration we want to test).
     old_state = migrator.apply_initial_migration(
         ("segments", "0023_add_versioning_to_segments")

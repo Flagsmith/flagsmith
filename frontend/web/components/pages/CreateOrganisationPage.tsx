@@ -66,7 +66,7 @@ const CreateOrganisationPage: React.FC = () => {
   useEffect(() => {
     API.trackPage(Constants.pages.CREATE_ORGANISATION)
     focusTimeout.current = setTimeout(() => {
-      inputRef.current?.focus()
+      inputRef.current?.focus?.()
       focusTimeout.current = null
     }, 500)
 
@@ -133,7 +133,7 @@ const CreateOrganisationPage: React.FC = () => {
                 <div>
                   What is your company's desired hosting option?{' '}
                   <a
-                    className='text-primary'
+                    className='text-action'
                     href='https://docs.flagsmith.com/version-comparison'
                     target='_blank'
                     rel='noreferrer'

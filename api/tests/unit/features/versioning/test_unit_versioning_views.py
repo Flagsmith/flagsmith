@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -46,7 +47,7 @@ now = timezone.now()
 tomorrow = now + timedelta(days=1)
 
 
-def test_get_versions_for_a_feature_and_environment(
+def test_list_versions__v2_versioning_enabled__returns_all_versions(
     admin_client: APIClient,
     admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -90,7 +91,7 @@ def test_get_versions_for_a_feature_and_environment(
     )
 
 
-def test_create_new_feature_version(
+def test_create_feature_version__staff_with_permissions__returns_created(
     staff_user: FFAdminUser,
     staff_client: APIClient,
     environment_v2_versioning: Environment,
@@ -118,7 +119,7 @@ def test_create_new_feature_version(
     assert response_json["uuid"]
 
 
-def test_delete_feature_version(
+def test_delete_feature_version__unpublished_version__marks_as_deleted(
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -148,7 +149,7 @@ def test_delete_feature_version(
     assert environment_feature_version.deleted is True
 
 
-def test_retrieve_environment_feature_version_permission_denied(
+def test_retrieve_feature_version__no_permissions__returns_forbidden(
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_client: APIClient,
@@ -165,7 +166,7 @@ def test_retrieve_environment_feature_version_permission_denied(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_retrieve_feature_version_with_no_previous_version(
+def test_retrieve_feature_version__no_previous_version__returns_null_previous_uuid(
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_client: APIClient,
@@ -197,7 +198,7 @@ def test_retrieve_feature_version_with_no_previous_version(
     assert response_json["environment"] == environment_v2_versioning.id
 
 
-def test_retrieve_feature_version_with_previous_version(
+def test_retrieve_feature_version__has_previous_version__returns_previous_uuid(
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_user: FFAdminUser,
@@ -230,7 +231,7 @@ def test_retrieve_feature_version_with_previous_version(
     assert response_json["previous_version_uuid"] == str(version_1.uuid)
 
 
-def test_retrieve_feature_version_for_unpublished_version(
+def test_retrieve_feature_version__unpublished_version__returns_previous_uuid(
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_user: FFAdminUser,
@@ -262,7 +263,7 @@ def test_retrieve_feature_version_for_unpublished_version(
     assert response_json["previous_version_uuid"] == str(version_1.uuid)
 
 
-def test_cannot_delete_live_feature_version(
+def test_delete_feature_version__live_version__returns_bad_request(
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -292,7 +293,7 @@ def test_cannot_delete_live_feature_version(
 
 
 @pytest.mark.parametrize("live_from", (None, tomorrow))
-def test_publish_feature_version(
+def test_publish_feature_version__unpublished_version__publishes_and_creates_audit_log(
     admin_client: APIClient,
     admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -339,7 +340,7 @@ def test_publish_feature_version(
 
 
 @pytest.mark.parametrize("live_from", (None, tomorrow))
-def test_publish_feature_version_using_master_api_key(
+def test_publish_feature_version__master_api_key__publishes_with_api_key_attribution(
     admin_master_api_key: MasterAPIKey,
     admin_master_api_key_client: APIClient,
     environment_v2_versioning: Environment,
@@ -378,7 +379,7 @@ def test_publish_feature_version_using_master_api_key(
     )
 
 
-def test_list_environment_feature_version_feature_states(
+def test_list_feature_version_feature_states__initial_version__returns_one_state(
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -407,7 +408,7 @@ def test_list_environment_feature_version_feature_states(
     assert len(response_json) == 1
 
 
-def test_add_environment_feature_version_feature_state(
+def test_create_feature_version_feature_state__unpublished_version__creates_segment_override(
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     segment: Segment,
@@ -448,7 +449,7 @@ def test_add_environment_feature_version_feature_state(
     assert environment_feature_version.feature_segments.count() == 1
 
 
-def test_cannot_add_feature_state_to_published_environment_feature_version(
+def test_create_feature_version_feature_state__published_version__returns_bad_request(
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     segment: Segment,
@@ -489,7 +490,7 @@ def test_cannot_add_feature_state_to_published_environment_feature_version(
     assert response.json()["detail"] == "Cannot modify published version."
 
 
-def test_update_environment_feature_version_feature_state(
+def test_update_feature_version_feature_state__unpublished_version__updates_enabled(
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -531,7 +532,7 @@ def test_update_environment_feature_version_feature_state(
     assert feature_state.enabled is True
 
 
-def test_cannot_update_feature_state_in_published_environment_feature_version(
+def test_update_feature_version_feature_state__published_version__returns_bad_request(
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -575,7 +576,7 @@ def test_cannot_update_feature_state_in_published_environment_feature_version(
     assert feature_state.enabled is False
 
 
-def test_delete_environment_feature_version_feature_state(
+def test_delete_feature_version_feature_state__segment_override__marks_as_deleted(
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     segment: Segment,
@@ -617,7 +618,7 @@ def test_delete_environment_feature_version_feature_state(
     assert segment_override.deleted is True
 
 
-def test_cannot_delete_feature_state_in_published_environment_feature_version(
+def test_delete_feature_version_feature_state__published_version__returns_bad_request(
     admin_client: APIClient,
     admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -665,7 +666,7 @@ def test_cannot_delete_feature_state_in_published_environment_feature_version(
     assert segment_override.deleted is False
 
 
-def test_cannot_delete_environment_default_feature_state_for_unpublished_environment_feature_version(
+def test_delete_feature_version_feature_state__environment_default__returns_bad_request(
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -709,7 +710,7 @@ def test_cannot_delete_environment_default_feature_state_for_unpublished_environ
     assert segment_override.deleted is False
 
 
-def test_filter_versions_by_is_live(
+def test_list_versions__filter_by_is_live__returns_matching_versions(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -765,7 +766,7 @@ def test_filter_versions_by_is_live(
     )
 
 
-def test_disable_v2_versioning_returns_bad_request_if_not_using_v2_versioning(
+def test_disable_v2_versioning__not_using_v2__returns_bad_request(
     environment: Environment,
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -787,7 +788,7 @@ def test_disable_v2_versioning_returns_bad_request_if_not_using_v2_versioning(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_create_new_version_with_changes_in_single_request(
+def test_create_version__changes_in_single_request__applies_all_changes(
     feature: Feature,
     segment: Segment,
     segment_featurestate: FeatureState,
@@ -884,7 +885,7 @@ def test_create_new_version_with_changes_in_single_request(
     assert new_version.is_live is True
 
 
-def test_update_and_create_segment_override_in_single_request(
+def test_create_version__update_and_create_segment_overrides__applies_both(
     feature: Feature,
     segment: Segment,
     segment_featurestate: FeatureState,
@@ -963,7 +964,7 @@ def test_update_and_create_segment_override_in_single_request(
     assert new_version.is_live is True
 
 
-def test_create_environment_default_when_creating_new_version_fails(
+def test_create_version__non_segment_override_in_create_list__returns_bad_request(
     environment_v2_versioning: Environment,
     feature: Feature,
     admin_client_new: APIClient,
@@ -1000,7 +1001,47 @@ def test_create_environment_default_when_creating_new_version_fails(
     }
 
 
-def test_create_segment_override_for_existing_override_when_creating_new_version_fails(
+def test_create_version__missing_feature_segment_key__returns_bad_request(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    # A payload where `feature_segment` key is omitted entirely
+    # (as opposed to being explicitly set to None).
+    # This previously caused a KeyError -> 500 Internal Server Error.
+    data = {
+        "feature_states_to_create": [
+            {
+                # `feature_segment` key is intentionally absent
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "some new value",
+                },
+            }
+        ]
+    }
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    # Should return 400 Bad Request, not 500 Internal Server Error
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "message": "Cannot create FeatureState objects that are not segment overrides."
+    }
+
+
+def test_create_version__duplicate_segment_override__returns_bad_request(
     feature: Feature,
     admin_client_new: APIClient,
     segment: Segment,
@@ -1039,7 +1080,7 @@ def test_create_segment_override_for_existing_override_when_creating_new_version
     }
 
 
-def test_create_new_version_for_multivariate_feature(
+def test_create_version__multivariate_feature__creates_with_mv_values(
     multivariate_feature: Feature,
     multivariate_options: list[MultivariateFeatureOption],
     environment_v2_versioning: Environment,
@@ -1099,7 +1140,7 @@ def test_create_new_version_for_multivariate_feature(
     )
 
 
-def test_create_new_version_delete_segment_override_updates_overrides_immediately(
+def test_create_version__delete_segment_override__removes_override_immediately(
     feature: Feature,
     segment: Segment,
     feature_segment: FeatureSegment,
@@ -1138,7 +1179,7 @@ def test_create_new_version_delete_segment_override_updates_overrides_immediatel
     assert get_feature_segments_response.json()["count"] == 0
 
 
-def test_creating_multiple_segment_overrides_in_multiple_versions_sets_correct_priorities(
+def test_create_version__multiple_segment_overrides_consecutively__sets_correct_priorities(
     feature: Feature,
     environment_v2_versioning: Environment,
     segment: Segment,
@@ -1158,6 +1199,7 @@ def test_creating_multiple_segment_overrides_in_multiple_versions_sets_correct_p
     See PR here for FE fix: https://github.com/Flagsmith/flagsmith/pull/4609
     """
 
+    # Given
     def generate_segment_override_fs_payload(
         segment: Segment, priority: int
     ) -> dict[str, typing.Any]:
@@ -1178,7 +1220,7 @@ def test_creating_multiple_segment_overrides_in_multiple_versions_sets_correct_p
         args=[environment_v2_versioning.id, feature.id],
     )
 
-    # Now, let's create the first override with priority 0
+    # create the first override with priority 0
     data = {
         "publish_immediately": True,
         "feature_states_to_create": [generate_segment_override_fs_payload(segment, 0)],
@@ -1197,7 +1239,8 @@ def test_creating_multiple_segment_overrides_in_multiple_versions_sets_correct_p
         == 0
     )
 
-    # Now, let's create the second override with priority 1 and (to mimic the FE behaviour)
+    # When
+    # we create the second override with priority 1 and (to mimic the FE behaviour)
     # update the existing segment override (without actually changing anything).
     data = {
         "publish_immediately": True,
@@ -1209,6 +1252,8 @@ def test_creating_multiple_segment_overrides_in_multiple_versions_sets_correct_p
     create_segment_override_2_response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
+
+    # Then
     assert create_segment_override_2_response.status_code == status.HTTP_201_CREATED
     version_2_uuid = create_segment_override_2_response.json()["uuid"]
     assert (
@@ -1221,7 +1266,7 @@ def test_creating_multiple_segment_overrides_in_multiple_versions_sets_correct_p
     )
 
 
-def test_create_new_version_fails_when_breaching_segment_override_limit(
+def test_create_version__exceeds_segment_override_limit__returns_bad_request(
     feature: Feature,
     segment: Segment,
     another_segment: Segment,
@@ -1231,11 +1276,13 @@ def test_create_new_version_fails_when_breaching_segment_override_limit(
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     with_project_permissions: WithProjectPermissionsCallable,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
+    settings.EDGE_ENABLED = True
     # We update the limit of segment overrides on the project
     project.max_segment_overrides_allowed = 1
     project.save()
@@ -1293,7 +1340,7 @@ def test_create_new_version_fails_when_breaching_segment_override_limit(
     )
 
 
-def test_segment_override_limit_excludes_older_versions__when_not_creating_any_new_overrides(
+def test_create_version__no_new_overrides_with_existing_at_limit__returns_created(
     feature: Feature,
     segment: Segment,
     environment_v2_versioning: Environment,
@@ -1302,11 +1349,13 @@ def test_segment_override_limit_excludes_older_versions__when_not_creating_any_n
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     with_project_permissions: WithProjectPermissionsCallable,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
+    settings.EDGE_ENABLED = True
     # We update the limit of segment overrides on the project
     project.max_segment_overrides_allowed = 1
     project.save()
@@ -1350,7 +1399,7 @@ def test_segment_override_limit_excludes_older_versions__when_not_creating_any_n
     ).exists()
 
 
-def test_segment_override_limit_excludes_older_versions__when_creating_new_override(
+def test_create_version__new_override_within_limit__returns_created(
     feature: Feature,
     segment: Segment,
     another_segment: Segment,
@@ -1360,11 +1409,13 @@ def test_segment_override_limit_excludes_older_versions__when_creating_new_overr
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     with_project_permissions: WithProjectPermissionsCallable,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
+    settings.EDGE_ENABLED = True
     # We update the limit of segment overrides on the project
     project.max_segment_overrides_allowed = 2
     project.save()
@@ -1425,7 +1476,7 @@ def test_segment_override_limit_excludes_older_versions__when_creating_new_overr
     ).exists()
 
 
-def test_segment_override_limit_excludes_overrides_being_deleted_when_creating_new_override(
+def test_create_version__delete_and_create_override_at_limit__returns_created(
     feature: Feature,
     segment: Segment,
     another_segment: Segment,
@@ -1435,11 +1486,13 @@ def test_segment_override_limit_excludes_overrides_being_deleted_when_creating_n
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     with_project_permissions: WithProjectPermissionsCallable,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
+    settings.EDGE_ENABLED = True
     # We update the limit of segment overrides on the project
     project.max_segment_overrides_allowed = 1
     project.save()
@@ -1501,7 +1554,7 @@ def test_segment_override_limit_excludes_overrides_being_deleted_when_creating_n
     ).exists()
 
 
-def test_cannot_create_new_version_for_environment_not_enabled_for_versioning_v2(
+def test_create_version__v2_versioning_not_enabled__returns_bad_request(
     environment: Environment,
     feature: Feature,
     staff_client: APIClient,
@@ -1533,7 +1586,7 @@ def test_cannot_create_new_version_for_environment_not_enabled_for_versioning_v2
     "plan_id, is_saas",
     (("free", True), ("free", False), ("startup", True), ("scale-up", True)),
 )
-def test_list_versions_only_returns_allowed_amount_for_non_enterprise_plan(
+def test_list_versions__non_enterprise_plan__returns_only_recent_versions(
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_user: FFAdminUser,
@@ -1596,7 +1649,7 @@ def test_list_versions_only_returns_allowed_amount_for_non_enterprise_plan(
 
 
 @pytest.mark.freeze_time(now - timedelta(days=DEFAULT_VERSION_LIMIT_DAYS + 1))
-def test_list_versions_always_returns_current_version_even_if_outside_limit(
+def test_list_versions__current_version_outside_limit__still_returns_current(
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_user: FFAdminUser,
@@ -1639,7 +1692,7 @@ def test_list_versions_always_returns_current_version_even_if_outside_limit(
 
 
 @pytest.mark.freeze_time(now - timedelta(days=DEFAULT_VERSION_LIMIT_DAYS + 1))
-def test_list_versions_returns_all_versions_for_enterprise_plan_when_saas(
+def test_list_versions__enterprise_plan_saas__returns_all_versions(
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_user: FFAdminUser,
@@ -1709,3 +1762,97 @@ def test_list_versions_returns_all_versions_for_enterprise_plan_when_saas(
     assert {v["uuid"] for v in response_json["results"]} == {
         str(v.uuid) for v in [initial_version, *all_versions]
     }
+
+
+def test_create_version__feature_state_save__dispatches_gitlab_state_change(
+    feature: Feature,
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_dispatch = mocker.patch(
+        "features.versioning.serializers.post_gitlab_state_change_comment_for_feature_state",
+    )
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_update": [
+            {
+                "feature_segment": None,
+                "enabled": True,
+                "feature_state_value": {"type": "unicode", "string_value": "updated!"},
+            }
+        ],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert mock_dispatch.call_count == 1
+
+
+def test_create_feature_version_feature_state__override_recreated_in_draft__inherits_mv_hashing_salt(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    environment_v2_versioning: Environment,
+    multivariate_feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given a published version containing a segment override for a
+    # multivariate feature
+    overridden_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=multivariate_feature
+    )
+    original_override = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=overridden_version,
+        feature_segment=FeatureSegment.objects.create(
+            feature=multivariate_feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=overridden_version,
+        ),
+    )
+    overridden_version.publish(published_by=admin_user)
+
+    # and a draft version from which the (cloned) override has been removed
+    draft_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=multivariate_feature
+    )
+    cloned_override = draft_version.feature_states.get(feature_segment__segment=segment)
+    cloned_override.feature_segment.delete()
+
+    # When the override is recreated in the draft version via the API
+    url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-list",
+        args=[
+            environment_v2_versioning.id,
+            multivariate_feature.id,
+            draft_version.uuid,
+        ],
+    )
+    data = {
+        "feature_segment": {"segment": segment.id},
+        "enabled": True,
+        "feature_state_value": {
+            "string_value": "recreated!",
+        },
+    }
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then the recreated override carries the original override's id as its
+    # bucketing salt, keeping multivariate variant assignment stable
+    assert response.status_code == status.HTTP_201_CREATED
+    recreated_override = FeatureState.objects.get(id=response.json()["id"])
+    assert recreated_override.mv_hashing_salt == original_override.id

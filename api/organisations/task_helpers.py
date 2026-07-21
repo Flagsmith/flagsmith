@@ -1,14 +1,16 @@
-import logging
 from datetime import timedelta
 
+import structlog
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils import timezone
 
+from app_analytics.analytics_db_service import get_total_events_count
 from app_analytics.influxdb_wrapper import get_current_api_usage
 from core.helpers import get_current_site_url
+from integrations.flagsmith.client import get_openfeature_client
 from organisations.models import (
     Organisation,
     OrganisationAPIUsageNotification,
@@ -19,7 +21,7 @@ from users.models import FFAdminUser
 
 from .constants import API_USAGE_ALERT_THRESHOLDS
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("api_usage")
 
 
 def send_api_flags_blocked_notification(organisation: Organisation) -> None:
@@ -113,10 +115,9 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         billing_starts_at = subscription_cache.current_billing_term_starts_at
 
         if billing_starts_at is None:
-            # Since the calling code is a list of many organisations
-            # log the error and return without raising an exception.
             logger.error(
-                f"Paid organisation {organisation.id} is missing billing_starts_at datetime"
+                "notification.missing_billing_starts_at",
+                organisation__id=organisation.id,
             )
             return
 
@@ -126,7 +127,16 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
 
         allowed_api_calls = subscription_cache.allowed_30d_api_calls
 
-    api_usage = get_current_api_usage(organisation.id, period_starts_at)
+    openfeature_client = get_openfeature_client()
+    # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
+    if openfeature_client.get_boolean_value(
+        "get_current_api_usage_deprecated",
+        default_value=False,
+        evaluation_context=organisation.openfeature_evaluation_context,
+    ):  # pragma: no cover
+        api_usage = get_total_events_count(organisation, period_starts_at)
+    else:
+        api_usage = get_current_api_usage(organisation.id, period_starts_at)
 
     # For some reason the allowed API calls is set to 0 so default to the max free plan.
     allowed_api_calls = allowed_api_calls or MAX_API_CALLS_IN_FREE_PLAN
@@ -140,6 +150,17 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
 
         matched_threshold = threshold
 
+    logger.info(
+        "notification.evaluated",
+        organisation__id=organisation.id,
+        api_usage=api_usage,
+        allowed_api_calls=allowed_api_calls,
+        api_usage_percent=api_usage_percent,
+        period_starts_at=period_starts_at.isoformat(),
+        period_ends_at=now.isoformat(),
+        matched_threshold=matched_threshold,
+    )
+
     # Didn't match even the lowest threshold, so no notification.
     if matched_threshold is None:
         return
@@ -151,6 +172,12 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
     ).exists():
         # Already sent the max notification level so don't resend.
         return
+
+    logger.info(
+        "notification.sent",
+        organisation__id=organisation.id,
+        matched_threshold=matched_threshold,
+    )
 
     _send_api_usage_notification(organisation, matched_threshold)
 

@@ -1,17 +1,28 @@
 import React, { useState } from 'react'
 import Constants from 'common/constants'
-import Collapse from '@material-ui/core/Collapse'
 import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronUp } from 'ionicons/icons'
 import { FeatureHealthEventReasonTextBlock } from 'common/types/responses'
+import useCollapsibleHeight from 'common/hooks/useCollapsibleHeight'
 
 interface EventTextBlocksProps {
   textBlocks: FeatureHealthEventReasonTextBlock[] | undefined
 }
 
+const CollapsibleText: React.FC<{
+  collapsed: boolean
+  children: React.ReactNode
+}> = ({ children, collapsed }) => {
+  const { contentRef, style } = useCollapsibleHeight(!collapsed)
+
+  return (
+    <div ref={contentRef} style={style}>
+      {children}
+    </div>
+  )
+}
+
 const EventTextBlocks: React.FC<EventTextBlocksProps> = ({ textBlocks }) => {
-  // Index is used here only because the data is read only.
-  // Backend sorts created_at in descending order.
   const initialValue =
     textBlocks?.map((_, index) => ({ collapsed: index !== 0, id: index })) ?? []
   const [collapsibleItems, setCollapsibleItems] =
@@ -37,11 +48,11 @@ const EventTextBlocks: React.FC<EventTextBlocksProps> = ({ textBlocks }) => {
 
   return (
     <div className='d-flex flex-column m-0 gap-2 flex-1'>
-      <strong className='text-body'>Incident Insights</strong>
+      <strong className='text-default'>Incident Insights</strong>
       {textBlocks.map((textBlock, index) => (
         <div key={`${textBlock.text}-${index}`}>
           {textBlock.title && (
-            <div className='mb-2 text-body'>
+            <div className='mb-2 text-default'>
               <strong style={{ color }}>{textBlock.title ?? 'Event'}</strong>
               {!!textBlock.text && (
                 <IonIcon
@@ -57,9 +68,9 @@ const EventTextBlocks: React.FC<EventTextBlocksProps> = ({ textBlocks }) => {
               )}
             </div>
           )}
-          <Collapse key={index} in={!collapsibleItems?.[index]?.collapsed}>
+          <CollapsibleText collapsed={!!collapsibleItems?.[index]?.collapsed}>
             {textBlock.text}
-          </Collapse>
+          </CollapsibleText>
         </div>
       ))}
     </div>

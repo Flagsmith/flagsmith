@@ -8,6 +8,7 @@ import {
   buildApiFilterParams,
   getFiltersFromParams,
   hasActiveFilters,
+  normaliseFilters,
 } from 'common/utils/featureFilterParams'
 import { SortOrder } from 'common/types/requests'
 import { TagStrategy } from 'common/types/responses'
@@ -185,6 +186,24 @@ describe('featureFilterParams', () => {
       expect(result.sort.sortBy).toBe('created_date')
       expect(result.sort.sortOrder).toBe(SortOrder.DESC)
     })
+  })
+
+  describe('normaliseFilters', () => {
+    it.each`
+      field             | input               | expected
+      ${'search'}       | ${'   '}            | ${null}
+      ${'search'}       | ${''}               | ${null}
+      ${'search'}       | ${null}             | ${null}
+      ${'search'}       | ${'  hello  '}      | ${'hello'}
+      ${'value_search'} | ${'   '}            | ${null}
+      ${'value_search'} | ${'  test value  '} | ${'test value'}
+    `(
+      'normalises $field "$input" to $expected',
+      ({ expected, field, input }) => {
+        const result = normaliseFilters({ [field]: input })
+        expect(result[field as keyof typeof result]).toBe(expected)
+      },
+    )
   })
 
   describe('hasActiveFilters', () => {

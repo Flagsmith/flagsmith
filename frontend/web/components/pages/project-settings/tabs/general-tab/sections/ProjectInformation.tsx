@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from 'react'
 import classNames from 'classnames'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import Utils from 'common/utils/utils'
@@ -113,7 +113,7 @@ export const ProjectInformation = ({ project }: ProjectInformationProps) => {
           </div>
         )}
 
-        <div className='text-right'>
+        <div className={classNames('text-right', { 'mt-4': !hasVersioning })}>
           <Button
             type='submit'
             id='save-proj-btn'

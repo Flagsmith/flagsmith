@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from task_processor.decorators import (
     register_task_handler,
@@ -6,6 +7,7 @@ from task_processor.decorators import (
 
 from environments.models import Webhook
 from features.models import Feature, FeatureState
+from features.multivariate.models import MultivariateFeatureStateValue
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 from webhooks.tasks import (
     call_environment_webhooks,
@@ -41,7 +43,7 @@ def trigger_feature_state_change_webhooks(  # type: ignore[no-untyped-def]
     new_state = (
         None
         if event_type == WebhookEventType.FLAG_DELETED
-        else _get_feature_state_webhook_data(instance)  # type: ignore[no-untyped-call]
+        else _get_feature_state_webhook_data(instance)
     )
     data = {"new_state": new_state, "changed_by": changed_by, "timestamp": timestamp}
     previous_state = _get_previous_state(instance, history_instance, event_type)
@@ -66,33 +68,93 @@ def _get_previous_state(
     instance: FeatureState,
     history_instance: HistoricalFeatureState,
     event_type: WebhookEventType,
-) -> dict:  # type: ignore[type-arg]
+) -> dict[str, Any] | None:
     if event_type == WebhookEventType.FLAG_DELETED:
-        return _get_feature_state_webhook_data(instance)  # type: ignore[no-untyped-call,no-any-return]
+        return _get_feature_state_webhook_data(instance)
+
+    # Change requests create a new FeatureState with its own history
+    if instance.change_request_id is not None:
+        previous_fs = _get_previous_feature_state_for_change_request(instance)
+        if previous_fs:
+            return _get_feature_state_webhook_data(previous_fs)
+        return None
+
     if history_instance and history_instance.prev_record:
-        return _get_feature_state_webhook_data(  # type: ignore[no-untyped-call,no-any-return]
+        return _get_feature_state_webhook_data(
             history_instance.prev_record.instance, previous=True
         )
-    return None  # type: ignore[return-value]
+    return None
 
 
-def _get_feature_state_webhook_data(feature_state, previous=False):  # type: ignore[no-untyped-def]
-    # TODO: fix circular imports and use serializers instead.
-    feature_state_value = (
-        feature_state.get_feature_state_value()
-        if not previous
-        else feature_state.previous_feature_state_value
+def _get_previous_feature_state_for_change_request(
+    instance: FeatureState,
+) -> FeatureState | None:
+    """Find the previous live FeatureState for a change request (legacy versioning)."""
+    result: FeatureState | None = (
+        FeatureState.objects.exclude(
+            change_request_id=instance.change_request_id,
+        )
+        .filter(
+            environment_id=instance.environment_id,
+            feature_id=instance.feature_id,
+            feature_segment=instance.feature_segment,
+            identity=instance.identity,
+            version__isnull=False,
+            live_from__lt=instance.live_from,
+        )
+        .order_by("-live_from")
+        .select_related(
+            "feature",
+            "environment",
+            "feature_state_value",
+            "feature_segment",
+            "identity",
+        )
+        .first()
     )
+    return result
 
+
+def _get_feature_state_webhook_data(
+    feature_state: FeatureState,
+    previous: bool = False,
+) -> dict[str, Any]:
+    if previous:
+        value = feature_state.previous_feature_state_value
+        mv_values = _get_previous_multivariate_values(feature_state)
+    else:
+        value = feature_state.get_feature_state_value()
+        mv_values = list(
+            feature_state.multivariate_feature_state_values.select_related(
+                "multivariate_feature_option"
+            ).all()
+        )
+
+    assert feature_state.environment is not None
     return Webhook.generate_webhook_feature_state_data(
         feature_state.feature,
         environment=feature_state.environment,
         enabled=feature_state.enabled,
-        value=feature_state_value,
+        value=value,
         identity_id=feature_state.identity_id,
         identity_identifier=getattr(feature_state.identity, "identifier", None),
         feature_segment=feature_state.feature_segment,
+        multivariate_feature_state_values=mv_values,
     )
+
+
+def _get_previous_multivariate_values(
+    feature_state: FeatureState,
+) -> list[MultivariateFeatureStateValue]:
+    """Get previous multivariate values from history."""
+    mv_values: list[MultivariateFeatureStateValue] = []
+    for mv in MultivariateFeatureStateValue.objects.filter(
+        feature_state_id=feature_state.id
+    ).select_related("multivariate_feature_option"):
+        history = mv.history.first()
+        if history and history.prev_record:
+            mv_values.append(history.prev_record.instance)
+    return mv_values
 
 
 @register_task_handler()

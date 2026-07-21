@@ -21,7 +21,7 @@ from segments.models import Segment
 from users.models import FFAdminUser
 
 
-def test_release_pipeline_publish_raises_error_if_pipeline_is_already_published(
+def test_release_pipeline_publish__already_published__raises_error(
     release_pipeline: ReleasePipeline, admin_user: FFAdminUser
 ) -> None:
     # Given - the pipeline is already published
@@ -34,9 +34,10 @@ def test_release_pipeline_publish_raises_error_if_pipeline_is_already_published(
         release_pipeline.publish(admin_user)
 
 
-def test_release_pipeline_get_first_stage_returns_none_if_pipeline_has_no_stages(
+def test_release_pipeline_get_first_stage__no_stages__returns_none(
     release_pipeline: ReleasePipeline,
 ) -> None:
+    # Given - a pipeline with no stages
     # When
     first_stage = release_pipeline.get_first_stage()
 
@@ -44,7 +45,7 @@ def test_release_pipeline_get_first_stage_returns_none_if_pipeline_has_no_stages
     assert first_stage is None
 
 
-def test_release_pipeline_get_first_stage_returns_correct_stage(
+def test_release_pipeline_get_first_stage__multiple_stages__returns_correct_stage(
     release_pipeline: ReleasePipeline, environment: Environment
 ) -> None:
     # Given
@@ -63,9 +64,10 @@ def test_release_pipeline_get_first_stage_returns_correct_stage(
     assert first_stage.order == 0  # type: ignore[union-attr]
 
 
-def test_release_pipeline_get_last_stage_returns_none_if_pipeline_has_no_stages(
+def test_release_pipeline_get_last_stage__no_stages__returns_none(
     release_pipeline: ReleasePipeline,
 ) -> None:
+    # Given - a pipeline with no stages
     # When
     last_stage = release_pipeline.get_last_stage()
 
@@ -73,7 +75,7 @@ def test_release_pipeline_get_last_stage_returns_none_if_pipeline_has_no_stages(
     assert last_stage is None
 
 
-def test_release_pipeline_get_last_stage_returns_correct_stage(
+def test_release_pipeline_get_last_stage__multiple_stages__returns_correct_stage(
     release_pipeline: ReleasePipeline, environment: Environment
 ) -> None:
     # Given
@@ -92,7 +94,7 @@ def test_release_pipeline_get_last_stage_returns_correct_stage(
     assert last_stage.order == 2  # type: ignore[union-attr]
 
 
-def test_release_pipeline_get_next_stage(
+def test_pipeline_stage_get_next_stage__multiple_stages__returns_correct_next_stage(
     release_pipeline: ReleasePipeline, environment: Environment
 ) -> None:
     # Given
@@ -115,33 +117,39 @@ def test_release_pipeline_get_next_stage(
         order=2,
     )
 
-    # Then
+    # When / Then
     assert stage1.get_next_stage() == stage2
     assert stage2.get_next_stage() == stage3
     assert stage3.get_next_stage() is None
 
 
-def test_release_pipeline_get_create_log_message(
+def test_release_pipeline_get_create_log_message__default__returns_expected_message(
     release_pipeline: ReleasePipeline,
 ) -> None:
-    # When
+    # Given
     expected_message = RELEASE_PIPELINE_CREATED_MESSAGE % release_pipeline.name
 
+    # When
+    result = release_pipeline.get_create_log_message(release_pipeline)
+
     # Then
-    assert release_pipeline.get_create_log_message(release_pipeline) == expected_message
+    assert result == expected_message
 
 
-def test_release_pipeline_get_delete_log_message(
+def test_release_pipeline_get_delete_log_message__default__returns_expected_message(
     release_pipeline: ReleasePipeline,
 ) -> None:
-    # When
+    # Given
     expected_message = RELEASE_PIPELINE_DELETED_MESSAGE % release_pipeline.name
 
+    # When
+    result = release_pipeline.get_delete_log_message(release_pipeline)
+
     # Then
-    assert release_pipeline.get_delete_log_message(release_pipeline) == expected_message
+    assert result == expected_message
 
 
-def test_release_pipeline_unpublish(
+def test_release_pipeline_unpublish__published_pipeline__clears_published_fields(
     release_pipeline: ReleasePipeline, admin_user: FFAdminUser
 ) -> None:
     # Given - the pipeline is already published
@@ -155,15 +163,16 @@ def test_release_pipeline_unpublish(
     assert release_pipeline.published_by is None
 
 
-def test_should_raise_error_when_unpublishing_unpublished_pipeline(
+def test_release_pipeline_unpublish__unpublished_pipeline__raises_error(
     release_pipeline: ReleasePipeline, admin_user: FFAdminUser
 ) -> None:
-    # When/ Then
+    # Given - the pipeline is not published
+    # When / Then
     with pytest.raises(InvalidPipelineStateError, match="Pipeline is not published."):
         release_pipeline.unpublish()
 
 
-def test_release_pipeline_has_feature_in_flight(
+def test_release_pipeline_has_feature_in_flight__unpublished_version__returns_true(
     release_pipeline: ReleasePipeline,
     environment: Environment,
     pipeline_stage_enable_feature_on_enter: PipelineStage,
@@ -178,7 +187,7 @@ def test_release_pipeline_has_feature_in_flight(
         published_at=None,
     )
 
-    # Then
+    # When / Then
     assert release_pipeline.has_feature_in_flight() is True
 
     # Next, publish the environment feature version
@@ -190,7 +199,7 @@ def test_release_pipeline_has_feature_in_flight(
     assert release_pipeline.has_feature_in_flight() is False
 
 
-def test_phased_rollout_state_increase_split_does_not_exceed_100(
+def test_phased_rollout_state_increase_split__exceeds_max__caps_at_100(
     phased_rollout_state: PhasedRolloutState,
 ) -> None:
     # Given
@@ -219,10 +228,11 @@ def test_phased_rollout_state_increase_split_does_not_exceed_100(
     )
 
 
-def test_phased_rollout_complete_rollout(
+def test_phased_rollout_state_complete_rollout__default__marks_complete_and_deletes_segment(
     phased_rollout_state: PhasedRolloutState,
     rollout_segment: Segment,
 ) -> None:
+    # Given - a phased rollout state with an associated segment
     # When
     phased_rollout_state.complete_rollout()
     # Then
@@ -230,9 +240,10 @@ def test_phased_rollout_complete_rollout(
     assert Segment.objects.filter(id=rollout_segment.id).exists() is False
 
 
-def test_get_phased_rollout_action_returns_none_if_no_phased_rollout_action(
+def test_pipeline_stage_get_phased_rollout_action__no_action__returns_none(
     pipeline_stage_enable_feature_on_enter: PipelineStage,
 ) -> None:
+    # Given - a stage with no phased rollout action
     # When
     phased_rollout_action = (
         pipeline_stage_enable_feature_on_enter.get_phased_rollout_action()
@@ -242,9 +253,10 @@ def test_get_phased_rollout_action_returns_none_if_no_phased_rollout_action(
     assert phased_rollout_action is None
 
 
-def test_get_phased_rollout_action_returns_phased_rollout_action_if_exists(
+def test_pipeline_stage_get_phased_rollout_action__action_exists__returns_action(
     pipeline_stage_phased_rollout: PipelineStage,
 ) -> None:
+    # Given - a stage with a phased rollout action
     # When
     phased_rollout_action = pipeline_stage_phased_rollout.get_phased_rollout_action()
 
@@ -253,13 +265,14 @@ def test_get_phased_rollout_action_returns_phased_rollout_action_if_exists(
     assert phased_rollout_action.action_type == StageActionType.PHASED_ROLLOUT.value
 
 
-def test_pipeline_stage_on_enter_get_completed_feature_versions_qs(
+def test_pipeline_stage_get_completed_feature_versions_qs__on_enter_stage__returns_published_versions(
     pipeline_stage_enable_feature_on_enter: PipelineStage,
     feature_in_pipeline_stage_enable_feature_on_enter: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
     feature_in_pipeline_stage_phased_rollout: Feature,
     feature_in_pipeline_stage_update_feature_value_on_wait_for: Feature,
 ) -> None:
+    # Given - a feature in an on-enter stage that is not yet published
     # When
     completed_feature_versions = (
         pipeline_stage_enable_feature_on_enter.get_completed_feature_versions_qs()
@@ -279,7 +292,7 @@ def test_pipeline_stage_on_enter_get_completed_feature_versions_qs(
     )
 
 
-def test_pipeline_stage_on_enter_get_completed_feature_versions_qs_with_completed_after(
+def test_pipeline_stage_get_completed_feature_versions_qs__on_enter_with_completed_after__filters_by_date(
     pipeline_stage_enable_feature_on_enter: PipelineStage,
     feature_in_pipeline_stage_enable_feature_on_enter: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
@@ -315,13 +328,14 @@ def test_pipeline_stage_on_enter_get_completed_feature_versions_qs_with_complete
     )
 
 
-def test_pipeline_stage_on_enter_get_in_stage_feature_versions_qs(
+def test_pipeline_stage_get_in_stage_feature_versions_qs__on_enter_stage__returns_unpublished_versions(
     pipeline_stage_enable_feature_on_enter: PipelineStage,
     feature_in_pipeline_stage_enable_feature_on_enter: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
     feature_in_pipeline_stage_phased_rollout: Feature,
     feature_in_pipeline_stage_update_feature_value_on_wait_for: Feature,
 ) -> None:
+    # Given - a feature in an on-enter stage that is not yet published
     # When
     in_stage_feature_versions = (
         pipeline_stage_enable_feature_on_enter.get_in_stage_feature_versions_qs()
@@ -340,13 +354,14 @@ def test_pipeline_stage_on_enter_get_in_stage_feature_versions_qs(
     assert in_stage_feature_versions.count() == 0
 
 
-def test_pipeline_stage_wait_for_get_completed_feature_versions_qs(
+def test_pipeline_stage_get_completed_feature_versions_qs__wait_for_stage__returns_published_versions(
     pipeline_stage_update_feature_value_on_wait_for: PipelineStage,
     feature_in_pipeline_stage_update_feature_value_on_wait_for: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
     feature_in_pipeline_stage_phased_rollout: Feature,
     feature_in_pipeline_stage_enable_feature_on_enter: Feature,
 ) -> None:
+    # Given - a feature in a wait-for stage that is not yet published
     # When
     completed_feature_versions = pipeline_stage_update_feature_value_on_wait_for.get_completed_feature_versions_qs()
     # Then
@@ -363,13 +378,14 @@ def test_pipeline_stage_wait_for_get_completed_feature_versions_qs(
     )
 
 
-def test_pipeline_stage_wait_for_get_in_stage_feature_versions_qs(
+def test_pipeline_stage_get_in_stage_feature_versions_qs__wait_for_stage__returns_unpublished_versions(
     pipeline_stage_update_feature_value_on_wait_for: PipelineStage,
     feature_in_pipeline_stage_update_feature_value_on_wait_for: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
     feature_in_pipeline_stage_phased_rollout: Feature,
     feature_in_pipeline_stage_enable_feature_on_enter: Feature,
 ) -> None:
+    # Given - a feature in a wait-for stage that is not yet published
     # When
     in_stage_feature_versions = pipeline_stage_update_feature_value_on_wait_for.get_in_stage_feature_versions_qs()
     # Then
@@ -386,12 +402,13 @@ def test_pipeline_stage_wait_for_get_in_stage_feature_versions_qs(
     assert in_stage_feature_versions.count() == 0
 
 
-def test_pipeline_stage_phased_rollout_get_completed_feature_versions_qs(
+def test_pipeline_stage_get_completed_feature_versions_qs__phased_rollout_stage__returns_completed_versions(
     pipeline_stage_phased_rollout: PipelineStage,
     feature_in_pipeline_stage_phased_rollout: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
     feature_in_pipeline_stage_enable_feature_on_enter: Feature,
 ) -> None:
+    # Given - a phased rollout stage with one completed feature
     # When
     completed_feature_versions = (
         pipeline_stage_phased_rollout.get_completed_feature_versions_qs()
@@ -404,7 +421,7 @@ def test_pipeline_stage_phased_rollout_get_completed_feature_versions_qs(
     )
 
 
-def test_pipeline_stage_phased_rollout_get_completed_feature_versions_qs_with_completed_after(
+def test_pipeline_stage_get_completed_feature_versions_qs__phased_rollout_with_completed_after__filters_by_date(
     pipeline_stage_phased_rollout: PipelineStage,
     feature_in_pipeline_stage_phased_rollout: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
@@ -445,12 +462,13 @@ def test_pipeline_stage_phased_rollout_get_completed_feature_versions_qs_with_co
     )
 
 
-def test_pipeline_stage_phased_rollout_get_in_stage_feature_versions_qs(
+def test_pipeline_stage_get_in_stage_feature_versions_qs__phased_rollout_stage__returns_in_progress_versions(
     pipeline_stage_phased_rollout: PipelineStage,
     feature_in_pipeline_stage_phased_rollout: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
     feature_in_pipeline_stage_enable_feature_on_enter: Feature,
 ) -> None:
+    # Given - a phased rollout stage with one in-progress feature
     # When
     in_stage_feature_versions = (
         pipeline_stage_phased_rollout.get_in_stage_feature_versions_qs()
@@ -463,13 +481,14 @@ def test_pipeline_stage_phased_rollout_get_in_stage_feature_versions_qs(
     )
 
 
-def test_release_pipeline_get_feature_versions_in_pipeline_qs(
+def test_release_pipeline_get_feature_versions_in_pipeline_qs__multiple_features__returns_all_unpublished(
     release_pipeline: ReleasePipeline,
     feature_in_pipeline_stage_enable_feature_on_enter: Feature,
     feature_in_pipeline_stage_phased_rollout: Feature,
     feature_in_pipeline_stage_update_feature_value_on_wait_for: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
 ) -> None:
+    # Given - a pipeline with multiple features across stages
     # When
     feature_versions_in_pipeline = (
         release_pipeline.get_feature_versions_in_pipeline_qs()
@@ -496,7 +515,10 @@ def test_release_pipeline_get_feature_versions_in_pipeline_qs(
     )
 
 
-def test_release_pipeline_url(release_pipeline: ReleasePipeline) -> None:
+def test_release_pipeline_url__saved_pipeline__returns_expected_url(
+    release_pipeline: ReleasePipeline,
+) -> None:
+    # Given - a saved release pipeline
     # When
     url = release_pipeline.url
     # Then
@@ -506,11 +528,12 @@ def test_release_pipeline_url(release_pipeline: ReleasePipeline) -> None:
     )
 
 
-def test_release_pipeline_url_raises_error_if_pipeline_is_not_saved(
+def test_release_pipeline_url__unsaved_pipeline__raises_attribute_error(
     release_pipeline: ReleasePipeline,
 ) -> None:
-    # When/ Then
+    # Given - a pipeline with no saved ID
     release_pipeline.id = None
+    # When / Then
     with pytest.raises(
         AttributeError,
         match="Release pipeline must be saved before it has a url attribute.",

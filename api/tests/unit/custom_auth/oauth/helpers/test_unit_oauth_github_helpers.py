@@ -7,7 +7,7 @@ from custom_auth.oauth.helpers.github_helpers import (
 )
 
 
-def test_convert_response_data_to_dictionary_success():  # type: ignore[no-untyped-def]
+def test_convert_response_data_to_dictionary__valid_string__returns_dict():  # type: ignore[no-untyped-def]
     # Given
     response_string = "key_1=value_1&key_2=value_2&key_3=value_3"
 
@@ -22,18 +22,16 @@ def test_convert_response_data_to_dictionary_success():  # type: ignore[no-untyp
     }
 
 
-def test_convert_response_data_to_dictionary_fail():  # type: ignore[no-untyped-def]
+def test_convert_response_data_to_dictionary__invalid_string__raises_github_error():  # type: ignore[no-untyped-def]
     # Given
     response_string = "key_1value_1&key_2=value_2=value_2"
 
-    # When
+    # When / Then
     with pytest.raises(GithubError):
         convert_response_data_to_dictionary(response_string)
 
-    # Then - exception raised
 
-
-def test_get_first_and_last_name_success():  # type: ignore[no-untyped-def]
+def test_get_first_and_last_name__two_part_name__returns_first_and_last():  # type: ignore[no-untyped-def]
     # Given
     full_name = "tommy tester"
 
@@ -45,7 +43,7 @@ def test_get_first_and_last_name_success():  # type: ignore[no-untyped-def]
     assert last_name == "tester"
 
 
-def test_get_first_and_last_name_too_many_names():  # type: ignore[no-untyped-def]
+def test_get_first_and_last_name__too_many_names__returns_full_name_as_first():  # type: ignore[no-untyped-def]
     # Given
     full_name = "tommy tester the third king among testers"
 
@@ -57,7 +55,7 @@ def test_get_first_and_last_name_too_many_names():  # type: ignore[no-untyped-de
     assert last_name == ""
 
 
-def test_get_first_and_last_name_too_few_names():  # type: ignore[no-untyped-def]
+def test_get_first_and_last_name__single_name__returns_full_name_as_first():  # type: ignore[no-untyped-def]
     # Given
     full_name = "wall-e"
 

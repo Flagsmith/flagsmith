@@ -1,11 +1,1 @@
-<svg width="96" height="96" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" version="1.1">
-
- <g>
-  <title>Layer 1</title>
-  <g id="svg_1">
-   <path id="svg_2" fill="#00AC69" d="m73.7,33.2l0,29.5l-25.7,14.8l0,18.5l41.9,-24l0,-48l-16.2,9.2z" class="st0"/>
-   <path id="svg_3" fill="#1CE783" d="m48,18.5l25.8,14.8l16,-9.3l-41.8,-24l-41.9,24l16.1,9.2l25.8,-14.7z" class="st1"/>
-   <path id="svg_4" fill="#1D252C" d="m31.9,57.2l0,29.5l16.1,9.3l0,-48l-41.9,-24l0,18.5l25.8,14.7z" class="st2"/>
-  </g>
- </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" version="1.1" xml:space="preserve"><g><title>Layer 1</title><g id="svg_1"><path id="svg_2" fill="#00AC69" d="m73.7,33.2l0,29.5l-25.7,14.8l0,18.5l41.9,-24l0,-48l-16.2,9.2z" class="st0"/><path id="svg_3" fill="#1CE783" d="m48,18.5l25.8,14.8l16,-9.3l-41.8,-24l-41.9,24l16.1,9.2l25.8,-14.7z" class="st1"/><path id="svg_4" fill="#1D252C" d="m31.9,57.2l0,29.5l16.1,9.3l0,-48l-41.9,-24l0,18.5l25.8,14.7z" class="st2"/></g></g></svg>

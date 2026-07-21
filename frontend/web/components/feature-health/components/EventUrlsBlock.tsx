@@ -1,6 +1,6 @@
 import React from 'react'
 import { FeatureHealthEventReasonUrlBlock } from 'common/types/responses'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 
 interface EventURLBlocksProps {
@@ -14,7 +14,7 @@ const EventURLBlocks: React.FC<EventURLBlocksProps> = ({ urlBlocks }) => {
   return (
     <div className='d-flex flex-column m-0 gap-2 align-items-start'>
       <div>
-        <strong className='text-body'>Provider Links</strong>
+        <strong className='text-default'>Provider Links</strong>
       </div>
       {urlBlocks.map((urlBlock, index) => (
         <Button

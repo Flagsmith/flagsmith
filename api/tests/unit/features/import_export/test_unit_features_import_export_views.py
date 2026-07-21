@@ -27,7 +27,7 @@ from tests.types import WithProjectPermissionsCallable
 from users.models import FFAdminUser
 
 
-def test_list_feature_exports(
+def test_list_feature_exports__multiple_environments__returns_ordered_exports(
     admin_client: APIClient,
     project: Project,
     environment: Environment,
@@ -66,7 +66,7 @@ def test_list_feature_exports(
     assert response.data["results"][1]["name"].startswith(f"{environment.name} | ")
 
 
-def test_list_feature_export_with_filtered_environments(
+def test_list_feature_exports__staff_with_limited_env_access__returns_permitted_only(
     staff_user: FFAdminUser,
     staff_client: APIClient,
     project: Project,
@@ -110,7 +110,7 @@ def test_list_feature_export_with_filtered_environments(
     assert response.data["results"][0]["id"] == feature_export2.id
 
 
-def test_list_feature_exports_unauthorized(
+def test_list_feature_exports__unauthorized_user__returns_forbidden(
     staff_client: APIClient,
     project: Project,
     environment: Environment,
@@ -133,7 +133,7 @@ def test_list_feature_exports_unauthorized(
     assert response.status_code == 403
 
 
-def test_download_feature_export(
+def test_download_feature_export__success_status__returns_json_attachment(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -155,7 +155,7 @@ def test_download_feature_export(
     assert response.json() == [{"feature": "data"}]
 
 
-def test_download_feature_export_unauthorized(
+def test_download_feature_export__unauthorized_user__returns_forbidden(
     staff_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -173,7 +173,7 @@ def test_download_feature_export_unauthorized(
 
 
 @pytest.mark.parametrize("status", (PROCESSING, FAILED))
-def test_cannot_download_non_success_feature_export(
+def test_download_feature_export__non_success_status__returns_bad_request(
     admin_client_new: APIClient,
     environment: Environment,
     status: str,
@@ -195,7 +195,7 @@ def test_cannot_download_non_success_feature_export(
     }
 
 
-def test_feature_import(
+def test_feature_import__valid_file__creates_import(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -220,7 +220,7 @@ def test_feature_import(
     assert feature_import.strategy == OVERWRITE_DESTRUCTIVE  # type: ignore[union-attr]
 
 
-def test_feature_import_already_processing(
+def test_feature_import__already_processing__returns_bad_request(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -254,7 +254,7 @@ def test_feature_import_already_processing(
     ]
 
 
-def test_feature_import_unauthorized(
+def test_feature_import__unauthorized_user__returns_forbidden(
     staff_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -278,7 +278,7 @@ def test_feature_import_unauthorized(
 
 
 @pytest.mark.freeze_time("2023-12-08T06:05:47.320000+00:00")
-def test_create_feature_export(
+def test_create_feature_export__with_tag__creates_export_and_triggers_task(
     admin_client: APIClient,
     environment: Environment,
     mocker: MockerFixture,
@@ -323,7 +323,7 @@ def test_create_feature_export(
     )
 
 
-def test_create_feature_export_unauthorized(
+def test_create_feature_export__unauthorized_user__returns_forbidden(
     staff_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -348,7 +348,7 @@ def test_create_feature_export_unauthorized(
     }
 
 
-def test_download_flagsmith_on_flagsmith_when_none(
+def test_download_flagsmith_on_flagsmith__no_export_exists__returns_not_found(
     api_client: APIClient,
     environment: Environment,
     settings: SettingsWrapper,
@@ -372,7 +372,7 @@ def test_download_flagsmith_on_flagsmith_when_none(
     assert response.status_code == 404
 
 
-def test_download_flagsmith_on_flagsmith_when_success(
+def test_download_flagsmith_on_flagsmith__export_exists__returns_data(
     api_client: APIClient,
     environment: Environment,
     settings: SettingsWrapper,
@@ -404,7 +404,7 @@ def test_download_flagsmith_on_flagsmith_when_success(
     assert response.data == [{"feature": "data"}]
 
 
-def test_list_feature_import_with_filtered_environments(
+def test_list_feature_imports__staff_with_limited_env_access__returns_permitted_only(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     project: Project,
@@ -459,7 +459,7 @@ def test_list_feature_import_with_filtered_environments(
     assert response.data["results"][0]["strategy"] == OVERWRITE_DESTRUCTIVE
 
 
-def test_list_feature_import_unauthorized(
+def test_list_feature_imports__unauthorized_user__returns_forbidden(
     staff_client: APIClient,
     project: Project,
     environment: Environment,

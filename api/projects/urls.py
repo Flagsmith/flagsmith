@@ -19,9 +19,16 @@ from features.import_export.views import (
 from features.multivariate.views import MultivariateFeatureOptionViewSet
 from features.views import FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
+from integrations.gitlab.views import (
+    BrowseGitLabIssues,
+    BrowseGitLabMergeRequests,
+    BrowseGitLabProjects,
+    GitLabConfigurationViewSet,
+)
 from integrations.grafana.views import GrafanaProjectConfigurationViewSet
 from integrations.launch_darkly.views import LaunchDarklyImportRequestViewSet
 from integrations.new_relic.views import NewRelicConfigurationViewSet
+from metadata.views import ProjectMetadataFieldViewSet
 from projects.tags.views import TagViewSet
 from segments.views import SegmentViewSet
 
@@ -65,6 +72,11 @@ projects_router.register(
     basename="imports-launch-darkly",
 )
 projects_router.register(
+    r"integrations/gitlab",
+    GitLabConfigurationViewSet,
+    basename="integrations-gitlab",
+)
+projects_router.register(
     r"integrations/grafana",
     GrafanaProjectConfigurationViewSet,
     basename="integrations-grafana",
@@ -83,6 +95,11 @@ projects_router.register(
     "feature-health/events",
     FeatureHealthEventViewSet,
     basename="feature-health-events",
+)
+projects_router.register(
+    r"metadata/fields",
+    ProjectMetadataFieldViewSet,
+    basename="project-metadata-fields",
 )
 
 if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover
@@ -132,5 +149,20 @@ urlpatterns = [
         "<int:project_pk>/feature-imports/",
         FeatureImportListView.as_view(),
         name="feature-imports",
+    ),
+    path(
+        "<int:project_pk>/gitlab/projects/",
+        BrowseGitLabProjects.as_view(),
+        name="get-gitlab-projects",
+    ),
+    path(
+        "<int:project_pk>/gitlab/issues/",
+        BrowseGitLabIssues.as_view(),
+        name="get-gitlab-issues",
+    ),
+    path(
+        "<int:project_pk>/gitlab/merge-requests/",
+        BrowseGitLabMergeRequests.as_view(),
+        name="get-gitlab-merge-requests",
     ),
 ]

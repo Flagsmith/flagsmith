@@ -1,10 +1,13 @@
 from datetime import timedelta
 
+import pytest
 from django.db.models import Q
 from django.utils import timezone
 from pytest_django import DjangoAssertNumQueries
+from rest_framework.exceptions import ValidationError
 
 from core.constants import STRING
+from core.dataclasses import AuthorData
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
@@ -12,19 +15,27 @@ from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
+from features.versioning.dataclasses import (
+    FlagChangeSet,
+    FlagChangeSetV2,
+    MultivariateValueChangeSet,
+    SegmentOverrideChangeSet,
+)
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.versioning_service import (
     get_current_live_environment_feature_version,
     get_environment_flags_list,
     get_environment_flags_queryset,
     get_updated_feature_states_for_version,
+    update_flag,
+    update_flag_v2,
 )
 from projects.models import Project
 from segments.models import Segment
 from users.models import FFAdminUser
 
 
-def test_get_environment_flags_queryset_returns_only_latest_versions(  # type: ignore[no-untyped-def]
+def test_get_environment_flags_queryset__multiple_versions_exist__returns_latest_version(  # type: ignore[no-untyped-def]
     feature: Feature,
     environment: Environment,
     django_assert_num_queries: DjangoAssertNumQueries,
@@ -51,7 +62,7 @@ def test_get_environment_flags_queryset_returns_only_latest_versions(  # type: i
     assert feature_states.first() == feature_state_v2
 
 
-def test_project_hide_disabled_flags_have_no_effect_on_get_environment_flags_queryset(  # type: ignore[no-untyped-def]
+def test_get_environment_flags_queryset__hide_disabled_flags_enabled__returns_all_flags(  # type: ignore[no-untyped-def]
     environment, project
 ):
     # Given
@@ -68,7 +79,9 @@ def test_project_hide_disabled_flags_have_no_effect_on_get_environment_flags_que
     assert feature_states.count() == 2
 
 
-def test_get_environment_flags_queryset_filter_using_feature_name(environment, project):  # type: ignore[no-untyped-def]  # noqa: E501
+def test_get_environment_flags_queryset__filter_by_feature_name__returns_matching_flag(  # type: ignore[no-untyped-def]
+    environment, project
+):  # noqa: E501
     # Given
     flag_1_name = "flag_1"
     Feature.objects.create(default_enabled=True, name=flag_1_name, project=project)
@@ -84,7 +97,7 @@ def test_get_environment_flags_queryset_filter_using_feature_name(environment, p
     assert feature_states.first().feature.name == "flag_1"  # type: ignore[union-attr]
 
 
-def test_get_environment_flags_returns_latest_live_versions_of_feature_states(  # type: ignore[no-untyped-def]
+def test_get_environment_flags_list__multiple_versions_and_identities__returns_latest_live(  # type: ignore[no-untyped-def]
     project, environment, feature
 ):
     # Given
@@ -123,7 +136,7 @@ def test_get_environment_flags_returns_latest_live_versions_of_feature_states(  
     }
 
 
-def test_get_environment_flags_v2_versioning_returns_latest_live_versions_of_feature_states(
+def test_get_environment_flags_list__v2_versioning_with_published_version__returns_latest_live(
     project: Project,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -166,7 +179,7 @@ def test_get_environment_flags_v2_versioning_returns_latest_live_versions_of_fea
     }
 
 
-def test_get_environment_flags_v2_versioning_does_not_return_removed_segment_override(
+def test_get_environment_flags_list__v2_segment_override_removed__excludes_override(
     project: Project,
     feature: Feature,
     admin_user: FFAdminUser,
@@ -207,7 +220,7 @@ def test_get_environment_flags_v2_versioning_does_not_return_removed_segment_ove
     assert len(environment_feature_states) == 1
 
 
-def test_get_current_live_environment_feature_version(
+def test_get_current_live_environment_feature_version__unpublished_and_future_versions_exist__returns_v1(
     environment_v2_versioning: Environment, staff_user: FFAdminUser, feature: Feature
 ) -> None:
     # Given
@@ -236,7 +249,7 @@ def test_get_current_live_environment_feature_version(
     assert latest_version == version_1
 
 
-def test_get_updated_feature_states_for_version_returns_empty_list_when_no_changes(
+def test_get_updated_feature_states_for_version__no_changes__returns_empty_list(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -254,7 +267,7 @@ def test_get_updated_feature_states_for_version_returns_empty_list_when_no_chang
     assert updated_feature_states == []
 
 
-def test_get_updated_feature_states_for_version_returns_feature_state_when_enabled_changes(
+def test_get_updated_feature_states_for_version__enabled_changed__returns_updated_state(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -282,7 +295,7 @@ def test_get_updated_feature_states_for_version_returns_feature_state_when_enabl
     assert updated_feature_states[0].enabled is not v1_fs.enabled
 
 
-def test_get_updated_feature_states_for_version_returns_feature_state_when_value_changes(
+def test_get_updated_feature_states_for_version__value_changed__returns_updated_state(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -307,7 +320,7 @@ def test_get_updated_feature_states_for_version_returns_feature_state_when_value
     assert updated_feature_states[0].get_feature_state_value() == "changed_value"
 
 
-def test_get_updated_feature_states_for_version_returns_new_segment_override(
+def test_get_updated_feature_states_for_version__new_segment_override_added__returns_override(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -342,7 +355,7 @@ def test_get_updated_feature_states_for_version_returns_new_segment_override(
     assert updated_feature_states[0].feature_segment == feature_segment
 
 
-def test_get_updated_feature_states_for_version_detects_environment_value_change(
+def test_get_updated_feature_states_for_version__environment_value_changed__returns_default_only(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -396,7 +409,7 @@ def test_get_updated_feature_states_for_version_detects_environment_value_change
     assert updated_feature_states[0].get_feature_state_value() == "default_value_v2"
 
 
-def test_get_updated_feature_states_for_version_detects_segment_override_changes(
+def test_get_updated_feature_states_for_version__segment_override_value_changed__returns_override_only(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -449,7 +462,7 @@ def test_get_updated_feature_states_for_version_detects_segment_override_changes
     assert updated_feature_states[0].get_feature_state_value() == "segment_value_v2"
 
 
-def test_get_updated_feature_states_for_version_detects_multivariate_segment_override_weight_changes(
+def test_get_updated_feature_states_for_version__mv_allocation_changed__returns_override(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -528,7 +541,7 @@ def test_get_updated_feature_states_for_version_detects_multivariate_segment_ove
     assert updated_feature_states[0].feature_segment.segment == segment
 
 
-def test_get_updated_feature_states_for_version_detects_segment_override_multivariate_value_changes(
+def test_get_updated_feature_states_for_version__mv_control_value_changed__returns_override(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -602,16 +615,384 @@ def test_get_updated_feature_states_for_version_detects_segment_override_multiva
     assert updated_feature_states[0].get_feature_state_value() == "new_control_value"
 
 
-def test_get_environment_flags_list_with_replica(
+def test_get_environment_flags_list__from_replica__returns_feature_states(
     feature: Feature,
     environment: Environment,
 ) -> None:
+    # Given
     # This just verifies the code path works - actual replica behavior
     # depends on database configuration
+
+    # When
     result = get_environment_flags_list(
         environment=environment,
         from_replica=True,
     )
 
+    # Then
     assert len(result) >= 1
     assert result[0].feature == feature
+
+
+def _mv_change_set(
+    author: AuthorData,
+    segment: Segment,
+    *,
+    multivariate_values: list[MultivariateValueChangeSet] | None,
+) -> FlagChangeSetV2:
+    return FlagChangeSetV2(
+        author=author,
+        environment_default_enabled=True,
+        environment_default_value="control",
+        environment_default_type="string",
+        segment_overrides=[
+            SegmentOverrideChangeSet(
+                segment_id=segment.id,
+                enabled=True,
+                feature_state_value="control",
+                type_="string",
+                multivariate_values=multivariate_values,
+            )
+        ],
+    )
+
+
+def _get_live_override(
+    environment: Environment, feature: Feature, segment: Segment
+) -> FeatureState:
+    if environment.use_v2_feature_versioning:
+        version = get_current_live_environment_feature_version(
+            environment_id=environment.id, feature_id=feature.id
+        )
+        assert version is not None
+        override: FeatureState = version.feature_states.get(
+            feature_segment__segment=segment
+        )
+        return override
+    override = FeatureState.objects.get(
+        environment=environment, feature=feature, feature_segment__segment=segment
+    )
+    return override
+
+
+def _override_allocations(override: FeatureState) -> dict[int, float]:
+    return {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in override.multivariate_feature_state_values.all()
+    }
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_update_flag_v2__new_segment_override_with_mv__creates_mv_values(
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    segment: Segment,
+    admin_user: FFAdminUser,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    option_a, option_b, _ = multivariate_options
+    change_set = _mv_change_set(
+        AuthorData(user=admin_user),
+        segment,
+        multivariate_values=[
+            MultivariateValueChangeSet(option_a.id, 60.0),
+            MultivariateValueChangeSet(option_b.id, 40.0),
+        ],
+    )
+
+    # When
+    update_flag_v2(environment, multivariate_feature, change_set)
+
+    # Then
+    override = _get_live_override(environment, multivariate_feature, segment)
+    assert _override_allocations(override) == {option_a.id: 60.0, option_b.id: 40.0}
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_update_flag_v2__existing_override_mv_changed__updates_allocations(
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    segment: Segment,
+    admin_user: FFAdminUser,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    author = AuthorData(user=admin_user)
+    option_a, option_b, _ = multivariate_options
+    update_flag_v2(
+        environment,
+        multivariate_feature,
+        _mv_change_set(
+            author,
+            segment,
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+            ],
+        ),
+    )
+
+    # When
+    update_flag_v2(
+        environment,
+        multivariate_feature,
+        _mv_change_set(
+            author,
+            segment,
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 70.0),
+                MultivariateValueChangeSet(option_b.id, 30.0),
+            ],
+        ),
+    )
+
+    # Then
+    override = _get_live_override(environment, multivariate_feature, segment)
+    assert _override_allocations(override) == {option_a.id: 70.0, option_b.id: 30.0}
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_update_flag_v2__option_not_passed__is_retained(
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    segment: Segment,
+    admin_user: FFAdminUser,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    author = AuthorData(user=admin_user)
+    option_a, option_b, _ = multivariate_options
+    update_flag_v2(
+        environment,
+        multivariate_feature,
+        _mv_change_set(
+            author,
+            segment,
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+        ),
+    )
+
+    # When only option_a is passed
+    update_flag_v2(
+        environment,
+        multivariate_feature,
+        _mv_change_set(
+            author,
+            segment,
+            multivariate_values=[MultivariateValueChangeSet(option_a.id, 30.0)],
+        ),
+    )
+
+    # Then option_b is left untouched
+    override = _get_live_override(environment, multivariate_feature, segment)
+    assert _override_allocations(override) == {option_a.id: 30.0, option_b.id: 50.0}
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_update_flag_v2__no_mv_values__leaves_existing_mv_untouched(
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    segment: Segment,
+    admin_user: FFAdminUser,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    author = AuthorData(user=admin_user)
+    option_a, option_b, _ = multivariate_options
+    update_flag_v2(
+        environment,
+        multivariate_feature,
+        _mv_change_set(
+            author,
+            segment,
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+            ],
+        ),
+    )
+
+    # When
+    update_flag_v2(
+        environment,
+        multivariate_feature,
+        _mv_change_set(author, segment, multivariate_values=None),
+    )
+
+    # Then
+    override = _get_live_override(environment, multivariate_feature, segment)
+    assert _override_allocations(override) == {option_a.id: 60.0, option_b.id: 40.0}
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_update_flag__segment_override_with_mv__sets_mv_values(
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    segment: Segment,
+    admin_user: FFAdminUser,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    update_flag(
+        environment,
+        multivariate_feature,
+        FlagChangeSet(
+            author=AuthorData(user=admin_user),
+            enabled=True,
+            feature_state_value="control",
+            type_="string",
+            segment_id=segment.id,
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 70.0),
+                MultivariateValueChangeSet(option_b.id, 30.0),
+            ],
+        ),
+    )
+
+    # Then
+    override = _get_live_override(environment, multivariate_feature, segment)
+    assert _override_allocations(override) == {option_a.id: 70.0, option_b.id: 30.0}
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_update_flag_v2__retained_plus_passed_exceeds_100__raises(
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    segment: Segment,
+    admin_user: FFAdminUser,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given an override allocating option_a 80% and option_b 20%
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    author = AuthorData(user=admin_user)
+    option_a, option_b, _ = multivariate_options
+    update_flag_v2(
+        environment,
+        multivariate_feature,
+        _mv_change_set(
+            author,
+            segment,
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 80.0),
+                MultivariateValueChangeSet(option_b.id, 20.0),
+            ],
+        ),
+    )
+
+    # When option_b alone is raised to 100% (retained option_a 80% → 180% total)
+    # Then it is rejected
+    with pytest.raises(ValidationError):
+        update_flag_v2(
+            environment,
+            multivariate_feature,
+            _mv_change_set(
+                author,
+                segment,
+                multivariate_values=[MultivariateValueChangeSet(option_b.id, 100.0)],
+            ),
+        )
+
+
+def test_update_flag__v2_versioning_multivariate_weight_increase__keeps_enrolled_identities_in_variant(
+    environment_v2_versioning: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given a multivariate feature split 50/50 between two variants, and the
+    # variant each of a range of identities is bucketed into
+    author = AuthorData(user=admin_user)
+    option_a, option_b, option_c = multivariate_options
+    feature_state = update_flag(
+        environment_v2_versioning,
+        multivariate_feature,
+        FlagChangeSet(
+            author=author,
+            enabled=True,
+            feature_state_value="control",
+            type_="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+                MultivariateValueChangeSet(option_c.id, 0.0),
+            ],
+        ),
+    )
+    identity_hash_keys = [f"identity-{i}" for i in range(100)]
+    original_assignment = {
+        key: feature_state.get_multivariate_feature_state_value(key).pk
+        for key in identity_hash_keys
+    }
+
+    # When the first variant's allocation is increased to 60/40
+    new_feature_state = update_flag(
+        environment_v2_versioning,
+        multivariate_feature,
+        FlagChangeSet(
+            author=author,
+            enabled=True,
+            feature_state_value="control",
+            type_="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+                MultivariateValueChangeSet(option_c.id, 0.0),
+            ],
+        ),
+    )
+
+    # Then identities already in the grown variant stay in it, and the only
+    # movement is from the shrunk variant into the grown one
+    new_assignment = {
+        key: new_feature_state.get_multivariate_feature_state_value(key).pk
+        for key in identity_hash_keys
+    }
+    movers = {
+        key
+        for key in identity_hash_keys
+        if new_assignment[key] != original_assignment[key]
+    }
+    assert movers
+    assert all(original_assignment[key] == option_b.id for key in movers)
+    assert all(new_assignment[key] == option_a.id for key in movers)
+    assert all(
+        new_assignment[key] == original_assignment[key]
+        for key in identity_hash_keys
+        if key not in movers
+    )

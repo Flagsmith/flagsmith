@@ -2,15 +2,22 @@ from typing import Any, Callable, Dict
 
 import pytest
 from django.contrib.contenttypes.models import ContentType
+from rest_framework import serializers
 
 from metadata.models import (
     FIELD_VALUE_MAX_LENGTH,
     MetadataField,
     MetadataModelField,
+    MetadataModelFieldRequirement,
 )
-from metadata.serializers import MetaDataModelFieldSerializer, MetadataSerializer
+from metadata.serializers import (
+    MetaDataModelFieldSerializer,
+    MetadataSerializer,
+    MetadataSerializerMixin,
+)
 from organisations.models import Organisation
 from projects.models import Project
+from segments.models import Segment
 
 
 @pytest.mark.parametrize(
@@ -31,7 +38,7 @@ from projects.models import Project
         ("multiline_str", "a valid string", True),
     ],
 )
-def test_metadata_serializer_validate_validates_field_value_type_correctly(
+def test_metadata_serializer_validate__various_field_types__validates_correctly(
     organisation: Organisation,
     environment_content_type: ContentType,
     field_type: str,
@@ -79,7 +86,7 @@ def test_metadata_serializer_validate_validates_field_value_type_correctly(
         ),
     ],
 )
-def test_metadata_model_field_serializer_validation(
+def test_metadata_model_field_serializer__various_content_types__validates_correctly(
     a_metadata_field: MetadataField,
     feature_content_type: ContentType,
     project: Project,
@@ -120,7 +127,7 @@ def test_metadata_model_field_serializer_validation(
         assert serializer.errors["non_field_errors"][0] == error_message
 
 
-def test_metadata_model_field_serializer_with_empty_is_required_for(
+def test_metadata_model_field_serializer__empty_is_required_for__is_valid(
     a_metadata_field: MetadataField,
     feature_content_type: ContentType,
 ) -> None:
@@ -137,7 +144,7 @@ def test_metadata_model_field_serializer_with_empty_is_required_for(
     assert result is True
 
 
-def test_metadata_model_field_serializer_validation_invalid_content_type(
+def test_metadata_model_field_serializer__invalid_content_type__returns_error(
     a_metadata_field: MetadataField,
     feature_content_type: ContentType,
     project: Project,
@@ -168,3 +175,145 @@ def test_metadata_model_field_serializer_validation_invalid_content_type(
         serializer.errors["non_field_errors"][0]
         == "The requirement content type must be project or organisation"
     )
+
+
+class _DummySegmentSerializer(MetadataSerializerMixin, serializers.Serializer):  # type: ignore[type-arg]
+    """A minimal serializer for testing _validate_required_metadata with Segment model."""
+
+    class Meta:
+        model = Segment
+
+
+def test_validate_required_metadata__requirement_on_project_a__not_enforced_in_project_b(
+    organisation: Organisation,
+    project: Project,
+    project_b: Project,
+    a_metadata_field: MetadataField,
+    segment_content_type: ContentType,
+    project_content_type: ContentType,
+) -> None:
+    # Given
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=segment_content_type,
+    )
+    MetadataModelFieldRequirement.objects.create(
+        content_type=project_content_type,
+        object_id=project.id,
+        model_field=model_field,
+    )
+    serializer = _DummySegmentSerializer()
+
+    # When / Then
+    serializer._validate_required_metadata(organisation, [], project=project_b)
+
+
+def test_validate_required_metadata__requirement_on_project_a__enforced_in_project_a(
+    organisation: Organisation,
+    project: Project,
+    a_metadata_field: MetadataField,
+    segment_content_type: ContentType,
+    project_content_type: ContentType,
+) -> None:
+    # Given
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=segment_content_type,
+    )
+    MetadataModelFieldRequirement.objects.create(
+        content_type=project_content_type,
+        object_id=project.id,
+        model_field=model_field,
+    )
+    serializer = _DummySegmentSerializer()
+
+    # When / Then
+    with pytest.raises(serializers.ValidationError, match="Missing required metadata"):
+        serializer._validate_required_metadata(organisation, [], project=project)
+
+
+def test_validate_required_metadata__org_level_requirement__enforced_in_all_projects(
+    organisation: Organisation,
+    project: Project,
+    project_b: Project,
+    a_metadata_field: MetadataField,
+    segment_content_type: ContentType,
+    organisation_content_type: ContentType,
+) -> None:
+    # Given
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=segment_content_type,
+    )
+    MetadataModelFieldRequirement.objects.create(
+        content_type=organisation_content_type,
+        object_id=organisation.id,
+        model_field=model_field,
+    )
+    serializer = _DummySegmentSerializer()
+
+    # When / Then
+    with pytest.raises(serializers.ValidationError, match="Missing required metadata"):
+        serializer._validate_required_metadata(organisation, [], project=project)
+
+    with pytest.raises(serializers.ValidationError, match="Missing required metadata"):
+        serializer._validate_required_metadata(organisation, [], project=project_b)
+
+
+def test_validate_required_metadata__project_level_field_with_requirement__only_enforced_in_its_project(
+    organisation: Organisation,
+    project: Project,
+    project_b: Project,
+    segment_content_type: ContentType,
+    project_content_type: ContentType,
+) -> None:
+    # Given
+    project_field = MetadataField.objects.create(
+        name="proj_field", type="str", organisation=organisation, project=project
+    )
+    model_field = MetadataModelField.objects.create(
+        field=project_field,
+        content_type=segment_content_type,
+    )
+    MetadataModelFieldRequirement.objects.create(
+        content_type=project_content_type,
+        object_id=project.id,
+        model_field=model_field,
+    )
+    serializer = _DummySegmentSerializer()
+
+    # When / Then
+    with pytest.raises(serializers.ValidationError, match="Missing required metadata"):
+        serializer._validate_required_metadata(organisation, [], project=project)
+
+    serializer._validate_required_metadata(organisation, [], project=project_b)
+
+
+@pytest.mark.django_db
+def test_validate_required_metadata__project_field_overrides_required_org_field__org_requirement_skipped(
+    organisation: Organisation,
+    project: Project,
+    a_metadata_field: MetadataField,
+    segment_content_type: ContentType,
+    organisation_content_type: ContentType,
+) -> None:
+    # Given
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=segment_content_type,
+    )
+    MetadataModelFieldRequirement.objects.create(
+        content_type=organisation_content_type,
+        object_id=organisation.id,
+        model_field=model_field,
+    )
+    MetadataField.objects.create(
+        name=a_metadata_field.name,
+        type=a_metadata_field.type,
+        organisation=organisation,
+        project=project,
+    )
+    serializer = _DummySegmentSerializer()
+
+    # When / Then
+    serializer._validate_required_metadata(organisation, [], project=project)

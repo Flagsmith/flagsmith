@@ -21,6 +21,7 @@ export const codeReferencesService = service
 
 export const {
   useGetFeatureCodeReferencesQuery,
+  useLazyGetFeatureCodeReferencesQuery,
   // END OF EXPORTS
 } = codeReferencesService
 

@@ -1,4 +1,5 @@
 import { FC, ReactNode, useEffect } from 'react'
+import { useHistory, useLocation } from 'react-router-dom'
 import { useGetOrganisationQuery } from 'common/services/useOrganisation'
 import { useRouteContext } from 'components/providers/RouteContext'
 import Utils from 'common/utils/utils'
@@ -12,7 +13,7 @@ import { LicensingTab } from './tabs/LicensingTab'
 import { CustomFieldsTab } from './tabs/CustomFieldsTab'
 import { APIKeysTab } from './tabs/APIKeysTab'
 import { WebhooksTab } from './tabs/WebhooksTab'
-import { SAMLTab } from './tabs/SAMLTab'
+import { SSOTab } from './tabs/sso'
 
 type OrganisationSettingsTab = {
   component: ReactNode
@@ -38,6 +39,19 @@ const OrganisationSettingsPage: FC = () => {
   useEffect(() => {
     API.trackPage(Constants.pages.ORGANISATION_SETTINGS)
   }, [])
+
+  // Back-compat: the SAML tab was renamed to SSO. Existing bookmarks and
+  // links pointing at ?tab=saml redirect to ?tab=sso so users land in the
+  // right place.
+  const history = useHistory()
+  const location = useLocation()
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    if (params.get('tab') === 'saml') {
+      params.set('tab', 'sso')
+      history.replace(`${location.pathname}?${params.toString()}`)
+    }
+  }, [history, location])
 
   if (isLoading) {
     return (
@@ -111,10 +125,10 @@ const OrganisationSettingsPage: FC = () => {
       label: 'Webhooks',
     },
     {
-      component: <SAMLTab organisationId={organisation.id} />,
+      component: <SSOTab organisationId={organisation.id} />,
       isVisible: true,
-      key: 'saml',
-      label: 'SAML',
+      key: 'sso',
+      label: 'SSO',
     },
   ].filter(({ isVisible }) => isVisible)
 

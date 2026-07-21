@@ -10,10 +10,13 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'plugin:prettier/recommended',
     'plugin:@dword-design/import-alias/recommended',
+    'plugin:storybook/recommended',
+    // Lints only changed lines in CI (no-op locally), so the pre-existing
+    // eslint backlog doesn't fail PRs that merely touch a file.
+    'plugin:diff/ci',
   ],
   'globals': {
     '$': true,
-    '$crisp': true,
     'API': true,
     'AccountProvider': true,
     'AccountStore': true,

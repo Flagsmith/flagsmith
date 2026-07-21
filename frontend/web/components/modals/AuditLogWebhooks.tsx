@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import JSONReference from 'components/JSONReference'
 import Button from 'components/base/forms/Button'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Constants from 'common/constants'
 import {
   deleteAuditLogWebhook,
@@ -23,7 +23,10 @@ type AuditLogWebhooksType = {
 
 const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
   const { data: webhooks, isLoading: webhooksLoading } =
-    useGetAuditLogWebhooksQuery({ organisationId }, { skip: !organisationId })
+    useGetAuditLogWebhooksQuery(
+      { organisationId: parseInt(organisationId) },
+      { skip: !organisationId },
+    )
   const createWebhook = () => {
     openModal(
       'New Webhook',

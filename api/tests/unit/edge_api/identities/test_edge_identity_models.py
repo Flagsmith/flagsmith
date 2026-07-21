@@ -4,11 +4,12 @@ from unittest.mock import MagicMock
 import pytest
 import shortuuid
 from django.utils import timezone
-from flag_engine.features.models import FeatureModel, FeatureStateModel
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
+from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
+from task_processor.task_run_method import TaskRunMethod
 
 from api_keys.user import APIKeyUser
 from edge_api.identities.models import EdgeIdentity
@@ -16,11 +17,14 @@ from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
+from projects.models import Project
 from segments.models import Segment
+from tests.types import EnableFeaturesFixture
 from users.models import FFAdminUser
+from util.engine_models.features.models import FeatureModel, FeatureStateModel
 
 
-def test_get_all_feature_states_for_edge_identity_uses_segment_priorities(  # type: ignore[no-untyped-def]
+def test_get_all_feature_states__multiple_segment_overrides__uses_segment_priorities(  # type: ignore[no-untyped-def]
     environment, project, segment, feature, mocker
 ):
     # Given
@@ -65,7 +69,7 @@ def test_get_all_feature_states_for_edge_identity_uses_segment_priorities(  # ty
     )
 
 
-def test_edge_identity_get_all_feature_states_ignores_not_live_feature_states(  # type: ignore[no-untyped-def]
+def test_get_all_feature_states__not_live_change_request__ignores_not_live_states(  # type: ignore[no-untyped-def]
     environment, project, segment, feature, feature_state, admin_user, mocker
 ):
     # Given
@@ -98,7 +102,8 @@ def test_edge_identity_get_all_feature_states_ignores_not_live_feature_states(  
     assert feature_states == [feature_state]
 
 
-def test_edge_identity_from_identity_document():  # type: ignore[no-untyped-def]
+def test_from_identity_document__valid_document__returns_edge_identity(  # type: ignore[no-untyped-def]
+):
     # Given
     identifier = "identifier"
     environment_api_key = shortuuid.uuid()
@@ -125,8 +130,10 @@ def test_edge_identity_from_identity_document():  # type: ignore[no-untyped-def]
         ),
     ),
 )
-def test_edge_identity_id_property(django_id, identity_uuid, expected_id, mocker):  # type: ignore[no-untyped-def]
-    # When
+def test_edge_identity_id__parametrised_ids__returns_expected_id(  # type: ignore[no-untyped-def]
+    django_id, identity_uuid, expected_id, mocker
+):
+    # Given / When
     edge_identity = EdgeIdentity(
         mocker.MagicMock(django_id=django_id, identity_uuid=identity_uuid)
     )
@@ -135,7 +142,9 @@ def test_edge_identity_id_property(django_id, identity_uuid, expected_id, mocker
     assert edge_identity.id == expected_id
 
 
-def test_edge_identity_get_feature_state_by_feature_name_or_id(edge_identity_model):  # type: ignore[no-untyped-def]
+def test_get_feature_state_by_feature_name_or_id__existing_override__returns_feature_state(  # type: ignore[no-untyped-def]
+    edge_identity_model,
+):
     # Given
     feature_state_model = FeatureStateModel(
         feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
@@ -158,7 +167,9 @@ def test_edge_identity_get_feature_state_by_feature_name_or_id(edge_identity_mod
     )
 
 
-def test_edge_identity_get_feature_state_by_featurestate_uuid(edge_identity_model):  # type: ignore[no-untyped-def]
+def test_get_feature_state_by_featurestate_uuid__existing_override__returns_feature_state(  # type: ignore[no-untyped-def]
+    edge_identity_model,
+):
     # Given
     feature_state_model = FeatureStateModel(
         feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
@@ -178,7 +189,9 @@ def test_edge_identity_get_feature_state_by_featurestate_uuid(edge_identity_mode
     assert edge_identity_model.get_feature_state_by_featurestate_uuid("invalid") is None
 
 
-def test_edge_identity_remove_feature_state(edge_identity_model):  # type: ignore[no-untyped-def]
+def test_remove_feature_override__existing_override__removes_feature_state(  # type: ignore[no-untyped-def]
+    edge_identity_model,
+):
     # Given
     feature_state_model = FeatureStateModel(
         feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
@@ -198,7 +211,7 @@ def test_edge_identity_remove_feature_state(edge_identity_model):  # type: ignor
     )
 
 
-def test_edge_identity_remove_feature_state_if_no_matching_feature_state(  # type: ignore[no-untyped-def]
+def test_remove_feature_override__no_matching_override__no_error(  # type: ignore[no-untyped-def]
     edge_identity_model,
 ):
     # Given
@@ -219,7 +232,9 @@ def test_edge_identity_remove_feature_state_if_no_matching_feature_state(  # typ
     )
 
 
-def test_edge_identity_synchronise_features(mocker, edge_identity_model):  # type: ignore[no-untyped-def]
+def test_synchronise_features__empty_feature_list__removes_overrides(  # type: ignore[no-untyped-def]
+    mocker, edge_identity_model
+):
     # Given
     mock_sync_identity_document_features = mocker.patch(
         "edge_api.identities.models.sync_identity_document_features"
@@ -246,7 +261,7 @@ def test_edge_identity_synchronise_features(mocker, edge_identity_model):  # typ
     )
 
 
-def test_edge_identity_save_does_not_generate_audit_records_if_no_changes(  # type: ignore[no-untyped-def]
+def test_save__no_changes__does_not_generate_audit_records(  # type: ignore[no-untyped-def]
     mocker, edge_identity_model, edge_identity_dynamo_wrapper_mock
 ):
     # Given
@@ -416,7 +431,7 @@ def test_edge_identity_save_called__feature_override_removed__expected_tasks_cal
         (False, "initial", True, "updated"),
     ),
 )
-def test_edge_identity_save_called_generate_audit_records_if_feature_override_updated(
+def test_save__feature_override_updated__generates_audit_records(
     initial_enabled: bool,
     initial_value: str,
     new_enabled: bool,
@@ -498,7 +513,7 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_up
     )
 
 
-def test_get_all_feature_states_post_v2_versioning_migration(
+def test_get_all_feature_states__post_v2_versioning_migration__returns_latest_overrides(
     environment: Environment,
     feature: Feature,
     feature_state: FeatureState,
@@ -538,3 +553,72 @@ def test_get_all_feature_states_post_v2_versioning_migration(
     # Then
     assert len(feature_states) == 1
     assert feature_states[0] == v2_segment_override
+
+
+def test_delete__clickhouse_enabled__schedules_delayed_recount(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    environment: Environment,
+    edge_identity_model: EdgeIdentity,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    settings.TASK_RUN_METHOD = TaskRunMethod.TASK_PROCESSOR
+    settings.SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS = 120
+    enqueue_membership_refresh_mock = mocker.patch(
+        "segment_membership.services.enqueue_membership_refresh"
+    )
+
+    # When
+    with freeze_time("2099-01-01T00:00:00Z"):
+        edge_identity_model.delete(user=mocker.MagicMock())
+        expected_delay_until = timezone.now() + timedelta(seconds=120)
+
+    # Then
+    enqueue_membership_refresh_mock.assert_called_once_with(
+        project, delay_until=expected_delay_until
+    )
+
+
+def test_delete__clickhouse_disabled__does_not_schedule_recount(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    edge_identity_model: EdgeIdentity,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+) -> None:
+    # Given
+    settings.CLICKHOUSE_ENABLED = False
+    enqueue_membership_refresh_mock = mocker.patch(
+        "segment_membership.services.enqueue_membership_refresh"
+    )
+
+    # When
+    edge_identity_model.delete(user=mocker.MagicMock())
+
+    # Then
+    enqueue_membership_refresh_mock.assert_not_called()
+
+
+def test_delete__membership_flag_off__does_not_enqueue_refresh(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    edge_identity_model: EdgeIdentity,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+) -> None:
+    # Given
+    settings.CLICKHOUSE_ENABLED = True
+    settings.TASK_RUN_METHOD = TaskRunMethod.TASK_PROCESSOR
+    refresh_mock = mocker.patch(
+        "segment_membership.tasks.refresh_project_segment_counts"
+    )
+    refresh_mock.task_identifier = "segment_membership.refresh_project_segment_counts"
+
+    # When
+    edge_identity_model.delete(user=mocker.MagicMock())
+
+    # Then
+    refresh_mock.delay.assert_not_called()

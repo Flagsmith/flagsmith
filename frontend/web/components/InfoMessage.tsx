@@ -1,7 +1,5 @@
-import React, { PureComponent, useEffect, useState } from 'react'
-import Icon, { IconName } from './Icon'
-import { chevronForward, close as closeIcon, chevronDown } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
+import React, { useEffect, useState } from 'react'
+import Icon, { IconName } from './icons/Icon'
 import { FC } from 'react'
 import Button from './base/forms/Button'
 
@@ -62,11 +60,7 @@ const InfoMessage: FC<InfoMessageType> = ({
     <div className={'alert alert-info flex-1'}>
       <div className={'flex-fill flex-column gap-2'}>
         <div className='d-flex'>
-          <div
-            className='user-select-none flex-fill align-items-center d-flex gap-2'
-            onClick={handleToggleCollapse}
-            style={{ cursor: 'pointer' }}
-          >
+          <div className='flex-fill align-items-center d-flex gap-2'>
             <div className='flex-fill'>
               <div className='d-flex gap-2 align-items-center'>
                 <Icon
@@ -87,8 +81,12 @@ const InfoMessage: FC<InfoMessageType> = ({
               </>
             )}
             {collapseId && (
-              <span className='ml-auto lh-1'>
-                <IonIcon icon={isCollapsed ? chevronForward : chevronDown} />
+              <span
+                className='ml-auto lh-1 user-select-none'
+                onClick={handleToggleCollapse}
+                style={{ cursor: 'pointer' }}
+              >
+                <Icon name={isCollapsed ? 'chevron-right' : 'chevron-down'} />
               </span>
             )}
           </div>
@@ -97,7 +95,7 @@ const InfoMessage: FC<InfoMessageType> = ({
       {isClosable && (
         <a onClick={close} className=' pl-2'>
           <span className={`icon close-btn`}>
-            <IonIcon icon={closeIcon} />
+            <Icon name='close' fill='currentColor' />
           </span>
         </a>
       )}

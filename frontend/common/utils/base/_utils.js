@@ -1,3 +1,5 @@
+import range from 'lodash/range'
+
 const Utils = {
   GUID(append) {
     let d = new Date().getTime()
@@ -439,7 +441,7 @@ emailRegex: /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|
       prevTruncated: startPage > 2,
 
       // can go forward a page
-      range: _.range(startPage, endPage),
+      range: range(startPage, endPage),
 
       showFirstPage: startPage > 1,
 
@@ -502,9 +504,10 @@ emailRegex: /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|
     const target = e.target
 
     if (target.getAttribute) {
-      return target.type === 'checkbox' || target.type === 'radio'
-        ? target.getAttribute('checked')
-        : typeof target.value === 'string'
+      if (target.type === 'checkbox' || target.type === 'radio') {
+        return target.getAttribute('checked')
+      }
+      return typeof target.value === 'string'
         ? target.value
         : target.getAttribute('data-value') || target.getAttribute('value')
     }
@@ -517,13 +520,22 @@ emailRegex: /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|
 
   toParam(obj) {
     // {min:100,max:200} -> min=100&max=200
+    // {status:['running','paused']} -> status=running&status=paused
     return Object.keys(obj)
       .filter((v) => obj[v] !== undefined)
-      .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`)
+      .flatMap((k) => {
+        const val = obj[k]
+        if (Array.isArray(val)) {
+          return val.map(
+            (v) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`,
+          )
+        }
+        return `${encodeURIComponent(k)}=${encodeURIComponent(val)}`
+      })
       .join('&')
   },
 
   // eslint-disable-next-line
 urlRegex: /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$/,
 }
-module.exports = Utils
+export default Utils

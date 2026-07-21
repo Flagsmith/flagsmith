@@ -2,7 +2,11 @@ import typing
 import uuid
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import (
+    MaxValueValidator,
+    MinValueValidator,
+    validate_slug,
+)
 from django.db import models
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
@@ -50,6 +54,13 @@ class MultivariateFeatureOption(
         related_name="multivariate_options",
     )
 
+    key = models.CharField(
+        max_length=255,
+        null=True,
+        validators=[validate_slug],
+        help_text="A stable, human-readable identifier for the variant.",
+    )
+
     # This field is stored at the feature level but not used here - it is transferred
     # to the MultivariateFeatureStateValue on creation of a new option or when creating
     # a new environment.
@@ -57,6 +68,9 @@ class MultivariateFeatureOption(
         default=100,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
     )
+
+    class Meta:
+        unique_together = ("feature", "key")
 
     @hook(AFTER_CREATE)
     def create_multivariate_feature_state_values(self):  # type: ignore[no-untyped-def]

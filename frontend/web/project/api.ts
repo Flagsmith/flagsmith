@@ -6,11 +6,11 @@ import * as amplitude from '@amplitude/analytics-browser'
 import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 import { groupBy } from 'lodash'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
-const Cookies = require('js-cookie')
+import Cookies from 'js-cookie'
 import Project from 'common/project'
 import { AccountModel, User } from 'common/types/responses'
 import AccountStore from 'common/stores/account-store'
-import flagsmith from 'flagsmith'
+import flagsmith from '@flagsmith/flagsmith'
 import Utils from 'common/utils/utils'
 import loadChat, { identifyChatUser } from 'common/loadChat'
 
@@ -112,7 +112,8 @@ const API = {
     }
 
     if (Project.amplitude) {
-      amplitude.setUserId(id)
+      const amplitudeUserId = user.uuid || id
+      amplitude.setUserId(amplitudeUserId)
       API.trackTraits({ email: id })
       if (window.engagement) {
         window.engagement.boot({
@@ -122,7 +123,7 @@ const API = {
                 amplitude.track(event.event_type, event.event_properties),
             },
           ],
-          user: { user_id: id, user_properties: {} },
+          user: { user_id: amplitudeUserId, user_properties: {} },
         })
       }
     }
@@ -133,9 +134,15 @@ const API = {
     const user = AccountStore.model as unknown as AccountModel
     if (!user) return
 
+    const currentOrganisation = AccountStore.getOrganisation()
+
     return flagsmith
       .identify(`${user.id}`, {
         email: user.email,
+        'organisation.id': currentOrganisation
+          ? String(currentOrganisation.id)
+          : null,
+        'organisation.name': currentOrganisation?.name ?? null,
         organisations: user.organisations
           ? user.organisations.map((o) => String(o.id)).join(',')
           : '',

@@ -8,7 +8,9 @@ import pytest
 from common.test_tools import SnapshotFixture
 from django.conf import settings
 from django.core import signing
+from django.utils import timezone
 from flag_engine.segments import constants as segment_constants
+from pytest_mock import MockerFixture
 from requests.exceptions import HTTPError, RequestException, Timeout
 
 from environments.identities.models import Identity
@@ -27,7 +29,7 @@ from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
 
 
-def test_create_import_request__return_expected(
+def test_create_import_request__valid_project__returns_expected(
     ld_client_mock: MagicMock,
     ld_client_class_mock: MagicMock,
     project: Project,
@@ -77,6 +79,7 @@ def test_create_import_request__return_expected(
         (Timeout(), "Timeout when requesting /expected_path"),
     ],
 )
+@pytest.mark.django_db(transaction=True)
 def test_process_import_request__api_error__expected_status(
     ld_client_mock: MagicMock,
     ld_client_class_mock: MagicMock,
@@ -100,6 +103,7 @@ def test_process_import_request__api_error__expected_status(
     assert import_request.status["error_messages"] == [expected_error_message]
 
 
+@pytest.mark.django_db(transaction=True)
 def test_process_import_request__success__expected_status(  # type: ignore[no-untyped-def]
     project: Project,
     import_request: LaunchDarklyImportRequest,
@@ -159,6 +163,10 @@ def test_process_import_request__success__expected_status(  # type: ignore[no-un
         ("TEST_SEGMENT_TARGET", "Imported"),
         ("TEST_COMBINED_TARGET", "Imported"),
     }
+
+    # Deprecated flags are archived.
+    deprecated_feature = Feature.objects.get(project=project, name="flag1")
+    assert deprecated_feature.is_archived is True
 
     # Standard feature states have expected values.
     boolean_standard_feature = Feature.objects.get(project=project, name="flag1")
@@ -255,11 +263,33 @@ def test_process_import_request__success__expected_status(  # type: ignore[no-un
     [tag.label for tag in tagged_feature.tags.all()] == ["testtag", "testtag2"]
 
 
-def test_process_import_request__segments_imported(  # type: ignore[no-untyped-def]
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__already_completed__does_not_reprocess(
+    ld_client_class_mock: MagicMock,
+    ld_client_mock: MagicMock,
+    import_request: LaunchDarklyImportRequest,
+) -> None:
+    # Given
+    import_request.status["result"] = "success"
+    import_request.completed_at = timezone.now()
+    import_request.ld_token = ""
+    import_request.save()
+    ld_client_class_mock.reset_mock()
+
+    # When
+    process_import_request(import_request)
+
+    # Then
+    ld_client_class_mock.assert_not_called()
+    ld_client_mock.get_environments.assert_not_called()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__valid_segments__imports_correctly(  # type: ignore[no-untyped-def]
     project: Project,
     import_request: LaunchDarklyImportRequest,
 ):
-    # When
+    # Given / When
     process_import_request(import_request)
 
     # Then
@@ -455,11 +485,12 @@ def test_process_import_request__segments_imported(  # type: ignore[no-untyped-d
         assert trait_value == identity.identifier
 
 
-def test_process_import_request__rules_imported(  # type: ignore[no-untyped-def]
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__valid_rules__imports_correctly(  # type: ignore[no-untyped-def]
     project: Project,
     import_request: LaunchDarklyImportRequest,
 ):
-    # When
+    # Given / When
     process_import_request(import_request)
 
     # Then
@@ -551,6 +582,7 @@ def test_process_import_request__rules_imported(  # type: ignore[no-untyped-def]
     }
 
 
+@pytest.mark.django_db(transaction=True)
 def test_process_import_request__large_segments__correctly_imported(
     request: pytest.FixtureRequest,
     ld_client_class_mock: MagicMock,
@@ -628,12 +660,30 @@ def test_process_import_request__large_segments__correctly_imported(
         (True, "True"),
     ],
 )
-def test_serialize_variation_value__return_expected(
+def test_serialize_variation_value__various_types__returns_expected(
     value: object,
     expected: str,
 ) -> None:
-    # When
+    # Given / When
     result = _serialize_variation_value(value)
 
     # Then
     assert result == expected
+
+
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__import__enqueues_membership_refresh(
+    import_request: LaunchDarklyImportRequest,
+    project: Project,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enqueue_membership_refresh_mock = mocker.patch(
+        "integrations.launch_darkly.services.enqueue_membership_refresh"
+    )
+
+    # When
+    process_import_request(import_request)
+
+    # Then
+    enqueue_membership_refresh_mock.assert_called_once_with(project)

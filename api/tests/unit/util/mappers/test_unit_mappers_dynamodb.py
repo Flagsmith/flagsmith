@@ -1,3 +1,5 @@
+import gzip
+import json
 import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -14,10 +16,10 @@ if TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
     from environments.models import Environment, EnvironmentAPIKey
-    from features.models import FeatureState
+    from features.models import Feature, FeatureState
 
 
-def test_map_environment_to_environment_document__call_expected(
+def test_map_environment_to_environment_document__valid_environment__returns_expected_document(
     environment: "Environment",
     feature_state: "FeatureState",
 ) -> None:
@@ -81,7 +83,7 @@ def test_map_environment_to_environment_document__call_expected(
     }
 
 
-def test_map_environment_api_key_to_environment_api_key_document__call_expected(
+def test_map_environment_api_key_to_environment_api_key_document__valid_key__returns_expected_document(
     environment_api_key: "EnvironmentAPIKey",
 ) -> None:
     # Given
@@ -106,7 +108,7 @@ def test_map_environment_api_key_to_environment_api_key_document__call_expected(
     }
 
 
-def test_map_identity_to_identity_document__call_expected(
+def test_map_identity_to_identity_document__valid_identity__returns_expected_document(
     identity: "Identity",
     trait: "Trait",
     mocker: "MockerFixture",
@@ -135,7 +137,7 @@ def test_map_identity_to_identity_document__call_expected(
     assert uuid.UUID(result["identity_uuid"])  # type: ignore[arg-type]
 
 
-def test_map_environment_to_environment_v2_document__call_expected(
+def test_map_environment_to_environment_v2_document__valid_environment__returns_expected_document(
     environment: "Environment",
     feature_state: "FeatureState",
 ) -> None:
@@ -224,6 +226,96 @@ def test_map_identity_override_to_identity_override_document__decimal_feature_st
     )
 
     # Then
-    feature_state_value = result["feature_state"]["feature_state_value"]  # type: ignore[index]
+    feature_state = result["feature_state"]
+    assert isinstance(feature_state, dict)
+    feature_state_value = feature_state["feature_state_value"]
     assert isinstance(feature_state_value, Decimal)
     assert feature_state_value == expected_feature_state_value
+
+
+def test_map_environment_to_compressed_environment_document__valid_environment__returns_compressed_fields(
+    environment: "Environment",
+    feature_state: "FeatureState",
+) -> None:
+    # Given
+    uncompressed_document = dynamodb.map_environment_to_environment_document(
+        environment
+    )
+
+    # When
+    result = dynamodb.map_environment_to_compressed_environment_document(environment)
+
+    # Then
+    assert result.compressed_size_bytes > 0
+    assert 0 < result.compression_ratio < 1.0
+
+    compressed_project = result.document["project"]
+    compressed_feature_states = result.document["feature_states"]
+    assert isinstance(compressed_project, bytes)
+    assert isinstance(compressed_feature_states, bytes)
+    assert (
+        json.loads(gzip.decompress(compressed_project).decode("utf-8"))
+        == uncompressed_document["project"]
+    )
+    assert (
+        json.loads(gzip.decompress(compressed_feature_states).decode("utf-8"))
+        == uncompressed_document["feature_states"]
+    )
+
+
+def test_map_environment_to_compressed_environment_document__mv_option_with_key__key_preserved(
+    environment: "Environment",
+    multivariate_feature: "Feature",
+) -> None:
+    # Given
+    mv_option = multivariate_feature.multivariate_options.first()
+    assert mv_option is not None
+    mv_option.key = "control"
+    mv_option.save()
+
+    # When
+    result = dynamodb.map_environment_to_compressed_environment_document(environment)
+
+    # Then
+    compressed_feature_states = result.document["feature_states"]
+    assert isinstance(compressed_feature_states, bytes)
+    feature_states = json.loads(
+        gzip.decompress(compressed_feature_states).decode("utf-8")
+    )
+    mv_options = [
+        mv_value["multivariate_feature_option"]
+        for feature_state in feature_states
+        for mv_value in feature_state["multivariate_feature_state_values"]
+    ]
+    keyed_option = next(option for option in mv_options if option["id"] == mv_option.id)
+    assert keyed_option["key"] == "control"
+
+
+def test_map_environment_to_compressed_environment_v2_document__valid_environment__returns_compressed_fields(
+    environment: "Environment",
+    feature_state: "FeatureState",
+) -> None:
+    # Given
+    uncompressed_document = dynamodb.map_environment_to_environment_v2_document(
+        environment
+    )
+
+    # When
+    result = dynamodb.map_environment_to_compressed_environment_v2_document(environment)
+
+    # Then
+    assert result.compressed_size_bytes > 0
+    assert 0 < result.compression_ratio < 1.0
+
+    compressed_project = result.document["project"]
+    compressed_feature_states = result.document["feature_states"]
+    assert isinstance(compressed_project, bytes)
+    assert isinstance(compressed_feature_states, bytes)
+    assert (
+        json.loads(gzip.decompress(compressed_project).decode("utf-8"))
+        == uncompressed_document["project"]
+    )
+    assert (
+        json.loads(gzip.decompress(compressed_feature_states).decode("utf-8"))
+        == uncompressed_document["feature_states"]
+    )

@@ -1,16 +1,24 @@
 import { matchPath } from 'react-router-dom'
-
-const Dispatcher = require('../dispatcher/dispatcher')
-const BaseStore = require('./base/_store')
-const data = require('../data/base/_data')
+import filter from 'lodash/filter'
+import find from 'lodash/find'
+import findIndex from 'lodash/findIndex'
+import get from 'lodash/get'
+import { storageGet, storageSet } from 'common/safeLocalStorage'
+import Dispatcher from 'common/dispatcher/dispatcher'
+import BaseStore from './base/_store'
+import data from 'common/data/base/_data'
 import Constants from 'common/constants'
 import dataRelay from 'data-relay'
 import { sortBy } from 'lodash'
 import Project from 'common/project'
 import { getStore } from 'common/store'
+import { setSelectedOrganisationId } from 'common/selectedOrganisationSlice'
+import { hidePylon, identifyChatUser } from 'common/loadChat'
 import { service } from 'common/service'
 import { getBuildVersion } from 'common/services/useBuildVersion'
 import { createOnboardingSupportOptIn } from 'common/services/useOnboardingSupportOptIn'
+import flagsmith from '@flagsmith/flagsmith'
+import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 
 const controller = {
   acceptInvite: (id) => {
@@ -25,7 +33,7 @@ const controller = {
           error.status === 400
         ) {
           API.ajaxHandler(store, error)
-          return
+          throw error
         }
         return data.post(`${Project.api}users/join/${id}/`)
       })
@@ -125,7 +133,7 @@ const controller = {
     data
       .delete(`${Project.api}organisations/${store.organisation.id}/`)
       .then(() => {
-        store.model.organisations = _.filter(
+        store.model.organisations = filter(
           store.model.organisations,
           (org) => org.id !== store.organisation.id,
         )
@@ -149,7 +157,7 @@ const controller = {
     data
       .put(`${Project.api}organisations/${store.organisation.id}/`, org)
       .then((res) => {
-        const idx = _.findIndex(store.model.organisations, {
+        const idx = findIndex(store.model.organisations, {
           id: store.organisation.id,
         })
         if (idx !== -1) {
@@ -238,6 +246,18 @@ const controller = {
         }
 
         data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
+        if (res.is_new_user) {
+          try {
+            flagsmith.trackEvent('new_signup', {
+              metadata: {
+                invite: !!API.getInvite(),
+                signup_method: type,
+              },
+            })
+          } catch (e) {
+            // never let analytics break the login flow
+          }
+        }
         return controller.onLogin()
       })
       .catch((e) => API.ajaxHandler(store, e))
@@ -259,6 +279,20 @@ const controller = {
       .then(async (res) => {
         data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         API.trackEvent(Constants.events.REGISTER)
+        const freeEmailDomain = isFreeEmailDomain(user.email)
+        try {
+          flagsmith.trackEvent('new_signup', {
+            metadata: {
+              ...(freeEmailDomain && { domain: user.email.split('@')[1] }),
+              free_email_domain: freeEmailDomain,
+              invite: !!API.getInvite(),
+              signup_method: 'email',
+              utm_source: user.utm_data?.utm_source,
+            },
+          })
+        } catch (e) {
+          // never let analytics break the signup flow
+        }
         if (API.getReferrer()) {
           API.trackEvent(
             Constants.events.REFERRER_REGISTERED(API.getReferrer().utm_source),
@@ -304,8 +338,10 @@ const controller = {
 
   selectOrganisation: (id) => {
     API.setCookie('organisation', `${id}`)
-    store.organisation = _.find(store.model.organisations, { id })
+    store.organisation = find(store.model.organisations, { id })
+    getStore().dispatch(setSelectedOrganisationId(id))
     store.changed()
+    identifyChatUser()
   },
 
   setToken: (token) => {
@@ -340,6 +376,9 @@ const controller = {
             AppActions.getOrganisation(orgId)
           }
         }
+        if (store.organisation?.id) {
+          getStore().dispatch(setSelectedOrganisationId(store.organisation.id))
+        }
       }
 
       AsyncStorage.setItem('user', JSON.stringify(store.model))
@@ -348,16 +387,22 @@ const controller = {
       store.loaded()
     } else if (!user) {
       store.ephemeral_token = null
+      const darkMode = storageGet('dark_mode')
       AsyncStorage.clear()
+      if (darkMode) {
+        storageSet('dark_mode', darkMode)
+      }
       if (!data.token) {
         return
       }
-      ;(Project.cookieAuthEnabled
+
+      ;(Project.cookieAuthEnabled && !E2E
         ? data.post(`${Project.api}auth/logout/`, {})
         : Promise.resolve()
       ).finally(() => {
         API.setCookie('t', '')
         data.setToken(null)
+        hidePylon()
         API.reset().finally(() => {
           store.model = user
           store.organisation = null
@@ -453,8 +498,8 @@ const store = Object.assign({}, BaseStore, {
     return (
       store.model &&
       store.model.organisations &&
-      _.get(
-        _.find(store.model.organisations, (org) =>
+      get(
+        find(store.model.organisations, (org) =>
           id
             ? org.id === id
             : org.id === (store.organisation && store.organisation.id),
@@ -471,7 +516,7 @@ const store = Object.assign({}, BaseStore, {
   },
   getPlans() {
     if (!store.model) return []
-    return _.filter(
+    return filter(
       store.model.organisations.map(
         (org) => org.subscription && org.subscription.plan,
       ),

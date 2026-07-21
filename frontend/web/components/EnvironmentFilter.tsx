@@ -1,7 +1,7 @@
 import { FC, useMemo } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 
-export type EnvironmentFilterType = {
+type EnvironmentFilterType = {
   projectId: number
   value?: string
   onChange: (value: string) => void

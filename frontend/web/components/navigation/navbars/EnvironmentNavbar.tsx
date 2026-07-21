@@ -3,6 +3,7 @@ import Utils from 'common/utils/utils'
 import Permission from 'common/providers/Permission'
 import classNames from 'classnames'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import BetaFlag from 'components/BetaFlag'
 import SidebarLink from 'components/navigation/SidebarLink'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 
@@ -78,8 +79,37 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
               >
                 Features
               </SidebarLink>
+              {Utils.getFlagsmithHasFeature('experimental_flags') ? (
+                <SidebarLink
+                  id={mobile ? undefined : 'experiments-link'}
+                  icon='flask'
+                  to={`/project/${projectId}/environment/${environmentId}/experiments`}
+                >
+                  Experiments
+                </SidebarLink>
+              ) : (
+                !Utils.isOrgOnFreePlan() &&
+                Utils.getFlagsmithHasFeature('experiments_fake_door') && (
+                  <SidebarLink
+                    id={mobile ? undefined : 'experiments-link'}
+                    icon='flask'
+                    to={`/project/${projectId}/environment/${environmentId}/experiments`}
+                  >
+                    <BetaFlag title='Coming soon'>Experiments</BetaFlag>
+                  </SidebarLink>
+                )
+              )}
+              {Utils.getFlagsmithHasFeature('experiment_metrics') && (
+                <SidebarLink
+                  id={mobile ? undefined : 'metrics-link'}
+                  icon='bar-chart'
+                  to={`/project/${projectId}/environment/${environmentId}/metrics`}
+                >
+                  Metrics
+                </SidebarLink>
+              )}
               <SidebarLink
-                id='change-requests-link'
+                id='scheduled-link'
                 icon='timer'
                 to={`/project/${projectId}/environment/${environmentId}/scheduled-changes/`}
               >
@@ -96,7 +126,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                 to={`/project/${projectId}/environment/${environmentId}/change-requests/`}
               >
                 <div>
-                  Change Requests{' '}
+                  Feature Change Requests{' '}
                   {changeRequests ? (
                     <span className='ms-1 unread d-inline'>
                       {changeRequests}
@@ -108,7 +138,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                 id={mobile ? undefined : 'users-link'}
                 exact
                 icon='people'
-                to={`/project/${projectId}/environment/${environmentId}/users`}
+                to={`/project/${projectId}/environment/${environmentId}/identities`}
               >
                 Identities
               </SidebarLink>

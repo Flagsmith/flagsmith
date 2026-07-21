@@ -55,7 +55,7 @@ const OnboardingPage: FC<OnboardingPageProps> = () => {
         }: { error?: any; isLoading: boolean; isSaving: boolean },
         { register }: { register: (data: any, isInvite: boolean) => void },
       ) => (
-        <div className='position-fixed overflow-auto top-0 bottom-0 left-0 w-100'>
+        <div className='position-fixed overflow-auto top-0 bottom-0 start-0 w-100'>
           <div className='min-vh-100 w-100 d-flex flex-1 flex-column justify-content-center align-items-center'>
             <div className='container'>
               {step ? (
@@ -67,7 +67,7 @@ const OnboardingPage: FC<OnboardingPageProps> = () => {
                     step={1}
                     currentStep={step}
                     title='Your account'
-                    description='This account will be set as the superuser for the Django Admin. You will be able to set up SSO and OAuth for your team members.'
+                    description='Create your admin account.'
                     completedTitle={`Hey, ${onboarding.first_name}!`}
                   >
                     <OnboardingAccountForm
@@ -83,7 +83,7 @@ const OnboardingPage: FC<OnboardingPageProps> = () => {
                     step={2}
                     currentStep={step}
                     title='Your organisation'
-                    description='Organisations are a way for you and other team members to manage projects and their features. Users can be members of multiple organisations.'
+                    description='Create a new organisation to work with your team members.'
                     completedTitle={`Creating the organisation ${onboarding.organisation_name}`}
                   >
                     <OnboardingOrganisationForm
@@ -120,7 +120,7 @@ const OnboardingPage: FC<OnboardingPageProps> = () => {
               <br />
               View our{' '}
               <a
-                className='text-primary'
+                className='text-action'
                 href='https://docs.flagsmith.com/deployment'
                 target={'_blank'}
                 rel='noreferrer'
@@ -129,7 +129,7 @@ const OnboardingPage: FC<OnboardingPageProps> = () => {
               </a>{' '}
               or{' '}
               <a
-                className='text-primary'
+                className='text-action'
                 target='_blank'
                 href='https://www.flagsmith.com/contact-us'
                 rel='noreferrer'

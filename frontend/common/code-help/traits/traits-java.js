@@ -1,6 +1,6 @@
 import Constants from 'common/constants'
 
-module.exports = (
+export default (
   envId,
   { LIB_NAME, LIB_NAME_JAVA, TRAIT_NAME },
   userId,

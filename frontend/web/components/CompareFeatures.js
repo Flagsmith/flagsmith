@@ -7,6 +7,9 @@ import FeatureRow from './feature-summary/FeatureRow'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { withRouter } from 'react-router-dom'
+import { getStore } from 'common/store'
+import { removeProjectFlag } from 'common/services/useProjectFlag'
+import { hasMultivariateChange } from 'common/utils/compareMultivariate'
 
 const featureNameWidth = 300
 
@@ -89,7 +92,7 @@ class CompareFeatures extends Component {
         {this.state.flagId && (
           <div>
             <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-              {({}, { removeFlag, toggleFlag }) => {
+              {({}, { toggleFlag }) => {
                 // Adapt old FeatureListProvider signatures to new FeatureRow signatures
                 const adaptedToggleFlag =
                   (environmentId) =>
@@ -103,7 +106,10 @@ class CompareFeatures extends Component {
                     )
                   }
                 const adaptedRemoveFlag = (projectFlag) => {
-                  removeFlag(this.props.projectId, projectFlag)
+                  removeProjectFlag(getStore(), {
+                    flag_id: projectFlag.id,
+                    project_id: this.props.projectId,
+                  })
                 }
                 const renderRow = (data, i) => {
                   const flagValues = this.state.environmentResults[i]
@@ -113,7 +119,8 @@ class CompareFeatures extends Component {
                   const flagB = compare[this.state.flagId]
                   const fadeEnabled = flagA.enabled === flagB.enabled
                   const fadeValue =
-                    flagB.feature_state_value === flagA.feature_state_value
+                    flagB.feature_state_value === flagA.feature_state_value &&
+                    !hasMultivariateChange(flagA, flagB)
                   const changeRequestsEnabled = Utils.changeRequestsEnabled(
                     data.minimum_change_request_approvals,
                   )
@@ -213,4 +220,4 @@ class CompareFeatures extends Component {
   }
 }
 
-module.exports = withRouter(ConfigProvider(CompareFeatures))
+export default withRouter(ConfigProvider(CompareFeatures))

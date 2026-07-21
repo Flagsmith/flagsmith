@@ -8,7 +8,7 @@ import { TagStrategy } from 'common/types/responses'
  * Function type for resolving environment API keys to numeric IDs.
  * Used to bridge routing layer (API keys) with API layer (numeric IDs).
  */
-export type EnvironmentIdResolver = (apiKey: string) => number | undefined
+type EnvironmentIdResolver = (apiKey: string) => number | undefined
 
 /** Converts array to comma-separated string, or undefined if empty */
 function joinArrayOrUndefined(
@@ -65,6 +65,20 @@ function parsePageNumber(value: string | string[] | undefined): number {
     return isNaN(parsed) ? 1 : parsed
   }
   return 1
+}
+
+/** Normalises filter updates by trimming string fields to prevent whitespace-only API requests. */
+export function normaliseFilters(
+  filters: Partial<FilterState>,
+): Partial<FilterState> {
+  const result = { ...filters }
+  if ('search' in result) {
+    result.search = result.search?.trim() || null
+  }
+  if ('value_search' in result) {
+    result.value_search = result.value_search?.trim() || null
+  }
+  return result
 }
 
 /** Check if any filters are currently active. */
@@ -169,6 +183,6 @@ export function getFiltersFromParams(
         ? TagStrategy.UNION
         : TagStrategy.INTERSECTION,
     tags: parseIntArray(params.tags),
-    value_search: parseStringParam(params.value_search, '') || null,
+    value_search: parseStringParam(params.value_search, ''),
   }
 }

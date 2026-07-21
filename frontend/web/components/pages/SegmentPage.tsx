@@ -8,10 +8,11 @@ import ChangeRequestStore from 'common/stores/change-requests-store'
 import Breadcrumb from 'components/Breadcrumb'
 import Button from 'components/base/forms/Button'
 import { useHasPermission } from 'common/providers/Permission'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import { handleRemoveSegment } from 'components/modals/ConfirmRemoveSegment'
 import SegmentSelect from 'components/SegmentSelect'
 import Utils from 'common/utils/utils'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type SegmentPageType = {}
 
@@ -27,7 +28,7 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
   const { permission: manageSegmentsPermission } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'MANAGE_SEGMENTS',
+    permission: ProjectPermission.MANAGE_SEGMENTS,
   })
 
   const onRemoveSegment = () => {

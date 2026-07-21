@@ -12,7 +12,9 @@ from rest_framework.test import APIClient
 from users.models import FFAdminUser, HubspotTracker
 
 
-def test_get_current_user(staff_user: FFAdminUser, staff_client: APIClient) -> None:
+def test_get_current_user__authenticated__returns_user_details(
+    staff_user: FFAdminUser, staff_client: APIClient
+) -> None:
     # Given
     url = reverse("api-v1:custom_auth:ffadminuser-me")
 
@@ -30,7 +32,7 @@ def test_get_current_user(staff_user: FFAdminUser, staff_client: APIClient) -> N
     assert response_json["pylon_email_signature"] is None
 
 
-def test_get_current_user_with_pylon_signature(
+def test_get_current_user__pylon_secret_configured__returns_pylon_signature(
     staff_user: FFAdminUser,
     staff_client: APIClient,
     settings: SettingsWrapper,
@@ -96,7 +98,7 @@ def test_get_current_user_with_pylon_signature(
     ],
 )
 @freeze_time("2025-01-01T12:00:00Z")
-def test_get_me_should_return_onboarding_object(
+def test_get_me__onboarding_data_set__returns_onboarding_object(
     db: None, onboarding_data: dict[str, Any], expected_response: dict[str, Any]
 ) -> None:
     # Given
@@ -145,7 +147,7 @@ def test_get_me_should_return_onboarding_object(
         ),
     ],
 )
-def test_patch_user_onboarding_updates_only_nested_objects_if_provided(
+def test_patch_user_onboarding__nested_objects_provided__updates_only_provided_keys(
     staff_user: FFAdminUser,
     staff_client: APIClient,
     data: dict[str, Any],
@@ -175,7 +177,7 @@ def test_patch_user_onboarding_updates_only_nested_objects_if_provided(
         ).get("integrations")
 
 
-def test_patch_user_onboarding_returns_error_if_preferences_tasks_and_tools_are_missing(
+def test_patch_user_onboarding__empty_payload__returns_bad_request(
     staff_user: FFAdminUser,
     staff_client: APIClient,
 ) -> None:
@@ -194,7 +196,7 @@ def test_patch_user_onboarding_returns_error_if_preferences_tasks_and_tools_are_
     }
 
 
-def test_create_user_calls_hubspot_tracking_and_creates_hubspot_contact(
+def test_create_user__hubspot_cookie_provided__creates_hubspot_contact(
     mocker: MagicMock,
     db: None,
     settings: SettingsWrapper,
@@ -231,7 +233,7 @@ def test_create_user_calls_hubspot_tracking_and_creates_hubspot_contact(
     mock_create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))
 
 
-def test_create_user_does_not_create_hubspot_tracking_if_no_cookie_is_provided(
+def test_create_user__no_hubspot_cookie__does_not_create_hubspot_tracker(
     mocker: MagicMock,
     db: None,
     settings: SettingsWrapper,

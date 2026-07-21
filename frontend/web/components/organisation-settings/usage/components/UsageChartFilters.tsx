@@ -3,7 +3,7 @@ import ProjectFilter from 'components/ProjectFilter'
 import EnvironmentFilter from 'components/EnvironmentFilter'
 import { billingPeriods, freePeriods, Req } from 'common/types/requests'
 
-export interface UsageChartFiltersProps {
+interface UsageChartFiltersProps {
   organisationId: number
   project: string | undefined
   setProject: (project: string | undefined) => void

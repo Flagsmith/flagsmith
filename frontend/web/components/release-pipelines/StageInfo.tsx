@@ -84,5 +84,4 @@ const StageInfo = ({
   )
 }
 
-export type { StageInfoProps }
 export default StageInfo

@@ -6,6 +6,7 @@ from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from features.constants import RESERVED_VARIANT_KEY_MESSAGE
 from features.models import Feature
 from organisations.models import Organisation
 from projects.models import Project
@@ -16,7 +17,9 @@ from users.models import FFAdminUser
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_create_mv_option(client, project, mv_option_50_percent, feature):  # type: ignore[no-untyped-def]
+def test_create_mv_option__valid_data__returns_created(  # type: ignore[no-untyped-def]
+    client, project, mv_option_50_percent, feature
+):
     # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
@@ -40,6 +43,265 @@ def test_can_create_mv_option(client, project, mv_option_50_percent, feature):  
     assert set(data.items()).issubset(set(response.json().items()))
 
 
+def test_create_mv_option__with_key__returns_created_with_key(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+        "key": "variant-a",
+    }
+    # When
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["key"] == "variant-a"
+
+
+def test_create_mv_option__reserved_control_key__returns_bad_request(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given - "control" is reserved for the variant an identity falls through to
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+        "key": "control",
+    }
+    # When
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["key"] == [RESERVED_VARIANT_KEY_MESSAGE]
+
+
+def test_create_mv_option__duplicate_key_for_same_feature__returns_bad_request(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    existing_option_data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+        "key": "variant-a",
+    }
+    assert (
+        admin_client_new.post(
+            url,
+            data=json.dumps(existing_option_data),
+            content_type="application/json",
+        ).status_code
+        == status.HTTP_201_CREATED
+    )
+    duplicate_option_data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "biggest",
+        "default_percentage_allocation": 50,
+        "key": "variant-a",
+    }
+    # When
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(duplicate_option_data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["key"] == [
+        "Multivariate option with this key already exists for the feature."
+    ]
+
+
+@pytest.mark.parametrize(
+    "invalid_key",
+    ["has spaces", "emoji🚀", "exclamation!", "trailing space "],
+)
+def test_create_mv_option__invalid_key_format__returns_bad_request(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+    invalid_key: str,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+        "key": invalid_key,
+    }
+    # When
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "key" in response.json()
+
+
+def test_create_mv_option__empty_string_key__returns_bad_request(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given - an empty string is not a valid key; clients must omit the field
+    # or send null for "no key"
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+        "key": "",
+    }
+    # When
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["key"] == ["This field may not be blank."]
+
+
+def test_update_mv_option__unchanged_key__returns_ok(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given - an option which already has a key
+    create_url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+        "key": "variant-a",
+    }
+    option_id = admin_client_new.post(
+        create_url,
+        data=json.dumps(data),
+        content_type="application/json",
+    ).json()["id"]
+
+    # When - the option is updated keeping its own key
+    update_url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, option_id],
+    )
+    response = admin_client_new.put(
+        update_url,
+        data=json.dumps({**data, "id": option_id, "string_value": "biggest"}),
+        content_type="application/json",
+    )
+
+    # Then - the option does not collide with itself
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["key"] == "variant-a"
+
+
+def test_update_mv_option__duplicate_sibling_key__returns_bad_request(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given - two options, one with a key
+    create_url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    keyed_option_data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+        "key": "variant-a",
+    }
+    unkeyed_option_data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "biggest",
+        "default_percentage_allocation": 50,
+    }
+    assert (
+        admin_client_new.post(
+            create_url,
+            data=json.dumps(keyed_option_data),
+            content_type="application/json",
+        ).status_code
+        == status.HTTP_201_CREATED
+    )
+    unkeyed_option_id = admin_client_new.post(
+        create_url,
+        data=json.dumps(unkeyed_option_data),
+        content_type="application/json",
+    ).json()["id"]
+
+    # When - the unkeyed option is updated to use its sibling's key
+    update_url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, unkeyed_option_id],
+    )
+    response = admin_client_new.put(
+        update_url,
+        data=json.dumps(
+            {**unkeyed_option_data, "id": unkeyed_option_id, "key": "variant-a"}
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["key"] == [
+        "Multivariate option with this key already exists for the feature."
+    ]
+
+
 @pytest.mark.parametrize(
     "client, feature_id",
     [
@@ -47,7 +309,9 @@ def test_can_create_mv_option(client, project, mv_option_50_percent, feature):  
         (lazy_fixture("admin_client"), "89809"),
     ],
 )
-def test_cannot_create_mv_option_when_feature_id_invalid(client, feature_id, project):  # type: ignore[no-untyped-def]
+def test_create_mv_option__invalid_feature_id__returns_not_found(  # type: ignore[no-untyped-def]
+    client, feature_id, project
+):
     # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
@@ -70,7 +334,7 @@ def test_cannot_create_mv_option_when_feature_id_invalid(client, feature_id, pro
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_cannot_create_mv_option_when_user_is_not_owner_of_the_feature(project):  # type: ignore[no-untyped-def]
+def test_create_mv_option__user_not_project_member__returns_forbidden(project):  # type: ignore[no-untyped-def]
     # Given
     new_user = FFAdminUser.objects.create(email="testuser@mail.com")
     organisation = Organisation.objects.create(name="Test Org")
@@ -106,7 +370,9 @@ def test_cannot_create_mv_option_when_user_is_not_owner_of_the_feature(project):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_list_mv_option(project, mv_option_50_percent, client, feature):  # type: ignore[no-untyped-def]
+def test_list_mv_options__option_exists__returns_option(  # type: ignore[no-untyped-def]
+    project, mv_option_50_percent, client, feature
+):
     # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
@@ -127,9 +393,10 @@ def test_can_list_mv_option(project, mv_option_50_percent, client, feature):  # 
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(  # type: ignore[no-untyped-def]
+def test_create_mv_option__total_allocation_exceeds_100__returns_bad_request(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
 ):
+    # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
         args=[project, feature],
@@ -157,9 +424,10 @@ def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(  # type:
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_update_default_percentage_allocation(  # type: ignore[no-untyped-def]
+def test_update_mv_option__valid_allocation__returns_updated_option(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
 ):
+    # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-detail",
         args=[project, feature, mv_option_50_percent],
@@ -187,9 +455,10 @@ def test_can_update_default_percentage_allocation(  # type: ignore[no-untyped-de
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_updating_default_percentage_allocation_that_pushes_the_total_percentage_allocation_over_100_returns_400(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_update_mv_option__total_allocation_exceeds_100__returns_bad_request(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
 ):
+    # Given
     # First let's create another mv_option with 30 percent allocation
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
@@ -237,7 +506,9 @@ def test_updating_default_percentage_allocation_that_pushes_the_total_percentage
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_remove_mv_option(project, mv_option_50_percent, client, feature):  # type: ignore[no-untyped-def]
+def test_delete_mv_option__option_exists__returns_no_content(  # type: ignore[no-untyped-def]
+    project, mv_option_50_percent, client, feature
+):
     # Given
     mv_option_url = reverse(
         "api-v1:projects:feature-mv-options-detail",
@@ -269,13 +540,14 @@ def test_can_remove_mv_option(project, mv_option_50_percent, client, feature):  
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_and_update_multivariate_feature_with_2_variations_50_percent(  # type: ignore[no-untyped-def]
+def test_update_feature_state__two_mv_options_at_50_percent__returns_ok(  # type: ignore[no-untyped-def]
     project, environment, environment_api_key, client, feature
 ):
     """
     Specific test to reproduce issue #234 in Github
     https://github.com/Flagsmith/flagsmith/issues/234
     """
+    # Given
     first_mv_option_data = {
         "type": "unicode",
         "feature": feature,
@@ -326,8 +598,7 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(  #
     assert get_feature_states_response.status_code == status.HTTP_200_OK
     assert len(feature_state["multivariate_feature_state_values"]) == 2
 
-    # Now we just want to try and update the feature state in the environment without
-    # changing anything
+    # When
     update_url = reverse(
         "api-v1:environments:environment-featurestates-detail",
         args=[environment_api_key, feature_state_id],
@@ -357,6 +628,8 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(  #
         data=json.dumps(update_feature_state_data),
         content_type="application/json",
     )
+
+    # Then
     assert update_feature_state_response.status_code == status.HTTP_200_OK
 
 
@@ -364,14 +637,14 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(  #
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_modify_weight_of_2_variations_in_single_request(  # type: ignore[no-untyped-def]
+def test_update_feature_state__swap_variation_weights__returns_ok(  # type: ignore[no-untyped-def]
     project, environment, environment_api_key, client, feature
 ):
     """
     Specific test to reproduce issue #807 in Github
     https://github.com/Flagsmith/flagsmith/issues/807
     """
-
+    # Given
     first_mv_option_data = {
         "type": "unicode",
         "feature": feature,
@@ -422,8 +695,8 @@ def test_modify_weight_of_2_variations_in_single_request(  # type: ignore[no-unt
     assert get_feature_states_response.status_code == status.HTTP_200_OK
     assert len(feature_state["multivariate_feature_state_values"]) == 2
 
-    # Now we want to switch the weighting so that the opposite variation is 100% as
-    # well as adding another new variation
+    # When
+    # switch the weighting so that the opposite variation is 100%
     update_url = reverse(
         "api-v1:environments:environment-featurestates-detail",
         args=[environment_api_key, feature_state_id],
@@ -457,4 +730,6 @@ def test_modify_weight_of_2_variations_in_single_request(  # type: ignore[no-unt
         data=json.dumps(update_feature_state_data),
         content_type="application/json",
     )
+
+    # Then
     assert update_feature_state_response.status_code == status.HTTP_200_OK

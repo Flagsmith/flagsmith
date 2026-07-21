@@ -1,5 +1,8 @@
 // import propTypes from 'prop-types';
 import React, { Component } from 'react'
+import each from 'lodash/each'
+import sortBy from 'lodash/sortBy'
+import keyBy from 'lodash/keyBy'
 import EnvironmentSelect from './EnvironmentSelect'
 import data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
@@ -8,12 +11,16 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Tag from './tags/Tag'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Constants from 'common/constants'
 import Button from './base/forms/Button'
+import EmptyState from './EmptyState'
 import Tooltip from './Tooltip'
 import { withRouter } from 'react-router-dom'
 import { getDarkMode } from 'project/darkMode'
+import { getStore } from 'common/store'
+import { removeProjectFlag } from 'common/services/useProjectFlag'
+import { hasMultivariateChange } from 'common/utils/compareMultivariate'
 
 const featureNameWidth = 300
 
@@ -79,8 +86,8 @@ class CompareEnvironments extends Component {
         ]) => {
           const changes = []
           const same = []
-          _.each(
-            _.sortBy(environmentLeftProjectFlags.results, (p) => p.name),
+          each(
+            sortBy(environmentLeftProjectFlags.results, (p) => p.name),
             (projectFlagLeft) => {
               const projectFlagRight =
                 environmentRightProjectFlags.results?.find(
@@ -105,9 +112,14 @@ class CompareEnvironments extends Component {
               }
               change.enabledChanged = change.rightEnabled !== change.leftEnabled
               change.valueChanged = change.rightValue !== change.leftValue
+              change.multivariateChanged = hasMultivariateChange(
+                leftSide,
+                rightSide,
+              )
               if (
                 change.enabledChanged ||
                 change.valueChanged ||
+                change.multivariateChanged ||
                 projectFlagLeft.num_identity_overrides ||
                 projectFlagLeft.num_segment_overrides ||
                 projectFlagRight.num_identity_overrides ||
@@ -121,11 +133,11 @@ class CompareEnvironments extends Component {
           )
           this.setState({
             changes,
-            environmentLeftFlags: _.keyBy(
+            environmentLeftFlags: keyBy(
               environmentLeftFlags.results,
               'feature',
             ),
-            environmentRightFlags: _.keyBy(
+            environmentRightFlags: keyBy(
               environmentRightFlags.results,
               'feature',
             ),
@@ -207,7 +219,7 @@ class CompareEnvironments extends Component {
 
         {this.state.environmentLeft && this.state.environmentRight ? (
           <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-            {({}, { removeFlag, toggleFlag }) => {
+            {({}, { toggleFlag }) => {
               // Adapt old FeatureListProvider signatures to new FeatureRow signatures
               const adaptedToggleFlag =
                 (environmentId) => (projectFlag, environmentFlag, onError) => {
@@ -220,7 +232,10 @@ class CompareEnvironments extends Component {
                   )
                 }
               const adaptedRemoveFlag = (projectFlag) => {
-                removeFlag(this.props.projectId, projectFlag)
+                removeProjectFlag(getStore(), {
+                  flag_id: projectFlag.id,
+                  project_id: this.props.projectId,
+                })
               }
               const renderRow = (p, i, fadeEnabled, fadeValue) => {
                 const environmentLeft = ProjectStore.getEnvironment(
@@ -305,6 +320,7 @@ class CompareEnvironments extends Component {
                         <FeatureRow
                           condensed
                           isCompareEnv
+                          className='border-left-1 ps-2'
                           fadeEnabled={fadeEnabled}
                           fadeValue={fadeValue}
                           history={this.props.history}
@@ -336,9 +352,11 @@ class CompareEnvironments extends Component {
                   )}
                   {!this.state.isLoading &&
                     (!this.state.changes || !this.state.changes.length) && (
-                      <div className='text-center mt-2'>
-                        These environments have no flag differences
-                      </div>
+                      <EmptyState
+                        title='No flag differences'
+                        description='These environments have identical flag configurations.'
+                        icon='checkmark-circle'
+                      />
                     )}
                   {!this.state.isLoading &&
                     this.state.changes &&
@@ -382,7 +400,7 @@ class CompareEnvironments extends Component {
                                 </div>
                                 <Flex className='table-column'></Flex>
                               </Flex>
-                              <Flex className='flex-row'>
+                              <Flex className='flex-row border-left-1 ps-2'>
                                 <div
                                   className='table-column'
                                   style={{ width: '80px' }}
@@ -400,7 +418,12 @@ class CompareEnvironments extends Component {
                           className='no-pad mt-2'
                           items={this.filter(this.state.changes)}
                           renderRow={(p, i) =>
-                            renderRow(p, i, !p.enabledChanged, !p.valueChanged)
+                            renderRow(
+                              p,
+                              i,
+                              !p.enabledChanged,
+                              !(p.valueChanged || p.multivariateChanged),
+                            )
                           }
                         />
                       </div>
@@ -455,7 +478,7 @@ class CompareEnvironments extends Component {
                                 p,
                                 i,
                                 !p.enabledChanged,
-                                !p.valueChanged,
+                                !(p.valueChanged || p.multivariateChanged),
                               )
                             }
                           />
@@ -474,4 +497,4 @@ class CompareEnvironments extends Component {
   }
 }
 
-module.exports = withRouter(ConfigProvider(CompareEnvironments))
+export default withRouter(ConfigProvider(CompareEnvironments))

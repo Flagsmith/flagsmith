@@ -10,12 +10,6 @@ textarea {
   line-height: $line-height-lg;
   padding: $input-padding;
   font-weight: $input-font-weight;
-  &.borderless {
-    border-left: none !important;
-    border-top: none !important;
-    border-right: none !important;
-    border-radius: 0;
-  }
   &::placeholder {
     color: $input-placeholder-color !important;
     font-weight: normal;
@@ -26,32 +20,63 @@ textarea {
   &:focus {
     border-color: $primary;
   }
-  &.textarea-sm {
-    padding: $input-padding-sm;
-    line-height: $line-height-sm;
-    height: $textarea-height-sm;
-  }
-  &.textarea-xsm {
-    padding: $input-padding-xsm;
-    line-height: $line-height-sm;
-    height: $textarea-height-xsm;
-    font-size: $font-sm;
-  }
   &.textarea-lg {
     padding: $input-padding-lg;
     height: $textarea-height-lg;
   }
-  &.textarea-container {
-    resize: none;
-    overflow: hidden;
-    min-height: 50px;
-    &.invalid {
-      border-color: $danger;
+}
+
+@import '~react-datepicker/dist/react-datepicker.css';
+
+// Borderless input with a bottom underline only; the underline turns
+// primary while focused. Used for inline edits (variant label, weight).
+.input-container.input-underline {
+  input.input {
+    border: none;
+    border-bottom: 1px solid $input-border-color;
+    border-radius: 0;
+    background-color: transparent;
+    padding-left: 8px;
+    padding-right: 8px;
+    // _forms.scss re-applies a full border shorthand on hover/focus.
+    &:hover {
+      border: none;
+      border-bottom: 1px solid $basic-alpha-48;
+    }
+    &:focus {
+      border: none;
+      border-bottom: 1px solid $primary;
+    }
+  }
+  input[type='number'].input {
+    -moz-appearance: textfield;
+    appearance: textfield;
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
   }
 }
 
-@import '~react-datepicker/dist/react-datepicker.css';
+// _forms.scss (.dark .input-container input.input) re-applies the full
+// border and a solid background at equal specificity, so the underline
+// variant needs its own dark overrides.
+.dark .input-container.input-underline {
+  input.input {
+    border: none;
+    border-bottom: 1px solid $white-alpha-16;
+    background-color: transparent;
+    &:hover {
+      border: none;
+      border-bottom: 1px solid $white-alpha-48;
+    }
+    &:focus {
+      border: none;
+      border-bottom: 1px solid $primary;
+    }
+  }
+}
 
 .input-container,
 .react-datepicker-wrapper .react-datepicker__input-container {
@@ -242,37 +267,6 @@ textarea {
     &::-webkit-calendar-picker-indicator {
       filter: invert(48%) sepia(13%) saturate(0%) hue-rotate(130deg)
         brightness(200%) contrast(80%);
-    }
-  }
-}
-
-.dark {
-  .MuiFormControl-root > div {
-    &:hover:before {
-      border-color: $input-bg-dark !important;
-    }
-    &:before {
-      border-color: $input-bg-dark;
-    }
-    &:before {
-      border-color: $input-bg-dark;
-    }
-  }
-  .MuiInputBase-input {
-    color: $body-color-dark;
-  }
-  .MuiChip-root {
-    color: $dark-highlight-color;
-    background: $panel-bg-dark;
-
-    &:hover {
-      background: $panel-bg-dark;
-      svg {
-        color: $hr-border-color;
-      }
-    }
-    svg {
-      color: $primary900;
     }
   }
 }

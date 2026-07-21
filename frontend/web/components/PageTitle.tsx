@@ -20,7 +20,7 @@ const PageTitle: FC<PageTitleType> = ({ children, className, cta, title }) => {
             </Row>
           )}
         </div>
-        {!!cta && <div className='float-right ms-lg-2'>{cta}</div>}
+        {!!cta && <div className='float-end ms-lg-2'>{cta}</div>}
       </div>
       <hr className='mb-0 mt-3' />
     </div>

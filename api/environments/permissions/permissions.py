@@ -6,7 +6,7 @@ from common.environments.permissions import (
 from common.projects.permissions import (
     CREATE_ENVIRONMENT,
 )
-from django.db.models import Model, Q
+from django.db.models import Model
 from rest_framework import exceptions
 from rest_framework.permissions import BasePermission, IsAuthenticated
 
@@ -36,9 +36,12 @@ class EnvironmentPermissions(IsAuthenticated):
 
         if view.action == "create":
             try:
-                project_id = request.data.get("project")
-                project_lookup = Q(id=project_id)
-                project = Project.objects.get(project_lookup)
+                project_id = int(request.data.get("project"))
+            except (TypeError, ValueError):
+                return False
+
+            try:
+                project = Project.objects.get(id=project_id)
                 return request.user.has_project_permission(CREATE_ENVIRONMENT, project)
             except Project.DoesNotExist:
                 return False

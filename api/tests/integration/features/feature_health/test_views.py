@@ -86,7 +86,7 @@ def test_feature_health_providers__delete__expected_response(
     assert response.json() == []
 
 
-def test_feature_health_events__dismiss__unauthorized__expected_response(
+def test_feature_health_events_dismiss__unauthorized_user__returns_403(
     project: int,
     unhealthy_feature_health_event: int,
     staff_client: APIClient,
@@ -164,7 +164,7 @@ def test_webhook__invalid_path__expected_response(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_webhook__sample_provider__post__expected_feature_health_event_created__expected_tag_added(
+def test_webhook__sample_provider_unhealthy_post__creates_event_and_adds_tag(
     feature: int,
     project: int,
     feature_name: str,
@@ -268,7 +268,7 @@ def test_webhook__sample_provider__post_with_environment_expected_feature_health
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_webhook__unhealthy_feature__post__expected_feature_health_event_created__expected_tag_removed(
+def test_webhook__unhealthy_feature_healthy_post__creates_event_and_removes_tag(
     unhealthy_feature: int,
     project: int,
     feature_name: str,
@@ -330,12 +330,12 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
 @pytest.mark.parametrize(
     "body", ["invalid", json.dumps({"status": "unhealthy", "feature": "non_existent"})]
 )
-def test_webhook__webhook_provider__post__invalid_payload__expected_response(
+def test_webhook__webhook_provider_invalid_payload__returns_400(
     webhook_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     body: str,
 ) -> None:
-    # When
+    # Given / When
     response = api_client.post(
         webhook_feature_health_provider_webhook_url,
         data=body,
@@ -346,7 +346,7 @@ def test_webhook__webhook_provider__post__invalid_payload__expected_response(
     assert response.status_code == 400
 
 
-def test_webhook__grafana_provider__post__expected_feature_health_event_created(
+def test_webhook__grafana_provider_firing_alert__creates_unhealthy_event(
     project: int,
     feature: int,
     feature_name: str,
@@ -427,7 +427,7 @@ def test_webhook__grafana_provider__post__expected_feature_health_event_created(
     ]
 
 
-def test_webhook__grafana_provider__post__multiple__expected_feature_health_events(
+def test_webhook__grafana_provider_multiple_alerts__creates_expected_events(
     project: int,
     environment: int,
     environment_name: str,

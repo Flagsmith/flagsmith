@@ -10,6 +10,7 @@ from audit.related_object_type import RelatedObjectType
 from audit.serializers import AuditLogListSerializer
 from audit.services import get_audited_instance_from_audit_log_record
 from features.models import FeatureState, FeatureStateValue
+from features.multivariate.models import MultivariateFeatureStateValue
 from features.signals import feature_state_change_went_live
 from integrations.common.models import IntegrationsModel
 from integrations.datadog.datadog import DataDogWrapper
@@ -214,9 +215,9 @@ def send_audit_log_event_to_slack(sender, instance, **kwargs):  # type: ignore[n
 def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
     audited_instance = get_audited_instance_from_audit_log_record(instance)
 
-    # Handle both FeatureState and FeatureStateValue audit logs
-    # FeatureStateValue changes also have related_object_type=FEATURE_STATE
-    if isinstance(audited_instance, FeatureStateValue):
+    # Handle FeatureState, FeatureStateValue, and MultivariateFeatureStateValue audit logs
+    # All these types have related_object_type=FEATURE_STATE
+    if isinstance(audited_instance, (FeatureStateValue, MultivariateFeatureStateValue)):
         feature_state = audited_instance.feature_state
     elif isinstance(audited_instance, FeatureState):
         feature_state = audited_instance
@@ -226,27 +227,23 @@ def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ign
     if feature_state.is_scheduled:
         return  # This is handled by audit.tasks.create_feature_state_went_live_audit_log
 
-    feature_state_change_went_live.send(feature_state, audit_log=instance)
+    feature_state_change_went_live.send(feature_state)
 
 
 @receiver(feature_state_change_went_live)
-def send_audit_log_event_to_sentry(
-    sender: FeatureState, audit_log: AuditLog, **kwargs: Any
-) -> None:
-    try:
-        sentry_configuration = SentryChangeTrackingConfiguration.objects.get(
-            environment=audit_log.environment,
-            deleted_at__isnull=True,
-        )
-    except SentryChangeTrackingConfiguration.DoesNotExist:
+def send_audit_log_event_to_sentry(sender: FeatureState, **kwargs: Any) -> None:
+    config = SentryChangeTrackingConfiguration.objects.filter(
+        environment=sender.environment,
+        deleted_at__isnull=True,
+    ).first()
+    if not config:
         return
-
-    sentry_change_tracking = SentryChangeTracking(
-        webhook_url=sentry_configuration.webhook_url,
-        secret=sentry_configuration.secret,
+    sentry = SentryChangeTracking(
+        webhook_url=config.webhook_url,
+        secret=config.secret,
     )
-
-    _track_event_async(audit_log, sentry_change_tracking)  # type: ignore[no-untyped-call]
+    if event_data := sentry.generate_event_data(sender):
+        sentry.track_event_async(event=event_data)
 
 
 @receiver(feature_state_change_went_live)

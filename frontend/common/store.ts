@@ -10,14 +10,17 @@ import {
   REGISTER,
   REHYDRATE,
 } from 'redux-persist'
+import storage from 'redux-persist/lib/storage'
 import { Persistor } from 'redux-persist/es/types'
 import { service } from './service'
+import selectedOrganisationReducer from './selectedOrganisationSlice'
+import lifecycleEnvironmentReducer from './lifecycleEnvironmentSlice'
 // END OF IMPORTS
 const createStore = () => {
-  const storage = require('redux-persist/lib/storage').default
-
   const reducer = combineReducers({
     [service.reducerPath]: service.reducer,
+    lifecycleEnvironment: lifecycleEnvironmentReducer,
+    selectedOrganisation: selectedOrganisationReducer,
     // END OF REDUCERS
   })
 
@@ -35,7 +38,7 @@ const createStore = () => {
         key: 'root',
         storage,
         version: 1,
-        whitelist: ['user'],
+        whitelist: ['user', 'lifecycleEnvironment'],
       },
       reducer,
     ),

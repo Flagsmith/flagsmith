@@ -6,7 +6,7 @@ from rest_framework import status
 from integrations.slack.exceptions import SlackChannelJoinError
 
 
-def test_posting_env_config_return_400_when_slack_project_config_does_not_exist(  # type: ignore[no-untyped-def]
+def test_post_env_config__no_slack_project_config__returns_400(  # type: ignore[no-untyped-def]
     admin_client, environment, environment_api_key
 ):
     # Given
@@ -25,7 +25,7 @@ def test_posting_env_config_return_400_when_slack_project_config_does_not_exist(
     assert "Slack api token not found" in response.json()[0]
 
 
-def test_posting_env_config_calls_join_channel(  # type: ignore[no-untyped-def]
+def test_post_env_config__valid_slack_config__calls_join_channel(  # type: ignore[no-untyped-def]
     mocker,
     admin_client,
     environment,
@@ -57,7 +57,7 @@ def test_posting_env_config_calls_join_channel(  # type: ignore[no-untyped-def]
     assert response.json()["channel_id"] == env_config["channel_id"]
 
 
-def test_update_environment_config_calls_join_channel(  # type: ignore[no-untyped-def]
+def test_update_env_config__valid_slack_config__calls_join_channel(  # type: ignore[no-untyped-def]
     mocker,
     admin_client,
     environment,
@@ -92,7 +92,7 @@ def test_update_environment_config_calls_join_channel(  # type: ignore[no-untype
     assert response.json()["channel_id"] == env_config["channel_id"]
 
 
-def test_update_environment_config_returns_400_if_join_channel_raises_slack_channel_join_error(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_update_env_config__join_channel_raises_error__returns_400(  # type: ignore[no-untyped-def]
     mocker,
     admin_client,
     environment,
@@ -128,7 +128,7 @@ def test_update_environment_config_returns_400_if_join_channel_raises_slack_chan
     assert response.json()[0] == slack_error_code
 
 
-def test_get_environment_config_list_returns_200(  # type: ignore[no-untyped-def]
+def test_get_env_config_list__valid_environment__returns_200(  # type: ignore[no-untyped-def]
     admin_client, environment, environment_api_key, slack_environment_config
 ):
     # Given
@@ -145,7 +145,7 @@ def test_get_environment_config_list_returns_200(  # type: ignore[no-untyped-def
     assert response.json()[0]["id"] == slack_environment_config
 
 
-def test_get_environment_config_returns_200(  # type: ignore[no-untyped-def]
+def test_get_env_config_detail__valid_environment__returns_200(  # type: ignore[no-untyped-def]
     admin_client, environment, environment_api_key, slack_environment_config
 ):
     # Given

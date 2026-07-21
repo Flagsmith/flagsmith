@@ -25,7 +25,6 @@ import UserGroupList from './UserGroupList'
 import { PermissionLevel, Req, PermissionRoleType } from 'common/types/requests'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Icon from './Icon'
 import {
   useCreateRolePermissionsMutation,
   useGetRoleEnvironmentPermissionsQuery,
@@ -66,8 +65,15 @@ import Utils from 'common/utils/utils'
 import RemoveViewPermissionModal from './RemoveViewPermissionModal'
 import { useHistory } from 'react-router-dom'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
+import Permissions from './inspect-permissions/Permissions'
+import UserAction from './UserAction'
+import {
+  decorateUsersForSort,
+  userTableSorting,
+} from './users-permissions/sortUsers'
+import { isOrgAdmin } from './users-permissions/isOrgAdmin'
 
-const Project = require('common/project')
+import Project from 'common/project'
 
 type EditPermissionModalType = {
   group?: UserGroupSummary
@@ -89,6 +95,7 @@ type EditPermissionModalType = {
   permissionChanged?: () => void
   isEditUserPermission?: boolean
   isEditGroupPermission?: boolean
+  isEditRolePermission?: boolean
 }
 
 type EditPermissionsType = Omit<EditPermissionModalType, 'onSave'> & {
@@ -175,12 +182,12 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
 
     const levelUpperCase = level.toUpperCase()
     const viewPermission = `VIEW_${levelUpperCase}`
-    const projectId =
-      props.level === 'project'
-        ? props.id
-        : props.level === 'environment'
-        ? props.parentId
-        : undefined
+    let projectId: number | string | undefined
+    if (props.level === 'project') {
+      projectId = props.id
+    } else if (props.level === 'environment') {
+      projectId = props.parentId
+    }
 
     const [permissionWasCreated, setPermissionWasCreated] =
       useState<boolean>(false)
@@ -259,11 +266,14 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         )
       }
 
-      const foundPermission = isGroup
-        ? findPermissionByGroup()
-        : role
-        ? findPermissionByRole()
-        : findPermissionByUser()
+      let foundPermission
+      if (isGroup) {
+        foundPermission = findPermissionByGroup()
+      } else if (role) {
+        foundPermission = findPermissionByRole()
+      } else {
+        foundPermission = findPermissionByUser()
+      }
 
       const isProjectOrEnvironmentRole =
         role && (level === 'project' || level === 'environment')
@@ -708,7 +718,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             deleteRolePermissionUser({
               organisation_id: id,
               role_id: roleId,
-              user_id: roleSelected?.user_role_id!,
+              user_id: roleSelected?.user_role_id ?? 0,
             }).then(onRoleRemoved as any)
           }
         }
@@ -721,7 +731,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             }).then(onRoleRemoved as any)
           } else if (roleSelected) {
             deleteRolePermissionGroup({
-              group_id: roleSelected.group_role_id!,
+              group_id: roleSelected.group_role_id ?? 0,
               organisation_id: id,
               role_id: roleId,
             }).then(onRoleRemoved as any)
@@ -737,7 +747,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           setRolesSelected(
             (rolesSelected || []).concat({
               group_role_id: undefined,
-              role: usersData?.role!,
+              role: usersData?.role ?? 0,
               user_role_id: usersData?.id,
             }),
           )
@@ -746,7 +756,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           setRolesSelected(
             (rolesSelected || []).concat({
               group_role_id: groupsData?.id,
-              role: groupsData?.role!,
+              role: groupsData?.role ?? 0,
               user_role_id: undefined,
             }),
           )
@@ -815,7 +825,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               <div className='mb-2'>
                 <Row className={role ? 'py-2' : ''}>
                   <Flex>
-                    <div className='font-weight-medium text-dark mb-1'>
+                    <div className='font-weight-medium text-default mb-1'>
                       Administrator
                     </div>
                   </Flex>
@@ -888,7 +898,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               )}
             />
 
-            <p className='text-right mt-5 text-dark'>
+            <p className='text-right mt-5 text-default'>
               This will edit the permissions for{' '}
               <strong>{getEditText()}</strong>.
             </p>
@@ -995,6 +1005,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
   const {
     envId,
     id,
+    isEditRolePermission,
     level,
     onSaveGroup,
     onSaveUser,
@@ -1008,6 +1019,21 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
   } = props
 
   const [tab, setTab] = useState()
+  const hasRbac = !!Utils.getPlansPermission('RBAC')
+  const inspectUserPermissions = (user: User) => {
+    openModal(
+      getUserDisplayName(user),
+      <div className='p-4'>
+        <Permissions
+          level={level}
+          levelId={id}
+          userId={user.id}
+          projectId={level === 'environment' ? Number(parentId) : Number(id)}
+        />
+      </div>,
+      'p-0 side-modal',
+    )
+  }
   const editUserPermissions = (user: User) => {
     openModal(
       `Edit ${Format.camelCase(level)} Permissions`,
@@ -1081,123 +1107,142 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
       >
         <TabItem tabLabel='Users'>
           <OrganisationProvider>
-            {({ isLoading, users }) => (
-              <div className='mt-4'>
-                {isLoading && !users?.length && (
-                  <div className='centered-container'>
-                    <Loader />
-                  </div>
-                )}
-                {!!users?.length && (
-                  <div>
-                    <FormGroup className='panel no-pad pl-2 pr-2 panel--nested'>
-                      <div className={tabClassName}>
-                        <PanelSearch
-                          id='org-members-list'
-                          title='Users'
-                          className='panel--transparent'
-                          items={users}
-                          itemHeight={64}
-                          header={
-                            <Row className='table-header'>
-                              <Flex className='table-column px-3'>User</Flex>
-                              <Flex className='table-column'>Role</Flex>
-                              <div
-                                style={{ width: '80px' }}
-                                className='table-column text-center'
-                              >
-                                Action
-                              </div>
-                            </Row>
-                          }
-                          renderRow={(user) => {
-                            const { email, first_name, id, last_name, role } =
-                              user
-                            const onClick = () => {
-                              if (role !== 'ADMIN') {
-                                editUserPermissions(user)
-                              }
-                            }
-                            const matchingPermissions = permissions?.find(
-                              (v) => v.user.id === id,
-                            )
-
-                            return (
-                              <Row
-                                onClick={onClick}
-                                space
-                                className={`list-item${
-                                  role === 'ADMIN' ? '' : ' clickable'
-                                }`}
-                                key={id}
-                              >
-                                <Flex className='table-column px-3'>
-                                  <div className='mb-1 font-weight-medium'>
-                                    {`${first_name} ${last_name}`}{' '}
-                                    {id == AccountStore.getUserId() && '(You)'}
-                                  </div>
-                                  <div className='list-item-subtitle'>
-                                    {email}
-                                  </div>
-                                </Flex>
-                                {role === 'ADMIN' ? (
-                                  <Flex className='table-column fs-small lh-sm'>
-                                    <Tooltip
-                                      title={'Organisation Administrator'}
-                                    >
-                                      {
-                                        'Organisation administrators have all permissions enabled.<br/>To change the role of this user, visit Organisation Settings.'
-                                      }
-                                    </Tooltip>
-                                  </Flex>
-                                ) : (
-                                  <Flex
-                                    onClick={onClick}
-                                    className='table-column fs-small lh-sm'
-                                  >
-                                    {matchingPermissions &&
-                                    matchingPermissions.admin
-                                      ? `${Format.camelCase(
-                                          level,
-                                        )} Administrator`
-                                      : 'Regular User'}
-                                  </Flex>
-                                )}
+            {({ isLoading, users }) => {
+              const permissionsByUserId = new Map(
+                permissions?.map((p) => [p.user.id, p]),
+              )
+              const sortableUsers = decorateUsersForSort(users, (user) => {
+                if (isOrgAdmin(user)) return 'Organisation Administrator'
+                if (permissionsByUserId.get(user.id)?.admin) {
+                  return `${Format.camelCase(level)} Administrator`
+                }
+                return 'Regular User'
+              })
+              return (
+                <div className='mt-4'>
+                  {isLoading && !users?.length && (
+                    <div className='centered-container'>
+                      <Loader />
+                    </div>
+                  )}
+                  {!!users?.length && (
+                    <div>
+                      <FormGroup className='panel no-pad pl-2 pr-2 panel--nested'>
+                        <div className={tabClassName}>
+                          <PanelSearch
+                            id='org-members-list'
+                            title='Users'
+                            className='panel--transparent'
+                            items={sortableUsers}
+                            itemHeight={64}
+                            sorting={userTableSorting}
+                            header={
+                              <Row className='table-header'>
+                                <Flex className='table-column px-3'>User</Flex>
+                                <Flex className='table-column'>Role</Flex>
                                 <div
                                   style={{ width: '80px' }}
-                                  className='text-center'
+                                  className='table-column text-center'
                                 >
-                                  {role !== 'ADMIN' && (
-                                    <Icon
-                                      name='setting'
-                                      width={20}
-                                      fill='#656D7B'
-                                    />
-                                  )}
+                                  Action
                                 </div>
                               </Row>
-                            )
-                          }}
-                          renderNoResults={
-                            <div>You have no users in this organisation.</div>
-                          }
-                          filterRow={(item: User, search: string) => {
-                            const strToSearch = `${item.first_name} ${item.last_name} ${item.email}`
-                            return (
-                              strToSearch
-                                .toLowerCase()
-                                .indexOf(search.toLowerCase()) !== -1
-                            )
-                          }}
-                        />
-                      </div>
+                            }
+                            renderRow={(user) => {
+                              const { email, first_name, id, last_name } = user
+                              const orgAdmin = isOrgAdmin(user)
+                              const onClick = () => {
+                                if (!orgAdmin) {
+                                  editUserPermissions(user)
+                                }
+                              }
+                              const matchingPermissions =
+                                permissionsByUserId.get(id)
 
-                      <div id='select-portal' />
-                    </FormGroup>
-                  </div>
-                )}
-              </div>
-            )}
+                              return (
+                                <Row
+                                  onClick={onClick}
+                                  space
+                                  className={`list-item${
+                                    orgAdmin ? '' : ' clickable'
+                                  }`}
+                                  key={id}
+                                >
+                                  <Flex className='table-column px-3'>
+                                    <div className='mb-1 font-weight-medium'>
+                                      {`${first_name} ${last_name}`}{' '}
+                                      {String(id) ===
+                                        String(AccountStore.getUserId()) &&
+                                        '(You)'}
+                                    </div>
+                                    <div className='list-item-subtitle'>
+                                      {email}
+                                    </div>
+                                  </Flex>
+                                  {orgAdmin ? (
+                                    <Flex className='table-column fs-small lh-sm'>
+                                      <Tooltip
+                                        title={'Organisation Administrator'}
+                                      >
+                                        {
+                                          'Organisation administrators have all permissions enabled.<br/>To change the role of this user, visit Organisation Settings.'
+                                        }
+                                      </Tooltip>
+                                    </Flex>
+                                  ) : (
+                                    <Flex
+                                      onClick={onClick}
+                                      className='table-column fs-small lh-sm'
+                                    >
+                                      {matchingPermissions &&
+                                      matchingPermissions.admin
+                                        ? `${Format.camelCase(
+                                            level,
+                                          )} Administrator`
+                                        : 'Regular User'}
+                                    </Flex>
+                                  )}
+                                  <div
+                                    style={{ width: '80px' }}
+                                    className='table-column d-flex justify-content-end'
+                                  >
+                                    {!orgAdmin && (
+                                      <UserAction
+                                        canEdit
+                                        canRemove={false}
+                                        canInspectPermissions={hasRbac}
+                                        onEdit={() => editUserPermissions(user)}
+                                        onRemove={() => {}}
+                                        onInspectPermissions={() =>
+                                          inspectUserPermissions(user)
+                                        }
+                                      />
+                                    )}
+                                  </div>
+                                </Row>
+                              )
+                            }}
+                            renderNoResults={
+                              <div>You have no users in this organisation.</div>
+                            }
+                            filterRow={(item: User, search: string) => {
+                              const strToSearch = `${item.first_name} ${item.last_name} ${item.email}`
+                              return (
+                                strToSearch
+                                  .toLowerCase()
+                                  .indexOf(search.toLowerCase()) !== -1
+                              )
+                            }}
+                          />
+                        </div>
+
+                        <div id='select-portal' />
+                      </FormGroup>
+                    </div>
+                  )}
+                </div>
+              )
+            }}
           </OrganisationProvider>
         </TabItem>
         <TabItem tabLabel='Groups'>
@@ -1212,73 +1257,75 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
             </div>
           </FormGroup>
         </TabItem>
-        <TabItem tabLabel='Roles'>
-          <PlanBasedAccess className='mt-4' feature={'RBAC'} theme='page'>
-            <Row space className='mt-4'>
-              <h5 className='m-b-0'>{roleTabTitle}</h5>
-            </Row>
-            <PanelSearch
-              id='org-members-list'
-              title={'Roles'}
-              className='no-pad'
-              items={roles}
-              itemHeight={65}
-              header={
-                <Row className='table-header px-3'>
-                  <div
-                    style={{
-                      width: rolesWidths[0],
-                    }}
-                  >
-                    Roles
-                  </div>
-                  <div
-                    style={{
-                      width: rolesWidths[1],
-                    }}
-                  >
-                    Description
-                  </div>
-                </Row>
-              }
-              renderRow={(role) => (
-                <Row
-                  className='list-item clickable cursor-pointer'
-                  key={role.id}
-                >
-                  <Row
-                    onClick={() => editRolePermissions(role)}
-                    className='table-column px-3'
-                    style={{
-                      width: rolesWidths[0],
-                    }}
-                  >
-                    {role.name}
+        {isEditRolePermission && (
+          <TabItem tabLabel='Roles'>
+            <PlanBasedAccess className='mt-4' feature={'RBAC'} theme='page'>
+              <Row space className='mt-4'>
+                <h5 className='m-b-0'>{roleTabTitle}</h5>
+              </Row>
+              <PanelSearch
+                id='org-members-list'
+                title={'Roles'}
+                className='no-pad'
+                items={roles}
+                itemHeight={65}
+                header={
+                  <Row className='table-header px-3'>
+                    <div
+                      style={{
+                        width: rolesWidths[0],
+                      }}
+                    >
+                      Roles
+                    </div>
+                    <div
+                      style={{
+                        width: rolesWidths[1],
+                      }}
+                    >
+                      Description
+                    </div>
                   </Row>
+                }
+                renderRow={(role) => (
                   <Row
-                    className='table-column px-3'
-                    onClick={() => editRolePermissions(role)}
-                    style={{
-                      width: rolesWidths[1],
-                    }}
+                    className='list-item clickable cursor-pointer'
+                    key={role.id}
                   >
-                    {role.description}
-                  </Row>
-                </Row>
-              )}
-              renderNoResults={
-                <Panel title={'Roles'} className='no-pad'>
-                  <div className='search-list'>
-                    <Row className='list-item p-3 text-muted'>
-                      {`You currently have no roles.`}
+                    <Row
+                      onClick={() => editRolePermissions(role)}
+                      className='table-column px-3'
+                      style={{
+                        width: rolesWidths[0],
+                      }}
+                    >
+                      {role.name}
                     </Row>
-                  </div>
-                </Panel>
-              }
-              isLoading={false}
-            />
-          </PlanBasedAccess>
-        </TabItem>
+                    <Row
+                      className='table-column px-3'
+                      onClick={() => editRolePermissions(role)}
+                      style={{
+                        width: rolesWidths[1],
+                      }}
+                    >
+                      {role.description}
+                    </Row>
+                  </Row>
+                )}
+                renderNoResults={
+                  <Panel title={'Roles'} className='no-pad'>
+                    <div className='search-list'>
+                      <Row className='list-item p-3 text-muted'>
+                        {`You currently have no roles.`}
+                      </Row>
+                    </div>
+                  </Panel>
+                }
+                isLoading={false}
+              />
+            </PlanBasedAccess>
+          </TabItem>
+        )}
       </Tabs>
     </div>
   )

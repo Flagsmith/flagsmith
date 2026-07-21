@@ -4,16 +4,16 @@ import uuid
 from decimal import Decimal
 
 from django.utils import timezone
-from flag_engine.identities.traits.types import map_any_value_to_trait_value
 
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.traits.models import Trait
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
+from util.engine_models.identities.traits.types import map_any_value_to_trait_value
 
 EXPORT_EDGE_IDENTITY_PAGINATION_LIMIT = 20000
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 def export_edge_identity_and_overrides(  # noqa: C901

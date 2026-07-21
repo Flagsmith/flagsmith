@@ -4,12 +4,14 @@ import Input from 'components/base/forms/Input'
 import InputGroup from 'components/base/forms/InputGroup'
 import Switch from 'components/Switch'
 import Button from 'components/base/forms/Button'
+import InlinePillToggle from 'components/base/forms/InlinePillToggle'
 import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import JSONReference from 'components/JSONReference'
 import { Segment } from 'common/types/responses'
 import ChangeRequestModal from './ChangeRequestModal'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type DefaultSegmentType = Omit<Segment, 'id' | 'project' | 'uuid'> & {
   id?: number
@@ -44,6 +46,8 @@ interface CreateSegmentRulesTabFormProps {
   isValid: boolean
   isLimitReached: boolean
   onCancel?: () => void
+  topLevelRuleType?: 'ALL' | 'ANY'
+  setTopLevelRuleType?: (type: 'ALL' | 'ANY') => void
 }
 
 const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
@@ -67,8 +71,10 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
   setDescription,
   setName,
   setShowDescriptions,
+  setTopLevelRuleType,
   setValueChanged,
   showDescriptions,
+  topLevelRuleType = 'ALL',
 }) => {
   const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID
 
@@ -178,16 +184,11 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
           />
           <span
             style={{ fontWeight: 'normal', marginLeft: '12px' }}
-            className='mb-0 fs-small text-dark'
+            className='mb-0 fs-small text-default'
           >
             Show condition descriptions
           </span>
         </Row>
-        <Flex className='mb-3'>
-          <label className='cols-sm-2 control-label mb-1'>
-            Include users when all of the following rules apply:
-          </label>
-        </Flex>
         {!condensed && (
           <InfoMessage collapseId={'value-type-conversions'} className='mb-3'>
             Trait names are case sensitive. Learn more about rule and trait
@@ -197,6 +198,41 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
             </a>
             .
           </InfoMessage>
+        )}
+        {!readOnly &&
+        setTopLevelRuleType &&
+        Utils.getFlagsmithHasFeature('segment_any_rule_type') ? (
+          <>
+            <Row className='mb-2 align-items-center gap-2'>
+              <label className='control-label mb-0'>Include users when</label>
+              <InlinePillToggle
+                data-test='top-level-rule-type'
+                size='medium'
+                options={[
+                  { label: 'ALL', value: 'ALL' },
+                  { label: 'ANY', value: 'ANY' },
+                ]}
+                value={topLevelRuleType}
+                onChange={setTopLevelRuleType}
+              />
+              <label className='control-label mb-0'>
+                of the following rules apply
+              </label>
+            </Row>
+            {topLevelRuleType === 'ANY' &&
+              Utils.getFlagsmithValue('segment_any_rule_type') && (
+                <div className='fs-small fst-italic text-muted mb-3'>
+                  {Utils.getFlagsmithValue('segment_any_rule_type')}
+                </div>
+              )}
+          </>
+        ) : (
+          <Flex className='mb-3'>
+            <label className='cols-sm-2 control-label mb-1'>
+              Include users when {topLevelRuleType === 'ANY' ? 'any' : 'all'} of
+              the following rules apply
+            </label>
+          </Flex>
         )}
         {allWarnings?.map((warning, i) => (
           <InfoMessage key={i}>
@@ -221,7 +257,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
             }
             place='left'
           >
-            {Constants.projectPermissions('Admin')}
+            {Constants.projectPermissions(ProjectPermission.ADMIN)}
           </Tooltip>
         </div>
       ) : (

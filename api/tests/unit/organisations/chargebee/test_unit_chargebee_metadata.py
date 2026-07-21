@@ -1,7 +1,7 @@
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 
 
-def test_add_chargebee_object_meta_data():  # type: ignore[no-untyped-def]
+def test_chargebee_obj_metadata__add_two_instances__sums_values():  # type: ignore[no-untyped-def]
     # Given
     a_obj_metadata = ChargebeeObjMetadata(seats=10, api_calls=100)
     another_obj_metadata = ChargebeeObjMetadata(seats=20, api_calls=200, projects=100)
@@ -15,7 +15,7 @@ def test_add_chargebee_object_meta_data():  # type: ignore[no-untyped-def]
     assert added_chargebee_obj_metadata.projects is None
 
 
-def test_multiply_chargebee_object_metadata():  # type: ignore[no-untyped-def]
+def test_chargebee_obj_metadata__multiply_by_scalar__scales_values():  # type: ignore[no-untyped-def]
     # Given
     metadata = ChargebeeObjMetadata(seats=10, api_calls=100)
 
@@ -28,7 +28,7 @@ def test_multiply_chargebee_object_metadata():  # type: ignore[no-untyped-def]
     assert new_metadata.projects is None
 
 
-def test_multiply_chargebee_object_metadata_works_for_null_values():  # type: ignore[no-untyped-def]
+def test_chargebee_obj_metadata__multiply_with_null_projects__keeps_null():  # type: ignore[no-untyped-def]
     # Given
     metadata = ChargebeeObjMetadata(seats=10, api_calls=100, projects=None)
 

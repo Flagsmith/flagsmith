@@ -33,16 +33,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install Poetry
-        run: make install-poetry
-
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/install-uv
         with:
-          python-version: 3.11
-          cache: poetry
+          working-directory: api
 
       - name: Install Dependencies
-        run: make install-packages
+        run: make install-packages opts='--extra dev'
 
       - name: Run `make ${{ inputs.target }} opts=${{ inputs.opts }}`
         env:

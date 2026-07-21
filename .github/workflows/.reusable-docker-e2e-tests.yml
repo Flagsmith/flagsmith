@@ -14,7 +14,7 @@ on:
         required: true
       args:
         type: string
-        description: Additional arguments to testcafe
+        description: Additional arguments to playwright
         required: false
         default: ''
       concurrency:
@@ -22,11 +22,26 @@ on:
         description: The concurrent number of browsers to be used on testing
         required: false
         default: 16
+      pg-max-connections:
+        type: number
+        description: Postgres max_connections for the E2E database. Raise above the default of 100 for high-concurrency runs (e.g. private-cloud) to avoid connection exhaustion.
+        required: false
+        default: 100
       runs-on:
         type: string
         description: The runner label to use. Defaults to `depot-ubuntu-latest`
         required: false
         default: depot-ubuntu-latest
+      visual-regression:
+        type: boolean
+        description: Enable visual regression screenshot comparison
+        required: false
+        default: false
+      visual-regression-update:
+        type: boolean
+        description: Update visual regression baselines (use on main branch)
+        required: false
+        default: false
     secrets:
       GCR_TOKEN:
         description: A token to use for logging into Github Container Registry. If not provided, login does not occur.
@@ -44,6 +59,7 @@ jobs:
       contents: read
       packages: read
       id-token: write
+      pull-requests: write
 
     env:
       GCR_TOKEN: ${{ secrets.GCR_TOKEN }}
@@ -51,6 +67,17 @@ jobs:
     steps:
       - name: Cloning repo
         uses: actions/checkout@v5
+
+      - name: Determine test type
+        id: test-type
+        run: |
+          if [[ '${{ inputs.args }}' == *"@enterprise"* ]]; then
+            echo "type=private-cloud" >> $GITHUB_OUTPUT
+            echo "label=private-cloud" >> $GITHUB_OUTPUT
+          else
+            echo "type=oss" >> $GITHUB_OUTPUT
+            echo "label=oss" >> $GITHUB_OUTPUT
+          fi
 
       - name: Login to Github Container Registry
         if: ${{ env.GCR_TOKEN }}
@@ -66,23 +93,206 @@ jobs:
       - name: Login to Depot Registry
         run: depot pull-token | docker login -u x-token --password-stdin registry.depot.dev
 
-      - name: Run tests on dockerised frontend
-        uses: nick-fields/retry@v3
+      - name: Prepare visual regression snapshots directory
+        if: inputs.visual-regression
+        working-directory: frontend
+        run: mkdir -p e2e/visual-regression-snapshots
+
+      - name: Download visual regression baselines
+        if: inputs.visual-regression
+        id: download-baseline
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v6
         with:
-          shell: bash
-          command: |
-            cd frontend
-            make test
-          max_attempts: 2
-          retry_on: error
-          timeout_minutes: 20
-          on_retry_command: |
-            cd frontend
-            docker compose down --remove-orphans || true
+          github_token: ${{ secrets.GCR_TOKEN }}
+          workflow: platform-docker-build-test-publish.yml
+          branch: main
+          name: visual-regression-baselines
+          path: frontend/e2e/visual-regression-snapshots/
+          if_no_artifact_found: warn
+
+      - name: Run tests on dockerised frontend
+        working-directory: frontend
+        run: make test
         env:
           opts: ${{ inputs.args }}
           API_IMAGE: ${{ inputs.api-image }}
           E2E_IMAGE: ${{ inputs.e2e-image }}
           E2E_CONCURRENCY: ${{ inputs.concurrency }}
+          E2E_RETRIES: 2
+          PG_MAX_CONNECTIONS: ${{ inputs.pg-max-connections }}
+          VISUAL_REGRESSION: ${{ inputs.visual-regression && '1' || '' }}
+          VISUAL_REGRESSION_ARGS: ${{ inputs.visual-regression-update && '--update-snapshots' || '' }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        timeout-minutes: 20
+
+      - name: Cleanup E2E services
+        if: always()
+        working-directory: frontend
+        run: docker compose down --remove-orphans || true
+
+      - name: Copy results.json to HTML report
+        if: always()
+        run: |
+          cp frontend/e2e/test-results/results.json frontend/e2e/playwright-report/ || true
+
+      - name: Upload HTML report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-html-report-${{ steps.test-type.outputs.type }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index }}
+          path: frontend/e2e/playwright-report/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Set artifact URL
+        if: failure() && github.event_name == 'pull_request'
+        id: artifact-url
+        run: |
+          echo "url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts" >> $GITHUB_OUTPUT
+
+      - name: Send Slack notification and upload report
+        if: failure()
+        working-directory: frontend
+        run: |
+          cd e2e
+          zip -r playwright-report.zip playwright-report/ || echo "Failed to zip report"
+          cd ..
+          npx -y tsx e2e/slack-e2e-reporter.ts
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+          TEST_TYPE: ${{ steps.test-type.outputs.label }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+
+      - name: Generate test report summary (success)
+        id: report-summary-success
+        if: success() && github.event_name == 'pull_request'
+        uses: daun/playwright-report-summary@v3
+        with:
+          report-file: frontend/e2e/playwright-report/results.json
+          comment-title: 'Playwright Test Results (${{ steps.test-type.outputs.label }} - ${{ inputs.runs-on }})'
+          create-comment: false
+          custom-info: |
+            **🔄 Run:** [#${{ github.run_number }} (attempt ${{ github.run_attempt }})](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+      - name: Generate test report summary (failure)
+        id: report-summary-failure
+        if: failure() && github.event_name == 'pull_request'
+        uses: daun/playwright-report-summary@v3
+        with:
+          report-file: frontend/e2e/playwright-report/results.json
+          comment-title: 'Playwright Test Results (${{ steps.test-type.outputs.label }} - ${{ inputs.runs-on }})'
+          create-comment: false
+          custom-info: |
+            **📦 Artifacts:** [View test results and HTML report](${{ steps.artifact-url.outputs.url }})
+            **🔄 Run:** [#${{ github.run_number }} (attempt ${{ github.run_attempt }})](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+      # Keeps a single sticky comment at constant height: the newest result stays
+      # expanded on top, and every earlier result is folded into one collapsed
+      # "Previous results" block. Each job rewrites the comment, prepending its
+      # entry and collapsing the rest.
+      - name: Comment PR with test results
+        if: always() && github.event_name == 'pull_request' && (steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary)
+        continue-on-error: true
+        uses: actions/github-script@v7
+        env:
+          SUMMARY: ${{ steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary }}
+          PASSED: ${{ steps.report-summary-success.outputs.summary && 'true' || 'false' }}
+          LABEL: ${{ steps.test-type.outputs.label }} · ${{ inputs.runs-on }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        with:
+          script: |
+            const MARKER = '<!-- playwright-e2e-results -->'
+            const HISTORY = '<details><summary>🗂️ Previous results</summary>\n<!-- pw:h -->'
+            const ENTRY = '<!-- pw:e -->'
+            const MAX_ENTRIES = 12 // keeps the comment body well under GitHub's 65536-char limit
+
+            const { SUMMARY, PASSED, LABEL, RUN_NUMBER, RUN_ATTEMPT } = process.env
+            const emoji = PASSED === 'true' ? '✅' : '❌'
+            const repo = { owner: context.repo.owner, repo: context.repo.repo }
+            const newest = `<details><summary>${emoji} ${LABEL} — run #${RUN_NUMBER} (attempt ${RUN_ATTEMPT})</summary>\n\n${SUMMARY}\n\n</details>`
+
+            // Recover earlier entries (collapsed) from the existing comment body.
+            // Entries are split on the ENTRY sentinel (each entry has its own
+            // </details>); the last chunk also carries the wrapper's closing tag.
+            const parse = (body) => {
+              if (!body) return []
+              const [top, rest = ''] = body.split(HISTORY)
+              const previousTop = (top.split(MARKER)[1] || '').trim()
+              const older = rest.split(ENTRY).map((s) => s.trim()).filter(Boolean)
+              if (older.length) older[older.length - 1] = older.at(-1).replace(/<\/details>\s*$/, '').trim()
+              if (previousTop) older.unshift(previousTop.replace('<details open>', '<details>'))
+              return older
+            }
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            })
+            const previous = comments.find((comment) => comment.body && comment.body.includes(MARKER))
+
+            const [current, ...older] = [newest, ...parse(previous?.body)].slice(0, MAX_ENTRIES)
+            let body = `${MARKER}\n\n${current.replace('<details>', '<details open>')}`
+            if (older.length) {
+              body += `\n\n${HISTORY}\n${older.map((entry) => `${ENTRY}\n${entry}`).join('\n')}\n</details>`
+            }
+
+            if (previous) {
+              await github.rest.issues.updateComment({ ...repo, comment_id: previous.id, body })
+            } else {
+              await github.rest.issues.createComment({ ...repo, issue_number: context.issue.number, body })
+            }
+
+      # Visual regression: after all E2E retries, run comparison and upload results
+      - name: Upload visual regression baselines (main branch)
+        if: always() && inputs.visual-regression-update
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-baselines
+          path: frontend/e2e/visual-regression-screenshots/
+          retention-days: 90
+          overwrite: true
+
+      - name: Upload visual regression report
+        if: always() && inputs.visual-regression && !inputs.visual-regression-update
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-report-${{ github.run_id }}-${{ strategy.job-index }}
+          path: frontend/e2e/visual-regression-report/
+          retention-days: 30
+
+      - name: Generate visual regression summary
+        if: always() && inputs.visual-regression && !inputs.visual-regression-update && github.event_name == 'pull_request'
+        id: visual-regression-summary
+        shell: bash
+        run: |
+          if [ "${{ steps.download-baseline.outcome }}" != "success" ]; then
+            echo "message=No baseline found — first run. Baselines will be generated after merge to main." >> $GITHUB_OUTPUT
+          else
+            SCREENSHOT_COUNT=$(find frontend/e2e/visual-regression-screenshots -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
+            REPORT_EXISTS=$(test -d frontend/e2e/visual-regression-report && echo "true" || echo "false")
+            if [ "$REPORT_EXISTS" = "true" ]; then
+              echo "message=$SCREENSHOT_COUNT screenshots compared. See report for details." >> $GITHUB_OUTPUT
+            else
+              echo "message=$SCREENSHOT_COUNT screenshots captured but comparison did not run." >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Comment PR with visual regression results
+        if: always() && inputs.visual-regression && !inputs.visual-regression-update && github.event_name == 'pull_request' && steps.visual-regression-summary.outputs.message
+        continue-on-error: true
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: visual-regression-results
+          message: |
+            ## Visual Regression
+            ${{ steps.visual-regression-summary.outputs.message }}
+            [View full report](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)

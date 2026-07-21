@@ -66,7 +66,6 @@ app.get('/config/project-overrides', (req, res) => {
     { name: 'headway', value: process.env.HEADWAY_API_KEY },
     { name: 'ga', value: process.env.GOOGLE_ANALYTICS_API_KEY },
     { name: 'sha', value: sha },
-    { name: 'crispChat', value: process.env.CRISP_WEBSITE_ID },
     { name: 'pylonAppId', value: process.env.PYLON_APP_ID },
     { name: 'fpr', value: process.env.FIRST_PROMOTER_ID },
     { name: 'sentry', value: process.env.SENTRY_API_KEY },
@@ -75,6 +74,10 @@ app.get('/config/project-overrides', (req, res) => {
       value: process.env.FLAGSMITH_PROXY_API_URL
         ? '/api/v1/'
         : process.env.FLAGSMITH_API_URL,
+    },
+    {
+      name: 'apiProxyEnabled',
+      value: !!process.env.FLAGSMITH_PROXY_API_URL,
     },
     { name: 'maintenance', value: envToBool('ENABLE_MAINTENANCE_MODE', false) },
     {
@@ -115,13 +118,18 @@ app.get('/config/project-overrides', (req, res) => {
     },
     {
       name: 'e2eToken',
-      value: process.env.E2E_TEST_TOKEN || '',
+      value: process.env[`E2E_TEST_TOKEN_${(process.env.ENV || 'dev').toUpperCase()}`] || process.env.E2E_TEST_TOKEN || '',
+    },
+    {
+      name: 'evaluationAnalyticsServerUrl',
+      value: process.env.EVALUATION_ANALYTICS_SERVER_URL,
     },
   ]
   let output = values.map(getVariable).join('')
   res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate')
   res.setHeader('content-type', 'application/javascript')
-  res.send(`window.projectOverrides = {
+  const e2eScript = process.env.E2E ? 'window.E2E=true;' : ''
+  res.send(`${e2eScript}window.projectOverrides = {
         ${output}
     };`)
 })
@@ -142,11 +150,8 @@ if (process.env.FLAGSMITH_PROXY_API_URL) {
 }
 
 if (isDev) {
-  // Serve files from src directory and use webpack-dev-server
-  // eslint-disable-next-line
-  console.log('Enabled Webpack Hot Reloading')
-  const webpackMiddleware = require('./middleware/webpack-middleware')
-  webpackMiddleware(app)
+  // In dev mode, use `npm run dev` which starts @rspack/dev-server
+  // This code path only runs if someone starts `node ./api` directly in dev
   app.set('views', 'web/')
   app.use(express.static('web'))
 } else {
@@ -208,7 +213,24 @@ app.get('/version', (req, res) => {
   }
 })
 
+if (process.env.FLAGSMITH_PROXY_API_URL) {
+  app.get('/_backend_version', async (req, res) => {
+    try {
+      const response = await fetch(
+        `${process.env.FLAGSMITH_PROXY_API_URL.replace(/\/?$/, '/')}version/`,
+      )
+      const data = await response.json()
+      res.json(data)
+    } catch (err) {
+      // eslint-disable-next-line
+      console.log('Unable to fetch backend version:', err)
+      res.status(502).json({})
+    }
+  })
+}
+
 app.use(bodyParser.json())
+
 app.use(spm)
 const genericWebsite = (url) => {
   if (!url) return true

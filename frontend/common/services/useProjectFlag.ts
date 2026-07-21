@@ -2,6 +2,7 @@ import { PagedResponse, ProjectFlag, Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
+import { sortMultivariateOptions } from 'common/utils/multivariate'
 
 /**
  * Number of features to display per page in the features list.
@@ -34,10 +35,38 @@ function recursivePageGet(
 }
 export const projectFlagService = service
   .enhanceEndpoints({
-    addTagTypes: ['ProjectFlag', 'FeatureList', 'FeatureState', 'Environment'],
+    addTagTypes: [
+      'ProjectFlag',
+      'FeatureList',
+      'FeatureState',
+      'Environment',
+      'LifecycleCounts',
+    ],
   })
   .injectEndpoints({
     endpoints: (builder) => ({
+      addFlagGroupOwners: builder.mutation<
+        Res['projectFlag'],
+        Req['addFlagGroupOwners']
+      >({
+        invalidatesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
+        query: ({ feature_id, project_id, ...body }) => ({
+          body,
+          method: 'POST',
+          url: `projects/${project_id}/features/${feature_id}/add-group-owners/`,
+        }),
+      }),
+      addFlagOwners: builder.mutation<Res['projectFlag'], Req['addFlagOwners']>(
+        {
+          invalidatesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
+          query: ({ feature_id, project_id, ...body }) => ({
+            body,
+            method: 'POST',
+            url: `projects/${project_id}/features/${feature_id}/add-owners/`,
+          }),
+        },
+      ),
+
       createProjectFlag: builder.mutation<
         Res['projectFlag'],
         Req['createProjectFlag']
@@ -45,6 +74,7 @@ export const projectFlagService = service
         invalidatesTags: [
           { id: 'LIST', type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
+          'LifecycleCounts',
         ],
         query: (query: Req['createProjectFlag']) => ({
           body: query.body,
@@ -52,6 +82,7 @@ export const projectFlagService = service
           url: `projects/${query.project_id}/features/`,
         }),
       }),
+
       getFeatureList: builder.query<Res['featureList'], Req['getFeatureList']>({
         providesTags: (_res, _meta, req) => [
           {
@@ -99,6 +130,22 @@ export const projectFlagService = service
             pageSize: arg.page_size || FEATURES_PAGE_SIZE,
             previous: response.previous,
           },
+          results: response.results.map((feature) => ({
+            ...feature,
+            multivariate_options: sortMultivariateOptions(
+              feature.multivariate_options,
+            ),
+          })),
+        }),
+      }),
+
+      getLifecycleStatusCounts: builder.query<
+        Res['lifecycleStatusCounts'],
+        Req['getLifecycleStatusCounts']
+      >({
+        providesTags: ['LifecycleCounts'],
+        query: ({ environment }) => ({
+          url: `environments/${environment}/feature-lifecycle-counts/`,
         }),
       }),
 
@@ -106,6 +153,12 @@ export const projectFlagService = service
         providesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
         query: (query: Req['getProjectFlag']) => ({
           url: `projects/${query.project}/features/${query.id}/`,
+        }),
+        transformResponse: (res: Res['projectFlag']) => ({
+          ...res,
+          multivariate_options: sortMultivariateOptions(
+            res.multivariate_options,
+          ),
         }),
       }),
 
@@ -133,11 +186,36 @@ export const projectFlagService = service
         },
       }),
 
+      removeFlagGroupOwners: builder.mutation<
+        Res['projectFlag'],
+        Req['removeFlagGroupOwners']
+      >({
+        invalidatesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
+        query: ({ feature_id, project_id, ...body }) => ({
+          body,
+          method: 'POST',
+          url: `projects/${project_id}/features/${feature_id}/remove-group-owners/`,
+        }),
+      }),
+
+      removeFlagOwners: builder.mutation<
+        Res['projectFlag'],
+        Req['removeFlagOwners']
+      >({
+        invalidatesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
+        query: ({ feature_id, project_id, ...body }) => ({
+          body,
+          method: 'POST',
+          url: `projects/${project_id}/features/${feature_id}/remove-owners/`,
+        }),
+      }),
+
       removeProjectFlag: builder.mutation<void, Req['removeProjectFlag']>({
         invalidatesTags: [
           { id: 'LIST', type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
           { id: 'METRICS', type: 'Environment' },
+          'LifecycleCounts',
         ],
         query: ({ flag_id, project_id }) => ({
           method: 'DELETE',
@@ -152,6 +230,8 @@ export const projectFlagService = service
         invalidatesTags: (res) => [
           { id: 'LIST', type: 'ProjectFlag' },
           { id: res?.id, type: 'ProjectFlag' },
+          { id: 'LIST', type: 'FeatureList' },
+          'LifecycleCounts',
         ],
         query: (query: Req['updateProjectFlag']) => ({
           body: query.body,
@@ -206,12 +286,28 @@ export async function createProjectFlag(
     projectFlagService.endpoints.createProjectFlag.initiate(data, options),
   )
 }
+export async function removeProjectFlag(
+  store: any,
+  data: Req['removeProjectFlag'],
+  options?: Parameters<
+    typeof projectFlagService.endpoints.removeProjectFlag.initiate
+  >[1],
+) {
+  return store.dispatch(
+    projectFlagService.endpoints.removeProjectFlag.initiate(data, options),
+  )
+}
 
 export const {
+  useAddFlagGroupOwnersMutation,
+  useAddFlagOwnersMutation,
   useCreateProjectFlagMutation,
   useGetFeatureListQuery,
+  useGetLifecycleStatusCountsQuery,
   useGetProjectFlagQuery,
   useGetProjectFlagsQuery,
+  useRemoveFlagGroupOwnersMutation,
+  useRemoveFlagOwnersMutation,
   useRemoveProjectFlagMutation,
   useUpdateProjectFlagMutation,
 } = projectFlagService

@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
+import React, { FC, useEffect } from 'react'
 import TableFilter from './TableFilter'
 import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -38,7 +38,7 @@ const TableTagFilter: FC<TableFilterType> = ({
     value?.valueSearch || '',
   )
   useEffect(() => {
-    if (search !== value.valueSearch) {
+    if ((search || '') !== (value.valueSearch || '')) {
       onChange({
         enabled: value.enabled,
         valueSearch: search,

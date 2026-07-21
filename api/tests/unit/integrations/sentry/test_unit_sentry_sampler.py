@@ -7,16 +7,19 @@ SAMPLE_RATE = 0.5
 
 
 @override_settings(DEFAULT_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
-def test_traces_sampler_empty_context_returns_default_sample_rate():  # type: ignore[no-untyped-def]
+def test_traces_sampler__empty_context__returns_default_sample_rate():  # type: ignore[no-untyped-def]
+    # Given
+    ctx: dict[str, object] = {}
+
     # When
-    sample_rate = traces_sampler({})  # type: ignore[no-untyped-call]
+    sample_rate = traces_sampler(ctx)  # type: ignore[no-untyped-call]
 
     # Then
     assert sample_rate == SAMPLE_RATE
 
 
 @override_settings(DEFAULT_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
-def test_traces_sampler_returns_0_for_health_check_transaction():  # type: ignore[no-untyped-def]
+def test_traces_sampler__health_check_path__returns_zero():  # type: ignore[no-untyped-def]
     # Given
     ctx = {"wsgi_environ": {"PATH_INFO": "/health"}}
 
@@ -28,7 +31,7 @@ def test_traces_sampler_returns_0_for_health_check_transaction():  # type: ignor
 
 
 @override_settings(DEFAULT_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
-def test_traces_sampler_returns_0_for_home_page_transaction():  # type: ignore[no-untyped-def]
+def test_traces_sampler__home_page_path__returns_zero():  # type: ignore[no-untyped-def]
     # Given
     ctx = {"wsgi_environ": {"PATH_INFO": "/"}}
 
@@ -40,7 +43,7 @@ def test_traces_sampler_returns_0_for_home_page_transaction():  # type: ignore[n
 
 
 @override_settings(DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
-def test_traces_sampler_returns_dashboard_sample_rate_for_dashboard_request():  # type: ignore[no-untyped-def]
+def test_traces_sampler__dashboard_request__returns_dashboard_sample_rate():  # type: ignore[no-untyped-def]
     # Given
     ctx = {"wsgi_environ": {"PATH_INFO": "/api/v1/environments/"}}
 
@@ -63,7 +66,7 @@ def test_traces_sampler_returns_dashboard_sample_rate_for_dashboard_request():  
     ),
 )
 @override_settings(DEFAULT_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
-def test_traces_sampler_returns_sample_rate_for_sdk_request(path_info):  # type: ignore[no-untyped-def]
+def test_traces_sampler__sdk_request_path__returns_default_sample_rate(path_info):  # type: ignore[no-untyped-def]
     # Given
     ctx = {"wsgi_environ": {"PATH_INFO": path_info}}
 

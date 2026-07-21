@@ -51,12 +51,11 @@ from environments.metrics import (
 )
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
-from integrations.flagsmith.client import get_client
+from integrations.flagsmith.client import get_openfeature_client
 from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
 from util.mappers import (
-    map_environment_to_environment_document,
     map_environment_to_sdk_document,
 )
 from webhooks.models import AbstractBaseExportableWebhookModel
@@ -207,13 +206,12 @@ class Environment(
             # we don't want to disable it based on the flag state.
             return
 
-        flagsmith_client = get_client("local", local_eval=True)
         organisation = self.project.organisation
-        enable_v2_versioning = flagsmith_client.get_identity_flags(
-            organisation.flagsmith_identifier,
-            traits=organisation.flagsmith_on_flagsmith_api_traits,
-        ).is_feature_enabled("enable_feature_versioning_for_new_environments")
-        self.use_v2_feature_versioning = enable_v2_versioning
+        self.use_v2_feature_versioning = get_openfeature_client().get_boolean_value(
+            "enable_feature_versioning_for_new_environments",
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        )
 
     def __str__(self):  # type: ignore[no-untyped-def]
         return "Project %s - Environment %s" % (self.project.name, self.name)
@@ -361,7 +359,8 @@ class Environment(
         ):
             environment_document_cache.set_many(
                 {
-                    e.api_key: map_environment_to_environment_document(e)
+                    # Use the SDK mapper so the cache perfectly matches the DB fallback
+                    e.api_key: map_environment_to_sdk_document(e)
                     for e in environments
                 }
             )
@@ -638,6 +637,8 @@ class Webhook(AbstractBaseExportableWebhookModel):
         identity_id: int | str | None = None,
         identity_identifier: str | None = None,
         feature_segment: FeatureSegment | None = None,
+        multivariate_feature_state_values: list[MultivariateFeatureStateValue]
+        | None = None,
     ) -> dict:  # type: ignore[type-arg]
         if (identity_id or identity_identifier) and not (
             identity_id and identity_identifier
@@ -647,8 +648,20 @@ class Webhook(AbstractBaseExportableWebhookModel):
         if (identity_id and identity_identifier) and feature_segment:
             raise ValueError("Cannot provide identity information and feature segment")
 
+        mv_values_data = [
+            {
+                "id": mv.id,
+                "multivariate_feature_option": {
+                    "id": mv.multivariate_feature_option_id,
+                    "value": mv.multivariate_feature_option.value,
+                },
+                "percentage_allocation": mv.percentage_allocation,
+            }
+            for mv in (multivariate_feature_state_values or [])
+        ]
+
         # TODO: refactor to use a serializer / schema
-        data = {
+        data: dict[str, typing.Any] = {
             "feature": {
                 "id": feature.id,
                 "created_date": feature.created_date.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
@@ -671,6 +684,7 @@ class Webhook(AbstractBaseExportableWebhookModel):
             "feature_segment": None,
             "enabled": enabled,
             "feature_state_value": value,
+            "multivariate_feature_state_values": mv_values_data,
         }
         if feature_segment:
             data["feature_segment"] = {
@@ -712,6 +726,32 @@ class EnvironmentAPIKey(LifecycleModel):  # type: ignore[misc]
     @hook(AFTER_DELETE, when="_should_update_dynamo", is_now=True)
     def delete_from_dynamo(self):  # type: ignore[no-untyped-def]
         environment_api_key_wrapper.delete_api_key(self.key)
+
+    @hook(AFTER_SAVE)  # type: ignore[misc]
+    def sync_to_ingestion_on_save(self) -> None:
+        from experimentation.models import WarehouseConnection
+        from experimentation.tasks import write_environment_ingestion_key
+
+        if not WarehouseConnection.objects.filter(
+            environment_id=self.environment_id
+        ).exists():
+            return
+        write_environment_ingestion_key.delay(
+            kwargs={"environment_api_key_id": self.id},
+        )
+
+    @hook(AFTER_DELETE)  # type: ignore[misc]
+    def remove_from_ingestion_on_delete(self) -> None:
+        from experimentation.models import WarehouseConnection
+        from experimentation.tasks import remove_environment_ingestion_key
+
+        if not WarehouseConnection.objects.filter(
+            environment_id=self.environment_id
+        ).exists():
+            return
+        remove_environment_ingestion_key.delay(
+            kwargs={"key": self.key},
+        )
 
     @property
     def _should_update_dynamo(self) -> bool:

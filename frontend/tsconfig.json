@@ -13,7 +13,7 @@
     "lib": [
       "dom"
     ],
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "skipLibCheck": true,
     "paths": {

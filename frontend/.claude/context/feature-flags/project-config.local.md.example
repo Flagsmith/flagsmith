@@ -1,0 +1,25 @@
+# Flagsmith Project Configuration
+
+Copy this file to `project-config.local.md` and fill in your values.
+
+**Flagsmith Organization:** <ORG_NAME> (ID: <ORG_ID>)
+
+**Project: <PROJECT_NAME> (ID: <PROJECT_ID>)**
+- **Production Environment**
+  - ID: <PROD_ENV_ID>
+  - API Key: `<PROD_API_KEY>`
+  - Requires approval for changes (minimum_change_request_approvals: 1)
+- **Staging Environment**
+  - ID: <STAGING_ENV_ID>
+  - API Key: `<STAGING_API_KEY>`
+  - No approval required for changes
+
+**CRITICAL: ALWAYS USE PROJECT ID <PROJECT_ID> WHEN CREATING FEATURE FLAGS FOR THIS FRONTEND.**
+
+**BEFORE CREATING ANY FEATURE FLAG, YOU MUST:**
+1. Read `common/project.js` and verify the `flagsmith` API key
+2. Use `mcp__flagsmith__list_project_environments` with project_id: <PROJECT_ID> to confirm the API key matches
+3. **ONLY** create the flag in Project ID <PROJECT_ID> (<PROJECT_NAME>)
+4. **NEVER** create flags in multiple projects or guess which project to use
+
+**Creating flags in the wrong project is a critical error that pollutes other projects with incorrect flags.**

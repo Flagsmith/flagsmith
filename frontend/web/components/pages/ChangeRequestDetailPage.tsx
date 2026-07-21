@@ -6,7 +6,10 @@ import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
 import CreateFeatureModal from 'components/modals/create-feature'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
-import { mergeChangeSets } from 'common/services/useChangeRequest'
+import {
+  mergeChangeSets,
+  useUpdateChangeRequestMutation,
+} from 'common/services/useChangeRequest'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getStore } from 'common/store'
 import {
@@ -21,7 +24,6 @@ import {
 import Utils from 'common/utils/utils'
 import moment from 'moment'
 import ProjectStore from 'common/stores/project-store'
-import { useUpdateChangeRequestMutation } from 'common/services/useChangeRequest'
 import { useHasPermission } from 'common/providers/Permission'
 import { IonIcon } from '@ionic/react'
 import { close } from 'ionicons/icons'
@@ -43,6 +45,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import { useHistory } from 'react-router-dom'
 import { openPublishChangeRequestConfirm } from 'components/PublishChangeRequestModal'
 import { getChangeRequestLiveDate } from 'common/utils/getChangeRequestLiveDate'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 
 type ChangeRequestPageType = {
   match: {
@@ -77,14 +80,19 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
   const approvePermission = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: 'APPROVE_CHANGE_REQUEST',
+    permission: EnvironmentPermission.APPROVE_CHANGE_REQUEST,
     tags: projectFlag?.tags,
   })
   const publishPermission = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: 'UPDATE_FEATURE_STATE',
+    permission: EnvironmentPermission.UPDATE_FEATURE_STATE,
     tags: projectFlag?.tags,
+  })
+  const isEnvironmentAdmin = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission: EnvironmentPermission.ADMIN,
   })
 
   useEffect(() => {
@@ -220,7 +228,6 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
                 ?.multivariate_feature_state_values
             : undefined
         }
-        flagId={environmentFlag.id}
       />,
       'side-modal create-feature-modal',
     )
@@ -245,7 +252,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       children: (
         <NewVersionWarning
           environmentId={`${environment?.id}`}
-          featureId={featureId!}
+          featureId={featureId}
           date={`${changeRequest.created_at}`}
         />
       ),
@@ -326,7 +333,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       <Breadcrumb
         items={[
           {
-            title: isScheduled ? 'Scheduling' : 'Change requests',
+            title: isScheduled ? 'Scheduling' : 'Feature Change Requests',
             url: `/project/${projectId}/environment/${environmentId}/${
               isScheduled ? 'scheduled-changes' : 'change-requests'
             }`,
@@ -336,6 +343,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       />
       <ChangeRequestPageInner
         hidePublish={!projectFlag}
+        canManageChangeRequests={isEnvironmentAdmin?.permission}
         publishChangeRequest={publishChangeRequest}
         approvePermission={approvePermission?.permission}
         approveChangeRequest={approveChangeRequest}
@@ -346,7 +354,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         addOwner={addOwner}
         removeOwner={removeOwner}
         publishPermissionDescription={Constants.environmentPermissions(
-          'Update Feature States',
+          EnvironmentPermission.UPDATE_FEATURE_STATE,
         )}
         scheduledDate={getChangeRequestLiveDate(changeRequest)}
         deleteChangeRequest={deleteChangeRequest}
@@ -418,6 +426,7 @@ type ChangeRequestPageInnerType = {
   approvePermission: boolean | undefined
   publishPermission: boolean | undefined
   isScheduled: boolean
+  canManageChangeRequests?: boolean
   hidePublish?: boolean
   scheduledDate?: moment.Moment | null
   changeRequest: ProjectChangeRequest | ChangeRequest | undefined
@@ -432,6 +441,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
   addOwner,
   approveChangeRequest,
   approvePermission,
+  canManageChangeRequests,
   changeRequest,
   deleteChangeRequest,
   editChangeRequest,
@@ -529,24 +539,26 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
       return `${matchingUser.first_name} ${matchingUser.last_name}`
     })
   const approved = !!approval && !!approval.approved_at
+  // Locks the CR UI once any reviewer has approved.
+  const hasApprovals = changeRequest.approvals.some((v) => !!v.approved_at)
   const isYourChangeRequest = changeRequest.user === AccountStore.getUser().id
 
   const user =
     changeRequest &&
     changeRequest.user &&
     orgUsers.find((v) => v.id === changeRequest.user)
-  const isYours = AccountStore.getUserId() === changeRequest.user
+
   return (
     <div>
       <PageTitle
         cta={
           (!changeRequest.committed_at || isScheduled) &&
-          isYours && (
+          (isYourChangeRequest || !!canManageChangeRequests) && (
             <Row>
               <Button theme='secondary' onClick={deleteChangeRequest}>
                 Delete
               </Button>
-              {editChangeRequest && (
+              {editChangeRequest && !hasApprovals && (
                 <Button onClick={editChangeRequest} className='ml-2'>
                   Edit
                 </Button>
@@ -560,6 +572,14 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
         by {user ? `${user.first_name} ${user.last_name}` : 'Unknown user'}
       </PageTitle>
       <p className='mt-2'>{changeRequest.description}</p>
+      {hasApprovals && isYourChangeRequest && !changeRequest.committed_at && (
+        <div className='col-md-6 mb-4'>
+          <InfoMessage>
+            This change request has been approved and can no longer be edited.
+            Delete it and create a new change request to make further changes.
+          </InfoMessage>
+        </div>
+      )}
       {isScheduled && (
         <div className='col-md-6 mb-4'>
           <InfoMessage icon='calendar' title='Scheduled Change'>
@@ -582,15 +602,21 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
           <>
             {!Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (
               <div className='mb-4'>
-                <SettingsButton onClick={() => setShowUsers(true)}>
-                  Assigned users
-                </SettingsButton>
+                {hasApprovals ? (
+                  <div className='font-weight-medium mb-2'>Assigned users</div>
+                ) : (
+                  <SettingsButton onClick={() => setShowUsers(true)}>
+                    Assigned users
+                  </SettingsButton>
+                )}
                 <Row className='mt-2'>
                   {ownerUsers.length !== 0 &&
                     ownerUsers.map((u) => (
                       <Row
                         key={u.id}
-                        onClick={() => removeOwner(u.id)}
+                        onClick={
+                          hasApprovals ? undefined : () => removeOwner(u.id)
+                        }
                         className='chip'
                         style={{
                           marginBottom: 4,
@@ -600,32 +626,44 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                         <span className='font-weight-bold'>
                           {u.first_name} {u.last_name}
                         </span>
-                        <span className='chip-icon ion'>
-                          <IonIcon icon={close} />
-                        </span>
+                        {!hasApprovals && (
+                          <span className='chip-icon ion'>
+                            <IonIcon icon={close} />
+                          </span>
+                        )}
                       </Row>
                     ))}
                 </Row>
-                <UserSelect
-                  users={orgUsers}
-                  value={ownerUsers && ownerUsers.map((v) => v.id)}
-                  onAdd={addOwner}
-                  onRemove={removeOwner}
-                  isOpen={showUsers}
-                  onToggle={() => setShowUsers(!showUsers)}
-                />
+                {!hasApprovals && (
+                  <UserSelect
+                    users={orgUsers}
+                    value={ownerUsers && ownerUsers.map((v) => v.id)}
+                    onAdd={addOwner}
+                    onRemove={removeOwner}
+                    isOpen={showUsers}
+                    onToggle={() => setShowUsers(!showUsers)}
+                  />
+                )}
               </div>
             )}
             <div className='mb-4'>
-              <SettingsButton onClick={() => setShowGroups(true)}>
-                Assigned groups
-              </SettingsButton>
+              {hasApprovals ? (
+                <div className='font-weight-medium mb-2'>Assigned groups</div>
+              ) : (
+                <SettingsButton onClick={() => setShowGroups(true)}>
+                  Assigned groups
+                </SettingsButton>
+              )}
               <Row className='mt-2'>
                 {!!ownerGroups?.length &&
                   ownerGroups.map((g) => (
                     <Row
                       key={g.id}
-                      onClick={() => removeOwner(g.id, false)}
+                      onClick={
+                        hasApprovals
+                          ? undefined
+                          : () => removeOwner(g.id, false)
+                      }
                       className='chip'
                       style={{
                         marginBottom: 4,
@@ -633,20 +671,24 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                       }}
                     >
                       <span className='font-weight-bold'>{g.name}</span>
-                      <span className='chip-icon ion'>
-                        <IonIcon icon={close} />
-                      </span>
+                      {!hasApprovals && (
+                        <span className='chip-icon ion'>
+                          <IonIcon icon={close} />
+                        </span>
+                      )}
                     </Row>
                   ))}
               </Row>
-              <MyGroupsSelect
-                orgId={AccountStore.getOrganisation().id}
-                value={ownerGroups && ownerGroups.map((v) => v.id)}
-                onAdd={addOwner}
-                onRemove={removeOwner}
-                isOpen={showGroups}
-                onToggle={() => setShowGroups(!showGroups)}
-              />
+              {!hasApprovals && (
+                <MyGroupsSelect
+                  orgId={AccountStore.getOrganisation().id}
+                  value={ownerGroups && ownerGroups.map((v) => v.id)}
+                  onAdd={addOwner}
+                  onRemove={removeOwner}
+                  isOpen={showGroups}
+                  onToggle={() => setShowGroups(!showGroups)}
+                />
+              )}
             </div>
           </>
         }
@@ -697,9 +739,10 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                     Utils.renderWithPermission(
                       approvePermission,
                       Constants.environmentPermissions(
-                        'Approve Change Requests',
+                        EnvironmentPermission.APPROVE_CHANGE_REQUEST,
                       ),
                       <Button
+                        data-test='approve-change-request-btn'
                         disabled={
                           approved || !approvePermission || isYourChangeRequest
                         }
@@ -713,6 +756,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                     publishPermission,
                     publishPermissionDescription,
                     <Button
+                      data-test='publish-change-request-btn'
                       disabled={
                         approvedBy.length < minApprovals || !publishPermission
                       }

@@ -1,7 +1,50 @@
+import { sortBy } from 'lodash'
+
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
+import transformCorePaging from 'common/transformCorePaging'
 import Utils from 'common/utils/utils'
+import { CustomMetadataField } from 'common/types/metadata-field'
+import {
+  Environment,
+  Metadata,
+  MetadataField,
+  PagedResponse,
+  ProjectFlag,
+  Segment,
+} from 'common/types/responses'
+
+type EntityType = 'feature' | 'segment' | 'environment'
+
+type EntityMetadataParams = {
+  organisationId: number
+  projectId: number
+  entityContentType: number
+  entityType: EntityType
+  entityId?: number
+}
+
+type EntityData = ProjectFlag | Segment | Environment
+
+type EntityWithMetadata = {
+  metadata?: Metadata[]
+}
+
+function getEntityUrl(params: EntityMetadataParams): string | null {
+  const { entityId, entityType, projectId } = params
+
+  switch (entityType) {
+    case 'feature':
+      return `projects/${projectId}/features/${entityId}/`
+    case 'segment':
+      return `projects/${projectId}/segments/${entityId}/`
+    case 'environment':
+      return `environments/${entityId}/`
+    default:
+      return null
+  }
+}
 
 export const metadataService = service
   .enhanceEndpoints({ addTagTypes: ['Metadata'] })
@@ -11,7 +54,7 @@ export const metadataService = service
         Res['metadataField'],
         Req['createMetadataField']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'Metadata' }],
+        invalidatesTags: [{ type: 'Metadata' }],
         query: (query: Req['createMetadataField']) => ({
           body: query.body,
           method: 'POST',
@@ -22,11 +65,95 @@ export const metadataService = service
         Res['metadataField'],
         Req['deleteMetadataField']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'Metadata' }],
+        invalidatesTags: [{ type: 'Metadata' }],
         query: (query: Req['deleteMetadataField']) => ({
           method: 'DELETE',
           url: `metadata/fields/${query.id}/`,
         }),
+      }),
+      getEntityMetadataFields: builder.query<
+        CustomMetadataField[],
+        EntityMetadataParams
+      >({
+        providesTags: (_res, _err, arg) => [
+          {
+            id: `${arg.entityType}-${arg.entityId ?? 'new'}-${
+              arg.entityContentType
+            }`,
+            type: 'Metadata',
+          },
+        ],
+        queryFn: async (arg, _api, _extraOptions, baseQuery) => {
+          const entityUrl = getEntityUrl(arg)
+
+          // Build queries to run in parallel
+          const queries: Promise<{ data?: unknown; error?: unknown }>[] = [
+            baseQuery({
+              url: `projects/${arg.projectId}/metadata/fields/?${Utils.toParam({
+                entity: arg.entityType,
+                include_organisation: true,
+                page_size: 100,
+              })}`,
+            }),
+          ]
+
+          // Only fetch entity data if we have an entityId
+          if (arg.entityId && entityUrl) {
+            queries.push(baseQuery({ url: entityUrl }))
+          }
+
+          // Fetch all in parallel
+          const results = await Promise.all(queries)
+
+          const [fieldsRes, entityRes] = results
+
+          // Handle errors
+          if (fieldsRes.error) {
+            return { error: fieldsRes.error as Res['metadataList'] }
+          }
+
+          if (entityRes?.error) {
+            return { error: entityRes.error as EntityData }
+          }
+
+          const fieldList = fieldsRes.data as PagedResponse<MetadataField>
+          const entityData = (entityRes?.data ??
+            null) as EntityWithMetadata | null
+
+          // Map fields to custom metadata fields with required status
+          const fieldsForContentType: CustomMetadataField[] =
+            fieldList.results.map((meta) => {
+              const matchingModelField = meta.model_fields.find(
+                (mf) => mf.content_type === arg.entityContentType,
+              )
+              return {
+                ...meta,
+                isRequiredFor: !!matchingModelField?.is_required_for.length,
+                metadataModelFieldId: matchingModelField
+                  ? matchingModelField.id
+                  : null,
+              }
+            })
+
+          // Get existing values from the entity
+          const existingValues: Metadata[] = entityData?.metadata ?? []
+
+          // Merge field definitions with existing values
+          const mergedMetadata = fieldsForContentType.map((field) => {
+            const existingValue = existingValues.find(
+              (v) => v.model_field === field.metadataModelFieldId,
+            )
+            return {
+              ...field,
+              field_value: existingValue?.field_value ?? '',
+              hasValue: !!existingValue,
+            }
+          })
+
+          return {
+            data: sortBy(mergedMetadata, (m) => (m.isRequiredFor ? -1 : 1)),
+          }
+        },
       }),
       getMetadataField: builder.query<
         Res['metadataField'],
@@ -45,15 +172,31 @@ export const metadataService = service
         query: (query: Req['getMetadataList']) => ({
           url: `metadata/fields/?${Utils.toParam(query)}`,
         }),
+        transformResponse: (res: Res['metadataList'], _, req) =>
+          transformCorePaging(req, res),
+      }),
+      getProjectMetadataFieldList: builder.query<
+        Res['projectMetadataFieldList'],
+        Req['getProjectMetadataFieldList']
+      >({
+        providesTags: [{ id: 'LIST', type: 'Metadata' }],
+        query: (query: Req['getProjectMetadataFieldList']) => ({
+          url: `projects/${query.project_id}/metadata/fields/?${Utils.toParam({
+            ...(query.include_organisation
+              ? { include_organisation: true }
+              : {}),
+            page: query.page,
+            page_size: query.page_size,
+          })}`,
+        }),
+        transformResponse: (res: Res['projectMetadataFieldList'], _, req) =>
+          transformCorePaging(req, res),
       }),
       updateMetadataField: builder.mutation<
         Res['metadataField'],
         Req['updateMetadataField']
       >({
-        invalidatesTags: (res) => [
-          { id: 'LIST', type: 'Metadata' },
-          { id: res?.id, type: 'Metadata' },
-        ],
+        invalidatesTags: [{ type: 'Metadata' }],
         query: (query: Req['updateMetadataField']) => ({
           body: query.body,
           method: 'PUT',
@@ -119,13 +262,40 @@ export async function updateMetadata(
     metadataService.endpoints.updateMetadataField.initiate(data, options),
   )
 }
+export async function getEntityMetadataFields(
+  store: any,
+  data: EntityMetadataParams,
+  options?: Parameters<
+    typeof metadataService.endpoints.getEntityMetadataFields.initiate
+  >[1],
+) {
+  return store.dispatch(
+    metadataService.endpoints.getEntityMetadataFields.initiate(data, options),
+  )
+}
+export async function getProjectMetadataFieldList(
+  store: any,
+  data: Req['getProjectMetadataFieldList'],
+  options?: Parameters<
+    typeof metadataService.endpoints.getProjectMetadataFieldList.initiate
+  >[1],
+) {
+  return store.dispatch(
+    metadataService.endpoints.getProjectMetadataFieldList.initiate(
+      data,
+      options,
+    ),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
   useCreateMetadataFieldMutation,
   useDeleteMetadataFieldMutation,
+  useGetEntityMetadataFieldsQuery,
   useGetMetadataFieldListQuery,
   useGetMetadataFieldQuery,
+  useGetProjectMetadataFieldListQuery,
   useUpdateMetadataFieldMutation,
   // END OF EXPORTS
 } = metadataService

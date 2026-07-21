@@ -11,6 +11,7 @@ from audit.views import OrganisationAuditLogViewSet
 from integrations.github.views import (
     GithubConfigurationViewSet,
     GithubRepositoryViewSet,
+    create_cleanup_issue,
     fetch_issues,
     fetch_pull_requests,
     fetch_repo_contributors,
@@ -148,6 +149,11 @@ urlpatterns = [
         name="get-github-installation-repos",
     ),
     path(
+        "<int:organisation_pk>/github/create-cleanup-issue/",
+        create_cleanup_issue,
+        name="create-github-cleanup-issue",
+    ),
+    path(
         "<int:organisation_pk>/api-usage-notification/",
         OrganisationAPIUsageNotificationView.as_view(),
         name="organisation-api-usage-notification",
@@ -155,7 +161,7 @@ urlpatterns = [
 ]
 
 if settings.LICENSING_INSTALLED:  # pragma: no cover
-    from licensing.views import (  # type: ignore[import-not-found]
+    from licensing.views import (  # type: ignore[import-not-found,unused-ignore]
         create_or_update_licence,
     )
 

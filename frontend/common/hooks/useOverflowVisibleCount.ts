@@ -68,7 +68,14 @@ export const useOverflowVisibleCount = ({
         return totalWidths + totalGaps
       }
 
-      const containerWidth = outerCont.clientWidth
+      // clientWidth includes the container's horizontal padding, which the items
+      // can't actually occupy. Subtract it so padded navbars don't over-estimate
+      // the available width and let items clip off-screen.
+      const outerStyle = getComputedStyle(outerCont)
+      const containerWidth =
+        outerCont.clientWidth -
+        (parseFloat(outerStyle.paddingLeft) || 0) -
+        (parseFloat(outerStyle.paddingRight) || 0)
       // All items fit
       if (sumWidths(widths.length) <= containerWidth) {
         setVisibleCount(widths.length)

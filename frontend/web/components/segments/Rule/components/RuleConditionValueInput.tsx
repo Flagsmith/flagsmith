@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import classNames from 'classnames'
 import Input from 'components/base/forms/Input'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 
 import { getDarkMode } from 'project/darkMode'
@@ -106,7 +106,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
   const isDarkMode = getDarkMode()
 
   return (
-    <div className={classNames('relative', className)}>
+    <div className={classNames('position-relative', className)}>
       <Input
         type='text'
         data-test={props['data-test']}
@@ -124,7 +124,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
         }}
       />
       {showIcon && (
-        <div style={{ position: 'absolute', right: 5, top: 9 }}>
+        <div className='position-absolute' style={{ right: 5, top: 9 }}>
           <Tooltip
             title={
               <div

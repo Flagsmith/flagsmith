@@ -22,6 +22,11 @@ GOOGLE_URL = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&"
 UserModel = get_user_model()
 
 
+class OAuthTokenSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    key = serializers.CharField(read_only=True)
+    is_new_user = serializers.BooleanField(read_only=True)
+
+
 class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):  # type: ignore[type-arg]
     access_token = serializers.CharField(
         required=True,
@@ -42,6 +47,7 @@ class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):  
     utm_data = UTMDataSerializer(required=False, allow_null=True)
     auth_type: AuthType | None = None
     user_model_id_attribute: str = "id"
+    is_new_user: bool = False
 
     class Meta:
         abstract = True
@@ -98,6 +104,7 @@ class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):  
             user = FFAdminUser.objects.create(
                 **user_data, email=email.lower(), sign_up_type=sign_up_type
             )
+            self.is_new_user = True
 
             # On first OAuth signup, we register the hubspot cookies and utms before creating the hubspot contact
             if request := self.context.get("request"):

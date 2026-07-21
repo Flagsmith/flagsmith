@@ -3,9 +3,9 @@ import React, { FC, useState } from 'react'
 import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
 import Switch from 'components/Switch'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 
-import { MetadataModelField } from 'common/types/responses'
+import { MetadataFieldModelField } from 'common/types/responses'
 type selectedContentType = {
   label: string
   value: string
@@ -13,12 +13,12 @@ type selectedContentType = {
 }
 
 type ContentTypesMetadataFieldTableType = {
-  organisationId: string
+  organisationId: number
   selectedContentTypes: selectedContentType[]
   onDelete: (removed: selectedContentType) => void
   isEdit: boolean
   changeMetadataRequired: (value: string, isRequired: boolean) => void
-  metadataModelFieldList: MetadataModelField[]
+  metadataModelFieldList: MetadataFieldModelField[]
 }
 
 type ContentTypesMetadataRowBase = Omit<

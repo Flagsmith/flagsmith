@@ -9,7 +9,7 @@ import {
   StageTriggerType,
 } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import { NEW_PIPELINE_STAGE_ACTION, TRIGGER_OPTIONS } from './constants'
 import { PipelineStageRequest, StageActionRequest } from 'common/types/requests'
 import PipelineStageActions from './PipelineStageActions'

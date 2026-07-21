@@ -53,7 +53,7 @@ ARG CI_COMMIT_SHA=dev
 
 # Pin runtimes versions
 ARG NODE_VERSION=22
-ARG PYTHON_VERSION=3.11
+ARG PYTHON_VERSION=3.13
 
 FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm AS node
 FROM cgr.dev/chainguard/wolfi-base:latest AS wolfi-base
@@ -85,6 +85,7 @@ RUN cd frontend && npm run bundle
 
 # * build-python
 FROM wolfi-base AS build-python
+COPY --from=ghcr.io/astral-sh/uv /uv /uvx /bin/
 WORKDIR /build
 
 ARG PYTHON_VERSION
@@ -93,28 +94,29 @@ RUN apk add build-base linux-headers curl git \
   python-${PYTHON_VERSION}-dev \
   py${PYTHON_VERSION}-pip
 
-COPY api/pyproject.toml api/poetry.lock api/Makefile ./
-ENV POETRY_VIRTUALENVS_IN_PROJECT=true \
-  POETRY_VIRTUALENVS_OPTIONS_ALWAYS_COPY=true \
-  POETRY_VIRTUALENVS_OPTIONS_NO_PIP=true \
-  POETRY_VIRTUALENVS_OPTIONS_NO_SETUPTOOLS=true \
-  POETRY_HOME=/opt/poetry \
-  PATH="/opt/poetry/bin:$PATH"
-RUN make install opts='--without dev'
+COPY api/pyproject.toml api/uv.lock api/Makefile ./
+ENV UV_PROJECT_ENVIRONMENT=/build/.venv \
+  UV_PYTHON_PREFERENCE=only-system \
+  UV_PYTHON=python${PYTHON_VERSION} \
+  UV_LINK_MODE=copy \
+  UV_NO_SYNC=1 \
+  UV_CACHE_DIR=/root/.cache/uv
+RUN --mount=type=cache,target=/root/.cache/uv \
+  make install opts='--no-install-project'
 
 # * build-python-private [build-python]
 FROM build-python AS build-python-private
 
-# Authenticate git with token, install private Python dependencies,
-# and integrate private modules
-ARG SAML_REVISION
-ARG RBAC_REVISION
-ARG WITH="saml,auth-controller,ldap,workflows,licensing,release-pipelines"
+# Authenticate git with token and install private Python dependencies
+ARG EXTRAS="--extra private"
 RUN --mount=type=secret,id=github_private_cloud_token \
+  --mount=type=secret,id=codeartifact_token \
+  --mount=type=cache,target=/root/.cache/uv \
   echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
   git config --global credential.helper store && \
-  make install-packages opts='--without dev --with ${WITH}' && \
-  make install-private-modules
+  UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws \
+  UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
+  make install-packages opts="--no-install-project ${EXTRAS}"
 
 # * api-runtime
 FROM wolfi-base AS api-runtime
@@ -133,7 +135,10 @@ ARG PROMETHEUS_MULTIPROC_DIR="/tmp/prometheus"
 ARG ACCESS_LOG_LOCATION="/dev/null"
 ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION} \
   PROMETHEUS_MULTIPROC_DIR=${PROMETHEUS_MULTIPROC_DIR} \
-  DJANGO_SETTINGS_MODULE=app.settings.production
+  DJANGO_SETTINGS_MODULE=app.settings.production \
+  GUNICORN_WORKERS=3 \
+  GUNICORN_THREADS=2 \
+  APPLICATION_LOGGERS="app_analytics,audit,code_references,common,core,dynamodb,edge_api,environments,features,import_export,integrations,mcp,oauth2_metadata,organisations,projects,segment_membership,segments,task_processor,users,webhooks,workflows"
 
 ARG CI_COMMIT_SHA
 RUN echo ${CI_COMMIT_SHA} > /app/CI_COMMIT_SHA && \
@@ -142,7 +147,7 @@ RUN echo ${CI_COMMIT_SHA} > /app/CI_COMMIT_SHA && \
 
 EXPOSE 8000
 
-ENTRYPOINT ["/app/scripts/run-docker.sh"]
+ENTRYPOINT ["flagsmith"]
 
 CMD ["migrate-and-serve"]
 
@@ -161,7 +166,8 @@ FROM build-python AS api-test
 
 COPY api /build/
 
-RUN make install-packages opts='--with dev'
+RUN --mount=type=cache,target=/root/.cache/uv \
+  make install-packages opts='--extra dev'
 
 CMD ["make", "test"]
 
@@ -170,7 +176,11 @@ FROM build-python-private AS api-private-test
 
 COPY api /build/
 
-RUN make install-packages opts='--with dev' && \
+RUN --mount=type=secret,id=codeartifact_token \
+  --mount=type=cache,target=/root/.cache/uv \
+  UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws \
+  UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
+  make install-packages opts='--extra dev --extra private' && \
   make integrate-private-tests && \
   git config --global --unset credential.helper && \
   rm -f ${HOME}/.git-credentials

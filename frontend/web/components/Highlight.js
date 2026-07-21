@@ -182,7 +182,7 @@ class Highlight extends React.Component {
             >
               {this.state.expanded ? 'Hide' : 'Show More'}
               <span
-                className={`icon ml-2 ion text-primary ${
+                className={`icon ml-2 ion icon-action ${
                   this.state.expanded
                     ? 'ion-ios-arrow-up'
                     : 'ion-ios-arrow-down'

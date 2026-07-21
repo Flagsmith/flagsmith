@@ -24,7 +24,15 @@ import {
   StageActionType,
   StageActionBody,
   ChangeRequest,
+  ExpectedDirection,
+  ExperimentStatus,
+  MetricAggregation,
+  MetricDirection,
+  MetricDefinition,
+  FlagsmithValue,
   TagStrategy,
+  FeatureType,
+  LifecycleStage,
 } from './responses'
 import { UtmsType } from './utms'
 
@@ -32,6 +40,7 @@ export type UpdateProjectBody = {
   name: string
   hide_disabled_flags?: boolean
   prevent_flag_defaults?: boolean
+  enforce_feature_owners?: boolean
   enable_realtime_updates?: boolean
   minimum_change_request_approvals?: number | null
   stale_flags_limit_days?: number | null
@@ -234,7 +243,7 @@ export type Req = {
     pages?: (string | undefined)[] // this is needed for edge since it returns no paging info other than a key
     isEdge: boolean
   }>
-  getPermission: { id: number; level: PermissionLevel }
+  getPermission: { id: number | string; level: PermissionLevel }
   getAvailablePermissions: { level: PermissionLevel }
   getTag: { id: number }
   getHealthEvents: { projectId: number }
@@ -250,8 +259,17 @@ export type Req = {
   getTags: {
     projectId: number
   }
-  createTag: { projectId: number; tag: Omit<Tag, 'id'> }
+  createTag: {
+    projectId: number
+    tag: Omit<Tag, 'id' | 'project' | 'type' | 'is_system_tag' | 'is_permanent'>
+  }
   getSegment: { projectId: number; id: number }
+  getSegmentMembers: PagedRequest<{
+    projectId: number
+    id: number
+    environment: number
+    pages?: (string | undefined)[]
+  }>
   updateAccount: Account
   deleteAccount: {
     current_password: string
@@ -343,6 +361,24 @@ export type Req = {
     organisation_id: number
     role_id: number
   }
+  createProjectRolePermission: {
+    organisation_id: number
+    role_id: number
+    body: {
+      admin?: boolean
+      permissions: RolePermission['permissions']
+      project: number
+    }
+  }
+  createEnvironmentRolePermission: {
+    organisation_id: number
+    role_id: number
+    body: {
+      admin?: boolean
+      permissions: RolePermission['permissions']
+      environment: number
+    }
+  }
   updateRolePermission: Req['createRolePermission'] & { id: number }
   deleteRolePermission: { organisation_id: number; role_id: number }
 
@@ -366,6 +402,10 @@ export type Req = {
     group_owners?: number[]
     sort_field?: string
     sort_direction?: SortOrder
+    lifecycle_stage?: LifecycleStage
+  }
+  getLifecycleStatusCounts: {
+    environment: number
   }
   getProjectFlag: { project: number; id: number }
   getRolesPermissionUsers: { organisation_id: number; role_id: number }
@@ -400,7 +440,7 @@ export type Req = {
     role_id: number
   }
   getGetSubscriptionMetadata: { id: number }
-  getEnvironment: { id: number }
+  getEnvironment: { id: string }
   getSubscriptionMetadata: { id: number }
   getMetadataModelFields: { organisation_id: number }
   getMetadataModelField: { organisation_id: number; id: number }
@@ -425,7 +465,11 @@ export type Req = {
     }
   }
   getMetadataField: { organisation_id: number }
-  getMetadataList: { organisation: number }
+  getMetadataList: PagedRequest<{ organisation: number }>
+  getProjectMetadataFieldList: PagedRequest<{
+    project_id: number
+    include_organisation?: boolean
+  }>
   updateMetadataField: {
     id: number
     body: {
@@ -433,6 +477,7 @@ export type Req = {
       type: string
       description: string
       organisation: number
+      project?: number | null
     }
   }
   deleteMetadataField: { id: number }
@@ -442,6 +487,7 @@ export type Req = {
       name: string
       organisation: number
       type: string
+      project?: number | null
     }
   }
 
@@ -624,10 +670,27 @@ export type Req = {
     id: string
   }
   getProject: { id: number }
+  createProject: { name: string; organisation: number }
   updateProject: { id: number; body: UpdateProjectBody }
   deleteProject: { id: number }
   migrateProject: { id: number }
   getProjectPermissions: { projectId: number }
+  createProjectUserPermission: {
+    projectId: number
+    body: {
+      admin?: boolean
+      permissions: string[]
+      user: number
+    }
+  }
+  createEnvironmentUserPermission: {
+    environmentId: string
+    body: {
+      admin?: boolean
+      permissions: string[]
+      user: number
+    }
+  }
   createGroup: {
     orgId: number
     data: Omit<UserGroup, 'id' | 'users'>
@@ -642,12 +705,36 @@ export type Req = {
   }
   createProjectFlag: {
     project_id: number
-    body: ProjectFlag
+    body: ProjectFlag & {
+      owners?: number[]
+      group_owners?: number[]
+    }
   }
   removeProjectFlag: {
     project_id: number
     flag_id: number
   }
+  addFlagOwners: {
+    project_id: number
+    feature_id: number
+    user_ids: number[]
+  }
+  removeFlagOwners: {
+    project_id: number
+    feature_id: number
+    user_ids: number[]
+  }
+  addFlagGroupOwners: {
+    project_id: number
+    feature_id: number
+    group_ids: number[]
+  }
+  removeFlagGroupOwners: {
+    project_id: number
+    feature_id: number
+    group_ids: number[]
+  }
+  createEnvironment: { name: string; project: number }
   updateEnvironment: { id: number; body: Environment }
   createCloneIdentityFeatureStates: {
     environment_id: string
@@ -660,8 +747,7 @@ export type Req = {
   updateGroup: Req['createGroup'] & {
     orgId: number
     data: UserGroup
-    users: UserGroup['users']
-
+    usersToAdd: number[] | null
     usersToAddAdmin: number[] | null
     usersToRemoveAdmin: number[] | null
     usersToRemove: number[] | null
@@ -701,6 +787,10 @@ export type Req = {
       idp_attribute_name: string
     }
   }
+  getScimConfiguration: { organisation_id: number }
+  createScimConfiguration: { organisation_id: number }
+  deleteScimConfiguration: { organisation_id: number }
+  regenerateScimToken: { organisation_id: number }
   updateIdentity: {
     environmentId: string
     data: Identity
@@ -787,7 +877,7 @@ export type Req = {
     userId: number
   }
   getUserPermissions: {
-    id?: number
+    id?: number | string
     userId: number | undefined
     level: PermissionLevel
   }
@@ -859,11 +949,185 @@ export type Req = {
     tag_strategy?: TagStrategy
     sort_field?: string
     sort_direction?: 'ASC' | 'DESC'
+    identity?: string
+    type?: FeatureType
   }
   updateFeatureState: {
     environmentId: string
     environmentFlagId: number
     body: UpdateFeatureStateBody
+  }
+  getExperimentResults: {
+    environmentId: string
+    featureName: string
+    getAdminDashboardMetrics: {
+      days?: number
+    }
+    createCleanupIssue: {
+      organisation_id: number
+      body: {
+        feature_id: number
+      }
+    }
+  }
+  getIdentityOverrides: {
+    environmentId: string
+    featureId: number
+    page?: number
+    isEdge: boolean
+  }
+  createIdentityOverride: {
+    environmentId: string
+    identityId: string
+    featureId: number
+    enabled: boolean
+    feature_state_value: FlagsmithValue | null
+  }
+  validateOAuthAuthorize: Record<string, string>
+  processOAuthConsent: {
+    allow: boolean
+    client_id: string
+    redirect_uri: string
+    response_type: string
+    scope: string
+    code_challenge: string
+    code_challenge_method: string
+    state?: string
+  }
+  getIntegration: {
+    integrationId: string
+    projectId?: string
+    environmentApiKey?: string
+  }
+  createIntegration: {
+    integrationId: string
+    projectId?: string
+    environmentApiKey?: string
+    organisationId?: string
+    body: Record<string, any>
+  }
+  updateIntegration: {
+    integrationId: string
+    id: string
+    projectId?: string
+    environmentApiKey?: string
+    organisationId?: string
+    body: Record<string, any>
+  }
+  getGitLabConfiguration: { project_id: number }
+  getGitLabProjects: PagedRequest<{ project_id: number }>
+  getGitLabIssues: PagedRequest<{
+    project_id: number
+    gitlab_project_id: number
+  }>
+  getGitLabMergeRequests: PagedRequest<{
+    project_id: number
+    gitlab_project_id: number
+  }>
+  getWarehouseConnections: {
+    environmentId: string
+    exclude_event_stats?: boolean
+  }
+  createWarehouseConnection: {
+    environmentId: string
+    warehouse_type: string
+    name?: string
+    config?: Record<string, string>
+  }
+  deleteWarehouseConnection: { environmentId: string; id: number }
+  testWarehouseConnection: { environmentId: string; id: number }
+  updateWarehouseConnection: {
+    environmentId: string
+    id: number
+    name?: string
+    config?: Record<string, string>
+  }
+  getExperiments: PagedRequest<{
+    environmentId: string
+    status?: ExperimentStatus | ExperimentStatus[]
+  }>
+  createExperiment: {
+    environmentId: string
+    body: {
+      name: string
+      hypothesis: string
+      feature: number
+      metrics: { metric: number; expected_direction: ExpectedDirection }[]
+      experiment_rollout: {
+        enabled: boolean
+        rollout_percentage: number
+        feature_state_value: {
+          type: 'integer' | 'string' | 'boolean'
+          value: string
+        }
+        multivariate_feature_state_values: {
+          multivariate_feature_option: number
+          percentage_allocation: number
+        }[]
+      }
+    }
+  }
+  experimentAction: { environmentId: string; experimentId: number }
+  updateExperiment: {
+    environmentId: string
+    experimentId: number
+    body: { hypothesis?: string }
+  }
+  updateExperimentRollout: {
+    environmentId: string
+    experimentId: number
+    body: {
+      enabled: boolean
+      rollout_percentage: number
+      feature_state_value: {
+        type: 'integer' | 'string' | 'boolean'
+        value: string
+      }
+      multivariate_feature_state_values: {
+        multivariate_feature_option: number
+        percentage_allocation: number
+      }[]
+    }
+  }
+  deleteExperiment: { environmentId: string; experimentId: number }
+  getExperiment: { environmentId: string; experimentId: number }
+  getExperimentExposures: { environmentId: string; experimentId: number }
+  refreshExperimentExposures: { environmentId: string; experimentId: number }
+  getExperimentBayesianResults: { environmentId: string; experimentId: number }
+  refreshExperimentBayesianResults: {
+    environmentId: string
+    experimentId: number
+  }
+  getMetrics: PagedRequest<{
+    environmentId: string
+    q?: string
+  }>
+  getMetric: { environmentId: string; metricId: number }
+  createMetric: {
+    environmentId: string
+    body: {
+      name: string
+      description: string
+      aggregation: MetricAggregation
+      direction: MetricDirection
+      definition: MetricDefinition
+    }
+  }
+  updateMetric: {
+    environmentId: string
+    metricId: number
+    body: Req['createMetric']['body']
+  }
+  deleteMetric: { environmentId: string; metricId: number }
+  createMultivariateOption: {
+    project_id: string | number
+    feature_id: number
+    body: Partial<MultivariateOption> & { feature: number }
+  }
+  saveMultivariateOptions: {
+    project_id: string | number
+    feature_id: number
+    multivariate_options: Partial<MultivariateOption>[]
   }
   // END OF TYPES
 }

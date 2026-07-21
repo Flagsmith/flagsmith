@@ -1,10 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-from axes.models import AccessAttempt  # type: ignore[import-untyped]
-from django.contrib.auth import authenticate
-from django.http import HttpRequest
-from pytest_django.fixtures import SettingsWrapper
 from rest_framework.exceptions import AuthenticationFailed
 
 from environments.authentication import EnvironmentKeyAuthentication
@@ -12,7 +8,7 @@ from environments.models import Environment
 from organisations.models import Organisation
 
 
-def test_authentication_passes_if_valid_api_key_passed(
+def test_environment_key_authentication__valid_api_key__passes(
     environment: Environment,
 ) -> None:
     # Given
@@ -24,7 +20,7 @@ def test_authentication_passes_if_valid_api_key_passed(
     authenticator.authenticate(request)  # type: ignore[no-untyped-call]
 
 
-def test_authenticate_raises_authentication_failed_if_request_missing_environment_key(
+def test_environment_key_authentication__missing_environment_key__raises_authentication_failed(
     db: None,
 ) -> None:
     # Given
@@ -36,7 +32,7 @@ def test_authenticate_raises_authentication_failed_if_request_missing_environmen
         authenticator.authenticate(request)  # type: ignore[no-untyped-call]
 
 
-def test_authenticate_raises_authentication_failed_if_request_environment_key_not_found(
+def test_environment_key_authentication__environment_key_not_found__raises_authentication_failed(
     db: None,
 ) -> None:
     # Given
@@ -49,7 +45,7 @@ def test_authenticate_raises_authentication_failed_if_request_environment_key_no
         authenticator.authenticate(request)  # type: ignore[no-untyped-call]
 
 
-def test_authenticate_raises_authentication_failed_if_organisation_set_to_stop_serving_flags(
+def test_environment_key_authentication__organisation_stop_serving_flags__raises_authentication_failed(
     organisation: Organisation,
     environment: Environment,
 ) -> None:
@@ -64,18 +60,3 @@ def test_authenticate_raises_authentication_failed_if_organisation_set_to_stop_s
     # When / Then
     with pytest.raises(AuthenticationFailed):
         authenticator.authenticate(request)  # type: ignore[no-untyped-call]
-
-
-# TODO: this test should not be here?
-def test_brute_force_access_attempts(db: None, settings: SettingsWrapper) -> None:
-    invalid_user_name = "invalid_user@mail.com"
-    login_attempts_to_make = settings.AXES_FAILURE_LIMIT + 1
-
-    assert AccessAttempt.objects.all().count() == 0
-
-    for _ in range(login_attempts_to_make):
-        request = HttpRequest()
-        request.path = "/api/v1/auth/login/"
-        authenticate(request, username=invalid_user_name, password="invalid_password")
-
-    assert AccessAttempt.objects.filter(username=invalid_user_name).count() == 1

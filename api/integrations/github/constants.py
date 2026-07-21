@@ -21,6 +21,15 @@ DELETED_SEGMENT_OVERRIDE_TEXT = (
 FEATURE_ENVIRONMENT_URL = "%s/project/%s/environment/%s/features?feature=%s&tab=%s"
 GITHUB_API_CALLS_TIMEOUT = 10
 
+CLEANUP_ISSUE_TITLE = "Remove stale feature flag: %s"
+CLEANUP_ISSUE_BODY = """\
+We need to clean up feature flag usage in the code.
+Our goal is to delete references of the "%s" feature.
+We need to delete the feature flag check so that the code path \
+is no longer guarded by the feature flag.
+These are the occurrences of this feature flag in this repository:
+%s"""
+
 GITHUB_TAG_COLOR = "#838992"
 GITHUB_FLAGSMITH_LABEL = "Flagsmith Flag"
 GITHUB_FLAGSMITH_LABEL_DESCRIPTION = (

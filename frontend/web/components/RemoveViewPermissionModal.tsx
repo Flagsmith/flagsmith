@@ -39,5 +39,4 @@ const RemoveViewPermissionModal = ({
   )
 }
 
-export type { RemoveViewPermissionModalProps }
 export default RemoveViewPermissionModal

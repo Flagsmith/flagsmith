@@ -1,4 +1,4 @@
-import { MultiValueProps } from 'react-select/lib/components/MultiValue'
+import { MultiValueProps } from 'react-select'
 import { MultiSelectOption } from './MultiSelect'
 
 export const CustomMultiValue = ({

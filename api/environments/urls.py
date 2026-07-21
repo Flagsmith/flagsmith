@@ -1,6 +1,7 @@
 from django.urls import include, path, re_path
 from rest_framework_nested import routers  # type: ignore[import-untyped]
 
+from app_analytics.experiments import get_experiment_results
 from edge_api.identities.views import (
     EdgeIdentityFeatureStateViewSet,
     EdgeIdentityViewSet,
@@ -166,5 +167,22 @@ urlpatterns = [
         "<str:environment_api_key>/edge-identity-overrides",
         get_edge_identity_overrides,
         name="edge-identity-overrides",
+    ),
+    path(
+        "<str:environment_api_key>/experiments/results/",
+        get_experiment_results,
+        name="experiment-results",
+    ),
+    path(
+        "<str:environment_api_key>/warehouse-connections/",
+        include("experimentation.urls"),
+    ),
+    path(
+        "<str:environment_api_key>/experiments/",
+        include("experimentation.experiment_urls"),
+    ),
+    path(
+        "<str:environment_api_key>/experiment-metrics/",
+        include("experimentation.metric_urls"),
     ),
 ]

@@ -5,7 +5,7 @@ import {
   User,
 } from 'common/types/responses'
 import { Link } from 'react-router-dom'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import moment from 'moment'
 import { IonIcon } from '@ionic/react'
 import { timeOutline } from 'ionicons/icons'

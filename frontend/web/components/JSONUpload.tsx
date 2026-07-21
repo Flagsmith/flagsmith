@@ -1,5 +1,5 @@
 import { FC, useCallback, useState } from 'react'
-import DropIcon from './svg/DropIcon'
+import DropIcon from './icons/DropIcon'
 import Button from './base/forms/Button'
 import { useDropzone } from 'react-dropzone'
 

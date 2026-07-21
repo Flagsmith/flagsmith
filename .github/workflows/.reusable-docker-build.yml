@@ -59,6 +59,11 @@ on:
         type: string
         description: Trivy Java Database OCI specifier
         default: ghcr.io/flagsmith/trivy-java-db:latest
+      codeartifact-login:
+        type: boolean
+        description: Authenticate with the prod CodeArtifact PyPI before building
+        required: false
+        default: false
     outputs:
       image:
         description: Resulting image specifier
@@ -105,6 +110,11 @@ jobs:
             ${{ inputs.registry-url }}/flagsmith/${{ inputs.image-name }}
           tags: ${{ inputs.tags }}
 
+      - name: Authenticate with CodeArtifact
+        if: inputs.codeartifact-login
+        id: codeartifact
+        uses: ./.github/actions/codeartifact-login
+
       - name: Build and push image
         id: build
         uses: depot/build-push-action@v1
@@ -113,7 +123,9 @@ jobs:
           save: ${{ inputs.ephemeral }}
           push: ${{ !inputs.ephemeral }}
           platforms: linux/amd64,linux/arm64
-          secrets: ${{ secrets.secrets }}
+          secrets: |
+            ${{ secrets.secrets }}
+            ${{ inputs.codeartifact-login && format('codeartifact_token={0}', steps.codeartifact.outputs.token) || '' }}
           target: ${{ inputs.target }}
           build-args: |
             CI_COMMIT_SHA=${{ github.sha }}
@@ -148,10 +160,11 @@ jobs:
 
       - name: Scan ${{ steps.image-tag.outputs.image-tag }} image
         id: trivy
-        uses: Flagsmith/actions/trivy-scan-image@v0.3.0
+        uses: Flagsmith/actions/trivy-scan-image@v0.4.1
         if: inputs.scan
         with:
           image-tag: ${{ steps.image-tag.outputs.image-tag }}
+          artifact-name: ${{ inputs.image-name }}-trivy-results
           category: ${{ inputs.image-name }}
           # `query` value contained path:{image_name} before but not all Trivy findings
           # conform to that. There's no category filter at the moment; for the time being,

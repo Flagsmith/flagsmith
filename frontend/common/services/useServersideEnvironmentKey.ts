@@ -32,9 +32,7 @@ export const serversideEnvironmentKeyService = service
         Res['serversideEnvironmentKeys'],
         Req['getServersideEnvironmentKeys']
       >({
-        providesTags: (res) => [
-          { id: res?.id, type: 'ServersideEnvironmentKey' },
-        ],
+        providesTags: [{ id: 'LIST', type: 'ServersideEnvironmentKey' }],
         query: (query: Req['getServersideEnvironmentKeys']) => ({
           url: `environments/${query.environmentId}/api-keys/`,
         }),

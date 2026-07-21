@@ -27,9 +27,11 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
   ] = useUpdateUserEmailMutation()
 
   useEffect(() => {
-    setTimeout(() => {
-      document.getElementById('email')?.focus()
-    }, 500)
+    if (!E2E) {
+      setTimeout(() => {
+        document.getElementById('email')?.focus()
+      }, 500)
+    }
   }, [])
 
   useEffect(() => {
@@ -120,6 +122,4 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
   )
 }
 
-export default ChangeEmailAddress
-
-module.exports = ConfigProvider(ChangeEmailAddress)
+export default ConfigProvider(ChangeEmailAddress)

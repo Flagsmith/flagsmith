@@ -21,9 +21,12 @@ from organisations.models import Organisation
 from users.models import FFAdminUser, SignUpType
 
 
-def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:
+def test_register_and_login__full_workflow__succeeds_with_password_reset(
+    db: None, api_client: APIClient
+) -> None:
+    # Given
     # try to register without first_name / last_name
-    email = "test@example.com"
+    email = f"test-{uuid.uuid4()}@example.com"
     password = FFAdminUser.objects.make_random_password()
     register_data = {
         "email": email,
@@ -31,8 +34,11 @@ def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:
         "re_password": password,
     }
     register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
     register_response_fail = api_client.post(register_url, data=register_data)
 
+    # Then
     assert register_response_fail.status_code == status.HTTP_400_BAD_REQUEST
 
     # now register with full data
@@ -95,11 +101,11 @@ def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:
 
 
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)  # type: ignore[misc]
-def test_cannot_register_without_invite_if_disabled(
+def test_register__without_invite_when_disabled__returns_forbidden(
     db: None, api_client: APIClient
 ) -> None:
     # Given
-    email = "test@example.com"
+    email = f"test-{uuid.uuid4()}@example.com"
     password = FFAdminUser.objects.make_random_password()
     register_data = {
         "email": email,
@@ -117,12 +123,35 @@ def test_cannot_register_without_invite_if_disabled(
 
 
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)  # type: ignore[misc]
-def test_can_register_with_invite_if_registration_disabled_without_invite(
+def test_register__existing_email_without_invite_when_disabled__returns_forbidden(
+    db: None,
+    api_client: APIClient,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    password = FFAdminUser.objects.make_random_password()
+    register_data = {
+        "email": admin_user.email,
+        "password": password,
+        "first_name": "test",
+        "last_name": "register",
+    }
+
+    # When
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+    response = api_client.post(url, data=register_data)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)  # type: ignore[misc]
+def test_register__with_invite_when_registration_disabled__returns_created(
     db: None,
     api_client: APIClient,
 ) -> None:
     # Given
-    email = "test@example.com"
+    email = f"test-{uuid.uuid4()}@example.com"
     password = FFAdminUser.objects.make_random_password()
     organisation = Organisation.objects.create(name="Test Organisation")
     register_data = {
@@ -148,7 +177,7 @@ def test_can_register_with_invite_if_registration_disabled_without_invite(
         settings.DJOSER,
     )
 )
-def test_registration_and_login_with_user_activation_flow(
+def test_register_and_login__activation_flow_enabled__succeeds_after_activation(
     db: None,
     api_client: APIClient,
 ) -> None:
@@ -158,7 +187,7 @@ def test_registration_and_login_with_user_activation_flow(
     """
 
     # Given user registration data
-    email = "test@example.com"
+    email = f"test-{uuid.uuid4()}@example.com"
     password = FFAdminUser.objects.make_random_password()
     register_data = {
         "email": email,
@@ -215,11 +244,12 @@ def test_registration_and_login_with_user_activation_flow(
     assert "key" in login_result.data
 
 
-def test_login_workflow_with_mfa_enabled(
+def test_login__mfa_enabled__succeeds_with_totp_and_backup_code(
     db: None,
     api_client: APIClient,
 ) -> None:
-    email = "test@example.com"
+    # Given
+    email = f"test-{uuid.uuid4()}@example.com"
     password = FFAdminUser.objects.make_random_password()
     register_data = {
         "email": email,
@@ -256,11 +286,13 @@ def test_login_workflow_with_mfa_enabled(
     assert confirm_mfa_method_response.status_code == status.HTTP_200_OK
     backup_codes = confirm_mfa_method_response.json()["backup_codes"]
 
-    # now login should return an ephemeral token rather than a token
+    # When - login should return an ephemeral token rather than a token
     login_data = {"email": email, "password": password}
     api_client.logout()
     login_url = reverse("api-v1:custom_auth:custom-mfa-authtoken-login")
     login_response = api_client.post(login_url, data=login_data)
+
+    # Then
     assert login_response.status_code == status.HTTP_200_OK
     ephemeral_token = login_response.json()["ephemeral_token"]
 
@@ -293,12 +325,12 @@ def test_login_workflow_with_mfa_enabled(
 
 
 @override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
-def test_register_and_login_workflows__jwt_cookie(
+def test_register_and_login__jwt_cookie_enabled__sets_and_clears_cookies(
     db: None,
     api_client: APIClient,
 ) -> None:
     # Given
-    email = "test@example.com"
+    email = f"test-{uuid.uuid4()}@example.com"
     password = FFAdminUser.objects.make_random_password()
     register_url = reverse("api-v1:custom_auth:ffadminuser-list")
     login_url = reverse("api-v1:custom_auth:custom-mfa-authtoken-login")
@@ -368,7 +400,7 @@ def test_login_workflow__jwt_cookie__mfa_enabled(
     api_client: APIClient,
 ) -> None:
     # Given
-    email = "test@example.com"
+    email = f"test-{uuid.uuid4()}@example.com"
     password = FFAdminUser.objects.make_random_password()
     register_url = reverse("api-v1:custom_auth:ffadminuser-list")
     create_mfa_method_url = reverse(
@@ -429,7 +461,7 @@ def test_login_workflow__jwt_cookie__cors_headers_expected(
     api_client: APIClient,
 ) -> None:
     # Given
-    email = "test@example.com"
+    email = f"test-{uuid.uuid4()}@example.com"
     password = FFAdminUser.objects.make_random_password()
     register_url = reverse("api-v1:custom_auth:ffadminuser-list")
     protected_resource_url = reverse("api-v1:projects:project-list")
@@ -453,12 +485,12 @@ def test_login_workflow__jwt_cookie__cors_headers_expected(
 
 
 @override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
-def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
+def test_login__jwt_cookie_with_invalid_token__returns_unauthorized_without_cookies(
     db: None,
     api_client: APIClient,
 ) -> None:
     # Given
-    email = "test@example.com"
+    email = f"test-{uuid.uuid4()}@example.com"
     password = FFAdminUser.objects.make_random_password()
     register_url = reverse("api-v1:custom_auth:ffadminuser-list")
     protected_resource_url = reverse("api-v1:projects:project-list")
@@ -483,19 +515,19 @@ def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
     assert not response.cookies.get("jwt")
 
 
-def test_throttle_login_workflows(
+def test_login__exceeds_throttle_rate__returns_too_many_requests(
     api_client: APIClient,
     db: None,
     reset_cache: None,
     mocker: MockerFixture,
 ) -> None:
-    # verify that a throttle rate exists already then set it
+    # Given - verify that a throttle rate exists already then set it
     # to something easier to reliably test
     assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"]  # type: ignore[index]
     mocker.patch(
         "rest_framework.throttling.ScopedRateThrottle.get_rate", return_value="1/minute"
     )
-    email = "test@example.com"
+    email = f"test-{uuid.uuid4()}@example.com"
     password = FFAdminUser.objects.make_random_password()
     register_data = {
         "email": email,
@@ -519,19 +551,21 @@ def test_throttle_login_workflows(
     assert login_response.status_code == status.HTTP_200_OK
     assert login_response.json()["key"]
 
-    # try login in again, should deny, current limit 1 per second
+    # When - try login in again, should deny, current limit 1 per second
     login_response = api_client.post(login_url, data=login_data)
+
+    # Then
     assert login_response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
 
-def test_throttle_signup(
+def test_signup__exceeds_throttle_rate__returns_too_many_requests(
     api_client: APIClient,
     user_password: str,
     db: None,
     reset_cache: None,
     mocker: MockerFixture,
 ) -> None:
-    # verify that a throttle rate exists already then set it
+    # Given - verify that a throttle rate exists already then set it
     # to something easier to reliably test
     assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"]  # type: ignore[index]
     mocker.patch(
@@ -552,15 +586,15 @@ def test_throttle_signup(
     assert register_response.status_code == status.HTTP_201_CREATED
     assert register_response.json()["key"]
 
-    # Now, let's signup again
+    # When - let's signup again
     register_url = reverse("api-v1:custom_auth:ffadminuser-list")
     response = api_client.post(register_url, data=register_data)
 
-    # Assert that we got throttled
+    # Then - we got throttled
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
 
-def test_get_user_is_not_throttled(  # type: ignore[no-untyped-def]
+def test_get_user__multiple_requests__is_not_throttled(  # type: ignore[no-untyped-def]
     admin_client: APIClient, reset_cache: None, mocker: MockerFixture
 ):
     # Given
@@ -576,7 +610,9 @@ def test_get_user_is_not_throttled(  # type: ignore[no-untyped-def]
 
 
 @pytest.mark.django_db
-def test_delete_token(api_client: APIClient, db: None) -> None:
+def test_delete_token__valid_token__returns_no_content_and_invalidates(
+    api_client: APIClient, db: None
+) -> None:
     # Given
     register_url = reverse("api-v1:custom_auth:ffadminuser-list")
     password = FFAdminUser.objects.make_random_password()
@@ -606,11 +642,11 @@ def test_delete_token(api_client: APIClient, db: None) -> None:
     assert client.delete(delete_token_url).status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_register_with_sign_up_type(client, db, settings):  # type: ignore[no-untyped-def]
+def test_register__with_sign_up_type__stores_sign_up_type(client, db):  # type: ignore[no-untyped-def]
     # Given
     password = FFAdminUser.objects.make_random_password()
     sign_up_type = "NO_INVITE"
-    email = "test@example.com"
+    email = f"test-{uuid.uuid4()}@example.com"
     register_data = {
         "email": email,
         "password": password,
@@ -636,13 +672,13 @@ def test_register_with_sign_up_type(client, db, settings):  # type: ignore[no-un
     assert FFAdminUser.objects.filter(email=email, sign_up_type=sign_up_type).exists()
 
 
-def test_can_create_superuser(
+def test_register__superuser_flag_on_selfhosted__creates_superuser(
     db: None, api_client: APIClient, mocker: MockerFixture
 ) -> None:
     # Given
     mocker.patch("custom_auth.serializers.is_saas", return_value=False)
 
-    email = "test@example.com"
+    email = f"test-{uuid.uuid4()}@example.com"
     password = FFAdminUser.objects.make_random_password()
     register_data = {
         "email": email,
@@ -664,13 +700,13 @@ def test_can_create_superuser(
     assert user.superuser is True
 
 
-def test_cannot_create_superuser_on_saas_build(
+def test_register__superuser_flag_on_saas__does_not_create_superuser(
     db: None, api_client: APIClient, mocker: MockerFixture
 ) -> None:
     # Given
     mocker.patch("custom_auth.serializers.is_saas", return_value=True)
 
-    email = "test@example.com"
+    email = f"test-{uuid.uuid4()}@example.com"
     password = FFAdminUser.objects.make_random_password()
     register_data = {
         "email": email,
@@ -691,13 +727,13 @@ def test_cannot_create_superuser_on_saas_build(
     assert user.superuser is False
 
 
-def test_cannot_create_superuser_if_any_user_exists(
+def test_register__superuser_flag_when_users_exist__returns_bad_request(
     admin_user: FFAdminUser, api_client: APIClient, mocker: MockerFixture
 ) -> None:
     # Given
     mocker.patch("custom_auth.serializers.is_saas", return_value=False)
 
-    email = "test@example.com"
+    email = f"test-{uuid.uuid4()}@example.com"
     password = FFAdminUser.objects.make_random_password()
     register_data = {
         "email": email,
@@ -721,7 +757,7 @@ def test_cannot_create_superuser_if_any_user_exists(
 
 
 @pytest.mark.parametrize("marketing_consent_given", [None, True, False])
-def test_marketing_consent_given_defaults_to_true(
+def test_register__marketing_consent_given__defaults_to_true(
     api_client: APIClient,
     marketing_consent_given: bool | None,
     db: None,
@@ -729,7 +765,7 @@ def test_marketing_consent_given_defaults_to_true(
     # Given
     password = FFAdminUser.objects.make_random_password()
     register_data = {
-        "email": "test@example.com",
+        "email": f"test-{uuid.uuid4()}@example.com",
         "password": password,
         "re_password": password,
         "first_name": "user",

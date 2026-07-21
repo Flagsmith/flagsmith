@@ -8,7 +8,7 @@ from environments.models import Environment
 from integrations.mixpanel.models import MixpanelConfiguration
 
 
-def test_should_create_mixpanel_config_when_post(  # type: ignore[no-untyped-def]
+def test_create_mixpanel_config__post_valid_data__returns_created(  # type: ignore[no-untyped-def]
     admin_client: APIClient,
     environment: Environment,
 ):
@@ -29,9 +29,11 @@ def test_should_create_mixpanel_config_when_post(  # type: ignore[no-untyped-def
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert MixpanelConfiguration.objects.filter(environment=environment).count() == 1
+    config = MixpanelConfiguration.objects.get(environment=environment)
+    assert config.base_url is None
 
 
-def test_should_return_400_when_duplicate_mixpanel_config_is_posted(
+def test_create_mixpanel_config__duplicate_config__returns_bad_request(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -57,7 +59,7 @@ def test_should_return_400_when_duplicate_mixpanel_config_is_posted(
     assert MixpanelConfiguration.objects.filter(environment=environment).count() == 1
 
 
-def test_should_update_configuration_when_put(
+def test_update_mixpanel_config__put_valid_data__returns_ok(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -86,7 +88,7 @@ def test_should_update_configuration_when_put(
     assert config.api_key == api_key_updated
 
 
-def test_should_return_mixpanel_config_list_when_requested(
+def test_list_mixpanel_config__config_exists__returns_config_list(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -104,11 +106,38 @@ def test_should_return_mixpanel_config_list_when_requested(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    expected_response = {"api_key": config.api_key, "id": config.id}
+    expected_response = {
+        "api_key": config.api_key,
+        "id": config.id,
+        "base_url": None,
+    }
     assert response.data == [expected_response]
 
 
-def test_should_remove_configuration_when_delete(
+def test_create_mixpanel_config__with_eu_base_url__returns_created(
+    admin_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    data = {"api_key": "abc-123", "base_url": "https://api-eu.mixpanel.com"}
+    url = reverse(
+        "api-v1:environments:integrations-mixpanel-list",
+        args=[environment.api_key],
+    )
+    # When
+    response = admin_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    config = MixpanelConfiguration.objects.get(environment=environment)
+    assert config.base_url == "https://api-eu.mixpanel.com"
+
+
+def test_delete_mixpanel_config__config_exists__removes_config(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:

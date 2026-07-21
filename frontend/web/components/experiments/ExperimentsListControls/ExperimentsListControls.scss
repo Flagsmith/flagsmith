@@ -1,0 +1,47 @@
+.experiments-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 16px;
+
+  &__tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--color-surface-subtle);
+    border-radius: var(--radius-md);
+    padding: 3px;
+  }
+
+  &__tab {
+    padding: 6px 14px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: var(--font-body-sm-size);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--easing-standard);
+
+    &:hover {
+      color: var(--color-text-default);
+    }
+
+    &--active {
+      background: var(--color-surface-default);
+      color: var(--color-text-default);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+
+  &__search {
+    min-width: 240px;
+  }
+}
+
+.experiments-footer {
+  padding: 12px 16px;
+  font-size: var(--font-body-sm-size);
+  color: var(--color-text-secondary);
+}

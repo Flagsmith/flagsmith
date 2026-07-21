@@ -3,7 +3,7 @@ from environments.identities.traits.models import Trait
 from environments.sdk.serializers import SDKBulkCreateUpdateTraitSerializer
 
 
-def test_bulk_create_update_serializer_save_many(  # type: ignore[no-untyped-def]
+def test_bulk_create_update_serializer_save_many__mixed_operations__creates_updates_and_deletes(  # type: ignore[no-untyped-def]
     identity, django_assert_num_queries, mocker
 ):
     # Given

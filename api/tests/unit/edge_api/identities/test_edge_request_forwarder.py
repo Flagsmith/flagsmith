@@ -14,7 +14,7 @@ from edge_api.identities.edge_request_forwarder import (
 @pytest.mark.parametrize(
     "forwarder_function", [forward_identity_request, forward_trait_request]
 )
-def test_forwarder_function_makes_no_request_if_migration_is_not_yet_done(  # type: ignore[no-untyped-def]
+def test_forwarder_function__migration_not_done__makes_no_request(  # type: ignore[no-untyped-def]
     mocker, forwarder_mocked_requests, forwarder_mocked_migrator, forwarder_function
 ):
     # Given
@@ -33,7 +33,7 @@ def test_forwarder_function_makes_no_request_if_migration_is_not_yet_done(  # ty
     forwarder_mocked_migrator.assert_called_with(project_id)
 
 
-def test_forward_identity_request_makes_correct_get_request(  # type: ignore[no-untyped-def]
+def test_forward_identity_request__get_request__sends_correct_params(  # type: ignore[no-untyped-def]
     mocker,
     forward_enable_settings,
     forwarder_mocked_migrator,
@@ -64,7 +64,7 @@ def test_forward_identity_request_makes_correct_get_request(  # type: ignore[no-
     forwarder_mocked_migrator.assert_called_with(project_id)
 
 
-def test_forward_identity_request_makes_correct_post_request(  # type: ignore[no-untyped-def]
+def test_forward_identity_request__post_request__sends_correct_data(  # type: ignore[no-untyped-def]
     mocker,
     forward_enable_settings,
     forwarder_mocked_migrator,
@@ -96,7 +96,7 @@ def test_forward_identity_request_makes_correct_post_request(  # type: ignore[no
     forwarder_mocked_migrator.assert_called_with(project_id)
 
 
-def test_forward_trait_request_sync_makes_correct_post_request(  # type: ignore[no-untyped-def]
+def test_forward_trait_request__post_request__sends_correct_data(  # type: ignore[no-untyped-def]
     mocker,
     forward_enable_settings,
     forwarder_mocked_migrator,
@@ -131,7 +131,9 @@ def test_forward_trait_request_sync_makes_correct_post_request(  # type: ignore[
     forwarder_mocked_migrator.assert_called_with(project_id)
 
 
-def test_forward_trait_requests__calls_expected(mocker: MockerFixture) -> None:
+def test_forward_trait_requests__multiple_traits__calls_forward_for_each(
+    mocker: MockerFixture,
+) -> None:
     # Given
     mocked_forward_trait_request = mocker.patch(
         "edge_api.identities.edge_request_forwarder.forward_trait_request",

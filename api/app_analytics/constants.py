@@ -31,31 +31,51 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
     "flagsmith-flutter-sdk": [
         "unknown",
         "6.1.0",
+        "6.1.1",
     ],
     "flagsmith-go-sdk": [
         "unknown",
         "5.0.0",
+        "5.1.0",
     ],
     "flagsmith-java-sdk": [
         "unknown",
         "8.0.0",
+        "8.0.1",
+        "8.0.2",
+        "8.1.0",
+        "8.1.1",
     ],
     "flagsmith-js-sdk": [
         "unknown",
         "9.3.1",
         "10.0.0",
+        "12.0.0",
+        "12.0.1",
+        "12.1.0",
     ],
-    "flagsmith-kotlin-android-sdk": ["unknown"],
+    "flagsmith-kotlin-android-sdk": [
+        "unknown",
+        "1.9.0",
+    ],
     "flagsmith-nodejs-sdk": [
         "unknown",
         "6.2.0",
         "7.0.2",
         "7.0.3",
+        "8.0.0",
+        "8.0.1",
+        "8.0.2",
+        "8.1.0",
+        "8.1.1",
+        "8.1.2",
+        "9.0.0",
     ],
     "flagsmith-php-sdk": [
         "unknown",
         "5.0.0",
         "5.1.0",
+        "5.1.1",
     ],
     "flagsmith-python-sdk": [
         "unknown",
@@ -65,6 +85,12 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "5.0.3",
         "5.1.0",
         "5.1.1",
+        "5.2.0",
+        "5.3.0",
+        "5.3.1",
+        "5.4.0",
+        "5.5.0",
+        "6.0.0",
     ],
     "flagsmith-ruby-sdk": [
         "unknown",
@@ -74,7 +100,10 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "unknown",
         "2.1.0",
     ],
-    "flagsmith-swift-ios-sdk": ["unknown"],
+    "flagsmith-swift-ios-sdk": [
+        "unknown",
+        "3.10.0",
+    ],
 }
 
 SDK_USER_AGENT_INFLUX_IDS: list[tuple[KnownSDK, int]] = [

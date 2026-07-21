@@ -1,5 +1,5 @@
 import React, { FC, ReactNode } from 'react'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import classNames from 'classnames'
 
 type TableFilterItemType = {
@@ -34,7 +34,7 @@ const TableFilterItem: FC<TableFilterItemType> = ({
         </div>
         <div>
           <Icon
-            className={classNames('text-body', { 'opacity-0': !isActive })}
+            className={classNames('text-default', { 'opacity-0': !isActive })}
             name={'checkmark'}
           />
         </div>

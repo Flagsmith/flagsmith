@@ -13,12 +13,26 @@ The application utilises an in-memory cache for a number of different API endpoi
 
 ## Flags & Identities Endpoint Caching
 
-To enable caching on the flags and identities endpoints (GET requests only), you must set the following environment variables:
+To enable caching on the flags and identities endpoints (GET requests only), you must set the following environment
+variables:
 
 | Environment Variable                                               | Description                                                                                                                    | Example value                                          | Default                                       |
 | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ | --------------------------------------------- |
-| `FLAG_IDENTITY_CACHE_LOCATION`                                     | The location to cache the flags and identities endpoints. One of `default` or `redis`.                                         | `redis`                                                |                                               |
-| `FLAG_IDENTITY_CACHE_TTL_SECONDS`                                  | The number of seconds to cache the flags and identities endpoints for.                                                         | `60`                                                   | `0` (i.e. don't cache)                        |
+| <code>GET\_[FLAGS&#124;IDENTITIES]\_ENDPOINT_CACHE_SECONDS</code>  | Number of seconds to cache the response to `GET /api/v1/flags`                                                                 | `60`                                                   | `0`                                           |
+| <code>GET\_[FLAGS&#124;IDENTITIES]\_ENDPOINT_CACHE_BACKEND</code>  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.dummy.DummyCache` |
+| <code>GET\_[FLAGS&#124;IDENTITIES]\_ENDPOINT_CACHE_LOCATION</code> | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `get_flags_endpoint_cache`                    |
+
+An example configuration to cache both flags and identities requests for 30 seconds in a memcached instance hosted at
+`memcached-container`:
+
+```
+GET_FLAGS_ENDPOINT_CACHE_SECONDS: 30
+GET_FLAGS_ENDPOINT_CACHE_BACKEND: django.core.cache.backends.memcached.PyMemcacheCache
+GET_FLAGS_ENDPOINT_CACHE_LOCATION: memcached-container:11211
+GET_IDENTITIES_ENDPOINT_CACHE_SECONDS: 30
+GET_IDENTITIES_ENDPOINT_CACHE_BACKEND: django.core.cache.backends.memcached.PyMemcacheCache
+GET_IDENTITIES_ENDPOINT_CACHE_LOCATION: memcached-container:11211
+```
 
 ## Environment Document Caching
 

@@ -2,6 +2,8 @@ import React from 'react'
 import { themeClassNames } from 'components/base/forms/Button'
 
 import Button from 'components/base/forms/Button'
+import ColorSwatch from 'components/ColorSwatch'
+import { colorIconWarning } from 'common/theme/tokens'
 
 interface TabButtonProps {
   noFocus?: boolean
@@ -27,7 +29,14 @@ const TabButton = React.forwardRef<HTMLButtonElement | null, TabButtonProps>(
           isSelected ? ' tab-active' : ''
         } ${className}`}
       >
-        {child.props.tabLabel}
+        <span className='btn-tab__label'>
+          {child.props.tabLabel}
+          {child.props.isDirty && (
+            <span role='status' aria-label='Unsaved changes'>
+              <ColorSwatch color={colorIconWarning} shape='circle' size='sm' />
+            </span>
+          )}
+        </span>
       </Button>
     )
   },

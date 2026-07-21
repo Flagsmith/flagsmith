@@ -4,7 +4,7 @@ import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import Button from './base/forms/Button'
 import FeatureValue from './feature-summary/FeatureValue'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Panel from './base/grid/Panel'
 import { useHasPermission } from 'common/providers/Permission'
 import API from 'project/api'
@@ -14,6 +14,7 @@ import {
   useGetIdentityTraitsQuery,
 } from 'common/services/useIdentityTrait'
 import { IdentityTrait } from 'common/types/responses'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 
 type IdentityTraitsType = {
   projectId: string | number
@@ -33,7 +34,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
   const { permission: manageUserPermission } = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: Utils.getManageUserPermission(),
+    permission: EnvironmentPermission.MANAGE_IDENTITIES,
   })
 
   const { data: traits } = useGetIdentityTraitsQuery({
@@ -42,8 +43,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
     use_edge_identities,
   })
 
-  const [deleteTrait, { isLoading: deletingTrait }] =
-    useDeleteIdentityTraitMutation({})
+  const [deleteTrait] = useDeleteIdentityTraitMutation({})
 
   const onTraitSaved = () => {
     closeModal?.()
@@ -126,7 +126,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
             {Utils.renderWithPermission(
               manageUserPermission,
               Constants.environmentPermissions(
-                Utils.getManageUserPermissionDescription(),
+                EnvironmentPermission.MANAGE_IDENTITIES,
               ),
               <Button
                 disabled={!manageUserPermission}
@@ -170,7 +170,6 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
             </Flex>
             <Flex className='table-column'>
               <FeatureValue
-                includeEmpty
                 data-test={`user-trait-value-${i}`}
                 value={trait_value}
               />
@@ -183,7 +182,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
               {Utils.renderWithPermission(
                 manageUserPermission,
                 Constants.environmentPermissions(
-                  Utils.getManageUserPermissionDescription(),
+                  EnvironmentPermission.MANAGE_IDENTITIES,
                 ),
                 <Button
                   id='remove-feature'
@@ -208,7 +207,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
                 {Utils.renderWithPermission(
                   manageUserPermission,
                   Constants.environmentPermissions(
-                    Utils.getManageUserPermissionDescription(),
+                    EnvironmentPermission.MANAGE_IDENTITIES,
                   ),
                   <Button
                     disabled={!manageUserPermission}

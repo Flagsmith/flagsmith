@@ -54,10 +54,11 @@ from .permissions.models import (
 )
 from .serializers import (
     CloneEnvironmentSerializer,
-    CreateUpdateEnvironmentSerializer,
+    CreateEnvironmentSerializer,
     EnvironmentAPIKeySerializer,
     EnvironmentRetrieveSerializerWithMetadata,
     EnvironmentSerializerWithMetadata,
+    UpdateEnvironmentSerializer,
     WebhookSerializer,
 )
 
@@ -79,12 +80,8 @@ logger = logging.getLogger(__name__)
                 type=int,
             )
         ],
-        extensions={
-            "x-gram": {
-                "name": "list_environments",
-                "description": "Lists all environments the user has access to",
-            },
-        },
+        operation_id="list_environments",
+        description="Lists all environments the user has access to",
     ),
 )
 class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
@@ -100,8 +97,10 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             return CloneEnvironmentSerializer
         if self.action == "retrieve":
             return EnvironmentRetrieveSerializerWithMetadata
-        elif self.action in ("create", "update", "partial_update"):
-            return CreateUpdateEnvironmentSerializer
+        elif self.action == "create":
+            return CreateEnvironmentSerializer
+        elif self.action in ("update", "partial_update"):
+            return UpdateEnvironmentSerializer
         return EnvironmentSerializerWithMetadata
 
     def get_serializer_context(self):  # type: ignore[no-untyped-def]
@@ -350,6 +349,8 @@ class WebhookViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
+    """Manage webhooks for an environment."""
+
     serializer_class = WebhookSerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
@@ -364,6 +365,8 @@ class EnvironmentAPIKeyViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
+    """Manage server-side SDK keys for an environment."""
+
     serializer_class = EnvironmentAPIKeySerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, EnvironmentAdminPermission]

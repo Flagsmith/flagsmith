@@ -1,7 +1,7 @@
 import typing
 
 from django.db.models import Q
-from flag_engine.segments.evaluator import is_context_in_segment
+from flag_engine.engine import get_evaluation_result
 from rest_framework import serializers
 
 from features.serializers import FeatureStateSerializerFull
@@ -9,11 +9,7 @@ from integrations.common.serializers import (
     BaseEnvironmentIntegrationModelSerializer,
 )
 from segments.models import Segment
-from util.mappers.engine import (
-    map_engine_identity_to_context,
-    map_identity_to_engine,
-    map_segment_to_engine,
-)
+from util.mappers.engine import map_environment_to_evaluation_context
 
 from .models import WebhookConfiguration
 
@@ -32,16 +28,14 @@ class SegmentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
         fields = ("id", "name", "member")
 
     def get_member(self, obj: Segment) -> bool:
-        engine_identity = map_identity_to_engine(
-            self.context.get("identity"),  # type: ignore[arg-type]
-            with_overrides=False,
+        identity = self.context["identity"]
+        context = map_environment_to_evaluation_context(
+            identity=identity,
+            environment=identity.environment,
+            segments=[obj],
         )
-        engine_segment = map_segment_to_engine(obj)
-        context = map_engine_identity_to_context(engine_identity)
-        return is_context_in_segment(
-            context=context,
-            segment=engine_segment,
-        )
+        result = get_evaluation_result(context)
+        return bool(result["segments"])
 
 
 class IntegrationFeatureStateSerializer(FeatureStateSerializerFull):

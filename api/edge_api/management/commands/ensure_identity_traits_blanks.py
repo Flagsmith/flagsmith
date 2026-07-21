@@ -9,7 +9,7 @@ from environments.dynamodb import DynamoIdentityWrapper
 
 identity_wrapper = DynamoIdentityWrapper()
 
-logger: structlog.BoundLogger = structlog.get_logger()
+logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 LOG_COUNT_EVERY = 100_000
 

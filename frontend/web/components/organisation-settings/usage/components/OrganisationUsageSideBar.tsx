@@ -1,4 +1,4 @@
-import { IconName } from 'components/Icon'
+import { IconName } from 'components/icons/Icon'
 import SidebarLink from 'components/navigation/SidebarLink'
 import { useHistory } from 'react-router-dom'
 import React from 'react'

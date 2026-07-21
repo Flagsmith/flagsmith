@@ -1,10 +1,8 @@
 import json
-import logging
 import typing
 
 import pytest
 import responses
-from hubspot.crm.associations.v4 import AssociationSpec  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 from rest_framework import status
 
@@ -42,7 +40,7 @@ def hubspot_client(mocker: MockerFixture) -> HubspotClient:
         (None, {}),
     ],
 )
-def test_create_lead_form(
+def test_create_lead_form__valid_user_data__submits_form_successfully(
     staff_user: FFAdminUser,
     hubspot_client: HubspotClient,
     hubspot_cookie_body: str | None,
@@ -117,16 +115,12 @@ def test_create_lead_form(
 
 
 @responses.activate
-def test_create_lead_form_error(
+def test_create_lead_form__api_returns_error__logs_error(
     staff_user: FFAdminUser,
     hubspot_client: HubspotClient,
-    inspecting_handler: logging.Handler,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     # Given
-    from integrations.lead_tracking.hubspot.client import logger
-
-    logger.addHandler(inspecting_handler)
-
     hubspot_cookie = "test_hubspot_cookie"
     url = f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{HUBSPOT_FORM_ID_SAAS}"
     responses.add(
@@ -141,14 +135,16 @@ def test_create_lead_form_error(
 
     # Then
     assert response == {"error": "Problem processing."}
-    assert inspecting_handler.messages == [  # type: ignore[attr-defined]
+    assert caplog.messages == [
         "Creating Hubspot lead form for user staff@example.com with hubspot cookie test_hubspot_cookie",
         "Problem posting data to Hubspot's form API due to 400 status code and following response: "
         + '{"error": "Problem processing."}',
     ]
 
 
-def test_get_company_by_domain(hubspot_client: HubspotClient) -> None:
+def test_get_company_by_domain__company_exists__returns_company(
+    hubspot_client: HubspotClient,
+) -> None:
     # Given
     name = "Flagsmith"
     domain = "flagsmith.com"
@@ -178,7 +174,9 @@ def test_get_company_by_domain(hubspot_client: HubspotClient) -> None:
     assert applied_filters[0]["operator"] == "EQ"
 
 
-def test_get_company_by_domain_no_results(hubspot_client: HubspotClient) -> None:
+def test_get_company_by_domain__no_results__returns_none(
+    hubspot_client: HubspotClient,
+) -> None:
     # Given
     hubspot_response = generate_get_company_by_domain_response_no_results()
 
@@ -193,7 +191,7 @@ def test_get_company_by_domain_no_results(hubspot_client: HubspotClient) -> None
     assert company is None
 
 
-def test_create_company_without_organisation_information(
+def test_create_company__without_organisation_info__creates_with_name_and_domain(
     hubspot_client: HubspotClient,
 ) -> None:
     # Given
@@ -215,30 +213,6 @@ def test_create_company_without_organisation_information(
         "domain": domain,
         "name": name,
     }
-
-
-def test_associate_contact_to_company_succeeds(hubspot_client: HubspotClient) -> None:
-    # Given
-    company_id = "456"
-    contact_id = "123"
-
-    # When
-    hubspot_client.associate_contact_to_company(
-        contact_id=contact_id, company_id=company_id
-    )
-
-    # Then
-    hubspot_client.client.crm.associations.v4.basic_api.create.assert_called_once_with(
-        object_type="contacts",
-        object_id=contact_id,
-        to_object_type="companies",
-        to_object_id=company_id,
-        association_spec=[
-            AssociationSpec(
-                association_category="HUBSPOT_DEFINED", association_type_id=1
-            )
-        ],
-    )
 
 
 @pytest.mark.parametrize(
@@ -274,7 +248,7 @@ def test_associate_contact_to_company_succeeds(hubspot_client: HubspotClient) ->
         ),
     ],
 )
-def test_update_company_calls_hubspot_api(
+def test_update_company__with_properties__calls_hubspot_api_with_expected_properties(
     hubspot_client: HubspotClient,
     kwargs: dict[str, typing.Any],
     expected_properties: dict[str, typing.Any],

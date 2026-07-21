@@ -1,0 +1,76 @@
+// =============================================================================
+// Token Utility Classes — AUTO-GENERATED from common/theme/tokens.json
+// Do not edit manually. Run: npm run generate:tokens
+// Dark mode is automatic — CSS custom properties resolve differently under
+// :root vs .dark, so no dark-prefixed classes are needed.
+// =============================================================================
+
+// Surface
+.bg-surface-action { background-color: var(--color-surface-action); }
+.bg-surface-action-active { background-color: var(--color-surface-action-active); }
+.bg-surface-action-hover { background-color: var(--color-surface-action-hover); }
+.bg-surface-action-muted { background-color: var(--color-surface-action-muted); }
+.bg-surface-action-subtle { background-color: var(--color-surface-action-subtle); }
+.bg-surface-active { background-color: var(--color-surface-active); }
+.bg-surface-danger { background-color: var(--color-surface-danger); }
+.bg-surface-default { background-color: var(--color-surface-default); }
+.bg-surface-emphasis { background-color: var(--color-surface-emphasis); }
+.bg-surface-hover { background-color: var(--color-surface-hover); }
+.bg-surface-info { background-color: var(--color-surface-info); }
+.bg-surface-muted { background-color: var(--color-surface-muted); }
+.bg-surface-subtle { background-color: var(--color-surface-subtle); }
+.bg-surface-success { background-color: var(--color-surface-success); }
+.bg-surface-warning { background-color: var(--color-surface-warning); }
+
+// Text
+.text-action { color: var(--color-text-action); }
+.text-danger { color: var(--color-text-danger); }
+.text-default { color: var(--color-text-default); }
+.text-disabled { color: var(--color-text-disabled); }
+.text-info { color: var(--color-text-info); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-success { color: var(--color-text-success); }
+.text-tertiary { color: var(--color-text-tertiary); }
+.text-warning { color: var(--color-text-warning); }
+
+// Border
+.border-action { border-color: var(--color-border-action); }
+.border-danger { border-color: var(--color-border-danger); }
+.border-default { border-color: var(--color-border-default); }
+.border-disabled { border-color: var(--color-border-disabled); }
+.border-info { border-color: var(--color-border-info); }
+.border-strong { border-color: var(--color-border-strong); }
+.border-success { border-color: var(--color-border-success); }
+.border-warning { border-color: var(--color-border-warning); }
+
+// Icon
+.icon-action { color: var(--color-icon-action); fill: var(--color-icon-action); }
+.icon-danger { color: var(--color-icon-danger); fill: var(--color-icon-danger); }
+.icon-default { color: var(--color-icon-default); fill: var(--color-icon-default); }
+.icon-disabled { color: var(--color-icon-disabled); fill: var(--color-icon-disabled); }
+.icon-info { color: var(--color-icon-info); fill: var(--color-icon-info); }
+.icon-secondary { color: var(--color-icon-secondary); fill: var(--color-icon-secondary); }
+.icon-success { color: var(--color-icon-success); fill: var(--color-icon-success); }
+.icon-warning { color: var(--color-icon-warning); fill: var(--color-icon-warning); }
+
+// Radius
+.rounded-2xl { border-radius: var(--radius-2xl); }
+.rounded-full { border-radius: var(--radius-full); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-none { border-radius: var(--radius-none); }
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded-xl { border-radius: var(--radius-xl); }
+.rounded-xs { border-radius: var(--radius-xs); }
+
+// Shadow
+.shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-xl { box-shadow: var(--shadow-xl); }
+.shadow-none { box-shadow: none; }
+
+// Transitions
+.transition-fast { transition-duration: var(--duration-fast); transition-timing-function: var(--easing-standard); }
+.transition-normal { transition-duration: var(--duration-normal); transition-timing-function: var(--easing-standard); }
+.transition-slow { transition-duration: var(--duration-slow); transition-timing-function: var(--easing-standard); }

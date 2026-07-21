@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 
 import useOutsideClick from 'common/useOutsideClick'
 import Button from './base/forms/Button'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import ActionButton from './ActionButton'
 
 interface UserActionProps {
@@ -109,7 +109,7 @@ const ActionDropdown = ({
   )
 }
 
-export const UserAction: FC<UserActionProps> = ({
+const UserAction: FC<UserActionProps> = ({
   canEdit,
   canInspectPermissions,
   canRemove,
@@ -142,7 +142,7 @@ export const UserAction: FC<UserActionProps> = ({
     [close, onRemove, onEdit, onInspectPermissions],
   )
 
-  if (!canEdit && !!canRemove) {
+  if (!canEdit && !!canRemove && !canInspectPermissions) {
     return (
       <Button onClick={onRemove} size='small' className='btn-with-icon'>
         <Icon name='trash-2' width={16} fill='#656D7B' />
@@ -150,7 +150,7 @@ export const UserAction: FC<UserActionProps> = ({
     )
   }
 
-  if (!!canEdit && !canRemove) {
+  if (!!canEdit && !canRemove && !canInspectPermissions) {
     return (
       <Button
         onClick={() => handleActionClick('edit')}
@@ -162,7 +162,7 @@ export const UserAction: FC<UserActionProps> = ({
     )
   }
 
-  if (!canEdit && !canRemove) {
+  if (!canEdit && !canRemove && !canInspectPermissions) {
     return null
   }
 

@@ -15,7 +15,7 @@ import PlanBasedBanner, {
 import PanelSearch from 'components/PanelSearch'
 import EmptyState from 'components/EmptyState'
 import JSONReference from 'components/JSONReference'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 type ScheduledChangesPageType = {

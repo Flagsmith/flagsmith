@@ -1,9 +1,12 @@
 from django.conf import settings
 from django.urls import include, path, re_path
-from drf_spectacular.views import SpectacularSwaggerView
+from drf_spectacular.views import (
+    SpectacularJSONAPIView,
+    SpectacularSwaggerView,
+    SpectacularYAMLAPIView,
+)
 from rest_framework import permissions, routers
 
-from api.openapi_views import CustomSpectacularJSONAPIView, CustomSpectacularYAMLAPIView
 from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
 from environments.identities.traits.views import SDKTraits
 from environments.identities.views import SDKIdentities
@@ -11,6 +14,7 @@ from environments.sdk.views import SDKEnvironmentAPIView
 from features.feature_health.views import feature_health_webhook
 from features.views import SDKFeatureStates, get_multivariate_options
 from integrations.github.views import github_webhook
+from integrations.gitlab.views import gitlab_webhook
 from organisations.views import chargebee_webhook
 
 schema_view_permission_class = (  # pragma: no cover
@@ -42,6 +46,12 @@ urlpatterns = [
     re_path(r"cb-webhook/", chargebee_webhook, name="chargebee-webhook"),
     # GitHub integration webhook
     re_path(r"github-webhook/", github_webhook, name="github-webhook"),
+    # GitLab integration webhook
+    path(
+        "gitlab-webhook/<uuid:webhook_uuid>/",
+        gitlab_webhook,
+        name="gitlab-webhook",
+    ),
     re_path(r"cb-webhook/", chargebee_webhook, name="chargebee-webhook"),
     # Feature health webhook
     re_path(
@@ -67,17 +77,18 @@ urlpatterns = [
         name="environment-document",
     ),
     re_path("", include("features.versioning.urls", namespace="versioning")),
+    path("", include("features.feature_lifecycle.urls", namespace="feature-lifecycle")),
     # API documentation
     path(
         "swagger.json",
-        CustomSpectacularJSONAPIView.as_view(
+        SpectacularJSONAPIView.as_view(
             permission_classes=[schema_view_permission_class],
         ),
         name="schema-json",
     ),
     path(
         "swagger.yaml",
-        CustomSpectacularYAMLAPIView.as_view(
+        SpectacularYAMLAPIView.as_view(
             permission_classes=[schema_view_permission_class],
         ),
         name="schema-yaml",
@@ -89,6 +100,11 @@ urlpatterns = [
             permission_classes=[schema_view_permission_class],
         ),
         name="schema-swagger-ui",
+    ),
+    # Platform Hub dashboard
+    re_path(
+        r"^admin/dashboard/",
+        include("platform_hub.urls", namespace="platform-hub"),
     ),
     # Test webhook url
     re_path(r"^webhooks/", include("webhooks.urls", namespace="webhooks")),

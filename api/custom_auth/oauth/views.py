@@ -14,8 +14,8 @@ from custom_auth.oauth.exceptions import GithubError, GoogleError
 from custom_auth.oauth.serializers import (
     GithubLoginSerializer,
     GoogleLoginSerializer,
+    OAuthTokenSerializer,
 )
-from custom_auth.serializers import CustomTokenSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ GOOGLE_AUTH_ERROR_MESSAGE = AUTH_ERROR_MESSAGE.format("GOOGLE")
 
 @extend_schema(
     request=GoogleLoginSerializer,
-    responses={200: CustomTokenSerializer, 502: ErrorSerializer},
+    responses={200: OAuthTokenSerializer, 502: ErrorSerializer},
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -39,7 +39,11 @@ def login_with_google(request):  # type: ignore[no-untyped-def]
         token = serializer.save()
         if settings.COOKIE_AUTH_ENABLED:
             return authorise_response(token.user, Response(status=HTTP_204_NO_CONTENT))
-        return Response(data=CustomTokenSerializer(instance=token).data)
+        return Response(
+            data=OAuthTokenSerializer(
+                {"key": token.key, "is_new_user": serializer.is_new_user}
+            ).data
+        )
     except GoogleError as e:
         logger.warning("%s: %s" % (GOOGLE_AUTH_ERROR_MESSAGE, str(e)))
         return Response(
@@ -50,7 +54,7 @@ def login_with_google(request):  # type: ignore[no-untyped-def]
 
 @extend_schema(
     request=GithubLoginSerializer,
-    responses={200: CustomTokenSerializer, 502: ErrorSerializer},
+    responses={200: OAuthTokenSerializer, 502: ErrorSerializer},
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -63,7 +67,11 @@ def login_with_github(request):  # type: ignore[no-untyped-def]
         token = serializer.save()
         if settings.COOKIE_AUTH_ENABLED:
             return authorise_response(token.user, Response(status=HTTP_204_NO_CONTENT))
-        return Response(data=CustomTokenSerializer(instance=token).data)
+        return Response(
+            data=OAuthTokenSerializer(
+                {"key": token.key, "is_new_user": serializer.is_new_user}
+            ).data
+        )
     except GithubError as e:
         logger.warning("%s: %s" % (GITHUB_AUTH_ERROR_MESSAGE, str(e)))
         return Response(

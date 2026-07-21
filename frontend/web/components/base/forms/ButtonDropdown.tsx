@@ -2,9 +2,9 @@ import { FC, useLayoutEffect, useRef, useState } from 'react'
 import Button, { ButtonType, sizeClassNames, themeClassNames } from './Button'
 import classNames from 'classnames'
 import useOutsideClick from 'common/useOutsideClick'
-import Icon, { IconName } from 'components/Icon'
+import Icon, { IconName } from 'components/icons/Icon'
 
-export interface ButtonDropdownType extends ButtonType {
+interface ButtonDropdownType extends ButtonType {
   toggleIcon?: IconName
   dropdownItems: {
     label: string
@@ -13,7 +13,7 @@ export interface ButtonDropdownType extends ButtonType {
   }[]
 }
 
-export const ButtonDropdown: FC<ButtonDropdownType> = ({
+const ButtonDropdown: FC<ButtonDropdownType> = ({
   children,
   dropdownItems,
   onClick,

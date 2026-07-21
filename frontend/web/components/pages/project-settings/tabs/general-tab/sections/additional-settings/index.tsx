@@ -2,6 +2,7 @@ import React from 'react'
 import { Project } from 'common/types/responses'
 import { ChangeRequestsApprovalsSetting } from './ChangeRequestsApprovalsSetting'
 import { PreventFlagDefaultsSetting } from './PreventFlagDefaultsSetting'
+import { EnforceFeatureOwnershipSetting } from './EnforceFeatureOwnershipSetting'
 import { CaseSensitivitySetting } from './CaseSensitivitySetting'
 import { FeatureNameValidation } from './FeatureNameValidation'
 
@@ -15,6 +16,8 @@ export const AdditionalSettings = ({ project }: AdditionalSettingsProps) => {
       <ChangeRequestsApprovalsSetting project={project} />
 
       <PreventFlagDefaultsSetting project={project} />
+
+      <EnforceFeatureOwnershipSetting project={project} />
 
       <CaseSensitivitySetting project={project} />
 

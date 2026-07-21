@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 from typing import Any
 
@@ -14,14 +15,13 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     LifecycleModelMixin,
     hook,
 )
-from flag_engine.identities.traits.types import TraitValue
+from openfeature.evaluation_context import EvaluationContext
 from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
 
 from core.models import SoftDeleteExportableModel
 from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_lead_v2,
-    update_hubspot_active_subscription,
 )
 from organisations.chargebee import (  # type: ignore[attr-defined]
     get_customer_id_from_subscription_id,
@@ -42,6 +42,7 @@ from organisations.subscriptions.constants import (
     FREE_PLAN_SUBSCRIPTION_METADATA,
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
+    MAX_SEATS_IN_SCALE_UP_PLAN,
     SUBSCRIPTION_BILLING_STATUSES,
     SUBSCRIPTION_PAYMENT_METHODS,
     TRIAL_SUBSCRIPTION_ID,
@@ -123,25 +124,19 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         return self.is_paid and self.subscription.is_enterprise
 
     @property
-    def flagsmith_identifier(self):  # type: ignore[no-untyped-def]
-        return f"org.{self.id}"
-
-    @property
-    def flagsmith_on_flagsmith_api_traits(self) -> dict[str, TraitValue]:
-        return {
-            "organisation.id": self.id,
-            "organisation.name": self.name,
-            "subscription.plan": self.subscription.plan,
-        }
-
-    def over_plan_seats_limit(self, additional_seats: int = 0):  # type: ignore[no-untyped-def]
-        if self.has_paid_subscription():
-            susbcription_metadata = self.subscription.get_subscription_metadata()
-            return self.num_seats + additional_seats > susbcription_metadata.seats
-
-        return self.num_seats + additional_seats > getattr(
-            self.subscription, "max_seats", MAX_SEATS_IN_FREE_PLAN
+    def openfeature_evaluation_context(self) -> EvaluationContext:
+        return EvaluationContext(
+            targeting_key=f"org.{self.id}",
+            attributes={
+                "organisation.id": self.id,
+                "organisation.name": self.name,
+                "subscription.plan": self.subscription.plan or "",
+            },
         )
+
+    def over_plan_seats_limit(self, additional_seats: int = 0) -> bool:
+        subscription_metadata = self.subscription.get_subscription_metadata()
+        return self.num_seats + additional_seats > subscription_metadata.seats
 
     def reset_alert_status(self):  # type: ignore[no-untyped-def]
         self.alerted_over_plan_limit = False
@@ -261,7 +256,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     history = HistoricalRecords()
 
     def update_plan(self, plan_id):  # type: ignore[no-untyped-def]
-        plan_metadata = get_plan_meta_data(plan_id)  # type: ignore[no-untyped-call]
+        plan_metadata = get_plan_meta_data(plan_id)
         self.cancellation_date = None
         self.plan = plan_id
         self.max_seats = get_max_seats_for_plan(plan_metadata)
@@ -273,6 +268,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         return (
             is_saas()
             and self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
+            and self.organisation.num_seats < MAX_SEATS_IN_SCALE_UP_PLAN
         )
 
     @property
@@ -294,6 +290,11 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     def is_enterprise(self) -> bool:
         return self.subscription_plan_family == SubscriptionPlanFamily.ENTERPRISE
 
+    def get_scaleup_plan_version(self) -> int:
+        if match := re.match(r"scale-up-v(\d+)", self.plan or ""):
+            return int(match.group(1))
+        return 1
+
     @hook(AFTER_SAVE, when="plan", has_changed=True)
     def update_api_limit_access_block(self):  # type: ignore[no-untyped-def]
         if not getattr(self.organisation, "api_limit_access_block", None):
@@ -303,13 +304,6 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         self.organisation.stop_serving_flags = False
         self.organisation.block_access_to_admin = False
         self.organisation.save()
-
-    @hook(AFTER_SAVE, when="plan", has_changed=True)
-    def update_hubspot_active_subscription(self):  # type: ignore[no-untyped-def]
-        if not settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            return
-
-        update_hubspot_active_subscription.delay(args=(self.id,))
 
     def save_as_free_subscription(self):  # type: ignore[no-untyped-def]
         """
@@ -370,16 +364,19 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         self.billing_status = None
         self.save()
 
-    def get_portal_url(self, redirect_url):  # type: ignore[no-untyped-def]
+    def get_portal_url(self, redirect_url: str) -> str | None:
         if not self.subscription_id:
             return None
 
         if not self.customer_id:
-            self.customer_id = get_customer_id_from_subscription_id(  # type: ignore[no-untyped-call]
+            self.customer_id = get_customer_id_from_subscription_id(
                 self.subscription_id
             )
             self.save()
-        return get_portal_url(self.customer_id, redirect_url)  # type: ignore[no-untyped-call]
+
+        if self.customer_id:
+            return get_portal_url(self.customer_id, redirect_url)
+        return None
 
     def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
         if self.is_free_plan:
@@ -423,24 +420,16 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         else:
             cb_metadata = get_subscription_metadata_from_id(self.subscription_id)  # type: ignore[assignment,arg-type]
 
-        if self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP and (
-            settings.VERSIONING_RELEASE_DATE is None
-            or (
-                self.subscription_date is not None
-                and self.subscription_date < settings.VERSIONING_RELEASE_DATE
-            )
-        ):
-            # Logic to grandfather old scale up plan customers to give them
-            # full access to audit log and feature history.
+        # Pre-v4 Scale-Up customers keep unlimited audit log. Feature
+        # history always honours the cache value.
+        is_scale_up = self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
+        if is_scale_up and self.get_scaleup_plan_version() < 4:
             cb_metadata.audit_log_visibility_days = None
-            cb_metadata.feature_history_visibility_days = None
 
         return cb_metadata
 
     def _get_subscription_metadata_for_self_hosted(self) -> BaseSubscriptionMetadata:
-        if is_enterprise() and hasattr(
-            self.organisation, "licence"
-        ):  # pragma: no cover
+        if is_enterprise() and hasattr(self.organisation, "licence"):
             licence_information = self.organisation.licence.get_licence_information()
             return BaseSubscriptionMetadata(
                 seats=licence_information.num_seats,
@@ -466,7 +455,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         if not self.can_auto_upgrade_seats:
             raise SubscriptionDoesNotSupportSeatUpgrade()
 
-        add_single_seat(self.subscription_id)  # type: ignore[arg-type]
+        add_single_seat(self.subscription_id, organisation_id=self.organisation_id)  # type: ignore[arg-type]
 
     def is_in_trial(self) -> bool:
         return self.subscription_id == TRIAL_SUBSCRIPTION_ID

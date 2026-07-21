@@ -9,9 +9,12 @@ from rest_framework.exceptions import NotFound
 from app_analytics.analytics_db_service import (
     get_feature_evaluation_data,
     get_feature_evaluation_data_from_local_db,
+    get_top_organisations_from_local_db,
     get_total_events_count,
     get_usage_data,
+    get_usage_data_for_window,
     get_usage_data_from_local_db,
+    get_usage_data_from_local_db_for_window,
 )
 from app_analytics.constants import CURRENT_BILLING_PERIOD, PREVIOUS_BILLING_PERIOD
 from app_analytics.dataclasses import FeatureEvaluationData, UsageData
@@ -45,7 +48,10 @@ def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCach
 
 
 @pytest.mark.use_analytics_db
-def test_get_usage_data_from_local_db(organisation, environment, settings):  # type: ignore[no-untyped-def]
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_usage_data_from_local_db__multiple_buckets__returns_aggregated_daily_data(  # type: ignore[no-untyped-def]
+    organisation, environment, settings
+):
     environment_id = environment.id
     now = timezone.now()
     read_bucket_size = 15
@@ -102,7 +108,7 @@ def test_get_usage_data_from_local_db(organisation, environment, settings):  # t
 
 
 @pytest.mark.use_analytics_db
-def test_get_usage_data_from_local_db_project_id_filter(  # type: ignore[no-untyped-def]
+def test_get_usage_data_from_local_db__project_id_filter__returns_filtered_data(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     project: Project,
     project_two: Project,
@@ -195,6 +201,7 @@ def test_get_usage_data_from_local_db__environment_filter__returns_expected(
 
 
 @pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_usage_data_from_local_db__labels_filter__returns_expected(
     organisation: Organisation,
     environment: Environment,
@@ -267,7 +274,10 @@ def test_get_usage_data_from_local_db__labels_filter__returns_expected(
 
 
 @pytest.mark.use_analytics_db
-def test_get_total_events_count(organisation, environment, settings):  # type: ignore[no-untyped-def]
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_total_events_count__multiple_buckets__returns_correct_total(  # type: ignore[no-untyped-def]
+    organisation, environment, settings
+):
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     environment_id = environment.id
     now = timezone.now()
@@ -318,7 +328,8 @@ def test_get_total_events_count(organisation, environment, settings):  # type: i
 
 
 @pytest.mark.use_analytics_db
-def test_get_feature_evaluation_data_from_local_db(
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_feature_evaluation_data_from_local_db__multiple_buckets__returns_aggregated_daily_data(
     feature: Feature,
     environment: Environment,
     settings: SettingsWrapper,
@@ -454,7 +465,7 @@ def test_get_feature_evaluation_data_from_local_db__labels_filter__returns_expec
     ]
 
 
-def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_configured(
+def test_get_usage_data__postgres_not_configured__calls_influxdb(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -481,7 +492,7 @@ def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_confi
     )
 
 
-def test_get_usage_data_calls_get_usage_data_from_local_db_if_postgres_is_configured(
+def test_get_usage_data__postgres_configured__calls_local_db(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -534,7 +545,8 @@ def test_get_usage_data__no_analytics_configured__no_calls_expected(
     mocked_get_usage_data_from_local_db.assert_not_called()
 
 
-def test_get_total_events_count_calls_influx_method_if_postgres_not_configured(  # type: ignore[no-untyped-def]
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_total_events_count__postgres_not_configured__calls_influx(  # type: ignore[no-untyped-def]
     mocker, settings, organisation
 ):
     # Given
@@ -549,11 +561,13 @@ def test_get_total_events_count_calls_influx_method_if_postgres_not_configured( 
     # Then
     assert total_events_count == mocked_get_events_for_organisation.return_value
     mocked_get_events_for_organisation.assert_called_once_with(
-        organisation_id=organisation.id
+        organisation.id,
+        date_start=datetime(2022, 12, 20, 0, 0, tzinfo=UTC),
+        date_stop=datetime(2023, 1, 19, 0, 0, tzinfo=UTC),
     )
 
 
-def test_get_feature_evaluation_data_calls_influx_method_if_postgres_not_configured(
+def test_get_feature_evaluation_data__postgres_not_configured__calls_influxdb(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -612,7 +626,7 @@ def test_get_feature_evaluation_data__no_analytics_configured__no_calls_expected
     mocked_get_feature_evaluation_data_from_local_db.assert_not_called()
 
 
-def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_local_db_if_configured(
+def test_get_feature_evaluation_data__postgres_configured__calls_local_db(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     feature: Feature,
@@ -643,7 +657,7 @@ def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_loca
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.parametrize("period", [PREVIOUS_BILLING_PERIOD, CURRENT_BILLING_PERIOD])
-def test_get_usage_data_returns_404_when_organisation_has_no_billing_periods(
+def test_get_usage_data__no_billing_periods__raises_not_found(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -665,7 +679,7 @@ def test_get_usage_data_returns_404_when_organisation_has_no_billing_periods(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_starts_at_with_current_billing_period(
+def test_get_usage_data__current_billing_period__passes_correct_date_range(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -694,7 +708,7 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_starts_at_with_previous_billing_period(
+def test_get_usage_data__previous_billing_period__passes_correct_date_range(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -720,3 +734,235 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
         date_stop=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=UTC),
         labels_filter=None,
     )
+
+
+@pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_top_organisations_from_local_db__with_data__returns_correct_mapping(
+    organisation: Organisation,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    now = timezone.now()
+    read_bucket_size = 15
+    settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
+    date_start = now - timedelta(days=30)
+
+    for i in range(3):
+        APIUsageBucket.objects.create(
+            environment_id=environment.id,
+            resource=Resource.FLAGS,
+            total_count=100,
+            bucket_size=read_bucket_size,
+            created_at=now - timedelta(days=i),
+        )
+
+    # When
+    result = get_top_organisations_from_local_db(date_start)
+
+    # Then
+    assert result == {organisation.id: 300}
+
+
+@pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_top_organisations_from_local_db__buckets_before_date_start__excluded(
+    organisation: Organisation,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    now = timezone.now()
+    read_bucket_size = 15
+    settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
+    date_start = now - timedelta(days=7)
+
+    # Bucket within range
+    APIUsageBucket.objects.create(
+        environment_id=environment.id,
+        resource=Resource.FLAGS,
+        total_count=50,
+        bucket_size=read_bucket_size,
+        created_at=now - timedelta(days=3),
+    )
+    # Bucket outside range (before date_start)
+    APIUsageBucket.objects.create(
+        environment_id=environment.id,
+        resource=Resource.FLAGS,
+        total_count=200,
+        bucket_size=read_bucket_size,
+        created_at=now - timedelta(days=10),
+    )
+
+    # When
+    result = get_top_organisations_from_local_db(date_start)
+
+    # Then
+    assert result == {organisation.id: 50}
+
+
+def test_get_top_organisations_from_local_db__saas_mode__raises_runtime_error(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "app_analytics.analytics_db_service.is_saas",
+        return_value=True,
+    )
+
+    # When / Then
+    with pytest.raises(RuntimeError, match="Must not run in SaaS mode"):
+        get_top_organisations_from_local_db(timezone.now() - timedelta(days=30))
+
+
+@pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
+def test_get_usage_data_from_local_db_for_window__bucket_outside_window__excluded(
+    organisation: Organisation,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ANALYTICS_BUCKET_SIZE = 15
+    now = timezone.now()
+    hour_start = now - timedelta(hours=1)
+
+    # A bucket inside the window [08:00, 09:00) ...
+    APIUsageBucket.objects.create(
+        environment_id=environment.id,
+        resource=Resource.FLAGS,
+        total_count=5,
+        bucket_size=15,
+        created_at=hour_start + timedelta(minutes=30),
+    )
+    # ... and one earlier the same day, before the window, that the daily filter
+    # would have included but the datetime window must exclude.
+    APIUsageBucket.objects.create(
+        environment_id=environment.id,
+        resource=Resource.FLAGS,
+        total_count=99,
+        bucket_size=15,
+        created_at=hour_start - timedelta(hours=1),
+    )
+
+    # When
+    usage_data = get_usage_data_from_local_db_for_window(
+        organisation,
+        date_start=hour_start,
+        date_stop=now,
+    )
+
+    # Then
+    assert len(usage_data) == 1
+    assert usage_data[0].flags == 5
+
+
+@pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
+def test_get_usage_data_from_local_db_for_window__project_id_filter__scopes_to_project(
+    organisation: Organisation,
+    project: Project,
+    project_two: Project,
+    environment: Environment,
+    project_two_environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ANALYTICS_BUCKET_SIZE = 15
+    now = timezone.now()
+    hour_start = now - timedelta(hours=1)
+    for environment_id in [environment.id, project_two_environment.id]:
+        APIUsageBucket.objects.create(
+            environment_id=environment_id,
+            resource=Resource.FLAGS,
+            total_count=10,
+            bucket_size=15,
+            created_at=hour_start + timedelta(minutes=10),
+        )
+
+    # When
+    usage_data = get_usage_data_from_local_db_for_window(
+        organisation,
+        date_start=hour_start,
+        date_stop=now,
+        project_id=project.id,
+    )
+
+    # Then
+    assert len(usage_data) == 1
+    assert usage_data[0].flags == 10
+
+
+def test_get_usage_data_for_window__postgres_configured__calls_local_db_for_window(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    organisation: Organisation,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = True
+    date_start = timezone.now() - timedelta(hours=1)
+    date_stop = timezone.now()
+    mocked_local_db_for_window = mocker.patch(
+        "app_analytics.analytics_db_service.get_usage_data_from_local_db_for_window",
+        autospec=True,
+    )
+
+    # When
+    usage_data = get_usage_data_for_window(organisation, date_start, date_stop)
+
+    # Then
+    assert usage_data == mocked_local_db_for_window.return_value
+    mocked_local_db_for_window.assert_called_once_with(
+        organisation,
+        date_start=date_start,
+        date_stop=date_stop,
+        project_id=None,
+    )
+
+
+def test_get_usage_data_for_window__influxdb_configured__calls_influxdb(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    organisation: Organisation,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False
+    settings.INFLUXDB_TOKEN = "test-token"
+    date_start = timezone.now() - timedelta(hours=1)
+    date_stop = timezone.now()
+    mocked_influxdb = mocker.patch(
+        "app_analytics.analytics_db_service.get_usage_data_from_influxdb",
+        autospec=True,
+    )
+
+    # When
+    usage_data = get_usage_data_for_window(organisation, date_start, date_stop)
+
+    # Then
+    assert usage_data == mocked_influxdb.return_value
+    mocked_influxdb.assert_called_once_with(
+        organisation_id=organisation.id,
+        project_id=None,
+        date_start=date_start,
+        date_stop=date_stop,
+    )
+
+
+def test_get_usage_data_for_window__no_analytics_configured__returns_empty(
+    settings: SettingsWrapper,
+    organisation: Organisation,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False
+    settings.INFLUXDB_TOKEN = None
+
+    # When
+    result = get_usage_data_for_window(
+        organisation,
+        timezone.now() - timedelta(hours=1),
+        timezone.now(),
+    )
+
+    # Then
+    assert result == []

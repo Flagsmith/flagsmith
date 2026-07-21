@@ -23,7 +23,7 @@ from users.models import FFAdminUser
 now = timezone.now()
 
 
-def test_create_new_environment_feature_version_clones_feature_states_from_previous_version(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_environment_feature_version_create__new_version__clones_feature_states_from_previous(  # type: ignore[no-untyped-def]  # noqa: E501
     environment_v2_versioning, feature
 ):
     # Given
@@ -75,7 +75,7 @@ def test_create_new_environment_feature_version_clones_feature_states_from_previ
     )
 
 
-def test_environment_feature_version_create_initial_version_fails_for_v1_versioning_environment(
+def test_environment_feature_version_create_initial_version__v1_versioning__raises_error(
     feature: "Feature", project: "Project"
 ) -> None:
     # Given
@@ -96,7 +96,7 @@ def test_environment_feature_version_create_initial_version_fails_for_v1_version
     )
 
 
-def test_environment_feature_version_create_initial_version_fails_if_version_already_exists(
+def test_environment_feature_version_create_initial_version__version_already_exists__raises_error(
     feature: "Feature", project: "Project"
 ) -> None:
     # Given
@@ -121,7 +121,9 @@ def test_environment_feature_version_create_initial_version_fails_if_version_alr
     )
 
 
-def test_get_previous_version(feature: "Feature", project: "Project") -> None:
+def test_get_previous_version__two_versions_exist__returns_first_version(
+    feature: "Feature", project: "Project"
+) -> None:
     # Given
     environment = Environment.objects.create(
         name="Test", project=project, use_v2_feature_versioning=True
@@ -134,11 +136,14 @@ def test_get_previous_version(feature: "Feature", project: "Project") -> None:
         environment=environment, feature=feature
     )
 
+    # When
+    result = version_2.get_previous_version()
+
     # Then
-    assert version_2.get_previous_version() == version_1
+    assert result == version_1
 
 
-def test_get_previous_version_ignores_unpublished_version(
+def test_get_previous_version__unpublished_version_exists__skips_unpublished(
     feature: "Feature", project: "Project"
 ) -> None:
     # Given
@@ -156,12 +161,15 @@ def test_get_previous_version_ignores_unpublished_version(
         environment=environment, feature=feature
     )
 
+    # When
+    result = version_3.get_previous_version()
+
     # Then
     assert version_2.is_live is False
-    assert version_3.get_previous_version() == version_1
+    assert result == version_1
 
 
-def test_get_previous_version_returns_previous_version_if_there_is_a_more_recent_previous_version(
+def test_get_previous_version__more_recent_version_published__returns_correct_previous(
     feature: "Feature",
     environment_v2_versioning: Environment,
     admin_user: "FFAdminUser",
@@ -191,7 +199,7 @@ def test_get_previous_version_returns_previous_version_if_there_is_a_more_recent
     assert previous_version == version_0
 
 
-def test_publish(
+def test_environment_feature_version_publish__valid_version__sets_live_and_triggers_rebuild(
     feature: "Feature",
     project: "Project",
     admin_user: "FFAdminUser",
@@ -226,7 +234,7 @@ def test_publish(
     )
 
 
-def test_update_version_webhooks_triggered_when_version_published(
+def test_environment_feature_version_publish__new_version__triggers_update_webhooks(
     environment_v2_versioning: Environment,
     feature: "Feature",
     admin_user: "FFAdminUser",
@@ -252,7 +260,7 @@ def test_update_version_webhooks_triggered_when_version_published(
     )
 
 
-def test_get_latest_versions_does_not_return_versions_scheduled_for_the_future(
+def test_get_latest_versions__future_scheduled_version__excludes_from_results(
     environment_v2_versioning: Environment,
     feature: "Feature",
     admin_user: "FFAdminUser",
@@ -280,7 +288,7 @@ def test_get_latest_versions_does_not_return_versions_scheduled_for_the_future(
     assert latest_versions.first() == version_0
 
 
-def test_version_change_set_adds_environment_on_create_with_change_request(
+def test_version_change_set_save__with_change_request__adds_environment(
     environment_v2_versioning: Environment,
     feature: "Feature",
     change_request: ChangeRequest,
@@ -297,7 +305,7 @@ def test_version_change_set_adds_environment_on_create_with_change_request(
     assert version_change_set.environment == change_request.environment
 
 
-def test_version_change_set_adds_environment_on_create_with_environment_feature_version(
+def test_version_change_set_save__with_environment_feature_version__adds_environment(
     environment_v2_versioning: Environment, feature: "Feature"
 ) -> None:
     # Given
@@ -315,7 +323,7 @@ def test_version_change_set_adds_environment_on_create_with_environment_feature_
     assert version_change_set.environment == version.environment
 
 
-def test_version_change_set_create_fails_if_no_related_object(
+def test_version_change_set_save__no_related_object__raises_runtime_error(
     feature: "Feature",
 ) -> None:
     # Given
@@ -332,7 +340,7 @@ def test_version_change_set_create_fails_if_no_related_object(
     )
 
 
-def test_version_change_set_get_conflicts(
+def test_version_change_set_get_conflicts__overlapping_changes__returns_all_conflicts(
     project: Project,
     segment: Segment,
     another_segment: Segment,
@@ -496,7 +504,7 @@ def test_version_change_set_get_conflicts(
     assert not conflict_dict[change_request_4.id].is_environment_default
 
 
-def test_version_change_set_publish_not_scheduled(
+def test_version_change_set_publish__not_scheduled__calls_task_immediately(
     environment_v2_versioning: Environment,
     change_request: ChangeRequest,
     feature: Feature,
@@ -522,7 +530,7 @@ def test_version_change_set_publish_not_scheduled(
     )
 
 
-def test_version_change_set_publish_scheduled(
+def test_version_change_set_publish__scheduled_for_future__calls_task_with_delay(
     environment_v2_versioning: Environment,
     change_request: ChangeRequest,
     feature: Feature,
@@ -555,7 +563,7 @@ def test_version_change_set_publish_scheduled(
     )
 
 
-def test_version_change_set_get_conflicts_returns_empty_list_if_published(
+def test_version_change_set_get_conflicts__already_published__returns_empty_list(
     feature: Feature,
     admin_user: FFAdminUser,
     segment: Segment,
@@ -590,11 +598,14 @@ def test_version_change_set_get_conflicts_returns_empty_list_if_published(
         change_set.refresh_from_db()
         change_sets.append(change_set)
 
+    # When
+    results = [cs.get_conflicts() for cs in change_sets]
+
     # Then
-    assert all(cs.get_conflicts() == [] for cs in change_sets)
+    assert all(r == [] for r in results)
 
 
-def test_version_change_set_get_conflicts_returns_empty_list_if_no_conflicts(
+def test_version_change_set_get_conflicts__no_overlapping_changes__returns_empty_list(
     change_request: ChangeRequest,
     feature: Feature,
     segment: Segment,
@@ -656,7 +667,7 @@ def test_version_change_set_get_conflicts_returns_empty_list_if_no_conflicts(
     assert conflicts == []
 
 
-def test_version_change_set_get_conflicts_returns_empty_list_if_no_change_sets_since_creation(
+def test_version_change_set_get_conflicts__no_change_sets_since_creation__returns_empty_list(
     change_request: ChangeRequest,
     feature: Feature,
 ) -> None:

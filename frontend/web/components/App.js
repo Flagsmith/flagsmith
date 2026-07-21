@@ -1,4 +1,6 @@
-import React, { Component, Fragment } from 'react'
+import React, { Component } from 'react'
+import get from 'lodash/get'
+import find from 'lodash/find'
 import { matchPath, withRouter } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
 import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
@@ -12,7 +14,6 @@ import AccountSettingsPage from './pages/AccountSettingsPage'
 import ProjectStore from 'common/stores/project-store'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
-import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import AccountStore from 'common/stores/account-store'
 import OrganisationLimit from './OrganisationLimit'
@@ -55,7 +56,7 @@ const App = class extends Component {
       strict: false,
     })
     const projectId =
-      _.get(match, 'params.projectId') || _.get(match2, 'params.projectId')
+      get(match, 'params.projectId') || get(match2, 'params.projectId')
     return !!projectId && parseInt(projectId)
   }
   getEnvironmentId = (props) => {
@@ -68,7 +69,7 @@ const App = class extends Component {
       strict: false,
     })
 
-    const environmentId = _.get(match, 'params.environmentId')
+    const environmentId = get(match, 'params.environmentId')
     return environmentId
   }
 
@@ -117,10 +118,6 @@ const App = class extends Component {
   }
 
   onLogin = () => {
-    resolveAuthFlow({
-      isAuthenticated: true,
-    })
-
     let redirect = API.getRedirect()
     const invite = API.getInvite()
     if (invite) {
@@ -139,8 +136,26 @@ const App = class extends Component {
     }
 
     if (!AccountStore.getOrganisation() && !invite) {
-      // If user has no organisation redirect to /create
-      this.props.history.replace(`/create${query}`)
+      // New users with no organisation go through the single-page onboarding
+      // flow when it's enabled - it creates the organisation itself, so it
+      // replaces the legacy /create page. Everyone else still gets /create.
+      // The flag must be evaluated for the identified user, not whatever the
+      // SDK last held, so wait for identify to settle before routing.
+      // Capped at 2s: a degraded flags API falls back to routing with the
+      // already-loaded flags instead of blocking the redirect.
+      Promise.race([
+        Promise.resolve(API.flagsmithIdentify()).catch(() => {}),
+        new Promise((resolve) => setTimeout(resolve, 2000)),
+      ]).then(() => {
+        if (
+          AccountStore.getUser()?.isGettingStarted &&
+          Utils.getFlagsmithHasFeature('onboarding_quickstart_flow')
+        ) {
+          this.props.history.replace('/getting-started')
+        } else {
+          this.props.history.replace(`/create${query}`)
+        }
+      })
       return
     }
 
@@ -149,7 +164,8 @@ const App = class extends Component {
       this.props.location.pathname === '/' ||
       this.props.location.pathname === '/widget' ||
       this.props.location.pathname === '/saml' ||
-      this.props.location.pathname.includes('/oauth') ||
+      (this.props.location.pathname.includes('/oauth') &&
+        !this.props.location.pathname.startsWith('/oauth/authorize')) ||
       this.props.location.pathname === '/login' ||
       this.props.location.pathname === '/signup'
     ) {
@@ -166,7 +182,7 @@ const App = class extends Component {
           }
           if (res) {
             const lastEnv = JSON.parse(res)
-            const lastOrg = _.find(AccountStore.getUser().organisations, {
+            const lastOrg = find(AccountStore.getUser().organisations, {
               id: lastEnv.orgId,
             })
             if (!lastOrg) {
@@ -209,9 +225,6 @@ const App = class extends Component {
   }
 
   onLogout = () => {
-    resolveAuthFlow({
-      isAuthenticated: false,
-    })
     if (document.location.href.includes('saml?')) {
       return
     }
@@ -226,6 +239,9 @@ const App = class extends Component {
   render() {
     const { location } = this.props
     const pathname = location.pathname
+    const isOnboardingFlow =
+      pathname === '/getting-started' &&
+      Utils.getFlagsmithHasFeature('onboarding_quickstart_flow')
 
     const projectId = this.getProjectId(this.props)
     const environmentId = this.getEnvironmentId(this.props)
@@ -237,7 +253,12 @@ const App = class extends Component {
     ) {
       return <Blocked />
     }
-    if (Project.maintenance || this.props.error || !window.projectOverrides) {
+    if (
+      Project.maintenance ||
+      Utils.getFlagsmithHasFeature('maintenance_mode') ||
+      this.props.error ||
+      !window.projectOverrides
+    ) {
       return <Maintenance />
     }
     const activeProject = OrganisationStore.getProject(projectId)
@@ -273,24 +294,35 @@ const App = class extends Component {
           onLogin={this.onLogin}
         >
           {({ isSaving, user }, { twoFactorLogin }) => {
-            return user && user.twoFactorPrompt ? (
-              <div className='col-md-6 push-md-3 mt-5'>
-                <TwoFactorPrompt
-                  pin={this.state.pin}
-                  error={this.state.error}
-                  onSubmit={() => {
-                    this.setState({ error: false })
-                    twoFactorLogin(this.state.pin, () => {
-                      this.setState({ error: true })
-                    })
-                  }}
-                  isLoading={isSaving}
-                  onChange={(e) =>
-                    this.setState({ pin: Utils.safeParseEventValue(e) })
-                  }
-                />
-              </div>
-            ) : (
+            if (user && user.twoFactorPrompt) {
+              return (
+                <div className='col-md-6 push-md-3 mt-5'>
+                  <TwoFactorPrompt
+                    pin={this.state.pin}
+                    error={this.state.error}
+                    onSubmit={() => {
+                      this.setState({ error: false })
+                      twoFactorLogin(this.state.pin, () => {
+                        this.setState({ error: true })
+                      })
+                    }}
+                    isLoading={isSaving}
+                    onChange={(e) =>
+                      this.setState({ pin: Utils.safeParseEventValue(e) })
+                    }
+                  />
+                </div>
+              )
+            }
+
+            // Chromeless onboarding: render only the flow - no nav, sidebar or
+            // header links - so the user can't navigate away mid-flow. The flow
+            // provides its own Skip escape.
+            if (isOnboardingFlow) {
+              return <div>{this.props.children}</div>
+            }
+
+            return (
               <Nav
                 header={
                   <>
@@ -349,10 +381,3 @@ App.propTypes = {
 }
 
 export default withRouter(ConfigProvider(App))
-
-if (E2E) {
-  const e2e = document.getElementsByClassName('e2e')
-  if (e2e && e2e[0]) {
-    e2e[0].classList.toggle('display-none')
-  }
-}

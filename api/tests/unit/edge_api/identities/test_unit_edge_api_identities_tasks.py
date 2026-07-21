@@ -2,6 +2,7 @@ from copy import deepcopy
 
 import pytest
 from django.utils import timezone
+from freezegun import freeze_time
 from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
@@ -27,7 +28,7 @@ from webhooks.webhooks import WebhookEventType
     "new_enabled_state, new_value",
     ((True, "foo"), (False, "foo"), (True, None), (False, None)),
 )
-def test_call_environment_webhook_for_feature_state_change_with_new_state_only(  # type: ignore[no-untyped-def]
+def test_call_environment_webhook_for_feature_state_change__new_state_only__calls_webhook_with_new_state(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker, environment, feature, identity, admin_user, new_value, new_enabled_state
 ):
     # Given
@@ -78,7 +79,7 @@ def test_call_environment_webhook_for_feature_state_change_with_new_state_only( 
     assert data["timestamp"] == now_isoformat
 
 
-def test_call_environment_webhook_for_feature_state_change_with_previous_state_only(  # type: ignore[no-untyped-def]
+def test_call_environment_webhook_for_feature_state_change__previous_state_only__calls_webhook_with_delete_event(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker, environment, feature, identity, admin_user
 ):
     # Given
@@ -131,7 +132,7 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
     assert data["timestamp"] == now_isoformat
 
 
-def test_call_environment_webhook_for_feature_state_change_with_changed_by_user_id(
+def test_call_environment_webhook_for_feature_state_change__changed_by_user_id__resolves_user_email(
     mocker: MockerFixture,
     environment: Environment,
     feature: Feature,
@@ -189,7 +190,7 @@ def test_call_environment_webhook_for_feature_state_change_with_changed_by_user_
         (False, None, True, None),
     ),
 )
-def test_call_environment_webhook_for_feature_state_change_with_both_states(  # type: ignore[no-untyped-def]
+def test_call_environment_webhook_for_feature_state_change__both_states__calls_webhook_with_update_event(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker,
     environment,
     feature,
@@ -264,7 +265,7 @@ def test_call_environment_webhook_for_feature_state_change_with_both_states(  # 
     assert data["timestamp"] == now_isoformat
 
 
-def test_call_environment_webhook_for_feature_state_change_does_nothing_if_no_webhooks(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_call_environment_webhook_for_feature_state_change__no_enabled_webhooks__does_nothing(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker, environment, feature, identity, admin_user
 ):
     # Given
@@ -292,7 +293,7 @@ def test_call_environment_webhook_for_feature_state_change_does_nothing_if_no_we
     mock_call_environment_webhooks.assert_not_called()
 
 
-def test_sync_identity_document_features_removes_deleted_features(  # type: ignore[no-untyped-def]
+def test_sync_identity_document_features__deleted_feature_exists__removes_deleted_feature(  # type: ignore[no-untyped-def]  # noqa: E501
     edge_identity_dynamo_wrapper_mock,
     identity_document_without_fs,
     environment,
@@ -375,7 +376,7 @@ def test_sync_identity_document_features_removes_deleted_features(  # type: igno
         ),
     ),
 )
-def test_generate_audit_log_records(  # type: ignore[no-untyped-def]
+def test_generate_audit_log_records__feature_override_changes__creates_expected_audit_log(  # type: ignore[no-untyped-def]  # noqa: E501
     changes, identifier, expected_log_message, db, environment, admin_user
 ):
     # Given
@@ -399,7 +400,8 @@ def test_generate_audit_log_records(  # type: ignore[no-untyped-def]
     ).exists()
 
 
-def test_update_flagsmith_environments_v2_identity_overrides__call_expected(
+@freeze_time("2023-01-01T00:00:00Z")
+def test_update_flagsmith_environments_v2_identity_overrides__changes_provided__updates_dynamo(
     mocker: MockerFixture,
     environment: Environment,
 ) -> None:

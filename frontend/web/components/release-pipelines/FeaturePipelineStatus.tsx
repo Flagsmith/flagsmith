@@ -96,5 +96,4 @@ const FeaturePipelineStatus = ({
   )
 }
 
-export type { FeaturePipelineStatusProps }
 export default FeaturePipelineStatus

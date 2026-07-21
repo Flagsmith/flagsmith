@@ -17,6 +17,7 @@ LaunchDarklyImportResult = Literal["success", "failure", "incomplete"]
 class LaunchDarklyImportStatus(TypedDict):
     requested_environment_count: int
     requested_flag_count: int
+    deprecated_flag_count: NotRequired[int]
     result: NotRequired[LaunchDarklyImportResult]
     error_messages: list[str]
 

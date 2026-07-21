@@ -1,4 +1,7 @@
-module.exports = function es6Component(context, onUnmount) {
+import each from 'lodash/each'
+import partial from 'lodash/partial'
+
+function es6Component(context, onUnmount) {
   context._listeners = []
 
   context.listenTo = function listenTo(store, event, callback) {
@@ -31,7 +34,7 @@ module.exports = function es6Component(context, onUnmount) {
   }
 
   context.setPathState = function setPathState(path, e) {
-    return _.partial(() => {
+    return partial(() => {
       const newState = {}
       newState[path] = Utils.safeParseEventValue(e)
       this.setState(newState)
@@ -39,7 +42,7 @@ module.exports = function es6Component(context, onUnmount) {
   }
 
   context.toggleState = function toggleState(path) {
-    return _.partial(() => {
+    return partial(() => {
       const newState = {}
       newState[path] = !this.state[path]
       this.setState(newState)
@@ -47,7 +50,7 @@ module.exports = function es6Component(context, onUnmount) {
   }
 
   context.componentWillUnmount = function componentWillUnmount() {
-    _.each(this._listeners, (listener, index) => {
+    each(this._listeners, (listener, index) => {
       if (listener) this.stopListening(index)
     })
     if (onUnmount) {
@@ -55,3 +58,5 @@ module.exports = function es6Component(context, onUnmount) {
     }
   }
 }
+
+export default es6Component

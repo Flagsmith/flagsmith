@@ -104,7 +104,7 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
             <label>
               Secret (Optional) -{' '}
               <a
-                className='text-info'
+                className='text-action'
                 target='_blank'
                 href='https://docs.flagsmith.com/system-administration/webhooks#web-hook-signature'
                 rel='noreferrer'
@@ -120,7 +120,7 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
               setSecret(Utils.safeParseEventValue(e))
             }
             isValid={!!url && url.length > 0}
-            type='text'
+            type='password'
             className='full-width'
             placeholder='Secret'
           />
@@ -131,7 +131,7 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
           )}
           <div className={isEdit ? 'footer' : ''}>
             <div className='mb-3'>
-              <p className='text-dark fw-bold'>
+              <p className='text-default fw-bold'>
                 This will {isEdit ? 'update' : 'create'} a webhook for the
                 Organisation{' '}
                 <strong>{AccountStore.getOrganisation().name}</strong>

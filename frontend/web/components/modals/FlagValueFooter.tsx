@@ -10,7 +10,7 @@ import RemoveFromReleasePipelineModal from 'components/release-pipelines/RemoveF
 import ButtonDropdown from 'components/base/forms/ButtonDropdown'
 import Button from 'components/base/forms/Button'
 
-export interface FlagValueFooterProps {
+interface FlagValueFooterProps {
   is4Eyes: boolean
   isVersioned: boolean
   projectId: number
@@ -119,7 +119,7 @@ const FlagValueFooter = ({
                 Utils.renderWithPermission(
                   savePermission,
                   Constants.environmentPermissions(
-                    Utils.getManageFeaturePermissionDescription(is4Eyes),
+                    Utils.getManageFeaturePermission(is4Eyes),
                   ),
                   <>
                     {!is4Eyes && (

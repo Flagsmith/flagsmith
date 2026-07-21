@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react'
 import Constants from 'common/constants'
 import CodeHelp from './CodeHelp'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Tabs from './navigation/TabMenu/Tabs'
 import TabItem from './navigation/TabMenu/TabItem'
 import InfoMessage from './InfoMessage'
@@ -57,7 +57,7 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
           <div className='mb-2'>
             Providing flag defaults is recommended for{' '}
             <a
-              className='text-primary'
+              className='text-action'
               target='_blank'
               href='https://docs.flagsmith.com/guides-and-examples/defensive-coding'
               rel='noreferrer'

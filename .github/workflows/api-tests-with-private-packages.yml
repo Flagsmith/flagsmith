@@ -1,8 +1,8 @@
 name: API Pull Request with Private Packages
 
 permissions:
-  contents: read     # For actions/checkout
-  id-token: write    # For Codecov OIDC
+  contents: read # For actions/checkout
+  id-token: write # For Codecov + CodeArtifact OIDC
 
 on:
   pull_request:
@@ -27,36 +27,36 @@ defaults:
 
 jobs:
   test:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.fork != true
     runs-on: depot-ubuntu-latest-16
     name: API Unit Tests
 
     strategy:
-      max-parallel: 2
+      max-parallel: 3
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - name: Cloning repo
         uses: actions/checkout@v5
 
-      - name: Install Poetry
-        run: make install-poetry
-
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/install-uv
         with:
+          working-directory: api
           python-version: ${{ matrix.python-version }}
-          cache: poetry
 
       - name: Install SAML Dependencies
         run: sudo apt-get install -y xmlsec1
+
+      - name: Authenticate with CodeArtifact
+        uses: ./.github/actions/codeartifact-login
 
       - name: Install packages and Tests
         shell: bash
         run: |
           echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials
           git config --global credential.helper store
-          make install-packages opts="--with saml,auth-controller,workflows"
-          make install-private-modules
+          make install-packages opts="--extra dev --extra private"
           make integrate-private-tests
           rm -rf ${HOME}/.git-credentials
 
@@ -66,7 +66,7 @@ jobs:
         run: make test
 
       - name: Upload Coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           PRIVATE_PACKAGES: "true"
           PYTHON: ${{ matrix.python-version }}

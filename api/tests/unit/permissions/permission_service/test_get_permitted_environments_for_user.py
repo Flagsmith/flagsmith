@@ -25,13 +25,14 @@ from projects.models import (
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-def test_get_permitted_environments_for_user_returns_all_environments_for_org_admin(  # type: ignore[no-untyped-def]
+def test_get_permitted_environments_for_user__org_admin__returns_all_environments(  # type: ignore[no-untyped-def]  # noqa: E501
     admin_user, environment, project, project_two_environment
 ):
-    for permission in EnvironmentPermissionModel.objects.all().values_list(
-        "key", flat=True
-    ):
-        # Then
+    # Given
+    permissions = EnvironmentPermissionModel.objects.all().values_list("key", flat=True)
+
+    # When / Then
+    for permission in permissions:
         assert (
             get_permitted_environments_for_user(admin_user, project, permission).count()
             == 1
@@ -45,7 +46,7 @@ def test_get_permitted_environments_for_user_returns_all_environments_for_org_ad
         (lazy_fixture("project_admin_via_user_permission_group")),
     ],
 )
-def test_get_permitted_environments_for_user_returns_all_the_environments_for_project_admin(  # noqa: E501
+def test_get_permitted_environments_for_user__project_admin__returns_all_environments(  # noqa: E501
     staff_user: FFAdminUser,
     environment: Environment,
     project: Project,
@@ -54,10 +55,11 @@ def test_get_permitted_environments_for_user_returns_all_the_environments_for_pr
     ],
     project_two_environment: Environment,
 ) -> None:
-    for permission in EnvironmentPermissionModel.objects.all().values_list(
-        "key", flat=True
-    ):
-        # Then
+    # Given
+    permissions = EnvironmentPermissionModel.objects.all().values_list("key", flat=True)
+
+    # When / Then
+    for permission in permissions:
         assert (
             get_permitted_environments_for_user(staff_user, project, permission).count()
             == 1
@@ -71,7 +73,7 @@ def test_get_permitted_environments_for_user_returns_all_the_environments_for_pr
         (lazy_fixture("environment_admin_via_user_permission_group")),
     ],
 )
-def test_get_permitted_environments_for_user_returns_the_environment_for_environment_admin(  # noqa: E501
+def test_get_permitted_environments_for_user__environment_admin__returns_environment(  # noqa: E501
     staff_user: FFAdminUser,
     environment: Environment,
     project: Project,
@@ -80,17 +82,18 @@ def test_get_permitted_environments_for_user_returns_the_environment_for_environ
     ],
     project_two_environment: Environment,
 ) -> None:
-    for permission in EnvironmentPermissionModel.objects.all().values_list(
-        "key", flat=True
-    ):
-        # Then
+    # Given
+    permissions = EnvironmentPermissionModel.objects.all().values_list("key", flat=True)
+
+    # When / Then
+    for permission in permissions:
         assert (
             get_permitted_environments_for_user(staff_user, project, permission).count()
             == 1
         )
 
 
-def test_get_permitted_environments_for_user_returns_correct_environment(
+def test_get_permitted_environments_for_user__specific_permissions__returns_correct_environment(  # noqa: E501
     staff_user: FFAdminUser,
     environment: Environment,
     project_two_environment: Environment,
@@ -101,6 +104,7 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
     environment_permission_using_user_permission: UserEnvironmentPermission,
     environment_permission_using_user_permission_group: UserPermissionGroupProjectPermission,
 ) -> None:
+    # Given
     # First, let's assert that the user does not have access to any environment
     for permission in EnvironmentPermissionModel.objects.all().values_list(
         "key", flat=True
@@ -109,12 +113,15 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
             get_permitted_environments_for_user(staff_user, project, permission).count()
             == 0
         )
+
+    # When
     # Next, let's give user some permissions using `user_permission`
     permissions_as_user = [VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE]
     environment_permission_using_user_permission.permissions.add(
         *PermissionModel.objects.filter(key__in=permissions_as_user)
     )
 
+    # Then
     # Next, let's assert that the environment is returned only for those permissions (and not for others).
     for permission in EnvironmentPermissionModel.objects.all().values_list(
         "key", flat=True
@@ -151,7 +158,7 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
         )
 
 
-def test_get_permitted_environments_for_user__does_not_return_environment_for_orphan_group_permission(
+def test_get_permitted_environments_for_user__orphan_group_permission__does_not_return_environment(  # noqa: E501
     organisation: Organisation,
     project: Project,
     environment: Environment,

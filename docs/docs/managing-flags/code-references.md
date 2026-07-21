@@ -127,7 +127,7 @@ Integrating with Code References **does not** expose your source code to Flagsmi
 
 :::
 
-Feature details will expand on the _Code References_ tab, and list locations of each code reference:
+Feature details will expand on the _Usage_ tab, and list locations of each code reference:
 
 ![Code References listed for each repository within Feature details](./code-references/feature-details.png)
 

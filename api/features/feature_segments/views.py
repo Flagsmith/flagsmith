@@ -27,7 +27,20 @@ logger = logging.getLogger(__name__)
 
 @method_decorator(
     name="list",
-    decorator=extend_schema(parameters=[FeatureSegmentQuerySerializer]),
+    decorator=extend_schema(
+        tags=["mcp"],
+        parameters=[FeatureSegmentQuerySerializer],
+        operation_id="list_feature_segments",
+        description="Lists segment overrides for a feature in an environment.",
+    ),
+)
+@method_decorator(
+    name="destroy",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="delete_feature_segment",
+        description="Deletes a segment override. Applies to environments without v2 feature versioning (use_v2_feature_versioning: false).",
+    ),
 )
 class FeatureSegmentViewSet(
     viewsets.ModelViewSet,  # type: ignore[type-arg]

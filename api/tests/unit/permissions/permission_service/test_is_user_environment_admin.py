@@ -19,7 +19,9 @@ from projects.models import (
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-def test_is_user_environment_admin_returns_true_for_org_admin(admin_user, environment):  # type: ignore[no-untyped-def]  # noqa: E501
+def test_is_user_environment_admin__org_admin__returns_true(admin_user, environment):  # type: ignore[no-untyped-def]  # noqa: E501
+    # Given / When
+    # Then
     assert is_user_environment_admin(admin_user, environment) is True
 
 
@@ -30,13 +32,14 @@ def test_is_user_environment_admin_returns_true_for_org_admin(admin_user, enviro
         (lazy_fixture("project_admin_via_user_permission_group")),
     ],
 )
-def test_is_user_environment_admin_returns_true_for_project_admin(
+def test_is_user_environment_admin__project_admin__returns_true(
     staff_user: FFAdminUser,
     environment: Environment,
     project_admin: typing.Union[
         UserProjectPermission, UserPermissionGroupProjectPermission
     ],
 ) -> None:
+    # Given / When
     # Then
     assert is_user_environment_admin(staff_user, environment) is True
 
@@ -48,28 +51,33 @@ def test_is_user_environment_admin_returns_true_for_project_admin(
         (lazy_fixture("environment_admin_via_user_permission_group")),
     ],
 )
-def test_is_user_environment_admin_returns_true_for_environment_admin(  # type: ignore[no-untyped-def]
+def test_is_user_environment_admin__environment_admin__returns_true(  # type: ignore[no-untyped-def]
     staff_user: FFAdminUser,
     environment: Environment,
     environment_admin: typing.Union[
         UserEnvironmentPermission, UserPermissionGroupEnvironmentPermission
     ],
 ):
+    # Given / When
     # Then
     assert is_user_environment_admin(staff_user, environment) is True
 
 
-def test_is_user_environment_admin_returns_false_for_user_with_no_permission(
+def test_is_user_environment_admin__no_permission__returns_false(
     staff_user: FFAdminUser,
     environment: Environment,
 ) -> None:
+    # Given / When
+    # Then
     assert is_user_environment_admin(staff_user, environment) is False
 
 
-def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_of_other_org(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_is_user_environment_admin__admin_of_other_org__returns_false(  # type: ignore[no-untyped-def]
     admin_user,
     organisation_two_project_one_environment_one,
 ):
+    # Given / When
+    # Then
     assert (
         is_user_environment_admin(
             admin_user, organisation_two_project_one_environment_one
@@ -78,7 +86,7 @@ def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_
     )
 
 
-def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_of_other_environment(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_is_user_environment_admin__admin_of_other_environment__returns_false(  # type: ignore[no-untyped-def]
     django_user_model,
     environment,
     user_project_permission,
@@ -88,7 +96,7 @@ def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_
 ):
     # Given
     user = django_user_model.objects.create(username="test_user")
-    # First, let's give the user admin permission
+    # When - give the user admin permission on other objects
     user_project_permission.admin = True
     user_project_permission.save()
 
@@ -102,11 +110,11 @@ def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_
     user_environment_permission_group.admin = True
     user_environment_permission_group.save()
 
-    # Then - the user should not be admin of the environment
+    # Then
     assert is_user_environment_admin(user, environment) is False
 
 
-def test_is_user_environment_admin__does_not_return_environment_for_orphan_group_permission(
+def test_is_user_environment_admin__orphan_group_permission__returns_false(
     organisation: Organisation,
     project: Project,
     environment: Environment,
@@ -137,13 +145,14 @@ def test_is_user_environment_admin__does_not_return_environment_for_orphan_group
     assert not is_user_environment_admin(user=staff_user, environment=environment)
 
 
-def test_is_user_environment_admin__short_circuits_on_direct_permission(
+def test_is_user_environment_admin__direct_permission__short_circuits_queries(
     staff_user: FFAdminUser,
     environment: Environment,
     environment_admin_via_user_permission: UserEnvironmentPermission,
     django_assert_num_queries: typing.Any,
 ) -> None:
-    # When/Then - should take only 6 queries (7 if RBAC installed):
+    # Given / When
+    # Then should take only 6 queries (7 if RBAC installed):
     # 1. Check if user is org admin (is_user_organisation_admin)
     # 2. Check organisation membership for project (_is_user_object_admin)
     # 3. Check direct user permission on project (not found)
@@ -156,13 +165,14 @@ def test_is_user_environment_admin__short_circuits_on_direct_permission(
         assert is_user_environment_admin(staff_user, environment) is True
 
 
-def test_is_user_environment_admin__short_circuits_on_group_permission(
+def test_is_user_environment_admin__group_permission__short_circuits_queries(
     staff_user: FFAdminUser,
     environment: Environment,
     environment_admin_via_user_permission_group: UserPermissionGroupEnvironmentPermission,
     django_assert_num_queries: typing.Any,
 ) -> None:
-    # When/Then - should take only 7 queries (8 if RBAC installed):
+    # Given / When
+    # Then should take only 7 queries (8 if RBAC installed):
     # 1. Check if user is org admin (is_user_organisation_admin)
     # 2. Check organisation membership for project (_is_user_object_admin)
     # 3. Check direct user permission on project (not found)

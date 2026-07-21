@@ -8,7 +8,7 @@ from environments.models import Environment
 from integrations.amplitude.models import AmplitudeConfiguration
 
 
-def test_should_create_amplitude_config_when_post(  # type: ignore[no-untyped-def]
+def test_create_amplitude_config__post_valid_data__returns_created(  # type: ignore[no-untyped-def]
     admin_client: APIClient,
     environment: Environment,
 ):
@@ -32,7 +32,7 @@ def test_should_create_amplitude_config_when_post(  # type: ignore[no-untyped-de
     assert AmplitudeConfiguration.objects.filter(environment=environment).count() == 1
 
 
-def test_should_return_400_when_duplicate_amplitude_config_is_posted(
+def test_create_amplitude_config__duplicate_config__returns_bad_request(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -59,7 +59,7 @@ def test_should_return_400_when_duplicate_amplitude_config_is_posted(
     assert AmplitudeConfiguration.objects.filter(environment=environment).count() == 1
 
 
-def test_should_update_configuration_when_put(
+def test_update_amplitude_config__put_valid_data__returns_ok(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -88,7 +88,7 @@ def test_should_update_configuration_when_put(
     assert config.api_key == api_key_updated
 
 
-def test_should_return_amplitude_config_list_when_requested(
+def test_list_amplitude_config__config_exists__returns_config_list(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -116,7 +116,7 @@ def test_should_return_amplitude_config_list_when_requested(
     assert response.data == [expected_response]
 
 
-def test_should_remove_configuration_when_delete(
+def test_delete_amplitude_config__config_exists__returns_no_content(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -137,7 +137,9 @@ def test_should_remove_configuration_when_delete(
     assert not AmplitudeConfiguration.objects.filter(environment=environment).exists()
 
 
-def test_create_amplitude_integration(environment, admin_client):  # type: ignore[no-untyped-def]
+def test_create_amplitude_integration__valid_api_key__returns_created(  # type: ignore[no-untyped-def]
+    environment, admin_client
+):
     # Given
     url = reverse(
         "api-v1:environments:integrations-amplitude-list", args=[environment.api_key]
@@ -154,7 +156,7 @@ def test_create_amplitude_integration(environment, admin_client):  # type: ignor
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_create_amplitude_integration_in_environment_with_deleted_integration(  # type: ignore[no-untyped-def]
+def test_create_amplitude_integration__deleted_integration_exists__returns_created(  # type: ignore[no-untyped-def]
     environment, admin_client, deleted_amplitude_integration
 ):
     # Given

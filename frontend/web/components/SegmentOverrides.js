@@ -1,6 +1,12 @@
-// import propTypes from 'prop-types';
 import React, { Component, Fragment } from 'react'
-import { SortableContainer, SortableElement } from 'react-sortable-hoc'
+import cloneDeep from 'lodash/cloneDeep'
+import filter from 'lodash/filter'
+import find from 'lodash/find'
+import classNames from 'classnames'
+import { DragDropProvider } from '@dnd-kit/react'
+import { useSortable, isSortable } from '@dnd-kit/react/sortable'
+import { RestrictToVerticalAxis } from '@dnd-kit/abstract/modifiers'
+import { arrayMove } from '@dnd-kit/helpers'
 import ProjectStore from 'common/stores/project-store'
 import ValueEditor from './ValueEditor'
 import { VariationOptions } from './mv/VariationOptions'
@@ -8,29 +14,22 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import CreateSegmentModal from './modals/CreateSegment'
 import SegmentSelect from './SegmentSelect'
 import JSONReference from './JSONReference'
-import ConfigProvider from 'common/providers/ConfigProvider'
-import InfoMessage from './InfoMessage'
 import Permission from 'common/providers/Permission'
-import Constants from 'common/constants'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import SegmentOverrideLimit from './SegmentOverrideLimit'
 import { getStore } from 'common/store'
 import { getEnvironment } from 'common/services/useEnvironment'
 import { getSegment } from 'common/services/useSegment'
 import Tooltip from './Tooltip'
-import SegmentsIcon from './svg/SegmentsIcon'
+import SegmentsIcon from './icons/SegmentsIcon'
 import SegmentOverrideActions from './SegmentOverrideActions'
+import CompareSegmentOverride from './diff/CompareSegmentOverride'
 import Button from './base/forms/Button'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 
-const arrayMoveMutate = (array, from, to) => {
-  array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])
-}
+const getSegmentId = (segment) =>
+  typeof segment === 'object' && segment !== null ? segment.id : segment
 
-const arrayMove = (array, from, to) => {
-  array = array.slice()
-  arrayMoveMutate(array, from, to)
-  return array
-}
 const SegmentOverrideInner = class Override extends React.Component {
   constructor(props) {
     super(props)
@@ -49,6 +48,7 @@ const SegmentOverrideInner = class Override extends React.Component {
       confirmRemove,
       controlValue,
       disabled,
+      dragHandleRef,
       environmentId,
       hideViewSegment,
       highlightSegmentId,
@@ -58,6 +58,7 @@ const SegmentOverrideInner = class Override extends React.Component {
       onSortEnd,
       projectFlag,
       readOnly,
+      setCompare,
       setSegmentEditId,
       setShowCreateSegment,
       setValue,
@@ -84,6 +85,23 @@ const SegmentOverrideInner = class Override extends React.Component {
       })
     const changed = !v.id || this.state.changed
     const showValue = !(multivariateOptions && multivariateOptions.length)
+    const canCompare =
+      showValue && v.value !== '' && v.value !== null && v.value !== undefined
+    const getOverrideLabel = (override) =>
+      override.name || override.segment_name || `Segment ${override.segment}`
+    const onCompare = () => {
+      setCompare({
+        source: {
+          enabled: !!v.enabled,
+          label: getOverrideLabel(v),
+          value: v.value,
+        },
+        sourceDescriptor: {
+          kind: 'segment',
+          segmentId: getSegmentId(v.segment),
+        },
+      })
+    }
     const controlPercent = Utils.calculateControl(mvOptions)
     const isHighlighted = highlightSegmentId && v.segment === highlightSegmentId
     if (!v || v.toRemove) {
@@ -100,18 +118,22 @@ const SegmentOverrideInner = class Override extends React.Component {
     return (
       <div
         data-test={`segment-override-${index}`}
-        style={{ zIndex: 9999999999 }}
-        className={`segment-overrides mb-3${
-          this.props.id
-            ? ''
-            : ' panel user-select-none panel-without-heading panel--draggable pb-0'
-        }${isHighlighted ? ' border-2 border-primary' : ''}`}
+        className={classNames('segment-overrides mb-3', {
+          'border-2 border-primary': isHighlighted,
+          'panel user-select-none panel-without-heading panel--draggable pb-0':
+            !this.props.id,
+        })}
       >
         <Row className='p-0 table-header px-3 py-1' space>
-          <div className='flex flex-1 text-left'>
+          <div
+            ref={dragHandleRef}
+            className={classNames('flex flex-1 text-start', {
+              'drag-handle': dragHandleRef,
+            })}
+          >
             {this.props.id ? (
               <>
-                <Row className='font-weight-medium text-dark mb-1'>
+                <Row className='font-weight-medium text-default mb-1'>
                   {projectFlag.description ? (
                     <Tooltip
                       title={
@@ -151,7 +173,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                   width={16}
                   height={16}
                 />
-                <span className='ms-2 fw-bold text-body mb-0'>
+                <span className='ms-2 fw-bold text-default mb-0'>
                   {name || v.segment_name}
                 </span>
                 {v.is_feature_specific && (
@@ -179,49 +201,48 @@ const SegmentOverrideInner = class Override extends React.Component {
                 />
               )}
               <Row className='gap-2'>
+                {/* Compare is read-only, so the actions render outside the
+                    MANAGE_SEGMENT_OVERRIDES gate; edit and remove remain gated
+                    by canEdit / canRemove below. */}
                 <Permission
                   id={environmentId}
-                  permission={'MANAGE_SEGMENT_OVERRIDES'}
+                  permission={EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES}
                   level={'environment'}
                 >
-                  {({ permission }) =>
-                    Utils.renderWithPermission(
-                      permission,
-                      Constants.projectPermissions('Manage Segments'),
-                      <>
-                        <SegmentOverrideActions
-                          hideViewSegment={hideViewSegment}
-                          onCopyValue={() => {
-                            this.setState({ changed: true })
-                            setValue(
-                              Utils.getTypedValue(
-                                Utils.safeParseEventValue(controlValue),
-                              ),
-                            )
-                          }}
-                          canCopyValue={
-                            !!controlValue &&
-                            (!multivariateOptions ||
-                              !multivariateOptions.length)
-                          }
-                          canRemove={!disabled && !readOnly}
-                          onRemove={confirmRemove}
-                          onEdit={() => {
-                            if (v.is_feature_specific) {
-                              setShowCreateSegment(true)
-                              setSegmentEditId(v.segment)
-                            } else {
-                              window.open(
-                                `${document.location.origin}/project/${this.props.projectId}/segments/${v.segment}`,
-                                '_blank',
-                              )
-                            }
-                          }}
-                          canEdit={permission}
-                        />
-                      </>,
-                    )
-                  }
+                  {({ permission }) => (
+                    <SegmentOverrideActions
+                      hideViewSegment={hideViewSegment}
+                      canCompare={canCompare}
+                      onCompare={onCompare}
+                      onCopyValue={() => {
+                        this.setState({ changed: true })
+                        setValue(
+                          Utils.getTypedValue(
+                            Utils.safeParseEventValue(controlValue),
+                          ),
+                        )
+                      }}
+                      canCopyValue={
+                        permission &&
+                        !!controlValue &&
+                        (!multivariateOptions || !multivariateOptions.length)
+                      }
+                      canRemove={permission && !disabled && !readOnly}
+                      onRemove={confirmRemove}
+                      onEdit={() => {
+                        if (v.is_feature_specific) {
+                          setShowCreateSegment(true)
+                          setSegmentEditId(v.segment)
+                        } else {
+                          window.open(
+                            `${document.location.origin}/project/${this.props.projectId}/segments/${v.segment}`,
+                            '_blank',
+                          )
+                        }
+                      }}
+                      canEdit={permission}
+                    />
+                  )}
                 </Permission>
               </Row>
             </Row>
@@ -345,9 +366,24 @@ const SegmentOverrideInner = class Override extends React.Component {
     )
   }
 }
-const SegmentOverride = ConfigProvider(SortableElement(SegmentOverrideInner))
+
+const SortableSegmentOverride = (props) => {
+  const { handleRef, ref } = useSortable({
+    id: props.sortId,
+    index: props.index,
+    modifiers: [RestrictToVerticalAxis],
+  })
+
+  return (
+    <div ref={ref}>
+      <SegmentOverrideInner {...props} dragHandleRef={handleRef} />
+    </div>
+  )
+}
+
 const SegmentOverrideListInner = ({
   confirmRemove,
+  controlEnabled,
   controlValue,
   disabled,
   environmentId,
@@ -361,6 +397,7 @@ const SegmentOverrideListInner = ({
   projectFlag,
   projectId,
   readOnly,
+  setCompare,
   setSegmentEditId,
   setShowCreateSegment,
   setValue,
@@ -368,58 +405,142 @@ const SegmentOverrideListInner = ({
   showEditSegment,
   toggle,
 }) => {
-  const InnerComponent = id || disabled ? SegmentOverrideInner : SegmentOverride
+  const canSort = !id && !disabled
   return (
     <div>
-      {items.map((value, index) => (
-        <Fragment key={value.segment.name}>
-          <InnerComponent
-            id={id}
-            name={name}
-            segment={value.segment}
-            hideViewSegment={hideViewSegment}
-            highlightSegmentId={highlightSegmentId}
-            onSortEnd={onSortEnd}
-            disabled={disabled}
-            showEditSegment={showEditSegment}
-            environmentId={environmentId}
-            projectId={projectId}
-            multivariateOptions={multivariateOptions}
-            index={index}
-            readOnly={readOnly}
-            value={value}
-            setSegmentEditId={setSegmentEditId}
-            setShowCreateSegment={setShowCreateSegment}
-            confirmRemove={() => confirmRemove(index)}
-            controlValue={controlValue}
-            toggle={() => toggle(index)}
-            setValue={(value) => {
-              setValue(index, value)
-            }}
-            setVariations={(i, override, mvOptions) => {
-              const newValue = _.cloneDeep(mvOptions)
-              newValue[i] = {
-                ...newValue[i],
-                percentage_allocation: override.default_percentage_allocation,
-              }
-              setVariations(index, newValue)
-            }}
-            projectFlag={projectFlag}
-          />
-          <div className='text-left'>
-            <JSONReference
-              showNamesButton
-              title={'Segment Override'}
-              json={value}
+      {items.map((value, index) => {
+        const segmentId = getSegmentId(value.segment)
+        const sortId = `segment-${segmentId ?? index}`
+        if (canSort) {
+          return (
+            <Fragment key={sortId}>
+              <SortableSegmentOverride
+                sortId={sortId}
+                id={id}
+                name={name}
+                segment={value.segment}
+                hideViewSegment={hideViewSegment}
+                highlightSegmentId={highlightSegmentId}
+                onSortEnd={onSortEnd}
+                disabled={disabled}
+                showEditSegment={showEditSegment}
+                environmentId={environmentId}
+                projectId={projectId}
+                multivariateOptions={multivariateOptions}
+                index={index}
+                readOnly={readOnly}
+                value={value}
+                setSegmentEditId={setSegmentEditId}
+                setShowCreateSegment={setShowCreateSegment}
+                confirmRemove={() => confirmRemove(index)}
+                controlValue={controlValue}
+                controlEnabled={controlEnabled}
+                items={items}
+                setCompare={setCompare}
+                toggle={() => toggle(index)}
+                setValue={(value) => {
+                  setValue(index, value)
+                }}
+                setVariations={(i, override, mvOptions) => {
+                  const newValue = cloneDeep(mvOptions)
+                  newValue[i] = {
+                    ...newValue[i],
+                    percentage_allocation:
+                      override.default_percentage_allocation,
+                  }
+                  setVariations(index, newValue)
+                }}
+                projectFlag={projectFlag}
+              />
+              <div className='text-start'>
+                <JSONReference
+                  showNamesButton
+                  title={'Segment Override'}
+                  json={value}
+                />
+              </div>
+            </Fragment>
+          )
+        }
+
+        return (
+          <Fragment key={sortId}>
+            <SegmentOverrideInner
+              id={id}
+              name={name}
+              segment={value.segment}
+              hideViewSegment={hideViewSegment}
+              highlightSegmentId={highlightSegmentId}
+              onSortEnd={onSortEnd}
+              disabled={disabled}
+              showEditSegment={showEditSegment}
+              environmentId={environmentId}
+              projectId={projectId}
+              multivariateOptions={multivariateOptions}
+              index={index}
+              readOnly={readOnly}
+              value={value}
+              setSegmentEditId={setSegmentEditId}
+              setShowCreateSegment={setShowCreateSegment}
+              confirmRemove={() => confirmRemove(index)}
+              controlValue={controlValue}
+              controlEnabled={controlEnabled}
+              items={items}
+              setCompare={setCompare}
+              toggle={() => toggle(index)}
+              setValue={(value) => {
+                setValue(index, value)
+              }}
+              setVariations={(i, override, mvOptions) => {
+                const newValue = cloneDeep(mvOptions)
+                newValue[i] = {
+                  ...newValue[i],
+                  percentage_allocation: override.default_percentage_allocation,
+                }
+                setVariations(index, newValue)
+              }}
+              projectFlag={projectFlag}
             />
-          </div>
-        </Fragment>
-      ))}
+            <div className='text-start'>
+              <JSONReference
+                showNamesButton
+                title={'Segment Override'}
+                json={value}
+              />
+            </div>
+          </Fragment>
+        )
+      })}
     </div>
   )
 }
 
-const SegmentOverrideList = SortableContainer(SegmentOverrideListInner)
+const SortableSegmentOverrideList = ({
+  items,
+  onSortEnd: handleSortEnd,
+  ...rest
+}) => {
+  const handleDragEnd = (event) => {
+    if (event.canceled) return
+    const { source } = event.operation
+    if (isSortable(source)) {
+      const { index, initialIndex } = source
+      if (initialIndex !== index) {
+        handleSortEnd({ newIndex: index, oldIndex: initialIndex })
+      }
+    }
+  }
+
+  return (
+    <DragDropProvider onDragEnd={handleDragEnd}>
+      <SegmentOverrideListInner
+        items={items}
+        onSortEnd={handleSortEnd}
+        {...rest}
+      />
+    </DragDropProvider>
+  )
+}
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -428,7 +549,16 @@ class TheComponent extends Component {
 
   constructor(props) {
     super(props)
-    this.state = { segmentEditId: undefined, totalSegmentOverrides: 0 }
+    this.state = {
+      compare: null,
+      segmentEditId: undefined,
+      totalSegmentOverrides: 0,
+    }
+  }
+
+  setCompare = (compare) => {
+    this.setState({ compare })
+    this.props.onCompareChange?.(!!compare)
   }
   componentDidMount() {
     getEnvironment(getStore(), {
@@ -521,7 +651,7 @@ class TheComponent extends Component {
   confirmRemove = (i) => {
     if (!this.props.value[i].id) {
       this.props.onChange(
-        _.filter(this.props.value, (v, index) => index !== i).map((v, i) => ({
+        filter(this.props.value, (v, index) => index !== i).map((v, i) => ({
           ...v,
           priority: i,
         })),
@@ -583,17 +713,40 @@ class TheComponent extends Component {
     const {
       props: { multivariateOptions, value },
     } = this
+    if (this.state.compare) {
+      return (
+        <div>
+          <div className='mb-3'>
+            <Button
+              theme='text'
+              size='small'
+              onClick={() => this.setCompare(null)}
+            >
+              <Icon name='arrow-left' width={16} />
+              Back to segment overrides
+            </Button>
+          </div>
+          <CompareSegmentOverride
+            projectId={this.props.projectId}
+            environmentId={this.props.environmentId}
+            featureId={this.props.feature}
+            source={this.state.compare.source}
+            sourceDescriptor={this.state.compare.sourceDescriptor}
+          />
+        </div>
+      )
+    }
     const filter = (segment) => {
       if (segment.feature && segment.feature !== this.props.feature)
         return false
       if (this.props.id && this.props.id !== segment.id) return null
-      const foundSegment = _.find(value, (v) => v.segment === segment.id)
+      const foundSegment = find(value, (v) => v.segment === segment.id)
       return !value || !foundSegment || (foundSegment && foundSegment.toRemove)
     }
     const InnerComponent =
       this.props.id || this.props.readOnly
         ? SegmentOverrideListInner
-        : SegmentOverrideList
+        : SortableSegmentOverrideList
 
     const visibleValues = value && value.filter((v) => !v.toRemove)
 
@@ -612,7 +765,7 @@ class TheComponent extends Component {
             !this.props.disableCreate &&
             !this.props.showCreateSegment &&
             !this.props.readOnly && (
-              <Row className='text-left gap-2'>
+              <Row className='text-start gap-2'>
                 <div className='flex-1'>
                   <SegmentSelect
                     className='w-100'
@@ -696,23 +849,6 @@ class TheComponent extends Component {
               <div className='overflow-visible'>
                 {!this.props.id && (
                   <div className='my-4'>
-                    <InfoMessage
-                      collapseId={'segment-overrides'}
-                      className='mb-4 text-left faint'
-                    >
-                      Segment overrides override the environment defaults,
-                      prioritise them by dragging it to the top of the list.
-                      Segment overrides will only apply when you identify via
-                      the SDK, any identity overrides will take priority.{' '}
-                      <a
-                        target='_blank'
-                        href='https://docs.flagsmith.com/basic-features/segments'
-                        rel='noreferrer'
-                      >
-                        Check the Docs for more details
-                      </a>
-                      .
-                    </InfoMessage>
                     <SegmentOverrideLimit
                       id={this.props.environmentId}
                       maxSegmentOverridesAllowed={ProjectStore.getMaxSegmentOverridesAllowed()}
@@ -723,33 +859,12 @@ class TheComponent extends Component {
                 {value && (
                   <>
                     <InnerComponent
-                      shouldCancelStart={(e) => {
-                        const tagName = e.target.tagName.toLowerCase()
-
-                        // Check if the clicked element is a button, input, or textarea
-                        if (
-                          tagName === 'input' ||
-                          tagName === 'textarea' ||
-                          tagName === 'button'
-                        ) {
-                          return true // Cancel sorting for inputs, buttons, etc.
-                        }
-
-                        // Cancel if the clicked element has class 'feature-action__list'
-                        if (
-                          e.target.closest('.feature-action__item') || // Checks for parent elements with the class
-                          e.target.closest('.hljs')
-                        ) {
-                          return true // Cancel sorting if the target or parent has these classes
-                        }
-
-                        // Otherwise, allow sorting
-                        return false
-                      }} // Here we pass the function to prevent sorting in certain cases
                       disabled={this.props.readOnly}
                       id={this.props.id}
                       name={this.props.name}
                       controlValue={this.props.controlValue}
+                      controlEnabled={this.props.controlEnabled}
+                      setCompare={this.setCompare}
                       multivariateOptions={multivariateOptions}
                       confirmRemove={this.confirmRemove}
                       setVariations={this.setVariations}
@@ -769,7 +884,7 @@ class TheComponent extends Component {
                       hideViewSegment={this.props.hideViewSegment}
                       highlightSegmentId={this.props.highlightSegmentId}
                     />
-                    <div className='text-left mt-4'>
+                    <div className='text-start mt-4'>
                       <JSONReference
                         showNamesButton
                         title={'Segment Overrides'}

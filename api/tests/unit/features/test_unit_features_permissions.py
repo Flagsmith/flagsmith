@@ -22,7 +22,7 @@ from tests.types import WithProjectPermissionsCallable
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-def test_organisation_admin_can_list_features(
+def test_feature_permissions_has_permission__organisation_admin_lists__returns_true(
     admin_user: FFAdminUser,
     project: Project,
 ) -> None:
@@ -42,7 +42,7 @@ def test_organisation_admin_can_list_features(
     assert result is True
 
 
-def test_project_admin_can_list_features(
+def test_feature_permissions_has_permission__project_admin_lists__returns_true(
     staff_user: FFAdminUser,
     project: Project,
 ) -> None:
@@ -63,7 +63,7 @@ def test_project_admin_can_list_features(
     assert result is True
 
 
-def test_project_user_with_read_access_can_list_features(
+def test_feature_permissions_has_permission__user_with_read_access_lists__returns_true(
     staff_user: FFAdminUser,
     project: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -85,7 +85,7 @@ def test_project_user_with_read_access_can_list_features(
     assert result is True
 
 
-def test_organisation_admin_can_create_feature(
+def test_feature_permissions_has_permission__organisation_admin_creates__returns_true(
     admin_user: FFAdminUser,
     project: Project,
 ) -> None:
@@ -107,7 +107,7 @@ def test_organisation_admin_can_create_feature(
     assert result is True
 
 
-def test_project_admin_can_create_feature(
+def test_feature_permissions_has_permission__project_admin_via_group_creates__returns_true(
     organisation: Organisation,
     project: Project,
     staff_user: FFAdminUser,
@@ -139,7 +139,7 @@ def test_project_admin_can_create_feature(
     assert result is True
 
 
-def test_project_user_with_create_feature_permission_can_create_feature(
+def test_feature_permissions_has_permission__user_with_create_permission_via_group__returns_true(
     staff_user: FFAdminUser,
     project: Project,
     organisation: Organisation,
@@ -172,7 +172,7 @@ def test_project_user_with_create_feature_permission_can_create_feature(
     assert result is True
 
 
-def test_project_user_without_create_feature_permission_cannot_create_feature(
+def test_feature_permissions_has_permission__user_without_create_permission__returns_false(
     staff_user: FFAdminUser,
     project: Project,
 ) -> None:
@@ -194,7 +194,7 @@ def test_project_user_without_create_feature_permission_cannot_create_feature(
     assert result is False
 
 
-def test_organisation_admin_can_view_feature(
+def test_feature_permissions_has_object_permission__organisation_admin_retrieves__returns_true(
     admin_user: FFAdminUser,
     feature: Feature,
 ) -> None:
@@ -213,7 +213,7 @@ def test_organisation_admin_can_view_feature(
     assert result is True
 
 
-def test_project_admin_can_view_feature(
+def test_feature_permissions_has_object_permission__project_admin_retrieves__returns_true(
     staff_user: FFAdminUser,
     project: Project,
     feature: Feature,
@@ -235,7 +235,7 @@ def test_project_admin_can_view_feature(
     assert result is True
 
 
-def test_project_user_with_view_project_permission_can_view_feature(
+def test_feature_permissions_has_object_permission__user_with_view_permission_retrieves__returns_true(
     staff_user: FFAdminUser,
     project: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -258,7 +258,7 @@ def test_project_user_with_view_project_permission_can_view_feature(
     assert result is True
 
 
-def test_project_user_without_view_project_permission_cannot_view_feature(
+def test_feature_permissions_has_object_permission__user_without_view_permission_retrieves__returns_false(
     staff_user: FFAdminUser,
     feature: Feature,
 ) -> None:
@@ -279,7 +279,7 @@ def test_project_user_without_view_project_permission_cannot_view_feature(
 
 
 @pytest.mark.parametrize("action", (("update"), ("partial_update")))
-def test_organisation_admin_can_edit_feature(
+def test_feature_permissions_has_object_permission__organisation_admin_edits__returns_true(
     action: str,
     admin_user: FFAdminUser,
     feature: Feature,
@@ -301,7 +301,7 @@ def test_organisation_admin_can_edit_feature(
 
 
 @pytest.mark.parametrize("action", (("update"), ("partial_update")))
-def test_project_admin_can_edit_feature(
+def test_feature_permissions_has_object_permission__project_admin_edits__returns_true(
     action: str,
     staff_user: FFAdminUser,
     project: Project,
@@ -321,7 +321,7 @@ def test_project_admin_can_edit_feature(
 
 
 @pytest.mark.parametrize("action", (("update"), ("partial_update")))
-def test_project_user_cannot_edit_feature(
+def test_feature_permissions_has_object_permission__user_with_view_only_edits__returns_false(
     action: str,
     staff_user: FFAdminUser,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -342,7 +342,7 @@ def test_project_user_cannot_edit_feature(
     assert result is False
 
 
-def test_organisation_admin_can_delete_feature(
+def test_feature_permissions_has_object_permission__organisation_admin_deletes__returns_true(
     admin_user: FFAdminUser,
     feature: Feature,
 ) -> None:
@@ -358,7 +358,7 @@ def test_organisation_admin_can_delete_feature(
     assert result is True
 
 
-def test_project_admin_can_delete_feature(
+def test_feature_permissions_has_object_permission__project_admin_deletes__returns_true(
     staff_user: FFAdminUser,
     feature: Feature,
     project: Project,
@@ -376,7 +376,7 @@ def test_project_admin_can_delete_feature(
     assert result is True
 
 
-def test_project_user_with_delete_feature_permission_can_delete_feature(
+def test_feature_permissions_has_object_permission__user_with_delete_permission__returns_true(
     staff_user: FFAdminUser,
     with_project_permissions: WithProjectPermissionsCallable,
     feature: Feature,
@@ -395,7 +395,7 @@ def test_project_user_with_delete_feature_permission_can_delete_feature(
     assert result is True
 
 
-def test_project_user_without_delete_feature_permission_cannot_delete_feature(
+def test_feature_permissions_has_object_permission__user_without_delete_permission__returns_false(
     staff_user: FFAdminUser,
     feature: Feature,
 ) -> None:
@@ -411,7 +411,7 @@ def test_project_user_without_delete_feature_permission_cannot_delete_feature(
     assert result is False
 
 
-def test_organisation_admin_can_update_feature_segments(
+def test_feature_permissions_has_object_permission__organisation_admin_updates_segments__returns_true(
     admin_user: FFAdminUser,
     feature: Feature,
 ) -> None:
@@ -427,7 +427,7 @@ def test_organisation_admin_can_update_feature_segments(
     assert result is True
 
 
-def test_project_admin_can_update_feature_segments(
+def test_feature_permissions_has_object_permission__project_admin_updates_segments__returns_true(
     staff_user: FFAdminUser,
     project: Project,
     feature: Feature,
@@ -445,7 +445,7 @@ def test_project_admin_can_update_feature_segments(
     assert result is True
 
 
-def test_project_user_cannot_update_feature_segments(
+def test_feature_permissions_has_object_permission__regular_user_updates_segments__returns_false(
     staff_user: FFAdminUser,
     feature: Feature,
 ) -> None:
@@ -470,7 +470,7 @@ def test_project_user_cannot_update_feature_segments(
         ({"create": CREATE_FEATURE}, "create", CREATE_FEATURE, True),
     ),
 )
-def test_nested_project_permissions_has_permission(  # type: ignore[no-untyped-def]
+def test_nested_project_permissions_has_permission__varying_permissions__returns_expected(  # type: ignore[no-untyped-def]
     action_permission_map,
     action,
     user_permission,
@@ -512,7 +512,7 @@ def test_nested_project_permissions_has_permission(  # type: ignore[no-untyped-d
         ({"update": CREATE_FEATURE}, "update", CREATE_FEATURE, True),
     ),
 )
-def test_nested_project_permissions_has_object_permission(  # type: ignore[no-untyped-def]
+def test_nested_project_permissions_has_object_permission__varying_permissions__returns_expected(  # type: ignore[no-untyped-def]
     action_permission_map,
     action,
     user_permission,

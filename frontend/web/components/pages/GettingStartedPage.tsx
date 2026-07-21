@@ -4,7 +4,7 @@ import Button from 'components/base/forms/Button'
 import loadChat, { openChat } from 'common/loadChat'
 import Utils from 'common/utils/utils'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import AccountStore from 'common/stores/account-store'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
@@ -166,7 +166,7 @@ const GettingStartedPage: FC = () => {
           <Button
             theme='text'
             onClick={onChatClick}
-            className='text-primary gap-2'
+            className='text-action gap-2'
             href=''
           >
             let us know

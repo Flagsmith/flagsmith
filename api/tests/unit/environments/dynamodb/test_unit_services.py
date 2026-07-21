@@ -1,5 +1,7 @@
 from decimal import Decimal
 
+from django.utils import timezone
+from freezegun import freeze_time
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_mock import MockerFixture
 
@@ -40,23 +42,24 @@ def test_migrate_environments_to_v2__environment_with_overrides__writes_expected
     expected_environment_document = map_environment_to_environment_v2_document(
         environment
     )
-    expected_identity_override_document = (
-        map_identity_override_to_identity_override_document(
-            map_engine_feature_state_to_identity_override(
-                feature_state=engine_identity.identity_features[0],
-                identity_uuid=str(engine_identity.identity_uuid),
-                identifier=engine_identity.identifier,
-                environment_api_key=environment.api_key,
-                environment_id=environment.id,
-            ),
+    with freeze_time(timezone.now()):
+        expected_identity_override_document = (
+            map_identity_override_to_identity_override_document(
+                map_engine_feature_state_to_identity_override(
+                    feature_state=engine_identity.identity_features[0],
+                    identity_uuid=str(engine_identity.identity_uuid),
+                    identifier=engine_identity.identifier,
+                    environment_api_key=environment.api_key,
+                    environment_id=environment.id,
+                ),
+            )
         )
-    )
 
-    # When
-    migrate_environments_to_v2(
-        project_id=environment.project_id,
-        capacity_budget=float("Inf"),  # type: ignore[arg-type]
-    )
+        # When
+        migrate_environments_to_v2(
+            project_id=environment.project_id,
+            capacity_budget=float("Inf"),  # type: ignore[arg-type]
+        )
 
     # Then
     results = flagsmith_environments_v2_table.scan()["Items"]

@@ -7,7 +7,8 @@
         {
             "name": "flagsmith-task-processor",
             "command": [
-                "run-task-processor"
+                "start",
+                "task-processor"
             ],
             "portMappings": [
                 {
@@ -29,7 +30,7 @@
                 "interval": 10,
                 "timeout": 2,
                 "retries": 5,
-                "startPeriod": 5
+                "startPeriod": 30
             },
             "essential": true,
             "environment": [
@@ -146,10 +147,6 @@
                     "value": "True"
                 },
                 {
-                    "name": "HUBSPOT_IGNORE_DOMAINS",
-                    "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
-                },
-                {
                     "name": "GITHUB_APP_ID",
                     "value": "811209"
                 },
@@ -164,6 +161,10 @@
                 {
                     "name": "PROMETHEUS_ENABLED",
                     "value": "True"
+                },
+                {
+                    "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
+                    "value": "http://adot-collector.metrics.local:4318"
                 },
                 {
                     "name": "ENABLE_API_USAGE_ALERTING",
@@ -184,6 +185,22 @@
                 {
                     "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
                     "value": "True"
+                },
+                {
+                    "name": "LOG_LEVEL",
+                    "value": "INFO"
+                },
+                {
+                    "name": "LOG_FORMAT",
+                    "value": "json"
+                },
+                {
+                    "name": "INGESTION_REDIS_URL",
+                    "value": "rediss://serverless-redis-cache-c4q8sw.serverless.euw2.cache.amazonaws.com:6379"
+                },
+                {
+                    "name": "INGESTION_FIREHOSE_DELIVERY_ROLE_ARN",
+                    "value": "arn:aws:iam::084060095745:role/experiment-events-firehose-delivery-external-warehouse"
                 }
             ],
             "secrets": [
@@ -197,6 +214,10 @@
                 },
                 {
                     "name": "DJANGO_SECRET_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DJANGO_SECRET_KEY::"
+                },
+                {
+                    "name": "WAREHOUSE_CREDENTIALS_SECRET",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DJANGO_SECRET_KEY::"
                 },
                 {
@@ -246,6 +267,14 @@
                 {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
+                },
+                {
+                    "name": "CLICKHOUSE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:clickhouse-url-kB2CK9"
+                },
+                {
+                    "name": "EXPERIMENTATION_CLICKHOUSE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:EXPERIMENTATION_CLICKHOUSE_URL::"
                 }
             ],
             "logConfiguration": {

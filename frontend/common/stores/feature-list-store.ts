@@ -1,5 +1,9 @@
+import find from 'lodash/find'
+import findIndex from 'lodash/findIndex'
+import keyBy from 'lodash/keyBy'
+import map from 'lodash/map'
+import throttle from 'lodash/throttle'
 import Constants from 'common/constants'
-import { getIsWidget } from 'components/pages/WidgetPage'
 import ProjectStore from './project-store'
 import {
   createAndSetFeatureVersion,
@@ -17,14 +21,16 @@ import {
   ChangeRequest,
   Environment,
   FeatureState,
+  MultivariateOption,
   PagedResponse,
   ProjectFlag,
   TypedFeatureState,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
+import { sortMultivariateOptions } from 'common/utils/multivariate'
 import Actions from 'common/dispatcher/action-constants'
 import Project from 'common/project'
-import flagsmith from 'flagsmith'
+import flagsmith from '@flagsmith/flagsmith'
 import API from 'project/api'
 import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
@@ -36,11 +42,15 @@ import {
 } from 'common/services/useChangeRequest'
 import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
 
-const Dispatcher = require('common/dispatcher/dispatcher')
-const BaseStore = require('./base/_store')
-const data = require('../data/base/_data')
-const { createSegmentOverride } = require('../services/useSegmentOverride')
-const { getStore } = require('../store')
+import Dispatcher from 'common/dispatcher/dispatcher'
+import BaseStore from './base/_store'
+import data from 'common/data/base/_data'
+import {
+  createMultivariateOption,
+  saveMultivariateOptions,
+} from 'common/services/useMultivariateOption'
+import { createSegmentOverride } from 'common/services/useSegmentOverride'
+import { getStore } from 'common/store'
 let createdFirstFeature = false
 
 const convertSegmentOverrideToFeatureState = (
@@ -79,7 +89,11 @@ const controller = {
   createFlag(projectId, environmentId, flag) {
     store.saving()
     API.trackEvent(Constants.events.CREATE_FEATURE)
-    if (
+    const featureType =
+      flag.multivariate_options && flag.multivariate_options.length
+        ? 'MULTIVARIATE'
+        : 'STANDARD'
+    const isFirstFeature =
       !createdFirstFeature &&
       !flagsmith.getTrait('first_feature') &&
       AccountStore.model &&
@@ -88,12 +102,6 @@ const controller = {
       OrganisationStore.model.projects.length === 1 &&
       store.model &&
       (!store.model.features || !store.model.features.length)
-    ) {
-      createdFirstFeature = true
-      flagsmith.setTrait('first_feature', 'true')
-      API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
-      window.lintrk?.('track', { conversion_id: 16798354 })
-    }
 
     createProjectFlag(getStore(), {
       body: Object.assign({}, flag, {
@@ -111,26 +119,27 @@ const controller = {
       }),
       project_id: projectId,
     })
-      .then((res) => {
+      .then(async (res) => {
         if (res.error) {
           throw res.error?.error || res.error
         }
-        return Promise.all(
-          (flag.multivariate_options || []).map((v) =>
-            data
-              .post(
-                `${Project.api}projects/${projectId}/features/${res.data.id}/mv-options/`,
-                {
-                  ...v,
-                  feature: res.data.id,
-                },
-              )
-              .then(() => res.data),
-          ),
-        ).then(() =>
-          data.get(
-            `${Project.api}projects/${projectId}/features/${res.data.id}/`,
-          ),
+        // Sequential so options get ascending ids in input order, which is
+        // the order the UI displays.
+        for (const v of flag.multivariate_options || []) {
+          const mvRes = await createMultivariateOption(getStore(), {
+            body: {
+              ...v,
+              feature: res.data.id,
+            },
+            feature_id: res.data.id,
+            project_id: projectId,
+          })
+          if (mvRes.error) {
+            throw mvRes.error
+          }
+        }
+        return data.get(
+          `${Project.api}projects/${projectId}/features/${res.data.id}/`,
         )
       })
       .then(() =>
@@ -148,16 +157,41 @@ const controller = {
             feature: v.id,
           }))
           store.model = {
-            features: features.results,
+            features: features.results.map(controller.parseFlag),
             keyedEnvironmentFeatures:
-              environmentFeatures && _.keyBy(environmentFeatures, 'feature'),
+              environmentFeatures && keyBy(environmentFeatures, 'feature'),
           }
           store.model.lastSaved = new Date().valueOf()
           getStore().dispatch(
-            projectFlagService.util.invalidateTags(['ProjectFlag']),
+            projectFlagService.util.invalidateTags([
+              'ProjectFlag',
+              'FeatureList',
+            ]),
           )
 
           store.saved({ createdFlag: flag.name })
+          if (isFirstFeature) {
+            createdFirstFeature = true
+            flagsmith.setTrait('first_feature', 'true')
+            API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
+            flagsmith.trackEvent('first_feature_created', {
+              metadata: {
+                feature_type: featureType,
+                project_id: projectId,
+              },
+              value: flag.name,
+            })
+            window.lintrk?.('track', { conversion_id: 16798354 })
+          } else {
+            flagsmith.trackEvent('feature_created', {
+              metadata: {
+                feature_type: featureType,
+                project_id: projectId,
+                total_feature_count: store.model?.features?.length ?? 0,
+              },
+              value: flag.name,
+            })
+          }
         }),
       )
       .catch((e) => API.ajaxHandler(store, e))
@@ -186,11 +220,14 @@ const controller = {
           onComplete(res)
         }
         if (store.model?.features) {
-          const index = _.findIndex(store.model.features, { id: flag.id })
+          const index = findIndex(store.model.features, { id: flag.id })
           store.model.features[index] = controller.parseFlag(flag)
           store.model.lastSaved = new Date().valueOf()
           getStore().dispatch(
-            projectFlagService.util.invalidateTags(['ProjectFlag']),
+            projectFlagService.util.invalidateTags([
+              'ProjectFlag',
+              'FeatureList',
+            ]),
           )
           store.changed()
         }
@@ -213,53 +250,45 @@ const controller = {
       })
       return
     }
+    store.error = null
     const originalFlag =
       store.model && store.model.features
         ? store.model.features.find((v) => v.id === flag.id)
         : flag
-    Promise.all(
-      (flag.multivariate_options || []).map((v, i) => {
-        const originalMV =
-          v.id && originalFlag?.multivariate_options
-            ? originalFlag.multivariate_options.find((m) => m.id === v.id)
-            : null
-        const url = `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`
-        const mvData = {
-          ...v,
-          default_percentage_allocation: 0,
-          feature: flag.id,
-        }
-        return (
-          originalMV
-            ? data.put(`${url}${originalMV.id}/`, mvData)
-            : data.post(url, mvData)
-        ).then((res) => {
-          // It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
-          flag.multivariate_options[i] = res
-          return {
-            ...v,
-            id: res.id,
-          }
-        })
-      }),
-    )
-      .then(() => {
-        const deletedMv = (originalFlag?.multivariate_options || []).filter(
-          (v) => !flag.multivariate_options.find((x) => v.id === x.id),
-        )
-        return Promise.all(
-          deletedMv.map((v) =>
-            data.delete(
-              `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/${v.id}/`,
-            ),
-          ),
-        )
-      })
-      .then(() => {
-        if (onComplete) {
-          onComplete(flag)
-        }
-      })
+    // Standard flags carry no multivariate data — skip the round-trip.
+    if (
+      !flag.multivariate_options?.length &&
+      !originalFlag?.multivariate_options?.length
+    ) {
+      if (onComplete) {
+        onComplete(flag)
+      }
+      return
+    }
+    saveMultivariateOptions(getStore(), {
+      feature_id: flag.id,
+      multivariate_options: flag.multivariate_options || [],
+      project_id: projectId,
+    }).then((res) => {
+      if (res.error) {
+        API.ajaxHandler(store, res.error)
+        return
+      }
+      if (res.data.errors) {
+        store.error = { multivariate_options: res.data.errors } as any
+        store.goneABitWest()
+        return
+      }
+      // It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
+      res.data.multivariate_options.forEach(
+        (v: MultivariateOption, i: number) => {
+          flag.multivariate_options[i] = v
+        },
+      )
+      if (onComplete) {
+        onComplete(flag)
+      }
+    })
   },
   editFeatureState: async (
     projectId,
@@ -380,15 +409,16 @@ const controller = {
                 )
               environmentFlag.multivariate_feature_state_values =
                 multivariate_feature_state_values
+              const typedValue = Utils.getTypedValue(
+                flag.initial_value,
+                undefined,
+                true,
+              )
               return data.put(
                 `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
                 Object.assign({}, environmentFlag, {
                   enabled: flag.default_enabled,
-                  feature_state_value: Utils.getTypedValue(
-                    flag.initial_value,
-                    undefined,
-                    true,
-                  ),
+                  feature_state_value: typedValue === '' ? null : typedValue,
                 }),
               )
             })
@@ -456,12 +486,12 @@ const controller = {
             if (store.model?.keyedEnvironmentFeatures) {
               store.model.keyedEnvironmentFeatures[projectFlag.id] = res
               if (segmentRes) {
-                const feature = _.find(
+                const feature = find(
                   store.model.features,
                   (f) => f.id === projectFlag.id,
                 )
                 if (feature) {
-                  feature.feature_segments = _.map(
+                  feature.feature_segments = map(
                     segmentRes.feature_segments,
                     (segment) => ({
                       ...segment,
@@ -477,7 +507,10 @@ const controller = {
             }
             onComplete && onComplete()
             getStore().dispatch(
-              projectFlagService.util.invalidateTags(['ProjectFlag']),
+              projectFlagService.util.invalidateTags([
+                'ProjectFlag',
+                'FeatureList',
+              ]),
             )
             store.saved({})
           })
@@ -748,7 +781,10 @@ const controller = {
             throw version.error
           }
           getStore().dispatch(
-            projectFlagService.util.invalidateTags(['ProjectFlag']),
+            projectFlagService.util.invalidateTags([
+              'ProjectFlag',
+              'FeatureList',
+            ]),
           )
           if (!store.model) {
             return
@@ -766,6 +802,9 @@ const controller = {
               store.model.keyedEnvironmentFeatures[projectFlag.id] = {
                 ...store.model.keyedEnvironmentFeatures[projectFlag.id],
                 ...environmentFeatureState,
+                feature_state_value: Utils.featureStateToValue(
+                  environmentFeatureState.feature_state_value,
+                ),
               }
             }
           })
@@ -802,7 +841,8 @@ const controller = {
           ).then((res) => {
             const data = Object.assign({}, environmentFlag, {
               enabled: flag.default_enabled,
-              feature_state_value: flag.initial_value,
+              feature_state_value:
+                flag.initial_value === '' ? null : flag.initial_value,
             })
             return createAndSetFeatureVersion(getStore(), {
               environmentId: res,
@@ -811,6 +851,11 @@ const controller = {
               projectId,
             }).then((version) => {
               if (version.error) {
+                // Multivariate options are saved separately at the project
+                // level, so an unchanged environment state is not a failure.
+                if (version.error.message === 'Feature contains no changes') {
+                  return
+                }
                 throw version.error
               }
               const featureState = version.data.feature_states[0].data
@@ -854,7 +899,7 @@ const controller = {
       store.projectId = projectId
       store.environmentId = environmentId
       store.page = page
-      store.filter = filter
+      store.filter = filter || {}
       let filterUrl = ''
       const { feature } = Utils.fromParam()
       if (Object.keys(store.filter).length) {
@@ -924,17 +969,12 @@ const controller = {
 
               store.model = {
                 features: features.results.map(controller.parseFlag),
-                keyedEnvironmentFeatures: _.keyBy(
-                  environmentFeatures,
-                  'feature',
-                ),
+                keyedEnvironmentFeatures: keyBy(environmentFeatures, 'feature'),
               }
               store.loaded()
             })
             .catch((e) => {
-              if (!getIsWidget()) {
-                document.location.href = '/404?entity=environment'
-              }
+              document.location.href = '/404?entity=environment'
               API.ajaxHandler(store, e)
             })
         },
@@ -950,27 +990,12 @@ const controller = {
           ...fs,
           segment: fs.segment.id,
         })),
+      multivariate_options:
+        flag.multivariate_options &&
+        sortMultivariateOptions(flag.multivariate_options),
     }
   },
-  removeFlag: (projectId, flag) => {
-    store.saving()
-    API.trackEvent(Constants.events.REMOVE_FEATURE)
-    return data
-      .delete(`${Project.api}projects/${projectId}/features/${flag.id}/`)
-      .then(() => {
-        store.model.features = _.filter(
-          store.model.features,
-          (f) => f.id !== flag.id,
-        )
-        store.model.lastSaved = new Date().valueOf()
-        getStore().dispatch(
-          projectFlagService.util.invalidateTags(['ProjectFlag']),
-        )
-        store.saved({})
-        store.trigger('removed', flag)
-      })
-  },
-  searchFeatures: _.throttle(
+  searchFeatures: throttle(
     (search, environmentId, projectId, filter, pageSize) => {
       store.search = encodeURIComponent(search || '')
       controller.getFeatures(
@@ -1017,33 +1042,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   const action = payload.action // this is our action from handleViewAction
   const projectId = parseInt(action.projectId)
   switch (action.actionType) {
-    case Actions.SEARCH_FLAGS: {
-      if (action.sort) {
-        store.sort = action.sort
-      }
-      controller.searchFeatures(
-        action.search,
-        action.environmentId,
-        projectId,
-        action.filter,
-        action.pageSize,
-      )
-      break
-    }
-    case Actions.GET_FLAGS:
-      store.search = encodeURIComponent(action.search || '')
-      if (action.sort) {
-        store.sort = action.sort
-      }
-      controller.getFeatures(
-        projectId,
-        action.environmentId,
-        action.force,
-        action.page,
-        action.filter,
-        action.pageSize,
-      )
-      break
     case Actions.REFRESH_FEATURES:
       if (
         projectId === store.projectId &&
@@ -1090,9 +1088,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.EDIT_FEATURE_MV:
       controller.editFeatureMv(projectId, action.flag, action.onComplete)
-      break
-    case Actions.REMOVE_FLAG:
-      controller.removeFlag(projectId, action.flag)
       break
     default:
   }

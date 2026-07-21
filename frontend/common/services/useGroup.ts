@@ -27,14 +27,17 @@ export const groupService = service
           }
           //Add the members
           if (query.users?.length) {
-            const { error } = await baseQuery({
+            const res = await baseQuery({
               body: { user_ids: query.users.map((u) => u.id) },
               method: 'POST',
-              url: `organisations/${query.orgId}/groups/${data.id}/`,
+              url: `organisations/${query.orgId}/groups/${data.id}/add-users/`,
             })
+            if (res.error) {
+              return { error: res.error }
+            }
           }
           // Make the admins
-          await Promise.all(
+          const adminResults = await Promise.all(
             (query.usersToAddAdmin || []).map((v) =>
               createGroupAdmin(getStore(), {
                 group: data.id,
@@ -43,6 +46,10 @@ export const groupService = service
               }),
             ),
           )
+          const adminError = adminResults.find((r: any) => r.error)
+          if (adminError?.error) {
+            return { error: adminError.error }
+          }
           return { data }
         },
       }),
@@ -115,22 +122,28 @@ export const groupService = service
             return { error }
           }
           //Add the members
-          if (query.users?.length) {
-            await baseQuery({
-              body: { user_ids: query.data.users.map((u) => u.id) },
+          if (query.usersToAdd?.length) {
+            const res = await baseQuery({
+              body: { user_ids: query.usersToAdd },
               method: 'POST',
               url: `organisations/${query.orgId}/groups/${data.id}/add-users/`,
             })
+            if (res.error) {
+              return { error: res.error }
+            }
           }
           if (query.usersToRemove?.length) {
-            await baseQuery({
+            const res = await baseQuery({
               body: { user_ids: query.usersToRemove },
               method: 'POST',
               url: `organisations/${query.orgId}/groups/${data.id}/remove-users/`,
             })
+            if (res.error) {
+              return { error: res.error }
+            }
           }
           // Make the admins
-          await Promise.all(
+          const addAdminResults = await Promise.all(
             (query.usersToAddAdmin || []).map((v) =>
               createGroupAdmin(getStore(), {
                 group: data.id,
@@ -139,8 +152,12 @@ export const groupService = service
               }),
             ),
           )
+          const addAdminError = addAdminResults.find((r: any) => r.error)
+          if (addAdminError?.error) {
+            return { error: addAdminError.error }
+          }
 
-          await Promise.all(
+          const removeAdminResults = await Promise.all(
             (query.usersToRemoveAdmin || []).map((v) =>
               deleteGroupAdmin(getStore(), {
                 group: data.id,
@@ -149,6 +166,10 @@ export const groupService = service
               }),
             ),
           )
+          const removeAdminError = removeAdminResults.find((r: any) => r.error)
+          if (removeAdminError?.error) {
+            return { error: removeAdminError.error }
+          }
           return { data }
         },
       }),

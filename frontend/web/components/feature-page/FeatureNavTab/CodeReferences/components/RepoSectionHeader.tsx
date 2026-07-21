@@ -1,4 +1,4 @@
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import VCSProviderTag from 'components/tags/VCSProviderTag'
 import { getDarkMode } from 'project/darkMode'
 import React from 'react'

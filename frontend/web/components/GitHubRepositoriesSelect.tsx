@@ -2,7 +2,7 @@ import React, { FC, useEffect } from 'react'
 import { Repository } from 'common/types/responses'
 import { useCreateGithubRepositoryMutation } from 'common/services/useGithubRepository'
 
-export type GitHubRepositoriesSelectType = {
+type GitHubRepositoriesSelectType = {
   disabled?: boolean
   repositories: Repository[] | undefined
   organisationId: string

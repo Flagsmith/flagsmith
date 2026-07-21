@@ -1,13 +1,14 @@
 import React, { FC } from 'react'
 import NavSubLink from 'components/navigation/NavSubLink'
 import { barChart, gitBranch, gitCompare } from 'ionicons/icons'
-import SegmentsIcon from 'components/svg/SegmentsIcon'
+import SegmentsIcon from 'components/icons/SegmentsIcon'
 import Permission, { useHasPermission } from 'common/providers/Permission'
-import AuditLogIcon from 'components/svg/AuditLogIcon'
-import Icon from 'components/Icon'
+import AuditLogIcon from 'components/icons/AuditLogIcon'
+import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 import OverflowNav from 'components/navigation/OverflowNav'
 import ProjectChangeRequestsLink from 'components/ProjectChangeRequestsLink'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type ProjectNavType = {
   environmentId?: string
@@ -19,7 +20,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
   const { permission: projectAdmin } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'ADMIN',
+    permission: ProjectPermission.ADMIN,
   })
   const projectMetricsTooltipEnabled = Utils.getFlagsmithHasFeature(
     'project_metrics_tooltip',
@@ -50,7 +51,23 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
       >
         Segments
       </NavSubLink>
-      <Permission level='project' permission='VIEW_AUDIT_LOG' id={projectId}>
+      {Utils.getFlagsmithHasFeature('feature_lifecycle') && (
+        <NavSubLink
+          icon={<Icon name='refresh' />}
+          id='lifecycle-link'
+          to={`/project/${projectId}/lifecycle`}
+          isActive={(_, location) =>
+            location.pathname.startsWith(`/project/${projectId}/lifecycle`)
+          }
+        >
+          Lifecycle
+        </NavSubLink>
+      )}
+      <Permission
+        level='project'
+        permission={ProjectPermission.VIEW_AUDIT_LOG}
+        id={projectId}
+      >
         {({ permission }) =>
           permission && (
             <NavSubLink
@@ -97,25 +114,23 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
       >
         Compare
       </NavSubLink>
+      {projectAdmin && Utils.getFlagsmithHasFeature('release_pipelines') && (
+        <NavSubLink
+          icon={<Icon name='flash' />}
+          id='release-pipelines-link'
+          to={`/project/${projectId}/release-pipelines`}
+        >
+          Pipelines
+        </NavSubLink>
+      )}
       {projectAdmin && (
-        <>
-          {Utils.getFlagsmithHasFeature('release_pipelines') && (
-            <NavSubLink
-              icon={<Icon name='flash' />}
-              id='release-pipelines-link'
-              to={`/project/${projectId}/release-pipelines`}
-            >
-              Release Pipelines
-            </NavSubLink>
-          )}
-          <NavSubLink
-            icon={<Icon name='setting' width={24} />}
-            id='project-settings-link'
-            to={`/project/${projectId}/settings`}
-          >
-            Project Settings
-          </NavSubLink>
-        </>
+        <NavSubLink
+          icon={<Icon name='setting' width={24} />}
+          id='project-settings-link'
+          to={`/project/${projectId}/settings`}
+        >
+          Project Settings
+        </NavSubLink>
       )}
     </OverflowNav>
   )

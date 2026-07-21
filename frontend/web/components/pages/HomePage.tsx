@@ -3,7 +3,7 @@ import { useHistory, useLocation, withRouter } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import ForgotPasswordModal from 'components/modals/ForgotPasswordModal'
 import Card from 'components/Card'
-import NavIconSmall from 'components/svg/NavIconSmall'
+import NavIconSmall from 'components/icons/NavIconSmall'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
@@ -11,6 +11,7 @@ import Button from 'components/base/forms/Button'
 import PasswordRequirements from 'components/PasswordRequirements'
 import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import { Icon } from 'components/icons'
 import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
 import OnboardingPage from './OnboardingPage'
@@ -30,6 +31,7 @@ import AccountStore from 'common/stores/account-store'
 import { LoginRequest, RegisterRequest } from 'common/types/requests'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import { useUTMs } from 'common/useUTMs'
+import useSignupExperiment from 'common/useSignupExperiment'
 
 const HomePage: React.FC = () => {
   const history = useHistory()
@@ -70,9 +72,11 @@ const HomePage: React.FC = () => {
   }
 
   useEffect(() => {
-    const emailField = (document.querySelector('input[name="firstName"]') ||
-      document.querySelector('input[name="email"]')) as HTMLInputElement
-    emailField?.focus()
+    if (!E2E) {
+      const emailField = (document.querySelector('input[name="firstName"]') ||
+        document.querySelector('input[name="email"]')) as HTMLInputElement
+      emailField?.focus()
+    }
 
     if (Project.albacross && location.pathname.indexOf('signup') !== -1) {
       addAlbacross()
@@ -109,11 +113,13 @@ const HomePage: React.FC = () => {
       }
     }
 
-    setTimeout(() => {
-      const emailField = (document.querySelector('input[name="firstName"]') ||
-        document.querySelector('input[name="email"]')) as HTMLInputElement
-      emailField?.focus()
-    }, 1000)
+    if (!E2E) {
+      setTimeout(() => {
+        const emailField = (document.querySelector('input[name="firstName"]') ||
+          document.querySelector('input[name="email"]')) as HTMLInputElement
+        emailField?.focus()
+      }, 1000)
+    }
 
     if (document.location.href.includes('saml')) {
       const access_token = params.code
@@ -130,11 +136,11 @@ const HomePage: React.FC = () => {
 
     if (document.location.href.indexOf('invite') !== -1) {
       const invite = params.redirect
-      if (invite.includes('invite-link')) {
+      if (invite?.includes('invite-link')) {
         const id = invite.split('invite-link/')[1]
         API.setInviteType('INVITE_LINK')
         API.setInvite(id)
-      } else if (invite.includes('invite')) {
+      } else if (invite?.includes('invite')) {
         const id = invite.split('invite/')[1]
         API.setInviteType('INVITE_EMAIL')
         API.setInvite(id)
@@ -175,6 +181,13 @@ const HomePage: React.FC = () => {
       currentLocation.indexOf('signup') !== -1)
   const disableSignup = preventSignup && isSignup
   const preventEmailPassword = Project.preventEmailPassword
+
+  const signupVariant = useSignupExperiment(
+    !isSignup || isInvite || !!preventEmailPassword || !!AccountStore.getUser(),
+    email,
+  )
+  const blockGenericEmailDomain =
+    signupVariant === 'signup_corporate_only' && isFreeEmailDomain(email)
   const disableForgotPassword = Project.preventForgotPassword
   const oauths: React.ReactNode[] = []
   const disableOauthRegister = Utils.getFlagsmithHasFeature(
@@ -202,9 +215,9 @@ const HomePage: React.FC = () => {
           <Button
             theme='secondary'
             className='w-100'
-            iconLeft='github'
             href={JSON.parse(Utils.getFlagsmithValue('oauth_github')).url}
           >
+            <Icon name='github' />
             GitHub
           </Button>
         </div>,
@@ -351,7 +364,7 @@ const HomePage: React.FC = () => {
                     {!isSignup ? (
                       <>
                         <Card
-                          className='mb-3 bg-white p-3'
+                          className='mb-3 bg-body p-3'
                           contentClassName={classNames(
                             'd-flex flex-column gap-3',
                             { 'bg-light200': preventEmailPassword },
@@ -418,7 +431,7 @@ const HomePage: React.FC = () => {
                                       !disableForgotPassword && (
                                         <Link
                                           tabIndex={-1}
-                                          className='float-right'
+                                          className='float-end'
                                           to={`/password-recovery${redirect}`}
                                           onClick={showForgotPassword}
                                         >
@@ -493,7 +506,7 @@ const HomePage: React.FC = () => {
                     ) : (
                       <>
                         <Card
-                          className='mb-3 bg-white p-3'
+                          className='mb-3 bg-body p-3'
                           contentClassName={classNames(
                             'd-flex flex-column gap-3',
                             { 'bg-light200': preventEmailPassword },
@@ -622,12 +635,16 @@ const HomePage: React.FC = () => {
                                   name='email'
                                   id='email'
                                 />
-                                {isFreeEmailDomain(email) && (
-                                  <InfoMessage>
-                                    Signing up with a work email makes it easier
-                                    for co-workers to join your Flagsmith
-                                    organisation.
-                                  </InfoMessage>
+                                {blockGenericEmailDomain ? (
+                                  <ErrorMessage error='Please use your work email address to create your account.' />
+                                ) : (
+                                  isFreeEmailDomain(email) && (
+                                    <InfoMessage>
+                                      Signing up with a work email makes it
+                                      easier for co-workers to join your
+                                      Flagsmith organisation.
+                                    </InfoMessage>
+                                  )
                                 )}
                                 <InputGroup
                                   title='Password'
@@ -658,7 +675,10 @@ const HomePage: React.FC = () => {
                                     disabled={
                                       isLoading ||
                                       isSaving ||
-                                      !allRequirementsMet
+                                      !allRequirementsMet ||
+                                      !firstName.trim() ||
+                                      !lastName.trim() ||
+                                      blockGenericEmailDomain
                                     }
                                     className='px-4 mt-3 full-width'
                                     type='submit'

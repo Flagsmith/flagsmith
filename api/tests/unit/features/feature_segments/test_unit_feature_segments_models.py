@@ -4,7 +4,7 @@ from projects.models import Project
 from segments.models import Segment
 
 
-def test_feature_segment_is_less_than_other_if_priority_lower(
+def test_feature_segment_lt__lower_priority__returns_true(
     feature: Feature,
     environment: Environment,
     segment: Segment,
@@ -33,7 +33,7 @@ def test_feature_segment_is_less_than_other_if_priority_lower(
     assert result is True
 
 
-def test_feature_segments_are_created_with_correct_priority(
+def test_feature_segment_create__multiple_features_and_environments__assigns_correct_priorities(
     feature: Feature,
     environment: Environment,
     segment: Segment,
@@ -78,7 +78,7 @@ def test_feature_segments_are_created_with_correct_priority(
         environment=another_environment,
     )
 
-    # Then
+    # When / Then
     # the two with the same feature and environment are created with ascending priorities
     assert feature_segment_1.priority == 0
     assert feature_segment_2.priority == 1
@@ -89,7 +89,7 @@ def test_feature_segments_are_created_with_correct_priority(
     assert feature_segment_5.priority == 0
 
 
-def test_clone_creates_a_new_object(
+def test_feature_segment_clone__new_environment__creates_new_object(
     feature: Feature,
     environment: Environment,
     segment: Segment,

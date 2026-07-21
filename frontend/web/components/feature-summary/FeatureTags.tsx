@@ -1,8 +1,8 @@
 import React, { FC, useMemo } from 'react'
-import SegmentOverridesIcon from 'components/SegmentOverridesIcon'
+import SegmentOverridesIcon from 'components/icons/SegmentOverridesIcon'
 import Constants from 'common/constants'
 import { ProjectFlag, VCSProvider } from 'common/types/responses'
-import IdentityOverridesIcon from 'components/IdentityOverridesIcon'
+import IdentityOverridesIcon from 'components/icons/IdentityOverridesIcon'
 import TagValues from 'components/tags/TagValues'
 import UnhealthyFlagWarning from './UnhealthyFlagWarning'
 import StaleFlagWarning from './StaleFlagWarning'
@@ -38,18 +38,13 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
   }
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
 
-  const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
-    'git_code_references',
-  )
-
   const hasScannedCodeReferences =
-    isCodeReferencesEnabled && projectFlag?.code_references_counts?.length > 0
-  const codeReferencesCounts = isCodeReferencesEnabled
-    ? projectFlag?.code_references_counts?.reduce(
-        (acc, curr) => acc + curr.count,
-        0,
-      ) || 0
-    : 0
+    projectFlag?.code_references_counts?.length > 0
+  const codeReferencesCounts =
+    projectFlag?.code_references_counts?.reduce(
+      (acc, curr) => acc + curr.count,
+      0,
+    ) || 0
 
   return (
     <>
@@ -68,14 +63,22 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
         count={projectFlag.num_identity_overrides}
         showPlusIndicator={showPlusIndicator}
       />
-      {isCodeReferencesEnabled && hasScannedCodeReferences && (
+      {hasScannedCodeReferences && (
         <Tooltip
           title={
-            <VCSProviderTag
-              count={codeReferencesCounts}
-              isWarning={codeReferencesCounts === 0}
-              vcsProvider={VCSProvider.GITHUB}
-            />
+            <div
+              onClick={(e) => {
+                e.stopPropagation()
+                editFeature(Constants.featurePanelTabs.USAGE)
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              <VCSProviderTag
+                count={codeReferencesCounts}
+                isWarning={codeReferencesCounts === 0}
+                vcsProvider={VCSProvider.GITHUB}
+              />
+            </div>
           }
           place='top'
         >

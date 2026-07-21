@@ -7,7 +7,7 @@ from custom_auth.oauth.github import NON_200_ERROR_MESSAGE, GithubUser
 
 
 @mock.patch("custom_auth.oauth.github.requests")
-def test_get_access_token_success_with_oauth_github(
+def test_github_user__valid_code__returns_access_token(
     mock_requests: mock.MagicMock,
 ) -> None:
     # Given
@@ -37,7 +37,7 @@ def test_get_access_token_success_with_oauth_github(
 
 
 @mock.patch("custom_auth.oauth.github.requests")
-def test_get_access_token_fail_non_200_with_github_oauth(
+def test_github_user__non_200_response__raises_github_error(
     mock_requests: mock.MagicMock,
 ) -> None:
     # Given
@@ -60,7 +60,7 @@ def test_get_access_token_fail_non_200_with_github_oauth(
 
 
 @mock.patch("custom_auth.oauth.github.requests")
-def test_get_access_token_fail_token_expired_with_github_oauth(
+def test_github_user__expired_token__raises_github_error(
     mock_requests: mock.MagicMock,
 ) -> None:
     # Given
@@ -87,7 +87,9 @@ def test_get_access_token_fail_token_expired_with_github_oauth(
 
 
 @mock.patch("custom_auth.oauth.github.requests")
-def test_get_user_name_and_id_with_github_oauth(mock_requests: mock.MagicMock) -> None:
+def test_github_user__valid_user_info__returns_name_and_id(
+    mock_requests: mock.MagicMock,
+) -> None:
     # Given
     # mock the post to get the access token
     mock_requests.post.return_value = mock.MagicMock(
@@ -118,7 +120,9 @@ def test_get_user_name_and_id_with_github_oauth(mock_requests: mock.MagicMock) -
 
 
 @mock.patch("custom_auth.oauth.github.requests")
-def test_get_primary_email_with_github_oauth(mock_requests: mock.MagicMock) -> None:
+def test_github_user__multiple_emails__returns_primary_email(
+    mock_requests: mock.MagicMock,
+) -> None:
     # Given
     # mock the post to get the access token
     mock_requests.post.return_value = mock.MagicMock(

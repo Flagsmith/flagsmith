@@ -1,0 +1,93 @@
+{/* Skeleton.mdx */}
+import { Meta, Canvas, Story } from '@storybook/addon-docs/blocks'
+import * as SkeletonStories from './Skeleton.stories'
+
+<Meta of={SkeletonStories} />
+
+# Skeleton
+
+A skeleton is a placeholder that approximates the shape of content while it loads. It reduces perceived loading time by showing users the structure of the page before data arrives — instead of a blank screen or a spinner.
+
+Skeletons work best when the layout is **predictable** (list rows, cards, settings). They signal to the user that content is coming and *where* it will appear. The brain processes the skeleton shape as "almost loaded" rather than "waiting", which makes the load feel faster even when it isn't.
+
+---
+
+## When to use
+
+- **Loading data from an API** and you want to show the layout shape before content arrives.
+- **The content area has a predictable structure** — list rows, cards, form fields, settings.
+- **You want to reduce perceived loading time** by showing a placeholder instead of a spinner.
+
+## When not to use
+
+- **The loading state is brief** (&lt;200ms) — use a spinner instead. A skeleton that flashes and disappears is worse than no skeleton.
+- **The content structure is unpredictable** — use a full-page spinner or a progress bar.
+- **You're loading a single value** — inline spinners or a simple "Loading..." text work better.
+
+---
+
+## How it works
+
+The `.skeleton` CSS class applies a **shimmer gradient animation** — a light band sweeps across the placeholder from left to right, creating the impression of activity.
+
+- **Dark mode:** The gradient automatically switches to lighter alpha values (`white-alpha-8` / `white-alpha-16`). No extra code needed.
+- **Reduced motion:** The animation respects `prefers-reduced-motion: reduce`. Users who disable motion see a static grey placeholder instead of the shimmer.
+- **Screen readers:** Skeleton elements are purely decorative — they carry no semantic meaning and screen readers skip them.
+
+---
+
+## Variants
+
+Three shape variants for different content types:
+
+<Canvas of={SkeletonStories.Variants} />
+
+<table>
+  <thead>
+    <tr>
+      <th>Variant</th>
+      <th>Shape</th>
+      <th>Use for</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>text</code> (default)</td>
+      <td>Rectangular bar, 16px tall, 4px radius</td>
+      <td>Text lines, labels, values</td>
+    </tr>
+    <tr>
+      <td><code>badge</code></td>
+      <td>Pill shape, 12px radius</td>
+      <td>Tags, status badges, chips</td>
+    </tr>
+    <tr>
+      <td><code>circle</code></td>
+      <td>Fully round</td>
+      <td>Avatars, icon placeholders, toggle switches</td>
+    </tr>
+  </tbody>
+</table>
+
+---
+
+## Composing skeletons
+
+The goal is that the skeleton and the loaded content **occupy the same space** — no layout shift when data arrives. Compose multiple Skeleton elements to match your content layout.
+
+### Feature row
+
+<Canvas of={SkeletonStories.FeatureRowExample} />
+
+### Settings section
+
+<Canvas of={SkeletonStories.SettingsExample} />
+
+---
+
+## Best practices
+
+1. **Match the real content dimensions.** If the loaded text is ~180px wide, make the skeleton ~180px wide. Close is good enough — exact pixel matching isn't needed.
+2. **Don't skeleton everything.** Static UI (headers, sidebars, navigation) should render immediately. Only skeleton the dynamic content area.
+3. **Keep skeleton structure simple.** Two or three shapes per row is enough. Over-detailed skeletons are harder to maintain and don't improve the user experience.
+4. **Avoid layout shift.** The skeleton should occupy the same height as the loaded content. If the loaded list has 65px rows, the skeleton rows should be 65px too.

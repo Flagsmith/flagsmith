@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ProjectStore from 'common/stores/project-store'
 import ReactMarkdown from 'react-markdown'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Utils from 'common/utils/utils'
 import { Environment, FeatureImport, Res } from 'common/types/responses'
 import { useGetFeatureImportsQuery } from 'common/services/useFeatureImport'
@@ -76,7 +76,7 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
           className='butter-bar font-weight-medium'
           style={{
             backgroundColor: environmentDetail.banner_colour,
-            color: 'white',
+            color: Utils.getContrastColour(environmentDetail.banner_colour),
           }}
         >
           {environmentDetail.banner_text}

@@ -36,6 +36,9 @@ class MetadataField(AbstractBaseExportableModel):
     )
     description = models.TextField(blank=True, null=True)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    project = models.ForeignKey(
+        "projects.Project", on_delete=models.CASCADE, null=True, blank=True
+    )
 
     def is_field_value_valid(self, field_value: str) -> bool:
         if len(field_value) > FIELD_VALUE_MAX_LENGTH:
@@ -68,7 +71,18 @@ class MetadataField(AbstractBaseExportableModel):
         return True
 
     class Meta:
-        unique_together = ("name", "organisation")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "organisation"],
+                condition=models.Q(project__isnull=True),
+                name="unique_org_level_metadata_field",
+            ),
+            models.UniqueConstraint(
+                fields=["name", "organisation", "project"],
+                condition=models.Q(project__isnull=False),
+                name="unique_project_level_metadata_field",
+            ),
+        ]
 
 
 class MetadataModelField(AbstractBaseExportableModel):

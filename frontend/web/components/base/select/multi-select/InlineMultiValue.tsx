@@ -1,5 +1,5 @@
 import { MultiSelectOption } from './MultiSelect'
-import { MultiValueProps } from 'react-select/lib/components/MultiValue'
+import { MultiValueProps } from 'react-select'
 import { getDarkMode } from 'project/darkMode'
 
 export const InlineMultiValue = (props: MultiValueProps<MultiSelectOption>) => {

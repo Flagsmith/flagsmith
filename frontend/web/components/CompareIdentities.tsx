@@ -10,7 +10,7 @@ import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import Tag from './tags/Tag'
 import PanelSearch from './PanelSearch'
 import { IdentityFeatureState } from 'common/types/responses'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Switch from './Switch'
 import FeatureValue from './feature-summary/FeatureValue'
 import { sortBy } from 'lodash'
@@ -18,11 +18,12 @@ import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
 import Button from './base/forms/Button'
 import ProjectStore from 'common/stores/project-store'
-import SegmentOverridesIcon from './SegmentOverridesIcon'
-import IdentityOverridesIcon from './IdentityOverridesIcon'
+import SegmentOverridesIcon from './icons/SegmentOverridesIcon'
+import IdentityOverridesIcon from './icons/IdentityOverridesIcon'
 import Tooltip from './Tooltip'
 import PageTitle from './PageTitle'
 import { getDarkMode } from 'project/darkMode'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 
 type CompareIdentitiesType = {
   projectId: string
@@ -73,7 +74,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
   const { isLoading: permissionLoading, permission } = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: Utils.getViewIdentitiesPermission(),
+    permission: EnvironmentPermission.VIEW_IDENTITIES,
   })
 
   const { data: leftUser } = useGetIdentityFeatureStatesAllQuery(
@@ -122,12 +123,13 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
   const isEdge = Utils.getIsEdge()
 
   const goUser = (user: IdentitySelectType['value'], feature: string) => {
+    if (!user) return
     window.open(
       `${
         document.location.origin
-      }/project/${projectId}/environment/${environmentId}/users/${encodeURIComponent(
-        user!.label,
-      )}/${user!.value}?flag=${encodeURIComponent(feature)}`,
+      }/project/${projectId}/environment/${environmentId}/identities/${encodeURIComponent(
+        user.label,
+      )}/${user.value}?flag=${encodeURIComponent(feature)}`,
       '_blank',
     )
   }
@@ -193,7 +195,9 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
       {!permission && !permissionLoading ? (
         <div
           dangerouslySetInnerHTML={{
-            __html: Constants.environmentPermissions('View Identities'),
+            __html: Constants.environmentPermissions(
+              EnvironmentPermission.VIEW_IDENTITIES,
+            ),
           }}
         />
       ) : (
@@ -335,7 +339,6 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                   >
                     {featureStateLeft && (
                       <FeatureValue
-                        includeEmpty={false}
                         value={featureStateLeft?.feature_state_value}
                       />
                     )}
@@ -354,7 +357,6 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                   >
                     {featureStateRight && (
                       <FeatureValue
-                        includeEmpty={false}
                         value={featureStateRight?.feature_state_value}
                       />
                     )}

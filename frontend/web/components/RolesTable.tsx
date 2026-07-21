@@ -5,13 +5,14 @@ import { User, Role } from 'common/types/responses'
 import PanelSearch from './PanelSearch'
 import Button from './base/forms/Button'
 import ConfirmDeleteRole from './modals/ConfirmDeleteRole'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Panel from './base/grid/Panel'
 import { useGetGroupsQuery } from 'common/services/useGroup'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import { useHasPermission } from 'common/providers/Permission'
 import { withRouter, useHistory, RouteComponentProps } from 'react-router-dom'
+import { OrganisationPermission } from 'common/types/permissions.types'
 const rolesWidths = [250, 100]
 
 interface RolesTableType extends RouteComponentProps {
@@ -83,7 +84,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
         <h5 className='m-b-0'>Roles</h5>
         {Utils.renderWithPermission(
           isAdmin,
-          Constants.organisationPermissions('Admin'),
+          Constants.organisationPermissions(OrganisationPermission.ADMIN),
           <Button
             disabled={!isAdmin}
             className='mr-2'

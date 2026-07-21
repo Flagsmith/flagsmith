@@ -1,8 +1,8 @@
 import React from 'react'
 import { Organisation } from 'common/types/responses'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
-import Payment from 'components/modals/Payment'
+import Payment from 'components/modals/payment'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import StatItem, { StatItemProps } from 'components/StatItem'
 
@@ -140,7 +140,10 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
         </>
       )}
       <h5>Manage Payment Plan</h5>
-      <Payment viewOnly={false} />
+      <Payment
+        organisation={organisation}
+        isPaymentsEnabled={Utils.getFlagsmithHasFeature('payments_enabled')}
+      />
     </div>
   )
 }

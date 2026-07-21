@@ -4,11 +4,12 @@ from core.models import AbstractBaseExportableModel
 from projects.models import Project
 
 
-class TagType(models.Choices):
+class TagType(models.TextChoices):
     NONE = "NONE"
     STALE = "STALE"
     GITHUB = "GITHUB"
     UNHEALTHY = "UNHEALTHY"
+    GITLAB = "GITLAB"
 
 
 class Tag(AbstractBaseExportableModel):
@@ -28,7 +29,7 @@ class Tag(AbstractBaseExportableModel):
         help_text="When applied to a feature, it means this feature should be excluded from stale flags logic.",
     )
     type = models.CharField(
-        default=TagType.NONE.value,
+        default=TagType.NONE,
         choices=TagType.choices,
         help_text="Field used to provide a consistent identifier for the FE and API to use for business logic.",
         max_length=100,
@@ -36,6 +37,13 @@ class Tag(AbstractBaseExportableModel):
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "label", "type"],
+                condition=models.Q(is_system_tag=True),
+                name="unique_project_label_type_system_tag",
+            )
+        ]
 
     def __str__(self):  # type: ignore[no-untyped-def]
         return "Tag %s" % self.label

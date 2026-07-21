@@ -2,8 +2,9 @@ import typing
 
 import pytest
 from django.contrib.sites.models import Site
+from django.test import RequestFactory
 
-from core.helpers import get_current_site_url
+from core.helpers import get_current_site_url, get_request_base_url
 
 if typing.TYPE_CHECKING:
     from pytest_django.fixtures import DjangoAssertNumQueries, SettingsWrapper
@@ -12,7 +13,7 @@ if typing.TYPE_CHECKING:
 pytestmark = pytest.mark.django_db
 
 
-def test_get_current_site_url_returns_correct_url_if_site_exists(
+def test_get_current_site_url__site_exists__returns_correct_url(
     settings: "SettingsWrapper",
 ) -> None:
     # Given
@@ -27,7 +28,7 @@ def test_get_current_site_url_returns_correct_url_if_site_exists(
     assert url == f"https://{expected_domain}"
 
 
-def test_get_current_site_url_uses_default_url_if_site_does_not_exist(
+def test_get_current_site_url__site_does_not_exist__returns_default_url(
     settings: "SettingsWrapper",
 ) -> None:
     # Given
@@ -71,7 +72,7 @@ def test_get_current_site_url__site_created__cached_return_expected(
     assert url_with_site == f"https://{expected_domain_with_site}"
 
 
-def test_get_current_site__domain_override__with_site__return_expected(
+def test_get_current_site_url__domain_override_with_site__returns_override(
     settings: "SettingsWrapper",
 ) -> None:
     # Given
@@ -88,7 +89,7 @@ def test_get_current_site__domain_override__with_site__return_expected(
     assert url == f"https://{expected_domain}"
 
 
-def test_get_current_site__domain_override__no_site__return_expected(
+def test_get_current_site_url__domain_override_no_site__returns_override(
     settings: "SettingsWrapper",
 ) -> None:
     # Given
@@ -136,3 +137,26 @@ def test_get_current_site__localhost__return_expected(
 
     # Then
     assert url == f"http://{expected_domain}"
+
+
+def test_get_request_base_url__no_request__returns_empty_string() -> None:
+    # Given / When
+    url = get_request_base_url()
+
+    # Then
+    assert url == ""
+
+
+def test_get_request_base_url__request__returns_absolute_base_url(
+    rf: RequestFactory,
+    settings: "SettingsWrapper",
+) -> None:
+    # Given
+    settings.ALLOWED_HOSTS = ["some-host.example.com"]
+    request = rf.get("/api/v1/some/path", HTTP_HOST="some-host.example.com")
+
+    # When
+    url = get_request_base_url(request)
+
+    # Then
+    assert url == "http://some-host.example.com/"

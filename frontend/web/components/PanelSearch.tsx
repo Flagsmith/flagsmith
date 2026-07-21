@@ -11,13 +11,14 @@ import React, {
 import { AutoSizer, List } from 'react-virtualized'
 import Popover from './base/Popover'
 import Input from './base/forms/Input'
-import Icon from './Icon'
-import classNames from 'classnames'
+import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronUp } from 'ionicons/icons'
 import Button from './base/forms/Button'
 import Paging from './Paging'
-import _ from 'lodash'
+import lodashFilter from 'lodash/filter'
+import find from 'lodash/find'
+import orderBy from 'lodash/orderBy'
 import Panel from './base/grid/Panel'
 import Utils from 'common/utils/utils'
 import { SortOrder } from 'common/types/requests'
@@ -29,7 +30,7 @@ export type SortOption = {
   label: string
 }
 
-export interface PanelSearchProps<T> {
+interface PanelSearchProps<T> {
   actionButton?: ReactNode
   filterElement?: ReactNode
   filterRow?: (item: T, search: string, index: number) => boolean
@@ -84,7 +85,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
 
   const defaultSortingOption = useMemo(() => {
     return sorting
-      ? (_.find(sorting, { default: true }) as SortOption | undefined)
+      ? (find(sorting, { default: true }) as SortOption | undefined)
       : undefined
   }, [sorting])
 
@@ -103,7 +104,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
   const sortItems = useCallback(
     (itemsToSort: T[]): T[] => {
       if (!sortBy) return itemsToSort
-      return _.orderBy(
+      return orderBy(
         itemsToSort,
         [sortBy],
         [(sortOrder?.toLowerCase() || 'asc') as 'asc' | 'desc'],
@@ -118,7 +119,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
       search = search.replace(/^"+|"+$/g, '')
     }
     if (filterRow && (search || filter)) {
-      const filtered = _.filter(items, (item, index) =>
+      const filtered = lodashFilter(items, (item, index) =>
         filterRow(item, search.toLowerCase(), index),
       )
       return sortItems(filtered)
@@ -189,12 +190,64 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
   const filteredItems = filterItems()
 
   const currentSort: SortOption | undefined = useMemo(() => {
-    return sorting ? _.find(sorting, (v) => v.value === sortBy) : undefined
+    return sorting ? find(sorting, (v) => v.value === sortBy) : undefined
   }, [sorting, sortBy])
 
   let search = propSearch || internalSearch || ''
   if (exact) {
     search = search.replace(/^"+|"+$/g, '')
+  }
+
+  const renderListContent = (): ReactNode => {
+    if (isLoading && (!filteredItems || !items)) {
+      return (
+        <div className='text-center'>
+          <Loader />
+        </div>
+      )
+    }
+    if (filteredItems && filteredItems.length) {
+      return (
+        <div
+          className={props.listClassName}
+          style={isLoading ? { opacity: 0.5 } : undefined}
+        >
+          {renderContainer(filteredItems)}
+        </div>
+      )
+    }
+    if (renderNoResults && !search) {
+      return <>{renderNoResults}</>
+    }
+    return (
+      <Row className='list-item'>
+        {!isLoading && (
+          <>
+            {props.noResultsText ? (
+              props.noResultsText(search) || (
+                <div className='table-column'>
+                  No results{' '}
+                  {search && (
+                    <span>
+                      for <strong>{` "${search}"`}</strong>
+                    </span>
+                  )}
+                </div>
+              )
+            ) : (
+              <div className='table-column'>
+                No results{' '}
+                {search && (
+                  <span>
+                    for <strong>{` "${search}"`}</strong>
+                  </span>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </Row>
+    )
   }
 
   if (
@@ -216,7 +269,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
             {props.filterElement && props.filterElement}
 
             {sorting && (
-              <Row className='mr-3 relative'>
+              <Row className='mr-3 position-relative'>
                 <Popover
                   renderTitle={(toggle: () => void, isActive: boolean) => (
                     <a
@@ -304,49 +357,9 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
       }
     >
       {props.searchPanel}
-      <div
-        id={props.id}
-        className={classNames('search-list', props.listClassName)}
-        style={isLoading ? { opacity: 0.5 } : {}}
-      >
+      <div id={props.id} className='search-list'>
         {props.header}
-        {isLoading && (!filteredItems || !items) ? (
-          <div className='text-center'>
-            <Loader />
-          </div>
-        ) : filteredItems && filteredItems.length ? (
-          renderContainer(filteredItems)
-        ) : renderNoResults && !search ? (
-          renderNoResults
-        ) : (
-          <Row className='list-item'>
-            {!isLoading && (
-              <>
-                {props.noResultsText ? (
-                  props.noResultsText(search) || (
-                    <div className='table-column'>
-                      No results{' '}
-                      {search && (
-                        <span>
-                          for <strong>{` "${search}"`}</strong>
-                        </span>
-                      )}
-                    </div>
-                  )
-                ) : (
-                  <div className='table-column'>
-                    No results{' '}
-                    {search && (
-                      <span>
-                        for <strong>{` "${search}"`}</strong>
-                      </span>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </Row>
-        )}
+        {renderListContent()}
         {paging && (
           <Paging
             paging={paging}

@@ -3,7 +3,7 @@
  */
 import MaskedInput from 'react-maskedinput'
 import cn from 'classnames'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Radio from './Radio'
 import Checkbox from './Checkbox'
 
@@ -75,6 +75,7 @@ const Input = class extends React.Component {
 
   render() {
     const {
+      centered,
       disabled,
       inputClassName,
       isValid,
@@ -82,6 +83,7 @@ const Input = class extends React.Component {
       placeholderChar,
       showSuccess,
       size,
+      underline,
       ...rest
     } = this.props
 
@@ -91,6 +93,7 @@ const Input = class extends React.Component {
       {
         'focused': this.state.isFocused,
         'input-container': true,
+        'input-underline': underline,
         invalid,
         'password': this.props.type === 'password',
         'search': this.props.search,
@@ -101,7 +104,8 @@ const Input = class extends React.Component {
 
     const innerClassName = cn(
       {
-        input: true,
+        'input': true,
+        'text-center': centered,
       },
       inputClassName,
       sizeClassNames[size],
@@ -176,7 +180,7 @@ const Input = class extends React.Component {
             }}
           >
             <Icon
-              name={this.state.type === 'text' ? 'eye' : 'eye-off'}
+              name={this.state.type === 'password' ? 'eye' : 'eye-off'}
               fill={invalid && '#ef4d56'}
               width={
                 size &&
@@ -215,6 +219,7 @@ Input.defaultProps = {
 
 Input.propTypes = {
   autocomplete: propTypes.string,
+  centered: propTypes.bool,
   className: propTypes.any,
   inputClassName: OptionalString,
   isValid: propTypes.any,
@@ -226,6 +231,7 @@ Input.propTypes = {
   placeholderChar: OptionalString,
   search: propTypes.Boolean,
   size: OptionalString,
+  underline: propTypes.bool,
 }
 
 export default Input

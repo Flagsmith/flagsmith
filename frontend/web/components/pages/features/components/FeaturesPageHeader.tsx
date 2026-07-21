@@ -3,18 +3,21 @@ import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
 import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
-import FeatureLimitAlert from 'components/modals/create-feature/FeatureLimitAlert'
+import FeatureLimitAlert from 'components/modals/create-feature/components/FeatureLimitAlert'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type FeaturesPageHeaderProps = {
   onCreateFeature: () => void
   readOnly: boolean
   projectId: number
+  title?: string
 }
 
 export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
   onCreateFeature,
   projectId,
   readOnly,
+  title = 'Features',
 }) => {
   const [featureLimitAlert, setFeatureLimitAlert] = useState({
     limit: 0,
@@ -28,11 +31,11 @@ export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
         onChange={setFeatureLimitAlert}
       />
       <PageTitle
-        title={'Features'}
+        title={title}
         cta={
           <Permission
             level='project'
-            permission='CREATE_FEATURE'
+            permission={ProjectPermission.CREATE_FEATURE}
             id={projectId}
             showTooltip
             permissionName='Create Feature'

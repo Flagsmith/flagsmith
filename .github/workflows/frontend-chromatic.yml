@@ -1,0 +1,67 @@
+name: Frontend Chromatic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - frontend/web/components/**
+      - frontend/web/styles/**
+      - frontend/common/theme/**
+      - frontend/documentation/**
+      - frontend/.storybook/**
+      - .github/workflows/frontend-chromatic.yml
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - frontend/**
+      - .github/workflows/frontend-chromatic.yml
+
+permissions:
+  contents: read
+
+jobs:
+  chromatic:
+    name: Chromatic
+    runs-on: ubuntu-latest
+    # Fork PRs (incl. Dependabot) can't read CHROMATIC_PROJECT_TOKEN — GitHub
+    # withholds repo secrets from pull_request runs originating from forks, so
+    # Chromatic would fail with "Missing project token". Skip them here; main's
+    # post-merge push runs Chromatic with full secrets, so coverage isn't lost.
+    if: |
+      github.actor != 'dependabot[bot]'
+      && (github.event_name == 'push' || github.event.pull_request.draft == false)
+      && (github.event_name == 'push'
+        || github.event.pull_request.head.repo.full_name == github.repository)
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Publish to Chromatic
+        uses: chromaui/action@v16
+        with:
+          workingDir: frontend
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          # Dev-mode build keeps React's act() in the bundle —
+          # production strips it and breaks play function synthetic
+          # events (Storybook #19758).
+          buildScriptName: build-storybook:dev
+          exitZeroOnChanges: true
+          exitOnceUploaded: true
+          onlyChanged: true
+          autoAcceptChanges: main

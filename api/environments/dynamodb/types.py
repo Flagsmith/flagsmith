@@ -5,8 +5,10 @@ from datetime import datetime
 
 import boto3
 from django.conf import settings
-from flag_engine.features.models import FeatureStateModel
-from pydantic import BaseModel
+from django.utils import timezone
+from pydantic import BaseModel, Field
+
+from util.engine_models.features.models import FeatureStateModel
 
 if typing.TYPE_CHECKING:
     from projects.models import EdgeV2MigrationStatus
@@ -88,18 +90,13 @@ class IdentityOverrideV2(BaseModel):
     identifier: str
     identity_uuid: str
     feature_state: FeatureStateModel
+    created_date: datetime = Field(default_factory=timezone.now)
 
 
 @dataclass
 class IdentityOverridesV2Changeset:
     to_delete: list[IdentityOverrideV2]
     to_put: list[IdentityOverrideV2]
-
-
-@dataclass
-class IdentityOverridesV2List:
-    identity_overrides: list[IdentityOverrideV2]
-    is_num_identity_overrides_complete: bool
 
 
 @dataclass

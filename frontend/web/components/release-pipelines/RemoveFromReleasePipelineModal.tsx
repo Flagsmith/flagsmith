@@ -61,5 +61,4 @@ const RemoveFromReleasePipelineModal = ({
   )
 }
 
-export type { RemoveFromReleasePipelineModalProps }
 export default RemoveFromReleasePipelineModal

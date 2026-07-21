@@ -56,7 +56,7 @@ const LicensingTabContent: React.FC<LicensingTabContentProps> = ({
           <input
             type='file'
             ref={licenceInputRef}
-            style={{ display: 'none' }}
+            className='d-none'
             onChange={() =>
               setLicence(licenceInputRef.current?.files?.[0] ?? null)
             }
@@ -64,7 +64,7 @@ const LicensingTabContent: React.FC<LicensingTabContentProps> = ({
           <input
             type='file'
             ref={licenceSignatureInputRef}
-            style={{ display: 'none' }}
+            className='d-none'
             onChange={() =>
               setLicenceSignature(
                 licenceSignatureInputRef.current?.files?.[0] ?? null,

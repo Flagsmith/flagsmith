@@ -1,10 +1,9 @@
 from datetime import date, datetime, timedelta
-from typing import Generator, Type
+from typing import Type
 from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from django.conf import settings
 from django.utils import timezone
 from influxdb_client.client.exceptions import InfluxDBError
@@ -13,7 +12,6 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from urllib3.exceptions import HTTPError
 
-import app_analytics
 from app_analytics.dataclasses import UsageData
 from app_analytics.influxdb_wrapper import (
     InfluxDBWrapper,
@@ -24,7 +22,6 @@ from app_analytics.influxdb_wrapper import (
     get_feature_evaluation_data,
     get_multiple_event_list_for_feature,
     get_multiple_event_list_for_organisation,
-    get_range_bucket_mappings,
     get_top_organisations,
     get_usage_data,
 )
@@ -39,24 +36,11 @@ influx_org = settings.INFLUXDB_ORG
 read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
 
 
-@pytest.fixture()
-def mock_influxdb_client(monkeypatch: Generator[MonkeyPatch, None, None]) -> MagicMock:
-    mock_influxdb_client = mock.MagicMock()
-    monkeypatch.setattr(  # type: ignore[attr-defined]
-        app_analytics.influxdb_wrapper, "influxdb_client", mock_influxdb_client
-    )
-    return mock_influxdb_client
-
-
-@pytest.fixture()
-def mock_write_api(mock_influxdb_client: MagicMock) -> MagicMock:
-    mock_write_api = mock.MagicMock()
-    mock_influxdb_client.write_api.return_value = mock_write_api
-    return mock_write_api
-
-
-def test_write(mock_write_api: MagicMock) -> None:
+def test_influxdb_wrapper_write__data_point_added__calls_write_api(
+    mock_influxdb_client: MagicMock,
+) -> None:
     # Given
+    mock_write_api = mock_influxdb_client.write_api.return_value
     influxdb = InfluxDBWrapper("name")  # type: ignore[no-untyped-call]
     influxdb.add_data_point("field_name", "field_value")
 
@@ -68,12 +52,13 @@ def test_write(mock_write_api: MagicMock) -> None:
 
 
 @pytest.mark.parametrize("exception_class", [HTTPError, InfluxDBError, ApiException])
-def test_write_handles_errors(
-    mock_write_api: MagicMock,
+def test_influxdb_wrapper_write__write_raises_error__handles_gracefully(
+    mock_influxdb_client: MagicMock,
     exception_class: Type[Exception],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     # Given
+    mock_write_api = mock_influxdb_client.write_api.return_value
     mock_write_api.write.side_effect = exception_class
 
     influxdb = InfluxDBWrapper("name")  # type: ignore[no-untyped-call]
@@ -88,15 +73,13 @@ def test_write_handles_errors(
 
 
 def test_influx_db_wrapper_query__http_error__logs_expected(
+    mock_influxdb_client: MagicMock,
     mocker: MockerFixture,
 ) -> None:
     # Given
     expected_exception = HTTPError("HTTP error occurred")
-    mock_query_api = mocker.patch(
-        "app_analytics.influxdb_wrapper.influxdb_client.query_api",
-        autospec=True,
-    )
-    mock_query_api.return_value.query.side_effect = expected_exception
+    mock_query_api = mock_influxdb_client.query_api.return_value
+    mock_query_api.query.side_effect = expected_exception
     capture_exception_mock = mocker.patch(
         "app_analytics.influxdb_wrapper.capture_exception",
         autospec=True,
@@ -113,7 +96,10 @@ def test_influx_db_wrapper_query__http_error__logs_expected(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):  # type: ignore[no-untyped-def]
+def test_get_events_for_organisation__default_params__calls_query_api_with_expected_query(
+    mock_influxdb_client: MagicMock,
+) -> None:
+    # Given
     expected_query = (
         (
             f'from(bucket:"{read_bucket}") |> range(start: 2022-12-20T09:09:47.325132+00:00, '
@@ -128,13 +114,7 @@ def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):  # 
         .replace(" ", "")
         .replace("\n", "")
     )
-    mock_influxdb_client = mock.MagicMock()
-    monkeypatch.setattr(
-        app_analytics.influxdb_wrapper, "influxdb_client", mock_influxdb_client
-    )
-
-    mock_query_api = mock.MagicMock()
-    mock_influxdb_client.query_api.return_value = mock_query_api
+    mock_query_api = mock_influxdb_client.query_api.return_value
 
     # When
     get_events_for_organisation(org_id)
@@ -148,9 +128,10 @@ def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):  # 
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_influx_db_query_when_get_events_list_then_query_api_called(
-    mocker: MockerFixture,
+def test_get_event_list_for_organisation__default_params__calls_query_api_with_expected_query(
+    mock_influxdb_client: MagicMock,
 ) -> None:
+    # Given
     query = (
         f'from(bucket:"{read_bucket}") '
         f"|> range(start: 2022-12-20T09:09:47.325132+00:00, stop: 2023-01-19T09:09:47.325132+00:00) "
@@ -160,13 +141,7 @@ def test_influx_db_query_when_get_events_list_then_query_api_called(
         f'"project_id", "environment", "environment_id", "host"]) '
         f'|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")'
     )
-    mock_influxdb_client = mocker.patch(
-        "app_analytics.influxdb_wrapper.influxdb_client",
-        autospec=True,
-    )
-
-    mock_query_api = mock.MagicMock()
-    mock_influxdb_client.query_api.return_value = mock_query_api
+    mock_query_api = mock_influxdb_client.query_api.return_value
 
     # When
     get_event_list_for_organisation(org_id)
@@ -214,12 +189,14 @@ def test_influx_db_query_when_get_events_list_then_query_api_called(
     ),
 )
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_multiple_event_list_for_organisation__calls_expected(
+def test_get_multiple_event_list_for_organisation__various_filters__calls_expected_query(
+    mock_influxdb_client: MagicMock,
     mocker: MockerFixture,
     project_id: int | None,
     environment_id: int | None,
     expected_filters: list[str],
 ) -> None:
+    # Given
     expected_query = (
         f'from(bucket:"{read_bucket}") '
         "|> range(start: 2022-12-20T09:09:47.325132+00:00, stop: 2023-01-19T09:09:47.325132+00:00) "
@@ -228,11 +205,6 @@ def test_get_multiple_event_list_for_organisation__calls_expected(
         '"project_id", "environment", "environment_id", "host"]) '
         '|> group(columns: ["resource", "client_application_name", "client_application_version", "user_agent"]) '
         '|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")'
-    )
-
-    mock_influxdb_client = mocker.patch(
-        "app_analytics.influxdb_wrapper.influxdb_client",
-        autospec=True,
     )
 
     mock_query_api = mock_influxdb_client.query_api.return_value
@@ -253,15 +225,11 @@ def test_get_multiple_event_list_for_organisation__calls_expected(
     ]
 
 
-def test_get_multiple_event_list_for_organisation__returns_expected(
+def test_get_multiple_event_list_for_organisation__with_data__returns_expected_usage_data(
+    mock_influxdb_client: MagicMock,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_influxdb_client = mocker.patch(
-        "app_analytics.influxdb_wrapper.influxdb_client",
-        autospec=True,
-    )
-
     mock_query_api = mock_influxdb_client.query_api.return_value
     mock_query_api.query.return_value = [
         mocker.MagicMock(
@@ -333,7 +301,7 @@ def test_get_multiple_event_list_for_organisation__returns_expected(
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_multiple_event_list_for_organisation__labels_filter__calls_expected(
-    mocker: MockerFixture,
+    mock_influxdb_client: MagicMock,
 ) -> None:
     # Given
     expected_query = (
@@ -348,11 +316,6 @@ def test_get_multiple_event_list_for_organisation__labels_filter__calls_expected
         '|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")'
     )
 
-    mock_influxdb_client = mocker.patch(
-        "app_analytics.influxdb_wrapper.influxdb_client",
-        autospec=True,
-    )
-
     mock_query_api = mock_influxdb_client.query_api.return_value
 
     # When
@@ -365,9 +328,10 @@ def test_get_multiple_event_list_for_organisation__labels_filter__calls_expected
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_multiple_event_list_for_feature__calls_expected(
-    mocker: MockerFixture,
+def test_get_multiple_event_list_for_feature__default_params__calls_expected_query(
+    mock_influxdb_client: MagicMock,
 ) -> None:
+    # Given
     query = (
         f'from(bucket:"{read_bucket}") '
         "|> range(start: 2022-12-20T09:09:47.325132+00:00, stop: 2023-01-19T09:09:47.325132+00:00) "
@@ -382,10 +346,6 @@ def test_get_multiple_event_list_for_feature__calls_expected(
         '|> yield(name: "sum")'
     )
 
-    mock_influxdb_client = mocker.patch(
-        "app_analytics.influxdb_wrapper.influxdb_client",
-        autospec=True,
-    )
     mock_query_api = mock_influxdb_client.query_api.return_value
 
     # When
@@ -397,7 +357,7 @@ def test_get_multiple_event_list_for_feature__calls_expected(
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_multiple_event_list_for_feature__labels_filter__calls_expected(
-    mocker: MockerFixture,
+    mock_influxdb_client: MagicMock,
 ) -> None:
     # Given
     query = (
@@ -415,9 +375,6 @@ def test_get_multiple_event_list_for_feature__labels_filter__calls_expected(
         '|> yield(name: "sum")'
     )
 
-    mock_influxdb_client = mocker.patch(
-        "app_analytics.influxdb_wrapper.influxdb_client", autospec=True
-    )
     mock_query_api = mock_influxdb_client.query_api.return_value
 
     # When
@@ -432,7 +389,9 @@ def test_get_multiple_event_list_for_feature__labels_filter__calls_expected(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data__calls_expected(mocker: MockerFixture) -> None:
+def test_get_usage_data__default_params__calls_get_multiple_event_list(
+    mocker: MockerFixture,
+) -> None:
     # Given
     mocked_get_multiple_event_list_for_organisation = mocker.patch(
         "app_analytics.influxdb_wrapper.get_multiple_event_list_for_organisation",
@@ -456,7 +415,9 @@ def test_get_usage_data__calls_expected(mocker: MockerFixture) -> None:
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_feature_evaluation_data__calls_expected(mocker: MockerFixture) -> None:
+def test_get_feature_evaluation_data__default_params__calls_get_multiple_event_list(
+    mocker: MockerFixture,
+) -> None:
     # Given
     mocked_get_multiple_event_list_for_feature = mocker.patch(
         "app_analytics.influxdb_wrapper.get_multiple_event_list_for_feature",
@@ -480,7 +441,7 @@ def test_get_feature_evaluation_data__calls_expected(mocker: MockerFixture) -> N
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_event_list_for_organisation_with_date_stop_set_to_now_and_previously(
+def test_get_event_list_for_organisation__date_stop_set__returns_grouped_data(
     mocker: MockerFixture,
     organisation: Organisation,
 ) -> None:
@@ -527,7 +488,7 @@ def test_get_event_list_for_organisation_with_date_stop_set_to_now_and_previousl
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.parametrize("limit", ["10", ""])
-def test_get_top_organisations(
+def test_get_top_organisations__with_records__returns_organisation_totals(
     limit: str,
     mocker: MockerFixture,
 ) -> None:
@@ -564,7 +525,7 @@ def test_get_top_organisations(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_top_organisations_value_error(
+def test_get_top_organisations__invalid_org_id__skips_bad_data(
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -596,9 +557,11 @@ def test_get_top_organisations_value_error(
     assert dataset == {456: 43}
 
 
-def test_early_return_for_empty_range_for_influx_query_manager() -> None:
-    # When
+def test_influx_query_manager__empty_date_range__returns_empty_list() -> None:
+    # Given
     now = timezone.now()
+
+    # When
     results = InfluxDBWrapper.influx_query_manager(
         date_start=now,
         date_stop=now,
@@ -608,47 +571,44 @@ def test_early_return_for_empty_range_for_influx_query_manager() -> None:
     assert results == []
 
 
-def test_get_range_bucket_mappings_when_less_than_10_days(
+def test_select_downsampled_bucket__less_than_10_days__returns_15m_bucket(
     settings: SettingsWrapper,
 ) -> None:
     # Given
     two_days = timezone.now() - timedelta(days=2)
 
     # When
-    result = get_range_bucket_mappings(two_days)
+    result = InfluxDBWrapper.select_downsampled_bucket(two_days)
 
     # Then
     assert result == settings.INFLUXDB_BUCKET + "_downsampled_15m"
 
 
-def test_get_range_bucket_mappings_when_more_than_10_days(
+def test_select_downsampled_bucket__more_than_10_days__returns_1h_bucket(
     settings: SettingsWrapper,
 ) -> None:
     # Given
     twelve_days = timezone.now() - timedelta(days=12)
 
     # When
-    result = get_range_bucket_mappings(twelve_days)
+    result = InfluxDBWrapper.select_downsampled_bucket(twelve_days)
 
     # Then
     assert result == settings.INFLUXDB_BUCKET + "_downsampled_1h"
 
 
-def test_influx_query_manager_when_date_start_is_set_to_none(
-    mocker: MockerFixture,
+def test_influx_query_manager__date_start_none__calls_query_api(
+    mock_influxdb_client: MagicMock,
 ) -> None:
-    # Given
-    mock_client = mocker.patch("app_analytics.influxdb_wrapper.influxdb_client")
-
-    # When
+    # Given / When
     InfluxDBWrapper.influx_query_manager()
 
     # Then
-    mock_client.query_api.assert_called_once()
+    mock_influxdb_client.query_api.assert_called_once()
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_top_organisation_when_date_start_is_set_to_none(
+def test_get_top_organisations__date_start_none__uses_default_30_day_range(
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -667,7 +627,9 @@ def test_get_top_organisation_when_date_start_is_set_to_none(
     assert influx_query_call.kwargs["date_start"] == date_start
 
 
-def test_get_current_api_usage(mocker: MockerFixture) -> None:
+def test_get_current_api_usage__with_records__returns_total_value(
+    mocker: MockerFixture,
+) -> None:
     # Given
     influx_mock = mocker.patch(
         "app_analytics.influxdb_wrapper.InfluxDBWrapper.influx_query_manager"
@@ -688,3 +650,73 @@ def test_get_current_api_usage(mocker: MockerFixture) -> None:
 
     # Then
     assert result == 43
+
+
+def test_get_platform_usage_trends__empty_org_ids__returns_empty() -> None:
+    # Given / When
+    from app_analytics.influxdb_wrapper import get_platform_usage_trends
+
+    result = get_platform_usage_trends(
+        date_start=timezone.now() - timedelta(days=30),
+        date_stop=timezone.now(),
+        organisation_ids=[],
+    )
+
+    # Then
+    assert result == {}
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_platform_usage_trends__with_data__returns_daily_breakdown(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    from app_analytics.influxdb_wrapper import get_platform_usage_trends
+
+    record_mock1 = mock.MagicMock()
+    record_mock1.values = {
+        "_time": datetime(2023, 1, 18, 0, 0),
+        "resource": "flags",
+    }
+    record_mock1.get_value.return_value = 100
+
+    record_mock2 = mock.MagicMock()
+    record_mock2.values = {
+        "_time": datetime(2023, 1, 18, 0, 0),
+        "resource": "identities",
+    }
+    record_mock2.get_value.return_value = 50
+
+    record_mock3 = mock.MagicMock()
+    record_mock3.values = {
+        "_time": datetime(2023, 1, 17, 0, 0),
+        "resource": "flags",
+    }
+    record_mock3.get_value.return_value = 75
+
+    table1 = mock.MagicMock()
+    table1.records = [record_mock1, record_mock2]
+    table2 = mock.MagicMock()
+    table2.records = [record_mock3]
+
+    influx_mock = mocker.patch(
+        "app_analytics.influxdb_wrapper.InfluxDBWrapper.influx_query_manager"
+    )
+    influx_mock.return_value = [table1, table2]
+
+    now = timezone.now()
+
+    # When
+    result = get_platform_usage_trends(
+        date_start=now - timedelta(days=30),
+        date_stop=now,
+        organisation_ids=[1, 2],
+    )
+
+    # Then
+    assert "2023-01-18" in result
+    assert result["2023-01-18"]["flags"] == 100
+    assert result["2023-01-18"]["identities"] == 50
+    assert "2023-01-17" in result
+    assert result["2023-01-17"]["flags"] == 75
+    influx_mock.assert_called_once()

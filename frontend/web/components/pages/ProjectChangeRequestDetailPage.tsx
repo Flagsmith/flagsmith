@@ -18,6 +18,7 @@ import { useGetProjectQuery } from 'common/services/useProject'
 import DiffSegment from 'components/diff/DiffSegment'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { useHistory } from 'react-router-dom'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type ProjectChangeRequestPageType = {
   router: RouterChildContext['router']
@@ -37,12 +38,17 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
   const approvePermission = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'MANAGE_SEGMENTS',
+    permission: ProjectPermission.APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS,
   })
   const publishPermission = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'MANAGE_SEGMENTS',
+    permission: ProjectPermission.MANAGE_SEGMENTS,
+  })
+  const manageChangeRequestsPermission = useHasPermission({
+    id: projectId,
+    level: 'project',
+    permission: ProjectPermission.MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS,
   })
   const { data: project } = useGetProjectQuery({ id: projectId })
   const [actionChangeRequest, { isLoading: isActioning }] =
@@ -117,9 +123,10 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
       ),
       destructive: true,
       onYes: () => {
+        if (!changeRequest) return
         deleteProjectChangeRequest({
-          id: `${changeRequest!.id}`,
-          project_id: projectId,
+          id: `${changeRequest.id}`,
+          project_id: Number(projectId),
         }).then((res) => {
           // @ts-ignore
           if (!res.error) {
@@ -136,10 +143,11 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
   }
 
   const approveChangeRequest = () => {
+    if (!changeRequest) return
     actionChangeRequest({
       actionType: 'approve',
-      id: `${changeRequest!.id}`,
-      project_id: projectId,
+      id: `${changeRequest.id}`,
+      project_id: Number(projectId),
     })
   }
 
@@ -165,10 +173,11 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
         </div>
       ),
       onYes: () => {
+        if (!changeRequest) return
         actionChangeRequest({
           actionType: 'commit',
-          id: `${changeRequest!.id}`,
-          project_id: projectId,
+          id: `${changeRequest.id}`,
+          project_id: Number(projectId),
         })
       },
       title: `Publish Change Request`,
@@ -214,13 +223,14 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
       <Breadcrumb
         items={[
           {
-            title: 'Change requests',
+            title: 'Segment Change Requests',
             url: `/project/${projectId}/change-requests`,
           },
         ]}
         currentPage={changeRequest.title}
       />
       <ChangeRequestPageInner
+        canManageChangeRequests={manageChangeRequestsPermission?.permission}
         isScheduled={false}
         publishChangeRequest={publishChangeRequest}
         approvePermission={approvePermission?.permission}
@@ -231,7 +241,7 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
         addOwner={addOwner}
         removeOwner={removeOwner}
         publishPermissionDescription={Constants.projectPermissions(
-          'Update Segments',
+          ProjectPermission.MANAGE_SEGMENTS,
         )}
         deleteChangeRequest={deleteChangeRequest}
         minApprovals={minApprovals || 0}

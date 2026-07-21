@@ -40,11 +40,14 @@ type FeaturesTableFiltersProps = {
   orgId?: number
   onFilterChange: (updates: Partial<FilterState>) => void
   onClearFilters: () => void
-  viewMode: ViewMode
-  onViewModeChange: (value: ViewMode) => void
+  viewMode?: ViewMode
+  onViewModeChange?: (value: ViewMode) => void
+  excludeTag?: (tag: { type: string; is_permanent: boolean }) => boolean
+  searchResetKey?: number
 }
 
 export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
+  excludeTag,
   filters,
   hasFilters,
   isLoading,
@@ -53,6 +56,7 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
   onViewModeChange,
   orgId,
   projectId,
+  searchResetKey,
   viewMode,
 }) => {
   const {
@@ -105,6 +109,7 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
     <Row className='table-header'>
       <div className='table-column flex-row flex-fill'>
         <TableSearchFilter
+          key={searchResetKey}
           onChange={(v) => onFilterChange({ search: v || null })}
           value={search}
         />
@@ -122,6 +127,7 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
             onToggleArchived={handleToggleArchivedFilter}
             showArchived={showArchived}
             onChange={handleTagsChange}
+            excludeTag={excludeTag}
           />
           <TableValueFilter
             className='me-4'
@@ -142,13 +148,15 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
             value={groupOwners}
             onChange={(group_owners) => onFilterChange({ group_owners })}
           />
-          <TableFilterOptions
-            title={'View'}
-            className='me-4'
-            value={viewMode}
-            onChange={(value) => onViewModeChange(value as ViewMode)}
-            options={VIEW_MODE_OPTIONS}
-          />
+          {viewMode && onViewModeChange && (
+            <TableFilterOptions
+              title={'View'}
+              className='me-4'
+              value={viewMode}
+              onChange={(value) => onViewModeChange(value as ViewMode)}
+              options={VIEW_MODE_OPTIONS}
+            />
+          )}
           <TableSortFilter
             isLoading={!!isLoading}
             value={sort}

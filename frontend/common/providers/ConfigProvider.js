@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import flagsmith from 'flagsmith'
+import flagsmith from '@flagsmith/flagsmith'
 import ConfigStore from 'common/stores/config-store'
 
 export default (WrappedComponent) => {
@@ -8,7 +8,7 @@ export default (WrappedComponent) => {
       super(props)
       this.state = {
         error: ConfigStore.error,
-        isLoading: ConfigStore.model ? ConfigStore.isLoading : true,
+        isLoading: ConfigStore.hasLoaded ? ConfigStore.isLoading : true,
       }
       ES6Component(this)
     }
@@ -20,6 +20,14 @@ export default (WrappedComponent) => {
           isLoading: ConfigStore.isLoading,
         })
       })
+      // Re-sync: the store can finish loading before this subscription
+      // exists, and no further change event arrives to recover.
+      if (ConfigStore.hasLoaded || ConfigStore.error) {
+        this.setState({
+          error: ConfigStore.error,
+          isLoading: ConfigStore.isLoading,
+        })
+      }
     }
 
     render() {
@@ -28,7 +36,6 @@ export default (WrappedComponent) => {
 
       return (
         <WrappedComponent
-          ref='wrappedComponent'
           isLoading={isLoading}
           error={error}
           history={this.props.history}

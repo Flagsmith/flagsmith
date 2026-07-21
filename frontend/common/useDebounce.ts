@@ -1,26 +1,31 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 export default function useDebounce(func: any, delay: number) {
-  const [timeout, saveTimeout] = useState<NodeJS.Timeout | null>(null)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const funcRef = useRef(func)
 
-  const debouncedFunc = function () {
-    //eslint-disable-next-line
-    const args = arguments
-    if (timeout) {
-      clearTimeout(timeout)
-    }
+  // Keep the latest callback without re-creating the debounced function,
+  // so the caller doesn't have to memoise `func` themselves.
+  useEffect(() => {
+    funcRef.current = func
+  }, [func])
 
-    const newTimeout = setTimeout(function () {
-      func(...args)
-      if (newTimeout === timeout) {
-        saveTimeout(null)
-      }
-    }, delay)
+  useEffect(
+    () => () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    },
+    [],
+  )
 
-    saveTimeout(newTimeout)
-  }
-
-  return debouncedFunc as typeof func
+  return useCallback(
+    (...args: any[]) => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      timeoutRef.current = setTimeout(() => {
+        funcRef.current(...args)
+      }, delay)
+    },
+    [delay],
+  ) as typeof func
 }
 /* Usage example:
 const searchItems = useDebounce((search:string) => {

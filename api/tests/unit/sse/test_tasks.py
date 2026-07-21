@@ -1,5 +1,5 @@
 from datetime import datetime
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 from pytest_django import DjangoAssertNumQueries
@@ -17,7 +17,7 @@ from sse.tasks import (
 )
 
 
-def test_send_environment_update_message_for_project_make_correct_request(  # type: ignore[no-untyped-def]
+def test_send_environment_update_message_for_project__realtime_enabled__posts_to_all_environments(  # type: ignore[no-untyped-def]
     mocker,
     settings,
     realtime_enabled_project,
@@ -59,7 +59,9 @@ def test_send_environment_update_message_for_project_make_correct_request(  # ty
     )
 
 
-def test_send_environment_update_message_make_correct_request(mocker, settings):  # type: ignore[no-untyped-def]
+def test_send_environment_update_message__valid_config__posts_to_sse_endpoint(  # type: ignore[no-untyped-def]
+    mocker, settings
+):
     # Given
     base_url = "http://localhost:8000"
     token = "token"
@@ -82,19 +84,20 @@ def test_send_environment_update_message_make_correct_request(mocker, settings):
     )
 
 
-def test_auth_header_raises_exception_if_token_not_set(settings):  # type: ignore[no-untyped-def]
+def test_get_auth_header__token_not_set__raises_sse_auth_token_not_set(settings):  # type: ignore[no-untyped-def]
     # Given
     settings.SSE_AUTHENTICATION_TOKEN = None
 
-    # When
+    # When / Then
     with pytest.raises(SSEAuthTokenNotSet):
         get_auth_header()  # type: ignore[no-untyped-call]
 
 
-def test_track_sse_usage(  # type: ignore[no-untyped-def]
-    mocker: MockerFixture,
+def test_update_sse_usage__valid_and_invalid_logs__writes_only_valid_to_influxdb(  # type: ignore[no-untyped-def]
     environment: Environment,
     django_assert_num_queries: DjangoAssertNumQueries,
+    mock_influxdb_client: Mock,
+    mocker: MockerFixture,
     settings: SettingsWrapper,
 ):
     # Given - two valid logs
@@ -111,7 +114,6 @@ def test_track_sse_usage(  # type: ignore[no-untyped-def]
     influxdb_bucket = "test_bucket"
     settings.INFLUXDB_BUCKET = influxdb_bucket
 
-    mocked_influx_db_client = mocker.patch("sse.tasks.influxdb_client")
     mocked_influx_point = mocker.patch("sse.tasks.Point")
 
     # When
@@ -153,7 +155,7 @@ def test_track_sse_usage(  # type: ignore[no-untyped-def]
 
     # Only valid logs were written to InfluxDB
     write_method = (
-        mocked_influx_db_client.write_api.return_value.__enter__.return_value.write
+        mock_influxdb_client.write_api.return_value.__enter__.return_value.write
     )
 
     assert write_method.call_count == 1

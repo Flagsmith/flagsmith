@@ -1,8 +1,8 @@
 import Project from 'common/project'
+import Dispatcher from 'common/dispatcher/dispatcher'
+import BaseStore from './base/_store'
 
-const Dispatcher = require('../dispatcher/dispatcher')
-const BaseStore = require('./base/_store')
-window.Project = require('../project')
+window.Project = Project
 
 const controller = {
   get() {
@@ -40,14 +40,23 @@ flagsmith
     AsyncStorage,
     api: Project.flagsmithClientAPI,
     cacheFlags: true,
-    enableAnalytics: Project.flagsmithAnalytics,
+    enableAnalytics: window.E2E ? false : Project.flagsmithAnalytics,
+    enableEvents: window.E2E ? false : Project.flagsmithAnalytics,
     environmentID: Project.flagsmith,
     onChange: controller.loaded,
-    realtime: Project.flagsmithRealtime,
+    realtime: window.E2E ? false : Project.flagsmithRealtime,
+    ...(Project.evaluationAnalyticsServerUrl
+      ? {
+          evaluationAnalyticsConfig: {
+            analyticsServerUrl: Project.evaluationAnalyticsServerUrl,
+            autoTrackEvaluations: false,
+          },
+        }
+      : {}),
   })
   .catch(() => {
     controller.onError()
   })
 
 controller.store = store
-module.exports = controller.store
+export default controller.store

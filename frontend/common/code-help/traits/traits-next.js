@@ -1,5 +1,5 @@
 import Constants from 'common/constants'
-module.exports = (
+export default (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, TRAIT_NAME },
   USER_ID,
@@ -7,7 +7,7 @@ module.exports = (
 // Option 1: Identify clientside
 //Home Page
 import flagsmith from '${LIB_NAME}/isomorphic';
-import { useFlags, useFlagsmith } from 'flagsmith/react';
+import { useFlags, useFlagsmith } from '@flagsmith/flagsmith/react';
 
 export default function HomePage() {
   const flags = useFlags(['${FEATURE_NAME}','${FEATURE_NAME_ALT}']); // only causes re-render if specified flag values / traits change

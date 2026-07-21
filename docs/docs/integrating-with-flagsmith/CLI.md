@@ -14,7 +14,7 @@ workflows.
 Install globally:
 
 ```bash
-npm install -g flagsmith-cli
+npm install -g @flagsmith/cli
 ```
 
 ## Sample Usage

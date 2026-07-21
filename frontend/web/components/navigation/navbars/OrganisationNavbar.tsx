@@ -2,10 +2,10 @@ import React, { FC } from 'react'
 import NavSubLink from 'components/navigation/NavSubLink'
 import { apps, statsChart } from 'ionicons/icons'
 import Utils from 'common/utils/utils'
-import UsersIcon from 'components/svg/UsersIcon'
+import UsersIcon from 'components/icons/UsersIcon'
 import AccountStore from 'common/stores/account-store'
 import Project from 'common/project'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import OverflowNav from 'components/navigation/OverflowNav'
 
 type OrganisationNavType = {}
@@ -42,28 +42,27 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
           Usage
         </NavSubLink>
       )}
-      {AccountStore.isAdmin() && (
-        <>
-          {Utils.getFlagsmithHasFeature('organisation_integrations') && (
-            <NavSubLink
-              icon={<Icon name='layers' />}
-              id='integrations-link'
-              to={`/organisation/${
-                AccountStore.getOrganisation().id
-              }/integrations`}
-            >
-              Organisation Integrations
-            </NavSubLink>
-          )}
+      {AccountStore.isAdmin() &&
+        Utils.getFlagsmithHasFeature('organisation_integrations') && (
           <NavSubLink
-            icon={<Icon name='setting' width={24} />}
-            id='org-settings-link'
-            data-test='org-settings-link'
-            to={`/organisation/${AccountStore.getOrganisation().id}/settings`}
+            icon={<Icon name='layers' />}
+            id='integrations-link'
+            to={`/organisation/${
+              AccountStore.getOrganisation().id
+            }/integrations`}
           >
-            Organisation Settings
+            Organisation Integrations
           </NavSubLink>
-        </>
+        )}
+      {AccountStore.isAdmin() && (
+        <NavSubLink
+          icon={<Icon name='setting' width={24} />}
+          id='org-settings-link'
+          data-test='org-settings-link'
+          to={`/organisation/${AccountStore.getOrganisation().id}/settings`}
+        >
+          Organisation Settings
+        </NavSubLink>
       )}
     </OverflowNav>
   )

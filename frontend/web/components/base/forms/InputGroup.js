@@ -1,7 +1,7 @@
 /**
  * Created by kylejohnson on 25/07/2016.
  */
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import React, { Component } from 'react'
 
 const InputGroup = class extends Component {
@@ -29,7 +29,10 @@ const InputGroup = class extends Component {
         {this.props.tooltip ? (
           <Tooltip
             title={
-              <label htmlFor={id} className='cols-sm-2 control-label'>
+              <label
+                htmlFor={id}
+                className='cols-sm-2 control-label cursor-pointer'
+              >
                 <div>
                   {props.title}{' '}
                   {!props.hideTooltipIcon && <Icon name='info-outlined' />}{' '}

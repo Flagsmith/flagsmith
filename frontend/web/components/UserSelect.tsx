@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import InlineModal from './InlineModal'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import classNames from 'classnames'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'
@@ -9,14 +9,14 @@ interface UserSelectProps {
   value: any[]
   isOpen: boolean
   onToggle: () => void
-  disabled: boolean
-  onRemove?: (id: string) => void
-  onAdd?: (id: string) => void
+  disabled?: boolean
+  onRemove?: (id: number) => void
+  onAdd?: (id: number) => void
   onChange?: (value: any[]) => void
 }
 
-export const UserSelect: React.FC<UserSelectProps> = ({
-  disabled,
+const UserSelect: React.FC<UserSelectProps> = ({
+  disabled = false,
   isOpen,
   onAdd,
   onChange,

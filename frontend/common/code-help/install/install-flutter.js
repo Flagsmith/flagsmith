@@ -1,5 +1,4 @@
-module.exports =
-  () => `The client library is available from the <a href='https://pub.dev/packages/flagsmith'>https://pub.dev/packages/flagsmith</a>:
+export default () => `The client library is available from the <a href='https://pub.dev/packages/flagsmith'>https://pub.dev/packages/flagsmith</a>:
 
 dependencies:
   flagsmith:

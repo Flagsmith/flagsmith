@@ -13,7 +13,7 @@ import { Project } from 'common/types/responses'
 import { SortOrder } from 'common/types/requests'
 import Button from './base/forms/Button'
 import PanelSearch from './PanelSearch'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import AppActions from 'common/dispatcher/app-actions'
 import CreateProjectModal from './modals/CreateProject'
 
@@ -123,7 +123,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                               {Utils.renderWithPermission(
                                 canCreateProject,
                                 Constants.organisationPermissions(
-                                  Utils.getCreateProjectPermissionDescription(
+                                  Utils.getCreateProjectPermission(
                                     AccountStore.getOrganisation(),
                                   ),
                                 ),
@@ -198,9 +198,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                         {Utils.renderWithPermission(
                           canCreateProject,
                           Constants.organisationPermissions(
-                            Utils.getCreateProjectPermissionDescription(
-                              organisation,
-                            ),
+                            Utils.getCreateProjectPermission(organisation),
                           ),
                           <div className='col-md-6 col-xl-3'>
                             <Button

@@ -5,13 +5,13 @@ import requests
 import structlog
 from django.core.serializers.json import DjangoJSONEncoder
 
-from audit.models import AuditLog
-from audit.services import get_audited_instance_from_audit_log_record
 from core.signing import sign_payload
 from features.models import FeatureState
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 
 logger = structlog.get_logger("sentry_change_tracking")
+
+_DEFAULT_AUTHOR_EMAIL = "app@flagsmith.com"
 
 
 class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
@@ -31,38 +31,35 @@ class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
         self.secret = secret
 
     @staticmethod
-    def generate_event_data(audit_log_record: AuditLog) -> dict[str, Any]:
-        feature_state = get_audited_instance_from_audit_log_record(audit_log_record)
-        if not isinstance(feature_state, FeatureState):  # pragma: no cover
-            logger.warning(
-                f"{type(feature_state)} is not supported by Sentry Change Tracking integration."
-            )
-            return {}
-
-        update_published_at = feature_state.deleted_at or (
+    def generate_event_data(feature_state: FeatureState) -> dict[str, Any]:
+        timestamp = feature_state.deleted_at or (
             max(feature_state.live_from, feature_state.updated_at)
             if feature_state.live_from
             else feature_state.updated_at
         )
 
+        history_record = feature_state.history.first()
+        if history_record is None:  # pragma: no cover
+            return {}
+
         action = {
             "+": "created",
             "-": "deleted",
             "~": "updated",
-        }[audit_log_record.history_record.history_type]  # type: ignore[union-attr]
+        }[history_record.history_type]
 
-        inner_payload = {
+        return {
             "action": action,
             "flag": feature_state.feature.name,
-            "created_at": update_published_at.isoformat(timespec="seconds"),
+            "created_at": timestamp.isoformat(timespec="seconds"),
             "created_by": {
-                "id": getattr(audit_log_record.author, "email", "app@flagsmith.com"),
+                "id": getattr(
+                    history_record.history_user, "email", _DEFAULT_AUTHOR_EMAIL
+                ),
                 "type": "email",
             },
             "change_id": str(feature_state.pk),
         }
-
-        return inner_payload
 
     def _track_event(self, event: dict[str, Any]) -> None:
         action = event["action"]

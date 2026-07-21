@@ -39,8 +39,10 @@ from integrations.launch_darkly.models import (
 from integrations.launch_darkly.types import Clause
 from projects.models import Project
 from projects.tags.models import Tag
+from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
+from util.db import closing_stale_connections
 from util.util import iter_chunked_concat, truncate
 
 logger = logging.getLogger(__name__)
@@ -124,7 +126,10 @@ def _create_tags_from_ld(
 ) -> dict[str, Tag]:
     tags_by_ld_tag = {}
 
-    for ld_tag in (*ld_tags, LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL):
+    for ld_tag in (
+        *ld_tags,
+        LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL,
+    ):
         tags_by_ld_tag[ld_tag], _ = Tag.objects.update_or_create(
             label=ld_tag,
             project_id=project_id,
@@ -911,7 +916,7 @@ def _create_feature_from_ld(
             "description": ld_flag.get("description"),
             "default_enabled": False,
             "type": feature_type,
-            "is_archived": ld_flag["archived"],
+            "is_archived": ld_flag["archived"] or ld_flag["deprecated"],
         },
     )
     feature.tags.set(tags)
@@ -1101,6 +1106,13 @@ def create_import_request(
 def process_import_request(
     import_request: LaunchDarklyImportRequest,
 ) -> None:
+    if import_request.completed_at is not None:
+        logger.warning(
+            "Ignoring already-completed LaunchDarkly import request %d.",
+            import_request.id,
+        )
+        return
+
     with _complete_import_request(import_request):
         ld_token = _unsign_ld_value(
             import_request.ld_token,
@@ -1110,34 +1122,35 @@ def process_import_request(
 
         ld_client = LaunchDarklyClient(ld_token)
 
-        try:
-            ld_environments = ld_client.get_environments(project_key=ld_project_key)
-            ld_flags = ld_client.get_flags_by_envs(
-                project_key=ld_project_key,
-                environment_keys=[env["key"] for env in ld_environments],
-            )
-            ld_flag_tags = ld_client.get_flag_tags()
-            # ld_segment_tags = ld_client.get_segment_tags()
-            # Keyed by (segment, environment)
-            ld_segments: list[tuple[ld_types.UserSegment, str]] = []
-            for env in ld_environments:
-                ld_segments_for_env = ld_client.get_segments(
+        with closing_stale_connections():
+            try:
+                ld_environments = ld_client.get_environments(project_key=ld_project_key)
+                ld_flags = ld_client.get_flags_by_envs(
                     project_key=ld_project_key,
-                    environment_key=env["key"],
+                    environment_keys=[env["key"] for env in ld_environments],
                 )
-                for segment in ld_segments_for_env:
-                    ld_segments.append((segment, env["key"]))
+                ld_flag_tags = ld_client.get_flag_tags()
+                # ld_segment_tags = ld_client.get_segment_tags()
+                # Keyed by (segment, environment)
+                ld_segments: list[tuple[ld_types.UserSegment, str]] = []
+                for env in ld_environments:
+                    ld_segments_for_env = ld_client.get_segments(
+                        project_key=ld_project_key,
+                        environment_key=env["key"],
+                    )
+                    for segment in ld_segments_for_env:
+                        ld_segments.append((segment, env["key"]))
 
-        except RequestException as exc:
-            _log_error(
-                import_request=import_request,
-                error_message=(
-                    f"{exc.__class__.__name__} "
-                    f"{str(exc.response.status_code) + ' ' if exc.response else ''}"
-                    + f"when requesting {getattr(exc.request, 'path_url', 'unknown')}"
-                ),
-            )
-            raise
+            except RequestException as exc:
+                _log_error(
+                    import_request=import_request,
+                    error_message=(
+                        f"{exc.__class__.__name__} "
+                        f"{str(exc.response.status_code) + ' ' if exc.response else ''}"
+                        + f"when requesting {getattr(exc.request, 'path_url', 'unknown')}"
+                    ),
+                )
+                raise
 
         # Create environments
         environments_by_ld_environment_key = _create_environments_from_ld(
@@ -1169,3 +1182,11 @@ def process_import_request(
             segments_by_ld_key=segments_by_ld_key,
             project_id=import_request.project_id,
         )
+
+        # Count deprecated flags for reporting
+        import_request.status["deprecated_flag_count"] = sum(
+            1 for ld_flag in ld_flags if ld_flag["deprecated"]
+        )
+
+        # Refresh membership counts for the segments the import just created.
+        enqueue_membership_refresh(import_request.project)

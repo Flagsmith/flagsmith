@@ -1,10 +1,11 @@
-from datetime import date, datetime, timedelta
+from collections import defaultdict
+from datetime import datetime, timedelta
 
 import structlog
-from common.core.utils import using_database_replica
+from common.core.utils import is_saas, using_database_replica
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
-from django.db.models import Q, Sum
+from django.db.models import Q, QuerySet, Sum
 from django.utils import timezone
 from rest_framework.exceptions import NotFound
 
@@ -77,19 +78,12 @@ def get_usage_data(
     return []
 
 
-def get_usage_data_from_local_db(
+def _get_api_usage_bucket_qs(
     organisation: Organisation,
     environment_id: int | None = None,
     project_id: int | None = None,
-    date_start: datetime | None = None,
-    date_stop: datetime | None = None,
     labels_filter: Labels | None = None,
-) -> list[UsageData]:
-    if date_start is None:
-        date_start = timezone.now() - timedelta(days=30)
-    if date_stop is None:
-        date_stop = timezone.now()
-
+) -> QuerySet[APIUsageBucket]:
     qs = APIUsageBucket.objects.filter(
         environment_id__in=_get_environment_ids_for_org(organisation),
         bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
@@ -109,33 +103,154 @@ def get_usage_data_from_local_db(
     if labels_filter:
         qs = qs.filter(labels__contains=labels_filter)
 
-    qs = (
-        qs.filter(  # type: ignore[assignment]
-            created_at__date__lte=date_stop,
-            created_at__date__gt=date_start,
-        )
-        .order_by("created_at__date")
+    return qs
+
+
+def _aggregate_buckets(qs: QuerySet[APIUsageBucket]) -> list[UsageData]:
+    annotated = (
+        qs.order_by("created_at__date")
         .values("created_at__date", "resource", "labels")
         .annotate(count=Sum("total_count"))
     )
+    return map_annotated_api_usage_buckets_to_usage_data(annotated)  # type: ignore[arg-type]
 
-    return map_annotated_api_usage_buckets_to_usage_data(qs)
+
+def get_usage_data_from_local_db(
+    organisation: Organisation,
+    environment_id: int | None = None,
+    project_id: int | None = None,
+    date_start: datetime | None = None,
+    date_stop: datetime | None = None,
+    labels_filter: Labels | None = None,
+) -> list[UsageData]:
+    if date_start is None:
+        date_start = timezone.now() - timedelta(days=30)
+    if date_stop is None:
+        date_stop = timezone.now()
+
+    qs = _get_api_usage_bucket_qs(
+        organisation,
+        environment_id=environment_id,
+        project_id=project_id,
+        labels_filter=labels_filter,
+    ).filter(
+        created_at__date__lte=date_stop,
+        created_at__date__gt=date_start,
+    )
+    return _aggregate_buckets(qs)
 
 
-def get_total_events_count(organisation) -> int:  # type: ignore[no-untyped-def]
+def get_usage_data_from_local_db_for_window(
+    organisation: Organisation,
+    date_start: datetime,
+    date_stop: datetime,
+    project_id: int | None = None,
+) -> list[UsageData]:
+    qs = _get_api_usage_bucket_qs(
+        organisation,
+        project_id=project_id,
+    ).filter(
+        created_at__gte=date_start,
+        created_at__lt=date_stop,
+    )
+    return _aggregate_buckets(qs)
+
+
+def get_usage_data_for_window(
+    organisation: Organisation,
+    date_start: datetime,
+    date_stop: datetime,
+    project_id: int | None = None,
+) -> list[UsageData]:
     """
-    Return total number of events for an organisation in the last 30 days
+    Return per-resource API-call counts for an explicit datetime window.
+
+    Mirrors ``get_usage_data`` but at full datetime
+    resolution, so callers can request a window finer than a day.
     """
     if settings.USE_POSTGRES_FOR_ANALYTICS:
-        count = APIUsageBucket.objects.filter(
+        return get_usage_data_from_local_db_for_window(
+            organisation,
+            date_start=date_start,
+            date_stop=date_stop,
+            project_id=project_id,
+        )
+
+    if settings.INFLUXDB_TOKEN:
+        return get_usage_data_from_influxdb(
+            organisation_id=organisation.id,
+            project_id=project_id,
+            date_start=date_start,
+            date_stop=date_stop,
+        )
+
+    logger.warning(
+        "no-analytics-database-configured",
+        details=constants.NO_ANALYTICS_DATABASE_CONFIGURED_WARNING,
+    )
+    return []
+
+
+def get_top_organisations_from_local_db(
+    date_start: datetime,
+) -> dict[int, int]:
+    """
+    Return a mapping of organisation ID to total API call count from the
+    Postgres analytics database, for all organisations with usage since
+    ``date_start``.  Non-SaaS deployments only.
+    """
+    if is_saas():
+        raise RuntimeError("Must not run in SaaS mode")
+
+    environment_id_to_organisation_id: dict[int, int] = dict(
+        using_database_replica(Environment.objects).values_list(
+            "id", "project__organisation_id"
+        )
+    )
+
+    usage_per_environment = (
+        APIUsageBucket.objects.filter(
+            created_at__gte=date_start,
+            bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
+        )
+        .values("environment_id")
+        .annotate(total=Sum("total_count"))
+    )
+
+    calls_per_organisation: defaultdict[int, int] = defaultdict(int)
+    for row in usage_per_environment:
+        organisation_id = environment_id_to_organisation_id.get(row["environment_id"])
+        if organisation_id is not None:
+            calls_per_organisation[organisation_id] += row["total"]
+
+    return dict(calls_per_organisation)
+
+
+def get_total_events_count(
+    organisation: Organisation,
+    date_start: datetime | None = None,
+    date_stop: datetime | None = None,
+) -> int:
+    """
+    Return total number of events for an organisation for a range, or last 30 days
+    """
+    today = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    date_start = date_start or (today - timedelta(days=30))
+    date_stop = date_stop or today
+    if settings.USE_POSTGRES_FOR_ANALYTICS:
+        count: int = APIUsageBucket.objects.filter(
             environment_id__in=_get_environment_ids_for_org(organisation),
-            created_at__date__lte=date.today(),
-            created_at__date__gt=date.today() - timedelta(days=30),
+            created_at__date__lte=date_stop,
+            created_at__date__gt=date_start,
             bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
         ).aggregate(total_count=Sum("total_count"))["total_count"]
     else:
-        count = get_events_for_organisation(organisation.id)
-    return count  # type: ignore[no-any-return]
+        count = get_events_for_organisation(
+            organisation.id,
+            date_start=date_start,
+            date_stop=date_stop,
+        )
+    return count
 
 
 def get_feature_evaluation_data(
