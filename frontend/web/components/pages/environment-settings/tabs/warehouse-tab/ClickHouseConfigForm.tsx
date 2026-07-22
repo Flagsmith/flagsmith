@@ -230,18 +230,16 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
               Cancel
             </Button>
           )}
-          {requiresTest && (
-            <Button
-              id='warehouse-config-test'
-              theme='outline'
-              size='small'
-              type='button'
-              onClick={handleTest}
-              disabled={!canTest || isTesting}
-            >
-              {isTesting ? 'Testing...' : 'Test connection'}
-            </Button>
-          )}
+          <Button
+            id='warehouse-config-test'
+            theme='outline'
+            size='small'
+            type='button'
+            onClick={handleTest}
+            disabled={!requiresTest || !canTest || isTesting}
+          >
+            {isTesting ? 'Testing...' : 'Test connection'}
+          </Button>
           <Button
             id='warehouse-config-save'
             theme='primary'
