@@ -90,11 +90,22 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
         environmentId,
         warehouse_type: 'clickhouse',
       }).unwrap()
-      setTestState(result.status === 'connected' ? 'connected' : 'errored')
-      setTestDetail(result.status_detail)
+      if (result.status === 'connected') {
+        setTestState('connected')
+        setTestDetail(null)
+        toast('Connection verified')
+      } else {
+        setTestState('errored')
+        setTestDetail(result.status_detail)
+        toast(
+          result.status_detail || 'Connection failed — check your credentials',
+          'danger',
+        )
+      }
     } catch {
       setTestState('errored')
       setTestDetail(null)
+      toast('Failed to test connection', 'danger')
     }
   }
 
@@ -243,12 +254,19 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
         </div>
 
         {testState === 'connected' && (
-          <span className='wh-config-form__hint text-success'>
-            Connection verified. You can now save.
-          </span>
+          <div className='d-flex justify-content-end'>
+            <span className='wh-config-form__hint text-success'>
+              Connection verified. You can now save.
+            </span>
+          </div>
         )}
         {testState === 'errored' && (
-          <WarningMessage warningMessage={getTestFailureWarning(testDetail)} />
+          <div className='d-flex justify-content-end'>
+            <WarningMessage
+              warningMessage={getTestFailureWarning(testDetail)}
+              warningMessageClass='mb-0'
+            />
+          </div>
         )}
       </div>
     </form>
