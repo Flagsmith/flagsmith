@@ -15,6 +15,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from django.db import transaction
 
 from audit.constants import PROJECT_CREATED_MESSAGE, PROJECT_DELETED_MESSAGE
 from audit.models import AuditLog
@@ -124,18 +125,19 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         )
 
     def perform_destroy(self, instance):
-        is_master_api_key_user = getattr(
-            self.request.user, "is_master_api_key_user", False
-        )
-        AuditLog.objects.create(
-            project=instance,
-            author=None if is_master_api_key_user else self.request.user,
-            master_api_key=self.request.user.key if is_master_api_key_user else None,
-            related_object_id=instance.id,
-            related_object_type=RelatedObjectType.PROJECT.name,
-            log=PROJECT_DELETED_MESSAGE % instance.name,
-        )
-        instance.delete()
+        with transaction.atomic():
+            is_master_api_key_user = getattr(
+                self.request.user, "is_master_api_key_user", False
+            )
+            AuditLog.objects.create(
+                project=instance,
+                author=None if is_master_api_key_user else self.request.user,
+                master_api_key=self.request.user.key if is_master_api_key_user else None,
+                related_object_id=instance.id,
+                related_object_type=RelatedObjectType.PROJECT.name,
+                log=PROJECT_DELETED_MESSAGE % instance.name,
+            )
+            instance.delete()
 
     @action(
         detail=False,
