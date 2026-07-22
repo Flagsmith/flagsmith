@@ -7,6 +7,7 @@ from botocore.exceptions import ClientError
 from django.core.exceptions import ImproperlyConfigured
 from moto import (  # type: ignore[import-untyped]
     mock_firehose,
+    mock_logs,
     mock_s3,
     mock_sts,
 )
@@ -29,13 +30,14 @@ def ingestion_infra_settings(settings: SettingsWrapper) -> SettingsWrapper:
 def _clear_client_caches() -> None:
     ingestion_infra_service._get_s3_client.cache_clear()
     ingestion_infra_service._get_firehose_client.cache_clear()
+    ingestion_infra_service._get_logs_client.cache_clear()
     ingestion_infra_service._get_account_id.cache_clear()
 
 
 @pytest.fixture()
 def aws_backends(aws_credentials: None) -> Iterator[None]:
     _clear_client_caches()
-    with mock_s3(), mock_firehose(), mock_sts():
+    with mock_s3(), mock_firehose(), mock_logs(), mock_sts():
         yield
     _clear_client_caches()
 
@@ -120,6 +122,11 @@ def test_provision_ingestion_infrastructure__fresh_account__creates_bucket_and_s
         "Enabled": True,
         "RetryOptions": {"DurationInSeconds": 300},
     }
+    assert destination["CloudWatchLoggingOptions"] == {
+        "Enabled": True,
+        "LogGroupName": "/aws/kinesisfirehose/events-ingestion-org-42",
+        "LogStreamName": "DestinationDelivery",
+    }
     assert destination["ProcessingConfiguration"] == {
         "Enabled": True,
         "Processors": [
@@ -148,6 +155,14 @@ def test_provision_ingestion_infrastructure__fresh_account__creates_bucket_and_s
         DeliveryStreamName=result.stream_name
     )
     assert stream_tags["Tags"] == [{"Key": "organisation_id", "Value": "42"}]
+
+    logs = boto3.client("logs", region_name="eu-west-2")
+    log_streams = logs.describe_log_streams(
+        logGroupName="/aws/kinesisfirehose/events-ingestion-org-42",
+    )["logStreams"]
+    assert [stream["logStreamName"] for stream in log_streams] == [
+        "DestinationDelivery"
+    ]
 
     assert log.events == [
         {
@@ -221,6 +236,10 @@ def test_provision_ingestion_infrastructure__stream_creation_fails__propagates_c
         "experimentation.ingestion_infra_service._get_s3_client",
         return_value=mocker.Mock(),
     )
+    mocker.patch(
+        "experimentation.ingestion_infra_service._get_logs_client",
+        return_value=mocker.Mock(),
+    )
     mock_firehose_client: Any = mocker.Mock()
     mock_firehose_client.create_delivery_stream.side_effect = ClientError(
         {"Error": {"Code": "LimitExceededException", "Message": "too many"}},
@@ -257,6 +276,12 @@ def test_deprovision_ingestion_infrastructure__existing_resources__deletes_bucke
     firehose = boto3.client("firehose", region_name="eu-west-2")
     with pytest.raises(ClientError):
         firehose.describe_delivery_stream(DeliveryStreamName=result.stream_name)
+
+    logs = boto3.client("logs", region_name="eu-west-2")
+    with pytest.raises(ClientError):
+        logs.describe_log_streams(
+            logGroupName="/aws/kinesisfirehose/events-ingestion-org-42",
+        )
 
     assert {
         "level": "info",

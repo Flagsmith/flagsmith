@@ -47,6 +47,10 @@ OBJECT_EXPIRATION_DAYS = 30
 # be attributed per organisation.
 ORGANISATION_TAG_KEY = "organisation_id"
 
+# Firehose writes delivery failures to this CloudWatch log group and stream.
+LOG_GROUP_NAME_PREFIX = "/aws/kinesisfirehose/"
+LOG_STREAM_NAME = "DestinationDelivery"
+
 
 def _add_account_regional_namespace_header(
     params: dict[str, Any],
@@ -73,6 +77,11 @@ def _get_firehose_client() -> "Any":
 
 
 @lru_cache(maxsize=1)
+def _get_logs_client() -> "Any":
+    return boto3.client("logs", region_name=AWS_REGION)
+
+
+@lru_cache(maxsize=1)
 def _get_account_id() -> str:
     sts = boto3.client("sts", region_name=AWS_REGION)
     return sts.get_caller_identity()["Account"]  # type: ignore[no-any-return]
@@ -84,6 +93,10 @@ def get_bucket_name(organisation_id: int) -> str:
 
 def get_stream_name(organisation_id: int) -> str:
     return f"{STREAM_NAME_PREFIX}{organisation_id}"
+
+
+def get_log_group_name(organisation_id: int) -> str:
+    return f"{LOG_GROUP_NAME_PREFIX}{get_stream_name(organisation_id)}"
 
 
 def _create_events_bucket(bucket_name: str, *, organisation_id: int) -> None:
@@ -127,12 +140,20 @@ def _create_events_bucket(bucket_name: str, *, organisation_id: int) -> None:
     )
 
 
-def _expected_destination_configuration(bucket_name: str) -> dict[str, Any]:
+def _expected_destination_configuration(
+    bucket_name: str,
+    log_group_name: str,
+) -> dict[str, Any]:
     return {
         "RoleARN": settings.INGESTION_FIREHOSE_DELIVERY_ROLE_ARN,
         "BucketARN": f"arn:aws:s3:::{bucket_name}",
         "Prefix": EVENTS_PREFIX,
         "ErrorOutputPrefix": ERRORS_PREFIX,
+        "CloudWatchLoggingOptions": {
+            "Enabled": True,
+            "LogGroupName": log_group_name,
+            "LogStreamName": LOG_STREAM_NAME,
+        },
         "BufferingHints": {
             "SizeInMBs": BUFFERING_SIZE_MB,
             "IntervalInSeconds": BUFFERING_INTERVAL_SECONDS,
@@ -175,11 +196,19 @@ def _create_delivery_stream(
     bucket_name: str,
     organisation_id: int,
 ) -> None:
+    log_group_name = get_log_group_name(organisation_id)
+    logs = _get_logs_client()
+    logs.create_log_group(logGroupName=log_group_name)
+    logs.create_log_stream(
+        logGroupName=log_group_name,
+        logStreamName=LOG_STREAM_NAME,
+    )
     _get_firehose_client().create_delivery_stream(
         DeliveryStreamName=stream_name,
         DeliveryStreamType="DirectPut",
         ExtendedS3DestinationConfiguration=_expected_destination_configuration(
-            bucket_name
+            bucket_name,
+            log_group_name,
         ),
         Tags=[{"Key": ORGANISATION_TAG_KEY, "Value": str(organisation_id)}],
     )
@@ -221,12 +250,14 @@ def _delete_events_bucket(bucket_name: str) -> None:
 def deprovision_ingestion_infrastructure(organisation_id: int) -> None:
     bucket_name = get_bucket_name(organisation_id)
     stream_name = get_stream_name(organisation_id)
+    log_group_name = get_log_group_name(organisation_id)
 
     _get_firehose_client().delete_delivery_stream(
         DeliveryStreamName=stream_name,
         AllowForceDelete=True,
     )
     _delete_events_bucket(bucket_name)
+    _get_logs_client().delete_log_group(logGroupName=log_group_name)
     logger.info(
         "ingestion_infra.deprovisioned",
         organisation__id=organisation_id,
