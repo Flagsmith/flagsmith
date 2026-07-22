@@ -15,7 +15,11 @@ import {
   isClickHouseConfigDirty,
   isClickHouseFormValid,
 } from './clickhouseConfig'
-import { getButtonLabel } from './warehouseFormUtils'
+import {
+  getButtonLabel,
+  getTestFailureWarning,
+  getWarehouseErrorMessage,
+} from './warehouseFormUtils'
 import './ConfigForm.scss'
 
 type ClickHouseConfigFormProps = {
@@ -201,13 +205,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
           </div>
         </div>
 
-        {error && (
-          <ErrorMessage
-            error={`Failed to ${
-              isEdit ? 'update' : 'create'
-            } warehouse connection. Please try again.`}
-          />
-        )}
+        {error && <ErrorMessage error={getWarehouseErrorMessage(isEdit)} />}
 
         <div className='wh-config-form__actions'>
           {isEdit && onCancel && (
@@ -250,11 +248,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
           </span>
         )}
         {testState === 'errored' && (
-          <WarningMessage
-            warningMessage={`We couldn't establish a connection${
-              testDetail ? `: ${testDetail}` : '.'
-            } You can save anyway and test again later, but events won't be delivered until the connection succeeds.`}
-          />
+          <WarningMessage warningMessage={getTestFailureWarning(testDetail)} />
         )}
       </div>
     </form>
