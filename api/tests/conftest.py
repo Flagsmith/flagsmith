@@ -113,7 +113,6 @@ from projects.models import (
 )
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
-from tests.test_helpers import reload_urlconf
 from tests.types import (
     AdminClientAuthType,
     EnableFeaturesFixture,
@@ -166,28 +165,6 @@ def pytest_configure(config: pytest.Config) -> None:
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
-
-
-@pytest.fixture()
-def is_oss(mocker: MockerFixture) -> typing.Generator[None, None, None]:
-    mocked_is_oss = mocker.patch("common.core.utils.is_oss", return_value=True)
-    reload_urlconf()
-
-    yield
-
-    mocker.stop(mocked_is_oss)
-    reload_urlconf()
-
-
-@pytest.fixture()
-def is_saas(mocker: MockerFixture) -> typing.Generator[None, None, None]:
-    mocked_is_saas = mocker.patch("common.core.utils.is_saas", return_value=True)
-    reload_urlconf()
-
-    yield
-
-    mocker.stop(mocked_is_saas)
-    reload_urlconf()
 
 
 @pytest.fixture()

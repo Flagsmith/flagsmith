@@ -24,10 +24,7 @@ class EnvironmentOnboardingStatusAPIView(RetrieveAPIView[Environment]):
     lookup_url_kwarg = "environment_api_key"
     serializer_class = EnvironmentOnboardingStatusSerializer
 
-    @extend_schema(
-        request=EnvironmentOnboardingStatusUpdateSerializer,
-        responses={204: None},
-    )
+    @extend_schema(exclude=True)
     def put(self, request: Request, environment_api_key: str) -> Response:
         """Mark this environment as having been evaluated by a client SDK."""
         serializer = EnvironmentOnboardingStatusUpdateSerializer(data=request.data)
