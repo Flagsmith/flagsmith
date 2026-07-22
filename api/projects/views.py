@@ -110,6 +110,9 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
     def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         project = serializer.save()
+        is_master_api_key_user = getattr(
+            self.request.user, "is_master_api_key_user", False
+        )
         if getattr(self.request.user, "is_master_api_key_user", False) is False:
             UserProjectPermission.objects.create(  # type: ignore[misc]
                 user=self.request.user, project=project, admin=True
