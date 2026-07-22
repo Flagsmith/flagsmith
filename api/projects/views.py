@@ -124,11 +124,11 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         )
 
     def perform_destroy(self, instance):
+        is_master_api_key_user = getattr(self.request.user, "is_master_api_key_user", False)
         AuditLog.objects.create(
             project=instance,
-            author=self.request.user
-            if not getattr(self.request.user, "is_master_api_key_user", False)
-            else None,
+            author=None if is_master_api_key_user else self.request.user,
+            master_api_key=self.request.user.key if is_master_api_key_user else None,
             related_object_id=instance.id,
             related_object_type=RelatedObjectType.PROJECT.name,
             log=PROJECT_DELETED_MESSAGE % instance.name,
