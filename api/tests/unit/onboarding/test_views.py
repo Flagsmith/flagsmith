@@ -1,5 +1,4 @@
-from unittest.mock import MagicMock
-
+import pytest
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -11,8 +10,9 @@ from organisations.models import Organisation
 from users.models import FFAdminUser
 
 
+@pytest.mark.usefixtures("is_oss")
 def test_send_onboarding_request__non_admin_user__returns_forbidden(
-    staff_client: APIClient, is_oss: MagicMock
+    staff_client: APIClient,
 ) -> None:
     # Given
     url = reverse("api-v1:onboarding:send-onboarding-request")
@@ -24,8 +24,9 @@ def test_send_onboarding_request__non_admin_user__returns_forbidden(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
+@pytest.mark.usefixtures("is_oss")
 def test_send_onboarding_request__no_organisation__returns_bad_request(
-    admin_client_original: APIClient, is_oss: MagicMock
+    admin_client_original: APIClient,
 ) -> None:
     # Given
     url = reverse("api-v1:onboarding:send-onboarding-request")
@@ -41,12 +42,12 @@ def test_send_onboarding_request__no_organisation__returns_bad_request(
     )
 
 
+@pytest.mark.usefixtures("is_oss")
 def test_send_onboarding_request__valid_admin_with_org__returns_no_content(
     admin_client_original: APIClient,
     mocker: MockerFixture,
     organisation: Organisation,
     admin_user: FFAdminUser,
-    is_oss: MagicMock,
 ) -> None:
     # Given
     mocked_requests = mocker.patch("onboarding.tasks.requests")
@@ -69,11 +70,11 @@ def test_send_onboarding_request__valid_admin_with_org__returns_no_content(
     )
 
 
+@pytest.mark.usefixtures("is_saas")
 def test_receive_onboarding_request__no_hubspot_token__returns_bad_request(
     settings: SettingsWrapper,
     api_client: APIClient,
     db: None,
-    is_saas: MagicMock,
 ) -> None:
     # Given
     settings.HUBSPOT_ACCESS_TOKEN = None
@@ -88,12 +89,12 @@ def test_receive_onboarding_request__no_hubspot_token__returns_bad_request(
     assert response.json()["message"] == "HubSpot access token not configured"
 
 
+@pytest.mark.usefixtures("is_saas")
 def test_receive_onboarding_request__valid_data__creates_lead(
     settings: SettingsWrapper,
     api_client: APIClient,
     mocker: MockerFixture,
     db: None,
-    is_saas: None,
 ) -> None:
     # Given
     settings.HUBSPOT_ACCESS_TOKEN = "some-token"
@@ -118,12 +119,12 @@ def test_receive_onboarding_request__valid_data__creates_lead(
     mocked_create_self_hosted_onboarding_lead.assert_called_once_with(**data)
 
 
+@pytest.mark.usefixtures("is_saas")
 def test_receive_onboarding_request__repeated_requests__throttles_by_ip(
     settings: SettingsWrapper,
     api_client: APIClient,
     mocker: MockerFixture,
     db: None,
-    is_saas: MagicMock,
 ) -> None:
     # Given
     settings.HUBSPOT_ACCESS_TOKEN = "some-token"

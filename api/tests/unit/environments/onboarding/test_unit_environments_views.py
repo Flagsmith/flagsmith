@@ -25,6 +25,7 @@ def write_environment_documents(mocker: MockerFixture) -> Mock:
     return mocker.patch.object(Environment, "write_environment_documents")
 
 
+@pytest.mark.usefixtures("is_saas")
 def test_get_onboarding_status__never_evaluated__responds_200(
     api_client: APIClient,
     environment: Environment,
@@ -42,6 +43,7 @@ def test_get_onboarding_status__never_evaluated__responds_200(
     }
 
 
+@pytest.mark.usefixtures("is_saas")
 def test_get_onboarding_status__evaluated__responds_200(
     api_client: APIClient,
     onboarded_environment: Environment,
@@ -60,6 +62,7 @@ def test_get_onboarding_status__evaluated__responds_200(
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("is_saas")
 def test_get_onboarding_status__unknown_environment__responds_404(
     api_client: APIClient,
 ) -> None:
@@ -70,6 +73,7 @@ def test_get_onboarding_status__unknown_environment__responds_404(
     assert response.status_code == 404
 
 
+@pytest.mark.usefixtures("is_saas")
 def test_put_onboarding_status__never_evaluated__updates_environment(
     api_client: APIClient,
     environment: Environment,
@@ -94,6 +98,7 @@ def test_put_onboarding_status__never_evaluated__updates_environment(
     assert environment.first_evaluated_sdk_label == "flagsmith-python-sdk"
 
 
+@pytest.mark.usefixtures("is_saas")
 def test_put_onboarding_status__evaluated__does_not_update_environment(
     api_client: APIClient,
     onboarded_environment: Environment,
@@ -119,6 +124,7 @@ def test_put_onboarding_status__evaluated__does_not_update_environment(
     assert "python" in onboarded_environment.first_evaluated_sdk_label
 
 
+@pytest.mark.usefixtures("is_saas")
 def test_put_onboarding_status__never_evaluated__writes_environment_document(
     api_client: APIClient,
     environment: Environment,
@@ -138,6 +144,7 @@ def test_put_onboarding_status__never_evaluated__writes_environment_document(
     write_environment_documents.assert_called_once_with(environment_id=environment.id)
 
 
+@pytest.mark.usefixtures("is_saas")
 def test_put_onboarding_status__evaluated__skips_environment_document(
     api_client: APIClient,
     onboarded_environment: Environment,
@@ -157,6 +164,7 @@ def test_put_onboarding_status__evaluated__skips_environment_document(
     write_environment_documents.assert_not_called()
 
 
+@pytest.mark.usefixtures("is_saas")
 def test_put_onboarding_status__never_evaluated__logs_first_evaluation(
     api_client: APIClient,
     environment: Environment,
@@ -183,6 +191,7 @@ def test_put_onboarding_status__never_evaluated__logs_first_evaluation(
     )
 
 
+@pytest.mark.usefixtures("is_saas")
 def test_put_onboarding_status__evaluated__logs_already_evaluated(
     api_client: APIClient,
     onboarded_environment: Environment,
@@ -211,6 +220,7 @@ def test_put_onboarding_status__evaluated__logs_already_evaluated(
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("is_saas")
 def test_put_onboarding_status__unknown_environment__responds_404(
     api_client: APIClient,
 ) -> None:
@@ -227,6 +237,7 @@ def test_put_onboarding_status__unknown_environment__responds_404(
     assert response.status_code == 404
 
 
+@pytest.mark.usefixtures("is_saas")
 def test_put_onboarding_status__invalid_sdk_label__responds_400(
     api_client: APIClient,
     environment: Environment,
@@ -245,3 +256,16 @@ def test_put_onboarding_status__invalid_sdk_label__responds_400(
     assert response.json() == {
         "first_evaluated_sdk_label": ['"invalid-sdk-label" is not a valid choice.'],
     }
+
+
+def test_get_onboarding_status__not_saas__responds_404(
+    api_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given / When
+    response = api_client.get(
+        f"/api/v1/environments/{environment.api_key}/onboarding-status/"
+    )
+
+    # Then
+    assert response.status_code == 404
