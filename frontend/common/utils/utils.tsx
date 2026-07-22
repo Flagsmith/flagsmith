@@ -382,6 +382,9 @@ const Utils = Object.assign({}, BaseUtils, {
   getFlagsmithValue(key: string) {
     return flagsmith.getValue(key)
   },
+  getFlagsmithVariant(key: string) {
+    return flagsmith.getAllFlags()[key]?.variant
+  },
 
   getIdentitiesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
