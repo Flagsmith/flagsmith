@@ -132,7 +132,7 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                 self.request.user, "is_master_api_key_user", False
             )
             AuditLog.objects.create(
-                project=instance,
+                project=None,
                 author=None if is_master_api_key_user else self.request.user,
                 master_api_key=self.request.user.key
                 if is_master_api_key_user
