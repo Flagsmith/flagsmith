@@ -7,7 +7,11 @@ from django.db.models import Count, Prefetch, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    extend_schema,
+    inline_serializer,
+)
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import Throttled, ValidationError
@@ -34,6 +38,7 @@ from experimentation.models import (
     ExperimentStatus,
     Metric,
     WarehouseConnection,
+    WarehouseConnectionStatus,
     WarehouseType,
 )
 from experimentation.permissions import (
@@ -172,7 +177,18 @@ class WarehouseConnectionViewSet(
         operation_id=(
             "api_v1_environments_warehouse_connections_"
             "test_warehouse_connection_config_create"
-        )
+        ),
+        responses={
+            200: inline_serializer(
+                name="WarehouseConnectionTestResult",
+                fields={
+                    "status": serializers.ChoiceField(
+                        choices=WarehouseConnectionStatus.choices
+                    ),
+                    "status_detail": serializers.CharField(allow_null=True),
+                },
+            )
+        },
     )
     @action(
         detail=False,

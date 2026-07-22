@@ -7118,7 +7118,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WarehouseConnection'
+                $ref: '#/components/schemas/WarehouseConnectionTestResult'
       security:
         - tokenAuth: []
         - Master API Key: []
@@ -27896,6 +27896,18 @@ components:
         - pending_connection
         - connected
         - errored
+    WarehouseConnectionTestResult:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/WarehouseConnectionStatusEnum'
+        status_detail:
+          type:
+            - string
+            - 'null'
+      required:
+        - status
+        - status_detail
     WarehouseTypeEnum:
       description: |-
         * `flagsmith` - Flagsmith
