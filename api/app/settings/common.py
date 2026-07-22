@@ -601,6 +601,9 @@ SPECTACULAR_SETTINGS = {
         "WebhookScopeTypeEnum": ["organisation", "environment"],
         "SegmentRuleTypeEnum": "segments.models.SegmentRule.RULE_TYPES",
         "FeatureValueTypeEnum": ["integer", "string", "boolean"],
+        "WarehouseConnectionStatusEnum": (
+            "experimentation.models.WarehouseConnectionStatus.choices"
+        ),
     },
     "COMPONENT_NO_READ_ONLY_REQUIRED": True,
 }
