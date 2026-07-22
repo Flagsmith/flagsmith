@@ -377,24 +377,64 @@ def test_is_paid__cancelled_subscription__returns_false(  # type: ignore[no-unty
     assert organisation.is_paid is False
 
 
-def test_is_paid__self_hosted_licence__returns_true(
+@pytest.fixture
+def self_hosted_licenced_organisation(
     organisation: Organisation,
     mocker: MockerFixture,
-) -> None:
-    # Given
-    # A self-hosted licence grants is_paid on its own, without a billing id.
+) -> Organisation:
+    # A self-hosted enterprise licence: enterprise plan, no billing provider
+    # (so no subscription_id), and entitlements sourced from the licence.
+    organisation.subscription.plan = "enterprise"
+    organisation.subscription.save()
+
+    licence = mocker.Mock()
+    licence.get_licence_information.return_value = mocker.Mock(
+        num_seats=3,
+        num_projects=5,
+    )
     mocker.patch.object(
         Organisation,
         "licence",
         new_callable=mocker.PropertyMock,
-        return_value=mocker.Mock(),
+        return_value=licence,
         create=True,
     )
     mocker.patch("organisations.models.is_enterprise", return_value=True)
+    mocker.patch("organisations.models.is_saas", return_value=False)
+    return organisation
 
-    # When / Then
-    assert organisation.subscription.subscription_id is None
-    assert organisation.is_paid is True
+
+def test_is_paid__self_hosted_licence__returns_true(
+    self_hosted_licenced_organisation: Organisation,
+) -> None:
+    # Given a self-hosted licenced organisation
+    # When we read its paid status
+    # Then it is paid despite having no billing subscription_id
+    assert self_hosted_licenced_organisation.subscription.subscription_id is None
+    assert self_hosted_licenced_organisation.is_paid is True
+
+
+def test_has_enterprise_subscription__self_hosted_licence__returns_true(
+    self_hosted_licenced_organisation: Organisation,
+) -> None:
+    # Given a self-hosted licenced organisation
+    # When we check the enterprise entitlement gate
+    # Then it is granted
+    assert self_hosted_licenced_organisation.has_enterprise_subscription() is True
+
+
+def test_get_subscription_metadata__self_hosted_licence__uses_licence_limits(
+    self_hosted_licenced_organisation: Organisation,
+) -> None:
+    # Given a self-hosted licenced organisation
+    # When we read its subscription metadata
+    metadata = (
+        self_hosted_licenced_organisation.subscription.get_subscription_metadata()
+    )
+
+    # Then the limits come from the licence, not a billing subscription
+    assert metadata.seats == 3
+    assert metadata.projects == 5
 
 
 def test_get_subscription_metadata__chargebee_subscription__returns_chargebee_metadata(  # type: ignore[no-untyped-def]
