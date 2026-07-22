@@ -1112,3 +1112,4 @@ def test_delete_project_creates_audit_log(admin_client, project, organisation):
     audit_log = AuditLog.objects.order_by("-created_date").first()
     assert audit_log.related_object_type == RelatedObjectType.PROJECT.name
     assert audit_log.log == PROJECT_DELETED_MESSAGE % project_name
+    assert audit_log.related_object_id == project.id
