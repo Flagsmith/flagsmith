@@ -4,7 +4,6 @@ import ErrorMessage from 'components/ErrorMessage'
 import Input from 'components/base/forms/Input'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
-import { getStore } from 'common/store'
 import {
   Repository,
   TrustRelationship,
@@ -16,14 +15,8 @@ import {
   useCreateTrustRelationshipMutation,
   useUpdateTrustRelationshipMutation,
 } from 'common/services/useTrustRelationship'
-import { createRoleMasterApiKey } from 'common/services/useRoleMasterApiKey'
-import {
-  deleteMasterAPIKeyWithMasterAPIKeyRoles,
-  getRolesMasterAPIKeyWithMasterAPIKeyRoles,
-} from 'common/services/useMasterAPIKeyWithMasterAPIKeyRole'
-import TrustRelationshipPermissionsFields, {
-  SelectedRole,
-} from 'components/pages/organisation-settings/tabs/trust-relationships/TrustRelationshipPermissionsFields'
+import useTrustRelationshipRoles from 'components/pages/organisation-settings/tabs/trust-relationships/hooks/useTrustRelationshipRoles'
+import TrustRelationshipPermissionsFields from 'components/pages/organisation-settings/tabs/trust-relationships/TrustRelationshipPermissionsFields'
 import WorkflowSetupSnippet, {
   GITHUB_ISSUER,
 } from 'components/pages/organisation-settings/tabs/trust-relationships/WorkflowSetupSnippet'
@@ -69,7 +62,8 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
     ruleValue(trustRelationship, 'environment') || '',
   )
   const [isAdmin, setIsAdmin] = useState(trustRelationship?.is_admin ?? true)
-  const [roles, setRoles] = useState<SelectedRole[]>([])
+  const { addRole, assignRoles, clearRoles, removeRole, roles } =
+    useTrustRelationshipRoles(organisationId, trustRelationship)
 
   // A repository pinned by ID resolves through the installation's repo list.
   const pinnedRepo = useMemo(
@@ -84,17 +78,6 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
       setSelectedRepo(pinnedRepo)
     }
   }, [pinnedRepo, selectedRepo])
-
-  useEffect(() => {
-    if (trustRelationship) {
-      getRolesMasterAPIKeyWithMasterAPIKeyRoles(getStore(), {
-        org_id: organisationId,
-        prefix: trustRelationship.master_api_key_prefix,
-      }).then((res: { data?: { results: SelectedRole[] } }) => {
-        setRoles(res.data?.results || [])
-      })
-    }
-  }, [organisationId, trustRelationship])
 
   const [
     createTrustRelationship,
@@ -135,45 +118,6 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
     repoFullName,
     existingAudiences,
   ])
-
-  const addRole = (role: SelectedRole) => {
-    if (!isEdit) {
-      // Roles are assigned after the trust relationship is created (see save).
-      setRoles((selected) => [...selected, { id: role.id, name: role.name }])
-      return
-    }
-    createRoleMasterApiKey(getStore(), {
-      body: { master_api_key: trustRelationship.master_api_key_id },
-      org_id: organisationId,
-      role_id: role.id,
-    }).then((res) => {
-      if (res.error) {
-        toast('Could not assign role', 'danger')
-        return
-      }
-      setRoles((selected) => [...selected, { id: role.id, name: role.name }])
-      toast('Role assigned')
-    })
-  }
-
-  const removeRole = (roleId: number) => {
-    if (!isEdit) {
-      setRoles((selected) => selected.filter((role) => role.id !== roleId))
-      return
-    }
-    deleteMasterAPIKeyWithMasterAPIKeyRoles(getStore(), {
-      org_id: organisationId,
-      prefix: trustRelationship.master_api_key_prefix,
-      role_id: roleId,
-    }).then((res) => {
-      if (res.error) {
-        toast('Could not remove role', 'danger')
-        return
-      }
-      setRoles((selected) => selected.filter((role) => role.id !== roleId))
-      toast('Role removed')
-    })
-  }
 
   const save = () => {
     const claimRules: TrustRelationshipClaimRule[] = []
@@ -216,25 +160,15 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
     } else {
       createTrustRelationship({ body, organisation_id: organisationId })
         .unwrap()
-        .then((created) =>
-          Promise.all(
-            roles.map((role) =>
-              createRoleMasterApiKey(getStore(), {
-                body: { master_api_key: created.master_api_key_id },
-                org_id: organisationId,
-                role_id: role.id,
-              }),
-            ),
-          ),
-        )
-        .then((results) => {
-          if (results.some((res) => res.error)) {
+        .then((created) => assignRoles(created.master_api_key_id))
+        .then((allAssigned) => {
+          if (allAssigned) {
+            toast('Trust relationship created')
+          } else {
             toast(
               'Trust relationship created, but some roles could not be assigned',
               'danger',
             )
-          } else {
-            toast('Trust relationship created')
           }
           closeModal()
         })
@@ -345,7 +279,7 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
         isAdmin={isAdmin}
         onIsAdminChange={() => {
           if (!isAdmin) {
-            setRoles([])
+            clearRoles()
           }
           setIsAdmin(!isAdmin)
         }}
