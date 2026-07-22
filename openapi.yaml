@@ -6507,6 +6507,25 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+  '/api/v1/environments/{environment_api_key}/onboarding-status/':
+    get:
+      operationId: api_v1_environments_onboarding_status_retrieve
+      description: Obtain information on whether features for this environment have been evaluated yet.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentOnboardingStatus'
+      tags:
+        - Environments
   '/api/v1/environments/{environment_api_key}/user-group-permissions/':
     get:
       operationId: api_v1_environments_user_group_permissions_list
@@ -19659,6 +19678,21 @@ components:
           items:
             $ref: '#/components/schemas/MetricItem'
           readOnly: true
+    EnvironmentOnboardingStatus:
+      type: object
+      properties:
+        first_evaluated_at:
+          description: When the environment's flags were first evaluated by an SDK.
+          type:
+            - string
+            - 'null'
+          format: date-time
+        first_evaluated_sdk_label:
+          description: SDK that first evaluated the environment's flags.
+          type:
+            - string
+            - 'null'
+          maxLength: 100
     EnvironmentRetrieveSerializerWithMetadata:
       description: Functionality for serializers that need to handle metadata
       type: object
