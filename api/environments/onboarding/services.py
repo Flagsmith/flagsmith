@@ -1,7 +1,5 @@
 import structlog
 from django.utils import timezone
-from task_processor.decorators import register_task_handler
-from task_processor.models import TaskPriority
 
 from app_analytics.types import KnownSDK
 from environments.models import Environment
@@ -9,18 +7,11 @@ from environments.models import Environment
 logger = structlog.get_logger("onboarding")
 
 
-@register_task_handler(priority=TaskPriority.HIGH)
 def record_environment_first_evaluation(
-    api_key: str,
+    environment: Environment,
     sdk_label: KnownSDK,
 ) -> None:
     """Mark this environment as having been evaluated by a client SDK."""
-    try:
-        environment = Environment.objects.select_related("project").get(api_key=api_key)
-    except Environment.DoesNotExist:
-        logger.warning("environment.not_found", api_key=api_key)
-        return
-
     log = logger.bind(
         environment__id=environment.id,
         project__id=environment.project_id,

@@ -388,7 +388,7 @@ Attributes:
 ### `onboarding.environment.already_evaluated`
 
 Logged at `info` from:
- - `api/environments/onboarding/tasks.py:32`
+ - `api/environments/onboarding/services.py:23`
 
 Attributes:
  - `environment.id`
@@ -399,21 +399,13 @@ Attributes:
 ### `onboarding.environment.first_evaluated`
 
 Logged at `info` from:
- - `api/environments/onboarding/tasks.py:41`
+ - `api/environments/onboarding/services.py:32`
 
 Attributes:
  - `environment.id`
  - `organisation.id`
  - `project.id`
  - `sdk.label`
-
-### `onboarding.environment.not_found`
-
-Logged at `warning` from:
- - `api/environments/onboarding/tasks.py:21`
-
-Attributes:
- - `api_key`
 
 ### `platform_hub.no_analytics_database_configured`
 

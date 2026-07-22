@@ -1443,7 +1443,9 @@ def test_get_flags__environment_never_evaluated__records_first_evaluation(
     expected_sdk_label: str,
 ) -> None:
     # Given
-    task = mocker.patch.object(views, "record_environment_first_evaluation")
+    record_environment_first_evaluation = mocker.patch.object(
+        views, "record_environment_first_evaluation"
+    )
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
@@ -1451,8 +1453,8 @@ def test_get_flags__environment_never_evaluated__records_first_evaluation(
 
     # Then
     assert response.status_code == 200
-    task.delay.assert_called_once_with(
-        args=(environment.api_key, expected_sdk_label),
+    record_environment_first_evaluation.assert_called_once_with(
+        environment, expected_sdk_label
     )
 
 
@@ -1472,7 +1474,9 @@ def test_get_flags__sdk_not_identified__does_not_record_first_evaluation(
     headers: dict[str, str],
 ) -> None:
     # Given
-    task = mocker.patch.object(views, "record_environment_first_evaluation")
+    record_environment_first_evaluation = mocker.patch.object(
+        views, "record_environment_first_evaluation"
+    )
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
@@ -1480,7 +1484,7 @@ def test_get_flags__sdk_not_identified__does_not_record_first_evaluation(
 
     # Then
     assert response.status_code == 200
-    task.delay.assert_not_called()
+    record_environment_first_evaluation.assert_not_called()
 
 
 def test_get_flags__environment_already_evaluated__does_not_record_first_evaluation(
@@ -1489,7 +1493,9 @@ def test_get_flags__environment_already_evaluated__does_not_record_first_evaluat
     mocker: MockerFixture,
 ) -> None:
     # Given
-    task = mocker.patch.object(views, "record_environment_first_evaluation")
+    record_environment_first_evaluation = mocker.patch.object(
+        views, "record_environment_first_evaluation"
+    )
     environment.first_evaluated_at = timezone.now()
     environment.first_evaluated_sdk_label = "flagsmith-js-sdk"
     environment.save(update_fields=["first_evaluated_at", "first_evaluated_sdk_label"])
@@ -1503,7 +1509,7 @@ def test_get_flags__environment_already_evaluated__does_not_record_first_evaluat
 
     # Then
     assert response.status_code == 200
-    task.delay.assert_not_called()
+    record_environment_first_evaluation.assert_not_called()
 
 
 def test_list_feature_states__simple_view_set__returns_expected_count(

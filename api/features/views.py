@@ -56,7 +56,7 @@ from environments.identities.serializers import (
     IdentitySourceIdentityRequestSerializer,
 )
 from environments.models import Environment
-from environments.onboarding.tasks import record_environment_first_evaluation
+from environments.onboarding.services import record_environment_first_evaluation
 from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
@@ -1012,9 +1012,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         if request.environment.first_evaluated_at is None and (
             sdk_label := map_request_to_sdk_label(request)
         ):
-            record_environment_first_evaluation.delay(
-                args=(request.environment.api_key, sdk_label),
-            )
+            record_environment_first_evaluation(request.environment, sdk_label)
 
         if identifier:
             return self._get_flags_response_with_identifier(request, identifier)
