@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import boto3
+import smart_open  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
     from mypy_boto3_s3.client import S3Client
@@ -29,7 +30,6 @@ from features.multivariate.models import (
     MultivariateFeatureStateValue,
 )
 from features.versioning.models import EnvironmentFeatureVersion
-from import_export.utils import S3MultipartUploadWriter
 from integrations.datadog.models import DataDogConfiguration
 from integrations.heap.models import HeapConfiguration
 from integrations.mixpanel.models import MixpanelConfiguration
@@ -58,6 +58,8 @@ logger = logging.getLogger(__name__)
 
 
 class S3OrganisationExporter:
+    MIN_PART_SIZE = 64 * 1024 * 1024
+
     def __init__(self, s3_client: "S3Client | None" = None) -> None:
         self.s3_client: "S3Client" = s3_client or boto3.client("s3")
 
@@ -70,15 +72,22 @@ class S3OrganisationExporter:
         data = full_export(organisation_id)
         logger.debug("Starting streaming export for organisation.")
 
-        with S3MultipartUploadWriter(self.s3_client, bucket_name, key) as writer:
-            writer.write(b"[")
-            first = True
-            for item in data:
-                if not first:
-                    writer.write(b",")
-                first = False
-                writer.write(json.dumps(item, cls=DjangoJSONEncoder).encode("utf-8"))
-            writer.write(b"]")
+        transport_params = {
+            "client": self.s3_client,
+            "min_part_size": self.MIN_PART_SIZE,
+        }
+        with smart_open.open(
+            f"s3://{bucket_name}/{key}",
+            "w",
+            encoding="utf-8",
+            transport_params=transport_params,
+        ) as fout:
+            fout.write("[")
+            for index, item in enumerate(data):
+                if index:
+                    fout.write(",")
+                fout.write(json.dumps(item, cls=DjangoJSONEncoder))
+            fout.write("]")
 
         logger.info("Finished streaming data export to S3.")
 
