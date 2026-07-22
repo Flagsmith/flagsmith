@@ -24921,7 +24921,7 @@ components:
           $ref: '#/components/schemas/WarehouseTypeEnum'
         status:
           allOf:
-            - $ref: '#/components/schemas/WarehouseConnectionStatusEnum'
+            - $ref: '#/components/schemas/Status3d9Enum'
           readOnly: true
         status_detail:
           type:
@@ -26456,6 +26456,18 @@ components:
           oneOf:
             - {}
             - type: 'null'
+    Status3d9Enum:
+      description: |-
+        * `created` - Created
+        * `pending_connection` - Pending Connection
+        * `connected` - Connected
+        * `errored` - Errored
+      type: string
+      enum:
+        - created
+        - pending_connection
+        - connected
+        - errored
     Status6d4Enum:
       description: |-
         * `SUCCESS` - Success
@@ -27849,7 +27861,7 @@ components:
           $ref: '#/components/schemas/WarehouseTypeEnum'
         status:
           allOf:
-            - $ref: '#/components/schemas/WarehouseConnectionStatusEnum'
+            - $ref: '#/components/schemas/Status3d9Enum'
           readOnly: true
         status_detail:
           type:
@@ -27884,23 +27896,11 @@ components:
           readOnly: true
       required:
         - warehouse_type
-    WarehouseConnectionStatusEnum:
-      description: |-
-        * `created` - Created
-        * `pending_connection` - Pending Connection
-        * `connected` - Connected
-        * `errored` - Errored
-      type: string
-      enum:
-        - created
-        - pending_connection
-        - connected
-        - errored
     WarehouseConnectionTestResult:
       type: object
       properties:
         status:
-          $ref: '#/components/schemas/WarehouseConnectionStatusEnum'
+          $ref: '#/components/schemas/Status3d9Enum'
         status_detail:
           type:
             - string
