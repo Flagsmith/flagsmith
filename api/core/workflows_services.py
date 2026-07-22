@@ -8,7 +8,10 @@ from environments.tasks import rebuild_environment_document
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import trigger_update_version_webhooks
-from features.workflows.core.exceptions import ChangeRequestNotApprovedError
+from features.workflows.core.exceptions import (
+    ChangeRequestConflictError,
+    ChangeRequestNotApprovedError,
+)
 
 if TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest
@@ -27,6 +30,7 @@ class ChangeRequestCommitService:
                 "Change request has not been approved by all required approvers."
             )
 
+        self._check_for_conflicts()
         self._publish_feature_states()
         self._publish_environment_feature_versions(committed_by)
         self._publish_change_sets(committed_by)
@@ -44,6 +48,27 @@ class ChangeRequestCommitService:
             )
 
         self.change_request.save()
+
+    def _check_for_conflicts(self) -> None:
+        # Stale detection already runs when a scheduled change set is published
+        # by the task processor (see ``publish_version_change_set``). Manual
+        # commits publish their change sets immediately and previously skipped
+        # this check, silently reverting any changes that were published after
+        # the change request was created. Run the same conflict check here so
+        # that an out-of-date commit is blocked rather than overwriting newer
+        # changes.
+        if self.change_request.ignore_conflicts:
+            return
+
+        now = timezone.now()
+        for change_set in self.change_request.change_sets.all():
+            # Scheduled change sets are conflict-checked when their task fires,
+            # since further conflicts can appear before they go live.
+            is_scheduled = change_set.live_from and change_set.live_from >= now
+            if is_scheduled:
+                continue
+            if change_set.get_conflicts():
+                raise ChangeRequestConflictError()
 
     def _publish_feature_states(self) -> None:
         now = timezone.now()

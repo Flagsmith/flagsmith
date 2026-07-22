@@ -16,3 +16,13 @@ class CannotApproveOwnChangeRequest(FeatureWorkflowError):
 
 class ChangeRequestDeletionError(FeatureWorkflowError):
     status_code = status.HTTP_400_BAD_REQUEST  # type: ignore[assignment]
+
+
+class ChangeRequestConflictError(FeatureWorkflowError):
+    status_code = status.HTTP_409_CONFLICT  # type: ignore[assignment]
+    default_code = "change_request_conflict"
+    default_detail = (
+        "This change request conflicts with changes that were published since "
+        "it was created. Refresh the change request, or set ignore_conflicts to "
+        "commit it anyway."
+    )

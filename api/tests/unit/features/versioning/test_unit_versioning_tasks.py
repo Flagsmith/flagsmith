@@ -31,6 +31,7 @@ from features.versioning.versioning_service import (
     get_environment_flags_dict,
     get_environment_flags_queryset,
 )
+from features.workflows.core.exceptions import ChangeRequestConflictError
 from features.workflows.core.models import ChangeRequest
 from organisations.models import Organisation
 from projects.models import Project
@@ -678,6 +679,158 @@ def test_publish_version_change_set__conflict_with_scheduled_change__sends_confl
     assert (
         latest_flags[(feature.id, None, None)].get_feature_state_value()
         == conflict_feature_value
+    )
+
+
+def test_manual_commit__conflict_with_published_change__blocks_commit(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    # A change request whose change set updates the environment default. It is
+    # created first, so it captures the current state of the flag.
+    change_request_1 = ChangeRequest.objects.create(
+        title="CR 1",
+        environment=environment_v2_versioning,
+        user=staff_user,
+    )
+    change_set_1 = VersionChangeSet.objects.create(
+        feature=feature,
+        change_request=change_request_1,
+        feature_states_to_update=json.dumps(
+            [
+                {
+                    "feature": feature.id,
+                    "enabled": True,
+                    "feature_segment": None,
+                    "feature_state_value": {"type": "unicode", "string_value": "foo"},
+                }
+            ]
+        ),
+    )
+
+    # Another change request changes the same environment default and is
+    # committed immediately, making the first change request out of date.
+    conflict_feature_value = "bar"
+    conflict_feature_enabled = False
+    conflict_change_request = ChangeRequest.objects.create(
+        title="Conflict CR",
+        environment=environment_v2_versioning,
+        user=staff_user,
+    )
+    VersionChangeSet.objects.create(
+        feature=feature,
+        change_request=conflict_change_request,
+        feature_states_to_update=json.dumps(
+            [
+                {
+                    "feature": feature.id,
+                    "enabled": conflict_feature_enabled,
+                    "feature_segment": None,
+                    "feature_state_value": {
+                        "type": "unicode",
+                        "string_value": conflict_feature_value,
+                    },
+                }
+            ]
+        ),
+    )
+    conflict_change_request.commit(staff_user)
+
+    # Sanity check: the first change request is now considered in conflict.
+    assert change_set_1.get_conflicts()
+
+    # When
+    # We commit the (now stale) first change request immediately.
+    with pytest.raises(ChangeRequestConflictError):
+        change_request_1.commit(staff_user)
+
+    # Then
+    # The stale commit is blocked...
+    change_request_1.refresh_from_db()
+    assert change_request_1.committed_at is None
+
+    # ...and the newer change is still reflected in the flags.
+    latest_flags = get_environment_flags_dict(environment=environment_v2_versioning)
+    assert latest_flags[(feature.id, None, None)].enabled is conflict_feature_enabled
+    assert (
+        latest_flags[(feature.id, None, None)].get_feature_state_value()
+        == conflict_feature_value
+    )
+
+
+def test_manual_commit__conflict_with_ignore_conflicts__commits(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    # A stale change request that has ignore_conflicts set explicitly.
+    change_request_1 = ChangeRequest.objects.create(
+        title="CR 1",
+        environment=environment_v2_versioning,
+        user=staff_user,
+        ignore_conflicts=True,
+    )
+    stale_feature_value = "foo"
+    stale_feature_enabled = True
+    VersionChangeSet.objects.create(
+        feature=feature,
+        change_request=change_request_1,
+        feature_states_to_update=json.dumps(
+            [
+                {
+                    "feature": feature.id,
+                    "enabled": stale_feature_enabled,
+                    "feature_segment": None,
+                    "feature_state_value": {
+                        "type": "unicode",
+                        "string_value": stale_feature_value,
+                    },
+                }
+            ]
+        ),
+    )
+
+    conflict_change_request = ChangeRequest.objects.create(
+        title="Conflict CR",
+        environment=environment_v2_versioning,
+        user=staff_user,
+    )
+    VersionChangeSet.objects.create(
+        feature=feature,
+        change_request=conflict_change_request,
+        feature_states_to_update=json.dumps(
+            [
+                {
+                    "feature": feature.id,
+                    "enabled": False,
+                    "feature_segment": None,
+                    "feature_state_value": {
+                        "type": "unicode",
+                        "string_value": "bar",
+                    },
+                }
+            ]
+        ),
+    )
+    conflict_change_request.commit(staff_user)
+
+    # When
+    # The change request is committed despite the conflict.
+    change_request_1.commit(staff_user)
+
+    # Then
+    # The commit succeeds and the change request's values win.
+    change_request_1.refresh_from_db()
+    assert change_request_1.committed_at is not None
+
+    latest_flags = get_environment_flags_dict(environment=environment_v2_versioning)
+    assert latest_flags[(feature.id, None, None)].enabled is stale_feature_enabled
+    assert (
+        latest_flags[(feature.id, None, None)].get_feature_state_value()
+        == stale_feature_value
     )
 
 
