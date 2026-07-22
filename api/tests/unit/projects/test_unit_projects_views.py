@@ -1,8 +1,6 @@
 import json
 from datetime import timedelta
-from audit.models import AuditLog
-from audit.related_object_type import RelatedObjectType
-from audit.constants import PROJECT_CREATED_MESSAGE, PROJECT_DELETED_MESSAGE
+
 import pytest
 from common.projects.permissions import (
     CREATE_ENVIRONMENT,
@@ -19,6 +17,9 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from task_processor.task_run_method import TaskRunMethod
 
+from audit.constants import PROJECT_CREATED_MESSAGE, PROJECT_DELETED_MESSAGE
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from environments.dynamodb.types import ProjectIdentityMigrationStatus
 from environments.identities.models import Identity
 from features.models import Feature, FeatureSegment
@@ -1071,8 +1072,8 @@ def test_list_projects__default_enforce_feature_owners__returns_false(
     assert len(response.json()) > 0
     assert "enforce_feature_owners" in response.json()[0]
     assert response.json()[0]["enforce_feature_owners"] is False
-    
-    
+
+
 def test_create_project_creates_audit_log(admin_client, organisation):
     # Given
     url = reverse("api-v1:projects:project-list")
@@ -1086,7 +1087,7 @@ def test_create_project_creates_audit_log(admin_client, organisation):
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert AuditLog.objects.count() == initial_audit_log_count + 1
-    
+
     # Verify the audit log details
     audit_log = AuditLog.objects.order_by("-created_date").first()
     assert audit_log.related_object_type == RelatedObjectType.PROJECT.name
@@ -1106,7 +1107,7 @@ def test_delete_project_creates_audit_log(admin_client, project, organisation):
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert AuditLog.objects.count() == initial_audit_log_count + 1
-    
+
     # Verify the audit log details
     audit_log = AuditLog.objects.order_by("-created_date").first()
     assert audit_log.related_object_type == RelatedObjectType.PROJECT.name

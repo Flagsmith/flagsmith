@@ -16,6 +16,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from audit.constants import PROJECT_CREATED_MESSAGE, PROJECT_DELETED_MESSAGE
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from environments.serializers import EnvironmentSerializerLight
@@ -49,9 +52,7 @@ from projects.serializers import (
     ProjectUpdateSerializer,
 )
 from users.models import FFAdminUser
-from audit.models import AuditLog
-from audit.related_object_type import RelatedObjectType
-from audit.constants import PROJECT_CREATED_MESSAGE, PROJECT_DELETED_MESSAGE
+
 
 @method_decorator(
     name="retrieve",
@@ -114,21 +115,26 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             )
         AuditLog.objects.create(
             project=project,
-            author=self.request.user if not getattr(self.request.user,"is_master_api_key_user",False) else None,
+            author=self.request.user
+            if not getattr(self.request.user, "is_master_api_key_user", False)
+            else None,
             related_object_id=project.id,
             related_object_type=RelatedObjectType.PROJECT.name,
-            log=PROJECT_CREATED_MESSAGE % project.name
+            log=PROJECT_CREATED_MESSAGE % project.name,
         )
-    
+
     def perform_destroy(self, instance):
-         AuditLog.objects.create(
+        AuditLog.objects.create(
             project=instance,
-            author=self.request.user if not getattr(self.request.user,"is_master_api_key_user",False) else None,
+            author=self.request.user
+            if not getattr(self.request.user, "is_master_api_key_user", False)
+            else None,
             related_object_id=instance.id,
             related_object_type=RelatedObjectType.PROJECT.name,
-            log=PROJECT_DELETED_MESSAGE % instance.name
+            log=PROJECT_DELETED_MESSAGE % instance.name,
         )
-         instance.delete()
+        instance.delete()
+
     @action(
         detail=False,
         url_path=r"get-by-uuid/(?P<uuid>[0-9a-f-]+)",

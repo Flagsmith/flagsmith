@@ -16,4 +16,3 @@ class RelatedObjectType(enum.Enum):
     EXPERIMENT = "Experiment"
     METRIC = "Metric"
     PROJECT = "project"
-    
