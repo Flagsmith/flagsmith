@@ -9,7 +9,10 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from environments.models import Environment
-from experimentation.models import OrganisationIngestionInfrastructure
+from experimentation.models import (
+    IngestionInfrastructureStatus,
+    OrganisationIngestionInfrastructure,
+)
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
     Organisation,
@@ -896,14 +899,37 @@ def test_update_plan__valid_plan_id__updates_fields_from_chargebee(
     assert subscription.cancellation_date is None
 
 
-def test_organisation__after_delete_with_infrastructure__enqueues_teardown(
+def test_organisation__after_delete_without_infrastructure__does_not_deprovision(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    OrganisationIngestionInfrastructure.objects.create(organisation=organisation)
-    mock_task = mocker.patch(
-        "experimentation.tasks.teardown_organisation_ingestion_infrastructure",
+    deprovision = mocker.patch(
+        "experimentation.organisation_ingestion_service"
+        ".deprovision_ingestion_infrastructure",
+    )
+
+    # When
+    organisation.delete()
+
+    # Then
+    deprovision.assert_not_called()
+
+
+def test_organisation__delete_with_created_infrastructure__deprovisions_aws_resources(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    OrganisationIngestionInfrastructure.objects.create(
+        organisation=organisation,
+        status=IngestionInfrastructureStatus.CREATED,
+        bucket_name="flagsmith-events-lake-org-1-123456789012-eu-west-2-an",
+        stream_name="events-ingestion-org-1",
+    )
+    deprovision = mocker.patch(
+        "experimentation.organisation_ingestion_service"
+        ".deprovision_ingestion_infrastructure",
     )
     organisation_id = organisation.id
 
@@ -911,22 +937,4 @@ def test_organisation__after_delete_with_infrastructure__enqueues_teardown(
     organisation.delete()
 
     # Then
-    mock_task.delay.assert_called_once_with(
-        kwargs={"organisation_id": organisation_id},
-    )
-
-
-def test_organisation__after_delete_without_infrastructure__does_nothing(
-    organisation: Organisation,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mock_task = mocker.patch(
-        "experimentation.tasks.teardown_organisation_ingestion_infrastructure",
-    )
-
-    # When
-    organisation.delete()
-
-    # Then
-    mock_task.delay.assert_not_called()
+    deprovision.assert_called_once_with(organisation_id)

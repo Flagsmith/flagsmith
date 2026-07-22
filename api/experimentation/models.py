@@ -111,7 +111,7 @@ class IngestionInfrastructureStatus(models.TextChoices):
 class OrganisationIngestionInfrastructure(models.Model):
     organisation = models.OneToOneField(
         "organisations.Organisation",
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="ingestion_infrastructure",
     )
     status = models.CharField(

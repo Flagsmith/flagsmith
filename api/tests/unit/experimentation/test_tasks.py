@@ -12,6 +12,7 @@ from experimentation.dataclasses import (
     ExposuresSummary,
     ExposuresTimeseries,
     ExposuresTimeseriesPoint,
+    IngestionInfrastructure,
     MetricResult,
     ResultsSummary,
 )
@@ -20,6 +21,8 @@ from experimentation.models import (
     ExperimentExposures,
     ExperimentResults,
     ExperimentStatus,
+    IngestionInfrastructureStatus,
+    OrganisationIngestionInfrastructure,
 )
 from experimentation.stats import VariantStats
 from experimentation.tasks import (
@@ -32,6 +35,7 @@ from experimentation.tasks import (
     write_environment_ingestion_key,
     write_environment_ingestion_keys,
 )
+from organisations.models import Organisation
 
 
 def test_write_environment_ingestion_keys__valid_keys__whitelists_client_and_server(
@@ -565,24 +569,35 @@ def test_compute_experiment_results__experiment_deleted_after_enqueue__skips(
     mock_compute.assert_not_called()
 
 
-def test_provision_external_warehouse_ingestion_infrastructure__valid_environment__enables_and_syncs_keys(
+def test_provision_external_warehouse_ingestion_infrastructure__valid_environment__provisions_and_syncs_keys(
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_enable = mocker.patch(
-        "experimentation.tasks.enable_ingestion_for_organisation",
+    provision = mocker.patch(
+        "experimentation.organisation_ingestion_service"
+        ".provision_ingestion_infrastructure",
+        return_value=IngestionInfrastructure(
+            bucket_name="flagsmith-events-lake-org-1-123456789012-eu-west-2-an",
+            stream_name="events-ingestion-org-1",
+        ),
     )
-    mock_write_keys = mocker.patch(
-        "experimentation.tasks.write_environment_ingestion_keys",
+    set_ingestion_key = mocker.patch(
+        "experimentation.tasks.ingestion_sync_service.set_ingestion_key",
     )
 
     # When
     provision_external_warehouse_ingestion_infrastructure(environment_id=environment.id)
 
-    # Then the org infrastructure is provisioned before the keys are synced
-    mock_enable.assert_called_once_with(environment.project.organisation)
-    mock_write_keys.assert_called_once_with(environment.id)
+    # Then the org infrastructure is provisioned and the environment keys synced
+    provision.assert_called_once_with(environment.project.organisation_id)
+    assert OrganisationIngestionInfrastructure.objects.filter(
+        organisation=environment.project.organisation,
+        status=IngestionInfrastructureStatus.CREATED,
+    ).exists()
+    set_ingestion_key.assert_called_once_with(
+        environment.api_key, environment_key=environment.api_key
+    )
 
 
 def test_provision_external_warehouse_ingestion_infrastructure__missing_environment__does_nothing(
@@ -590,31 +605,40 @@ def test_provision_external_warehouse_ingestion_infrastructure__missing_environm
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_enable = mocker.patch(
-        "experimentation.tasks.enable_ingestion_for_organisation",
-    )
-    mock_write_keys = mocker.patch(
-        "experimentation.tasks.write_environment_ingestion_keys",
+    provision = mocker.patch(
+        "experimentation.organisation_ingestion_service"
+        ".provision_ingestion_infrastructure",
     )
 
     # When
     provision_external_warehouse_ingestion_infrastructure(environment_id=999999)
 
     # Then
-    mock_enable.assert_not_called()
-    mock_write_keys.assert_not_called()
+    provision.assert_not_called()
+    assert not OrganisationIngestionInfrastructure.objects.exists()
 
 
-def test_teardown_organisation_ingestion_infrastructure__any_organisation__disables_ingestion(
+def test_teardown_organisation_ingestion_infrastructure__created_infrastructure__deprovisions(
+    organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_disable = mocker.patch(
-        "experimentation.tasks.disable_ingestion_for_organisation",
+    OrganisationIngestionInfrastructure.objects.create(
+        organisation=organisation,
+        status=IngestionInfrastructureStatus.CREATED,
+        bucket_name="flagsmith-events-lake-org-1-123456789012-eu-west-2-an",
+        stream_name="events-ingestion-org-1",
+    )
+    deprovision = mocker.patch(
+        "experimentation.organisation_ingestion_service"
+        ".deprovision_ingestion_infrastructure",
     )
 
     # When
-    teardown_organisation_ingestion_infrastructure(organisation_id=42)
+    teardown_organisation_ingestion_infrastructure(organisation_id=organisation.id)
 
     # Then
-    mock_disable.assert_called_once_with(42)
+    deprovision.assert_called_once_with(organisation.id)
+    assert not OrganisationIngestionInfrastructure.objects.filter(
+        organisation=organisation
+    ).exists()

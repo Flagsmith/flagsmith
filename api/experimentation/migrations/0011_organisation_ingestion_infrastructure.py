@@ -49,7 +49,7 @@ class Migration(migrations.Migration):
                 (
                     "organisation",
                     models.OneToOneField(
-                        on_delete=django.db.models.deletion.CASCADE,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="ingestion_infrastructure",
                         to="organisations.organisation",
                     ),
