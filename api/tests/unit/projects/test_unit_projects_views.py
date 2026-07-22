@@ -1,6 +1,8 @@
 import json
 from datetime import timedelta
-
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
+from audit.constants import PROJECT_CREATED_MESSAGE, PROJECT_DELETED_MESSAGE
 import pytest
 from common.projects.permissions import (
     CREATE_ENVIRONMENT,
@@ -1069,3 +1071,43 @@ def test_list_projects__default_enforce_feature_owners__returns_false(
     assert len(response.json()) > 0
     assert "enforce_feature_owners" in response.json()[0]
     assert response.json()[0]["enforce_feature_owners"] is False
+    
+    
+def test_create_project_creates_audit_log(admin_client, organisation):
+    # Given
+    url = reverse("api-v1:projects:project-list")
+    project_name = "New Audit Log Project"
+    data = {"name": project_name, "organisation": organisation.id}
+    initial_audit_log_count = AuditLog.objects.count()
+
+    # When
+    response = admin_client.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert AuditLog.objects.count() == initial_audit_log_count + 1
+    
+    # Verify the audit log details
+    audit_log = AuditLog.objects.order_by("-created_date").first()
+    assert audit_log.related_object_type == RelatedObjectType.PROJECT.name
+    assert audit_log.log == PROJECT_CREATED_MESSAGE % project_name
+    assert audit_log.project_id == response.data["id"]
+
+
+def test_delete_project_creates_audit_log(admin_client, project, organisation):
+    # Given
+    url = reverse("api-v1:projects:project-detail", args=[project.id])
+    project_name = project.name
+    initial_audit_log_count = AuditLog.objects.count()
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert AuditLog.objects.count() == initial_audit_log_count + 1
+    
+    # Verify the audit log details
+    audit_log = AuditLog.objects.order_by("-created_date").first()
+    assert audit_log.related_object_type == RelatedObjectType.PROJECT.name
+    assert audit_log.log == PROJECT_DELETED_MESSAGE % project_name

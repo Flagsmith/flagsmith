@@ -15,3 +15,5 @@ class RelatedObjectType(enum.Enum):
     WAREHOUSE_CONNECTION = "Warehouse connection"
     EXPERIMENT = "Experiment"
     METRIC = "Metric"
+    PROJECT = "project"
+    
