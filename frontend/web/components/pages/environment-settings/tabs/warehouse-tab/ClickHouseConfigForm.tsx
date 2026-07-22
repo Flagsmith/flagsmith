@@ -3,6 +3,7 @@ import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
 import Switch from 'components/Switch'
 import ErrorMessage from 'components/ErrorMessage'
+import WarningMessage from 'components/WarningMessage'
 import { ClickHouseConfig } from 'common/types/responses'
 import { useTestWarehouseConnectionConfigMutation } from 'common/services/useWarehouseConnection'
 import {
@@ -64,7 +65,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
   const isValid = isClickHouseFormValid(form, isEdit)
   const requiresTest = !isEdit || isClickHouseConfigDirty(form, initialConfig)
   const canTest = canTestClickHouseConnection(form)
-  const canSave = isValid && (!requiresTest || testState === 'connected')
+  const canSave = isValid && (!requiresTest || testState !== 'idle')
 
   const setField =
     <T,>(setter: (value: T) => void) =>
@@ -200,19 +201,6 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
           </div>
         </div>
 
-        {testState === 'errored' && (
-          <ErrorMessage
-            error={
-              testDetail || 'Connection failed — check your connection details.'
-            }
-          />
-        )}
-        {testState === 'connected' && (
-          <span className='wh-config-form__hint text-success'>
-            Connection verified. You can now save.
-          </span>
-        )}
-
         {error && (
           <ErrorMessage
             error={`Failed to ${
@@ -255,6 +243,19 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
             {getButtonLabel(isEdit, isSaving)}
           </Button>
         </div>
+
+        {testState === 'connected' && (
+          <span className='wh-config-form__hint text-success'>
+            Connection verified. You can now save.
+          </span>
+        )}
+        {testState === 'errored' && (
+          <WarningMessage
+            warningMessage={`We couldn't establish a connection${
+              testDetail ? `: ${testDetail}` : '.'
+            } You can save anyway and test again later, but events won't be delivered until the connection succeeds.`}
+          />
+        )}
       </div>
     </form>
   )
