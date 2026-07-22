@@ -116,9 +116,8 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             )
         AuditLog.objects.create(
             project=project,
-            author=self.request.user
-            if not getattr(self.request.user, "is_master_api_key_user", False)
-            else None,
+            author=None if is_master_api_key_user else self.request.user,
+            master_api_key=self.request.user.key if is_master_api_key_user else None,            else None,
             related_object_id=project.id,
             related_object_type=RelatedObjectType.PROJECT.name,
             log=PROJECT_CREATED_MESSAGE % project.name,
