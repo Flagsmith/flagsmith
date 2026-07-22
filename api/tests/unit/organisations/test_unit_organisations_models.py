@@ -377,6 +377,26 @@ def test_is_paid__cancelled_subscription__returns_false(  # type: ignore[no-unty
     assert organisation.is_paid is False
 
 
+def test_is_paid__self_hosted_licence__returns_true(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    # A self-hosted licence grants is_paid on its own, without a billing id.
+    mocker.patch.object(
+        Organisation,
+        "licence",
+        new_callable=mocker.PropertyMock,
+        return_value=mocker.Mock(),
+        create=True,
+    )
+    mocker.patch("organisations.models.is_enterprise", return_value=True)
+
+    # When / Then
+    assert organisation.subscription.subscription_id is None
+    assert organisation.is_paid is True
+
+
 def test_get_subscription_metadata__chargebee_subscription__returns_chargebee_metadata(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     mocker: MockerFixture,

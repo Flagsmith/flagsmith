@@ -115,8 +115,15 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
             self.subscription_information_cache
         )
 
+    def has_enterprise_licence(self) -> bool:
+        return is_enterprise() and hasattr(self, "licence")
+
     @property
     def is_paid(self):  # type: ignore[no-untyped-def]
+        # A self-hosted licence is the entitlement in its own right; it has no
+        # billing provider, so there is no subscription_id to check.
+        if self.has_enterprise_licence():
+            return True
         return (
             self.has_paid_subscription() and self.subscription.cancellation_date is None
         )
@@ -443,7 +450,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         return cb_metadata
 
     def _get_subscription_metadata_for_self_hosted(self) -> BaseSubscriptionMetadata:
-        if is_enterprise() and hasattr(self.organisation, "licence"):
+        if self.organisation.has_enterprise_licence():
             licence_information = self.organisation.licence.get_licence_information()
             return BaseSubscriptionMetadata(
                 seats=licence_information.num_seats,
