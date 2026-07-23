@@ -11,10 +11,10 @@ from django.db.models import (
     BooleanField,
     Case,
     Exists,
-    Max,
     OuterRef,
     Q,
     QuerySet,
+    Subquery,
     Value,
     When,
 )
@@ -108,6 +108,7 @@ from .serializers import (  # type: ignore[attr-defined]
     WritableNestedFeatureStateSerializer,
 )
 from .tasks import trigger_feature_state_change_webhooks
+from .versioning.models import EnvironmentFeatureVersion
 from .versioning.versioning_service import (
     get_environment_flags_list,
     get_environment_flags_queryset,
@@ -186,14 +187,20 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         project = get_object_or_404(accessible_projects, pk=self.kwargs["project_pk"])
 
+        # Correlated subqueries (as opposed to joined aggregations) keep the
+        # main query free of joins and GROUP BY, so they are only evaluated
+        # for the rows on the requested page and are stripped from the
+        # paginator's COUNT query.
         queryset = (
             project.features.all()
             .annotate(
-                last_modified_in_any_environment=Max(
-                    "feature_states__environment_feature_version__created_at",
-                    filter=Q(
-                        feature_states__environment_feature_version__published_at__isnull=False
-                    ),
+                last_modified_in_any_environment=Subquery(
+                    EnvironmentFeatureVersion.objects.filter(
+                        feature=OuterRef("pk"),
+                        published_at__isnull=False,
+                    )
+                    .order_by("-created_at")
+                    .values("created_at")[:1]
                 ),
             )
             .prefetch_related(
@@ -214,12 +221,14 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         if environment_id := query_data.get("environment"):
             queryset = queryset.annotate(
-                last_modified_in_current_environment=Max(
-                    "feature_states__environment_feature_version__created_at",
-                    filter=Q(
-                        feature_states__environment=environment_id,
-                        feature_states__environment_feature_version__published_at__isnull=False,
-                    ),
+                last_modified_in_current_environment=Subquery(
+                    EnvironmentFeatureVersion.objects.filter(
+                        feature=OuterRef("pk"),
+                        environment=environment_id,
+                        published_at__isnull=False,
+                    )
+                    .order_by("-created_at")
+                    .values("created_at")[:1]
                 )
             )
 
@@ -340,11 +349,18 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             segment_feature_states=segment_feature_states,
         )
 
-        if self.action == "list" and "environment" in self.request.query_params:
-            environment = get_object_or_404(
-                Environment, id=self.request.query_params["environment"]
+        if (
+            self.action == "list"
+            and (environment := getattr(self, "environment", None))
+            and (feature_ids := getattr(self, "feature_ids", None)) is not None
+        ):
+            # `environment` and `feature_ids` are set by `get_queryset` when an
+            # environment is passed in the query parameters. Limiting overrides
+            # data to the current page keeps the query cost bound to page size.
+            context["overrides_data"] = get_overrides_data(
+                environment,
+                feature_ids=feature_ids,
             )
-            context["overrides_data"] = get_overrides_data(environment)
 
         return context
 
@@ -564,16 +580,28 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         queryset: QuerySet[Feature],
         query_data: dict[str, typing.Any],
     ) -> QuerySet[Feature]:
+        # Use subqueries rather than joins so that features matching multiple
+        # owners or group owners don't produce duplicate rows.
         owners_q = Q()
         if query_data.get("owners"):
             owners_q = owners_q | Q(
-                owners__id__in=query_data["owners"],
+                Exists(
+                    Feature.owners.through.objects.filter(
+                        feature_id=OuterRef("pk"),
+                        ffadminuser_id__in=query_data["owners"],
+                    )
+                )
             )
 
         group_owners_q = Q()
         if query_data.get("group_owners"):
             group_owners_q = group_owners_q | Q(
-                group_owners__id__in=query_data["group_owners"],
+                Exists(
+                    Feature.group_owners.through.objects.filter(
+                        feature_id=OuterRef("pk"),
+                        userpermissiongroup_id__in=query_data["group_owners"],
+                    )
+                )
             )
 
         return queryset.filter(owners_q | group_owners_q)
@@ -589,10 +617,17 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             queryset = queryset.filter(name__icontains=query_data["search"])
 
         if "tags" in query_serializer.initial_data:
+            # Use subqueries rather than joins so that features matching
+            # multiple tags don't produce duplicate rows.
+            feature_tags = Feature.tags.through.objects.filter(
+                feature_id=OuterRef("pk")
+            )
             if query_data.get("tags", "") == "":
-                queryset = queryset.filter(tags__isnull=True)
+                queryset = queryset.filter(~Exists(feature_tags))
             elif query_data["tag_strategy"] == UNION:
-                queryset = queryset.filter(tags__in=query_data["tags"])
+                queryset = queryset.filter(
+                    Exists(feature_tags.filter(tag_id__in=query_data["tags"]))
+                )
             else:
                 assert query_data["tag_strategy"] == INTERSECTION
                 queryset = reduce(
