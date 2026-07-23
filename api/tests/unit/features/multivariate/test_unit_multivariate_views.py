@@ -105,3 +105,25 @@ def test_list_mv_options__feature_in_other_project__returns_404(
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_multivariate_feature_option_create_omitted_allocation_fails_if_siblings_exist(
+    feature,
+):
+    # Given an existing option taking up 50%
+    MultivariateFeatureOption.objects.create(
+        feature=feature,
+        default_percentage_allocation=50,
+        type="unicode",
+        string_value="control",
+    )
+
+    # When we try to create a new one without specifying an allocation
+    # (Serializer defaults to 100, so 50 + 100 = 150 > 100)
+    serializer = MultivariateFeatureOptionSerializer(
+        data={"feature": feature.id, "type": "unicode", "string_value": "variant"}
+    )
+
+    # Then it should fail validation
+    assert serializer.is_valid() is False
+    assert "default_percentage_allocation" in serializer.errors

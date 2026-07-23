@@ -83,7 +83,7 @@ def validate(self, attrs):  # type: ignore[no-untyped-def]
         feature = attrs.get("feature") or getattr(self.instance, "feature", None)
         default_percentage_allocation = attrs.get(
             "default_percentage_allocation",
-            getattr(self.instance, "default_percentage_allocation", 0) if self.instance else 0
+            getattr(self.instance, "default_percentage_allocation", 0) if self.instance else 100
         )
         
         total_sibling_percentage_allocation = (
