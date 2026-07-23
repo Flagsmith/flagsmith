@@ -65,7 +65,7 @@ module.exports = function setupRoutes(app) {
   })
 
   // Optionally proxy the API
- if (process.env.FLAGSMITH_PROXY_API_URL) {
+  if (process.env.FLAGSMITH_PROXY_API_URL) {
     const { createProxyMiddleware } = require('http-proxy-middleware')
     app.use(
       createProxyMiddleware({
