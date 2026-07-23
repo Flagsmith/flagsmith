@@ -77,16 +77,23 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
             raise serializers.ValidationError(RESERVED_VARIANT_KEY_MESSAGE)
         return value
 
-    def validate(self, attrs):  # type: ignore[no-untyped-def]
+def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
+        
+        feature = attrs.get("feature") or getattr(self.instance, "feature", None)
+        default_percentage_allocation = attrs.get(
+            "default_percentage_allocation",
+            getattr(self.instance, "default_percentage_allocation", 0) if self.instance else 0
+        )
+        
         total_sibling_percentage_allocation = (
-            self._get_siblings(attrs["feature"]).aggregate(
+            self._get_siblings(feature).aggregate(
                 total_percentage_allocation=Sum("default_percentage_allocation")
             )["total_percentage_allocation"]
             or 0
         )
         total_percentage_allocation = (
-            total_sibling_percentage_allocation + attrs["default_percentage_allocation"]
+            total_sibling_percentage_allocation + default_percentage_allocation
         )
 
         if total_percentage_allocation > 100:
@@ -102,13 +109,15 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
         key = attrs.get("key")
         if key is None:
             return
-        if self._get_siblings(attrs["feature"]).filter(key=key).exists():
+            
+        feature = attrs.get("feature") or getattr(self.instance, "feature", None)
+        
+        if self._get_siblings(feature).filter(key=key).exists():
             raise ValidationError(
                 {
                     "key": "Multivariate option with this key already exists for the feature."
                 }
             )
-
     def _get_siblings(self, feature: Feature):  # type: ignore[no-untyped-def]
         siblings = feature.multivariate_options.all()
         if self.instance:
