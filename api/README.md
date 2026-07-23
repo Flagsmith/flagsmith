@@ -31,32 +31,11 @@ We avoid class-based tests. To manage test lifecycle and dependencies, we rely o
 
 We enforce the `test_{subject}__{condition}__{expected outcome}` template for test names, e.g. `test_get_version__valid_file_contents__returns_version_number`.
 
-We structure each test into sections:
+We structure each test into sections, marked with comments:
 - `# Given / When` + `# Then` for tests with empty, or implicit setup — e.g. via fixtures.
 - `# Given` + `# When` + `# Then` for tests with explicit setup.
 
 We avoid extra comments in tests, and rely on the test name and body to communicate the intent.
-
-### Code guidelines: comments
-
-We use docstrings for public functions and classes.
-
-We avoid comments unless they reveal useful context only seen outside the code. When a comment is necessary, we prefer terse, one-line comments over long paragraphs.
-
-We avoid deictic comments, such as references to a work session, or to an investigation. For example:
-- "This fixes the failing test in CI" — deixis about a situation.
-- "The cache was returning stale segments here" — deixis about a debugging session.
-- "TODO: remove this logic branch before shipping to production" — deixis about team dynamics.
-- "Decision 3: evaluate in the view" — deixis about a decision-making process.
-- "Switched from offset pagination to cursors" — deixis about a prior draft.
-- "We no longer recompute this on every request" — deixis about a discarded approach.
-
-We prefer comments that survive the code across time, and that add value to future readers with no context. They reveal context as it is, never how the code came to be. For example:
-- "Float sums drift on large totals."
-- "Webhooks may arrive out of order."
-- "Empty Content-Length is rejected upstream."
-- "TODO: https://flagsmith.github.com/org/repo/issues/1234"
-
 
 ### Code guidelines: metrics
 
