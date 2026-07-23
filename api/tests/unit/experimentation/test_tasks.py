@@ -105,6 +105,9 @@ def test_remove_environment_ingestion_keys__client_and_server_keys__all_removed(
     mock_delete = mocker.patch(
         "experimentation.tasks.ingestion_sync_service.delete_ingestion_key",
     )
+    mock_delete_destination = mocker.patch(
+        "experimentation.tasks.ingestion_sync_service.delete_ingestion_destination",
+    )
 
     # When
     remove_environment_ingestion_keys(environment_id=environment.id)
@@ -115,6 +118,8 @@ def test_remove_environment_ingestion_keys__client_and_server_keys__all_removed(
         mocker.call(active_key.key),
         mocker.call(inactive_key.key),
     ]
+    # And the environment's destination routing is cleared
+    mock_delete_destination.assert_called_once_with(environment.api_key)
 
 
 def test_remove_environment_ingestion_keys__missing_environment__does_nothing(
@@ -585,6 +590,9 @@ def test_provision_external_warehouse_ingestion_infrastructure__valid_environmen
     set_ingestion_key = mocker.patch(
         "experimentation.tasks.ingestion_sync_service.set_ingestion_key",
     )
+    set_ingestion_destination = mocker.patch(
+        "experimentation.tasks.ingestion_sync_service.set_ingestion_destination",
+    )
 
     # When
     provision_external_warehouse_ingestion_infrastructure(environment_id=environment.id)
@@ -597,6 +605,10 @@ def test_provision_external_warehouse_ingestion_infrastructure__valid_environmen
     ).exists()
     set_ingestion_key.assert_called_once_with(
         environment.api_key, environment_key=environment.api_key
+    )
+    # And the environment is routed to the org's provisioned stream
+    set_ingestion_destination.assert_called_once_with(
+        environment.api_key, stream_name="events-ingestion-org-1"
     )
 
 
