@@ -64,7 +64,7 @@ def provision_external_warehouse_ingestion_infrastructure(environment_id: int) -
         return
 
     infrastructure = enable_ingestion_for_organisation(environment.project.organisation)
-    if infrastructure.stream_name is None:
+    if not infrastructure.stream_name:
         raise RuntimeError("Provisioned ingestion infrastructure has no stream name")
     # Set the destination before publishing the ingestion keys: the keys gate
     # the pipeline, so a key without a destination would route events to the

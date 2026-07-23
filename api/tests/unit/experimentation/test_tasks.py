@@ -613,15 +613,17 @@ def test_provision_external_warehouse_ingestion_infrastructure__valid_environmen
     )
 
 
+@pytest.mark.parametrize("stream_name", [None, ""], ids=["none", "blank"])
 def test_provision_external_warehouse_ingestion_infrastructure__no_stream_name__raises(
     environment: Environment,
     mocker: MockerFixture,
+    stream_name: str | None,
 ) -> None:
-    # Given provisioning returns infrastructure without a stream name
+    # Given provisioning returns infrastructure without a usable stream name
     infrastructure = OrganisationIngestionInfrastructure(
         organisation=environment.project.organisation,
         status=IngestionInfrastructureStatus.CREATED,
-        stream_name=None,
+        stream_name=stream_name,
     )
     mocker.patch(
         "experimentation.tasks.enable_ingestion_for_organisation",
