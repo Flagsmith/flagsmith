@@ -12,8 +12,8 @@ export function HomePage() {
   const ${FEATURE_NAME_ALT} = flags.${FEATURE_NAME_ALT}.value
   return (
     <>
-      {\`${FEATURE_NAME}: \${${FEATURE_NAME}}\`}
-      {\`${FEATURE_NAME_ALT}: \${${FEATURE_NAME_ALT}}\`}
+      <div>{\`${FEATURE_NAME}: \${${FEATURE_NAME}}\`}</div>
+      <div>{\`${FEATURE_NAME_ALT}: \${${FEATURE_NAME_ALT}}\`}</div>
     </>
   );
 }

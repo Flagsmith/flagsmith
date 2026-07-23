@@ -6,6 +6,7 @@ export default (
   userId,
 ) => `
 // Option 1: Initialise with an identity and traits
+import flagsmith from '${NPM_CLIENT}';
 import { FlagsmithProvider } from '${NPM_CLIENT}/react';
 
 export default function App() {
