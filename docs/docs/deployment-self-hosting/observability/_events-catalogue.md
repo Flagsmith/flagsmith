@@ -91,7 +91,7 @@ Attributes:
 ### `experimentation.exposures.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:123`
+ - `api/experimentation/tasks.py:131`
 
 Attributes:
  - `environment.id`
@@ -159,7 +159,7 @@ Attributes:
 ### `experimentation.results.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:159`
+ - `api/experimentation/tasks.py:167`
 
 Attributes:
  - `environment.id`
