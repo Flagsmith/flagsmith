@@ -106,6 +106,7 @@ def validate(self, attrs):  # type: ignore[no-untyped-def]
         return attrs
 
     def _validate_key_is_unique(self, attrs: dict[str, typing.Any]) -> None:
+        key = attrs.get("key") or getattr(self.instance, "key", None)
         key = attrs.get("key")
         if key is None:
             return
