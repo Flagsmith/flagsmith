@@ -187,10 +187,6 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         project = get_object_or_404(accessible_projects, pk=self.kwargs["project_pk"])
 
-        # Correlated subqueries (as opposed to joined aggregations) keep the
-        # main query free of joins and GROUP BY, so they are only evaluated
-        # for the rows on the requested page and are stripped from the
-        # paginator's COUNT query.
         queryset = (
             project.features.all()
             .annotate(
@@ -580,8 +576,6 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         queryset: QuerySet[Feature],
         query_data: dict[str, typing.Any],
     ) -> QuerySet[Feature]:
-        # Use subqueries rather than joins so that features matching multiple
-        # owners or group owners don't produce duplicate rows.
         owners_q = Q()
         if query_data.get("owners"):
             owners_q = owners_q | Q(
@@ -617,8 +611,6 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             queryset = queryset.filter(name__icontains=query_data["search"])
 
         if "tags" in query_serializer.initial_data:
-            # Use subqueries rather than joins so that features matching
-            # multiple tags don't produce duplicate rows.
             feature_tags = Feature.tags.through.objects.filter(
                 feature_id=OuterRef("pk")
             )
