@@ -1,8 +1,8 @@
 import { FC, useMemo } from 'react'
 import Icon from 'components/icons/Icon'
-import { colorTextSuccess } from 'common/theme/tokens'
+import { colorTextSuccess, colorTextWarning } from 'common/theme/tokens'
 import { BayesianResultsSummary, Experiment } from 'common/types/responses'
-import { deriveSummary } from './ExperimentSummaryScorecard'
+import { deriveSummary } from './derive'
 import VariantName from './VariantName'
 
 type ExperimentRecommendationProps = {
@@ -20,6 +20,29 @@ const ExperimentRecommendation: FC<ExperimentRecommendationProps> = ({
   )
 
   if (!summary) return null
+
+  if (summary.controlWins) {
+    return (
+      <div className='alert alert-warning experiment-recommendation mb-3'>
+        <div className='d-flex align-items-center gap-2 mb-2'>
+          <Icon name='warning' width={20} fill={colorTextWarning} />
+          <span className='text-warning fw-semibold'>
+            Control is the winner
+          </span>
+        </div>
+        <div>
+          <VariantName name='Control' colour={summary.controlColour} /> has
+          shown the best performance, with {summary.chanceToBest} probability of
+          being the best arm. No variant has outperformed it.
+        </div>
+        <div className='mt-2'>
+          Consider rolling out{' '}
+          <VariantName name='Control' colour={summary.controlColour} /> to all
+          users.
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className='alert alert-success experiment-recommendation mb-3'>
