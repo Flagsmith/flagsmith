@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useRef, useState } from 'react'
 import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
 import Switch from 'components/Switch'
@@ -53,6 +53,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
   const [error, setError] = useState(false)
   const [testState, setTestState] = useState<TestState>('idle')
   const [testDetail, setTestDetail] = useState<string | null>(null)
+  const testRevision = useRef(0)
 
   const [testConnectionConfig, { isLoading: isTesting }] =
     useTestWarehouseConnectionConfigMutation()
@@ -75,6 +76,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
     <T,>(setter: (value: T) => void) =>
     (value: T) => {
       setter(value)
+      testRevision.current += 1
       setTestState('idle')
       setTestDetail(null)
     }
@@ -82,6 +84,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
   const handleTest = async () => {
     if (!canTest || isTesting) return
     setError(false)
+    const revision = testRevision.current
     try {
       const { config, credentials } = buildClickHousePayload(form)
       const result = await testConnectionConfig({
@@ -90,6 +93,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
         environmentId,
         warehouse_type: 'clickhouse',
       }).unwrap()
+      if (revision !== testRevision.current) return
       if (result.status === 'connected') {
         setTestState('connected')
         setTestDetail(null)
@@ -103,6 +107,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
         )
       }
     } catch {
+      if (revision !== testRevision.current) return
       setTestState('errored')
       setTestDetail(null)
       toast('Failed to test connection', 'danger')
