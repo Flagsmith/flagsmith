@@ -2,6 +2,7 @@ from dataclasses import asdict
 from datetime import datetime, timedelta
 from datetime import timezone as dt_timezone
 
+import pytest
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_mock import MockerFixture
@@ -610,6 +611,36 @@ def test_provision_external_warehouse_ingestion_infrastructure__valid_environmen
     set_ingestion_destination.assert_called_once_with(
         environment.api_key, stream_name="events-ingestion-org-1"
     )
+
+
+def test_provision_external_warehouse_ingestion_infrastructure__no_stream_name__raises(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given provisioning returns infrastructure without a stream name
+    infrastructure = OrganisationIngestionInfrastructure(
+        organisation=environment.project.organisation,
+        status=IngestionInfrastructureStatus.CREATED,
+        stream_name=None,
+    )
+    mocker.patch(
+        "experimentation.tasks.enable_ingestion_for_organisation",
+        return_value=infrastructure,
+    )
+    set_ingestion_destination = mocker.patch(
+        "experimentation.tasks.ingestion_sync_service.set_ingestion_destination",
+    )
+    write_keys = mocker.patch(
+        "experimentation.tasks.write_environment_ingestion_keys",
+    )
+
+    # When / Then the task fails loudly without seeding a broken destination
+    with pytest.raises(RuntimeError, match="no stream name"):
+        provision_external_warehouse_ingestion_infrastructure(
+            environment_id=environment.id
+        )
+    set_ingestion_destination.assert_not_called()
+    write_keys.assert_not_called()
 
 
 def test_provision_external_warehouse_ingestion_infrastructure__missing_environment__does_nothing(

@@ -64,14 +64,16 @@ def provision_external_warehouse_ingestion_infrastructure(environment_id: int) -
         return
 
     infrastructure = enable_ingestion_for_organisation(environment.project.organisation)
-    write_environment_ingestion_keys(environment_id)
-    # Route the environment's events to the org's stream; absent this key the
-    # pipeline falls back to its default stream.
-    assert infrastructure.stream_name is not None  # set once provisioned
+    if infrastructure.stream_name is None:
+        raise RuntimeError("Provisioned ingestion infrastructure has no stream name")
+    # Set the destination before publishing the ingestion keys: the keys gate
+    # the pipeline, so a key without a destination would route events to the
+    # default stream until this write lands.
     ingestion_sync_service.set_ingestion_destination(
         environment.api_key,
         stream_name=infrastructure.stream_name,
     )
+    write_environment_ingestion_keys(environment_id)
 
 
 @register_task_handler()
