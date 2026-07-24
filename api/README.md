@@ -31,9 +31,7 @@ We avoid class-based tests. To manage test lifecycle and dependencies, we rely o
 
 We enforce the `test_{subject}__{condition}__{expected outcome}` template for test names, e.g. `test_get_version__valid_file_contents__returns_version_number`.
 
-We structure each test into sections, marked with comments:
-- `# Given / When` + `# Then` for tests with empty, or implicit setup — e.g. via fixtures.
-- `# Given` + `# When` + `# Then` for tests with explicit setup.
+We follow the Given-When-Then structure and mark up test bodies with Given / When / Then comments, collapsed when empty, e.g. `# Given / When`. We avoid extra comments in tests beyond the GWT markers. We prefer to rely on the test name and body to communicate the intent.
 
 We avoid extra comments in tests, and rely on the test name and body to communicate the intent.
 
