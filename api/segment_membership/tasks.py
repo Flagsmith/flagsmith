@@ -21,14 +21,18 @@ from segment_membership.metrics import (
     flagsmith_segment_membership_backfill_identities_total,
     flagsmith_segment_membership_refresh_duration_seconds,
     flagsmith_segment_membership_refresh_failures_total,
+    flagsmith_segment_membership_refresh_skipped_total,
 )
 from segment_membership.models import SegmentMembershipCount, SegmentMembershipSeed
 from segment_membership.services import (
     compute_segment_counts_for_project,
     enqueue_membership_refresh,
+    get_project_watermark,
+    get_projects_due_for_refresh,
     get_projects_to_process,
     is_membership_enabled,
     open_clickhouse_cursor,
+    save_refresh_state,
 )
 from segments.models import Segment
 from util.util import batched
@@ -170,26 +174,38 @@ def reconcile_segment_membership_seeds() -> None:
     timeout=timedelta(minutes=10),
 )
 def refresh_all_segment_counts() -> None:
-    """Refresh counts for every project with a live segment"""
+    """Refresh counts for every project with a live segment whose identities
+    changed since its last refresh, staggered across the window."""
     if not settings.CLICKHOUSE_ENABLED:
         return
 
-    projects = (
+    projects = list(
         Project.objects.filter(
             Exists(Segment.live_objects.filter(project=OuterRef("pk")))
         )
         .select_related("organisation")
         .order_by("organisation_id", "id")
     )
-    total = projects.count()
-    if not total:
+    if not projects:
+        return
+
+    if settings.SEGMENT_MEMBERSHIP_SKIP_UNCHANGED_ENABLED:
+        with open_clickhouse_cursor(
+            log_comment="flagsmith:segment_membership:watermark"
+        ) as cursor:
+            due = get_projects_due_for_refresh(projects, cursor)
+        flagsmith_segment_membership_refresh_skipped_total.inc(len(projects) - len(due))
+    else:
+        due = projects
+
+    if not due:
         return
 
     spacing = timedelta(
         hours=settings.SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS
-    ) / (total + 1)
+    ) / (len(due) + 1)
     now = timezone.now()
-    for index, project in enumerate(projects.iterator()):
+    for index, project in enumerate(due):
         enqueue_membership_refresh(project, delay_until=now + spacing * index)
 
 
@@ -233,6 +249,10 @@ def refresh_project_segment_counts(project_id: int) -> None:
         open_clickhouse_cursor(log_comment=log_comment) as cursor,
     ):
         try:
+            # Read before the count scan so a change landing mid-refresh yields
+            # a newer watermark next cycle rather than being silently skipped.
+            env_keys = list(project.environments.values_list("api_key", flat=True))
+            watermark = get_project_watermark(cursor, env_keys)
             membership_counts = compute_segment_counts_for_project(project, cursor)
         except Exception:
             flagsmith_segment_membership_refresh_failures_total.inc()
@@ -263,6 +283,7 @@ def refresh_project_segment_counts(project_id: int) -> None:
             unique_fields=["segment", "environment"],
             update_fields=["count", "last_synced_at"],
         )
+        save_refresh_state(project, watermark, now)
         logger.info(
             "refresh.project.completed",
             project__id=project_id,

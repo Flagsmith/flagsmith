@@ -456,7 +456,7 @@ Attributes:
 ### `segment_membership.compute.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:149`
+ - `api/segment_membership/services.py:154`
 
 Attributes:
  - `project.id`
@@ -466,7 +466,7 @@ Attributes:
 ### `segment_membership.members.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:215`
+ - `api/segment_membership/services.py:322`
 
 Attributes:
  - `reason`
@@ -475,7 +475,7 @@ Attributes:
 ### `segment_membership.refresh.project.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:266`
+ - `api/segment_membership/tasks.py:287`
 
 Attributes:
  - `membership_counts.count`
@@ -485,7 +485,7 @@ Attributes:
 ### `segment_membership.refresh.project.failed`
 
 Logged at `exception` from:
- - `api/segment_membership/tasks.py:239`
+ - `api/segment_membership/tasks.py:259`
 
 Attributes:
  - `project.id`
@@ -493,8 +493,9 @@ Attributes:
 ### `segment_membership.refresh.project.skipped`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:206`
- - `api/segment_membership/tasks.py:218`
+ - `api/segment_membership/services.py:274`
+ - `api/segment_membership/tasks.py:222`
+ - `api/segment_membership/tasks.py:234`
 
 Attributes:
  - `project.id`
@@ -504,7 +505,7 @@ Attributes:
 ### `segment_membership.seed.environment.completed`
 
 Logged at `info` from:
- - `api/segment_membership/tasks.py:121`
+ - `api/segment_membership/tasks.py:125`
 
 Attributes:
  - `environment.id`
@@ -515,7 +516,7 @@ Attributes:
 ### `segment_membership.seed.environment.failed`
 
 Logged at `exception` from:
- - `api/segment_membership/tasks.py:114`
+ - `api/segment_membership/tasks.py:118`
 
 Attributes:
  - `environment.id`
@@ -525,9 +526,9 @@ Attributes:
 ### `segment_membership.seed.skipped`
 
 Logged at `warning` from:
- - `api/segment_membership/tasks.py:67`
- - `api/segment_membership/tasks.py:72`
- - `api/segment_membership/tasks.py:77`
+ - `api/segment_membership/tasks.py:71`
+ - `api/segment_membership/tasks.py:76`
+ - `api/segment_membership/tasks.py:81`
 
 Attributes:
  - `organisation.id`

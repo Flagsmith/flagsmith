@@ -119,6 +119,14 @@ Total segment-membership refresh runs that failed for any reason.
 
 Labels:
 
+### `flagsmith_segment_membership_refresh_skipped`
+
+Counter.
+
+Total projects the periodic segment-membership refresh skipped because their identities were unchanged since the last refresh.
+
+Labels:
+
 ### `flagsmith_task_processor_enqueued_tasks`
 
 Counter.

@@ -23,6 +23,11 @@ flagsmith_segment_membership_refresh_failures_total = prometheus_client.Counter(
     "Total segment-membership refresh runs that failed for any reason.",
 )
 
+flagsmith_segment_membership_refresh_skipped_total = prometheus_client.Counter(
+    "flagsmith_segment_membership_refresh_skipped_total",
+    "Total projects the periodic segment-membership refresh skipped because their identities were unchanged since the last refresh.",
+)
+
 flagsmith_segment_membership_read_duration_seconds = prometheus_client.Histogram(
     "flagsmith_segment_membership_read_duration_seconds",
     "Duration of one segment membership page read.",

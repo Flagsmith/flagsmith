@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from datetime import timezone as dt_timezone
 from unittest.mock import MagicMock
 
 import pytest
@@ -8,15 +9,20 @@ from django.utils import timezone
 from flag_engine.segments.constants import EQUAL, REGEX
 from pytest_django.fixtures import DjangoAssertNumQueries, SettingsWrapper
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 from task_processor.models import Task
 from task_processor.task_run_method import TaskRunMethod
 
 from environments.models import Environment
 from organisations.models import Organisation
 from projects.models import Project
+from segment_membership.models import SegmentMembershipRefreshState
 from segment_membership.services import (
     compute_segment_counts_for_project,
     enqueue_membership_refresh,
+    get_environment_watermarks,
+    get_project_watermark,
+    get_projects_due_for_refresh,
     get_projects_to_process,
     get_segment_members_page,
     is_membership_enabled,
@@ -344,6 +350,100 @@ def test_compute_segment_counts_for_project__multiple_segments__uses_single_quer
         connections["clickhouse"].cursor() as cursor,
     ):
         compute_segment_counts_for_project(project, cursor)
+
+
+def test_get_environment_watermarks__no_env_keys__returns_empty() -> None:
+    # Given / When
+    result = get_environment_watermarks(MagicMock(), [])
+
+    # Then
+    assert result == {}
+
+
+@pytest.mark.clickhouse
+def test_get_environment_watermarks__identities_present__returns_utc_watermark(
+    segment_membership_identities: None,
+    environment_api_key_str: str,
+) -> None:
+    # Given / When
+    with connections["clickhouse"].cursor() as cursor:
+        watermarks = get_environment_watermarks(cursor, [environment_api_key_str])
+
+    # Then
+    assert environment_api_key_str in watermarks
+    assert watermarks[environment_api_key_str].tzinfo is not None
+
+
+def test_get_projects_due_for_refresh__no_projects__returns_empty() -> None:
+    # Given / When
+    # Then
+    assert get_projects_due_for_refresh([], MagicMock()) == []
+
+
+@pytest.mark.clickhouse
+def test_get_projects_due_for_refresh__never_refreshed__due(
+    segment_membership_identities: None,
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given / When
+    with connections["clickhouse"].cursor() as cursor:
+        due = get_projects_due_for_refresh([project], cursor)
+
+    # Then
+    assert due == [project]
+
+
+@pytest.mark.clickhouse
+def test_get_projects_due_for_refresh__watermark_advanced__due(
+    segment_membership_identities: None,
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    SegmentMembershipRefreshState.objects.create(
+        project=project,
+        identity_watermark=datetime(2000, 1, 1, tzinfo=dt_timezone.utc),
+        last_refreshed_at=timezone.now(),
+    )
+
+    # When
+    with connections["clickhouse"].cursor() as cursor:
+        due = get_projects_due_for_refresh([project], cursor)
+
+    # Then
+    assert due == [project]
+
+
+@pytest.mark.clickhouse
+def test_get_projects_due_for_refresh__watermark_unchanged__skipped(
+    segment_membership_identities: None,
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    with connections["clickhouse"].cursor() as cursor:
+        current = get_project_watermark(cursor, [environment.api_key])
+    SegmentMembershipRefreshState.objects.create(
+        project=project,
+        identity_watermark=current,
+        last_refreshed_at=timezone.now(),
+    )
+
+    # When
+    with connections["clickhouse"].cursor() as cursor:
+        due = get_projects_due_for_refresh([project], cursor)
+
+    # Then
+    assert due == []
+    assert any(
+        event["event"] == "refresh.project.skipped" and event["reason"] == "unchanged"
+        for event in log.events
+    )
 
 
 @pytest.mark.clickhouse

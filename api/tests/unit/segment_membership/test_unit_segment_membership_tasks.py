@@ -16,7 +16,14 @@ from environments.models import Environment
 from organisations.models import Organisation
 from projects.models import Project
 from segment_membership import tasks
-from segment_membership.models import SegmentMembershipCount, SegmentMembershipSeed
+from segment_membership.metrics import (
+    flagsmith_segment_membership_refresh_skipped_total,
+)
+from segment_membership.models import (
+    SegmentMembershipCount,
+    SegmentMembershipRefreshState,
+    SegmentMembershipSeed,
+)
 from segment_membership.tasks import (
     reconcile_segment_membership_seeds,
     refresh_all_segment_counts,
@@ -405,6 +412,8 @@ def test_refresh_all_segment_counts__live_segment_projects__staggers_evenly_by_o
     project_b = Project.objects.create(name="b1", organisation=org_b)
     Segment.objects.create(name="seg-b", project=project_b)
     settings.CLICKHOUSE_ENABLED = True
+    # Isolate the staggering from the watermark gate.
+    settings.SEGMENT_MEMBERSHIP_SKIP_UNCHANGED_ENABLED = False
     settings.SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS = 4
     enqueue = mocker.patch.object(tasks, "enqueue_membership_refresh")
 
@@ -425,6 +434,74 @@ def test_refresh_all_segment_counts__live_segment_projects__staggers_evenly_by_o
     delays = [delay for _, delay in called]
     assert delays[1] - delays[0] == spacing
     assert delays[2] - delays[1] == spacing
+
+
+def test_refresh_all_segment_counts__skip_enabled__enqueues_only_due_projects(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    project_b = Project.objects.create(name="b", organisation=project.organisation)
+    Segment.objects.create(name="seg-b", project=project_b)
+    settings.CLICKHOUSE_ENABLED = True
+    settings.SEGMENT_MEMBERSHIP_SKIP_UNCHANGED_ENABLED = True
+    mocker.patch.object(tasks, "open_clickhouse_cursor")
+    mocker.patch.object(tasks, "get_projects_due_for_refresh", return_value=[project_b])
+    enqueue = mocker.patch.object(tasks, "enqueue_membership_refresh")
+    skipped_before = flagsmith_segment_membership_refresh_skipped_total._value.get()
+
+    # When
+    refresh_all_segment_counts()
+
+    # Then
+    assert [call.args[0].id for call in enqueue.call_args_list] == [project_b.id]
+    assert (
+        flagsmith_segment_membership_refresh_skipped_total._value.get() - skipped_before
+        == 1
+    )
+
+
+def test_refresh_all_segment_counts__all_unchanged__enqueues_nothing(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    settings.CLICKHOUSE_ENABLED = True
+    settings.SEGMENT_MEMBERSHIP_SKIP_UNCHANGED_ENABLED = True
+    mocker.patch.object(tasks, "open_clickhouse_cursor")
+    mocker.patch.object(tasks, "get_projects_due_for_refresh", return_value=[])
+    enqueue = mocker.patch.object(tasks, "enqueue_membership_refresh")
+
+    # When
+    refresh_all_segment_counts()
+
+    # Then
+    enqueue.assert_not_called()
+
+
+@pytest.mark.clickhouse
+def test_refresh_project_segment_counts__success__persists_watermark(
+    segment_membership_identities: None,
+    settings: SettingsWrapper,
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+
+    # When
+    refresh_project_segment_counts(project.id)
+
+    # Then
+    state = SegmentMembershipRefreshState.objects.get(project=project)
+    assert state.identity_watermark is not None
 
 
 def test_refresh_project_segment_counts__no_clickhouse_creds__skips(
@@ -495,6 +572,7 @@ def test_refresh_project_segment_counts__compute_fails__logs(
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     cursor = MagicMock()
+    cursor.fetchall.return_value = []  # watermark read precedes the failing compute
     open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
     open_cursor.return_value.__enter__.return_value = cursor
     mocker.patch.object(
@@ -526,6 +604,7 @@ def test_refresh_project_segment_counts__previously_matching_pair_drops_to_zero_
         last_synced_at=timezone.now(),
     )
     cursor = MagicMock()
+    cursor.fetchall.return_value = []
     open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
     open_cursor.return_value.__enter__.return_value = cursor
     mocker.patch.object(tasks, "compute_segment_counts_for_project", return_value=[])
@@ -551,6 +630,7 @@ def test_refresh_project_segment_counts__never_matched_pair__no_row_written(
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
     cursor = MagicMock()
+    cursor.fetchall.return_value = []
     open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
     open_cursor.return_value.__enter__.return_value = cursor
     mocker.patch.object(tasks, "compute_segment_counts_for_project", return_value=[])

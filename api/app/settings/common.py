@@ -1537,6 +1537,9 @@ SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS = env.int(
     "SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS",
     default=120,  # We can expect the identity deletion to propagate by T+120 seconds based on Edge CDC SLO.
 )
+SEGMENT_MEMBERSHIP_SKIP_UNCHANGED_ENABLED = env.bool(
+    "SEGMENT_MEMBERSHIP_SKIP_UNCHANGED_ENABLED", default=True
+)
 
 # Always installed: the router fences the `clickhouse` app's migrations off
 # the default Postgres database whether or not a CH alias is configured.

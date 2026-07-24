@@ -1,6 +1,8 @@
+from collections import defaultdict
 from contextlib import contextmanager
 from datetime import datetime
-from typing import Any, Iterator
+from datetime import timezone as dt_timezone
+from typing import Any, Collection, Iterator
 
 import structlog
 from django.db import connections
@@ -20,7 +22,10 @@ from environments.models import Environment
 from integrations.flagsmith.client import get_openfeature_client
 from organisations.models import Organisation
 from projects.models import Project
-from segment_membership.models import SegmentMembershipCount
+from segment_membership.models import (
+    SegmentMembershipCount,
+    SegmentMembershipRefreshState,
+)
 from segment_membership.types import ClickHouseReadIdentityRow, SegmentMember
 from segments.models import Segment
 from util.engine_models.context.mappers import map_segment_to_segment_context
@@ -183,6 +188,108 @@ def compute_segment_counts_for_project(
                     )
                 )
     return membership_counts
+
+
+def _max_watermark(
+    watermark_by_env_key: dict[str, datetime],
+    env_keys: Collection[str],
+) -> datetime | None:
+    """Latest watermark across `env_keys`, or `None` when none has one yet."""
+    values = [
+        watermark_by_env_key[str(k)] for k in env_keys if str(k) in watermark_by_env_key
+    ]
+    return max(values) if values else None
+
+
+def get_environment_watermarks(
+    cursor: CursorWrapper, env_keys: Collection[str]
+) -> dict[str, datetime]:
+    """Return the latest identity `inserted_at` per environment api key.
+
+    Reads the pre-aggregated `IDENTITIES_ENV_WATERMARK` view, so the cost is
+    O(environments) rather than a scan over all identities. Environments with no
+    identities are simply absent from the result. A naive ClickHouse `DateTime`
+    (always UTC) is labelled aware so it compares against Django's datetimes.
+    """
+    keys = tuple(str(k) for k in env_keys)
+    if not keys:
+        return {}
+    cursor.execute(
+        "SELECT environment_id, maxMerge(watermark) "
+        "FROM IDENTITIES_ENV_WATERMARK "
+        "WHERE environment_id IN %(env_keys)s "
+        "GROUP BY environment_id",
+        {"env_keys": keys},
+    )
+    return {
+        str(env_key): watermark.replace(tzinfo=dt_timezone.utc)
+        for env_key, watermark in cursor.fetchall()
+    }
+
+
+def get_project_watermark(
+    cursor: CursorWrapper, env_keys: Collection[str]
+) -> datetime | None:
+    """Latest identity change across a project's environments, or `None`."""
+    return _max_watermark(get_environment_watermarks(cursor, env_keys), env_keys)
+
+
+def get_projects_due_for_refresh(
+    projects: Collection[Project], cursor: CursorWrapper
+) -> list[Project]:
+    """Filter `projects` to those whose identities changed since their last
+    successful refresh.
+
+    A project is due when it has never been refreshed, or when its current
+    identity watermark differs from the one stored at the last refresh. Input
+    order is preserved so the caller can keep its staggering.
+    """
+    project_by_id = {project.id: project for project in projects}
+    if not project_by_id:
+        return []
+
+    env_keys_by_project: dict[int, list[str]] = defaultdict(list)
+    for project_id, api_key in Environment.objects.filter(
+        project_id__in=project_by_id
+    ).values_list("project_id", "api_key"):
+        env_keys_by_project[project_id].append(str(api_key))
+
+    all_env_keys = [key for keys in env_keys_by_project.values() for key in keys]
+    watermark_by_env_key = get_environment_watermarks(cursor, all_env_keys)
+    stored_watermark_by_project = dict(
+        SegmentMembershipRefreshState.objects.filter(
+            project_id__in=project_by_id
+        ).values_list("project_id", "identity_watermark")
+    )
+
+    due: list[Project] = []
+    for project_id, project in project_by_id.items():
+        current = _max_watermark(watermark_by_env_key, env_keys_by_project[project_id])
+        if project_id not in stored_watermark_by_project:
+            due.append(project)
+            continue
+        if current != stored_watermark_by_project[project_id]:
+            due.append(project)
+        else:
+            logger.info(
+                "refresh.project.skipped",
+                project__id=project_id,
+                reason="unchanged",
+            )
+    return due
+
+
+def save_refresh_state(
+    project: Project, identity_watermark: datetime | None, refreshed_at: datetime
+) -> None:
+    """Persist the watermark folded into the counts just written for `project`."""
+    SegmentMembershipRefreshState.objects.update_or_create(
+        project=project,
+        defaults={
+            "identity_watermark": identity_watermark,
+            "last_refreshed_at": refreshed_at,
+        },
+    )
 
 
 def get_segment_members_page(
