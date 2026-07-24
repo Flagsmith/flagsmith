@@ -3,6 +3,7 @@ import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
 import Switch from 'components/Switch'
 import ErrorMessage from 'components/ErrorMessage'
+import FieldError from 'components/base/forms/FieldError'
 import WarningMessage from 'components/WarningMessage'
 import { ClickHouseConfig } from 'common/types/responses'
 import { useTestWarehouseConnectionConfigMutation } from 'common/services/useWarehouseConnection'
@@ -170,14 +171,12 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
                 hasInvalidPort ? 'warehouse-config-port-error' : undefined
               }
             />
-            {hasInvalidPort && (
-              <span
-                id='warehouse-config-port-error'
-                className='wh-config-form__hint text-danger'
-              >
-                Port must be a number between 1 and 65535.
-              </span>
-            )}
+            <FieldError
+              id='warehouse-config-port-error'
+              error={
+                hasInvalidPort && 'Port must be a number between 1 and 65535.'
+              }
+            />
           </div>
           <div className='wh-config-form__field'>
             <label className='wh-config-form__label'>Database</label>
