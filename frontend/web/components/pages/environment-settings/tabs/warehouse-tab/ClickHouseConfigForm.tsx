@@ -210,7 +210,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
               setField(setPassword)(e.target.value)
             }
             type='password'
-            autocomplete='new-password'
+            autoComplete='new-password'
             placeholder={isEdit ? '••••••••' : 'Password'}
           />
           {isEdit && (
