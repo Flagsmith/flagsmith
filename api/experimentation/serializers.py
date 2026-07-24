@@ -16,6 +16,7 @@ from experimentation.models import (
     ExperimentResults,
     ExperimentStatus,
     Metric,
+    MetricDirection,
     WarehouseConnection,
     WarehouseConnectionStatus,
     WarehouseType,
@@ -175,7 +176,11 @@ class ExperimentMetricSerializer(serializers.ModelSerializer):  # type: ignore[t
     )
     metric_name = serializers.CharField(source="metric.name", read_only=True)
     aggregation = serializers.CharField(source="metric.aggregation", read_only=True)
-    direction = serializers.CharField(source="metric.direction", read_only=True)
+    direction = serializers.ChoiceField(
+        choices=MetricDirection.choices,
+        source="metric.direction",
+        read_only=True,
+    )
 
     class Meta:
         model = ExperimentMetric
