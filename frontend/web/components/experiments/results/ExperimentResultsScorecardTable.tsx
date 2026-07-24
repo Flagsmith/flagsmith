@@ -197,7 +197,14 @@ const ExperimentResultsScorecardTable: FC<
                 </td>
                 <td>{stats ? stats.n.toLocaleString() : '—'}</td>
                 <td>{renderMetricValue(stats, metric.aggregation)}</td>
-                <td>{renderLift(v, inference, metric.direction, liftRange)}</td>
+                <td>
+                  {renderLift(
+                    v,
+                    inference,
+                    metric.direction ?? 'up',
+                    liftRange,
+                  )}
+                </td>
                 <td>{renderCI(v, inference)}</td>
                 <td>
                   {renderWinProbability(v, inference, v.key === winnerKey)}

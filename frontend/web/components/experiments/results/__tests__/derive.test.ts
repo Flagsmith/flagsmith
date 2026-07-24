@@ -11,6 +11,7 @@ import {
   getVariantIdentities,
   getVariantTotals,
   getWinningVariant,
+  isLiftFavourable,
   liftToPercent,
   valueToPercent,
 } from 'components/experiments/results/derive'
@@ -341,10 +342,11 @@ describe('deriveSummary', () => {
     })
   })
 
-  it.each<[MetricDirection, LiftTone]>([
+  it.each<[MetricDirection | undefined, LiftTone]>([
     ['up', 'success'],
     ['down', 'danger'],
     ['informational', 'neutral'],
+    [undefined, 'success'], // legacy payloads without direction default to up
   ])(
     'tones the positive winning lift for a %s metric as %s',
     (direction, tone) => {
@@ -353,6 +355,20 @@ describe('deriveSummary', () => {
         metrics: [{ ...experiment.metrics[0], direction }],
       }
       expect(deriveSummary(exp, results(metricResult))?.liftTone).toBe(tone)
+    },
+  )
+})
+
+describe('isLiftFavourable', () => {
+  it.each<[number, MetricDirection, boolean]>([
+    [0.08, 'up', true],
+    [-0.08, 'up', false],
+    [-0.08, 'down', true],
+    [0.08, 'down', false],
+  ])(
+    'judges a %d lift on a %s metric as favourable=%s',
+    (lift, direction, expected) => {
+      expect(isLiftFavourable(lift, direction)).toBe(expected)
     },
   )
 })

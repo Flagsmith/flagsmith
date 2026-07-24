@@ -227,9 +227,10 @@ export const deriveSummary = (
   const winnerIdentity = identities.find((v) => v.key === winner.key)
   const controlIdentity = identities.find((v) => v.isControl)
 
+  const direction = metric.direction ?? 'up'
   let liftTone: LiftTone = 'neutral'
-  if (winner.inference && metric.direction !== 'informational') {
-    liftTone = isLiftFavourable(winner.inference.lift, metric.direction)
+  if (winner.inference && direction !== 'informational') {
+    liftTone = isLiftFavourable(winner.inference.lift, direction)
       ? 'success'
       : 'danger'
   }
