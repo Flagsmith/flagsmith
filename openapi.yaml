@@ -20183,7 +20183,8 @@ components:
           type: string
           readOnly: true
         direction:
-          type: string
+          allOf:
+            - $ref: '#/components/schemas/DirectionEnum'
           readOnly: true
         expected_direction:
           $ref: '#/components/schemas/ExpectedDirectionEnum'
@@ -23691,7 +23692,8 @@ components:
           type: string
           readOnly: true
         direction:
-          type: string
+          allOf:
+            - $ref: '#/components/schemas/DirectionEnum'
           readOnly: true
         expected_direction:
           $ref: '#/components/schemas/ExpectedDirectionEnum'

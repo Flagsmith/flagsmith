@@ -4536,7 +4536,11 @@
             "readOnly": true
           },
           "direction": {
-            "type": "string",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DirectionEnum"
+              }
+            ],
             "readOnly": true
           },
           "expected_direction": {
