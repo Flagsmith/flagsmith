@@ -75,12 +75,21 @@ Counts are a starting map, not a per-site read. A few `component=` matches in th
 
 The base `Select` swaps to a bespoke `<input> + <a>` DOM when `global.E2E` is true. This is TestCafe-era scaffolding; E2E is fully Playwright now, and Playwright can drive real react-select. The fork is the source of the "Select behaves differently under E2E" bugs (e.g. the fork keys its input off `id`, while react-select uses `inputId`).
 
-Kept out of the `component`-prop migration on purpose. Sequenced **after** the Select call sites move to `SelectField`, as its own Select-only PR:
+Kept out of the `component`-prop migration on purpose. Sequenced **after** the Select call sites move to `SelectField`, as its own Select-only PR.
 
-1. Add `data-test` to the real (non-E2E) `Select` container so tests can target it (react-select does not render arbitrary `data-test`).
-2. Add a Playwright `selectOption(selectTestId, label)` helper: click the container to open the menu, click `.react-select__option` by text.
-3. Migrate the sites that use the fork's `*-option-N` ids: `invite-test.pw.ts`, `roles-test.pw.ts`, and the `select-segment-option-${i}` helper in `e2e-helpers.playwright.ts`.
-4. Remove the `E2E ?` branch from `Select`.
-5. Run the affected specs (`invite`, `roles`, segment) to confirm. Requires Docker + API on localhost:8000.
+Prefer accessibility selectors over `data-test`. This is the payoff of `SelectField`: a select with a proper label gets an accessible name, so Playwright can target it by role, with no bespoke test id. The sequencing matters here, once the target selects render through `SelectField` (with a `title`), the role selectors work.
+
+This also makes the E2E suite a standing accessibility guard: a role/name selector only resolves if the component is genuinely accessible, so if a select later loses its label the test fails loudly instead of the accessibility silently rotting. `data-test` selectors give no such signal.
+
+1. Add a Playwright `selectOption(name, optionLabel)` helper using role/name selectors:
+   ```ts
+   await page.getByRole('combobox', { name }).click()          // open the menu
+   await page.getByRole('option', { name: optionLabel }).click()
+   ```
+2. Migrate the sites that use the fork's `*-option-N` ids to the helper: `invite-test.pw.ts`, `roles-test.pw.ts`, and the `select-segment-option-${i}` helper in `e2e-helpers.playwright.ts`.
+3. Remove the `E2E ?` branch from `Select`.
+4. Run the affected specs (`invite`, `roles`, segment) to confirm. Requires Docker + API on localhost:8000.
+
+Fallback: a select without a visible label (inline filters, etc.) has no accessible name. Give it an `aria-label` (via `SelectField`) so it stays role-targetable, rather than reintroducing a `data-test`.
 
 Scope is `Select` only. The other E2E forks (`toast`, `ValueEditor`, `FeatureAction`, `ActionItem`, the config/organisation stores) are out of scope.
