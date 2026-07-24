@@ -49,6 +49,7 @@ def get_identified_transient_identity_and_traits(
         environment=environment,
         identifier=identifier,
     ).first():
+        identity.environment = environment
         return identity, identity.update_traits(sdk_trait_data)
     return (
         identity := _get_transient_identity(
@@ -72,6 +73,7 @@ def get_persisted_identity_and_traits(
         environment=environment,
         identifier=identifier,
     )
+    identity.environment = environment
     persist_trait_data = environment.project.organisation.persist_trait_data
     if created:
         return identity, identity.generate_traits(

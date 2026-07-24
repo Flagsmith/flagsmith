@@ -742,7 +742,7 @@ def test_sdk_feature_states_get__no_identifier__returns_feature_list(
     ["use_replica", "is_new_identity", "num_queries"],
     [
         pytest.param(False, True, 9, id="default_database,new_identity"),
-        pytest.param(False, False, 8, id="default_database,existing_identity"),
+        pytest.param(False, False, 6, id="default_database,existing_identity"),
         pytest.param(True, True, 9, id="replica_database,new_identity"),
         pytest.param(True, False, 7, id="replica_database,existing_identity"),
     ],
@@ -795,7 +795,7 @@ def test_SDKFeatureStates_get__given_identifier__responds_200_with_feature_list(
     ["use_replica", "is_new_identity", "num_queries"],
     [
         pytest.param(False, True, 9, id="default_database,new_identity"),
-        pytest.param(False, False, 8, id="default_database,existing_identity"),
+        pytest.param(False, False, 6, id="default_database,existing_identity"),
         pytest.param(True, True, 9, id="replica_database,new_identity"),
         pytest.param(True, False, 7, id="replica_database,existing_identity"),
     ],
@@ -846,7 +846,7 @@ def test_sdk_feature_states_get__identifier_and_existing_feature__returns_featur
     ["use_replica", "is_new_identity", "num_queries"],
     [
         pytest.param(False, True, 8, id="default_database,new_identity"),
-        pytest.param(False, False, 7, id="default_database,existing_identity"),
+        pytest.param(False, False, 5, id="default_database,existing_identity"),
         pytest.param(True, True, 8, id="replica_database,new_identity"),
         pytest.param(True, False, 6, id="replica_database,existing_identity"),
     ],

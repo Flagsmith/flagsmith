@@ -1122,9 +1122,10 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         if not is_new_identity and is_database_replica_setup():
             identity = (
                 using_database_replica(Identity.objects)
-                .with_context()
+                .with_traits()
                 .get(id=identity.id)
             )
+        identity.environment = request.environment
 
         if feature_name := request.GET.get("feature"):
             feature_states = identity.get_all_feature_states(feature_name=feature_name)

@@ -9,7 +9,6 @@ if TYPE_CHECKING:
 
     from environments.identities.models import Identity
     from environments.models import Environment
-    from integrations.integration import IntegrationConfig
 
 
 class IdentityManager(Manager["Identity"]):
@@ -25,28 +24,18 @@ class IdentityManager(Manager["Identity"]):
         identifier: str,
         environment: "Environment",
     ) -> "tuple[Identity, bool]":
-        return self.with_context().get_or_create(
+        identity, created = self.with_traits().get_or_create(
             identifier=identifier,
             environment=environment,
         )
+        identity.environment = environment
+        return identity, created
 
-    def with_context(
+    def with_traits(
         self,
-        integrations: "Iterable[IntegrationConfig] | None" = None,
-        extra_select_related: "Iterable[str] | None" = None,
         extra_prefetch_related: "Iterable[str | Prefetch] | None" = None,  # type: ignore[type-arg]
     ) -> "QuerySet[Identity]":
-        from integrations.integration import IDENTITY_INTEGRATIONS
-
-        return self.select_related(
-            "environment",
-            "environment__project",
-            *(
-                f"environment__{integration['relation_name']}"
-                for integration in (integrations or IDENTITY_INTEGRATIONS)
-            ),
-            *(extra_select_related or []),
-        ).prefetch_related(
+        return self.prefetch_related(
             "identity_traits",
             *(extra_prefetch_related or []),
         )

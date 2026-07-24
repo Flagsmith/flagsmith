@@ -536,7 +536,9 @@ class Environment(
             segments = list(
                 Segment.live_objects.filter(
                     feature_segments__feature_states__environment=self
-                ).prefetch_related(
+                )
+                .distinct()
+                .prefetch_related(
                     "rules",
                     "rules__conditions",
                     "rules__rules",
