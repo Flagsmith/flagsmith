@@ -4,6 +4,7 @@ import {
   computeLiftRange,
   computeAxisRange,
   buildExposuresChartData,
+  LiftTone,
   deriveSummary,
   formatBucketLabel,
   getHeadlineTotal,
@@ -19,6 +20,7 @@ import {
   Experiment,
   ExperimentFeature,
   ExposuresSummary,
+  MetricDirection,
   MultivariateOption,
 } from 'common/types/responses'
 
@@ -300,6 +302,7 @@ describe('deriveSummary', () => {
       {
         aggregation: 'occurrence',
         created_at: '2026-06-01T00:00:00Z',
+        direction: 'up',
         expected_direction: 'increase',
         id: 1,
         metric: 1,
@@ -320,7 +323,7 @@ describe('deriveSummary', () => {
     expect(deriveSummary(experiment, results(metricResult))).toMatchObject({
       chanceToBest: '75%',
       controlWins: false,
-      liftFavourable: true,
+      liftTone: 'success',
       liftVsControl: '+8.0%',
       winnerName: 'b',
     })
@@ -332,11 +335,26 @@ describe('deriveSummary', () => {
     ).toMatchObject({
       chanceToBest: '85%',
       controlWins: true,
-      liftFavourable: false,
+      liftTone: 'neutral',
       liftVsControl: 'Baseline',
       winnerName: 'Control',
     })
   })
+
+  it.each<[MetricDirection, LiftTone]>([
+    ['up', 'success'],
+    ['down', 'danger'],
+    ['informational', 'neutral'],
+  ])(
+    'tones the positive winning lift for a %s metric as %s',
+    (direction, tone) => {
+      const exp: Experiment = {
+        ...experiment,
+        metrics: [{ ...experiment.metrics[0], direction }],
+      }
+      expect(deriveSummary(exp, results(metricResult))?.liftTone).toBe(tone)
+    },
+  )
 })
 
 describe('computeLiftRange', () => {

@@ -1,6 +1,10 @@
 import moment from 'moment'
 import { ChartDataPoint, buildChartColorMap } from 'components/charts'
-import { colorTextDanger, colorTextSuccess } from 'common/theme/tokens'
+import {
+  colorTextDanger,
+  colorTextSecondary,
+  colorTextSuccess,
+} from 'common/theme/tokens'
 import {
   BayesianMetricResult,
   BayesianResultsSummary,
@@ -9,6 +13,7 @@ import {
   ExposureGranularity,
   ExposuresSummary,
   Inference,
+  MetricDirection,
   MultivariateOption,
 } from 'common/types/responses'
 import { getPrimaryMetric } from 'components/experiments/constants'
@@ -120,12 +125,21 @@ export const getResultsTotalUsers = (
   return Object.values(firstMetric.variants).reduce((sum, v) => sum + v.n, 0)
 }
 
-// Colour by sign only — expected_direction is not used reliably yet, so it
-// deliberately plays no part in lift colouring.
-export const isLiftFavourable = (lift: number): boolean => lift > 0
+// A lift is favourable when it moves with the metric's inherent polarity
+// (direction), e.g. a drop in a lower-is-better metric. The experiment-level
+// expected_direction guardrail deliberately plays no part in colouring.
+export const isLiftFavourable = (
+  lift: number,
+  direction: MetricDirection,
+): boolean => (direction === 'down' ? lift < 0 : lift > 0)
 
-export const getLiftColour = (lift: number): string =>
-  isLiftFavourable(lift) ? colorTextSuccess : colorTextDanger
+export const getLiftColour = (
+  lift: number,
+  direction: MetricDirection,
+): string => {
+  if (direction === 'informational') return colorTextSecondary
+  return isLiftFavourable(lift, direction) ? colorTextSuccess : colorTextDanger
+}
 
 export const formatLiftPct = (lift: number): string => {
   const pct = lift * 100
@@ -185,6 +199,8 @@ export const getWinningVariant = (
   return best
 }
 
+export type LiftTone = 'success' | 'danger' | 'neutral'
+
 export type SummaryStats = {
   winnerName: string
   winnerColour: string
@@ -192,7 +208,7 @@ export type SummaryStats = {
   controlWins: boolean
   chanceToBest: string
   liftVsControl: string
-  liftFavourable: boolean
+  liftTone: LiftTone
 }
 
 export const deriveSummary = (
@@ -211,13 +227,18 @@ export const deriveSummary = (
   const winnerIdentity = identities.find((v) => v.key === winner.key)
   const controlIdentity = identities.find((v) => v.isControl)
 
+  let liftTone: LiftTone = 'neutral'
+  if (winner.inference && metric.direction !== 'informational') {
+    liftTone = isLiftFavourable(winner.inference.lift, metric.direction)
+      ? 'success'
+      : 'danger'
+  }
+
   return {
     chanceToBest: `${Math.round(winner.chanceToWin * 100)}%`,
     controlColour: controlIdentity?.colour ?? '',
     controlWins: winner.isControl,
-    liftFavourable: winner.inference
-      ? isLiftFavourable(winner.inference.lift)
-      : false,
+    liftTone,
     liftVsControl: winner.inference
       ? formatLiftPct(winner.inference.lift)
       : 'Baseline',
