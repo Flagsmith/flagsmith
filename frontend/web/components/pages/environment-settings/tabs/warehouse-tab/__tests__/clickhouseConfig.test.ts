@@ -24,6 +24,10 @@ describe('isValidPort', () => {
     expect(isValidPort('65535')).toBe(true)
   })
 
+  it('accepts a port with surrounding whitespace', () => {
+    expect(isValidPort(' 9440 ')).toBe(true)
+  })
+
   it('rejects out-of-range or non-numeric ports', () => {
     expect(isValidPort('0')).toBe(false)
     expect(isValidPort('65536')).toBe(false)
@@ -46,6 +50,12 @@ describe('isClickHouseFormValid', () => {
       )
     },
   )
+
+  it('rejects a whitespace-only host', () => {
+    expect(isClickHouseFormValid({ ...validForm, host: '   ' }, false)).toBe(
+      false,
+    )
+  })
 
   it('allows an empty password on edit (keeps the stored one)', () => {
     expect(isClickHouseFormValid({ ...validForm, password: '' }, true)).toBe(
@@ -125,5 +135,29 @@ describe('buildClickHousePayload', () => {
     expect(
       buildClickHousePayload({ ...validForm, password: '' }).credentials,
     ).toBeUndefined()
+  })
+
+  it('trims whitespace from pasted values, leaving the password intact', () => {
+    expect(
+      buildClickHousePayload({
+        ...validForm,
+        database: 'flagsmith\n',
+        host: ' ch.example.com ',
+        name: ' Production ClickHouse ',
+        password: ' hunter2 ',
+        port: ' 9440 ',
+        username: 'default ',
+      }),
+    ).toEqual({
+      config: {
+        database: 'flagsmith',
+        host: 'ch.example.com',
+        port: 9440,
+        secure: true,
+        username: 'default',
+      },
+      credentials: { password: ' hunter2 ' },
+      name: 'Production ClickHouse',
+    })
   })
 })

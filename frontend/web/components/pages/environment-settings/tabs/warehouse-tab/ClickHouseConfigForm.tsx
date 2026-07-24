@@ -14,6 +14,7 @@ import {
   ClickHouseFormState,
   isClickHouseConfigDirty,
   isClickHouseFormValid,
+  isValidPort,
 } from './clickhouseConfig'
 import {
   getButtonLabel,
@@ -101,16 +102,11 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
       } else {
         setTestState('errored')
         setTestDetail(result.status_detail)
-        toast(
-          result.status_detail || 'Connection failed — check your credentials',
-          'danger',
-        )
       }
     } catch {
       if (revision !== testRevision.current) return
       setTestState('errored')
       setTestDetail(null)
-      toast('Failed to test connection', 'danger')
     }
   }
 
@@ -169,6 +165,11 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
               }
               placeholder='9440'
             />
+            {!!port && !isValidPort(port) && (
+              <span className='wh-config-form__hint text-danger'>
+                Port must be a number between 1 and 65535.
+              </span>
+            )}
           </div>
           <div className='wh-config-form__field'>
             <label className='wh-config-form__label'>Database</label>
@@ -201,6 +202,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
               setField(setPassword)(e.target.value)
             }
             type='password'
+            autocomplete='new-password'
             placeholder={isEdit ? '••••••••' : 'Password'}
           />
           {isEdit && (

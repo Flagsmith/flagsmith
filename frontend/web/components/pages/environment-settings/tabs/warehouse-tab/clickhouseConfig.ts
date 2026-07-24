@@ -25,9 +25,10 @@ export type ClickHouseFormData = {
 }
 
 export const isValidPort = (port: string): boolean => {
-  const value = Number(port)
+  const trimmed = port.trim()
+  const value = Number(trimmed)
   return (
-    /^\d+$/.test(port) &&
+    /^\d+$/.test(trimmed) &&
     Number.isInteger(value) &&
     value >= 1 &&
     value <= 65535
@@ -38,34 +39,34 @@ export const isClickHouseFormValid = (
   form: ClickHouseFormState,
   isEdit: boolean,
 ): boolean =>
-  !!form.name &&
-  !!form.host &&
+  !!form.name.trim() &&
+  !!form.host.trim() &&
   isValidPort(form.port) &&
-  !!form.database &&
-  !!form.username &&
+  !!form.database.trim() &&
+  !!form.username.trim() &&
   (isEdit || !!form.password)
 
 export const buildClickHousePayload = (
   form: ClickHouseFormState,
 ): ClickHouseFormData => ({
   config: {
-    database: form.database,
-    host: form.host,
-    port: Number(form.port),
+    database: form.database.trim(),
+    host: form.host.trim(),
+    port: Number(form.port.trim()),
     secure: form.secure,
-    username: form.username,
+    username: form.username.trim(),
   },
   credentials: form.password ? { password: form.password } : undefined,
-  name: form.name,
+  name: form.name.trim(),
 })
 
 export const canTestClickHouseConnection = (
   form: ClickHouseFormState,
 ): boolean =>
-  !!form.host &&
+  !!form.host.trim() &&
   isValidPort(form.port) &&
-  !!form.database &&
-  !!form.username &&
+  !!form.database.trim() &&
+  !!form.username.trim() &&
   !!form.password
 
 export const isClickHouseConfigDirty = (
@@ -74,10 +75,10 @@ export const isClickHouseConfigDirty = (
 ): boolean => {
   const initial = { ...CLICKHOUSE_DEFAULTS, ...initialConfig }
   return (
-    form.host !== initial.host ||
-    form.port !== String(initial.port) ||
-    form.database !== initial.database ||
-    form.username !== initial.username ||
+    form.host.trim() !== initial.host ||
+    form.port.trim() !== String(initial.port) ||
+    form.database.trim() !== initial.database ||
+    form.username.trim() !== initial.username ||
     form.secure !== initial.secure ||
     !!form.password
   )
