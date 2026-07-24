@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react'
 import ColorSwatch from 'components/ColorSwatch'
-import { BayesianMetricResult } from 'common/types/responses'
+import { BayesianMetricResult, MetricDirection } from 'common/types/responses'
 import {
   AxisRange,
   VariantIdentity,
@@ -31,10 +31,12 @@ type ExperimentResultsAxisChartProps = {
   identities: VariantIdentity[]
   metricName: string
   metricResult?: BayesianMetricResult
+  direction: MetricDirection
   range: AxisRange
 }
 
 const ExperimentResultsAxisChart: FC<ExperimentResultsAxisChartProps> = ({
+  direction,
   identities,
   metricName,
   metricResult,
@@ -87,7 +89,7 @@ const ExperimentResultsAxisChart: FC<ExperimentResultsAxisChartProps> = ({
               )
             }
             if (!inf) return null
-            const colour = getLiftColour(inf.lift)
+            const colour = getLiftColour(inf.lift, direction)
             const ciLeft = valueToPercent(inf.ci_low, range)
             const ciRight = valueToPercent(inf.ci_high, range)
             const dotPos = valueToPercent(inf.lift, range)

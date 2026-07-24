@@ -671,6 +671,7 @@ export type ExperimentMetric = {
   metric: number
   metric_name: string
   aggregation: MetricAggregation
+  direction: MetricDirection
   expected_direction: ExpectedDirection
   created_at: string
 }
