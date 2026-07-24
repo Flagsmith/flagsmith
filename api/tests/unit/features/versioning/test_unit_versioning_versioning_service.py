@@ -136,6 +136,114 @@ def test_get_environment_flags_list__multiple_versions_and_identities__returns_l
     }
 
 
+def test_get_environment_flags_list__segment_override_multiple_versions__returns_latest_live(
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given
+    environment_default_feature_state = FeatureState.objects.get(
+        feature=feature, environment=environment, feature_segment=None, identity=None
+    )
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature, segment=segment, environment=environment
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        enabled=False,
+        version=1,
+        live_from=timezone.now() - timedelta(days=1),
+    )
+    segment_override_v2_feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        enabled=True,
+        version=2,
+        live_from=timezone.now(),
+    )
+
+    # When
+    environment_feature_states = get_environment_flags_list(environment=environment)
+
+    # Then
+    assert set(environment_feature_states) == {
+        environment_default_feature_state,
+        segment_override_v2_feature_state,
+    }
+
+
+def test_get_environment_flags_list__identity_override_multiple_versions__returns_latest_live(
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+) -> None:
+    # Given
+    environment_default_feature_state = FeatureState.objects.get(
+        feature=feature, environment=environment, feature_segment=None, identity=None
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        identity=identity,
+        enabled=False,
+        version=1,
+        live_from=timezone.now() - timedelta(days=1),
+    )
+    identity_override_v2_feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        identity=identity,
+        enabled=True,
+        version=2,
+        live_from=timezone.now(),
+    )
+
+    # When
+    environment_feature_states = get_environment_flags_list(environment=environment)
+
+    # Then
+    assert set(environment_feature_states) == {
+        environment_default_feature_state,
+        identity_override_v2_feature_state,
+    }
+
+
+def test_get_environment_flags_list__filter_excludes_latest_version__returns_latest_matching(
+    environment: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    # the latest committed version of a flag is disabled,
+    # with an earlier enabled version behind it
+    enabled_v2_feature_state = FeatureState.objects.get(
+        feature=feature, environment=environment, feature_segment=None, identity=None
+    )
+    enabled_v2_feature_state.version = 2
+    enabled_v2_feature_state.enabled = True
+    enabled_v2_feature_state.save()
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        enabled=False,
+        version=3,
+        live_from=timezone.now(),
+    )
+
+    # When
+    environment_feature_states = get_environment_flags_list(
+        environment=environment,
+        additional_filters=Q(enabled=True),
+    )
+
+    # Then
+    # the latest version that matches the filters is returned
+    assert environment_feature_states == [enabled_v2_feature_state]
+
+
 def test_get_environment_flags_list__v2_versioning_with_published_version__returns_latest_live(
     project: Project,
     environment_v2_versioning: Environment,
