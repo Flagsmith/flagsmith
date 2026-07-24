@@ -3,7 +3,6 @@ import { ChartDataPoint, buildChartColorMap } from 'components/charts'
 import {
   BayesianMetricResult,
   BayesianResultsSummary,
-  ExpectedDirection,
   Experiment,
   ExperimentFeature,
   ExposureGranularity,
@@ -120,13 +119,9 @@ export const getResultsTotalUsers = (
   return Object.values(firstMetric.variants).reduce((sum, v) => sum + v.n, 0)
 }
 
-export const isLiftFavourable = (
-  lift: number,
-  direction: ExpectedDirection,
-): boolean => {
-  if (direction === 'increase' || direction === 'not_decrease') return lift > 0
-  return lift < 0
-}
+// Colour by sign only — expected_direction is not used reliably yet, so it
+// deliberately plays no part in lift colouring.
+export const isLiftFavourable = (lift: number): boolean => lift > 0
 
 export const formatLiftPct = (lift: number): string => {
   const pct = lift * 100
@@ -217,7 +212,7 @@ export const deriveSummary = (
     controlColour: controlIdentity?.colour ?? '',
     controlWins: winner.isControl,
     liftFavourable: winner.inference
-      ? isLiftFavourable(winner.inference.lift, metric.expected_direction)
+      ? isLiftFavourable(winner.inference.lift)
       : false,
     liftVsControl: winner.inference
       ? formatLiftPct(winner.inference.lift)
