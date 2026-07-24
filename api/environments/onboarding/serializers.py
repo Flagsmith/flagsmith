@@ -13,4 +13,6 @@ class EnvironmentOnboardingStatusSerializer(serializers.ModelSerializer[Environm
 
 
 class EnvironmentOnboardingStatusUpdateSerializer(serializers.Serializer[None]):
-    first_evaluated_sdk_label = serializers.ChoiceField(choices=get_args(KnownSDK))
+    first_evaluated_sdk_label = serializers.ChoiceField(
+        choices=get_args(KnownSDK) + ("unknown",)
+    )
