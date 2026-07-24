@@ -71,6 +71,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
   const isValid = isClickHouseFormValid(form, isEdit)
   const requiresTest = !isEdit || isClickHouseConfigDirty(form, initialConfig)
   const canTest = canTestClickHouseConnection(form)
+  const hasInvalidPort = !!port && !isValidPort(port)
   const canSave = isValid && (!requiresTest || testState !== 'idle')
 
   const setField =
@@ -164,9 +165,16 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
                 setField(setPort)(e.target.value)
               }
               placeholder='9440'
+              aria-invalid={hasInvalidPort}
+              aria-describedby={
+                hasInvalidPort ? 'warehouse-config-port-error' : undefined
+              }
             />
-            {!!port && !isValidPort(port) && (
-              <span className='wh-config-form__hint text-danger'>
+            {hasInvalidPort && (
+              <span
+                id='warehouse-config-port-error'
+                className='wh-config-form__hint text-danger'
+              >
                 Port must be a number between 1 and 65535.
               </span>
             )}

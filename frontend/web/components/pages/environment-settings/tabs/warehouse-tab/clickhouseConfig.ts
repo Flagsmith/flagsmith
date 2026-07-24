@@ -76,7 +76,7 @@ export const isClickHouseConfigDirty = (
   const initial = { ...CLICKHOUSE_DEFAULTS, ...initialConfig }
   return (
     form.host.trim() !== initial.host ||
-    form.port.trim() !== String(initial.port) ||
+    Number(form.port.trim()) !== initial.port ||
     form.database.trim() !== initial.database ||
     form.username.trim() !== initial.username ||
     form.secure !== initial.secure ||

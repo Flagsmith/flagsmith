@@ -109,6 +109,15 @@ describe('isClickHouseConfigDirty', () => {
     ).toBe(true)
   })
 
+  it('is clean when the port differs only in formatting', () => {
+    expect(
+      isClickHouseConfigDirty(
+        { ...validForm, password: '', port: '09440' },
+        initialConfig,
+      ),
+    ).toBe(false)
+  })
+
   it('compares against defaults when there is no stored config', () => {
     expect(
       isClickHouseConfigDirty({ ...validForm, password: '' }, undefined),
