@@ -1,18 +1,14 @@
 import { FC, useMemo } from 'react'
 import ColorSwatch from 'components/ColorSwatch'
-import { colorTextDanger, colorTextSuccess } from 'common/theme/tokens'
 import { BayesianMetricResult } from 'common/types/responses'
 import {
   AxisRange,
   VariantIdentity,
   buildTicks,
   formatLiftPct,
-  isLiftFavourable,
+  getLiftColour,
   valueToPercent,
 } from './derive'
-
-const getLiftColour = (lift: number): string =>
-  isLiftFavourable(lift) ? colorTextSuccess : colorTextDanger
 
 const TickLines: FC<{ ticks: number[]; range: AxisRange }> = ({
   range,

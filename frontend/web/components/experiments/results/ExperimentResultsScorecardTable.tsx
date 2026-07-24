@@ -4,7 +4,6 @@ import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
 import {
   colorIconSecondary,
-  colorTextDanger,
   colorTextSecondary,
   colorTextSuccess,
 } from 'common/theme/tokens'
@@ -18,7 +17,7 @@ import {
 import {
   VariantIdentity,
   formatLiftPct,
-  isLiftFavourable,
+  getLiftColour,
   liftToPercent,
 } from './derive'
 
@@ -40,9 +39,6 @@ const renderMetricValue = (
   if (aggregation === 'occurrence') return `${(mean * 100).toFixed(1)}%`
   return mean.toFixed(2)
 }
-
-const getLiftColour = (lift: number): string =>
-  isLiftFavourable(lift) ? colorTextSuccess : colorTextDanger
 
 const renderLift = (
   identity: VariantIdentity,

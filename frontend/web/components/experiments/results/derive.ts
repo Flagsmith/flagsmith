@@ -1,5 +1,6 @@
 import moment from 'moment'
 import { ChartDataPoint, buildChartColorMap } from 'components/charts'
+import { colorTextDanger, colorTextSuccess } from 'common/theme/tokens'
 import {
   BayesianMetricResult,
   BayesianResultsSummary,
@@ -122,6 +123,9 @@ export const getResultsTotalUsers = (
 // Colour by sign only — expected_direction is not used reliably yet, so it
 // deliberately plays no part in lift colouring.
 export const isLiftFavourable = (lift: number): boolean => lift > 0
+
+export const getLiftColour = (lift: number): string =>
+  isLiftFavourable(lift) ? colorTextSuccess : colorTextDanger
 
 export const formatLiftPct = (lift: number): string => {
   const pct = lift * 100

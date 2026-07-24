@@ -91,6 +91,9 @@
   }
   .alert-warning {
     background-color: $warning-solid-dark-alert;
+    strong {
+      color: $text-icon-light;
+    }
   }
   .alert-danger{
     background-color: $danger-solid-dark-alert
