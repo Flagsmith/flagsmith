@@ -33,8 +33,6 @@ We enforce the `test_{subject}__{condition}__{expected outcome}` template for te
 
 We follow the Given-When-Then structure and mark up test bodies with Given / When / Then comments, collapsed when empty, e.g. `# Given / When`. We avoid extra comments in tests beyond the GWT markers. We prefer to rely on the test name and body to communicate the intent.
 
-We avoid extra comments in tests, and rely on the test name and body to communicate the intent.
-
 ### Code guidelines: metrics
 
 The Flagsmith backend exports Prometheus metrics. When planning a feature, consider which metrics should cover it — counters for domain events, histograms for latency or sizes, gauges for cardinalities. See [documentation for existing metrics](https://docs.flagsmith.com/deployment-self-hosting/observability/metrics). Metrics code is hosted in `metrics.py` modules.
