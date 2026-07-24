@@ -2,6 +2,7 @@ from django.db import models
 
 from environments.models import Environment
 from organisations.models import Organisation
+from projects.models import Project
 from segments.models import Segment
 
 
@@ -42,3 +43,15 @@ class SegmentMembershipSeed(models.Model):
         related_name="+",
     )
     seeded_at = models.DateTimeField(null=True)
+
+
+class SegmentMembershipRefreshState(models.Model):
+    """Per-project bookkeeping for the periodic count refresh."""
+
+    project = models.OneToOneField(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="+",
+    )
+    identity_watermark = models.DateTimeField(null=True)
+    last_refreshed_at = models.DateTimeField()
