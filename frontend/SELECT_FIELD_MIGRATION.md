@@ -70,3 +70,17 @@ Counts are a starting map, not a per-site read. A few `component=` matches in th
 
 - `SelectField` is a first cut. The error-state styling and the react-select aria verification (step 2) are deliberately follow-ups so this PR stays reviewable.
 - The base `Select` (`web/project/project-components.js`) is untyped JS and spreads props into react-select, which is why `SelectField` types its own surface off react-select's `Props` plus the base's custom extras (`size`, `autoSelect`).
+
+## Related follow-up: drop the Select E2E fork (separate PR, after SelectField)
+
+The base `Select` swaps to a bespoke `<input> + <a>` DOM when `global.E2E` is true. This is TestCafe-era scaffolding; E2E is fully Playwright now, and Playwright can drive real react-select. The fork is the source of the "Select behaves differently under E2E" bugs (e.g. the fork keys its input off `id`, while react-select uses `inputId`).
+
+Kept out of the `component`-prop migration on purpose. Sequenced **after** the Select call sites move to `SelectField`, as its own Select-only PR:
+
+1. Add `data-test` to the real (non-E2E) `Select` container so tests can target it (react-select does not render arbitrary `data-test`).
+2. Add a Playwright `selectOption(selectTestId, label)` helper: click the container to open the menu, click `.react-select__option` by text.
+3. Migrate the sites that use the fork's `*-option-N` ids: `invite-test.pw.ts`, `roles-test.pw.ts`, and the `select-segment-option-${i}` helper in `e2e-helpers.playwright.ts`.
+4. Remove the `E2E ?` branch from `Select`.
+5. Run the affected specs (`invite`, `roles`, segment) to confirm. Requires Docker + API on localhost:8000.
+
+Scope is `Select` only. The other E2E forks (`toast`, `ValueEditor`, `FeatureAction`, `ActionItem`, the config/organisation stores) are out of scope.
