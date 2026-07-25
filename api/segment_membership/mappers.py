@@ -1,4 +1,3 @@
-from datetime import datetime
 from decimal import Decimal
 
 from flagsmith_schemas import dynamodb
