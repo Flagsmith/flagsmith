@@ -1,7 +1,7 @@
 import React, { FC, ReactNode, useMemo, useState } from 'react'
 import InlineModal from 'components/InlineModal'
 import { IonIcon } from '@ionic/react'
-import { caretDown, search } from 'ionicons/icons'
+import { caretDown } from 'ionicons/icons'
 import classNames from 'classnames'
 import TableFilterItem from './TableFilterItem'
 import Input from 'components/base/forms/Input'
@@ -82,7 +82,7 @@ const TableFilter: FC<TableFilterType> = ({
             <div className='px-2 mt-2 mb-2'>
               <Input
                 autoFocus
-                onChange={(e: InputEvent) => {
+                onChange={(e) => {
                   setFilter(Utils.safeParseEventValue(e))
                 }}
                 className='full-width'

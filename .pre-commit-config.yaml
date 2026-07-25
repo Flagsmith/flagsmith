@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.12
+    rev: v0.15.22
     # Each project is linted under its own config; the global hook runs once per project.
     hooks:
       - id: ruff
@@ -66,12 +66,12 @@ repos:
         stages: [pre-push]
 
   - repo: https://github.com/Flagsmith/flagsmith-common
-    rev: v3.9.0
+    rev: v3.12.0
     hooks:
       - id: flagsmith-lint-tests
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.11.18 # Ensure this matches the version in api/pyproject.toml
+    rev: 0.11.29 # Ensure this matches the version in api/pyproject.toml
     hooks:
       - id: uv-lock
         name: api-lockcheck
@@ -81,7 +81,7 @@ repos:
         args: ["--project", "mcp", "--check"]
 
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 43.205.2
+    rev: 43.272.4
     hooks:
       - id: renovate-config-validator
         name: renovate-config-validator

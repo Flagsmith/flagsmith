@@ -101,6 +101,8 @@ corresponding client-side key.
 
 #### `api_url`
 
+The URL that edge proxy uses to retrieve the environment document, and poll the Flagsmith API for changes. Defaults to `https://edge.api.flagsmith.com/api/v1`.
+
 If you are self-hosting Flagsmith, set this to your API URL:
 
 ```json
@@ -332,7 +334,7 @@ later, or use `:latest`, to pick up override deletions.
 
 When a **request** matches both an identity override and a segment override, the identity override takes precedence —
 this matches the behaviour of
-[Local Evaluation Mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode).
+[Local Evaluation Mode](/integrating-with-flagsmith/sdks/#for-local-evaluation).
 
 ## Troubleshooting
 
@@ -401,6 +403,7 @@ If your client is hitting the proxy and the result differs from a direct API cal
   between calls — see [Managing Traits](/performance/edge-proxy#managing-traits).
 - If the result was correct before and is now stale after deleting an identity override, upgrade to Edge Proxy v2.21.1
   or newer (see [Identity overrides](#identity-overrides)).
+- If the evaluation comes from an identity override and your edge proxy fetches updates from the Edge API, ensure the [default](#api_url) `api_url` is used.
 - Disable [endpoint caches](#endpoint_caches) temporarily to rule out a cached response.
 
 ## Production deployment

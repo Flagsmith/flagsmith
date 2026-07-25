@@ -2,8 +2,13 @@ name: Renovate
 
 on:
   schedule:
-    - cron: '0 3 * * *'
-  workflow_dispatch: {}
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: "Comma-separated packages to force-update out of band (leave empty for a normal run)"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -22,15 +27,29 @@ jobs:
 
       - name: Generate GitHub App token
         id: app-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
         with:
-          app-id: ${{ vars.FLAGSMITH_ENGINEERING_GH_APP_ID }}
+          client-id: ${{ vars.FLAGSMITH_ENGINEERING_GH_APP_ID }}
           private-key: ${{ secrets.FLAGSMITH_ENGINEERING_GH_APP_PRIVATE_KEY }}
 
+      - name: Compute Renovate force override
+        id: force
+        shell: python
+        env:
+          PACKAGES: ${{ inputs.packages }}
+        run: |
+          import json, os
+          names = [n for part in os.environ["PACKAGES"].split(",") if (n := part.strip())]
+          if names:
+              value = {"packageRules": [{"matchPackageNames": names, "enabled": True, "rangeStrategy": "bump"}]}
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write(f"value={json.dumps(value)}\n")
+
       - name: Run Renovate
-        uses: renovatebot/github-action@v46.1.14
+        uses: renovatebot/github-action@3064367f740a1a91cca218698a63902689cce200
         env:
           RENOVATE_TOKEN: ${{ steps.app-token.outputs.token }}
+          RENOVATE_FORCE: ${{ steps.force.outputs.value }}
           RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_GIT_AUTHOR: ${{ vars.RENOVATE_GIT_AUTHOR }}
           RENOVATE_HOST_RULES: >-

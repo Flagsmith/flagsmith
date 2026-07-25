@@ -4,6 +4,8 @@ import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from django.utils import timezone
+
 from environments.dynamodb.constants import (
     ENVIRONMENTS_V2_ENVIRONMENT_META_DOCUMENT_KEY,
 )
@@ -16,7 +18,7 @@ if TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
     from environments.models import Environment, EnvironmentAPIKey
-    from features.models import FeatureState
+    from features.models import Feature, FeatureState
 
 
 def test_map_environment_to_environment_document__valid_environment__returns_expected_document(
@@ -59,6 +61,7 @@ def test_map_environment_to_environment_document__valid_environment__returns_exp
         "id": Decimal(environment.pk),
         "mixpanel_config": None,
         "name": "Test Environment",
+        "onboarding_pending": True,
         "project": {
             "enable_realtime_updates": False,
             "hide_disabled_flags": False,
@@ -81,6 +84,20 @@ def test_map_environment_to_environment_document__valid_environment__returns_exp
         "use_identity_overrides_in_local_eval": True,
         "webhook_config": None,
     }
+
+
+def test_map_environment_to_environment_document__first_evaluated__onboarding_pending_false(
+    environment: "Environment",
+) -> None:
+    # Given
+    environment.first_evaluated_at = timezone.now()
+    environment.save(update_fields=["first_evaluated_at"])
+
+    # When
+    result = dynamodb.map_environment_to_environment_document(environment)
+
+    # Then
+    assert result["onboarding_pending"] is False
 
 
 def test_map_environment_api_key_to_environment_api_key_document__valid_key__returns_expected_document(
@@ -179,6 +196,7 @@ def test_map_environment_to_environment_v2_document__valid_environment__returns_
         "id": Decimal(environment.pk),
         "mixpanel_config": None,
         "name": "Test Environment",
+        "onboarding_pending": True,
         "project": {
             "enable_realtime_updates": False,
             "hide_disabled_flags": False,
@@ -261,6 +279,34 @@ def test_map_environment_to_compressed_environment_document__valid_environment__
         json.loads(gzip.decompress(compressed_feature_states).decode("utf-8"))
         == uncompressed_document["feature_states"]
     )
+
+
+def test_map_environment_to_compressed_environment_document__mv_option_with_key__key_preserved(
+    environment: "Environment",
+    multivariate_feature: "Feature",
+) -> None:
+    # Given
+    mv_option = multivariate_feature.multivariate_options.first()
+    assert mv_option is not None
+    mv_option.key = "control"
+    mv_option.save()
+
+    # When
+    result = dynamodb.map_environment_to_compressed_environment_document(environment)
+
+    # Then
+    compressed_feature_states = result.document["feature_states"]
+    assert isinstance(compressed_feature_states, bytes)
+    feature_states = json.loads(
+        gzip.decompress(compressed_feature_states).decode("utf-8")
+    )
+    mv_options = [
+        mv_value["multivariate_feature_option"]
+        for feature_state in feature_states
+        for mv_value in feature_state["multivariate_feature_state_values"]
+    ]
+    keyed_option = next(option for option in mv_options if option["id"] == mv_option.id)
+    assert keyed_option["key"] == "control"
 
 
 def test_map_environment_to_compressed_environment_v2_document__valid_environment__returns_compressed_fields(

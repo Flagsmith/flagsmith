@@ -7,7 +7,7 @@ COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
-UV_VERSION ?= $(shell python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["tool"]["uv"]["required-version"].lstrip("="))')
+UV_VERSION ?= $(shell python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["tool"]["uv"]["required-version"].lstrip("<=>"))')
 
 OPENAPI_FORMAT_VERSION ?= 1.23.0
 
@@ -23,20 +23,12 @@ codeartifact-login:
 		--query authorizationToken --output text) && \
 	printf 'UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws\nUV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD=%s\n' "$$token" > .env-codeartifact
 
-.PHONY: install-pip
-install-pip:
-	python -m pip -q install --upgrade pip
-
-.PHONY: install-uv
-install-uv:
-	python -m pip -q install uv==${UV_VERSION}
-
 .PHONY: install-packages
 install-packages:
 	uv sync --frozen $(opts)
 
 .PHONY: install
-install: install-pip install-uv install-packages
+install: install-packages
 
 .PHONY: lint
 lint:
@@ -180,15 +172,36 @@ integrate-private-tests:
 	mv ./flagsmith-private/unit_tests/saml tests/saml_unit_tests
 	rm -rf ./flagsmith-private
 
+CORE_OPENAPI_SERVERS := [{"url": "https://api.flagsmith.com", "description": "Flagsmith API"}]
+
+.PHONY: generate-full-openapi
+generate-full-openapi: OPENAPI_SERVERS=$(CORE_OPENAPI_SERVERS)
+generate-full-openapi:
+	uv run python manage.py spectacular | \
+	  npx openapi-format@${OPENAPI_FORMAT_VERSION} /dev/fd/0 \
+	    --output ../openapi.yaml
+
+.PHONY: generate-mcp-openapi
+generate-mcp-openapi:
+	npx openapi-format@${OPENAPI_FORMAT_VERSION} ../openapi.yaml \
+	  --filterFile openapi-filter-mcp.yaml \
+	  --output ../mcp/src/flagsmith_mcp/openapi.json
+
 .PHONY: generate-docs
-generate-docs: generate-flagsmith-sdk-openapi
+generate-docs: generate-flagsmith-sdk-openapi generate-mcp-openapi
 	uv run flagsmith docgen metrics > ../docs/docs/deployment-self-hosting/observability/_metrics-catalogue.md
 	uv run flagsmith docgen events > ../docs/docs/deployment-self-hosting/observability/_events-catalogue.md
+	uv run python manage.py generate_mcp_tool_catalogue > ../docs/docs/integrating-with-flagsmith/_mcp-tool-catalogue.md
+
+.PHONY: generate-docs-private
+generate-docs-private:
+	$(MAKE) install-packages opts="--extra dev --extra private"
+	$(MAKE) generate-full-openapi
+	$(MAKE) generate-mcp-openapi
+	uv run python manage.py generate_mcp_tool_catalogue \
+	  --exclude ../docs/docs/integrating-with-flagsmith/_mcp-tool-catalogue.md \
+	  > ../docs/docs/integrating-with-flagsmith/_mcp-tool-catalogue-enterprise.md
 
 .PHONY: add-known-sdk-version
 add-known-sdk-version:
 	uv run python scripts/add-known-sdk-version.py $(opts)
-
-.PHONY: generate-mcp-spec
-generate-mcp-spec:
-	uv run python manage.py spectacular --generator-class api.openapi.MCPSchemaGenerator --file mcp_openapi.yaml

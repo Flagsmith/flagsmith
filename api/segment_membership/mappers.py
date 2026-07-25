@@ -1,9 +1,12 @@
+from datetime import datetime
 from decimal import Decimal
 
 from flagsmith_schemas import dynamodb
 
 # (environment_id, identifier, identity_key, traits, is_deleted)
 ClickHouseIdentityRow = tuple[str, str, str, dict[str, object] | None, bool]
+from segment_membership.constants import INT64_MAX, INT64_MIN
+from segment_membership.types import ClickHouseIdentityRow
 
 
 def map_identity_document_to_clickhouse_row(
@@ -32,9 +35,17 @@ def _coerce_trait_value(value: object) -> object:
     # stores a typed numeric subcolumn instead of failing to serialise.
     if isinstance(value, Decimal):
         if value == value.to_integral_value():
-            return int(value)
+            return _coerce_int(int(value))
         return float(value)
+    if isinstance(value, int) and not isinstance(value, bool):
+        return _coerce_int(value)
     return value
+
+
+def _coerce_int(value: int) -> int | str:
+    if INT64_MIN <= value <= INT64_MAX:
+        return value
+    return str(value)
 
 
 def _flatten_traits(

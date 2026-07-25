@@ -33,7 +33,7 @@ paths:
     get:
       operationId: sdk_v1_flags
       description: |-
-        Retrieve the flags for an environment.
+        Retrieve the feature flags for an environment.
 
         ---
         *Note*: when providing the `feature` query argument, this endpoint will

@@ -6,6 +6,7 @@ import {
   usePauseExperimentMutation,
   useStartExperimentMutation,
 } from 'common/services/useExperiment'
+import { ENABLE_EXPERIMENT_LIFECYCLE } from 'components/experiments/constants'
 import DropdownMenu from 'components/base/DropdownMenu'
 
 type ExperimentActionDropdownProps = {
@@ -107,7 +108,9 @@ const ExperimentActionDropdown: FC<ExperimentActionDropdownProps> = ({
         ]
       case 'running':
         return [
-          { label: 'Pause Experiment', onClick: handlePause },
+          ...(ENABLE_EXPERIMENT_LIFECYCLE
+            ? [{ label: 'Pause Experiment', onClick: handlePause }]
+            : []),
           { label: 'Mark as Completed', onClick: handleComplete },
         ]
       case 'paused':
@@ -115,12 +118,18 @@ const ExperimentActionDropdown: FC<ExperimentActionDropdownProps> = ({
           { label: 'Resume Experiment', onClick: handleStart },
           { label: 'Mark as Completed', onClick: handleComplete },
         ]
+      case 'completed':
+        return [
+          {
+            className: 'text-danger',
+            label: 'Delete',
+            onClick: handleDelete,
+          },
+        ]
       default:
         return []
     }
   }, [status, handleStart, handlePause, handleComplete, handleDelete])
-
-  if (status === 'completed') return null
 
   return <DropdownMenu items={items} />
 }

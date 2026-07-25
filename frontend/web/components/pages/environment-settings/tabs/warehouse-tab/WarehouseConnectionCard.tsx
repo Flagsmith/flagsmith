@@ -15,6 +15,10 @@ type WarehouseConnectionCardProps = {
   connection: WarehouseConnection
   onDelete: () => void
   onEdit?: () => void
+  onSendTestEvent: () => void
+  onTestConnection?: () => void
+  isSendingTestEvent: boolean
+  isLoadingStats?: boolean
 }
 
 const STATUS_COLOUR: Record<WarehouseConnectionStatus, string> = {
@@ -38,13 +42,21 @@ const TYPE_LABEL: Partial<Record<WarehouseType, string>> = {
 
 const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   connection,
+  isLoadingStats,
+  isSendingTestEvent,
   onDelete,
   onEdit,
+  onSendTestEvent,
+  onTestConnection,
 }) => {
   const typeLabel =
     connection.warehouse_type !== 'flagsmith'
       ? TYPE_LABEL[connection.warehouse_type] ?? connection.warehouse_type
       : null
+
+  const isFlagsmith = connection.warehouse_type === 'flagsmith'
+  const isPending = connection.status === 'pending_connection'
+  const isConnected = connection.status === 'connected'
 
   const handleDelete = () => {
     openConfirm({
@@ -70,7 +82,11 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
               }
               place='top'
             >
-              {STATUS_LABEL[connection.status]}
+              {connection.status === 'errored' && connection.status_detail
+                ? `${STATUS_LABEL[connection.status]}: ${
+                    connection.status_detail
+                  }`
+                : STATUS_LABEL[connection.status]}
             </Tooltip>
           </div>
           {typeLabel && (
@@ -80,12 +96,17 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
                 'account_identifier' in connection.config &&
                 connection.config.account_identifier &&
                 `: ${connection.config.account_identifier}`}
+              {connection.config &&
+                'host' in connection.config &&
+                connection.config.host &&
+                `: ${connection.config.host}`}
             </span>
           )}
         </div>
         <div className='d-flex flex-row align-items-center gap-2'>
           {onEdit && (
             <Button
+              id='warehouse-connection-edit'
               size='xSmall'
               className='btn btn-with-icon'
               onClick={onEdit}
@@ -94,6 +115,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
             </Button>
           )}
           <Button
+            id='warehouse-connection-delete'
             size='xSmall'
             className='btn btn-with-icon'
             onClick={handleDelete}
@@ -106,19 +128,42 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
       <WarehouseStats
         errored={connection.status === 'errored'}
         lastEventReceived='-'
-        totalEventsReceived={0}
-        uniqueEventsCount={0}
+        loading={isLoadingStats}
+        totalEventsReceived={connection.total_events_received}
+        uniqueEventsCount={connection.unique_events_count}
       />
       <hr className='my-4' />
+      {connection.status === 'pending_connection' && (
+        <div className='d-flex flex-row flex-nowrap align-items-center gap-2 text-muted mb-2'>
+          <Icon name='info' width={14} fill='#656D7B' />
+          <span>
+            Your test event is on its way. It can take up to a few hours to
+            process the first event.
+          </span>
+        </div>
+      )}
       <WarehouseEventCodeHelp />
       <div className='d-flex justify-content-end mt-3'>
-        {connection.warehouse_type === 'flagsmith' ? (
-          <Button theme='primary' size='small' disabled>
-            Send your first event
+        {onTestConnection && (
+          <Button
+            id='warehouse-connection-test'
+            theme='outline'
+            size='small'
+            onClick={onTestConnection}
+            disabled={isSendingTestEvent}
+          >
+            {isSendingTestEvent ? 'Testing...' : 'Test connection'}
           </Button>
-        ) : (
-          <Button theme='outline' size='small' disabled>
-            Test connection
+        )}
+        {isFlagsmith && !isPending && !isConnected && (
+          <Button
+            id='warehouse-send-first-event'
+            theme='primary'
+            size='small'
+            onClick={onSendTestEvent}
+            disabled={isSendingTestEvent}
+          >
+            {isSendingTestEvent ? 'Sending...' : 'Send your first event'}
           </Button>
         )}
       </div>

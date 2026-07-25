@@ -3,6 +3,8 @@ import flagsmith from '@flagsmith/flagsmith'
 import { useGetFeatureCodeReferencesQuery } from 'common/services/useCodeReferences'
 import RepoCodeReferencesSection from './components/RepoCodeReferencesSection'
 import { FeatureCodeReferences } from 'common/types/responses'
+import { useHasGithubIntegration } from 'common/hooks/useHasGithubIntegration'
+import { useHasGitLabIntegration } from 'common/hooks/useHasGitLabIntegration'
 
 interface FeatureCodeReferencesContainerProps {
   featureId: number
@@ -18,6 +20,9 @@ const FeatureCodeReferencesContainer: React.FC<
     featureId: featureId,
     projectId: projectId,
   })
+  const { hasIntegration: hasGithubIntegration, organisationId } =
+    useHasGithubIntegration()
+  const { hasIntegration: hasGitlabIntegration } = useHasGitLabIntegration()
 
   const codeReferencesByRepo = useMemo(
     () =>
@@ -63,6 +68,16 @@ const FeatureCodeReferencesContainer: React.FC<
   }
 
   if (!data || data.length === 0) {
+    if (!hasGithubIntegration && !hasGitlabIntegration) {
+      return (
+        <div className='text-center text-muted'>
+          Set up{' '}
+          <a href={`/organisation/${organisationId}/integrations`}>GitHub</a> or{' '}
+          <a href={`/project/${projectId}/integrations`}>GitLab</a> integration
+          to enable code references.
+        </div>
+      )
+    }
     return (
       <div className='text-center text-muted'>
         No code references found for this feature.

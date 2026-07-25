@@ -1415,6 +1415,103 @@ def test_get_flags__user_throttle_set__is_not_throttled(  # type: ignore[no-unty
         assert response.status_code == status.HTTP_200_OK
 
 
+@pytest.mark.parametrize(
+    "headers,expected_sdk_label",
+    [
+        (
+            {"Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/9.3.1"},
+            "flagsmith-js-sdk",
+        ),
+        (
+            {"User-Agent": "flagsmith-python-sdk/6.0.0"},
+            "flagsmith-python-sdk",
+        ),
+        (
+            {
+                "Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/9.3.1",
+                "User-Agent": "flagsmith-python-sdk/6.0.0",
+            },
+            "flagsmith-js-sdk",
+        ),
+    ],
+)
+def test_get_flags__environment_never_evaluated__records_first_evaluation(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+    headers: dict[str, str],
+    expected_sdk_label: str,
+) -> None:
+    # Given
+    record_environment_first_evaluation = mocker.patch.object(
+        views, "record_environment_first_evaluation"
+    )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/", headers=headers)
+
+    # Then
+    assert response.status_code == 200
+    record_environment_first_evaluation.assert_called_once_with(
+        environment, expected_sdk_label
+    )
+
+
+@pytest.mark.parametrize(
+    "headers",
+    [
+        {},
+        {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15"
+        },
+    ],
+)
+def test_get_flags__sdk_not_identified__does_not_record_first_evaluation(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+    headers: dict[str, str],
+) -> None:
+    # Given
+    record_environment_first_evaluation = mocker.patch.object(
+        views, "record_environment_first_evaluation"
+    )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/", headers=headers)
+
+    # Then
+    assert response.status_code == 200
+    record_environment_first_evaluation.assert_not_called()
+
+
+def test_get_flags__environment_already_evaluated__does_not_record_first_evaluation(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    record_environment_first_evaluation = mocker.patch.object(
+        views, "record_environment_first_evaluation"
+    )
+    environment.first_evaluated_at = timezone.now()
+    environment.first_evaluated_sdk_label = "flagsmith-js-sdk"
+    environment.save(update_fields=["first_evaluated_at", "first_evaluated_sdk_label"])
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(
+        "/api/v1/flags/",
+        headers={"Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/9.3.1"},
+    )
+
+    # Then
+    assert response.status_code == 200
+    record_environment_first_evaluation.assert_not_called()
+
+
 def test_list_feature_states__simple_view_set__returns_expected_count(
     environment: Environment,
     feature: Feature,
@@ -2238,6 +2335,31 @@ def test_create_feature__admin_with_mv_options__returns_201(
     assert len(response_json["multivariate_options"]) == 1
 
 
+def test_create_feature__mv_options_with_key__key_is_read_only(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given - mv option keys are only writable via the dedicated mv-options
+    # endpoint, where their uniqueness is validated
+    data = {
+        "name": "test_feature",
+        "default_enabled": True,
+        "multivariate_options": [
+            {"type": "unicode", "string_value": "test-value", "key": "control"}
+        ],
+    }
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["multivariate_options"][0]["key"] is None
+
+
 def test_get_feature_by_uuid__existing_feature__returns_200(
     admin_client_new: APIClient,
     project: Project,
@@ -2509,6 +2631,7 @@ def test_list_features__dynamo_enabled__calls_get_overrides_data(
     assert response.status_code == status.HTTP_200_OK
     mock_get_overrides_data.assert_called_once_with(
         dynamo_enabled_project_environment_one,
+        feature_ids=[feature.id],
     )
 
 
@@ -3219,6 +3342,30 @@ def test_update_feature_state__change_feature__returns_400(
     assert (
         response.json()["feature"][0] == "Cannot change the feature of a feature state"
     )
+
+
+def test_update_feature_state__null_environment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    url = reverse("api-v1:features:featurestates-detail", args=[feature_state.id])
+    data = {
+        "enabled": True,
+        "environment": None,
+        "feature": feature.id,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "environment" in response.json()
 
 
 @pytest.mark.parametrize(

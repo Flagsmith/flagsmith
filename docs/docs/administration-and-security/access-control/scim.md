@@ -33,6 +33,14 @@ provisioning (which users and groups exist in Flagsmith, and who belongs to what
 
 ## User lifecycle
 
+:::caution
+
+Flagsmith requires the SCIM `userName` attribute to be the user's email address. Requests with a `userName` that is not
+a valid email address are rejected with a 400 response. Ensure your identity provider is configured to send email
+addresses as SCIM usernames — for example, in Okta, set the application username format to "Email".
+
+:::
+
 When your identity provider provisions a user through SCIM:
 
 1. If the user does not exist in Flagsmith, they are created with the email, first name and last name from the SCIM
@@ -169,6 +177,8 @@ endpoints as defined by the SCIM 2.0 specification.
 - Verify the SCIM base URL ends with `/api/v1/scim/v2/` (including the trailing slash).
 - Verify the bearer token is correct. If in doubt, regenerate it.
 - Check that the user's email address is included in the SCIM request. Flagsmith requires an email to create a user.
+- Check that the SCIM `userName` attribute is the user's email address. Flagsmith rejects requests with a non-email
+  `userName` with a 400 response.
 
 ### Users are provisioned but cannot log in
 

@@ -44,6 +44,7 @@ const TableTagFilter: FC<TableFilterType> = ({
         valueSearch: search,
       })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, value])
   return (
     <div className={isLoading ? 'disabled' : ''}>
@@ -86,7 +87,6 @@ const TableTagFilter: FC<TableFilterType> = ({
             />
             <InputGroup
               title='Feature Value'
-              autoFocus
               onChange={(e: InputEvent) => {
                 setSearchInput(Utils.safeParseEventValue(e))
               }}
@@ -94,12 +94,10 @@ const TableTagFilter: FC<TableFilterType> = ({
               inputProps={{ style: { height: 60 } }}
               value={searchInput}
               textarea
-              rows={2}
               className='full-width mt-2'
               type='text'
               size='xSmall'
               placeholder='Enter a feature value'
-              search
             />
           </div>
         </div>

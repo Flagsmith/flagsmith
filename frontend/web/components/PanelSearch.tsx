@@ -23,7 +23,7 @@ import Panel from './base/grid/Panel'
 import Utils from 'common/utils/utils'
 import { SortOrder } from 'common/types/requests'
 
-type SortOption = {
+export type SortOption = {
   value: string
   order: SortOrder
   default?: boolean

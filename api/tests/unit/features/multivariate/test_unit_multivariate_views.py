@@ -8,8 +8,12 @@ from common.projects.permissions import (
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
+from rest_framework.test import APIClient
 
+from features.models import Feature
+from features.multivariate.models import MultivariateFeatureOption
 from features.multivariate.views import MultivariateFeatureOptionViewSet
+from projects.models import Project
 from projects.permissions import NestedProjectPermissions
 
 
@@ -69,6 +73,35 @@ def test_get_mv_feature_option_by_uuid__nonexistent_uuid__returns_404(  # type: 
 
     # When
     response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_list_mv_options__feature_in_other_project__returns_404(
+    admin_client: APIClient,
+    project: Project,
+    organisation_two_project_one: Project,
+) -> None:
+    # Given
+    feature = Feature.objects.create(
+        name="feature",
+        project=organisation_two_project_one,
+        type="MULTIVARIATE",
+        initial_value="control",
+    )
+    for percentage_allocation in (30, 30, 40):
+        MultivariateFeatureOption.objects.create(
+            feature=feature,
+            default_percentage_allocation=percentage_allocation,
+            type="unicode",
+            string_value=f"multivariate option for {percentage_allocation}%",
+        )
+
+    url = f"/api/v1/projects/{project.id}/features/{feature.id}/mv-options/"
+
+    # When
+    response = admin_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND

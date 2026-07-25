@@ -16,7 +16,7 @@ import ExperimentsListControls from 'components/experiments/ExperimentsListContr
 import {
   FilterTab,
   TAB_LABELS,
-  TAB_ORDER,
+  VISIBLE_TAB_ORDER,
 } from 'components/experiments/constants'
 import Icon from 'components/icons/Icon'
 
@@ -51,12 +51,14 @@ const ExperimentsPage: FC = () => {
 
   const { data: warehouseConnections, isLoading: isLoadingWarehouse } =
     useGetWarehouseConnectionsQuery(
-      { environmentId: environmentId ?? '' },
+      { environmentId: environmentId ?? '', exclude_event_stats: true },
       { skip: !environmentId },
     )
 
   const hasWarehouse = (warehouseConnections?.length ?? 0) > 0
   const experiments = experimentsData?.results
+    ?.slice()
+    ?.sort((a, b) => b.created_at.localeCompare(a.created_at))
   const experimentCount = experimentsData?.count ?? 0
   const statusCounts = experimentsData?.status_counts
 
@@ -82,7 +84,7 @@ const ExperimentsPage: FC = () => {
   const hasExperiments = Utils.getFlagsmithHasFeature('experimental_flags')
   const hasFakeDoor = Utils.getFlagsmithHasFeature('experiments_fake_door')
 
-  if (!hasExperiments && hasFakeDoor) {
+  if (!Utils.isOrgOnFreePlan() && !hasExperiments && hasFakeDoor) {
     return (
       <div data-test='experiments-page' className='app-container container'>
         <PageTitle title='Experiments' />
@@ -169,7 +171,7 @@ const ExperimentsPage: FC = () => {
         </div>
       )
     }
-    const tabs = TAB_ORDER.map((value) => ({
+    const tabs = VISIBLE_TAB_ORDER.map((value) => ({
       label: getTabLabel(value),
       value,
     }))
@@ -187,6 +189,7 @@ const ExperimentsPage: FC = () => {
           <ExperimentsTable
             experiments={experiments}
             environmentId={environmentId}
+            projectId={projectId}
           />
         ) : (
           <div className='text-center py-5'>
@@ -197,6 +200,7 @@ const ExperimentsPage: FC = () => {
         )}
         {hasResults && (
           <Paging
+            className='border-top-0'
             paging={{
               ...(experimentsData || {}),
               page,
@@ -212,19 +216,31 @@ const ExperimentsPage: FC = () => {
     )
   }
 
+  const renderCta = () => {
+    if (isLoading || isLoadingWarehouse) {
+      return undefined
+    }
+    if (hasWarehouse) {
+      return (
+        <Button onClick={() => setIsCreating(true)}>
+          <Icon name='plus' width={16} />
+          Create Experiment
+        </Button>
+      )
+    }
+    if (experimentCount > 0) {
+      return (
+        <Button theme='outline' onClick={() => history.push(settingsUrl)}>
+          Connect Warehouse
+        </Button>
+      )
+    }
+    return undefined
+  }
+
   return (
     <div data-test='experiments-page' className='app-container container'>
-      <PageTitle
-        title='Experiments'
-        cta={
-          hasWarehouse ? (
-            <Button onClick={() => setIsCreating(true)}>
-              <Icon name='plus' width={16} />
-              Create Experiment
-            </Button>
-          ) : undefined
-        }
-      />
+      <PageTitle title='Experiments' cta={renderCta()} />
       {renderBody()}
     </div>
   )

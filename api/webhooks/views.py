@@ -47,11 +47,11 @@ class WebhookViewSet(viewsets.ViewSet):
                 else WebhookType.ENVIRONMENT
             )
             response = send_test_request_to_webhook(webhook_url, secret, webhook_type)
-            if response.status_code != 200:
+            if not response.ok:
                 return Response(
                     {
-                        "detail": "Webhook returned invalid status",
-                        "body": "Please check the webhook endpoint to validate it returns a 200 OK.",
+                        "detail": "Webhook returned error status",
+                        "body": f"Webhook returned HTTP {response.status_code}.",
                         "status": response.status_code,
                     },
                     status=status.HTTP_400_BAD_REQUEST,

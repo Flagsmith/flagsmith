@@ -6,12 +6,14 @@ from django.core.cache import BaseCache
 from django.core.cache.backends.locmem import LocMemCache
 from django.test import Client as DjangoClient
 from django.urls import reverse
+from influxdb_client import InfluxDBClient
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from app.utils import create_hash
+from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.enums import EnvironmentDocumentCacheMode
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
@@ -36,6 +38,30 @@ def api_client():  # type: ignore[no-untyped-def]
 def admin_client(api_client, admin_user):  # type: ignore[no-untyped-def]
     api_client.force_authenticate(user=admin_user)
     return api_client
+
+
+@pytest.fixture()
+def influxdb(settings: SettingsWrapper) -> InfluxDBClient:
+    settings.INFLUXDB_BUCKET = "api_usage"
+    settings.INFLUXDB_URL = "http://localhost:8086"
+    settings.INFLUXDB_ORG = "flagsmith"
+    settings.INFLUXDB_TOKEN = "admin-token"
+
+    # Matches api.app_analytics.influxdb_wrapper bucket definitions
+    client = InfluxDBWrapper.get_client()
+    bucket_api = client.buckets_api()
+    bucket_names = [
+        "api_usage_downsampled_15m",
+        "api_usage_downsampled_1h",
+    ]
+    for bucket_name in bucket_names:
+        if not bucket_api.find_bucket_by_name(bucket_name):  # type: ignore[no-untyped-call]
+            bucket_api.create_bucket(
+                org="flagsmith",
+                bucket_name=bucket_name,
+            )
+
+    return client
 
 
 @pytest.fixture()
@@ -74,8 +100,13 @@ def dynamo_enabled_project(  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
-def environment_api_key():  # type: ignore[no-untyped-def]
+def environment_api_key() -> str:
     return create_hash()
+
+
+@pytest.fixture()
+def environment_api_key_str(environment_api_key: str) -> str:
+    return environment_api_key
 
 
 @pytest.fixture()
@@ -423,7 +454,11 @@ def identity_document(  # type: ignore[no-untyped-def]
         "multivariate_feature_state_values": [
             {
                 "percentage_allocation": 50,
-                "multivariate_feature_option": {"value": "50_percent", "id": 1},
+                "multivariate_feature_option": {
+                    "value": "50_percent",
+                    "id": 1,
+                    "key": None,
+                },
                 "mv_fs_value_uuid": "9438d56d-e06e-4f6b-bca5-f66755f063c0",
                 "id": 1,
             },
@@ -433,6 +468,7 @@ def identity_document(  # type: ignore[no-untyped-def]
                 "multivariate_feature_option": {
                     "value": "other_50_percent",
                     "id": None,
+                    "key": None,
                 },
                 "id": 2,
             },

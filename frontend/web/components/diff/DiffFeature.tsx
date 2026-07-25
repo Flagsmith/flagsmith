@@ -12,8 +12,7 @@ import {
   getSegmentOverrideDiff,
   getVariationDiff,
 } from './diff-utils'
-import DiffString from './DiffString'
-import DiffEnabled from './DiffEnabled'
+import DiffFeatureStateValues from './DiffFeatureStateValues'
 import DiffSegmentOverrides from './DiffSegmentOverrides'
 import DiffVariations from './DiffVariations'
 import InfoMessage from 'components/InfoMessage'
@@ -32,7 +31,6 @@ type FeatureDiffType = {
   conflicts?: FeatureConflict[] | undefined
   disableSegments?: boolean
 }
-const enabledWidth = 110
 type ViewMode = 'combined' | 'new' | 'old'
 const DiffFeature: FC<FeatureDiffType> = ({
   conflicts,
@@ -152,60 +150,19 @@ const DiffFeature: FC<FeatureDiffType> = ({
                   />
                 </div>
               )}
-              <div className='panel-content'>
-                <div className='search-list mt-2'>
-                  <div className='flex-row gap-5 table-header'>
-                    <div
-                      style={{ width: enabledWidth }}
-                      className='table-column flex-row text-center'
-                    >
-                      Enabled
-                    </div>
-                    {!hideValue && (
-                      <div className='table-column flex-row flex flex-1'>
-                        Value
-                      </div>
-                    )}
-                  </div>
-                  <div className='flex-row pt-4 gap-5 list-item list-item-sm'>
-                    <div
-                      style={{ width: enabledWidth }}
-                      className='table-column text-center'
-                    >
-                      <div className='d-flex flex-row'>
-                        <DiffEnabled
-                          data-test={'version-enabled'}
-                          oldValue={
-                            viewMode === 'new'
-                              ? diff.newEnabled
-                              : diff.oldEnabled
-                          }
-                          newValue={
-                            viewMode === 'old'
-                              ? diff.oldEnabled
-                              : diff.newEnabled
-                          }
-                        />
-                      </div>
-                    </div>
-                    {!hideValue && (
-                      <div className='table-column flex flex-1 overflow-hidden'>
-                        <div>
-                          <DiffString
-                            data-test={'version-value'}
-                            oldValue={
-                              viewMode === 'new' ? diff.newValue : diff.oldValue
-                            }
-                            newValue={
-                              viewMode === 'old' ? diff.oldValue : diff.newValue
-                            }
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <DiffFeatureStateValues
+                hideValue={hideValue}
+                enabled={{
+                  newValue:
+                    viewMode === 'old' ? diff.oldEnabled : diff.newEnabled,
+                  oldValue:
+                    viewMode === 'new' ? diff.newEnabled : diff.oldEnabled,
+                }}
+                value={{
+                  newValue: viewMode === 'old' ? diff.oldValue : diff.newValue,
+                  oldValue: viewMode === 'new' ? diff.newValue : diff.oldValue,
+                }}
+              />
             </TabItem>
             {!!variationDiffs?.diffs?.length && (
               <TabItem

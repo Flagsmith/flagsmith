@@ -13,13 +13,16 @@ import {
 } from 'common/types/permissions.types'
 
 export const integrationCategories = [
+  'AI',
   'Analytics',
   'Authentication',
   'CI/CD',
   'Developer tools',
+  'Enterprise tools',
   'Infrastructure',
   'Messaging',
   'Monitoring',
+  'Project Management',
   'Webhooks',
 ] as const
 export type IntegrationSummary = {

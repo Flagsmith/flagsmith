@@ -34,7 +34,8 @@ Attributes:
 
 Logged at `warning` from:
  - `api/app_analytics/analytics_db_service.py:74`
- - `api/app_analytics/analytics_db_service.py:210`
+ - `api/app_analytics/analytics_db_service.py:187`
+ - `api/app_analytics/analytics_db_service.py:278`
 
 Attributes:
  - `details`
@@ -70,6 +71,14 @@ Attributes:
  - `feature.count`
  - `organisation.id`
 
+### `core.encrypted_field.decrypt_failed`
+
+Logged at `warning` from:
+ - `api/core/fields.py:37`
+
+Attributes:
+ - `exc_info`
+
 ### `dynamodb.environment_document_compressed`
 
 Logged at `info` from:
@@ -78,6 +87,85 @@ Logged at `info` from:
 Attributes:
  - `environment_api_key`
  - `environment_id`
+
+### `experimentation.exposures.compute_failed`
+
+Logged at `error` from:
+ - `api/experimentation/tasks.py:133`
+
+Attributes:
+ - `environment.id`
+ - `exc_info`
+ - `experiment.id`
+ - `feature.id`
+ - `organisation.id`
+
+### `experimentation.ingestion_infra.bucket_created`
+
+Logged at `info` from:
+ - `api/experimentation/ingestion_infra_service.py:108`
+
+Attributes:
+ - `bucket.name`
+ - `organisation.id`
+
+### `experimentation.ingestion_infra.deprovisioned`
+
+Logged at `info` from:
+ - `api/experimentation/ingestion_infra_service.py:261`
+
+Attributes:
+ - `bucket.name`
+ - `organisation.id`
+ - `stream.name`
+
+### `experimentation.ingestion_infra.provision_failed`
+
+Logged at `error` from:
+ - `api/experimentation/organisation_ingestion_service.py:41`
+
+Attributes:
+ - `exc_info`
+ - `organisation.id`
+
+### `experimentation.ingestion_infra.provisioned`
+
+Logged at `info` from:
+ - `api/experimentation/organisation_ingestion_service.py:52`
+
+Attributes:
+ - `bucket.name`
+ - `organisation.id`
+ - `stream.name`
+
+### `experimentation.ingestion_infra.stream_created`
+
+Logged at `info` from:
+ - `api/experimentation/ingestion_infra_service.py:215`
+
+Attributes:
+ - `bucket.name`
+ - `organisation.id`
+ - `stream.name`
+
+### `experimentation.ingestion_infra.torn_down`
+
+Logged at `info` from:
+ - `api/experimentation/organisation_ingestion_service.py:70`
+
+Attributes:
+ - `organisation.id`
+
+### `experimentation.results.compute_failed`
+
+Logged at `error` from:
+ - `api/experimentation/tasks.py:169`
+
+Attributes:
+ - `environment.id`
+ - `exc_info`
+ - `experiment.id`
+ - `organisation.id`
 
 ### `feature_health.feature_health_event_dismissal_not_supported`
 
@@ -107,6 +195,15 @@ Logged at `warning` from:
 
 Attributes:
  - `path`
+
+### `feature_lifecycle.summarised`
+
+Logged at `info` from:
+ - `api/features/feature_lifecycle/views.py:52`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
 
 ### `gitlab.api_call.failed`
 
@@ -316,8 +413,45 @@ Attributes:
  - `project_id`
  - `retry_at`
 
+### `mcp.tool.called`
+
+Logged at `info` from:
+ - `api/telemetry/middleware.py:38`
+ - `api/telemetry/middleware.py:40`
+
+Attributes:
+ - `organisation.id`
+
+### `onboarding.environment.already_evaluated`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:112`
+ - `api/environments/onboarding/services.py:23`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+ - `sdk.label`
+
+### `onboarding.environment.first_evaluated`
+
+Logged at `exception` from:
+ - `api/segment_membership/tasks.py:105`
+Logged at `info` from:
+ - `api/environments/onboarding/services.py:32`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+ - `sdk.label`
+
 ### `platform_hub.no_analytics_database_configured`
 
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:69`
+ - `api/segment_membership/tasks.py:74`
 Logged at `warning` from:
  - `api/platform_hub/services.py:116`
  - `api/platform_hub/services.py:206`
@@ -325,41 +459,22 @@ Logged at `warning` from:
 
 Attributes:
 
-### `segment_membership.backfill.environment.completed`
-
-Logged at `info` from:
- - `api/segment_membership/tasks.py:112`
-
-Attributes:
- - `environment.id`
- - `project.id`
- - `rows.count`
-
-### `segment_membership.backfill.environment.failed`
-
-Logged at `exception` from:
- - `api/segment_membership/tasks.py:105`
-
-Attributes:
- - `environment.id`
- - `project.id`
-
-### `segment_membership.backfill.skipped`
-
-Logged at `info` from:
- - `api/segment_membership/tasks.py:69`
- - `api/segment_membership/tasks.py:74`
-
-Attributes:
- - `reason`
-
 ### `segment_membership.compute.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:96`
+ - `api/segment_membership/services.py:149`
 
 Attributes:
  - `project.id`
+ - `reason`
+ - `segment.id`
+
+### `segment_membership.members.segment.skipped`
+
+Logged at `error` from:
+ - `api/segment_membership/services.py:215`
+
+Attributes:
  - `reason`
  - `segment.id`
 
@@ -367,6 +482,7 @@ Attributes:
 
 Logged at `info` from:
  - `api/segment_membership/tasks.py:187`
+ - `api/segment_membership/tasks.py:266`
 
 Attributes:
  - `membership_counts.count`
@@ -377,6 +493,7 @@ Attributes:
 
 Logged at `exception` from:
  - `api/segment_membership/tasks.py:160`
+ - `api/segment_membership/tasks.py:239`
 
 Attributes:
  - `project.id`
@@ -386,9 +503,44 @@ Attributes:
 Logged at `info` from:
  - `api/segment_membership/tasks.py:131`
  - `api/segment_membership/tasks.py:140`
+ - `api/segment_membership/tasks.py:206`
+ - `api/segment_membership/tasks.py:218`
 
 Attributes:
  - `project.id`
+ - `reason`
+ - `stale_counts.count`
+
+### `segment_membership.seed.environment.completed`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:121`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+ - `rows.count`
+
+### `segment_membership.seed.environment.failed`
+
+Logged at `exception` from:
+ - `api/segment_membership/tasks.py:114`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+
+### `segment_membership.seed.skipped`
+
+Logged at `warning` from:
+ - `api/segment_membership/tasks.py:67`
+ - `api/segment_membership/tasks.py:72`
+ - `api/segment_membership/tasks.py:77`
+
+Attributes:
+ - `organisation.id`
  - `reason`
 
 ### `segment_membership.tombstone.skipped`
@@ -415,7 +567,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:155`
+ - `api/segments/serializers.py:158`
 
 Attributes:
  - `revision_id`
@@ -462,6 +614,95 @@ Logged at `info` from:
 Attributes:
  - `feature_name`
  - `sentry_action`
+
+### `usage_reporting.run.skipped`
+
+Logged at `debug` from:
+ - `api/organisations/usage_reporting/services.py:60`
+ - `api/organisations/usage_reporting/services.py:63`
+
+Attributes:
+ - `reason`
+
+### `usage_reporting.snapshot.errored`
+
+Logged at `exception` from:
+ - `api/organisations/usage_reporting/services.py:75`
+
+Attributes:
+
+### `usage_reporting.snapshot.push_failed`
+
+Logged at `warning` from:
+ - `api/organisations/usage_reporting/services.py:55`
+
+Attributes:
+ - `status_code`
+
+### `usage_reporting.snapshot.pushed`
+
+Logged at `info` from:
+ - `api/organisations/usage_reporting/services.py:53`
+
+Attributes:
+ - `status_code`
+
+### `warehouse.connection.connected`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:884`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
+### `warehouse.connection.test_event_sent`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:790`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
+### `warehouse.connection.verification_failed`
+
+Logged at `warning` from:
+ - `api/experimentation/services.py:859`
+
+Attributes:
+ - `environment.id`
+ - `exc_info`
+ - `organisation.id`
+
+### `warehouse.connection.verification_succeeded`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:869`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
+### `warehouse.srm.overallocated`
+
+Logged at `error` from:
+ - `api/experimentation/services.py:412`
+
+Attributes:
+ - `environment.id`
+ - `experiment.id`
+ - `feature.id`
+
+### `warehouse.srm.unkeyed_variant`
+
+Logged at `error` from:
+ - `api/experimentation/services.py:398`
+
+Attributes:
+ - `environment.id`
+ - `experiment.id`
+ - `feature.id`
 
 ### `workflows.change_request.committed`
 

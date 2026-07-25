@@ -76,7 +76,10 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):  # type: ignore[t
         if getattr(self, "swagger_fake_view", False):
             return MultivariateFeatureOption.objects.none()
 
-        feature = get_object_or_404(Feature, pk=self.kwargs["feature_pk"])
+        feature = get_object_or_404(
+            Feature.objects.filter(project__id=self.kwargs["project_pk"]),
+            pk=self.kwargs["feature_pk"],
+        )
         return feature.multivariate_options.all()
 
 

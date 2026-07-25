@@ -79,7 +79,7 @@ const keywords = {
   LIB_NAME: 'flagsmith',
   LIB_NAME_JAVA: 'FlagsmithClient',
   NPM_CLIENT: '@flagsmith/flagsmith',
-  NPM_NODE_CLIENT: 'flagsmith-nodejs',
+  NPM_NODE_CLIENT: '@flagsmith/nodejs',
   SEGMENT_NAME: 'superUsers',
   TRAIT_NAME: 'age',
   USER_FEATURE_FUNCTION: 'myEvenCoolerFeature',
@@ -260,6 +260,18 @@ const Constants = {
       'category': 'User',
       'event': `User oauth ${type}`,
     }),
+    'ONBOARDING_AI_CONNECT': {
+      'category': 'Onboarding',
+      'event': 'Onboarding AI connect used',
+    },
+    'ONBOARDING_FLAG_TOGGLED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding flag toggled',
+    },
+    'ONBOARDING_SNIPPET_COPIED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding snippet copied',
+    },
     'REFERRER_CONVERSION': (referrer: string) => ({
       'category': 'Referrer',
       'event': `${referrer} converted`,
@@ -292,6 +304,13 @@ const Constants = {
       }
     },
     'VIEW_FEATURE': { 'category': 'Features', 'event': 'Feature viewed' },
+    VIEW_INTEGRATION: (integration: string) => {
+      return {
+        category: 'Integrations',
+        event: 'View Integration',
+        extra: { integration },
+      }
+    },
     VIEW_LOCKED_FEATURE: (feature: string) => {
       return {
         'category': 'Locked Feature',
@@ -396,6 +415,7 @@ const Constants = {
       'FEATURE_ID': 150,
       'SEGMENT_ID': 150,
       'TRAITS_ID': 150,
+      'VARIANT_KEY': 255,
     },
   },
 
@@ -651,6 +671,7 @@ const Constants = {
       'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.',
     REMOTE_CONFIG_DESCRIPTION_VARIATION:
       'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.<br/>Variation values are set per project, the environment weight is per environment.',
+    RESERVED_VARIANT_KEY: 'control',
     SEGMENT_OVERRIDES_DESCRIPTION:
       'Set different values for your feature based on what segments users are in. Identity overrides will take priority over any segment override.',
     TAGS_DESCRIPTION:

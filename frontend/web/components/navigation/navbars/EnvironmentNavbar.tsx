@@ -88,6 +88,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                   Experiments
                 </SidebarLink>
               ) : (
+                !Utils.isOrgOnFreePlan() &&
                 Utils.getFlagsmithHasFeature('experiments_fake_door') && (
                   <SidebarLink
                     id={mobile ? undefined : 'experiments-link'}
@@ -97,6 +98,15 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                     <BetaFlag title='Coming soon'>Experiments</BetaFlag>
                   </SidebarLink>
                 )
+              )}
+              {Utils.getFlagsmithHasFeature('experiment_metrics') && (
+                <SidebarLink
+                  id={mobile ? undefined : 'metrics-link'}
+                  icon='bar-chart'
+                  to={`/project/${projectId}/environment/${environmentId}/metrics`}
+                >
+                  Metrics
+                </SidebarLink>
               )}
               <SidebarLink
                 id='scheduled-link'
@@ -116,7 +126,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                 to={`/project/${projectId}/environment/${environmentId}/change-requests/`}
               >
                 <div>
-                  Change Requests{' '}
+                  Feature Change Requests{' '}
                   {changeRequests ? (
                     <span className='ms-1 unread d-inline'>
                       {changeRequests}

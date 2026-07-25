@@ -10,6 +10,7 @@ test.describe('Flag Tests', () => {
       createRemoteConfig,
       deleteFeature,
       editRemoteConfig,
+      editVariantLabel,
       gotoFeatures,
       gotoProject,
       login,
@@ -70,6 +71,9 @@ test.describe('Flag Tests', () => {
     const json = await tryItExpect('header_enabled', 'enabled', true)
     expect(json.header_size.value).toBe('big')
     expect(json.mv_flag.value).toBe('big')
+
+    log('Edit variant label')
+    await editVariantLabel('mv_flag', 0, 'variant_medium')
 
     log('Update feature')
     await editRemoteConfig('header_size', 12)

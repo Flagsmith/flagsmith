@@ -75,6 +75,7 @@ type CreateSegmentType = {
   onComplete?: (segment: Segment) => void
   readOnly?: boolean
   segment?: Segment
+  membersEnabled: boolean
 }
 type CreateSegmentError = {
   status: number
@@ -103,6 +104,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   identities,
   identitiesLoading,
   identity,
+  membersEnabled,
   onCancel,
   onComplete,
   page,
@@ -291,7 +293,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [valueChanged, setValueChanged] = useState(false)
   const [metadataValueChanged, setMetadataValueChanged] = useState(false)
   const onClosing = useCallback(() => {
-    return new Promise((resolve) => {
+    return new Promise<boolean>((resolve) => {
       if (valueChanged) {
         openConfirm({
           body: 'Closing this will discard your unsaved changes.',
@@ -306,6 +308,19 @@ const CreateSegment: FC<CreateSegmentType> = ({
       }
     })
   }, [valueChanged])
+  // The condensed/inline drawer (e.g. creating a feature-specific segment) is
+  // closed via the `onCancel` prop, which bypasses the modal's intercept-close
+  // handler above. Guard it so unsaved changes prompt the same confirmation (#5368).
+  const handleCancel = useCallback(() => {
+    if (!onCancel) {
+      return
+    }
+    onClosing().then((shouldClose) => {
+      if (shouldClose) {
+        onCancel()
+      }
+    })
+  }, [onCancel, onClosing])
   const onCreateChangeRequest = async (changeRequestData: {
     approvals: []
     description: string
@@ -569,7 +584,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 isSaving={isSaving}
                 isValid={isValid}
                 isLimitReached={isLimitReached}
-                onCancel={onCancel}
+                onCancel={handleCancel}
                 topLevelRuleType={topLevelRuleType}
                 setTopLevelRuleType={setTopLevelRuleType}
               />
@@ -597,6 +612,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             <div className='my-4'>
               <CreateSegmentUsersTabContent
                 projectId={projectId}
+                segmentId={segment.id}
                 environmentId={environmentId}
                 setEnvironmentId={setEnvironmentId}
                 identitiesLoading={identitiesLoading}
@@ -607,6 +623,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 searchInput={searchInput}
                 setSearchInput={setSearchInput}
                 memberships={segment.membership_counts}
+                membersEnabled={membersEnabled}
               />
             </div>
           </TabItem>
@@ -646,7 +663,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 isSaving={isSaving}
                 isValid={isValid}
                 isLimitReached={isLimitReached}
-                onCancel={onCancel}
+                onCancel={handleCancel}
                 topLevelRuleType={topLevelRuleType}
                 setTopLevelRuleType={setTopLevelRuleType}
               />
@@ -685,7 +702,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               isSaving={isSaving}
               isValid={isValid}
               isLimitReached={isLimitReached}
-              onCancel={onCancel}
+              onCancel={handleCancel}
               topLevelRuleType={topLevelRuleType}
               setTopLevelRuleType={setTopLevelRuleType}
             />
@@ -740,6 +757,15 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
 
   const isEdge = Utils.getIsEdge()
 
+  // Availability is derived strictly from the backend: membership counts are
+  // only present for membership-enabled orgs (see `is_membership_enabled`), so
+  // their presence gates the UI without a separate frontend flag. When enabled
+  // and the project uses edge, the Identities tab uses the dedicated segment
+  // members endpoint, so the legacy identities list (and its request) is not
+  // needed.
+  const membersEnabled =
+    (segmentData?.membership_counts?.length ?? 0) > 0 && isEdge
+
   const { data: identities, isLoading: identitiesLoading } =
     useGetIdentitiesQuery(
       {
@@ -752,7 +778,7 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
         q: search,
       },
       {
-        skip: !environmentId,
+        skip: !environmentId || membersEnabled,
       },
     )
 
@@ -772,6 +798,7 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
       page={page}
       environmentId={environmentId}
       setEnvironmentId={setEnvironmentId}
+      membersEnabled={membersEnabled}
     />
   )
 }

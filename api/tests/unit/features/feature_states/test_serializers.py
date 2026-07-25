@@ -8,6 +8,7 @@ from features.feature_states.serializers import (
     FeatureValueSerializer,
     UpdateFlagSerializer,
     UpdateFlagV2Serializer,
+    validate_multivariate_state_values,
 )
 from features.models import Feature
 from projects.models import Project
@@ -179,3 +180,143 @@ def test_update_flag_serializer__cross_project_segment__returns_invalid(
     # Then
     assert is_valid is False
     assert "not found in project" in str(serializer.errors)
+
+
+def test_update_flag_v2_serializer__mv_option_not_on_feature__returns_invalid(
+    multivariate_feature: Feature,
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    serializer = UpdateFlagV2Serializer(
+        data={
+            "feature": {"name": multivariate_feature.name},
+            "environment_default": {
+                "enabled": True,
+                "value": {"type": "string", "value": "default"},
+            },
+            "segment_overrides": [
+                {
+                    "segment_id": segment.id,
+                    "enabled": True,
+                    "value": {"type": "string", "value": "test"},
+                    "multivariate_feature_state_values": [
+                        {
+                            "multivariate_feature_option": 999999,
+                            "percentage_allocation": 100,
+                        }
+                    ],
+                },
+            ],
+        },
+        context={"environment": environment},
+    )
+
+    # When
+    is_valid = serializer.is_valid()
+
+    # Then
+    assert is_valid is False
+    assert "do not belong to the feature" in str(serializer.errors)
+
+
+def test_update_flag_v2_serializer__duplicate_mv_option__returns_invalid(
+    multivariate_feature: Feature,
+    multivariate_options: list[typing.Any],
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given the same multivariate option is passed twice
+    option = multivariate_options[0]
+    serializer = UpdateFlagV2Serializer(
+        data={
+            "feature": {"name": multivariate_feature.name},
+            "environment_default": {
+                "enabled": True,
+                "value": {"type": "string", "value": "default"},
+            },
+            "segment_overrides": [
+                {
+                    "segment_id": segment.id,
+                    "enabled": True,
+                    "value": {"type": "string", "value": "test"},
+                    "multivariate_feature_state_values": [
+                        {
+                            "multivariate_feature_option": option.id,
+                            "percentage_allocation": 40,
+                        },
+                        {
+                            "multivariate_feature_option": option.id,
+                            "percentage_allocation": 60,
+                        },
+                    ],
+                },
+            ],
+        },
+        context={"environment": environment},
+    )
+
+    # When
+    is_valid = serializer.is_valid()
+
+    # Then
+    assert is_valid is False
+    assert "must be unique" in str(serializer.errors)
+
+
+def test_validate_multivariate_state_values__empty_list__is_noop(
+    feature: Feature,
+) -> None:
+    # Given
+    multivariate_values: list[dict[str, typing.Any]] = []
+
+    # When / Then no exception is raised
+    validate_multivariate_state_values(feature, multivariate_values)
+
+
+def test_update_flag_v2_serializer__valid_mv_option__change_set_carries_mv(
+    multivariate_feature: Feature,
+    multivariate_options: list,  # type: ignore[type-arg]
+    environment: Environment,
+    segment: Segment,
+    admin_user: typing.Any,
+    rf: typing.Any,
+) -> None:
+    # Given
+    option = multivariate_options[0]
+    request = rf.post("/")
+    request.user = admin_user
+    serializer = UpdateFlagV2Serializer(
+        data={
+            "feature": {"name": multivariate_feature.name},
+            "environment_default": {
+                "enabled": True,
+                "value": {"type": "string", "value": "default"},
+            },
+            "segment_overrides": [
+                {
+                    "segment_id": segment.id,
+                    "enabled": True,
+                    "value": {"type": "string", "value": "test"},
+                    "multivariate_feature_state_values": [
+                        {
+                            "multivariate_feature_option": option.id,
+                            "percentage_allocation": 75,
+                        }
+                    ],
+                },
+            ],
+        },
+        context={"environment": environment, "request": request},
+    )
+
+    # When
+    is_valid = serializer.is_valid()
+    change_set = serializer.change_set_v2
+
+    # Then
+    assert is_valid is True
+    mv_values = change_set.segment_overrides[0].multivariate_values
+    assert mv_values is not None
+    assert mv_values[0].multivariate_feature_option_id == option.id
+    assert mv_values[0].percentage_allocation == 75

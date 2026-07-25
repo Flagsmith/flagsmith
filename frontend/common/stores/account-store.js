@@ -17,6 +17,8 @@ import { hidePylon, identifyChatUser } from 'common/loadChat'
 import { service } from 'common/service'
 import { getBuildVersion } from 'common/services/useBuildVersion'
 import { createOnboardingSupportOptIn } from 'common/services/useOnboardingSupportOptIn'
+import flagsmith from '@flagsmith/flagsmith'
+import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 
 const controller = {
   acceptInvite: (id) => {
@@ -244,6 +246,18 @@ const controller = {
         }
 
         data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
+        if (res.is_new_user) {
+          try {
+            flagsmith.trackEvent('new_signup', {
+              metadata: {
+                invite: !!API.getInvite(),
+                signup_method: type,
+              },
+            })
+          } catch (e) {
+            // never let analytics break the login flow
+          }
+        }
         return controller.onLogin()
       })
       .catch((e) => API.ajaxHandler(store, e))
@@ -265,6 +279,20 @@ const controller = {
       .then(async (res) => {
         data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         API.trackEvent(Constants.events.REGISTER)
+        const freeEmailDomain = isFreeEmailDomain(user.email)
+        try {
+          flagsmith.trackEvent('new_signup', {
+            metadata: {
+              ...(freeEmailDomain && { domain: user.email.split('@')[1] }),
+              free_email_domain: freeEmailDomain,
+              invite: !!API.getInvite(),
+              signup_method: 'email',
+              utm_source: user.utm_data?.utm_source,
+            },
+          })
+        } catch (e) {
+          // never let analytics break the signup flow
+        }
         if (API.getReferrer()) {
           API.trackEvent(
             Constants.events.REFERRER_REGISTERED(API.getReferrer().utm_source),
