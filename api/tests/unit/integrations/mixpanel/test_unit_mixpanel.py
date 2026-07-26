@@ -207,7 +207,7 @@ def test_identify_integrations__mixpanel_configured__posts_to_expected_url(
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     "feature_state_with_value,expected_property_value",
-    [(False, False), (True, True), ("foo", "foo"), (1, 1), (0, 0)],
+    [(False, False), (True, True), ("foo", "foo"), (1, 1), (0, 0), (None, True)],
     indirect=["feature_state_with_value"],
 )
 def test_mixpanel_generate_user_data__falsy_values__returns_value_not_enabled_state(

@@ -36,7 +36,7 @@ def test_rudderstack_generate_user_data__valid_identity__returns_expected_data( 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     "feature_state_with_value,expected_property_value",
-    [(False, False), (True, True), ("foo", "foo"), (1, 1), (0, 0)],
+    [(False, False), (True, True), ("foo", "foo"), (1, 1), (0, 0), (None, True)],
     indirect=["feature_state_with_value"],
 )
 def test_rudderstack_generate_user_data__falsy_values__returns_value_not_enabled_state(
