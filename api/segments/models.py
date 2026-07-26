@@ -80,7 +80,10 @@ class SegmentConditionManager(ConfiguredOrderManager["Condition"]):
 class Segment(
     LifecycleModelMixin,  # type: ignore[misc]
     SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
+    abstract_base_auditable_model_factory(  # type: ignore[misc]
+        ["uuid"],
+        change_details_excluded_fields=["version"],
+    ),
 ):
     history_record_class_path = "segments.models.HistoricalSegment"
     related_object_type = RelatedObjectType.SEGMENT
