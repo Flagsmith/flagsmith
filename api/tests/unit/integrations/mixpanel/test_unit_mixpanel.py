@@ -1,3 +1,4 @@
+import typing
 from logging import DEBUG
 from typing import TYPE_CHECKING
 
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
 
     from environments.identities.models import Identity
     from environments.models import Environment
-    from features.models import Feature
+    from features.models import Feature, FeatureState
     from projects.models import Project
 
 
@@ -140,7 +141,9 @@ def test_mixpanel_generate_user_data__identity_with_features__returns_expected_f
     for feature_state in feature_states:
         value = feature_state.get_feature_state_value()
         feature_properties[feature_state.feature.name] = (
-            value if (feature_state.enabled and value) else feature_state.enabled
+            value
+            if (feature_state.enabled and value is not None)
+            else feature_state.enabled
         )
 
     expected_user_data = [
@@ -199,3 +202,65 @@ def test_identify_integrations__mixpanel_configured__posts_to_expected_url(
     # Then
     assert mocked_post.call_args.args[0] == expected_url
     assert mocked_post.call_args.kwargs["json"][0]["$token"] == api_key
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "feature_state_with_value,expected_property_value",
+    [(False, False), (True, True), ("foo", "foo"), (1, 1), (0, 0)],
+    indirect=["feature_state_with_value"],
+)
+def test_mixpanel_generate_user_data__falsy_values__returns_value_not_enabled_state(
+    expected_property_value: typing.Any,
+    environment: "Environment",
+    feature_state: "FeatureState",
+    feature_state_with_value: "FeatureState",
+    identity: "Identity",
+) -> None:
+    # Given
+    config = MixpanelConfiguration(api_key="123key")
+    mixpanel = MixpanelWrapper(config)
+
+    # When
+    user_data = mixpanel.generate_user_data(
+        identity=identity,
+        feature_states=[feature_state, feature_state_with_value],
+        trait_models=[],
+    )
+
+    # Then
+    expected_user_data = [
+        {
+            "$token": config.api_key,
+            "$distinct_id": identity.identifier,
+            "$set": {
+                feature_state.feature.name: feature_state.enabled,
+                feature_state_with_value.feature.name: expected_property_value,
+            },
+            "$ip": "0",
+        }
+    ]
+    assert user_data == expected_user_data
+
+
+@pytest.mark.django_db
+def test_mixpanel_generate_user_data__disabled_flag__returns_enabled_state(
+    feature: "Feature",
+    environment: "Environment",
+    identity: "Identity",
+) -> None:
+    # Given
+    config = MixpanelConfiguration(api_key="123key")
+    mixpanel = MixpanelWrapper(config)
+    feature_states = [*feature.feature_states.all()]
+
+    # When
+    user_data = mixpanel.generate_user_data(
+        identity=identity,
+        feature_states=feature_states,
+        trait_models=[],
+    )
+
+    # Then
+    # Default feature is not enabled, so the value should be False
+    assert user_data[0]["$set"][feature.name] is False

@@ -32,7 +32,9 @@ class RudderstackWrapper(AbstractBaseIdentityIntegrationWrapper):  # type: ignor
         for feature_state in feature_states:
             value = feature_state.get_feature_state_value(identity=identity)
             feature_properties[feature_state.feature.name] = (
-                value if (feature_state.enabled and value) else feature_state.enabled
+                value
+                if (feature_state.enabled and value is not None)
+                else feature_state.enabled
             )
 
         return {
