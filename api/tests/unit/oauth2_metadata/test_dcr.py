@@ -178,7 +178,7 @@ def test_dcr_register__invalid_redirect_uris__returns_rfc7591_error(
 
 @pytest.mark.parametrize(
     "invalid_uri",
-    ["javascript:alert(1)", 12345],
+    ["javascript:alert(1)", ""],
     ids=["policy-error", "child-field-error"],
 )
 def test_dcr_register__invalid_redirect_uri_after_valid_one__returns_rfc7591_error(

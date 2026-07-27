@@ -26,11 +26,11 @@ def _first_error_message(detail: Any) -> str:
     ListField child errors arrive as a dict keyed by list index, so
     positional indexing is not safe here.
     """
-    if isinstance(detail, str):
-        # ErrorDetail is a str subclass; str() drops the repr wrapping.
-        return str(detail)
-    if isinstance(detail, dict):
-        return _first_error_message(next(iter(detail.values())))
-    if isinstance(detail, (list, tuple)):
-        return _first_error_message(detail[0])
-    return str(detail)
+    while True:
+        if isinstance(detail, dict):
+            detail = next(iter(detail.values()))
+        elif isinstance(detail, (list, tuple)):
+            detail = detail[0]
+        else:
+            # ErrorDetail is a str subclass; str() drops the repr wrapping.
+            return str(detail)
