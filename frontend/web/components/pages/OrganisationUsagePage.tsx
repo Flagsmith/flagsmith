@@ -45,7 +45,7 @@ const OrganisationUsagePage: FC = () => {
   )
 
   return (
-    <div className='px-3 px-md-4 pb-4'>
+    <div className='px-3 px-md-4 pt-4 pb-4'>
       {/* SPIKE: billing-aligned usage redesign prototype. */}
       <UsageBillingPrototype
         data={orgData}
