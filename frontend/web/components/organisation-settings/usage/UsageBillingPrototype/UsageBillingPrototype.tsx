@@ -308,6 +308,9 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
               axisLine={{ stroke: colorTextSecondary }}
             />
             <YAxis
+              // Pin the top to the limit (or usage if over) so the plan-limit
+              // ceiling is always visible, not auto-scaled to tiny usage.
+              domain={[0, Math.max(limit, total) || 'auto']}
               tick={{ fill: colorTextSecondary, fontSize: 11 }}
               axisLine={{ stroke: colorTextSecondary }}
               tickFormatter={(value) =>
