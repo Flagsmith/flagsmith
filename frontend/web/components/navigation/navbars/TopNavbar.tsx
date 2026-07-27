@@ -26,6 +26,11 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
           <div className='me-3'>
             <GithubStar />
           </div>
+          {Utils.getFlagsmithHasFeature('dark_mode_nav_toggle') && (
+            <div className='me-3'>
+              <ThemeToggle />
+            </div>
+          )}
           <NavLink
             activeClassName='active'
             to={'/getting-started'}
@@ -46,12 +51,6 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
             <span className='d-none d-md-block'>Docs</span>
           </a>
           <Headway className='cursor-pointer ps-3' />
-
-          {Utils.getFlagsmithHasFeature('dark_mode_nav_toggle') && (
-            <div className='ps-3'>
-              <ThemeToggle />
-            </div>
-          )}
 
           {Utils.getFlagsmithHasFeature('persona_based_views') ? (
             <AccountDropdown />
