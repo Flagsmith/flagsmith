@@ -145,7 +145,9 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
       )}
       {connection.warehouse_type === 'clickhouse' && (
         <div className='mb-3'>
-          <WarehouseSetupSqlHelp showInitially={!isConnected} />
+          <WarehouseSetupSqlHelp
+            showInitially={!connection.total_events_received}
+          />
         </div>
       )}
       <WarehouseEventCodeHelp />
