@@ -7,6 +7,7 @@ import Icon from 'components/icons/Icon'
 import Headway from 'components/Headway'
 import { Project } from 'common/types/responses'
 import AccountDropdown from 'components/navigation/AccountDropdown'
+import ThemeToggle from 'components/ThemeToggle'
 
 type TopNavType = {
   activeProject: Project | undefined
@@ -45,6 +46,12 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
             <span className='d-none d-md-block'>Docs</span>
           </a>
           <Headway className='cursor-pointer ps-3' />
+
+          {Utils.getFlagsmithHasFeature('dark_mode_nav_toggle') && (
+            <div className='ps-3'>
+              <ThemeToggle />
+            </div>
+          )}
 
           {Utils.getFlagsmithHasFeature('persona_based_views') ? (
             <AccountDropdown />
