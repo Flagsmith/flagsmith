@@ -5,7 +5,6 @@
     border: none;
   }
 
-
   &__menu-list {
     overflow-y: auto;
     scrollbar-width: none;
@@ -108,6 +107,13 @@
     }
   }
 }
+
+// Field-level error state, set by SelectField when it renders an error.
+// !important so the danger border survives emotion's runtime hover/focus
+// styles, matching the invalid input convention in _forms.scss.
+.select-field--invalid .react-select__control {
+  border-color: var(--color-border-danger) !important;
+}
 .select-sm .react-select {
   &__control {
     height: $input-height-sm;
@@ -209,7 +215,7 @@
     cursor: pointer;
     &:hover {
       background: $bg-light200 !important;
-      cursor:pointer;
+      cursor: pointer;
     }
     &--is-focused {
       background: $bg-light300 !important;
@@ -226,7 +232,8 @@
   }
 }
 .dark {
-  .react-select .react-select,.react-select {
+  .react-select .react-select,
+  .react-select {
     input[type='text'] {
       color: white !important;
       border: none !important;
@@ -261,11 +268,11 @@
       &:hover {
         background: $bg-dark200 !important;
         color: white !important;
-        cursor:pointer;
+        cursor: pointer;
       }
       &--is-focused {
         background: $bg-dark200 !important;
-        cursor:pointer;
+        cursor: pointer;
       }
       &--is-selected {
         background-color: $primary-alfa-16 !important;

@@ -46,6 +46,12 @@ export type SelectFieldProps<
 // relationships off one id, so consumers stop wrapping a bare Select in
 // InputGroup's `component` slot (which renders the control with no a11y
 // wiring at all). Prefer this over `<InputGroup component={<Select />} />`.
+//
+// aria-errormessage (not aria-describedby) is deliberate: react-select v5
+// forwards aria-errormessage/aria-invalid onto its combobox input on both
+// render paths (searchable and not), but manages aria-describedby itself
+// (placeholder/live-region), so describedby passed from outside never
+// reaches the input.
 function SelectField<Option = unknown, IsMulti extends boolean = false>({
   className,
   'data-test': dataTest,
@@ -64,7 +70,12 @@ function SelectField<Option = unknown, IsMulti extends boolean = false>({
   const hasError = !!error
 
   return (
-    <div className={cn(className, { 'form-group': !noMargin })}>
+    <div
+      className={cn(className, {
+        'form-group': !noMargin,
+        'select-field--invalid': hasError,
+      })}
+    >
       {(!!title || !!tooltip) && (
         <FieldLabel
           htmlFor={inputId}
