@@ -21,7 +21,10 @@ import {
 import './UsageBillingPrototype.scss'
 
 type UsageBillingPrototypeProps = {
+  // Org-level usage: drives the meter + cumulative chart (limit is org-wide).
   data: Res['organisationUsage'] | undefined
+  // Project/environment-filtered usage: drives the request-type breakdown.
+  breakdownData?: Res['organisationUsage'] | undefined
   maxApiCalls?: number | null
 }
 
@@ -60,6 +63,7 @@ type Tile = {
  * diff doubles as the backend ask.
  */
 const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
+  breakdownData,
   data,
   maxApiCalls,
 }) => {
@@ -90,8 +94,9 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
   }, [data?.events_list])
 
   // Request-type breakdown (the four billable types), ranked by volume.
+  // Uses the project/environment-filtered totals when a filter is applied.
   const breakdown = useMemo(() => {
-    const t = data?.totals
+    const t = (breakdownData ?? data)?.totals
     const rows = [
       { label: 'Flag evaluations', op: 'get-flags', value: t?.flags ?? 0 },
       {
@@ -111,10 +116,15 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
       },
     ]
     const max = Math.max(1, ...rows.map((r) => r.value))
+    const sum = rows.reduce((acc, r) => acc + r.value, 0)
     return rows
       .sort((a, b) => b.value - a.value)
-      .map((r) => ({ ...r, width: Math.round((r.value / max) * 100) }))
-  }, [data?.totals])
+      .map((r) => ({
+        ...r,
+        pct: sum ? Math.round((r.value / sum) * 100) : 0,
+        width: Math.round((r.value / max) * 100),
+      }))
+  }, [breakdownData, data])
 
   const tiles: Tile[] = [
     {
@@ -330,7 +340,7 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
               </div>
               <div className='usage-proto__row-value'>{compact(row.value)}</div>
               <div className='usage-proto__sub usage-proto__row-pct'>
-                {total ? Math.round((row.value / total) * 100) : 0}%
+                {row.pct}%
               </div>
             </div>
           ))}
