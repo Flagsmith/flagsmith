@@ -799,6 +799,31 @@ class InternalAddressError(Exception):
     pass
 
 
+class MissingEventsTableError(Exception):
+    pass
+
+
+def _connect_customer_clickhouse(connection: WarehouseConnection) -> Client:
+    """Build a client for the customer's ClickHouse instance from stored
+    connection details, re-checking the host against internal address ranges
+    first: DNS may resolve differently than it did at validation time, and
+    rows may predate host validation."""
+    config = typing.cast(ClickHouseConfig, connection.config or {})
+    credentials = typing.cast(ClickHouseCredentials, connection.credentials or {})
+    if is_internal_address(config["host"], include_shared=True):
+        raise InternalAddressError(config["host"])
+    return Client(
+        config["host"],
+        port=config["port"],
+        user=config["username"],
+        password=credentials["password"],
+        database=config["database"],
+        secure=config["secure"],
+        connect_timeout=CLICKHOUSE_CONNECT_TIMEOUT_SECONDS,
+        send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
+    )
+
+
 def _describe_verification_error(error: Exception) -> str:
     if isinstance(error, clickhouse_errors.ServerException):
         # 516 = AUTHENTICATION_FAILED (not in clickhouse_driver.errors.ErrorCodes)
@@ -813,6 +838,11 @@ def _describe_verification_error(error: Exception) -> str:
         return "Could not connect to the host."
     if isinstance(error, InternalAddressError):
         return "Host must not target internal or private network addresses."
+    if isinstance(error, MissingEventsTableError):
+        return (
+            "Events table not found in the configured database. "
+            "Run the setup SQL to create it."
+        )
     if isinstance(error, KeyError):
         return "Stored connection details are incomplete."
     return "Verification failed."
@@ -822,30 +852,19 @@ def verify_clickhouse_connection(
     connection: WarehouseConnection,
     persist: bool = True,
 ) -> None:
-    """Run SELECT 1 against the customer's ClickHouse and set the status to
-    connected or errored; never raises. With persist=False, the status is only
-    set on the in-memory instance, allowing unsaved connections to be tested."""
+    """Run SELECT 1 against the customer's ClickHouse, check the events table
+    exists, and set the status to connected or errored; never raises. With
+    persist=False, the status is only set on the in-memory instance, allowing
+    unsaved connections to be tested."""
     log = logger.bind(environment__id=connection.environment_id)
     try:
         log = log.bind(organisation__id=connection.environment.project.organisation_id)
-        config = typing.cast(ClickHouseConfig, connection.config or {})
-        credentials = typing.cast(ClickHouseCredentials, connection.credentials or {})
-        # Re-check right before connecting: DNS may resolve differently than it
-        # did at validation time, and rows may predate host validation.
-        if is_internal_address(config["host"], include_shared=True):
-            raise InternalAddressError(config["host"])
-        client = Client(
-            config["host"],
-            port=config["port"],
-            user=config["username"],
-            password=credentials["password"],
-            database=config["database"],
-            secure=config["secure"],
-            connect_timeout=CLICKHOUSE_CONNECT_TIMEOUT_SECONDS,
-            send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
-        )
+        client = _connect_customer_clickhouse(connection)
         try:
             client.execute("SELECT 1")
+            rows = client.execute("EXISTS TABLE events")
+            if not rows[0][0]:
+                raise MissingEventsTableError()
         finally:
             client.disconnect()
     except Exception as error:
@@ -893,9 +912,19 @@ def annotate_warehouse_event_stats(
     connection: WarehouseConnection,
     environment_key: str,
 ) -> None:
-    """Attach live warehouse event stats to a flagsmith connection. No-op for
-    non-flagsmith connections or when no warehouse is configured; leaves stats
-    unset when the warehouse is unreachable. Read-only: never changes status."""
+    """Attach live warehouse event stats to a connection — from the managed
+    warehouse for flagsmith connections, from the customer's instance for
+    clickhouse ones. No-op for other types or when no warehouse is configured;
+    leaves stats unset when the warehouse is unreachable. Read-only: never
+    changes status."""
+    if connection.warehouse_type == WarehouseType.CLICKHOUSE:
+        try:
+            connection.event_stats = _get_customer_warehouse_event_stats(
+                connection, environment_key
+            )
+        except Exception:
+            pass
+        return
     if (
         connection.warehouse_type != WarehouseType.FLAGSMITH
         or not settings.EXPERIMENTATION_CLICKHOUSE_URL
@@ -905,3 +934,25 @@ def annotate_warehouse_event_stats(
         connection.event_stats = get_warehouse_event_stats(environment_key)
     except Exception:
         return
+
+
+def _get_customer_warehouse_event_stats(
+    connection: WarehouseConnection,
+    environment_key: str,
+) -> WarehouseEventStats:
+    """Return event counts recorded for `environment_key` in the customer's
+    ClickHouse instance."""
+    client = _connect_customer_clickhouse(connection)
+    try:
+        rows = client.execute(
+            "SELECT count() AS total, uniqExact(event) AS unique "
+            "FROM events WHERE environment_key = %(environment_key)s",
+            {"environment_key": environment_key},
+        )
+    finally:
+        client.disconnect()
+    total, unique = rows[0] if rows else (0, 0)
+    return WarehouseEventStats(
+        total_events_received=int(total),
+        unique_events_count=int(unique),
+    )

@@ -40,7 +40,9 @@ from experimentation.models import (
 from experimentation.results_query import _MetricSlot
 from experimentation.services import (
     InternalAddressError,
+    MissingEventsTableError,
     _describe_verification_error,
+    annotate_warehouse_event_stats,
     verify_clickhouse_connection,
 )
 from experimentation.stats import VariantStats
@@ -2031,6 +2033,7 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
 ) -> None:
     # Given
     mock_client = mocker.patch("experimentation.services.Client")
+    mock_client.return_value.execute.return_value = [(1,)]
     success_count_before = _verification_count("success")
     clickhouse_connection.status_detail = "stale detail"
     clickhouse_connection.save()
@@ -2052,7 +2055,10 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
         connect_timeout=5,
         send_receive_timeout=5,
     )
-    mock_client.return_value.execute.assert_called_once_with("SELECT 1")
+    assert mock_client.return_value.execute.call_args_list == [
+        mocker.call("SELECT 1"),
+        mocker.call("EXISTS TABLE events"),
+    ]
     mock_client.return_value.disconnect.assert_called_once_with()
     assert _verification_count("success") == success_count_before + 1
     assert {
@@ -2071,14 +2077,20 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
             Exception("connection refused"),
             "Verification failed.",
         ),
+        (
+            {"password": "hunter2"},
+            [[(1,)], [(0,)]],
+            "Events table not found in the configured database. "
+            "Run the setup SQL to create it.",
+        ),
         (None, None, "Stored connection details are incomplete."),
     ],
-    ids=["driver_error", "missing_credentials"],
+    ids=["driver_error", "missing_events_table", "missing_credentials"],
 )
 def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
     clickhouse_connection: WarehouseConnection,
     credentials: dict[str, str] | None,
-    execute_side_effect: Exception | None,
+    execute_side_effect: Exception | list[list[tuple[int]]] | None,
     expected_detail: str,
     log: StructuredLogCapture,
     mocker: MockerFixture,
@@ -2162,6 +2174,11 @@ def test_verify_clickhouse_connection__internal_host__sets_errored_without_conne
             "Host must not target internal or private network addresses.",
         ),
         (
+            MissingEventsTableError(),
+            "Events table not found in the configured database. "
+            "Run the setup SQL to create it.",
+        ),
+        (
             KeyError("host"),
             "Stored connection details are incomplete.",
         ),
@@ -2178,6 +2195,7 @@ def test_verify_clickhouse_connection__internal_host__sets_errored_without_conne
         "builtin_timeout_error",
         "network_error",
         "internal_address_error",
+        "missing_events_table_error",
         "key_error",
         "generic_exception",
     ],
@@ -2191,3 +2209,37 @@ def test_describe_verification_error__known_error_types__returns_expected_detail
 
     # Then
     assert detail == expected_detail
+
+
+@pytest.mark.parametrize(
+    "execute_side_effect, expected_stats",
+    [
+        (
+            [[(42, 7)]],
+            WarehouseEventStats(total_events_received=42, unique_events_count=7),
+        ),
+        (Exception("connection refused"), None),
+    ],
+    ids=["reachable", "unreachable"],
+)
+def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer_instance(
+    clickhouse_connection: WarehouseConnection,
+    execute_side_effect: Exception | list[list[tuple[int, int]]],
+    expected_stats: WarehouseEventStats | None,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = mocker.patch("experimentation.services.Client")
+    mock_client.return_value.execute.side_effect = execute_side_effect
+
+    # When
+    annotate_warehouse_event_stats(clickhouse_connection, "test-env-key")
+
+    # Then
+    assert getattr(clickhouse_connection, "event_stats", None) == expected_stats
+    mock_client.return_value.execute.assert_called_once_with(
+        "SELECT count() AS total, uniqExact(event) AS unique "
+        "FROM events WHERE environment_key = %(environment_key)s",
+        {"environment_key": "test-env-key"},
+    )
+    mock_client.return_value.disconnect.assert_called_once_with()

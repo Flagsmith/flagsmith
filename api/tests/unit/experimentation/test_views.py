@@ -1238,7 +1238,7 @@ def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
     assert response.json()["config"] == {
         "host": "ch.example.com",
         "port": 9440,
-        "database": "flagsmith",
+        "database": "flagsmith_exp",
         "username": "default",
         "secure": True,
     }
@@ -1535,7 +1535,7 @@ def test_post__clickhouse_verification_outcome__returns_201_with_status(
     assert response.json()["status"] == expected_status
     assert response.json()["status_detail"] == expected_detail
     assert "credentials" not in response.json()
-    mock_client.return_value.execute.assert_called_once_with("SELECT 1")
+    assert mock_client.return_value.execute.call_args_list[0] == mocker.call("SELECT 1")
 
 
 def test_get__clickhouse__credentials_not_in_response(

@@ -619,7 +619,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:884`
+ - `api/experimentation/services.py:903`
 
 Attributes:
  - `environment.id`
@@ -637,7 +637,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:859`
+ - `api/experimentation/services.py:878`
 
 Attributes:
  - `environment.id`
@@ -647,7 +647,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:869`
+ - `api/experimentation/services.py:888`
 
 Attributes:
  - `environment.id`
