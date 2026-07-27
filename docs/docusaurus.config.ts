@@ -41,6 +41,9 @@ const config: Config = {
                 theme: {
                     customCss: require.resolve('./src/css/custom.css'),
                 },
+                googleTagManager: {
+                  containerId: 'GTM-5ZV5K5G',
+                },
             } satisfies Preset.Options,
         ],
     ],
@@ -57,9 +60,6 @@ const config: Config = {
             // Public API key: it is safe to commit it
             apiKey: '00987f2d774d7787dcae25294463294c',
             indexName: 'flagsmith',
-        },
-        tagManager: {
-            trackingID: 'GTM-5ZV5K5G',
         },
         navbar: {
             title: 'Flagsmith',
