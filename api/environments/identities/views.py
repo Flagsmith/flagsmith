@@ -27,6 +27,7 @@ from environments.identities.serializers import (
     IdentitySerializer,
     SDKIdentitiesQuerySerializer,
 )
+from environments.identities.services import replace_identity_environment
 from environments.models import Environment
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from environments.sdk.serializers import (
@@ -124,7 +125,7 @@ class SDKIdentitiesDeprecated(SDKAPIView):
                 .with_traits()
                 .get(id=identity.id)
             )
-            identity.environment = request.environment
+            replace_identity_environment(identity, request.environment)
 
         traits_data = identity.get_all_user_traits()  # type: ignore[no-untyped-call]
 
@@ -193,7 +194,7 @@ class SDKIdentities(SDKAPIView):
                 .with_traits()
                 .get(id=identity.id)
             )
-            identity.environment = request.environment
+            replace_identity_environment(identity, request.environment)
 
         self.identity = identity
 

@@ -55,6 +55,7 @@ from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
     IdentitySourceIdentityRequestSerializer,
 )
+from environments.identities.services import replace_identity_environment
 from environments.models import Environment
 from environments.onboarding.services import record_environment_first_evaluation
 from environments.permissions.permissions import (
@@ -1125,7 +1126,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
                 .with_traits()
                 .get(id=identity.id)
             )
-        identity.environment = request.environment
+        replace_identity_environment(identity, request.environment)
 
         if feature_name := request.GET.get("feature"):
             feature_states = identity.get_all_feature_states(feature_name=feature_name)

@@ -2,6 +2,8 @@ from typing import TYPE_CHECKING
 
 from django.db.models import Manager
 
+from environments.identities.services import replace_identity_environment
+
 if TYPE_CHECKING:
     from typing import Iterable
 
@@ -28,7 +30,7 @@ class IdentityManager(Manager["Identity"]):
             identifier=identifier,
             environment=environment,
         )
-        identity.environment = environment
+        replace_identity_environment(identity, environment)
         return identity, created
 
     def with_traits(
