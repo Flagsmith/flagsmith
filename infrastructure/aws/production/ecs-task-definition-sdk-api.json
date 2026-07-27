@@ -7,9 +7,10 @@
         {
             "name": "flagsmith-api",
             "command": [
-                "serve",
+                "start",
                 "--keep-alive",
-                "75"
+                "75",
+                "api"
             ],
             "cpu": 0,
             "portMappings": [
