@@ -2,6 +2,7 @@ import React, { FC, useEffect } from 'react'
 import TableFilter from './TableFilter'
 import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
+import SelectField from 'components/base/forms/SelectField'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 
 type TableFilterType = {
@@ -62,28 +63,25 @@ const TableTagFilter: FC<TableFilterType> = ({
       >
         <div className='inline-modal__list d-flex flex-column mx-0 py-0'>
           <div className='px-2 mt-2'>
-            <InputGroup
+            <SelectField
               title='Enabled State'
               className='mt-2'
-              component={
-                <Select
-                  size='select-xxsm'
-                  styles={{
-                    control: (base) => ({
-                      ...base,
-                      height: 18,
-                    }),
-                  }}
-                  onChange={(e: (typeof enabledOptions)[number]) => {
-                    onChange({
-                      enabled: e.value,
-                      valueSearch: value.valueSearch,
-                    })
-                  }}
-                  value={enabledOptions.find((v) => v.value === value.enabled)}
-                  options={enabledOptions}
-                />
-              }
+              size='select-xxsm'
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  height: 18,
+                }),
+              }}
+              onChange={(e) => {
+                if (!e) return
+                onChange({
+                  enabled: e.value,
+                  valueSearch: value.valueSearch,
+                })
+              }}
+              value={enabledOptions.find((v) => v.value === value.enabled)}
+              options={enabledOptions}
             />
             <InputGroup
               title='Feature Value'

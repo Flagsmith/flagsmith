@@ -789,11 +789,11 @@ const Utils = Object.assign({}, BaseUtils, {
       .replace(/[\s_]+/g, '-')
       .toLowerCase(),
 
-  toSelectedValue: (
-    value: string,
-    options: { label: string; value: string }[],
-    defaultValue?: string,
-  ) => {
+  toSelectedValue: <T extends { label: string; value?: unknown }>(
+    value: unknown,
+    options: T[] | undefined,
+    defaultValue?: T,
+  ): T | undefined => {
     return options?.find((option) => option.value === value) ?? defaultValue
   },
 

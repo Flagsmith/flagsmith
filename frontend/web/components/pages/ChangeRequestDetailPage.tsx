@@ -33,7 +33,6 @@ import NewVersionWarning from 'components/NewVersionWarning'
 import Breadcrumb from 'components/Breadcrumb'
 import PageTitle from 'components/PageTitle'
 import InfoMessage from 'components/InfoMessage'
-import InputGroup from 'components/base/forms/InputGroup'
 import SettingsButton from 'components/SettingsButton'
 import UserSelect from 'components/UserSelect'
 import MyGroupsSelect from 'components/MyGroupsSelect'
@@ -596,103 +595,94 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
           </InfoMessage>
         </div>
       )}
-      <InputGroup
-        className='col-md-6'
-        component={
-          <>
-            {!Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (
-              <div className='mb-4'>
-                {hasApprovals ? (
-                  <div className='font-weight-medium mb-2'>Assigned users</div>
-                ) : (
-                  <SettingsButton onClick={() => setShowUsers(true)}>
-                    Assigned users
-                  </SettingsButton>
-                )}
-                <Row className='mt-2'>
-                  {ownerUsers.length !== 0 &&
-                    ownerUsers.map((u) => (
-                      <Row
-                        key={u.id}
-                        onClick={
-                          hasApprovals ? undefined : () => removeOwner(u.id)
-                        }
-                        className='chip'
-                        style={{
-                          marginBottom: 4,
-                          marginTop: 4,
-                        }}
-                      >
-                        <span className='font-weight-bold'>
-                          {u.first_name} {u.last_name}
-                        </span>
-                        {!hasApprovals && (
-                          <span className='chip-icon ion'>
-                            <IonIcon icon={close} />
-                          </span>
-                        )}
-                      </Row>
-                    ))}
-                </Row>
-                {!hasApprovals && (
-                  <UserSelect
-                    users={orgUsers}
-                    value={ownerUsers && ownerUsers.map((v) => v.id)}
-                    onAdd={addOwner}
-                    onRemove={removeOwner}
-                    isOpen={showUsers}
-                    onToggle={() => setShowUsers(!showUsers)}
-                  />
-                )}
-              </div>
+      <div className='col-md-6 form-group'>
+        {!Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (
+          <div className='mb-4'>
+            {hasApprovals ? (
+              <div className='font-weight-medium mb-2'>Assigned users</div>
+            ) : (
+              <SettingsButton onClick={() => setShowUsers(true)}>
+                Assigned users
+              </SettingsButton>
             )}
-            <div className='mb-4'>
-              {hasApprovals ? (
-                <div className='font-weight-medium mb-2'>Assigned groups</div>
-              ) : (
-                <SettingsButton onClick={() => setShowGroups(true)}>
-                  Assigned groups
-                </SettingsButton>
-              )}
-              <Row className='mt-2'>
-                {!!ownerGroups?.length &&
-                  ownerGroups.map((g) => (
-                    <Row
-                      key={g.id}
-                      onClick={
-                        hasApprovals
-                          ? undefined
-                          : () => removeOwner(g.id, false)
-                      }
-                      className='chip'
-                      style={{
-                        marginBottom: 4,
-                        marginTop: 4,
-                      }}
-                    >
-                      <span className='font-weight-bold'>{g.name}</span>
-                      {!hasApprovals && (
-                        <span className='chip-icon ion'>
-                          <IonIcon icon={close} />
-                        </span>
-                      )}
-                    </Row>
-                  ))}
-              </Row>
-              {!hasApprovals && (
-                <MyGroupsSelect
-                  orgId={AccountStore.getOrganisation().id}
-                  value={ownerGroups && ownerGroups.map((v) => v.id)}
-                  onAdd={addOwner}
-                  onRemove={removeOwner}
-                  isOpen={showGroups}
-                  onToggle={() => setShowGroups(!showGroups)}
-                />
-              )}
-            </div>
-          </>
-        }
-      />
+            <Row className='mt-2'>
+              {ownerUsers.length !== 0 &&
+                ownerUsers.map((u) => (
+                  <Row
+                    key={u.id}
+                    onClick={hasApprovals ? undefined : () => removeOwner(u.id)}
+                    className='chip'
+                    style={{
+                      marginBottom: 4,
+                      marginTop: 4,
+                    }}
+                  >
+                    <span className='font-weight-bold'>
+                      {u.first_name} {u.last_name}
+                    </span>
+                    {!hasApprovals && (
+                      <span className='chip-icon ion'>
+                        <IonIcon icon={close} />
+                      </span>
+                    )}
+                  </Row>
+                ))}
+            </Row>
+            {!hasApprovals && (
+              <UserSelect
+                users={orgUsers}
+                value={ownerUsers && ownerUsers.map((v) => v.id)}
+                onAdd={addOwner}
+                onRemove={removeOwner}
+                isOpen={showUsers}
+                onToggle={() => setShowUsers(!showUsers)}
+              />
+            )}
+          </div>
+        )}
+        <div className='mb-4'>
+          {hasApprovals ? (
+            <div className='font-weight-medium mb-2'>Assigned groups</div>
+          ) : (
+            <SettingsButton onClick={() => setShowGroups(true)}>
+              Assigned groups
+            </SettingsButton>
+          )}
+          <Row className='mt-2'>
+            {!!ownerGroups?.length &&
+              ownerGroups.map((g) => (
+                <Row
+                  key={g.id}
+                  onClick={
+                    hasApprovals ? undefined : () => removeOwner(g.id, false)
+                  }
+                  className='chip'
+                  style={{
+                    marginBottom: 4,
+                    marginTop: 4,
+                  }}
+                >
+                  <span className='font-weight-bold'>{g.name}</span>
+                  {!hasApprovals && (
+                    <span className='chip-icon ion'>
+                      <IonIcon icon={close} />
+                    </span>
+                  )}
+                </Row>
+              ))}
+          </Row>
+          {!hasApprovals && (
+            <MyGroupsSelect
+              orgId={AccountStore.getOrganisation().id}
+              value={ownerGroups && ownerGroups.map((v) => v.id)}
+              onAdd={addOwner}
+              onRemove={removeOwner}
+              isOpen={showGroups}
+              onToggle={() => setShowGroups(!showGroups)}
+            />
+          )}
+        </div>
+      </div>
 
       {DiffView}
       <JSONReference

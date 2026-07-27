@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import { IonIcon } from '@ionic/react'
 import { close as closeIcon } from 'ionicons/icons'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -18,6 +19,7 @@ import Utils from 'common/utils/utils'
 import { useHistory } from 'react-router-dom'
 import API from 'project/api'
 import InputGroup from 'components/base/forms/InputGroup'
+import SelectField from 'components/base/forms/SelectField'
 import { Environment, Role, User } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import UserSelect from 'components/UserSelect'
@@ -261,31 +263,28 @@ const CreateEnvironmentPage: React.FC = () => {
                       </CondensedRow>
                       <CondensedRow>
                         {!!project?.environments?.length && (
-                          <InputGroup
+                          <SelectField
                             tooltip='This will copy feature enabled states and remote config values from the selected environment.'
                             title='Clone from environment'
-                            component={
-                              <Select
-                                onChange={(env: { value: string }) => {
-                                  setSelectedEnv(
-                                    project?.environments.find(
-                                      (v) => v.api_key === env.value,
-                                    ),
-                                  )
-                                }}
-                                options={project.environments.map((env) => ({
-                                  label: env.name,
-                                  value: env.api_key,
-                                }))}
-                                value={
-                                  selectedEnv
-                                    ? {
-                                        label: selectedEnv.name,
-                                        value: selectedEnv.api_key,
-                                      }
-                                    : { label: 'Please select an environment' }
-                                }
-                              />
+                            onChange={(env) => {
+                              setSelectedEnv(
+                                project?.environments.find(
+                                  (v) => v.api_key === env?.value,
+                                ),
+                              )
+                            }}
+                            options={project.environments.map((env) => ({
+                              label: env.name,
+                              value: env.api_key,
+                            }))}
+                            placeholder='Please select an environment'
+                            value={
+                              selectedEnv
+                                ? {
+                                    label: selectedEnv.name,
+                                    value: selectedEnv.api_key,
+                                  }
+                                : null
                             }
                           />
                         )}
@@ -414,28 +413,27 @@ const CreateEnvironmentPage: React.FC = () => {
                       envContentType?.id && (
                         <CondensedRow>
                           <FormGroup className='mt-2 setting'>
-                            <InputGroup
-                              title='Custom fields'
-                              tooltip='You need to add a value to the custom field if it is required to successfully clone the environment'
-                              tooltipPlace='right'
-                              component={
-                                <AddMetadataToEntity
-                                  organisationId={
-                                    AccountStore.getOrganisation().id
-                                  }
-                                  projectId={projectId}
-                                  entityId={selectedEnv?.api_key}
-                                  envName={name}
-                                  entityContentType={envContentType.id}
-                                  entity={envContentType.model}
-                                  isCloningEnvironment
-                                  onChange={setMetadata}
-                                  setHasMetadataRequired={
-                                    setHasMetadataRequired
-                                  }
-                                />
-                              }
-                            />
+                            <div className='form-group'>
+                              <FieldLabel
+                                tooltip='You need to add a value to the custom field if it is required to successfully clone the environment'
+                                tooltipPlace='right'
+                              >
+                                Custom fields
+                              </FieldLabel>
+                              <AddMetadataToEntity
+                                organisationId={
+                                  AccountStore.getOrganisation().id
+                                }
+                                projectId={projectId}
+                                entityId={selectedEnv?.api_key}
+                                envName={name}
+                                entityContentType={envContentType.id}
+                                entity={envContentType.model}
+                                isCloningEnvironment
+                                onChange={setMetadata}
+                                setHasMetadataRequired={setHasMetadataRequired}
+                              />
+                            </div>
                           </FormGroup>
                         </CondensedRow>
                       )}

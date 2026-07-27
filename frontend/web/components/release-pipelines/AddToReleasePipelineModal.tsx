@@ -6,7 +6,7 @@ import {
 import { ReleasePipeline } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
-import InputGroup from 'components/base/forms/InputGroup'
+import SelectField from 'components/base/forms/SelectField'
 
 type AddToReleasePipelineModalProps = {
   projectId: number
@@ -43,8 +43,8 @@ const AddToReleasePipelineModal = ({
     [releasePipelines],
   )
 
-  const handleSelect = (option: { label: string; value: number }) => {
-    setSelectedReleasePipeline(option.value)
+  const handleSelect = (option: { label: string; value: number } | null) => {
+    setSelectedReleasePipeline(option?.value ?? null)
   }
 
   const handleAddToReleasePipeline = () => {
@@ -74,18 +74,16 @@ const AddToReleasePipelineModal = ({
 
   return (
     <div className='p-4'>
-      <InputGroup
+      <SelectField
         title='Release Pipeline'
-        component={
-          <Select
-            options={releasePipelinesOptions}
-            onChange={handleSelect}
-            value={Utils.toSelectedValue(
-              selectedReleasePipeline,
-              releasePipelinesOptions,
-              { label: 'Select Release Pipeline', value: null },
-            )}
-          />
+        options={releasePipelinesOptions}
+        onChange={handleSelect}
+        placeholder='Select Release Pipeline'
+        value={
+          Utils.toSelectedValue(
+            selectedReleasePipeline,
+            releasePipelinesOptions,
+          ) ?? null
         }
       />
       <div className='text-right mt-4'>

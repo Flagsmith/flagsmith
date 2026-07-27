@@ -86,8 +86,13 @@ function SelectField<Option = unknown, IsMulti extends boolean = false>({
           {title}
         </FieldLabel>
       )}
+      {/* The legacy select SCSS (.react-select .react-select, .select-* size
+          blocks) only applies when the wrapper carries these classes, which
+          call sites historically passed by hand (or forgot to). SelectField
+          always sets them, so its selects are deterministically styled. */}
       <Select
         {...selectProps}
+        className={cn('react-select', selectProps.size)}
         inputId={inputId}
         data-test={dataTest}
         aria-invalid={hasError || undefined}

@@ -30,8 +30,6 @@ interface InputGroupProps {
   tooltip?: string
   tooltipPlace?: TooltipProps['place']
   unsaved?: boolean
-  // Render an arbitrary control instead of the default Input/textarea.
-  component?: ReactNode
   textarea?: boolean
   // Legacy: consumers pass truthy/falsy non-booleans (e.g. `name && name.length`);
   // coerced to a boolean before it reaches Input.
@@ -60,7 +58,6 @@ interface InputGroupProps {
 
 const InputGroup: FC<InputGroupProps> = ({
   className,
-  component,
   'data-test': dataTest,
   defaultValue,
   disabled,
@@ -125,54 +122,50 @@ const InputGroup: FC<InputGroupProps> = ({
       )}
 
       <div>
-        {component ? (
-          component
-        ) : (
-          <div>
-            {textarea ? (
-              <textarea
-                ref={(c) => {
-                  inputRef.current = c
-                }}
-                {...(restInputProps as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
-                disabled={disabled}
-                value={value}
-                defaultValue={defaultValue}
-                data-test={dataTest}
-                onChange={onChange}
-                id={id}
-                aria-invalid={hasError}
-                aria-describedby={hasError ? errorId : undefined}
-                placeholder={placeholder}
-                onBlur={onBlur}
-              />
-            ) : (
-              <Input
-                ref={(c) => {
-                  inputRef.current = c
-                }}
-                {...restInputProps}
-                isValid={
-                  isValid === null || isValid === undefined
-                    ? undefined
-                    : !!isValid
-                }
-                disabled={disabled}
-                defaultValue={defaultValue}
-                value={value}
-                data-test={dataTest}
-                onChange={onChange}
-                type={type || 'text'}
-                id={id}
-                aria-invalid={hasError}
-                aria-describedby={hasError ? errorId : undefined}
-                onBlur={onBlur}
-                placeholder={placeholder}
-                size={size}
-              />
-            )}
-          </div>
-        )}
+        <div>
+          {textarea ? (
+            <textarea
+              ref={(c) => {
+                inputRef.current = c
+              }}
+              {...(restInputProps as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
+              disabled={disabled}
+              value={value}
+              defaultValue={defaultValue}
+              data-test={dataTest}
+              onChange={onChange}
+              id={id}
+              aria-invalid={hasError}
+              aria-describedby={hasError ? errorId : undefined}
+              placeholder={placeholder}
+              onBlur={onBlur}
+            />
+          ) : (
+            <Input
+              ref={(c) => {
+                inputRef.current = c
+              }}
+              {...restInputProps}
+              isValid={
+                isValid === null || isValid === undefined
+                  ? undefined
+                  : !!isValid
+              }
+              disabled={disabled}
+              defaultValue={defaultValue}
+              value={value}
+              data-test={dataTest}
+              onChange={onChange}
+              type={type || 'text'}
+              id={id}
+              aria-invalid={hasError}
+              aria-describedby={hasError ? errorId : undefined}
+              onBlur={onBlur}
+              placeholder={placeholder}
+              size={size}
+            />
+          )}
+        </div>
       </div>
       <FieldError id={errorId} error={errorContent} />
     </div>

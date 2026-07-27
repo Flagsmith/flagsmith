@@ -144,6 +144,15 @@ module.exports = {
     'no-empty': 'off',
     'no-empty-pattern': 'off',
     'no-nested-ternary': 'error',
+    'no-restricted-syntax': [
+      'error',
+      {
+        'message':
+          'InputGroup no longer renders custom controls. Use SelectField for a labelled Select, or FieldLabel + FieldError for other controls.',
+        'selector':
+          "JSXOpeningElement[name.name='InputGroup'] JSXAttribute[name.name='component']",
+      },
+    ],
     'no-unused-vars': 'off',
     'no-var': 'error',
     'object-curly-spacing': ['error', 'always'],

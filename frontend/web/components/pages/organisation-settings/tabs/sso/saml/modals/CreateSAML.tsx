@@ -1,5 +1,7 @@
 import React, { FC, useEffect, useState } from 'react'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import InputGroup from 'components/base/forms/InputGroup'
+import SelectField from 'components/base/forms/SelectField'
 import Utils from 'common/utils/utils'
 import Switch from 'components/Switch'
 import ValueEditor from 'components/ValueEditor'
@@ -144,20 +146,20 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
         }}
         type='text'
       />
-      <InputGroup
-        className='mt-2 mb-4'
-        title='Allow IdP-initiated logins'
-        tooltip="Enable this to allow logins initiated by your identity provider. If disabled, users can only log in from Flagsmith's login page."
-        tooltipPlace='right'
-        component={
-          <Switch
-            checked={allowIdpInitiated || data?.allow_idp_initiated}
-            onChange={() => {
-              setAllowIdpInitiated(!allowIdpInitiated)
-            }}
-          />
-        }
-      />
+      <div className='form-group mt-2 mb-4'>
+        <FieldLabel
+          tooltip="Enable this to allow logins initiated by your identity provider. If disabled, users can only log in from Flagsmith's login page."
+          tooltipPlace='right'
+        >
+          Allow IdP-initiated logins
+        </FieldLabel>
+        <Switch
+          checked={allowIdpInitiated || data?.allow_idp_initiated}
+          onChange={() => {
+            setAllowIdpInitiated(!allowIdpInitiated)
+          }}
+        />
+      </div>
       <FormGroup className='mb-1'>
         <div className='mt-2 p-0'>
           <Row>
@@ -311,19 +313,16 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       useCreateSamlAttributeMappingMutation()
     return (
       <div className='create-feature-tab mt-3'>
-        <InputGroup
+        <SelectField
           title={'Flagsmith user attribute'}
-          component={
-            <Select
-              value={djangoAttributeName}
-              placeholder='Select a Flagsmith user attribute'
-              options={samlAttributes}
-              onChange={(m: samlAttributeType) => {
-                setDjangoAttributeName(m)
-              }}
-              className='mb-4 react-select'
-            />
-          }
+          value={djangoAttributeName}
+          placeholder='Select a Flagsmith user attribute'
+          options={samlAttributes}
+          onChange={(m) => {
+            if (m) {
+              setDjangoAttributeName(m)
+            }
+          }}
         />
         <InputGroup
           className='mt-2'

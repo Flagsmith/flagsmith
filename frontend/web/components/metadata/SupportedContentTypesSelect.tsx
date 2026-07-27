@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState } from 'react'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 import { ContentType, MetadataFieldModelField } from 'common/types/responses'
-import InputGroup from 'components/base/forms/InputGroup'
+import SelectField from 'components/base/forms/SelectField'
 import ContentTypesMetadataFieldTable from './ContentTypesMetadataFieldTable'
 
 type SupportedContentTypesSelectType = {
@@ -64,28 +64,25 @@ const SupportedContentTypesSelect: FC<SupportedContentTypesSelectType> = ({
 
   return (
     <>
-      <InputGroup
+      <SelectField
         title={'Entities'}
-        component={
-          <Select
-            placeholder='Select the Entity'
-            options={(supportedContentTypes || [])
-              .filter(
-                (v) =>
-                  v.model !== 'project' &&
-                  v.model !== 'organisation' &&
-                  !selectedContentTypes.some((x) => x.value === `${v.id}`),
-              )
-              .map((v: ContentType) => ({
-                label: v.model,
-                value: `${v.id}`,
-              }))}
-            onChange={(v: SelectContentTypesType) => {
-              setSelectedContentTypes((prevState) => [...prevState, v])
-            }}
-            className='mb-4 react-select'
-          />
-        }
+        placeholder='Select the Entity'
+        options={(supportedContentTypes || [])
+          .filter(
+            (v) =>
+              v.model !== 'project' &&
+              v.model !== 'organisation' &&
+              !selectedContentTypes.some((x) => x.value === `${v.id}`),
+          )
+          .map((v: ContentType) => ({
+            label: v.model,
+            value: `${v.id}`,
+          }))}
+        onChange={(v) => {
+          if (v) {
+            setSelectedContentTypes((prevState) => [...prevState, v])
+          }
+        }}
       />
       {!!selectedContentTypes.length && (
         <ContentTypesMetadataFieldTable

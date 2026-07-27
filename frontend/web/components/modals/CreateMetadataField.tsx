@@ -1,6 +1,7 @@
 import React, { FC, useEffect, useState } from 'react'
 import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
+import SelectField from 'components/base/forms/SelectField'
 import Button from 'components/base/forms/Button'
 import SupportedContentTypesSelect, {
   SelectContentTypesType,
@@ -290,19 +291,16 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
         title={'Description'}
         placeholder={"e.g. 'The JIRA Ticket Number associated with this flag'"}
       />
-      <InputGroup
+      <SelectField
         title={'Type'}
-        component={
-          <Select
-            value={typeValue}
-            placeholder='Select a field type'
-            options={metadataTypes}
-            onChange={(m: MetadataType) => {
-              setTypeValue(m)
-            }}
-            className='mb-4 react-select'
-          />
-        }
+        value={typeValue}
+        placeholder='Select a field type'
+        options={metadataTypes}
+        onChange={(m) => {
+          if (m) {
+            setTypeValue(m)
+          }
+        }}
       />
       <SupportedContentTypesSelect
         organisationId={organisationId}

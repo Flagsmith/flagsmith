@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import Setting from 'components/Setting'
 import RegexTester from 'components/RegexTester'
 import Utils from 'common/utils/utils'
@@ -120,46 +121,47 @@ export const FeatureNameValidation = ({
           transition: 'opacity 0.4s ease-in-out, height 0.4s ease-in-out',
         }}
       >
-        <InputGroup
-          title='Feature Name RegEx'
-          component={
-            <form onSubmit={handleSubmit}>
-              <Row>
-                <Flex>
-                  <Input
-                    ref={inputRef}
-                    value={featureNameRegex || ''}
-                    inputClassName='input input--wide'
-                    name='feature-name-regex'
-                    onClick={forceSelectionRange}
-                    onKeyUp={forceSelectionRange}
-                    showSuccess
-                    onChange={handleRegexChange}
-                    isValid={regexValid}
-                    type='text'
-                    placeholder='Regular Expression'
-                  />
-                </Flex>
-                <Button
-                  className='ml-2'
-                  type='submit'
-                  disabled={!regexValid || isSaving}
-                >
-                  Save
-                </Button>
-                <Button
-                  theme='text'
-                  type='button'
-                  onClick={openRegexTester}
-                  className='ml-2'
-                  disabled={!regexValid}
-                >
-                  Test RegEx
-                </Button>
-              </Row>
-            </form>
-          }
-        />
+        <div className='form-group'>
+          <FieldLabel htmlFor='feature-name-regex'>
+            Feature Name RegEx
+          </FieldLabel>
+          <form onSubmit={handleSubmit}>
+            <Row>
+              <Flex>
+                <Input
+                  ref={inputRef}
+                  value={featureNameRegex || ''}
+                  inputClassName='input input--wide'
+                  id='feature-name-regex'
+                  name='feature-name-regex'
+                  onClick={forceSelectionRange}
+                  onKeyUp={forceSelectionRange}
+                  showSuccess
+                  onChange={handleRegexChange}
+                  isValid={regexValid}
+                  type='text'
+                  placeholder='Regular Expression'
+                />
+              </Flex>
+              <Button
+                className='ml-2'
+                type='submit'
+                disabled={!regexValid || isSaving}
+              >
+                Save
+              </Button>
+              <Button
+                theme='text'
+                type='button'
+                onClick={openRegexTester}
+                className='ml-2'
+                disabled={!regexValid}
+              >
+                Test RegEx
+              </Button>
+            </Row>
+          </form>
+        </div>
       </div>
     </FormGroup>
   )

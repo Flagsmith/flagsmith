@@ -1,6 +1,7 @@
 import { SyntheticEvent, useEffect, useMemo, useState } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import InputGroup from 'components/base/forms/InputGroup'
+import SelectField from 'components/base/forms/SelectField'
 import Utils from 'common/utils/utils'
 import {
   StageActionBody,
@@ -128,7 +129,10 @@ const CreatePipelineStage = ({
     handleOnChange('actions', actions)
   }
 
-  const handleTriggerChange = (option: { value: string; label: string }) => {
+  const handleTriggerChange = (
+    option: { value: StageTriggerType; label: string } | null,
+  ) => {
+    if (!option) return
     handleOnChange('trigger', {
       trigger_body: null,
       trigger_type: option.value,
@@ -163,59 +167,37 @@ const CreatePipelineStage = ({
         />
       </FormGroup>
       <FormGroup>
-        <InputGroup
+        <SelectField
           title='Environment'
-          inputProps={{
-            error: hasNoFeatureVersioningEnvironments
+          error={
+            hasNoFeatureVersioningEnvironments
               ? 'No environments with feature versioning enabled'
-              : undefined,
-          }}
-          component={
-            <Select
-              styles={{
-                control: (base: any) => ({
-                  ...base,
-                  '&:hover': {
-                    borderColor: hasNoFeatureVersioningEnvironments
-                      ? '#ef4d56'
-                      : base.borderColor,
-                  },
-                  borderColor: hasNoFeatureVersioningEnvironments
-                    ? '#ef4d56'
-                    : base.borderColor,
-                  boxShadow: hasNoFeatureVersioningEnvironments
-                    ? '0 0 0 1px #ef4d56'
-                    : base.boxShadow,
-                }),
-              }}
-              value={Utils.toSelectedValue(
-                stageData.environment,
-                environmentWithFeatureVersioningOptions,
-              )}
-              isDisabled={isEnvironmentsLoading}
-              isLoading={isEnvironmentsLoading}
-              inputValue={searchInput}
-              onInputChange={setSearchInput}
-              options={environmentWithFeatureVersioningOptions}
-              onChange={(option: { value: number; label: string }) =>
-                handleOnChange('environment', option.value)
-              }
-            />
+              : undefined
           }
+          value={Utils.toSelectedValue(
+            stageData.environment,
+            environmentWithFeatureVersioningOptions,
+          )}
+          isDisabled={isEnvironmentsLoading}
+          isLoading={isEnvironmentsLoading}
+          inputValue={searchInput}
+          onInputChange={setSearchInput}
+          options={environmentWithFeatureVersioningOptions}
+          onChange={(option) => {
+            if (option) {
+              handleOnChange('environment', option.value)
+            }
+          }}
         />
       </FormGroup>
       <FormGroup>
-        <InputGroup
+        <SelectField
           title='Trigger'
-          component={
-            <Select
-              isDisabled={isEnvironmentsLoading}
-              isLoading={isEnvironmentsLoading}
-              value={selectedTrigger}
-              options={TRIGGER_OPTIONS}
-              onChange={handleTriggerChange}
-            />
-          }
+          isDisabled={isEnvironmentsLoading}
+          isLoading={isEnvironmentsLoading}
+          value={selectedTrigger}
+          options={TRIGGER_OPTIONS}
+          onChange={handleTriggerChange}
         />
       </FormGroup>
       {selectedTrigger?.value === StageTriggerType.WAIT_FOR && (
