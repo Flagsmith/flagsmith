@@ -1,6 +1,8 @@
-export const CLICKHOUSE_SETUP_SQL = `CREATE DATABASE IF NOT EXISTS flagsmith_exp;
+export const getClickHouseSetupSql = (
+  database: string,
+): string => `CREATE DATABASE IF NOT EXISTS ${database};
 
-CREATE TABLE IF NOT EXISTS flagsmith_exp.events
+CREATE TABLE IF NOT EXISTS ${database}.events
 (
     environment_key      LowCardinality(String),
     event                LowCardinality(String),

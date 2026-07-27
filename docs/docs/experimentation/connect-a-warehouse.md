@@ -52,43 +52,45 @@ The current status is shown on the warehouse card in **Environment Settings > Wa
 
 ## Bring your own ClickHouse
 
-Instead of the managed Flagsmith warehouse, you can store experiment events in your own **ClickHouse** instance, so
-experiment data never leaves your data platform.
+Instead of the managed Flagsmith warehouse, you can store experiment events in your own **ClickHouse** instance.
 
-1. Create the database and events table by running the following against your ClickHouse instance. This is a one-off
-   setup step; the same SQL is available to copy from the warehouse card in the Flagsmith dashboard.
+1. Create the database and events table by running the following against your ClickHouse instance, using an
+   administrative user (the statements require `CREATE DATABASE` and `CREATE TABLE` privileges). This is a one-off setup
+   step; the same SQL is available to copy from the warehouse card in the Flagsmith dashboard, adjusted to the database
+   name you configure.
 
-```sql
-CREATE DATABASE IF NOT EXISTS flagsmith_exp;
+   ```sql
+   CREATE DATABASE IF NOT EXISTS flagsmith_exp;
 
-CREATE TABLE IF NOT EXISTS flagsmith_exp.events
-(
-    environment_key      LowCardinality(String),
-    event                LowCardinality(String),
-    feature_name         LowCardinality(String),
-    timestamp            DateTime64(3),
-    collected_at         DateTime64(3),
-    identifier           String,
-    value                String                          CODEC(ZSTD(3)),
-    traits               String                          CODEC(ZSTD(3)),
-    metadata             String                          CODEC(ZSTD(3)),
-    sdk_language         LowCardinality(String),
-    sdk_version          LowCardinality(String),
+   CREATE TABLE IF NOT EXISTS flagsmith_exp.events
+   (
+       environment_key      LowCardinality(String),
+       event                LowCardinality(String),
+       feature_name         LowCardinality(String),
+       timestamp            DateTime64(3),
+       collected_at         DateTime64(3),
+       identifier           String,
+       value                String                          CODEC(ZSTD(3)),
+       traits               String                          CODEC(ZSTD(3)),
+       metadata             String                          CODEC(ZSTD(3)),
+       sdk_language         LowCardinality(String),
+       sdk_version          LowCardinality(String),
 
-    INDEX idx_identity identifier TYPE bloom_filter GRANULARITY 4,
+       INDEX idx_identity identifier TYPE bloom_filter GRANULARITY 4,
 
-    CONSTRAINT environment_key_not_empty CHECK environment_key != '',
-    CONSTRAINT event_not_empty           CHECK event != '',
-    CONSTRAINT timestamp_sane            CHECK timestamp > toDateTime64('2020-01-01 00:00:00', 3)
-)
-ENGINE = MergeTree
-PARTITION BY toYYYYMMDD(timestamp)
-ORDER BY (environment_key, event, feature_name, timestamp, identifier);
-```
+       CONSTRAINT environment_key_not_empty CHECK environment_key != '',
+       CONSTRAINT event_not_empty           CHECK event != '',
+       CONSTRAINT timestamp_sane            CHECK timestamp > toDateTime64('2020-01-01 00:00:00', 3)
+   )
+   ENGINE = MergeTree
+   PARTITION BY toYYYYMMDD(timestamp)
+   ORDER BY (environment_key, event, feature_name, timestamp, identifier);
+   ```
 
 2. Go to **Environment Settings > Warehouse**, select **ClickHouse** and enter your connection details: host, port (9440
-   by default, the native protocol port), database, username and password. The configured user needs `INSERT` permission
-   on `flagsmith_exp.events`.
+   by default, the native protocol port), database (`flagsmith_exp` by default), username and password. Use a
+   least-privileged runtime user rather than the administrative one — it needs `INSERT` and `SELECT` on the `events`
+   table in the configured database.
 3. Click **Test connection**. Once the test succeeds, save the connection.
 
 Connections use the ClickHouse native protocol, with TLS enabled by default.

@@ -10,6 +10,7 @@ import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 import WarehouseEventCodeHelp from './WarehouseEventCodeHelp'
 import WarehouseSetupSqlHelp from './WarehouseSetupSqlHelp'
+import { CLICKHOUSE_DEFAULTS } from './clickhouseConfig'
 import WarehouseStats from './WarehouseStats'
 
 type WarehouseConnectionCardProps = {
@@ -146,6 +147,12 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
       {connection.warehouse_type === 'clickhouse' && (
         <div className='mb-3'>
           <WarehouseSetupSqlHelp
+            database={
+              (connection.config &&
+                'database' in connection.config &&
+                connection.config.database) ||
+              CLICKHOUSE_DEFAULTS.database
+            }
             showInitially={!connection.total_events_received}
           />
         </div>

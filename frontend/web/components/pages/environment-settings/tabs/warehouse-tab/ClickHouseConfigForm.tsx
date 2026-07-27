@@ -4,6 +4,7 @@ import Input from 'components/base/forms/Input'
 import Switch from 'components/Switch'
 import ErrorMessage from 'components/ErrorMessage'
 import FieldError from 'components/base/forms/FieldError'
+import WarehouseSetupSqlHelp from './WarehouseSetupSqlHelp'
 import WarningMessage from 'components/WarningMessage'
 import { ClickHouseConfig } from 'common/types/responses'
 import { useTestWarehouseConnectionConfigMutation } from 'common/services/useWarehouseConnection'
@@ -185,7 +186,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setField(setDatabase)(e.target.value)
               }
-              placeholder='flagsmith'
+              placeholder='flagsmith_exp'
             />
           </div>
         </div>
@@ -229,6 +230,10 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
             </label>
           </div>
         </div>
+
+        <WarehouseSetupSqlHelp
+          database={database.trim() || CLICKHOUSE_DEFAULTS.database}
+        />
 
         {error && <ErrorMessage error={getWarehouseErrorMessage(isEdit)} />}
 

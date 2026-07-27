@@ -4,16 +4,19 @@ import CalloutBar from 'components/CalloutBar'
 import Highlight from 'components/Highlight'
 import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
-import { CLICKHOUSE_SETUP_SQL } from './clickhouseSetupSql'
+import { getClickHouseSetupSql } from './clickhouseSetupSql'
 
 type WarehouseSetupSqlHelpProps = {
+  database: string
   showInitially?: boolean
 }
 
 const WarehouseSetupSqlHelp: FC<WarehouseSetupSqlHelpProps> = ({
+  database,
   showInitially,
 }) => {
   const [visible, setVisible] = useState(!!showInitially)
+  const sql = getClickHouseSetupSql(database)
 
   return (
     <div>
@@ -27,11 +30,11 @@ const WarehouseSetupSqlHelp: FC<WarehouseSetupSqlHelpProps> = ({
       {visible && (
         <div className='hljs-container mt-2 mb-2'>
           <Highlight forceExpanded preventEscape className='sql'>
-            {CLICKHOUSE_SETUP_SQL}
+            {sql}
           </Highlight>
           <div className='flex-column hljs-docs'>
             <Button
-              onClick={() => Utils.copyToClipboard(CLICKHOUSE_SETUP_SQL)}
+              onClick={() => Utils.copyToClipboard(sql)}
               theme='primary'
               size='xSmall'
             >
