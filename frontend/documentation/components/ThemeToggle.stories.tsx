@@ -8,7 +8,7 @@ const meta: Meta<typeof ThemeToggle> = {
     docs: {
       description: {
         component:
-          'Always-visible theme control: an icon button showing the resolved theme, opening a Light / Dark / System menu. Selecting an option flips the theme live (including this Storybook canvas) and persists it.',
+          'One-click light/dark toggle (the icon shows what you switch to). With no stored choice the theme follows the OS; the first click pins an explicit preference. Clicking flips this Storybook canvas live.',
       },
     },
     layout: 'centered',

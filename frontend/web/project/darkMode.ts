@@ -1,10 +1,9 @@
 import { useSyncExternalStore } from 'react'
 import { storageGet, storageSet } from 'common/safeLocalStorage'
 
-export type ThemeSetting = 'light' | 'dark' | 'system'
-
+// 'light' | 'dark' once the user has explicitly chosen.
 const THEME_KEY = 'theme'
-// Pre-theme-setting storage: 'true' | 'false' under 'dark_mode'.
+// Pre-theme storage: 'true' | 'false' under 'dark_mode'.
 const LEGACY_KEY = 'dark_mode'
 
 const media =
@@ -12,21 +11,19 @@ const media =
     ? window.matchMedia('(prefers-color-scheme: dark)')
     : null
 
-export const getThemeSetting = (): ThemeSetting => {
+const getStoredChoice = (): 'light' | 'dark' | null => {
   const stored = storageGet(THEME_KEY)
-  if (stored === 'light' || stored === 'dark' || stored === 'system') {
-    return stored
-  }
+  if (stored === 'light' || stored === 'dark') return stored
   const legacy = storageGet(LEGACY_KEY)
   if (legacy === 'true') return 'dark'
-  // No stored preference defaults to light, matching the previous behaviour;
-  // 'system' is opt-in so existing users' themes do not flip on deploy.
-  return 'light'
+  if (legacy === 'false') return 'light'
+  return null
 }
 
+// An explicit choice wins; without one the OS preference decides.
 export const getDarkMode = (): boolean => {
-  const setting = getThemeSetting()
-  return setting === 'system' ? !!media?.matches : setting === 'dark'
+  const choice = getStoredChoice()
+  return choice ? choice === 'dark' : !!media?.matches
 }
 
 const listeners = new Set<() => void>()
@@ -42,14 +39,9 @@ const apply = () => {
   listeners.forEach((listener) => listener())
 }
 
-export const setThemeSetting = (setting: ThemeSetting) => {
-  storageSet(THEME_KEY, setting)
-  apply()
-}
-
-// Back-compat boolean setter (account settings switch, legacy callers).
 export const setDarkMode = (enabled: boolean) => {
-  setThemeSetting(enabled ? 'dark' : 'light')
+  storageSet(THEME_KEY, enabled ? 'dark' : 'light')
+  apply()
 }
 
 const subscribe = (listener: () => void) => {
@@ -62,14 +54,13 @@ const subscribe = (listener: () => void) => {
 // Reactive theme state; all theme UI (nav toggle, settings switch) shares it
 // so no control goes stale when another one changes the theme.
 export const useTheme = () => {
-  const setting = useSyncExternalStore(subscribe, getThemeSetting)
   const isDark = useSyncExternalStore(subscribe, getDarkMode)
-  return { isDark, setThemeSetting, setting }
+  return { isDark, setDarkMode }
 }
 
-// Follow OS appearance changes while in system mode.
+// Follow OS appearance changes until the user makes an explicit choice.
 media?.addEventListener?.('change', () => {
-  if (getThemeSetting() === 'system') {
+  if (!getStoredChoice()) {
     apply()
   }
 })
