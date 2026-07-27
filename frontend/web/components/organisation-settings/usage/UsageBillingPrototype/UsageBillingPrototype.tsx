@@ -11,7 +11,13 @@ import {
   YAxis,
 } from 'recharts'
 import { Res } from 'common/types/responses'
-import { colorTextSecondary } from 'common/theme/tokens'
+import {
+  colorSurfaceAction,
+  colorTextDanger,
+  colorTextSecondary,
+  colorTextSuccess,
+  colorTextWarning,
+} from 'common/theme/tokens'
 import './UsageBillingPrototype.scss'
 
 type UsageBillingPrototypeProps = {
@@ -19,10 +25,11 @@ type UsageBillingPrototypeProps = {
   maxApiCalls?: number | null
 }
 
-const ACCENT = '#6837fc'
-const DANGER = '#ef4d56'
-const SUCCESS = '#27ab95'
-const WARNING = '#f79009'
+// Semantic tokens (dark-mode aware via the --color-* vars).
+const ACCENT = colorSurfaceAction
+const DANGER = colorTextDanger
+const SUCCESS = colorTextSuccess
+const WARNING = colorTextWarning
 
 // Compact number formatting to match the design (1.24M / 68.4k).
 const compact = (n: number): string => {
@@ -309,7 +316,7 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
           </span>
         </div>
         <div className='usage-proto__breakdown'>
-          {breakdown.map((row, i) => (
+          {breakdown.map((row) => (
             <div className='usage-proto__row' key={row.op}>
               <div className='usage-proto__row-label'>
                 <div>{row.label}</div>
@@ -318,11 +325,7 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
               <div className='usage-proto__bar-track'>
                 <div
                   className='usage-proto__bar-fill'
-                  style={{
-                    background:
-                      [ACCENT, '#8b5cf6', '#a78bfa', '#c4b5fd'][i] ?? ACCENT,
-                    width: `${row.width}%`,
-                  }}
+                  style={{ background: ACCENT, width: `${row.width}%` }}
                 />
               </div>
               <div className='usage-proto__row-value'>{compact(row.value)}</div>

@@ -1,6 +1,10 @@
 .usage-proto {
-  $border: var(--hr-border-color, rgba(101, 109, 123, 0.16));
-  $muted: var(--text-icon-grey, #656d7b);
+  $border: var(--color-border-default);
+  $muted: var(--color-text-secondary);
+  $surface: var(--color-surface-default);
+  $track: var(--color-surface-muted);
+
+  color: var(--color-text-default);
 
   &__strip {
     display: flex;
@@ -14,7 +18,7 @@
   }
 
   &__stub {
-    color: var(--text-icon-light-grey, #9da4ae);
+    color: var(--color-text-tertiary);
     font-style: italic;
     font-size: 12px;
   }
@@ -24,7 +28,7 @@
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 16px;
-    background: var(--panel-bg, #ffffff);
+    background: $surface;
   }
 
   &__panel-head {
@@ -77,7 +81,7 @@
   &__track {
     height: 14px;
     border-radius: 100px;
-    background: var(--bg-light300, #eff1f4);
+    background: $track;
     overflow: hidden;
   }
 
@@ -91,7 +95,7 @@
     top: 4px;
     bottom: 0;
     width: 2px;
-    background: rgba(101, 109, 123, 0.25);
+    background: var(--color-border-strong);
     transform: translateX(-50%);
   }
 
@@ -116,7 +120,7 @@
     border: 1px solid $border;
     border-radius: 8px;
     padding: 16px;
-    background: var(--panel-bg, #ffffff);
+    background: $surface;
   }
 
   &__tile-head {
@@ -145,13 +149,13 @@
     white-space: nowrap;
 
     &--success {
-      color: #27ab95;
-      background: rgba(39, 171, 149, 0.12);
+      color: var(--color-text-success);
+      background: var(--color-surface-success);
     }
 
     &--estimate {
-      color: $muted;
-      background: var(--bg-light300, #eff1f4);
+      color: var(--color-text-secondary);
+      background: var(--color-surface-muted);
     }
   }
 
@@ -181,7 +185,7 @@
     flex: 1;
     height: 8px;
     border-radius: 100px;
-    background: var(--bg-light300, #eff1f4);
+    background: $track;
     overflow: hidden;
   }
 
@@ -205,7 +209,7 @@
     margin-top: 8px;
     padding: 12px 16px;
     border-radius: 6px;
-    background: var(--bg-light200, #fafafb);
+    background: var(--color-surface-subtle);
     font-size: 13px;
     color: $muted;
   }
