@@ -1,4 +1,5 @@
 import { FC, ReactNode, useEffect, useMemo, useState } from 'react'
+import Icon from 'components/icons/Icon'
 import OrganisationStore from 'common/stores/organisation-store'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import FeatureListStore from 'common/stores/feature-list-store'
@@ -25,8 +26,6 @@ import Utils from 'common/utils/utils'
 import moment from 'moment'
 import ProjectStore from 'common/stores/project-store'
 import { useHasPermission } from 'common/providers/Permission'
-import { IonIcon } from '@ionic/react'
-import { close } from 'ionicons/icons'
 import Constants from 'common/constants'
 import Button from 'components/base/forms/Button'
 import NewVersionWarning from 'components/NewVersionWarning'
@@ -621,8 +620,8 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                       {u.first_name} {u.last_name}
                     </span>
                     {!hasApprovals && (
-                      <span className='chip-icon ion'>
-                        <IonIcon icon={close} />
+                      <span className='chip-icon'>
+                        <Icon name='close' width={18} />
                       </span>
                     )}
                   </Row>
@@ -664,8 +663,8 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                 >
                   <span className='font-weight-bold'>{g.name}</span>
                   {!hasApprovals && (
-                    <span className='chip-icon ion'>
-                      <IonIcon icon={close} />
+                    <span className='chip-icon'>
+                      <Icon name='close' width={18} />
                     </span>
                   )}
                 </Row>

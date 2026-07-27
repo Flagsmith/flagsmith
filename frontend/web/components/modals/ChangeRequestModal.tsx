@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
+import Icon from 'components/icons/Icon'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import UserSelect from 'components/UserSelect'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
@@ -6,8 +7,6 @@ import Button from 'components/base/forms/Button'
 import MyGroupsSelect from 'components/MyGroupsSelect'
 import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
 import DateSelect, { DateSelectProps } from 'components/DateSelect'
-import { close } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 import InfoMessage from 'components/InfoMessage'
 import AccountStore from 'common/stores/account-store'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -236,8 +235,8 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
                               <span className='font-weight-bold'>
                                 {getUserDisplayName(u)}
                               </span>
-                              <span className='chip-icon ion'>
-                                <IonIcon icon={close} />
+                              <span className='chip-icon'>
+                                <Icon name='close' width={18} />
                               </span>
                             </Row>
                           ))}
@@ -259,8 +258,8 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
                             style={{ marginBottom: 4, marginTop: 4 }}
                           >
                             <span className='font-weight-bold'>{u.name}</span>
-                            <span className='chip-icon ion'>
-                              <IonIcon icon={close} />
+                            <span className='chip-icon'>
+                              <Icon name='close' width={18} />
                             </span>
                           </Row>
                         ))}

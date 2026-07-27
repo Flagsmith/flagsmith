@@ -1,6 +1,4 @@
 import React, { PureComponent } from 'react'
-import { close as closeIcon } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 import data from 'common/data/base/_data'
 import AppActions from 'common/dispatcher/app-actions'
 import OrganisationStore from 'common/stores/organisation-store'
@@ -226,11 +224,8 @@ export class CreateAPIKey extends PureComponent {
                           className='chip'
                         >
                           <span className='font-weight-bold'>{r.name}</span>
-                          <span className='chip-icon ion'>
-                            <IonIcon
-                              icon={closeIcon}
-                              style={{ fontSize: '13px' }}
-                            />
+                          <span className='chip-icon'>
+                            <Icon name='close' width={18} />
                           </span>
                         </Row>
                       ))}

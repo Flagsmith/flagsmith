@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { IonIcon } from '@ionic/react'
-import { close as closeIcon } from 'ionicons/icons'
+import Icon from 'components/icons/Icon'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
@@ -338,8 +337,8 @@ const CreateEnvironmentPage: React.FC = () => {
                                           className='chip mr-2'
                                         >
                                           <span>{getUserDisplayName(u)}</span>
-                                          <span className='chip-icon ion'>
-                                            <IonIcon icon={closeIcon} />
+                                          <span className='chip-icon'>
+                                            <Icon name='close' width={18} />
                                           </span>
                                         </Row>
                                       ))}
@@ -390,8 +389,8 @@ const CreateEnvironmentPage: React.FC = () => {
                                           className='chip mr-2'
                                         >
                                           <span>{r.name}</span>
-                                          <span className='chip-icon ion'>
-                                            <IonIcon icon={closeIcon} />
+                                          <span className='chip-icon'>
+                                            <Icon name='close' width={18} />
                                           </span>
                                         </Row>
                                       ))}

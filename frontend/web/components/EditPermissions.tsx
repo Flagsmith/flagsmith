@@ -1,8 +1,7 @@
 import React, { FC, forwardRef, useCallback, useEffect, useState } from 'react'
+import Icon from './icons/Icon'
 import FieldLabel from './base/forms/FieldLabel'
 import { find } from 'lodash'
-import { close as closeIcon } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 import _data from 'common/data/base/_data'
 import {
   AvailablePermission,
@@ -949,11 +948,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                         style={{ marginBottom: 4, marginTop: 4 }}
                       >
                         <span className='font-weight-bold'>{r.name}</span>
-                        <span className='chip-icon ion'>
-                          <IonIcon
-                            icon={closeIcon}
-                            style={{ fontSize: '13px' }}
-                          />
+                        <span className='chip-icon'>
+                          <Icon name='close' width={18} />
                         </span>
                       </Row>
                     ))}
