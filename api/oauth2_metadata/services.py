@@ -28,6 +28,7 @@ def validate_redirect_uri(uri: str) -> str:
     """
     try:
         parsed = urlparse(uri)
+        _ = parsed.port  # Raises on malformed or out-of-range ports.
     except ValueError as e:
         # e.g. malformed IPv6 authority such as https://[::1
         raise ValidationError(f"Invalid URI: {uri}") from e
