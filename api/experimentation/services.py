@@ -803,6 +803,24 @@ def mark_warehouse_pending_connection(
     return connection
 
 
+def mark_warehouse_delivery_failed(
+    connection: WarehouseConnection,
+    detail: str,
+) -> None:
+    connection.status = WarehouseConnectionStatus.ERRORED
+    connection.status_detail = detail[:255]
+    connection.save(update_fields=["status", "status_detail"])
+
+
+def mark_warehouse_delivery_succeeded(connection: WarehouseConnection) -> None:
+    if connection.status == WarehouseConnectionStatus.CONNECTED:
+        return
+
+    connection.status = WarehouseConnectionStatus.CONNECTED
+    connection.status_detail = None
+    connection.save(update_fields=["status", "status_detail"])
+
+
 class InternalAddressError(Exception):
     pass
 

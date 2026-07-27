@@ -47,6 +47,7 @@ dependencies = [
     "flagsmith-sql-flag-engine>=0.2.0,<0.3.0",
     "django-clickhouse-backend>=1.4,<2.0",
     "clickhouse-driver==0.2.11",
+    "clickhouse-connect>=1.6.0,<2.0.0",
     "boto3>=1.35.95,<1.36.0",
     "smart-open[s3]>=7.0.0,<8.0.0",
     "slack-sdk>=3.9.0,<3.10.0",
