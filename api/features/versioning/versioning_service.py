@@ -609,7 +609,7 @@ def _get_feature_states_queryset(
     ).prefetch_related(*additional_prefetch_related_args)
 
 
-def _exclude_superseded_versions(
+def _exclude_superseded_versions(  # TODO incorporate into get_live_feature_states https://github.com/Flagsmith/flagsmith/issues/8127
     queryset: QuerySet[FeatureState],
 ) -> QuerySet[FeatureState]:
     """
