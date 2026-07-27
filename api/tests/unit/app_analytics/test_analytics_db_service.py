@@ -708,6 +708,39 @@ def test_get_usage_data__current_billing_period__passes_correct_date_range(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_usage_data__current_billing_period_annual_plan__passes_correct_date_range(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    organisation: Organisation,
+    cache: OrganisationSubscriptionInformationCache,
+) -> None:
+    # Given
+    # A billing term that started more than 12 months ago (annual plan): the
+    # months-only delta used to drop the years component and land a year early.
+    settings.USE_POSTGRES_FOR_ANALYTICS = True
+    cache.current_billing_term_starts_at = datetime(
+        2021, 12, 30, 9, 9, 47, 325132, tzinfo=UTC
+    )
+    cache.save()
+    mocked_get_usage_data_from_local_db = mocker.patch(
+        "app_analytics.analytics_db_service.get_usage_data_from_local_db", autospec=True
+    )
+
+    # When
+    get_usage_data(organisation, period=CURRENT_BILLING_PERIOD)
+
+    # Then the current period start is this month, not a year ago.
+    mocked_get_usage_data_from_local_db.assert_called_once_with(
+        organisation=organisation,
+        environment_id=None,
+        project_id=None,
+        date_start=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=UTC),
+        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=UTC),
+        labels_filter=None,
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_usage_data__previous_billing_period__passes_correct_date_range(
     mocker: MockerFixture,
     settings: SettingsWrapper,
