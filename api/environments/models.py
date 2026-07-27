@@ -535,10 +535,10 @@ class Environment(
         if not segments:
             segments = list(
                 Segment.live_objects.filter(
-                    feature_segments__feature_states__environment=self
-                )
-                .distinct()
-                .prefetch_related(
+                    id__in=FeatureSegment.objects.filter(
+                        feature_states__environment=self
+                    ).values("segment_id")
+                ).prefetch_related(
                     "rules",
                     "rules__conditions",
                     "rules__rules",
