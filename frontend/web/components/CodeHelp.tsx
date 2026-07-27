@@ -144,7 +144,6 @@ const SnippetItem: FC<SnippetItemProps> = ({
       />
       <Highlight
         forceExpanded
-        preventEscape
         className={
           Constants.codeHelp.keys[
             languageKey as keyof typeof Constants.codeHelp.keys

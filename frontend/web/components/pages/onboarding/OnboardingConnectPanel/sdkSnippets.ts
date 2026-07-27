@@ -1,11 +1,8 @@
 // Snippets for every SDK we support, sourced from the maintained
 // `Constants.codeHelp` (the same install/init the rest of the app uses, so
-// they don't drift). Two adaptations for this page:
-//   1. codeHelp snippets are authored for innerHTML rendering, so they carry
-//      HTML entities (&lt; etc.). We render via <Highlight> (escaping on), so
-//      we unescape first.
-//   2. They use a placeholder flag name; we swap it for the user's real flag,
-//      so the snippet references the flag this onboarding actually created.
+// they don't drift). One adaptation for this page: codeHelp uses a placeholder
+// flag name; we swap it for the user's real flag, so the snippet references
+// the flag this onboarding actually created.
 // The SDK list itself (labels, logos, codeHelp keys) lives in ./sdkLangs.
 import Constants from 'common/constants'
 import { SdkLang } from './sdkLangs'
@@ -13,14 +10,6 @@ import { SdkLang } from './sdkLangs'
 // Mirrors Constants' `keywords.FEATURE_NAME`. Kept local (keywords isn't
 // exported); if that placeholder ever changes, update this too.
 const PLACEHOLDER_FLAG = 'my_cool_feature'
-
-const unescapeHtml = (s: string): string =>
-  s
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&#39;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&amp;/g, '&')
 
 export type SdkSnippet = {
   install: string
@@ -55,12 +44,12 @@ export const getSdkSnippet = (
     string,
     string
   >
-  const wire = unescapeHtml(inits[lang.initKey ?? lang.codeHelpKey] ?? '')
+  const wire = (inits[lang.initKey ?? lang.codeHelpKey] ?? '')
     .split(PLACEHOLDER_FLAG)
     .join(featureName)
   return {
     language: lang.language,
-    ...parseInstall(unescapeHtml(installs[lang.codeHelpKey] ?? '')),
+    ...parseInstall(installs[lang.codeHelpKey] ?? ''),
     wire: wire.trim(),
   }
 }

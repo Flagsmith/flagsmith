@@ -8,7 +8,7 @@ import { FlagsmithProvider } from '@flagsmith/flagsmith/react';
 
 export default function App({ Component, pageProps, flagsmithState } {
   return (
-    &lt;FlagsmithProvider
+    <FlagsmithProvider
       serverState={flagsmithState}
       options={{
         environmentID: "${envId}",${
@@ -17,9 +17,9 @@ export default function App({ Component, pageProps, flagsmithState } {
     : ''
 }
       }}
-      flagsmith={flagsmith}&gt;
-        &lt;Component {...pageProps} />
-    &lt;/FlagsmithProvider>
+      flagsmith={flagsmith}>
+        <Component {...pageProps} />
+    </FlagsmithProvider>
   );
 }
 
@@ -43,6 +43,6 @@ export default function HomePage() {
   const ${FEATURE_NAME} = flags.${FEATURE_NAME}.enabled
   const ${FEATURE_NAME_ALT} = flags.${FEATURE_NAME_ALT}.value
   return (
-    &lt;>{...}&lt;/>
+    <>{...}</>
   );
 }`

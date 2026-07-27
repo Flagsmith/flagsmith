@@ -134,7 +134,7 @@ class Highlight extends React.Component {
     }
 
     const raw = this.getRawHtml()
-    const html = this.props.preventEscape ? raw : escapeHtml(raw)
+    const html = escapeHtml(raw)
     return (
       <div className={this.state.expandable ? 'expandable' : ''}>
         <pre
