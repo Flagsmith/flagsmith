@@ -134,6 +134,14 @@
     font-weight: 600;
   }
 
+  // The 100% marker sits at the track's right edge, so right-align its label
+  // to keep it inside the panel instead of overflowing.
+  &__marker--end &__marker-label {
+    left: auto;
+    right: 0;
+    transform: none;
+  }
+
   &__tiles {
     display: flex;
     gap: 16px;

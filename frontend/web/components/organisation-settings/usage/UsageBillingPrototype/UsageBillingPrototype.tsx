@@ -244,7 +244,10 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
               Notify 75%
             </span>
           </span>
-          <span className='usage-proto__marker' style={{ left: '100%' }}>
+          <span
+            className='usage-proto__marker usage-proto__marker--end'
+            style={{ left: '100%' }}
+          >
             <span
               className='usage-proto__marker-label'
               style={{ color: DANGER }}
