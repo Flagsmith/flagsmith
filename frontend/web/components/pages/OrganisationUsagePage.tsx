@@ -13,7 +13,6 @@ const OrganisationUsagePage: FC = () => {
   const { organisationId } = useRouteContext()
 
   const [project, setProject] = useState<string | undefined>()
-  const [environment, setEnvironment] = useState<string | undefined>()
 
   const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
   const orgSubscription = AccountStore.getOrganisation()?.subscription
@@ -35,7 +34,6 @@ const OrganisationUsagePage: FC = () => {
   const { data: filteredData } = useGetOrganisationUsageQuery(
     {
       billing_period: billingPeriod,
-      environmentId: environment,
       organisationId: organisationId || 0,
       projectId: project,
     },
@@ -53,8 +51,6 @@ const OrganisationUsagePage: FC = () => {
         organisationId={organisationId || 0}
         project={project}
         setProject={setProject}
-        environment={environment}
-        setEnvironment={setEnvironment}
         billingPeriod={billingPeriod}
         setBillingPeriod={setBillingPeriod}
         isOnFreePlanPeriods={isOnFreePlanPeriods}
