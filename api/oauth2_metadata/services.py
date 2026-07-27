@@ -26,7 +26,11 @@ def validate_redirect_uri(uri: str) -> str:
       for native app clients (RFC 8252 §7.1), excluding schemes a browser
       treats as executable
     """
-    parsed = urlparse(uri)
+    try:
+        parsed = urlparse(uri)
+    except ValueError as e:
+        # e.g. malformed IPv6 authority such as https://[::1
+        raise ValidationError(f"Invalid URI: {uri}") from e
 
     if not parsed.scheme or not (parsed.netloc or parsed.path):
         raise ValidationError(f"Invalid URI: {uri}")
@@ -41,6 +45,9 @@ def validate_redirect_uri(uri: str) -> str:
 
     if scheme in FORBIDDEN_REDIRECT_URI_SCHEMES:
         raise ValidationError(f"Scheme is not permitted in redirect URIs: {uri}")
+
+    if scheme in ("http", "https") and not parsed.hostname:
+        raise ValidationError(f"Invalid URI: {uri}")
 
     is_localhost = parsed.hostname in ("localhost", "127.0.0.1", "::1")
 

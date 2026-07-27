@@ -9,6 +9,8 @@ from oauth2_metadata.services import validate_redirect_uri
     [
         ("not-a-uri", "Invalid URI"),
         ("claude:", "Invalid URI"),
+        ("https://[::1", "Invalid URI"),
+        ("https:///callback", "Invalid URI"),
         ("https://*.example.com/callback", "Wildcards"),
         ("https://example.com/callback#frag", "Fragment"),
         ("http://example.com/callback", "HTTPS is required"),
@@ -20,6 +22,8 @@ from oauth2_metadata.services import validate_redirect_uri
     ids=[
         "invalid-uri",
         "scheme-only",
+        "malformed-ipv6",
+        "https-no-host",
         "wildcard",
         "fragment",
         "http-non-localhost",
