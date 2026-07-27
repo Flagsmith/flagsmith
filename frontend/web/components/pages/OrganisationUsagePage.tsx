@@ -6,7 +6,6 @@ import AccountStore from 'common/stores/account-store'
 import { Req } from 'common/types/requests'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
-import UsageChartFilters from 'components/organisation-settings/usage/components/UsageChartFilters'
 import UsageBillingPrototype from 'components/organisation-settings/usage/UsageBillingPrototype'
 
 const OrganisationUsagePage: FC = () => {
@@ -46,20 +45,18 @@ const OrganisationUsagePage: FC = () => {
   )
 
   return (
-    <div className='app-container px-3 px-md-4 pb-4'>
-      <UsageChartFilters
+    <div className='px-3 px-md-4 pb-4'>
+      {/* SPIKE: billing-aligned usage redesign prototype. */}
+      <UsageBillingPrototype
+        data={orgData}
+        breakdownData={filteredData}
+        maxApiCalls={subscriptionMeta?.max_api_calls}
         organisationId={organisationId || 0}
         project={project}
         setProject={setProject}
         billingPeriod={billingPeriod}
         setBillingPeriod={setBillingPeriod}
         isOnFreePlanPeriods={isOnFreePlanPeriods}
-      />
-      {/* SPIKE: billing-aligned usage redesign prototype. */}
-      <UsageBillingPrototype
-        data={orgData}
-        breakdownData={filteredData}
-        maxApiCalls={subscriptionMeta?.max_api_calls}
       />
     </div>
   )

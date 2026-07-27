@@ -18,6 +18,8 @@ import {
   colorTextSuccess,
   colorTextWarning,
 } from 'common/theme/tokens'
+import ProjectFilter from 'components/ProjectFilter'
+import { billingPeriods, freePeriods, Req } from 'common/types/requests'
 import './UsageBillingPrototype.scss'
 
 type UsageBillingPrototypeProps = {
@@ -26,6 +28,14 @@ type UsageBillingPrototypeProps = {
   // Project/environment-filtered usage: drives the request-type breakdown.
   breakdownData?: Res['organisationUsage'] | undefined
   maxApiCalls?: number | null
+  organisationId: number
+  project: string | undefined
+  setProject: (project: string | undefined) => void
+  billingPeriod: Req['getOrganisationUsage']['billing_period']
+  setBillingPeriod: (
+    period: Req['getOrganisationUsage']['billing_period'],
+  ) => void
+  isOnFreePlanPeriods: boolean
 }
 
 // Semantic tokens (dark-mode aware via the --color-* vars).
@@ -63,9 +73,15 @@ type Tile = {
  * diff doubles as the backend ask.
  */
 const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
+  billingPeriod,
   breakdownData,
   data,
+  isOnFreePlanPeriods,
   maxApiCalls,
+  organisationId,
+  project,
+  setBillingPeriod,
+  setProject,
 }) => {
   const total = data?.totals?.total ?? 0
   const limit = maxApiCalls ?? 0
@@ -158,6 +174,27 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
 
   return (
     <div className='usage-proto mb-4'>
+      {/* Page header: title + period/project filters (matches design) */}
+      <div className='usage-proto__header'>
+        <h4 className='usage-proto__title'>Usage</h4>
+        <div className='usage-proto__header-filters'>
+          <div className='usage-proto__select'>
+            <Select
+              onChange={(v: any) => setBillingPeriod(v.value)}
+              value={billingPeriods.find((v) => v.value === billingPeriod)}
+              options={isOnFreePlanPeriods ? freePeriods : billingPeriods}
+            />
+          </div>
+          <div className='usage-proto__select'>
+            <ProjectFilter
+              showAll
+              organisationId={organisationId}
+              onChange={setProject}
+              value={project}
+            />
+          </div>
+        </div>
+      </div>
       {/* Billing-period strip */}
       <div className='usage-proto__strip'>
         <span>

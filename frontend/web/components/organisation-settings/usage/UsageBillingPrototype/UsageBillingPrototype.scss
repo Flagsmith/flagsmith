@@ -5,6 +5,31 @@
   $track: var(--color-surface-muted);
 
   color: var(--color-text-default);
+  max-width: 1280px;
+  margin: 0 auto;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  &__header-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__select {
+    min-width: 210px;
+  }
 
   &__strip {
     display: flex;
