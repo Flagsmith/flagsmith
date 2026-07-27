@@ -265,9 +265,10 @@ export class CreateAPIKey extends PureComponent {
               </>
               <Flex>
                 <div>
-                  <label>Expiry</label>
+                  <label htmlFor='api-key-expiry'>Expiry</label>
                 </div>
                 <DateSelect
+                  id='api-key-expiry'
                   onChange={(e) => {
                     this.setState({
                       expiry_date: e?.toISOString(),
