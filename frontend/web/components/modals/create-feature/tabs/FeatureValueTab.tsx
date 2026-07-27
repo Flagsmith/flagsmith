@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
-import InputGroup from 'components/base/forms/InputGroup'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import ValueEditor from 'components/ValueEditor'
 import Constants from 'common/constants'
 import { VariationOptions } from 'components/mv/VariationOptions'
@@ -378,30 +378,29 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 
       {showValue && (
         <FormGroup className='mb-4'>
-          <InputGroup
-            component={
-              <ValueEditor
-                data-test='featureValue'
-                name='featureValue'
-                className={`full-width${hasVariations ? ' code-medium' : ''}`}
-                value={`${
-                  typeof initial_value === 'undefined' || initial_value === null
-                    ? ''
-                    : initial_value
-                }`}
-                onChange={(e: any) => {
-                  const feature_state_value = Utils.getTypedValue(
-                    Utils.safeParseEventValue(e),
-                  )
-                  onEnvironmentFlagChange({ feature_state_value })
-                }}
-                disabled={isDisabled}
-                placeholder="e.g. 'big' "
-              />
-            }
-            tooltip={getValueTooltip(hasVariations, isEdit)}
-            title={valueTitle}
-          />
+          <div className='form-group'>
+            <FieldLabel tooltip={getValueTooltip(hasVariations, isEdit)}>
+              {valueTitle}
+            </FieldLabel>
+            <ValueEditor
+              data-test='featureValue'
+              name='featureValue'
+              className={`full-width${hasVariations ? ' code-medium' : ''}`}
+              value={`${
+                typeof initial_value === 'undefined' || initial_value === null
+                  ? ''
+                  : initial_value
+              }`}
+              onChange={(e: any) => {
+                const feature_state_value = Utils.getTypedValue(
+                  Utils.safeParseEventValue(e),
+                )
+                onEnvironmentFlagChange({ feature_state_value })
+              }}
+              disabled={isDisabled}
+              placeholder="e.g. 'big' "
+            />
+          </div>
           {canCompareValue && (
             <div className='text-end mt-2'>
               <Button

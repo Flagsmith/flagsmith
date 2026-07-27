@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import PageTitle from 'components/PageTitle'
-import InputGroup from 'components/base/forms/InputGroup'
 import { useRouteContext } from 'components/providers/RouteContext'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import Icon from 'components/icons/Icon'
@@ -78,26 +78,27 @@ const ReleaseManagerPage: FC = () => {
       </PageTitle>
 
       <div className='mb-4'>
-        <InputGroup
-          title='Search Flags and Tags'
-          component={
-            <div className='d-flex gap-2'>
-              <input
-                className='input full-width'
-                name='search'
-                onKeyDown={handleKeyDown}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setSearchInput(e.target.value)
-                }
-                placeholder='Search for flags or tags across all projects...'
-                value={searchInput}
-              />
-              <Button onClick={handleSearch} disabled={isSearchDisabled}>
-                Search
-              </Button>
-            </div>
-          }
-        />
+        <div className='form-group'>
+          <FieldLabel htmlFor='release-manager-search'>
+            Search Flags and Tags
+          </FieldLabel>
+          <div className='d-flex gap-2'>
+            <input
+              id='release-manager-search'
+              className='input full-width'
+              name='search'
+              onKeyDown={handleKeyDown}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setSearchInput(e.target.value)
+              }
+              placeholder='Search for flags or tags across all projects...'
+              value={searchInput}
+            />
+            <Button onClick={handleSearch} disabled={isSearchDisabled}>
+              Search
+            </Button>
+          </div>
+        </div>
       </div>
 
       {!hasSearched && (
