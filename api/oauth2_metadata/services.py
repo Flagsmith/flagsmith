@@ -7,18 +7,28 @@ from oauth2_provider.models import Application
 logger = logging.getLogger(__name__)
 
 
+# Schemes a browser may execute or read local content through; never
+# acceptable as redirect targets.
+FORBIDDEN_REDIRECT_URI_SCHEMES = frozenset(
+    {"javascript", "data", "vbscript", "file", "about", "blob"}
+)
+
+
 def validate_redirect_uri(uri: str) -> str:
     """Validate a single redirect URI per DCR policy.
 
     Rules:
-    - HTTPS required for all redirect URIs
     - No wildcards, exact match only
     - No fragment components
-    - localhost exception: http://localhost:*, http://127.0.0.1:*, and http://[::1]:* permitted
+    - https:// permitted for any host
+    - http:// permitted for loopback addresses only (RFC 8252 §7.3)
+    - Private-use schemes (e.g. claude://, com.example.app:/) permitted
+      for native app clients (RFC 8252 §7.1), excluding schemes a browser
+      treats as executable
     """
     parsed = urlparse(uri)
 
-    if not parsed.scheme or not parsed.netloc:
+    if not parsed.scheme or not (parsed.netloc or parsed.path):
         raise ValidationError(f"Invalid URI: {uri}")
 
     if "*" in uri:
@@ -27,11 +37,16 @@ def validate_redirect_uri(uri: str) -> str:
     if parsed.fragment:
         raise ValidationError(f"Fragment components are not permitted: {uri}")
 
+    scheme = parsed.scheme.lower()
+
+    if scheme in FORBIDDEN_REDIRECT_URI_SCHEMES:
+        raise ValidationError(f"Scheme is not permitted in redirect URIs: {uri}")
+
     is_localhost = parsed.hostname in ("localhost", "127.0.0.1", "::1")
 
-    if parsed.scheme != "https" and not (parsed.scheme == "http" and is_localhost):
+    if scheme == "http" and not is_localhost:
         raise ValidationError(
-            f"HTTPS is required for redirect URIs (localhost excepted): {uri}"
+            f"HTTPS is required for http(s) redirect URIs (localhost excepted): {uri}"
         )
 
     return uri

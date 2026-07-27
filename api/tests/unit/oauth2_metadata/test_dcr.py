@@ -53,8 +53,10 @@ def test_dcr_register__valid_request__returns_201_with_client_id(
         "http://127.0.0.1:3000/callback",
         "http://[::1]:3000/callback",
         "https://example.com/callback",
+        "claude://oauth/callback",
+        "com.example.app:/oauth2redirect",
     ],
-    ids=["localhost", "127.0.0.1", "::1", "https"],
+    ids=["localhost", "127.0.0.1", "::1", "https", "custom-scheme", "reverse-domain"],
 )
 def test_dcr_register__valid_redirect_uri__returns_201(
     api_client: APIClient,
@@ -138,11 +140,23 @@ def test_dcr_register__valid_request__creates_public_application_in_database(
     [
         (["http://example.com/callback"], "HTTPS"),
         (["https://example.com/callback#frag"], "Fragment"),
-        (["https://*.example.com/callback"], "valid URL"),
+        (["https://*.example.com/callback"], "Wildcards"),
+        (["example.com/callback"], "Invalid URI"),
+        (["javascript:alert(1)"], "not permitted"),
+        (["data:text/html,x"], "not permitted"),
         ([], "at least 1"),
         ([f"https://example.com/cb{i}" for i in range(6)], "no more than 5"),
     ],
-    ids=["http-non-localhost", "fragment", "wildcard", "empty-list", "too-many"],
+    ids=[
+        "http-non-localhost",
+        "fragment",
+        "wildcard",
+        "scheme-less",
+        "javascript-scheme",
+        "data-scheme",
+        "empty-list",
+        "too-many",
+    ],
 )
 def test_dcr_register__invalid_redirect_uris__returns_rfc7591_error(
     api_client: APIClient,
@@ -160,6 +174,31 @@ def test_dcr_register__invalid_redirect_uris__returns_rfc7591_error(
     data = response.json()
     assert data["error"] == "invalid_redirect_uri"
     assert expected_fragment.lower() in data["error_description"].lower()
+
+
+@pytest.mark.parametrize(
+    "invalid_uri",
+    ["javascript:alert(1)", 12345],
+    ids=["policy-error", "child-field-error"],
+)
+def test_dcr_register__invalid_redirect_uri_after_valid_one__returns_rfc7591_error(
+    api_client: APIClient,
+    invalid_uri: object,
+) -> None:
+    # Given - the invalid URI is not at index 0, so field errors are keyed
+    # by list index rather than returned as a flat list.
+    payload = _valid_payload(
+        redirect_uris=["https://example.com/callback", invalid_uri]
+    )
+
+    # When
+    response = api_client.post(DCR_URL, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+    assert data["error"] == "invalid_redirect_uri"
+    assert "ErrorDetail" not in data["error_description"]
 
 
 @pytest.mark.parametrize(
