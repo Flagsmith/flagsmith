@@ -20182,6 +20182,10 @@ components:
         aggregation:
           type: string
           readOnly: true
+        direction:
+          allOf:
+            - $ref: '#/components/schemas/DirectionEnum'
+          readOnly: true
         expected_direction:
           $ref: '#/components/schemas/ExpectedDirectionEnum'
         created_at:
@@ -23686,6 +23690,10 @@ components:
           readOnly: true
         aggregation:
           type: string
+          readOnly: true
+        direction:
+          allOf:
+            - $ref: '#/components/schemas/DirectionEnum'
           readOnly: true
         expected_direction:
           $ref: '#/components/schemas/ExpectedDirectionEnum'
