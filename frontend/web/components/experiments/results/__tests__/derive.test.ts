@@ -25,6 +25,8 @@ import {
   MultivariateOption,
 } from 'common/types/responses'
 
+type OptionalMetricDirection = MetricDirection | undefined
+
 const option = (over: Partial<MultivariateOption>): MultivariateOption => ({
   boolean_value: undefined,
   default_percentage_allocation: 0,
@@ -342,7 +344,7 @@ describe('deriveSummary', () => {
     })
   })
 
-  it.each<[MetricDirection | undefined, LiftTone]>([
+  it.each<[OptionalMetricDirection, LiftTone]>([
     ['up', 'success'],
     ['down', 'danger'],
     ['informational', 'neutral'],

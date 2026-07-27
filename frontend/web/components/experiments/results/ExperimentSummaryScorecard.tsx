@@ -21,7 +21,7 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
   )
   const hasResults = !!results
 
-  let liftClassName: string | undefined
+  let liftClassName = 'text-secondary' // neutral
   if (summary?.liftTone === 'success') liftClassName = 'text-success'
   if (summary?.liftTone === 'danger') liftClassName = 'text-danger'
 
