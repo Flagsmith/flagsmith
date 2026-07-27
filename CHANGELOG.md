@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.256.1](https://github.com/Flagsmith/flagsmith/compare/v2.256.0...v2.256.1) (2026-07-27)
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Fix API boot failure in SaaS ([#8108](https://github.com/Flagsmith/flagsmith/issues/8108)) ([db1f611](https://github.com/Flagsmith/flagsmith/commit/db1f611d98ca89d84071bdc11637125d40396090))
+
 ## [2.256.0](https://github.com/Flagsmith/flagsmith/compare/v2.255.1...v2.256.0) (2026-07-27)
 
 
