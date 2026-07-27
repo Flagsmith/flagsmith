@@ -15,6 +15,7 @@ import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsa
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import UsageChartFilters from 'components/organisation-settings/usage/components/UsageChartFilters'
 import UsageChartTotals from 'components/organisation-settings/usage/components/UsageChartTotals'
+import UsageBillingPrototype from 'components/organisation-settings/usage/UsageBillingPrototype'
 
 const OrganisationUsagePage: FC = () => {
   const isSdkViewEnabled = Utils.getFlagsmithHasFeature('sdk_usage_charts')
@@ -160,6 +161,11 @@ const OrganisationUsagePage: FC = () => {
             billingPeriod={billingPeriod}
             setBillingPeriod={setBillingPeriod}
             isOnFreePlanPeriods={isOnFreePlanPeriods}
+          />
+          {/* SPIKE: billing-aligned usage prototype (validates M1b against live data) */}
+          <UsageBillingPrototype
+            data={data}
+            maxApiCalls={subscriptionMeta?.max_api_calls}
           />
           <UsageChartTotals
             data={data}
