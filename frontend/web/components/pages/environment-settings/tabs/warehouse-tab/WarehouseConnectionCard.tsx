@@ -9,6 +9,7 @@ import Tooltip from 'components/Tooltip'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 import WarehouseEventCodeHelp from './WarehouseEventCodeHelp'
+import WarehouseSetupSqlHelp from './WarehouseSetupSqlHelp'
 import WarehouseStats from './WarehouseStats'
 
 type WarehouseConnectionCardProps = {
@@ -140,6 +141,11 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
             Your test event is on its way. It can take up to a few hours to
             process the first event.
           </span>
+        </div>
+      )}
+      {connection.warehouse_type === 'clickhouse' && (
+        <div className='mb-3'>
+          <WarehouseSetupSqlHelp showInitially={!isConnected} />
         </div>
       )}
       <WarehouseEventCodeHelp />
