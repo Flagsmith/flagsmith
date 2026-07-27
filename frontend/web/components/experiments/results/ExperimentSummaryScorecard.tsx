@@ -21,10 +21,9 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
   )
   const hasResults = !!results
 
-  let liftClassName: string | undefined
-  if (summary && !summary.controlWins) {
-    liftClassName = summary.liftFavourable ? 'text-success' : 'text-danger'
-  }
+  let liftClassName = 'text-secondary' // neutral
+  if (summary?.liftTone === 'success') liftClassName = 'text-success'
+  if (summary?.liftTone === 'danger') liftClassName = 'text-danger'
 
   return (
     <>

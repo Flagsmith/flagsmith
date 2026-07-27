@@ -55,6 +55,7 @@ const ExperimentMetricScorecard: FC<ExperimentMetricScorecardProps> = ({
     <>
       {metricResult && (
         <ExperimentResultsAxisChart
+          direction={metric.direction ?? 'up'}
           identities={identities}
           metricName={metric.metric_name}
           metricResult={metricResult}

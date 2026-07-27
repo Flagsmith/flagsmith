@@ -671,6 +671,8 @@ export type ExperimentMetric = {
   metric: number
   metric_name: string
   aggregation: MetricAggregation
+  // Absent from API responses until the backend exposes it; treat as 'up'.
+  direction?: MetricDirection
   expected_direction: ExpectedDirection
   created_at: string
 }

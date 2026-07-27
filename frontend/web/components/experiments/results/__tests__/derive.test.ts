@@ -4,12 +4,14 @@ import {
   computeLiftRange,
   computeAxisRange,
   buildExposuresChartData,
+  LiftTone,
   deriveSummary,
   formatBucketLabel,
   getHeadlineTotal,
   getVariantIdentities,
   getVariantTotals,
   getWinningVariant,
+  isLiftFavourable,
   liftToPercent,
   valueToPercent,
 } from 'components/experiments/results/derive'
@@ -19,8 +21,11 @@ import {
   Experiment,
   ExperimentFeature,
   ExposuresSummary,
+  MetricDirection,
   MultivariateOption,
 } from 'common/types/responses'
+
+type OptionalMetricDirection = MetricDirection | undefined
 
 const option = (over: Partial<MultivariateOption>): MultivariateOption => ({
   boolean_value: undefined,
@@ -300,6 +305,7 @@ describe('deriveSummary', () => {
       {
         aggregation: 'occurrence',
         created_at: '2026-06-01T00:00:00Z',
+        direction: 'up',
         expected_direction: 'increase',
         id: 1,
         metric: 1,
@@ -320,7 +326,7 @@ describe('deriveSummary', () => {
     expect(deriveSummary(experiment, results(metricResult))).toMatchObject({
       chanceToBest: '75%',
       controlWins: false,
-      liftFavourable: true,
+      liftTone: 'success',
       liftVsControl: '+8.0%',
       winnerName: 'b',
     })
@@ -332,11 +338,41 @@ describe('deriveSummary', () => {
     ).toMatchObject({
       chanceToBest: '85%',
       controlWins: true,
-      liftFavourable: false,
+      liftTone: 'neutral',
       liftVsControl: 'Baseline',
       winnerName: 'Control',
     })
   })
+
+  it.each<[OptionalMetricDirection, LiftTone]>([
+    ['up', 'success'],
+    ['down', 'danger'],
+    ['informational', 'neutral'],
+    [undefined, 'success'], // legacy payloads without direction default to up
+  ])(
+    'tones the positive winning lift for a %s metric as %s',
+    (direction, tone) => {
+      const exp: Experiment = {
+        ...experiment,
+        metrics: [{ ...experiment.metrics[0], direction }],
+      }
+      expect(deriveSummary(exp, results(metricResult))?.liftTone).toBe(tone)
+    },
+  )
+})
+
+describe('isLiftFavourable', () => {
+  it.each<[number, MetricDirection, boolean]>([
+    [0.08, 'up', true],
+    [-0.08, 'up', false],
+    [-0.08, 'down', true],
+    [0.08, 'down', false],
+  ])(
+    'judges a %d lift on a %s metric as favourable=%s',
+    (lift, direction, expected) => {
+      expect(isLiftFavourable(lift, direction)).toBe(expected)
+    },
+  )
 })
 
 describe('computeLiftRange', () => {
