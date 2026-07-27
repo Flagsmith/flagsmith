@@ -1,12 +1,10 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { FC, useCallback, useEffect, useState } from 'react'
 import cn from 'classnames'
-import OrganisationUsage from 'components/organisation-settings/usage/OrganisationUsage.container'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { useLocation } from 'react-router-dom'
 import OrganisationUsageMetrics from 'components/organisation-settings/usage/OrganisationUsageMetrics.container'
 import OrganisationUsageSideBar from 'components/organisation-settings/usage/components/OrganisationUsageSideBar'
 import { useRouteContext } from 'components/providers/RouteContext'
-import { AggregateUsageDataItem } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
 import { planNames } from 'common/utils/utils'
@@ -54,7 +52,7 @@ const OrganisationUsagePage: FC = () => {
     Req['getOrganisationUsage']['billing_period']
   >(isOnFreePlanPeriods ? '90_day_period' : 'current_billing_period')
 
-  const { data, isError } = useGetOrganisationUsageQuery(
+  const { data } = useGetOrganisationUsageQuery(
     {
       billing_period: billingPeriod,
       environmentId: environment,
@@ -68,44 +66,6 @@ const OrganisationUsagePage: FC = () => {
     { id: organisationId || 0 },
     { skip: !organisationId },
   )
-
-  // Aggregate usage events by date, summing metrics across all client types
-  const chartData = useMemo(() => {
-    const consolidated = Object.values(
-      data?.events_list?.reduce((acc, event) => {
-        const date = event.day
-        if (!acc[date]) {
-          acc[date] = {
-            day: date,
-            environment_document: 0,
-            flags: 0,
-            identities: 0,
-            traits: 0,
-          }
-        }
-
-        acc[date].flags = (acc[date].flags ?? 0) + (event.flags ?? 0)
-        acc[date].identities =
-          (acc[date].identities ?? 0) + (event.identities ?? 0)
-        acc[date].traits = (acc[date].traits ?? 0) + (event.traits ?? 0)
-        acc[date].environment_document =
-          (acc[date].environment_document ?? 0) +
-          (event.environment_document ?? 0)
-
-        return acc
-      }, {} as Record<string, AggregateUsageDataItem>) || {},
-    )
-
-    return consolidated.map((v) => ({
-      ...v,
-      environment_document: selection.includes('Environment Document')
-        ? v.environment_document
-        : null,
-      flags: selection.includes('Flags') ? v.flags : null,
-      identities: selection.includes('Identities') ? v.identities : null,
-      traits: selection.includes('Traits') ? v.traits : null,
-    }))
-  }, [data?.events_list, selection])
 
   useEffect(() => {
     if (!isSdkViewEnabled) {
@@ -162,27 +122,28 @@ const OrganisationUsagePage: FC = () => {
             setBillingPeriod={setBillingPeriod}
             isOnFreePlanPeriods={isOnFreePlanPeriods}
           />
-          {/* SPIKE: billing-aligned usage prototype (validates M1b against live data) */}
-          <UsageBillingPrototype
-            data={data}
-            maxApiCalls={subscriptionMeta?.max_api_calls}
-          />
-          <UsageChartTotals
-            data={data}
-            selection={selection}
-            updateSelection={updateSelection}
-            colours={colours}
-            withColor={chartsView !== 'user-agents'}
-            maxApiCalls={subscriptionMeta?.max_api_calls}
-          />
+          {/* SPIKE: billing-aligned usage redesign prototype.
+              Global view renders the reframed design; By SDK keeps the
+              existing totals + per-SDK charts. */}
           {chartsView === 'user-agents' ? (
-            <OrganisationUsageMetrics data={data} selectedMetrics={selection} />
+            <>
+              <UsageChartTotals
+                data={data}
+                selection={selection}
+                updateSelection={updateSelection}
+                colours={colours}
+                withColor={false}
+                maxApiCalls={subscriptionMeta?.max_api_calls}
+              />
+              <OrganisationUsageMetrics
+                data={data}
+                selectedMetrics={selection}
+              />
+            </>
           ) : (
-            <OrganisationUsage
-              chartData={chartData}
-              colours={colours}
-              isError={isError}
-              selection={selection}
+            <UsageBillingPrototype
+              data={data}
+              maxApiCalls={subscriptionMeta?.max_api_calls}
             />
           )}
         </div>
