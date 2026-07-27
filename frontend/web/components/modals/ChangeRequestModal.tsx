@@ -172,11 +172,15 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
             </FormGroup>
             <div>
               <div className='form-group'>
-                <FieldLabel tooltip='Allows you to set a date and time in which your change will only become active. All dates are displayed in your local timezone.'>
+                <FieldLabel
+                  htmlFor='change-request-live-from'
+                  tooltip='Allows you to set a date and time in which your change will only become active. All dates are displayed in your local timezone.'
+                >
                   Schedule Change
                 </FieldLabel>
                 <Row>
                   <DateSelect
+                    id='change-request-live-from'
                     isValid={!!liveFrom?.length}
                     dateFormat='MMMM d, yyyy h:mm aa'
                     onChange={handleOnDateChange}
