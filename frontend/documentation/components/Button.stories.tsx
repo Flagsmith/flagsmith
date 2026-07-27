@@ -126,6 +126,80 @@ export const Disabled: Story = {
   ),
 }
 
+export const Loading: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Loading buttons auto-disable, announce via aria-busy, and show a spinner beside the label. `loadingLabel` swaps the label while loading.',
+      },
+    },
+  },
+  render: () => (
+    <div className='d-flex align-items-center flex-wrap gap-2'>
+      <Button theme='primary' isLoading>
+        Save
+      </Button>
+      <Button theme='secondary' isLoading>
+        Save
+      </Button>
+      <Button theme='danger' isLoading>
+        Delete
+      </Button>
+      <Button theme='primary' isLoading loadingLabel='Saving…'>
+        Save
+      </Button>
+    </div>
+  ),
+}
+
+export const LoadingSizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'The loading spinner across button sizes.',
+      },
+    },
+  },
+  render: () => (
+    <div className='d-flex align-items-center flex-wrap gap-2'>
+      <Button size='large' isLoading>
+        Large
+      </Button>
+      <Button size='default' isLoading>
+        Default
+      </Button>
+      <Button size='small' isLoading>
+        Small
+      </Button>
+      <Button size='xSmall' isLoading>
+        Extra Small
+      </Button>
+    </div>
+  ),
+}
+
+export const LoadingLink: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A loading link is non-interactive: pointer events are off, keyboard activation is guarded, and aria-disabled is set (anchors cannot be disabled natively).',
+      },
+    },
+  },
+  render: () => (
+    <div className='d-flex align-items-center flex-wrap gap-2'>
+      <Button href='https://docs.flagsmith.com' target='_blank'>
+        Idle link
+      </Button>
+      <Button href='https://docs.flagsmith.com' target='_blank' isLoading>
+        Loading link
+      </Button>
+    </div>
+  ),
+}
+
 export const WithIcons: Story = {
   parameters: {
     docs: {

@@ -29,6 +29,9 @@ export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
   theme?: keyof typeof themeClassNames
   size?: keyof typeof sizeClassNames
   isLoading?: boolean
+  // Replaces children while loading (e.g. 'Saving…'). Omit to keep the
+  // label beside the spinner, the existing behaviour at adopted sites.
+  loadingLabel?: string
 }
 
 export const Button = React.forwardRef<
@@ -42,6 +45,7 @@ export const Button = React.forwardRef<
       disabled,
       href,
       isLoading = false,
+      loadingLabel,
       onMouseUp,
       size = 'default',
       target,
@@ -58,16 +62,32 @@ export const Button = React.forwardRef<
       sizeClassNames[size],
       isLoading && 'd-inline-flex align-items-center gap-2',
     )
+    const content = (
+      <>
+        {isLoading && <Loader width='15px' height='15px' />}
+        {isLoading && loadingLabel ? loadingLabel : children}
+      </>
+    )
     return href ? (
+      // Anchors cannot be disabled, so a loading link gets Bootstrap's
+      // .disabled (pointer-events: none) plus a click guard for keyboard
+      // activation, and the same aria state as the button variant.
       <a
-        onClick={rest.onClick as React.MouseEventHandler}
-        className={classes}
+        onClick={
+          isLoading
+            ? (e) => e.preventDefault()
+            : (rest.onClick as React.MouseEventHandler)
+        }
+        className={cn(classes, isLoading && 'disabled')}
         target={target}
         href={href}
         rel='noreferrer'
+        aria-disabled={isLoading || undefined}
+        aria-busy={isLoading || undefined}
+        aria-live='polite'
         ref={ref as React.RefObject<HTMLAnchorElement>}
       >
-        {children}
+        {content}
       </a>
     ) : (
       <button
@@ -76,10 +96,11 @@ export const Button = React.forwardRef<
         type={type}
         onMouseUp={onMouseUp}
         className={classes}
+        aria-busy={isLoading || undefined}
+        aria-live='polite'
         ref={ref as React.RefObject<HTMLButtonElement>}
       >
-        {isLoading && <Loader width='15px' height='15px' />}
-        {children}
+        {content}
       </button>
     )
   },
