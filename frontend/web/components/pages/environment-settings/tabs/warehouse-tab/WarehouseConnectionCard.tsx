@@ -59,6 +59,11 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   const isFlagsmith = connection.warehouse_type === 'flagsmith'
   const isPending = connection.status === 'pending_connection'
   const isConnected = connection.status === 'connected'
+  // ClickHouse connections are born connected, so the first-event nudge stays
+  // until events actually arrive in the customer's warehouse.
+  const showSendFirstEvent = isFlagsmith
+    ? !isPending && !isConnected
+    : !connection.total_events_received
 
   const handleDelete = () => {
     openConfirm({
@@ -170,7 +175,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
             {isSendingTestEvent ? 'Testing...' : 'Test connection'}
           </Button>
         )}
-        {isFlagsmith && !isPending && !isConnected && (
+        {showSendFirstEvent && (
           <Button
             id='warehouse-send-first-event'
             theme='primary'

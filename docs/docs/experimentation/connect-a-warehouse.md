@@ -54,12 +54,19 @@ The current status is shown on the warehouse card in **Environment Settings > Wa
 
 Instead of the managed Flagsmith warehouse, you can store experiment events in your own **ClickHouse** instance.
 
-1. Create the database and events table by running the following against your ClickHouse instance, using an
-   administrative user (the statements require `CREATE DATABASE` and `CREATE TABLE` privileges). This is a one-off setup
-   step; the same SQL is available to copy from the warehouse card in the Flagsmith dashboard, adjusted to the database
-   name you configure.
+1. Configure your instance by running the following against it, using an administrative user (the statements require
+   `CREATE USER`, `GRANT`, `CREATE DATABASE` and `CREATE TABLE` privileges). Replace `<USERNAME>` and
+   `<YOUR_SECURED_PASSWORD>` with your own values. This is a one-off setup step; the same SQL is available to copy from
+   the Flagsmith dashboard.
 
    ```sql
+   -- Create a dedicated user for Flagsmith
+   CREATE USER IF NOT EXISTS <USERNAME> IDENTIFIED BY '<YOUR_SECURED_PASSWORD>';
+
+   -- Allow it to write and read experiment events
+   GRANT INSERT, SELECT ON flagsmith_exp.* TO <USERNAME>;
+
+   -- Create the database and events table
    CREATE DATABASE IF NOT EXISTS flagsmith_exp;
 
    CREATE TABLE IF NOT EXISTS flagsmith_exp.events
@@ -88,10 +95,11 @@ Instead of the managed Flagsmith warehouse, you can store experiment events in y
    ```
 
 2. Go to **Environment Settings > Warehouse**, select **ClickHouse** and enter your connection details: host, port (9440
-   by default, the native protocol port), database (`flagsmith_exp` by default), username and password. Use a
-   least-privileged runtime user rather than the administrative one — it needs `INSERT` and `SELECT` on the `events`
-   table in the configured database.
+   by default, the native protocol port), database (`flagsmith_exp` by default), and the username and password of the
+   user you created in step 1.
 3. Click **Test connection**. Once the test succeeds, save the connection.
+4. Click **Send your first event** on the connection card to verify events are arriving in your warehouse; the button
+   disappears once the first event is received.
 
 Connections use the ClickHouse native protocol, with TLS enabled by default.
 

@@ -25,3 +25,13 @@ CREATE TABLE IF NOT EXISTS ${database}.events
 ENGINE = MergeTree
 PARTITION BY toYYYYMMDD(timestamp)
 ORDER BY (environment_key, event, feature_name, timestamp, identifier);`
+
+export const getClickHouseOnboardingSql =
+  (): string => `-- Create a dedicated user for Flagsmith
+CREATE USER IF NOT EXISTS <USERNAME> IDENTIFIED BY '<YOUR_SECURED_PASSWORD>';
+
+-- Allow it to write and read experiment events
+GRANT INSERT, SELECT ON flagsmith_exp.* TO <USERNAME>;
+
+-- Create the database and events table
+${getClickHouseSetupSql('flagsmith_exp')}`

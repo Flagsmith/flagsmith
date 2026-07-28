@@ -5,7 +5,7 @@ export const CLICKHOUSE_DEFAULTS: ClickHouseConfig = {
   host: '',
   port: 9440,
   secure: true,
-  username: 'default',
+  username: '',
 }
 
 export type ClickHouseFormState = {

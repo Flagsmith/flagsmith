@@ -51,7 +51,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
   const [database, setDatabase] = useState(defaults.database)
   const [username, setUsername] = useState(defaults.username)
   const [password, setPassword] = useState('')
-  const [secure, setSecure] = useState(defaults.secure)
+  const [secure] = useState(defaults.secure)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState(false)
   const [testState, setTestState] = useState<TestState>('idle')
@@ -148,7 +148,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
         </div>
 
         <div className='wh-config-form__field'>
-          <label className='wh-config-form__label'>Name</label>
+          <label className='wh-config-form__label'>Name this warehouse</label>
           <Input
             value={name}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -180,7 +180,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
             />
           </div>
           <div className='wh-config-form__field'>
-            <label className='wh-config-form__label'>Database</label>
+            <label className='wh-config-form__label'>Database Name</label>
             <Input
               value={database}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -198,7 +198,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setField(setUsername)(e.target.value)
             }
-            placeholder='default'
+            placeholder='The user from the setup script'
           />
         </div>
 
@@ -224,17 +224,19 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
 
         <div className='wh-config-form__field'>
           <div className='d-flex flex-row align-items-center gap-2'>
-            <Switch checked={secure} onChange={setField(setSecure)} />
+            <Switch checked={secure} disabled />
             <label className='wh-config-form__label mb-0'>
               Secure connection (TLS)
             </label>
           </div>
         </div>
 
-        <WarehouseSetupSqlHelp
-          database={database.trim() || CLICKHOUSE_DEFAULTS.database}
-          showInitially={!isEdit || testState === 'errored'}
-        />
+        {isEdit && (
+          <WarehouseSetupSqlHelp
+            database={database.trim() || CLICKHOUSE_DEFAULTS.database}
+            showInitially={testState === 'errored'}
+          />
+        )}
 
         {error && <ErrorMessage error={getWarehouseErrorMessage(isEdit)} />}
 
