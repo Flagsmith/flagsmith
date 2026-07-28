@@ -25,7 +25,7 @@ _CLIENT_NAME_RE = re.compile(r"^[\w\s.\-()]+$", re.ASCII)
 class DCRRequestSerializer(serializers.Serializer[None]):
     client_name = serializers.CharField(max_length=255, required=True)
     redirect_uris = serializers.ListField(
-        child=serializers.URLField(),
+        child=serializers.CharField(max_length=2000),
         min_length=1,
         max_length=5,
         required=True,
