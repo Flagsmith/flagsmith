@@ -95,6 +95,9 @@ Instead of the managed Flagsmith warehouse, you can store experiment events in y
 
 Connections use the ClickHouse native protocol, with TLS enabled by default.
 
+Experiment results and exposure queries are currently computed from the managed Flagsmith warehouse; serving results
+directly from your own ClickHouse instance is not supported yet.
+
 ## Coming soon
 
 Bring your own warehouse: connections for **Snowflake**, **BigQuery** and **Databricks**, so experiment results are

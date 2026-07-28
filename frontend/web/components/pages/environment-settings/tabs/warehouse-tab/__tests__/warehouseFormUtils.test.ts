@@ -9,4 +9,17 @@ describe('getTestFailureWarning', () => {
   ])('formats detail %p with a single sentence break', (detail, expected) => {
     expect(getTestFailureWarning(detail)).toContain(expected)
   })
+
+  it('does not claim a failed connection when only the events table is missing', () => {
+    const detail =
+      'Events table not found in the configured database. Run the setup SQL to create it.'
+
+    const warning = getTestFailureWarning(detail)
+
+    expect(warning).not.toContain("couldn't establish a connection")
+    expect(warning).toContain(detail)
+    expect(warning).toContain(
+      "events won't be delivered until the table exists",
+    )
+  })
 })

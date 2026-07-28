@@ -15,7 +15,10 @@ const WarehouseSetupSqlHelp: FC<WarehouseSetupSqlHelpProps> = ({
   database,
   showInitially,
 }) => {
-  const [visible, setVisible] = useState(!!showInitially)
+  // Visibility follows showInitially until the user toggles; their choice
+  // then stays authoritative across re-renders.
+  const [override, setOverride] = useState<boolean | null>(null)
+  const visible = override ?? !!showInitially
   const sql = getClickHouseSetupSql(database)
 
   return (
@@ -25,7 +28,7 @@ const WarehouseSetupSqlHelp: FC<WarehouseSetupSqlHelpProps> = ({
         prefix='Database setup:'
         label='Run once against your ClickHouse instance to create the events table'
         expanded={visible}
-        onClick={() => setVisible(!visible)}
+        onClick={() => setOverride(!visible)}
       />
       {visible && (
         <div className='hljs-container mt-2 mb-2'>
