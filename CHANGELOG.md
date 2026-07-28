@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.257.0](https://github.com/Flagsmith/flagsmith/compare/v2.256.1...v2.257.0) (2026-07-28)
+
+
+### Features
+
+* **experiments:** colour lift by metric direction ([#8099](https://github.com/Flagsmith/flagsmith/issues/8099)) ([0668c09](https://github.com/Flagsmith/flagsmith/commit/0668c09ee42030575e79838ad4309fd0144321c8))
+
+
+### Bug Fixes
+
+* **api:** OAuth dynamic client registration fails for Claude Desktop ([#8114](https://github.com/Flagsmith/flagsmith/issues/8114)) ([aecbbb6](https://github.com/Flagsmith/flagsmith/commit/aecbbb646ed356a8a588f5ed3deb89cea0eb9e46))
+
+
+### Performance Improvements
+
+* **SDK:** Decouple SDK identity request cost from version history ([#8096](https://github.com/Flagsmith/flagsmith/issues/8096)) ([bea1512](https://github.com/Flagsmith/flagsmith/commit/bea1512a643956c9325f198b8fcc01a5352a5a35))
+
+
+### Refactoring
+
+* **code-help:** escape snippets centrally instead of in source strings ([#8062](https://github.com/Flagsmith/flagsmith/issues/8062)) ([4d5fff8](https://github.com/Flagsmith/flagsmith/commit/4d5fff8f2cff7df429e527c160123309bebc6bbd))
+
 ## [2.256.1](https://github.com/Flagsmith/flagsmith/compare/v2.256.0...v2.256.1) (2026-07-27)
 
 
