@@ -188,6 +188,7 @@ def test_dcr_register__invalid_redirect_uris__returns_rfc7591_error(
 def test_dcr_register__confidential_client__returns_201_with_secret(
     api_client: APIClient,
     auth_method: str,
+    assert_metric: AssertMetricFixture,
 ) -> None:
     # Given
     payload = _valid_payload(token_endpoint_auth_method=auth_method)
@@ -206,6 +207,12 @@ def test_dcr_register__confidential_client__returns_201_with_secret(
     assert application.client_type == Application.CLIENT_CONFIDENTIAL
     # The secret is hashed at rest; only the response carries the plaintext.
     assert application.client_secret != data["client_secret"]
+
+    assert_metric(
+        name="flagsmith_oauth2_dcr_registrations_total",
+        labels={"token_endpoint_auth_method": auth_method, "outcome": "registered"},
+        value=1,
+    )
 
 
 @pytest.mark.django_db()
