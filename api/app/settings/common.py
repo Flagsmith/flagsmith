@@ -367,6 +367,7 @@ REST_FRAMEWORK = {
         "user": USER_THROTTLE_RATE,
         "influx_query": "5/min",
         "warehouse_connection_write": "10/min",
+        "warehouse_connection_read": "60/min",
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_RENDERER_CLASSES": [

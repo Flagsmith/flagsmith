@@ -9,6 +9,7 @@ from clickhouse_driver import Client
 from clickhouse_driver import errors as clickhouse_errors
 from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
+from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -95,6 +96,9 @@ logger = structlog.get_logger("warehouse")
 CLICKHOUSE_CONNECT_TIMEOUT_SECONDS = 5
 CLICKHOUSE_QUERY_TIMEOUT_SECONDS = 30
 CLICKHOUSE_VERIFY_TIMEOUT_SECONDS = 5
+CUSTOMER_EVENT_STATS_CACHE_SECONDS = 60
+
+_CUSTOMER_EVENT_STATS_UNAVAILABLE = "unavailable"
 
 
 def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
@@ -140,9 +144,8 @@ def get_unique_event_names(environment_key: str) -> list[str]:
     return [row[0] for row in rows]
 
 
-def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
-    """Return event counts recorded for `environment_key` in the warehouse."""
-    rows = _get_clickhouse_client().execute(
+def _query_event_stats(client: Client, environment_key: str) -> WarehouseEventStats:
+    rows = client.execute(
         "SELECT count() AS total, uniqExact(event) AS unique "
         "FROM events WHERE environment_key = %(environment_key)s",
         {"environment_key": environment_key},
@@ -152,6 +155,11 @@ def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
         total_events_received=int(total),
         unique_events_count=int(unique),
     )
+
+
+def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
+    """Return event counts recorded for `environment_key` in the warehouse."""
+    return _query_event_stats(_get_clickhouse_client(), environment_key)
 
 
 EXPOSURE_BUCKETS_QUERY = (
@@ -918,12 +926,9 @@ def annotate_warehouse_event_stats(
     leaves stats unset when the warehouse is unreachable. Read-only: never
     changes status."""
     if connection.warehouse_type == WarehouseType.CLICKHOUSE:
-        try:
-            connection.event_stats = _get_customer_warehouse_event_stats(
-                connection, environment_key
-            )
-        except Exception:
-            pass
+        stats = _get_customer_warehouse_event_stats_cached(connection, environment_key)
+        if stats is not None:
+            connection.event_stats = stats
         return
     if (
         connection.warehouse_type != WarehouseType.FLAGSMITH
@@ -936,23 +941,37 @@ def annotate_warehouse_event_stats(
         return
 
 
-def _get_customer_warehouse_event_stats(
+def _get_customer_warehouse_event_stats_cached(
     connection: WarehouseConnection,
     environment_key: str,
-) -> WarehouseEventStats:
+) -> WarehouseEventStats | None:
     """Return event counts recorded for `environment_key` in the customer's
-    ClickHouse instance."""
-    client = _connect_customer_clickhouse(connection)
+    ClickHouse instance, or None when it's unreachable. Results — including
+    failures — are cached briefly so read endpoints don't open a connection to
+    the customer's host on every request."""
+    cache_key = f"experimentation:customer_event_stats:{connection.id}"
+    cached = cache.get(cache_key)
+    if isinstance(cached, WarehouseEventStats):
+        return cached
+    if cached == _CUSTOMER_EVENT_STATS_UNAVAILABLE:
+        return None
     try:
-        rows = client.execute(
-            "SELECT count() AS total, uniqExact(event) AS unique "
-            "FROM events WHERE environment_key = %(environment_key)s",
-            {"environment_key": environment_key},
+        client = _connect_customer_clickhouse(connection)
+        try:
+            stats = _query_event_stats(client, environment_key)
+        finally:
+            client.disconnect()
+    except Exception:
+        cache.set(
+            cache_key,
+            _CUSTOMER_EVENT_STATS_UNAVAILABLE,
+            CUSTOMER_EVENT_STATS_CACHE_SECONDS,
         )
-    finally:
-        client.disconnect()
-    total, unique = rows[0] if rows else (0, 0)
-    return WarehouseEventStats(
-        total_events_received=int(total),
-        unique_events_count=int(unique),
-    )
+        logger.warning(
+            "connection.event_stats_failed",
+            environment__id=connection.environment_id,
+            exc_info=True,
+        )
+        return None
+    cache.set(cache_key, stats, CUSTOMER_EVENT_STATS_CACHE_SECONDS)
+    return stats

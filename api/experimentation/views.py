@@ -106,6 +106,9 @@ class WarehouseConnectionViewSet(
         ):
             self.throttle_scope = "warehouse_connection_write"
             return [*super().get_throttles(), ScopedRateThrottle()]
+        if self.action in ("list", "retrieve"):
+            self.throttle_scope = "warehouse_connection_read"
+            return [*super().get_throttles(), ScopedRateThrottle()]
         return super().get_throttles()
 
     def perform_create(self, serializer: BaseSerializer[WarehouseConnection]) -> None:

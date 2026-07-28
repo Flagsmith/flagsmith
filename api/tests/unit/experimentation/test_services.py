@@ -2224,8 +2224,10 @@ def test_describe_verification_error__known_error_types__returns_expected_detail
 )
 def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer_instance(
     clickhouse_connection: WarehouseConnection,
+    reset_cache: None,
     execute_side_effect: Exception | list[list[tuple[int, int]]],
     expected_stats: WarehouseEventStats | None,
+    log: StructuredLogCapture,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -2243,3 +2245,14 @@ def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer
         {"environment_key": "test-env-key"},
     )
     mock_client.return_value.disconnect.assert_called_once_with()
+    assert any(
+        event["event"] == "connection.event_stats_failed" for event in log.events
+    ) == (expected_stats is None)
+
+    # When — the outcome is cached, so a second request doesn't reconnect
+    fresh_connection = WarehouseConnection.objects.get(id=clickhouse_connection.id)
+    annotate_warehouse_event_stats(fresh_connection, "test-env-key")
+
+    # Then
+    mock_client.assert_called_once()
+    assert getattr(fresh_connection, "event_stats", None) == expected_stats
