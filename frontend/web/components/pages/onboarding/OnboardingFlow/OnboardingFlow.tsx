@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, Suspense, lazy, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
@@ -19,6 +19,11 @@ import { useUpdateProjectMutation } from 'common/services/useProject'
 import API from 'project/api'
 import Constants from 'common/constants'
 import './OnboardingFlow.scss'
+
+// Lazy so lottie-web + the animation JSON stay out of the initial bundle.
+const OnboardingLoading = lazy(
+  () => import('components/pages/onboarding/OnboardingLoading'),
+)
 
 type OnboardingSnippet = 'install' | 'wire'
 
@@ -177,9 +182,9 @@ const OnboardingFlow: FC = () => {
 
   if (status === 'creating') {
     return (
-      <div className='onboarding-flow mx-auto text-center'>
-        <Loader />
-      </div>
+      <Suspense fallback={<Loader />}>
+        <OnboardingLoading />
+      </Suspense>
     )
   }
 

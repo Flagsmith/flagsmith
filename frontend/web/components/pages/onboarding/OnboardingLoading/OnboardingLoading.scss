@@ -1,0 +1,19 @@
+.onboarding-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 100vh;
+
+  &__anim {
+    width: min(480px, 72vw);
+    aspect-ratio: 1600 / 1400;
+  }
+
+  &__text {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--color-text-default);
+  }
+}
