@@ -424,7 +424,7 @@ Attributes:
 
 ### `oauth2_metadata.registration.rejected`
 
-Logged at `info` from:
+Logged at `error` from:
  - `api/oauth2_metadata/views.py:163`
 
 Attributes:

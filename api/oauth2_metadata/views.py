@@ -160,7 +160,7 @@ class DynamicClientRegistrationView(APIView):
         if not serializer.is_valid():
             error_body = map_drf_error_to_rfc7591_error_body(serializer.errors)
             payload = request.data if isinstance(request.data, dict) else {}
-            logger.info(
+            logger.error(
                 "registration.rejected",
                 error=error_body["error"],
                 error_description=error_body["error_description"],

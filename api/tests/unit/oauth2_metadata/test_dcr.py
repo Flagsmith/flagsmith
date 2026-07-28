@@ -286,7 +286,7 @@ def test_dcr_register__invalid_request__logs_rejection(
     # Then
     assert log.events == [
         {
-            "level": "info",
+            "level": "error",
             "event": "registration.rejected",
             "error": "invalid_redirect_uri",
             "error_description": (
