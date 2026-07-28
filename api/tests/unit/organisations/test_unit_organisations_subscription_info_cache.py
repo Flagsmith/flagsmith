@@ -4,6 +4,7 @@ import pytest
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 from task_processor.task_run_method import TaskRunMethod
 
 from organisations.chargebee.metadata import ChargebeeObjMetadata
@@ -71,6 +72,7 @@ def test_update_caches__with_usage_data__populates_cache_correctly(  # type: ign
         organisation.subscription_information_cache.allowed_30d_api_calls
         == chargebee_metadata.api_calls
     )
+    assert organisation.subscription_information_cache.chargebee_updated_at == now
 
     mocked_get_subscription_metadata.assert_called_once_with(
         chargebee_subscription.subscription_id
@@ -81,6 +83,52 @@ def test_update_caches__with_usage_data__populates_cache_correctly(  # type: ign
         (day_30, ""),
         (day_7, ""),
         (day_1, "100"),
+    ]
+
+
+def test_update_caches__chargebee_sync_fails__leaves_allowed_calls_and_timestamp_unchanged(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    chargebee_subscription: Subscription,
+    settings: SettingsWrapper,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    settings.CHARGEBEE_API_KEY = "api-key"
+    settings.INFLUXDB_TOKEN = "token"
+    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
+
+    previously_synced_at = timezone.now() - timedelta(hours=6)
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=1_000_000,
+        chargebee_updated_at=previously_synced_at,
+    )
+
+    mocker.patch("organisations.subscription_info_cache.get_top_organisations")
+    mocker.patch(
+        "organisations.subscription_info_cache.get_subscription_metadata_from_id",
+        return_value=None,
+    )
+
+    # When
+    update_caches(SubscriptionCacheEntity.CHARGEBEE)
+
+    # Then
+    organisation.subscription_information_cache.refresh_from_db()
+    assert (
+        organisation.subscription_information_cache.allowed_30d_api_calls == 1_000_000
+    )
+    assert (
+        organisation.subscription_information_cache.chargebee_updated_at
+        == previously_synced_at
+    )
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "subscription_information_cache.chargebee_sync_skipped",
+            "organisation__id": organisation.id,
+        }
     ]
 
 

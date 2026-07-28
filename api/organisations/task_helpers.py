@@ -16,10 +16,13 @@ from organisations.models import (
     OrganisationAPIUsageNotification,
     OrganisationRole,
 )
-from organisations.subscriptions.constants import MAX_API_CALLS_IN_FREE_PLAN
+from organisations.subscriptions.constants import (
+    CHARGEBEE,
+    MAX_API_CALLS_IN_FREE_PLAN,
+)
 from users.models import FFAdminUser
 
-from .constants import API_USAGE_ALERT_THRESHOLDS
+from .constants import API_USAGE_ALERT_THRESHOLDS, CHARGEBEE_CACHE_STALE_AFTER
 
 logger = structlog.get_logger("api_usage")
 
@@ -126,6 +129,21 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         period_starts_at = relativedelta(months=month_delta) + billing_starts_at
 
         allowed_api_calls = subscription_cache.allowed_30d_api_calls
+
+        if organisation.subscription.payment_method == CHARGEBEE and (
+            subscription_cache.chargebee_updated_at is None
+            or subscription_cache.chargebee_updated_at
+            < now - CHARGEBEE_CACHE_STALE_AFTER
+        ):
+            # allowed_30d_api_calls is only trustworthy if it's been recently
+            # synced from Chargebee — otherwise it may hold a stale limit and
+            # trip a false alert.
+            logger.warning(
+                "notification.stale_chargebee_cache",
+                organisation__id=organisation.id,
+                chargebee_updated_at=subscription_cache.chargebee_updated_at,
+            )
+            return
 
     openfeature_client = get_openfeature_client()
     # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985

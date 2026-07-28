@@ -385,6 +385,108 @@ def test_handle_api_usage_notification_for_organisation__billing_starts_at_over_
     )
 
 
+def test_handle_api_usage_notification_for_organisation__chargebee_cache_never_synced__skips_notification(
+    organisation: Organisation,
+    log: StructuredLogCapture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    now = timezone.now()
+    api_usage_mock = mocker.patch("organisations.task_helpers.get_current_api_usage")
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.payment_method = CHARGEBEE
+    organisation.subscription.save()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=100,
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+        api_calls_30d=90,
+        chargebee_updated_at=None,
+    )
+
+    # When
+    handle_api_usage_notification_for_organisation(organisation)
+
+    # Then
+    api_usage_mock.assert_not_called()
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "notification.stale_chargebee_cache",
+            "organisation__id": organisation.id,
+            "chargebee_updated_at": None,
+        }
+    ]
+
+
+def test_handle_api_usage_notification_for_organisation__chargebee_cache_stale__skips_notification(
+    organisation: Organisation,
+    log: StructuredLogCapture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    now = timezone.now()
+    stale_sync_at = now - timedelta(hours=13)
+    api_usage_mock = mocker.patch("organisations.task_helpers.get_current_api_usage")
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.payment_method = CHARGEBEE
+    organisation.subscription.save()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=100,
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+        api_calls_30d=90,
+        chargebee_updated_at=stale_sync_at,
+    )
+
+    # When
+    handle_api_usage_notification_for_organisation(organisation)
+
+    # Then
+    api_usage_mock.assert_not_called()
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "notification.stale_chargebee_cache",
+            "organisation__id": organisation.id,
+            "chargebee_updated_at": stale_sync_at,
+        }
+    ]
+
+
+def test_handle_api_usage_notification_for_organisation__chargebee_cache_fresh__sends_notification(
+    organisation: Organisation,
+    mailoutbox: list[EmailMultiAlternatives],
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    now = timezone.now()
+    mocker.patch("organisations.task_helpers.get_current_api_usage", return_value=91)
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.payment_method = CHARGEBEE
+    organisation.subscription.save()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=100,
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+        api_calls_30d=90,
+        chargebee_updated_at=now - timedelta(hours=1),
+    )
+
+    # When
+    handle_api_usage_notification_for_organisation(organisation)
+
+    # Then
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].subject == "Flagsmith API use has reached 90%"
+
+
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_handle_api_usage_notifications__feature_flag_is_off__skips_processing(
     mocker: MockerFixture,

@@ -1,6 +1,7 @@
 import typing
 from datetime import timedelta
 
+import structlog
 from django.conf import settings
 from django.utils import timezone
 
@@ -10,6 +11,8 @@ from app_analytics.influxdb_wrapper import get_top_organisations
 from .chargebee import get_subscription_metadata_from_id  # type: ignore[attr-defined]
 from .models import Organisation, OrganisationSubscriptionInformationCache
 from .subscriptions.constants import CHARGEBEE, SubscriptionCacheEntity
+
+logger = structlog.get_logger("billing")
 
 OrganisationSubscriptionInformationCacheDict = typing.Dict[
     int, OrganisationSubscriptionInformationCache
@@ -139,9 +142,14 @@ def _update_caches_with_chargebee_data(  # type: ignore[no-untyped-def]
 
         metadata = get_subscription_metadata_from_id(subscription.subscription_id)
         if not metadata:
+            logger.warning(
+                "subscription_information_cache.chargebee_sync_skipped",
+                organisation__id=organisation.id,
+            )
             continue
 
         subscription_info_cache = organisation_info_cache_dict[organisation.id]
         subscription_info_cache.allowed_seats = metadata.seats
         subscription_info_cache.allowed_30d_api_calls = metadata.api_calls
         subscription_info_cache.chargebee_email = metadata.chargebee_email
+        subscription_info_cache.chargebee_updated_at = timezone.now()

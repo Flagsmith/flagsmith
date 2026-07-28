@@ -1,5 +1,4 @@
 import logging
-from contextlib import suppress
 from datetime import datetime
 from typing import Any
 
@@ -183,7 +182,7 @@ def get_subscription_metadata_from_id(
         logger.warning("Subscription id is empty or None")
         return None
 
-    with suppress(ChargebeeAPIError):
+    try:
         chargebee_result = chargebee_client.Subscription.retrieve(subscription_id)
         chargebee_subscription = _convert_chargebee_subscription_to_dictionary(
             chargebee_result.subscription
@@ -192,6 +191,12 @@ def get_subscription_metadata_from_id(
         return extract_subscription_metadata(
             chargebee_subscription,
             chargebee_result.customer.email,
+        )
+    except ChargebeeAPIError:
+        log.warning(
+            "metadata.fetch_failed",
+            subscription__id=subscription_id,
+            exc_info=True,
         )
 
     return None

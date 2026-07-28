@@ -2,7 +2,7 @@
 ### `api_usage.notification.evaluated`
 
 Logged at `info` from:
- - `api/organisations/task_helpers.py:153`
+ - `api/organisations/task_helpers.py:171`
 
 Attributes:
  - `allowed_api_calls`
@@ -16,7 +16,7 @@ Attributes:
 ### `api_usage.notification.missing_billing_starts_at`
 
 Logged at `error` from:
- - `api/organisations/task_helpers.py:118`
+ - `api/organisations/task_helpers.py:121`
 
 Attributes:
  - `organisation.id`
@@ -24,10 +24,19 @@ Attributes:
 ### `api_usage.notification.sent`
 
 Logged at `info` from:
- - `api/organisations/task_helpers.py:176`
+ - `api/organisations/task_helpers.py:194`
 
 Attributes:
  - `matched_threshold`
+ - `organisation.id`
+
+### `api_usage.notification.stale_chargebee_cache`
+
+Logged at `warning` from:
+ - `api/organisations/task_helpers.py:141`
+
+Attributes:
+ - `chargebee_updated_at`
  - `organisation.id`
 
 ### `app_analytics.no_analytics_database_configured`
@@ -40,10 +49,19 @@ Logged at `warning` from:
 Attributes:
  - `details`
 
+### `billing.metadata.fetch_failed`
+
+Logged at `warning` from:
+ - `api/organisations/chargebee/chargebee.py:196`
+
+Attributes:
+ - `exc_info`
+ - `subscription.id`
+
 ### `billing.seat.added`
 
 Logged at `info` from:
- - `api/organisations/chargebee/chargebee.py:239`
+ - `api/organisations/chargebee/chargebee.py:244`
 
 Attributes:
  - `addon.id`
@@ -51,6 +69,14 @@ Attributes:
  - `seats.new`
  - `seats.previous`
  - `subscription.id`
+
+### `billing.subscription_information_cache.chargebee_sync_skipped`
+
+Logged at `warning` from:
+ - `api/organisations/subscription_info_cache.py:145`
+
+Attributes:
+ - `organisation.id`
 
 ### `code_references.cleanup_issues.created`
 

@@ -12,6 +12,7 @@ from chargebee.models.subscription.operations import (  # type: ignore[import-un
     Subscription as SubscriptionOps,
 )
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 from pytz import UTC
 
 from organisations.chargebee import (  # type: ignore[attr-defined]
@@ -454,7 +455,7 @@ def test_cancel_subscription__api_error__raises_cannot_cancel_error(  # type: ig
 
 
 def test_get_subscription_metadata_from_id__chargebee_api_error__returns_none(  # type: ignore[no-untyped-def]
-    mocker, chargebee_object_metadata
+    mocker, chargebee_object_metadata, log: StructuredLogCapture
 ) -> None:
     # Given
     mocked_chargebee = mocker.patch(
@@ -471,6 +472,14 @@ def test_get_subscription_metadata_from_id__chargebee_api_error__returns_none(  
 
     # Then
     assert subscription_metadata is None
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "metadata.fetch_failed",
+            "subscription__id": subscription_id,
+            "exc_info": True,
+        }
+    ]
 
 
 @pytest.mark.parametrize(
