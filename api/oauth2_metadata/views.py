@@ -1,6 +1,7 @@
 from typing import Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
+import structlog
 from django.http import HttpRequest, JsonResponse, QueryDict
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
@@ -20,6 +21,8 @@ from oauth2_metadata.dataclasses import OAuthConfig
 from oauth2_metadata.mappers import map_drf_error_to_rfc7591_error_body
 from oauth2_metadata.serializers import DCRRequestSerializer, OAuthConsentSerializer
 from oauth2_metadata.services import create_oauth2_application
+
+logger = structlog.get_logger("oauth2_metadata")
 
 
 @csrf_exempt
@@ -155,8 +158,18 @@ class DynamicClientRegistrationView(APIView):
     def post(self, request: Request) -> Response:
         serializer = DCRRequestSerializer(data=request.data)
         if not serializer.is_valid():
+            error_body = map_drf_error_to_rfc7591_error_body(serializer.errors)
+            payload = request.data if isinstance(request.data, dict) else {}
+            logger.error(
+                "registration.rejected",
+                error=error_body["error"],
+                error_description=error_body["error_description"],
+                client__name=payload.get("client_name"),
+                redirect_uris=payload.get("redirect_uris"),
+                user_agent=request.headers.get("User-Agent", ""),
+            )
             return Response(
-                map_drf_error_to_rfc7591_error_body(serializer.errors),
+                error_body,
                 status=drf_status.HTTP_400_BAD_REQUEST,
             )
 
