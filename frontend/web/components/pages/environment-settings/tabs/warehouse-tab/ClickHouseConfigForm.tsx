@@ -233,6 +233,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
 
         <WarehouseSetupSqlHelp
           database={database.trim() || CLICKHOUSE_DEFAULTS.database}
+          showInitially={!isEdit}
         />
 
         {error && <ErrorMessage error={getWarehouseErrorMessage(isEdit)} />}
