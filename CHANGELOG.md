@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.257.1](https://github.com/Flagsmith/flagsmith/compare/v2.257.0...v2.257.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* **api:** DCR rejects registrations without a client_name ([#8129](https://github.com/Flagsmith/flagsmith/issues/8129)) ([1201efd](https://github.com/Flagsmith/flagsmith/commit/1201efddd2a36268aa07e4c858d9f15631878fff))
+
 ## [2.257.0](https://github.com/Flagsmith/flagsmith/compare/v2.256.1...v2.257.0) (2026-07-28)
 
 
