@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.258.0](https://github.com/Flagsmith/flagsmith/compare/v2.257.1...v2.258.0) (2026-07-28)
+
+
+### Features
+
+* **api:** Support confidential clients in OAuth dynamic client registration ([#8138](https://github.com/Flagsmith/flagsmith/issues/8138)) ([ec9fd4a](https://github.com/Flagsmith/flagsmith/commit/ec9fd4ab4ed914cd60b7cd91041af35209efc067))
+
+
+### CI
+
+* pre-commit autoupdate ([#8118](https://github.com/Flagsmith/flagsmith/issues/8118)) ([067b6de](https://github.com/Flagsmith/flagsmith/commit/067b6dea0a6847de64982be35345e2a03fc110d1))
+
 ## [2.257.1](https://github.com/Flagsmith/flagsmith/compare/v2.257.0...v2.257.1) (2026-07-28)
 
 
