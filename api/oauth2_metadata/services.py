@@ -2,7 +2,10 @@ import logging
 from urllib.parse import urlparse
 
 from django.core.exceptions import ValidationError
+from oauth2_provider.generators import generate_client_secret
 from oauth2_provider.models import Application
+
+from oauth2_metadata.dataclasses import RegisteredClient
 
 logger = logging.getLogger(__name__)
 
@@ -64,19 +67,27 @@ def create_oauth2_application(
     *,
     client_name: str,
     redirect_uris: list[str],
-) -> Application:
-    """Create a public OAuth2 application for dynamic client registration."""
+    token_endpoint_auth_method: str = "none",
+) -> RegisteredClient:
+    """Create an OAuth2 application for dynamic client registration."""
+    client_secret = ""
+    client_type = Application.CLIENT_PUBLIC
+    if token_endpoint_auth_method != "none":
+        client_secret = generate_client_secret()
+        client_type = Application.CLIENT_CONFIDENTIAL
+
     application: Application = Application.objects.create(
         name=client_name,
-        client_type=Application.CLIENT_PUBLIC,
+        client_type=client_type,
         authorization_grant_type=Application.GRANT_AUTHORIZATION_CODE,
-        client_secret="",
+        client_secret=client_secret,
         redirect_uris=" ".join(redirect_uris),
         skip_authorization=False,
     )
     logger.info(
-        "OAuth2 DCR: registered application %s (client_id=%s).",
+        "OAuth2 DCR: registered application %s (client_id=%s, client_type=%s).",
         client_name,
         application.client_id,
+        client_type,
     )
-    return application
+    return RegisteredClient(application=application, client_secret=client_secret)

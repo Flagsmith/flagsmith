@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+from common.test_tools import AssertMetricFixture
 from django.urls import reverse
 from oauth2_provider.models import Application
 from pytest_structlog import StructuredLogCapture
@@ -44,6 +45,8 @@ def test_dcr_register__valid_request__returns_201_with_client_id(
     assert data["response_types"] == ["code"]
     assert data["token_endpoint_auth_method"] == "none"
     assert isinstance(data["client_id_issued_at"], int)
+    assert "client_secret" not in data
+    assert "client_secret_expires_at" not in data
 
 
 @pytest.mark.django_db()
@@ -177,6 +180,69 @@ def test_dcr_register__invalid_redirect_uris__returns_rfc7591_error(
     assert expected_fragment.lower() in data["error_description"].lower()
 
 
+@pytest.mark.django_db()
+@pytest.mark.parametrize(
+    "auth_method",
+    ["client_secret_basic", "client_secret_post"],
+)
+def test_dcr_register__confidential_client__returns_201_with_secret(
+    api_client: APIClient,
+    auth_method: str,
+) -> None:
+    # Given
+    payload = _valid_payload(token_endpoint_auth_method=auth_method)
+
+    # When
+    response = api_client.post(DCR_URL, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    data = response.json()
+    assert data["token_endpoint_auth_method"] == auth_method
+    assert data["client_secret"]
+    assert data["client_secret_expires_at"] == 0
+
+    application = Application.objects.get(client_id=data["client_id"])
+    assert application.client_type == Application.CLIENT_CONFIDENTIAL
+    # The secret is hashed at rest; only the response carries the plaintext.
+    assert application.client_secret != data["client_secret"]
+
+
+@pytest.mark.django_db()
+def test_dcr_register__valid_request__increments_registration_metric(
+    api_client: APIClient,
+    assert_metric: AssertMetricFixture,
+) -> None:
+    # Given / When
+    api_client.post(DCR_URL, data=_valid_payload(), format="json")
+
+    # Then
+    assert_metric(
+        name="flagsmith_oauth2_dcr_registrations_total",
+        labels={"token_endpoint_auth_method": "none", "outcome": "registered"},
+        value=1,
+    )
+
+
+def test_dcr_register__invalid_auth_method__increments_rejection_metric(
+    api_client: APIClient,
+    assert_metric: AssertMetricFixture,
+) -> None:
+    # Given / When - an unsupported method is collapsed to "other".
+    api_client.post(
+        DCR_URL,
+        data=_valid_payload(token_endpoint_auth_method="private_key_jwt"),
+        format="json",
+    )
+
+    # Then
+    assert_metric(
+        name="flagsmith_oauth2_dcr_registrations_total",
+        labels={"token_endpoint_auth_method": "other", "outcome": "rejected"},
+        value=1,
+    )
+
+
 @pytest.mark.parametrize(
     "invalid_uri",
     ["javascript:alert(1)", ""],
@@ -208,7 +274,7 @@ def test_dcr_register__invalid_redirect_uri_after_valid_one__returns_rfc7591_err
         ({"client_name": "<script>alert(1)</script>"}, "letters"),
         ({"grant_types": ["implicit"]}, "grant type"),
         ({"response_types": ["token"]}, "response type"),
-        ({"token_endpoint_auth_method": "client_secret_basic"}, "public clients"),
+        ({"token_endpoint_auth_method": "private_key_jwt"}, "not a valid choice"),
     ],
     ids=[
         "xss-client-name",

@@ -23,6 +23,9 @@ _CLIENT_NAME_RE = re.compile(r"^[\w\s.\-()]+$", re.ASCII)
 
 DEFAULT_CLIENT_NAME = "MCP client"
 
+# Matches token_endpoint_auth_methods_supported in the RFC 8414 metadata.
+TOKEN_ENDPOINT_AUTH_METHODS = ["client_secret_basic", "client_secret_post", "none"]
+
 
 class DCRRequestSerializer(serializers.Serializer[None]):
     # Optional per RFC 7591 §2; null, blank and absent all mean "unnamed".
@@ -49,7 +52,8 @@ class DCRRequestSerializer(serializers.Serializer[None]):
         required=False,
         default=["code"],
     )
-    token_endpoint_auth_method = serializers.CharField(
+    token_endpoint_auth_method = serializers.ChoiceField(
+        choices=TOKEN_ENDPOINT_AUTH_METHODS,
         required=False,
         default="none",
     )
@@ -73,14 +77,6 @@ class DCRRequestSerializer(serializers.Serializer[None]):
                 errors.append(str(e.message))
         if errors:
             raise serializers.ValidationError(errors)
-        return value
-
-    def validate_token_endpoint_auth_method(self, value: str) -> str:
-        if value != "none":
-            raise serializers.ValidationError(
-                "Only public clients are supported; "
-                "token_endpoint_auth_method must be 'none'."
-            )
         return value
 
     def validate_grant_types(self, value: list[str]) -> list[str]:

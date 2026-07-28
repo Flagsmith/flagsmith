@@ -79,6 +79,16 @@ Labels:
  - `method`
  - `response_status`
 
+### `flagsmith_oauth2_dcr_registrations`
+
+Counter.
+
+Total OAuth2 dynamic client registration requests, labelled by the requested token endpoint auth method and whether the registration was accepted or rejected.
+
+Labels:
+ - `token_endpoint_auth_method`
+ - `outcome`
+
 ### `flagsmith_segment_membership_backfill_duration_seconds`
 
 Histogram.
