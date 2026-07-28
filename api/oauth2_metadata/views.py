@@ -19,7 +19,12 @@ from rest_framework.views import APIView
 
 from oauth2_metadata.dataclasses import OAuthConfig
 from oauth2_metadata.mappers import map_drf_error_to_rfc7591_error_body
-from oauth2_metadata.serializers import DCRRequestSerializer, OAuthConsentSerializer
+from oauth2_metadata.metrics import flagsmith_oauth2_dcr_registrations_total
+from oauth2_metadata.serializers import (
+    TOKEN_ENDPOINT_AUTH_METHODS,
+    DCRRequestSerializer,
+    OAuthConsentSerializer,
+)
 from oauth2_metadata.services import create_oauth2_application
 
 logger = structlog.get_logger("oauth2_metadata")
@@ -160,6 +165,9 @@ class DynamicClientRegistrationView(APIView):
         if not serializer.is_valid():
             error_body = map_drf_error_to_rfc7591_error_body(serializer.errors)
             payload = request.data if isinstance(request.data, dict) else {}
+            self._count_registration(
+                payload.get("token_endpoint_auth_method"), outcome="rejected"
+            )
             logger.error(
                 "registration.rejected",
                 error=error_body["error"],
@@ -175,20 +183,39 @@ class DynamicClientRegistrationView(APIView):
 
         data = serializer.validated_data
 
-        application = create_oauth2_application(
+        registered = create_oauth2_application(
             client_name=data["client_name"],
             redirect_uris=data["redirect_uris"],
+            token_endpoint_auth_method=data["token_endpoint_auth_method"],
+        )
+        self._count_registration(
+            data["token_endpoint_auth_method"], outcome="registered"
         )
 
-        return Response(
-            {
-                "client_id": application.client_id,
-                "client_name": application.name,
-                "redirect_uris": data["redirect_uris"],
-                "grant_types": data["grant_types"],
-                "response_types": data["response_types"],
-                "token_endpoint_auth_method": data["token_endpoint_auth_method"],
-                "client_id_issued_at": int(application.created.timestamp()),
-            },
-            status=drf_status.HTTP_201_CREATED,
-        )
+        application = registered.application
+        response_body: dict[str, Any] = {
+            "client_id": application.client_id,
+            "client_name": application.name,
+            "redirect_uris": data["redirect_uris"],
+            "grant_types": data["grant_types"],
+            "response_types": data["response_types"],
+            "token_endpoint_auth_method": data["token_endpoint_auth_method"],
+            "client_id_issued_at": int(application.created.timestamp()),
+        }
+        if registered.client_secret:
+            response_body["client_secret"] = registered.client_secret
+            # 0 means the secret never expires, per RFC 7591 §3.2.1.
+            response_body["client_secret_expires_at"] = 0
+
+        return Response(response_body, status=drf_status.HTTP_201_CREATED)
+
+    def _count_registration(self, auth_method: Any, outcome: str) -> None:
+        # Requested method is client input; collapse unknown values to keep
+        # metric cardinality bounded.
+        if auth_method is None:
+            auth_method = "none"
+        if auth_method not in TOKEN_ENDPOINT_AUTH_METHODS:
+            auth_method = "other"
+        flagsmith_oauth2_dcr_registrations_total.labels(
+            token_endpoint_auth_method=auth_method, outcome=outcome
+        ).inc()
