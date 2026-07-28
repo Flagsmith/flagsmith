@@ -1441,6 +1441,12 @@ export type Res = {
       rank: number
     }[]
   }
+  environmentOnboardingStatus: {
+    // Null until the environment's first SDK evaluation is reported by Edge.
+    first_evaluated_at: string | null
+    // A Core `KnownSDK` label (e.g. 'flagsmith-js-sdk') or 'unknown'.
+    first_evaluated_sdk_label: string | null
+  }
   profile: User
   onboarding: {}
   userPermissions: UserPermission[]
