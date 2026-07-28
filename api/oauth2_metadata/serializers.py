@@ -23,7 +23,12 @@ _CLIENT_NAME_RE = re.compile(r"^[\w\s.\-()]+$", re.ASCII)
 
 
 class DCRRequestSerializer(serializers.Serializer[None]):
-    client_name = serializers.CharField(max_length=255, required=True)
+    # Optional per RFC 7591 §2; some MCP clients register without a name.
+    client_name = serializers.CharField(
+        max_length=255,
+        required=False,
+        default="MCP client",
+    )
     redirect_uris = serializers.ListField(
         child=serializers.CharField(max_length=2000),
         min_length=1,

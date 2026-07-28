@@ -422,6 +422,18 @@ Logged at `info` from:
 Attributes:
  - `organisation.id`
 
+### `oauth2_metadata.registration.rejected`
+
+Logged at `info` from:
+ - `api/oauth2_metadata/views.py:163`
+
+Attributes:
+ - `client.name`
+ - `error`
+ - `error_description`
+ - `redirect_uris`
+ - `user_agent`
+
 ### `onboarding.environment.already_evaluated`
 
 Logged at `info` from:

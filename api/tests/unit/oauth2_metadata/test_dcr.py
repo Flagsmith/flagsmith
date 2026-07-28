@@ -3,6 +3,7 @@ from unittest.mock import patch
 import pytest
 from django.urls import reverse
 from oauth2_provider.models import Application
+from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -236,33 +237,69 @@ def test_dcr_register__invalid_client_metadata__returns_rfc7591_error(
     assert expected_fragment.lower() in data["error_description"].lower()
 
 
-@pytest.mark.parametrize(
-    ("payload", "expected_error"),
-    [
-        (
-            {"redirect_uris": ["https://example.com/callback"]},
-            "invalid_client_metadata",
-        ),
-        (
-            {"client_name": "Test"},
-            "invalid_redirect_uri",
-        ),
-    ],
-    ids=["missing-client-name", "missing-redirect-uris"],
-)
-def test_dcr_register__missing_required_field__returns_rfc7591_error(
+@pytest.mark.django_db()
+def test_dcr_register__no_client_name__returns_201_with_default_name(
     api_client: APIClient,
-    payload: dict[str, object],
-    expected_error: str,
+) -> None:
+    # Given - client_name is optional per RFC 7591 section 2.
+    payload = {"redirect_uris": ["https://example.com/callback"]}
+
+    # When
+    response = api_client.post(DCR_URL, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["client_name"] == "MCP client"
+
+
+def test_dcr_register__missing_redirect_uris__returns_rfc7591_error(
+    api_client: APIClient,
 ) -> None:
     # Given / When
-    response = api_client.post(DCR_URL, data=payload, format="json")
+    response = api_client.post(DCR_URL, data={"client_name": "Test"}, format="json")
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
-    assert data["error"] == expected_error
+    assert data["error"] == "invalid_redirect_uri"
     assert "error_description" in data
+
+
+def test_dcr_register__invalid_request__logs_rejection(
+    api_client: APIClient,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    payload = _valid_payload(
+        client_name="Claude Desktop",
+        redirect_uris=["https://example.com/callback", "javascript:alert(1)"],
+    )
+
+    # When
+    api_client.post(
+        DCR_URL,
+        data=payload,
+        format="json",
+        HTTP_USER_AGENT="Claude-Desktop/1.0",
+    )
+
+    # Then
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "registration.rejected",
+            "error": "invalid_redirect_uri",
+            "error_description": (
+                "Scheme is not permitted in redirect URIs: javascript:alert(1)"
+            ),
+            "client__name": "Claude Desktop",
+            "redirect_uris": [
+                "https://example.com/callback",
+                "javascript:alert(1)",
+            ],
+            "user_agent": "Claude-Desktop/1.0",
+        }
+    ]
 
 
 def test_dcr_register__get_request__returns_405(
