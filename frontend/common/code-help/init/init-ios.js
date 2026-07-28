@@ -9,8 +9,10 @@ func application(_ application: UIApplication,
  didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
   Flagsmith.shared.apiKey = "${envId}"${
-  Constants.isCustomFlagsmithUrl() &&
-  `\n  Flagsmith.shared.baseURL = "${Constants.getFlagsmithSDKUrl()}"\n`
+  // `&&` here would interpolate the literal string "false" into the snippet.
+  Constants.isCustomFlagsmithUrl()
+    ? `\n  Flagsmith.shared.baseURL = "${Constants.getFlagsmithSDKUrl()}"\n`
+    : ''
 }
   // Check for a feature
   Flagsmith.shared
@@ -20,7 +22,9 @@ func application(_ application: UIApplication,
 
   // Or, use the value of a feature
   Flagsmith.shared
-  .getFeatureValue(withID: "${FEATURE_NAME_ALT}", forIdentity: nil) { (result) in
+  .getFeatureValue(withID: "${
+    FEATURE_NAME_ALT || FEATURE_NAME
+  }", forIdentity: nil) { (result) in
       switch result {
       case .success(let value):
           print(value ?? "nil")

@@ -64,11 +64,19 @@ export const FeatureFlagProvider = ({
 import { useFlags } from '@flagsmith/flagsmith/react';
 
 export default function HomePage() {
-  const flags = useFlags(['${FEATURE_NAME}','${FEATURE_NAME_ALT}']); // only causes re-render if specified flag values / traits change
-  const ${FEATURE_NAME} = flags.${FEATURE_NAME}.enabled
-  const ${FEATURE_NAME_ALT} = flags.${FEATURE_NAME_ALT}.value
+  // Only re-renders when the listed flag values / traits change
+  const flags = useFlags([${
+    FEATURE_NAME_ALT
+      ? `'${FEATURE_NAME}', '${FEATURE_NAME_ALT}'`
+      : `'${FEATURE_NAME}'`
+  }]);
+  const isEnabled = flags['${FEATURE_NAME}'].enabled;
+  const featureValue = flags['${FEATURE_NAME_ALT || FEATURE_NAME}'].value;
   
   return (
-    <>{...}</>
+    <div>
+      <p>${FEATURE_NAME} enabled: {String(isEnabled)}</p>
+      <p>${FEATURE_NAME_ALT || FEATURE_NAME} value: {String(featureValue)}</p>
+    </div>
   );
 }`

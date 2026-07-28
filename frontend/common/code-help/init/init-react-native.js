@@ -1,12 +1,14 @@
 import Constants from 'common/constants'
 
-// Flag names are user-defined and need not be valid JS identifiers, so the
-// snippet reads flags by key and keeps its own local variable names.
+// Same shape as the React snippet, but React Native has no <div>/<p>, so this
+// renders View/Text. Flag names are user-defined and need not be valid JS
+// identifiers, so flags are read by key with local variable names.
 export default (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_CLIENT },
 ) => `import ${LIB_NAME} from "${NPM_CLIENT}";
 import { FlagsmithProvider, useFlags } from '${NPM_CLIENT}/react';
+import { View, Text } from 'react-native';
 
 export function HomePage() {
   // Only re-renders when the listed flag values / traits change
@@ -19,10 +21,12 @@ export function HomePage() {
   const featureValue = flags['${FEATURE_NAME_ALT || FEATURE_NAME}'].value;
 
   return (
-    <div>
-      <p>${FEATURE_NAME} enabled: {String(isEnabled)}</p>
-      <p>${FEATURE_NAME_ALT || FEATURE_NAME} value: {String(featureValue)}</p>
-    </div>
+    <View>
+      <Text>${FEATURE_NAME} enabled: {String(isEnabled)}</Text>
+      <Text>${
+        FEATURE_NAME_ALT || FEATURE_NAME
+      } value: {String(featureValue)}</Text>
+    </View>
   );
 }
 
