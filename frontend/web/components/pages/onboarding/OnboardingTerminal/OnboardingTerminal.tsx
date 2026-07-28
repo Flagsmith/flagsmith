@@ -8,6 +8,8 @@ export type OnboardingTerminalProps = {
   snippetCopied: boolean
   // First evaluation received (#7767).
   connected: boolean
+  // Which SDK reported that evaluation, when Core could identify it.
+  sdkLabel?: string | null
 }
 
 // Verify console. Always dark (a terminal reads the same in both modes), so it
@@ -16,6 +18,7 @@ const OnboardingTerminal: FC<OnboardingTerminalProps> = ({
   connected,
   featureName,
   installCopied,
+  sdkLabel,
   snippetCopied,
 }) => {
   const steps = [
@@ -74,7 +77,7 @@ const OnboardingTerminal: FC<OnboardingTerminalProps> = ({
         {connected ? (
           <>
             <p className='onboarding-terminal__line onboarding-terminal__line--dim'>
-              SDK initialized · flags loaded · {featureName}: true
+              {sdkLabel ? `${sdkLabel} · ` : ''}first evaluation received
             </p>
             <p className='onboarding-terminal__line onboarding-terminal__line--ok onboarding-terminal__line--strong'>
               ✓ Connected
