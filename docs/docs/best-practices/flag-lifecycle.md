@@ -24,6 +24,8 @@ Short-lived flags are designed to be removed from your code and from Flagsmith a
 
 Short lived flags are typically used for the following use-scenarios:
 
+Flagsmith can automatically flag features that have not been changed for a configurable period of time — see [Stale Flag Detection](/managing-flags/stale-flags).
+
 ### Feature Roll-Outs
 
 The most common use of flags in general is to decouple the deployment of a feature from its release. When using a flag to achieve this, you will generally remove it from your code and from Flagsmith once you are happy with the feature and it is rolled out to all your users.

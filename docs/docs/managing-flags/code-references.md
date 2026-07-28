@@ -8,7 +8,7 @@ Integrate with Code References to track feature flag usage in your codebase, and
 
 - Identify the impact of each feature across multiple repositories
 - Navigate through the business logic in the code from a feature's perspective
-- Coordinate cleanup work around stale feature flags easier
+- Coordinate cleanup work around [stale feature flags](/managing-flags/stale-flags) easier
 
 ![Code References badges displayed in the Features list, each containing a count of references of that feature](./code-references/feature-list.png)
 
