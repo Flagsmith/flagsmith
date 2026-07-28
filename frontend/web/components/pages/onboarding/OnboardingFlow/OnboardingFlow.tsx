@@ -64,8 +64,9 @@ const OnboardingFlow: FC = () => {
     projectId,
   })
 
-  // Connection is stubbed until #7767 (useOnboardingConnection); the toggle is real.
-  const connection = useOnboardingConnection()
+  // Real first-evaluation signal: polls the environment's onboarding
+  // status until Edge reports its first SDK evaluation.
+  const connection = useOnboardingConnection(environmentKey)
   // Session-only: a reload resets the checklist. Fine for onboarding.
   const [installCopied, setInstallCopied] = useState(false)
   const [snippetCopied, setSnippetCopied] = useState(false)
