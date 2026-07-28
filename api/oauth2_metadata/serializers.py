@@ -21,13 +21,17 @@ class OAuthConsentSerializer(serializers.Serializer):  # type: ignore[type-arg]
 # ASCII-only to prevent Unicode homoglyph spoofing on the consent screen.
 _CLIENT_NAME_RE = re.compile(r"^[\w\s.\-()]+$", re.ASCII)
 
+DEFAULT_CLIENT_NAME = "MCP client"
+
 
 class DCRRequestSerializer(serializers.Serializer[None]):
-    # Optional per RFC 7591 §2; some MCP clients register without a name.
+    # Optional per RFC 7591 §2; null, blank and absent all mean "unnamed".
     client_name = serializers.CharField(
         max_length=255,
         required=False,
-        default="MCP client",
+        allow_blank=True,
+        allow_null=True,
+        default=DEFAULT_CLIENT_NAME,
     )
     redirect_uris = serializers.ListField(
         child=serializers.CharField(max_length=2000),
@@ -50,7 +54,9 @@ class DCRRequestSerializer(serializers.Serializer[None]):
         default="none",
     )
 
-    def validate_client_name(self, value: str) -> str:
+    def validate_client_name(self, value: str | None) -> str:
+        if not value or not value.strip():
+            return DEFAULT_CLIENT_NAME
         if not _CLIENT_NAME_RE.match(value):
             raise serializers.ValidationError(
                 "Client name may only contain letters, digits, spaces, "

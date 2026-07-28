@@ -206,14 +206,12 @@ def test_dcr_register__invalid_redirect_uri_after_valid_one__returns_rfc7591_err
     ("overrides", "expected_fragment"),
     [
         ({"client_name": "<script>alert(1)</script>"}, "letters"),
-        ({"client_name": "   "}, "blank"),
         ({"grant_types": ["implicit"]}, "grant type"),
         ({"response_types": ["token"]}, "response type"),
         ({"token_endpoint_auth_method": "client_secret_basic"}, "public clients"),
     ],
     ids=[
         "xss-client-name",
-        "blank-client-name",
         "bad-grant-type",
         "bad-response-type",
         "bad-auth-method",
@@ -238,11 +236,22 @@ def test_dcr_register__invalid_client_metadata__returns_rfc7591_error(
 
 
 @pytest.mark.django_db()
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"redirect_uris": ["https://example.com/callback"]},
+        {"client_name": None, "redirect_uris": ["https://example.com/callback"]},
+        {"client_name": "", "redirect_uris": ["https://example.com/callback"]},
+        {"client_name": "   ", "redirect_uris": ["https://example.com/callback"]},
+    ],
+    ids=["absent", "null", "blank", "whitespace-only"],
+)
 def test_dcr_register__no_client_name__returns_201_with_default_name(
     api_client: APIClient,
+    payload: dict[str, object],
 ) -> None:
-    # Given - client_name is optional per RFC 7591 section 2.
-    payload = {"redirect_uris": ["https://example.com/callback"]}
+    # Given - client_name is optional per RFC 7591 section 2; null and
+    # blank values are treated the same as an absent one.
 
     # When
     response = api_client.post(DCR_URL, data=payload, format="json")
