@@ -1020,6 +1020,6 @@ def test_deliver_events_for_connection__warehouse_unusable__aborts_and_marks_err
     # Then the breakage is surfaced on the connection
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
-    assert clickhouse_connection.status_detail == "Authentication failed"
+    assert clickhouse_connection.status_detail == "Authentication failed."
     assert _delivery_runs_count("failure") == failure_runs_before + 1
     assert log.has("warehouse_delivery.failed", level="error")

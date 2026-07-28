@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import structlog
 from django.utils import timezone
 from task_processor.decorators import (
@@ -134,7 +136,7 @@ def deliver_events_to_external_warehouses() -> None:
         deliver_events_for_connection.delay(kwargs={"connection_id": connection_id})
 
 
-@register_task_handler()
+@register_task_handler(timeout=timedelta(minutes=9))
 def deliver_events_for_connection(connection_id: int) -> None:
     connection = (
         WarehouseConnection.objects.select_related(
@@ -200,7 +202,10 @@ def deliver_events_for_connection(connection_id: int) -> None:
         # The warehouse itself is unusable; deliver nothing, leave every
         # remaining object in place for the next run, and surface the
         # breakage on the connection.
-        mark_warehouse_delivery_failed(connection, detail=str(exc))
+        mark_warehouse_delivery_failed(
+            connection,
+            detail=warehouse_delivery_service.describe_delivery_error(exc),
+        )
         flagsmith_experimentation_warehouse_delivery_runs_total.labels(
             result="failure"
         ).inc()

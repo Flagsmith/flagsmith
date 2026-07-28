@@ -4,7 +4,7 @@ from typing import Any
 
 import boto3
 import pytest
-from clickhouse_connect.driver.exceptions import DatabaseError
+from clickhouse_connect.driver.exceptions import DatabaseError, OperationalError
 from moto import mock_s3  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 
@@ -253,3 +253,51 @@ def test_deliver_object__connection_level_error__reraises(
             BUCKET_NAME,
             _event_key("13"),
         )
+
+
+@pytest.mark.parametrize(
+    "error, expected_detail",
+    [
+        pytest.param(
+            warehouse_delivery_service.DeliveryConfigError(
+                "Stored connection details are incomplete."
+            ),
+            "Stored connection details are incomplete.",
+            id="config-error",
+        ),
+        pytest.param(
+            OperationalError("HTTPSConnectionPool: Max retries exceeded"),
+            "Could not connect to the host.",
+            id="unreachable",
+        ),
+        pytest.param(
+            DatabaseError("Code: 516. DB::Exception: nope", code=516),
+            "Authentication failed.",
+            id="bad-auth",
+        ),
+        pytest.param(
+            DatabaseError("Code: 60. DB::Exception: no table", code=60),
+            "Table `events` does not exist.",
+            id="missing-table",
+        ),
+        pytest.param(
+            DatabaseError("Code: 241. DB::Exception: memory limit", code=241),
+            "The ClickHouse server rejected the request.",
+            id="other-server-error",
+        ),
+        pytest.param(
+            ConnectionResetError("connection reset by peer"),
+            "Delivery failed.",
+            id="unexpected-error",
+        ),
+    ],
+)
+def test_describe_delivery_error__known_failures__returns_user_facing_detail(
+    error: Exception,
+    expected_detail: str,
+) -> None:
+    # When
+    detail = warehouse_delivery_service.describe_delivery_error(error)
+
+    # Then
+    assert detail == expected_detail

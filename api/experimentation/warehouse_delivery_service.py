@@ -5,7 +5,10 @@ from functools import lru_cache
 import boto3
 import clickhouse_connect
 import structlog
-from clickhouse_connect.driver.exceptions import DatabaseError
+from clickhouse_connect.driver.exceptions import (
+    DatabaseError,
+    OperationalError,
+)
 
 from core.network import is_internal_address
 from experimentation.ingestion_infra_service import AWS_REGION
@@ -68,6 +71,25 @@ OBJECT_LEVEL_ERROR_CODES = frozenset(
         469,  # VIOLATED_CONSTRAINT
     }
 )
+
+
+def describe_delivery_error(error: Exception) -> str:
+    """Return a user-facing description of a failed delivery run, suitable for
+    the connection's ``status_detail``. Raw exception text stays in the logs:
+    it can carry internal infrastructure details."""
+    if isinstance(error, DeliveryConfigError):
+        return str(error)
+    # OperationalError subclasses DatabaseError, so it is matched first.
+    if isinstance(error, OperationalError):
+        return "Could not connect to the host."
+    if isinstance(error, DatabaseError):
+        # 516 = AUTHENTICATION_FAILED, 60 = UNKNOWN_TABLE
+        if error.code == 516:
+            return "Authentication failed."
+        if error.code == 60:
+            return f"Table `{EVENTS_TABLE_NAME}` does not exist."
+        return "The ClickHouse server rejected the request."
+    return "Delivery failed."
 
 
 @lru_cache(maxsize=1)
