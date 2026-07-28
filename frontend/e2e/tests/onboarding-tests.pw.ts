@@ -138,6 +138,10 @@ test.describe('Onboarding', () => {
         .getByRole('region', { name: 'Your flags' })
         .getByText('Onboarding', { exact: true }),
     ).toBeVisible();
+    // The reload dropped the connected latch, so wait for the console to flip
+    // back before snapshotting: the badge state would otherwise race the first
+    // poll and diff against the baseline.
+    await waitConnected();
     await visualSnapshot(page, 'onboarding-renamed', testInfo);
 
     // The next-quest cards unlock once connected, each deep-linking to the
@@ -147,7 +151,6 @@ test.describe('Onboarding', () => {
       page.getByRole('heading', { name: 'Choose your next quest' }),
     ).toBeVisible();
 
-    await waitConnected();
     await page.getByRole('button', { name: /Gradual rollout/ }).click();
     await expect(page).toHaveURL(
       /\/features\?feature=\d+&tab=segment-overrides/,
