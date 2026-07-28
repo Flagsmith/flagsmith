@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 from common.test_tools import AssertMetricFixture
+from django.contrib.auth.hashers import check_password
 from django.urls import reverse
 from oauth2_provider.models import Application
 from pytest_structlog import StructuredLogCapture
@@ -206,7 +207,9 @@ def test_dcr_register__confidential_client__returns_201_with_secret(
     application = Application.objects.get(client_id=data["client_id"])
     assert application.client_type == Application.CLIENT_CONFIDENTIAL
     # The secret is hashed at rest; only the response carries the plaintext.
+    # check_password is the same verification the token endpoint performs.
     assert application.client_secret != data["client_secret"]
+    assert check_password(data["client_secret"], application.client_secret)
 
     assert_metric(
         name="flagsmith_oauth2_dcr_registrations_total",
