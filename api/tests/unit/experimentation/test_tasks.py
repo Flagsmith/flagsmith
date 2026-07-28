@@ -911,7 +911,7 @@ def test_deliver_events_for_connection__pending_objects__delivers_archives_and_r
     assert _delivery_objects_count("delivered") == delivered_objects_before + 2
     assert {
         "level": "info",
-        "event": "warehouse_delivery.completed",
+        "event": "delivery.completed",
         "environment__id": environment.id,
         "organisation__id": environment.project.organisation_id,
         "objects__count": 2,
@@ -972,10 +972,10 @@ def test_deliver_events_for_connection__rejected_object__moves_to_failed_and_con
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
     assert _delivery_objects_count("rejected") == rejected_objects_before + 1
-    assert log.has("warehouse_delivery.object_rejected", level="warning")
+    assert log.has("delivery.object_rejected", level="warning")
     assert {
         "level": "info",
-        "event": "warehouse_delivery.completed",
+        "event": "delivery.completed",
         "environment__id": environment.id,
         "organisation__id": environment.project.organisation_id,
         "objects__count": 1,
@@ -1022,4 +1022,4 @@ def test_deliver_events_for_connection__warehouse_unusable__aborts_and_marks_err
     assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
     assert clickhouse_connection.status_detail == "Authentication failed."
     assert _delivery_runs_count("failure") == failure_runs_before + 1
-    assert log.has("warehouse_delivery.failed", level="error")
+    assert log.has("delivery.failed", level="error")

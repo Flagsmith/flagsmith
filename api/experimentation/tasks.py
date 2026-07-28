@@ -8,12 +8,8 @@ from task_processor.decorators import (
 )
 
 from environments.models import Environment, EnvironmentAPIKey
-from experimentation import ingestion_sync_service, warehouse_delivery_service
+from experimentation import ingestion_sync_service
 from experimentation.constants import DELIVERY_INTERVAL
-from experimentation.metrics import (
-    flagsmith_experimentation_warehouse_delivery_objects_total,
-    flagsmith_experimentation_warehouse_delivery_runs_total,
-)
 from experimentation.models import (
     Experiment,
     ExperimentExposures,
@@ -28,8 +24,7 @@ from experimentation.organisation_ingestion_service import (
 from experimentation.services import (
     compute_exposures_summary,
     compute_results_summary,
-    mark_warehouse_delivery_failed,
-    mark_warehouse_delivery_succeeded,
+    deliver_warehouse_events,
 )
 
 logger = structlog.get_logger("experimentation")
@@ -148,80 +143,15 @@ def deliver_events_for_connection(connection_id: int) -> None:
     if connection is None:
         return
 
-    organisation = connection.environment.project.organisation
-    infrastructure = getattr(organisation, "ingestion_infrastructure", None)
+    infrastructure = getattr(
+        connection.environment.project.organisation,
+        "ingestion_infrastructure",
+        None,
+    )
     if infrastructure is None or not infrastructure.bucket_name:
         return
 
-    log = logger.bind(
-        environment__id=connection.environment_id,
-        organisation__id=organisation.id,
-    )
-    bucket_name = infrastructure.bucket_name
-    pending = warehouse_delivery_service.list_pending_objects(
-        bucket_name,
-        environment_key=connection.environment.api_key,
-    )
-    if not pending:
-        return
-
-    delivered_count = rejected_count = rows_count = 0
-    try:
-        with warehouse_delivery_service.delivery_client(connection) as client:
-            for s3_key in pending:
-                try:
-                    rows_count += warehouse_delivery_service.deliver_object(
-                        client,
-                        bucket_name,
-                        s3_key,
-                    )
-                except warehouse_delivery_service.ObjectRejectedError:
-                    # This object's contents are the problem; the ones behind
-                    # it are still deliverable.
-                    warehouse_delivery_service.move_object(
-                        bucket_name,
-                        s3_key,
-                        to_prefix=warehouse_delivery_service.FAILED_PREFIX,
-                    )
-                    rejected_count += 1
-                    flagsmith_experimentation_warehouse_delivery_objects_total.labels(
-                        result="rejected"
-                    ).inc()
-                    log.warning("warehouse_delivery.object_rejected", exc_info=True)
-                    continue
-                warehouse_delivery_service.move_object(
-                    bucket_name,
-                    s3_key,
-                    to_prefix=warehouse_delivery_service.ARCHIVE_PREFIX,
-                )
-                delivered_count += 1
-                flagsmith_experimentation_warehouse_delivery_objects_total.labels(
-                    result="delivered"
-                ).inc()
-    except Exception as exc:
-        # The warehouse itself is unusable; deliver nothing, leave every
-        # remaining object in place for the next run, and surface the
-        # breakage on the connection.
-        mark_warehouse_delivery_failed(
-            connection,
-            detail=warehouse_delivery_service.describe_delivery_error(exc),
-        )
-        flagsmith_experimentation_warehouse_delivery_runs_total.labels(
-            result="failure"
-        ).inc()
-        log.error("warehouse_delivery.failed", exc_info=exc)
-        return
-
-    mark_warehouse_delivery_succeeded(connection)
-    flagsmith_experimentation_warehouse_delivery_runs_total.labels(
-        result="success"
-    ).inc()
-    log.info(
-        "warehouse_delivery.completed",
-        objects__count=delivered_count,
-        objects__rejected_count=rejected_count,
-        rows__count=rows_count,
-    )
+    deliver_warehouse_events(connection, bucket_name=infrastructure.bucket_name)
 
 
 @register_task_handler()

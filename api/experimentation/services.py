@@ -21,6 +21,7 @@ from audit.related_object_type import RelatedObjectType
 from core.dataclasses import AuthorData
 from core.network import is_internal_address
 from environments.tasks import rebuild_environment_document
+from experimentation import warehouse_delivery_service
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
@@ -45,6 +46,8 @@ from experimentation.dataclasses import (
 )
 from experimentation.metrics import (
     flagsmith_experimentation_warehouse_connection_verifications_total,
+    flagsmith_experimentation_warehouse_delivery_objects_total,
+    flagsmith_experimentation_warehouse_delivery_runs_total,
 )
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
@@ -83,6 +86,8 @@ _ROLLOUT_VALUE_TYPE: dict[str, "FeatureValueType"] = {
 if typing.TYPE_CHECKING:
     from collections.abc import Sequence
     from datetime import datetime
+
+    from clickhouse_connect.driver.client import Client as ClickHouseHTTPClient
 
     from experimentation.models import Metric, WarehouseConnection
     from experimentation.types import ExposureGranularity
@@ -819,6 +824,99 @@ def mark_warehouse_delivery_succeeded(connection: WarehouseConnection) -> None:
     connection.status = WarehouseConnectionStatus.CONNECTED
     connection.status_detail = None
     connection.save(update_fields=["status", "status_detail"])
+
+
+def _deliver_pending_objects(
+    client: ClickHouseHTTPClient,
+    *,
+    bucket_name: str,
+    pending: list[str],
+    log: structlog.stdlib.BoundLogger,
+) -> tuple[int, int, int]:
+    delivered_count = rejected_count = rows_count = 0
+    for s3_key in pending:
+        try:
+            rows_count += warehouse_delivery_service.deliver_object(
+                client,
+                bucket_name,
+                s3_key,
+            )
+        except warehouse_delivery_service.ObjectRejectedError:
+            # This object's contents are the problem; the ones behind it are
+            # still deliverable.
+            warehouse_delivery_service.move_object(
+                bucket_name,
+                s3_key,
+                to_prefix=warehouse_delivery_service.FAILED_PREFIX,
+            )
+            rejected_count += 1
+            flagsmith_experimentation_warehouse_delivery_objects_total.labels(
+                result="rejected"
+            ).inc()
+            log.warning("delivery.object_rejected", exc_info=True)
+            continue
+        warehouse_delivery_service.move_object(
+            bucket_name,
+            s3_key,
+            to_prefix=warehouse_delivery_service.ARCHIVE_PREFIX,
+        )
+        delivered_count += 1
+        flagsmith_experimentation_warehouse_delivery_objects_total.labels(
+            result="delivered"
+        ).inc()
+    return delivered_count, rejected_count, rows_count
+
+
+def deliver_warehouse_events(
+    connection: WarehouseConnection,
+    *,
+    bucket_name: str,
+) -> None:
+    """Deliver the environment's pending event objects to the connection's
+    warehouse, surfacing the outcome on the connection's status."""
+    log = logger.bind(
+        environment__id=connection.environment_id,
+        organisation__id=connection.environment.project.organisation_id,
+    )
+    pending = warehouse_delivery_service.list_pending_objects(
+        bucket_name,
+        environment_key=connection.environment.api_key,
+    )
+    if not pending:
+        return
+
+    try:
+        with warehouse_delivery_service.delivery_client(connection) as client:
+            delivered_count, rejected_count, rows_count = _deliver_pending_objects(
+                client,
+                bucket_name=bucket_name,
+                pending=pending,
+                log=log,
+            )
+    except Exception as exc:
+        # The warehouse itself is unusable; deliver nothing, leave every
+        # remaining object in place for the next run, and surface the
+        # breakage on the connection.
+        mark_warehouse_delivery_failed(
+            connection,
+            detail=warehouse_delivery_service.describe_delivery_error(exc),
+        )
+        flagsmith_experimentation_warehouse_delivery_runs_total.labels(
+            result="failure"
+        ).inc()
+        log.error("delivery.failed", exc_info=exc)
+        return
+
+    mark_warehouse_delivery_succeeded(connection)
+    flagsmith_experimentation_warehouse_delivery_runs_total.labels(
+        result="success"
+    ).inc()
+    log.info(
+        "delivery.completed",
+        objects__count=delivered_count,
+        objects__rejected_count=rejected_count,
+        rows__count=rows_count,
+    )
 
 
 class InternalAddressError(Exception):
