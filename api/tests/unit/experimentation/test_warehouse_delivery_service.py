@@ -70,6 +70,8 @@ def test_list_pending_objects__objects_across_hours__returns_chronological_and_s
 def test_list_pending_objects__no_objects__returns_empty(
     events_bucket: Any,
 ) -> None:
+    # Given an events bucket with no objects
+
     # When
     pending = warehouse_delivery_service.list_pending_objects(
         BUCKET_NAME,
@@ -296,6 +298,8 @@ def test_describe_delivery_error__known_failures__returns_user_facing_detail(
     error: Exception,
     expected_detail: str,
 ) -> None:
+    # Given a parametrised delivery failure
+
     # When
     detail = warehouse_delivery_service.describe_delivery_error(error)
 

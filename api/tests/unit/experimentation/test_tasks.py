@@ -804,6 +804,8 @@ def test_deliver_events_for_connection__missing_connection__does_nothing(
     db: None,
     warehouse_client: Any,
 ) -> None:
+    # Given no connection with the requested id
+
     # When
     deliver_events_for_connection(connection_id=404)
 
@@ -815,6 +817,8 @@ def test_deliver_events_for_connection__no_infrastructure__does_nothing(
     clickhouse_connection: WarehouseConnection,
     warehouse_client: Any,
 ) -> None:
+    # Given a connection whose organisation has no ingestion infrastructure
+
     # When
     deliver_events_for_connection(connection_id=clickhouse_connection.id)
 
@@ -846,6 +850,8 @@ def test_deliver_events_for_connection__no_pending_objects__does_not_connect(
     delivery_bucket: Any,
     warehouse_client: Any,
 ) -> None:
+    # Given an events bucket with no objects for the environment
+
     # When
     deliver_events_for_connection(connection_id=clickhouse_connection.id)
 
