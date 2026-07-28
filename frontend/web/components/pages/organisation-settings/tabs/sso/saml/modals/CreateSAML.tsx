@@ -276,8 +276,8 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
                 if (res.data) {
                   setName(res.data.name)
                   setFrontendUrl(res.data.frontend_url)
-                  setMetadataXml(res.data.idp_metadata_xml)
-                  setAllowIdpInitiated(res.data.allow_idp_initiated)
+                  setMetadataXml(res.data.idp_metadata_xml ?? '')
+                  setAllowIdpInitiated(res.data.allow_idp_initiated ?? false)
                   setPreviousName(res.data.name)
                   toast('SAML configuration updated!')
                 }
@@ -287,8 +287,8 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
                 if (res.data) {
                   setName(res.data.name)
                   setFrontendUrl(res.data.frontend_url)
-                  setMetadataXml(res.data.idp_metadata_xml)
-                  setAllowIdpInitiated(res.data.allow_idp_initiated)
+                  setMetadataXml(res.data.idp_metadata_xml ?? '')
+                  setAllowIdpInitiated(res.data.allow_idp_initiated ?? false)
                   toast('SAML configuration Created!')
                   setIsEdit(true)
                   setPreviousName(res.data.name)
