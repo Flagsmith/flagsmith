@@ -63,7 +63,8 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   // until events actually arrive in the customer's warehouse.
   const showSendFirstEvent = isFlagsmith
     ? !isPending && !isConnected
-    : !connection.total_events_received
+    : connection.warehouse_type === 'clickhouse' &&
+      !connection.total_events_received
 
   const handleDelete = () => {
     openConfirm({
@@ -149,8 +150,9 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
           </span>
         </div>
       )}
+      <WarehouseEventCodeHelp />
       {connection.warehouse_type === 'clickhouse' && (
-        <div className='mb-3'>
+        <div className='mt-3'>
           <WarehouseSetupSqlHelp
             database={
               (connection.config &&
@@ -158,13 +160,11 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
                 connection.config.database) ||
               CLICKHOUSE_DEFAULTS.database
             }
-            showInitially={!connection.total_events_received}
           />
         </div>
       )}
-      <WarehouseEventCodeHelp />
       <div className='d-flex justify-content-end mt-3'>
-        {onTestConnection && (
+        {onTestConnection && !isConnected && (
           <Button
             id='warehouse-connection-test'
             theme='outline'
