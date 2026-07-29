@@ -979,7 +979,7 @@ def test_deliver_events_for_connection__rejected_object__moves_to_failed_and_con
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
     assert _delivery_objects_count("rejected") == rejected_objects_before + 1
-    assert log.has("delivery.object_rejected", level="warning")
+    assert log.has("delivery.object_rejected", level="error")
     assert {
         "level": "info",
         "event": "delivery.completed",

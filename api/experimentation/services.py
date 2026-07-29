@@ -874,7 +874,7 @@ def _deliver_pending_objects(
             flagsmith_experimentation_warehouse_delivery_objects_total.labels(
                 result="rejected"
             ).inc()
-            log.warning(
+            log.error(
                 "delivery.object_rejected",
                 s3__key=s3_key,
                 exc_info=True,
