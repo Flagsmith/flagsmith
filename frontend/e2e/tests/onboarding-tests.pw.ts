@@ -99,6 +99,10 @@ test.describe('Onboarding', () => {
     firstEvaluated = true;
     await waitConnected();
 
+    // The console names the SDK that reported the evaluation, from the mocked
+    // first_evaluated_sdk_label above.
+    await expect(page.getByText(/flagsmith-js-sdk/)).toBeVisible();
+
     // Two switches on the page (theme + flag), so scope to the flags region.
     log('Toggle the flag');
     const flagsTable = page.getByRole('region', { name: 'Your flags' });

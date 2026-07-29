@@ -1,15 +1,10 @@
 // Snippets for every SDK we support, sourced from the maintained
 // `Constants.codeHelp` (the same install/init the rest of the app uses, so
-// they don't drift). One adaptation for this page: codeHelp uses a placeholder
-// flag name; we swap it for the user's real flag, so the snippet references
-// the flag this onboarding actually created.
+// they don't drift). We pass the flag this onboarding created, which builds the
+// snippets around that one flag rather than codeHelp's two placeholders.
 // The SDK list itself (labels, logos, codeHelp keys) lives in ./sdkLangs.
 import Constants from 'common/constants'
 import { SdkLang } from './sdkLangs'
-
-// Mirrors Constants' `keywords.FEATURE_NAME`. Kept local (keywords isn't
-// exported); if that placeholder ever changes, update this too.
-const PLACEHOLDER_FLAG = 'my_cool_feature'
 
 export type SdkSnippet = {
   install: string
@@ -40,16 +35,13 @@ export const getSdkSnippet = (
   featureName: string,
 ): SdkSnippet => {
   const installs = Constants.codeHelp.INSTALL as Record<string, string>
-  const inits = Constants.codeHelp.INIT(environmentKey) as Record<
+  const inits = Constants.codeHelp.INIT(environmentKey, featureName) as Record<
     string,
     string
   >
-  const wire = (inits[lang.initKey ?? lang.codeHelpKey] ?? '')
-    .split(PLACEHOLDER_FLAG)
-    .join(featureName)
   return {
     language: lang.language,
     ...parseInstall(installs[lang.codeHelpKey] ?? ''),
-    wire: wire.trim(),
+    wire: (inits[lang.initKey ?? lang.codeHelpKey] ?? '').trim(),
   }
 }
