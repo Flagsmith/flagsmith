@@ -1,15 +1,31 @@
+from datetime import timedelta
+
 import structlog
 from django.utils import timezone
-from task_processor.decorators import register_task_handler
+from task_processor.decorators import (
+    register_recurring_task,
+    register_task_handler,
+)
 
 from environments.models import Environment, EnvironmentAPIKey
 from experimentation import ingestion_sync_service
-from experimentation.models import Experiment, ExperimentExposures, ExperimentResults
+from experimentation.constants import DELIVERY_INTERVAL
+from experimentation.models import (
+    Experiment,
+    ExperimentExposures,
+    ExperimentResults,
+    WarehouseConnection,
+    WarehouseType,
+)
 from experimentation.organisation_ingestion_service import (
     disable_ingestion_for_organisation,
     enable_ingestion_for_organisation,
 )
-from experimentation.services import compute_exposures_summary, compute_results_summary
+from experimentation.services import (
+    compute_exposures_summary,
+    compute_results_summary,
+    deliver_warehouse_events,
+)
 
 logger = structlog.get_logger("experimentation")
 
@@ -104,6 +120,38 @@ def write_environment_ingestion_key(environment_api_key_id: int) -> None:
 @register_task_handler()
 def remove_environment_ingestion_key(key: str) -> None:
     ingestion_sync_service.delete_ingestion_key(key)
+
+
+@register_recurring_task(run_every=DELIVERY_INTERVAL)
+def deliver_events_to_external_warehouses() -> None:
+    connection_ids = WarehouseConnection.objects.filter(
+        warehouse_type=WarehouseType.CLICKHOUSE,
+    ).values_list("id", flat=True)
+    for connection_id in connection_ids:
+        deliver_events_for_connection.delay(kwargs={"connection_id": connection_id})
+
+
+@register_task_handler(timeout=timedelta(minutes=9))
+def deliver_events_for_connection(connection_id: int) -> None:
+    connection = (
+        WarehouseConnection.objects.select_related(
+            "environment__project__organisation__ingestion_infrastructure",
+        )
+        .filter(id=connection_id)
+        .first()
+    )
+    if connection is None:
+        return
+
+    infrastructure = getattr(
+        connection.environment.project.organisation,
+        "ingestion_infrastructure",
+        None,
+    )
+    if infrastructure is None or not infrastructure.bucket_name:
+        return
+
+    deliver_warehouse_events(connection, bucket_name=infrastructure.bucket_name)
 
 
 @register_task_handler()
