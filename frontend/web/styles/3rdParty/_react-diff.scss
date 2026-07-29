@@ -106,13 +106,13 @@
 }
 
 .diff-removed-header {
-  background-color: $danger-alfa-16;
-  color: $danger;
+  background-color: var(--color-surface-danger);
+  color: var(--color-text-danger);
 }
 
 .diff-added-header {
-  background-color: $success-alfa-16;
-  color: $success;
+  background-color: var(--color-surface-success);
+  color: var(--color-text-success);
 }
 
 .diff-sign {

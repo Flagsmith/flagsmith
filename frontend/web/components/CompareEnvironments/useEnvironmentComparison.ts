@@ -25,12 +25,19 @@ const deriveChanges = (
 ): FeatureChange[] => {
   const changes: FeatureChange[] = []
 
+  // Pre-index for O(1) lookups instead of O(n) .find() calls
+  const rightProjectFlagsById = new Map(
+    rightProjectFlags.map((pf) => [pf.id, pf]),
+  )
+  const leftFlagsByFeatureId = new Map(leftFlags.map((fs) => [fs.feature, fs]))
+  const rightFlagsByFeatureId = new Map(
+    rightFlags.map((fs) => [fs.feature, fs]),
+  )
+
   sortBy(leftProjectFlags, (p) => p.name).forEach((projectFlagLeft) => {
-    const projectFlagRight = rightProjectFlags.find(
-      (pf) => pf.id === projectFlagLeft.id,
-    )
-    const leftSide = leftFlags.find((v) => v.feature === projectFlagLeft.id)
-    const rightSide = rightFlags.find((v) => v.feature === projectFlagLeft.id)
+    const projectFlagRight = rightProjectFlagsById.get(projectFlagLeft.id)
+    const leftSide = leftFlagsByFeatureId.get(projectFlagLeft.id)
+    const rightSide = rightFlagsByFeatureId.get(projectFlagLeft.id)
 
     if (!leftSide || !rightSide) return
 

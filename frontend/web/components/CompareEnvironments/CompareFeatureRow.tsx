@@ -35,12 +35,14 @@ type EnvironmentStateCellProps = {
   enabled: boolean
   value: FeatureChange['leftValue']
   onEdit: () => void
+  environmentName?: string
 }
 
 // The switch and value are read-only representations — clicking either opens
 // the edit modal rather than toggling in place
 const EnvironmentStateCell: FC<EnvironmentStateCellProps> = ({
   enabled,
+  environmentName,
   onEdit,
   value,
 }) => (
@@ -48,6 +50,9 @@ const EnvironmentStateCell: FC<EnvironmentStateCellProps> = ({
     className='clickable d-flex align-items-center gap-2 overflow-hidden'
     role='button'
     tabIndex={0}
+    aria-label={`Edit feature state${
+      environmentName ? ` in ${environmentName}` : ''
+    }`}
     onClick={(e: React.MouseEvent) => {
       e.stopPropagation()
       onEdit()
@@ -140,6 +145,7 @@ const CompareFeatureRow: FC<CompareFeatureRowProps> = ({
             enabled={item.leftEnabled}
             value={item.leftValue}
             onEdit={editLeft}
+            environmentName={leftEnvironmentName}
           />
         </div>
 
@@ -151,6 +157,7 @@ const CompareFeatureRow: FC<CompareFeatureRowProps> = ({
             enabled={item.rightEnabled}
             value={item.rightValue}
             onEdit={editRight}
+            environmentName={rightEnvironmentName}
           />
         </div>
 
