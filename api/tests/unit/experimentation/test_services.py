@@ -2053,7 +2053,10 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
         send_receive_timeout=services.CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
         pool_mgr=mocker.ANY,
     )
-    get_client.return_value.query.assert_called_once_with("SELECT 1")
+    assert get_client.return_value.query.call_args_list == [
+        mocker.call("SELECT 1"),
+        mocker.call("EXISTS TABLE events"),
+    ]
     get_client.return_value.close.assert_called_once_with()
     assert _verification_count("success") == success_count_before + 1
     assert {
@@ -2065,21 +2068,27 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
 
 
 @pytest.mark.parametrize(
-    "credentials, query_side_effect, expected_detail",
+    "credentials, query_results, expected_detail",
     [
         (
             {"password": "hunter2"},
             Exception("connection refused"),
             "Connection failed.",
         ),
+        (
+            {"password": "hunter2"},
+            [[(1,)], [(0,)]],
+            "Events table not found in the configured database. "
+            "Run the setup SQL to create it.",
+        ),
         (None, None, "Stored connection details are incomplete."),
     ],
-    ids=["client_error", "missing_credentials"],
+    ids=["client_error", "missing_events_table", "missing_credentials"],
 )
 def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
     clickhouse_connection: WarehouseConnection,
     credentials: dict[str, str] | None,
-    query_side_effect: Exception | None,
+    query_results: Exception | list[list[tuple[int]]] | None,
     expected_detail: str,
     log: StructuredLogCapture,
     mocker: MockerFixture,
@@ -2088,7 +2097,12 @@ def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
     get_client = mocker.patch(
         "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
     )
-    get_client.return_value.query.side_effect = query_side_effect
+    if isinstance(query_results, list):
+        get_client.return_value.query.side_effect = [
+            mocker.Mock(result_rows=rows) for rows in query_results
+        ]
+    else:
+        get_client.return_value.query.side_effect = query_results
     clickhouse_connection.credentials = credentials
     clickhouse_connection.save()
     failure_count_before = _verification_count("failure")

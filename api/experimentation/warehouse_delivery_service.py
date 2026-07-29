@@ -70,6 +70,10 @@ class ObjectRejectedError(Exception):
     unaffected, so the object is abandoned rather than retried."""
 
 
+class MissingEventsTableError(Exception):
+    """The configured database has no events table to deliver into."""
+
+
 # ClickHouse error codes raised by the object's own bytes: unparseable records,
 # values that do not fit the column, constraint violations. Anything else —
 # authentication (516), a missing table (60), an unreachable host — would fail
@@ -108,6 +112,11 @@ def describe_warehouse_error(error: Exception) -> str:
         if error.code == 60:
             return f"Table `{EVENTS_TABLE_NAME}` does not exist."
         return "The ClickHouse server rejected the request."
+    if isinstance(error, MissingEventsTableError):
+        return (
+            "Events table not found in the configured database. "
+            "Run the setup SQL to create it."
+        )
     return "Connection failed."
 
 
@@ -204,6 +213,14 @@ def delivery_client(
         yield client
     finally:
         client.close()
+
+
+def check_events_table_exists(client: "Client") -> None:
+    """Raise ``MissingEventsTableError`` if the connection's database has no
+    events table for delivery to insert into."""
+    rows = client.query(f"EXISTS TABLE {EVENTS_TABLE_NAME}").result_rows
+    if not rows[0][0]:
+        raise MissingEventsTableError()
 
 
 def deliver_object(client: "Client", bucket_name: str, s3_key: str) -> int:

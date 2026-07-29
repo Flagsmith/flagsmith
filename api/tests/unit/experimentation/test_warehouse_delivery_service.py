@@ -216,6 +216,31 @@ def test_delivery_client__body_raises__still_closes_client(
     get_client.return_value.close.assert_called_once_with()
 
 
+@pytest.mark.parametrize(
+    "exists_result, expected_raise",
+    [
+        pytest.param([(1,)], False, id="table-exists"),
+        pytest.param([(0,)], True, id="table-missing"),
+    ],
+)
+def test_check_events_table_exists__exists_query_result__raises_only_when_missing(
+    exists_result: list[tuple[int]],
+    expected_raise: bool,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    client = mocker.MagicMock()
+    client.query.return_value = mocker.Mock(result_rows=exists_result)
+
+    # When / Then
+    if expected_raise:
+        with pytest.raises(warehouse_delivery_service.MissingEventsTableError):
+            warehouse_delivery_service.check_events_table_exists(client)
+    else:
+        warehouse_delivery_service.check_events_table_exists(client)
+    client.query.assert_called_once_with("EXISTS TABLE events")
+
+
 def test_deliver_object__valid_object__streams_body_and_returns_written_rows(
     events_bucket: Any,
     mocker: MockerFixture,
@@ -331,6 +356,12 @@ def test_deliver_object__connection_level_error__reraises(
             DatabaseError("Code: 241. DB::Exception: memory limit", code=241),
             "The ClickHouse server rejected the request.",
             id="other-server-error",
+        ),
+        pytest.param(
+            warehouse_delivery_service.MissingEventsTableError(),
+            "Events table not found in the configured database. "
+            "Run the setup SQL to create it.",
+            id="missing-events-table",
         ),
         pytest.param(
             ConnectionResetError("connection reset by peer"),
