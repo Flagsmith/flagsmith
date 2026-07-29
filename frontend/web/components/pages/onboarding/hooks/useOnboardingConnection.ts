@@ -5,26 +5,19 @@ export type OnboardingConnectionStatus = 'listening' | 'connected'
 
 export type OnboardingConnection = {
   status: OnboardingConnectionStatus
-  // Which SDK reported the first evaluation, e.g. 'flagsmith-python-sdk'. Null
-  // until the signal lands, and also when Core could not identify the SDK from
-  // the user agent (it sends 'unknown', which is nothing to show a user).
-  sdkLabel: string | null
+  sdkLabel: string | null // null until the signal lands, or if unidentified
 }
 
-// Edge reports the first evaluation asynchronously after the SDK's first
-// request, so the flip isn't instant — poll until it lands.
-const POLL_INTERVAL_MS = 3000
+const POLL_INTERVAL_MS = 5000
 
-const UNIDENTIFIED_SDK = 'unknown'
+const UNIDENTIFIED_SDK = 'unknown' // what Core sends for an unknown user agent
 
-// Connection status for the verify console, driven by the real first-evaluation
-// signal: Edge reports the first SDK evaluation to Core, exposed at
-// GET environments/{key}/onboarding-status/. `first_evaluated_at` flips from
-// null to a timestamp once received; it never reverts, so we stop polling then.
-// The signal is latched into state because skipping the query drops `data`.
+// Polls onboarding-status/ until Core reports the first SDK evaluation.
 export const useOnboardingConnection = (
   environmentKey: string,
 ): OnboardingConnection => {
+  // Kept in state, not read from `data`: the query is skipped once the signal
+  // lands, and a skipped query has no data to read.
   const [firstEvaluation, setFirstEvaluation] = useState<{
     sdkLabel: string | null
   } | null>(null)
@@ -34,6 +27,7 @@ export const useOnboardingConnection = (
     {
       pollingInterval: POLL_INTERVAL_MS,
       skip: !!firstEvaluation || !environmentKey,
+      skipPollingIfUnfocused: true, // pauses when hidden; visibilitychange, not blur
     },
   )
 
