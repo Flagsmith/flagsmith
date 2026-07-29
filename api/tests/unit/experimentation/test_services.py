@@ -2053,10 +2053,7 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
         send_receive_timeout=services.CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
         pool_mgr=mocker.ANY,
     )
-    assert get_client.return_value.query.call_args_list == [
-        mocker.call("SELECT 1"),
-        mocker.call("EXISTS TABLE events"),
-    ]
+    get_client.return_value.query.assert_called_once_with("EXISTS TABLE events")
     get_client.return_value.close.assert_called_once_with()
     assert _verification_count("success") == success_count_before + 1
     assert {
@@ -2077,7 +2074,7 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
         ),
         (
             {"password": "hunter2"},
-            [[(1,)], [(0,)]],
+            [[(0,)]],
             "Events table not found in the configured database. "
             "Run the setup SQL to create it.",
         ),

@@ -74,6 +74,14 @@ class MissingEventsTableError(Exception):
     """The configured database has no events table to deliver into."""
 
 
+# The customer's fix is the same whether verification's existence check or a
+# delivery insert found the table missing.
+MISSING_EVENTS_TABLE_DETAIL = (
+    "Events table not found in the configured database. "
+    "Run the setup SQL to create it."
+)
+
+
 # ClickHouse error codes raised by the object's own bytes: unparseable records,
 # values that do not fit the column, constraint violations. Anything else —
 # authentication (516), a missing table (60), an unreachable host — would fail
@@ -110,13 +118,10 @@ def describe_warehouse_error(error: Exception) -> str:
         if error.code == 81:
             return "Database does not exist."
         if error.code == 60:
-            return f"Table `{EVENTS_TABLE_NAME}` does not exist."
+            return MISSING_EVENTS_TABLE_DETAIL
         return "The ClickHouse server rejected the request."
     if isinstance(error, MissingEventsTableError):
-        return (
-            "Events table not found in the configured database. "
-            "Run the setup SQL to create it."
-        )
+        return MISSING_EVENTS_TABLE_DETAIL
     return "Connection failed."
 
 

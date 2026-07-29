@@ -349,7 +349,8 @@ def test_deliver_object__connection_level_error__reraises(
         ),
         pytest.param(
             DatabaseError("Code: 60. DB::Exception: no table", code=60),
-            "Table `events` does not exist.",
+            "Events table not found in the configured database. "
+            "Run the setup SQL to create it.",
             id="missing-table",
         ),
         pytest.param(

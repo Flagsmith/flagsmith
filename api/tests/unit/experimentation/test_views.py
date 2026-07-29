@@ -1544,7 +1544,7 @@ def test_post__clickhouse_verification_outcome__returns_201_with_status(
     assert response.json()["status"] == expected_status
     assert response.json()["status_detail"] == expected_detail
     assert "credentials" not in response.json()
-    assert mock_client.return_value.query.call_args_list[0] == mocker.call("SELECT 1")
+    mock_client.return_value.query.assert_called_once_with("EXISTS TABLE events")
 
 
 def test_get__clickhouse__credentials_not_in_response(

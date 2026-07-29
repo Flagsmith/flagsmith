@@ -975,11 +975,11 @@ def verify_clickhouse_connection(
     connection: WarehouseConnection,
     persist: bool = True,
 ) -> None:
-    """Run SELECT 1 against the customer's ClickHouse over the same client,
-    interface and port that delivery uses, check the events table exists, and
-    set the status to connected or errored; never raises. With persist=False,
-    the status is only set on the in-memory instance, allowing unsaved
-    connections to be tested."""
+    """Check the customer's events table exists, connecting over the same
+    client, interface and port that delivery uses, and set the status to
+    connected or errored; never raises. With persist=False, the status is only
+    set on the in-memory instance, allowing unsaved connections to be
+    tested."""
     log = logger.bind(environment__id=connection.environment_id)
     try:
         log = log.bind(organisation__id=connection.environment.project.organisation_id)
@@ -987,7 +987,6 @@ def verify_clickhouse_connection(
             connection,
             send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
         ) as client:
-            client.query("SELECT 1")
             warehouse_delivery_service.check_events_table_exists(client)
     except Exception as error:
         connection.status = WarehouseConnectionStatus.ERRORED

@@ -631,7 +631,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1027`
+ - `api/experimentation/services.py:1026`
 
 Attributes:
  - `environment.id`
@@ -640,7 +640,7 @@ Attributes:
 ### `warehouse.connection.event_stats_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1090`
+ - `api/experimentation/services.py:1089`
 
 Attributes:
  - `environment.id`
@@ -658,7 +658,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1002`
+ - `api/experimentation/services.py:1001`
 
 Attributes:
  - `environment.id`
@@ -668,7 +668,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1012`
+ - `api/experimentation/services.py:1011`
 
 Attributes:
  - `environment.id`
