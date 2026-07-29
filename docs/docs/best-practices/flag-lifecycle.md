@@ -22,9 +22,13 @@ Short-lived flags are designed to be removed from your code and from Flagsmith a
 5. Deploy your application, so that there is no reference to the flag.
 6. Remove the flag from Flagsmith.
 
-Short lived flags are typically used for the following use-scenarios:
+:::info 
 
 Flagsmith can automatically flag features that have not been changed for a configurable period of time — see [Stale Flag Detection](/managing-flags/stale-flags).
+
+:::
+
+Short lived flags are typically used for the following use-scenarios:
 
 ### Feature Roll-Outs
 
