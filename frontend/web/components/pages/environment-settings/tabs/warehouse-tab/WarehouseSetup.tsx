@@ -161,8 +161,8 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
                 <>
                   <p className='text-muted mb-3'>
                     Run this once against your ClickHouse instance using an
-                    administrative user. Replace {'<USERNAME>'} and{' '}
-                    {'<YOUR_SECURED_PASSWORD>'} with your own values.
+                    administrative user. Replace {'<USER>'} and{' '}
+                    {'<CHANGE_ME_PASSWORD>'} with your own values.
                   </p>
                   <WarehouseSqlSnippet sql={getClickHouseOnboardingSql()} />
                 </>
