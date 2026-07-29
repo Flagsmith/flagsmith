@@ -631,7 +631,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1027`
+ - `api/experimentation/services.py:1025`
 
 Attributes:
  - `environment.id`
@@ -640,7 +640,7 @@ Attributes:
 ### `warehouse.connection.event_stats_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1090`
+ - `api/experimentation/services.py:1088`
 
 Attributes:
  - `environment.id`
@@ -649,7 +649,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:815`
+ - `api/experimentation/services.py:813`
 
 Attributes:
  - `environment.id`
@@ -658,7 +658,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1002`
+ - `api/experimentation/services.py:1000`
 
 Attributes:
  - `environment.id`
@@ -668,7 +668,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1012`
+ - `api/experimentation/services.py:1010`
 
 Attributes:
  - `environment.id`
@@ -677,7 +677,7 @@ Attributes:
 ### `warehouse.delivery.all_objects_rejected`
 
 Logged at `error` from:
- - `api/experimentation/services.py:958`
+ - `api/experimentation/services.py:956`
 
 Attributes:
  - `connection.id`
@@ -688,7 +688,7 @@ Attributes:
 ### `warehouse.delivery.budget_exhausted`
 
 Logged at `info` from:
- - `api/experimentation/services.py:860`
+ - `api/experimentation/services.py:858`
 
 Attributes:
  - `connection.id`
@@ -699,7 +699,7 @@ Attributes:
 ### `warehouse.delivery.completed`
 
 Logged at `info` from:
- - `api/experimentation/services.py:968`
+ - `api/experimentation/services.py:966`
 
 Attributes:
  - `connection.id`
@@ -712,7 +712,7 @@ Attributes:
 ### `warehouse.delivery.failed`
 
 Logged at `error` from:
- - `api/experimentation/services.py:941`
+ - `api/experimentation/services.py:939`
 
 Attributes:
  - `connection.id`
@@ -723,7 +723,7 @@ Attributes:
 ### `warehouse.delivery.object_rejected`
 
 Logged at `error` from:
- - `api/experimentation/services.py:883`
+ - `api/experimentation/services.py:881`
 
 Attributes:
  - `connection.id`
@@ -735,7 +735,7 @@ Attributes:
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:437`
+ - `api/experimentation/services.py:435`
 
 Attributes:
  - `environment.id`
@@ -745,7 +745,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:423`
+ - `api/experimentation/services.py:421`
 
 Attributes:
  - `environment.id`

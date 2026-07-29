@@ -152,8 +152,6 @@ def get_unique_event_names(environment_key: str) -> list[str]:
     return [row[0] for row in rows]
 
 
-# Placeholder style is shared by clickhouse-driver and clickhouse-connect, so
-# the same query runs against the managed warehouse and customer instances.
 _EVENT_STATS_QUERY = (
     "SELECT count() AS total, uniqExact(event) AS unique "
     "FROM events WHERE environment_key = %(environment_key)s"
