@@ -9,13 +9,13 @@ import CreateFlagModal from 'components/modals/create-feature'
 import FeatureListStore from 'common/stores/feature-list-store'
 import { FeaturesTableFilters } from 'components/pages/features/components'
 import Utils from 'common/utils/utils'
-import { TagStrategy } from 'common/types/responses'
 import type { FilterState } from 'common/types/featureFilters'
 import { SortOrder } from 'common/types/requests'
 import {
   getFiltersFromParams,
   hasActiveFilters,
 } from 'common/utils/featureFilterParams'
+import { matchesProjectFlagFilters } from 'common/utils/filterProjectFlagClientSide'
 import CompareFeatureRow, { EditFeatureHandler } from './CompareFeatureRow'
 import { ENV_COLUMN_WIDTH, SEGMENTS_COLUMN_WIDTH } from './constants'
 import { FeatureChange } from './types'
@@ -33,52 +33,18 @@ const filterAndSortChanges = (
   if (!items) return []
 
   const filtered = items.filter((item) => {
-    if (!filters.showArchived && item.projectFlagLeft.is_archived) {
+    // Use shared client-side filter for ProjectFlag properties
+    if (
+      !matchesProjectFlagFilters(
+        item.projectFlagLeft,
+        filters,
+        filters.tag_strategy,
+      )
+    ) {
       return false
     }
 
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase()
-      if (!item.projectFlagLeft.name.toLowerCase().includes(searchLower)) {
-        return false
-      }
-    }
-
-    if (filters.tags.length > 0) {
-      const featureTags = item.projectFlagLeft.tags || []
-
-      if (filters.tags.includes('')) {
-        if (featureTags.length > 0) {
-          return false
-        }
-      } else {
-        const tagIds = filters.tags.filter((t) => t !== '') as number[]
-        if (tagIds.length > 0) {
-          if (filters.tag_strategy === TagStrategy.INTERSECTION) {
-            if (!tagIds.every((tagId) => featureTags.includes(tagId))) {
-              return false
-            }
-          } else if (!tagIds.some((tagId) => featureTags.includes(tagId))) {
-            return false
-          }
-        }
-      }
-    }
-
-    if (filters.owners.length > 0) {
-      const ownerIds = item.projectFlagLeft.owners?.map((o) => o.id) || []
-      if (!filters.owners.some((id) => ownerIds.includes(id))) {
-        return false
-      }
-    }
-
-    if (filters.group_owners.length > 0) {
-      const groupIds = item.projectFlagLeft.group_owners?.map((g) => g.id) || []
-      if (!filters.group_owners.some((id) => groupIds.includes(id))) {
-        return false
-      }
-    }
-
+    // FeatureChange-specific: filter by enabled state in left environment
     if (
       filters.is_enabled !== null &&
       item.leftEnabled !== filters.is_enabled
