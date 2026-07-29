@@ -62,6 +62,7 @@ from features.managers import (
     FeatureStateValueManager,
 )
 from features.multivariate.models import MultivariateFeatureStateValue
+from features.signals import feature_state_change_went_live
 from features.utils import (
     get_boolean_from_string,
     get_integer_from_string,
@@ -462,7 +463,7 @@ class FeatureState(
     LifecycleModelMixin,  # type: ignore[misc]
     abstract_base_auditable_model_factory(  # type: ignore[misc]
         historical_records_excluded_fields=["uuid"],
-        change_details_excluded_fields=["live_from", "version"],
+        change_details_excluded_fields=["live_from", "version", "mv_hashing_salt"],
         show_change_details_for_create=True,
     ),
 ):
@@ -520,6 +521,9 @@ class FeatureState(
 
     # to be deprecated!
     version = models.IntegerField(default=1, null=True)
+
+    # Multivariate bucketing seed, kept stable across recreation (#7913) — see mv_hashing_seed.
+    mv_hashing_salt = models.IntegerField(null=True, blank=True, default=None)
 
     class Meta:
         ordering = ["id"]
@@ -668,6 +672,9 @@ class FeatureState(
         clone = deepcopy(self)
         clone.id = None
         clone.uuid = uuid.uuid4()
+        # Preserve the multivariate bucketing seed so that recreating this feature
+        # state does not re-bucket already-enrolled identities.
+        clone.mv_hashing_salt = self.mv_hashing_seed
 
         if self.feature_segment:
             # We can only create a new feature segment if we are cloning to another environment,
@@ -694,9 +701,11 @@ class FeatureState(
         self.feature_state_value.clone(clone)
 
         if self.feature.type == MULTIVARIATE:
+            # Clone in id order so the new rows keep the same relative id order,
+            # which variant bucketing iterates over.
             mv_values = [
                 mv_value.clone(feature_state=clone, persist=False)
-                for mv_value in self.multivariate_feature_state_values.all()
+                for mv_value in self.multivariate_feature_state_values.order_by("id")
             ]
             MultivariateFeatureStateValue.objects.bulk_create(mv_values)
 
@@ -759,6 +768,43 @@ class FeatureState(
 
         return {"type": type_, key_name: parse_func(value)}
 
+    @property
+    def mv_hashing_seed(self) -> int:
+        """The seed for multivariate variant bucketing: a lineage constant — the
+        id of the first state created for this (environment, feature, segment)
+        lineage, carried forward on every recreation so enrolled identities keep
+        their variant (#7913). States predating the salt column fall back to
+        their own id, the seed used until now.
+        """
+        return self.mv_hashing_salt or self.id
+
+    def get_superseded_live_feature_state(self) -> typing.Optional["FeatureState"]:
+        """Return the live feature state of this state's lineage (same
+        environment, feature and segment) that this state supersedes.
+        """
+        # A segment override's FeatureSegment row is recreated with it, so match
+        # the lineage by its segment, not by the FeatureSegment row.
+        if self.feature_segment_id is None:
+            lineage_filter = Q(feature_segment__isnull=True)
+        else:
+            lineage_filter = Q(
+                feature_segment__segment_id=self.feature_segment.segment_id  # type: ignore[union-attr]
+            )
+
+        superseded: FeatureState | None = (
+            FeatureState.objects.get_live_feature_states(
+                environment=self.environment,  # type: ignore[arg-type]
+                additional_filters=lineage_filter,
+                feature_id=self.feature_id,
+                identity__isnull=True,
+            )
+            .exclude(id=self.id)
+            # Match __gt__'s precedence: latest live_from wins, version breaks ties.
+            .order_by("-live_from", "-version")
+            .first()
+        )
+        return superseded
+
     def get_multivariate_feature_state_value(
         self, identity_hash_key: str
     ) -> AbstractBaseFeatureValueModel:
@@ -768,7 +814,7 @@ class FeatureState(
         mv_options = list(self.multivariate_feature_state_values.all())
 
         percentage_value = get_hashed_percentage_for_object_ids(
-            [self.id, identity_hash_key]
+            [self.mv_hashing_seed, identity_hash_key]
         )
 
         # Iterate over the mv options in order of id (so we get the same value each
@@ -816,6 +862,23 @@ class FeatureState(
                 "Feature state already exists for this environment, feature, "
                 "version, segment & identity combination"
             )
+
+    @hook(BEFORE_CREATE)
+    def inherit_mv_hashing_salt(self):  # type: ignore[no-untyped-def]
+        """Keep multivariate bucketing stable across recreation: a new row
+        superseding a live state in its lineage adopts that state's seed
+        (#7913). Identity overrides have no versioned lineage; the feature type
+        check confines the lineage query to rows where bucketing matters.
+        """
+        if (
+            self.mv_hashing_salt is not None
+            or self.identity_id is not None
+            or self.feature.type != MULTIVARIATE
+        ):
+            return
+
+        if superseded := self.get_superseded_live_feature_state():
+            self.mv_hashing_salt = superseded.mv_hashing_seed
 
     @hook(BEFORE_CREATE)
     def set_live_from(self):  # type: ignore[no-untyped-def]
@@ -904,7 +967,23 @@ class FeatureState(
                 )
             )
 
-        cls.objects.create(**kwargs)
+        feature_state = cls.objects.create(**kwargs)
+        feature_state._send_change_went_live_for_v2_feature_create()
+
+    def _send_change_went_live_for_v2_feature_create(self) -> None:
+        """
+        v2 suppresses the FS audit row that v1 uses to drive
+        `feature_state_change_went_live` (see get_skip_create_audit_log).
+        For the feature-create case (env existed when the feature was
+        created — env-create / env-clone are excluded by the date check),
+        fire the signal directly so consumers like Sentry are notified.
+        """
+        if (
+            self.environment is not None
+            and self.environment.use_v2_feature_versioning
+            and self.environment.created_date <= self.feature.created_date
+        ):
+            feature_state_change_went_live.send(self)
 
     @classmethod
     def get_next_version_number(  # type: ignore[no-untyped-def]

@@ -113,7 +113,6 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
                 setCurrentEmail(Utils.safeParseEventValue(event))
               }}
               type='email'
-              name='currentEmail'
             />
           ) : (
             <InputGroup
@@ -128,7 +127,6 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
                 setPassword(Utils.safeParseEventValue(event))
               }}
               type='password'
-              name='password'
             />
           )}
           {(isMutationError || isEmailMismatchError) && (

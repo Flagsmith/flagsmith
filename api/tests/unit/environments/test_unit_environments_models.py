@@ -97,6 +97,22 @@ def test_environment_clone__default__does_not_modify_original_instance(
     assert clone.api_key != original_api_key
 
 
+def test_environment_clone__evaluated_source__resets_first_evaluation_fields(
+    environment: Environment,
+) -> None:
+    # Given
+    environment.first_evaluated_at = timezone.now()
+    environment.first_evaluated_sdk_label = "flagsmith-python-sdk"
+    environment.save()
+
+    # When
+    clone = environment.clone(name="Cloned env")
+
+    # Then
+    assert clone.first_evaluated_at is None
+    assert clone.first_evaluated_sdk_label is None
+
+
 def test_environment_clone__with_feature__creates_feature_states(  # type: ignore[no-untyped-def]
     environment: Environment, feature: Feature
 ):

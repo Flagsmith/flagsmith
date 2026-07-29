@@ -19,6 +19,7 @@ class FeatureModel(BaseModel):
 class MultivariateFeatureOptionModel(BaseModel):
     value: typing.Any
     id: typing.Optional[int] = None
+    key: typing.Optional[str] = None
 
 
 class MultivariateFeatureStateValueModel(BaseModel):

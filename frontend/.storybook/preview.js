@@ -55,6 +55,8 @@ global.Select = (props) =>
 window.Tooltip = Tooltip
 window.Row = Row
 window.FormGroup = FormGroup
+// isMobile is set at app boot; stub it so components that read it render in Storybook.
+window.isMobile = false
 
 /** @type { import('storybook').Preview } */
 const preview = {

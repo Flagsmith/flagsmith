@@ -512,7 +512,7 @@ def test_send_feature_flag_went_live_signal__feature_state__sends_signal(
     send_feature_flag_went_live_signal(sender=AuditLog, instance=audit_log)
 
     # Then
-    mock_signal_send.assert_called_once_with(feature_state, audit_log=audit_log)
+    mock_signal_send.assert_called_once_with(feature_state)
 
 
 def test_send_feature_flag_went_live_signal__feature_state_value__sends_signal(
@@ -541,7 +541,7 @@ def test_send_feature_flag_went_live_signal__feature_state_value__sends_signal(
 
     # Then
     # The signal should be called with the parent FeatureState extracted from FeatureStateValue
-    mock_signal_send.assert_called_once_with(feature_state, audit_log=audit_log)
+    mock_signal_send.assert_called_once_with(feature_state)
 
 
 def test_send_feature_flag_went_live_signal__scheduled_feature_state__skips_signal(

@@ -21,11 +21,23 @@ class OAuthConsentSerializer(serializers.Serializer):  # type: ignore[type-arg]
 # ASCII-only to prevent Unicode homoglyph spoofing on the consent screen.
 _CLIENT_NAME_RE = re.compile(r"^[\w\s.\-()]+$", re.ASCII)
 
+DEFAULT_CLIENT_NAME = "MCP client"
+
+# Matches token_endpoint_auth_methods_supported in the RFC 8414 metadata.
+TOKEN_ENDPOINT_AUTH_METHODS = ["client_secret_basic", "client_secret_post", "none"]
+
 
 class DCRRequestSerializer(serializers.Serializer[None]):
-    client_name = serializers.CharField(max_length=255, required=True)
+    # Optional per RFC 7591 §2; null, blank and absent all mean "unnamed".
+    client_name = serializers.CharField(
+        max_length=255,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        default=DEFAULT_CLIENT_NAME,
+    )
     redirect_uris = serializers.ListField(
-        child=serializers.URLField(),
+        child=serializers.CharField(max_length=2000),
         min_length=1,
         max_length=5,
         required=True,
@@ -40,12 +52,15 @@ class DCRRequestSerializer(serializers.Serializer[None]):
         required=False,
         default=["code"],
     )
-    token_endpoint_auth_method = serializers.CharField(
+    token_endpoint_auth_method = serializers.ChoiceField(
+        choices=TOKEN_ENDPOINT_AUTH_METHODS,
         required=False,
         default="none",
     )
 
-    def validate_client_name(self, value: str) -> str:
+    def validate_client_name(self, value: str | None) -> str:
+        if not value or not value.strip():
+            return DEFAULT_CLIENT_NAME
         if not _CLIENT_NAME_RE.match(value):
             raise serializers.ValidationError(
                 "Client name may only contain letters, digits, spaces, "
@@ -62,14 +77,6 @@ class DCRRequestSerializer(serializers.Serializer[None]):
                 errors.append(str(e.message))
         if errors:
             raise serializers.ValidationError(errors)
-        return value
-
-    def validate_token_endpoint_auth_method(self, value: str) -> str:
-        if value != "none":
-            raise serializers.ValidationError(
-                "Only public clients are supported; "
-                "token_endpoint_auth_method must be 'none'."
-            )
         return value
 
     def validate_grant_types(self, value: list[str]) -> list[str]:

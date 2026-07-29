@@ -525,7 +525,6 @@ def test_list_projects__valid_organisation__returns_projects(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-@mock.patch("app_analytics.influxdb_wrapper.influxdb_client")
 def test_get_usage__valid_organisation__queries_influx(
     mock_influxdb_client: MagicMock,
     organisation: Organisation,

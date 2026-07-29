@@ -1,4 +1,11 @@
-import React, { FC, ReactNode, useEffect, useRef, useState } from 'react'
+import React, {
+  FC,
+  KeyboardEvent,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { IonIcon } from '@ionic/react'
 import { checkmarkCircle, chevronDown, chevronUp } from 'ionicons/icons'
 import InlineModal from './InlineModal'
@@ -125,7 +132,7 @@ const ItemList: FC<ItemListType> = ({
               </span>
             </div>
             {isActive && (
-              <IonIcon className='text-primary' icon={checkmarkCircle} />
+              <IonIcon className='icon-action' icon={checkmarkCircle} />
             )}
           </a>
         )
@@ -334,10 +341,8 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
             >
               <Input
                 autoFocus={focus === 'organisation'}
-                onKeyDown={(e: KeyboardEvent) =>
-                  navigateOrganisations(e, organisations)
-                }
-                onChange={(e: KeyboardEvent) => {
+                onKeyDown={(e) => navigateOrganisations(e, organisations)}
+                onChange={(e) => {
                   setOrganisationSearch(Utils.safeParseEventValue(e))
                 }}
                 search
@@ -390,11 +395,11 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
               )}
             >
               <Input
-                onChange={(e: InputEvent) => {
+                onChange={(e) => {
                   setProjectSearch(Utils.safeParseEventValue(e))
                 }}
                 autoFocus={focus === 'project'}
-                onKeyDown={(e: KeyboardEvent) => navigateProjects(e)}
+                onKeyDown={(e) => navigateProjects(e)}
                 search
                 className='full-width'
                 inputClassName='border-0 bg-transparent border-bottom-1'

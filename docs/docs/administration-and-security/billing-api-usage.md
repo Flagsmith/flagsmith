@@ -117,11 +117,11 @@ application. For example, when a user visits a certain part of your application 
 a mobile application is brought to the foreground.
 * Consider using an Edge Proxy as your source of flags instead of calling the Flagsmith API directly.
 * If you have a suitable backend, consider evaluating flags server-side instead. This enables other usage patterns that
-result in fewer API calls, such as [Local Evaluation](/integrating-with-flagsmith/integration-overview#local-evaluation-mode) and custom cache implementations.
+result in fewer API calls, such as [Local Evaluation](/integrating-with-flagsmith/sdks/#local-evaluation) and custom cache implementations.
 
 For server-side applications:
 
-* Consider using [Local Evaluation](/integrating-with-flagsmith/integration-overview#local-evaluation-mode), or deploying [Edge Proxies](/performance/edge-proxy).
+* Consider using [Local Evaluation](/integrating-with-flagsmith/sdks/#local-evaluation), or deploying [Edge Proxies](/performance/edge-proxy).
 * Reduce the polling rate for Edge Proxies and any SDKs using Local Evaluation.
 * If your use case allows for it, use the Flagsmith SDK in Offline Mode.
 

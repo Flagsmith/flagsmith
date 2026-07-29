@@ -45,7 +45,8 @@ from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
 
-from .constants import INTERSECTION, UNION
+from .constants import CONTROL_VARIANT_KEY, INTERSECTION, UNION
+from .feature_lifecycle.types import LifecycleStage
 from .feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
     exceeds_segment_override_limit,
@@ -53,7 +54,9 @@ from .feature_segments.limits import (
 from .feature_segments.serializers import (
     CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
+from .feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE
 from .models import Feature, FeatureState
+from .multivariate.models import MultivariateFeatureOption
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
 
 
@@ -95,6 +98,11 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     )
 
     is_archived = serializers.BooleanField(required=False)
+    type = serializers.ChoiceField(
+        choices=FEATURE_TYPE_CHOICES,
+        required=False,
+        help_text="Feature type to filter on (STANDARD or MULTIVARIATE).",
+    )
     environment = serializers.IntegerField(
         required=False,
         help_text="Integer ID of the environment to view features in the context of.",
@@ -106,6 +114,12 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     identity = serializers.CharField(
         required=False,
         help_text="ID of the identity to sort features with identity overrides first.",
+    )
+
+    lifecycle_stage = serializers.ChoiceField(
+        choices=list(LifecycleStage),
+        required=False,
+        help_text="Lifecycle stage to filter on. Requires `environment`.",
     )
 
     is_enabled = serializers.BooleanField(
@@ -443,8 +457,15 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
 class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerializer):
     metadata = MetadataSerializer(required=False, many=True)
 
+    # NOTE: This field is populated by `projects.code_references.services.annotate_feature_queryset_with_code_references_summary`.
     code_references_counts = FeatureFlagCodeReferencesRepositoryCountSerializer(
         many=True,
+        read_only=True,
+    )
+
+    # NOTE: This field is populated by `features.feature_lifecycle.services.annotate_feature_queryset_with_lifecycle_stage`.
+    lifecycle_stage = serializers.ChoiceField(
+        choices=list(LifecycleStage),
         read_only=True,
     )
 
@@ -452,6 +473,7 @@ class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerial
         fields = CreateFeatureSerializer.Meta.fields + (  # type: ignore[assignment]
             "metadata",
             "code_references_counts",
+            "lifecycle_stage",
         )
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
@@ -620,6 +642,27 @@ class SDKFeatureStateSerializer(
     )
 
 
+class SDKIdentityFeatureStateSerializer(SDKFeatureStateSerializer):
+    variant = serializers.SerializerMethodField()
+
+    class Meta(SDKFeatureStateSerializer.Meta):
+        fields = SDKFeatureStateSerializer.Meta.fields + ("variant",)  # type: ignore[assignment]
+
+    @extend_schema_field({"type": "string", "nullable": True})
+    def get_variant(self, obj: FeatureState) -> str | None:
+        if obj.feature.type != MULTIVARIATE:
+            return None
+        identity = self.context["identity"]
+        value_object = obj.get_multivariate_feature_state_value(
+            identity.get_hash_key(
+                identity.environment.use_identity_composite_key_for_hashing
+            )
+        )
+        if isinstance(value_object, MultivariateFeatureOption):
+            return value_object.key
+        return CONTROL_VARIANT_KEY
+
+
 class FeatureStateSerializerBasic(WritableNestedModelSerializer):
     feature_state_value = serializers.SerializerMethodField()
     multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
@@ -632,7 +675,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
 
     class Meta:
         model = FeatureState
-        fields = "__all__"
+        exclude = ("mv_hashing_salt",)
         read_only_fields = ("version", "created_at", "updated_at", "status")
 
     @extend_schema_field(
@@ -685,6 +728,8 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         return feature
 
     def validate_environment(self, environment):  # type: ignore[no-untyped-def]
+        if environment is None:
+            raise serializers.ValidationError("Environment may not be null.")
         if self.instance and self.instance.environment_id != environment.id:  # type: ignore[union-attr]
             raise serializers.ValidationError(
                 "Cannot change the environment of a feature state"

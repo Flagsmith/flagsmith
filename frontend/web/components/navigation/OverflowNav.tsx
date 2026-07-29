@@ -71,8 +71,15 @@ const OverflowNav: FC<OverflowNavProps> = ({
           'd-flex align-items-center',
         )}
       >
+        {/* Wrappers keep DOM children 1:1 with items so measured widths align,
+            even when an item renders nothing or multiple elements */}
         {(isMeasuring ? items : visible).map((child, idx) => (
-          <React.Fragment key={idx}>{child}</React.Fragment>
+          <div
+            key={idx}
+            className={`d-flex align-items-center gap-${gap} flex-shrink-0`}
+          >
+            {child}
+          </div>
         ))}
       </div>
 
@@ -82,6 +89,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
             style={{ height: buttonWidth, width: buttonWidth }}
             onClick={() => setOpen(!open)}
             theme='secondary'
+            data-test='overflow-nav-button'
             className='d-flex align-items-center justify-content-center m-0 p-0'
           >
             <IonIcon className='fs-small' icon={icon} />

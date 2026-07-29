@@ -35,6 +35,12 @@ def get_current_site_url(request: HttpRequest | Request | None = None) -> str:
     return f"{scheme}://{domain}"
 
 
+def get_request_base_url(request: HttpRequest | Request | None = None) -> str:
+    if request is None:
+        return ""
+    return request.build_absolute_uri("/")
+
+
 def get_ip_address_from_request(request: Request) -> Any | None:
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     return (

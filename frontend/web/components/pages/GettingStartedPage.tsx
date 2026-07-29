@@ -166,7 +166,7 @@ const GettingStartedPage: FC = () => {
           <Button
             theme='text'
             onClick={onChatClick}
-            className='text-primary gap-2'
+            className='text-action gap-2'
             href=''
           >
             let us know

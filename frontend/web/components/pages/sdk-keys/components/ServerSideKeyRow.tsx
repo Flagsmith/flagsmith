@@ -34,7 +34,7 @@ const ServerSideKeyRow: FC<ServerSideKeyRowProps> = ({
         onClick={() => {
           Utils.copyToClipboard(keyValue)
         }}
-        className='ml-2 btn-with-icon text-body'
+        className='ml-2 btn-with-icon icon-default'
       >
         <Icon name='copy' width={20} />
       </Button>
@@ -42,7 +42,7 @@ const ServerSideKeyRow: FC<ServerSideKeyRowProps> = ({
         <Button
           onClick={() => onRemove(id, name)}
           id='remove-sdk-key'
-          className='btn btn-with-icon text-body'
+          className='btn btn-with-icon icon-default'
         >
           <Icon name='trash-2' width={20} />
         </Button>

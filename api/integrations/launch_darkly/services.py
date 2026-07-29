@@ -39,6 +39,7 @@ from integrations.launch_darkly.models import (
 from integrations.launch_darkly.types import Clause
 from projects.models import Project
 from projects.tags.models import Tag
+from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
 from util.db import closing_stale_connections
@@ -1105,6 +1106,13 @@ def create_import_request(
 def process_import_request(
     import_request: LaunchDarklyImportRequest,
 ) -> None:
+    if import_request.completed_at is not None:
+        logger.warning(
+            "Ignoring already-completed LaunchDarkly import request %d.",
+            import_request.id,
+        )
+        return
+
     with _complete_import_request(import_request):
         ld_token = _unsign_ld_value(
             import_request.ld_token,
@@ -1179,3 +1187,6 @@ def process_import_request(
         import_request.status["deprecated_flag_count"] = sum(
             1 for ld_flag in ld_flags if ld_flag["deprecated"]
         )
+
+        # Refresh membership counts for the segments the import just created.
+        enqueue_membership_refresh(import_request.project)

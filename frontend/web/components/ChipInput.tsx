@@ -6,6 +6,7 @@ import React, {
 } from 'react'
 import { filter } from 'lodash'
 import Icon from './icons/Icon'
+import BareButton from './base/forms/BareButton'
 
 type ChipInputType = {
   placeholder?: string
@@ -65,17 +66,13 @@ const ChipInput: FC<ChipInputType> = ({ onChange, placeholder, value }) => {
         {value?.map((chip, index) => (
           <span key={`${chip}-${index}`} className='chip'>
             <span>{chip}</span>
-            <span
+            <BareButton
               className='chip-icon ion'
               onClick={() => onDelete(index)}
-              role='button'
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') onDelete(index)
-              }}
+              aria-label={`Remove ${chip}`}
             >
               <Icon name='close' width={16} height={16} fill='currentColor' />
-            </span>
+            </BareButton>
           </span>
         ))}
         <input

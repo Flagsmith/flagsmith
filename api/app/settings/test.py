@@ -1,5 +1,18 @@
 from app.settings.common import *  # noqa
-from app.settings.common import REST_FRAMEWORK
+from app.settings.common import (
+    DATABASES,
+    INSTALLED_APPS,
+    LDAP_INSTALLED,
+    REST_FRAMEWORK,
+)
+
+# TODO: remove once permissions are an enum --
+# https://github.com/Flagsmith/flagsmith/issues/7850
+DATABASES["default"]["ENGINE"] = "core.db_backends.postgresql"
+
+if LDAP_INSTALLED:
+    INSTALLED_APPS = INSTALLED_APPS + ["flagsmith_ldap"]
+    LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID = None
 
 # We dont want to track tests
 ENABLE_TELEMETRY = False
@@ -14,6 +27,8 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "user": "100000/day",
     "master_api_key": "100000/day",
     "influx_query": "50/min",
+    "warehouse_connection_write": "1000/min",
+    "warehouse_connection_read": "1000/min",
 }
 
 AWS_SSE_LOGS_BUCKET_NAME = "test_bucket"

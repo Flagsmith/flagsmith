@@ -53,11 +53,13 @@ const SDKKeysPage: FC = () => {
               value={environmentId}
               inputClassName='input input--wide'
               type='text'
-              title={<h3>Client-side Environment Key</h3>}
               placeholder='Client-side Environment Key'
             />
           </Flex>
-          <Button onClick={handleCopy} className='ml-2 btn-with-icon text-body'>
+          <Button
+            onClick={handleCopy}
+            className='ml-2 btn-with-icon icon-default'
+          >
             <Icon name='copy' width={20} />
           </Button>
         </Row>

@@ -1,4 +1,5 @@
 import json
+import typing
 
 from django.urls import reverse
 from django.utils.http import urlencode
@@ -47,17 +48,20 @@ def create_mv_option_with_api(
     feature_id: str,
     default_percentage_allocation: float,
     value: str,
+    key: str | None = None,
 ) -> int:
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
         args=[project_id, feature_id],
     )
-    data = {
+    data: dict[str, typing.Any] = {
         "type": STRING,
         "feature": feature_id,
         "string_value": value,
         "default_percentage_allocation": default_percentage_allocation,
     }
+    if key is not None:
+        data["key"] = key
     response = client.post(
         url,
         data=json.dumps(data),

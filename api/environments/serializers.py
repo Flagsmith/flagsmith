@@ -14,6 +14,7 @@ from projects.serializers import ProjectListSerializer
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
+from webhooks.fields import NoSSRFURLField
 
 
 class EnvironmentSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -185,6 +186,8 @@ class CloneEnvironmentSerializer(EnvironmentSerializerLight):
 
 
 class WebhookSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    url = NoSSRFURLField()
+
     class Meta:
         model = Webhook
         fields = ("id", "url", "enabled", "created_at", "updated_at", "secret")

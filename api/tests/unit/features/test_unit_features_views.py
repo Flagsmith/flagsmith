@@ -57,12 +57,11 @@ from metadata.models import (
 )
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
-from projects.code_references.models import FeatureFlagCodeReferencesScan
+from projects.code_references.models import ScannedCodeReferences, VCSRepository
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import Segment
 from tests.types import (
-    EnableFeaturesFixture,
     WithEnvironmentPermissionsCallable,
     WithProjectPermissionsCallable,
 )
@@ -743,7 +742,7 @@ def test_sdk_feature_states_get__no_identifier__returns_feature_list(
     ["use_replica", "is_new_identity", "num_queries"],
     [
         pytest.param(False, True, 9, id="default_database,new_identity"),
-        pytest.param(False, False, 8, id="default_database,existing_identity"),
+        pytest.param(False, False, 6, id="default_database,existing_identity"),
         pytest.param(True, True, 9, id="replica_database,new_identity"),
         pytest.param(True, False, 7, id="replica_database,existing_identity"),
     ],
@@ -796,7 +795,7 @@ def test_SDKFeatureStates_get__given_identifier__responds_200_with_feature_list(
     ["use_replica", "is_new_identity", "num_queries"],
     [
         pytest.param(False, True, 9, id="default_database,new_identity"),
-        pytest.param(False, False, 8, id="default_database,existing_identity"),
+        pytest.param(False, False, 6, id="default_database,existing_identity"),
         pytest.param(True, True, 9, id="replica_database,new_identity"),
         pytest.param(True, False, 7, id="replica_database,existing_identity"),
     ],
@@ -847,7 +846,7 @@ def test_sdk_feature_states_get__identifier_and_existing_feature__returns_featur
     ["use_replica", "is_new_identity", "num_queries"],
     [
         pytest.param(False, True, 8, id="default_database,new_identity"),
-        pytest.param(False, False, 7, id="default_database,existing_identity"),
+        pytest.param(False, False, 5, id="default_database,existing_identity"),
         pytest.param(True, True, 8, id="replica_database,new_identity"),
         pytest.param(True, False, 6, id="replica_database,existing_identity"),
     ],
@@ -1414,6 +1413,103 @@ def test_get_flags__user_throttle_set__is_not_throttled(  # type: ignore[no-unty
 
         # Then
         assert response.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.parametrize(
+    "headers,expected_sdk_label",
+    [
+        (
+            {"Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/9.3.1"},
+            "flagsmith-js-sdk",
+        ),
+        (
+            {"User-Agent": "flagsmith-python-sdk/6.0.0"},
+            "flagsmith-python-sdk",
+        ),
+        (
+            {
+                "Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/9.3.1",
+                "User-Agent": "flagsmith-python-sdk/6.0.0",
+            },
+            "flagsmith-js-sdk",
+        ),
+    ],
+)
+def test_get_flags__environment_never_evaluated__records_first_evaluation(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+    headers: dict[str, str],
+    expected_sdk_label: str,
+) -> None:
+    # Given
+    record_environment_first_evaluation = mocker.patch.object(
+        views, "record_environment_first_evaluation"
+    )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/", headers=headers)
+
+    # Then
+    assert response.status_code == 200
+    record_environment_first_evaluation.assert_called_once_with(
+        environment, expected_sdk_label
+    )
+
+
+@pytest.mark.parametrize(
+    "headers",
+    [
+        {},
+        {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15"
+        },
+    ],
+)
+def test_get_flags__sdk_not_identified__does_not_record_first_evaluation(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+    headers: dict[str, str],
+) -> None:
+    # Given
+    record_environment_first_evaluation = mocker.patch.object(
+        views, "record_environment_first_evaluation"
+    )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/", headers=headers)
+
+    # Then
+    assert response.status_code == 200
+    record_environment_first_evaluation.assert_not_called()
+
+
+def test_get_flags__environment_already_evaluated__does_not_record_first_evaluation(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    record_environment_first_evaluation = mocker.patch.object(
+        views, "record_environment_first_evaluation"
+    )
+    environment.first_evaluated_at = timezone.now()
+    environment.first_evaluated_sdk_label = "flagsmith-js-sdk"
+    environment.save(update_fields=["first_evaluated_at", "first_evaluated_sdk_label"])
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(
+        "/api/v1/flags/",
+        headers={"Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/9.3.1"},
+    )
+
+    # Then
+    assert response.status_code == 200
+    record_environment_first_evaluation.assert_not_called()
 
 
 def test_list_feature_states__simple_view_set__returns_expected_count(
@@ -2239,6 +2335,31 @@ def test_create_feature__admin_with_mv_options__returns_201(
     assert len(response_json["multivariate_options"]) == 1
 
 
+def test_create_feature__mv_options_with_key__key_is_read_only(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given - mv option keys are only writable via the dedicated mv-options
+    # endpoint, where their uniqueness is validated
+    data = {
+        "name": "test_feature",
+        "default_enabled": True,
+        "multivariate_options": [
+            {"type": "unicode", "string_value": "test-value", "key": "control"}
+        ],
+    }
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["multivariate_options"][0]["key"] is None
+
+
 def test_get_feature_by_uuid__existing_feature__returns_200(
     admin_client_new: APIClient,
     project: Project,
@@ -2510,6 +2631,7 @@ def test_list_features__dynamo_enabled__calls_get_overrides_data(
     assert response.status_code == status.HTTP_200_OK
     mock_get_overrides_data.assert_called_once_with(
         dynamo_enabled_project_environment_one,
+        feature_ids=[feature.id],
     )
 
 
@@ -3222,6 +3344,30 @@ def test_update_feature_state__change_feature__returns_400(
     )
 
 
+def test_update_feature_state__null_environment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    url = reverse("api-v1:features:featurestates-detail", args=[feature_state.id])
+    data = {
+        "enabled": True,
+        "environment": None,
+        "feature": feature.id,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "environment" in response.json()
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
@@ -3531,7 +3677,7 @@ def test_list_features__without_rbac__no_n_plus_1(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=18,
+        num_queries=17,
     )
 
 
@@ -3556,7 +3702,7 @@ def test_list_features__with_rbac__no_n_plus_1(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=19,
+        num_queries=18,
     )
 
 
@@ -3995,7 +4141,6 @@ def test_list_features__value_search_boolean__returns_matching(
 
 
 def test_list_features__with_code_references__returns_counts(
-    enable_features: EnableFeaturesFixture,
     feature: Feature,
     project: Project,
     staff_client: APIClient,
@@ -4003,62 +4148,39 @@ def test_list_features__with_code_references__returns_counts(
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    enable_features("code_references_ui_stats")
-    with freeze_time("2099-01-01T10:00:00-0300"):
-        FeatureFlagCodeReferencesScan.objects.create(
-            project=project,
-            repository_url="https://github.flagsmith.com/backend/",
-            revision="backend-1",
-            code_references=[
-                {
-                    "feature_name": feature.name,
-                    "file_path": "path/to/file.py",
-                    "line_number": 42,
-                },
-            ],
-        )
-        FeatureFlagCodeReferencesScan.objects.create(
-            project=project,
-            repository_url="https://gitlab.flagsmith.com/frontend/",
-            revision="frontend-1",
-            code_references=[
-                {
-                    "feature_name": feature.name,
-                    "file_path": "path/to/file.js",
-                    "line_number": 23,
-                },
-            ],
-        )
-    with freeze_time("2099-01-02T11:00:00-0300"):
-        FeatureFlagCodeReferencesScan.objects.create(
-            project=project,
-            repository_url="https://github.flagsmith.com/backend/",
-            revision="backend-2",
-            code_references=[
-                {
-                    "feature_name": f"Another {feature.name}",
-                    "file_path": "path/to/another/file.py",
-                    "line_number": 11,
-                },
-            ],
-        )
-        FeatureFlagCodeReferencesScan.objects.create(
-            project=project,
-            repository_url="https://gitlab.flagsmith.com/frontend/",
-            revision="frontend-2",
-            code_references=[
-                {
-                    "feature_name": feature.name,
-                    "file_path": "path/to/file.js",
-                    "line_number": 23,
-                },
-                {
-                    "feature_name": feature.name,
-                    "file_path": "path/to/another/file.js",
-                    "line_number": 50,
-                },
-            ],
-        )
+    github_repository = VCSRepository.objects.create(
+        project=project,
+        url="https://github.flagsmith.com/backend/",
+        vcs_provider="github",
+        last_scanned_at="2099-01-02T14:00:00+00:00",
+    )
+    ScannedCodeReferences.objects.create(
+        feature=feature,
+        repository=github_repository,
+        revision="backend-1",
+        code_references=[
+            {"file_path": "path/to/file.py", "line_number": 42},
+        ],
+        code_references_hash="hash-backend-1",
+        created_at="2099-01-01T13:00:00+00:00",
+    )
+    gitlab_repository = VCSRepository.objects.create(
+        project=project,
+        url="https://gitlab.flagsmith.com/frontend/",
+        vcs_provider="github",
+        last_scanned_at="2099-01-02T14:00:00+00:00",
+    )
+    ScannedCodeReferences.objects.create(
+        feature=feature,
+        repository=gitlab_repository,
+        revision="frontend-2",
+        code_references=[
+            {"file_path": "path/to/file.js", "line_number": 23},
+            {"file_path": "path/to/another/file.js", "line_number": 50},
+        ],
+        code_references_hash="hash-frontend-2",
+        created_at="2099-01-02T14:00:00+00:00",
+    )
 
     # When
     response = staff_client.get(f"/api/v1/projects/{project.pk}/features/")
@@ -4081,54 +4203,51 @@ def test_list_features__with_code_references__returns_counts(
     ]
 
 
-@pytest.mark.usefixtures("feature")
-def test_list_features__without_code_references__returns_empty_counts(
-    enable_features: EnableFeaturesFixture,
-    environment: Environment,
-    project: Project,
-    staff_client: APIClient,
-    with_project_permissions: WithProjectPermissionsCallable,
-) -> None:
-    # Given
-    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    enable_features("code_references_ui_stats")
-
-    # When
-    response = staff_client.get(
-        f"/api/v1/projects/{project.id}/features/?environment={environment.id}"
-    )
-
-    # Then
-    assert response.status_code == 200
-    results = response.json()["results"]
-    assert len(results) == 1
-    assert results[0]["code_references_counts"] == []
-
-
-# TODO: Delete this after https://github.com/flagsmith/flagsmith/issues/6832 is resolved
-def test_list_features__code_references_ui_stats_disabled__returns_empty_counts(
-    enable_features: EnableFeaturesFixture,
-    environment: Environment,
+def test_list_features__scan_recorded_via_api__count_reflects_references(
     feature: Feature,
     project: Project,
+    admin_client_new: APIClient,
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    enable_features()  # code_references_ui_stats not enabled
-    FeatureFlagCodeReferencesScan.objects.create(
-        project=project,
-        repository_url="https://github.flagsmith.com/backend/",
-        revision="rev-1",
-        code_references=[
-            {
-                "feature_name": feature.name,
-                "file_path": "path/to/file.py",
-                "line_number": 42,
-            },
-        ],
+    admin_client_new.post(
+        f"/api/v1/projects/{project.pk}/code-references/",
+        data={
+            "repository_url": "https://github.flagsmith.com/backend/",
+            "revision": "rev-1",
+            "code_references": [
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/file.py",
+                    "line_number": 42,
+                },
+            ],
+        },
+        format="json",
     )
+
+    # When
+    response = staff_client.get(f"/api/v1/projects/{project.pk}/features/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    counts = response.json()["results"][0]["code_references_counts"]
+    assert len(counts) == 1
+    assert counts[0]["repository_url"] == "https://github.flagsmith.com/backend/"
+    assert counts[0]["count"] == 1
+
+
+@pytest.mark.usefixtures("feature")
+def test_list_features__without_code_references__returns_empty_counts(
+    environment: Environment,
+    project: Project,
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     # When
     response = staff_client.get(
@@ -4217,7 +4336,7 @@ def test_list_features__last_modified_without_rbac__returns_expected(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=20,
+        num_queries=19,
     )
 
 
@@ -4245,7 +4364,7 @@ def test_list_features__last_modified_with_rbac__returns_expected(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=21,
+        num_queries=20,
     )
 
 

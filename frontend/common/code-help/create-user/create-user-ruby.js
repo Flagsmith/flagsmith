@@ -8,8 +8,9 @@ export default (
 
 $flagsmith = Flagsmith::Client.new(
     environment_key="${envId}"${
-  Constants.isCustomFlagsmithUrl() &&
-  `,\n    api_url="${Constants.getFlagsmithSDKUrl()}"\n`
+  Constants.isCustomFlagsmithUrl()
+    ? `,\n    api_url="${Constants.getFlagsmithSDKUrl()}"\n`
+    : ''
 })
 
 // Identify the user

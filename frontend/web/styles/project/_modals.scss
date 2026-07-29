@@ -253,6 +253,12 @@ $side-width: 800px;
   display: none !important;
 }
 
+@include media-breakpoint-up(md) {
+  .side-modal--narrow .modal-dialog {
+    width: 640px !important;
+  }
+}
+
 @media (max-width: 600px) {
   /* portrait tablets, portrait iPad, e-readers (Nook/Kindle), landscape 800x480 phones (Android) */
   .side-modal__footer {

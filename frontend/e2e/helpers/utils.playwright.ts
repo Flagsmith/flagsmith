@@ -4,6 +4,7 @@ import { IFlagsmith } from '@flagsmith/flagsmith/types';
 import Project from '../../common/project';
 
 export const LONG_TIMEOUT = 20000;
+export const SHORT_TIMEOUT = 5000;
 
 export const byId = (id: string) => `[data-test="${id}"]`;
 

@@ -37,6 +37,33 @@ Results of cache retrieval for environment document. `result` label is either `h
 Labels:
  - `result`
 
+### `flagsmith_experimentation_warehouse_connection_verifications`
+
+Counter.
+
+Outcomes of connection verification attempts against customers&#x27; own data warehouses. `result` label is either `success` or `failure`.
+
+Labels:
+ - `result`
+
+### `flagsmith_experimentation_warehouse_delivery_objects`
+
+Counter.
+
+Buffered S3 event objects processed by delivery to customers&#x27; own data warehouses. `result` label is `delivered` for objects inserted and archived, or `rejected` for objects the warehouse refused, which are moved aside and never retried.
+
+Labels:
+ - `result`
+
+### `flagsmith_experimentation_warehouse_delivery_runs`
+
+Counter.
+
+Outcomes of per-connection runs delivering buffered event objects to customers&#x27; own data warehouses. `result` label is either `success` or `failure`; a failed run delivers nothing and is retried on the next tick.
+
+Labels:
+ - `result`
+
 ### `flagsmith_http_server_request_duration_seconds`
 
 Histogram.
@@ -69,6 +96,56 @@ Labels:
  - `route`
  - `method`
  - `response_status`
+
+### `flagsmith_oauth2_dcr_registrations`
+
+Counter.
+
+Total OAuth2 dynamic client registration requests, labelled by the requested token endpoint auth method and whether the registration was accepted or rejected.
+
+Labels:
+ - `token_endpoint_auth_method`
+ - `outcome`
+
+### `flagsmith_segment_membership_backfill_duration_seconds`
+
+Histogram.
+
+Duration of a segment-membership backfill for one environment.
+
+Labels:
+
+### `flagsmith_segment_membership_backfill_identities`
+
+Counter.
+
+Total identities mirrored from Dynamo to ClickHouse by the segment-membership backfill task across all environments.
+
+Labels:
+
+### `flagsmith_segment_membership_read_duration_seconds`
+
+Histogram.
+
+Duration of one segment membership page read.
+
+Labels:
+
+### `flagsmith_segment_membership_refresh_duration_seconds`
+
+Histogram.
+
+Duration of a single segment-membership count-refresh run for one project.
+
+Labels:
+
+### `flagsmith_segment_membership_refresh_failures`
+
+Counter.
+
+Total segment-membership refresh runs that failed for any reason.
+
+Labels:
 
 ### `flagsmith_task_processor_enqueued_tasks`
 

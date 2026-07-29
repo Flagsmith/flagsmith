@@ -59,6 +59,11 @@ on:
         type: string
         description: Trivy Java Database OCI specifier
         default: ghcr.io/flagsmith/trivy-java-db:latest
+      codeartifact-login:
+        type: boolean
+        description: Authenticate with the prod CodeArtifact PyPI before building
+        required: false
+        default: false
     outputs:
       image:
         description: Resulting image specifier
@@ -105,6 +110,11 @@ jobs:
             ${{ inputs.registry-url }}/flagsmith/${{ inputs.image-name }}
           tags: ${{ inputs.tags }}
 
+      - name: Authenticate with CodeArtifact
+        if: inputs.codeartifact-login
+        id: codeartifact
+        uses: ./.github/actions/codeartifact-login
+
       - name: Build and push image
         id: build
         uses: depot/build-push-action@v1
@@ -113,7 +123,9 @@ jobs:
           save: ${{ inputs.ephemeral }}
           push: ${{ !inputs.ephemeral }}
           platforms: linux/amd64,linux/arm64
-          secrets: ${{ secrets.secrets }}
+          secrets: |
+            ${{ secrets.secrets }}
+            ${{ inputs.codeartifact-login && format('codeartifact_token={0}', steps.codeartifact.outputs.token) || '' }}
           target: ${{ inputs.target }}
           build-args: |
             CI_COMMIT_SHA=${{ github.sha }}

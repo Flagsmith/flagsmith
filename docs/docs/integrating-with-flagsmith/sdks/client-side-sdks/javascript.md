@@ -107,7 +107,7 @@ You can automatically set default flags for your frontend application as part of
 
 The main steps to achieving this are as follows:
 
-1. Install the [CLI](/integrating-with-flagsmith/CLI) `npm i flagsmith-cli --save-dev`
+1. Install the [CLI](/integrating-with-flagsmith/CLI) `npm i @flagsmith/cli --save-dev`
 2. Call the CLI as part of npm postinstall to create a `flagsmith.json` file each time you run `npm install`. This can
    be done by either:
 

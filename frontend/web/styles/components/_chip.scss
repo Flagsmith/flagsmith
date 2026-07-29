@@ -27,7 +27,7 @@
 .chip {
   display: flex;
   align-items: center;
-  align-self: flex-start !important;
+  align-self: flex-start;
   background-color: $primary-alfa-8;
   border: 1px solid $primary-alfa-24;
   padding: 5px 12px;
@@ -124,6 +124,8 @@
     flex: 1;
     min-width: 80px;
     background: transparent;
+    // Was unset → black → invisible in dark mode; token follows the theme.
+    color: var(--color-text-default);
     font-size: $font-sm;
     line-height: $line-height-sm;
     padding: 2px 0;
