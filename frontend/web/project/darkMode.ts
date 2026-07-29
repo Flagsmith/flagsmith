@@ -1,23 +1,31 @@
 import { useSyncExternalStore } from 'react'
 import { storageGet, storageSet } from 'common/safeLocalStorage'
 
-// 'light' | 'dark' once the user has explicitly chosen.
+type ThemeChoice = 'light' | 'dark'
+
+// A ThemeChoice once the user has explicitly chosen.
 const THEME_KEY = 'theme'
 // Pre-theme storage: 'true' | 'false' under 'dark_mode'.
 const LEGACY_KEY = 'dark_mode'
+
+// Fallback when localStorage is unavailable (private mode, quota, blocked):
+// hold the explicit choice in memory so the toggle still works this session.
+let inMemoryChoice: ThemeChoice | null = null
 
 const media =
   typeof window !== 'undefined' && window.matchMedia
     ? window.matchMedia('(prefers-color-scheme: dark)')
     : null
 
-const getStoredChoice = (): 'light' | 'dark' | null => {
+const getStoredChoice = (): ThemeChoice | null => {
   const stored = storageGet(THEME_KEY)
   if (stored === 'light' || stored === 'dark') return stored
   const legacy = storageGet(LEGACY_KEY)
   if (legacy === 'true') return 'dark'
   if (legacy === 'false') return 'light'
-  return null
+  // Storage wins when present so cross-tab changes propagate; fall back to the
+  // in-memory choice only when storage has nothing (e.g. writes are blocked).
+  return inMemoryChoice
 }
 
 // An explicit choice wins; without one the OS preference decides.
@@ -40,7 +48,8 @@ const apply = () => {
 }
 
 export const setDarkMode = (enabled: boolean) => {
-  storageSet(THEME_KEY, enabled ? 'dark' : 'light')
+  inMemoryChoice = enabled ? 'dark' : 'light'
+  storageSet(THEME_KEY, inMemoryChoice)
   apply()
 }
 
@@ -68,7 +77,8 @@ media?.addEventListener?.('change', () => {
 // Reflect theme changes made in other browser tabs immediately.
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
-    if (e.key === THEME_KEY || e.key === LEGACY_KEY) {
+    // e.key is null on localStorage.clear() — revert to OS theme then too.
+    if (e.key === null || e.key === THEME_KEY || e.key === LEGACY_KEY) {
       apply()
     }
   })
