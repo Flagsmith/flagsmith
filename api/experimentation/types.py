@@ -57,7 +57,7 @@ class ClickHouseConfig(TypedDict):
 CLICKHOUSE_DEFAULTS: ClickHouseConfig = {
     "host": "",
     "port": 9440,
-    "database": "flagsmith",
+    "database": "flagsmith_exp",
     "username": "default",
     "secure": True,
 }
