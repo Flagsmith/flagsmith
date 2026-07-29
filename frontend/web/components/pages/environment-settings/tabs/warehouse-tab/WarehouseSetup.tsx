@@ -1,12 +1,15 @@
 import { FC, useState } from 'react'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
+import BareButton from 'components/base/forms/BareButton'
 import { WarehouseType } from 'common/types/responses'
 import { ConfigFormData } from './ConfigForm'
 import SelectableCard from 'components/base/SelectableCard'
 import ConfigForm from './ConfigForm'
 import Utils from 'common/utils/utils'
 import ClickHouseConfigForm from './ClickHouseConfigForm'
+import WarehouseSqlSnippet from './WarehouseSqlSnippet'
+import { getClickHouseOnboardingSql } from './clickhouseSetupSql'
 import { ClickHouseFormData } from './clickhouseConfig'
 import './WarehouseSetup.scss'
 
@@ -29,6 +32,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
 }) => {
   const [selectedType, setSelectedType] =
     useState<WarehouseTypeOption>('flagsmith')
+  const [sqlExpanded, setSqlExpanded] = useState(true)
   const clickhouseEnabled = Utils.getFlagsmithHasFeature('clickhouse_warehouse')
   const configurableTypes: WarehouseTypeOption[] = clickhouseEnabled
     ? ['flagsmith', 'clickhouse']
@@ -132,10 +136,55 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
       )}
 
       {selectedType === 'clickhouse' && (
-        <ClickHouseConfigForm
-          environmentId={environmentId}
-          onSave={onCreateClickHouse}
-        />
+        <div className='warehouse-setup__steps'>
+          <div className='warehouse-setup__step'>
+            <div className='warehouse-setup__step-rail'>
+              <div className='warehouse-setup__step-marker'>1</div>
+              <div className='warehouse-setup__step-connector' />
+            </div>
+            <div className='warehouse-setup__step-content'>
+              <BareButton
+                className='warehouse-setup__step-toggle mb-2'
+                aria-expanded={sqlExpanded}
+                onClick={() => setSqlExpanded(!sqlExpanded)}
+              >
+                <h6 className='mb-0'>
+                  Configure your warehouse for experimentation
+                </h6>
+                <Icon
+                  name={sqlExpanded ? 'chevron-up' : 'chevron-down'}
+                  width={22}
+                  fill='#656D7B'
+                />
+              </BareButton>
+              {sqlExpanded && (
+                <>
+                  <p className='text-muted mb-3'>
+                    Run this once against your ClickHouse instance using an
+                    administrative user. Replace {'<USER>'} and{' '}
+                    {'<CHANGE_ME_PASSWORD>'} with your own values.
+                  </p>
+                  <WarehouseSqlSnippet sql={getClickHouseOnboardingSql()} />
+                </>
+              )}
+            </div>
+          </div>
+          <div className='warehouse-setup__step'>
+            <div className='warehouse-setup__step-rail'>
+              <div className='warehouse-setup__step-marker'>2</div>
+            </div>
+            <div className='warehouse-setup__step-content'>
+              <h6 className='mb-2'>Connect your warehouse</h6>
+              <p className='text-muted mb-3'>
+                Enter the connection details for the user you created in step 1.
+              </p>
+              <ClickHouseConfigForm
+                environmentId={environmentId}
+                onSave={onCreateClickHouse}
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {!configurableTypes.includes(selectedType) && (

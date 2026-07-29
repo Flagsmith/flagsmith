@@ -50,6 +50,65 @@ The current status is shown on the warehouse card in **Environment Settings > Wa
 - **Connected**: events have been received; you are ready to run experiments.
 - **Errored**: something went wrong; [contact support](/support/).
 
+## Bring your own ClickHouse
+
+Instead of the managed Flagsmith warehouse, you can store experiment events in your own **ClickHouse** instance.
+
+1. Configure your instance by running the following against it, using an administrative user (the statements require
+   `CREATE USER`, `GRANT`, `CREATE DATABASE` and `CREATE TABLE` privileges). Replace `<USER>` and `<CHANGE_ME_PASSWORD>`
+   with your own values. This is a one-off setup step; the same SQL is available to copy from the Flagsmith dashboard.
+
+   ```sql
+   -- Create a dedicated user for Flagsmith
+   CREATE USER IF NOT EXISTS <USER>
+       IDENTIFIED WITH sha256_password BY '<CHANGE_ME_PASSWORD>';
+
+   -- Allow it to write and read experiment events
+   GRANT SELECT, INSERT ON flagsmith_exp.events TO <USER>;
+
+   -- Allow it to check the events table exists
+   GRANT SHOW TABLES, SHOW COLUMNS ON flagsmith_exp.* TO <USER>;
+
+   -- Create the database and events table
+   CREATE DATABASE IF NOT EXISTS flagsmith_exp;
+
+   CREATE TABLE IF NOT EXISTS flagsmith_exp.events
+   (
+       environment_key      LowCardinality(String),
+       event                LowCardinality(String),
+       feature_name         LowCardinality(String),
+       timestamp            DateTime64(3),
+       collected_at         DateTime64(3),
+       identifier           String,
+       value                String                          CODEC(ZSTD(3)),
+       traits               String                          CODEC(ZSTD(3)),
+       metadata             String                          CODEC(ZSTD(3)),
+       sdk_language         LowCardinality(String),
+       sdk_version          LowCardinality(String),
+
+       INDEX idx_identity identifier TYPE bloom_filter GRANULARITY 4,
+
+       CONSTRAINT environment_key_not_empty CHECK environment_key != '',
+       CONSTRAINT event_not_empty           CHECK event != '',
+       CONSTRAINT timestamp_sane            CHECK timestamp > toDateTime64('2020-01-01 00:00:00', 3)
+   )
+   ENGINE = MergeTree
+   PARTITION BY toYYYYMMDD(timestamp)
+   ORDER BY (environment_key, event, feature_name, timestamp, identifier);
+   ```
+
+2. Go to **Environment Settings > Warehouse**, select **ClickHouse** and enter your connection details: host, port (9440
+   by default, the native protocol port), database (`flagsmith_exp` by default), and the username and password of the
+   user you created in step 1.
+3. Click **Test connection**. Once the test succeeds, save the connection.
+4. Click **Send your first event** on the connection card to verify events are arriving in your warehouse; the button
+   disappears once the first event is received.
+
+Connections use the ClickHouse native protocol, with TLS enabled by default.
+
+Experiment results and exposure queries are currently computed from the managed Flagsmith warehouse; serving results
+directly from your own ClickHouse instance is not supported yet.
+
 ## Coming soon
 
 Bring your own warehouse: connections for **Snowflake**, **BigQuery** and **Databricks**, so experiment results are

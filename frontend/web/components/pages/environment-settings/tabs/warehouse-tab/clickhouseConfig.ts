@@ -1,11 +1,11 @@
 import { ClickHouseConfig } from 'common/types/responses'
 
 export const CLICKHOUSE_DEFAULTS: ClickHouseConfig = {
-  database: 'flagsmith',
+  database: 'flagsmith_exp',
   host: '',
   port: 9440,
   secure: true,
-  username: 'default',
+  username: '',
 }
 
 export type ClickHouseFormState = {

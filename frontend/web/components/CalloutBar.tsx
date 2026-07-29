@@ -5,7 +5,7 @@ export type CalloutBarTheme = 'light' | 'dark'
 
 type CalloutBarProps = {
   theme?: CalloutBarTheme
-  icon: ReactNode
+  icon?: ReactNode
   prefix: ReactNode
   label: ReactNode
   expanded?: boolean
@@ -14,7 +14,7 @@ type CalloutBarProps = {
 
 const CalloutBar: FC<CalloutBarProps> = ({
   expanded,
-  icon,
+  icon = <>{'<>'}</>,
   label,
   onClick,
   prefix,

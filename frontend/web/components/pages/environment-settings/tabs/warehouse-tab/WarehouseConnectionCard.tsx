@@ -9,6 +9,8 @@ import Tooltip from 'components/Tooltip'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 import WarehouseEventCodeHelp from './WarehouseEventCodeHelp'
+import WarehouseSetupSqlHelp from './WarehouseSetupSqlHelp'
+import { CLICKHOUSE_DEFAULTS } from './clickhouseConfig'
 import WarehouseStats from './WarehouseStats'
 
 type WarehouseConnectionCardProps = {
@@ -57,6 +59,12 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   const isFlagsmith = connection.warehouse_type === 'flagsmith'
   const isPending = connection.status === 'pending_connection'
   const isConnected = connection.status === 'connected'
+  // ClickHouse connections are born connected, so the first-event nudge stays
+  // until events actually arrive in the customer's warehouse.
+  const showSendFirstEvent = isFlagsmith
+    ? !isPending && !isConnected
+    : connection.warehouse_type === 'clickhouse' &&
+      !connection.total_events_received
 
   const handleDelete = () => {
     openConfirm({
@@ -143,8 +151,20 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
         </div>
       )}
       <WarehouseEventCodeHelp />
+      {connection.warehouse_type === 'clickhouse' && (
+        <div className='mt-3'>
+          <WarehouseSetupSqlHelp
+            database={
+              (connection.config &&
+                'database' in connection.config &&
+                connection.config.database) ||
+              CLICKHOUSE_DEFAULTS.database
+            }
+          />
+        </div>
+      )}
       <div className='d-flex justify-content-end mt-3'>
-        {onTestConnection && (
+        {onTestConnection && !isConnected && (
           <Button
             id='warehouse-connection-test'
             theme='outline'
@@ -155,7 +175,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
             {isSendingTestEvent ? 'Testing...' : 'Test connection'}
           </Button>
         )}
-        {isFlagsmith && !isPending && !isConnected && (
+        {showSendFirstEvent && (
           <Button
             id='warehouse-send-first-event'
             theme='primary'
