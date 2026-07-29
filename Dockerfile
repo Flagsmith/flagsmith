@@ -141,9 +141,13 @@ ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION} \
   APPLICATION_LOGGERS="app_analytics,audit,code_references,common,core,dynamodb,edge_api,environments,features,import_export,integrations,mcp,oauth2_metadata,organisations,projects,segment_membership,segments,task_processor,users,webhooks,workflows"
 
 ARG CI_COMMIT_SHA
+# The multiproc directory is world-writable rather than owned by `nobody` so that
+# the image keeps working under an arbitrary `runAsUser`. Every `flagsmith`
+# subcommand writes here as soon as `common.core.metrics` is imported, so a
+# directory only `nobody` can write to fails any pod that overrides the UID.
 RUN echo ${CI_COMMIT_SHA} > /app/CI_COMMIT_SHA && \
   mkdir -p ${PROMETHEUS_MULTIPROC_DIR} && \
-  chown nobody ${PROMETHEUS_MULTIPROC_DIR}
+  chmod 0777 ${PROMETHEUS_MULTIPROC_DIR}
 
 EXPOSE 8000
 
