@@ -230,4 +230,7 @@ def deliver_object(client: "Client", bucket_name: str, s3_key: str) -> int:
         if exc.code in OBJECT_LEVEL_ERROR_CODES:
             raise ObjectRejectedError(str(exc)) from exc
         raise
+    finally:
+        # Releases the pooled S3 connection if the insert failed mid-read.
+        body.close()
     return summary.written_rows

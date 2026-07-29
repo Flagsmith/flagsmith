@@ -217,7 +217,13 @@ def test_deliver_object__valid_object__streams_body_and_returns_written_rows(
     # Given
     events_bucket.put_object(Bucket=BUCKET_NAME, Key=_event_key("13"), Body=OBJECT_BODY)
     client = mocker.MagicMock()
-    client.raw_insert.return_value.written_rows = 203
+    streamed_bodies: list[bytes] = []
+
+    def raw_insert(*args: Any, **kwargs: Any) -> Any:
+        streamed_bodies.append(kwargs["insert_block"].read())
+        return mocker.Mock(written_rows=203)
+
+    client.raw_insert.side_effect = raw_insert
 
     # When
     written_rows = warehouse_delivery_service.deliver_object(
@@ -234,9 +240,11 @@ def test_deliver_object__valid_object__streams_body_and_returns_written_rows(
         fmt="JSONEachRow",
         compression="gzip",
     )
-    # The body reaches ClickHouse as the exact bytes stored in S3
-    insert_block = client.raw_insert.call_args.kwargs["insert_block"]
-    assert insert_block.read() == OBJECT_BODY
+    # The body reaches ClickHouse as the exact bytes stored in S3, and is
+    # closed once delivered
+    assert streamed_bodies == [OBJECT_BODY]
+    with pytest.raises(ValueError, match="closed file"):
+        client.raw_insert.call_args.kwargs["insert_block"].read()
 
 
 def test_deliver_object__object_level_error__raises_object_rejected(
