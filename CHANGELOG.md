@@ -1,5 +1,33 @@
 # Changelog
 
+## [2.259.0](https://github.com/Flagsmith/flagsmith/compare/v2.258.0...v2.259.0) (2026-07-29)
+
+
+### Features
+
+* ClickHouse database setup SQL on the warehouse card and docs ([#8112](https://github.com/Flagsmith/flagsmith/issues/8112)) ([f8eeab0](https://github.com/Flagsmith/flagsmith/commit/f8eeab052e4e63112ce5fe1fa3a56b629362c66a))
+* **onboarding:** wire the verify console to the real first-evaluation signal ([#8132](https://github.com/Flagsmith/flagsmith/issues/8132)) ([b8073b9](https://github.com/Flagsmith/flagsmith/commit/b8073b9d8ba60826b6e002d8325a81304bb5d105))
+* push delivery of buffered events to external ClickHouse warehouses ([#8107](https://github.com/Flagsmith/flagsmith/issues/8107)) ([41b8b9f](https://github.com/Flagsmith/flagsmith/commit/41b8b9fdadc8aee3b501b7b7e8463761e4d1f130))
+* Redesign Compare Environments page ([#7965](https://github.com/Flagsmith/flagsmith/issues/7965)) ([acb3eb9](https://github.com/Flagsmith/flagsmith/commit/acb3eb9bb51c57e9c4030d1c44dbf39b184927ee))
+* verify ClickHouse events table and query customer event stats ([#8116](https://github.com/Flagsmith/flagsmith/issues/8116)) ([551ac44](https://github.com/Flagsmith/flagsmith/commit/551ac4430772f01f31a46fe76f12bbb2f95a93ae))
+
+
+### Bug Fixes
+
+* **code-help:** correct the identity and segment snippets ([#8146](https://github.com/Flagsmith/flagsmith/issues/8146)) ([4d32782](https://github.com/Flagsmith/flagsmith/commit/4d3278297d6b7d229ecc6d3ea2829cffc456e7a9))
+* **code-help:** make the SDK snippets runnable ([#8145](https://github.com/Flagsmith/flagsmith/issues/8145)) ([238babf](https://github.com/Flagsmith/flagsmith/commit/238babf14c4fe37cc18266f6405bbd9d15fa1037))
+* **docker:** API image crashes on startup under a non-default runAsUser ([#8158](https://github.com/Flagsmith/flagsmith/issues/8158)) ([5e9eba9](https://github.com/Flagsmith/flagsmith/commit/5e9eba93f617e4df6252f5e36caeaafcf8f17353))
+
+
+### Dependency Updates
+
+* **frontend:** bump immutable, postcss, fast-uri and rspack [security] ([#8156](https://github.com/Flagsmith/flagsmith/issues/8156)) ([968e2c3](https://github.com/Flagsmith/flagsmith/commit/968e2c3ace13cee5cf8975ea1279e3736f187699))
+
+
+### Docs
+
+* Add stale flag detection documentation ([#8142](https://github.com/Flagsmith/flagsmith/issues/8142)) ([b14dd0c](https://github.com/Flagsmith/flagsmith/commit/b14dd0c4c9a261d6a469fe548efd3e7e4a92fa62))
+
 ## [2.258.0](https://github.com/Flagsmith/flagsmith/compare/v2.257.1...v2.258.0) (2026-07-28)
 
 
