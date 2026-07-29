@@ -180,7 +180,7 @@ const store = Object.assign({}, BaseStore, {
       return null
     }
     const env = find(store.model.environments, { api_key })
-    return env && env.id
+    return env?.id
   },
   getEnvironmentIdFromKeyAsync: async (projectId, apiKey) => {
     if (store.model && `${store.model.id}` === `${projectId}`) {
@@ -196,7 +196,7 @@ const store = Object.assign({}, BaseStore, {
       return null
     }
     const env = find(store.model.environments, { api_key })
-    return env && env.use_v2_feature_versioning
+    return env?.use_v2_feature_versioning
   },
   getMaxFeaturesAllowed: () => {
     return store.model && store.model.max_features_allowed
