@@ -19,7 +19,7 @@ const WarehouseSqlSnippet: FC<WarehouseSqlSnippetProps> = ({ sql }) => (
         theme='primary'
         size='xSmall'
       >
-        <Icon name='copy' width={16} fill='white' />
+        <Icon name='copy' width={16} />
         Copy Code
       </Button>
     </div>

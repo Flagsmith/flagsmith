@@ -1,6 +1,7 @@
 import { FC, useState } from 'react'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
+import BareButton from 'components/base/forms/BareButton'
 import { WarehouseType } from 'common/types/responses'
 import { ConfigFormData } from './ConfigForm'
 import SelectableCard from 'components/base/SelectableCard'
@@ -142,8 +143,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
               <div className='warehouse-setup__step-connector' />
             </div>
             <div className='warehouse-setup__step-content'>
-              <button
-                type='button'
+              <BareButton
                 className='warehouse-setup__step-toggle mb-2'
                 aria-expanded={sqlExpanded}
                 onClick={() => setSqlExpanded(!sqlExpanded)}
@@ -156,7 +156,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
                   width={22}
                   fill='#656D7B'
                 />
-              </button>
+              </BareButton>
               {sqlExpanded && (
                 <>
                   <p className='text-muted mb-3'>

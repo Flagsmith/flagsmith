@@ -20,7 +20,6 @@ const WarehouseSetupSqlHelp: FC<WarehouseSetupSqlHelpProps> = ({
   return (
     <div>
       <CalloutBar
-        icon={<>{'<>'}</>}
         prefix='Database setup:'
         label='Run once against your ClickHouse instance to create the events table'
         expanded={visible}
