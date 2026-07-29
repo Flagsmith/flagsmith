@@ -4,11 +4,12 @@ from functools import lru_cache
 
 import boto3
 import clickhouse_connect
-import structlog
+from clickhouse_connect.driver import httputil
 from clickhouse_connect.driver.exceptions import (
     DatabaseError,
     OperationalError,
 )
+from urllib3 import PoolManager
 
 from core.network import is_internal_address
 from experimentation.ingestion_infra_service import AWS_REGION
@@ -21,8 +22,6 @@ if typing.TYPE_CHECKING:
     from clickhouse_connect.driver.client import Client
 
     from experimentation.models import WarehouseConnection
-
-logger = structlog.get_logger("experimentation")
 
 EVENTS_TABLE_NAME = "events"
 EVENTS_FORMAT = "JSONEachRow"
@@ -42,6 +41,29 @@ NATIVE_TO_HTTP_PORT = {9440: 8443, 9000: 8123}
 
 CONNECT_TIMEOUT_SECONDS = 10
 INSERT_TIMEOUT_SECONDS = 300
+
+
+class _NoRedirectPoolManager(PoolManager):
+    """The internal-address guard validates the host we dial; following a
+    redirect would let a permitted host bounce the request, and its event
+    payload, to an address that was never checked."""
+
+    def urlopen(  # type: ignore[override]
+        self,
+        method: str,
+        url: str,
+        redirect: bool = True,
+        **kwargs: "Any",
+    ) -> "Any":
+        kwargs["redirect"] = False
+        return super().urlopen(method, url, **kwargs)
+
+
+@lru_cache(maxsize=1)
+def _get_pool_manager() -> PoolManager:
+    # Shared across delivery clients, as clickhouse-connect's own default pool
+    # is: the manager pools connections per host and is thread-safe.
+    return _NoRedirectPoolManager(**httputil.get_pool_manager_options())
 
 
 class DeliveryConfigError(Exception):
@@ -179,6 +201,7 @@ def delivery_client(connection: "WarehouseConnection") -> "Iterator[Client]":
         secure=secure,
         connect_timeout=CONNECT_TIMEOUT_SECONDS,
         send_receive_timeout=INSERT_TIMEOUT_SECONDS,
+        pool_mgr=_get_pool_manager(),
     )
     try:
         yield client
@@ -191,10 +214,9 @@ def deliver_object(client: "Client", bucket_name: str, s3_key: str) -> int:
     return the number of rows written.
 
     The body is passed through untouched — ClickHouse decompresses and parses
-    it, so neither happens in this process. The deduplication token is what
-    absorbs a redelivery, but only on a Replicated table or one configured with
-    a non-replicated deduplication window; otherwise duplicates reach the table
-    and the distinct-aware aggregates in the results queries account for them.
+    it, so neither happens in this process. Delivery is at-least-once, so a
+    redelivered object duplicates rows; the distinct-aware aggregates in the
+    results queries account for that.
     """
     body = _get_s3_client().get_object(Bucket=bucket_name, Key=s3_key)["Body"]
     try:
@@ -203,7 +225,6 @@ def deliver_object(client: "Client", bucket_name: str, s3_key: str) -> int:
             insert_block=body,
             fmt=EVENTS_FORMAT,
             compression=EVENTS_COMPRESSION,
-            settings={"insert_deduplication_token": s3_key},
         )
     except DatabaseError as exc:
         if exc.code in OBJECT_LEVEL_ERROR_CODES:

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import time
 import typing
 from dataclasses import replace
 from functools import lru_cache
 
 import structlog
+from clickhouse_connect.driver.exceptions import ClickHouseError
 from clickhouse_driver import Client
 from clickhouse_driver import errors as clickhouse_errors
 from clickhouse_driver.util.helpers import parse_url
@@ -104,6 +106,10 @@ CLICKHOUSE_VERIFY_TIMEOUT_SECONDS = 5
 CUSTOMER_EVENT_STATS_CACHE_SECONDS = 60
 
 _CUSTOMER_EVENT_STATS_UNAVAILABLE = "unavailable"
+
+# A delivery run stops taking on new objects after this long, leaving room for
+# the slowest possible in-flight insert to still land inside the task timeout.
+DELIVERY_TIME_BUDGET_SECONDS = 210
 
 
 def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
@@ -831,10 +837,25 @@ def _deliver_pending_objects(
     *,
     bucket_name: str,
     pending: list[str],
-    log: structlog.stdlib.BoundLogger,
+    connection: WarehouseConnection,
 ) -> tuple[int, int, int]:
+    log = logger.bind(
+        connection__id=connection.id,
+        environment__id=connection.environment_id,
+        organisation__id=connection.environment.project.organisation_id,
+    )
+    # A run that outlives the task timeout is retried while its own thread
+    # keeps delivering, so it must finish first: whatever is left is picked up
+    # on the next tick.
+    deadline = time.monotonic() + DELIVERY_TIME_BUDGET_SECONDS
     delivered_count = rejected_count = rows_count = 0
-    for s3_key in pending:
+    for index, s3_key in enumerate(pending):
+        if time.monotonic() > deadline:
+            log.info(
+                "delivery.budget_exhausted",
+                objects__remaining_count=len(pending) - index,
+            )
+            break
         try:
             rows_count += warehouse_delivery_service.deliver_object(
                 client,
@@ -853,7 +874,11 @@ def _deliver_pending_objects(
             flagsmith_experimentation_warehouse_delivery_objects_total.labels(
                 result="rejected"
             ).inc()
-            log.warning("delivery.object_rejected", exc_info=True)
+            log.warning(
+                "delivery.object_rejected",
+                s3__key=s3_key,
+                exc_info=True,
+            )
             continue
         warehouse_delivery_service.move_object(
             bucket_name,
@@ -875,6 +900,7 @@ def deliver_warehouse_events(
     """Deliver the environment's pending event objects to the connection's
     warehouse, surfacing the outcome on the connection's status."""
     log = logger.bind(
+        connection__id=connection.id,
         environment__id=connection.environment_id,
         organisation__id=connection.environment.project.organisation_id,
     )
@@ -891,12 +917,14 @@ def deliver_warehouse_events(
                 client,
                 bucket_name=bucket_name,
                 pending=pending,
-                log=log,
+                connection=connection,
             )
-    except Exception as exc:
+    except (warehouse_delivery_service.DeliveryConfigError, ClickHouseError) as exc:
         # The warehouse itself is unusable; deliver nothing, leave every
         # remaining object in place for the next run, and surface the
-        # breakage on the connection.
+        # breakage on the connection. Anything else — an S3 failure, a bug
+        # here — is ours, so it propagates and fails the task instead of
+        # blaming the customer's warehouse.
         mark_warehouse_delivery_failed(
             connection,
             detail=warehouse_delivery_service.describe_delivery_error(exc),
@@ -905,6 +933,26 @@ def deliver_warehouse_events(
             result="failure"
         ).inc()
         log.error("delivery.failed", exc_info=exc)
+        return
+
+    if delivered_count == 0 and rejected_count:
+        # Records all come from one ingestion pipeline, so every object being
+        # rejected points at the table's schema rather than the objects.
+        mark_warehouse_delivery_failed(
+            connection,
+            detail=(
+                f"The warehouse rejected every event object. Check that the "
+                f"`{warehouse_delivery_service.EVENTS_TABLE_NAME}` table "
+                f"matches the expected schema."
+            ),
+        )
+        flagsmith_experimentation_warehouse_delivery_runs_total.labels(
+            result="failure"
+        ).inc()
+        log.error(
+            "delivery.all_objects_rejected",
+            objects__rejected_count=rejected_count,
+        )
         return
 
     mark_warehouse_delivery_succeeded(connection)

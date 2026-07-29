@@ -7,6 +7,7 @@ import pytest
 from clickhouse_connect.driver.exceptions import DatabaseError, OperationalError
 from moto import mock_s3  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
+from urllib3 import PoolManager
 
 from experimentation import warehouse_delivery_service
 from experimentation.models import WarehouseConnection
@@ -177,6 +178,14 @@ def test_delivery_client__valid_config__yields_http_client_and_closes(
             secure=True,
             connect_timeout=10,
             send_receive_timeout=300,
+            pool_mgr=mocker.ANY,
+        )
+        # Redirects must not be followed: the internal-address guard only
+        # validates the host being dialled.
+        pool_manager = get_client.call_args.kwargs["pool_mgr"]
+        assert isinstance(
+            pool_manager,
+            warehouse_delivery_service._NoRedirectPoolManager,
         )
         get_client.return_value.close.assert_not_called()
 
@@ -206,7 +215,6 @@ def test_deliver_object__valid_object__streams_body_and_returns_written_rows(
         insert_block=mocker.ANY,
         fmt="JSONEachRow",
         compression="gzip",
-        settings={"insert_deduplication_token": _event_key("13")},
     )
     # The body reaches ClickHouse as the exact bytes stored in S3
     insert_block = client.raw_insert.call_args.kwargs["insert_block"]
@@ -305,3 +313,19 @@ def test_describe_delivery_error__known_failures__returns_user_facing_detail(
 
     # Then
     assert detail == expected_detail
+
+
+def test_no_redirect_pool_manager__urlopen__refuses_to_follow_redirects(
+    mocker: MockerFixture,
+) -> None:
+    # Given a manager asked to follow redirects, as clickhouse-connect's own
+    # request path does
+    urlopen = mocker.patch.object(PoolManager, "urlopen")
+    manager = warehouse_delivery_service._NoRedirectPoolManager()
+
+    # When
+    manager.urlopen("POST", "https://ch.acme-corp.example/", redirect=True)
+
+    # Then the redirect is refused: a permitted host must not be able to bounce
+    # the request, and its event payload, to an unchecked address
+    assert urlopen.call_args.kwargs["redirect"] is False
