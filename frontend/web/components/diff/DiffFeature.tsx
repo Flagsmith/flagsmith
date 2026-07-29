@@ -30,6 +30,8 @@ type FeatureDiffType = {
   tabTheme?: string
   conflicts?: FeatureConflict[] | undefined
   disableSegments?: boolean
+  oldEnvName?: string
+  newEnvName?: string
 }
 type ViewMode = 'combined' | 'new' | 'old'
 const DiffFeature: FC<FeatureDiffType> = ({
@@ -37,8 +39,10 @@ const DiffFeature: FC<FeatureDiffType> = ({
   disableSegments,
   environmentId,
   featureId,
+  newEnvName,
   newState,
   noChangesMessage,
+  oldEnvName,
   oldState,
   projectId,
   tabTheme,
@@ -81,8 +85,8 @@ const DiffFeature: FC<FeatureDiffType> = ({
     !totalChanges && (diff.newValue === null || diff.newValue === undefined)
   const viewOptions = [
     { label: 'Combined Diff', value: 'combined' },
-    { label: 'New Value', value: 'new' },
-    { label: 'Old Value', value: 'old' },
+    { label: newEnvName || 'New Value', value: 'new' },
+    { label: oldEnvName || 'Old Value', value: 'old' },
   ]
   const selectedOption = viewOptions.find((v) => v.value === viewMode)
   return (
@@ -97,6 +101,20 @@ const DiffFeature: FC<FeatureDiffType> = ({
             !totalSegmentChanges &&
             !totalVariationChanges &&
             noChangesMessage && <InfoMessage>{noChangesMessage}</InfoMessage>}
+          {(oldEnvName || newEnvName) && (
+            <div className='d-flex gap-3 mb-3'>
+              {oldEnvName && (
+                <span className='diff-removed-header'>
+                  <span className='diff-sign'>−</span> {oldEnvName}
+                </span>
+              )}
+              {newEnvName && (
+                <span className='diff-added-header'>
+                  <span className='diff-sign'>+</span> {newEnvName}
+                </span>
+              )}
+            </div>
+          )}
           <Tabs
             hideNavOnSingleTab
             theme={tabTheme}
