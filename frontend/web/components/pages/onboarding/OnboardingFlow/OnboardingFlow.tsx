@@ -222,10 +222,11 @@ const OnboardingFlow: FC = () => {
         featureName={featureName}
         installCopied={installCopied}
         snippetCopied={snippetCopied}
-        connected={connection === 'connected'}
+        connected={connection.status === 'connected'}
+        sdkLabel={connection.sdkLabel}
       />
       <OnboardingFlagsTable
-        status={connection === 'connected' ? 'connected' : 'waiting'}
+        status={connection.status === 'connected' ? 'connected' : 'waiting'}
         flags={[
           {
             description: 'Controls the demo button shown to your users',
@@ -239,7 +240,7 @@ const OnboardingFlow: FC = () => {
         togglesReady={flagStateReady}
       />
       <OnboardingNextSteps
-        locked={connection !== 'connected'}
+        locked={connection.status !== 'connected'}
         onSelect={goToNextStep}
       />
       <div className='d-flex justify-content-end'>
