@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
-import FieldLabel from 'components/base/forms/FieldLabel'
+import Field from 'components/base/forms/Field'
 import PageTitle from 'components/PageTitle'
 import { useRouteContext } from 'components/providers/RouteContext'
 import { useGetProjectsQuery } from 'common/services/useProject'
@@ -78,10 +78,7 @@ const ReleaseManagerPage: FC = () => {
       </PageTitle>
 
       <div className='mb-4'>
-        <div className='form-group'>
-          <FieldLabel htmlFor='release-manager-search'>
-            Search Flags and Tags
-          </FieldLabel>
+        <Field htmlFor='release-manager-search' title='Search Flags and Tags'>
           <div className='d-flex gap-2'>
             <input
               id='release-manager-search'
@@ -98,7 +95,7 @@ const ReleaseManagerPage: FC = () => {
               Search
             </Button>
           </div>
-        </div>
+        </Field>
       </div>
 
       {!hasSearched && (

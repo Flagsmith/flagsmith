@@ -1,5 +1,5 @@
 import React from 'react'
-import FieldLabel from 'components/base/forms/FieldLabel'
+import Field from 'components/base/forms/Field'
 import ValueEditor from 'components/ValueEditor'
 import ErrorMessage from 'components/ErrorMessage'
 import Constants from 'common/constants'
@@ -65,12 +65,11 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
           )}
         </div>
       </Row>
-      <div>
-        <FieldLabel
-          tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
-        >
-          Variation Value
-        </FieldLabel>
+      <Field
+        noMargin
+        title='Variation Value'
+        tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
+      >
         {Utils.renderWithPermission(
           canCreateFeature,
           readOnly
@@ -107,7 +106,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
             placeholder="e.g. 'big' "
           />,
         )}
-      </div>
+      </Field>
       <Row className='justify-content-between align-items-center mt-2'>
         <label className='mb-0'>{weightTitle}</label>
         <div className='d-flex align-items-center gap-2'>

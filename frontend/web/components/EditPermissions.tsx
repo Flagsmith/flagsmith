@@ -1,6 +1,6 @@
 import React, { FC, forwardRef, useCallback, useEffect, useState } from 'react'
+import Field from './base/forms/Field'
 import Icon from './icons/Icon'
-import FieldLabel from './base/forms/FieldLabel'
 import { find } from 'lodash'
 import _data from 'common/data/base/_data'
 import {
@@ -933,10 +933,11 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           </div>
           {roles && level === 'organisation' && (
             <FormGroup className='px-4'>
-              <div className='form-group full-width'>
-                <FieldLabel tooltip='Assigns what role the user/group will have'>
-                  Assign roles
-                </FieldLabel>
+              <Field
+                className='full-width'
+                title='Assign roles'
+                tooltip='Assigns what role the user/group will have'
+              >
                 <div>
                   <Row>
                     <strong style={{ width: 70 }}>Roles: </strong>
@@ -962,7 +963,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                     </Button>
                   </Row>
                 </div>
-              </div>
+              </Field>
             </FormGroup>
           )}
           {level !== 'environment' && level !== 'project' && (

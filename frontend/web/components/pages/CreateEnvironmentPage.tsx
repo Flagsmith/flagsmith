@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import Field from 'components/base/forms/Field'
 import Icon from 'components/icons/Icon'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
@@ -16,7 +17,6 @@ import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
 import { useHistory } from 'react-router-dom'
 import API from 'project/api'
-import FieldLabel from 'components/base/forms/FieldLabel'
 import InputGroup from 'components/base/forms/InputGroup'
 import { Environment, Role, User } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
@@ -414,13 +414,11 @@ const CreateEnvironmentPage: React.FC = () => {
                       envContentType?.id && (
                         <CondensedRow>
                           <FormGroup className='mt-2 setting'>
-                            <div className='form-group'>
-                              <FieldLabel
-                                tooltip='You need to add a value to the custom field if it is required to successfully clone the environment'
-                                tooltipPlace='right'
-                              >
-                                Custom fields
-                              </FieldLabel>
+                            <Field
+                              title='Custom fields'
+                              tooltip='You need to add a value to the custom field if it is required to successfully clone the environment'
+                              tooltipPlace='right'
+                            >
                               <AddMetadataToEntity
                                 organisationId={
                                   AccountStore.getOrganisation().id
@@ -434,7 +432,7 @@ const CreateEnvironmentPage: React.FC = () => {
                                 onChange={setMetadata}
                                 setHasMetadataRequired={setHasMetadataRequired}
                               />
-                            </div>
+                            </Field>
                           </FormGroup>
                         </CondensedRow>
                       )}

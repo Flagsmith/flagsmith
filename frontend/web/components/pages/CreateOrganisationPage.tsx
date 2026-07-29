@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import FieldLabel from 'components/base/forms/FieldLabel'
+import Field from 'components/base/forms/Field'
 import { useHistory } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
@@ -128,18 +128,21 @@ const CreateOrganisationPage: React.FC = () => {
             onChange={(e: InputEvent) => setName(Utils.safeParseEventValue(e))}
           />
           {showHostingPreferences && (
-            <div className='form-group'>
-              <FieldLabel>
-                What is your company's desired hosting option?{' '}
-                <a
-                  className='text-action'
-                  href='https://docs.flagsmith.com/version-comparison'
-                  target='_blank'
-                  rel='noreferrer'
-                >
-                  View Docs
-                </a>
-              </FieldLabel>
+            <Field
+              title={
+                <>
+                  What is your company's desired hosting option?{' '}
+                  <a
+                    className='text-action'
+                    href='https://docs.flagsmith.com/version-comparison'
+                    target='_blank'
+                    rel='noreferrer'
+                  >
+                    View Docs
+                  </a>
+                </>
+              }
+            >
               <CheckboxGroup
                 onChange={setHosting}
                 selectedValues={hosting}
@@ -158,7 +161,7 @@ const CreateOrganisationPage: React.FC = () => {
                   },
                 ]}
               />
-            </div>
+            </Field>
           )}
 
           <div className='text-right'>

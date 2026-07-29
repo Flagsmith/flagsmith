@@ -1,5 +1,5 @@
 import React, { FC } from 'react'
-import FieldLabel from 'components/base/forms/FieldLabel'
+import Field from 'components/base/forms/Field'
 import moment from 'moment'
 import EnvironmentSelect, {
   EnvironmentSelectOption,
@@ -147,8 +147,7 @@ const CreateSegmentUsersTabContent: React.FC<
       </InfoMessage>
       <div className='mt-2'>
         <FormGroup>
-          <div className='form-group col-4'>
-            <FieldLabel>Environment</FieldLabel>
+          <Field className='col-4' title='Environment'>
             <EnvironmentSelect
               projectId={`${projectId}`}
               value={environmentId}
@@ -165,7 +164,7 @@ const CreateSegmentUsersTabContent: React.FC<
                   )
                 : '—'}
             </div>
-          </div>
+          </Field>
           {membersEnabled && segmentId && selectedEnv ? (
             <SegmentMembersList
               projectId={projectId}

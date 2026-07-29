@@ -1,5 +1,5 @@
 import React, { FC, KeyboardEvent, useEffect, useMemo, useState } from 'react'
-import FieldLabel from 'components/base/forms/FieldLabel'
+import Field from 'components/base/forms/Field'
 import { Tag as TTag } from 'common/types/responses'
 import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
@@ -189,8 +189,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
           have deletion protection.
         </Tooltip>
 
-        <div className='form-group select-colour'>
-          <FieldLabel>Select a color</FieldLabel>
+        <Field className='select-colour' title='Select a color'>
           <Row className={'gap-3'}>
             {Constants.tagColors.map((color) => (
               <div key={color} className='tag--select'>
@@ -202,7 +201,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
               </div>
             ))}
           </Row>
-        </div>
+        </Field>
         {existingTag && (
           <ErrorMessage error={'A tag already exists with this name'} />
         )}

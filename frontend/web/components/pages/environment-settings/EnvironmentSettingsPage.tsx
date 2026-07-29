@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import FieldLabel from 'components/base/forms/FieldLabel'
+import Field from 'components/base/forms/Field'
 import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -924,15 +924,13 @@ const EnvironmentSettingsPage: React.FC = () => {
                   {metadataEnable && environmentContentType?.id && (
                     <TabItem tabLabel='Custom Fields'>
                       <FormGroup className='mt-5 setting'>
-                        <div className='form-group'>
-                          <FieldLabel
-                            tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
-                              'environments',
-                            )}`}
-                            tooltipPlace='right'
-                          >
-                            Custom fields
-                          </FieldLabel>
+                        <Field
+                          title='Custom fields'
+                          tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
+                            'environments',
+                          )}`}
+                          tooltipPlace='right'
+                        >
                           <AddMetadataToEntity
                             organisationId={AccountStore.getOrganisation().id}
                             projectId={projectId}
@@ -946,7 +944,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                               )
                             }}
                           />
-                        </div>
+                        </Field>
                       </FormGroup>
                     </TabItem>
                   )}

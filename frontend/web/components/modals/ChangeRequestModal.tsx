@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
+import Field from 'components/base/forms/Field'
 import Icon from 'components/icons/Icon'
-import FieldLabel from 'components/base/forms/FieldLabel'
 import UserSelect from 'components/UserSelect'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Button from 'components/base/forms/Button'
@@ -170,13 +170,11 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
               />
             </FormGroup>
             <div>
-              <div className='form-group'>
-                <FieldLabel
-                  htmlFor='change-request-live-from'
-                  tooltip='Allows you to set a date and time in which your change will only become active. All dates are displayed in your local timezone.'
-                >
-                  Schedule Change
-                </FieldLabel>
+              <Field
+                htmlFor='change-request-live-from'
+                title='Schedule Change'
+                tooltip='Allows you to set a date and time in which your change will only become active. All dates are displayed in your local timezone.'
+              >
                 <Row>
                   <DateSelect
                     id='change-request-live-from'
@@ -193,7 +191,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
                     Clear
                   </Button>
                 </Row>
-              </div>
+              </Field>
             </div>
             {showAssignees && moment(liveFrom).isSame(currDate) && (
               <InfoMessage>
@@ -215,10 +213,11 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
               showAssignees &&
               !Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (
                 <FormGroup className='mb-4'>
-                  <div className='form-group full-width'>
-                    <FieldLabel tooltip='Assignees will be able to review and approve the change request'>
-                      Assignees
-                    </FieldLabel>
+                  <Field
+                    className='full-width'
+                    title='Assignees'
+                    tooltip='Assignees will be able to review and approve the change request'
+                  >
                     <div>
                       {!Utils.getFlagsmithHasFeature(
                         'disable_users_as_reviewers',
@@ -271,7 +270,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
                         </Button>
                       </Row>
                     </div>
-                  </div>
+                  </Field>
                 </FormGroup>
               )}
             {!changeRequest &&

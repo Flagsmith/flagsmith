@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
-import FieldLabel from 'components/base/forms/FieldLabel'
+import Field from 'components/base/forms/Field'
 import ValueEditor from 'components/ValueEditor'
 import Constants from 'common/constants'
 import { VariationOptions } from 'components/mv/VariationOptions'
@@ -345,10 +345,10 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 
       {showValue && (
         <FormGroup className='mb-4'>
-          <div className='form-group'>
-            <FieldLabel tooltip={getValueTooltip(hasVariations, isEdit)}>
-              {valueTitle}
-            </FieldLabel>
+          <Field
+            title={valueTitle}
+            tooltip={getValueTooltip(hasVariations, isEdit)}
+          >
             <ValueEditor
               data-test='featureValue'
               name='featureValue'
@@ -367,7 +367,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               disabled={isDisabled}
               placeholder="e.g. 'big' "
             />
-          </div>
+          </Field>
           {canCompareValue && (
             <div className='text-end mt-2'>
               <Button

@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react'
-import FieldLabel from 'components/base/forms/FieldLabel'
+import Field from 'components/base/forms/Field'
 import Setting from 'components/Setting'
 import RegexTester from 'components/RegexTester'
 import Utils from 'common/utils/utils'
@@ -121,10 +121,7 @@ export const FeatureNameValidation = ({
           transition: 'opacity 0.4s ease-in-out, height 0.4s ease-in-out',
         }}
       >
-        <div className='form-group'>
-          <FieldLabel htmlFor='feature-name-regex'>
-            Feature Name RegEx
-          </FieldLabel>
+        <Field htmlFor='feature-name-regex' title='Feature Name RegEx'>
           <form onSubmit={handleSubmit}>
             <Row>
               <Flex>
@@ -161,7 +158,7 @@ export const FeatureNameValidation = ({
               </Button>
             </Row>
           </form>
-        </div>
+        </Field>
       </div>
     </FormGroup>
   )
