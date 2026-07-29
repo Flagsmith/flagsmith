@@ -26,11 +26,15 @@ describe('getClickHouseOnboardingSql', () => {
   it('creates a placeholder user, grants it access, and includes the DDL', () => {
     const sql = getClickHouseOnboardingSql()
 
+    expect(sql).toContain('CREATE USER IF NOT EXISTS <USER>')
     expect(sql).toContain(
-      "CREATE USER IF NOT EXISTS <USERNAME> IDENTIFIED BY '<YOUR_SECURED_PASSWORD>';",
+      "IDENTIFIED WITH sha256_password BY '<CHANGE_ME_PASSWORD>';",
     )
     expect(sql).toContain(
-      'GRANT INSERT, SELECT ON flagsmith_exp.* TO <USERNAME>;',
+      'GRANT SELECT, INSERT ON flagsmith_exp.events TO <USER>;',
+    )
+    expect(sql).toContain(
+      'GRANT SHOW TABLES, SHOW COLUMNS ON flagsmith_exp.* TO <USER>;',
     )
     expect(sql).toContain(getClickHouseSetupSql('flagsmith_exp'))
   })

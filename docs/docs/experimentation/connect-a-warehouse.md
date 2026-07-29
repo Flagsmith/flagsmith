@@ -55,16 +55,19 @@ The current status is shown on the warehouse card in **Environment Settings > Wa
 Instead of the managed Flagsmith warehouse, you can store experiment events in your own **ClickHouse** instance.
 
 1. Configure your instance by running the following against it, using an administrative user (the statements require
-   `CREATE USER`, `GRANT`, `CREATE DATABASE` and `CREATE TABLE` privileges). Replace `<USERNAME>` and
-   `<YOUR_SECURED_PASSWORD>` with your own values. This is a one-off setup step; the same SQL is available to copy from
-   the Flagsmith dashboard.
+   `CREATE USER`, `GRANT`, `CREATE DATABASE` and `CREATE TABLE` privileges). Replace `<USER>` and `<CHANGE_ME_PASSWORD>`
+   with your own values. This is a one-off setup step; the same SQL is available to copy from the Flagsmith dashboard.
 
    ```sql
    -- Create a dedicated user for Flagsmith
-   CREATE USER IF NOT EXISTS <USERNAME> IDENTIFIED BY '<YOUR_SECURED_PASSWORD>';
+   CREATE USER IF NOT EXISTS <USER>
+       IDENTIFIED WITH sha256_password BY '<CHANGE_ME_PASSWORD>';
 
    -- Allow it to write and read experiment events
-   GRANT INSERT, SELECT ON flagsmith_exp.* TO <USERNAME>;
+   GRANT SELECT, INSERT ON flagsmith_exp.events TO <USER>;
+
+   -- Allow it to check the events table exists
+   GRANT SHOW TABLES, SHOW COLUMNS ON flagsmith_exp.* TO <USER>;
 
    -- Create the database and events table
    CREATE DATABASE IF NOT EXISTS flagsmith_exp;
