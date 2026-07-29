@@ -22,4 +22,10 @@ describe('getTestFailureWarning', () => {
       "events won't be delivered until the table exists",
     )
   })
+
+  it('keeps the sentence boundary when the missing-table detail lacks punctuation', () => {
+    expect(getTestFailureWarning('Events table not found')).toContain(
+      'Events table not found. You can save anyway',
+    )
+  })
 })

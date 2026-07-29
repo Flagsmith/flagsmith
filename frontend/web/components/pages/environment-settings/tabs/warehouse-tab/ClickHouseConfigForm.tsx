@@ -22,6 +22,7 @@ import {
   getButtonLabel,
   getTestFailureWarning,
   getWarehouseErrorMessage,
+  isMissingEventsTableDetail,
 } from './warehouseFormUtils'
 import './ConfigForm.scss'
 
@@ -56,6 +57,9 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
   const [error, setError] = useState(false)
   const [testState, setTestState] = useState<TestState>('idle')
   const [testDetail, setTestDetail] = useState<string | null>(null)
+  // Sticky: the setup SQL stays offered once a test reports the table missing,
+  // even while the user edits fields (which resets the live test state).
+  const [showSetupSql, setShowSetupSql] = useState(false)
   const testRevision = useRef(0)
 
   const [testConnectionConfig, { isLoading: isTesting }] =
@@ -105,6 +109,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
       } else {
         setTestState('errored')
         setTestDetail(result.status_detail)
+        setShowSetupSql(isMissingEventsTableDetail(result.status_detail))
       }
     } catch {
       if (revision !== testRevision.current) return
@@ -234,7 +239,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
         {isEdit && (
           <WarehouseSetupSqlHelp
             database={database.trim() || CLICKHOUSE_DEFAULTS.database}
-            showInitially={testState === 'errored'}
+            showInitially={showSetupSql}
           />
         )}
 
