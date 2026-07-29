@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
 import pytest
-from clickhouse_driver import errors as clickhouse_errors
 from django.db.models import Q
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from prometheus_client import REGISTRY
@@ -39,9 +38,6 @@ from experimentation.models import (
 )
 from experimentation.results_query import _MetricSlot
 from experimentation.services import (
-    InternalAddressError,
-    MissingEventsTableError,
-    _describe_verification_error,
     annotate_warehouse_event_stats,
     verify_clickhouse_connection,
 )
@@ -2032,8 +2028,9 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_client = mocker.patch("experimentation.services.Client")
-    mock_client.return_value.execute.return_value = [(1,)]
+    get_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
     success_count_before = _verification_count("success")
     clickhouse_connection.status_detail = "stale detail"
     clickhouse_connection.save()
@@ -2041,25 +2038,23 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
     # When
     verify_clickhouse_connection(clickhouse_connection)
 
-    # Then
+    # Then the check ran over the same HTTP client delivery uses
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
     assert clickhouse_connection.status_detail is None
-    mock_client.assert_called_once_with(
-        "ch.acme-corp.example",
-        port=9440,
-        user="acme_svc",
+    get_client.assert_called_once_with(
+        host="ch.acme-corp.example",
+        port=8443,
+        username="acme_svc",
         password="hunter2",
         database="acme_dwh",
         secure=True,
-        connect_timeout=5,
-        send_receive_timeout=5,
+        connect_timeout=10,
+        send_receive_timeout=services.CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
+        pool_mgr=mocker.ANY,
     )
-    assert mock_client.return_value.execute.call_args_list == [
-        mocker.call("SELECT 1"),
-        mocker.call("EXISTS TABLE events"),
-    ]
-    mock_client.return_value.disconnect.assert_called_once_with()
+    get_client.return_value.query.assert_called_once_with("SELECT 1")
+    get_client.return_value.close.assert_called_once_with()
     assert _verification_count("success") == success_count_before + 1
     assert {
         "level": "info",
@@ -2070,34 +2065,30 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
 
 
 @pytest.mark.parametrize(
-    "credentials, execute_side_effect, expected_detail",
+    "credentials, query_side_effect, expected_detail",
     [
         (
             {"password": "hunter2"},
             Exception("connection refused"),
-            "Verification failed.",
-        ),
-        (
-            {"password": "hunter2"},
-            [[(1,)], [(0,)]],
-            "Events table not found in the configured database. "
-            "Run the setup SQL to create it.",
+            "Connection failed.",
         ),
         (None, None, "Stored connection details are incomplete."),
     ],
-    ids=["driver_error", "missing_events_table", "missing_credentials"],
+    ids=["client_error", "missing_credentials"],
 )
 def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
     clickhouse_connection: WarehouseConnection,
     credentials: dict[str, str] | None,
-    execute_side_effect: Exception | list[list[tuple[int]]] | None,
+    query_side_effect: Exception | None,
     expected_detail: str,
     log: StructuredLogCapture,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_client = mocker.patch("experimentation.services.Client")
-    mock_client.return_value.execute.side_effect = execute_side_effect
+    get_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
+    get_client.return_value.query.side_effect = query_side_effect
     clickhouse_connection.credentials = credentials
     clickhouse_connection.save()
     failure_count_before = _verification_count("failure")
@@ -2120,7 +2111,9 @@ def test_verify_clickhouse_connection__internal_host__sets_errored_without_conne
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_client = mocker.patch("experimentation.services.Client")
+    get_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
     clickhouse_connection.config = {
         **(clickhouse_connection.config or {}),
         "host": "10.0.0.5",
@@ -2137,85 +2130,14 @@ def test_verify_clickhouse_connection__internal_host__sets_errored_without_conne
         clickhouse_connection.status_detail
         == "Host must not target internal or private network addresses."
     )
-    mock_client.assert_not_called()
+    get_client.assert_not_called()
 
 
 @pytest.mark.parametrize(
-    "error,expected_detail",
+    "query_result, expected_stats",
     [
         (
-            clickhouse_errors.ServerException("Authentication failed", code=516),
-            "Authentication failed.",
-        ),
-        (
-            clickhouse_errors.ServerException(
-                "Database not_a_real_db does not exist", code=81
-            ),
-            "Database does not exist.",
-        ),
-        (
-            clickhouse_errors.ServerException("Some other server error", code=999),
-            "The ClickHouse server rejected the request.",
-        ),
-        (
-            clickhouse_errors.SocketTimeoutError("(10.255.255.1:9000)"),
-            "The connection timed out.",
-        ),
-        (
-            TimeoutError("timed out"),
-            "The connection timed out.",
-        ),
-        (
-            clickhouse_errors.NetworkError("Connection refused"),
-            "Could not connect to the host.",
-        ),
-        (
-            InternalAddressError("10.0.0.5"),
-            "Host must not target internal or private network addresses.",
-        ),
-        (
-            MissingEventsTableError(),
-            "Events table not found in the configured database. "
-            "Run the setup SQL to create it.",
-        ),
-        (
-            KeyError("host"),
-            "Stored connection details are incomplete.",
-        ),
-        (
-            ValueError("unexpected"),
-            "Verification failed.",
-        ),
-    ],
-    ids=[
-        "server_exception_auth_failure",
-        "server_exception_unknown_database",
-        "server_exception_other",
-        "socket_timeout_error",
-        "builtin_timeout_error",
-        "network_error",
-        "internal_address_error",
-        "missing_events_table_error",
-        "key_error",
-        "generic_exception",
-    ],
-)
-def test_describe_verification_error__known_error_types__returns_expected_detail(
-    error: Exception,
-    expected_detail: str,
-) -> None:
-    # Given / When
-    detail = _describe_verification_error(error)
-
-    # Then
-    assert detail == expected_detail
-
-
-@pytest.mark.parametrize(
-    "execute_side_effect, expected_stats",
-    [
-        (
-            [[(42, 7)]],
+            [(42, 7)],
             WarehouseEventStats(total_events_received=42, unique_events_count=7),
         ),
         (Exception("connection refused"), None),
@@ -2225,26 +2147,33 @@ def test_describe_verification_error__known_error_types__returns_expected_detail
 def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer_instance(
     clickhouse_connection: WarehouseConnection,
     reset_cache: None,
-    execute_side_effect: Exception | list[list[tuple[int, int]]],
+    query_result: Exception | list[tuple[int, int]],
     expected_stats: WarehouseEventStats | None,
     log: StructuredLogCapture,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_client = mocker.patch("experimentation.services.Client")
-    mock_client.return_value.execute.side_effect = execute_side_effect
+    get_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
+    if isinstance(query_result, Exception):
+        get_client.return_value.query.side_effect = query_result
+    else:
+        get_client.return_value.query.return_value = mocker.Mock(
+            result_rows=query_result
+        )
 
     # When
     annotate_warehouse_event_stats(clickhouse_connection, "test-env-key")
 
     # Then
     assert getattr(clickhouse_connection, "event_stats", None) == expected_stats
-    mock_client.return_value.execute.assert_called_once_with(
+    get_client.return_value.query.assert_called_once_with(
         "SELECT count() AS total, uniqExact(event) AS unique "
         "FROM events WHERE environment_key = %(environment_key)s",
-        {"environment_key": "test-env-key"},
+        parameters={"environment_key": "test-env-key"},
     )
-    mock_client.return_value.disconnect.assert_called_once_with()
+    get_client.return_value.close.assert_called_once_with()
     assert any(
         event["event"] == "connection.event_stats_failed" for event in log.events
     ) == (expected_stats is None)
@@ -2254,5 +2183,5 @@ def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer
     annotate_warehouse_event_stats(fresh_connection, "test-env-key")
 
     # Then
-    mock_client.assert_called_once()
+    get_client.assert_called_once()
     assert getattr(fresh_connection, "event_stats", None) == expected_stats

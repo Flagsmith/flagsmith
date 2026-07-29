@@ -8,7 +8,6 @@ from functools import lru_cache
 import structlog
 from clickhouse_connect.driver.exceptions import ClickHouseError
 from clickhouse_driver import Client
-from clickhouse_driver import errors as clickhouse_errors
 from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
 from django.core.cache import cache
@@ -21,7 +20,6 @@ from rest_framework.exceptions import ValidationError
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from core.dataclasses import AuthorData
-from core.network import is_internal_address
 from environments.tasks import rebuild_environment_document
 from experimentation import warehouse_delivery_service
 from experimentation.constants import (
@@ -67,7 +65,6 @@ from experimentation.stats import (
     compare_to_control,
     srm_p_value,
 )
-from experimentation.types import ClickHouseConfig, ClickHouseCredentials
 from features.models import FeatureState
 from features.value_types import BOOLEAN, INTEGER, STRING
 from features.versioning.dataclasses import FlagChangeSet, MultivariateValueChangeSet
@@ -155,12 +152,17 @@ def get_unique_event_names(environment_key: str) -> list[str]:
     return [row[0] for row in rows]
 
 
-def _query_event_stats(client: Client, environment_key: str) -> WarehouseEventStats:
-    rows = client.execute(
-        "SELECT count() AS total, uniqExact(event) AS unique "
-        "FROM events WHERE environment_key = %(environment_key)s",
-        {"environment_key": environment_key},
-    )
+# Placeholder style is shared by clickhouse-driver and clickhouse-connect, so
+# the same query runs against the managed warehouse and customer instances.
+_EVENT_STATS_QUERY = (
+    "SELECT count() AS total, uniqExact(event) AS unique "
+    "FROM events WHERE environment_key = %(environment_key)s"
+)
+
+
+def _build_event_stats(
+    rows: Sequence[Sequence[typing.Any]],
+) -> WarehouseEventStats:
     total, unique = rows[0] if rows else (0, 0)
     return WarehouseEventStats(
         total_events_received=int(total),
@@ -170,7 +172,11 @@ def _query_event_stats(client: Client, environment_key: str) -> WarehouseEventSt
 
 def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
     """Return event counts recorded for `environment_key` in the warehouse."""
-    return _query_event_stats(_get_clickhouse_client(), environment_key)
+    rows = _get_clickhouse_client().execute(
+        _EVENT_STATS_QUERY,
+        {"environment_key": environment_key},
+    )
+    return _build_event_stats(rows)
 
 
 EXPOSURE_BUCKETS_QUERY = (
@@ -927,7 +933,7 @@ def deliver_warehouse_events(
         # blaming the customer's warehouse.
         mark_warehouse_delivery_failed(
             connection,
-            detail=warehouse_delivery_service.describe_delivery_error(exc),
+            detail=warehouse_delivery_service.describe_warehouse_error(exc),
         )
         flagsmith_experimentation_warehouse_delivery_runs_total.labels(
             result="failure"
@@ -967,81 +973,27 @@ def deliver_warehouse_events(
     )
 
 
-class InternalAddressError(Exception):
-    pass
-
-
-class MissingEventsTableError(Exception):
-    pass
-
-
-def _connect_customer_clickhouse(connection: WarehouseConnection) -> Client:
-    """Build a client for the customer's ClickHouse instance from stored
-    connection details, re-checking the host against internal address ranges
-    first: DNS may resolve differently than it did at validation time, and
-    rows may predate host validation."""
-    config = typing.cast(ClickHouseConfig, connection.config or {})
-    credentials = typing.cast(ClickHouseCredentials, connection.credentials or {})
-    if is_internal_address(config["host"], include_shared=True):
-        raise InternalAddressError(config["host"])
-    return Client(
-        config["host"],
-        port=config["port"],
-        user=config["username"],
-        password=credentials["password"],
-        database=config["database"],
-        secure=config["secure"],
-        connect_timeout=CLICKHOUSE_CONNECT_TIMEOUT_SECONDS,
-        send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
-    )
-
-
-def _describe_verification_error(error: Exception) -> str:
-    if isinstance(error, clickhouse_errors.ServerException):
-        # 516 = AUTHENTICATION_FAILED (not in clickhouse_driver.errors.ErrorCodes)
-        if error.code == 516:
-            return "Authentication failed."
-        if error.code == clickhouse_errors.ErrorCodes.UNKNOWN_DATABASE:
-            return "Database does not exist."
-        return "The ClickHouse server rejected the request."
-    if isinstance(error, (clickhouse_errors.SocketTimeoutError, TimeoutError)):
-        return "The connection timed out."
-    if isinstance(error, clickhouse_errors.NetworkError):
-        return "Could not connect to the host."
-    if isinstance(error, InternalAddressError):
-        return "Host must not target internal or private network addresses."
-    if isinstance(error, MissingEventsTableError):
-        return (
-            "Events table not found in the configured database. "
-            "Run the setup SQL to create it."
-        )
-    if isinstance(error, KeyError):
-        return "Stored connection details are incomplete."
-    return "Verification failed."
-
-
 def verify_clickhouse_connection(
     connection: WarehouseConnection,
     persist: bool = True,
 ) -> None:
-    """Run SELECT 1 against the customer's ClickHouse, check the events table
-    exists, and set the status to connected or errored; never raises. With
-    persist=False, the status is only set on the in-memory instance, allowing
-    unsaved connections to be tested."""
+    """Run SELECT 1 against the customer's ClickHouse over the same client,
+    interface and port that delivery uses, and set the status to connected or
+    errored; never raises. With persist=False, the status is only set on the
+    in-memory instance, allowing unsaved connections to be tested."""
     log = logger.bind(environment__id=connection.environment_id)
     try:
         log = log.bind(organisation__id=connection.environment.project.organisation_id)
-        client = _connect_customer_clickhouse(connection)
-        try:
-            client.execute("SELECT 1")
-            rows = client.execute("EXISTS TABLE events")
-            if not rows[0][0]:
-                raise MissingEventsTableError()
-        finally:
-            client.disconnect()
+        with warehouse_delivery_service.delivery_client(
+            connection,
+            send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
+        ) as client:
+            client.query("SELECT 1")
     except Exception as error:
         connection.status = WarehouseConnectionStatus.ERRORED
-        connection.status_detail = _describe_verification_error(error)
+        connection.status_detail = warehouse_delivery_service.describe_warehouse_error(
+            error
+        )
         if persist:
             connection.save(update_fields=["status", "status_detail"])
         flagsmith_experimentation_warehouse_connection_verifications_total.labels(
@@ -1120,11 +1072,15 @@ def _get_customer_warehouse_event_stats_cached(
     if cached == _CUSTOMER_EVENT_STATS_UNAVAILABLE:
         return None
     try:
-        client = _connect_customer_clickhouse(connection)
-        try:
-            stats = _query_event_stats(client, environment_key)
-        finally:
-            client.disconnect()
+        with warehouse_delivery_service.delivery_client(
+            connection,
+            send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
+        ) as client:
+            rows = client.query(
+                _EVENT_STATS_QUERY,
+                parameters={"environment_key": environment_key},
+            ).result_rows
+        stats = _build_event_stats(rows)
     except Exception:
         cache.set(
             cache_key,

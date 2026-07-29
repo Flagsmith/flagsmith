@@ -114,7 +114,7 @@ def clickhouse_connection(
         name="Production ClickHouse",
         config={
             "host": "ch.acme-corp.example",
-            "port": 9440,
+            "port": 8443,
             "database": "acme_dwh",
             "username": "acme_svc",
             "secure": True,
