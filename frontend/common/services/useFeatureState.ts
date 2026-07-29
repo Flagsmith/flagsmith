@@ -19,7 +19,7 @@ export const addFeatureSegmentsToFeatureStates = async (v) => {
 }
 export const featureStateService = service
   .enhanceEndpoints({
-    addTagTypes: ['FeatureState', 'FeatureList', 'Environment'],
+    addTagTypes: ['FeatureState', 'FeatureList', 'Environment', 'ProjectFlag'],
   })
   .injectEndpoints({
     endpoints: (builder) => ({
@@ -71,6 +71,7 @@ export const featureStateService = service
           { id: 'LIST', type: 'FeatureList' },
           { id: 'LIST', type: 'FeatureState' },
           { id: 'METRICS', type: 'Environment' },
+          { type: 'ProjectFlag' },
         ],
         query: (query: Req['updateFeatureState']) => ({
           body: query.body,
