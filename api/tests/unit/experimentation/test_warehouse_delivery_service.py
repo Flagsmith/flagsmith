@@ -192,6 +192,24 @@ def test_delivery_client__valid_config__yields_http_client_and_closes(
     get_client.return_value.close.assert_called_once_with()
 
 
+def test_delivery_client__body_raises__still_closes_client(
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
+
+    # When a delivery inside the block fails
+    with pytest.raises(RuntimeError, match="boom"):
+        with warehouse_delivery_service.delivery_client(clickhouse_connection):
+            raise RuntimeError("boom")
+
+    # Then the pooled HTTP connection is still released
+    get_client.return_value.close.assert_called_once_with()
+
+
 def test_deliver_object__valid_object__streams_body_and_returns_written_rows(
     events_bucket: Any,
     mocker: MockerFixture,
