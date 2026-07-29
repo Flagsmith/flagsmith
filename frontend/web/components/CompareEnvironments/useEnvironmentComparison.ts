@@ -1,10 +1,10 @@
 import { useCallback, useMemo } from 'react'
 import sortBy from 'lodash/sortBy'
-import ProjectStore from 'common/stores/project-store'
 import { hasMultivariateChange } from 'common/utils/compareMultivariate'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import { useGetAllEnvironmentFeatureStatesQuery } from 'common/services/useFeatureState'
-import { Environment, FeatureState, ProjectFlag } from 'common/types/responses'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { FeatureState, ProjectFlag } from 'common/types/responses'
 import { FeatureChange } from './types'
 
 type UseEnvironmentComparisonArgs = {
@@ -12,10 +12,6 @@ type UseEnvironmentComparisonArgs = {
   leftEnvironmentKey: string
   rightEnvironmentKey: string
 }
-
-// ProjectStore.getEnvironment returns null while the project is loading and
-// undefined for unknown keys
-type StoredEnvironment = Environment | undefined | null
 
 const deriveChanges = (
   leftProjectFlags: ProjectFlag[],
@@ -77,10 +73,21 @@ export const useEnvironmentComparison = ({
   projectId,
   rightEnvironmentKey,
 }: UseEnvironmentComparisonArgs) => {
-  const leftEnvironmentId =
-    ProjectStore.getEnvironmentIdFromKey(leftEnvironmentKey)
-  const rightEnvironmentId =
-    ProjectStore.getEnvironmentIdFromKey(rightEnvironmentKey)
+  const { data: environments } = useGetEnvironmentsQuery({
+    projectId: parseInt(projectId),
+  })
+
+  const leftEnvironment = useMemo(
+    () => environments?.results?.find((e) => e.api_key === leftEnvironmentKey),
+    [environments, leftEnvironmentKey],
+  )
+  const rightEnvironment = useMemo(
+    () => environments?.results?.find((e) => e.api_key === rightEnvironmentKey),
+    [environments, rightEnvironmentKey],
+  )
+
+  const leftEnvironmentId = leftEnvironment?.id
+  const rightEnvironmentId = rightEnvironment?.id
 
   const {
     currentData: leftProjectFlags,
@@ -145,13 +152,6 @@ export const useEnvironmentComparison = ({
     refetchLeftFlags,
     refetchRightFlags,
   ])
-
-  const leftEnvironment = ProjectStore.getEnvironment(
-    leftEnvironmentKey,
-  ) as StoredEnvironment
-  const rightEnvironment = ProjectStore.getEnvironment(
-    rightEnvironmentKey,
-  ) as StoredEnvironment
 
   return {
     changes,
