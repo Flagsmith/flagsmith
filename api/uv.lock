@@ -1681,7 +1681,7 @@ requires-dist = [
     { name = "clickhouse-connect", specifier = ">=1.6.0,<2.0.0" },
     { name = "clickhouse-driver", specifier = "==0.2.11" },
     { name = "coreapi", specifier = ">=2.3.3,<2.4.0" },
-    { name = "datamodel-code-generator", marker = "extra == 'dev'", specifier = ">=0.25,<0.26.0" },
+    { name = "datamodel-code-generator", marker = "extra == 'dev'", specifier = ">=0.64,<0.65" },
     { name = "diff-cover", marker = "extra == 'dev'", specifier = ">=10.1.0,<11.0.0" },
     { name = "dj-database-url", specifier = ">=3.0.1,<3.1.0" },
     { name = "django", specifier = ">=5,<6" },
