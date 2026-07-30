@@ -28,10 +28,13 @@ export default meta
 
 type Story = StoryObj<typeof Field>
 
+// Declaring htmlFor once wires everything: Input adopts it as its id via
+// FieldContext, and picks up aria-invalid/aria-describedby when there is
+// an error.
 export const Default: Story = {
   render: () => (
     <Field title='Email' htmlFor='field-email'>
-      <Input id='field-email' placeholder='you@example.com' />
+      <Input placeholder='you@example.com' />
     </Field>
   ),
 }
@@ -43,7 +46,7 @@ export const WithTooltip: Story = {
       tooltip='We never share your email.'
       htmlFor='field-email-tooltip'
     >
-      <Input id='field-email-tooltip' placeholder='you@example.com' />
+      <Input placeholder='you@example.com' />
     </Field>
   ),
 }
@@ -55,13 +58,7 @@ export const WithError: Story = {
       htmlFor='field-email-error'
       error='Enter a valid email address.'
     >
-      <Input
-        id='field-email-error'
-        aria-describedby='field-email-error-error'
-        isValid={false}
-        autoValidate
-        value='not-an-email'
-      />
+      <Input isValid={false} autoValidate value='not-an-email' />
     </Field>
   ),
 }
