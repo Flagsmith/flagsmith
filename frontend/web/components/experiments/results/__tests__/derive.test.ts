@@ -304,6 +304,7 @@ describe('getControlChanceToWin', () => {
   it.each<[string, BayesianMetricResult['inference']]>([
     ['no treatment', {}],
     ['only some treatments', { b: metricResult.inference.b }],
+    ['a null-inference treatment', { b: metricResult.inference.b, c: null }],
   ])('returns null when %s has inference data', (_, inference) => {
     expect(
       getControlChanceToWin({ ...metricResult, inference }, identities),
