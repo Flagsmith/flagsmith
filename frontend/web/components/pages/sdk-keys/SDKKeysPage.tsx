@@ -1,9 +1,7 @@
 import React, { FC } from 'react'
-import Button from 'components/base/forms/Button'
-import Input from 'components/base/forms/Input'
-import Icon from 'components/icons/Icon'
+import CopyField from 'components/CopyField'
 import PageTitle from 'components/PageTitle'
-import Utils from 'common/utils/utils'
+import Button from 'components/base/forms/Button'
 import { useRouteMatch } from 'react-router-dom'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { ServerSideSDKKeys } from './components'
@@ -27,8 +25,6 @@ const SDKKeysPage: FC = () => {
     environments?.results?.find((env) => env.api_key === environmentId)?.name ??
     ''
 
-  const handleCopy = () => Utils.copyToClipboard(environmentId)
-
   return (
     <div
       data-test='sdk-keys-page'
@@ -47,22 +43,7 @@ const SDKKeysPage: FC = () => {
         SDKs.
       </PageTitle>
       <div className='col-md-6'>
-        <Row>
-          <Flex>
-            <Input
-              value={environmentId}
-              inputClassName='input input--wide'
-              type='text'
-              placeholder='Client-side Environment Key'
-            />
-          </Flex>
-          <Button
-            onClick={handleCopy}
-            className='ml-2 btn-with-icon icon-default'
-          >
-            <Icon name='copy' width={20} />
-          </Button>
-        </Row>
+        <CopyField value={environmentId} />
       </div>
       <hr className='py-0 my-4' />
       <ServerSideSDKKeys
