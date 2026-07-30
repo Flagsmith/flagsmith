@@ -62,4 +62,32 @@ test.describe('Invite Tests', () => {
     await setText("[name='currentPassword']", PASSWORD)
     await click(byId('delete-account'))
   });
+
+  test('An invite opened while signed in asks before joining @oss', async ({ page }) => {
+    const { click, getInputValue, login, waitForElementVisible } = createHelpers(page);
+
+    log('Login')
+    await login(E2E_USER, PASSWORD)
+    log('Get Invite url')
+    await waitForElementVisible(byId('organisation-link'))
+    await click(byId('organisation-link'))
+    await waitForElementVisible(byId('org-settings-link'))
+    await click(byId('org-settings-link'))
+    await getInputValue(byId('organisation-name'))
+    await click(byId('users-and-permissions'))
+    const hasAdminLink = await page.locator(byId('invite-link')).waitFor({ state: 'visible', timeout: 5000 }).then(() => true).catch(() => false)
+    if (!hasAdminLink) {
+      await click(byId('invite-role-select-option-1'))
+      await waitForElementVisible(byId('invite-link'))
+    }
+    const inviteLink = await getInputValue(byId('invite-link'))
+
+    log('Open the invite with the session still live')
+    await page.goto(inviteLink)
+    // The signup form is what this used to show, despite being signed in.
+    await expect(page.getByText('Accept your invitation')).toBeVisible({ timeout: LONG_TIMEOUT })
+    await expect(page.getByText(E2E_USER)).toBeVisible()
+    await expect(page.locator(byId('firstName'))).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Use a different account' })).toBeVisible()
+  });
 });

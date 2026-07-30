@@ -47,11 +47,10 @@ if (event) {
   } catch (e) {}
 }
 
-const isInvite = document.location.href.includes('invite')
 const isOauth =
   document.location.href.includes('/oauth') &&
   !document.location.pathname.startsWith('/oauth/authorize')
-if (res && !isInvite && !isOauth) {
+if (res && !isOauth) {
   AppActions.setToken(res)
 }
 
@@ -75,6 +74,11 @@ function isPublicURL() {
     '/saml',
     '/signup',
     '/login',
+    // Reachable either way: InvitePage sends you to sign in if you have no
+    // session, and asks before joining if you do. Bouncing from here instead
+    // would flash the signup form at someone already signed in.
+    '/invite',
+    '/invite-link',
   ]
 
   return publicPaths.some(
