@@ -301,9 +301,12 @@ describe('getControlChanceToWin', () => {
     expect(getControlChanceToWin(metricResult, identities)).toBe(0)
   })
 
-  it('returns null when no treatment has inference data', () => {
+  it.each<[string, BayesianMetricResult['inference']]>([
+    ['no treatment', {}],
+    ['only some treatments', { b: metricResult.inference.b }],
+  ])('returns null when %s has inference data', (_, inference) => {
     expect(
-      getControlChanceToWin({ ...metricResult, inference: {} }, identities),
+      getControlChanceToWin({ ...metricResult, inference }, identities),
     ).toBeNull()
   })
 })
@@ -371,6 +374,7 @@ describe('deriveSummary', () => {
       ...losingMetricResult,
       inference: {
         b: { chance_to_win: 0.05, ci_high: -0.9, ci_low: -1, lift: -1 },
+        c: { chance_to_win: 0.03, ci_high: -0.3, ci_low: -0.7, lift: -0.5 },
       },
     }
     expect(deriveSummary(experiment, results(wipedOut))).toMatchObject({

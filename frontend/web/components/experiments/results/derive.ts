@@ -163,20 +163,21 @@ export type WinningVariant = {
 // chance_to_win is pairwise — P(variant beats control) — so chances don't sum
 // to 1 across arms. P(control is best) = P(no variant beats it); the Bonferroni
 // bound 1 - Σ chance_to_win is exact for one variant, conservative otherwise.
+// The bound is only meaningful over all arms, so it stays null (and control
+// can't be declared the winner) until every treatment has inference.
 export const getControlChanceToWin = (
   metricResult: BayesianMetricResult,
   identities: VariantIdentity[],
 ): number | null => {
+  const treatments = identities.filter((v) => !v.isControl)
+  if (!treatments.length) return null
   let treatmentChancesTotal = 0
-  let hasInference = false
-  for (const v of identities) {
-    if (v.isControl) continue
+  for (const v of treatments) {
     const inf = metricResult.inference[v.key]
-    if (!inf) continue
-    hasInference = true
+    if (!inf) return null
     treatmentChancesTotal += inf.chance_to_win
   }
-  return hasInference ? Math.max(0, 1 - treatmentChancesTotal) : null
+  return Math.max(0, 1 - treatmentChancesTotal)
 }
 
 export const getBestTreatment = (
