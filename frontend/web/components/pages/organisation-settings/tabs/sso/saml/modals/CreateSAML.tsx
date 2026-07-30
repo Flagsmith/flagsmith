@@ -212,7 +212,6 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       {isEdit && (
         // stopPropagation: prevent clicks on the read-only input from
         // bubbling into the parent Tabs panel.
-        // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
         <div className='mt-12' onClick={(e) => e.stopPropagation()}>
           <CopyField
             value={acsUrl}
