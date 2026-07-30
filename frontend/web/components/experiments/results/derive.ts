@@ -163,17 +163,31 @@ export type WinningVariant = {
 // chance_to_win is pairwise — P(variant beats control) — so chances don't sum
 // to 1 across arms. P(control is best) = P(no variant beats it); the Bonferroni
 // bound 1 - Σ chance_to_win is exact for one variant, conservative otherwise.
-export const getWinningVariant = (
+export const getControlChanceToWin = (
   metricResult: BayesianMetricResult,
   identities: VariantIdentity[],
-): WinningVariant | null => {
-  let best: WinningVariant | null = null
+): number | null => {
   let treatmentChancesTotal = 0
+  let hasInference = false
   for (const v of identities) {
     if (v.isControl) continue
     const inf = metricResult.inference[v.key]
     if (!inf) continue
+    hasInference = true
     treatmentChancesTotal += inf.chance_to_win
+  }
+  return hasInference ? Math.max(0, 1 - treatmentChancesTotal) : null
+}
+
+export const getBestTreatment = (
+  metricResult: BayesianMetricResult,
+  identities: VariantIdentity[],
+): WinningVariant | null => {
+  let best: WinningVariant | null = null
+  for (const v of identities) {
+    if (v.isControl) continue
+    const inf = metricResult.inference[v.key]
+    if (!inf) continue
     if (!best || inf.chance_to_win > best.chanceToWin) {
       best = {
         chanceToWin: inf.chance_to_win,
@@ -184,10 +198,18 @@ export const getWinningVariant = (
       }
     }
   }
+  return best
+}
+
+export const getWinningVariant = (
+  metricResult: BayesianMetricResult,
+  identities: VariantIdentity[],
+): WinningVariant | null => {
+  const best = getBestTreatment(metricResult, identities)
   if (!best) return null
   const control = identities.find((v) => v.isControl)
-  const controlChance = Math.max(0, 1 - treatmentChancesTotal)
-  if (control && controlChance > best.chanceToWin) {
+  const controlChance = getControlChanceToWin(metricResult, identities)
+  if (control && controlChance !== null && controlChance > best.chanceToWin) {
     return {
       chanceToWin: controlChance,
       inference: null,
@@ -207,7 +229,9 @@ export type SummaryStats = {
   controlColour: string
   controlWins: boolean
   chanceToBest: string
-  liftVsControl: string
+  chanceToBestHigh: boolean
+  liftLabel: string
+  liftValue: string
   liftTone: LiftTone
 }
 
@@ -228,21 +252,27 @@ export const deriveSummary = (
   const controlIdentity = identities.find((v) => v.isControl)
 
   const direction = metric.direction ?? 'up'
+  let lift: number | null = winner.inference?.lift ?? null
+  if (winner.isControl) {
+    // Control's lead, kept in control's terms: the best treatment's lift
+    // negated, so the magnitude matches the delta column and axis chart.
+    const bestTreatment = getBestTreatment(metricResult, identities)
+    lift = bestTreatment?.inference ? -bestTreatment.inference.lift : null
+  }
+
   let liftTone: LiftTone = 'neutral'
-  if (winner.inference && direction !== 'informational') {
-    liftTone = isLiftFavourable(winner.inference.lift, direction)
-      ? 'success'
-      : 'danger'
+  if (lift !== null && direction !== 'informational') {
+    liftTone = isLiftFavourable(lift, direction) ? 'success' : 'danger'
   }
 
   return {
     chanceToBest: `${Math.round(winner.chanceToWin * 100)}%`,
+    chanceToBestHigh: winner.chanceToWin > 0.9,
     controlColour: controlIdentity?.colour ?? '',
     controlWins: winner.isControl,
+    liftLabel: winner.isControl ? 'Control vs best variant' : 'Lift vs control',
     liftTone,
-    liftVsControl: winner.inference
-      ? formatLiftPct(winner.inference.lift)
-      : 'Baseline',
+    liftValue: lift !== null ? formatLiftPct(lift) : 'Baseline',
     winnerColour: winnerIdentity?.colour ?? '',
     winnerName: winner.name,
   }

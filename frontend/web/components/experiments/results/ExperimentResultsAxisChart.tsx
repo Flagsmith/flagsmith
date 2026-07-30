@@ -98,10 +98,16 @@ const ExperimentResultsAxisChart: FC<ExperimentResultsAxisChartProps> = ({
                 <div className='experiment-results__axis-track'>
                   <span
                     className='experiment-results__axis-row-label'
-                    style={{ left: `${ciLeft}%` }}
+                    style={{
+                      left: `${ciLeft}%`,
+                      maxWidth: `calc(${ciLeft}% - 8px)`,
+                    }}
+                    title={v.name}
                   >
                     <ColorSwatch color={v.colour} shape='circle' size='sm' />
-                    {v.name}
+                    <span className='experiment-results__axis-row-label-text'>
+                      {v.name}
+                    </span>
                   </span>
                   <div
                     className='experiment-results__axis-bar'

@@ -10,9 +10,9 @@ type StatCardProps = {
 const StatCard: FC<StatCardProps> = ({ label, loading, value }) => (
   <ContentCard compact>
     <div className='text-secondary fs-caption'>{label}</div>
-    <div className='fs-3 mt-1'>
+    <h4 className='mb-0 mt-1'>
       {loading ? <span className='text-secondary'>—</span> : value ?? '—'}
-    </div>
+    </h4>
   </ContentCard>
 )
 

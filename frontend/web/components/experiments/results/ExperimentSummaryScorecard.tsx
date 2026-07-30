@@ -3,6 +3,7 @@ import InfoMessage from 'components/InfoMessage'
 import { BayesianResultsSummary, Experiment } from 'common/types/responses'
 import { deriveSummary } from './derive'
 import StatCard from './StatCard'
+import VariantName from './VariantName'
 
 type ExperimentSummaryScorecardProps = {
   usersEnrolled: number | null
@@ -50,7 +51,11 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
                 <span
                   className={summary.controlWins ? undefined : 'text-success'}
                 >
-                  {summary.winnerName}
+                  <VariantName
+                    colour={summary.winnerColour}
+                    fontSize={24}
+                    name={summary.winnerName}
+                  />
                 </span>
               ) : undefined
             }
@@ -60,16 +65,26 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
           <StatCard
             label='Chance to be best'
             loading={!hasResults}
-            value={summary?.chanceToBest}
+            value={
+              summary?.chanceToBest ? (
+                <span
+                  className={
+                    summary.chanceToBestHigh ? 'text-success' : undefined
+                  }
+                >
+                  {summary.chanceToBest}
+                </span>
+              ) : undefined
+            }
           />
         </div>
         <div className='col-md-3'>
           <StatCard
-            label='Lift vs control'
+            label={summary?.liftLabel ?? 'Lift vs control'}
             loading={!hasResults}
             value={
-              summary?.liftVsControl ? (
-                <span className={liftClassName}>{summary.liftVsControl}</span>
+              summary?.liftValue ? (
+                <span className={liftClassName}>{summary.liftValue}</span>
               ) : undefined
             }
           />

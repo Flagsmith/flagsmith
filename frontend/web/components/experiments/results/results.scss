@@ -17,6 +17,16 @@
   color: var(--color-text-secondary);
 }
 
+// Caps' optical centre sits ~0.35em above the baseline, so lift the dot's
+// bottom edge by that minus half its height. Text stays on the baseline.
+.variant-name__swatch {
+  vertical-align: calc(0.35em - 4px);
+
+  &--lg {
+    vertical-align: calc(0.35em - 6px);
+  }
+}
+
 .experiment-results {
   &__legend-row {
     display: flex;
@@ -56,9 +66,13 @@
     position: relative;
     flex: 1;
     height: 12px;
-    background: var(--color-surface-muted);
+    background: var(--color-surface-emphasis);
     border-radius: var(--radius-full);
     overflow: hidden;
+
+    @media (max-width: 1263px) {
+      display: none;
+    }
   }
 
   &__lift-zero {
@@ -172,6 +186,11 @@
     padding-right: 6px;
   }
 
+  &__axis-row-label-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   &__axis-tracks {
     position: relative;
     padding: 12px 0;
@@ -213,7 +232,7 @@
   &__win-prob-track {
     width: 100px;
     height: 6px;
-    background: var(--color-surface-muted);
+    background: var(--color-surface-emphasis);
     border-radius: var(--radius-full);
     overflow: hidden;
     flex-shrink: 0;
