@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.260.0](https://github.com/Flagsmith/flagsmith/compare/v2.259.0...v2.260.0) (2026-07-30)
+
+
+### Features
+
+* Ask for the ClickHouse HTTPS port instead of inferring it from the native port ([#8152](https://github.com/Flagsmith/flagsmith/issues/8152)) ([3e455a9](https://github.com/Flagsmith/flagsmith/commit/3e455a930259d1af5760226c5f4aec6ad60474ab))
+
+
+### Dependency Updates
+
+* **api:** update dependency datamodel-code-generator to &gt;=0.64,&lt;0.65 [security] ([#8148](https://github.com/Flagsmith/flagsmith/issues/8148)) ([4720225](https://github.com/Flagsmith/flagsmith/commit/47202256b883ba604d969f7e58df6a2cbdf25c91))
+* Bump flagsmith-common to 3.12.1 ([#8162](https://github.com/Flagsmith/flagsmith/issues/8162)) ([5442257](https://github.com/Flagsmith/flagsmith/commit/5442257558c23a5568b2285f942677ec2d7c17eb))
+
 ## [2.259.0](https://github.com/Flagsmith/flagsmith/compare/v2.258.0...v2.259.0) (2026-07-29)
 
 
