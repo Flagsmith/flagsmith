@@ -1543,6 +1543,9 @@ SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS = env.int(
 # the default Postgres database whether or not a CH alias is configured.
 DATABASE_ROUTERS.append("app.routers.ClickHouseRouter")
 
+# Should be registered last.
+DATABASE_ROUTERS.append("app.routers.ReplicaRouter")
+
 if CLICKHOUSE_ENABLED:
     _clickhouse_db: dict[str, Any] = {
         "ENGINE": "core.db_backends.clickhouse",
