@@ -48,6 +48,7 @@ SNOWFLAKE_DEFAULTS: SnowflakeConfig = {
 
 class ClickHouseConfig(TypedDict):
     host: str
+    # The HTTP(S) interface port, used for verification and delivery alike.
     port: int
     database: str
     username: str
@@ -56,7 +57,7 @@ class ClickHouseConfig(TypedDict):
 
 CLICKHOUSE_DEFAULTS: ClickHouseConfig = {
     "host": "",
-    "port": 9440,
+    "port": 8443,
     "database": "flagsmith_exp",
     "username": "default",
     "secure": True,

@@ -165,13 +165,13 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
 
         <div className='wh-config-form__row'>
           <div className='wh-config-form__field'>
-            <label className='wh-config-form__label'>Port</label>
+            <label className='wh-config-form__label'>HTTPS port</label>
             <Input
               value={port}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setField(setPort)(e.target.value)
               }
-              placeholder='9440'
+              placeholder='8443'
               aria-invalid={hasInvalidPort}
               aria-describedby={
                 hasInvalidPort ? 'warehouse-config-port-error' : undefined

@@ -12,7 +12,7 @@ const validForm: ClickHouseFormState = {
   host: 'ch.example.com',
   name: 'Production ClickHouse',
   password: 'hunter2',
-  port: '9440',
+  port: '8443',
   secure: true,
   username: 'default',
 }
@@ -20,12 +20,12 @@ const validForm: ClickHouseFormState = {
 describe('isValidPort', () => {
   it('accepts ports within 1-65535', () => {
     expect(isValidPort('1')).toBe(true)
-    expect(isValidPort('9440')).toBe(true)
+    expect(isValidPort('8443')).toBe(true)
     expect(isValidPort('65535')).toBe(true)
   })
 
   it('accepts a port with surrounding whitespace', () => {
-    expect(isValidPort(' 9440 ')).toBe(true)
+    expect(isValidPort(' 8443 ')).toBe(true)
   })
 
   it('rejects out-of-range or non-numeric ports', () => {
@@ -83,7 +83,7 @@ describe('isClickHouseConfigDirty', () => {
   const initialConfig = {
     database: 'flagsmith',
     host: 'ch.example.com',
-    port: 9440,
+    port: 8443,
     secure: true,
     username: 'default',
   }
@@ -95,7 +95,7 @@ describe('isClickHouseConfigDirty', () => {
   })
 
   it.each([
-    ['port', { port: '9000' }],
+    ['port', { port: '8123' }],
     ['database', { database: 'analytics' }],
     ['username', { username: 'svc' }],
     ['secure', { secure: false }],
@@ -112,7 +112,7 @@ describe('isClickHouseConfigDirty', () => {
   it('is clean when the port differs only in formatting', () => {
     expect(
       isClickHouseConfigDirty(
-        { ...validForm, password: '', port: '09440' },
+        { ...validForm, password: '', port: '08443' },
         initialConfig,
       ),
     ).toBe(false)
@@ -131,7 +131,7 @@ describe('buildClickHousePayload', () => {
       config: {
         database: 'flagsmith',
         host: 'ch.example.com',
-        port: 9440,
+        port: 8443,
         secure: true,
         username: 'default',
       },
@@ -154,14 +154,14 @@ describe('buildClickHousePayload', () => {
         host: ' ch.example.com ',
         name: ' Production ClickHouse ',
         password: ' hunter2 ',
-        port: ' 9440 ',
+        port: ' 8443 ',
         username: 'default ',
       }),
     ).toEqual({
       config: {
         database: 'flagsmith',
         host: 'ch.example.com',
-        port: 9440,
+        port: 8443,
         secure: true,
         username: 'default',
       },

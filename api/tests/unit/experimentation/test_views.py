@@ -1,7 +1,7 @@
 import socket
 
 import pytest
-from clickhouse_driver import errors as clickhouse_errors
+from clickhouse_connect.driver.exceptions import OperationalError
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -1225,7 +1225,9 @@ def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
-    mocker.patch("experimentation.services.Client")
+    mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
 
     # When
     response = admin_client.post(
@@ -1242,7 +1244,7 @@ def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["config"] == {
         "host": "ch.example.com",
-        "port": 9440,
+        "port": 8443,
         "database": "flagsmith_exp",
         "username": "default",
         "secure": True,
@@ -1502,17 +1504,17 @@ def test_patch__flagsmith_to_clickhouse_without_credentials__returns_400(
 
 
 @pytest.mark.parametrize(
-    "execute_side_effect, expected_status, expected_detail",
+    "query_side_effect, expected_status, expected_detail",
     [
         (None, "connected", None),
-        (Exception("unreachable"), "errored", "Verification failed."),
+        (Exception("unreachable"), "errored", "Connection failed."),
     ],
     ids=["reachable", "unreachable"],
 )
 def test_post__clickhouse_verification_outcome__returns_201_with_status(
     admin_client: APIClient,
     enable_features: EnableFeaturesFixture,
-    execute_side_effect: Exception | None,
+    query_side_effect: Exception | None,
     expected_detail: str | None,
     expected_status: str,
     mocker: MockerFixture,
@@ -1520,8 +1522,10 @@ def test_post__clickhouse_verification_outcome__returns_201_with_status(
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
-    mock_client = mocker.patch("experimentation.services.Client")
-    mock_client.return_value.execute.side_effect = execute_side_effect
+    mock_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
+    mock_client.return_value.query.side_effect = query_side_effect
 
     # When
     response = admin_client.post(
@@ -1540,7 +1544,7 @@ def test_post__clickhouse_verification_outcome__returns_201_with_status(
     assert response.json()["status"] == expected_status
     assert response.json()["status_detail"] == expected_detail
     assert "credentials" not in response.json()
-    assert mock_client.return_value.execute.call_args_list[0] == mocker.call("SELECT 1")
+    mock_client.return_value.query.assert_called_once_with("EXISTS TABLE events")
 
 
 def test_get__clickhouse__credentials_not_in_response(
@@ -1571,7 +1575,9 @@ def test_patch__clickhouse_config_without_credentials__keeps_stored_password(
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
-    mock_client = mocker.patch("experimentation.services.Client")
+    mock_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, clickhouse_connection.id],
@@ -1580,7 +1586,7 @@ def test_patch__clickhouse_config_without_credentials__keeps_stored_password(
     # When
     response = admin_client.patch(
         url,
-        data={"config": {"host": "ch.example.com", "port": 9000}},
+        data={"config": {"host": "ch.example.com", "port": 8123}},
         format="json",
     )
 
@@ -1590,9 +1596,9 @@ def test_patch__clickhouse_config_without_credentials__keeps_stored_password(
     assert clickhouse_connection.credentials == {"password": "hunter2"}
     assert clickhouse_connection.config is not None
     assert clickhouse_connection.config.get("database") == "acme_dwh"
-    assert clickhouse_connection.config.get("port") == 9000
+    assert clickhouse_connection.config.get("port") == 8123
     assert mock_client.call_args.kwargs["password"] == "hunter2"
-    assert mock_client.call_args.kwargs["port"] == 9000
+    assert mock_client.call_args.kwargs["port"] == 8123
 
 
 def test_patch__clickhouse_name_only__does_not_reverify(
@@ -1604,7 +1610,9 @@ def test_patch__clickhouse_name_only__does_not_reverify(
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
-    mock_client = mocker.patch("experimentation.services.Client")
+    mock_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, clickhouse_connection.id],
@@ -1627,7 +1635,9 @@ def test_put__clickhouse_name_only__preserves_config_and_credentials(
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
-    mocker.patch("experimentation.services.Client")
+    mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, clickhouse_connection.id],
@@ -1661,7 +1671,9 @@ def test_test_warehouse_connection__clickhouse__reverifies_and_returns_status(
     enable_features("experimentation_warehouse_connection")
     clickhouse_connection.status = WarehouseConnectionStatus.ERRORED
     clickhouse_connection.save()
-    mocker.patch("experimentation.services.Client")
+    mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
     url = reverse(
         "api-v1:environments:experimentation:"
         "warehouse-connections-test-warehouse-connection",
@@ -1697,7 +1709,7 @@ CLICKHOUSE_TEST_PAYLOAD = {
         ),
         pytest.param(
             CLICKHOUSE_TEST_PAYLOAD,
-            clickhouse_errors.NetworkError("boom"),
+            OperationalError("boom"),
             status.HTTP_200_OK,
             {"status": "errored", "status_detail": "Could not connect to the host."},
             id="unreachable",
@@ -1730,7 +1742,10 @@ def test_test_warehouse_connection_config__payload__returns_expected_response(
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
-    mocker.patch("experimentation.services.Client", side_effect=client_side_effect)
+    mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        side_effect=client_side_effect,
+    )
     url = reverse(
         "api-v1:environments:experimentation:"
         "warehouse-connections-test-warehouse-connection-config",

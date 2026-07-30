@@ -141,21 +141,6 @@ def test_delivery_client__internal_host__raises_config_error(
             pass  # pragma: no cover
 
 
-def test_delivery_client__unmappable_port__raises_config_error(
-    clickhouse_connection: WarehouseConnection,
-) -> None:
-    # Given
-    clickhouse_connection.config["port"] = 1234  # type: ignore[index]
-
-    # When / Then
-    with pytest.raises(
-        warehouse_delivery_service.DeliveryConfigError,
-        match="No HTTP port is known for ClickHouse port 1234",
-    ):
-        with warehouse_delivery_service.delivery_client(clickhouse_connection):
-            pass  # pragma: no cover
-
-
 def test_delivery_client__valid_config__yields_http_client_and_closes(
     clickhouse_connection: WarehouseConnection,
     mocker: MockerFixture,
@@ -167,7 +152,7 @@ def test_delivery_client__valid_config__yields_http_client_and_closes(
 
     # When
     with warehouse_delivery_service.delivery_client(clickhouse_connection) as client:
-        # Then the native port is mapped to its HTTP counterpart
+        # Then the stored HTTP(S) port is used as-is
         assert client is get_client.return_value
         get_client.assert_called_once_with(
             host="ch.acme-corp.example",
@@ -192,6 +177,27 @@ def test_delivery_client__valid_config__yields_http_client_and_closes(
     get_client.return_value.close.assert_called_once_with()
 
 
+def test_delivery_client__timeout_override__passed_through(
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
+
+    # When a caller with quicker queries than an insert, such as verification,
+    # asks for a shorter timeout
+    with warehouse_delivery_service.delivery_client(
+        clickhouse_connection,
+        send_receive_timeout=5,
+    ):
+        pass
+
+    # Then
+    assert get_client.call_args.kwargs["send_receive_timeout"] == 5
+
+
 def test_delivery_client__body_raises__still_closes_client(
     clickhouse_connection: WarehouseConnection,
     mocker: MockerFixture,
@@ -208,6 +214,31 @@ def test_delivery_client__body_raises__still_closes_client(
 
     # Then the pooled HTTP connection is still released
     get_client.return_value.close.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    "exists_result, expected_raise",
+    [
+        pytest.param([(1,)], False, id="table-exists"),
+        pytest.param([(0,)], True, id="table-missing"),
+    ],
+)
+def test_check_events_table_exists__exists_query_result__raises_only_when_missing(
+    exists_result: list[tuple[int]],
+    expected_raise: bool,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    client = mocker.MagicMock()
+    client.query.return_value = mocker.Mock(result_rows=exists_result)
+
+    # When / Then
+    if expected_raise:
+        with pytest.raises(warehouse_delivery_service.MissingEventsTableError):
+            warehouse_delivery_service.check_events_table_exists(client)
+    else:
+        warehouse_delivery_service.check_events_table_exists(client)
+    client.query.assert_called_once_with("EXISTS TABLE events")
 
 
 def test_deliver_object__valid_object__streams_body_and_returns_written_rows(
@@ -312,8 +343,14 @@ def test_deliver_object__connection_level_error__reraises(
             id="bad-auth",
         ),
         pytest.param(
+            DatabaseError("Code: 81. DB::Exception: no database", code=81),
+            "Database does not exist.",
+            id="missing-database",
+        ),
+        pytest.param(
             DatabaseError("Code: 60. DB::Exception: no table", code=60),
-            "Table `events` does not exist.",
+            "Events table not found in the configured database. "
+            "Run the setup SQL to create it.",
             id="missing-table",
         ),
         pytest.param(
@@ -322,20 +359,26 @@ def test_deliver_object__connection_level_error__reraises(
             id="other-server-error",
         ),
         pytest.param(
+            warehouse_delivery_service.MissingEventsTableError(),
+            "Events table not found in the configured database. "
+            "Run the setup SQL to create it.",
+            id="missing-events-table",
+        ),
+        pytest.param(
             ConnectionResetError("connection reset by peer"),
-            "Delivery failed.",
+            "Connection failed.",
             id="unexpected-error",
         ),
     ],
 )
-def test_describe_delivery_error__known_failures__returns_user_facing_detail(
+def test_describe_warehouse_error__known_failures__returns_user_facing_detail(
     error: Exception,
     expected_detail: str,
 ) -> None:
-    # Given a parametrised delivery failure
+    # Given a parametrised verification or delivery failure
 
     # When
-    detail = warehouse_delivery_service.describe_delivery_error(error)
+    detail = warehouse_delivery_service.describe_warehouse_error(error)
 
     # Then
     assert detail == expected_detail

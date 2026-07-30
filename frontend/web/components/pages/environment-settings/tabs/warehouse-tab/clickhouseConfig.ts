@@ -3,7 +3,8 @@ import { ClickHouseConfig } from 'common/types/responses'
 export const CLICKHOUSE_DEFAULTS: ClickHouseConfig = {
   database: 'flagsmith_exp',
   host: '',
-  port: 9440,
+  // The HTTP(S) interface port, matching CLICKHOUSE_DEFAULTS in the API.
+  port: 8443,
   secure: true,
   username: '',
 }
