@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { IonIcon } from '@ionic/react'
-import { close as closeIcon } from 'ionicons/icons'
+import Field from 'components/base/forms/Field'
+import Icon from 'components/icons/Icon'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
@@ -337,8 +337,8 @@ const CreateEnvironmentPage: React.FC = () => {
                                           className='chip mr-2'
                                         >
                                           <span>{getUserDisplayName(u)}</span>
-                                          <span className='chip-icon ion'>
-                                            <IonIcon icon={closeIcon} />
+                                          <span className='chip-icon'>
+                                            <Icon name='close' width={18} />
                                           </span>
                                         </Row>
                                       ))}
@@ -389,8 +389,8 @@ const CreateEnvironmentPage: React.FC = () => {
                                           className='chip mr-2'
                                         >
                                           <span>{r.name}</span>
-                                          <span className='chip-icon ion'>
-                                            <IonIcon icon={closeIcon} />
+                                          <span className='chip-icon'>
+                                            <Icon name='close' width={18} />
                                           </span>
                                         </Row>
                                       ))}
@@ -414,28 +414,25 @@ const CreateEnvironmentPage: React.FC = () => {
                       envContentType?.id && (
                         <CondensedRow>
                           <FormGroup className='mt-2 setting'>
-                            <InputGroup
+                            <Field
                               title='Custom fields'
                               tooltip='You need to add a value to the custom field if it is required to successfully clone the environment'
                               tooltipPlace='right'
-                              component={
-                                <AddMetadataToEntity
-                                  organisationId={
-                                    AccountStore.getOrganisation().id
-                                  }
-                                  projectId={projectId}
-                                  entityId={selectedEnv?.api_key}
-                                  envName={name}
-                                  entityContentType={envContentType.id}
-                                  entity={envContentType.model}
-                                  isCloningEnvironment
-                                  onChange={setMetadata}
-                                  setHasMetadataRequired={
-                                    setHasMetadataRequired
-                                  }
-                                />
-                              }
-                            />
+                            >
+                              <AddMetadataToEntity
+                                organisationId={
+                                  AccountStore.getOrganisation().id
+                                }
+                                projectId={projectId}
+                                entityId={selectedEnv?.api_key}
+                                envName={name}
+                                entityContentType={envContentType.id}
+                                entity={envContentType.model}
+                                isCloningEnvironment
+                                onChange={setMetadata}
+                                setHasMetadataRequired={setHasMetadataRequired}
+                              />
+                            </Field>
                           </FormGroup>
                         </CondensedRow>
                       )}

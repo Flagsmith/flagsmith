@@ -31,6 +31,19 @@ export const Default: Story = {
   ),
 }
 
+// The label lives inside CopyField so htmlFor can reach the inner input.
+export const WithTitle: Story = {
+  render: () => (
+    <Container>
+      <CopyField
+        title='SCIM bearer token'
+        value='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzY2ltLXRva2VuIn0'
+        className='font-monospace'
+      />
+    </Container>
+  ),
+}
+
 export const Monospace: Story = {
   render: () => (
     <Container>

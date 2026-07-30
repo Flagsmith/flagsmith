@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
+import Field from 'components/base/forms/Field'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import Switch from 'components/Switch'
@@ -144,20 +145,19 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
         }}
         type='text'
       />
-      <InputGroup
+      <Field
         className='mt-2 mb-4'
         title='Allow IdP-initiated logins'
         tooltip="Enable this to allow logins initiated by your identity provider. If disabled, users can only log in from Flagsmith's login page."
         tooltipPlace='right'
-        component={
-          <Switch
-            checked={allowIdpInitiated || data?.allow_idp_initiated}
-            onChange={() => {
-              setAllowIdpInitiated(!allowIdpInitiated)
-            }}
-          />
-        }
-      />
+      >
+        <Switch
+          checked={allowIdpInitiated || data?.allow_idp_initiated}
+          onChange={() => {
+            setAllowIdpInitiated(!allowIdpInitiated)
+          }}
+        />
+      </Field>
       <FormGroup className='mb-1'>
         <div className='mt-2 p-0'>
           <Row>

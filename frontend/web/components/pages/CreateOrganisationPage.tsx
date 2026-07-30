@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import Field from 'components/base/forms/Field'
 import { useHistory } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
@@ -127,10 +128,9 @@ const CreateOrganisationPage: React.FC = () => {
             onChange={(e: InputEvent) => setName(Utils.safeParseEventValue(e))}
           />
           {showHostingPreferences && (
-            <InputGroup
-              inputProps={{ className: 'full-width', name: 'orgName' }}
+            <Field
               title={
-                <div>
+                <>
                   What is your company's desired hosting option?{' '}
                   <a
                     className='text-action'
@@ -140,29 +140,28 @@ const CreateOrganisationPage: React.FC = () => {
                   >
                     View Docs
                   </a>
-                </div>
+                </>
               }
-              component={
-                <CheckboxGroup
-                  onChange={setHosting}
-                  selectedValues={hosting}
-                  items={[
-                    {
-                      label: 'Public SaaS (Multi Tenant)',
-                      value: 'public_saas',
-                    },
-                    {
-                      label: 'Private SaaS (Single Tenant)',
-                      value: 'private_saas',
-                    },
-                    {
-                      label: 'Self Hosted (in your own cloud)',
-                      value: 'self_hosted',
-                    },
-                  ]}
-                />
-              }
-            />
+            >
+              <CheckboxGroup
+                onChange={setHosting}
+                selectedValues={hosting}
+                items={[
+                  {
+                    label: 'Public SaaS (Multi Tenant)',
+                    value: 'public_saas',
+                  },
+                  {
+                    label: 'Private SaaS (Single Tenant)',
+                    value: 'private_saas',
+                  },
+                  {
+                    label: 'Self Hosted (in your own cloud)',
+                    value: 'self_hosted',
+                  },
+                ]}
+              />
+            </Field>
           )}
 
           <div className='text-right'>

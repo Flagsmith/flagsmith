@@ -31,7 +31,6 @@ import AssociatedSegmentOverrides from 'components/segments/AssociatedSegmentOve
 import { SegmentMembershipTotalBadge } from 'components/segments/SegmentMembershipBadge'
 import Button from 'components/base/forms/Button'
 import InfoMessage from 'components/InfoMessage'
-import InputGroup from 'components/base/forms/InputGroup'
 import Rule from 'components/segments/Rule/Rule'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import Tabs from 'components/navigation/TabMenu/Tabs'
@@ -523,23 +522,19 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   const MetadataTab = (
     <FormGroup className='mt-5 setting'>
-      <InputGroup
-        component={
-          <AddMetadataToEntity
-            organisationId={AccountStore.getOrganisation().id}
-            projectId={projectId}
-            entityId={segment.id}
-            entityContentType={segmentContentType?.id}
-            entity={segmentContentType?.model}
-            onChange={(m) => {
-              setMetadata(m as Metadata[])
-              // Need to fix this to be more robust and handle post save
-              if (isEdit) {
-                setMetadataValueChanged(true)
-              }
-            }}
-          />
-        }
+      <AddMetadataToEntity
+        organisationId={AccountStore.getOrganisation().id}
+        projectId={projectId}
+        entityId={segment.id}
+        entityContentType={segmentContentType?.id}
+        entity={segmentContentType?.model}
+        onChange={(m) => {
+          setMetadata(m as Metadata[])
+          // Need to fix this to be more robust and handle post save
+          if (isEdit) {
+            setMetadataValueChanged(true)
+          }
+        }}
       />
     </FormGroup>
   )

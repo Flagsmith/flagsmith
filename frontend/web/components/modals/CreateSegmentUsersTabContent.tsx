@@ -1,11 +1,11 @@
 import React, { FC } from 'react'
+import Field from 'components/base/forms/Field'
 import moment from 'moment'
 import EnvironmentSelect, {
   EnvironmentSelectOption,
 } from 'components/EnvironmentSelect'
 import PanelSearch from 'components/PanelSearch'
 import InfoMessage from 'components/InfoMessage'
-import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import { Res, SegmentMembership } from 'common/types/responses'
 import Icon from 'components/icons/Icon'
@@ -147,30 +147,24 @@ const CreateSegmentUsersTabContent: React.FC<
       </InfoMessage>
       <div className='mt-2'>
         <FormGroup>
-          <InputGroup
-            title='Environment'
-            className='col-4'
-            component={
-              <>
-                <EnvironmentSelect
-                  projectId={`${projectId}`}
-                  value={environmentId}
-                  onChange={(environmentId: string) => {
-                    setEnvironmentId(environmentId)
-                  }}
-                  formatOptionLabel={renderEnvOption}
-                />
-                <div className='text-muted fs-small mt-2'>
-                  Last synced:{' '}
-                  {selectedMembership
-                    ? moment(selectedMembership.last_synced_at).format(
-                        'Do MMM YYYY HH:mm:ss',
-                      )
-                    : '—'}
-                </div>
-              </>
-            }
-          />
+          <Field className='col-4' title='Environment'>
+            <EnvironmentSelect
+              projectId={`${projectId}`}
+              value={environmentId}
+              onChange={(environmentId: string) => {
+                setEnvironmentId(environmentId)
+              }}
+              formatOptionLabel={renderEnvOption}
+            />
+            <div className='text-muted fs-small mt-2'>
+              Last synced:{' '}
+              {selectedMembership
+                ? moment(selectedMembership.last_synced_at).format(
+                    'Do MMM YYYY HH:mm:ss',
+                  )
+                : '—'}
+            </div>
+          </Field>
           {membersEnabled && segmentId && selectedEnv ? (
             <SegmentMembersList
               projectId={projectId}

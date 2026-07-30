@@ -1,5 +1,6 @@
-import React, { FC } from 'react'
+import React, { FC, ReactNode, useId } from 'react'
 import Button from './base/forms/Button'
+import FieldLabel from './base/forms/FieldLabel'
 import Flex from './base/grid/Flex'
 import Icon from './icons/Icon'
 import Input from './base/forms/Input'
@@ -13,6 +14,9 @@ import Utils from 'common/utils/utils'
 // fit every existing consumer.
 type CopyFieldProps = {
   value: string
+  // Optional label, wired to the read-only input; the label must live here
+  // because callers cannot reach the inner input's id for htmlFor.
+  title?: ReactNode
   className?: string
   'data-test'?: string
 }
@@ -20,29 +24,35 @@ type CopyFieldProps = {
 const CopyField: FC<CopyFieldProps> = ({
   className,
   'data-test': dataTest,
+  title,
   value,
 }) => {
+  const id = useId()
   const onCopy = () => Utils.copyToClipboard(value)
 
   return (
-    <Row className='gap-2 align-items-center'>
-      <Flex>
-        <Input
-          value={value}
-          readOnly
-          className={className}
-          data-test={dataTest}
-        />
-      </Flex>
-      <Button
-        theme='secondary'
-        className='btn-with-icon'
-        onClick={onCopy}
-        aria-label='Copy to clipboard'
-      >
-        <Icon name='copy' width={20} />
-      </Button>
-    </Row>
+    <>
+      {!!title && <FieldLabel htmlFor={id}>{title}</FieldLabel>}
+      <Row className='gap-2 align-items-center'>
+        <Flex>
+          <Input
+            id={id}
+            value={value}
+            readOnly
+            className={className}
+            data-test={dataTest}
+          />
+        </Flex>
+        <Button
+          theme='secondary'
+          className='btn-with-icon'
+          onClick={onCopy}
+          aria-label='Copy to clipboard'
+        >
+          <Icon name='copy' width={20} />
+        </Button>
+      </Row>
+    </>
   )
 }
 

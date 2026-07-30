@@ -2,6 +2,7 @@ import React, {
   FocusEvent,
   KeyboardEvent,
   Ref,
+  useContext,
   useImperativeHandle,
   useRef,
   useState,
@@ -10,6 +11,7 @@ import cn from 'classnames'
 import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 import { colorIconDanger, colorIconDefault } from 'common/theme/tokens'
+import FieldContext from './FieldContext'
 
 export type InputSize = 'default' | 'large' | 'small' | 'xSmall'
 
@@ -68,6 +70,8 @@ const Input: React.FC<InputProps> = ({
   ...rest
 }) => {
   const inputRef = useRef<HTMLInputElement>(null)
+  // Adopt the surrounding Field's wiring as defaults; explicit props win.
+  const field = useContext(FieldContext)
   const [isFocused, setIsFocused] = useState(false)
   const [shouldValidate, setShouldValidate] = useState(
     !!value || !!autoValidate,
@@ -128,6 +132,12 @@ const Input: React.FC<InputProps> = ({
       <input
         ref={inputRef}
         {...rest}
+        id={rest.id ?? field?.controlId}
+        aria-invalid={rest['aria-invalid'] ?? (field?.hasError || undefined)}
+        aria-describedby={
+          rest['aria-describedby'] ??
+          (field?.hasError ? field.errorId : undefined)
+        }
         onChange={onChange}
         onFocus={onFocus}
         onKeyDown={onKeyDown}

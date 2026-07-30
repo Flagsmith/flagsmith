@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import Field from 'components/base/forms/Field'
 import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -923,28 +924,27 @@ const EnvironmentSettingsPage: React.FC = () => {
                   {metadataEnable && environmentContentType?.id && (
                     <TabItem tabLabel='Custom Fields'>
                       <FormGroup className='mt-5 setting'>
-                        <InputGroup
-                          title={'Custom fields'}
+                        <Field
+                          title='Custom fields'
                           tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
                             'environments',
                           )}`}
                           tooltipPlace='right'
-                          component={
-                            <AddMetadataToEntity
-                              organisationId={AccountStore.getOrganisation().id}
-                              projectId={projectId}
-                              entityId={currentEnv?.api_key ?? ''}
-                              envName={currentEnv?.name}
-                              entityContentType={environmentContentType?.id}
-                              entity={environmentContentType.model}
-                              onMetadataSave={(metadata) => {
-                                setCurrentEnv((prev) =>
-                                  prev ? { ...prev, metadata } : null,
-                                )
-                              }}
-                            />
-                          }
-                        />
+                        >
+                          <AddMetadataToEntity
+                            organisationId={AccountStore.getOrganisation().id}
+                            projectId={projectId}
+                            entityId={currentEnv?.api_key ?? ''}
+                            envName={currentEnv?.name}
+                            entityContentType={environmentContentType?.id}
+                            entity={environmentContentType.model}
+                            onMetadataSave={(metadata) => {
+                              setCurrentEnv((prev) =>
+                                prev ? { ...prev, metadata } : null,
+                              )
+                            }}
+                          />
+                        </Field>
                       </FormGroup>
                     </TabItem>
                   )}

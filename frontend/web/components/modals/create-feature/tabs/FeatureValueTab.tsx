@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
-import InputGroup from 'components/base/forms/InputGroup'
+import Field from 'components/base/forms/Field'
 import ValueEditor from 'components/ValueEditor'
 import Constants from 'common/constants'
 import { VariationOptions } from 'components/mv/VariationOptions'
@@ -345,30 +345,29 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 
       {showValue && (
         <FormGroup className='mb-4'>
-          <InputGroup
-            component={
-              <ValueEditor
-                data-test='featureValue'
-                name='featureValue'
-                className={`full-width${hasVariations ? ' code-medium' : ''}`}
-                value={`${
-                  typeof initial_value === 'undefined' || initial_value === null
-                    ? ''
-                    : initial_value
-                }`}
-                onChange={(e: any) => {
-                  const feature_state_value = Utils.getTypedValue(
-                    Utils.safeParseEventValue(e),
-                  )
-                  onEnvironmentFlagChange({ feature_state_value })
-                }}
-                disabled={isDisabled}
-                placeholder="e.g. 'big' "
-              />
-            }
-            tooltip={getValueTooltip(hasVariations, isEdit)}
+          <Field
             title={valueTitle}
-          />
+            tooltip={getValueTooltip(hasVariations, isEdit)}
+          >
+            <ValueEditor
+              data-test='featureValue'
+              name='featureValue'
+              className={`full-width${hasVariations ? ' code-medium' : ''}`}
+              value={`${
+                typeof initial_value === 'undefined' || initial_value === null
+                  ? ''
+                  : initial_value
+              }`}
+              onChange={(e: any) => {
+                const feature_state_value = Utils.getTypedValue(
+                  Utils.safeParseEventValue(e),
+                )
+                onEnvironmentFlagChange({ feature_state_value })
+              }}
+              disabled={isDisabled}
+              placeholder="e.g. 'big' "
+            />
+          </Field>
           {canCompareValue && (
             <div className='text-end mt-2'>
               <Button

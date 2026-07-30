@@ -1,4 +1,5 @@
 import React, { FC, KeyboardEvent, useEffect, useMemo, useState } from 'react'
+import Field from 'components/base/forms/Field'
 import { Tag as TTag } from 'common/types/responses'
 import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
@@ -188,23 +189,19 @@ const CreateEditTag: FC<CreateEditTagType> = ({
           have deletion protection.
         </Tooltip>
 
-        <InputGroup
-          title='Select a color'
-          component={
-            <Row className={'gap-3'}>
-              {Constants.tagColors.map((color) => (
-                <div key={color} className='tag--select'>
-                  <Tag
-                    onClick={(e: TTag) => update('color', e.color)}
-                    selected={tag?.color === color}
-                    tag={{ color }}
-                  />
-                </div>
-              ))}
-            </Row>
-          }
-          className='select-colour'
-        />
+        <Field className='select-colour' title='Select a color'>
+          <Row className={'gap-3'}>
+            {Constants.tagColors.map((color) => (
+              <div key={color} className='tag--select'>
+                <Tag
+                  onClick={(e: TTag) => update('color', e.color)}
+                  selected={tag?.color === color}
+                  tag={{ color }}
+                />
+              </div>
+            ))}
+          </Row>
+        </Field>
         {existingTag && (
           <ErrorMessage error={'A tag already exists with this name'} />
         )}

@@ -1,12 +1,12 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
+import Field from 'components/base/forms/Field'
+import Icon from 'components/icons/Icon'
 import UserSelect from 'components/UserSelect'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Button from 'components/base/forms/Button'
 import MyGroupsSelect from 'components/MyGroupsSelect'
 import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
 import DateSelect, { DateSelectProps } from 'components/DateSelect'
-import { close } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 import InfoMessage from 'components/InfoMessage'
 import AccountStore from 'common/stores/account-store'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -170,27 +170,28 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
               />
             </FormGroup>
             <div>
-              <InputGroup
-                tooltip='Allows you to set a date and time in which your change will only become active. All dates are displayed in your local timezone.'
+              <Field
+                htmlFor='change-request-live-from'
                 title='Schedule Change'
-                component={
-                  <Row>
-                    <DateSelect
-                      isValid={!!liveFrom?.length}
-                      dateFormat='MMMM d, yyyy h:mm aa'
-                      onChange={handleOnDateChange}
-                      selected={liveFrom ? moment(liveFrom).toDate() : null}
-                    />
-                    <Button
-                      className='ml-2'
-                      onClick={handleClear}
-                      theme='secondary'
-                    >
-                      Clear
-                    </Button>
-                  </Row>
-                }
-              />
+                tooltip='Allows you to set a date and time in which your change will only become active. All dates are displayed in your local timezone.'
+              >
+                <Row>
+                  <DateSelect
+                    id='change-request-live-from'
+                    isValid={!!liveFrom?.length}
+                    dateFormat='MMMM d, yyyy h:mm aa'
+                    onChange={handleOnDateChange}
+                    selected={liveFrom ? moment(liveFrom).toDate() : null}
+                  />
+                  <Button
+                    className='ml-2'
+                    onClick={handleClear}
+                    theme='secondary'
+                  >
+                    Clear
+                  </Button>
+                </Row>
+              </Field>
             </div>
             {showAssignees && moment(liveFrom).isSame(currDate) && (
               <InfoMessage>
@@ -212,75 +213,64 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
               showAssignees &&
               !Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (
                 <FormGroup className='mb-4'>
-                  <InputGroup
-                    component={
-                      <div>
-                        {!Utils.getFlagsmithHasFeature(
-                          'disable_users_as_reviewers',
-                        ) && (
-                          <Row>
-                            <strong style={{ width: 70 }}> Users: </strong>
-                            {ownerUsers.map((u) => (
-                              <Row
-                                key={u.id}
-                                onClick={() => removeOwner(u.id)}
-                                className='chip'
-                                style={{ marginBottom: 4, marginTop: 4 }}
-                              >
-                                <span className='font-weight-bold'>
-                                  {getUserDisplayName(u)}
-                                </span>
-                                <span className='chip-icon ion'>
-                                  <IonIcon icon={close} />
-                                </span>
-                              </Row>
-                            ))}
-                            <Button
-                              theme='text'
-                              onClick={() => setShowUsers(true)}
-                            >
-                              Add user
-                            </Button>
-                          </Row>
-                        )}
+                  <Field
+                    className='full-width'
+                    title='Assignees'
+                    tooltip='Assignees will be able to review and approve the change request'
+                  >
+                    <div>
+                      {!Utils.getFlagsmithHasFeature(
+                        'disable_users_as_reviewers',
+                      ) && (
                         <Row>
-                          <strong style={{ width: 70 }}> Groups: </strong>
-                          {ownerGroups?.map((u) => (
+                          <strong style={{ width: 70 }}> Users: </strong>
+                          {ownerUsers.map((u) => (
                             <Row
                               key={u.id}
-                              onClick={() => removeOwner(u.id, false)}
+                              onClick={() => removeOwner(u.id)}
                               className='chip'
                               style={{ marginBottom: 4, marginTop: 4 }}
                             >
-                              <span className='font-weight-bold'>{u.name}</span>
-                              <span className='chip-icon ion'>
-                                <IonIcon icon={close} />
+                              <span className='font-weight-bold'>
+                                {getUserDisplayName(u)}
+                              </span>
+                              <span className='chip-icon'>
+                                <Icon name='close' width={18} />
                               </span>
                             </Row>
                           ))}
                           <Button
                             theme='text'
-                            onClick={() => setShowGroups(true)}
+                            onClick={() => setShowUsers(true)}
                           >
-                            Add group
+                            Add user
                           </Button>
                         </Row>
-                      </div>
-                    }
-                    onChange={(e: Event) =>
-                      setDescription(Utils.safeParseEventValue(e))
-                    }
-                    type='text'
-                    title='Assignees'
-                    tooltipPlace='top'
-                    tooltip='Assignees will be able to review and approve the change request'
-                    inputProps={{
-                      className: 'full-width',
-                      style: { minHeight: 80 },
-                    }}
-                    className='full-width'
-                    placeholder='Add an optional description...'
-                  />
+                      )}
+                      <Row>
+                        <strong style={{ width: 70 }}> Groups: </strong>
+                        {ownerGroups?.map((u) => (
+                          <Row
+                            key={u.id}
+                            onClick={() => removeOwner(u.id, false)}
+                            className='chip'
+                            style={{ marginBottom: 4, marginTop: 4 }}
+                          >
+                            <span className='font-weight-bold'>{u.name}</span>
+                            <span className='chip-icon'>
+                              <Icon name='close' width={18} />
+                            </span>
+                          </Row>
+                        ))}
+                        <Button
+                          theme='text'
+                          onClick={() => setShowGroups(true)}
+                        >
+                          Add group
+                        </Button>
+                      </Row>
+                    </div>
+                  </Field>
                 </FormGroup>
               )}
             {!changeRequest &&

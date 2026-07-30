@@ -147,7 +147,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
         usersToAddAdmin: (usersToAddAdmin || []).map((user) => user.id),
         usersToRemove: getUsersToRemove(groupData!.users).map((v) => v.id),
         usersToRemoveAdmin: (usersToRemoveAdmin || []).map((user) => user.id),
-      }).then((data) => {
+      }).then((data: { data?: unknown; error?: unknown }) => {
         // @ts-ignore
         if (!data.error) {
           toast('Updated Group')
@@ -165,7 +165,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
         orgId,
         users: users as any,
         usersToAddAdmin: (usersToAddAdmin || []).map((user) => user.id),
-      }).then((data) => {
+      }).then((data: { data?: unknown; error?: unknown }) => {
         // @ts-ignore
         if (!data.error) {
           toast('Created Group')

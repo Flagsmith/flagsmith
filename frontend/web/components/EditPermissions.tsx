@@ -1,7 +1,7 @@
 import React, { FC, forwardRef, useCallback, useEffect, useState } from 'react'
+import Field from './base/forms/Field'
+import Icon from './icons/Icon'
 import { find } from 'lodash'
-import { close as closeIcon } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 import _data from 'common/data/base/_data'
 import {
   AvailablePermission,
@@ -55,7 +55,6 @@ import {
 
 import MyRoleSelect from './MyRoleSelect'
 import Panel from './base/grid/Panel'
-import InputGroup from './base/forms/InputGroup'
 import classNames from 'classnames'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import { useHasPermission } from 'common/providers/Permission'
@@ -934,47 +933,37 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           </div>
           {roles && level === 'organisation' && (
             <FormGroup className='px-4'>
-              <InputGroup
-                component={
-                  <div>
-                    <Row>
-                      <strong style={{ width: 70 }}>Roles: </strong>
-                      {rolesAdded?.map((r) => (
-                        <Row
-                          key={r.id}
-                          onClick={() => removeOwner(r.id)}
-                          className='chip'
-                          style={{ marginBottom: 4, marginTop: 4 }}
-                        >
-                          <span className='font-weight-bold'>{r.name}</span>
-                          <span className='chip-icon ion'>
-                            <IonIcon
-                              icon={closeIcon}
-                              style={{ fontSize: '13px' }}
-                            />
-                          </span>
-                        </Row>
-                      ))}
-                      <Button
-                        theme='text'
-                        onClick={() => setShowRoles(true)}
-                        style={{ width: 70 }}
-                      >
-                        Add Role
-                      </Button>
-                    </Row>
-                  </div>
-                }
-                type='text'
+              <Field
+                className='full-width'
                 title='Assign roles'
                 tooltip='Assigns what role the user/group will have'
-                inputProps={{
-                  className: 'full-width',
-                  style: { minHeight: 80 },
-                }}
-                className='full-width'
-                placeholder='Add an optional description...'
-              />
+              >
+                <div>
+                  <Row>
+                    <strong style={{ width: 70 }}>Roles: </strong>
+                    {rolesAdded?.map((r) => (
+                      <Row
+                        key={r.id}
+                        onClick={() => removeOwner(r.id)}
+                        className='chip'
+                        style={{ marginBottom: 4, marginTop: 4 }}
+                      >
+                        <span className='font-weight-bold'>{r.name}</span>
+                        <span className='chip-icon'>
+                          <Icon name='close' width={18} />
+                        </span>
+                      </Row>
+                    ))}
+                    <Button
+                      theme='text'
+                      onClick={() => setShowRoles(true)}
+                      style={{ width: 70 }}
+                    >
+                      Add Role
+                    </Button>
+                  </Row>
+                </div>
+              </Field>
             </FormGroup>
           )}
           {level !== 'environment' && level !== 'project' && (
