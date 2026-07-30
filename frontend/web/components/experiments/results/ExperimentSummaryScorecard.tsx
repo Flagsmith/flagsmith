@@ -35,14 +35,14 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
         </InfoMessage>
       )}
       <div className='row g-3 mb-4'>
-        <div className='col-md-3'>
+        <div className='col-md-2'>
           <StatCard
             label='Users enrolled'
             loading={usersEnrolled === null}
             value={usersEnrolled?.toLocaleString()}
           />
         </div>
-        <div className='col-md-3'>
+        <div className='col-md-4'>
           <StatCard
             label='Winning variation'
             loading={!hasResults}
@@ -52,6 +52,7 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
                   className={summary.controlWins ? undefined : 'text-success'}
                 >
                   <VariantName
+                    fit
                     colour={summary.winnerColour}
                     fontSize={24}
                     name={summary.winnerName}
