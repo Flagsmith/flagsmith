@@ -74,8 +74,6 @@ class MissingEventsTableError(Exception):
     """The configured database has no events table to deliver into."""
 
 
-# The customer's fix is the same whether verification's existence check or a
-# delivery insert found the table missing.
 MISSING_EVENTS_TABLE_DETAIL = (
     "Events table not found in the configured database. Run the setup SQL to create it."
 )
