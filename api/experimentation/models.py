@@ -149,6 +149,8 @@ class WarehouseDeliveryLog(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=["connection", "created_at"]),
+            # Serves the retention cleanup, which filters on created_at alone.
+            models.Index(fields=["created_at"]),
         ]
 
 
