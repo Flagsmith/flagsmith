@@ -880,7 +880,6 @@ def _deliver_pending_objects(
                 connection=connection,
                 s3_key=s3_key,
                 outcome=WarehouseDeliveryOutcome.REJECTED,
-                rows_count=0,
                 error=str(exc),
             )
             rejected_count += 1
