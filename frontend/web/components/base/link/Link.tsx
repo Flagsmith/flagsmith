@@ -13,8 +13,11 @@ type LinkBaseProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
 
 // `to` stays in the app and does not reload it, `href` leaves. `to` takes the
 // router's own type, so the object form carrying search or state works here too.
-export type LinkProps = LinkBaseProps &
-  ({ to: RouterLinkProps['to']; href?: never } | { href: string; to?: never })
+type LinkDestination =
+  | { to: RouterLinkProps['to']; href?: never }
+  | { href: string; to?: never }
+
+export type LinkProps = LinkBaseProps & LinkDestination
 
 // Use this to go somewhere and Button to do something.
 const Link: React.FC<LinkProps> = ({
@@ -28,10 +31,19 @@ const Link: React.FC<LinkProps> = ({
   ...rest
 }) => {
   const classes = cn('link', className)
+  // Stops a new tab getting a handle on this one.
+  const safeRel = target === '_blank' ? rel ?? 'noreferrer' : rel
 
   if (to) {
     return (
-      <RouterLink {...rest} className={classes} to={to} ref={ref}>
+      <RouterLink
+        {...rest}
+        className={classes}
+        to={to}
+        target={target}
+        rel={safeRel}
+        ref={ref}
+      >
         {children}
       </RouterLink>
     )
@@ -43,8 +55,7 @@ const Link: React.FC<LinkProps> = ({
       className={classes}
       href={href}
       target={target}
-      // Stops the new tab getting a handle on this one.
-      rel={target === '_blank' ? rel ?? 'noreferrer' : rel}
+      rel={safeRel}
       ref={ref}
     >
       {children}
