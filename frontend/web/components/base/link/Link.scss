@@ -1,0 +1,19 @@
+// Reproduces what btn-link renders today, so links that move onto this
+// component do not shift. The colour token resolves to the same purple in light
+// mode and a lighter one in dark, where btn-link had no dark treatment.
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  vertical-align: baseline;
+  color: var(--color-text-action);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  transition: all 200ms;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--color-text-action);
+    text-decoration: underline;
+  }
+}
