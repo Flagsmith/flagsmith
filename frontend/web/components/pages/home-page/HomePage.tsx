@@ -9,12 +9,10 @@ import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
 import PasswordRequirements from 'components/PasswordRequirements'
-import { informationCircleOutline } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 import { Icon } from 'components/icons'
 import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
-import OnboardingPage from './OnboardingPage'
+import OnboardingPage from 'components/pages/OnboardingPage'
 import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 import InputGroup from 'components/base/forms/InputGroup'
 import { Link } from 'react-router-dom'
@@ -32,6 +30,37 @@ import { LoginRequest, RegisterRequest } from 'common/types/requests'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import { useUTMs } from 'common/useUTMs'
 import useSignupExperiment from 'common/useSignupExperiment'
+import './HomePage.scss'
+
+type EmailError = { email?: string | string[] } | undefined
+
+// The error object never clears itself, and it describes the address that was
+// submitted, so it stops applying the moment the field holds something else.
+const currentEmailError = (
+  error: EmailError,
+  email: string,
+  submittedEmail: string,
+) => (email === submittedEmail ? error?.email : undefined)
+
+// Matched on the message because the API sends no error code for this. Raised
+// by CustomUserCreateSerializer.validate.
+const isEmailTaken = (
+  error: EmailError,
+  email: string,
+  submittedEmail: string,
+) => {
+  const current = currentEmailError(error, email, submittedEmail)
+  const messages = Array.isArray(current) ? current : [current]
+  return messages.some((message) =>
+    message?.toLowerCase().includes('already exists'),
+  )
+}
+
+// The banner is for errors with no field to attach to. Anything belonging to a
+// field is shown under that field instead, so one failure gives one message.
+const SIGNUP_FIELDS = ['email', 'first_name', 'last_name', 'password']
+const hasFieldError = (error?: Record<string, unknown>) =>
+  SIGNUP_FIELDS.some((field) => !!error?.[field])
 
 const HomePage: React.FC = () => {
   const history = useHistory()
@@ -43,6 +72,9 @@ const HomePage: React.FC = () => {
   const [lastName, setLastName] = useState('')
   const [marketingConsentGiven] = useState(true)
   const [password, setPassword] = useState('')
+  // The error object never clears on its own, so remember which address it was
+  // about.
+  const [submittedEmail, setSubmittedEmail] = useState('')
 
   const [samlError, setLocalError] = useState(false)
   const [samlLoading, setSamlLoading] = useState(false)
@@ -390,13 +422,11 @@ const HomePage: React.FC = () => {
                                 }}
                               >
                                 {isInvite && (
-                                  <div className='notification flex-row'>
-                                    <span className='notification__icon mb-2'>
-                                      <IonIcon
-                                        icon={informationCircleOutline}
-                                      />
+                                  <div className='notification d-flex align-items-center justify-content-center gap-2 mb-3'>
+                                    <span className='notification__icon d-flex'>
+                                      <Icon name='info-outlined' width={20} />
                                     </span>
-                                    <p className='notification__text pl-3'>
+                                    <p className='notification__text mb-0'>
                                       Log in to accept your invite
                                     </p>
                                   </div>
@@ -525,6 +555,7 @@ const HomePage: React.FC = () => {
                                 const isInvite =
                                   document.location.href.indexOf('invite') !==
                                   -1
+                                setSubmittedEmail(email)
                                 register(
                                   {
                                     email,
@@ -539,7 +570,7 @@ const HomePage: React.FC = () => {
                                 )
                               }}
                             >
-                              {error && (
+                              {error && !hasFieldError(error) && (
                                 <Row>
                                   <div
                                     id='error-alert'
@@ -557,29 +588,13 @@ const HomePage: React.FC = () => {
                                 </Row>
                               )}
                               {isInvite && (
-                                <div>
-                                  <div className='notification flex-row'>
-                                    <span className='notification__icon mb-2'>
-                                      <IonIcon
-                                        icon={informationCircleOutline}
-                                      />
-                                    </span>
-                                    <p className='notification__text pl-3'>
-                                      Create an account to accept your invite
-                                    </p>
-                                  </div>
-                                  <Row className='justify-content-center'>
-                                    Have an account?{' '}
-                                    <Button
-                                      theme='text'
-                                      className='ml-1 fw-bold'
-                                      onClick={() => {
-                                        window.location.href = `/login${redirect}`
-                                      }}
-                                    >
-                                      Log in
-                                    </Button>
-                                  </Row>
+                                <div className='notification d-flex align-items-center justify-content-center gap-2 mb-3'>
+                                  <span className='notification__icon d-flex'>
+                                    <Icon name='info-outlined' width={20} />
+                                  </span>
+                                  <p className='notification__text mb-0'>
+                                    Create an account to accept your invite
+                                  </p>
                                 </div>
                               )}
                               <fieldset id='details'>
@@ -620,10 +635,21 @@ const HomePage: React.FC = () => {
                                 <InputGroup
                                   title='Email Address'
                                   data-test='email'
+                                  isInvalid={
+                                    !!currentEmailError(
+                                      error,
+                                      email,
+                                      submittedEmail,
+                                    )
+                                  }
                                   inputProps={{
                                     autoComplete: 'on',
                                     className: 'full-width',
-                                    error: error && error.email,
+                                    error: currentEmailError(
+                                      error,
+                                      email,
+                                      submittedEmail,
+                                    ),
                                     name: 'email',
                                   }}
                                   onChange={(
@@ -675,7 +701,8 @@ const HomePage: React.FC = () => {
                                       !allRequirementsMet ||
                                       !firstName.trim() ||
                                       !lastName.trim() ||
-                                      blockGenericEmailDomain
+                                      blockGenericEmailDomain ||
+                                      isEmailTaken(error, email, submittedEmail)
                                     }
                                     className='px-4 mt-3 full-width'
                                     type='submit'
@@ -687,6 +714,29 @@ const HomePage: React.FC = () => {
                             </form>
                           )}
                         </Card>
+                        <Row
+                          className={classNames(
+                            'login-prompt justify-content-center',
+                            {
+                              'login-prompt--highlight': isEmailTaken(
+                                error,
+                                email,
+                                submittedEmail,
+                              ),
+                            },
+                          )}
+                        >
+                          {isEmailTaken(error, email, submittedEmail)
+                            ? 'You already have an account.'
+                            : 'Have an account?'}{' '}
+                          <Button
+                            theme='text'
+                            className='ml-1 fw-bold'
+                            href={`/login${redirect}`}
+                          >
+                            Log in
+                          </Button>
+                        </Row>
                       </>
                     )}
                   </div>
