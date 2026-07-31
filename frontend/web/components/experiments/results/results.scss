@@ -325,6 +325,14 @@
     white-space: nowrap;
   }
 
+  // h4 typography without the heading semantics — stat values shouldn't
+  // appear in the document outline.
+  &__stat-value {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: var(--font-weight-bold);
+  }
+
   &__refresh {
     display: flex;
     align-items: center;

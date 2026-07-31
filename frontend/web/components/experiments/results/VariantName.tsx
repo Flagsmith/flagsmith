@@ -1,8 +1,7 @@
-import { FC, useLayoutEffect, useRef } from 'react'
+import { FC } from 'react'
 import ColorSwatch from 'components/ColorSwatch'
+import useFitText from 'components/hooks/useFitText'
 import './results.scss'
-
-const FIT_MIN_FONT_SIZE = 14
 
 type VariantNameProps = {
   name: string
@@ -11,37 +10,22 @@ type VariantNameProps = {
   fit?: boolean
 }
 
-// fit shrinks the font (down to FIT_MIN_FONT_SIZE, then ellipsis) until the
-// name matches the container width; it renders as a block, which drops the
-// prose baseline alignment — leave it off inside a sentence.
+// fit shrinks the font until the name matches the container width, with an
+// ellipsis floor; it renders as a block, which drops the prose baseline
+// alignment — leave it off inside a sentence.
 const VariantName: FC<VariantNameProps> = ({ colour, fit, fontSize, name }) => {
   const large = !!fontSize && fontSize >= 20
-  const ref = useRef<HTMLSpanElement>(null)
-
-  useLayoutEffect(() => {
-    const el = ref.current
-    if (!el || !fit || !fontSize) return
-    const fitText = () => {
-      let size = fontSize
-      el.style.fontSize = `${size}px`
-      while (size > FIT_MIN_FONT_SIZE && el.scrollWidth > el.clientWidth) {
-        size -= 1
-        el.style.fontSize = `${size}px`
-      }
-    }
-    fitText()
-    const observer = new ResizeObserver(fitText)
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [fit, fontSize, name])
+  const { fontSize: fittedSize, ref } = useFitText<HTMLSpanElement>(
+    fit ? fontSize : undefined,
+    name,
+  )
+  const appliedSize = fit ? fittedSize : fontSize
 
   return (
     <span
       className={fit ? 'variant-name--fit' : undefined}
       ref={ref}
-      // In fit mode the layout effect owns fontSize; setting it here too
-      // would clobber the fitted size on every re-render.
-      style={!fit && fontSize ? { fontSize } : undefined}
+      style={appliedSize ? { fontSize: appliedSize } : undefined}
       title={fit ? name : undefined}
     >
       <ColorSwatch

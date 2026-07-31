@@ -1,5 +1,6 @@
 import { FC, ReactNode } from 'react'
 import ContentCard from 'components/base/grid/ContentCard'
+import './results.scss'
 
 type StatCardProps = {
   label: string
@@ -10,9 +11,9 @@ type StatCardProps = {
 const StatCard: FC<StatCardProps> = ({ label, loading, value }) => (
   <ContentCard compact>
     <div className='text-secondary fs-caption'>{label}</div>
-    <h4 className='mb-0 mt-1'>
+    <div className='experiment-results__stat-value mt-1'>
       {loading ? <span className='text-secondary'>—</span> : value ?? '—'}
-    </h4>
+    </div>
   </ContentCard>
 )
 

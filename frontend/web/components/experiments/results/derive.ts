@@ -205,8 +205,8 @@ export const getBestTreatment = (
 export const getWinningVariant = (
   metricResult: BayesianMetricResult,
   identities: VariantIdentity[],
+  best: WinningVariant | null = getBestTreatment(metricResult, identities),
 ): WinningVariant | null => {
-  const best = getBestTreatment(metricResult, identities)
   if (!best) return null
   const control = identities.find((v) => v.isControl)
   const controlChance = getControlChanceToWin(metricResult, identities)
@@ -246,7 +246,8 @@ export const deriveSummary = (
   if (!metricResult) return null
 
   const identities = getVariantIdentities(experiment.feature)
-  const winner = getWinningVariant(metricResult, identities)
+  const bestTreatment = getBestTreatment(metricResult, identities)
+  const winner = getWinningVariant(metricResult, identities, bestTreatment)
   if (!winner) return null
 
   const winnerIdentity = identities.find((v) => v.key === winner.key)
@@ -257,7 +258,6 @@ export const deriveSummary = (
   if (winner.isControl) {
     // Control's lead, kept in control's terms: the best treatment's lift
     // negated, so the magnitude matches the delta column and axis chart.
-    const bestTreatment = getBestTreatment(metricResult, identities)
     lift = bestTreatment?.inference ? -bestTreatment.inference.lift : null
   }
 
