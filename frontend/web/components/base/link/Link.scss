@@ -1,9 +1,10 @@
-// Matches btn-link so the call sites that move onto this do not shift. The
-// token is the same purple in light mode and a lighter one in dark, which
-// btn-link had no treatment for.
+// Light mode is the same #6837fc as btn-link, so those call sites will not
+// shift when they move over. Dark deliberately differs: `.dark .btn-link` keeps
+// that same purple, this takes a lighter one for contrast on dark backgrounds,
+// so moving a link over is a visible change there.
 //
 // `body.dark a` in styles.scss colours every anchor and outranks a bare .link,
-// so dark is repeated to beat it, the same way .dark .btn-link does. Both go
+// so dark is repeated to beat it, the same way `.dark .btn-link` does. Both go
 // away if that global rule moves to a token.
 .link,
 .dark .link {
