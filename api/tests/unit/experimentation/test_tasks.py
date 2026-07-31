@@ -34,6 +34,8 @@ from experimentation.models import (
     OrganisationIngestionInfrastructure,
     WarehouseConnection,
     WarehouseConnectionStatus,
+    WarehouseDeliveryLog,
+    WarehouseDeliveryOutcome,
     WarehouseType,
 )
 from experimentation.stats import VariantStats
@@ -908,6 +910,26 @@ def test_deliver_events_for_connection__pending_objects__delivers_archives_and_r
         == []
     )
 
+    # Then each delivery is recorded in the audit ledger
+    assert list(
+        WarehouseDeliveryLog.objects.filter(connection=clickhouse_connection)
+        .order_by("s3_key")
+        .values_list("s3_key", "outcome", "rows_count", "error")
+    ) == [
+        (
+            _pending_key(environment.api_key, hour="13"),
+            WarehouseDeliveryOutcome.DELIVERED,
+            100,
+            None,
+        ),
+        (
+            _pending_key(environment.api_key, hour="14"),
+            WarehouseDeliveryOutcome.DELIVERED,
+            100,
+            None,
+        ),
+    ]
+
     # Then the delivery success resolves the earlier breakage
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
@@ -980,6 +1002,27 @@ def test_deliver_events_for_connection__rejected_object__moves_to_failed_and_con
     assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
     assert _delivery_objects_count("rejected") == rejected_objects_before + 1
     assert log.has("delivery.object_rejected", level="error")
+
+    # Then both outcomes are recorded in the audit ledger, the rejection with
+    # its warehouse error
+    assert list(
+        WarehouseDeliveryLog.objects.filter(connection=clickhouse_connection)
+        .order_by("s3_key")
+        .values_list("s3_key", "outcome", "rows_count", "error")
+    ) == [
+        (
+            _pending_key(environment.api_key, hour="13"),
+            WarehouseDeliveryOutcome.REJECTED,
+            None,
+            "Constraint `event_not_empty` violated",
+        ),
+        (
+            _pending_key(environment.api_key, hour="14"),
+            WarehouseDeliveryOutcome.DELIVERED,
+            100,
+            None,
+        ),
+    ]
     assert {
         "level": "info",
         "event": "delivery.completed",
