@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.261.0](https://github.com/Flagsmith/flagsmith/compare/v2.260.0...v2.261.0) (2026-07-31)
+
+
+### Features
+
+* Log per-object warehouse delivery outcomes ([#8170](https://github.com/Flagsmith/flagsmith/issues/8170)) ([10a3bb7](https://github.com/Flagsmith/flagsmith/commit/10a3bb79b4e638516b687a6b5ebf28435ed4bddb))
+
+
+### Bug Fixes
+
+* **api:** DCR rejects client names containing colons ([#8194](https://github.com/Flagsmith/flagsmith/issues/8194)) ([9f3a4ee](https://github.com/Flagsmith/flagsmith/commit/9f3a4eef36044630f5ea4df69ce2e69b9d99cf6f))
+* consolidate copy field pattern usage ([#8169](https://github.com/Flagsmith/flagsmith/issues/8169)) ([fd78b2b](https://github.com/Flagsmith/flagsmith/commit/fd78b2b77a7d6c730f96aa7af4f01bed679687a2))
+* **onboarding:** stop polling while the verify console is hidden ([#8157](https://github.com/Flagsmith/flagsmith/issues/8157)) ([b372dc1](https://github.com/Flagsmith/flagsmith/commit/b372dc10a1ce18e96ddf1df7e6ff4d800d226a99))
+* **SDK:** Flag fetches fail when replica databases are configured ([#8168](https://github.com/Flagsmith/flagsmith/issues/8168)) ([6cf55a4](https://github.com/Flagsmith/flagsmith/commit/6cf55a43a6547aef1417d81123984e8490ca2de9))
+
 ## [2.260.0](https://github.com/Flagsmith/flagsmith/compare/v2.259.0...v2.260.0) (2026-07-30)
 
 
