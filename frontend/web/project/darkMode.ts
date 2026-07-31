@@ -79,6 +79,11 @@ if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
     // e.key is null on localStorage.clear() — revert to OS theme then too.
     if (e.key === null || e.key === THEME_KEY || e.key === LEGACY_KEY) {
+      // A clear (e.key null) or removal (e.newValue null) means no explicit
+      // choice remains; drop the in-memory fallback so we fall back to the OS.
+      if (e.key === null || e.newValue === null) {
+        inMemoryChoice = null
+      }
       apply()
     }
   })
