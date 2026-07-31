@@ -1,6 +1,9 @@
 import React, { AnchorHTMLAttributes, ReactNode, Ref } from 'react'
 import cn from 'classnames'
-import { Link as RouterLink } from 'react-router-dom'
+import {
+  Link as RouterLink,
+  LinkProps as RouterLinkProps,
+} from 'react-router-dom'
 import './Link.scss'
 
 type LinkBaseProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
@@ -8,9 +11,10 @@ type LinkBaseProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   ref?: Ref<HTMLAnchorElement>
 }
 
-// `to` stays in the app and does not reload it, `href` leaves.
+// `to` stays in the app and does not reload it, `href` leaves. `to` takes the
+// router's own type, so the object form carrying search or state works here too.
 export type LinkProps = LinkBaseProps &
-  ({ to: string; href?: never } | { href: string; to?: never })
+  ({ to: RouterLinkProps['to']; href?: never } | { href: string; to?: never })
 
 // Use this to go somewhere and Button to do something.
 const Link: React.FC<LinkProps> = ({
