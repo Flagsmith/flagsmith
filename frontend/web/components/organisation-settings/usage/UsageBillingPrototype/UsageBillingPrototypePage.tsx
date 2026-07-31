@@ -1,0 +1,114 @@
+import { FC, useState } from 'react'
+import Utils, { planNames } from 'common/utils/utils'
+import AccountStore from 'common/stores/account-store'
+import { Req } from 'common/types/requests'
+import UsageBillingPrototype from './UsageBillingPrototype'
+import UsageNotifications from './UsageNotifications'
+import usePrototypeUsage from './usePrototypeUsage'
+import { ScenarioId, SCENARIOS } from './fixtures'
+import './UsageBillingPrototype.scss'
+
+type UsageBillingPrototypePageProps = {
+  organisationId: number
+}
+
+type Tab = 'usage' | 'notifications'
+
+/**
+ * PROTOTYPE (#8184). Wiring for the prototype: which scenario, which tab, and
+ * where the data comes from. Reached only when the `usage_billing_prototype`
+ * flag is on.
+ */
+const UsageBillingPrototypePage: FC<UsageBillingPrototypePageProps> = ({
+  organisationId,
+}) => {
+  const [scenario, setScenario] = useState<ScenarioId>('healthy')
+  const [tab, setTab] = useState<Tab>('usage')
+  const [project, setProject] = useState<string | undefined>()
+
+  const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
+  const orgSubscription = AccountStore.getOrganisation()?.subscription
+  const isOnFreePlanPeriods =
+    planNames.free === currentPlan ||
+    !orgSubscription?.has_active_billing_periods
+
+  const [billingPeriod, setBillingPeriod] = useState<
+    Req['getOrganisationUsage']['billing_period']
+  >(isOnFreePlanPeriods ? '90_day_period' : 'current_billing_period')
+
+  const view = usePrototypeUsage({
+    billingPeriod,
+    isOnFreePlanPeriods,
+    organisationId,
+    // ProjectFilter hands back the id as a string, the query wants the pk.
+    projectId: project ? Number(project) : undefined,
+    scenario,
+  })
+
+  return (
+    <div className='px-3 px-md-4 pt-4 pb-4'>
+      <div className='usage-proto__switch'>
+        <div className='usage-proto__switch-group'>
+          <span className='usage-proto__sub'>Prototype state</span>
+          {SCENARIOS.map((option) => (
+            <button
+              key={option.id}
+              type='button'
+              onClick={() => setScenario(option.id)}
+              className={
+                option.id === scenario
+                  ? 'usage-proto__switch-btn usage-proto__switch-btn--active'
+                  : 'usage-proto__switch-btn'
+              }
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <div className='usage-proto__switch-group'>
+          <button
+            type='button'
+            onClick={() => setTab('usage')}
+            className={
+              tab === 'usage'
+                ? 'usage-proto__switch-btn usage-proto__switch-btn--active'
+                : 'usage-proto__switch-btn'
+            }
+          >
+            Usage
+          </button>
+          <button
+            type='button'
+            onClick={() => setTab('notifications')}
+            className={
+              tab === 'notifications'
+                ? 'usage-proto__switch-btn usage-proto__switch-btn--active'
+                : 'usage-proto__switch-btn'
+            }
+          >
+            Notifications
+          </button>
+        </div>
+      </div>
+
+      {tab === 'usage' ? (
+        <UsageBillingPrototype
+          view={view}
+          organisationId={organisationId}
+          project={project}
+          setProject={setProject}
+          billingPeriod={billingPeriod}
+          setBillingPeriod={setBillingPeriod}
+          isOnFreePlanPeriods={isOnFreePlanPeriods}
+        />
+      ) : (
+        <UsageNotifications
+          notifications={view.notifications}
+          channels={view.channels}
+        />
+      )}
+    </div>
+  )
+}
+
+export default UsageBillingPrototypePage

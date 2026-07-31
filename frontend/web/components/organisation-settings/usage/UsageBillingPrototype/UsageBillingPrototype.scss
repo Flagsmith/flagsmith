@@ -48,6 +48,74 @@
     font-size: 12px;
   }
 
+  &__strip-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__chip {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 100px;
+    white-space: nowrap;
+    cursor: default;
+
+    &--success {
+      color: var(--color-text-success);
+      background: var(--color-surface-success);
+    }
+
+    &--info {
+      color: var(--color-text-info);
+      background: var(--color-surface-info);
+    }
+
+    &--warning {
+      color: var(--color-text-warning);
+      background: var(--color-surface-warning);
+    }
+
+    &--danger {
+      color: var(--color-text-danger);
+      background: var(--color-surface-danger);
+    }
+  }
+
+  &__banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    margin-bottom: 16px;
+
+    &--warning {
+      color: var(--color-text-warning);
+      background: var(--color-surface-warning);
+      border-color: var(--color-border-warning);
+    }
+
+    &--danger {
+      color: var(--color-text-danger);
+      background: var(--color-surface-danger);
+      border-color: var(--color-border-danger);
+    }
+  }
+
+  &__banner-title {
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  &__banner-body {
+    font-size: 13px;
+  }
+
   &__panel {
     border: 1px solid $border;
     border-radius: 8px;
@@ -113,6 +181,46 @@
   &__fill {
     height: 100%;
     border-radius: 100px;
+
+    &--success {
+      background: var(--color-text-success);
+    }
+
+    &--warning {
+      background: var(--color-text-warning);
+    }
+
+    &--danger {
+      background: var(--color-text-danger);
+    }
+  }
+
+  &__pct {
+    &--success {
+      color: var(--color-text-success);
+    }
+
+    &--warning {
+      color: var(--color-text-warning);
+    }
+
+    &--danger {
+      color: var(--color-text-danger);
+    }
+  }
+
+  &__marker-label {
+    &--warning {
+      color: var(--color-text-warning);
+    }
+
+    &--danger {
+      color: var(--color-text-danger);
+    }
+  }
+
+  &__bar-fill {
+    background: var(--color-surface-action);
   }
 
   &__marker {
@@ -238,12 +346,71 @@
     text-align: right;
   }
 
-  &__notes {
-    margin-top: 8px;
-    padding: 12px 16px;
-    border-radius: 6px;
-    background: var(--color-surface-subtle);
+  &__notify-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-top: 1px solid $border;
+
+    &:first-of-type {
+      border-top: 0;
+    }
+  }
+
+  &__call-detail {
+    max-width: 420px;
+    text-align: right;
+  }
+
+  &__add {
+    background: none;
+    border: 0;
+    padding: 12px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 13px;
-    color: $muted;
+    font-weight: 600;
+    color: var(--color-text-action);
+  }
+}
+
+// Prototype-only chrome: picks the fixture state and the screen. Goes with the
+// fixtures when the real endpoints land.
+.usage-proto__switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 1280px;
+  margin: 0 auto 16px;
+  padding: 8px 12px;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 8px;
+}
+
+.usage-proto__switch-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.usage-proto__switch-btn {
+  background: none;
+  border: 1px solid var(--color-border-default);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+
+  &--active {
+    color: var(--color-text-default);
+    background: var(--color-surface-muted);
+    border-color: var(--color-border-strong);
+    font-weight: 600;
   }
 }
