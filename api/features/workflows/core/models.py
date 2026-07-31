@@ -103,7 +103,7 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
 
     class Meta:
         # Explicit ordering to prevent pagination warnings.
-        ordering = ("id",)
+        ordering = ("-id",)
 
     def approve(self, user: "FFAdminUser"):  # type: ignore[no-untyped-def]
         if user.id == self.user_id:
