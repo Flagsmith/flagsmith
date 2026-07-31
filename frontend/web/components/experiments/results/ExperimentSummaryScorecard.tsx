@@ -26,6 +26,9 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
   if (summary?.liftTone === 'success') liftClassName = 'text-success'
   if (summary?.liftTone === 'danger') liftClassName = 'text-danger'
 
+  // Give long winner names room by borrowing a column from Users enrolled.
+  const wideWinner = (summary?.winnerName.length ?? 0) > 15
+
   return (
     <>
       {!summary && hasResults && (
@@ -35,14 +38,14 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
         </InfoMessage>
       )}
       <div className='row g-3 mb-4'>
-        <div className='col-md-2'>
+        <div className={wideWinner ? 'col-md-2' : 'col-md-3'}>
           <StatCard
             label='Users enrolled'
             loading={usersEnrolled === null}
             value={usersEnrolled?.toLocaleString()}
           />
         </div>
-        <div className='col-md-4'>
+        <div className={wideWinner ? 'col-md-4' : 'col-md-3'}>
           <StatCard
             label='Winning variation'
             loading={!hasResults}
