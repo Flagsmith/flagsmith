@@ -17,6 +17,7 @@ import {
 } from 'common/types/responses'
 import {
   VariantIdentity,
+  formatChancePct,
   formatLiftPct,
   getControlChanceToWin,
   getLiftColour,
@@ -117,7 +118,7 @@ const renderWinProbability = (
           style={{ background: colour, width: `${pct}%` }}
         />
       </div>
-      <span style={{ color: colour }}>{pct}%</span>
+      <span style={{ color: colour }}>{formatChancePct(chanceToWin)}</span>
     </div>
   )
 }

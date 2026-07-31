@@ -7,6 +7,7 @@ import {
   LiftTone,
   deriveSummary,
   formatBucketLabel,
+  formatChancePct,
   getControlChanceToWin,
   getHeadlineTotal,
   getVariantIdentities,
@@ -402,6 +403,20 @@ describe('deriveSummary', () => {
       expect(deriveSummary(exp, results(metricResult))?.liftTone).toBe(tone)
     },
   )
+})
+
+describe('formatChancePct', () => {
+  it.each<[number, string]>([
+    [1, '> 99%'],
+    [0.996, '> 99%'],
+    [0.994, '99%'],
+    [0.75, '75%'],
+    [0.006, '1%'],
+    [0.004, '< 1%'],
+    [0, '< 1%'],
+  ])('formats a %d chance as %s', (chance, expected) => {
+    expect(formatChancePct(chance)).toBe(expected)
+  })
 })
 
 describe('isLiftFavourable', () => {

@@ -141,6 +141,14 @@ export const getLiftColour = (
   return isLiftFavourable(lift, direction) ? colorTextSuccess : colorTextDanger
 }
 
+// Extreme rounded probabilities would read as certainties — hedge them.
+export const formatChancePct = (chance: number): string => {
+  const pct = Math.round(chance * 100)
+  if (pct >= 100) return '> 99%'
+  if (pct <= 0) return '< 1%'
+  return `${pct}%`
+}
+
 export const formatLiftPct = (lift: number): string => {
   const pct = lift * 100
   return `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`
@@ -267,7 +275,7 @@ export const deriveSummary = (
   }
 
   return {
-    chanceToBest: `${Math.round(winner.chanceToWin * 100)}%`,
+    chanceToBest: formatChancePct(winner.chanceToWin),
     chanceToBestHigh: winner.chanceToWin > 0.9,
     controlColour: controlIdentity?.colour ?? '',
     controlWins: winner.isControl,
