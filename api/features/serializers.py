@@ -360,6 +360,9 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         project = self.context["project"]
         feature_name_regex = project.feature_name_regex
 
+        if project.only_allow_lower_case_feature_names and name != name.lower():
+            raise serializers.ValidationError("Feature name must be lower case.")
+
         if not project.is_feature_name_valid(name):
             raise serializers.ValidationError(
                 f"Feature name must match regex: {feature_name_regex}"

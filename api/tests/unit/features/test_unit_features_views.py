@@ -641,7 +641,7 @@ def test_create_feature__dynamo_enabled__triggers_single_dynamo_write(
     project.save()
 
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    data = {"name": "Test feature flag", "type": STANDARD, "project": project.id}
+    data = {"name": "test_feature_flag", "type": STANDARD, "project": project.id}
 
     mock_dynamo_environment_wrapper.is_enabled = True
     mock_dynamo_environment_wrapper.reset_mock()
@@ -1903,6 +1903,54 @@ def test_create_feature__name_does_not_match_regex__returns_400(
     )
 
 
+def test_create_feature__lower_case_only_and_mixed_case_name__returns_400(
+    admin_client_new: APIClient, project: Project
+) -> None:
+    # Given
+    # only_allow_lower_case_feature_names defaults to True
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": "MixedCaseFeature", "type": STANDARD, "project": project.id}
+
+    # When
+    response = admin_client_new.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["name"][0] == "Feature name must be lower case."
+
+
+def test_create_feature__lower_case_only_and_lower_case_name__returns_201(
+    admin_client_new: APIClient, project: Project
+) -> None:
+    # Given
+    # only_allow_lower_case_feature_names defaults to True
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": "lower_case_feature", "type": STANDARD, "project": project.id}
+
+    # When
+    response = admin_client_new.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_create_feature__lower_case_only_disabled_and_mixed_case_name__returns_201(
+    admin_client_new: APIClient, project: Project
+) -> None:
+    # Given
+    project.only_allow_lower_case_feature_names = False
+    project.save()
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": "MixedCaseFeature", "type": STANDARD, "project": project.id}
+
+    # When
+    response = admin_client_new.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
 def test_create_feature__valid_data__creates_audit_log(
     admin_client_new: APIClient,
     project: Project,
@@ -1910,7 +1958,7 @@ def test_create_feature__valid_data__creates_audit_log(
 ) -> None:
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    data = {"name": "Test feature flag", "type": STANDARD, "project": project.id}
+    data = {"name": "test_feature_flag", "type": STANDARD, "project": project.id}
 
     # When
     response = admin_client_new.post(url, data=data)
@@ -1997,7 +2045,7 @@ def test_create_feature__with_tags__creates_tagged_feature(
 ) -> None:
     # Given - set up data
     default_value = "Test"
-    feature_name = "Test feature"
+    feature_name = "test_feature"
     data = {
         "name": feature_name,
         "project": project.id,
@@ -3381,7 +3429,7 @@ def test_create_feature__missing_required_metadata__returns_400(
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
     description = "This is the description"
     data = {
-        "name": "Test feature",
+        "name": "test_feature",
         "description": description,
     }
 
@@ -3406,7 +3454,7 @@ def test_create_feature__with_optional_metadata__returns_201(
     description = "This is the description"
     field_value = 10
     data = {
-        "name": "Test feature",
+        "name": "test_feature",
         "description": description,
         "metadata": [
             {
@@ -3442,7 +3490,7 @@ def test_create_feature__with_required_metadata__returns_201(
     description = "This is the description"
     field_value = 10
     data = {
-        "name": "Test feature",
+        "name": "test_feature",
         "description": description,
         "metadata": [
             {
@@ -3478,7 +3526,7 @@ def test_create_feature__required_metadata_org_content_type__returns_201(
     description = "This is the description"
     field_value = 10
     data = {
-        "name": "Test feature",
+        "name": "test_feature",
         "description": description,
         "metadata": [
             {
@@ -4916,7 +4964,7 @@ def test_create_feature__duplicate_metadata_id__keeps_metadata_isolated(
 
     # Create first feature with metadata
     first_feature_data = {
-        "name": "First Feature",
+        "name": "first_feature",
         "description": "First feature description",
         "metadata": [
             {
@@ -4941,7 +4989,7 @@ def test_create_feature__duplicate_metadata_id__keeps_metadata_isolated(
 
     # Given - Create second feature
     second_feature_data = {
-        "name": "Second Feature",
+        "name": "second_feature",
         "description": "Second feature description",
         "metadata": [
             {
@@ -5013,7 +5061,7 @@ def test_create_feature__required_metadata_on_other_project__returns_201(
         model_field=model_field,
     )
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    data = {"name": "Test feature cross project", "description": "desc"}
+    data = {"name": "test_feature_cross_project", "description": "desc"}
 
     # When
     response = admin_client.post(
@@ -5082,7 +5130,7 @@ def test_create_feature__type_provided__validates_and_sets_type(
 ) -> None:
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    data = {"name": f"test_feature_{feature_type}", "type": feature_type}
+    data = {"name": f"test_feature_{feature_type.lower()}", "type": feature_type}
 
     # When
     response = admin_client_new.post(
