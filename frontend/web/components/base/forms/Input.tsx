@@ -24,6 +24,10 @@ export interface InputProps
   autoValidate?: boolean
   centered?: boolean
   inputClassName?: string
+  // Already known to be wrong, e.g. the API rejected it. Shows immediately,
+  // unlike isValid, which waits until the field has been touched so a pristine
+  // form is not red before anyone has typed.
+  isInvalid?: boolean
   isValid?: boolean
   ref?: Ref<InputMethods>
   search?: boolean
@@ -53,6 +57,7 @@ const Input: React.FC<InputProps> = ({
   className = '',
   disabled,
   inputClassName,
+  isInvalid = false,
   isValid = true,
   onBlur: onBlurProp,
   onChange,
@@ -101,8 +106,8 @@ const Input: React.FC<InputProps> = ({
     onKeyDownProp?.(e)
   }
 
-  const invalid = shouldValidate && !isValid
-  const success = isValid && showSuccess
+  const invalid = isInvalid || (shouldValidate && !isValid)
+  const success = isValid && !invalid && showSuccess
   const sizeClassName = size ? sizeClassNames[size] : ''
   const containerClassName = cn(
     {
