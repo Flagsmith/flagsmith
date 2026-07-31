@@ -121,8 +121,9 @@
         }
       }
     }
-    .list-item:hover a,.btn-link {
-      color: $primary !important;
+    .list-item:hover a,
+    .btn-link {
+      color: var(--color-text-action) !important;
     }
 
     &.panel-integrations {
