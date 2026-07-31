@@ -1,4 +1,4 @@
-import re
+import unicodedata
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
@@ -17,9 +17,11 @@ class OAuthConsentSerializer(serializers.Serializer):  # type: ignore[type-arg]
     state = serializers.CharField(required=False, allow_blank=True, default="")
 
 
-# Allow ASCII letters, digits, spaces, hyphens, underscores, dots, and parentheses.
-# ASCII-only to prevent Unicode homoglyph spoofing on the consent screen.
-_CLIENT_NAME_RE = re.compile(r"^[\w\s.\-()]+$", re.ASCII)
+# RFC 7591 § 2 places no constraints on `client_name`, and § 2.2 provides for localised names,
+# Only protect against control and formatting characters breaking the layout
+_DISALLOWED_CLIENT_NAME_CATEGORIES = frozenset(
+    {"Cc", "Cf", "Cs", "Co", "Cn", "Zl", "Zp"}
+)
 
 DEFAULT_CLIENT_NAME = "MCP client"
 
@@ -59,14 +61,17 @@ class DCRRequestSerializer(serializers.Serializer[None]):
     )
 
     def validate_client_name(self, value: str | None) -> str:
-        if not value or not value.strip():
+        if not value or not (name := unicodedata.normalize("NFC", value.strip())):
             return DEFAULT_CLIENT_NAME
-        if not _CLIENT_NAME_RE.match(value):
+        if any(
+            unicodedata.category(character) in _DISALLOWED_CLIENT_NAME_CATEGORIES
+            for character in name
+        ):
             raise serializers.ValidationError(
-                "Client name may only contain letters, digits, spaces, "
-                "hyphens, underscores, dots, and parentheses."
+                "Client name may not contain control, formatting or separator "
+                "characters."
             )
-        return value
+        return name
 
     def validate_redirect_uris(self, value: list[str]) -> list[str]:
         errors: list[str] = []
