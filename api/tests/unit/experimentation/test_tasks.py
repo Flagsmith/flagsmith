@@ -1015,7 +1015,7 @@ def test_deliver_events_for_connection__rejected_object__moves_to_failed_and_con
         (
             _pending_key(environment.api_key, hour="13"),
             WarehouseDeliveryOutcome.REJECTED,
-            None,
+            0,
             "Constraint `event_not_empty` violated",
         ),
         (
@@ -1179,6 +1179,7 @@ def test_clean_up_old_warehouse_delivery_logs__old_and_recent_logs__deletes_only
         connection=clickhouse_connection,
         s3_key=_pending_key(environment.api_key, hour="14"),
         outcome=WarehouseDeliveryOutcome.REJECTED,
+        rows_count=0,
         error="Constraint `event_not_empty` violated",
     )
 

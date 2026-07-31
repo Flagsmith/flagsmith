@@ -142,7 +142,7 @@ class WarehouseDeliveryLog(models.Model):
         max_length=50,
         choices=WarehouseDeliveryOutcome.choices,
     )
-    rows_count = models.PositiveIntegerField(null=True, blank=True)
+    rows_count = models.PositiveIntegerField()
     error = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
