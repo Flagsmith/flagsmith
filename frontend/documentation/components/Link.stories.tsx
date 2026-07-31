@@ -16,17 +16,14 @@ export default meta
 
 type Story = StoryObj<typeof Link>
 
-// An in-app route. No page load, so app state survives the navigation.
 export const InApp: Story = {
   render: () => <Link to='/organisations'>Switch organisation</Link>,
 }
 
-// Anything outside the app, which needs a real document load.
 export const External: Story = {
   render: () => <Link href='https://docs.flagsmith.com'>Read the docs</Link>,
 }
 
-// rel is set for you, so a new tab cannot reach back into this one.
 export const NewTab: Story = {
   render: () => (
     <Link href='https://docs.flagsmith.com' target='_blank'>
@@ -35,8 +32,7 @@ export const NewTab: Story = {
   ),
 }
 
-// The reason vertical-align matters: a link in prose has to sit on the same
-// baseline as the text around it.
+// Checks the baseline sits right mid-sentence.
 export const InSentence: Story = {
   render: () => (
     <p>
@@ -47,7 +43,7 @@ export const InSentence: Story = {
   ),
 }
 
-// Children are laid out with a gap, so an icon needs no spacing of its own.
+// Checks the gap, so an icon needs no spacing of its own.
 export const WithIcon: Story = {
   render: () => (
     <Link to='/projects'>
@@ -57,8 +53,6 @@ export const WithIcon: Story = {
   ),
 }
 
-// The distinction the component exists for. The link goes somewhere, the button
-// does something, and each carries the element that means that.
 export const AlongsideAButton: Story = {
   render: () => (
     <div className='d-flex align-items-center gap-3'>

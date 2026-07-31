@@ -5,17 +5,14 @@ import './Link.scss'
 
 type LinkBaseProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   children: ReactNode
-  // React 19 ref-as-prop, no forwardRef.
   ref?: Ref<HTMLAnchorElement>
 }
 
-// Exactly one destination, so a link can never render without one. `to` is an
-// in-app route and does not reload the app; `href` is for anything outside it.
+// `to` stays in the app and does not reload it, `href` leaves.
 export type LinkProps = LinkBaseProps &
   ({ to: string; href?: never } | { href: string; to?: never })
 
-// A navigation control. Use this wherever the job is to go somewhere, and
-// Button wherever the job is to do something.
+// Use this to go somewhere and Button to do something.
 const Link: React.FC<LinkProps> = ({
   children,
   className,

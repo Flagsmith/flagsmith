@@ -1,6 +1,6 @@
-// Reproduces what btn-link renders today, so links that move onto this
-// component do not shift. The colour token resolves to the same purple in light
-// mode and a lighter one in dark, where btn-link had no dark treatment.
+// Matches btn-link so the call sites that move onto this do not shift. The
+// token is the same purple in light mode and a lighter one in dark, which
+// btn-link had no treatment for.
 .link {
   display: inline-flex;
   align-items: center;
