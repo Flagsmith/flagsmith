@@ -121,8 +121,11 @@
         }
       }
     }
+    // :hover is spelled out because `a:hover` above is also !important and
+    // more specific, so a hovered link would otherwise still go near-white.
     .list-item:hover a,
-    .btn-link {
+    .btn-link,
+    .btn-link:hover {
       color: var(--color-text-action) !important;
     }
 
