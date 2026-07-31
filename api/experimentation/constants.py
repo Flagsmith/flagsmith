@@ -15,6 +15,7 @@ RESULTS_REFRESH_MIN_INTERVAL = timedelta(minutes=5)
 CONTROL_VARIANT_KEY = "control"
 
 DELIVERY_INTERVAL = timedelta(minutes=10)
+DELIVERY_LOG_RETENTION = timedelta(days=60)
 
 # Below these per-variant floors a metric shows "collecting data" rather than
 # inference; sample-ratio is only checked once there is enough traffic to judge.

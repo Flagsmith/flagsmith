@@ -9,12 +9,13 @@ from task_processor.decorators import (
 
 from environments.models import Environment, EnvironmentAPIKey
 from experimentation import ingestion_sync_service
-from experimentation.constants import DELIVERY_INTERVAL
+from experimentation.constants import DELIVERY_INTERVAL, DELIVERY_LOG_RETENTION
 from experimentation.models import (
     Experiment,
     ExperimentExposures,
     ExperimentResults,
     WarehouseConnection,
+    WarehouseDeliveryLog,
     WarehouseType,
 )
 from experimentation.organisation_ingestion_service import (
@@ -152,6 +153,13 @@ def deliver_events_for_connection(connection_id: int) -> None:
         return
 
     deliver_warehouse_events(connection, bucket_name=infrastructure.bucket_name)
+
+
+@register_recurring_task(run_every=timedelta(days=1))
+def clean_up_old_warehouse_delivery_logs() -> None:
+    WarehouseDeliveryLog.objects.filter(
+        created_at__lt=timezone.now() - DELIVERY_LOG_RETENTION,
+    ).delete()
 
 
 @register_task_handler()

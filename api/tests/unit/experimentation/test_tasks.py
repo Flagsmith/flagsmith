@@ -17,6 +17,7 @@ from pytest_structlog import StructuredLogCapture
 
 from environments.models import Environment, EnvironmentAPIKey
 from experimentation import warehouse_delivery_service
+from experimentation.constants import DELIVERY_LOG_RETENTION
 from experimentation.dataclasses import (
     ExposuresSummary,
     ExposuresTimeseries,
@@ -40,6 +41,7 @@ from experimentation.models import (
 )
 from experimentation.stats import VariantStats
 from experimentation.tasks import (
+    clean_up_old_warehouse_delivery_logs,
     compute_experiment_exposures,
     compute_experiment_results,
     deliver_events_for_connection,
@@ -1157,3 +1159,31 @@ def test_deliver_events_for_connection__time_budget_exhausted__defers_remaining(
         "organisation__id": environment.project.organisation_id,
         "objects__remaining_count": 2,
     } in log.events
+
+
+def test_clean_up_old_warehouse_delivery_logs__old_and_recent_logs__deletes_only_expired(
+    clickhouse_connection: WarehouseConnection,
+    environment: Environment,
+) -> None:
+    # Given a log older than the retention window and a recent one
+    expired_log = WarehouseDeliveryLog.objects.create(
+        connection=clickhouse_connection,
+        s3_key=_pending_key(environment.api_key, hour="13"),
+        outcome=WarehouseDeliveryOutcome.DELIVERED,
+        rows_count=100,
+    )
+    WarehouseDeliveryLog.objects.filter(id=expired_log.id).update(
+        created_at=timezone.now() - DELIVERY_LOG_RETENTION - timedelta(days=1),
+    )
+    recent_log = WarehouseDeliveryLog.objects.create(
+        connection=clickhouse_connection,
+        s3_key=_pending_key(environment.api_key, hour="14"),
+        outcome=WarehouseDeliveryOutcome.REJECTED,
+        error="Constraint `event_not_empty` violated",
+    )
+
+    # When
+    clean_up_old_warehouse_delivery_logs()
+
+    # Then
+    assert list(WarehouseDeliveryLog.objects.all()) == [recent_log]
