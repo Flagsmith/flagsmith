@@ -45,9 +45,9 @@ test.describe('Invite Tests', () => {
     await setText(byId('lastName'), 'Train')
     await setText(byId('email'), inviteEmail)
     await setText(byId('password'), PASSWORD)
-    await waitForElementVisible(byId('signup-btn'))
-    // Wait for form validation to complete before clicking
-    await page.waitForTimeout(500)
+    // Enabled, not just visible: the button stays disabled until the password
+    // requirements pass.
+    await expect(page.locator(byId('signup-btn'))).toBeEnabled()
     await click(byId('signup-btn'))
     log('Change email')
     await gotoAccountSettings()
@@ -78,9 +78,9 @@ test.describe('Invite Tests', () => {
     await setText(byId('lastName'), 'User')
     await setText(byId('email'), E2E_USER)
     await setText(byId('password'), PASSWORD)
-    await waitForElementVisible(byId('signup-btn'))
-    // Wait for form validation to complete before clicking
-    await page.waitForTimeout(500)
+    // Enabled, not just visible: the button stays disabled until the password
+    // requirements pass.
+    await expect(page.locator(byId('signup-btn'))).toBeEnabled()
     await click(byId('signup-btn'))
 
     log('Error explains why, and the way out is still on the page')

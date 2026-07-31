@@ -32,7 +32,8 @@ import { useUTMs } from 'common/useUTMs'
 import useSignupExperiment from 'common/useSignupExperiment'
 import './HomePage.scss'
 
-type EmailError = { email?: string | string[] } | undefined
+type EmailFieldError = string | string[]
+type EmailError = { email?: EmailFieldError } | undefined
 
 // The error object never clears itself, and it describes the address that was
 // submitted, so it stops applying the moment the field holds something else.
