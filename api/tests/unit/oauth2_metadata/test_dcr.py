@@ -84,8 +84,18 @@ def test_dcr_register__valid_redirect_uri__returns_201(
         "Claude Desktop (v2.1-beta)",
         "My_App.test",
         "Simple",
+        "Claude Code (plugin:core-tools:flagsmith)",
+        "フラグスミス",
+        "Flagsm\u0456th",
     ],
-    ids=["special-chars", "underscores-dots", "simple"],
+    ids=[
+        "special-chars",
+        "underscores-dots",
+        "simple",
+        "colons",
+        "non-ascii",
+        "homoglyph",
+    ],
 )
 def test_dcr_register__valid_client_name__returns_201(
     api_client: APIClient,
@@ -100,6 +110,31 @@ def test_dcr_register__valid_client_name__returns_201(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["client_name"] == client_name
+
+
+@pytest.mark.django_db()
+@pytest.mark.parametrize(
+    ("client_name", "expected_client_name"),
+    [
+        ("Cafe\u0301 Client", "Café Client"),
+        ("  Padded Client  ", "Padded Client"),
+    ],
+    ids=["decomposed", "surrounding-whitespace"],
+)
+def test_dcr_register__client_name_needs_normalising__returns_201_with_normalised_name(
+    api_client: APIClient,
+    client_name: str,
+    expected_client_name: str,
+) -> None:
+    # Given
+    payload = _valid_payload(client_name=client_name)
+
+    # When
+    response = api_client.post(DCR_URL, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["client_name"] == expected_client_name
 
 
 @pytest.mark.django_db()
@@ -281,13 +316,19 @@ def test_dcr_register__invalid_redirect_uri_after_valid_one__returns_rfc7591_err
 @pytest.mark.parametrize(
     ("overrides", "expected_fragment"),
     [
-        ({"client_name": "<script>alert(1)</script>"}, "letters"),
+        ({"client_name": "Right\u202eto\u202cleft"}, "control, formatting"),
+        ({"client_name": "Zero\u200bwidth"}, "control, formatting"),
+        ({"client_name": "Line\u2028separator"}, "control, formatting"),
+        ({"client_name": "Two\nlines"}, "control, formatting"),
         ({"grant_types": ["implicit"]}, "grant type"),
         ({"response_types": ["token"]}, "response type"),
         ({"token_endpoint_auth_method": "private_key_jwt"}, "not a valid choice"),
     ],
     ids=[
-        "xss-client-name",
+        "bidi-override-client-name",
+        "zero-width-client-name",
+        "line-separator-client-name",
+        "control-char-client-name",
         "bad-grant-type",
         "bad-response-type",
         "bad-auth-method",
