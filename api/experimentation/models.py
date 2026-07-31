@@ -125,6 +125,35 @@ class OrganisationIngestionInfrastructure(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
+class WarehouseDeliveryOutcome(models.TextChoices):
+    DELIVERED = "delivered", "Delivered"
+    REJECTED = "rejected", "Rejected"
+
+
+class WarehouseDeliveryLog(models.Model):
+    connection = models.ForeignKey(
+        WarehouseConnection,
+        on_delete=models.CASCADE,
+        related_name="delivery_logs",
+    )
+    # S3's own key length limit.
+    s3_key = models.CharField(max_length=1024)
+    outcome = models.CharField(
+        max_length=50,
+        choices=WarehouseDeliveryOutcome.choices,
+    )
+    rows_count = models.PositiveIntegerField(null=True, blank=True)
+    error = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["connection", "created_at"]),
+            # Serves the retention cleanup, which filters on created_at alone.
+            models.Index(fields=["created_at"]),
+        ]
+
+
 class ExperimentStatus(models.TextChoices):
     CREATED = "created", "Created"
     RUNNING = "running", "Running"

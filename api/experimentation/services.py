@@ -56,6 +56,8 @@ from experimentation.models import (
     MetricAggregation,
     MetricDirection,
     WarehouseConnectionStatus,
+    WarehouseDeliveryLog,
+    WarehouseDeliveryOutcome,
     WarehouseType,
 )
 from experimentation.results_query import _EXPOSURES_CTE, ResultsQueryBuilder
@@ -861,18 +863,24 @@ def _deliver_pending_objects(
             )
             break
         try:
-            rows_count += warehouse_delivery_service.deliver_object(
+            object_rows_count = warehouse_delivery_service.deliver_object(
                 client,
                 bucket_name,
                 s3_key,
             )
-        except warehouse_delivery_service.ObjectRejectedError:
+        except warehouse_delivery_service.ObjectRejectedError as exc:
             # This object's contents are the problem; the ones behind it are
             # still deliverable.
             warehouse_delivery_service.move_object(
                 bucket_name,
                 s3_key,
                 to_prefix=warehouse_delivery_service.FAILED_PREFIX,
+            )
+            WarehouseDeliveryLog.objects.create(
+                connection=connection,
+                s3_key=s3_key,
+                outcome=WarehouseDeliveryOutcome.REJECTED,
+                error=str(exc),
             )
             rejected_count += 1
             flagsmith_experimentation_warehouse_delivery_objects_total.labels(
@@ -889,6 +897,13 @@ def _deliver_pending_objects(
             s3_key,
             to_prefix=warehouse_delivery_service.ARCHIVE_PREFIX,
         )
+        WarehouseDeliveryLog.objects.create(
+            connection=connection,
+            s3_key=s3_key,
+            outcome=WarehouseDeliveryOutcome.DELIVERED,
+            rows_count=object_rows_count,
+        )
+        rows_count += object_rows_count
         delivered_count += 1
         flagsmith_experimentation_warehouse_delivery_objects_total.labels(
             result="delivered"
