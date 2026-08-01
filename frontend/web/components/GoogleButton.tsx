@@ -5,6 +5,7 @@ import { Icon } from './icons'
 
 type GoogleButtonProps = {
   className?: string
+  ready?: boolean
   onSuccess?: (
     tokenResponse: Omit<
       TokenResponse,
@@ -12,7 +13,11 @@ type GoogleButtonProps = {
     >,
   ) => void
 }
-const GoogleButton: FC<GoogleButtonProps> = ({ className, onSuccess }) => {
+const GoogleButton: FC<GoogleButtonProps> = ({
+  className,
+  onSuccess,
+  ready,
+}) => {
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
       onSuccess?.(tokenResponse)
@@ -24,7 +29,8 @@ const GoogleButton: FC<GoogleButtonProps> = ({ className, onSuccess }) => {
       className={className}
       theme='secondary'
       key='google'
-      onClick={() => login()}
+      disabled={!ready}
+      onClick={() => ready && login()}
     >
       <Icon name='google' />
       Google
