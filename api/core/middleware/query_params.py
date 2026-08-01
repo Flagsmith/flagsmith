@@ -17,7 +17,12 @@ class RejectNulByteQueryParamsMiddleware:
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
-        if any("\x00" in value for value in request.GET.values()):
+        # `.values()` only yields the last value per key: a repeated key
+        # (`?a=x&a=y`) would let a NUL byte in an earlier value slip through.
+        # `.lists()` yields every value for every key.
+        if any(
+            "\x00" in value for _, values in request.GET.lists() for value in values
+        ):
             return HttpResponseBadRequest(
                 "Query parameters must not contain NUL characters."
             )
