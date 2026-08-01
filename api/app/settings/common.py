@@ -379,6 +379,7 @@ REST_FRAMEWORK = {
 MIDDLEWARE = [
     "common.core.middleware.APIResponseVersionHeaderMiddleware",
     "common.gunicorn.middleware.RouteLoggerMiddleware",
+    "core.middleware.query_params.RejectNulByteQueryParamsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
