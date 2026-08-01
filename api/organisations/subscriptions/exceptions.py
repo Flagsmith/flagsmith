@@ -1,9 +1,18 @@
+from rest_framework import status
 from rest_framework.exceptions import APIException
 
 
-class InvalidSubscriptionPlanError(APIException):
-    status_code = 403
-    default_detail = "Organisation does not have a valid plan for this resource."
+class BaseInvalidPlanError(APIException):
+    status_code = status.HTTP_402_PAYMENT_REQUIRED
+    default_code = "invalid-plan"
+    default_detail = (
+        "Organisation does not have a valid plan for this resource. "
+        "Please upgrade your plan: https://www.flagsmith.com/pricing"
+    )
+
+
+class InvalidSubscriptionPlanError(BaseInvalidPlanError):
+    pass
 
 
 class CannotCancelChargebeeSubscription(APIException):
@@ -15,7 +24,7 @@ class UpgradeSeatsError(APIException):
 
 
 class UpgradeSeatsPaymentFailure(APIException):
-    status_code = 400
+    status_code = status.HTTP_400_BAD_REQUEST
     default_detail = (
         "Joining the organisation has failed due to a payment issue. "
         "Please contact your organisation's admin."
@@ -27,13 +36,15 @@ class UpgradeAPIUsageError(APIException):
 
 
 class UpgradeAPIUsagePaymentFailure(APIException):
-    status_code = 400
+    status_code = status.HTTP_400_BAD_REQUEST
     default_detail = (
         "API usage upgrade has failed due to a payment issue. "
         "If this persists, contact the organisation admin."
     )
 
 
-class SubscriptionDoesNotSupportSeatUpgrade(APIException):
-    status_code = 400
-    default_detail = "Please upgrade your plan to add additional seats/users"
+class SubscriptionDoesNotSupportSeatUpgrade(BaseInvalidPlanError):
+    default_detail = (
+        "Please upgrade your plan to add additional seats/users: "
+        "https://www.flagsmith.com/pricing"
+    )
