@@ -60,11 +60,13 @@ describe('validateRule', () => {
   it('does not throw when value is a non-string type for MODULO', () => {
     const rule = buildRule({ operator: 'MODULO', value: true })
     expect(() => Utils.validateRule(rule)).not.toThrow()
+    expect(Utils.validateRule(rule)).toBe(false)
   })
 
   it('does not throw when value is a non-string type for a semver operator', () => {
     const rule = buildRule({ operator: 'GREATER_THAN:semver', value: true })
     expect(() => Utils.validateRule(rule)).not.toThrow()
+    expect(Utils.validateRule(rule)).toBe(false)
   })
 
   it('is valid for a hideValue operator (e.g. IS_SET) even with a null value', () => {
