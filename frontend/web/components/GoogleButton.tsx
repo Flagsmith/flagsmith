@@ -5,7 +5,7 @@ import { Icon } from './icons'
 
 type GoogleButtonProps = {
   className?: string
-  ready?: boolean
+  ready: boolean
   onSuccess?: (
     tokenResponse: Omit<
       TokenResponse,
