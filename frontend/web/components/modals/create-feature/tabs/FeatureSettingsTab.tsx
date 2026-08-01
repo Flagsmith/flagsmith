@@ -32,6 +32,8 @@ import AccountStore from 'common/stores/account-store'
 import { ProjectPermission } from 'common/types/permissions.types'
 import { getStore } from 'common/store'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
+import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
+import { useRemoveFeatureWithToast } from 'components/pages/features/hooks/useRemoveFeatureWithToast'
 
 type FeatureSettingsTabProps = {
   identity?: string
@@ -106,6 +108,30 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
     level: 'project',
     permission: ProjectPermission.CREATE_FEATURE,
   })
+  const { permission: deleteFeature } = useHasPermission({
+    id: projectId,
+    level: 'project',
+    permission: ProjectPermission.DELETE_FEATURE,
+  })
+  const [removeFeature] = useRemoveFeatureWithToast()
+
+  const handleRemove = () => {
+    if (!projectFlag) return
+    openModal2(
+      'Remove Feature',
+      <ConfirmRemoveFeature
+        projectFlag={projectFlag}
+        cb={() => {
+          removeFeature(projectFlag, numericProjectId, {
+            onSuccess: closeModal,
+          }).catch(() => {
+            // toast already shown by useRemoveFeatureWithToast
+          })
+        }}
+      />,
+      'p-0',
+    )
+  }
 
   if (!createFeature) {
     return (
@@ -332,6 +358,29 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
                 An archived flag will still return as normal in all SDK
                 endpoints.`}
             </Tooltip>
+          </Row>
+        </FormGroup>
+      )}
+
+      {!identity && isEdit && (
+        <FormGroup className='mb-3 setting'>
+          <Row space>
+            <div className='col-md-8'>
+              <label className='cols-sm-2 control-label mb-0'>
+                Remove Feature
+              </label>
+              <p className='fs-small lh-sm mb-0'>
+                This will remove the feature for all environments. This action
+                cannot be undone.
+              </p>
+            </div>
+            <Button
+              theme='danger'
+              disabled={!deleteFeature}
+              onClick={handleRemove}
+            >
+              Remove Feature
+            </Button>
           </Row>
         </FormGroup>
       )}
