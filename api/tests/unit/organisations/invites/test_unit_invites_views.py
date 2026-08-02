@@ -91,7 +91,11 @@ def test_get_invite_links__seats_exceeded__returns_400(
     response = admin_client.get(url)
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_402_PAYMENT_REQUIRED
+    assert (
+        response.json()["detail"]
+        == "Please upgrade your plan to add additional seats/users: https://www.flagsmith.com/pricing"
+    )
 
 
 def test_delete_invite_link__valid_invite__returns_204(
@@ -137,7 +141,11 @@ def test_delete_invite_link__seats_exceeded__returns_400(
     response = admin_client.delete(url)
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_402_PAYMENT_REQUIRED
+    assert (
+        response.json()["detail"]
+        == "Please upgrade your plan to add additional seats/users: https://www.flagsmith.com/pricing"
+    )
 
 
 def test_update_invite_link__patch_request__returns_405(  # type: ignore[no-untyped-def]
@@ -258,6 +266,7 @@ def test_create_invite__permission_group_from_another_org__returns_400(
     )
 
     # Then
+    # Validation error, stays 400
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     response_json = response.json()
@@ -286,10 +295,10 @@ def test_create_invite__seats_exceeded__returns_400(
         url, data=json.dumps(data), content_type="application/json"
     )
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_402_PAYMENT_REQUIRED
     assert (
         response.json()["detail"]
-        == "Please upgrade your plan to add additional seats/users"
+        == "Please upgrade your plan to add additional seats/users: https://www.flagsmith.com/pricing"
     )
 
 
@@ -359,10 +368,10 @@ def test_join_organisation__exceeds_plan_limit_saas__returns_400(
     response = staff_client.post(url)
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_402_PAYMENT_REQUIRED
     assert (
         response.json()["detail"]
-        == "Please upgrade your plan to add additional seats/users"
+        == "Please upgrade your plan to add additional seats/users: https://www.flagsmith.com/pricing"
     )
 
 
@@ -391,10 +400,10 @@ def test_join_organisation__exceeds_plan_limit_self_hosted__returns_400(
     response = staff_client.post(url)
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_402_PAYMENT_REQUIRED
     assert (
         response.json()["detail"]
-        == "Please upgrade your plan to add additional seats/users"
+        == "Please upgrade your plan to add additional seats/users: https://www.flagsmith.com/pricing"
     )
 
 
