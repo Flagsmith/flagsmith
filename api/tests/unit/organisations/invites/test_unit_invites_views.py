@@ -72,7 +72,7 @@ def test_get_invite_links__multiple_roles_exist__returns_all_links(
         assert all(attr in invite_link for attr in expected_attributes)
 
 
-def test_get_invite_links__seats_exceeded__returns_400(
+def test_get_invite_links__seats_exceeded__returns_402(
     settings: SettingsWrapper,
     organisation: Organisation,
     admin_client: APIClient,
@@ -92,6 +92,7 @@ def test_get_invite_links__seats_exceeded__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["code"] == "invalid-plan"
     assert (
         response.json()["detail"]
         == "Please upgrade your plan to add additional seats/users: https://www.flagsmith.com/pricing"
@@ -124,7 +125,7 @@ def test_delete_invite_link__valid_invite__returns_204(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_delete_invite_link__seats_exceeded__returns_400(
+def test_delete_invite_link__seats_exceeded__returns_402(
     organisation: Organisation,
     admin_client: APIClient,
     settings: SettingsWrapper,
@@ -142,6 +143,7 @@ def test_delete_invite_link__seats_exceeded__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["code"] == "invalid-plan"
     assert (
         response.json()["detail"]
         == "Please upgrade your plan to add additional seats/users: https://www.flagsmith.com/pricing"
@@ -277,7 +279,7 @@ def test_create_invite__permission_group_from_another_org__returns_400(
     }
 
 
-def test_create_invite__seats_exceeded__returns_400(
+def test_create_invite__seats_exceeded__returns_402(
     admin_client: APIClient,
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
@@ -296,6 +298,7 @@ def test_create_invite__seats_exceeded__returns_400(
     )
     # Then
     assert response.status_code == status.HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["code"] == "invalid-plan"
     assert (
         response.json()["detail"]
         == "Please upgrade your plan to add additional seats/users: https://www.flagsmith.com/pricing"
@@ -355,7 +358,7 @@ def test_update_invite__put_request__returns_405(  # type: ignore[no-untyped-def
         (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
-def test_join_organisation__exceeds_plan_limit_saas__returns_400(
+def test_join_organisation__exceeds_plan_limit_saas__returns_402(
     staff_client: APIClient,
     invite_object: Invite | InviteLink,
     url: str,
@@ -369,6 +372,7 @@ def test_join_organisation__exceeds_plan_limit_saas__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["code"] == "invalid-plan"
     assert (
         response.json()["detail"]
         == "Please upgrade your plan to add additional seats/users: https://www.flagsmith.com/pricing"
@@ -383,7 +387,7 @@ def test_join_organisation__exceeds_plan_limit_saas__returns_400(
         (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
-def test_join_organisation__exceeds_plan_limit_self_hosted__returns_400(
+def test_join_organisation__exceeds_plan_limit_self_hosted__returns_402(
     staff_client: APIClient,
     invite_object: Invite | InviteLink,
     url: str,
@@ -401,6 +405,7 @@ def test_join_organisation__exceeds_plan_limit_self_hosted__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["code"] == "invalid-plan"
     assert (
         response.json()["detail"]
         == "Please upgrade your plan to add additional seats/users: https://www.flagsmith.com/pricing"
