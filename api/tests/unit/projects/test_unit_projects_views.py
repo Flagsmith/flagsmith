@@ -590,7 +590,10 @@ def test_migrate_to_edge__too_many_identities__returns_400(  # type: ignore[no-u
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == "Too many identities. Please contact support to adjust your limits: https://docs.flagsmith.com/support#getting-in-touch"
+    assert (
+        response.json()["detail"]
+        == "Too many identities. Please contact support to adjust your limits: https://docs.flagsmith.com/support#getting-in-touch"
+    )
     mocked_identity_migrator.assert_not_called()
 
 
@@ -611,7 +614,10 @@ def test_migrate_to_edge__too_many_features__returns_400(  # type: ignore[no-unt
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == "Project is too large. Please contact support to adjust your limits: https://docs.flagsmith.com/support#getting-in-touch"
+    assert (
+        response.json()["detail"]
+        == "Project is too large. Please contact support to adjust your limits: https://docs.flagsmith.com/support#getting-in-touch"
+    )
     mocked_identity_migrator.assert_not_called()
 
 
@@ -639,7 +645,10 @@ def test_migrate_to_edge__too_many_segments__returns_400(  # type: ignore[no-unt
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == "Project is too large. Please contact support to adjust your limits: https://docs.flagsmith.com/support#getting-in-touch"
+    assert (
+        response.json()["detail"]
+        == "Project is too large. Please contact support to adjust your limits: https://docs.flagsmith.com/support#getting-in-touch"
+    )
     mocked_identity_migrator.assert_not_called()
 
 
@@ -672,7 +681,10 @@ def test_migrate_to_edge__too_many_segment_overrides__returns_400(  # type: igno
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == "Project is too large. Please contact support to adjust your limits: https://docs.flagsmith.com/support#getting-in-touch"
+    assert (
+        response.json()["detail"]
+        == "Project is too large. Please contact support to adjust your limits: https://docs.flagsmith.com/support#getting-in-touch"
+    )
     mocked_identity_migrator.assert_not_called()
 
 

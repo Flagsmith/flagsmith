@@ -1,5 +1,6 @@
-from rest_framework.exceptions import APIException
 from rest_framework import status
+from rest_framework.exceptions import APIException
+
 
 class OrganisationHasNoPaidSubscription(APIException):
     status_code = status.HTTP_402_PAYMENT_REQUIRED
