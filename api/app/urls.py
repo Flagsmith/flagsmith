@@ -8,6 +8,7 @@ from django.views.generic.base import TemplateView
 from oauth2_provider import views as oauth2_views
 
 from oauth2_metadata.views import (
+    CIMDTokenView,
     DynamicClientRegistrationView,
     OAuthAuthorizeView,
     authorization_server_metadata,
@@ -73,7 +74,7 @@ if not settings.TASK_PROCESSOR_MODE:
             include(
                 (
                     [
-                        path("token/", oauth2_views.TokenView.as_view(), name="token"),
+                        path("token/", CIMDTokenView.as_view(), name="token"),
                         path(
                             "revoke_token/",
                             oauth2_views.RevokeTokenView.as_view(),
