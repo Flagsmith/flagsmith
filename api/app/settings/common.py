@@ -353,7 +353,7 @@ REST_FRAMEWORK = {
         "api_keys.authentication.MasterAPIKeyAuthentication",
         "oauth2_metadata.authentication.OAuth2BearerTokenAuthentication",
     ),
-    'EXCEPTION_HANDLER': 'app.exceptions.custom_api_exception_handler',
+    "EXCEPTION_HANDLER": "app.exceptions.custom_api_exception_handler",
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
