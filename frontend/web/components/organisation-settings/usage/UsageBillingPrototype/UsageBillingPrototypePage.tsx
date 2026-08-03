@@ -1,6 +1,7 @@
 import { FC, useState } from 'react'
 import Utils, { planNames } from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
+import BareButton from 'components/base/forms/BareButton'
 import { Req } from 'common/types/requests'
 import UsageBillingPrototype from './UsageBillingPrototype'
 import UsageNotifications from './UsageNotifications'
@@ -13,6 +14,11 @@ type UsageBillingPrototypePageProps = {
 }
 
 type Tab = 'usage' | 'notifications'
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'usage', label: 'Usage' },
+  { id: 'notifications', label: 'Notifications' },
+]
 
 /**
  * PROTOTYPE (#8184). Wiring for the prototype: which scenario, which tab, and
@@ -48,13 +54,17 @@ const UsageBillingPrototypePage: FC<UsageBillingPrototypePageProps> = ({
   return (
     <div className='px-3 px-md-4 pt-4 pb-4'>
       <div className='usage-proto__switch'>
-        <div className='usage-proto__switch-group'>
+        <div
+          className='usage-proto__switch-group'
+          role='group'
+          aria-label='Prototype state'
+        >
           <span className='usage-proto__sub'>Prototype state</span>
           {SCENARIOS.map((option) => (
-            <button
+            <BareButton
               key={option.id}
-              type='button'
               onClick={() => setScenario(option.id)}
+              aria-pressed={option.id === scenario}
               className={
                 option.id === scenario
                   ? 'usage-proto__switch-btn usage-proto__switch-btn--active'
@@ -62,32 +72,28 @@ const UsageBillingPrototypePage: FC<UsageBillingPrototypePageProps> = ({
               }
             >
               {option.label}
-            </button>
+            </BareButton>
           ))}
         </div>
-        <div className='usage-proto__switch-group'>
-          <button
-            type='button'
-            onClick={() => setTab('usage')}
-            className={
-              tab === 'usage'
-                ? 'usage-proto__switch-btn usage-proto__switch-btn--active'
-                : 'usage-proto__switch-btn'
-            }
-          >
-            Usage
-          </button>
-          <button
-            type='button'
-            onClick={() => setTab('notifications')}
-            className={
-              tab === 'notifications'
-                ? 'usage-proto__switch-btn usage-proto__switch-btn--active'
-                : 'usage-proto__switch-btn'
-            }
-          >
-            Notifications
-          </button>
+        <div
+          className='usage-proto__switch-group'
+          role='group'
+          aria-label='Screen'
+        >
+          {TABS.map((option) => (
+            <BareButton
+              key={option.id}
+              onClick={() => setTab(option.id)}
+              aria-pressed={tab === option.id}
+              className={
+                tab === option.id
+                  ? 'usage-proto__switch-btn usage-proto__switch-btn--active'
+                  : 'usage-proto__switch-btn'
+              }
+            >
+              {option.label}
+            </BareButton>
+          ))}
         </div>
       </div>
 

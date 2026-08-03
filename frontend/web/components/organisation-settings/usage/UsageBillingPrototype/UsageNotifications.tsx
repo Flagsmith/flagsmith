@@ -1,5 +1,6 @@
 import { FC, useState } from 'react'
 import Switch from 'components/Switch'
+import BareButton from 'components/base/forms/BareButton'
 import { Button } from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import { UsageNotification } from './types'
@@ -86,9 +87,9 @@ const UsageNotifications: FC<UsageNotificationsProps> = ({
               />
             </div>
           ))}
-        <button className='usage-proto__add' onClick={addRow} type='button'>
+        <BareButton className='usage-proto__add' onClick={addRow}>
           <Icon name='plus' width={16} /> Add notification
-        </button>
+        </BareButton>
       </div>
 
       <div className='usage-proto__panel'>

@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import Chip from 'components/base/Chip'
 import Tooltip from 'components/Tooltip'
 import { GraceState } from './types'
 
@@ -7,12 +8,14 @@ type GraceChipProps = {
   daysLeft?: number
 }
 
+// Tone comes from the token utilities rather than a Chip variant: Chip only
+// ships neutral and accent.
 const TONE: Record<GraceState, string> = {
-  available: 'success',
-  countdown: 'warning',
-  covering: 'info',
-  restricted: 'danger',
-  used: 'danger',
+  available: 'bg-surface-success text-success',
+  countdown: 'bg-surface-warning text-warning',
+  covering: 'bg-surface-info text-info',
+  restricted: 'bg-surface-danger text-danger',
+  used: 'bg-surface-danger text-danger',
 }
 
 const LABEL: Record<GraceState, string> = {
@@ -43,9 +46,9 @@ const GraceChip: FC<GraceChipProps> = ({ daysLeft, grace }) => {
   return (
     <Tooltip
       title={
-        <span className={`usage-proto__chip usage-proto__chip--${TONE[grace]}`}>
+        <Chip size='sm' className={TONE[grace]}>
           {label}
-        </span>
+        </Chip>
       }
     >
       {EXPLANATION[grace]}

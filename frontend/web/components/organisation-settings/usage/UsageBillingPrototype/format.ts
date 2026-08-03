@@ -1,9 +1,11 @@
-/** PROTOTYPE (#8184). Compact numbers to match the designs: 1.24M, 68.4k. */
-export const compact = (n: number): string => {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
-  return `${Math.round(n)}`
-}
+import Format from 'common/utils/format'
+
+/**
+ * PROTOTYPE (#8184). `Format.shortenNumber` does the formatting, this only
+ * guards zero: it takes log10 of the value, so 0 comes back as NaN.
+ */
+export const compact = (n: number): string =>
+  n ? Format.shortenNumber(n) : '0'
 
 export const currency = (amount: number): string =>
   `$${amount.toLocaleString()}`

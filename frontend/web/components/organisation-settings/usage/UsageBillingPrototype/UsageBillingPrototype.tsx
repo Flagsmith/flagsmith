@@ -1,5 +1,7 @@
 import { FC } from 'react'
 import ProjectFilter from 'components/ProjectFilter'
+import StatItem from 'components/StatItem'
+import { IconName } from 'components/icons/Icon'
 import { billingPeriods, freePeriods, Req } from 'common/types/requests'
 import UsageBanner from './UsageBanner'
 import UsageChart from './UsageChart'
@@ -21,10 +23,11 @@ type UsageBillingPrototypeProps = {
 }
 
 type Tile = {
+  icon: IconName
   label: string
-  value: string
-  sub: string
-  badge?: { text: string; tone: 'success' | 'warning' | 'danger' | 'estimate' }
+  value: string | number
+  limit?: number | null
+  tooltip?: string
 }
 
 const toneForPercent = (percent: number): 'success' | 'warning' | 'danger' => {
@@ -36,49 +39,53 @@ const toneForPercent = (percent: number): 'success' | 'warning' | 'danger' => {
 const buildTiles = (view: UsageView, percent: number): Tile[] => {
   const tiles: Tile[] = [
     {
-      badge:
-        percent >= 100
-          ? { text: 'Over limit', tone: 'danger' }
-          : { text: percent >= 75 ? 'Watch' : 'On track', tone: 'success' },
+      icon: 'bar-chart',
       label: 'Total API calls',
-      sub: view.limit
-        ? `of ${compact(view.limit)} plan limit`
-        : 'no plan limit',
-      value: compact(view.total),
+      limit: view.limit,
+      tooltip: view.limit
+        ? `Your plan allows ${compact(view.limit)} calls per period`
+        : undefined,
+      value: view.total,
     },
     {
+      icon: 'pie-chart',
       label: '% of plan consumed',
-      sub: view.period.isBillingPeriod ? 'this billing period' : 'this period',
+      tooltip: view.period.isBillingPeriod
+        ? 'Of your plan limit, this billing period'
+        : 'Of your plan limit, this period',
       value: view.limit ? `${percent}%` : '—',
     },
     {
+      icon: 'calendar',
       label: 'Days remaining',
-      sub: view.period.resetsAt
-        ? `resets ${view.period.resetsAt}`
-        : 'needs the billing period',
-      value: view.period.daysRemaining ? `${view.period.daysRemaining}` : '—',
+      tooltip: view.period.resetsAt
+        ? `Resets ${view.period.resetsAt}`
+        : undefined,
+      value: view.period.daysRemaining || '—',
     },
   ]
 
   if (view.restricted) {
     tiles.push({
-      badge: { text: 'Paused', tone: 'danger' },
+      icon: 'warning',
       label: 'Flag serving',
-      sub: 'resumes on upgrade',
+      tooltip: 'Resumes when usage drops below the limit, or on upgrade',
       value: 'Paused',
     })
   } else if (view.overageCost !== null) {
     tiles.push({
-      badge: { text: 'Estimate', tone: 'estimate' },
+      icon: 'flash',
       label: 'Est. overage cost',
-      sub: 'charged at the end of the period',
+      tooltip: 'An estimate, charged at the end of the period',
       value: currency(view.overageCost),
     })
   } else {
     tiles.push({
-      badge: { text: 'Estimate', tone: 'estimate' },
+      icon: 'timer',
       label: 'Projected end-of-period',
-      sub: view.projected ? 'at the current run rate' : 'too early to project',
+      tooltip: view.projected
+        ? 'An estimate, at the current run rate'
+        : 'Too early in the period to project',
       value: view.projected ? compact(view.projected) : '—',
     })
   }
@@ -165,7 +172,15 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
         </div>
 
         <div className='usage-proto__meter'>
-          <div className='usage-proto__track'>
+          <div
+            className='usage-proto__track'
+            role='progressbar'
+            aria-label='Plan usage this period'
+            aria-valuenow={percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuetext={`${percent}% of plan consumed`}
+          >
             <div
               className={`usage-proto__fill usage-proto__fill--${tone}`}
               style={{ width: `${Math.min(percent, 100)}%` }}
@@ -195,24 +210,18 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
         </div>
       </div>
 
-      <div className='usage-proto__tiles'>
+      <Row className='plan p-4 mb-4 flex-wrap gap-4'>
         {buildTiles(view, percent).map((tile) => (
-          <div className='usage-proto__tile' key={tile.label}>
-            <div className='usage-proto__tile-head'>
-              <span className='usage-proto__tile-label'>{tile.label}</span>
-              {tile.badge && (
-                <span
-                  className={`usage-proto__badge usage-proto__badge--${tile.badge.tone}`}
-                >
-                  {tile.badge.text}
-                </span>
-              )}
-            </div>
-            <div className='usage-proto__tile-value'>{tile.value}</div>
-            <div className='usage-proto__sub'>{tile.sub}</div>
-          </div>
+          <StatItem
+            key={tile.label}
+            icon={tile.icon}
+            label={tile.label}
+            value={tile.value}
+            limit={tile.limit}
+            tooltip={tile.tooltip}
+          />
         ))}
-      </div>
+      </Row>
 
       <div className='usage-proto__panel'>
         <div className='usage-proto__panel-head'>
