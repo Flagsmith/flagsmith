@@ -4,7 +4,13 @@ import type { Meta, StoryObj } from 'storybook'
 import Row from 'components/base/grid/Row'
 
 const meta: Meta = {
-  parameters: { layout: 'padded' },
+  parameters: {
+    // Flexbox only, no colour, radius or shadow, so no design token can change
+    // how this renders and light/dark are identical. Snapshotting it costs
+    // budget for a diff that cannot happen.
+    chromatic: { disableSnapshot: true },
+    layout: 'padded',
+  },
   title: 'Components/Layout/Row',
 }
 export default meta
