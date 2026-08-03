@@ -28,9 +28,18 @@
   }
 
   &__value {
-    font-size: 28px;
     font-weight: var(--font-weight-bold);
     line-height: 1.1;
+    // Long text values (emails, ids) wrap instead of pushing the card wide.
+    overflow-wrap: anywhere;
+
+    &--default {
+      font-size: 28px;
+    }
+
+    &--sm {
+      font-size: 16px;
+    }
   }
 
   &__limit {

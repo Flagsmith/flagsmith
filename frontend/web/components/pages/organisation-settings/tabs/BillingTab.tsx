@@ -1,6 +1,5 @@
 import React from 'react'
 import { Organisation } from 'common/types/responses'
-import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 import Payment from 'components/modals/payment'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
@@ -71,48 +70,18 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
 
   return (
     <div className='mt-4'>
-      <Row space className='plan p-4 mb-4 flex-wrap gap-4'>
-        <div>
-          <Row className='flex-wrap gap-4'>
-            <div>
-              <Row style={{ width: '230px' }}>
-                <div className='plan-icon'>
-                  <Icon name='layers' width={32} />
-                </div>
-                <div>
-                  <p className='fs-small lh-sm mb-0'>Your plan</p>
-                  <h4 className='mb-0'>{planName}</h4>
-                </div>
-              </Row>
-            </div>
-            <div>
-              <Row style={{ width: '230px' }}>
-                <div className='plan-icon'>
-                  <h4 className='mb-0 text-center' style={{ width: '32px' }}>
-                    ID
-                  </h4>
-                </div>
-                <div>
-                  <p className='fs-small lh-sm mb-0'>Organisation ID</p>
-                  <h4 className='mb-0'>{organisation.id}</h4>
-                </div>
-              </Row>
-            </div>
-            {!!chargebee_email && (
-              <div>
-                <Row style={{ width: '230px' }}>
-                  <div className='plan-icon'>
-                    <Icon name='layers' width={32} />
-                  </div>
-                  <div>
-                    <p className='fs-small lh-sm mb-0'>Management Email</p>
-                    <h6 className='mb-0'>{chargebee_email}</h6>
-                  </div>
-                </Row>
-              </div>
-            )}
-          </Row>
-        </div>
+      <Row space className='mb-4 flex-wrap gap-3 align-items-stretch'>
+        <Row className='flex-wrap gap-3 align-items-stretch flex-1'>
+          <StatItem icon='layers' label='Your plan' value={planName} />
+          <StatItem label='Organisation ID' value={String(organisation.id)} />
+          {!!chargebee_email && (
+            <StatItem
+              label='Management email'
+              value={chargebee_email}
+              size='sm'
+            />
+          )}
+        </Row>
         <div className='align-self-center'>
           {organisation.subscription?.subscription_id && (
             <Button
