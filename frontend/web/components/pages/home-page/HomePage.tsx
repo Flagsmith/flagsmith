@@ -43,10 +43,12 @@ type EmailError = { email?: EmailFieldError } | undefined
 const currentEmailError = (
   error: EmailError,
   email: string,
-  submittedEmail: string,
+  submittedEmail: string | null,
   isSaving: boolean,
 ) =>
-  !isSaving && email.toLowerCase() === submittedEmail.toLowerCase()
+  !isSaving &&
+  submittedEmail !== null &&
+  email.toLowerCase() === submittedEmail.toLowerCase()
     ? error?.email
     : undefined
 
@@ -55,7 +57,7 @@ const currentEmailError = (
 const isEmailTaken = (
   error: EmailError,
   email: string,
-  submittedEmail: string,
+  submittedEmail: string | null,
   isSaving: boolean,
 ) => {
   const current = currentEmailError(error, email, submittedEmail, isSaving)
@@ -81,9 +83,10 @@ const HomePage: React.FC = () => {
   const [lastName, setLastName] = useState('')
   const [marketingConsentGiven] = useState(true)
   const [password, setPassword] = useState('')
-  // The error object never clears on its own, so remember which address it was
-  // about.
-  const [submittedEmail, setSubmittedEmail] = useState('')
+  // Which address the last signup attempt used, null until there has been one.
+  // Both /login and /signup render this component, so an empty string would
+  // match a login error that arrived before anyone submitted a signup.
+  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null)
 
   const [samlError, setLocalError] = useState(false)
   const [samlLoading, setSamlLoading] = useState(false)
