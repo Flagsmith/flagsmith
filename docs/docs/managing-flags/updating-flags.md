@@ -90,9 +90,6 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
   }'
 ```
 
-The `priority` field in segment overrides is optional. The lowest number has the highest priority. Omit it to add at the
-lowest priority.
-
 ### Configure multiple segment overrides
 
 Set different values per segment — for example, pricing tiers.
@@ -110,19 +107,21 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
     "segment_overrides": [
       {
         "segment_id": 101,
-        "priority": 1,
+        "priority": 10,
         "enabled": true,
         "value": {"type": "string", "value": "enterprise"}
       },
       {
         "segment_id": 202,
-        "priority": 2,
+        "priority": 20,
         "enabled": true,
         "value": {"type": "string", "value": "premium"}
       }
     ]
   }'
 ```
+
+When adding a new segment override, and `priority` is omitted, priority is set to the position of the override in the `segment_overrides` list. The lowest number has the highest priority.
 
 ### Configure A/B/n experiments (variants)
 

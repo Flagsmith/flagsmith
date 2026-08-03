@@ -174,13 +174,13 @@ def test_update_flag__segment_overrides__creates_overrides(
             "segment_overrides": [
                 {
                     "segment_id": segment,
-                    "priority": 1,
+                    "priority": 10,
                     "enabled": True,
                     "value": {"type": "string", "value": "enterprise"},
                 },
                 {
                     "segment_id": segment_2,
-                    "priority": 2,
+                    "priority": 20,
                     "enabled": True,
                     "value": {"type": "string", "value": "premium"},
                 },
@@ -199,11 +199,115 @@ def test_update_flag__segment_overrides__creates_overrides(
     assert environment_default.enabled is False
     assert environment_default.get_feature_state_value() == "standard"
     enterprise_override = live_feature_states.get(feature_segment__segment_id=segment)
+    assert enterprise_override.priority == 10
     assert enterprise_override.enabled is True
     assert enterprise_override.get_feature_state_value() == "enterprise"
     premium_override = live_feature_states.get(feature_segment__segment_id=segment_2)
+    assert premium_override.priority == 20
     assert premium_override.enabled is True
     assert premium_override.get_feature_state_value() == "premium"
+
+
+def test_update_flag__segment_override_priority_omitted__sets_priority_from_list_position(
+    admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    segment_2: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        f"/api/experiments/environments/{environment_api_key}/update-flag/",
+        {
+            "feature": {"id": feature},
+            "segment_overrides": [
+                {
+                    "segment_id": segment,
+                    "priority": 10,
+                    "enabled": True,
+                    "value": {"type": "string", "value": "enterprise"},
+                },
+                {
+                    "segment_id": segment_2,
+                    "enabled": True,
+                    "value": {"type": "string", "value": "premium"},
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 204
+    live_feature_states = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+    )
+    assert live_feature_states.get(feature_segment__segment_id=segment).priority == 10
+    assert live_feature_states.get(feature_segment__segment_id=segment_2).priority == 1
+
+
+@pytest.mark.parametrize(
+    "update",
+    [
+        pytest.param(
+            {"priority": 10, "value": {"type": "string", "value": "enterprise"}},
+            id="enabled",
+        ),
+        pytest.param({"priority": 10, "enabled": True}, id="value"),
+        pytest.param(
+            {"enabled": True, "value": {"type": "string", "value": "enterprise"}},
+            id="priority",
+        ),
+        pytest.param({}, id="enabled-and-value-and-priority"),
+    ],
+)
+def test_update_flag__segment_override_attribute_omitted__left_unchanged(
+    admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    versioned_environment: Environment,
+    update: dict[str, object],
+) -> None:
+    # Given
+    setup_response = admin_client.post(
+        f"/api/experiments/environments/{environment_api_key}/update-flag/",
+        {
+            "feature": {"id": feature},
+            "segment_overrides": [
+                {
+                    "segment_id": segment,
+                    "priority": 10,
+                    "enabled": True,
+                    "value": {"type": "string", "value": "enterprise"},
+                },
+            ],
+        },
+        format="json",
+    )
+    assert setup_response.status_code == 204
+
+    # When
+    response = admin_client.post(
+        f"/api/experiments/environments/{environment_api_key}/update-flag/",
+        {
+            "feature": {"id": feature},
+            "segment_overrides": [{"segment_id": segment, **update}],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 204
+    override = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+    ).get(feature_segment__segment_id=segment)
+    assert override.priority == 10
+    assert override.enabled is True
+    assert override.get_feature_state_value() == "enterprise"
 
 
 def test_update_flag__environment_default_variants__creates_variants(
