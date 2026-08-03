@@ -5,9 +5,8 @@ import Flex from 'components/base/grid/Flex'
 
 const meta: Meta = {
   parameters: {
-    // Flexbox only, no colour, radius or shadow, so no design token can change
-    // how this renders and light/dark are identical. Snapshotting it costs
-    // budget for a diff that cannot happen.
+    // Flexbox only. No token can change how this renders, and light/dark are
+    // identical, so there is no diff to catch.
     chromatic: { disableSnapshot: true },
     layout: 'padded',
   },

@@ -1,14 +1,8 @@
 name: Frontend Chromatic
 
 on:
-  # Keep the two path lists below identical. Anything outside them cannot change
-  # how a story renders, so a build there only burns snapshot quota. They are
-  # duplicated rather than shared via a YAML anchor because GitHub Actions does
-  # not support anchors in workflow files.
-  #
-  # package.json is included because a dependency bump (Storybook, React,
-  # Bootstrap) can change rendering, and it is also where TurboSnap bails to a
-  # full build, which is exactly when main's baselines need refreshing.
+  # Keep both path lists identical. Nothing outside them can change how a story
+  # renders. Duplicated because GitHub Actions does not support YAML anchors.
   push:
     branches: [main]
     paths:
@@ -78,31 +72,12 @@ jobs:
           exitZeroOnChanges: true
           exitOnceUploaded: true
           onlyChanged: true
-          # Snapshot allowlist. We are on the free 5,000-snapshot plan, and the
-          # full surface is 217 capturable stories, so one build that cannot use
-          # TurboSnap costs 434 snapshots (x2 for the light and dark modes). A
-          # single bad day in July burned 2,766. These files are the stories
-          # whose dark appearance comes from a hand-written `.dark` override
-          # rather than from a token, so they are the only ones a snapshot can
-          # catch drifting. Everything else inherits its baseline.
-          #
-          # Paths are relative to the Storybook project root (workingDir), and
-          # are file paths rather than story titles because several titles
-          # contain spaces ("Components/Data Display/Chip") and the action does
-          # not document how it splits list inputs.
-          #
-          # Widening this list costs ~62 snapshots/month per story added, at the
-          # current ~261 builds/month and 12% TurboSnap bail rate.
-          #
-          # Of the token documentation pages only SemanticTokens is here. It
-          # renders live swatches read from the stylesheet, so it is the only
-          # place tokens no component exercises are visible (the nine code-*
-          # colours, surface-info, text-tertiary). The others earn nothing: a
-          # static image cannot show duration or easing; radius and elevation
-          # specimens duplicate what Button, Card, Panel, Chip, Input and Modal
-          # already cover; and ColourPalette renders _primitives.scss, which is
-          # not the source of truth. All of them print token values as text,
-          # which the git diff of tokens.ts already shows for free.
+          # On the free plan a build that cannot use TurboSnap costs 434
+          # snapshots, so capture only stories whose dark styling is a
+          # hand-written `.dark` override rather than a token. Everything else
+          # inherits its baseline. Widening this costs ~62 snapshots/month per
+          # story. Paths relative to workingDir, not story titles, because some
+          # titles contain spaces and the action does not document list parsing.
           onlyStoryFiles: |
             documentation/SemanticTokens.stories.tsx
             documentation/components/Icons.stories.tsx
