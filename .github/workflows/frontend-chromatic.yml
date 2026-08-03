@@ -1,6 +1,14 @@
 name: Frontend Chromatic
 
 on:
+  # Keep the two path lists below identical. Anything outside them cannot change
+  # how a story renders, so a build there only burns snapshot quota. They are
+  # duplicated rather than shared via a YAML anchor because GitHub Actions does
+  # not support anchors in workflow files.
+  #
+  # package.json is included because a dependency bump (Storybook, React,
+  # Bootstrap) can change rendering, and it is also where TurboSnap bails to a
+  # full build, which is exactly when main's baselines need refreshing.
   push:
     branches: [main]
     paths:
@@ -9,11 +17,17 @@ on:
       - frontend/common/theme/**
       - frontend/documentation/**
       - frontend/.storybook/**
+      - frontend/package.json
       - .github/workflows/frontend-chromatic.yml
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
-      - frontend/**
+      - frontend/web/components/**
+      - frontend/web/styles/**
+      - frontend/common/theme/**
+      - frontend/documentation/**
+      - frontend/.storybook/**
+      - frontend/package.json
       - .github/workflows/frontend-chromatic.yml
 
 permissions:
