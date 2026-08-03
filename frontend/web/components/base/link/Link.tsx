@@ -34,7 +34,8 @@ const Link: React.FC<LinkProps> = ({
   // Stops a new tab getting a handle on this one.
   const safeRel = target === '_blank' ? rel ?? 'noreferrer' : rel
 
-  if (to) {
+  // Not truthiness: `to=''` would render an anchor with no href.
+  if (to !== undefined) {
     return (
       <RouterLink
         {...rest}
