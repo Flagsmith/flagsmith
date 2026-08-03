@@ -8,6 +8,8 @@ import { UsageNotification } from './types'
 
 type UsageNotificationsProps = {
   notifications: UsageNotification[]
+  /** Lifted, so edits reach the meter markers on the usage screen. */
+  onChange: (notifications: UsageNotification[]) => void
   channels: { email: boolean; inApp: boolean }
 }
 
@@ -46,25 +48,30 @@ const BILLABLE_CALLS = [
  */
 const UsageNotifications: FC<UsageNotificationsProps> = ({
   channels,
-  notifications,
+  notifications: rows,
+  onChange,
 }) => {
-  const [rows, setRows] = useState(notifications)
   const [inApp, setInApp] = useState(channels.inApp)
   const [email, setEmail] = useState(channels.email)
 
   const toggleRow = (percent: number) =>
-    setRows(
+    onChange(
       rows.map((row) =>
         row.percent === percent ? { ...row, enabled: !row.enabled } : row,
       ),
     )
 
   const removeRow = (percent: number) =>
-    setRows(rows.filter((row) => row.percent !== percent))
+    onChange(rows.filter((row) => row.percent !== percent))
 
   const addRow = () => {
-    const next = [...rows].map((row) => row.percent).sort((a, b) => b - a)[0]
-    setRows(rows.concat({ enabled: true, percent: Math.min(next + 25, 500) }))
+    const highest = [...rows].map((row) => row.percent).sort((a, b) => b - a)[0]
+    onChange(
+      rows.concat({
+        enabled: true,
+        percent: Math.min((highest ?? 50) + 25, 500),
+      }),
+    )
   }
 
   return (
@@ -79,7 +86,7 @@ const UsageNotifications: FC<UsageNotificationsProps> = ({
         <div className='usage-proto__panel-head'>
           <strong>Notify me at</strong>
         </div>
-        {rows
+        {[...rows]
           .sort((a, b) => a.percent - b.percent)
           .map((row) => (
             <div className='usage-proto__notify-row' key={row.percent}>

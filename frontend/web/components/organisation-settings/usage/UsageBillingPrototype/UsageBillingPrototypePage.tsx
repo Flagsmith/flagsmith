@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useMemo, useState } from 'react'
 import Utils, { planNames } from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
 import BareButton from 'components/base/forms/BareButton'
@@ -7,6 +7,7 @@ import UsageBillingPrototype from './UsageBillingPrototype'
 import UsageNotifications from './UsageNotifications'
 import usePrototypeUsage from './usePrototypeUsage'
 import { ScenarioId, SCENARIOS } from './fixtures'
+import { UsageNotification } from './types'
 import './UsageBillingPrototype.scss'
 
 type UsageBillingPrototypePageProps = {
@@ -42,7 +43,14 @@ const UsageBillingPrototypePage: FC<UsageBillingPrototypePageProps> = ({
     Req['getOrganisationUsage']['billing_period']
   >(isOnFreePlanPeriods ? '90_day_period' : 'current_billing_period')
 
-  const view = usePrototypeUsage({
+  // Notifications live here rather than in the settings screen, so removing
+  // one takes its marker off the meter. Null until edited, so switching
+  // scenario shows that fixture's own notifications again.
+  const [editedNotifications, setEditedNotifications] = useState<
+    UsageNotification[] | null
+  >(null)
+
+  const baseView = usePrototypeUsage({
     billingPeriod,
     isOnFreePlanPeriods,
     organisationId,
@@ -50,6 +58,14 @@ const UsageBillingPrototypePage: FC<UsageBillingPrototypePageProps> = ({
     projectId: project ? Number(project) : undefined,
     scenario,
   })
+
+  const view = useMemo(
+    () =>
+      editedNotifications
+        ? { ...baseView, notifications: editedNotifications }
+        : baseView,
+    [baseView, editedNotifications],
+  )
 
   return (
     <div className='px-3 px-md-4 pt-4 pb-4'>
@@ -63,7 +79,10 @@ const UsageBillingPrototypePage: FC<UsageBillingPrototypePageProps> = ({
           {SCENARIOS.map((option) => (
             <BareButton
               key={option.id}
-              onClick={() => setScenario(option.id)}
+              onClick={() => {
+                setScenario(option.id)
+                setEditedNotifications(null)
+              }}
               aria-pressed={option.id === scenario}
               className={
                 option.id === scenario
@@ -116,6 +135,7 @@ const UsageBillingPrototypePage: FC<UsageBillingPrototypePageProps> = ({
       ) : (
         <UsageNotifications
           notifications={view.notifications}
+          onChange={setEditedNotifications}
           channels={view.channels}
         />
       )}
