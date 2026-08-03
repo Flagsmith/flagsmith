@@ -1,28 +1,23 @@
 name: Frontend Chromatic
 
 on:
-  # Keep both path lists identical. Nothing outside them can change how a story
-  # renders. Duplicated because GitHub Actions does not support YAML anchors.
+  # Nothing outside these paths can change how a story renders. The lockfile is
+  # included alongside package.json because `npm ci` installs from it, so a
+  # transitive bump can change rendering without package.json moving.
   push:
     branches: [main]
-    paths:
+    paths: &story_paths
       - frontend/web/components/**
       - frontend/web/styles/**
       - frontend/common/theme/**
       - frontend/documentation/**
       - frontend/.storybook/**
       - frontend/package.json
+      - frontend/package-lock.json
       - .github/workflows/frontend-chromatic.yml
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    paths:
-      - frontend/web/components/**
-      - frontend/web/styles/**
-      - frontend/common/theme/**
-      - frontend/documentation/**
-      - frontend/.storybook/**
-      - frontend/package.json
-      - .github/workflows/frontend-chromatic.yml
+    paths: *story_paths
 
 permissions:
   contents: read
