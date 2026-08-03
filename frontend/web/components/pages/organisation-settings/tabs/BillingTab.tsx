@@ -43,29 +43,31 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
     Utils.getFlagsmithHasFeature('feature_versioning') &&
     feature_history_visibility_days !== 0
 
-  const limitItems: LimitItem[] = [
-    {
-      icon: 'bar-chart',
-      label: 'API Calls',
-      value: formatLimit(max_api_calls),
-    },
-    { icon: 'people', label: 'Team Seats', value: formatLimit(max_seats) },
-    { icon: 'layers', label: 'Projects', value: formatLimit(max_projects) },
-    showAuditLog
-      ? {
-          icon: 'list',
-          label: 'Audit Log',
-          value: formatDays(audit_log_visibility_days),
-        }
-      : undefined,
-    showFeatureHistory
-      ? {
-          icon: 'clock',
-          label: 'Feature History',
-          value: formatDays(feature_history_visibility_days),
-        }
-      : undefined,
-  ].filter((item): item is LimitItem => item !== undefined)
+  const limitItems: LimitItem[] = (
+    [
+      {
+        icon: 'bar-chart',
+        label: 'API Calls',
+        value: formatLimit(max_api_calls),
+      },
+      { icon: 'people', label: 'Team Seats', value: formatLimit(max_seats) },
+      { icon: 'layers', label: 'Projects', value: formatLimit(max_projects) },
+      showAuditLog
+        ? {
+            icon: 'list',
+            label: 'Audit Log',
+            value: formatDays(audit_log_visibility_days),
+          }
+        : undefined,
+      showFeatureHistory
+        ? {
+            icon: 'clock',
+            label: 'Feature History',
+            value: formatDays(feature_history_visibility_days),
+          }
+        : undefined,
+    ] as (LimitItem | undefined)[]
+  ).filter((item): item is LimitItem => item !== undefined)
 
   return (
     <div className='mt-4'>
@@ -127,7 +129,8 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
       {subscriptionMeta && (
         <>
           <h5 className='mt-4 mb-3'>Subscription Limits</h5>
-          <Row className='plan p-4 mb-4 flex-wrap gap-4'>
+          {/* StatItem carries its own card, so this row is layout only. */}
+          <Row className='mb-4 flex-wrap gap-3 align-items-stretch'>
             {limitItems.map((item) => (
               <StatItem
                 key={item.label}

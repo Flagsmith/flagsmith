@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import ProjectFilter from 'components/ProjectFilter'
+import StatItem from 'components/StatItem'
 import { billingPeriods, freePeriods, Req } from 'common/types/requests'
 import UsageBanner from './UsageBanner'
 import UsageChart from './UsageChart'
@@ -209,18 +210,19 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
 
       <div className='usage-proto__tiles'>
         {buildTiles(view, percent).map((tile) => (
-          <div className='usage-proto__tile' key={tile.label}>
-            <div className='usage-proto__tile-head'>
-              <span className='usage-proto__tile-label'>{tile.label}</span>
-              {tile.badge && (
+          <StatItem
+            key={tile.label}
+            label={tile.label}
+            value={tile.value}
+            sub={tile.sub}
+            badge={
+              tile.badge && (
                 <UsageBadge tone={tile.badge.tone} withDot={tile.badge.withDot}>
                   {tile.badge.text}
                 </UsageBadge>
-              )}
-            </div>
-            <div className='usage-proto__tile-value'>{tile.value}</div>
-            <div className='usage-proto__sub'>{tile.sub}</div>
-          </div>
+              )
+            }
+          />
         ))}
       </div>
 

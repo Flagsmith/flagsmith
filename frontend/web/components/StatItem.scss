@@ -1,0 +1,47 @@
+.stat-item {
+  flex: 1;
+  min-width: 180px;
+  padding: 16px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-default);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+  }
+
+  &__label {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  // Pushes the badge to the right of the label, whatever the label's length.
+  &__badge {
+    margin-left: auto;
+  }
+
+  &__value {
+    font-size: 28px;
+    font-weight: var(--font-weight-bold);
+    line-height: 1.1;
+  }
+
+  &__limit {
+    font-size: 12px;
+    font-weight: var(--font-weight-regular);
+    color: var(--color-text-secondary);
+  }
+
+  &__sub {
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+  }
+}
