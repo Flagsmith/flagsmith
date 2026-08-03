@@ -80,6 +80,9 @@ const UsageChart: FC<UsageChartProps> = ({
     projected ?? 0,
     series[series.length - 1]?.cumulative ?? 0,
   )
+  // Headroom above the highest value, so the topmost label has room to render
+  // instead of being clipped by the top of the chart.
+  const ceiling = peak ? Math.round(peak * 1.08) : 0
   const today = series[series.length - 1]
 
   return (
@@ -110,7 +113,7 @@ const UsageChart: FC<UsageChartProps> = ({
         <YAxis
           // Pin the top to the ceiling so the limit is always in view rather
           // than the series auto-scaling to fill the panel.
-          domain={[0, peak || 'auto']}
+          domain={[0, ceiling || 'auto']}
           tick={{ fill: colorTextSecondary, fontSize: 11 }}
           axisLine={{ stroke: colorTextSecondary }}
           tickFormatter={(value: number) => compact(value)}
@@ -125,7 +128,7 @@ const UsageChart: FC<UsageChartProps> = ({
         {!!limit && peak > limit && (
           <ReferenceArea
             y1={limit}
-            y2={peak}
+            y2={ceiling}
             fill={DANGER}
             fillOpacity={0.08}
             ifOverflow='extendDomain'
@@ -174,7 +177,8 @@ const UsageChart: FC<UsageChartProps> = ({
             label={{
               fill: ACCENT,
               fontSize: 11,
-              position: 'insideBottomRight',
+              offset: 8,
+              position: 'top',
               value: `Projected · ${compact(projected)}`,
             }}
           />
