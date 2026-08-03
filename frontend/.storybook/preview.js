@@ -106,6 +106,9 @@ const preview = {
       container: DocsContainer,
     },
     chromatic: {
+      // Off by default; opt in per story with `disableSnapshot: false`. We only
+      // capture stories whose dark styling is a `.dark` override, not a token.
+      disableSnapshot: true,
       modes: {
         light: allModes.light,
         dark: allModes.dark,

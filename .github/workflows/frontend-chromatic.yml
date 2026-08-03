@@ -72,24 +72,4 @@ jobs:
           exitZeroOnChanges: true
           exitOnceUploaded: true
           onlyChanged: true
-          # On the free plan a build that cannot use TurboSnap costs 434
-          # snapshots, so capture only stories whose dark styling is a
-          # hand-written `.dark` override rather than a token. Everything else
-          # inherits its baseline. Widening this costs ~62 snapshots/month per
-          # story. Paths relative to workingDir, not story titles, because some
-          # titles contain spaces and the action does not document list parsing.
-          onlyStoryFiles: |
-            documentation/SemanticTokens.stories.tsx
-            documentation/components/Icons.stories.tsx
-            documentation/components/Button.stories.tsx
-            documentation/components/Input.stories.tsx
-            documentation/components/Switch.stories.tsx
-            documentation/components/Chip.stories.tsx
-            documentation/components/Tooltip.stories.tsx
-            documentation/components/Tabs.stories.tsx
-            documentation/components/Card.stories.tsx
-            documentation/components/Panel.stories.tsx
-            documentation/components/Modal.stories.tsx
-            documentation/components/ErrorMessage.stories.tsx
-            documentation/components/MultiSelect.stories.tsx
           autoAcceptChanges: main

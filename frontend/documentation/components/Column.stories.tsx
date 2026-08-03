@@ -4,12 +4,7 @@ import type { Meta, StoryObj } from 'storybook'
 import Column from 'components/base/grid/Column'
 
 const meta: Meta = {
-  parameters: {
-    // Flexbox only. No token can change how this renders, and light/dark are
-    // identical, so there is no diff to catch.
-    chromatic: { disableSnapshot: true },
-    layout: 'padded',
-  },
+  parameters: { layout: 'padded' },
   title: 'Components/Layout/Column',
 }
 export default meta
