@@ -36,12 +36,19 @@ type EmailFieldError = string | string[]
 type EmailError = { email?: EmailFieldError } | undefined
 
 // The error object never clears itself, and it describes the address that was
-// submitted, so it stops applying the moment the field holds something else.
+// submitted, so it stops applying the moment the field holds something else, or
+// while a new attempt is in flight and has not answered yet.
+//
+// Case-insensitive to match the API, which looks the address up with iexact.
 const currentEmailError = (
   error: EmailError,
   email: string,
   submittedEmail: string,
-) => (email === submittedEmail ? error?.email : undefined)
+  isSaving: boolean,
+) =>
+  !isSaving && email.toLowerCase() === submittedEmail.toLowerCase()
+    ? error?.email
+    : undefined
 
 // Matched on the message because the API sends no error code for this. Raised
 // by CustomUserCreateSerializer.validate.
@@ -49,8 +56,9 @@ const isEmailTaken = (
   error: EmailError,
   email: string,
   submittedEmail: string,
+  isSaving: boolean,
 ) => {
-  const current = currentEmailError(error, email, submittedEmail)
+  const current = currentEmailError(error, email, submittedEmail, isSaving)
   const messages = Array.isArray(current) ? current : [current]
   return messages.some((message) =>
     message?.toLowerCase().includes('already exists'),
@@ -641,6 +649,7 @@ const HomePage: React.FC = () => {
                                       error,
                                       email,
                                       submittedEmail,
+                                      isSaving,
                                     )
                                   }
                                   inputProps={{
@@ -650,6 +659,7 @@ const HomePage: React.FC = () => {
                                       error,
                                       email,
                                       submittedEmail,
+                                      isSaving,
                                     ),
                                     name: 'email',
                                   }}
@@ -703,7 +713,12 @@ const HomePage: React.FC = () => {
                                       !firstName.trim() ||
                                       !lastName.trim() ||
                                       blockGenericEmailDomain ||
-                                      isEmailTaken(error, email, submittedEmail)
+                                      isEmailTaken(
+                                        error,
+                                        email,
+                                        submittedEmail,
+                                        isSaving,
+                                      )
                                     }
                                     className='px-4 mt-3 full-width'
                                     type='submit'
@@ -723,11 +738,12 @@ const HomePage: React.FC = () => {
                                 error,
                                 email,
                                 submittedEmail,
+                                isSaving,
                               ),
                             },
                           )}
                         >
-                          {isEmailTaken(error, email, submittedEmail)
+                          {isEmailTaken(error, email, submittedEmail, isSaving)
                             ? 'You already have an account.'
                             : 'Have an account?'}{' '}
                           <Button
