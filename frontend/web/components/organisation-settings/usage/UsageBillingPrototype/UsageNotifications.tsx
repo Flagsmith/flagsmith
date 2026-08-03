@@ -3,11 +3,18 @@ import Switch from 'components/Switch'
 import BareButton from 'components/base/forms/BareButton'
 import { Button } from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
+import { colorIconSecondary } from 'common/theme/tokens'
 import { UsageNotification } from './types'
 
 type UsageNotificationsProps = {
   notifications: UsageNotification[]
   channels: { email: boolean; inApp: boolean }
+}
+
+const describe = (percent: number): string => {
+  if (percent > 100) return 'You are over your plan limit'
+  if (percent === 100) return 'You have reached your plan limit'
+  return 'Early warning, while there is time to act'
 }
 
 const BILLABLE_CALLS = [
@@ -52,6 +59,9 @@ const UsageNotifications: FC<UsageNotificationsProps> = ({
       ),
     )
 
+  const removeRow = (percent: number) =>
+    setRows(rows.filter((row) => row.percent !== percent))
+
   const addRow = () => {
     const next = [...rows].map((row) => row.percent).sort((a, b) => b - a)[0]
     setRows(rows.concat({ enabled: true, percent: Math.min(next + 25, 500) }))
@@ -75,16 +85,21 @@ const UsageNotifications: FC<UsageNotificationsProps> = ({
             <div className='usage-proto__notify-row' key={row.percent}>
               <div>
                 <div>{row.percent}% of plan consumed</div>
-                <div className='usage-proto__sub'>
-                  {row.percent >= 100
-                    ? 'You have reached your plan limit'
-                    : 'Early warning, while there is time to act'}
-                </div>
+                <div className='usage-proto__sub'>{describe(row.percent)}</div>
               </div>
-              <Switch
-                checked={row.enabled}
-                onChange={() => toggleRow(row.percent)}
-              />
+              <div className='usage-proto__notify-actions'>
+                <Switch
+                  checked={row.enabled}
+                  onChange={() => toggleRow(row.percent)}
+                />
+                <BareButton
+                  className='usage-proto__remove'
+                  aria-label={`Remove the ${row.percent}% notification`}
+                  onClick={() => removeRow(row.percent)}
+                >
+                  <Icon name='trash-2' width={16} fill={colorIconSecondary} />
+                </BareButton>
+              </div>
             </div>
           ))}
         <BareButton className='usage-proto__add' onClick={addRow}>

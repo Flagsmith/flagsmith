@@ -331,6 +331,22 @@
     }
   }
 
+  &__notify-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__remove {
+    display: flex;
+    align-items: center;
+    opacity: 0.6;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
   &__call-detail {
     max-width: 420px;
     text-align: right;
