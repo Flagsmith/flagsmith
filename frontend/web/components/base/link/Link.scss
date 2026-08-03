@@ -1,9 +1,7 @@
-// Light mode is the same #6837fc as btn-link, so those call sites will not
-// shift when they move over. Dark deliberately differs: `.dark .btn-link` keeps
-// that same purple, this takes a lighter one for contrast on dark backgrounds.
-// `body.dark a` in styles.scss colours every anchor and outranks a bare .link,
-// so dark is repeated to beat it, the same way `.dark .btn-link` does. Both go
-// away if that global rule moves to a token.
+// Same token as btn-link since #8181, so call sites do not shift when they move
+// over. `body.dark a` in styles.scss colours every anchor and outranks a bare
+// .link, so dark is repeated to beat it. That goes away if the global rule moves
+// to a token too.
 .link,
 .dark .link {
   display: inline-flex;
