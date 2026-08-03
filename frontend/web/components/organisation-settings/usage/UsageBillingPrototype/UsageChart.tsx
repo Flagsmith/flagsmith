@@ -165,6 +165,20 @@ const UsageChart: FC<UsageChartProps> = ({
             }}
           />
         )}
+        {!!projected && rows.length > 0 && (
+          <ReferenceDot
+            r={0}
+            x={rows[rows.length - 1].day}
+            y={projected}
+            isFront
+            label={{
+              fill: ACCENT,
+              fontSize: 11,
+              position: 'insideBottomRight',
+              value: `Projected · ${compact(projected)}`,
+            }}
+          />
+        )}
         {today && (
           <ReferenceDot
             r={4}

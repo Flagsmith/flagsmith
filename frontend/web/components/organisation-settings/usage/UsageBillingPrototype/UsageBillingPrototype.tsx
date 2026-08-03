@@ -1,12 +1,13 @@
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import ProjectFilter from 'components/ProjectFilter'
 import StatItem from 'components/StatItem'
 import { billingPeriods, freePeriods, Req } from 'common/types/requests'
 import UsageBanner from './UsageBanner'
 import UsageChart from './UsageChart'
 import GraceChip from './GraceChip'
+import UsageNote from './UsageNote'
 import UsageBadge, { BadgeTone } from './UsageBadge'
-import { UsageView } from './types'
+import { BREAKDOWN_DIMENSIONS, BreakdownDimension, UsageView } from './types'
 import { compact, currency } from './format'
 import './UsageBillingPrototype.scss'
 
@@ -58,9 +59,9 @@ const buildTiles = (view: UsageView, percent: number): Tile[] => {
     },
     {
       label: 'Days remaining',
-      sub: view.period.resetsAt
-        ? `resets ${view.period.resetsAt}`
-        : 'needs the billing period',
+      sub: view.period.isBillingPeriod
+        ? `resets ${view.period.resetsAt || '(needs the billing period)'}`
+        : 'in this rolling window',
       value: view.period.daysRemaining ? `${view.period.daysRemaining}` : '—',
     },
   ]
@@ -104,10 +105,13 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
   setProject,
   view,
 }) => {
+  const [dimension, setDimension] = useState<BreakdownDimension>('request-type')
+
   const percent = view.limit ? Math.round((view.total / view.limit) * 100) : 0
   const tone = toneForPercent(percent)
-  const maxBreakdown = Math.max(1, ...view.breakdown.map((row) => row.value))
-  const breakdownTotal = view.breakdown.reduce((acc, row) => acc + row.value, 0)
+  const rows = view.breakdowns[dimension]
+  const maxBreakdown = Math.max(1, ...rows.map((row) => row.value))
+  const breakdownTotal = rows.reduce((acc, row) => acc + row.value, 0)
 
   return (
     <div className='usage-proto mb-4'>
@@ -137,7 +141,7 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
       <div className='usage-proto__strip'>
         <span>
           <strong>
-            {view.period.isBillingPeriod ? 'Billing period' : 'Period'}
+            {view.period.isBillingPeriod ? 'Billing period' : 'Usage window'}
           </strong>{' '}
           {view.period.label}
         </span>
@@ -206,6 +210,8 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
               </span>
             ))}
         </div>
+
+        <UsageNote view={view} percent={percent} />
       </div>
 
       <div className='usage-proto__tiles'>
@@ -241,19 +247,35 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
 
       <div className='usage-proto__panel'>
         <div className='usage-proto__panel-head'>
-          <strong>Usage by request type</strong>
-          <span className='usage-proto__sub'>
-            Where your API calls came from
-          </span>
+          <div>
+            <strong>
+              {BREAKDOWN_DIMENSIONS.find((d) => d.value === dimension)?.label}
+            </strong>
+            <div className='usage-proto__sub'>
+              Where your API calls came from this period
+            </div>
+          </div>
+          <div className='usage-proto__dimension'>
+            <Select
+              onChange={(v: any) => setDimension(v.value)}
+              value={BREAKDOWN_DIMENSIONS.find((d) => d.value === dimension)}
+              options={BREAKDOWN_DIMENSIONS}
+            />
+          </div>
         </div>
         <div className='usage-proto__breakdown'>
-          {[...view.breakdown]
+          {!rows.length && (
+            <div className='usage-proto__sub'>
+              The API does not break usage down this way yet.
+            </div>
+          )}
+          {[...rows]
             .sort((a, b) => b.value - a.value)
             .map((row) => (
-              <div className='usage-proto__row' key={row.op}>
+              <div className='usage-proto__row' key={row.label}>
                 <div className='usage-proto__row-label'>
                   <div>{row.label}</div>
-                  <div className='usage-proto__sub'>{row.op}</div>
+                  {row.op && <div className='usage-proto__sub'>{row.op}</div>}
                 </div>
                 <div className='usage-proto__bar-track'>
                   <div

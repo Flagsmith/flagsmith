@@ -1,3 +1,5 @@
+import { Req } from 'common/types/requests'
+
 /**
  * PROTOTYPE (#8184). The view model the usage page renders.
  *
@@ -21,11 +23,13 @@ export type GraceState =
 
 export type UsagePeriod = {
   label: string
-  /** Human date, e.g. "9 Aug 2026". Comes from the billing term today. */
+  /** Human date, e.g. "9 Aug 2026". Empty on rolling windows, which never reset. */
   resetsAt: string
   daysRemaining: number
   /** False for the rolling windows (last 30 / 90 days). */
   isBillingPeriod: boolean
+  /** Keeps the period selector honest about what is on screen. */
+  selectValue: Req['getOrganisationUsage']['billing_period']
 }
 
 export type UsagePoint = {
@@ -33,10 +37,26 @@ export type UsagePoint = {
   cumulative: number
 }
 
+export type BreakdownDimension =
+  | 'request-type'
+  | 'project'
+  | 'environment'
+  | 'sdk'
+
+export const BREAKDOWN_DIMENSIONS: {
+  value: BreakdownDimension
+  label: string
+}[] = [
+  { label: 'By request type', value: 'request-type' },
+  { label: 'By project', value: 'project' },
+  { label: 'By environment', value: 'environment' },
+  { label: 'By SDK', value: 'sdk' },
+]
+
 export type BreakdownRow = {
   label: string
   /** Canonical operation name, shared with the "what counts" docs. */
-  op: string
+  op?: string
   value: number
 }
 
@@ -51,7 +71,7 @@ export type UsageView = {
   total: number
   limit: number | null
   series: UsagePoint[]
-  breakdown: BreakdownRow[]
+  breakdowns: Record<BreakdownDimension, BreakdownRow[]>
   grace: GraceState
   /** Only set while `grace` is 'countdown'. */
   graceDaysLeft?: number

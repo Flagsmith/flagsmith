@@ -117,9 +117,14 @@ const UsageNotifications: FC<UsageNotificationsProps> = ({
       <div className='usage-proto__panel'>
         <div className='usage-proto__panel-head'>
           <strong>What counts as an API call?</strong>
-          <span className='usage-proto__sub'>
-            These four request types are billable
-          </span>
+          <a
+            className='usage-proto__docs'
+            href='https://docs.flagsmith.com/system-administration/api-usage'
+            target='_blank'
+            rel='noreferrer'
+          >
+            See docs
+          </a>
         </div>
         {BILLABLE_CALLS.map((call) => (
           <div className='usage-proto__notify-row' key={call.op}>

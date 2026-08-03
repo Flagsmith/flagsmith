@@ -237,6 +237,41 @@
 
 
 
+  &__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 20px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+
+    &--success {
+      color: var(--color-text-success);
+      background: var(--color-surface-success);
+    }
+
+    &--warning {
+      color: var(--color-text-warning);
+      background: var(--color-surface-warning);
+    }
+
+    &--danger {
+      color: var(--color-text-danger);
+      background: var(--color-surface-danger);
+    }
+  }
+
+  &__dimension {
+    min-width: 190px;
+  }
+
+  &__docs {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-action);
+  }
+
   &__breakdown {
     display: flex;
     flex-direction: column;

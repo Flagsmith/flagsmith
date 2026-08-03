@@ -1,5 +1,10 @@
 import moment from 'moment'
-import { BreakdownRow, UsagePoint, UsageView } from './types'
+import {
+  BreakdownDimension,
+  BreakdownRow,
+  UsagePoint,
+  UsageView,
+} from './types'
 
 /**
  * PROTOTYPE (#8184). Fake data so every designed state can be demonstrated.
@@ -50,9 +55,31 @@ const buildSeries = (
   })
 }
 
-const buildBreakdown = (total: number): BreakdownRow[] => {
-  // Split roughly as a real account does: flag evaluations dominate.
-  const shares = [
+const split = (
+  total: number,
+  parts: { label: string; op?: string; share: number }[],
+): BreakdownRow[] =>
+  parts.map(({ label, op, share }) => ({
+    label,
+    op,
+    value: Math.round(total * share),
+  }))
+
+// Obviously invented names, so nobody mistakes the demo for their own data.
+const buildBreakdowns = (
+  total: number,
+): Record<BreakdownDimension, BreakdownRow[]> => ({
+  environment: split(total, [
+    { label: 'Production', share: 0.81 },
+    { label: 'Staging', share: 0.13 },
+    { label: 'Development', share: 0.06 },
+  ]),
+  project: split(total, [
+    { label: 'Web app', share: 0.54 },
+    { label: 'Mobile', share: 0.31 },
+    { label: 'Internal tools', share: 0.15 },
+  ]),
+  'request-type': split(total, [
     { label: 'Flag evaluations', op: 'get-flags', share: 0.63 },
     {
       label: 'Identity flag evaluations',
@@ -65,13 +92,14 @@ const buildBreakdown = (total: number): BreakdownRow[] => {
       op: 'get-environment-document',
       share: 0.04,
     },
-  ]
-  return shares.map(({ label, op, share }) => ({
-    label,
-    op,
-    value: Math.round(total * share),
-  }))
-}
+  ]),
+  sdk: split(total, [
+    { label: 'JavaScript', op: 'flagsmith-js', share: 0.42 },
+    { label: 'Python', op: 'flagsmith-python', share: 0.27 },
+    { label: 'Java', op: 'flagsmith-java', share: 0.19 },
+    { label: 'Go', op: 'flagsmith-go', share: 0.12 },
+  ]),
+})
 
 type ScenarioInput = {
   plan: UsageView['plan']
@@ -105,7 +133,7 @@ const buildView = ({
   const resetsAt = periodStart.clone().add(periodDays, 'days')
 
   return {
-    breakdown: buildBreakdown(total),
+    breakdowns: buildBreakdowns(total),
     channels: { email: true, inApp: true },
     grace,
     graceDaysLeft,
@@ -121,7 +149,10 @@ const buildView = ({
       label:
         periodLabel ??
         `${periodStart.format('D MMM')} to ${resetsAt.format('D MMM YYYY')}`,
-      resetsAt: resetsAt.format('D MMM YYYY'),
+      // Rolling windows never reset, so they get no reset date.
+      resetsAt: isBillingPeriod ? resetsAt.format('D MMM YYYY') : '',
+
+      selectValue: isBillingPeriod ? 'current_billing_period' : undefined,
     },
     plan,
     // Run rate to the end of the period. Deliberately null early on, which is

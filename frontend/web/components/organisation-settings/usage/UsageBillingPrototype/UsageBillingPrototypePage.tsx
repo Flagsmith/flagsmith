@@ -103,9 +103,15 @@ const UsageBillingPrototypePage: FC<UsageBillingPrototypePageProps> = ({
           organisationId={organisationId}
           project={project}
           setProject={setProject}
-          billingPeriod={billingPeriod}
+          // Fixtures do not re-query, so the selector follows the fixture
+          // rather than contradicting the period shown underneath it.
+          billingPeriod={
+            scenario === 'live' ? billingPeriod : view.period.selectValue
+          }
           setBillingPeriod={setBillingPeriod}
-          isOnFreePlanPeriods={isOnFreePlanPeriods}
+          isOnFreePlanPeriods={
+            scenario === 'live' ? isOnFreePlanPeriods : view.plan === 'free'
+          }
         />
       ) : (
         <UsageNotifications

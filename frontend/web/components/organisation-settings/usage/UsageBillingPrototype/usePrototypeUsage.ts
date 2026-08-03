@@ -45,24 +45,35 @@ const buildLiveView = (
   const totals = (breakdownUsage ?? usage)?.totals
 
   return {
-    breakdown: [
-      { label: 'Flag evaluations', op: 'get-flags', value: totals?.flags ?? 0 },
-      {
-        label: 'Identity flag evaluations',
-        op: 'get-identity-flags',
-        value: totals?.identities ?? 0,
-      },
-      {
-        label: 'Trait updates',
-        op: 'set-identity-traits',
-        value: totals?.traits ?? 0,
-      },
-      {
-        label: 'Environment bootstrap',
-        op: 'get-environment-document',
-        value: totals?.environmentDocument ?? 0,
-      },
-    ],
+    breakdowns: {
+      // The API only breaks usage down by request type today. The other
+      // dimensions need work that is not raised yet, so they stay empty.
+      environment: [],
+      project: [],
+      'request-type': [
+        {
+          label: 'Flag evaluations',
+          op: 'get-flags',
+          value: totals?.flags ?? 0,
+        },
+        {
+          label: 'Identity flag evaluations',
+          op: 'get-identity-flags',
+          value: totals?.identities ?? 0,
+        },
+        {
+          label: 'Trait updates',
+          op: 'set-identity-traits',
+          value: totals?.traits ?? 0,
+        },
+        {
+          label: 'Environment bootstrap',
+          op: 'get-environment-document',
+          value: totals?.environmentDocument ?? 0,
+        },
+      ],
+      sdk: [],
+    },
     channels: { email: true, inApp: true },
     // Grace state is not serialised by the API yet (see the epic), so live
     // data can only ever show the neutral case.
@@ -85,6 +96,7 @@ const buildLiveView = (
           ).format('D MMM YYYY')}`
         : 'No usage recorded',
       resetsAt: '',
+      selectValue: isOnFreePlanPeriods ? undefined : 'current_billing_period',
     },
     plan: isOnFreePlanPeriods ? 'free' : 'paid',
     projected: null,
