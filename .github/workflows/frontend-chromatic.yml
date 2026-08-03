@@ -81,7 +81,7 @@ jobs:
           # Snapshot allowlist. We are on the free 5,000-snapshot plan, and the
           # full surface is 217 capturable stories, so one build that cannot use
           # TurboSnap costs 434 snapshots (x2 for the light and dark modes). A
-          # single bad day in July burned 2,766. These 17 files are the stories
+          # single bad day in July burned 2,766. These files are the stories
           # whose dark appearance comes from a hand-written `.dark` override
           # rather than from a token, so they are the only ones a snapshot can
           # catch drifting. Everything else inherits its baseline.
@@ -93,12 +93,18 @@ jobs:
           #
           # Widening this list costs ~62 snapshots/month per story added, at the
           # current ~261 builds/month and 12% TurboSnap bail rate.
+          #
+          # Of the token documentation pages only SemanticTokens is here. It
+          # renders live swatches read from the stylesheet, so it is the only
+          # place tokens no component exercises are visible (the nine code-*
+          # colours, surface-info, text-tertiary). The others earn nothing: a
+          # static image cannot show duration or easing; radius and elevation
+          # specimens duplicate what Button, Card, Panel, Chip, Input and Modal
+          # already cover; and ColourPalette renders _primitives.scss, which is
+          # not the source of truth. All of them print token values as text,
+          # which the git diff of tokens.ts already shows for free.
           onlyStoryFiles: |
             documentation/SemanticTokens.stories.tsx
-            documentation/ColourPalette.stories.tsx
-            documentation/RadiusTokens.stories.tsx
-            documentation/ElevationTokens.stories.tsx
-            documentation/MotionTokens.stories.tsx
             documentation/components/Icons.stories.tsx
             documentation/components/Button.stories.tsx
             documentation/components/Input.stories.tsx
