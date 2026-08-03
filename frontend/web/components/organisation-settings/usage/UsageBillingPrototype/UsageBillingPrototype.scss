@@ -227,6 +227,38 @@
 
 
 
+  &__tiles {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  &__tile {
+    flex: 1;
+    border: 1px solid $border;
+    border-radius: 8px;
+    padding: 16px;
+    background: $surface;
+  }
+
+  &__tile-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  &__tile-label {
+    font-size: 13px;
+    color: $muted;
+  }
+
+  &__tile-value {
+    font-size: 28px;
+    font-weight: 700;
+  }
+
   &__breakdown {
     display: flex;
     flex-direction: column;
