@@ -20,7 +20,7 @@ button.btn {
       background: transparent;
     }
     &.btn:active {
-      color: $link-color;
+      color: var(--color-text-action);
       background: transparent;
     }
   }
@@ -286,7 +286,7 @@ button.btn-link {
   vertical-align: baseline;
   font-family: $font-family;
   background: transparent;
-  color: $link-color;
+  color: var(--color-text-action);
   @include transition(all 200ms);
   border: none;
   box-shadow: none;
@@ -297,7 +297,7 @@ button.btn-link {
   font-weight: 500;
   &:hover,
   &:focus {
-    color: $link-color;
+    color: var(--color-text-action);
     background: transparent;
     text-decoration: underline;
     border: none;
@@ -412,7 +412,6 @@ $add-btn-size: 34px;
       &:active,
       &:focus {
         background-color: transparent;
-        color: $dark-highlight-color;
       }
     }
     .btn-radio {
@@ -452,8 +451,5 @@ $add-btn-size: 34px;
         background-color: $danger-alfa-8;
       }
     }
-  }
-  .btn-link {
-    color: $primary;
   }
 }
