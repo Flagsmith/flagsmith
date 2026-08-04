@@ -15,6 +15,7 @@ export type OnboardingResources = {
   organisationName: string
   projectName: string
   featureName: string
+  hasDemoFlag: boolean
   caseSensitive: boolean
   environment: Environment | null
   environmentKey: string
@@ -46,6 +47,7 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
   const [organisationName, setOrganisationName] = useState('')
   const [projectName, setProjectName] = useState('')
   const [featureName, setFeatureName] = useState('')
+  const [hasDemoFlag, setHasDemoFlag] = useState(true)
   // Whether the project enforces lower-case feature names; drives the same name
   // normalisation the create-feature modal applies (see the header).
   const [caseSensitive, setCaseSensitive] = useState(false)
@@ -77,6 +79,7 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
         setEnvironment(res.environment)
         setEnvironmentKey(res.environment.api_key)
         setFeatureName(res.featureName)
+        setHasDemoFlag(res.hasDemoFlag)
         setStatus('ready')
       })
       .catch((e) => {
@@ -91,6 +94,7 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
     environmentKey,
     error,
     featureName,
+    hasDemoFlag,
     organisationId,
     organisationName,
     projectId,
