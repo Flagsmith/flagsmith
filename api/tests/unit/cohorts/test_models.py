@@ -1,5 +1,6 @@
 import pytest
 from django.db.utils import IntegrityError
+from django.utils import timezone
 
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
 from environments.models import Environment
@@ -26,7 +27,13 @@ def test_cohort__soft_deleted_cohort__allows_new_cohort_for_segment(
     segment: Segment,
 ) -> None:
     # Given
-    Cohort.objects.create(environment=environment, segment=segment).delete()
+    existing_cohort = Cohort.objects.create(environment=environment, segment=segment)
+    assert (
+        Cohort.objects.filter(id=existing_cohort.id).update(
+            deleted_at=timezone.now()
+        )
+        == 1
+    )
 
     # When
     new_cohort = Cohort.objects.create(environment=environment, segment=segment)
