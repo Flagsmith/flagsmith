@@ -124,6 +124,7 @@ INSTALLED_APPS = [
     "features.release_pipelines.core",
     "segments",
     "segment_membership",
+    "cohorts",
     "clickhouse",
     "app",
     "e2etests",
