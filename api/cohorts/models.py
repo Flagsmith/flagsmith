@@ -31,6 +31,17 @@ class Cohort(SoftDeleteExportableModel):
     def system_trait_key(self) -> str:
         return f"{COHORT_SYSTEM_TRAIT_KEY_PREFIX}{self.uuid}"
 
+    class Meta:
+        constraints = [
+            # Exactly one active cohort feeds a segment: two cohorts on one
+            # segment would race each other's membership sync.
+            models.UniqueConstraint(
+                fields=["segment"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_active_cohort_per_segment",
+            ),
+        ]
+
 
 class CohortMembershipState(models.TextChoices):
     PENDING_ADD = "pending_add", "Pending add"
