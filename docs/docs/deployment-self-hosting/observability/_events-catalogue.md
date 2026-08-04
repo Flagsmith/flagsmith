@@ -71,6 +71,35 @@ Attributes:
  - `feature.count`
  - `organisation.id`
 
+### `cohorts.membership.applied`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:66`
+
+Attributes:
+ - `adds.count`
+ - `cohort.id`
+ - `environment.id`
+ - `removes.count`
+
+### `cohorts.membership.apply.skipped`
+
+Logged at `info` from:
+ - `api/cohorts/tasks.py:18`
+ - `api/cohorts/tasks.py:24`
+
+Attributes:
+ - `cohort.id`
+ - `reason`
+
+### `cohorts.membership.apply.throttled`
+
+Logged at `warning` from:
+ - `api/cohorts/tasks.py:30`
+
+Attributes:
+ - `cohort.id`
+
 ### `core.encrypted_field.decrypt_failed`
 
 Logged at `warning` from:
