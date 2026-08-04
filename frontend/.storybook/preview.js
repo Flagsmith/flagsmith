@@ -106,6 +106,10 @@ const preview = {
       container: DocsContainer,
     },
     chromatic: {
+      // Off by default; opt in per story with `disableSnapshot: false`. Opted
+      // in: components still styling dark mode with hand-written `.dark` blocks,
+      // plus SemanticTokens for token values no component exercises.
+      disableSnapshot: true,
       modes: {
         light: allModes.light,
         dark: allModes.dark,

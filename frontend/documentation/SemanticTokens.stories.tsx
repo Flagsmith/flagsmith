@@ -7,7 +7,7 @@ import TokenGroup from './components/TokenGroup'
 import type { TokenGroupData } from './components/TokenGroup'
 
 const meta: Meta = {
-  parameters: { chromatic: { disableSnapshot: true }, layout: 'padded' },
+  parameters: { chromatic: { disableSnapshot: false }, layout: 'padded' },
   title: 'Design System/Semantic Colour Tokens',
 }
 export default meta
