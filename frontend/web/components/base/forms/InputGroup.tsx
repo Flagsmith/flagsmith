@@ -94,6 +94,14 @@ const InputGroup: FC<InputGroupProps> = ({
   // the message for this field (htmlFor/id/aria-describedby all share `id`).
   const errorId = `${id}-error`
   const hasError = Array.isArray(error) ? error.length > 0 : !!error
+  // isInvalid is the caller stating the value is wrong, so it beats the computed
+  // validity and skips the wait for a blur.
+  let inputIsValid: boolean | undefined
+  if (isInvalid) {
+    inputIsValid = false
+  } else if (isValid !== null && isValid !== undefined) {
+    inputIsValid = !!isValid
+  }
   let errorContent: ReactNode = null
   if (typeof error === 'string') {
     errorContent = error
@@ -152,11 +160,8 @@ const InputGroup: FC<InputGroupProps> = ({
                   inputRef.current = c
                 }}
                 {...restInputProps}
-                isValid={
-                  isValid === null || isValid === undefined
-                    ? undefined
-                    : !!isValid
-                }
+                autoValidate={!!isInvalid}
+                isValid={inputIsValid}
                 disabled={disabled}
                 defaultValue={defaultValue}
                 value={value}

@@ -21,6 +21,8 @@ export interface InputMethods {
 
 export interface InputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+  // Show the invalid state without waiting for the field to be touched, for a
+  // validity known up front, e.g. the API rejected the value.
   autoValidate?: boolean
   centered?: boolean
   inputClassName?: string
@@ -69,9 +71,7 @@ const Input: React.FC<InputProps> = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isFocused, setIsFocused] = useState(false)
-  const [shouldValidate, setShouldValidate] = useState(
-    !!value || !!autoValidate,
-  )
+  const [hasBeenTouched, setHasBeenTouched] = useState(!!value)
   const [type, setType] = useState(typeProp)
 
   // No-op under E2E to avoid programmatic focus stealing during tests; native
@@ -90,7 +90,7 @@ const Input: React.FC<InputProps> = ({
 
   const onBlur = (e: FocusEvent<HTMLInputElement>) => {
     setIsFocused(false)
-    setShouldValidate(true)
+    setHasBeenTouched(true)
     onBlurProp?.(e)
   }
 
@@ -101,7 +101,7 @@ const Input: React.FC<InputProps> = ({
     onKeyDownProp?.(e)
   }
 
-  const invalid = shouldValidate && !isValid
+  const invalid = (hasBeenTouched || !!autoValidate) && !isValid
   const success = isValid && showSuccess
   const sizeClassName = size ? sizeClassNames[size] : ''
   const containerClassName = cn(

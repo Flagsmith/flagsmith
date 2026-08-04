@@ -77,6 +77,21 @@ export const MultipleErrors: Story = {
   ),
 }
 
+// Untouched on purpose: isInvalid colours the control straight away, which is
+// what a form submitted with Enter needs. isValid alone waits for a blur.
+export const InvalidBeforeBlur: Story = {
+  render: () => (
+    <Field
+      title='Email'
+      isInvalid
+      inputProps={{
+        error: 'A user with this email address already exists.',
+        name: 'email',
+      }}
+    />
+  ),
+}
+
 export const Disabled: Story = {
   render: () => <Field title='Email' initialValue='you@example.com' disabled />,
 }
