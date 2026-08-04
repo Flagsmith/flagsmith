@@ -152,9 +152,6 @@ const InputGroup: FC<InputGroupProps> = ({
                   inputRef.current = c
                 }}
                 {...restInputProps}
-                // Forwarded so the control can be coloured immediately, without
-                // waiting for the field to be touched. Only reached the wrapper
-                // before, where no styling picks it up.
                 isInvalid={!!isInvalid}
                 isValid={
                   isValid === null || isValid === undefined

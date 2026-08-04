@@ -39,14 +39,11 @@ test.describe('Invite Tests', () => {
     await page.goto(inviteLink)
     // Wait for the form to load
     await waitForElementVisible(byId('firstName'))
-    // Invitees who already have an account can only get in by logging in.
     await expect(page.getByRole('link', { name: 'Log in', exact: true })).toBeVisible()
     await setText(byId('firstName'), 'Bullet')
     await setText(byId('lastName'), 'Train')
     await setText(byId('email'), inviteEmail)
     await setText(byId('password'), PASSWORD)
-    // Enabled, not just visible: the button stays disabled until the password
-    // requirements pass.
     await expect(page.locator(byId('signup-btn'))).toBeEnabled()
     await click(byId('signup-btn'))
     log('Change email')
@@ -78,8 +75,6 @@ test.describe('Invite Tests', () => {
     await setText(byId('lastName'), 'User')
     await setText(byId('email'), E2E_USER)
     await setText(byId('password'), PASSWORD)
-    // Enabled, not just visible: the button stays disabled until the password
-    // requirements pass.
     await expect(page.locator(byId('signup-btn'))).toBeEnabled()
     await click(byId('signup-btn'))
 

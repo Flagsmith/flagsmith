@@ -41,11 +41,8 @@ import useSignupExperiment from 'common/useSignupExperiment'
 type EmailFieldError = string | string[]
 type EmailError = { email?: EmailFieldError } | undefined
 
-// The error object never clears itself, and it describes the address that was
-// submitted, so it stops applying the moment the field holds something else, or
-// while a new attempt is in flight and has not answered yet.
-//
-// Case-insensitive to match the API, which looks the address up with iexact.
+// The error object never clears itself, so it only applies while the field still
+// holds the address it was about. Case-insensitive to match the API's iexact.
 const currentEmailError = (
   error: EmailError,
   email: string,
@@ -73,15 +70,13 @@ const isEmailTaken = (
   )
 }
 
-// The banner is for errors with no field to attach to. Anything belonging to a
-// field is shown under that field instead, so one failure gives one message.
+// The banner is only for errors with no field to attach to.
 const SIGNUP_FIELDS = ['email', 'first_name', 'last_name', 'password']
 const hasFieldError = (error?: Record<string, unknown>) =>
   SIGNUP_FIELDS.some((field) => !!error?.[field])
 
-// Runs the redirect once signup reports the address is taken. A component
-// because the error only exists inside the provider's render prop, and a side
-// effect does not belong in render.
+// A component, not an effect in the page, because the error only exists inside
+// the provider's render prop.
 const RedirectWhenTaken: FC<{ taken: boolean; onTaken: () => void }> = ({
   onTaken,
   taken,
@@ -104,12 +99,9 @@ const HomePage: React.FC = () => {
   const [lastName, setLastName] = useState('')
   const [marketingConsentGiven] = useState(true)
   const [password, setPassword] = useState('')
-  // Which address the last signup attempt used, null until there has been one.
-  // Both /login and /signup render this component, so an empty string would
-  // match a login error that arrived before anyone submitted a signup.
+  // Null until a signup has been attempted. /login and /signup are the same
+  // component, so '' would match a login error that arrived before any signup.
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null)
-  // Set when signup sent us to login because the address already had an
-  // account, so login can say why you are there.
   const [emailAlreadyRegistered, setEmailAlreadyRegistered] = useState(false)
 
   const [samlError, setLocalError] = useState(false)
@@ -490,8 +482,8 @@ const HomePage: React.FC = () => {
                                   <InputGroup
                                     title='Email Address / Username'
                                     data-test='email'
-                                    // Controlled so an address carried over from
-                                    // signup is visible, not just held in state.
+                                    // Controlled so an address carried from signup
+                                    // is visible, not just held in state.
                                     value={email}
                                     inputProps={{
                                       className: 'full-width',
