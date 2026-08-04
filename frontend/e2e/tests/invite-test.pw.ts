@@ -65,7 +65,7 @@ test.describe('Invite Tests', () => {
     await click(byId('delete-account'))
   });
 
-  test('Signup points users at login when their email already has an account @oss', async ({ page }) => {
+  test('Signup sends users to login when their email already has an account @oss', async ({ page }) => {
     const { click, setText, waitForElementVisible } = createHelpers(page);
 
     log('Open signup')
@@ -83,9 +83,9 @@ test.describe('Invite Tests', () => {
     await expect(page.locator(byId('signup-btn'))).toBeEnabled()
     await click(byId('signup-btn'))
 
-    log('Error explains why, and the way out is still on the page')
-    await expect(page.getByText('Email already exists')).toBeVisible()
-    await expect(page.getByText('Please check your details and try again')).toHaveCount(0)
-    await expect(page.getByRole('link', { name: 'Log in', exact: true })).toBeVisible()
+    log('Sent to login, prefilled, with the reason at the top')
+    await expect(page).toHaveURL(/\/login/)
+    await expect(page.getByText('You already have an account')).toBeVisible()
+    await expect(page.locator(byId('email'))).toHaveValue(E2E_USER)
   });
 });

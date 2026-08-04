@@ -1,4 +1,11 @@
-import React, { ChangeEvent, MouseEvent, useEffect, useState } from 'react'
+import React, {
+  ChangeEvent,
+  FC,
+  MouseEvent,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 import { useHistory, useLocation, withRouter } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import ForgotPasswordModal from 'components/modals/ForgotPasswordModal'
@@ -30,7 +37,6 @@ import { LoginRequest, RegisterRequest } from 'common/types/requests'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import { useUTMs } from 'common/useUTMs'
 import useSignupExperiment from 'common/useSignupExperiment'
-import './HomePage.scss'
 
 type EmailFieldError = string | string[]
 type EmailError = { email?: EmailFieldError } | undefined
@@ -73,6 +79,21 @@ const SIGNUP_FIELDS = ['email', 'first_name', 'last_name', 'password']
 const hasFieldError = (error?: Record<string, unknown>) =>
   SIGNUP_FIELDS.some((field) => !!error?.[field])
 
+// Runs the redirect once signup reports the address is taken. A component
+// because the error only exists inside the provider's render prop, and a side
+// effect does not belong in render.
+const RedirectWhenTaken: FC<{ taken: boolean; onTaken: () => void }> = ({
+  onTaken,
+  taken,
+}) => {
+  useEffect(() => {
+    if (taken) {
+      onTaken()
+    }
+  }, [taken, onTaken])
+  return null
+}
+
 const HomePage: React.FC = () => {
   const history = useHistory()
   const location = useLocation()
@@ -87,6 +108,9 @@ const HomePage: React.FC = () => {
   // Both /login and /signup render this component, so an empty string would
   // match a login error that arrived before anyone submitted a signup.
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null)
+  // Set when signup sent us to login because the address already had an
+  // account, so login can say why you are there.
+  const [emailAlreadyRegistered, setEmailAlreadyRegistered] = useState(false)
 
   const [samlError, setLocalError] = useState(false)
   const [samlLoading, setSamlLoading] = useState(false)
@@ -215,6 +239,13 @@ const HomePage: React.FC = () => {
   const redirect = Utils.fromParam().redirect
     ? `?redirect=${Utils.fromParam().redirect}`
     : ''
+  // Pushed rather than replaced, so Back returns to the signup form with what
+  // was typed still in it.
+  const goToLoginAsRegistered = useCallback(() => {
+    setEmailAlreadyRegistered(true)
+    history.push(`/login${redirect}`)
+  }, [history, redirect])
+
   const currentLocation = `${document.location.pathname}${
     document.location.search || ''
   }`
@@ -433,7 +464,18 @@ const HomePage: React.FC = () => {
                                   login({ email, password })
                                 }}
                               >
-                                {isInvite && (
+                                {emailAlreadyRegistered && (
+                                  <div className='notification d-flex align-items-center justify-content-center gap-2 mb-3'>
+                                    <span className='notification__icon d-flex'>
+                                      <Icon name='info-outlined' width={20} />
+                                    </span>
+                                    <p className='notification__text mb-0'>
+                                      You already have an account, log in to
+                                      continue
+                                    </p>
+                                  </div>
+                                )}
+                                {isInvite && !emailAlreadyRegistered && (
                                   <div className='notification d-flex align-items-center justify-content-center gap-2 mb-3'>
                                     <span className='notification__icon d-flex'>
                                       <Icon name='info-outlined' width={20} />
@@ -447,6 +489,9 @@ const HomePage: React.FC = () => {
                                   <InputGroup
                                     title='Email Address / Username'
                                     data-test='email'
+                                    // Controlled so an address carried over from
+                                    // signup is visible, not just held in state.
+                                    value={email}
                                     inputProps={{
                                       className: 'full-width',
                                       error: error?.email,
@@ -582,6 +627,15 @@ const HomePage: React.FC = () => {
                                 )
                               }}
                             >
+                              <RedirectWhenTaken
+                                taken={isEmailTaken(
+                                  error,
+                                  email,
+                                  submittedEmail,
+                                  isSaving,
+                                )}
+                                onTaken={goToLoginAsRegistered}
+                              />
                               {error && !hasFieldError(error) && (
                                 <Row>
                                   <div
@@ -715,13 +769,7 @@ const HomePage: React.FC = () => {
                                       !allRequirementsMet ||
                                       !firstName.trim() ||
                                       !lastName.trim() ||
-                                      blockGenericEmailDomain ||
-                                      isEmailTaken(
-                                        error,
-                                        email,
-                                        submittedEmail,
-                                        isSaving,
-                                      )
+                                      blockGenericEmailDomain
                                     }
                                     className='px-4 mt-3 full-width'
                                     type='submit'
@@ -733,22 +781,8 @@ const HomePage: React.FC = () => {
                             </form>
                           )}
                         </Card>
-                        <Row
-                          className={classNames(
-                            'login-prompt justify-content-center',
-                            {
-                              'login-prompt--highlight': isEmailTaken(
-                                error,
-                                email,
-                                submittedEmail,
-                                isSaving,
-                              ),
-                            },
-                          )}
-                        >
-                          {isEmailTaken(error, email, submittedEmail, isSaving)
-                            ? 'You already have an account.'
-                            : 'Have an account?'}{' '}
+                        <Row className='justify-content-center'>
+                          Have an account?{' '}
                           <Button
                             theme='text'
                             className='ml-1 fw-bold'
