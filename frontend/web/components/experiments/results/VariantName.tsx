@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import ColorSwatch from 'components/ColorSwatch'
-import useFitText from 'components/hooks/useFitText'
+import useFitText from 'common/hooks/useFitText'
 import './results.scss'
 
 type VariantNameProps = {

@@ -198,6 +198,9 @@
   }
 
   &__axis-row-label-text {
+    // The label's width is capped inline; min-width lets this flex item shrink
+    // below its intrinsic width so the ellipsis actually kicks in.
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
   }

@@ -10,6 +10,12 @@ import {
   valueToPercent,
 } from './derive'
 
+// A row label is right-aligned at the start of its interval, so the space it
+// has to work with is whatever sits to the left of it. Intervals starting near
+// the axis edge leave almost nothing, so floor the width — the name then
+// ellipsises rather than collapsing to a sliver.
+const LABEL_MIN_WIDTH = 64
+
 const TickLines: FC<{ ticks: number[]; range: AxisRange }> = ({
   range,
   ticks,
@@ -100,7 +106,7 @@ const ExperimentResultsAxisChart: FC<ExperimentResultsAxisChartProps> = ({
                     className='experiment-results__axis-row-label'
                     style={{
                       left: `${ciLeft}%`,
-                      maxWidth: `calc(${ciLeft}% - 8px)`,
+                      maxWidth: `max(${LABEL_MIN_WIDTH}px, calc(${ciLeft}% - 8px))`,
                     }}
                     title={v.name}
                   >
