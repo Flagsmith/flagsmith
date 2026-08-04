@@ -461,6 +461,7 @@ const HomePage: React.FC = () => {
                                 name='form'
                                 onSubmit={(e) => {
                                   e.preventDefault()
+                                  setEmailAlreadyRegistered(false)
                                   login({ email, password })
                                 }}
                               >
@@ -494,7 +495,9 @@ const HomePage: React.FC = () => {
                                     value={email}
                                     inputProps={{
                                       className: 'full-width',
-                                      error: error?.email,
+                                      error: emailAlreadyRegistered
+                                        ? undefined
+                                        : error?.email,
                                       name: 'email',
                                     }}
                                     onChange={(
@@ -551,20 +554,21 @@ const HomePage: React.FC = () => {
                                     </Button>
                                   </div>
                                 </fieldset>
-                                {(AccountStore.error || samlError) && (
-                                  <div
-                                    id='error-alert'
-                                    className='mt-3 font-weight-medium'
-                                  >
-                                    <ErrorMessage
-                                      error={
-                                        typeof AccountStore.error === 'string'
-                                          ? AccountStore.error
-                                          : 'Please check your details and try again'
-                                      }
-                                    />
-                                  </div>
-                                )}
+                                {!emailAlreadyRegistered &&
+                                  (AccountStore.error || samlError) && (
+                                    <div
+                                      id='error-alert'
+                                      className='mt-3 font-weight-medium'
+                                    >
+                                      <ErrorMessage
+                                        error={
+                                          typeof AccountStore.error === 'string'
+                                            ? AccountStore.error
+                                            : 'Please check your details and try again'
+                                        }
+                                      />
+                                    </div>
+                                  )}
                               </form>
                             )}
                           </>
