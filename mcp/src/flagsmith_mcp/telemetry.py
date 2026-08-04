@@ -1,4 +1,5 @@
 import httpx
+import sentry_sdk
 from common.core.logging import setup_logging
 from common.core.otel import (
     add_otel_trace_context,
@@ -49,6 +50,7 @@ def setup_telemetry(settings: config.Settings) -> None:
         log_provider = build_otel_log_provider(
             endpoint=f"{endpoint}/v1/logs",
             service_name=settings.otel_service_name,
+            protocol="http/protobuf",
         )
         otel_processors = [
             add_otel_trace_context,
@@ -57,6 +59,7 @@ def setup_telemetry(settings: config.Settings) -> None:
         tracer_provider = build_tracer_provider(
             endpoint=f"{endpoint}/v1/traces",
             service_name=settings.otel_service_name,
+            protocol="http/protobuf",
         )
     else:
         # No exporter: spans stay in-process, but still feed the API
@@ -69,4 +72,14 @@ def setup_telemetry(settings: config.Settings) -> None:
         log_format=settings.log_format,
         application_loggers=APPLICATION_LOGGERS,
         otel_processors=otel_processors,
+    )
+
+
+def setup_sentry(settings: config.Settings) -> None:
+    """Initialise Sentry for error capture when a DSN is configured."""
+    if not settings.sentry_dsn:
+        return
+    sentry_sdk.init(
+        dsn=str(settings.sentry_dsn),
+        environment=settings.environment,
     )

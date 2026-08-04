@@ -31,7 +31,7 @@ $body-color: #1a2634;
 $text-icon-light: #ffffff;
 $text-icon-grey: #656d7b;
 $text-icon-light-grey: rgba(157, 164, 174, 1);
-$text-muted: $text-icon-grey;
+$text-muted: var(--color-text-secondary);
 
 // Header
 $header-color: #1e0d26; // for headers and labels
@@ -312,8 +312,6 @@ $tab-line-color: $primary;
 //CodeHelp
 $code-btn-bg: $secondary-alfa-16;
 $code-btn-description-color: $secondary600;
-$code-color: $text-icon-light;
-$code-bg: $bg-dark200;
 
 //Panels
 $panel-border-color: $basic-alpha-16;

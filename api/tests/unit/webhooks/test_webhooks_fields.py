@@ -58,7 +58,7 @@ def test_no_ssrf_url_field__hostname_resolving_to_private_ip__raises_validation_
 ) -> None:
     # Given — a hostname that resolves to an RFC1918 address
     with mock.patch(
-        "webhooks.fields.socket.getaddrinfo",
+        "core.network.socket.getaddrinfo",
         return_value=[(socket.AF_INET, None, None, None, ("192.168.1.100", 0))],
     ):
         # When / Then
@@ -73,7 +73,7 @@ def test_no_ssrf_url_field__hostname_resolving_to_private_ipv6__raises_validatio
 ) -> None:
     # Given — an AAAA-only hostname resolving to a private IPv6 address
     with mock.patch(
-        "webhooks.fields.socket.getaddrinfo",
+        "core.network.socket.getaddrinfo",
         return_value=[(socket.AF_INET6, None, None, None, ("fc00::1", 0, 0, 0))],
     ):
         # When / Then
@@ -108,7 +108,7 @@ def test_no_ssrf_url_field__unresolvable_hostname__returns_value(
 ) -> None:
     # Given — the hostname cannot be resolved; URL format is still valid
     with mock.patch(
-        "webhooks.fields.socket.getaddrinfo",
+        "core.network.socket.getaddrinfo",
         side_effect=socket.gaierror,
     ):
         # When

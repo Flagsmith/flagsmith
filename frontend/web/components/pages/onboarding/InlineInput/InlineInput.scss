@@ -1,32 +1,24 @@
-// Inline editable value in the welcome sentence: an action underline + pencil,
-// with a faint highlight on hover/focus. Rationale lives in InlineInput.tsx.
 .inline-input {
   display: inline-flex;
   align-items: center;
   vertical-align: baseline;
   gap: 4px;
-  padding: 0 4px;
-  border-radius: var(--radius-xs);
+  padding: 1px 8px;
+  // Round the top only; the bottom stays square so it sits flush with the
+  // action underline (rounded bottom corners fight the border).
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
   border-bottom: 1px solid var(--color-border-action);
+  // Resting fill so it reads as editable, not only on hover.
+  background-color: var(--color-surface-subtle);
   cursor: text;
   transition: background-color var(--duration-fast) var(--easing-standard);
 
-  svg {
-    opacity: 0.8;
-    transition: opacity var(--duration-fast) var(--easing-standard);
-  }
-
   &:hover,
   &:focus-within {
-    background-color: var(--color-surface-subtle);
-
-    svg {
-      opacity: 1;
-    }
+    background-color: var(--color-surface-muted);
   }
 
-  // The hero value (flag name): a filled soft-purple pill instead of an
-  // underline, so it reads as the thing the user will reference in code.
+  // Flag name: a filled pill rather than an underline (it's referenced in code).
   &--accent {
     padding: 1px 8px;
     border-bottom: none;

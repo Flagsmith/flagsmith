@@ -65,6 +65,8 @@ jobs:
     runs-on: depot-ubuntu-latest
     # The OIDC role trusts jobs running in the staging environment.
     environment: staging
+    outputs:
+      image: ${{ vars.MCP_ECR_REPOSITORY_URL }}:${{ steps.meta.outputs.version }}
     permissions:
       contents: read
       packages: read
@@ -99,7 +101,7 @@ jobs:
           images: ${{ vars.MCP_ECR_REPOSITORY_URL }}
           tags: |
             type=ref,event=branch
-            type=sha
+            type=sha,priority=900
             type=raw,value=latest
 
       # Setup Docker buildx with Depot builder so imagetools have access to Depot cache
@@ -120,6 +122,8 @@ jobs:
     runs-on: depot-ubuntu-latest
     # The OIDC role trusts jobs running in the production environment.
     environment: production
+    outputs:
+      image: ${{ vars.MCP_ECR_REPOSITORY_URL }}:${{ steps.meta.outputs.version }}
     permissions:
       contents: read
       packages: read
@@ -176,20 +180,18 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
+      - name: Cloning repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Deploy MCP to ECS
+        uses: ./.github/actions/mcp-deploy-ecs
         with:
           role-to-assume: ${{ vars.MCP_ECR_GITHUB_ROLE_ARN }}
-          aws-region: eu-west-2
-
-      - name: Roll the service onto the new image
-        run: |
-          aws ecs update-service \
-            --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment
-          aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"
-        env:
-          CLUSTER: ${{ vars.AWS_ECS_CLUSTER_NAME }}
-          SERVICE: ${{ vars.AWS_ECS_MCP_SERVICE_NAME }}
+          cluster: ${{ vars.AWS_ECS_CLUSTER_NAME }}
+          service: ${{ vars.AWS_ECS_MCP_SERVICE_NAME }}
+          image: ${{ needs.docker-publish-ecr-staging-mcp.outputs.image }}
 
   deploy-ecr-mcp:
     name: Deploy MCP to production
@@ -202,17 +204,15 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
+      - name: Cloning repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Deploy MCP to ECS
+        uses: ./.github/actions/mcp-deploy-ecs
         with:
           role-to-assume: ${{ vars.MCP_ECR_GITHUB_ROLE_ARN }}
-          aws-region: eu-west-2
-
-      - name: Roll the service onto the new image
-        run: |
-          aws ecs update-service \
-            --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment
-          aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"
-        env:
-          CLUSTER: ${{ vars.AWS_ECS_CLUSTER_NAME }}
-          SERVICE: ${{ vars.AWS_ECS_MCP_SERVICE_NAME }}
+          cluster: ${{ vars.AWS_ECS_CLUSTER_NAME }}
+          service: ${{ vars.AWS_ECS_MCP_SERVICE_NAME }}
+          image: ${{ needs.docker-publish-ecr-mcp.outputs.image }}

@@ -42,28 +42,27 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
           Usage
         </NavSubLink>
       )}
-      {AccountStore.isAdmin() && (
-        <>
-          {Utils.getFlagsmithHasFeature('organisation_integrations') && (
-            <NavSubLink
-              icon={<Icon name='layers' />}
-              id='integrations-link'
-              to={`/organisation/${
-                AccountStore.getOrganisation().id
-              }/integrations`}
-            >
-              Organisation Integrations
-            </NavSubLink>
-          )}
+      {AccountStore.isAdmin() &&
+        Utils.getFlagsmithHasFeature('organisation_integrations') && (
           <NavSubLink
-            icon={<Icon name='setting' width={24} />}
-            id='org-settings-link'
-            data-test='org-settings-link'
-            to={`/organisation/${AccountStore.getOrganisation().id}/settings`}
+            icon={<Icon name='layers' />}
+            id='integrations-link'
+            to={`/organisation/${
+              AccountStore.getOrganisation().id
+            }/integrations`}
           >
-            Organisation Settings
+            Organisation Integrations
           </NavSubLink>
-        </>
+        )}
+      {AccountStore.isAdmin() && (
+        <NavSubLink
+          icon={<Icon name='setting' width={24} />}
+          id='org-settings-link'
+          data-test='org-settings-link'
+          to={`/organisation/${AccountStore.getOrganisation().id}/settings`}
+        >
+          Organisation Settings
+        </NavSubLink>
       )}
     </OverflowNav>
   )

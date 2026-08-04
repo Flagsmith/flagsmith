@@ -3,6 +3,7 @@ from datetime import datetime
 from datetime import timezone as dt_timezone
 
 import pytest
+from django.db import connection as django_db_connection
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
@@ -24,13 +25,13 @@ from experimentation.models import (
 from experimentation.stats import VariantStats
 
 
-def test_warehouse_connection__after_create__enqueues_ingestion_add_task(
+def test_warehouse_connection__after_create__enqueues_ingestion_write_task(
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
     # Given
     mock_task = mocker.patch(
-        "experimentation.tasks.add_environment_key_to_ingestion",
+        "experimentation.tasks.write_environment_ingestion_keys",
     )
 
     # When
@@ -42,26 +43,52 @@ def test_warehouse_connection__after_create__enqueues_ingestion_add_task(
 
     # Then
     mock_task.delay.assert_called_once_with(
-        kwargs={"environment_api_key": environment.api_key},
+        kwargs={"environment_id": environment.id},
     )
 
 
-def test_warehouse_connection__after_delete__enqueues_ingestion_delete_task(
+def test_warehouse_connection__after_create_external_type__enqueues_provision_task(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_provision = mocker.patch(
+        "experimentation.tasks.provision_external_warehouse_ingestion_infrastructure",
+    )
+    mock_write_keys = mocker.patch(
+        "experimentation.tasks.write_environment_ingestion_keys",
+    )
+
+    # When
+    WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.CLICKHOUSE,
+        name="external warehouse",
+    )
+
+    # Then the per-org infrastructure is provisioned, which chains the key sync
+    mock_provision.delay.assert_called_once_with(
+        kwargs={"environment_id": environment.id},
+    )
+    mock_write_keys.delay.assert_not_called()
+
+
+def test_warehouse_connection__after_delete__enqueues_ingestion_remove_task(
     warehouse_connection: WarehouseConnection,
     mocker: MockerFixture,
 ) -> None:
     # Given
     mock_task = mocker.patch(
-        "experimentation.tasks.delete_environment_key_from_ingestion",
+        "experimentation.tasks.remove_environment_ingestion_keys",
     )
-    environment_api_key = warehouse_connection.environment.api_key
+    environment_id = warehouse_connection.environment_id
 
     # When
     warehouse_connection.delete()
 
     # Then
     mock_task.delay.assert_called_once_with(
-        kwargs={"environment_api_key": environment_api_key},
+        kwargs={"environment_id": environment_id},
     )
 
 
@@ -241,3 +268,22 @@ def test_experiment_results__is_final__reflects_window_coverage(
     # When / Then the row is final only once it covers the experiment's end
     results = ExperimentResults(experiment=experiment, as_of=as_of)
     assert results.is_final is expected
+
+
+def test_warehouse_connection_credentials__saved__ciphertext_in_db_and_roundtrips(
+    clickhouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+
+    # When
+    with django_db_connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT credentials FROM experimentation_warehouseconnection WHERE id = %s",
+            [clickhouse_connection.id],
+        )
+        raw = cursor.fetchone()[0]
+
+    # Then
+    assert "hunter2" not in raw
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.credentials == {"password": "hunter2"}

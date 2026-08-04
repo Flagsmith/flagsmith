@@ -112,13 +112,13 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
         data-test={props['data-test']}
         name='rule-condition-value-input'
         aria-label='Rule condition value input'
-        value={value}
+        value={typeof value === 'boolean' ? String(value) : value}
         className='w-100'
         inputClassName={
           showIcon ? `pr-5 ${hasWarning ? 'border-warning' : ''}` : ''
         }
         style={{ width: '100%' }}
-        onChange={(e: InputEvent) => {
+        onChange={(e) => {
           const value = Utils.safeParseEventValue(e)
           onChange?.(value)
         }}

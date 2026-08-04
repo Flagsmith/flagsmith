@@ -1797,3 +1797,62 @@ def test_create_version__feature_state_save__dispatches_gitlab_state_change(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert mock_dispatch.call_count == 1
+
+
+def test_create_feature_version_feature_state__override_recreated_in_draft__inherits_mv_hashing_salt(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    environment_v2_versioning: Environment,
+    multivariate_feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given a published version containing a segment override for a
+    # multivariate feature
+    overridden_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=multivariate_feature
+    )
+    original_override = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=overridden_version,
+        feature_segment=FeatureSegment.objects.create(
+            feature=multivariate_feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=overridden_version,
+        ),
+    )
+    overridden_version.publish(published_by=admin_user)
+
+    # and a draft version from which the (cloned) override has been removed
+    draft_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=multivariate_feature
+    )
+    cloned_override = draft_version.feature_states.get(feature_segment__segment=segment)
+    cloned_override.feature_segment.delete()
+
+    # When the override is recreated in the draft version via the API
+    url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-list",
+        args=[
+            environment_v2_versioning.id,
+            multivariate_feature.id,
+            draft_version.uuid,
+        ],
+    )
+    data = {
+        "feature_segment": {"segment": segment.id},
+        "enabled": True,
+        "feature_state_value": {
+            "string_value": "recreated!",
+        },
+    }
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then the recreated override carries the original override's id as its
+    # bucketing salt, keeping multivariate variant assignment stable
+    assert response.status_code == status.HTTP_201_CREATED
+    recreated_override = FeatureState.objects.get(id=response.json()["id"])
+    assert recreated_override.mv_hashing_salt == original_override.id

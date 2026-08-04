@@ -643,6 +643,215 @@ def test_get_multivariate_feature_state_value__with_identity__returns_correct_va
     assert multivariate_value.value != multivariate_value.initial_value
 
 
+@mock.patch("features.models.get_hashed_percentage_for_object_ids")
+def test_get_multivariate_feature_state_value__no_mv_hashing_salt__seeds_hash_with_id(  # type: ignore[no-untyped-def]
+    mock_get_hashed_percentage,
+    multivariate_feature,
+    environment,
+    identity,
+):
+    # Given
+    mock_get_hashed_percentage.return_value = 0.0
+    feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+    assert feature_state.mv_hashing_salt is None
+    identity_hash_key = identity.get_hash_key()
+
+    # When
+    feature_state.get_multivariate_feature_state_value(
+        identity_hash_key=identity_hash_key
+    )
+
+    # Then the feature state id seeds the hash
+    mock_get_hashed_percentage.assert_called_once_with(
+        [feature_state.id, identity_hash_key]
+    )
+
+
+@mock.patch("features.models.get_hashed_percentage_for_object_ids")
+def test_get_multivariate_feature_state_value__mv_hashing_salt_set__seeds_hash_with_salt(  # type: ignore[no-untyped-def]
+    mock_get_hashed_percentage,
+    multivariate_feature,
+    environment,
+    identity,
+):
+    # Given
+    mock_get_hashed_percentage.return_value = 0.0
+    feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+    feature_state.mv_hashing_salt = 999
+    identity_hash_key = identity.get_hash_key()
+
+    # When
+    feature_state.get_multivariate_feature_state_value(
+        identity_hash_key=identity_hash_key
+    )
+
+    # Then the salt seeds the hash instead of the feature state id
+    mock_get_hashed_percentage.assert_called_once_with([999, identity_hash_key])
+
+
+def test_feature_state_clone__multivariate_feature__keeps_variant_bucketing_stable(
+    multivariate_feature: Feature,
+    environment: Environment,
+    environment_two: Environment,
+) -> None:
+    # Given the environment-default feature state for a multivariate feature, and
+    # the variant each of a range of identities is currently bucketed into
+    feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+    identity_hash_keys = [f"identity-{i}" for i in range(50)]
+    original_assignment = {
+        key: feature_state.get_multivariate_feature_state_value(key).id
+        for key in identity_hash_keys
+    }
+
+    # When the feature state is recreated by cloning it (e.g. publishing a new
+    # version or editing multivariate weights under v2 versioning)
+    cloned_feature_state = feature_state.clone(env=environment_two, as_draft=True)
+
+    # Then the clone keeps the original feature state's id as its bucketing salt
+    assert cloned_feature_state.id != feature_state.id
+    assert cloned_feature_state.mv_hashing_salt == feature_state.id
+
+    # and every identity stays in the same variant as before
+    cloned_assignment = {
+        key: cloned_feature_state.get_multivariate_feature_state_value(key).id
+        for key in identity_hash_keys
+    }
+    assert cloned_assignment == original_assignment
+
+
+def test_feature_state_clone__existing_mv_hashing_salt__is_preserved(
+    feature: Feature,
+    environment: Environment,
+    environment_two: Environment,
+) -> None:
+    # Given a feature state that already carries a bucketing salt
+    feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=feature,
+        identity=None,
+        feature_segment=None,
+    )
+    feature_state.mv_hashing_salt = 12345
+    feature_state.save()
+
+    # When it is cloned
+    cloned_feature_state = feature_state.clone(env=environment_two, as_draft=True)
+
+    # Then the existing salt is carried over rather than the source id
+    assert cloned_feature_state.mv_hashing_salt == 12345
+
+
+def test_feature_state_create__recreates_live_segment_override_directly__inherits_salt(
+    environment_v2_versioning: Environment,
+    multivariate_feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given a live segment override, and a later (unpublished) version created
+    # before the override existed, so the clone receiver did not copy the
+    # override into it
+    initial_version = EnvironmentFeatureVersion.objects.get(
+        feature=multivariate_feature, environment=environment_v2_versioning
+    )
+    later_version = EnvironmentFeatureVersion.objects.create(
+        feature=multivariate_feature, environment=environment_v2_versioning
+    )
+    live_override = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=initial_version,
+        feature_segment=FeatureSegment.objects.create(
+            feature=multivariate_feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=initial_version,
+        ),
+    )
+
+    # When the same segment's override is recreated directly (not via clone) in
+    # the later version
+    feature_state = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=later_version,
+        feature_segment=FeatureSegment.objects.create(
+            feature=multivariate_feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=later_version,
+        ),
+    )
+
+    # Then it adopts the live override's bucketing seed
+    assert feature_state.mv_hashing_salt == live_override.mv_hashing_seed
+
+
+def test_feature_state_create__v1_recreates_live_state_directly__inherits_salt(
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given the live feature state of a multivariate feature in a v1
+    # versioning environment
+    live_feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+
+    # When a new version of the feature state is created directly, the way a
+    # change request draft is
+    feature_state = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        version=None,
+    )
+
+    # Then it adopts the live state's bucketing seed
+    assert feature_state.mv_hashing_salt == live_feature_state.mv_hashing_seed
+
+
+def test_feature_state_create__new_segment_override_under_v2__no_salt_inherited(
+    environment_v2_versioning: Environment,
+    multivariate_feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given a version whose lineage has no live override for this segment
+    later_version = EnvironmentFeatureVersion.objects.create(
+        feature=multivariate_feature, environment=environment_v2_versioning
+    )
+
+    # When a brand-new override for the segment is created directly
+    feature_state = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=later_version,
+        feature_segment=FeatureSegment.objects.create(
+            feature=multivariate_feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=later_version,
+        ),
+    )
+
+    # Then a genuinely new override starts a fresh seed
+    assert feature_state.mv_hashing_salt is None
+
+
 @mock.patch.object(FeatureState, "get_multivariate_feature_state_value")
 def test_get_feature_state_value__multivariate_feature__returns_mv_value(  # type: ignore[no-untyped-def]
     mock_get_mv_feature_state_value, environment, multivariate_feature, identity
@@ -1305,3 +1514,67 @@ def test_feature_delete__with_gitlab_resources__dispatches_deleted_comment_task(
     assert mock_task.delay.call_args_list == [
         mocker.call(args=(expected_name, expected_id, expected_project_id)),
     ]
+
+
+def test_get_superseded_live_feature_state__segment_override_draft__returns_live_override(
+    environment: Environment,
+    multivariate_feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given a live segment override, and an (uncommitted) draft feature state
+    # recreating it
+    feature_segment = FeatureSegment.objects.create(
+        feature=multivariate_feature, segment=segment, environment=environment
+    )
+    live_override = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        feature_segment=feature_segment,
+    )
+    draft = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        version=None,
+    )
+
+    # When
+    superseded = draft.get_superseded_live_feature_state()
+
+    # Then
+    assert superseded == live_override
+
+
+def test_get_superseded_live_feature_state__scheduled_change_gone_live__returns_latest_live_from_state(
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given a state committed last (highest version) that went live first, and
+    # a previously committed scheduled state whose live_from has since passed
+    FeatureState.objects.filter(
+        feature=multivariate_feature, environment=environment
+    ).update(live_from=now - timedelta(hours=3))
+    committed_last = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        version=3,
+        live_from=now - timedelta(hours=2),
+    )
+    scheduled = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        version=2,
+        live_from=now - timedelta(hours=1),
+    )
+    draft = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        version=None,
+    )
+
+    # When
+    superseded = draft.get_superseded_live_feature_state()
+
+    # Then the state with the latest live_from is live, not the highest version
+    assert superseded == scheduled
+    assert superseded != committed_last

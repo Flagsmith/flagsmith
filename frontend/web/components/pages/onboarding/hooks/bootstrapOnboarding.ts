@@ -7,23 +7,32 @@ import {
   getEnvironments,
 } from 'common/services/useEnvironment'
 import { projectFlagService } from 'common/services/useProjectFlag'
+import { tagService } from 'common/services/useTag'
 import { Req } from 'common/types/requests'
 import {
   Environment,
   PagedResponse,
+  ProjectFlag,
   ProjectSummary,
+  Tag,
 } from 'common/types/responses'
 import { SmartDefaults } from './useSmartDefaults'
 import { createOrganisationViaAccountStore } from './createOrganisationViaAccountStore'
+import API from 'project/api'
+import Constants from 'common/constants'
 
 type Store = ReturnType<typeof getStore>
 
 const FLAG_NAME = 'show_demo_button'
 const DEFAULT_ORG_NAME = 'My organisation'
 const DEFAULT_PROJECT_NAME = 'My first project'
-// Written on create and matched by name on reuse, so the two must stay in step.
 const DEV_ENVIRONMENT_NAME = 'Development'
 const PROD_ENVIRONMENT_NAME = 'Production'
+const ONBOARDING_TAG = {
+  color: '#3cb371',
+  description: 'Created during onboarding',
+  label: 'Onboarding',
+}
 
 type ExistingOrg = { id: number; name: string }
 
@@ -40,13 +49,12 @@ export type OnboardingBootstrap = {
   featureName: string
 }
 
-// Reuse the loaded org, or create one only when the user has none (the plan
-// org cap rejects extra creates with a 403). Create goes through the legacy
-// AccountStore so the shell's current-org selection is populated.
 async function ensureOrganisation(
   store: Store,
   { defaults, existingOrg }: BootstrapInput,
 ): Promise<ExistingOrg> {
+  // Create only when the user has none: the plan org cap rejects extra creates
+  // with a 403. Goes through AccountStore so the shell adopts the new org.
   if (existingOrg) {
     return existingOrg
   }
@@ -61,8 +69,6 @@ async function ensureOrganisation(
   return { id, name }
 }
 
-// Reuse the first project, else create one with Development + Production
-// environments. Avoids stacking up duplicate projects on revisits.
 async function ensureProject(
   store: Store,
   organisationId: number,
@@ -83,6 +89,7 @@ async function ensureProject(
       }),
     )
     .unwrap()
+  API.trackEvent(Constants.events.CREATE_FIRST_PROJECT)
   await store
     .dispatch(
       environmentService.endpoints.createEnvironment.initiate({
@@ -102,8 +109,6 @@ async function ensureProject(
   return project
 }
 
-// Surface an environment key: reuse one (preferring Development), or create it
-// only if the reused project somehow has none.
 async function ensureEnvironments(
   store: Store,
   project: ProjectSummary,
@@ -128,13 +133,20 @@ async function ensureEnvironments(
     .unwrap()
 }
 
-// Reuse the project's existing flag (keeps a renamed flag and stops piling up
-// duplicates on revisit); only create the demo flag when there are none.
-// Returns the real flag name so the header shows what's actually there.
+async function findOnboardingTag(
+  store: Store,
+  projectId: number,
+): Promise<Tag | undefined> {
+  const tags = await store
+    .dispatch(tagService.endpoints.getTags.initiate({ projectId }))
+    .unwrap()
+  return tags?.find((t) => t.label === ONBOARDING_TAG.label)
+}
+
 async function ensureFlag(
   store: Store,
   project: ProjectSummary,
-): Promise<string> {
+): Promise<ProjectFlag | undefined> {
   const flags = await store
     .dispatch(
       projectFlagService.endpoints.getProjectFlags.initiate({
@@ -142,10 +154,15 @@ async function ensureFlag(
       }),
     )
     .unwrap()
-  const existing = flags?.results?.[0]
+  const onboardingTag = await findOnboardingTag(store, project.id)
+  const existing =
+    (onboardingTag &&
+      flags?.results?.find((f) => f.tags?.includes(onboardingTag.id))) ||
+    flags?.results?.find((f) => f.name === FLAG_NAME)
   if (existing) {
-    return existing.name
+    return existing
   }
+  const isFirstFeature = !flags?.results?.length
   const created = await store
     .dispatch(
       projectFlagService.endpoints.createProjectFlag.initiate({
@@ -158,13 +175,44 @@ async function ensureFlag(
       }),
     )
     .unwrap()
-  return created?.name ?? FLAG_NAME
+  if (isFirstFeature) {
+    API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
+  }
+  return created
 }
 
-// Idempotently bring up everything the single-page flow needs: org, project,
-// Development + Production environments, and a first flag, reusing whatever
-// already exists. Split into ensure* steps so each concern is testable and the
-// reuse-vs-create decisions are obvious.
+async function ensureOnboardingTag(
+  store: Store,
+  project: ProjectSummary,
+  flag: ProjectFlag,
+): Promise<void> {
+  try {
+    const tag =
+      (await findOnboardingTag(store, project.id)) ??
+      (await store
+        .dispatch(
+          tagService.endpoints.createTag.initiate({
+            projectId: project.id,
+            tag: ONBOARDING_TAG,
+          }),
+        )
+        .unwrap())
+    if (tag && !flag.tags?.includes(tag.id)) {
+      await store
+        .dispatch(
+          projectFlagService.endpoints.updateProjectFlag.initiate({
+            body: { ...flag, tags: [...(flag.tags ?? []), tag.id] },
+            feature_id: flag.id,
+            project_id: project.id,
+          }),
+        )
+        .unwrap()
+    }
+  } catch {
+    // Cosmetic: tagging must never block onboarding.
+  }
+}
+
 export async function bootstrapOnboarding(
   store: Store,
   input: BootstrapInput,
@@ -172,12 +220,14 @@ export async function bootstrapOnboarding(
   const organisation = await ensureOrganisation(store, input)
   const project = await ensureProject(store, organisation.id, input.defaults)
   const environment = await ensureEnvironments(store, project)
-  const featureName = await ensureFlag(store, project)
-  // Refresh the legacy org store so the shell sees the project.
+  const flag = await ensureFlag(store, project)
+  if (flag) {
+    await ensureOnboardingTag(store, project, flag)
+  }
   AppActions.refreshOrganisation()
   return {
     environment,
-    featureName,
+    featureName: flag?.name ?? FLAG_NAME,
     organisationId: organisation.id,
     organisationName: organisation.name,
     project,

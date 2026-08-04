@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+from importlib import resources
 from typing import Callable
 
 import httpx
@@ -12,7 +13,7 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
-from respx import MockRouter
+from pyfakefs.fake_filesystem import FakeFilesystem
 from starlette.middleware import Middleware
 
 from flagsmith_mcp import config, constants
@@ -69,11 +70,14 @@ def openapi_spec() -> openapi.OpenAPI:
 
 
 @pytest.fixture(autouse=True)
-def openapi_spec_mock(respx_mock: MockRouter, openapi_spec: openapi.OpenAPI) -> None:
-    # create_server fetches the OpenAPI spec over HTTP; mock that call (respx
-    # leaves the in-memory ASGI transport used by the tests untouched).
-    respx_mock.get(constants.OPENAPI_SPEC_URL).respond(
-        json=openapi_spec.model_dump(by_alias=True, exclude_none=True, mode="json")
+def openapi_spec_mock(
+    fs: FakeFilesystem,
+    openapi_spec: openapi.OpenAPI,
+) -> None:
+    path = resources.files("flagsmith_mcp").joinpath(constants.OPENAPI_SPEC_FILENAME)
+    fs.create_file(
+        str(path),
+        contents=openapi_spec.model_dump_json(),
     )
 
 

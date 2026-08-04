@@ -2,6 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import transformCorePaging from 'common/transformCorePaging'
+import transformCursorPaging from 'common/transformCursorPaging'
 import Utils from 'common/utils/utils'
 
 const getIdentityEndpoint = (environmentId: string, isEdge: boolean) => {
@@ -87,34 +88,10 @@ export const identityService = service
           }
         },
         transformResponse(baseQueryReturnValue: Res['identities'], meta, req) {
-          const {
-            isEdge,
-            page = 1,
-            page_size = 10,
-            pageType,
-            pages: _pages,
-          } = req
-          if (isEdge) {
-            // For edge, we create our own paging
-            let pages = _pages ? _pages.concat([]) : []
-            const next_evaluated_key = baseQueryReturnValue.last_evaluated_key
-            if (pageType === 'NEXT') {
-              pages.push(next_evaluated_key)
-            } else if (pageType === 'PREVIOUS') {
-              pages.unshift()
-            } else {
-              pages = []
-            }
-
+          if (req.isEdge) {
+            // For edge, identities are cursor-paginated.
             return {
-              ...baseQueryReturnValue,
-              next:
-                baseQueryReturnValue.results.length < page_size
-                  ? undefined
-                  : '1',
-              pages,
-              //
-              previous: pages.length ? '1' : undefined,
+              ...transformCursorPaging(req, baseQueryReturnValue),
               results: baseQueryReturnValue.results?.map((v) => {
                 if (v.id) {
                   return v
@@ -123,7 +100,7 @@ export const identityService = service
                   ...v,
                   id: v.identity_uuid,
                 }
-              }), //
+              }),
             }
           }
           return transformCorePaging(req, baseQueryReturnValue)

@@ -165,6 +165,15 @@ export type SegmentMembership = {
   count: number
   last_synced_at: string
 }
+export type SegmentMember = {
+  identifier: string
+  identity_key: string
+  traits: Record<string, FlagsmithValue> | null
+}
+export type SegmentMembersResponse = PagedResponse<SegmentMember> & {
+  // Pass as `cursor` to fetch the next page; null when there are no more rows.
+  next_cursor: string | null
+}
 export type Segment = {
   id: number
   rules: SegmentRule[]
@@ -362,6 +371,7 @@ export type IntegrationData = {
   organisation?: string
   project?: string
   isOauth?: boolean
+  customUI?: boolean
 }
 
 export type ActiveIntegration = {
@@ -404,6 +414,8 @@ export type User = {
   last_login: string
   uuid: string
   onboarding: Onboarding
+  // Set client-side at login, not returned by the API.
+  isGettingStarted?: boolean
   // TODO: Use enum
   role: string
 }
@@ -630,6 +642,20 @@ export type Experiment = {
   updated_at: string
   started_at: string | null
   ended_at: string | null
+  experiment_rollout?: ExperimentRollout
+}
+
+export type ExperimentRollout = {
+  enabled: boolean
+  rollout_percentage: number
+  feature_state_value: {
+    type: 'integer' | 'string' | 'boolean'
+    value: string
+  }
+  multivariate_feature_state_values: {
+    multivariate_feature_option: number
+    percentage_allocation: number
+  }[]
 }
 
 export type ExpectedDirection =
@@ -645,6 +671,8 @@ export type ExperimentMetric = {
   metric: number
   metric_name: string
   aggregation: MetricAggregation
+  // Absent from API responses until the backend exposes it; treat as 'up'.
+  direction?: MetricDirection
   expected_direction: ExpectedDirection
   created_at: string
 }
@@ -801,7 +829,18 @@ export type ProjectFlag = {
     last_successful_repository_scanned_at: string
     last_feature_found_at: string
   }[]
+  lifecycle_stage?: LifecycleStage | null
 }
+
+export type LifecycleStage =
+  | 'new'
+  | 'live'
+  | 'permanent'
+  | 'stale'
+  | 'needs_monitoring'
+  | 'to_remove'
+
+export type LifecycleStatusCounts = Record<LifecycleStage, number>
 
 export type FeatureListProviderData = {
   projectFlags: ProjectFlag[] | null
@@ -1205,29 +1244,6 @@ export interface UsageEventsList extends AggregateUsageDataItem {
   }
 }
 
-export type ExperimentVariantResult = {
-  variant: string
-  evaluations: number
-  conversions: number
-  conversion_rate: number
-}
-
-export type ExperimentStatistics = {
-  p_value: number
-  significant: boolean
-  chance_to_win: Record<string, number>
-  lift: string
-  winner: string | null
-  recommendation: string
-  sample_size_warning: string | null
-}
-
-export type ExperimentResults = {
-  feature: string
-  variants: ExperimentVariantResult[]
-  statistics: ExperimentStatistics
-}
-
 export type WarehouseConnectionStatus =
   | 'created'
   | 'pending_connection'
@@ -1245,12 +1261,31 @@ export type SnowflakeConfig = {
   user: string
 }
 
+export type ClickHouseConfig = {
+  host: string
+  port: number
+  database: string
+  username: string
+  secure: boolean
+}
+
+export type WarehouseConfigResponse =
+  | SnowflakeConfig
+  | ClickHouseConfig
+  | Record<string, never>
+
+export type WarehouseConnectionTestResult = {
+  status: WarehouseConnectionStatus
+  status_detail: string | null
+}
+
 export type WarehouseConnection = {
   id: number
   warehouse_type: WarehouseType
   status: WarehouseConnectionStatus
+  status_detail: string | null
   name: string
-  config: SnowflakeConfig | Record<string, never>
+  config: WarehouseConfigResponse
   created_at: string
   total_events_received: number | null
   unique_events_count: number | null
@@ -1259,6 +1294,7 @@ export type WarehouseConnection = {
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
+  segmentMembers: SegmentMembersResponse
   auditLogs: PagedResponse<AuditLogItem>
   organisationLicence: {}
   organisation: Organisation
@@ -1329,6 +1365,7 @@ export type Res = {
   rolePermission: PagedResponse<RolePermission>
   projectFlags: PagedResponse<ProjectFlag>
   projectFlag: ProjectFlag
+  lifecycleStatusCounts: LifecycleStatusCounts
   identityFeatureStatesAll: IdentityFeatureState[]
   createRolesPermissionUsers: RolePermissionUser
   rolesPermissionUsers: PagedResponse<RolePermissionUser>
@@ -1404,6 +1441,12 @@ export type Res = {
       rank: number
     }[]
   }
+  environmentOnboardingStatus: {
+    // Null until the environment's first SDK evaluation is reported by Edge.
+    first_evaluated_at: string | null
+    // A Core `KnownSDK` label (e.g. 'flagsmith-js-sdk') or 'unknown'.
+    first_evaluated_sdk_label: string | null
+  }
   profile: User
   onboarding: {}
   userPermissions: UserPermission[]
@@ -1450,7 +1493,6 @@ export type Res = {
     environmentDefault?: TypedFeatureState
     saved: boolean
   }
-  experimentResults: ExperimentResults
   adminDashboardMetrics: {
     summary: {
       total_organisations: number
@@ -1488,6 +1530,7 @@ export type Res = {
   gitlabIssues: PagedResponse<GitLabIssue>
   gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
   warehouseConnections: WarehouseConnection[]
+  warehouseConnectionTestResult: WarehouseConnectionTestResult
   experiments: PagedResponse<Experiment> & {
     currentPage: number
     pageSize: number

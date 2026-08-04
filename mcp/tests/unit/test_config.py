@@ -13,7 +13,7 @@ def test_settings__unset__uses_saas_defaults(monkeypatch: pytest.MonkeyPatch) ->
     settings = config.Settings()
 
     # Then
-    assert settings.flagsmith_api_url == "https://api.flagsmith.com"
+    assert str(settings.flagsmith_api_url) == "https://api.flagsmith.com/"
     assert settings.flagsmith_api_token is None
     assert settings.transport == "http"
 
@@ -28,7 +28,7 @@ def test_settings__env__overrides_defaults(monkeypatch: pytest.MonkeyPatch) -> N
     settings = config.Settings()
 
     # Then
-    assert settings.flagsmith_api_url == "https://self-hosted.example.com"
+    assert str(settings.flagsmith_api_url) == "https://self-hosted.example.com/"
     assert settings.flagsmith_api_token == "ser.secret"
     assert settings.transport == "stdio"
 

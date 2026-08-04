@@ -261,6 +261,29 @@ def test_get_github_repository__github_pk_not_a_number__returns_400(  # type: ig
     assert response.json() == {"github_pk": ["Must be an integer"]}
 
 
+def test_get_github_repository__configuration_in_other_organisation__returns_403(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    organisation_two: Organisation,
+) -> None:
+    # Given
+    configuration = GithubConfiguration.objects.create(
+        organisation=organisation_two,
+        installation_id=7654321,
+    )
+
+    url = (
+        f"/api/v1/organisations/{organisation.id}"
+        f"/integrations/github/{configuration.id}/repositories/"
+    )
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
 @responses.activate
 def test_create_github_repository__valid_data__returns_201(
     admin_client_new: APIClient,

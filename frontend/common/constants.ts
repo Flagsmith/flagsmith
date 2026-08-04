@@ -38,6 +38,7 @@ import initNode from './code-help/init/init-node'
 import initPhp from './code-help/init/init-php'
 import initPython from './code-help/init/init-python'
 import initReact from './code-help/init/init-react'
+import initReactNative from './code-help/init/init-react-native'
 import initRuby from './code-help/init/init-ruby'
 import initRust from './code-help/init/init-rust'
 import installCurl from './code-help/install/install-curl'
@@ -111,24 +112,39 @@ const Constants = {
       'iOS': createUserIos(envId, keywords, userId),
     }),
 
-    'INIT': (envId: string) => ({
-      '.NET': initDotnet(envId, keywords),
-      'Flutter': initFlutter(envId, keywords),
-      'Go': initGo(envId, keywords),
-      'Java': initJava(envId, keywords),
-      'JavaScript': initJs(envId, keywords),
-      'Next.js (app router)': initNextAppRouter(envId, keywords),
-      'Next.js (pages router)': initNextPagesRouter(envId, keywords),
-      'Node JS': initNode(envId, keywords),
-      'PHP': initPhp(envId, keywords),
-      'Python': initPython(envId, keywords),
-      'React': initReact(envId, keywords),
-      'React Native': initReact(envId, keywordsReactNative),
-      'Ruby': initRuby(envId, keywords),
-      'Rust': initRust(envId, keywords),
-      'curl': initCurl(envId),
-      'iOS': initIos(envId, keywords),
-    }),
+    // Pass `featureName` to build the snippets around one real flag, as the
+    // onboarding does. Without it the snippets illustrate two placeholder flags:
+    // one for the enabled check, one for the value.
+    'INIT': (envId: string, featureName?: string) => {
+      const kw = featureName
+        ? { ...keywords, FEATURE_NAME: featureName, FEATURE_NAME_ALT: '' }
+        : keywords
+      const kwNative = featureName
+        ? {
+            ...keywordsReactNative,
+            FEATURE_NAME: featureName,
+            FEATURE_NAME_ALT: '',
+          }
+        : keywordsReactNative
+      return {
+        '.NET': initDotnet(envId, kw),
+        'Flutter': initFlutter(envId, kw),
+        'Go': initGo(envId, kw),
+        'Java': initJava(envId, kw),
+        'JavaScript': initJs(envId, kw),
+        'Next.js (app router)': initNextAppRouter(envId, kw),
+        'Next.js (pages router)': initNextPagesRouter(envId, kw),
+        'Node JS': initNode(envId, kw),
+        'PHP': initPhp(envId, kw),
+        'Python': initPython(envId, kw),
+        'React': initReact(envId, kw),
+        'React Native': initReactNative(envId, kwNative),
+        'Ruby': initRuby(envId, kw),
+        'Rust': initRust(envId, kw),
+        'curl': initCurl(envId),
+        'iOS': initIos(envId, kw),
+      }
+    },
 
     'INSTALL': {
       '.NET': installDotnet(),
@@ -260,6 +276,18 @@ const Constants = {
       'category': 'User',
       'event': `User oauth ${type}`,
     }),
+    'ONBOARDING_AI_CONNECT': {
+      'category': 'Onboarding',
+      'event': 'Onboarding AI connect used',
+    },
+    'ONBOARDING_FLAG_TOGGLED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding flag toggled',
+    },
+    'ONBOARDING_SNIPPET_COPIED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding snippet copied',
+    },
     'REFERRER_CONVERSION': (referrer: string) => ({
       'category': 'Referrer',
       'event': `${referrer} converted`,
@@ -292,6 +320,13 @@ const Constants = {
       }
     },
     'VIEW_FEATURE': { 'category': 'Features', 'event': 'Feature viewed' },
+    VIEW_INTEGRATION: (integration: string) => {
+      return {
+        category: 'Integrations',
+        event: 'View Integration',
+        extra: { integration },
+      }
+    },
     VIEW_LOCKED_FEATURE: (feature: string) => {
       return {
         'category': 'Locked Feature',

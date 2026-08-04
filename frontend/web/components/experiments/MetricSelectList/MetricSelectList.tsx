@@ -62,7 +62,10 @@ const MetricSelectList: FC<MetricSelectListProps> = ({
         description='Create your first metric to measure experiment outcomes.'
         icon='bar-chart'
         action={
-          <Button onClick={onCreateClick}>
+          <Button
+            id='experiment-wizard-create-metric-empty'
+            onClick={onCreateClick}
+          >
             <Icon name='plus' width={16} />
             Create Metric
           </Button>
@@ -85,7 +88,11 @@ const MetricSelectList: FC<MetricSelectListProps> = ({
             size='small'
           />
         </div>
-        <Button theme='outline' onClick={onCreateClick}>
+        <Button
+          id='experiment-wizard-create-metric'
+          theme='outline'
+          onClick={onCreateClick}
+        >
           <Icon name='plus' width={16} />
           Create Metric
         </Button>

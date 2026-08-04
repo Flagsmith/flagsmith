@@ -1,8 +1,15 @@
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
+import pytest
 from common.test_tools import RunTasksFixture
-from pytest_django.fixtures import SettingsWrapper
+from django.db import connections
+from django.utils import timezone
+from flag_engine.segments.constants import EQUAL, REGEX
+from pytest_django.fixtures import DjangoAssertNumQueries, SettingsWrapper
 from pytest_mock import MockerFixture
+from task_processor.models import Task
+from task_processor.task_run_method import TaskRunMethod
 
 from environments.models import Environment
 from organisations.models import Organisation
@@ -11,10 +18,12 @@ from segment_membership.services import (
     compute_segment_counts_for_project,
     enqueue_membership_refresh,
     get_projects_to_process,
+    get_segment_members_page,
     is_membership_enabled,
 )
 from segment_membership.tasks import refresh_project_segment_counts
-from segments.models import Segment, SegmentRule
+from segment_membership.types import SegmentMember
+from segments.models import Condition, Segment, SegmentRule
 from tests.types import EnableFeaturesFixture
 
 
@@ -122,7 +131,7 @@ def test_compute_segment_counts_for_project__unknown_env_key_in_row__skips(
         return_value="TRUE",
     )
     cursor = MagicMock()
-    cursor.fetchall.return_value = [(segment.id, "ghost-env", 99)]
+    cursor.fetchall.return_value = [("ghost-env", 99)]
 
     # When
     result = compute_segment_counts_for_project(project, cursor)
@@ -151,6 +160,363 @@ def test_compute_segment_counts_for_project__untranslatable_segment__skips(
     # Then
     assert result == []
     cursor.execute.assert_not_called()
+
+
+def test_get_segment_members_page__untranslatable_segment__returns_empty_without_querying(
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+    segment_rule: SegmentRule,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "segment_membership.services.translate_segment",
+        return_value=None,
+    )
+    open_cursor = mocker.patch("segment_membership.services.open_clickhouse_cursor")
+
+    # When
+    result = get_segment_members_page(segment, environment, cursor=None, limit=100)
+
+    # Then
+    assert result == []
+    open_cursor.assert_not_called()
+
+
+@pytest.fixture
+def matching_segment(segment: Segment) -> Segment:
+    rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(rule=rule, property="foo", operator=EQUAL, value="bar")
+    return segment
+
+
+@pytest.fixture
+def percent_regex_segment(segment: Segment) -> Segment:
+    rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(rule=rule, property="foo", operator=REGEX, value="[b%]ar")
+    return segment
+
+
+@pytest.fixture
+def three_segments(matching_segment: Segment, project: Project) -> dict[str, Segment]:
+    """`matching_segment` matches foo == bar (alice, bob); add one matching a
+    different value (carol) and one matching nobody."""
+    seg_baz = Segment.objects.create(name="baz", project=project)
+    Condition.objects.create(
+        rule=SegmentRule.objects.create(segment=seg_baz, type=SegmentRule.ALL_RULE),
+        property="foo",
+        operator=EQUAL,
+        value="baz",
+    )
+    seg_none = Segment.objects.create(name="none", project=project)
+    Condition.objects.create(
+        rule=SegmentRule.objects.create(segment=seg_none, type=SegmentRule.ALL_RULE),
+        property="foo",
+        operator=EQUAL,
+        value="zzz",
+    )
+    return {"bar": matching_segment, "baz": seg_baz, "none": seg_none}
+
+
+@pytest.mark.clickhouse
+def test_get_segment_members_page__deleted_identity__excluded(
+    segment_membership_identities: None,
+    matching_segment: Segment,
+    environment: Environment,
+    environment_api_key_str: str,
+) -> None:
+    # Given
+    with connections["clickhouse"].cursor() as cursor:
+        cursor.executemany(
+            "INSERT INTO IDENTITIES "
+            "(environment_id, identifier, identity_key, traits, is_deleted) VALUES",
+            [(environment_api_key_str, "aaron", "aaron_key", {"foo": "bar"}, True)],  # type: ignore[list-item]
+        )
+
+    # When
+    members = get_segment_members_page(
+        matching_segment, environment, cursor=None, limit=100
+    )
+
+    # Then
+    assert [member["identifier"] for member in members] == ["alice", "bob"]
+
+
+@pytest.mark.clickhouse
+def test_get_segment_members_page__duplicate_versions__returns_latest_once(
+    segment_membership_identities: None,
+    matching_segment: Segment,
+    environment: Environment,
+    environment_api_key_str: str,
+) -> None:
+    # Given
+    # a newer version of alice that still matches the segment
+    with connections["clickhouse"].cursor() as cursor:
+        cursor.executemany(
+            "INSERT INTO IDENTITIES "
+            "(environment_id, identifier, identity_key, traits, inserted_at) VALUES",
+            [
+                (  # type: ignore[list-item]
+                    environment_api_key_str,
+                    "alice",
+                    "alice_key",
+                    {"foo": "bar", "version": "new"},
+                    datetime(2099, 1, 1),
+                )
+            ],
+        )
+
+    # When
+    members = get_segment_members_page(
+        matching_segment, environment, cursor=None, limit=100
+    )
+
+    # Then
+    # alice appears once, with the latest version's traits
+    assert members == [
+        SegmentMember(
+            identifier="alice",
+            identity_key="alice_key",
+            traits={"foo": "bar", "version": "new"},
+        ),
+        SegmentMember(identifier="bob", identity_key="bob_key", traits={"foo": "bar"}),
+    ]
+
+
+@pytest.mark.clickhouse
+def test_compute_segment_counts_for_project__deleted_identity__excluded_from_count(
+    segment_membership_identities: None,
+    matching_segment: Segment,
+    project: Project,
+    environment_api_key_str: str,
+) -> None:
+    # Given
+    with connections["clickhouse"].cursor() as cursor:
+        cursor.executemany(
+            "INSERT INTO IDENTITIES "
+            "(environment_id, identifier, identity_key, traits, is_deleted) VALUES",
+            [(environment_api_key_str, "aaron", "aaron_key", {"foo": "bar"}, True)],  # type: ignore[list-item]
+        )
+
+    # When
+    with connections["clickhouse"].cursor() as cursor:
+        counts = compute_segment_counts_for_project(project, cursor)
+
+    # Then
+    assert len(counts) == 1
+    assert counts[0].segment_id == matching_segment.id
+    assert counts[0].count == 2
+
+
+@pytest.mark.clickhouse
+def test_compute_segment_counts_for_project__multiple_segments__maps_each_count_drops_zeros(
+    segment_membership_identities: None,
+    three_segments: dict[str, Segment],
+    project: Project,
+) -> None:
+    # Given / When
+    with connections["clickhouse"].cursor() as cursor:
+        counts = compute_segment_counts_for_project(project, cursor)
+
+    # Then
+    by_segment = {c.segment_id: c.count for c in counts}
+    assert by_segment == {
+        three_segments["bar"].id: 2,
+        three_segments["baz"].id: 1,
+    }
+    assert three_segments["none"].id not in by_segment
+
+
+@pytest.mark.clickhouse
+def test_compute_segment_counts_for_project__multiple_segments__uses_single_query(
+    segment_membership_identities: None,
+    three_segments: dict[str, Segment],
+    project: Project,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given
+    # three_segments + identities are set up by fixtures
+
+    # When / Then
+    with (
+        django_assert_num_queries(1, connection=connections["clickhouse"]),
+        connections["clickhouse"].cursor() as cursor,
+    ):
+        compute_segment_counts_for_project(project, cursor)
+
+
+@pytest.mark.clickhouse
+def test_get_segment_members_page__regex_with_percent__returns_matches(
+    segment_membership_identities: None,
+    percent_regex_segment: Segment,
+    environment: Environment,
+) -> None:
+    # Given / When
+    members = get_segment_members_page(
+        percent_regex_segment, environment, cursor=None, limit=100
+    )
+
+    # Then
+    assert [member["identifier"] for member in members] == ["alice", "bob"]
+
+
+@pytest.mark.clickhouse
+def test_compute_segment_counts_for_project__regex_with_percent__counts_matches(
+    segment_membership_identities: None,
+    percent_regex_segment: Segment,
+    project: Project,
+) -> None:
+    # Given / When
+    with connections["clickhouse"].cursor() as cursor:
+        counts = compute_segment_counts_for_project(project, cursor)
+
+    # Then
+    assert len(counts) == 1
+    assert counts[0].segment_id == percent_regex_segment.id
+    assert counts[0].count == 2
+
+
+@pytest.mark.clickhouse
+def test_get_segment_members_page__matching_identities__returns_members_ordered_by_identifier(
+    segment_membership_identities: None,
+    matching_segment: Segment,
+    environment: Environment,
+) -> None:
+    # Given / When
+    members = get_segment_members_page(
+        matching_segment, environment, cursor=None, limit=100
+    )
+
+    # Then
+    assert members == [
+        SegmentMember(
+            identifier="alice",
+            identity_key="alice_key",
+            traits={"foo": "bar"},
+        ),
+        SegmentMember(
+            identifier="bob",
+            identity_key="bob_key",
+            traits={"foo": "bar"},
+        ),
+    ]
+
+
+@pytest.mark.clickhouse
+def test_get_segment_members_page__cursor__returns_rows_after_cursor(
+    segment_membership_identities: None,
+    matching_segment: Segment,
+    environment: Environment,
+) -> None:
+    # Given / When
+    members = get_segment_members_page(
+        matching_segment, environment, cursor="alice", limit=100
+    )
+
+    # Then
+    assert members == [
+        SegmentMember(
+            identifier="bob",
+            identity_key="bob_key",
+            traits={"foo": "bar"},
+        ),
+    ]
+
+
+@pytest.mark.clickhouse
+def test_get_segment_members_page__limit__caps_results(
+    segment_membership_identities: None,
+    matching_segment: Segment,
+    environment: Environment,
+) -> None:
+    # Given / When
+    members = get_segment_members_page(
+        matching_segment, environment, cursor=None, limit=1
+    )
+
+    # Then
+    assert members == [
+        SegmentMember(
+            identifier="alice",
+            identity_key="alice_key",
+            traits={"foo": "bar"},
+        ),
+    ]
+
+
+@pytest.mark.parametrize(
+    "q,expected_result",
+    [
+        pytest.param(
+            "ali",
+            [
+                SegmentMember(
+                    identifier="alice",
+                    identity_key="alice_key",
+                    traits={"foo": "bar"},
+                ),
+            ],
+            id="substring",
+        ),
+        pytest.param(
+            "ALICE",
+            [
+                SegmentMember(
+                    identifier="alice",
+                    identity_key="alice_key",
+                    traits={"foo": "bar"},
+                ),
+            ],
+            id="case-insensitive",
+        ),
+        pytest.param("zzz", [], id="no-match"),
+    ],
+)
+@pytest.mark.clickhouse
+def test_get_segment_members_page__q__returns_expected(
+    segment_membership_identities: None,
+    matching_segment: Segment,
+    environment: Environment,
+    q: str,
+    expected_result: list[SegmentMember],
+) -> None:
+    # Given / When
+    members = get_segment_members_page(
+        matching_segment,
+        environment,
+        cursor=None,
+        limit=100,
+        q=q,
+    )
+
+    # Then
+    assert members == expected_result
+
+
+@pytest.mark.clickhouse
+def test_get_segment_members_page__q_matches_beyond_first_page__still_found(
+    segment_membership_identities: None,
+    matching_segment: Segment,
+    environment: Environment,
+) -> None:
+    # Given / When
+    members = get_segment_members_page(
+        matching_segment,
+        environment,
+        cursor=None,
+        limit=1,
+        q="bob",
+    )
+
+    # Then
+    assert members == [
+        SegmentMember(
+            identifier="bob",
+            identity_key="bob_key",
+            traits={"foo": "bar"},
+        ),
+    ]
 
 
 def test_enqueue_membership_refresh__flag_on__enqueues_refresh(
@@ -253,3 +619,100 @@ def test_enqueue_membership_refresh__pending_for_other_project__still_enqueues(
         [mocker.call(project, mocker.ANY), mocker.call(project_b, mocker.ANY)],
         any_order=True,
     )
+
+
+def test_enqueue_membership_refresh__delay_until__forwards_delay_to_task(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    refresh_mock = mocker.patch(
+        "segment_membership.tasks.refresh_project_segment_counts"
+    )
+    refresh_mock.task_identifier = "segment_membership.refresh_project_segment_counts"
+    delay_until = datetime(2099, 1, 1)
+
+    # When
+    enqueue_membership_refresh(project, delay_until=delay_until)
+
+    # Then
+    refresh_mock.delay.assert_called_once_with(
+        args=(project.id,), delay_until=delay_until
+    )
+
+
+def test_enqueue_membership_refresh__pending_scheduled_sooner__reschedules_to_delay_until(
+    settings: SettingsWrapper,
+    project: Project,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    settings.TASK_RUN_METHOD = TaskRunMethod.TASK_PROCESSOR
+    sooner = timezone.now()
+    later = sooner + timedelta(seconds=120)
+    refresh_project_segment_counts.delay(args=(project.id,), delay_until=sooner)
+
+    # When
+    enqueue_membership_refresh(project, delay_until=later)
+
+    # Then
+    # the pending task is pushed out rather than a second one being enqueued
+    task = Task.objects.get(
+        task_identifier=refresh_project_segment_counts.task_identifier,
+        serialized_args=Task.serialize_data((project.id,)),
+    )
+    assert task.scheduled_for == later
+
+
+def test_enqueue_membership_refresh__pending_scheduled_later__leaves_schedule(
+    settings: SettingsWrapper,
+    project: Project,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    settings.TASK_RUN_METHOD = TaskRunMethod.TASK_PROCESSOR
+    later = timezone.now() + timedelta(hours=1)
+    refresh_project_segment_counts.delay(args=(project.id,), delay_until=later)
+
+    # When
+    enqueue_membership_refresh(
+        project, delay_until=timezone.now() + timedelta(seconds=120)
+    )
+
+    # Then
+    task = Task.objects.get(
+        task_identifier=refresh_project_segment_counts.task_identifier,
+        serialized_args=Task.serialize_data((project.id,)),
+    )
+    assert task.scheduled_for == later
+
+
+def test_enqueue_membership_refresh__pending_and_no_delay__leaves_schedule(
+    settings: SettingsWrapper,
+    project: Project,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    settings.TASK_RUN_METHOD = TaskRunMethod.TASK_PROCESSOR
+    scheduled = timezone.now() + timedelta(seconds=120)
+    refresh_project_segment_counts.delay(args=(project.id,), delay_until=scheduled)
+
+    # When
+    enqueue_membership_refresh(project, delay_until=None)
+
+    # Then
+    task = Task.objects.get(
+        task_identifier=refresh_project_segment_counts.task_identifier,
+        serialized_args=Task.serialize_data((project.id,)),
+    )
+    assert task.scheduled_for == scheduled

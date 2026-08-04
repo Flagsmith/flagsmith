@@ -12,7 +12,9 @@ from app_analytics.analytics_db_service import (
     get_top_organisations_from_local_db,
     get_total_events_count,
     get_usage_data,
+    get_usage_data_for_window,
     get_usage_data_from_local_db,
+    get_usage_data_from_local_db_for_window,
 )
 from app_analytics.constants import CURRENT_BILLING_PERIOD, PREVIOUS_BILLING_PERIOD
 from app_analytics.dataclasses import FeatureEvaluationData, UsageData
@@ -812,3 +814,155 @@ def test_get_top_organisations_from_local_db__saas_mode__raises_runtime_error(
     # When / Then
     with pytest.raises(RuntimeError, match="Must not run in SaaS mode"):
         get_top_organisations_from_local_db(timezone.now() - timedelta(days=30))
+
+
+@pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
+def test_get_usage_data_from_local_db_for_window__bucket_outside_window__excluded(
+    organisation: Organisation,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ANALYTICS_BUCKET_SIZE = 15
+    now = timezone.now()
+    hour_start = now - timedelta(hours=1)
+
+    # A bucket inside the window [08:00, 09:00) ...
+    APIUsageBucket.objects.create(
+        environment_id=environment.id,
+        resource=Resource.FLAGS,
+        total_count=5,
+        bucket_size=15,
+        created_at=hour_start + timedelta(minutes=30),
+    )
+    # ... and one earlier the same day, before the window, that the daily filter
+    # would have included but the datetime window must exclude.
+    APIUsageBucket.objects.create(
+        environment_id=environment.id,
+        resource=Resource.FLAGS,
+        total_count=99,
+        bucket_size=15,
+        created_at=hour_start - timedelta(hours=1),
+    )
+
+    # When
+    usage_data = get_usage_data_from_local_db_for_window(
+        organisation,
+        date_start=hour_start,
+        date_stop=now,
+    )
+
+    # Then
+    assert len(usage_data) == 1
+    assert usage_data[0].flags == 5
+
+
+@pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
+def test_get_usage_data_from_local_db_for_window__project_id_filter__scopes_to_project(
+    organisation: Organisation,
+    project: Project,
+    project_two: Project,
+    environment: Environment,
+    project_two_environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ANALYTICS_BUCKET_SIZE = 15
+    now = timezone.now()
+    hour_start = now - timedelta(hours=1)
+    for environment_id in [environment.id, project_two_environment.id]:
+        APIUsageBucket.objects.create(
+            environment_id=environment_id,
+            resource=Resource.FLAGS,
+            total_count=10,
+            bucket_size=15,
+            created_at=hour_start + timedelta(minutes=10),
+        )
+
+    # When
+    usage_data = get_usage_data_from_local_db_for_window(
+        organisation,
+        date_start=hour_start,
+        date_stop=now,
+        project_id=project.id,
+    )
+
+    # Then
+    assert len(usage_data) == 1
+    assert usage_data[0].flags == 10
+
+
+def test_get_usage_data_for_window__postgres_configured__calls_local_db_for_window(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    organisation: Organisation,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = True
+    date_start = timezone.now() - timedelta(hours=1)
+    date_stop = timezone.now()
+    mocked_local_db_for_window = mocker.patch(
+        "app_analytics.analytics_db_service.get_usage_data_from_local_db_for_window",
+        autospec=True,
+    )
+
+    # When
+    usage_data = get_usage_data_for_window(organisation, date_start, date_stop)
+
+    # Then
+    assert usage_data == mocked_local_db_for_window.return_value
+    mocked_local_db_for_window.assert_called_once_with(
+        organisation,
+        date_start=date_start,
+        date_stop=date_stop,
+        project_id=None,
+    )
+
+
+def test_get_usage_data_for_window__influxdb_configured__calls_influxdb(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    organisation: Organisation,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False
+    settings.INFLUXDB_TOKEN = "test-token"
+    date_start = timezone.now() - timedelta(hours=1)
+    date_stop = timezone.now()
+    mocked_influxdb = mocker.patch(
+        "app_analytics.analytics_db_service.get_usage_data_from_influxdb",
+        autospec=True,
+    )
+
+    # When
+    usage_data = get_usage_data_for_window(organisation, date_start, date_stop)
+
+    # Then
+    assert usage_data == mocked_influxdb.return_value
+    mocked_influxdb.assert_called_once_with(
+        organisation_id=organisation.id,
+        project_id=None,
+        date_start=date_start,
+        date_stop=date_stop,
+    )
+
+
+def test_get_usage_data_for_window__no_analytics_configured__returns_empty(
+    settings: SettingsWrapper,
+    organisation: Organisation,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False
+    settings.INFLUXDB_TOKEN = None
+
+    # When
+    result = get_usage_data_for_window(
+        organisation,
+        timezone.now() - timedelta(hours=1),
+        timezone.now(),
+    )
+
+    # Then
+    assert result == []

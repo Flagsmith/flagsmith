@@ -8,6 +8,7 @@ import pytest
 from common.test_tools import SnapshotFixture
 from django.conf import settings
 from django.core import signing
+from django.utils import timezone
 from flag_engine.segments import constants as segment_constants
 from pytest_mock import MockerFixture
 from requests.exceptions import HTTPError, RequestException, Timeout
@@ -260,6 +261,27 @@ def test_process_import_request__success__expected_status(  # type: ignore[no-un
     # Tags are imported correctly.
     tagged_feature = Feature.objects.get(project=project, name="flag5")
     [tag.label for tag in tagged_feature.tags.all()] == ["testtag", "testtag2"]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__already_completed__does_not_reprocess(
+    ld_client_class_mock: MagicMock,
+    ld_client_mock: MagicMock,
+    import_request: LaunchDarklyImportRequest,
+) -> None:
+    # Given
+    import_request.status["result"] = "success"
+    import_request.completed_at = timezone.now()
+    import_request.ld_token = ""
+    import_request.save()
+    ld_client_class_mock.reset_mock()
+
+    # When
+    process_import_request(import_request)
+
+    # Then
+    ld_client_class_mock.assert_not_called()
+    ld_client_mock.get_environments.assert_not_called()
 
 
 @pytest.mark.django_db(transaction=True)

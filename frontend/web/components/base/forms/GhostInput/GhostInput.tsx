@@ -63,6 +63,11 @@ const GhostInput = ({
         onKeyDown={onKeyDown}
         aria-label={ariaLabel}
         spellCheck={false}
+        // Opt out of browser autofill + password-manager overlays (1Password,
+        // LastPass); their icons would overlap the trailing edit pencil.
+        autoComplete='off'
+        data-1p-ignore
+        data-lpignore='true'
         style={{ width: inputWidth }}
       />
     </span>

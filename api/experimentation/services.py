@@ -1,18 +1,27 @@
 from __future__ import annotations
 
+import time
 import typing
 from dataclasses import replace
 from functools import lru_cache
 
 import structlog
+from clickhouse_connect.driver.exceptions import ClickHouseError
 from clickhouse_driver import Client
 from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
+from django.core.cache import cache
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
+from flag_engine.segments.constants import PERCENTAGE_SPLIT
+from rest_framework.exceptions import ValidationError
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.dataclasses import AuthorData
+from environments.tasks import rebuild_environment_document
+from experimentation import warehouse_delivery_service
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
@@ -32,14 +41,23 @@ from experimentation.dataclasses import (
     MetricSpec,
     ResultsAggregates,
     ResultsSummary,
+    RolloutSpec,
     WarehouseEventStats,
+)
+from experimentation.metrics import (
+    flagsmith_experimentation_warehouse_connection_verifications_total,
+    flagsmith_experimentation_warehouse_delivery_objects_total,
+    flagsmith_experimentation_warehouse_delivery_runs_total,
 )
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
+    Experiment,
     ExperimentStatus,
     MetricAggregation,
     MetricDirection,
     WarehouseConnectionStatus,
+    WarehouseDeliveryLog,
+    WarehouseDeliveryOutcome,
     WarehouseType,
 )
 from experimentation.results_query import _EXPOSURES_CTE, ResultsQueryBuilder
@@ -50,14 +68,32 @@ from experimentation.stats import (
     srm_p_value,
 )
 from features.models import FeatureState
+from features.value_types import BOOLEAN, INTEGER, STRING
+from features.versioning.dataclasses import FlagChangeSet, MultivariateValueChangeSet
+from features.versioning.versioning_service import (
+    get_environment_flags_list,
+    update_flag,
+    update_multivariate_values,
+)
 from integrations.flagsmith.client import get_openfeature_client
+from segments.models import Condition, Segment, SegmentRule
+
+_ROLLOUT_VALUE_TYPE: dict[str, "FeatureValueType"] = {
+    INTEGER: "integer",
+    STRING: "string",
+    BOOLEAN: "boolean",
+}
 
 if typing.TYPE_CHECKING:
     from collections.abc import Sequence
     from datetime import datetime
 
-    from experimentation.models import Experiment, Metric, WarehouseConnection
+    from clickhouse_connect.driver.client import Client as ClickHouseHTTPClient
+
+    from experimentation.models import Metric, WarehouseConnection
     from experimentation.types import ExposureGranularity
+    from features.feature_states.models import FeatureValueType
+    from features.models import FeatureStateValue
     from organisations.models import Organisation
     from users.models import FFAdminUser
 
@@ -65,6 +101,14 @@ logger = structlog.get_logger("warehouse")
 
 CLICKHOUSE_CONNECT_TIMEOUT_SECONDS = 5
 CLICKHOUSE_QUERY_TIMEOUT_SECONDS = 30
+CLICKHOUSE_VERIFY_TIMEOUT_SECONDS = 5
+CUSTOMER_EVENT_STATS_CACHE_SECONDS = 60
+
+_CUSTOMER_EVENT_STATS_UNAVAILABLE = "unavailable"
+
+# A delivery run stops taking on new objects after this long, leaving room for
+# the slowest possible in-flight insert to still land inside the task timeout.
+DELIVERY_TIME_BUDGET_SECONDS = 210
 
 
 def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
@@ -94,6 +138,7 @@ def _get_clickhouse_client() -> Client:
     host, kwargs = parse_url(settings.EXPERIMENTATION_CLICKHOUSE_URL)
     kwargs.setdefault("connect_timeout", CLICKHOUSE_CONNECT_TIMEOUT_SECONDS)
     kwargs.setdefault("send_receive_timeout", CLICKHOUSE_QUERY_TIMEOUT_SECONDS)
+    kwargs.setdefault("client_name", settings.CLICKHOUSE_CONNECTION_CLIENT_NAME)
     return Client(host, **kwargs)
 
 
@@ -109,18 +154,29 @@ def get_unique_event_names(environment_key: str) -> list[str]:
     return [row[0] for row in rows]
 
 
-def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
-    """Return event counts recorded for `environment_key` in the warehouse."""
-    rows = _get_clickhouse_client().execute(
-        "SELECT count() AS total, uniqExact(event) AS unique "
-        "FROM events WHERE environment_key = %(environment_key)s",
-        {"environment_key": environment_key},
-    )
+_EVENT_STATS_QUERY = (
+    "SELECT count() AS total, uniqExact(event) AS unique "
+    "FROM events WHERE environment_key = %(environment_key)s"
+)
+
+
+def _build_event_stats(
+    rows: Sequence[Sequence[typing.Any]],
+) -> WarehouseEventStats:
     total, unique = rows[0] if rows else (0, 0)
     return WarehouseEventStats(
         total_events_received=int(total),
         unique_events_count=int(unique),
     )
+
+
+def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
+    """Return event counts recorded for `environment_key` in the warehouse."""
+    rows = _get_clickhouse_client().execute(
+        _EVENT_STATS_QUERY,
+        {"environment_key": environment_key},
+    )
+    return _build_event_stats(rows)
 
 
 EXPOSURE_BUCKETS_QUERY = (
@@ -512,6 +568,240 @@ def transition_experiment_status(
     return experiment
 
 
+def _create_rollout_segment(
+    experiment: Experiment, rollout_percentage: float
+) -> Segment:
+    segment: Segment = Segment.objects.create(
+        name=f"experiment-{experiment.id}-rollout",
+        project=experiment.feature.project,
+        is_system_segment=True,
+    )
+    rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(
+        rule=rule,
+        operator=PERCENTAGE_SPLIT,
+        property="$.identity.key",
+        value=str(rollout_percentage),
+    )
+    return segment
+
+
+def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
+    option_ids = [v.multivariate_feature_option_id for v in spec.multivariate_values]
+    if len(option_ids) != len(set(option_ids)):
+        raise ValidationError("Multivariate options must be unique")
+    valid_option_ids = set(
+        experiment.feature.multivariate_options.values_list("id", flat=True)
+    )
+    if invalid := set(option_ids) - valid_option_ids:
+        raise ValidationError(
+            f"Multivariate options {sorted(invalid)} do not belong to the feature"
+        )
+    total = sum(v.percentage_allocation for v in spec.multivariate_values)
+    if total > 100:
+        raise ValidationError(
+            f"Multivariate allocations must not exceed 100%, got {total}%."
+        )
+
+
+def _sync_rollout_segment(experiment: Experiment, rollout_percentage: float) -> Segment:
+    segment = experiment.rollout_segment
+    if segment is not None:
+        condition = Condition.objects.get(
+            rule__segment=segment, operator=PERCENTAGE_SPLIT
+        )
+        condition.value = str(rollout_percentage)
+        condition.save()
+        return segment
+    segment = _create_rollout_segment(experiment, rollout_percentage)
+    experiment.rollout_segment = segment
+    experiment.save()
+    return segment
+
+
+def _get_live_rollout_override(experiment: Experiment) -> FeatureState | None:
+    flags = get_environment_flags_list(
+        environment=experiment.environment,
+        additional_filters=Q(
+            feature_id=experiment.feature_id,
+            feature_segment__segment_id=experiment.rollout_segment_id,
+            identity__isnull=True,
+        ),
+    )
+    return flags[0] if flags else None
+
+
+def _update_live_feature_state(
+    feature_state: FeatureState, change_set: FlagChangeSet
+) -> None:
+    feature_state.enabled = change_set.enabled
+    feature_state.save()
+    feature_state.feature_state_value.set_value(
+        change_set.feature_state_value, change_set.type_
+    )
+    feature_state.feature_state_value.save()
+    update_multivariate_values(feature_state, change_set.multivariate_values)
+
+
+def _update_rollout_in_place(experiment: Experiment, change_set: FlagChangeSet) -> None:
+    """Write the rollout-segment override, keeping variant assignment stable.
+
+    Under v2 versioning, ``update_flag`` clones the override into a fresh feature
+    state on every call. Since the multivariate split is salted on the feature
+    state id, that would re-randomise control/variant for already-enrolled
+    identities on each rollout update. Once the override exists, mutate it in
+    place instead (no version is published). Creating the override, and v1
+    versioning, still go through ``update_flag``, which already reuses the
+    feature state.
+
+    This is a temporary solution until we find a permanent fix for the
+    underlying salting issue: https://github.com/Flagsmith/flagsmith/issues/7913
+    """
+    if experiment.environment.use_v2_feature_versioning and (
+        override := _get_live_rollout_override(experiment)
+    ):
+        _update_live_feature_state(override, change_set)
+        return
+    update_flag(experiment.environment, experiment.feature, change_set)
+
+
+def _reset_default_allocations_to_control(
+    experiment: Experiment, author: AuthorData
+) -> None:
+    """Zero every variant's allocation on the feature's environment-default
+    feature state, leaving control (the unallocated remainder) at 100%.
+
+    Run once, when the rollout segment is first created: identities outside the
+    rollout cohort should all receive control while the experiment runs.
+    """
+    (default_state,) = get_environment_flags_list(
+        environment=experiment.environment,
+        additional_filters=Q(
+            feature_id=experiment.feature_id,
+            feature_segment__isnull=True,
+            identity__isnull=True,
+        ),
+    )
+    str_value, value_type = _serialize_feature_state_value(
+        default_state.feature_state_value
+    )
+    update_flag(
+        experiment.environment,
+        experiment.feature,
+        FlagChangeSet(
+            author=author,
+            enabled=default_state.enabled,
+            feature_state_value=str_value,
+            type_=value_type,
+            multivariate_values=[
+                MultivariateValueChangeSet(
+                    multivariate_feature_option_id=option_id,
+                    percentage_allocation=0,
+                )
+                for option_id in experiment.feature.multivariate_options.values_list(
+                    "id", flat=True
+                )
+            ],
+        ),
+    )
+
+
+def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
+    validate_rollout_spec(experiment, spec)
+    environment_id = experiment.environment_id
+    with transaction.atomic():
+        experiment.refresh_from_db(from_queryset=Experiment.objects.select_for_update())
+        if experiment.status == ExperimentStatus.COMPLETED:
+            raise ValidationError(
+                f"Cannot change the rollout of a {experiment.status} experiment."
+            )
+        is_first_rollout = experiment.rollout_segment_id is None
+        segment = _sync_rollout_segment(experiment, spec.rollout_percentage)
+        if is_first_rollout:
+            _reset_default_allocations_to_control(experiment, spec.author)
+        _update_rollout_in_place(
+            experiment,
+            FlagChangeSet(
+                author=spec.author,
+                enabled=spec.enabled,
+                feature_state_value=spec.feature_state_value,
+                type_=spec.value_type,
+                segment_id=segment.id,
+                multivariate_values=spec.multivariate_values,
+            ),
+        )
+        # Segment condition changes don't trigger a rebuild on their own.
+        transaction.on_commit(
+            lambda: rebuild_environment_document.delay(
+                kwargs={"environment_id": environment_id}
+            )
+        )
+
+
+def _serialize_feature_state_value(
+    value: FeatureStateValue,
+) -> tuple[str, FeatureValueType]:
+    """Render a stored feature state value as the (string, API type) pair that
+    a `FlagChangeSet` expects."""
+    if value.value is None:
+        return "", "string"
+    return (
+        str(value.value).lower() if value.type == BOOLEAN else str(value.value),
+        _ROLLOUT_VALUE_TYPE.get(value.type or STRING, "string"),
+    )
+
+
+def get_experiment_rollout(experiment: Experiment) -> dict[str, typing.Any] | None:
+    segment_id = experiment.rollout_segment_id
+    if segment_id is None:
+        return None
+
+    feature_state = FeatureState.objects.get_live_feature_states(
+        environment=experiment.environment,
+        additional_filters=Q(
+            feature_segment__segment_id=segment_id, identity__isnull=True
+        ),
+        feature_id=experiment.feature_id,
+    ).latest("id")
+
+    condition = Condition.objects.get(
+        rule__segment_id=segment_id, operator=PERCENTAGE_SPLIT
+    )
+    str_value, value_type = _serialize_feature_state_value(
+        feature_state.feature_state_value
+    )
+    return {
+        "enabled": feature_state.enabled,
+        "rollout_percentage": float(condition.value or 0),
+        "feature_state_value": {"type": value_type, "value": str_value},
+        "multivariate_feature_state_values": [
+            {
+                "multivariate_feature_option": mv.multivariate_feature_option_id,
+                "percentage_allocation": mv.percentage_allocation,
+            }
+            for mv in feature_state.multivariate_feature_state_values.all()
+        ],
+    }
+
+
+def enable_experiment_rollout(experiment: Experiment, author: AuthorData) -> None:
+    rollout = get_experiment_rollout(experiment)
+    if rollout is None or rollout["enabled"]:
+        return
+
+    value = rollout["feature_state_value"]
+    _update_rollout_in_place(
+        experiment,
+        FlagChangeSet(
+            author=author,
+            enabled=True,
+            feature_state_value=value["value"],
+            type_=value["type"],
+            segment_id=experiment.rollout_segment_id,
+        ),
+    )
+
+
 def mark_warehouse_pending_connection(
     connection: WarehouseConnection,
 ) -> WarehouseConnection:
@@ -528,6 +818,212 @@ def mark_warehouse_pending_connection(
         organisation__id=connection.environment.project.organisation_id,
     )
     return connection
+
+
+def mark_warehouse_delivery_failed(
+    connection: WarehouseConnection,
+    detail: str,
+) -> None:
+    connection.status = WarehouseConnectionStatus.ERRORED
+    connection.status_detail = detail[:255]
+    connection.save(update_fields=["status", "status_detail"])
+
+
+def mark_warehouse_delivery_succeeded(connection: WarehouseConnection) -> None:
+    if connection.status == WarehouseConnectionStatus.CONNECTED:
+        return
+
+    connection.status = WarehouseConnectionStatus.CONNECTED
+    connection.status_detail = None
+    connection.save(update_fields=["status", "status_detail"])
+
+
+def _deliver_pending_objects(
+    client: ClickHouseHTTPClient,
+    *,
+    bucket_name: str,
+    pending: list[str],
+    connection: WarehouseConnection,
+) -> tuple[int, int, int]:
+    log = logger.bind(
+        connection__id=connection.id,
+        environment__id=connection.environment_id,
+        organisation__id=connection.environment.project.organisation_id,
+    )
+    # A run that outlives the task timeout is retried while its own thread
+    # keeps delivering, so it must finish first: whatever is left is picked up
+    # on the next tick.
+    deadline = time.monotonic() + DELIVERY_TIME_BUDGET_SECONDS
+    delivered_count = rejected_count = rows_count = 0
+    for index, s3_key in enumerate(pending):
+        if time.monotonic() > deadline:
+            log.info(
+                "delivery.budget_exhausted",
+                objects__remaining_count=len(pending) - index,
+            )
+            break
+        try:
+            object_rows_count = warehouse_delivery_service.deliver_object(
+                client,
+                bucket_name,
+                s3_key,
+            )
+        except warehouse_delivery_service.ObjectRejectedError as exc:
+            # This object's contents are the problem; the ones behind it are
+            # still deliverable.
+            warehouse_delivery_service.move_object(
+                bucket_name,
+                s3_key,
+                to_prefix=warehouse_delivery_service.FAILED_PREFIX,
+            )
+            WarehouseDeliveryLog.objects.create(
+                connection=connection,
+                s3_key=s3_key,
+                outcome=WarehouseDeliveryOutcome.REJECTED,
+                error=str(exc),
+            )
+            rejected_count += 1
+            flagsmith_experimentation_warehouse_delivery_objects_total.labels(
+                result="rejected"
+            ).inc()
+            log.error(
+                "delivery.object_rejected",
+                s3__key=s3_key,
+                exc_info=True,
+            )
+            continue
+        warehouse_delivery_service.move_object(
+            bucket_name,
+            s3_key,
+            to_prefix=warehouse_delivery_service.ARCHIVE_PREFIX,
+        )
+        WarehouseDeliveryLog.objects.create(
+            connection=connection,
+            s3_key=s3_key,
+            outcome=WarehouseDeliveryOutcome.DELIVERED,
+            rows_count=object_rows_count,
+        )
+        rows_count += object_rows_count
+        delivered_count += 1
+        flagsmith_experimentation_warehouse_delivery_objects_total.labels(
+            result="delivered"
+        ).inc()
+    return delivered_count, rejected_count, rows_count
+
+
+def deliver_warehouse_events(
+    connection: WarehouseConnection,
+    *,
+    bucket_name: str,
+) -> None:
+    """Deliver the environment's pending event objects to the connection's
+    warehouse, surfacing the outcome on the connection's status."""
+    log = logger.bind(
+        connection__id=connection.id,
+        environment__id=connection.environment_id,
+        organisation__id=connection.environment.project.organisation_id,
+    )
+    pending = warehouse_delivery_service.list_pending_objects(
+        bucket_name,
+        environment_key=connection.environment.api_key,
+    )
+    if not pending:
+        return
+
+    try:
+        with warehouse_delivery_service.delivery_client(connection) as client:
+            delivered_count, rejected_count, rows_count = _deliver_pending_objects(
+                client,
+                bucket_name=bucket_name,
+                pending=pending,
+                connection=connection,
+            )
+    except (warehouse_delivery_service.DeliveryConfigError, ClickHouseError) as exc:
+        # The warehouse itself is unusable; deliver nothing, leave every
+        # remaining object in place for the next run, and surface the
+        # breakage on the connection. Anything else — an S3 failure, a bug
+        # here — is ours, so it propagates and fails the task instead of
+        # blaming the customer's warehouse.
+        mark_warehouse_delivery_failed(
+            connection,
+            detail=warehouse_delivery_service.describe_warehouse_error(exc),
+        )
+        flagsmith_experimentation_warehouse_delivery_runs_total.labels(
+            result="failure"
+        ).inc()
+        log.error("delivery.failed", exc_info=exc)
+        return
+
+    if delivered_count == 0 and rejected_count:
+        # Records all come from one ingestion pipeline, so every object being
+        # rejected points at the table's schema rather than the objects.
+        mark_warehouse_delivery_failed(
+            connection,
+            detail=(
+                f"The warehouse rejected every event object. Check that the "
+                f"`{warehouse_delivery_service.EVENTS_TABLE_NAME}` table "
+                f"matches the expected schema."
+            ),
+        )
+        flagsmith_experimentation_warehouse_delivery_runs_total.labels(
+            result="failure"
+        ).inc()
+        log.error(
+            "delivery.all_objects_rejected",
+            objects__rejected_count=rejected_count,
+        )
+        return
+
+    mark_warehouse_delivery_succeeded(connection)
+    flagsmith_experimentation_warehouse_delivery_runs_total.labels(
+        result="success"
+    ).inc()
+    log.info(
+        "delivery.completed",
+        objects__count=delivered_count,
+        objects__rejected_count=rejected_count,
+        rows__count=rows_count,
+    )
+
+
+def verify_clickhouse_connection(
+    connection: WarehouseConnection,
+    persist: bool = True,
+) -> None:
+    """Check the customer's events table exists, connecting over the same
+    client, interface and port that delivery uses, and set the status to
+    connected or errored; never raises. With persist=False, the status is only
+    set on the in-memory instance, allowing unsaved connections to be
+    tested."""
+    log = logger.bind(environment__id=connection.environment_id)
+    try:
+        log = log.bind(organisation__id=connection.environment.project.organisation_id)
+        with warehouse_delivery_service.delivery_client(
+            connection,
+            send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
+        ) as client:
+            warehouse_delivery_service.check_events_table_exists(client)
+    except Exception as error:
+        connection.status = WarehouseConnectionStatus.ERRORED
+        connection.status_detail = warehouse_delivery_service.describe_warehouse_error(
+            error
+        )
+        if persist:
+            connection.save(update_fields=["status", "status_detail"])
+        flagsmith_experimentation_warehouse_connection_verifications_total.labels(
+            result="failure"
+        ).inc()
+        log.warning("connection.verification_failed", exc_info=True)
+        return
+
+    connection.status = WarehouseConnectionStatus.CONNECTED
+    connection.status_detail = None
+    if persist:
+        connection.save(update_fields=["status", "status_detail"])
+    flagsmith_experimentation_warehouse_connection_verifications_total.labels(
+        result="success"
+    ).inc()
+    log.info("connection.verification_succeeded")
 
 
 def refresh_warehouse_connection_status(
@@ -554,9 +1050,16 @@ def annotate_warehouse_event_stats(
     connection: WarehouseConnection,
     environment_key: str,
 ) -> None:
-    """Attach live warehouse event stats to a flagsmith connection. No-op for
-    non-flagsmith connections or when no warehouse is configured; leaves stats
-    unset when the warehouse is unreachable. Read-only: never changes status."""
+    """Attach live warehouse event stats to a connection — from the managed
+    warehouse for flagsmith connections, from the customer's instance for
+    clickhouse ones. No-op for other types or when no warehouse is configured;
+    leaves stats unset when the warehouse is unreachable. Read-only: never
+    changes status."""
+    if connection.warehouse_type == WarehouseType.CLICKHOUSE:
+        stats = _get_customer_warehouse_event_stats_cached(connection, environment_key)
+        if stats is not None:
+            connection.event_stats = stats
+        return
     if (
         connection.warehouse_type != WarehouseType.FLAGSMITH
         or not settings.EXPERIMENTATION_CLICKHOUSE_URL
@@ -566,3 +1069,43 @@ def annotate_warehouse_event_stats(
         connection.event_stats = get_warehouse_event_stats(environment_key)
     except Exception:
         return
+
+
+def _get_customer_warehouse_event_stats_cached(
+    connection: WarehouseConnection,
+    environment_key: str,
+) -> WarehouseEventStats | None:
+    """Return event counts recorded for `environment_key` in the customer's
+    ClickHouse instance, or None when it's unreachable. Results — including
+    failures — are cached briefly so read endpoints don't open a connection to
+    the customer's host on every request."""
+    cache_key = f"experimentation:customer_event_stats:{connection.id}"
+    cached = cache.get(cache_key)
+    if isinstance(cached, WarehouseEventStats):
+        return cached
+    if cached == _CUSTOMER_EVENT_STATS_UNAVAILABLE:
+        return None
+    try:
+        with warehouse_delivery_service.delivery_client(
+            connection,
+            send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
+        ) as client:
+            rows = client.query(
+                _EVENT_STATS_QUERY,
+                parameters={"environment_key": environment_key},
+            ).result_rows
+        stats = _build_event_stats(rows)
+    except Exception:
+        cache.set(
+            cache_key,
+            _CUSTOMER_EVENT_STATS_UNAVAILABLE,
+            CUSTOMER_EVENT_STATS_CACHE_SECONDS,
+        )
+        logger.warning(
+            "connection.event_stats_failed",
+            environment__id=connection.environment_id,
+            exc_info=True,
+        )
+        return None
+    cache.set(cache_key, stats, CUSTOMER_EVENT_STATS_CACHE_SECONDS)
+    return stats

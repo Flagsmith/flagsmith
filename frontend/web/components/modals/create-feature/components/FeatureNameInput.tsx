@@ -31,7 +31,6 @@ const FeatureNameInput: FC<FeatureNameInputProps> = ({
   return (
     <FormGroup className='mb-4 mt-2'>
       <InputGroup
-        autoFocus={autoFocus}
         data-test='featureID'
         inputProps={{
           className: 'full-width',

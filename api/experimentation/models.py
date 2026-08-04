@@ -12,6 +12,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     hook,
 )
 
+from core.fields import EncryptedJSONField
 from core.models import SoftDeleteExportableModel
 from environments.models import Environment
 from experimentation.dataclasses import (
@@ -54,10 +55,12 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
         choices=WarehouseConnectionStatus.choices,
         default=WarehouseConnectionStatus.CREATED,
     )
+    status_detail = models.CharField(max_length=255, null=True, blank=True)
     name = models.CharField(max_length=255)
     config: models.JSONField[dict[str, object] | None, dict[str, object] | None] = (
         models.JSONField(null=True, blank=True)
     )
+    credentials = EncryptedJSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Populated at serialization time for flagsmith connections from ClickHouse;
@@ -75,19 +78,80 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
 
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def sync_to_ingestion_on_create(self) -> None:
-        from experimentation.tasks import add_environment_key_to_ingestion
+        from experimentation.tasks import (
+            provision_external_warehouse_ingestion_infrastructure,
+            write_environment_ingestion_keys,
+        )
 
-        add_environment_key_to_ingestion.delay(
-            kwargs={"environment_api_key": self.environment.api_key},
+        if self.warehouse_type == WarehouseType.FLAGSMITH:
+            write_environment_ingestion_keys.delay(
+                kwargs={"environment_id": self.environment_id},
+            )
+            return
+
+        provision_external_warehouse_ingestion_infrastructure.delay(
+            kwargs={"environment_id": self.environment_id},
         )
 
     @hook(AFTER_DELETE)  # type: ignore[misc]
     def sync_to_ingestion_on_delete(self) -> None:
-        from experimentation.tasks import delete_environment_key_from_ingestion
+        from experimentation.tasks import remove_environment_ingestion_keys
 
-        delete_environment_key_from_ingestion.delay(
-            kwargs={"environment_api_key": self.environment.api_key},
+        remove_environment_ingestion_keys.delay(
+            kwargs={"environment_id": self.environment_id},
         )
+
+
+class IngestionInfrastructureStatus(models.TextChoices):
+    PENDING = "pending", "Pending"
+    CREATED = "created", "Created"
+    ERRORED = "errored", "Errored"
+
+
+class OrganisationIngestionInfrastructure(models.Model):
+    organisation = models.OneToOneField(
+        "organisations.Organisation",
+        on_delete=models.DO_NOTHING,
+        related_name="ingestion_infrastructure",
+    )
+    status = models.CharField(
+        max_length=50,
+        choices=IngestionInfrastructureStatus.choices,
+        default=IngestionInfrastructureStatus.PENDING,
+    )
+    bucket_name = models.CharField(max_length=255, null=True, blank=True)
+    stream_name = models.CharField(max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class WarehouseDeliveryOutcome(models.TextChoices):
+    DELIVERED = "delivered", "Delivered"
+    REJECTED = "rejected", "Rejected"
+
+
+class WarehouseDeliveryLog(models.Model):
+    connection = models.ForeignKey(
+        WarehouseConnection,
+        on_delete=models.CASCADE,
+        related_name="delivery_logs",
+    )
+    # S3's own key length limit.
+    s3_key = models.CharField(max_length=1024)
+    outcome = models.CharField(
+        max_length=50,
+        choices=WarehouseDeliveryOutcome.choices,
+    )
+    rows_count = models.PositiveIntegerField(null=True, blank=True)
+    error = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["connection", "created_at"]),
+            # Serves the retention cleanup, which filters on created_at alone.
+            models.Index(fields=["created_at"]),
+        ]
 
 
 class ExperimentStatus(models.TextChoices):
@@ -127,6 +191,13 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
     updated_at = models.DateTimeField(auto_now=True)
     started_at = models.DateTimeField(null=True, blank=True)
     ended_at = models.DateTimeField(null=True, blank=True)
+    rollout_segment = models.OneToOneField(
+        "segments.Segment",
+        on_delete=models.SET_NULL,
+        related_name="experiment_rollout",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         constraints = [

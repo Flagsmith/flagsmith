@@ -3,6 +3,7 @@
 name: flagsmith
 
 volumes:
+  influxdb_data:
   pg_11_data:
   pg_11_data_analytics:
   clickhouse_data:
@@ -33,6 +34,20 @@ services:
     environment:
       POSTGRES_DB: analytics
       POSTGRES_PASSWORD: password
+
+  influxdb:
+    image: influxdb:2-alpine
+    volumes:
+       - influxdb_data:/var/lib/influxdb2
+    ports:
+       - 8086:8086
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: user
+      DOCKER_INFLUXDB_INIT_PASSWORD: password
+      DOCKER_INFLUXDB_INIT_ORG: flagsmith
+      DOCKER_INFLUXDB_INIT_BUCKET: unused
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: admin-token
 
   clickhouse:
     # Match the version Flagsmith runs on ClickHouse Cloud.

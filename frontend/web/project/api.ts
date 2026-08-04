@@ -134,9 +134,15 @@ const API = {
     const user = AccountStore.model as unknown as AccountModel
     if (!user) return
 
+    const currentOrganisation = AccountStore.getOrganisation()
+
     return flagsmith
       .identify(`${user.id}`, {
         email: user.email,
+        'organisation.id': currentOrganisation
+          ? String(currentOrganisation.id)
+          : null,
+        'organisation.name': currentOrganisation?.name ?? null,
         organisations: user.organisations
           ? user.organisations.map((o) => String(o.id)).join(',')
           : '',
@@ -303,27 +309,33 @@ const API = {
     label?: string
     extra?: Record<string, any>
   }): void {
-    if (Project.ga) {
-      if (Project.logAnalytics) console.log('ANALYTICS EVENT', data)
-      if (!data || !data.category || !data.event)
-        return console.error('Invalid event provided', data)
-      if (data.category === 'First')
-        API.postEvent(
-          `${data.event}${data.extra ? ` ${JSON.stringify(data.extra)}` : ''}`,
-          'first_events',
-        )
-      ga('send', {
-        eventAction: data.event,
-        eventCategory: data.category,
-        eventLabel: data.label,
-        hitType: 'event',
-      })
-    }
-    if (Project.amplitude) {
-      amplitude.track(data.event, {
-        category: data.category,
-        ...(data.extra || {}),
-      })
+    try {
+      if (Project.ga) {
+        if (Project.logAnalytics) console.log('ANALYTICS EVENT', data)
+        if (!data || !data.category || !data.event)
+          return console.error('Invalid event provided', data)
+        if (data.category === 'First')
+          API.postEvent(
+            `${data.event}${
+              data.extra ? ` ${JSON.stringify(data.extra)}` : ''
+            }`,
+            'first_events',
+          )
+        ga('send', {
+          eventAction: data.event,
+          eventCategory: data.category,
+          eventLabel: data.label,
+          hitType: 'event',
+        })
+      }
+      if (Project.amplitude) {
+        amplitude.track(data.event, {
+          category: data.category,
+          ...(data.extra || {}),
+        })
+      }
+    } catch (err) {
+      console.error('Error tracking event', err)
     }
   },
 
@@ -338,12 +350,16 @@ const API = {
   },
 
   trackTraits(traits: Record<string, any>): void {
-    if (Project.amplitude && traits) {
-      const identifyObj = new amplitude.Identify()
-      Object.entries(traits).forEach(([key, value]) =>
-        identifyObj.set(key, value),
-      )
-      amplitude.identify(identifyObj)
+    try {
+      if (Project.amplitude && traits) {
+        const identifyObj = new amplitude.Identify()
+        Object.entries(traits).forEach(([key, value]) =>
+          identifyObj.set(key, value),
+        )
+        amplitude.identify(identifyObj)
+      }
+    } catch (err) {
+      console.error('Error tracking traits', err)
     }
   },
 }

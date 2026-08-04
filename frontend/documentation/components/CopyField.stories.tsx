@@ -57,3 +57,15 @@ export const LongValue: Story = {
     </Container>
   ),
 }
+
+export const WithLabel: Story = {
+  render: () => (
+    <Container>
+      <CopyField
+        value='https://app.flagsmith.com/api/v1/auth/saml/my-org/response/'
+        title='Assertion Consumer Service (ACS) URL'
+        tooltip='Your identity provider posts SAML responses to this URL.'
+      />
+    </Container>
+  ),
+}

@@ -14,7 +14,10 @@ import {
 } from 'common/services/useExperiment'
 import { Experiment } from 'common/types/responses'
 import Tooltip from 'components/Tooltip'
-import { getPrimaryMetric } from 'components/experiments/constants'
+import {
+  ENABLE_EXPERIMENT_LIFECYCLE,
+  getPrimaryMetric,
+} from 'components/experiments/constants'
 import 'components/base/SelectableCard/SelectableCard.scss'
 import './results.scss'
 
@@ -170,9 +173,11 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
       case 'running':
         return (
           <ButtonDropdown
-            dropdownItems={[
-              { label: 'Pause Experiment', onClick: handlePause },
-            ]}
+            dropdownItems={
+              ENABLE_EXPERIMENT_LIFECYCLE
+                ? [{ label: 'Pause Experiment', onClick: handlePause }]
+                : []
+            }
             onClick={handleComplete}
             size='small'
             theme='danger'
@@ -194,8 +199,8 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
   const renderHypothesis = () => {
     if (isEditingHypothesis) {
       return (
-        <div className='mt-3' style={{ maxWidth: 640 }}>
-          <span className='fs-caption text-muted fw-bold'>Hypothesis</span>
+        <div className='mt-3'>
+          <span className='fs-caption text-default fw-bold'>Hypothesis</span>
           <div className='d-flex align-items-start gap-2 mt-1'>
             <textarea
               autoFocus
@@ -246,14 +251,9 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
     }
 
     return (
-      <div className='mt-3' style={{ maxWidth: 640 }}>
-        <span className='fs-caption text-muted fw-bold'>Hypothesis</span>
-        <div className='d-flex align-items-start gap-1'>
-          <p className='text-muted mb-0'>
-            {experiment.hypothesis || (
-              <span className='fst-italic'>No hypothesis</span>
-            )}
-          </p>
+      <div className='mt-3'>
+        <div className='d-flex align-items-center gap-1'>
+          <span className='fs-caption text-default fw-bold'>Hypothesis</span>
           <Button
             theme='text'
             onClick={startEditingHypothesis}
@@ -262,6 +262,11 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
             <Icon name='edit' width={14} />
           </Button>
         </div>
+        <p className='text-secondary mb-0'>
+          {experiment.hypothesis || (
+            <span className='fst-italic'>No hypothesis</span>
+          )}
+        </p>
       </div>
     )
   }

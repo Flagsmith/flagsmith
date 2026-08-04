@@ -1,41 +1,23 @@
-import { PagedResponse, ProjectFlag, Res } from 'common/types/responses'
+import { ProjectFlag, Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 import { sortMultivariateOptions } from 'common/utils/multivariate'
+import { recursivePageGet } from 'common/utils/recursivePageGet'
 
 /**
  * Number of features to display per page in the features list.
  */
 export const FEATURES_PAGE_SIZE = 50
-
-function recursivePageGet(
-  url: string,
-  parentRes: null | PagedResponse<ProjectFlag>,
-  baseQuery: (arg: unknown) => any, // matches rtk types,
-) {
-  return baseQuery({
-    method: 'GET',
-    url,
-  }).then((res: Res['projectFlags']) => {
-    let response
-    if (parentRes) {
-      response = {
-        ...parentRes,
-        results: parentRes.results.concat(res.results),
-      }
-    } else {
-      response = res
-    }
-    if (res.next) {
-      return recursivePageGet(res.next, response, baseQuery)
-    }
-    return Promise.resolve(response)
-  })
-}
 export const projectFlagService = service
   .enhanceEndpoints({
-    addTagTypes: ['ProjectFlag', 'FeatureList', 'FeatureState', 'Environment'],
+    addTagTypes: [
+      'ProjectFlag',
+      'FeatureList',
+      'FeatureState',
+      'Environment',
+      'LifecycleCounts',
+    ],
   })
   .injectEndpoints({
     endpoints: (builder) => ({
@@ -68,6 +50,7 @@ export const projectFlagService = service
         invalidatesTags: [
           { id: 'LIST', type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
+          'LifecycleCounts',
         ],
         query: (query: Req['createProjectFlag']) => ({
           body: query.body,
@@ -132,6 +115,16 @@ export const projectFlagService = service
         }),
       }),
 
+      getLifecycleStatusCounts: builder.query<
+        Res['lifecycleStatusCounts'],
+        Req['getLifecycleStatusCounts']
+      >({
+        providesTags: ['LifecycleCounts'],
+        query: ({ environment }) => ({
+          url: `environments/${environment}/feature-lifecycle-counts/`,
+        }),
+      }),
+
       getProjectFlag: builder.query<Res['projectFlag'], Req['getProjectFlag']>({
         providesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
         query: (query: Req['getProjectFlag']) => ({
@@ -158,7 +151,7 @@ export const projectFlagService = service
           },
         ],
         queryFn: async (args, _, _2, baseQuery) => {
-          return await recursivePageGet(
+          return await recursivePageGet<ProjectFlag>(
             `projects/${args.project}/features/?${Utils.toParam({
               ...args,
               page_size: 999,
@@ -198,6 +191,7 @@ export const projectFlagService = service
           { id: 'LIST', type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
           { id: 'METRICS', type: 'Environment' },
+          'LifecycleCounts',
         ],
         query: ({ flag_id, project_id }) => ({
           method: 'DELETE',
@@ -213,6 +207,7 @@ export const projectFlagService = service
           { id: 'LIST', type: 'ProjectFlag' },
           { id: res?.id, type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
+          'LifecycleCounts',
         ],
         query: (query: Req['updateProjectFlag']) => ({
           body: query.body,
@@ -284,6 +279,7 @@ export const {
   useAddFlagOwnersMutation,
   useCreateProjectFlagMutation,
   useGetFeatureListQuery,
+  useGetLifecycleStatusCountsQuery,
   useGetProjectFlagQuery,
   useGetProjectFlagsQuery,
   useRemoveFlagGroupOwnersMutation,

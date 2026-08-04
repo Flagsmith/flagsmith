@@ -10,6 +10,7 @@ from rest_framework.exceptions import ValidationError
 from edge_api.utils import is_edge_enabled
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.models import Project
+from segment_membership.constants import MAX_SEGMENT_MEMBERS_PAGE_SIZE
 from segment_membership.models import SegmentMembershipCount
 from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule
@@ -246,3 +247,38 @@ class CloneSegmentSerializer(serializers.ModelSerializer[Segment]):
     class Meta:
         model = Segment
         fields = ("name",)
+
+
+class SegmentMembersQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
+    environment = serializers.IntegerField(
+        help_text="The id of the environment to list segment members for.",
+    )
+    cursor = serializers.CharField(
+        required=False,
+        help_text="The identifier of the previous page's last row; omit for the first page.",
+    )
+    q = serializers.CharField(
+        required=False,
+        help_text="Case-insensitive substring to filter members by identifier.",
+    )
+    limit = serializers.IntegerField(
+        required=False,
+        default=100,
+        min_value=1,
+        max_value=MAX_SEGMENT_MEMBERS_PAGE_SIZE,
+        help_text=f"Page size, up to {MAX_SEGMENT_MEMBERS_PAGE_SIZE}.",
+    )
+
+
+class SegmentMemberSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    identifier = serializers.CharField()
+    identity_key = serializers.CharField()
+    traits = serializers.JSONField()
+
+
+class SegmentMembersResponseSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    results = SegmentMemberSerializer(many=True)
+    next_cursor = serializers.CharField(
+        allow_null=True,
+        help_text="Pass as `cursor` to fetch the next page; null when there are no more rows.",
+    )

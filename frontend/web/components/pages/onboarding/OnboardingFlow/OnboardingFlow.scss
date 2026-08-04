@@ -4,7 +4,7 @@
 // Centring is the `mx-auto` utility on the element.
 .onboarding-flow {
   max-width: 1100px;
-  // Minimal top padding so the theme-toggle row isn't flush to the very edge;
+  // Top padding gives the theme-toggle row room to breathe from the very edge;
   // sides + bottom keep the reading column off the edges.
-  padding: 4px 24px 40px;
+  padding: 24px 24px 40px;
 }

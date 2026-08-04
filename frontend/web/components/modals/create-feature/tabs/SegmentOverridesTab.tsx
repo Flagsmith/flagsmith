@@ -12,6 +12,8 @@ import ModalHR from 'components/modals/ModalHR'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
 import Utils from 'common/utils/utils'
 import { ProjectFlag } from 'common/types/responses'
+import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
+import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
 import { EnvironmentPermission } from 'common/types/permissions.types'
 
 export type SegmentOverrideValue = {
@@ -26,6 +28,7 @@ type SegmentOverridesTabProps = {
   segmentOverrides?: SegmentOverrideValue[]
   updateSegments: (segments: SegmentOverrideValue[]) => void
   controlValue: string | number | boolean | null
+  controlEnabled?: boolean
   onSegmentsChange: () => void
   saveFeatureSegments: (schedule: boolean) => void
   isSaving: boolean
@@ -33,16 +36,19 @@ type SegmentOverridesTabProps = {
   error: any
   existingChangeRequest?: { id: number }
   noPermissions?: boolean
+  freeze?: FeatureExperimentFreeze
   disableCreate?: boolean
   highlightSegmentId?: number
 }
 
 const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
+  controlEnabled,
   controlValue,
   disableCreate,
   environmentId,
   error,
   existingChangeRequest,
+  freeze,
   highlightSegmentId,
   invalid,
   isSaving,
@@ -56,6 +62,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
 }) => {
   const [showCreateSegment, setShowCreateSegment] = useState(false)
   const [enabledSegment, setEnabledSegment] = useState(false)
+  const [isComparing, setIsComparing] = useState(false)
 
   const { getEnvironment } = useProjectEnvironments(projectId)
   const environment = getEnvironment(environmentId)
@@ -73,7 +80,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
   const { permission: savePermission } = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: Utils.getManageFeaturePermission(is4Eyes, false),
+    permission: Utils.getManageFeaturePermission(is4Eyes),
     tags: projectFlag.tags,
   })
 
@@ -138,43 +145,59 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
         )}
       >
         <div>
-          <Row className='align-items-center mb-2 gap-4'>
-            <div className='flex-fill'>
-              <Tooltip
-                title={
-                  <h5 className='mb-0'>
-                    Segment Overrides <Icon name='info-outlined' />
-                  </h5>
-                }
-                place='top'
-              >
-                {Constants.strings.SEGMENT_OVERRIDES_DESCRIPTION}
-              </Tooltip>
-            </div>
-            {!showCreateSegment && manageSegmentOverrides && !disableCreate && (
-              <div className='text-right'>
-                <Button
-                  size='small'
-                  onClick={() => {
-                    setShowCreateSegment(true)
-                  }}
-                  theme='outline'
+          <Row className='align-items-center mb-2 gap-4 segment-overrides-title'>
+            {!isComparing && (
+              <div className='flex-fill'>
+                <Tooltip
+                  title={
+                    <h5 className='mb-0'>
+                      Segment Overrides <Icon name='info-outlined' />
+                    </h5>
+                  }
+                  place='top'
                 >
-                  Create Feature-Specific Segment
-                </Button>
+                  {Constants.strings.SEGMENT_OVERRIDES_DESCRIPTION}
+                </Tooltip>
               </div>
             )}
-            {!showCreateSegment && !noPermissions && (
-              <Button
-                onClick={() => changeSegment(segmentOverrides || [])}
-                type='button'
-                theme='secondary'
-                size='small'
-              >
-                {enabledSegment ? 'Enable All' : 'Disable All'}
-              </Button>
-            )}
+            {!isComparing &&
+              !showCreateSegment &&
+              manageSegmentOverrides &&
+              !disableCreate &&
+              !freeze?.isFrozen && (
+                <div className='text-right'>
+                  <Button
+                    size='small'
+                    onClick={() => {
+                      setShowCreateSegment(true)
+                    }}
+                    theme='outline'
+                  >
+                    Create Feature-Specific Segment
+                  </Button>
+                </div>
+              )}
+            {!isComparing &&
+              !showCreateSegment &&
+              !noPermissions &&
+              !freeze?.isFrozen && (
+                <Button
+                  onClick={() => changeSegment(segmentOverrides || [])}
+                  type='button'
+                  theme='secondary'
+                  size='small'
+                >
+                  {enabledSegment ? 'Enable All' : 'Disable All'}
+                </Button>
+              )}
           </Row>
+          {freeze?.isFrozen && freeze.experiment && (
+            <ExperimentFreezeNotice
+              experiment={freeze.experiment}
+              projectId={projectId}
+              environmentId={environmentId}
+            />
+          )}
           <div className='text-muted mb-2'>
             <p>
               Segment Overrides apply when the identity traits match the segment
@@ -197,7 +220,8 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
               <WarningMessage warningMessage={featureWarning} />
               <SegmentOverrides
                 setShowCreateSegment={setShowCreateSegment}
-                readOnly={!manageSegmentOverrides}
+                onCompareChange={setIsComparing}
+                readOnly={!manageSegmentOverrides || !!freeze?.isFrozen}
                 is4Eyes={is4Eyes}
                 showEditSegment
                 showCreateSegment={showCreateSegment}
@@ -207,6 +231,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
                 environmentId={environmentId}
                 value={segmentOverrides}
                 controlValue={controlValue}
+                controlEnabled={controlEnabled}
                 onChange={(v: SegmentOverrideValue[]) => {
                   onSegmentsChange()
                   updateSegments(v)
@@ -219,8 +244,10 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
               <Loader />
             </div>
           )}
-          {!showCreateSegment && <ModalHR className='mt-4' />}
-          {!showCreateSegment && (
+          {!isComparing && !showCreateSegment && !freeze?.isFrozen && (
+            <ModalHR className='mt-4' />
+          )}
+          {!isComparing && !showCreateSegment && !freeze?.isFrozen && (
             <div>
               <p className='text-right mt-4 fs-small lh-sm modal-caption'>
                 Re-order overrides to adjust priority.
@@ -249,10 +276,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
                 {isVersioned && is4Eyes
                   ? Utils.renderWithPermission(
                       savePermission,
-                      Utils.getManageFeaturePermissionDescription(
-                        is4Eyes,
-                        false,
-                      ),
+                      Utils.getManageFeaturePermissionDescription(is4Eyes),
                       <Button
                         onClick={() => saveFeatureSegments(false)}
                         type='button'
@@ -262,7 +286,8 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
                           isSaving ||
                           !projectFlag.name ||
                           invalid ||
-                          !savePermission
+                          !savePermission ||
+                          !!freeze?.isLoading
                         }
                       >
                         {getButtonText()}
@@ -287,7 +312,8 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
                                 isSaving ||
                                 !projectFlag.name ||
                                 invalid ||
-                                !savePermission
+                                !savePermission ||
+                                !!freeze?.isLoading
                               }
                             >
                               {getScheduleButtonText()}
@@ -303,7 +329,8 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
                             isSaving ||
                             !projectFlag.name ||
                             invalid ||
-                            !manageSegmentOverrides
+                            !manageSegmentOverrides ||
+                            !!freeze?.isLoading
                           }
                         >
                           {isSaving ? 'Updating' : 'Update Segment Overrides'}

@@ -106,7 +106,13 @@ export const getFeatureStateCrud = (
 
 export const featureVersionService = service
   .enhanceEndpoints({
-    addTagTypes: ['FeatureVersion', 'Environment', 'FeatureList'],
+    addTagTypes: [
+      'FeatureVersion',
+      'Environment',
+      'FeatureList',
+      'FeatureState',
+      'ProjectFlag',
+    ],
   })
   .injectEndpoints({
     endpoints: (builder) => ({
@@ -127,6 +133,8 @@ export const featureVersionService = service
             type: 'FeatureList',
           },
           { id: 'METRICS', type: 'Environment' },
+          { id: 'LIST', type: 'FeatureState' },
+          { type: 'ProjectFlag' },
         ],
         queryFn: async (query: Req['createAndSetFeatureVersion']) => {
           // todo: this will be removed when we combine saving value and segment overrides
@@ -230,7 +238,11 @@ export const featureVersionService = service
         Res['featureVersion'],
         Req['createFeatureVersion']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'FeatureVersion' },
+          { id: 'LIST', type: 'FeatureState' },
+          { type: 'ProjectFlag' },
+        ],
         query: (query: Req['createFeatureVersion']) => ({
           body: query,
           method: 'POST',
@@ -268,7 +280,11 @@ export const featureVersionService = service
         Res['featureVersion'],
         Req['publishFeatureVersion']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'FeatureVersion' },
+          { id: 'LIST', type: 'FeatureState' },
+          { type: 'ProjectFlag' },
+        ],
         query: (query: Req['publishFeatureVersion']) => ({
           body: query,
           method: 'POST',

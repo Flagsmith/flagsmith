@@ -193,14 +193,63 @@ jobs:
             **📦 Artifacts:** [View test results and HTML report](${{ steps.artifact-url.outputs.url }})
             **🔄 Run:** [#${{ github.run_number }} (attempt ${{ github.run_attempt }})](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
+      # Keeps a single sticky comment at constant height: the newest result stays
+      # expanded on top, and every earlier result is folded into one collapsed
+      # "Previous results" block. Each job rewrites the comment, prepending its
+      # entry and collapsing the rest.
       - name: Comment PR with test results
         if: always() && github.event_name == 'pull_request' && (steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary)
         continue-on-error: true
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: actions/github-script@v7
+        env:
+          SUMMARY: ${{ steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary }}
+          PASSED: ${{ steps.report-summary-success.outputs.summary && 'true' || 'false' }}
+          LABEL: ${{ steps.test-type.outputs.label }} · ${{ inputs.runs-on }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
         with:
-          header: playwright-e2e-results
-          append: true
-          message: ${{ steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary }}
+          script: |
+            const MARKER = '<!-- playwright-e2e-results -->'
+            const HISTORY = '<details><summary>🗂️ Previous results</summary>\n<!-- pw:h -->'
+            const ENTRY = '<!-- pw:e -->'
+            const MAX_ENTRIES = 12 // keeps the comment body well under GitHub's 65536-char limit
+
+            const { SUMMARY, PASSED, LABEL, RUN_NUMBER, RUN_ATTEMPT } = process.env
+            const emoji = PASSED === 'true' ? '✅' : '❌'
+            const repo = { owner: context.repo.owner, repo: context.repo.repo }
+            const newest = `<details><summary>${emoji} ${LABEL} — run #${RUN_NUMBER} (attempt ${RUN_ATTEMPT})</summary>\n\n${SUMMARY}\n\n</details>`
+
+            // Recover earlier entries (collapsed) from the existing comment body.
+            // Entries are split on the ENTRY sentinel (each entry has its own
+            // </details>); the last chunk also carries the wrapper's closing tag.
+            const parse = (body) => {
+              if (!body) return []
+              const [top, rest = ''] = body.split(HISTORY)
+              const previousTop = (top.split(MARKER)[1] || '').trim()
+              const older = rest.split(ENTRY).map((s) => s.trim()).filter(Boolean)
+              if (older.length) older[older.length - 1] = older.at(-1).replace(/<\/details>\s*$/, '').trim()
+              if (previousTop) older.unshift(previousTop.replace('<details open>', '<details>'))
+              return older
+            }
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            })
+            const previous = comments.find((comment) => comment.body && comment.body.includes(MARKER))
+
+            const [current, ...older] = [newest, ...parse(previous?.body)].slice(0, MAX_ENTRIES)
+            let body = `${MARKER}\n\n${current.replace('<details>', '<details open>')}`
+            if (older.length) {
+              body += `\n\n${HISTORY}\n${older.map((entry) => `${ENTRY}\n${entry}`).join('\n')}\n</details>`
+            }
+
+            if (previous) {
+              await github.rest.issues.updateComment({ ...repo, comment_id: previous.id, body })
+            } else {
+              await github.rest.issues.createComment({ ...repo, issue_number: context.issue.number, body })
+            }
 
       # Visual regression: after all E2E retries, run comparison and upload results
       - name: Upload visual regression baselines (main branch)

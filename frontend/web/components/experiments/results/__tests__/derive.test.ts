@@ -4,19 +4,28 @@ import {
   computeLiftRange,
   computeAxisRange,
   buildExposuresChartData,
+  LiftTone,
+  deriveSummary,
   formatBucketLabel,
   getHeadlineTotal,
   getVariantIdentities,
   getVariantTotals,
+  getWinningVariant,
+  isLiftFavourable,
   liftToPercent,
   valueToPercent,
 } from 'components/experiments/results/derive'
 import {
   BayesianMetricResult,
+  BayesianResultsSummary,
+  Experiment,
   ExperimentFeature,
   ExposuresSummary,
+  MetricDirection,
   MultivariateOption,
 } from 'common/types/responses'
+
+type OptionalMetricDirection = MetricDirection | undefined
 
 const option = (over: Partial<MultivariateOption>): MultivariateOption => ({
   boolean_value: undefined,
@@ -244,6 +253,126 @@ describe('liftToPercent', () => {
     expect(liftToPercent(-0.6, 0.3)).toBe(0)
     expect(liftToPercent(0.6, 0.3)).toBe(100)
   })
+})
+
+const losingMetricResult: BayesianMetricResult = {
+  ...metricResult,
+  inference: {
+    b: { chance_to_win: 0.05, ci_high: 0.02, ci_low: -0.3, lift: -0.15 },
+    c: { chance_to_win: 0.1, ci_high: 0.04, ci_low: -0.2, lift: -0.09 },
+  },
+}
+
+describe('getWinningVariant', () => {
+  it('returns the treatment with the highest chance of beating control', () => {
+    expect(getWinningVariant(metricResult, identities)).toMatchObject({
+      chanceToWin: 0.75,
+      isControl: false,
+      key: 'b',
+    })
+  })
+
+  it('returns control when no treatment is likely to beat it', () => {
+    expect(getWinningVariant(losingMetricResult, identities)).toMatchObject({
+      chanceToWin: 0.85,
+      inference: null,
+      isControl: true,
+      key: CONTROL_VARIANT_KEY,
+      name: 'Control',
+    })
+  })
+
+  it('returns null when no treatment has inference data', () => {
+    expect(
+      getWinningVariant({ ...metricResult, inference: {} }, identities),
+    ).toBeNull()
+  })
+})
+
+describe('deriveSummary', () => {
+  const experiment: Experiment = {
+    created_at: '2026-06-01T00:00:00Z',
+    ended_at: null,
+    feature: feature({
+      multivariate_options: [
+        option({ id: 10, key: 'b', string_value: 'big' }),
+        option({ id: 11, key: 'c', string_value: 'huge' }),
+      ],
+    }),
+    hypothesis: '',
+    id: 1,
+    metrics: [
+      {
+        aggregation: 'occurrence',
+        created_at: '2026-06-01T00:00:00Z',
+        direction: 'up',
+        expected_direction: 'increase',
+        id: 1,
+        metric: 1,
+        metric_name: 'Signup',
+      },
+    ],
+    name: 'exp',
+    started_at: null,
+    status: 'running',
+    updated_at: '2026-06-01T00:00:00Z',
+  }
+  const results = (mr: BayesianMetricResult): BayesianResultsSummary => ({
+    metrics: [mr],
+    srm_p_value: null,
+  })
+
+  it('summarises the winning treatment with its lift vs control', () => {
+    expect(deriveSummary(experiment, results(metricResult))).toMatchObject({
+      chanceToBest: '75%',
+      controlWins: false,
+      liftTone: 'success',
+      liftVsControl: '+8.0%',
+      winnerName: 'b',
+    })
+  })
+
+  it('summarises control as the winner with a baseline lift', () => {
+    expect(
+      deriveSummary(experiment, results(losingMetricResult)),
+    ).toMatchObject({
+      chanceToBest: '85%',
+      controlWins: true,
+      liftTone: 'neutral',
+      liftVsControl: 'Baseline',
+      winnerName: 'Control',
+    })
+  })
+
+  it.each<[OptionalMetricDirection, LiftTone]>([
+    ['up', 'success'],
+    ['down', 'danger'],
+    ['informational', 'neutral'],
+    [undefined, 'success'], // legacy payloads without direction default to up
+  ])(
+    'tones the positive winning lift for a %s metric as %s',
+    (direction, tone) => {
+      const exp: Experiment = {
+        ...experiment,
+        metrics: [{ ...experiment.metrics[0], direction }],
+      }
+      expect(deriveSummary(exp, results(metricResult))?.liftTone).toBe(tone)
+    },
+  )
+})
+
+describe('isLiftFavourable', () => {
+  it.each<[number, MetricDirection, boolean]>([
+    [0.08, 'up', true],
+    [-0.08, 'up', false],
+    [-0.08, 'down', true],
+    [0.08, 'down', false],
+  ])(
+    'judges a %d lift on a %s metric as favourable=%s',
+    (lift, direction, expected) => {
+      expect(isLiftFavourable(lift, direction)).toBe(expected)
+    },
+  )
 })
 
 describe('computeLiftRange', () => {

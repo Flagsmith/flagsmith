@@ -49,6 +49,8 @@ Tags with the following names will prevent users from being able to delete tagge
 
 :::
 
+Marking a tag as **permanent** when you create it (via the _Is permanent?_ toggle) also protects tagged features from deletion and excludes them from [Stale Flag Detection](/managing-flags/stale-flags).
+
 
 ---
 

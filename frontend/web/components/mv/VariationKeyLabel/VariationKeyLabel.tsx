@@ -155,7 +155,7 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
       {canEdit && (
         <Button
           theme='text'
-          className='text-primary ml-2'
+          className='text-action ml-2'
           onClick={startEditing}
           data-test={`featureVariationKeyEdit${index}`}
           aria-label='Edit label'

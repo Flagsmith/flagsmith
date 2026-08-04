@@ -180,12 +180,6 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return null
   },
-  escapeHtml(html: string) {
-    const text = document.createTextNode(html)
-    const p = document.createElement('p')
-    p.appendChild(text)
-    return p.innerHTML
-  },
   featureStateToValue(featureState: FeatureStateValue) {
     if (!featureState) {
       return null
@@ -382,6 +376,9 @@ const Utils = Object.assign({}, BaseUtils, {
   getFlagsmithValue(key: string) {
     return flagsmith.getValue(key)
   },
+  getFlagsmithVariant(key: string) {
+    return flagsmith.getAllFlags()[key]?.variant
+  },
 
   getIdentitiesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
@@ -416,7 +413,6 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return EnvironmentPermissionDescriptions.UPDATE_FEATURE_STATE
   },
-
   getNextPlan: () => {
     const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
     if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
@@ -437,6 +433,7 @@ const Utils = Object.assign({}, BaseUtils, {
       }
     }
   },
+
   getOrganisationHomePage(id?: string) {
     const orgId = id || AccountStore.getOrganisation()?.id
     if (!orgId) {
@@ -444,11 +441,11 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return `/organisation/${orgId}/projects`
   },
-
   getOrganisationIdFromUrl(match: any) {
     const organisationId = match?.params?.organisationId
     return organisationId ? parseInt(organisationId) : null
   },
+
   getOverridePermission: (
     level: 'identity' | 'segment',
   ): {
@@ -686,6 +683,13 @@ const Utils = Object.assign({}, BaseUtils, {
       (permission) => permission.permission_key === key,
     )
   },
+  hasIntegration(key: string) {
+    const data = Utils.getIntegrationData() as
+      | Record<string, unknown>
+      | null
+      | undefined
+    return !!data && !!data[key]
+  },
   //todo: Remove when migrating to RTK
   isEnterpriseImage: () =>
     selectBuildVersion(getStore().getState())?.backend.is_enterprise,
@@ -816,7 +820,10 @@ const Utils = Object.assign({}, BaseUtils, {
     }
 
     if (operatorObj?.value?.toLowerCase?.().includes('semver')) {
-      return !!semver.valid(`${rule.value.split(':')[0]}`)
+      if (!rule.value) {
+        return false
+      }
+      return !!semver.valid(`${rule.value}`.split(':')[0])
     }
 
     switch (rule.operator) {
@@ -836,7 +843,10 @@ const Utils = Object.assign({}, BaseUtils, {
         }
       }
       case 'MODULO': {
-        const valueSplit = rule.value.split('|')
+        if (!rule.value) {
+          return false
+        }
+        const valueSplit = `${rule.value}`.split('|')
         if (valueSplit.length === 2) {
           const [divisor, remainder] = [
             parseFloat(valueSplit[0]),

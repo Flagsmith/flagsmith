@@ -7,7 +7,10 @@
         {
             "name": "flagsmith-api",
             "command": [
-                "serve"
+                "start",
+                "--keep-alive",
+                "75",
+                "api"
             ],
             "cpu": 0,
             "portMappings": [
@@ -257,6 +260,10 @@
                 },
                 {
                     "name": "DJANGO_SECRET_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DJANGO_SECRET_KEY::"
+                },
+                {
+                    "name": "WAREHOUSE_CREDENTIALS_SECRET",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DJANGO_SECRET_KEY::"
                 },
                 {

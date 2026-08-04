@@ -22,7 +22,7 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from core.helpers import get_current_site_url
 from environments.models import Environment
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import (
     EnvironmentFeatureVersion,
     VersionChangeSet,
@@ -1167,3 +1167,93 @@ def test_project_delete__v2_versioning_with_change_requests__does_not_trigger_au
     assert project.deleted_at is not None
     mock_went_live_task.delay.assert_not_called()
     mock_updated_task.delay.assert_not_called()
+
+
+def test_change_request_commit__v1_multivariate_feature__keeps_variant_bucketing_stable(
+    environment: Environment,
+    multivariate_feature: Feature,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given the current live environment-default feature state of a multivariate
+    # feature, and the variant each of a range of identities is bucketed into
+    live_feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+    identity_hash_keys = [f"identity-{i}" for i in range(50)]
+    original_assignment = {
+        key: live_feature_state.get_multivariate_feature_state_value(key).pk
+        for key in identity_hash_keys
+    }
+
+    # and a change request carrying a draft feature state for the same feature,
+    # as created by the API when a change request is raised under v1 versioning
+    change_request = ChangeRequest.objects.create(
+        title="Test CR", environment=environment, user=admin_user
+    )
+    draft_feature_state = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        change_request=change_request,
+        version=None,
+    )
+
+    # When the change request is committed
+    change_request.commit(committed_by=admin_user)
+
+    # Then the draft feature state is now the live one, carrying the superseded
+    # feature state's id as its bucketing salt
+    new_live_feature_state = next(
+        fs
+        for fs in get_environment_flags_list(
+            environment, feature_name=multivariate_feature.name
+        )
+        if fs.feature_segment_id is None and fs.identity_id is None
+    )
+    assert new_live_feature_state.id == draft_feature_state.id
+    assert new_live_feature_state.mv_hashing_salt == live_feature_state.id
+
+    # and every identity stays in the same variant as before the commit
+    new_assignment = {
+        key: new_live_feature_state.get_multivariate_feature_state_value(key).pk
+        for key in identity_hash_keys
+    }
+    assert new_assignment == original_assignment
+
+
+def test_change_request_commit__v1_segment_override_draft__inherits_mv_hashing_salt(
+    environment: Environment,
+    multivariate_feature: Feature,
+    segment: Segment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given a live segment override for a multivariate feature
+    feature_segment = FeatureSegment.objects.create(
+        feature=multivariate_feature, segment=segment, environment=environment
+    )
+    live_override = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        feature_segment=feature_segment,
+    )
+
+    # and a change request carrying a draft feature state recreating the override
+    change_request = ChangeRequest.objects.create(
+        title="Test CR", environment=environment, user=admin_user
+    )
+    draft_feature_state = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        change_request=change_request,
+        version=None,
+    )
+
+    # When the change request is committed
+    change_request.commit(committed_by=admin_user)
+
+    # Then the draft carries the superseded override's id as its bucketing salt
+    draft_feature_state.refresh_from_db()
+    assert draft_feature_state.mv_hashing_salt == live_override.id

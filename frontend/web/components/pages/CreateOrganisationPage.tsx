@@ -133,7 +133,7 @@ const CreateOrganisationPage: React.FC = () => {
                 <div>
                   What is your company's desired hosting option?{' '}
                   <a
-                    className='text-primary'
+                    className='text-action'
                     href='https://docs.flagsmith.com/version-comparison'
                     target='_blank'
                     rel='noreferrer'

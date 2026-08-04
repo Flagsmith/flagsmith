@@ -12,6 +12,7 @@ import Project from 'common/project'
 import Utils from 'common/utils/utils'
 import { getFeatureSegment } from './useFeatureSegment'
 import { createAndSetFeatureVersion } from './useFeatureVersion'
+import { recursivePageGet } from 'common/utils/recursivePageGet'
 import { getStore } from 'common/store'
 
 // The consolidated update-flag endpoints (#7641) live under /api/experiments/
@@ -80,10 +81,23 @@ export const featureStateService = service
       'FeatureList',
       'FeatureVersion',
       'Environment',
+      'ProjectFlag',
     ],
   })
   .injectEndpoints({
     endpoints: (builder) => ({
+      getAllEnvironmentFeatureStates: builder.query<
+        Res['featureStates'],
+        Req['getAllEnvironmentFeatureStates']
+      >({
+        providesTags: [{ id: 'LIST', type: 'FeatureState' }],
+        queryFn: async (query, _baseQueryApi, _extraOptions, baseQuery) =>
+          recursivePageGet<FeatureState>(
+            `environments/${query.environmentKey}/featurestates/?page_size=999`,
+            null,
+            baseQuery,
+          ),
+      }),
       getFeatureStates: builder.query<
         Res['featureStates'],
         Req['getFeatureStates']
@@ -254,6 +268,7 @@ export const featureStateService = service
           { id: 'LIST', type: 'FeatureList' },
           { id: 'LIST', type: 'FeatureState' },
           { id: 'METRICS', type: 'Environment' },
+          { type: 'ProjectFlag' },
         ],
         query: (query: Req['updateFeatureState']) => ({
           body: query.body,
@@ -361,6 +376,7 @@ async function toggleFeatureStates(
 }
 
 export const {
+  useGetAllEnvironmentFeatureStatesQuery,
   useGetFeatureStatesQuery,
   useToggleFeatureMutation,
   useUpdateFeatureMutation,

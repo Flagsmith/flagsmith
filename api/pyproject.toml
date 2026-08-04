@@ -44,10 +44,12 @@ dependencies = [
     "drf-writable-nested>=0.6.2,<0.7.0",
     "django-filter>=2.4.0,<2.5.0",
     "flagsmith-flag-engine>=10.1.0,<11.0.0",
-    "flagsmith-sql-flag-engine>=0.1.0,<0.2.0",
+    "flagsmith-sql-flag-engine>=0.2.0,<0.3.0",
     "django-clickhouse-backend>=1.4,<2.0",
-    "clickhouse-driver",
+    "clickhouse-driver==0.2.11",
+    "clickhouse-connect>=1.6.0,<2.0.0",
     "boto3>=1.35.95,<1.36.0",
+    "smart-open[s3]>=7.0.0,<8.0.0",
     "slack-sdk>=3.9.0,<3.10.0",
     "asgiref>=3.8.1,<3.9.0",
     "djangorestframework-api-key>=2.2.0,<2.3.0",
@@ -74,7 +76,7 @@ dependencies = [
     "hubspot-api-client>=12.0.0,<13.0.0",
     "djangorestframework-dataclasses>=1.3.1,<2.0.0",
     "pyotp>=2.9.0,<3.0.0",
-    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.9.1,<4",
+    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.12.1,<4",
     "django-stubs>=5.1.3,<6.0.0",
     "tzdata>=2024.1,<2025.0.0",
     "djangorestframework-simplejwt>=5.5.1,<6.0.0",
@@ -86,7 +88,7 @@ dependencies = [
 
 [project.optional-dependencies]
 private = [
-    "flagsmith-private>=0.9.0,<1",
+    "flagsmith-private>=0.11.2,<1",
 ]
 dev = [
     "django-test-migrations>=1.2.0,<2.0.0",
@@ -106,11 +108,12 @@ dev = [
     "pytest>=9.0.3,<9.1.0",
     "pytest-django>=4.8.0,<5.0.0",
     "pytest-cov>=4.1.0,<4.2.0",
-    "datamodel-code-generator>=0.25,<0.26.0",
+    "datamodel-code-generator>=0.64,<0.65",
     "requests-mock>=1.11.0,<2.0.0",
     "django-extensions>=3.2.3,<4.0.0",
     "pdbpp>=0.10.3,<0.11.0",
     "mypy-boto3-dynamodb>=1.33.0,<2.0.0",
+    "mypy-boto3-s3>=1.36.0,<2.0.0",
     "pytest-structlog>=1.1,<2.0.0",
     "pyfakefs>=5.7.4,<6.0.0",
     "mypy>=1.15.0,<2.0.0",
@@ -155,9 +158,6 @@ explicit = true
 
 [tool.uv.sources]
 flagsmith-private = { index = "flagsmith-pypi-production" }
-clickhouse-driver = { git = "https://github.com/Flagsmith/clickhouse-driver", branch = "newjson" }
-# TODO: Revert to the PyPI release once a version closing
-# https://github.com/jayvynl/django-clickhouse-backend/issues/154 is published.
 django-clickhouse-backend = { git = "https://github.com/jayvynl/django-clickhouse-backend", rev = "d884c7d" }
 
 [tool.uv]
@@ -166,6 +166,8 @@ required-version = ">=0.11.18"  # Ensure this matches the version in .pre-commit
 # main before this migration, so the poetry -> uv switch is dependency-neutral.
 # Keep this list in sync with poetry.lock until the lockfile churn settles.
 override-dependencies = [
+    # TODO: remove once https://github.com/jayvynl/django-clickhouse-backend/issues/172 is closed
+    "clickhouse-driver==0.2.11",
     "annotated-types==0.6.0",
     "anyio==4.12.1",
     "appdirs==1.4.4",
@@ -296,6 +298,7 @@ override-dependencies = [
     "openfeature-sdk==0.9.0",
     "opentelemetry-api==1.40.0",
     "opentelemetry-exporter-otlp-proto-common==1.40.0",
+    "opentelemetry-exporter-otlp-proto-grpc==1.40.0",
     "opentelemetry-exporter-otlp-proto-http==1.40.0",
     "opentelemetry-instrumentation==0.61b0",
     "opentelemetry-instrumentation-dbapi==0.61b0",

@@ -4,8 +4,9 @@ from django.db import transaction
 from django.db.models import QuerySet
 from rest_framework import serializers
 
+from core.dataclasses import AuthorData
 from environments.models import Environment
-from experimentation.dataclasses import WarehouseEventStats
+from experimentation.dataclasses import RolloutSpec, WarehouseEventStats
 from experimentation.metric_definitions import validate_metric_definition
 from experimentation.models import (
     ExpectedDirection,
@@ -15,22 +16,36 @@ from experimentation.models import (
     ExperimentResults,
     ExperimentStatus,
     Metric,
+    MetricDirection,
     WarehouseConnection,
+    WarehouseConnectionStatus,
     WarehouseType,
 )
-from experimentation.types import (
-    SNOWFLAKE_DEFAULTS,
-    MetricExperimentResult,
-    SnowflakeConfig,
+from experimentation.services import (
+    apply_experiment_rollout,
+    get_experiment_rollout,
+)
+from experimentation.types import MetricExperimentResult
+from experimentation.warehouse_validation import (
+    CONFIG_VALIDATORS,
+    validate_credentials,
+)
+from features.feature_states.serializers import (
+    FeatureValueSerializer,
+    MultivariateValueSerializer,
 )
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
 from features.multivariate.serializers import NestedMultivariateFeatureOptionSerializer
+from features.versioning.dataclasses import MultivariateValueChangeSet
 
 
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     name = serializers.CharField(max_length=255, required=False)
-    config = serializers.JSONField(default=None, required=False, allow_null=True)
+    config = serializers.JSONField(required=False, allow_null=True)
+    credentials = serializers.JSONField(
+        required=False, allow_null=True, write_only=True
+    )
     total_events_received = serializers.SerializerMethodField()
     unique_events_count = serializers.SerializerMethodField()
 
@@ -40,33 +55,52 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             "id",
             "warehouse_type",
             "status",
+            "status_detail",
             "name",
             "config",
+            "credentials",
             "created_at",
             "total_events_received",
             "unique_events_count",
         )
-        read_only_fields = ("id", "status", "created_at")
+        read_only_fields = ("id", "status", "status_detail", "created_at")
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         warehouse_type: str = attrs.get(
             "warehouse_type",
             getattr(self.instance, "warehouse_type", ""),
         )
+        type_changed = (
+            self.instance is not None
+            and getattr(self.instance, "warehouse_type", "") != warehouse_type
+        )
 
-        if "config" not in attrs and self.instance is not None:
+        validate_credentials(attrs, warehouse_type, self.instance)  # type: ignore[arg-type]
+
+        if "config" not in attrs and self.instance is not None and not type_changed:
             return attrs
 
         config: dict[str, Any] | None = attrs.get("config")
 
-        if warehouse_type == WarehouseType.SNOWFLAKE:
-            attrs["config"] = self._validate_snowflake_config(config or {})
+        if config_validator := CONFIG_VALIDATORS.get(warehouse_type):
+            stored = (
+                getattr(self.instance, "config", None)
+                if self.instance is not None
+                and not type_changed
+                and isinstance(getattr(self.instance, "config", None), dict)
+                else None
+            )
+            attrs["config"] = config_validator(config or {}, stored=stored)
         elif warehouse_type == WarehouseType.FLAGSMITH:
             if config:
                 raise serializers.ValidationError(
                     {"config": "Flagsmith warehouse does not accept configuration."}
                 )
             attrs["config"] = None
+
+        if type_changed:
+            attrs["status"] = WarehouseConnectionStatus.CREATED
+            attrs["status_detail"] = None
         return attrs
 
     def create(
@@ -94,19 +128,6 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
     def _generate_name(warehouse_type: str, environment: Environment) -> str:
         label = WarehouseType(warehouse_type).label
         return f"{label} Warehouse - {environment.name}"
-
-    @staticmethod
-    def _validate_snowflake_config(config: dict[str, Any]) -> SnowflakeConfig:
-        account_identifier = config.get("account_identifier", "")
-        if not account_identifier:
-            raise serializers.ValidationError(
-                {"config": {"account_identifier": "This field is required."}}
-            )
-        merged: SnowflakeConfig = {
-            **SNOWFLAKE_DEFAULTS,
-            **config,  # type: ignore[typeddict-item]
-        }
-        return merged
 
 
 class MetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -155,6 +176,11 @@ class ExperimentMetricSerializer(serializers.ModelSerializer):  # type: ignore[t
     )
     metric_name = serializers.CharField(source="metric.name", read_only=True)
     aggregation = serializers.CharField(source="metric.aggregation", read_only=True)
+    direction = serializers.ChoiceField(
+        choices=MetricDirection.choices,
+        source="metric.direction",
+        read_only=True,
+    )
 
     class Meta:
         model = ExperimentMetric
@@ -163,6 +189,7 @@ class ExperimentMetricSerializer(serializers.ModelSerializer):  # type: ignore[t
             "metric",
             "metric_name",
             "aggregation",
+            "direction",
             "expected_direction",
             "created_at",
         )
@@ -207,6 +234,35 @@ class ExperimentMetricInlineSerializer(serializers.Serializer):  # type: ignore[
     expected_direction = serializers.ChoiceField(choices=ExpectedDirection.choices)
 
 
+class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    enabled = serializers.BooleanField(required=True)
+    rollout_percentage = serializers.FloatField(
+        required=True, min_value=0, max_value=100
+    )
+    feature_state_value = FeatureValueSerializer(required=True)
+    multivariate_feature_state_values = MultivariateValueSerializer(
+        many=True, required=False
+    )
+
+    @staticmethod
+    def to_spec(data: dict[str, Any], request: Any) -> RolloutSpec:
+        value = data["feature_state_value"]
+        return RolloutSpec(
+            enabled=data["enabled"],
+            rollout_percentage=data["rollout_percentage"],
+            feature_state_value=value["value"],
+            value_type=value["type"],
+            multivariate_values=[
+                MultivariateValueChangeSet(
+                    multivariate_feature_option_id=mv["multivariate_feature_option"],
+                    percentage_allocation=mv["percentage_allocation"],
+                )
+                for mv in data.get("multivariate_feature_state_values", [])
+            ],
+            author=AuthorData.from_request(request),
+        )
+
+
 class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     # Annotated with the common base type so ExperimentListSerializer can
     # override the field with a read-only representation.
@@ -214,6 +270,9 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
         many=True,
         required=False,
         write_only=True,
+    )
+    experiment_rollout: Any = ExperimentRolloutSerializer(
+        required=False, write_only=True
     )
 
     class Meta:
@@ -225,6 +284,7 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
             "hypothesis",
             "status",
             "metrics",
+            "experiment_rollout",
             "created_at",
             "updated_at",
             "started_at",
@@ -260,6 +320,15 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
             raise serializers.ValidationError(
                 {"metrics": "Cannot change the metrics of an existing experiment."}
             )
+        if self.instance is not None and "experiment_rollout" in attrs:
+            raise serializers.ValidationError(
+                {
+                    "experiment_rollout": (
+                        "Cannot change the rollout via this endpoint; "
+                        "use the rollout endpoint instead."
+                    )
+                }
+            )
         self._validate_metrics(attrs.get("metrics") or [])
         return attrs
 
@@ -272,6 +341,7 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
 
     def create(self, validated_data: dict[str, Any]) -> Experiment:
         metrics: list[dict[str, Any]] = validated_data.pop("metrics", [])
+        rollout: dict[str, Any] | None = validated_data.pop("experiment_rollout", None)
         with transaction.atomic():
             experiment: Experiment = super().create(validated_data)
             ExperimentMetric.objects.bulk_create(
@@ -282,6 +352,13 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
                 )
                 for entry in metrics
             )
+            if rollout is not None:
+                apply_experiment_rollout(
+                    experiment,
+                    ExperimentRolloutSerializer.to_spec(
+                        rollout, self.context["request"]
+                    ),
+                )
         return experiment
 
 
@@ -331,6 +408,13 @@ class ExperimentFeatureSerializer(serializers.ModelSerializer):  # type: ignore[
         return options  # type: ignore[return-value]
 
 
+class ExperimentQueryParamSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    status = serializers.ListField(
+        child=serializers.ChoiceField(choices=ExperimentStatus.choices),
+        required=False,
+    )
+
+
 class ExperimentListSerializer(ExperimentSerializer):
     feature = ExperimentFeatureSerializer(read_only=True)
     metrics = ExperimentMetricSerializer(
@@ -338,6 +422,13 @@ class ExperimentListSerializer(ExperimentSerializer):
         many=True,
         read_only=True,
     )
+
+
+class ExperimentDetailSerializer(ExperimentListSerializer):
+    experiment_rollout = serializers.SerializerMethodField()
+
+    def get_experiment_rollout(self, experiment: Experiment) -> dict[str, Any] | None:
+        return get_experiment_rollout(experiment)
 
 
 class ExperimentExposuresSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]

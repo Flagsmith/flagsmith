@@ -64,6 +64,7 @@ from xdist import get_xdist_worker_id  # type: ignore[import-untyped]
 
 from api_keys.models import MasterAPIKey
 from api_keys.user import APIKeyUser
+from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoEnvironmentWrapper,
@@ -228,6 +229,12 @@ def django_db_setup(request: pytest.FixtureRequest) -> None:
     for db_settings in settings.DATABASES.values():
         test_db_name = f"{TEST_DATABASE_PREFIX}{db_settings['NAME']}_{test_db_suffix}"
         db_settings["NAME"] = test_db_name
+
+
+@pytest.fixture()
+def mock_influxdb_client(mocker: MockerFixture) -> MagicMock:
+    client: MagicMock = mocker.patch.object(InfluxDBWrapper, "get_client").return_value
+    return client
 
 
 @pytest.fixture(autouse=True)
@@ -1367,6 +1374,43 @@ def clickhouse_db(
     with connection.cursor() as cursor:
         for table_name in connection.introspection.table_names(cursor):
             cursor.execute(f"TRUNCATE TABLE {connection.ops.quote_name(table_name)}")
+
+
+@pytest.fixture
+def environment_api_key_str(environment: "Environment") -> str:
+    return str(environment.api_key)
+
+
+@pytest.fixture
+def segment_membership_identities(
+    clickhouse_db: None,
+    environment_api_key_str: str,
+) -> None:
+    rows = [
+        (
+            environment_api_key_str,
+            "alice",
+            "alice_key",
+            {"foo": "bar"},
+        ),  # matches segment
+        (
+            environment_api_key_str,
+            "bob",
+            "bob_key",
+            {"foo": "bar"},
+        ),  # matches segment
+        (
+            environment_api_key_str,
+            "carol",
+            "carol_key",
+            {"foo": "baz"},
+        ),  # doesn't match
+    ]
+    with connections["clickhouse"].cursor() as cursor:
+        cursor.executemany(
+            "INSERT INTO IDENTITIES (environment_id, identifier, identity_key, traits) VALUES",
+            rows,  # type: ignore[arg-type]
+        )
 
 
 @pytest.fixture

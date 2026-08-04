@@ -1,11 +1,17 @@
 from dataclasses import asdict
 from datetime import datetime, timezone
+from unittest.mock import MagicMock
 
 import pytest
+from django.db.models import Q
+from flag_engine.segments.constants import PERCENTAGE_SPLIT
+from prometheus_client import REGISTRY
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
+from rest_framework.exceptions import ValidationError
 
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from experimentation import services
 from experimentation.dataclasses import (
@@ -15,6 +21,7 @@ from experimentation.dataclasses import (
     ExposuresTimeseriesPoint,
     MetricSpec,
     ResultsAggregates,
+    RolloutSpec,
     WarehouseEventStats,
 )
 from experimentation.models import (
@@ -30,11 +37,19 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.results_query import _MetricSlot
+from experimentation.services import (
+    annotate_warehouse_event_stats,
+    verify_clickhouse_connection,
+)
 from experimentation.stats import VariantStats
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
+from features.versioning.dataclasses import MultivariateValueChangeSet
+from segments.models import Condition
+from users.models import FFAdminUser
+from util.mappers import map_environment_to_environment_document
 
 
 def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
@@ -61,6 +76,7 @@ def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
         secure=True,
         connect_timeout=services.CLICKHOUSE_CONNECT_TIMEOUT_SECONDS,
         send_receive_timeout=services.CLICKHOUSE_QUERY_TIMEOUT_SECONDS,
+        client_name=settings.CLICKHOUSE_CONNECTION_CLIENT_NAME,
     )
     assert client is mock_client_cls.return_value
     services._get_clickhouse_client.cache_clear()
@@ -87,6 +103,7 @@ def test_get_clickhouse_client__dsn_timeouts__are_preserved(
         database="db",
         connect_timeout=1,
         send_receive_timeout=2,
+        client_name=settings.CLICKHOUSE_CONNECTION_CLIENT_NAME,
     )
     services._get_clickhouse_client.cache_clear()
 
@@ -1301,3 +1318,881 @@ def test_compute_results_summary__experiment__queries_warehouse_and_builds(
     assert summary.srm_p_value == pytest.approx(1.0)
     assert summary.metrics[0].metric_id == metric.id
     assert summary.metrics[0].inference["variant_a"] is not None
+
+
+def test_apply_experiment_rollout__no_segment__creates_segment_and_override(
+    experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=42.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # Then
+    experiment.refresh_from_db()
+    segment = experiment.rollout_segment
+    assert segment is not None
+    assert segment.is_system_segment is True
+    condition = Condition.objects.get(rule__segment=segment)
+    assert condition.operator == PERCENTAGE_SPLIT
+    assert condition.value == "42.0"
+
+    override = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__segment=segment,
+    )
+    assert override.enabled is True
+    allocations = {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in override.multivariate_feature_state_values.all()
+    }
+    assert allocations == {option_a.id: 60.0, option_b.id: 40.0}
+
+
+def test_apply_experiment_rollout__null_default_value__serialised_as_empty_string(
+    experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given the environment default has no value stored
+    option_a, option_b, _ = multivariate_options
+    default_state = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+    default_state.feature_state_value.string_value = None
+    default_state.feature_state_value.save()
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=42.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # Then the default value is not rewritten as the string "None"
+    default_state.refresh_from_db()
+    assert default_state.get_feature_state_value() == ""
+
+
+def test_apply_experiment_rollout__first_rollout__zeroes_default_allocations(
+    experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    option_a, option_b, option_c = multivariate_options
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=42.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # Then
+    experiment.refresh_from_db()
+    default_state = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+    default_allocations = {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in default_state.multivariate_feature_state_values.all()
+    }
+    assert default_allocations == {option_a.id: 0, option_b.id: 0, option_c.id: 0}
+
+    # The rollout segment override keeps the experiment's own split.
+    override = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__segment=experiment.rollout_segment,
+    )
+    override_allocations = {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in override.multivariate_feature_state_values.all()
+    }
+    assert override_allocations == {option_a.id: 60.0, option_b.id: 40.0}
+
+
+def test_apply_experiment_rollout__existing_segment__leaves_default_allocations(
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    experiment = experiment_with_rollout
+    option_a, option_b, _ = multivariate_options
+    default_state = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__isnull=True,
+        identity__isnull=True,
+    )
+    # A later manual edit to the default allocations must survive a rollout update.
+    default_state.multivariate_feature_state_values.filter(
+        multivariate_feature_option=option_a
+    ).update(percentage_allocation=25.0)
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=80.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # Then the manual edit to the default allocations survives...
+    allocation = default_state.multivariate_feature_state_values.get(
+        multivariate_feature_option=option_a
+    ).percentage_allocation
+    assert allocation == 25.0
+
+    # ...while the rollout update itself is applied
+    condition = Condition.objects.get(rule__segment=experiment.rollout_segment)
+    assert condition.value == "80.0"
+    override = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__segment=experiment.rollout_segment,
+    )
+    override_allocations = {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in override.multivariate_feature_state_values.all()
+    }
+    assert override_allocations == {option_a.id: 50.0, option_b.id: 50.0}
+
+
+def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enabled(
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    experiment = experiment_with_rollout
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=False,
+            rollout_percentage=80.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # Then
+    condition = Condition.objects.get(rule__segment=experiment.rollout_segment)
+    assert condition.value == "80.0"
+    override = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__segment=experiment.rollout_segment,
+    )
+    assert override.enabled is False
+
+
+def test_apply_experiment_rollout__completed__raises(
+    experiment_with_rollout: Experiment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    experiment = experiment_with_rollout
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.save()
+
+    # When / Then
+    with pytest.raises(ValidationError):
+        services.apply_experiment_rollout(
+            experiment,
+            RolloutSpec(
+                enabled=True,
+                rollout_percentage=50.0,
+                feature_state_value="control",
+                value_type="string",
+                multivariate_values=[],
+                author=AuthorData(user=admin_user),
+            ),
+        )
+
+
+@pytest.mark.parametrize(
+    "status",
+    [ExperimentStatus.RUNNING, ExperimentStatus.PAUSED],
+)
+def test_apply_experiment_rollout__running_or_paused__updates_rollout(
+    status: ExperimentStatus,
+    experiment_with_rollout: Experiment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    experiment = experiment_with_rollout
+    experiment.status = status
+    experiment.save()
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=50.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # Then
+    condition = Condition.objects.get(rule__segment=experiment.rollout_segment)
+    assert condition.value == "50.0"
+
+
+def test_apply_experiment_rollout__duplicate_options__raises(
+    experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    option_a, _, _ = multivariate_options
+
+    # When / Then
+    with pytest.raises(ValidationError):
+        services.apply_experiment_rollout(
+            experiment,
+            RolloutSpec(
+                enabled=True,
+                rollout_percentage=20.0,
+                feature_state_value="control",
+                value_type="string",
+                multivariate_values=[
+                    MultivariateValueChangeSet(option_a.id, 40.0),
+                    MultivariateValueChangeSet(option_a.id, 60.0),
+                ],
+                author=AuthorData(user=admin_user),
+            ),
+        )
+
+
+def test_apply_experiment_rollout__update_flag_fails__rolls_back(
+    experiment_with_rollout: Experiment,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    experiment = experiment_with_rollout
+    mocker.patch(
+        "experimentation.services.update_flag",
+        side_effect=RuntimeError("boom"),
+    )
+
+    # When / Then
+    with pytest.raises(RuntimeError):
+        services.apply_experiment_rollout(
+            experiment,
+            RolloutSpec(
+                enabled=False,
+                rollout_percentage=80.0,
+                feature_state_value="control",
+                value_type="string",
+                multivariate_values=[],
+                author=AuthorData(user=admin_user),
+            ),
+        )
+
+    # Then
+    condition = Condition.objects.get(
+        rule__segment=experiment.rollout_segment, operator=PERCENTAGE_SPLIT
+    )
+    assert condition.value == "20.0"
+
+
+def _rollout_percentage_in_written_document(
+    mock_dynamo_env_wrapper: MagicMock,
+) -> str | None:
+    environments = mock_dynamo_env_wrapper.write_environments.call_args[0][0]
+    document = map_environment_to_environment_document(list(environments)[0])
+
+    values: list[str] = []
+
+    def _walk(node: object) -> None:
+        if isinstance(node, dict):
+            if node.get("operator") == PERCENTAGE_SPLIT:
+                values.append(node.get("value"))  # type: ignore[arg-type]
+            for child in node.values():
+                _walk(child)
+        elif isinstance(node, list):
+            for child in node:
+                _walk(child)
+
+    _walk(document)
+    return values[0] if values else None
+
+
+def test_apply_experiment_rollout__update_under_v2__rebuilds_environment_document(  # type: ignore[no-untyped-def]
+    environment_v2_versioning: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+    django_capture_on_commit_callbacks,
+) -> None:
+    # Given
+    mock_dynamo_env_wrapper = mocker.patch("environments.models.environment_wrapper")
+    environment = environment_v2_versioning
+    environment.project.enable_dynamo_db = True
+    environment.project.save()
+
+    option_a, option_b, _ = multivariate_options
+    experiment = Experiment.objects.create(
+        environment=environment,
+        feature=multivariate_feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.RUNNING,
+    )
+
+    def _spec(rollout_percentage: float) -> RolloutSpec:
+        return RolloutSpec(
+            enabled=True,
+            rollout_percentage=rollout_percentage,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+            author=AuthorData(user=admin_user),
+        )
+
+    with django_capture_on_commit_callbacks(execute=True):
+        services.apply_experiment_rollout(experiment, _spec(20.0))
+    experiment.refresh_from_db()
+
+    assert _rollout_percentage_in_written_document(mock_dynamo_env_wrapper) == "20.0"
+
+    # When
+    mock_dynamo_env_wrapper.reset_mock()
+    with django_capture_on_commit_callbacks(execute=True):
+        services.apply_experiment_rollout(experiment, _spec(15.0))
+
+    # Then
+    assert mock_dynamo_env_wrapper.write_environments.called
+    assert _rollout_percentage_in_written_document(mock_dynamo_env_wrapper) == "15.0"
+
+
+def test_apply_experiment_rollout__update_under_v1__rebuilds_environment_document(  # type: ignore[no-untyped-def]
+    environment: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+    django_capture_on_commit_callbacks,
+) -> None:
+    # Given
+    mock_dynamo_env_wrapper = mocker.patch("environments.models.environment_wrapper")
+    environment.project.enable_dynamo_db = True
+    environment.project.save()
+
+    option_a, option_b, _ = multivariate_options
+    experiment = Experiment.objects.create(
+        environment=environment,
+        feature=multivariate_feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.RUNNING,
+    )
+
+    def _spec(rollout_percentage: float) -> RolloutSpec:
+        return RolloutSpec(
+            enabled=True,
+            rollout_percentage=rollout_percentage,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+            author=AuthorData(user=admin_user),
+        )
+
+    with django_capture_on_commit_callbacks(execute=True):
+        services.apply_experiment_rollout(experiment, _spec(20.0))
+    experiment.refresh_from_db()
+
+    # When
+    mock_dynamo_env_wrapper.reset_mock()
+    with django_capture_on_commit_callbacks(execute=True):
+        services.apply_experiment_rollout(experiment, _spec(15.0))
+
+    # Then
+    assert mock_dynamo_env_wrapper.write_environments.called
+    assert _rollout_percentage_in_written_document(mock_dynamo_env_wrapper) == "15.0"
+
+
+def test_get_experiment_rollout__rollout_exists__returns_representation(
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+) -> None:
+    # Given a rollout (20%, options split 50/50, value "control") from the fixture
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    rollout = services.get_experiment_rollout(experiment_with_rollout)
+
+    # Then
+    assert rollout is not None
+    assert rollout["enabled"] is True
+    assert rollout["rollout_percentage"] == 20.0
+    assert rollout["feature_state_value"] == {"type": "string", "value": "control"}
+    assert {
+        (mv["multivariate_feature_option"], mv["percentage_allocation"])
+        for mv in rollout["multivariate_feature_state_values"]
+    } == {(option_a.id, 50.0), (option_b.id, 50.0)}
+
+
+def test_get_experiment_rollout__no_rollout__returns_none(
+    experiment: Experiment,
+) -> None:
+    # Given an experiment without a rollout
+    # When / Then
+    assert services.get_experiment_rollout(experiment) is None
+
+
+def test_get_experiment_rollout__v2_versioning__returns_representation(
+    environment_v2_versioning: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given a rollout on a v2 environment
+    option_a, option_b, _ = multivariate_options
+    experiment = Experiment.objects.create(
+        environment=environment_v2_versioning,
+        feature=multivariate_feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.CREATED,
+    )
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=30.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # When
+    rollout = services.get_experiment_rollout(experiment)
+
+    # Then
+    assert rollout is not None
+    assert rollout["rollout_percentage"] == 30.0
+    assert {
+        (mv["multivariate_feature_option"], mv["percentage_allocation"])
+        for mv in rollout["multivariate_feature_state_values"]
+    } == {(option_a.id, 60.0), (option_b.id, 40.0)}
+
+
+def test_get_experiment_rollout__boolean_value__returns_lowercase_string(
+    experiment: Experiment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=20.0,
+            feature_state_value="true",
+            value_type="boolean",
+            multivariate_values=[],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # When
+    rollout = services.get_experiment_rollout(experiment)
+
+    # Then
+    assert rollout is not None
+    assert rollout["feature_state_value"] == {"type": "boolean", "value": "true"}
+
+
+def test_enable_experiment_rollout__disabled_rollout__enables_and_preserves_allocations(
+    experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given a disabled rollout with a 50/50 multivariate split
+    option_a, option_b, _ = multivariate_options
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=False,
+            rollout_percentage=20.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # When
+    services.enable_experiment_rollout(experiment, AuthorData(user=admin_user))
+
+    # Then the override is enabled with its allocations preserved
+    rollout = services.get_experiment_rollout(experiment)
+    assert rollout is not None
+    assert rollout["enabled"] is True
+    assert {
+        (mv["multivariate_feature_option"], mv["percentage_allocation"])
+        for mv in rollout["multivariate_feature_state_values"]
+    } == {(option_a.id, 50.0), (option_b.id, 50.0)}
+
+
+def test_enable_experiment_rollout__already_enabled__no_op(
+    experiment_with_rollout: Experiment,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+) -> None:
+    # Given a rollout that is already enabled
+    update_flag = mocker.patch("experimentation.services.update_flag")
+
+    # When
+    services.enable_experiment_rollout(
+        experiment_with_rollout, AuthorData(user=admin_user)
+    )
+
+    # Then no flag write is made
+    update_flag.assert_not_called()
+
+
+def test_enable_experiment_rollout__no_rollout__no_op(
+    experiment: Experiment,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+) -> None:
+    # Given an experiment without a rollout
+    update_flag = mocker.patch("experimentation.services.update_flag")
+
+    # When
+    services.enable_experiment_rollout(experiment, AuthorData(user=admin_user))
+
+    # Then nothing is written
+    update_flag.assert_not_called()
+
+
+def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
+    environment_v2_versioning: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given a running experiment whose rollout splits two variants 50/50
+    option_a, option_b, _ = multivariate_options
+    experiment = Experiment.objects.create(
+        environment=environment_v2_versioning,
+        feature=multivariate_feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.RUNNING,
+    )
+    spec = RolloutSpec(
+        enabled=True,
+        rollout_percentage=50.0,
+        feature_state_value="control",
+        value_type="string",
+        multivariate_values=[
+            MultivariateValueChangeSet(option_a.id, 50.0),
+            MultivariateValueChangeSet(option_b.id, 50.0),
+        ],
+        author=AuthorData(user=admin_user),
+    )
+    identity_hash_keys = [f"identity-{i}" for i in range(50)]
+
+    def variant_assignment() -> dict[str, int]:
+        override = (
+            FeatureState.objects.get_live_feature_states(
+                environment=experiment.environment,
+                additional_filters=Q(
+                    feature_segment__segment=experiment.rollout_segment,
+                    identity__isnull=True,
+                ),
+                feature_id=experiment.feature_id,
+            )
+            .prefetch_related(
+                "multivariate_feature_state_values__multivariate_feature_option"
+            )
+            .latest("id")
+        )
+        assignment: dict[str, int] = {}
+        for key in identity_hash_keys:
+            option = override.get_multivariate_feature_state_value(key)
+            # The 50/50 split allocates 100%, so every identity lands on an option.
+            assert isinstance(option, MultivariateFeatureOption)
+            assignment[key] = option.id
+        return assignment
+
+    # When the rollout is applied, then re-applied unchanged (e.g. tuned while
+    # the experiment is running)
+    services.apply_experiment_rollout(experiment, spec)
+    experiment.refresh_from_db()
+    before = variant_assignment()
+
+    services.apply_experiment_rollout(experiment, spec)
+    after = variant_assignment()
+
+    # Then every already-enrolled identity keeps the variant it was first
+    # assigned; tuning the rollout must not re-randomise the split.
+    assert before == after
+
+
+def _verification_count(result: str) -> float:
+    return (
+        REGISTRY.get_sample_value(
+            "flagsmith_experimentation_warehouse_connection_verifications_total",
+            {"result": result},
+        )
+        or 0.0
+    )
+
+
+def test_verify_clickhouse_connection__reachable__sets_connected(
+    clickhouse_connection: WarehouseConnection,
+    log: StructuredLogCapture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
+    success_count_before = _verification_count("success")
+    clickhouse_connection.status_detail = "stale detail"
+    clickhouse_connection.save()
+
+    # When
+    verify_clickhouse_connection(clickhouse_connection)
+
+    # Then the check ran over the same HTTP client delivery uses
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
+    assert clickhouse_connection.status_detail is None
+    get_client.assert_called_once_with(
+        host="ch.acme-corp.example",
+        port=8443,
+        username="acme_svc",
+        password="hunter2",
+        database="acme_dwh",
+        secure=True,
+        connect_timeout=10,
+        send_receive_timeout=services.CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
+        pool_mgr=mocker.ANY,
+    )
+    get_client.return_value.query.assert_called_once_with("EXISTS TABLE events")
+    get_client.return_value.close.assert_called_once_with()
+    assert _verification_count("success") == success_count_before + 1
+    assert {
+        "level": "info",
+        "event": "connection.verification_succeeded",
+        "environment__id": clickhouse_connection.environment_id,
+        "organisation__id": (clickhouse_connection.environment.project.organisation_id),
+    } in log.events
+
+
+@pytest.mark.parametrize(
+    "credentials, query_results, expected_detail",
+    [
+        (
+            {"password": "hunter2"},
+            Exception("connection refused"),
+            "Connection failed.",
+        ),
+        (
+            {"password": "hunter2"},
+            [[(0,)]],
+            "Events table not found in the configured database. "
+            "Run the setup SQL to create it.",
+        ),
+        (None, None, "Stored connection details are incomplete."),
+    ],
+    ids=["client_error", "missing_events_table", "missing_credentials"],
+)
+def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
+    clickhouse_connection: WarehouseConnection,
+    credentials: dict[str, str] | None,
+    query_results: Exception | list[list[tuple[int]]] | None,
+    expected_detail: str,
+    log: StructuredLogCapture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
+    if isinstance(query_results, list):
+        get_client.return_value.query.side_effect = [
+            mocker.Mock(result_rows=rows) for rows in query_results
+        ]
+    else:
+        get_client.return_value.query.side_effect = query_results
+    clickhouse_connection.credentials = credentials
+    clickhouse_connection.save()
+    failure_count_before = _verification_count("failure")
+
+    # When
+    verify_clickhouse_connection(clickhouse_connection)
+
+    # Then
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
+    assert clickhouse_connection.status_detail == expected_detail
+    assert _verification_count("failure") == failure_count_before + 1
+    assert any(
+        event["event"] == "connection.verification_failed" for event in log.events
+    )
+
+
+def test_verify_clickhouse_connection__internal_host__sets_errored_without_connecting(
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
+    clickhouse_connection.config = {
+        **(clickhouse_connection.config or {}),
+        "host": "10.0.0.5",
+    }
+    clickhouse_connection.save()
+
+    # When
+    verify_clickhouse_connection(clickhouse_connection)
+
+    # Then
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
+    assert (
+        clickhouse_connection.status_detail
+        == "Host must not target internal or private network addresses."
+    )
+    get_client.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "query_result, expected_stats",
+    [
+        (
+            [(42, 7)],
+            WarehouseEventStats(total_events_received=42, unique_events_count=7),
+        ),
+        (Exception("connection refused"), None),
+    ],
+    ids=["reachable", "unreachable"],
+)
+def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer_instance(
+    clickhouse_connection: WarehouseConnection,
+    reset_cache: None,
+    query_result: Exception | list[tuple[int, int]],
+    expected_stats: WarehouseEventStats | None,
+    log: StructuredLogCapture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
+    if isinstance(query_result, Exception):
+        get_client.return_value.query.side_effect = query_result
+    else:
+        get_client.return_value.query.return_value = mocker.Mock(
+            result_rows=query_result
+        )
+
+    # When
+    annotate_warehouse_event_stats(clickhouse_connection, "test-env-key")
+
+    # Then
+    assert getattr(clickhouse_connection, "event_stats", None) == expected_stats
+    get_client.return_value.query.assert_called_once_with(
+        "SELECT count() AS total, uniqExact(event) AS unique "
+        "FROM events WHERE environment_key = %(environment_key)s",
+        parameters={"environment_key": "test-env-key"},
+    )
+    get_client.return_value.close.assert_called_once_with()
+    assert any(
+        event["event"] == "connection.event_stats_failed" for event in log.events
+    ) == (expected_stats is None)
+
+    # When — the outcome is cached, so a second request doesn't reconnect
+    fresh_connection = WarehouseConnection.objects.get(id=clickhouse_connection.id)
+    annotate_warehouse_event_stats(fresh_connection, "test-env-key")
+
+    # Then
+    get_client.assert_called_once()
+    assert getattr(fresh_connection, "event_stats", None) == expected_stats

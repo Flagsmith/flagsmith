@@ -40,7 +40,7 @@ const GithubStar: FC<GithubStarType> = ({}) => {
     <a
       target='_blank'
       href='https://github.com/flagsmith/flagsmith'
-      className='d-flex text-body'
+      className='d-flex text-default'
       rel='noreferrer'
     >
       <div

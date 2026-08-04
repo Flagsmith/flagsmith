@@ -1,40 +1,29 @@
 import Constants from 'common/constants'
+
+// baseURI belongs to FlagsmithConfig; FlagsmithClient itself only takes
+// `apiKey` (plus optional config, seeds and storage).
 export default (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT },
-) => `//In your application, initialise the Flagsmith client with your API key:
+) => `import 'package:flagsmith/flagsmith.dart';
 
 final flagsmithClient = FlagsmithClient(
-        apiKey: '${envId}',${
+  apiKey: '${envId}',${
   Constants.isCustomFlagsmithUrl()
-    ? `\n        baseURI: '${Constants.getFlagsmithSDKUrl()}',`
+    ? `\n  config: FlagsmithConfig(baseURI: '${Constants.getFlagsmithSDKUrl()}'),`
     : ''
 }
-        config: config,
-        seeds: <Flag>[
-            Flag.seed('feature', enabled: true),
-        ],
-    );
+);
 
-//if you prefer async initialization then you should use
-//final flagsmithClient = await FlagsmithClient.init(
-//        apiKey: '${envId}',${
-  Constants.isCustomFlagsmithUrl()
-    ? `\n//        baseURI: '${Constants.getFlagsmithSDKUrl()}',`
-    : ''
-}
-//        config: config,
-//        seeds: <Flag>[
-//            Flag.seed('feature', enabled: true),
-//        ],
-//        update: false,
-//    );
+// The method below triggers a network request
+await flagsmithClient.getFeatureFlags();
 
-await flagsmithClient.getFeatureFlags(reload: true) // fetch updates from api
+// Check whether the feature is enabled, or read its value
+final isEnabled = await flagsmithClient.hasFeatureFlag('${FEATURE_NAME}');
+final featureValue = await flagsmithClient.getFeatureFlagValue('${
+  FEATURE_NAME_ALT || FEATURE_NAME
+}');
 
-// Check for a feature
-bool ${FEATURE_NAME} = await flagsmithClient.hasFeatureFlag("${FEATURE_NAME}");
-
-// Or, use the value of a feature
-final ${FEATURE_NAME_ALT} = await flagsmithClient.getFeatureFlagValue("${FEATURE_NAME_ALT}");
+print('${FEATURE_NAME} enabled: $isEnabled');
+print('${FEATURE_NAME_ALT || FEATURE_NAME} value: $featureValue');
 `
