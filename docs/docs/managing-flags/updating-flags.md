@@ -121,20 +121,18 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
   }'
 ```
 
-When adding a new segment override, and `priority` is omitted, priority is set to the position of the override in the `segment_overrides` list. The lowest number has the highest priority.
+When adding a new segment override, and `priority` is omitted, priority is set to the position of the override in the
+`segment_overrides` list. The lowest number has the highest priority.
 
-### Configure A/B/n experiments (variants)
+### Re-weight experiment variants (A/B/n)
 
-Set up features with weighted variants and customise weights per segment.
-
-The `variants` list in `environment_default` defines the available variants for the feature, and their default weights
-in the environment. Each variant is identified by a `key` (slug format). Omitting a variant from the list deletes it in
-the environment, and in any segment overrides.
+On previously-configured experiments (multivariate features), the weight of each variant can be adjusted in the
+environment and per segment with the `variants` property.
 
 A `weight` is a fraction between 0 and 1. Any weight not allocated to variants serves the flag's default `value`.
 
-The `variants` list in `segment_overrides` can only re-weight existing variants. Variants omitted from it keep their
-current weights for that segment.
+In both `environment_default` and `segment_overrides`, the `variants` list **must** include all variants for the
+feature, even if their weight is 0.
 
 ```bash
 curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag/' \
@@ -146,16 +144,8 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
       "enabled": true,
       "value": {"type": "string", "value": "default_gateway"},
       "variants": [
-        {
-          "key": "new_gateway_a",
-          "weight": 0.1,
-          "value": {"type": "string", "value": "sharp_payments"}
-        },
-        {
-          "key": "new_gateway_b",
-          "weight": 0.1,
-          "value": {"type": "string", "value": "e_z_pay"}
-        }
+        {"key": "variant_a", "weight": 0.1},
+        {"key": "variant_b", "weight": 0.1}
       ]
     }
   }'
@@ -173,16 +163,9 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
       {
         "segment_id": 101,
         "enabled": true,
-        "value": {"type": "string", "value": "enterprise_gateway"},
         "variants": [
-          {
-            "key": "new_gateway_a",
-            "weight": 0.25
-          },
-          {
-            "key": "new_gateway_b",
-            "weight": 0.25
-          }
+          {"key": "variant_a", "weight": 0.25},
+          {"key": "variant_b", "weight": 0.25}
         ]
       }
     ]

@@ -1,15 +1,12 @@
 """https://docs.flagsmith.com/managing-flags/updating-flags"""
 
-from collections.abc import Callable
-from typing import Any
-
 import pytest
 from rest_framework.test import APIClient
 
 from environments.models import Environment
 from features.models import FeatureState
-from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.tasks import enable_v2_versioning
+from tests.integration.helpers import create_mv_option_with_api
 
 
 @pytest.fixture(params=["feature_versioning_v1", "feature_versioning_v2"], autouse=True)
@@ -37,6 +34,26 @@ def segment_2(
         format="json",
     )
     return int(response.json()["id"])
+
+
+@pytest.fixture()
+def feature_variants(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    for key, value, default_percentage_allocation in [
+        ("variant_a", "a", 10),
+        ("variant_b", "b", 20),
+    ]:
+        create_mv_option_with_api(
+            admin_client,
+            project,
+            feature,
+            default_percentage_allocation,
+            value,
+            key=key,
+        )
 
 
 def test_update_flag__environment_default_enabled__toggles_flag(
@@ -310,56 +327,64 @@ def test_update_flag__segment_override_attribute_omitted__left_unchanged(
     assert override.get_feature_state_value() == "enterprise"
 
 
-def test_update_flag__environment_default_variants__creates_variants(
+@pytest.mark.parametrize(
+    "variants, expected_allocations",
+    [
+        pytest.param(
+            [
+                {"key": "variant_a", "weight": 0.25},
+                {"key": "variant_b", "weight": 0.25},
+            ],
+            {"variant_a": 25, "variant_b": 25},
+            id="fractional",
+        ),
+        pytest.param(
+            [
+                {"key": "variant_a", "weight": 0.5},
+                {"key": "variant_b", "weight": 0},
+            ],
+            {"variant_a": 50, "variant_b": 0},
+            id="zero-weight",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("feature_variants")
+def test_update_flag__environment_default_variants__reweights_variants(
     admin_client: APIClient,
     environment_api_key: str,
     feature: int,
     versioned_environment: Environment,
+    variants: list[dict[str, object]],
+    expected_allocations: dict[str, float],
 ) -> None:
     # Given / When
     response = admin_client.post(
         f"/api/experiments/environments/{environment_api_key}/update-flag/",
         {
             "feature": {"id": feature},
-            "environment_default": {
-                "enabled": True,
-                "value": {"type": "string", "value": "default_gateway"},
-                "variants": [
-                    {
-                        "key": "new_gateway_a",
-                        "weight": 0.1,
-                        "value": {"type": "string", "value": "sharp_payments"},
-                    },
-                    {
-                        "key": "new_gateway_b",
-                        "weight": 0.1,
-                        "value": {"type": "string", "value": "e_z_pay"},
-                    },
-                ],
-            },
+            "environment_default": {"variants": variants},
         },
         format="json",
     )
 
     # Then
     assert response.status_code == 204
-    assert dict(
-        MultivariateFeatureOption.objects.filter(feature_id=feature).values_list(
-            "key", "string_value"
-        )
-    ) == {"new_gateway_a": "sharp_payments", "new_gateway_b": "e_z_pay"}
     environment_default = FeatureState.objects.get_live_feature_states(
         environment=versioned_environment,
         feature_id=feature,
         feature_segment=None,
     ).get()
-    assert dict(
-        environment_default.multivariate_feature_state_values.values_list(
-            "multivariate_feature_option__key", "percentage_allocation"
+    assert (
+        dict(
+            environment_default.multivariate_feature_state_values.values_list(
+                "multivariate_feature_option__key", "percentage_allocation"
+            )
         )
-    ) == {"new_gateway_a": 10, "new_gateway_b": 10}
+        == expected_allocations
+    )
 
 
+@pytest.mark.usefixtures("feature_variants")
 def test_update_flag__segment_override_variants__reweights_for_segment_only(
     admin_client: APIClient,
     environment_api_key: str,
@@ -367,33 +392,7 @@ def test_update_flag__segment_override_variants__reweights_for_segment_only(
     segment: int,
     versioned_environment: Environment,
 ) -> None:
-    # Given
-    setup_response = admin_client.post(
-        f"/api/experiments/environments/{environment_api_key}/update-flag/",
-        {
-            "feature": {"id": feature},
-            "environment_default": {
-                "enabled": True,
-                "value": {"type": "string", "value": "default_gateway"},
-                "variants": [
-                    {
-                        "key": "new_gateway_a",
-                        "weight": 0.1,
-                        "value": {"type": "string", "value": "sharp_payments"},
-                    },
-                    {
-                        "key": "new_gateway_b",
-                        "weight": 0.1,
-                        "value": {"type": "string", "value": "e_z_pay"},
-                    },
-                ],
-            },
-        },
-        format="json",
-    )
-    assert setup_response.status_code == 204
-
-    # When
+    # Given / When
     response = admin_client.post(
         f"/api/experiments/environments/{environment_api_key}/update-flag/",
         {
@@ -402,10 +401,9 @@ def test_update_flag__segment_override_variants__reweights_for_segment_only(
                 {
                     "segment_id": segment,
                     "enabled": True,
-                    "value": {"type": "string", "value": "enterprise_gateway"},
                     "variants": [
-                        {"key": "new_gateway_a", "weight": 0.25},
-                        {"key": "new_gateway_b", "weight": 0.25},
+                        {"key": "variant_a", "weight": 0.25},
+                        {"key": "variant_b", "weight": 0.25},
                     ],
                 },
             ],
@@ -424,156 +422,13 @@ def test_update_flag__segment_override_variants__reweights_for_segment_only(
         override.multivariate_feature_state_values.values_list(
             "multivariate_feature_option__key", "percentage_allocation"
         )
-    ) == {"new_gateway_a": 25, "new_gateway_b": 25}
+    ) == {"variant_a": 25, "variant_b": 25}
     environment_default = live_feature_states.get(feature_segment=None)
     assert dict(
         environment_default.multivariate_feature_state_values.values_list(
             "multivariate_feature_option__key", "percentage_allocation"
         )
-    ) == {"new_gateway_a": 10, "new_gateway_b": 10}
-
-
-def test_update_flag__segment_override_variant_omitted__keeps_weight_for_segment(
-    admin_client: APIClient,
-    environment_api_key: str,
-    feature: int,
-    segment: int,
-    versioned_environment: Environment,
-) -> None:
-    # Given
-    setup_response = admin_client.post(
-        f"/api/experiments/environments/{environment_api_key}/update-flag/",
-        {
-            "feature": {"id": feature},
-            "environment_default": {
-                "enabled": True,
-                "value": {"type": "string", "value": "default"},
-                "variants": [
-                    {
-                        "key": "variant_a",
-                        "weight": 0.1,
-                        "value": {"type": "string", "value": "a"},
-                    },
-                    {
-                        "key": "variant_b",
-                        "weight": 0.2,
-                        "value": {"type": "string", "value": "b"},
-                    },
-                ],
-            },
-        },
-        format="json",
-    )
-    assert setup_response.status_code == 204
-
-    # When
-    response = admin_client.post(
-        f"/api/experiments/environments/{environment_api_key}/update-flag/",
-        {
-            "feature": {"id": feature},
-            "segment_overrides": [
-                {
-                    "segment_id": segment,
-                    "enabled": True,
-                    "value": {"type": "string", "value": "override"},
-                    "variants": [
-                        {"key": "variant_a", "weight": 0.3},
-                    ],
-                },
-            ],
-        },
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == 204
-    override = FeatureState.objects.get_live_feature_states(
-        environment=versioned_environment,
-        feature_id=feature,
-    ).get(feature_segment__segment_id=segment)
-    assert dict(
-        override.multivariate_feature_state_values.values_list(
-            "multivariate_feature_option__key", "percentage_allocation"
-        )
-    ) == {"variant_a": 30, "variant_b": 20}
-
-
-def test_update_flag__environment_default_variant_omitted__deletes_variant(
-    admin_client: APIClient,
-    environment_api_key: str,
-    feature: int,
-    segment: int,
-    versioned_environment: Environment,
-) -> None:
-    # Given
-    setup_response = admin_client.post(
-        f"/api/experiments/environments/{environment_api_key}/update-flag/",
-        {
-            "feature": {"id": feature},
-            "environment_default": {
-                "enabled": True,
-                "value": {"type": "string", "value": "default"},
-                "variants": [
-                    {
-                        "key": "variant_kept",
-                        "weight": 0.1,
-                        "value": {"type": "string", "value": "kept"},
-                    },
-                    {
-                        "key": "variant_deleted",
-                        "weight": 0.2,
-                        "value": {"type": "string", "value": "deleted"},
-                    },
-                ],
-            },
-            "segment_overrides": [
-                {
-                    "segment_id": segment,
-                    "enabled": True,
-                    "value": {"type": "string", "value": "override"},
-                    "variants": [
-                        {"key": "variant_kept", "weight": 0.3},
-                        {"key": "variant_deleted", "weight": 0.4},
-                    ],
-                },
-            ],
-        },
-        format="json",
-    )
-    assert setup_response.status_code == 204
-
-    # When
-    response = admin_client.post(
-        f"/api/experiments/environments/{environment_api_key}/update-flag/",
-        {
-            "feature": {"id": feature},
-            "environment_default": {
-                "variants": [
-                    {"key": "variant_kept", "weight": 0.5},
-                ],
-            },
-        },
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == 204
-    live_feature_states = FeatureState.objects.get_live_feature_states(
-        environment=versioned_environment,
-        feature_id=feature,
-    )
-    environment_default = live_feature_states.get(feature_segment=None)
-    assert dict(
-        environment_default.multivariate_feature_state_values.values_list(
-            "multivariate_feature_option__key", "percentage_allocation"
-        )
-    ) == {"variant_kept": 50}
-    override = live_feature_states.get(feature_segment__segment_id=segment)
-    assert dict(
-        override.multivariate_feature_state_values.values_list(
-            "multivariate_feature_option__key", "percentage_allocation"
-        )
-    ) == {"variant_kept": 30}
+    ) == {"variant_a": 10, "variant_b": 20}
 
 
 def test_update_flag__segment_override_delete__removes_override(
@@ -647,74 +502,53 @@ def test_update_flag__segment_override_delete_with_other_attributes__responds_40
     assert "delete" in str(response.json())
 
 
+@pytest.mark.parametrize("context", ["environment_default", "segment_overrides"])
 @pytest.mark.parametrize(
-    "update",
+    "variants",
     [
         pytest.param(
-            lambda segment: {
-                "environment_default": {
-                    "variants": [
-                        {"key": "variant_a", "weight": 0.6},
-                        {"key": "variant_b", "weight": 0.5},
-                    ],
-                },
-            },
-            id="environment-default",
+            [
+                {"key": "variant_a", "weight": 0.6},
+                {"key": "variant_b", "weight": 0.5},
+            ],
+            id="weights-exceed-one",
         ),
         pytest.param(
-            lambda segment: {
-                "segment_overrides": [
-                    {
-                        "segment_id": segment,
-                        "variants": [
-                            {"key": "variant_a", "weight": 0.6},
-                            {"key": "variant_b", "weight": 0.5},
-                        ],
-                    },
-                ],
-            },
-            id="segment-override",
+            [{"key": "variant_a", "weight": 0.5}],
+            id="variant-omitted",
+        ),
+        pytest.param(
+            [
+                {"key": "variant_a", "weight": 0.1},
+                {"key": "variant_b", "weight": 0.2},
+                {"key": "unknown_variant", "weight": 0.5},
+            ],
+            id="unknown-key",
         ),
     ],
 )
-def test_update_flag__variant_weights_exceed_one__responds_400(
+@pytest.mark.usefixtures("feature_variants")
+def test_update_flag__invalid_variants__responds_400(
     admin_client: APIClient,
     environment_api_key: str,
     feature: int,
     segment: int,
     versioned_environment: Environment,
-    update: Callable[[int], dict[str, Any]],
+    context: str,
+    variants: list[dict[str, object]],
 ) -> None:
     # Given
-    setup_response = admin_client.post(
-        f"/api/experiments/environments/{environment_api_key}/update-flag/",
-        {
-            "feature": {"id": feature},
-            "environment_default": {
-                "variants": [
-                    {
-                        "key": "variant_a",
-                        "weight": 0.1,
-                        "value": {"type": "string", "value": "a"},
-                    },
-                    {
-                        "key": "variant_b",
-                        "weight": 0.1,
-                        "value": {"type": "string", "value": "b"},
-                    },
-                ],
-            },
-        },
-        format="json",
-    )
-    assert setup_response.status_code == 204
+    update = {
+        "environment_default": {"variants": variants},
+        "segment_overrides": [{"segment_id": segment, "variants": variants}],
+    }[context]
 
     # When
     response = admin_client.post(
         f"/api/experiments/environments/{environment_api_key}/update-flag/",
         {
             "feature": {"id": feature},
-            **update(segment),
+            context: update,
         },
         format="json",
     )
@@ -731,70 +565,7 @@ def test_update_flag__variant_weights_exceed_one__responds_400(
         environment_default.multivariate_feature_state_values.values_list(
             "multivariate_feature_option__key", "percentage_allocation"
         )
-    ) == {"variant_a": 10, "variant_b": 10}
-
-
-@pytest.mark.parametrize(
-    "variant",
-    [
-        pytest.param(
-            {
-                "key": "variant_a",
-                "weight": 0.5,
-                "value": {"type": "string", "value": "changed"},
-            },
-            id="value-provided",
-        ),
-        pytest.param(
-            {"key": "unknown_variant", "weight": 0.5},
-            id="unknown-key",
-        ),
-    ],
-)
-def test_update_flag__segment_override_variant_not_reweighting__responds_400(
-    admin_client: APIClient,
-    environment_api_key: str,
-    feature: int,
-    segment: int,
-    variant: dict[str, Any],
-) -> None:
-    # Given
-    setup_response = admin_client.post(
-        f"/api/experiments/environments/{environment_api_key}/update-flag/",
-        {
-            "feature": {"id": feature},
-            "environment_default": {
-                "variants": [
-                    {
-                        "key": "variant_a",
-                        "weight": 0.1,
-                        "value": {"type": "string", "value": "a"},
-                    },
-                ],
-            },
-        },
-        format="json",
-    )
-    assert setup_response.status_code == 204
-
-    # When
-    response = admin_client.post(
-        f"/api/experiments/environments/{environment_api_key}/update-flag/",
-        {
-            "feature": {"id": feature},
-            "segment_overrides": [
-                {
-                    "segment_id": segment,
-                    "variants": [variant],
-                },
-            ],
-        },
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == 400
-    assert "variants" in str(response.json())
+    ) == {"variant_a": 10, "variant_b": 20}
 
 
 def test_update_flag__unknown_feature__responds_400(
