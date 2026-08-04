@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, TypeAlias
 
+from pydantic.main import IncEx
+
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from util.mappers.engine import (
     map_environment_to_engine,
@@ -10,13 +12,22 @@ if TYPE_CHECKING:  # pragma: no cover
     from environments.models import Environment
 
 
-SDKDocumentValue: TypeAlias = dict[str, "SDKDocumentValue"] | str | bool | None | float
+SDKDocumentValue: TypeAlias = (
+    dict[str, "SDKDocumentValue"]
+    | list["SDKDocumentValue"]
+    | str
+    | bool
+    | None
+    | float
+)
 SDKDocument: TypeAlias = dict[str, SDKDocumentValue]
 
-SDK_DOCUMENT_EXCLUDE = {
-    *IDENTITY_INTEGRATIONS_RELATION_NAMES,
-    "dynatrace_config",
-    "onboarding_pending",
+SDK_DOCUMENT_EXCLUDE: dict[str, bool | IncEx] = {
+    **dict.fromkeys(IDENTITY_INTEGRATIONS_RELATION_NAMES, True),
+    "dynatrace_config": True,
+    "onboarding_pending": True,
+    # System-owned identity data must never reach local-eval SDKs.
+    "identity_overrides": {"__all__": {"system_traits"}},
 }
 
 
