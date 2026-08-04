@@ -36,6 +36,7 @@ import useSignupExperiment from 'common/useSignupExperiment'
 const HomePage: React.FC = () => {
   const history = useHistory()
   const location = useLocation()
+  const [googleReady, setGoogleReady] = useState(false)
   const [allRequirementsMet, setAllRequirementsMet] = useState(false)
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')
@@ -231,9 +232,12 @@ const HomePage: React.FC = () => {
             clientId={
               JSON.parse(Utils.getFlagsmithValue('oauth_google')).clientId
             }
+            onScriptLoadSuccess={() => setGoogleReady(true)}
+            onScriptLoadError={() => setGoogleReady(false)}
           >
             <GoogleButton
               className='w-100'
+              ready={googleReady}
               onSuccess={(e) => {
                 document.location.href = `${
                   document.location.origin

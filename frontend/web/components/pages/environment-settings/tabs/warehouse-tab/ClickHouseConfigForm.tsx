@@ -5,7 +5,6 @@ import Switch from 'components/Switch'
 import ErrorMessage from 'components/ErrorMessage'
 import FieldError from 'components/base/forms/FieldError'
 import WarehouseSetupSqlHelp from './WarehouseSetupSqlHelp'
-import WarningMessage from 'components/WarningMessage'
 import { ClickHouseConfig } from 'common/types/responses'
 import { useTestWarehouseConnectionConfigMutation } from 'common/services/useWarehouseConnection'
 import {
@@ -286,10 +285,10 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
           </div>
         )}
         {testState === 'errored' && (
-          <div className='d-flex justify-content-end'>
-            <WarningMessage
-              warningMessage={getTestFailureWarning(testDetail)}
-              warningMessageClass='mb-0'
+          <div className='d-flex'>
+            <ErrorMessage
+              error={getTestFailureWarning(testDetail)}
+              errorMessageClass='mb-0 flex-1 wh-config-form__test-error'
             />
           </div>
         )}

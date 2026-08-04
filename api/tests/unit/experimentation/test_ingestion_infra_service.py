@@ -157,6 +157,10 @@ def test_provision_ingestion_infrastructure__fresh_account__creates_bucket_and_s
     assert stream_tags["Tags"] == [{"Key": "organisation_id", "Value": "42"}]
 
     logs = boto3.client("logs", region_name="eu-west-2")
+    log_groups = logs.describe_log_groups(
+        logGroupNamePrefix="/aws/kinesisfirehose/events-ingestion-org-42",
+    )["logGroups"]
+    assert [group["retentionInDays"] for group in log_groups] == [365]
     log_streams = logs.describe_log_streams(
         logGroupName="/aws/kinesisfirehose/events-ingestion-org-42",
     )["logStreams"]

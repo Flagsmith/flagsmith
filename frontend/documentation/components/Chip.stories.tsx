@@ -7,6 +7,7 @@ const meta: Meta<typeof Chip> = {
   args: { children: 'Production' },
   component: Chip,
   parameters: {
+    chromatic: { disableSnapshot: false },
     docs: {
       description: {
         component:
