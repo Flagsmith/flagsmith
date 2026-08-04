@@ -16,6 +16,12 @@ import {
   ProjectSummary,
   Tag,
 } from 'common/types/responses'
+import {
+  DEMO_FLAG_NAME,
+  ONBOARDING_TAG,
+  findDemoFlag,
+  shouldSeedDemoFlag,
+} from './demoFlag'
 import { SmartDefaults } from './useSmartDefaults'
 import { createOrganisationViaAccountStore } from './createOrganisationViaAccountStore'
 import API from 'project/api'
@@ -23,17 +29,10 @@ import Constants from 'common/constants'
 
 type Store = ReturnType<typeof getStore>
 
-const FLAG_NAME = 'show_demo_button'
 const DEFAULT_ORG_NAME = 'My organisation'
 const DEFAULT_PROJECT_NAME = 'My first project'
 const DEV_ENVIRONMENT_NAME = 'Development'
 const PROD_ENVIRONMENT_NAME = 'Production'
-const ONBOARDING_TAG = {
-  color: '#3cb371',
-  description: 'Created during onboarding',
-  label: 'Onboarding',
-}
-
 type ExistingOrg = { id: number; name: string }
 
 export type BootstrapInput = {
@@ -47,6 +46,9 @@ export type OnboardingBootstrap = {
   project: ProjectSummary
   environment: Environment
   featureName: string
+  // False when the project already had flags, so we seeded nothing and the tour
+  // has no flag of its own to teach with.
+  hasDemoFlag: boolean
 }
 
 async function ensureOrganisation(
@@ -154,20 +156,20 @@ async function ensureFlag(
       }),
     )
     .unwrap()
+  const results = flags?.results ?? []
   const onboardingTag = await findOnboardingTag(store, project.id)
-  const existing =
-    (onboardingTag &&
-      flags?.results?.find((f) => f.tags?.includes(onboardingTag.id))) ||
-    flags?.results?.find((f) => f.name === FLAG_NAME)
+  const existing = findDemoFlag(results, onboardingTag)
   if (existing) {
     return existing
   }
-  const isFirstFeature = !flags?.results?.length
+  if (!shouldSeedDemoFlag(results)) {
+    return undefined
+  }
   const created = await store
     .dispatch(
       projectFlagService.endpoints.createProjectFlag.initiate({
         body: {
-          name: FLAG_NAME,
+          name: DEMO_FLAG_NAME,
           project: project.id,
           type: 'STANDARD',
         } as Req['createProjectFlag']['body'],
@@ -175,9 +177,7 @@ async function ensureFlag(
       }),
     )
     .unwrap()
-  if (isFirstFeature) {
-    API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
-  }
+  API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
   return created
 }
 
@@ -227,7 +227,8 @@ export async function bootstrapOnboarding(
   AppActions.refreshOrganisation()
   return {
     environment,
-    featureName: flag?.name ?? FLAG_NAME,
+    featureName: flag?.name ?? DEMO_FLAG_NAME,
+    hasDemoFlag: !!flag,
     organisationId: organisation.id,
     organisationName: organisation.name,
     project,

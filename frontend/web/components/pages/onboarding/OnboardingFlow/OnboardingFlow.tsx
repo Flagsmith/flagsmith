@@ -17,6 +17,7 @@ import { useOnboardingConnection } from 'components/pages/onboarding/hooks/useOn
 import { useUpdateOrganisationMutation } from 'common/services/useOrganisation'
 import { useUpdateProjectMutation } from 'common/services/useProject'
 import API from 'project/api'
+import OnboardingAlreadySetUp from 'components/pages/onboarding/onboarding-already-set-up'
 import Constants from 'common/constants'
 import './OnboardingFlow.scss'
 
@@ -30,6 +31,7 @@ const OnboardingFlow: FC = () => {
     environment,
     environmentKey,
     featureName: bootstrappedFeatureName,
+    hasDemoFlag,
     organisationId,
     organisationName,
     projectId,
@@ -194,6 +196,17 @@ const OnboardingFlow: FC = () => {
         </p>
         <Button onClick={() => window.location.reload()}>Try again</Button>
       </div>
+    )
+  }
+
+  // The project already had flags, so nothing was seeded to tour with.
+  if (!hasDemoFlag) {
+    return (
+      <OnboardingAlreadySetUp
+        projectName={projectDisplayName}
+        featuresHref={`/project/${projectId}/environment/${environmentKey}/features`}
+        onSkip={skipToApp}
+      />
     )
   }
 
