@@ -697,14 +697,6 @@ const HomePage: React.FC = () => {
                                 <InputGroup
                                   title='Email Address'
                                   data-test='email'
-                                  isInvalid={
-                                    !!currentEmailError(
-                                      error,
-                                      email,
-                                      submittedEmail,
-                                      isSaving,
-                                    )
-                                  }
                                   inputProps={{
                                     autoComplete: 'on',
                                     className: 'full-width',
