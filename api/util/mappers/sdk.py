@@ -13,12 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 SDKDocumentValue: TypeAlias = (
-    dict[str, "SDKDocumentValue"]
-    | list["SDKDocumentValue"]
-    | str
-    | bool
-    | None
-    | float
+    dict[str, "SDKDocumentValue"] | list["SDKDocumentValue"] | str | bool | None | float
 )
 SDKDocument: TypeAlias = dict[str, SDKDocumentValue]
 

@@ -136,4 +136,3 @@ def _apply_remove(composite_key: str, trait_key: str) -> None:
     except ClientError as exc:
         if exc.response["Error"]["Code"] != "ConditionalCheckFailedException":
             raise
-

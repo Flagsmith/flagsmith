@@ -94,9 +94,7 @@ def test_apply_cohort_membership_deltas__non_edge_project__skips(
     # Then
     membership.refresh_from_db()
     assert membership.state == CohortMembershipState.PENDING_ADD
-    assert log.has(
-        "membership.apply.skipped", cohort__id=cohort.id, reason="not_edge"
-    )
+    assert log.has("membership.apply.skipped", cohort__id=cohort.id, reason="not_edge")
 
 
 def test_apply_cohort_membership_deltas__missing_cohort__logs_warning(
