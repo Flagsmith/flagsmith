@@ -21,13 +21,11 @@ export interface InputMethods {
 
 export interface InputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+  // Skips the wait for the field to be touched, so a validity known up front,
+  // e.g. the API rejected the value, shows straight away.
   autoValidate?: boolean
   centered?: boolean
   inputClassName?: string
-  // Already known to be wrong, e.g. the API rejected it. Shows immediately,
-  // unlike isValid, which waits until the field has been touched so a pristine
-  // form is not red before anyone has typed.
-  isInvalid?: boolean
   isValid?: boolean
   ref?: Ref<InputMethods>
   search?: boolean
@@ -57,7 +55,6 @@ const Input: React.FC<InputProps> = ({
   className = '',
   disabled,
   inputClassName,
-  isInvalid = false,
   isValid = true,
   onBlur: onBlurProp,
   onChange,
@@ -74,9 +71,7 @@ const Input: React.FC<InputProps> = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isFocused, setIsFocused] = useState(false)
-  const [shouldValidate, setShouldValidate] = useState(
-    !!value || !!autoValidate,
-  )
+  const [hasBeenTouched, setHasBeenTouched] = useState(!!value)
   const [type, setType] = useState(typeProp)
 
   // No-op under E2E to avoid programmatic focus stealing during tests; native
@@ -95,7 +90,7 @@ const Input: React.FC<InputProps> = ({
 
   const onBlur = (e: FocusEvent<HTMLInputElement>) => {
     setIsFocused(false)
-    setShouldValidate(true)
+    setHasBeenTouched(true)
     onBlurProp?.(e)
   }
 
@@ -106,8 +101,8 @@ const Input: React.FC<InputProps> = ({
     onKeyDownProp?.(e)
   }
 
-  const invalid = isInvalid || (shouldValidate && !isValid)
-  const success = isValid && !invalid && showSuccess
+  const invalid = (hasBeenTouched || !!autoValidate) && !isValid
+  const success = isValid && showSuccess
   const sizeClassName = size ? sizeClassNames[size] : ''
   const containerClassName = cn(
     {
