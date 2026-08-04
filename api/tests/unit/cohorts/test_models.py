@@ -6,6 +6,35 @@ from environments.models import Environment
 from segments.models import Segment
 
 
+def test_cohort__second_active_cohort_for_segment__raises_integrity_error(
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    Cohort.objects.create(environment=environment, segment=segment)
+
+    # When
+    with pytest.raises(IntegrityError) as exc_info:
+        Cohort.objects.create(environment=environment, segment=segment)
+
+    # Then
+    assert "unique_active_cohort_per_segment" in str(exc_info.value)
+
+
+def test_cohort__soft_deleted_cohort__allows_new_cohort_for_segment(
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    Cohort.objects.create(environment=environment, segment=segment).delete()
+
+    # When
+    new_cohort = Cohort.objects.create(environment=environment, segment=segment)
+
+    # Then
+    assert new_cohort.deleted_at is None
+
+
 def test_cohort_membership__create__defaults_to_pending_add(
     environment: Environment,
     segment: Segment,

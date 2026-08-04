@@ -26,6 +26,17 @@ class Cohort(SoftDeleteExportableModel):
     version = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        constraints = [
+            # Exactly one active cohort feeds a segment: two cohorts on one
+            # segment would race each other's membership sync.
+            models.UniqueConstraint(
+                fields=["segment"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_active_cohort_per_segment",
+            ),
+        ]
+
 
 class CohortMembershipState(models.TextChoices):
     PENDING_ADD = "pending_add", "Pending add"
