@@ -44,6 +44,17 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _system_trait_value_matches(
+    stored_value: object,
+    document_value: bool | int | Decimal | str,
+) -> bool:
+    # The bool check stops `Decimal(1) == True` false positives.
+    return (
+        isinstance(stored_value, bool) == isinstance(document_value, bool)
+        and stored_value == document_value
+    )
+
+
 class DynamoIdentityWrapper(BaseDynamoWrapper):
     def __init__(self) -> None:
         super().__init__()
@@ -106,14 +117,10 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                 Key={"composite_key": composite_key}, ConsistentRead=True
             ).get("Item")
             system_traits = document.get("system_traits") if document else None
-            if isinstance(system_traits, dict):
-                stored_value = system_traits.get(trait_key)
-                # The bool check stops `Decimal(1) == True` false positives.
-                if (
-                    isinstance(stored_value, bool) == isinstance(document_value, bool)
-                    and stored_value == document_value
-                ):
-                    return
+            if isinstance(system_traits, dict) and _system_trait_value_matches(
+                system_traits.get(trait_key), document_value
+            ):
+                return
             try:
                 if document is None:
                     self.table.put_item(  # type: ignore[union-attr]
@@ -137,8 +144,8 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                 else:
                     # If another writer created system_traits after we read
                     # the document, this write does nothing and their traits
-                    # survive; the next loop pass adds our key alongside theirs.
-                    self.table.update_item(  # type: ignore[union-attr]
+                    # survive; the returned attributes tell us which happened.
+                    response = self.table.update_item(  # type: ignore[union-attr]
                         Key={"composite_key": composite_key},
                         UpdateExpression=(
                             "SET system_traits = if_not_exists(system_traits, :init)"
@@ -150,7 +157,13 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                         ExpressionAttributeValues={
                             ":init": {trait_key: document_value}
                         },
+                        ReturnValues="ALL_NEW",
                     )
+                    written_traits = response["Attributes"].get("system_traits")
+                    if isinstance(written_traits, dict) and _system_trait_value_matches(
+                        written_traits.get(trait_key), document_value
+                    ):
+                        return
                     continue
                 return
             except ClientError as exc:

@@ -727,6 +727,7 @@ def test_set_system_trait__document_with_system_traits__sets_only_given_key(
 
 def test_set_system_trait__document_without_system_traits__creates_system_traits(
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     dynamodb_identity_wrapper.put_item(
@@ -736,6 +737,7 @@ def test_set_system_trait__document_without_system_traits__creates_system_traits
             "environment_api_key": "api-key",
         }
     )
+    read_spy = mocker.spy(dynamodb_identity_wrapper.table, "get_item")
 
     # When
     dynamodb_identity_wrapper.set_system_trait(
@@ -743,6 +745,7 @@ def test_set_system_trait__document_without_system_traits__creates_system_traits
     )
 
     # Then
+    assert read_spy.call_count == 1
     document = dynamodb_identity_wrapper.get_item("api-key_user-1")
     assert document is not None
     assert document["system_traits"] == {"cohort_x": True}
