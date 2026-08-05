@@ -725,7 +725,7 @@ def test_set_system_trait__document_with_system_traits__sets_only_given_key(
     assert document["identity_traits"] == [{"trait_key": "plan", "trait_value": "pro"}]
 
 
-def test_set_system_trait__document_without_system_traits__creates_map(
+def test_set_system_trait__document_without_system_traits__creates_system_traits(
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
 ) -> None:
     # Given
@@ -766,13 +766,13 @@ def test_set_system_trait__missing_document__creates_document(
     assert document["system_traits"] == {"cohort_x": True}
 
 
-def test_set_system_trait__map_created_concurrently__kept_intact(
+def test_set_system_trait__system_traits_created_concurrently__merges_into_existing(
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    # The table holds a document whose system traits map appeared after the
-    # wrapper's first read (simulated by a stale map-less first response).
+    # The table holds a document whose system_traits appeared after the
+    # wrapper's first read (simulated by a stale first response without them).
     dynamodb_identity_wrapper.put_item(
         {
             "composite_key": "api-key_user-1",

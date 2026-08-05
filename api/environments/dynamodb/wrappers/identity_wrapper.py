@@ -137,7 +137,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                 else:
                     # If another writer created system_traits after we read
                     # the document, this write does nothing and their traits
-                    # survive; the next loop pass adds our key to their map.
+                    # survive; the next loop pass adds our key alongside theirs.
                     self.table.update_item(  # type: ignore[union-attr]
                         Key={"composite_key": composite_key},
                         UpdateExpression=(
@@ -174,7 +174,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                 Key={"composite_key": composite_key},
                 UpdateExpression="REMOVE system_traits.#tk",
                 # Failing this condition covers every no-op case at once:
-                # missing document, missing map, or trait already absent.
+                # missing document, missing system_traits, or trait already absent.
                 ConditionExpression="attribute_exists(system_traits.#tk)",
                 ExpressionAttributeNames={"#tk": trait_key},
             )
