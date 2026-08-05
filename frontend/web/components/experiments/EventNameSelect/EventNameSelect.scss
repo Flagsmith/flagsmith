@@ -1,0 +1,16 @@
+.event-name-select {
+  position: relative;
+
+  .react-select__menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 3;
+  }
+
+  .react-select__menu-list {
+    max-height: 260px;
+    overflow-y: auto;
+  }
+}

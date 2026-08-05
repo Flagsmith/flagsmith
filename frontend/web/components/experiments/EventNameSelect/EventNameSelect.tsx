@@ -8,6 +8,7 @@ import { WarehouseType } from 'common/types/responses'
 import { useRouteContext } from 'components/providers/RouteContext'
 import Icon from 'components/icons/Icon'
 import { buildEventOptions, EventOption, isUnknownEvent } from './utils'
+import './EventNameSelect.scss'
 
 type EventNameSelectProps = {
   value: string
@@ -34,13 +35,14 @@ const EventNameSelect: FC<EventNameSelectProps> = ({ onChange, value }) => {
   const showWarning = isSuccess && isUnknownEvent(value, data?.events)
 
   return (
-    <>
+    <div className='event-name-select'>
       <CreatableSelect
         inputId='metric-event'
         className='react-select'
         classNamePrefix='react-select'
         isClearable
         isLoading={isLoading}
+        maxMenuHeight={260}
         options={options}
         value={value ? { label: value, value } : null}
         onChange={(option: EventOption | null) => onChange(option?.value ?? '')}
@@ -54,7 +56,7 @@ const EventNameSelect: FC<EventNameSelectProps> = ({ onChange, value }) => {
           This event hasn&apos;t been received by your warehouse yet.
         </span>
       )}
-    </>
+    </div>
   )
 }
 
