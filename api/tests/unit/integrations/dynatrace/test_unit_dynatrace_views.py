@@ -171,3 +171,30 @@ def test_dynatrace_environment_view__no_permissions__return_expected(
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert not DynatraceConfiguration.objects.filter(environment=environment).exists()
+
+
+def test_create_dynatrace_config__private_ip_base_url__returns_bad_request(
+    admin_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    data = {
+        "base_url": "http://127.0.0.1/",
+        "api_key": "abc-123",
+        "entity_selector": "type(APPLICATION),entityName(docs)",
+    }
+    url = reverse(
+        "api-v1:environments:integrations-dynatrace-list",
+        args=[environment.api_key],
+    )
+
+    # When
+    response = admin_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert not DynatraceConfiguration.objects.filter(environment=environment).exists()

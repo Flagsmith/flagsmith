@@ -116,3 +116,24 @@ def test_no_ssrf_url_field__unresolvable_hostname__returns_value(
 
     # Then
     assert result == "https://unresolvable.example.com/hook"
+
+
+@pytest.mark.parametrize(
+    "url,label",
+    [
+        ("ftp://example.com/hook", "ftp"),
+        ("ftps://example.com/hook", "ftps"),
+        ("file:///etc/passwd", "file"),
+        ("gopher://example.com/hook", "gopher"),
+    ],
+)
+def test_no_ssrf_url_field__non_http_scheme__raises_validation_error(  # noqa: FT004
+    field: NoSSRFURLField,
+    url: str,
+    label: str,
+) -> None:
+    # Given / When / Then
+    with pytest.raises(ValidationError) as exc_info:
+        field.run_validation(url)
+
+    assert "invalid" in str(exc_info.value.detail)

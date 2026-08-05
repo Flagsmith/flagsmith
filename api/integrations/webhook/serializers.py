@@ -10,11 +10,14 @@ from integrations.common.serializers import (
 )
 from segments.models import Segment
 from util.mappers.engine import map_environment_to_evaluation_context
+from webhooks.fields import NoSSRFURLField
 
 from .models import WebhookConfiguration
 
 
 class WebhookConfigurationSerializer(BaseEnvironmentIntegrationModelSerializer):
+    url = NoSSRFURLField()
+
     class Meta:
         model = WebhookConfiguration
         fields = ("id", "url", "secret")
