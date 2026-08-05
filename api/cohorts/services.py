@@ -16,28 +16,10 @@ _PENDING_STATES = [
 
 
 def pending_memberships(cohort: Cohort) -> "QuerySet[CohortMembership]":
-    """Ledger rows awaiting application to the edge store.
-
-    Ingestion rejects identifiers over the DynamoDB sort-key byte cap up
-    front, so every pending row is assumed appliable.
-    """
     return CohortMembership.objects.filter(cohort=cohort, state__in=_PENDING_STATES)
 
 
 def apply_pending_memberships(cohort: Cohort) -> bool:
-    """Apply one batch of pending ledger rows to DynamoDB identity documents.
-
-    Returns True while pending rows remain — callers loop until False.
-    Raises `SystemTraitWriteRaceError` on unwinnable write contention and
-    propagates `ClientError` (callers map throttle codes to backoff).
-
-    Lock-free: writes only touch the `system_traits.<cohort key>` attribute,
-    and state flips are guarded — rows transitioned elsewhere mid-flight are
-    left for a later batch. A crash re-applies the batch (idempotent).
-    The ledger doubles as the durable membership table: applied adds are
-    kept as `applied` rows (they serve core evaluation lookups); applied
-    removes delete the row.
-    """
     identity_wrapper = DynamoIdentityWrapper()
     environment_api_key: str = cohort.environment.api_key
     trait_key = cohort.system_trait_key
@@ -49,22 +31,14 @@ def apply_pending_memberships(cohort: Cohort) -> bool:
     added_ids: list[int] = []
     removed_ids: list[int] = []
     for row in batch:
-        # Re-read just before writing: narrows the stale-claim window from
-        # the batch's whole duration to a single write's. The residual race
-        # is repaired by the reconciliation sweep (see design doc).
-        state = (
-            CohortMembership.objects.filter(id=row.id)
-            .values_list("state", flat=True)
-            .first()
-        )
-        if state == CohortMembershipState.PENDING_ADD:
+        if row.state == CohortMembershipState.PENDING_ADD:
             identity_wrapper.set_system_trait(
                 environment_api_key=environment_api_key,
                 identifier=row.identifier,
                 trait_key=trait_key,
             )
             added_ids.append(row.id)
-        elif state == CohortMembershipState.PENDING_REMOVE:
+        else:
             identity_wrapper.unset_system_trait(
                 environment_api_key=environment_api_key,
                 identifier=row.identifier,

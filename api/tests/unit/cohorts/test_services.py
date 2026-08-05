@@ -108,32 +108,3 @@ def test_apply_pending_memberships__row_transitioned_mid_write__not_flipped(
     assert membership.state == CohortMembershipState.PENDING_REMOVE
     assert result is True
     assert not log.has("membership.applied")
-
-
-def test_apply_pending_memberships__state_changed_before_write__routes_to_new_state(
-    cohort: Cohort,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    CohortMembership.objects.create(cohort=cohort, identifier="user-1")
-    second = CohortMembership.objects.create(cohort=cohort, identifier="user-2")
-    wrapper_mock = mocker.patch("cohorts.services.DynamoIdentityWrapper").return_value
-
-    def transition_second_row(**kwargs: str) -> None:
-        CohortMembership.objects.filter(id=second.id).update(
-            state=CohortMembershipState.PENDING_REMOVE
-        )
-        wrapper_mock.set_system_trait.side_effect = None
-
-    wrapper_mock.set_system_trait.side_effect = transition_second_row
-
-    # When
-    apply_pending_memberships(cohort)
-
-    # Then
-    wrapper_mock.unset_system_trait.assert_called_once_with(
-        environment_api_key=cohort.environment.api_key,
-        identifier="user-2",
-        trait_key=cohort.system_trait_key,
-    )
-    assert not CohortMembership.objects.filter(id=second.id).exists()

@@ -74,7 +74,7 @@ Attributes:
 ### `cohorts.membership.applied`
 
 Logged at `info` from:
- - `api/cohorts/services.py:87`
+ - `api/cohorts/services.py:61`
 
 Attributes:
  - `adds.count`
