@@ -16,6 +16,7 @@ import {
   ProjectSummary,
   Tag,
 } from 'common/types/responses'
+import { selectOnboardingProject } from './onboardingProject'
 import {
   DEMO_FLAG_NAME,
   ONBOARDING_TAG,
@@ -36,6 +37,8 @@ const PROD_ENVIRONMENT_NAME = 'Production'
 type ExistingOrg = { id: number; name: string }
 
 export type BootstrapInput = {
+  // From `?project=` on the entry URL. Ignored when it isn't in this org.
+  requestedProjectId?: string | null
   defaults: SmartDefaults
   existingOrg?: ExistingOrg
 }
@@ -75,11 +78,12 @@ async function ensureProject(
   store: Store,
   organisationId: number,
   defaults: SmartDefaults,
+  requestedProjectId?: string | null,
 ): Promise<ProjectSummary> {
   const projects = await store
     .dispatch(projectService.endpoints.getProjects.initiate({ organisationId }))
     .unwrap()
-  const existing = projects?.[0]
+  const existing = selectOnboardingProject(projects ?? [], requestedProjectId)
   if (existing) {
     return existing
   }
@@ -218,7 +222,12 @@ export async function bootstrapOnboarding(
   input: BootstrapInput,
 ): Promise<OnboardingBootstrap> {
   const organisation = await ensureOrganisation(store, input)
-  const project = await ensureProject(store, organisation.id, input.defaults)
+  const project = await ensureProject(
+    store,
+    organisation.id,
+    input.defaults,
+    input.requestedProjectId,
+  )
   const environment = await ensureEnvironments(store, project)
   const flag = await ensureFlag(store, project)
   if (flag) {

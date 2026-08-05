@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { getStore } from 'common/store'
 import { useGetOrganisationsQuery } from 'common/services/useOrganisation'
 import useSelectedOrganisation from 'common/hooks/useSelectedOrganisation'
@@ -38,6 +39,10 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
     profile?.first_name ?? '',
   )
   const selectedOrganisation = useSelectedOrganisation()
+  // Which project to run against. The nav link carries it; a bare
+  // /getting-started (a fresh signup) has none.
+  const { search } = useLocation()
+  const requestedProjectId = new URLSearchParams(search).get('project')
 
   const [status, setStatus] = useState<OnboardingResourcesStatus>('creating')
   const [environment, setEnvironment] = useState<Environment | null>(null)
@@ -69,7 +74,11 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
       ? { id: existing.id, name: existing.name }
       : undefined
 
-    bootstrapOnboarding(getStore(), { defaults, existingOrg })
+    bootstrapOnboarding(getStore(), {
+      defaults,
+      existingOrg,
+      requestedProjectId,
+    })
       .then((res) => {
         setOrganisationId(res.organisationId)
         setOrganisationName(res.organisationName)
@@ -86,7 +95,16 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
         setError(e)
         setStatus('error')
       })
-  }, [profile, orgsLoading, organisations, selectedOrganisation, defaults])
+    // ranRef makes this run once, so requestedProjectId is read at that moment
+    // and a later URL change doesn't re-provision.
+  }, [
+    profile,
+    orgsLoading,
+    organisations,
+    selectedOrganisation,
+    defaults,
+    requestedProjectId,
+  ])
 
   return {
     caseSensitive,

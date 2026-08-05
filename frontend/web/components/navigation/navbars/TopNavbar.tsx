@@ -8,6 +8,7 @@ import Headway from 'components/Headway'
 import { Project } from 'common/types/responses'
 import AccountDropdown from 'components/navigation/AccountDropdown'
 import ThemeToggle from 'components/ThemeToggle'
+import { useLastEnv } from 'common/hooks/useLastEnv'
 
 type TopNavType = {
   activeProject: Project | undefined
@@ -15,6 +16,14 @@ type TopNavType = {
 }
 
 const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
+  // Name the project the tour should run against: the one you're in, else the
+  // one you were last in. Without it the page falls back to the org's first.
+  const lastEnv = useLastEnv()
+  const onboardingProjectId = projectId ?? lastEnv?.projectId
+  const gettingStartedTo = onboardingProjectId
+    ? `/getting-started?project=${onboardingProjectId}`
+    : '/getting-started'
+
   return (
     <React.Fragment>
       <nav className='mt-2 mb-1 space flex-row hidden-xs-down'>
@@ -33,7 +42,7 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
           )}
           <NavLink
             activeClassName='active'
-            to={'/getting-started'}
+            to={gettingStartedTo}
             className='d-flex gap-1 d-none d-md-flex text-end lh-1 align-items-center'
           >
             <span>
