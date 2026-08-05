@@ -5,7 +5,7 @@ import useSelectedOrganisation from 'common/hooks/useSelectedOrganisation'
 import { useGetProfileQuery } from 'common/services/useProfile'
 import { Environment } from 'common/types/responses'
 import { useSmartDefaults } from './useSmartDefaults'
-import { bootstrapOnboarding } from './bootstrapOnboarding'
+import { bootstrapOnboarding } from 'components/pages/onboarding/bootstrap/bootstrapOnboarding'
 
 export type OnboardingResourcesStatus = 'creating' | 'ready' | 'error'
 
