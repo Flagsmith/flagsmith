@@ -755,17 +755,27 @@ Attributes:
 ### `workflows.change_request.committed`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:39`
+ - `api/core/workflows_services.py:44`
 
 Attributes:
  - `environment.id`
  - `feature_states.count`
  - `organisation.id`
 
+### `workflows.change_request.stale`
+
+Logged at `warning` from:
+ - `api/core/workflows_services.py:63`
+
+Attributes:
+ - `change_request.id`
+ - `environment.id`
+ - `organisation.id`
+
 ### `workflows.missing_live_segment`
 
 Logged at `warning` from:
- - `api/core/workflows_services.py:114`
+ - `api/core/workflows_services.py:137`
 
 Attributes:
  - `draft_segment`
@@ -773,7 +783,7 @@ Attributes:
 ### `workflows.segment_revision_created`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:119`
+ - `api/core/workflows_services.py:142`
 
 Attributes:
  - `revision_id`
