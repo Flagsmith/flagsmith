@@ -129,10 +129,10 @@ When adding a new segment override, and `priority` is omitted, priority is set t
 On previously-configured experiments (multivariate features), the weight of each variant can be adjusted in the
 environment and per segment with the `variants` property.
 
-A `weight` is a fraction between 0 and 1. Any weight not allocated to variants serves the flag's default `value`.
+A `weight` is a percentage between 0 and 100. Any weight not allocated to variants serves the flag's default `value`.
 
 In both `environment_default` and `segment_overrides`, the `variants` list **must** include all variants for the
-feature, even if their weight is 0.
+feature, even if their weight is zero.
 
 ```bash
 curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag/' \
@@ -144,8 +144,8 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
       "enabled": true,
       "value": {"type": "string", "value": "default_gateway"},
       "variants": [
-        {"key": "variant_a", "weight": 0.1},
-        {"key": "variant_b", "weight": 0.1}
+        {"key": "variant_a", "weight": 10},
+        {"key": "variant_b", "weight": 10.5}
       ]
     }
   }'
@@ -164,8 +164,8 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
         "segment_id": 101,
         "enabled": true,
         "variants": [
-          {"key": "variant_a", "weight": 0.25},
-          {"key": "variant_b", "weight": 0.25}
+          {"key": "variant_a", "weight": 25},
+          {"key": "variant_b", "weight": 25}
         ]
       }
     ]
