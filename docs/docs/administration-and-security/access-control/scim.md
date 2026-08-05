@@ -135,6 +135,10 @@ Add Flagsmith as a SCIM application in your identity provider. You will need:
 Both values are shown on the SCIM page in Flagsmith, so you can copy them directly rather than assembling the URL by
 hand.
 
+Some integrations ask for your Flagsmith API domain instead of the full SCIM base URL, and append the SCIM path
+themselves. The Flagsmith application in the Okta Integration Network works this way — see the [Okta guide](#okta)
+below.
+
 The exact steps depend on your identity provider. See the guides below for common providers.
 
 ### 3. Assign users and groups
@@ -161,24 +165,27 @@ for the most up-to-date steps.
 
 ### Okta
 
-Before you start, get your SCIM base URL and bearer token from Flagsmith: go to **Organisation Settings** > **SSO** >
-**SCIM** and create a SCIM configuration, as described under [Setup](#1-create-a-scim-configuration). The base URL is
-shown on that page, and the bearer token is displayed once when the configuration is created.
+These steps are for the Flagsmith application from the Okta Integration Network catalogue. You do not enter a SCIM base
+URL: the Flagsmith integration builds it from the API base URL you give it, so you only need your SCIM bearer token from
+**Organisation Settings** > **SSO** > **SCIM**, as described under [Setup](#1-create-a-scim-configuration).
 
 1. Go to the "Applications" page and open the Flagsmith application.
-2. Go to the "General" tab and click "Edit" under "App Settings".
-3. Enable "Provisioning" and click "Save".
-4. A new "Provisioning" tab will appear. Open it and click "Edit" under "SCIM Connection".
-5. Set the SCIM connector base URL to the SCIM base URL shown in Flagsmith.
-6. Set the unique identifier field to `email`.
-7. Under "Supported provisioning actions", enable: Push New Users, Push Profile Updates, and Push Groups.
-8. Set the authentication mode to "HTTP Header" and paste your SCIM bearer token.
-9. Click "Test Connector Configuration" to verify the connection, then save.
-10. Still on the "Provisioning" tab, under "To App", click "Edit" and enable: Create Users and Update User Attributes.
-    Leave "Deactivate Users" disabled — Flagsmith does not act on the `active` attribute. To deprovision a user, remove
-    them from the application in Okta so that Okta sends a DELETE request.
-11. On the "Sign On" tab, set the application username format to "Email". Flagsmith requires the SCIM `userName` to be a
-    valid email address.
+2. On the "Sign On" tab, under "Advanced Sign-on Settings", set **API Base URL** to your Flagsmith API domain — on
+   Flagsmith SaaS this is `https://api.flagsmith.com`.
+3. Still on the "Sign On" tab, under "Credentials Details", set the application username format to "Email". Flagsmith
+   requires the SCIM `userName` to be a valid email address.
+4. Go to the "General" tab, click "Edit" under "App Settings", enable "Provisioning" and click "Save". A "Provisioning"
+   tab appears.
+5. On the "Provisioning" tab, select "Integration" and click "Edit". Tick "Enable API integration" and paste your SCIM
+   bearer token into **API Token**.
+6. Click "Test API Credentials" to verify the connection, then save.
+7. Select "To App" and click "Edit", then enable "Create Users" and "Update User Attributes".
+
+To deprovision a user, unassign them from the application in Okta. Okta sends a DELETE request and Flagsmith removes the
+user from your organisation. There is no "Deactivate Users" option for this integration, because Flagsmith does not act
+on the SCIM `active` attribute.
+
+To sync groups, use the "Push Groups" tab to select the Okta groups you want to push to Flagsmith.
 
 ### Microsoft Entra ID (Azure AD)
 
