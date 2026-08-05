@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import logging
 from datetime import timedelta
 
-from dateutil.relativedelta import relativedelta
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status, viewsets
@@ -48,6 +47,7 @@ from organisations.serializers import (
     SubscriptionDetailsSerializer,
     UpdateSubscriptionSerializer,
 )
+from organisations.services import get_current_billing_period_start_date
 from permissions.permissions_calculator import get_organisation_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
@@ -393,8 +393,7 @@ class OrganisationAPIUsageNotificationView(ListAPIView):  # type: ignore[type-ar
         # by defaulting to something as a reasonable default.
         billing_starts_at = billing_starts_at or now - timedelta(days=30)
 
-        month_delta = relativedelta(now, billing_starts_at).months
-        period_starts_at = relativedelta(months=month_delta) + billing_starts_at
+        period_starts_at = get_current_billing_period_start_date(billing_starts_at, now)
 
         queryset = OrganisationAPIUsageNotification.objects.filter(
             organisation_id=organisation.id,

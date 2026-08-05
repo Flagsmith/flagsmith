@@ -2056,6 +2056,52 @@ def test_get_api_usage_notifications__with_cache__returns_highest_notification(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_api_usage_notifications__annual_term__returns_current_period_notification(
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    # A term that started more than twelve months ago, as an annual plan does.
+    url = reverse(
+        "api-v1:organisations:organisation-api-usage-notification",
+        args=[organisation.id],
+    )
+
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=400),
+        current_billing_term_ends_at=now + timedelta(days=330),
+    )
+
+    # Notified in a month of the term that has already passed, so it should not
+    # be returned. Counting only the months of the delta would have included it.
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=90,
+        notified_at=now - timedelta(days=60),
+    )
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=75,
+        notified_at=now,
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert len(response.data["results"]) == 1
+    assert response.data["results"][0]["percent_usage"] == 75
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_api_usage_notifications__stale_notification__returns_empty(
     staff_client: APIClient,
     organisation: Organisation,

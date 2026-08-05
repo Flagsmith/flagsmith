@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 import structlog
-from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -16,6 +15,7 @@ from organisations.models import (
     OrganisationAPIUsageNotification,
     OrganisationRole,
 )
+from organisations.services import get_current_billing_period_start_date
 from organisations.subscriptions.constants import MAX_API_CALLS_IN_FREE_PLAN
 from users.models import FFAdminUser
 
@@ -123,9 +123,7 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
             )
             return
 
-        # Truncate to the closest active month to get start of current period.
-        month_delta = _get_total_months(relativedelta(now, billing_starts_at))
-        period_starts_at = relativedelta(months=month_delta) + billing_starts_at
+        period_starts_at = get_current_billing_period_start_date(billing_starts_at, now)
 
         allowed_api_calls = subscription_cache.allowed_30d_api_calls
 
@@ -182,7 +180,3 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
     )
 
     _send_api_usage_notification(organisation, matched_threshold)
-
-
-def _get_total_months(rd: relativedelta) -> int:
-    return rd.months + rd.years * 12

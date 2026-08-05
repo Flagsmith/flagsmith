@@ -29,6 +29,7 @@ from app_analytics.types import Labels, PeriodType
 from environments.models import Environment
 from features.models import Feature
 from organisations.models import Organisation, OrganisationSubscriptionInformationCache
+from organisations.services import get_current_billing_period_start_date
 
 logger = structlog.get_logger("app_analytics")
 
@@ -341,8 +342,7 @@ def _get_start_date_and_stop_date_for_subscribed_organisation(
             else:
                 raise NotFound("No billing periods found for this organisation.")
 
-            month_delta = relativedelta(now, starts_at).months
-            date_start = relativedelta(months=month_delta) + starts_at
+            date_start = get_current_billing_period_start_date(starts_at, now)
             return date_start, now
 
         case constants.PREVIOUS_BILLING_PERIOD:
@@ -351,10 +351,8 @@ def _get_start_date_and_stop_date_for_subscribed_organisation(
             else:
                 raise NotFound("No billing periods found for this organisation.")
 
-            month_delta = relativedelta(now, starts_at).months - 1
-            month_delta += relativedelta(now, starts_at).years * 12
-            date_start = relativedelta(months=month_delta) + starts_at
-            date_stop = relativedelta(months=month_delta + 1) + starts_at
+            date_stop = get_current_billing_period_start_date(starts_at, now)
+            date_start = date_stop - relativedelta(months=1)
             return date_start, date_stop
 
         case constants.NINETY_DAY_PERIOD:
