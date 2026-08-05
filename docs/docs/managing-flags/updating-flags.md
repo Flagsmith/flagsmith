@@ -4,7 +4,7 @@ sidebar_label: Updating Flags (Experimental)
 sidebar_position: 6
 ---
 
-The `/api/experiments/environments/{environment_key}/update-flag/` endpoint lets you update feature flags, segment
+The `/api/__future__/environments/{environment_key}/update-flag/` endpoint lets you update feature flags, segment
 overrides, and variant allocations via the Admin API.
 
 A successful response is always **204 No Content**. The request body is a JSON object with the following fields:
@@ -24,7 +24,7 @@ Values are passed as a `value` object with `type` and `value` (always a string):
 | `boolean` | `{"type": "boolean", "value": "true"}` |
 
 Learn more in the
-[API specification](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_update_flag).
+[API specification](https://api.flagsmith.com/api/v1/docs/#/experimental/api___future___environments_update_flag_create).
 
 :::caution
 
@@ -40,7 +40,7 @@ Learn more in the
 The simplest case — flip a feature flag in an environment.
 
 ```bash
-curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag/' \
+curl -X POST 'https://api.flagsmith.com/api/__future__/environments/{environment_key}/update-flag/' \
   -H 'Authorization: Api-Key <your_token>' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -54,7 +54,7 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
 Change a feature's value — for example, setting a rate limit.
 
 ```bash
-curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag/' \
+curl -X POST 'https://api.flagsmith.com/api/__future__/environments/{environment_key}/update-flag/' \
   -H 'Authorization: Api-Key <your_token>' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -71,7 +71,7 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
 Enable a feature for a specific segment (e.g. beta users) while keeping it off for everyone else.
 
 ```bash
-curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag/' \
+curl -X POST 'https://api.flagsmith.com/api/__future__/environments/{environment_key}/update-flag/' \
   -H 'Authorization: Api-Key <your_token>' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -95,7 +95,7 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
 Set different values per segment — for example, pricing tiers.
 
 ```bash
-curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag/' \
+curl -X POST 'https://api.flagsmith.com/api/__future__/environments/{environment_key}/update-flag/' \
   -H 'Authorization: Api-Key <your_token>' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -135,7 +135,7 @@ In both `environment_default` and `segment_overrides`, the `variants` list **mus
 feature, even if their weight is zero.
 
 ```bash
-curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag/' \
+curl -X POST 'https://api.flagsmith.com/api/__future__/environments/{environment_key}/update-flag/' \
   -H 'Authorization: Api-Key <your_token>' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -154,7 +154,7 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
 Within the same request as above, or separately, you can also set different weights for a segment:
 
 ```bash
-curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag/' \
+curl -X POST 'https://api.flagsmith.com/api/__future__/environments/{environment_key}/update-flag/' \
   -H 'Authorization: Api-Key <your_token>' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -178,7 +178,7 @@ A special `delete` attribute can be used to remove a segment override from a fea
 attributes besides `segment_id`.
 
 ```bash
-curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environment_key}/update-flag/' \
+curl -X POST 'https://api.flagsmith.com/api/__future__/environments/{environment_key}/update-flag/' \
   -H 'Authorization: Api-Key <your_token>' \
   -H 'Content-Type: application/json' \
   -d '{
