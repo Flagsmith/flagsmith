@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING, TypeAlias
 
-from pydantic.main import IncEx
-
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from util.mappers.engine import (
     map_environment_to_engine,
@@ -13,16 +11,11 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 SDKDocumentValue: TypeAlias = (
-    dict[str, "SDKDocumentValue"]
-    | list["SDKDocumentValue"]
-    | str
-    | bool
-    | None
-    | float
+    dict[str, "SDKDocumentValue"] | list["SDKDocumentValue"] | str | bool | None | float
 )
 SDKDocument: TypeAlias = dict[str, SDKDocumentValue]
 
-SDK_DOCUMENT_EXCLUDE: dict[str, bool | IncEx] = {
+SDK_DOCUMENT_EXCLUDE: dict[str, bool | dict[str, set[str]]] = {
     **dict.fromkeys(IDENTITY_INTEGRATIONS_RELATION_NAMES, True),
     "dynatrace_config": True,
     "onboarding_pending": True,
