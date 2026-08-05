@@ -766,6 +766,49 @@ def test_set_system_trait__missing_document__creates_document(
     assert document["system_traits"] == {"cohort_x": True}
 
 
+def test_set_system_trait__map_created_concurrently__kept_intact(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    # The table holds a document whose system traits map appeared after the
+    # wrapper's first read (simulated by a stale map-less first response).
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+            "system_traits": {"other": True},
+        }
+    )
+    real_get_item = dynamodb_identity_wrapper.table.get_item  # type: ignore[union-attr]
+    stale_responses: typing.Iterator[dict[str, typing.Any]] = iter(
+        [
+            {
+                "Item": {
+                    "composite_key": "api-key_user-1",
+                    "identifier": "user-1",
+                    "environment_api_key": "api-key",
+                }
+            }
+        ]
+    )
+    mocker.patch.object(
+        dynamodb_identity_wrapper.table,
+        "get_item",
+        side_effect=lambda **kwargs: next(stale_responses, real_get_item(**kwargs)),
+    )
+
+    # When
+    dynamodb_identity_wrapper.set_system_trait(
+        environment_api_key="api-key", identifier="user-1", trait_key="cohort_x"
+    )
+
+    # Then
+    document = real_get_item(Key={"composite_key": "api-key_user-1"})["Item"]
+    assert document["system_traits"] == {"other": True, "cohort_x": True}
+
+
 def test_set_system_trait__custom_trait_value__written_to_document(
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
 ) -> None:

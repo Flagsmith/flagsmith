@@ -88,6 +88,9 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         document is created if missing. Each write is conditional on the
         document shape just read — a lost race re-reads and retries, and
         `SystemTraitWriteRaceError` is raised once attempts are exhausted.
+
+        Assumes stored documents never carry `system_traits` as NULL — the
+        document mapper omits the attribute when unset.
         """
         composite_key = IdentityModel.generate_composite_key(
             environment_api_key, identifier
@@ -132,23 +135,21 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                         ExpressionAttributeValues={":value": document_value},
                     )
                 else:
-                    # `system_traits` is absent or a map, never NULL — the
-                    # document mapper omits the attribute when unset
-                    # (`_NULLABLE_IDENTITY_KEY_ATTRIBUTES`); these conditions
-                    # depend on that invariant.
+                    # A concurrently created map is kept intact; the next
+                    # loop iteration writes the key into it.
                     self.table.update_item(  # type: ignore[union-attr]
                         Key={"composite_key": composite_key},
-                        UpdateExpression="SET system_traits = :init",
-                        # attribute_exists guard: update_item would otherwise
-                        # upsert a skeleton document for a deleted identity.
-                        ConditionExpression=(
-                            "attribute_exists(composite_key)"
-                            " AND attribute_not_exists(system_traits)"
+                        UpdateExpression=(
+                            "SET system_traits = if_not_exists(system_traits, :init)"
                         ),
+                        # Guard: update_item would otherwise upsert a skeleton
+                        # document for a deleted identity.
+                        ConditionExpression="attribute_exists(composite_key)",
                         ExpressionAttributeValues={
                             ":init": {trait_key: document_value}
                         },
                     )
+                    continue
                 return
             except ClientError as exc:
                 if exc.response["Error"]["Code"] != "ConditionalCheckFailedException":
