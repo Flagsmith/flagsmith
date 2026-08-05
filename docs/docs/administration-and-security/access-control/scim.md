@@ -163,8 +163,8 @@ These steps are for the Flagsmith application from the Okta Integration Network 
 
 1. Get your SCIM bearer token as described under [Setup](#1-create-a-scim-configuration).
 1. Go to the "Applications" page and open the Flagsmith application.
-1. If self-hosted: On the "Sign On" tab, under "Advanced Sign-on Settings", set API Base URL to your Flagsmith API
-   domain.
+1. On the "Sign On" tab, under "Advanced Sign-on Settings", set API Base URL to your Flagsmith API domain. On Flagsmith
+   SaaS this is `https://api.flagsmith.com`.
 1. Still on the "Sign On" tab, under "Credentials Details", set the application username format to "Email". Flagsmith
    requires the SCIM `userName` to be a valid email address.
 1. Go to the "General" tab, click "Edit" under "App Settings", enable "Provisioning" and click "Save". A "Provisioning"
