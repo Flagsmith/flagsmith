@@ -1,12 +1,11 @@
 import structlog
-from django.db.models import F, Func, IntegerField, QuerySet
+from django.db.models import QuerySet
 from django.utils import timezone
 
 from cohorts.constants import COHORT_MEMBERSHIP_APPLY_BATCH_SIZE
 from cohorts.metrics import flagsmith_cohorts_membership_deltas_applied_total
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
 from environments.dynamodb import DynamoIdentityWrapper
-from environments.dynamodb.constants import IDENTITY_SORT_KEY_MAX_BYTES
 
 logger = structlog.get_logger("cohorts")
 
@@ -16,26 +15,13 @@ _PENDING_STATES = [
 ]
 
 
-def _pending(cohort: Cohort) -> "QuerySet[CohortMembership]":
-    return CohortMembership.objects.filter(
-        cohort=cohort, state__in=_PENDING_STATES
-    ).annotate(
-        identifier_bytes=Func(
-            F("identifier"), function="octet_length", output_field=IntegerField()
-        )
-    )
-
-
 def pending_memberships(cohort: Cohort) -> "QuerySet[CohortMembership]":
     """Ledger rows awaiting application to the edge store.
 
-    Identifiers over the DynamoDB sort-key byte cap are excluded — they can
-    never exist as edge identities, and one would otherwise head every
-    batch and stall the drain.
+    Ingestion rejects identifiers over the DynamoDB sort-key byte cap up
+    front, so every pending row is assumed appliable.
     """
-    return _pending(cohort).filter(  # type: ignore[misc] # annotate() alias opaque to django-stubs
-        identifier_bytes__lte=IDENTITY_SORT_KEY_MAX_BYTES
-    )
+    return CohortMembership.objects.filter(cohort=cohort, state__in=_PENDING_STATES)
 
 
 def apply_pending_memberships(cohort: Cohort) -> bool:
@@ -59,7 +45,6 @@ def apply_pending_memberships(cohort: Cohort) -> bool:
         pending_memberships(cohort).order_by("id")[:COHORT_MEMBERSHIP_APPLY_BATCH_SIZE]
     )
     if not batch:
-        _warn_if_unappliable(cohort)
         return False
     added_ids: list[int] = []
     removed_ids: list[int] = []
@@ -106,24 +91,4 @@ def apply_pending_memberships(cohort: Cohort) -> bool:
             adds__count=added_count,
             removes__count=removed_count,
         )
-    remaining = pending_memberships(cohort).exists()
-    if not remaining:
-        _warn_if_unappliable(cohort)
-    return remaining
-
-
-def _warn_if_unappliable(cohort: Cohort) -> None:
-    oversized_count = (
-        _pending(cohort)
-        .filter(  # type: ignore[misc] # annotate() alias opaque to django-stubs
-            identifier_bytes__gt=IDENTITY_SORT_KEY_MAX_BYTES
-        )
-        .count()
-    )
-    if oversized_count:
-        logger.warning(
-            "membership.apply.oversized_identifiers",
-            cohort__id=cohort.id,
-            environment__id=cohort.environment_id,
-            memberships__count=oversized_count,
-        )
+    return pending_memberships(cohort).exists()

@@ -74,23 +74,13 @@ Attributes:
 ### `cohorts.membership.applied`
 
 Logged at `info` from:
- - `api/cohorts/services.py:102`
+ - `api/cohorts/services.py:87`
 
 Attributes:
  - `adds.count`
  - `cohort.id`
  - `environment.id`
  - `removes.count`
-
-### `cohorts.membership.apply.oversized_identifiers`
-
-Logged at `warning` from:
- - `api/cohorts/services.py:124`
-
-Attributes:
- - `cohort.id`
- - `environment.id`
- - `memberships.count`
 
 ### `cohorts.membership.apply.skipped`
 

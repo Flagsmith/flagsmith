@@ -137,26 +137,3 @@ def test_apply_pending_memberships__state_changed_before_write__routes_to_new_st
         trait_key=cohort.system_trait_key,
     )
     assert not CohortMembership.objects.filter(id=second.id).exists()
-
-
-def test_apply_pending_memberships__oversized_identifier__excluded_and_warned(
-    cohort: Cohort,
-    dynamodb_identity_wrapper: DynamoIdentityWrapper,
-    log: StructuredLogCapture,
-) -> None:
-    # Given
-    oversized = CohortMembership.objects.create(cohort=cohort, identifier="x" * 1500)
-    CohortMembership.objects.create(cohort=cohort, identifier="user-1")
-
-    # When
-    result = apply_pending_memberships(cohort)
-
-    # Then
-    assert result is False
-    oversized.refresh_from_db()
-    assert oversized.state == CohortMembershipState.PENDING_ADD
-    assert log.has(
-        "membership.apply.oversized_identifiers",
-        cohort__id=cohort.id,
-        memberships__count=1,
-    )
