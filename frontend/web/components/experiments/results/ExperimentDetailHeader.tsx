@@ -284,7 +284,7 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
           {renderActions()}
         </div>
         <div className='d-flex align-items-center gap-2 fs-caption mt-2'>
-          {metricName && <strong>{metricName}</strong>}
+          {metricName && <strong style={{ fontSize: 15 }}>{metricName}</strong>}
           {[startedFact, endedFact].filter(Boolean).length > 0 && (
             <span className='text-muted'>
               {metricName ? '· ' : ''}
