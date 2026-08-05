@@ -18,22 +18,21 @@ With SCIM, you can:
 
 - Create Flagsmith users ahead of their first login, so they already have the right group memberships and permissions
   waiting for them.
-- Remove users from your Flagsmith organisation when they are deprovisioned in your identity provider
+- Remove users from your Flagsmith organisation when they are deprovisioned in your identity provider.
 - Sync group membership so that adding or removing a user from a group in your identity provider is reflected in
   Flagsmith automatically.
 
-SCIM works alongside your existing SSO configuration. SSO handles authentication (how users log in), while SCIM handles
+SCIM works alongside your existing SSO configuration: SSO handles authentication (how users log in), while SCIM handles
 provisioning (which users and groups exist in Flagsmith, and who belongs to what).
 
 ## Supported features
 
 Flagsmith's SCIM 2.0 API supports:
 
-- Create users.
-- Update user attributes.
-- Delete users — See [User lifecycle](#user-lifecycle) for what is and is not removed.
-- Push groups — create and update [permission groups](/administration-and-security/access-control/rbac#groups) and their
-  membership, and delete groups.
+- Creating users.
+- Deleting users. See [User lifecycle](#user-lifecycle) for what is and is not removed.
+- Pushing groups: create and update [permission groups](/administration-and-security/access-control/rbac#groups) and
+  their membership, and delete groups.
 - Filtering and pagination on the `/Users` and `/Groups` list endpoints.
 
 Flagsmith does not support:
@@ -51,9 +50,8 @@ Flagsmith does not support:
 
 :::caution
 
-Flagsmith requires the SCIM `userName` attribute to be the user's email address. Requests with a `userName` that is not
-a valid email address are rejected with a 400 response. Ensure your identity provider is configured to send email
-addresses as SCIM usernames — for example, in Okta, set the application username format to "Email".
+Flagsmith requires the SCIM `userName` attribute to be the user's email address. Ensure your identity provider is
+configured to send email addresses as SCIM usernames.
 
 :::
 
@@ -135,10 +133,6 @@ Add Flagsmith as a SCIM application in your identity provider. You will need:
 Both values are shown on the SCIM page in Flagsmith, so you can copy them directly rather than assembling the URL by
 hand.
 
-Some integrations ask for your Flagsmith API domain instead of the full SCIM base URL, and append the SCIM path
-themselves. The Flagsmith application in the Okta Integration Network works this way — see the [Okta guide](#okta)
-below.
-
 The exact steps depend on your identity provider. See the guides below for common providers.
 
 ### 3. Assign users and groups
@@ -158,32 +152,30 @@ You can view and manage SCIM configurations from **Organisation Settings** > **S
 
 :::note
 
-These guides were last verified in May 2026. If your identity provider's UI has changed, refer to their documentation
+These guides were last verified in July 2026. If your identity provider's UI has changed, refer to their documentation
 for the most up-to-date steps.
 
 :::
 
 ### Okta
 
-These steps are for the Flagsmith application from the Okta Integration Network catalogue. You do not enter a SCIM base
-URL: the Flagsmith integration builds it from the API base URL you give it, so you only need your SCIM bearer token from
-**Organisation Settings** > **SSO** > **SCIM**, as described under [Setup](#1-create-a-scim-configuration).
+These steps are for the Flagsmith application from the Okta Integration Network catalogue.
 
+1. Get your SCIM bearer token as described under [Setup](#1-create-a-scim-configuration).
 1. Go to the "Applications" page and open the Flagsmith application.
-2. On the "Sign On" tab, under "Advanced Sign-on Settings", set **API Base URL** to your Flagsmith API domain — on
-   Flagsmith SaaS this is `https://api.flagsmith.com`.
-3. Still on the "Sign On" tab, under "Credentials Details", set the application username format to "Email". Flagsmith
+1. If self-hosted: On the "Sign On" tab, under "Advanced Sign-on Settings", set API Base URL to your Flagsmith API
+   domain.
+1. Still on the "Sign On" tab, under "Credentials Details", set the application username format to "Email". Flagsmith
    requires the SCIM `userName` to be a valid email address.
-4. Go to the "General" tab, click "Edit" under "App Settings", enable "Provisioning" and click "Save". A "Provisioning"
+1. Go to the "General" tab, click "Edit" under "App Settings", enable "Provisioning" and click "Save". A "Provisioning"
    tab appears.
-5. On the "Provisioning" tab, select "Integration" and click "Edit". Tick "Enable API integration" and paste your SCIM
+1. On the "Provisioning" tab, select "Integration" and click "Edit". Tick "Enable API integration" and paste your SCIM
    bearer token into **API Token**.
-6. Click "Test API Credentials" to verify the connection, then save.
-7. Select "To App" and click "Edit", then enable "Create Users" and "Update User Attributes".
+1. Click "Test API Credentials" to verify the connection, then save.
+1. Select "To App" and click "Edit", then enable "Create Users" and "Update User Attributes".
 
 To deprovision a user, unassign them from the application in Okta. Okta sends a DELETE request and Flagsmith removes the
-user from your organisation. There is no "Deactivate Users" option for this integration, because Flagsmith does not act
-on the SCIM `active` attribute.
+user from your organisation.
 
 To sync groups, use the "Push Groups" tab to select the Okta groups you want to push to Flagsmith.
 
@@ -223,7 +215,6 @@ endpoints as defined by the SCIM 2.0 specification.
 - Verify the SCIM base URL in your identity provider matches the one shown in Flagsmith under **Organisation
   Settings** > **SSO** > **SCIM**.
 - Verify the bearer token is correct. If in doubt, regenerate it.
-- Check that the user's email address is included in the SCIM request. Flagsmith requires an email to create a user.
 - Check that the SCIM `userName` attribute is the user's email address. Flagsmith rejects requests with a non-email
   `userName` with a 400 response.
 
