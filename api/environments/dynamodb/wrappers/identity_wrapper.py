@@ -135,15 +135,17 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                         ExpressionAttributeValues={":value": document_value},
                     )
                 else:
-                    # A concurrently created map is kept intact; the next
-                    # loop iteration writes the key into it.
+                    # If another writer created system_traits after we read
+                    # the document, this write does nothing and their traits
+                    # survive; the next loop pass adds our key to their map.
                     self.table.update_item(  # type: ignore[union-attr]
                         Key={"composite_key": composite_key},
                         UpdateExpression=(
                             "SET system_traits = if_not_exists(system_traits, :init)"
                         ),
-                        # Guard: update_item would otherwise upsert a skeleton
-                        # document for a deleted identity.
+                        # Without this condition, update_item would re-create
+                        # a just-deleted identity as an empty document
+                        # containing nothing but this trait.
                         ConditionExpression="attribute_exists(composite_key)",
                         ExpressionAttributeValues={
                             ":init": {trait_key: document_value}
