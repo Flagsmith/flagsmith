@@ -16,7 +16,7 @@ from .models import WebhookConfiguration
 
 
 class WebhookConfigurationSerializer(BaseEnvironmentIntegrationModelSerializer):
-    url = NoSSRFURLField()
+    url = NoSSRFURLField(max_length=200)
 
     class Meta:
         model = WebhookConfiguration

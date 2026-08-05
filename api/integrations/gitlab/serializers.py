@@ -10,7 +10,7 @@ WRITE_ONLY_PLACEHOLDER = "write-only"
 
 
 class GitLabConfigurationSerializer(BaseProjectIntegrationModelSerializer):
-    gitlab_instance_url = NoSSRFURLField()
+    gitlab_instance_url = NoSSRFURLField(max_length=200)
 
     class Meta:
         model = GitLabConfiguration

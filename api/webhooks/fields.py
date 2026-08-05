@@ -24,7 +24,7 @@ class NoSSRFURLField(serializers.URLField):
     default_error_messages = {
         **serializers.URLField.default_error_messages,
         "internal_address": (
-            "Webhook URLs must not target internal or private network addresses."
+            "URLs must not target internal or private network addresses."
         ),
     }
 

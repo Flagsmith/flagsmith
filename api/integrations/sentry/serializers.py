@@ -7,7 +7,7 @@ from .models import SentryChangeTrackingConfiguration
 class SentryChangeTrackingConfigurationSerializer(
     BaseEnvironmentIntegrationModelSerializer
 ):
-    webhook_url = NoSSRFURLField()
+    webhook_url = NoSSRFURLField(max_length=200)
 
     class Meta:
         model = SentryChangeTrackingConfiguration
