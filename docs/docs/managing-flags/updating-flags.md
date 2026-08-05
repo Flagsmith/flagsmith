@@ -124,9 +124,9 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
 When adding a new segment override, and `priority` is omitted, priority is set to the position of the override in the
 `segment_overrides` list. The lowest number has the highest priority.
 
-### Re-weight experiment variants (A/B/n)
+### Re-weight variants (A/B/n)
 
-On previously-configured experiments (multivariate features), the weight of each variant can be adjusted in the
+On previously-configured multivariate features (e.g. experiments), the weight of each variant can be adjusted in the
 environment and per segment with the `variants` property.
 
 A `weight` is a percentage between 0 and 100. Any weight not allocated to variants serves the flag's default `value`.
