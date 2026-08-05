@@ -29,9 +29,7 @@ def test_cohort__soft_deleted_cohort__allows_new_cohort_for_segment(
     # Given
     existing_cohort = Cohort.objects.create(environment=environment, segment=segment)
     assert (
-        Cohort.objects.filter(id=existing_cohort.id).update(
-            deleted_at=timezone.now()
-        )
+        Cohort.objects.filter(id=existing_cohort.id).update(deleted_at=timezone.now())
         == 1
     )
 
