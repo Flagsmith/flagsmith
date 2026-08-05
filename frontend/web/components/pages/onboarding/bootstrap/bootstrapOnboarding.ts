@@ -21,8 +21,8 @@ import {
   ONBOARDING_TAG,
   findDemoFlag,
   shouldSeedDemoFlag,
-} from 'components/pages/onboarding/bootstrap/demoFlag'
-import { SmartDefaults } from './useSmartDefaults'
+} from './demoFlag'
+import { SmartDefaults } from 'components/pages/onboarding/hooks/useSmartDefaults'
 import { createOrganisationViaAccountStore } from './createOrganisationViaAccountStore'
 import API from 'project/api'
 import Constants from 'common/constants'
@@ -46,8 +46,7 @@ export type OnboardingBootstrap = {
   project: ProjectSummary
   environment: Environment
   featureName: string
-  // False when the project already had flags, so we seeded nothing and the tour
-  // has no flag of its own to teach with.
+  // False when the project already had flags, so nothing was seeded.
   hasDemoFlag: boolean
 }
 
