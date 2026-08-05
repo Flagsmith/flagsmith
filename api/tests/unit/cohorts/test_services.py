@@ -1,4 +1,5 @@
 import pytest
+from botocore.exceptions import ClientError
 from pytest_mock import MockerFixture
 
 from cohorts.exceptions import CohortMembershipApplyRaceError
@@ -14,6 +15,61 @@ def patched_identity_wrapper(
 ) -> DynamoIdentityWrapper:
     mocker.patch("cohorts.services.identity_wrapper", dynamodb_identity_wrapper)
     return dynamodb_identity_wrapper
+
+
+def test_apply_pending_memberships__no_pending_rows__returns_zero(
+    cohort: Cohort,
+) -> None:
+    # Given
+    CohortMembership.objects.create(
+        cohort=cohort, identifier="user-1", state=CohortMembershipState.APPLIED
+    )
+
+    # When
+    result = apply_pending_memberships(cohort)
+
+    # Then
+    assert result == 0
+
+
+def test_apply_add__unexpected_client_error__reraises(
+    patched_identity_wrapper: DynamoIdentityWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch.object(
+        patched_identity_wrapper.table,
+        "put_item",
+        side_effect=ClientError({"Error": {"Code": "ValidationException"}}, "PutItem"),
+    )
+
+    # When
+    with pytest.raises(ClientError):
+        _apply_add("api-key_user-1", "user-1", "api-key", "flagsmith_cohort_x")
+
+    # Then
+    assert patched_identity_wrapper.get_item("api-key_user-1") is None
+
+
+def test_apply_remove__unexpected_client_error__reraises(
+    patched_identity_wrapper: DynamoIdentityWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch.object(
+        patched_identity_wrapper.table,
+        "update_item",
+        side_effect=ClientError(
+            {"Error": {"Code": "ValidationException"}}, "UpdateItem"
+        ),
+    )
+
+    # When
+    with pytest.raises(ClientError):
+        _apply_remove("api-key_user-1", "flagsmith_cohort_x")
+
+    # Then
+    assert patched_identity_wrapper.get_item("api-key_user-1") is None
 
 
 def test_apply_add__already_member__skips_write(
