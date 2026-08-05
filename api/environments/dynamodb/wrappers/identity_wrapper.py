@@ -79,8 +79,9 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         environment_api_key: str,
         identifier: str,
         trait_key: str,
+        trait_value: bool | int | float | str = True,
     ) -> None:
-        """Idempotently set a system trait to `True` on an identity document.
+        """Idempotently set a system trait on an identity document.
 
         Writes only touch the `system_traits.<trait_key>` attribute, so
         concurrent writes to other attributes are never overwritten; the
@@ -91,6 +92,10 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         composite_key = IdentityModel.generate_composite_key(
             environment_api_key, identifier
         )
+        # DynamoDB rejects floats and returns all numbers as Decimal.
+        document_value: bool | int | Decimal | str = (
+            Decimal(str(trait_value)) if isinstance(trait_value, float) else trait_value
+        )
         for _ in range(SYSTEM_TRAIT_WRITE_MAX_ATTEMPTS):
             # Strongly consistent read: a replication-lagged hint would burn
             # retry attempts on conditional writes that can never succeed.
@@ -98,8 +103,14 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                 Key={"composite_key": composite_key}, ConsistentRead=True
             ).get("Item")
             system_traits = document.get("system_traits") if document else None
-            if isinstance(system_traits, dict) and system_traits.get(trait_key) is True:
-                return
+            if isinstance(system_traits, dict):
+                stored_value = system_traits.get(trait_key)
+                # The bool check stops `Decimal(1) == True` false positives.
+                if (
+                    isinstance(stored_value, bool) == isinstance(document_value, bool)
+                    and stored_value == document_value
+                ):
+                    return
             try:
                 if document is None:
                     self.table.put_item(  # type: ignore[union-attr]
@@ -107,7 +118,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                             IdentityModel(
                                 identifier=identifier,
                                 environment_api_key=environment_api_key,
-                                system_traits={trait_key: True},
+                                system_traits={trait_key: trait_value},
                             )
                         ),
                         ConditionExpression="attribute_not_exists(composite_key)",
@@ -115,10 +126,10 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                 elif isinstance(system_traits, dict):
                     self.table.update_item(  # type: ignore[union-attr]
                         Key={"composite_key": composite_key},
-                        UpdateExpression="SET system_traits.#tk = :true",
+                        UpdateExpression="SET system_traits.#tk = :value",
                         ConditionExpression="attribute_exists(system_traits)",
                         ExpressionAttributeNames={"#tk": trait_key},
-                        ExpressionAttributeValues={":true": True},
+                        ExpressionAttributeValues={":value": document_value},
                     )
                 else:
                     # `system_traits` is absent or a map, never NULL — the
@@ -134,7 +145,9 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                             "attribute_exists(composite_key)"
                             " AND attribute_not_exists(system_traits)"
                         ),
-                        ExpressionAttributeValues={":init": {trait_key: True}},
+                        ExpressionAttributeValues={
+                            ":init": {trait_key: document_value}
+                        },
                     )
                 return
             except ClientError as exc:

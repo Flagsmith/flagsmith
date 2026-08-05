@@ -766,6 +766,60 @@ def test_set_system_trait__missing_document__creates_document(
     assert document["system_traits"] == {"cohort_x": True}
 
 
+def test_set_system_trait__custom_trait_value__written_to_document(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+            "system_traits": {"cohort_x": True},
+        }
+    )
+
+    # When
+    dynamodb_identity_wrapper.set_system_trait(
+        environment_api_key="api-key",
+        identifier="user-1",
+        trait_key="score",
+        trait_value=0.5,
+    )
+
+    # Then
+    document = dynamodb_identity_wrapper.get_item("api-key_user-1")
+    assert document is not None
+    assert document["system_traits"] == {"cohort_x": True, "score": Decimal("0.5")}
+
+
+def test_set_system_trait__value_changed__overwrites(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+            "system_traits": {"tier": "silver"},
+        }
+    )
+
+    # When
+    dynamodb_identity_wrapper.set_system_trait(
+        environment_api_key="api-key",
+        identifier="user-1",
+        trait_key="tier",
+        trait_value="gold",
+    )
+
+    # Then
+    document = dynamodb_identity_wrapper.get_item("api-key_user-1")
+    assert document is not None
+    assert document["system_traits"] == {"tier": "gold"}
+
+
 def test_set_system_trait__already_set__skips_write(
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
     mocker: MockerFixture,
