@@ -74,7 +74,7 @@ Attributes:
 ### `cohorts.membership.applied`
 
 Logged at `info` from:
- - `api/cohorts/services.py:66`
+ - `api/cohorts/services.py:102`
 
 Attributes:
  - `adds.count`
@@ -82,11 +82,21 @@ Attributes:
  - `environment.id`
  - `removes.count`
 
+### `cohorts.membership.apply.oversized_identifiers`
+
+Logged at `warning` from:
+ - `api/cohorts/services.py:124`
+
+Attributes:
+ - `cohort.id`
+ - `environment.id`
+ - `memberships.count`
+
 ### `cohorts.membership.apply.skipped`
 
 Logged at `info` from:
- - `api/cohorts/tasks.py:18`
- - `api/cohorts/tasks.py:24`
+ - `api/cohorts/tasks.py:23`
+ - `api/cohorts/tasks.py:29`
 
 Attributes:
  - `cohort.id`
@@ -95,7 +105,7 @@ Attributes:
 ### `cohorts.membership.apply.throttled`
 
 Logged at `warning` from:
- - `api/cohorts/tasks.py:30`
+ - `api/cohorts/tasks.py:37`
 
 Attributes:
  - `cohort.id`

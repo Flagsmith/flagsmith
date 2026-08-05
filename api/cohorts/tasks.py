@@ -6,7 +6,12 @@ from task_processor.decorators import register_task_handler
 from task_processor.exceptions import TaskBackoffError
 
 from cohorts import services
-from cohorts.models import Cohort, CohortMembership, CohortMembershipState
+from cohorts.constants import (
+    COHORT_MEMBERSHIP_APPLY_MAX_BATCHES_PER_RUN,
+    DYNAMODB_THROTTLING_ERROR_CODES,
+)
+from cohorts.models import Cohort
+from environments.dynamodb import DynamoIdentityWrapper
 
 logger = structlog.get_logger("cohorts")
 
@@ -19,22 +24,18 @@ def apply_cohort_membership_deltas(cohort_id: int) -> None:
         return
     if not (
         cohort.environment.project.enable_dynamo_db
-        and services.identity_wrapper.is_enabled
+        and DynamoIdentityWrapper().is_enabled
     ):
         log.info("membership.apply.skipped", reason="not_edge")
         return
     try:
-        services.apply_pending_memberships(cohort)
+        for _ in range(COHORT_MEMBERSHIP_APPLY_MAX_BATCHES_PER_RUN):
+            if not services.apply_pending_memberships(cohort):
+                return
     except ClientError as exc:
-        if exc.response["Error"]["Code"] == "ProvisionedThroughputExceededException":
+        if exc.response["Error"]["Code"] in DYNAMODB_THROTTLING_ERROR_CODES:
             log.warning("membership.apply.throttled")
             raise TaskBackoffError() from exc
         raise
-    if CohortMembership.objects.filter(
-        cohort=cohort,
-        state__in=[
-            CohortMembershipState.PENDING_ADD,
-            CohortMembershipState.PENDING_REMOVE,
-        ],
-    ).exists():
-        apply_cohort_membership_deltas.delay(kwargs={"cohort_id": cohort_id})
+    # Still pending after this run's batch cap; continue in a fresh task run.
+    apply_cohort_membership_deltas.delay(kwargs={"cohort_id": cohort_id})

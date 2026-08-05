@@ -13,7 +13,7 @@ Labels:
 
 Counter.
 
-Total number of cohort membership deltas applied to identity documents. The `operation` label is either `add` or `remove`.
+Total number of cohort membership ledger rows transitioned to their applied state after the corresponding identity document write. The `operation` label is either `add` or `remove`.
 
 Labels:
  - `operation`

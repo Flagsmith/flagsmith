@@ -5,19 +5,29 @@ from decimal import Decimal
 from typing import Iterable
 
 from boto3.dynamodb.conditions import Attr, Key
+from botocore.exceptions import ClientError
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import NotFound
 
 from edge_api.identities.search import EdgeIdentitySearchData
-from environments.dynamodb.constants import IDENTITIES_PAGINATION_LIMIT
-from environments.dynamodb.wrappers.exceptions import CapacityBudgetExceeded
+from environments.dynamodb.constants import (
+    IDENTITIES_PAGINATION_LIMIT,
+    SYSTEM_TRAIT_WRITE_MAX_ATTEMPTS,
+)
+from environments.dynamodb.wrappers.exceptions import (
+    CapacityBudgetExceeded,
+    SystemTraitWriteRaceError,
+)
 from util.engine_models.context.mappers import (
     is_context_in_segment,
     map_environment_identity_to_context,
 )
 from util.engine_models.identities.models import IdentityModel
-from util.mappers import map_identity_to_identity_document
+from util.mappers import (
+    map_engine_identity_to_identity_document,
+    map_identity_to_identity_document,
+)
 
 from .base import BaseDynamoWrapper
 
@@ -62,6 +72,99 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
 
     def get_item(self, composite_key: str) -> typing.Optional[dict]:  # type: ignore[type-arg]
         return self.table.get_item(Key={"composite_key": composite_key}).get("Item")  # type: ignore[union-attr]
+
+    def set_system_trait(
+        self,
+        *,
+        environment_api_key: str,
+        identifier: str,
+        trait_key: str,
+    ) -> None:
+        """Idempotently set a system trait to `True` on an identity document.
+
+        Writes only touch the `system_traits.<trait_key>` attribute, so
+        concurrent writes to other attributes are never overwritten; the
+        document is created if missing. Each write is conditional on the
+        document shape just read — a lost race re-reads and retries, and
+        `SystemTraitWriteRaceError` is raised once attempts are exhausted.
+        """
+        composite_key = IdentityModel.generate_composite_key(
+            environment_api_key, identifier
+        )
+        for _ in range(SYSTEM_TRAIT_WRITE_MAX_ATTEMPTS):
+            # Strongly consistent read: a replication-lagged hint would burn
+            # retry attempts on conditional writes that can never succeed.
+            document = self.table.get_item(  # type: ignore[union-attr]
+                Key={"composite_key": composite_key}, ConsistentRead=True
+            ).get("Item")
+            system_traits = document.get("system_traits") if document else None
+            if isinstance(system_traits, dict) and system_traits.get(trait_key) is True:
+                return
+            try:
+                if document is None:
+                    self.table.put_item(  # type: ignore[union-attr]
+                        Item=map_engine_identity_to_identity_document(
+                            IdentityModel(
+                                identifier=identifier,
+                                environment_api_key=environment_api_key,
+                                system_traits={trait_key: True},
+                            )
+                        ),
+                        ConditionExpression="attribute_not_exists(composite_key)",
+                    )
+                elif isinstance(system_traits, dict):
+                    self.table.update_item(  # type: ignore[union-attr]
+                        Key={"composite_key": composite_key},
+                        UpdateExpression="SET system_traits.#tk = :true",
+                        ConditionExpression="attribute_exists(system_traits)",
+                        ExpressionAttributeNames={"#tk": trait_key},
+                        ExpressionAttributeValues={":true": True},
+                    )
+                else:
+                    # `system_traits` is absent or a map, never NULL — the
+                    # document mapper omits the attribute when unset
+                    # (`_NULLABLE_IDENTITY_KEY_ATTRIBUTES`); these conditions
+                    # depend on that invariant.
+                    self.table.update_item(  # type: ignore[union-attr]
+                        Key={"composite_key": composite_key},
+                        UpdateExpression="SET system_traits = :init",
+                        # attribute_exists guard: update_item would otherwise
+                        # upsert a skeleton document for a deleted identity.
+                        ConditionExpression=(
+                            "attribute_exists(composite_key)"
+                            " AND attribute_not_exists(system_traits)"
+                        ),
+                        ExpressionAttributeValues={":init": {trait_key: True}},
+                    )
+                return
+            except ClientError as exc:
+                if exc.response["Error"]["Code"] != "ConditionalCheckFailedException":
+                    raise
+        raise SystemTraitWriteRaceError(composite_key)
+
+    def unset_system_trait(
+        self,
+        *,
+        environment_api_key: str,
+        identifier: str,
+        trait_key: str,
+    ) -> None:
+        """Idempotently remove a system trait from an identity document."""
+        composite_key = IdentityModel.generate_composite_key(
+            environment_api_key, identifier
+        )
+        try:
+            self.table.update_item(  # type: ignore[union-attr]
+                Key={"composite_key": composite_key},
+                UpdateExpression="REMOVE system_traits.#tk",
+                # Failing this condition covers every no-op case at once:
+                # missing document, missing map, or trait already absent.
+                ConditionExpression="attribute_exists(system_traits.#tk)",
+                ExpressionAttributeNames={"#tk": trait_key},
+            )
+        except ClientError as exc:
+            if exc.response["Error"]["Code"] != "ConditionalCheckFailedException":
+                raise
 
     def delete_item(self, composite_key: str):  # type: ignore[no-untyped-def]
         self.table.delete_item(Key={"composite_key": composite_key})  # type: ignore[union-attr]

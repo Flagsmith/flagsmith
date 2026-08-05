@@ -1,23 +1,12 @@
-import pytest
-from botocore.exceptions import ClientError
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 
-from cohorts.exceptions import CohortMembershipApplyRaceError
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
-from cohorts.services import _apply_add, _apply_remove, apply_pending_memberships
+from cohorts.services import apply_pending_memberships
 from environments.dynamodb import DynamoIdentityWrapper
 
 
-@pytest.fixture()
-def patched_identity_wrapper(
-    dynamodb_identity_wrapper: DynamoIdentityWrapper,
-    mocker: MockerFixture,
-) -> DynamoIdentityWrapper:
-    mocker.patch("cohorts.services.identity_wrapper", dynamodb_identity_wrapper)
-    return dynamodb_identity_wrapper
-
-
-def test_apply_pending_memberships__no_pending_rows__returns_zero(
+def test_apply_pending_memberships__no_pending_rows__returns_false(
     cohort: Cohort,
 ) -> None:
     # Given
@@ -29,266 +18,145 @@ def test_apply_pending_memberships__no_pending_rows__returns_zero(
     result = apply_pending_memberships(cohort)
 
     # Then
-    assert result == 0
+    assert result is False
 
 
-def test_apply_add__unexpected_client_error__reraises(
-    patched_identity_wrapper: DynamoIdentityWrapper,
+def test_apply_pending_memberships__pending_rows__applies_and_flips(
+    cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    api_key = cohort.environment.api_key
+    trait_key = cohort.system_trait_key
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": f"{api_key}_member",
+            "identifier": "member",
+            "environment_api_key": api_key,
+            "system_traits": {trait_key: True},
+        }
+    )
+    CohortMembership.objects.create(cohort=cohort, identifier="joiner")
+    CohortMembership.objects.create(
+        cohort=cohort,
+        identifier="member",
+        state=CohortMembershipState.PENDING_REMOVE,
+    )
+
+    # When
+    result = apply_pending_memberships(cohort)
+
+    # Then
+    assert result is False
+    joiner_document = dynamodb_identity_wrapper.get_item(f"{api_key}_joiner")
+    assert joiner_document is not None
+    assert joiner_document["system_traits"] == {trait_key: True}
+    member_document = dynamodb_identity_wrapper.get_item(f"{api_key}_member")
+    assert member_document is not None
+    assert member_document["system_traits"] == {}
+    assert list(
+        CohortMembership.objects.filter(cohort=cohort).values_list(
+            "identifier", "state"
+        )
+    ) == [("joiner", CohortMembershipState.APPLIED)]
+
+
+def test_apply_pending_memberships__more_rows_than_batch__returns_true(
+    cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mocker.patch.object(
-        patched_identity_wrapper.table,
-        "put_item",
-        side_effect=ClientError({"Error": {"Code": "ValidationException"}}, "PutItem"),
+    mocker.patch("cohorts.services.COHORT_MEMBERSHIP_APPLY_BATCH_SIZE", 1)
+    CohortMembership.objects.create(cohort=cohort, identifier="user-1")
+    CohortMembership.objects.create(cohort=cohort, identifier="user-2")
+
+    # When
+    result = apply_pending_memberships(cohort)
+
+    # Then
+    assert result is True
+    assert (
+        CohortMembership.objects.filter(
+            cohort=cohort, state=CohortMembershipState.APPLIED
+        ).count()
+        == 1
     )
 
-    # When
-    with pytest.raises(ClientError):
-        _apply_add("api-key_user-1", "user-1", "api-key", "flagsmith_cohort_x")
 
-    # Then
-    assert patched_identity_wrapper.get_item("api-key_user-1") is None
-
-
-def test_apply_remove__unexpected_client_error__reraises(
-    patched_identity_wrapper: DynamoIdentityWrapper,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mocker.patch.object(
-        patched_identity_wrapper.table,
-        "update_item",
-        side_effect=ClientError(
-            {"Error": {"Code": "ValidationException"}}, "UpdateItem"
-        ),
-    )
-
-    # When
-    with pytest.raises(ClientError):
-        _apply_remove("api-key_user-1", "flagsmith_cohort_x")
-
-    # Then
-    assert patched_identity_wrapper.get_item("api-key_user-1") is None
-
-
-def test_apply_add__already_member__skips_write(
-    patched_identity_wrapper: DynamoIdentityWrapper,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    patched_identity_wrapper.put_item(
-        {
-            "composite_key": "api-key_user-1",
-            "identifier": "user-1",
-            "environment_api_key": "api-key",
-            "system_traits": {"flagsmith_cohort_x": True},
-        }
-    )
-    update_mock = mocker.patch.object(patched_identity_wrapper.table, "update_item")
-    put_mock = mocker.patch.object(patched_identity_wrapper.table, "put_item")
-
-    # When
-    _apply_add("api-key_user-1", "user-1", "api-key", "flagsmith_cohort_x")
-
-    # Then
-    update_mock.assert_not_called()
-    put_mock.assert_not_called()
-
-
-def test_apply_add__missing_document__creates_document(
-    patched_identity_wrapper: DynamoIdentityWrapper,
-) -> None:
-    # Given
-    composite_key = "api-key_user-1"
-
-    # When
-    _apply_add(composite_key, "user-1", "api-key", "flagsmith_cohort_x")
-
-    # Then
-    document = patched_identity_wrapper.get_item(composite_key)
-    assert document is not None
-    assert document["identifier"] == "user-1"
-    assert document["system_traits"] == {"flagsmith_cohort_x": True}
-
-
-def test_apply_remove__missing_document__no_error(
-    patched_identity_wrapper: DynamoIdentityWrapper,
-) -> None:
-    # Given
-    composite_key = "api-key_never-seen"
-
-    # When
-    _apply_remove(composite_key, "flagsmith_cohort_x")
-
-    # Then
-    assert patched_identity_wrapper.get_item(composite_key) is None
-
-
-def test_apply_remove__member__removes_only_cohort_key(
-    patched_identity_wrapper: DynamoIdentityWrapper,
-) -> None:
-    # Given
-    patched_identity_wrapper.put_item(
-        {
-            "composite_key": "api-key_user-1",
-            "identifier": "user-1",
-            "environment_api_key": "api-key",
-            "identity_traits": [{"trait_key": "plan", "trait_value": "pro"}],
-            "system_traits": {"flagsmith_cohort_x": True, "other": True},
-        }
-    )
-
-    # When
-    _apply_remove("api-key_user-1", "flagsmith_cohort_x")
-
-    # Then
-    document = patched_identity_wrapper.get_item("api-key_user-1")
-    assert document is not None
-    assert document["system_traits"] == {"other": True}
-    assert document["identity_traits"] == [{"trait_key": "plan", "trait_value": "pro"}]
-
-
-def test_apply_add__document_with_system_traits__sets_only_cohort_key(
-    patched_identity_wrapper: DynamoIdentityWrapper,
-) -> None:
-    # Given
-    patched_identity_wrapper.put_item(
-        {
-            "composite_key": "api-key_user-1",
-            "identifier": "user-1",
-            "environment_api_key": "api-key",
-            "identity_traits": [{"trait_key": "plan", "trait_value": "pro"}],
-            "system_traits": {"other": True},
-        }
-    )
-
-    # When
-    _apply_add("api-key_user-1", "user-1", "api-key", "flagsmith_cohort_x")
-
-    # Then
-    document = patched_identity_wrapper.get_item("api-key_user-1")
-    assert document is not None
-    assert document["system_traits"] == {"other": True, "flagsmith_cohort_x": True}
-    assert document["identity_traits"] == [{"trait_key": "plan", "trait_value": "pro"}]
-
-
-def test_apply_add__document_without_system_traits__creates_map(
-    patched_identity_wrapper: DynamoIdentityWrapper,
-) -> None:
-    # Given
-    patched_identity_wrapper.put_item(
-        {
-            "composite_key": "api-key_user-1",
-            "identifier": "user-1",
-            "environment_api_key": "api-key",
-        }
-    )
-
-    # When
-    _apply_add("api-key_user-1", "user-1", "api-key", "flagsmith_cohort_x")
-
-    # Then
-    document = patched_identity_wrapper.get_item("api-key_user-1")
-    assert document is not None
-    assert document["system_traits"] == {"flagsmith_cohort_x": True}
-
-
-def test_apply_remove__trait_absent__no_error(
-    patched_identity_wrapper: DynamoIdentityWrapper,
-) -> None:
-    # Given
-    patched_identity_wrapper.put_item(
-        {
-            "composite_key": "api-key_user-1",
-            "identifier": "user-1",
-            "environment_api_key": "api-key",
-            "system_traits": {"other": True},
-        }
-    )
-
-    # When
-    _apply_remove("api-key_user-1", "flagsmith_cohort_x")
-
-    # Then
-    document = patched_identity_wrapper.get_item("api-key_user-1")
-    assert document is not None
-    assert document["system_traits"] == {"other": True}
-
-
-def test_apply_add__stale_missing_document_hint__retries_and_merges(
-    patched_identity_wrapper: DynamoIdentityWrapper,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    patched_identity_wrapper.put_item(
-        {
-            "composite_key": "api-key_user-1",
-            "identifier": "user-1",
-            "environment_api_key": "api-key",
-            "system_traits": {"other": True},
-        }
-    )
-    real_get_item = patched_identity_wrapper.get_item
-    mocker.patch.object(
-        patched_identity_wrapper,
-        "get_item",
-        side_effect=[None, real_get_item("api-key_user-1")],
-    )
-
-    # When
-    _apply_add("api-key_user-1", "user-1", "api-key", "flagsmith_cohort_x")
-
-    # Then
-    document = real_get_item("api-key_user-1")
-    assert document is not None
-    assert document["system_traits"] == {"other": True, "flagsmith_cohort_x": True}
-
-
-def test_apply_add__conditional_writes_keep_losing__raises(
-    patched_identity_wrapper: DynamoIdentityWrapper,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    patched_identity_wrapper.put_item(
-        {
-            "composite_key": "api-key_user-1",
-            "identifier": "user-1",
-            "environment_api_key": "api-key",
-        }
-    )
-    real_get_item = patched_identity_wrapper.get_item
-    mocker.patch.object(patched_identity_wrapper, "get_item", return_value=None)
-
-    # When
-    with pytest.raises(CohortMembershipApplyRaceError):
-        _apply_add("api-key_user-1", "user-1", "api-key", "flagsmith_cohort_x")
-
-    # Then
-    document = real_get_item("api-key_user-1")
-    assert document is not None
-    assert "system_traits" not in document
-
-
-def test_apply_pending_memberships__row_transitioned_mid_flight__not_flipped(
+def test_apply_pending_memberships__row_transitioned_mid_write__not_flipped(
     cohort: Cohort,
     mocker: MockerFixture,
+    log: StructuredLogCapture,
 ) -> None:
     # Given
     membership = CohortMembership.objects.create(cohort=cohort, identifier="user-1")
+    wrapper_mock = mocker.patch("cohorts.services.DynamoIdentityWrapper").return_value
 
-    def transition_to_pending_remove(*args: str) -> None:
+    def transition_row(**kwargs: str) -> None:
         CohortMembership.objects.filter(id=membership.id).update(
             state=CohortMembershipState.PENDING_REMOVE
         )
 
-    mocker.patch(
-        "cohorts.services._apply_add", side_effect=transition_to_pending_remove
-    )
+    wrapper_mock.set_system_trait.side_effect = transition_row
+
+    # When
+    result = apply_pending_memberships(cohort)
+
+    # Then
+    membership.refresh_from_db()
+    assert membership.state == CohortMembershipState.PENDING_REMOVE
+    assert result is True
+    assert not log.has("membership.applied")
+
+
+def test_apply_pending_memberships__state_changed_before_write__routes_to_new_state(
+    cohort: Cohort,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    CohortMembership.objects.create(cohort=cohort, identifier="user-1")
+    second = CohortMembership.objects.create(cohort=cohort, identifier="user-2")
+    wrapper_mock = mocker.patch("cohorts.services.DynamoIdentityWrapper").return_value
+
+    def transition_second_row(**kwargs: str) -> None:
+        CohortMembership.objects.filter(id=second.id).update(
+            state=CohortMembershipState.PENDING_REMOVE
+        )
+        wrapper_mock.set_system_trait.side_effect = None
+
+    wrapper_mock.set_system_trait.side_effect = transition_second_row
 
     # When
     apply_pending_memberships(cohort)
 
     # Then
-    membership.refresh_from_db()
-    assert membership.state == CohortMembershipState.PENDING_REMOVE
+    wrapper_mock.unset_system_trait.assert_called_once_with(
+        environment_api_key=cohort.environment.api_key,
+        identifier="user-2",
+        trait_key=cohort.system_trait_key,
+    )
+    assert not CohortMembership.objects.filter(id=second.id).exists()
+
+
+def test_apply_pending_memberships__oversized_identifier__excluded_and_warned(
+    cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    oversized = CohortMembership.objects.create(cohort=cohort, identifier="x" * 1500)
+    CohortMembership.objects.create(cohort=cohort, identifier="user-1")
+
+    # When
+    result = apply_pending_memberships(cohort)
+
+    # Then
+    assert result is False
+    oversized.refresh_from_db()
+    assert oversized.state == CohortMembershipState.PENDING_ADD
+    assert log.has(
+        "membership.apply.oversized_identifiers",
+        cohort__id=cohort.id,
+        memberships__count=1,
+    )

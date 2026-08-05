@@ -1,59 +1,94 @@
 import structlog
-from botocore.exceptions import ClientError
+from django.db.models import F, Func, IntegerField, QuerySet
+from django.utils import timezone
 
-from cohorts.constants import (
-    COHORT_MEMBERSHIP_APPLY_BATCH_SIZE,
-    COHORT_MEMBERSHIP_APPLY_MAX_ATTEMPTS,
-)
-from cohorts.exceptions import CohortMembershipApplyRaceError
+from cohorts.constants import COHORT_MEMBERSHIP_APPLY_BATCH_SIZE
 from cohorts.metrics import flagsmith_cohorts_membership_deltas_applied_total
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
 from environments.dynamodb import DynamoIdentityWrapper
-from util.engine_models.identities.models import IdentityModel
-from util.mappers.dynamodb import map_engine_identity_to_identity_document
+from environments.dynamodb.constants import IDENTITY_SORT_KEY_MAX_BYTES
 
 logger = structlog.get_logger("cohorts")
 
-identity_wrapper = DynamoIdentityWrapper()
+_PENDING_STATES = [
+    CohortMembershipState.PENDING_ADD,
+    CohortMembershipState.PENDING_REMOVE,
+]
 
 
-def apply_pending_memberships(cohort: Cohort) -> int:
+def _pending(cohort: Cohort) -> "QuerySet[CohortMembership]":
+    return CohortMembership.objects.filter(
+        cohort=cohort, state__in=_PENDING_STATES
+    ).annotate(
+        identifier_bytes=Func(
+            F("identifier"), function="octet_length", output_field=IntegerField()
+        )
+    )
+
+
+def pending_memberships(cohort: Cohort) -> "QuerySet[CohortMembership]":
+    """Ledger rows awaiting application to the edge store.
+
+    Identifiers over the DynamoDB sort-key byte cap are excluded — they can
+    never exist as edge identities, and one would otherwise head every
+    batch and stall the drain.
+    """
+    return _pending(cohort).filter(  # type: ignore[misc] # annotate() alias opaque to django-stubs
+        identifier_bytes__lte=IDENTITY_SORT_KEY_MAX_BYTES
+    )
+
+
+def apply_pending_memberships(cohort: Cohort) -> bool:
     """Apply one batch of pending ledger rows to DynamoDB identity documents.
 
-    Returns the number of rows processed; 0 means the ledger is drained.
-    Lock-free: DynamoDB writes only touch the `system_traits.<cohort key>`
-    attribute (conditional updates), so concurrent SDK writes are preserved,
+    Returns True while pending rows remain — callers loop until False.
+    Raises `SystemTraitWriteRaceError` on unwinnable write contention and
+    propagates `ClientError` (callers map throttle codes to backoff).
+
+    Lock-free: writes only touch the `system_traits.<cohort key>` attribute,
     and state flips are guarded — rows transitioned elsewhere mid-flight are
     left for a later batch. A crash re-applies the batch (idempotent).
+    The ledger doubles as the durable membership table: applied adds are
+    kept as `applied` rows (they serve core evaluation lookups); applied
+    removes delete the row.
     """
+    identity_wrapper = DynamoIdentityWrapper()
     environment_api_key: str = cohort.environment.api_key
     trait_key = cohort.system_trait_key
     batch = list(
-        CohortMembership.objects.filter(
-            cohort=cohort,
-            state__in=[
-                CohortMembershipState.PENDING_ADD,
-                CohortMembershipState.PENDING_REMOVE,
-            ],
-        ).order_by("id")[:COHORT_MEMBERSHIP_APPLY_BATCH_SIZE]
+        pending_memberships(cohort).order_by("id")[:COHORT_MEMBERSHIP_APPLY_BATCH_SIZE]
     )
     if not batch:
-        return 0
+        _warn_if_unappliable(cohort)
+        return False
     added_ids: list[int] = []
     removed_ids: list[int] = []
     for row in batch:
-        composite_key = IdentityModel.generate_composite_key(
-            environment_api_key, row.identifier
+        # Re-read just before writing: narrows the stale-claim window from
+        # the batch's whole duration to a single write's. The residual race
+        # is repaired by the reconciliation sweep (see design doc).
+        state = (
+            CohortMembership.objects.filter(id=row.id)
+            .values_list("state", flat=True)
+            .first()
         )
-        if row.state == CohortMembershipState.PENDING_ADD:
-            _apply_add(composite_key, row.identifier, environment_api_key, trait_key)
+        if state == CohortMembershipState.PENDING_ADD:
+            identity_wrapper.set_system_trait(
+                environment_api_key=environment_api_key,
+                identifier=row.identifier,
+                trait_key=trait_key,
+            )
             added_ids.append(row.id)
-        else:
-            _apply_remove(composite_key, trait_key)
+        elif state == CohortMembershipState.PENDING_REMOVE:
+            identity_wrapper.unset_system_trait(
+                environment_api_key=environment_api_key,
+                identifier=row.identifier,
+                trait_key=trait_key,
+            )
             removed_ids.append(row.id)
     added_count = CohortMembership.objects.filter(
         id__in=added_ids, state=CohortMembershipState.PENDING_ADD
-    ).update(state=CohortMembershipState.APPLIED)
+    ).update(state=CohortMembershipState.APPLIED, updated_at=timezone.now())
     removed_count, _ = CohortMembership.objects.filter(
         id__in=removed_ids, state=CohortMembershipState.PENDING_REMOVE
     ).delete()
@@ -63,76 +98,32 @@ def apply_pending_memberships(cohort: Cohort) -> int:
     flagsmith_cohorts_membership_deltas_applied_total.labels(operation="remove").inc(
         removed_count
     )
-    logger.info(
-        "membership.applied",
-        cohort__id=cohort.id,
-        environment__id=cohort.environment_id,
-        adds__count=added_count,
-        removes__count=removed_count,
-    )
-    return len(batch)
-
-
-def _apply_add(
-    composite_key: str,
-    identifier: str,
-    environment_api_key: str,
-    trait_key: str,
-) -> None:
-    for _ in range(COHORT_MEMBERSHIP_APPLY_MAX_ATTEMPTS):
-        document = identity_wrapper.get_item(composite_key)
-        system_traits = document.get("system_traits") if document else None
-        if isinstance(system_traits, dict) and system_traits.get(trait_key) is True:
-            return
-        try:
-            if document is None:
-                identity_wrapper.table.put_item(  # type: ignore[union-attr]
-                    Item=map_engine_identity_to_identity_document(
-                        IdentityModel(
-                            identifier=identifier,
-                            environment_api_key=environment_api_key,
-                            system_traits={trait_key: True},
-                        )
-                    ),
-                    ConditionExpression="attribute_not_exists(composite_key)",
-                )
-            elif isinstance(system_traits, dict):
-                identity_wrapper.table.update_item(  # type: ignore[union-attr]
-                    Key={"composite_key": composite_key},
-                    UpdateExpression="SET system_traits.#tk = :true",
-                    ConditionExpression="attribute_exists(system_traits)",
-                    ExpressionAttributeNames={"#tk": trait_key},
-                    ExpressionAttributeValues={":true": True},
-                )
-            else:
-                identity_wrapper.table.update_item(  # type: ignore[union-attr]
-                    Key={"composite_key": composite_key},
-                    UpdateExpression="SET system_traits = :init",
-                    # attribute_exists guard: update_item would otherwise
-                    # upsert a skeleton document for a deleted identity.
-                    ConditionExpression=(
-                        "attribute_exists(composite_key)"
-                        " AND attribute_not_exists(system_traits)"
-                    ),
-                    ExpressionAttributeValues={":init": {trait_key: True}},
-                )
-            return
-        except ClientError as exc:
-            if exc.response["Error"]["Code"] != "ConditionalCheckFailedException":
-                raise
-    raise CohortMembershipApplyRaceError(composite_key)
-
-
-def _apply_remove(composite_key: str, trait_key: str) -> None:
-    try:
-        identity_wrapper.table.update_item(  # type: ignore[union-attr]
-            Key={"composite_key": composite_key},
-            UpdateExpression="REMOVE system_traits.#tk",
-            # Failing this condition covers every no-op case at once:
-            # missing document, missing map, or trait already absent.
-            ConditionExpression="attribute_exists(system_traits.#tk)",
-            ExpressionAttributeNames={"#tk": trait_key},
+    if added_count or removed_count:
+        logger.info(
+            "membership.applied",
+            cohort__id=cohort.id,
+            environment__id=cohort.environment_id,
+            adds__count=added_count,
+            removes__count=removed_count,
         )
-    except ClientError as exc:
-        if exc.response["Error"]["Code"] != "ConditionalCheckFailedException":
-            raise
+    remaining = pending_memberships(cohort).exists()
+    if not remaining:
+        _warn_if_unappliable(cohort)
+    return remaining
+
+
+def _warn_if_unappliable(cohort: Cohort) -> None:
+    oversized_count = (
+        _pending(cohort)
+        .filter(  # type: ignore[misc] # annotate() alias opaque to django-stubs
+            identifier_bytes__gt=IDENTITY_SORT_KEY_MAX_BYTES
+        )
+        .count()
+    )
+    if oversized_count:
+        logger.warning(
+            "membership.apply.oversized_identifiers",
+            cohort__id=cohort.id,
+            environment__id=cohort.environment_id,
+            memberships__count=oversized_count,
+        )

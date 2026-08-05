@@ -9,6 +9,12 @@ ENVIRONMENTS_V2_SECONDARY_INDEX_PARTITION_KEY = "environment_api_key"
 DYNAMODB_MAX_BATCH_WRITE_ITEM_COUNT = 25
 IDENTITIES_PAGINATION_LIMIT = 1000
 
+# Sort keys can not be greater than 1024 bytes.
+# https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ServiceQuotas.html#limits-partition-sort-keys
+IDENTITY_SORT_KEY_MAX_BYTES = 1024
+
+SYSTEM_TRAIT_WRITE_MAX_ATTEMPTS = 3
+
 # DynamoDB max item size is 400 KB (409,600 bytes).
 DOCUMENT_SIZE_HISTOGRAM_BUCKETS = (
     1_000,
