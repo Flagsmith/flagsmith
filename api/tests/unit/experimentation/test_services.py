@@ -148,9 +148,9 @@ def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names(
     # Then
     assert result == expected
     mock_client.execute.assert_called_once_with(
-        "SELECT DISTINCT event FROM events "
+        "SELECT event FROM events "
         "WHERE environment_key = %(environment_key)s "
-        "ORDER BY event LIMIT %(limit)s",
+        "GROUP BY event ORDER BY max(timestamp) DESC LIMIT %(limit)s",
         {"environment_key": "env-key-123", "limit": 501},
     )
 
@@ -222,9 +222,9 @@ def test_get_warehouse_event_names__clickhouse_connection__queries_customer_inst
     # Then
     assert result == expected
     get_client.return_value.query.assert_called_once_with(
-        "SELECT DISTINCT event FROM events "
+        "SELECT event FROM events "
         "WHERE environment_key = %(environment_key)s "
-        "ORDER BY event LIMIT %(limit)s",
+        "GROUP BY event ORDER BY max(timestamp) DESC LIMIT %(limit)s",
         parameters={"environment_key": "test-env-key", "limit": 501},
     )
     get_client.return_value.close.assert_called_once_with()

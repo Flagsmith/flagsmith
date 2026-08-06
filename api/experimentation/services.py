@@ -147,9 +147,9 @@ def _get_clickhouse_client() -> Client:
 
 
 _EVENT_NAMES_QUERY = (
-    "SELECT DISTINCT event FROM events "
+    "SELECT event FROM events "
     "WHERE environment_key = %(environment_key)s "
-    "ORDER BY event LIMIT %(limit)s"
+    "GROUP BY event ORDER BY max(timestamp) DESC LIMIT %(limit)s"
 )
 
 
@@ -175,8 +175,9 @@ def get_warehouse_event_names(
     connection: "WarehouseConnection",
     environment_key: str,
 ) -> WarehouseEventNames | None:
-    """Return the distinct event names recorded for `environment_key`, capped
-    at WAREHOUSE_EVENT_NAMES_LIMIT; None when the warehouse is unavailable."""
+    """Return the distinct event names recorded for `environment_key`, most
+    recently seen first, capped at WAREHOUSE_EVENT_NAMES_LIMIT; None when the
+    warehouse is unavailable."""
     if connection.warehouse_type == WarehouseType.CLICKHOUSE:
         return _get_customer_warehouse_event_names_cached(connection, environment_key)
     if not settings.EXPERIMENTATION_CLICKHOUSE_URL:
