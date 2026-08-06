@@ -1095,9 +1095,9 @@ def test_create_project__valid_request__creates_audit_log(admin_client, organisa
     assert audit_log.project_id == response.data["id"]
 
 
-def test_delete_project__valid_request__creates_audit_log -> None(
+def test_delete_project__valid_request__creates_audit_log (
     admin_client, project, organisation
-):
+) -> None:
     # Given
     url = reverse("api-v1:projects:project-detail", args=[project.id])
     project_name = project.name
