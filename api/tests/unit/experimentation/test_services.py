@@ -241,6 +241,47 @@ def test_get_warehouse_event_names__clickhouse_connection__queries_customer_inst
     assert second_result == expected
 
 
+@pytest.mark.parametrize(
+    "changed_field, new_value",
+    [
+        ("config", {"host": "new.acme-corp.example"}),
+        ("credentials", {"password": "rotated"}),
+    ],
+    ids=["config", "credentials"],
+)
+def test_get_warehouse_event_names__connection_details_changed__bypasses_cache(
+    clickhouse_connection: WarehouseConnection,
+    reset_cache: None,
+    changed_field: str,
+    new_value: dict[str, str],
+    mocker: MockerFixture,
+) -> None:
+    # Given — a cached result for the connection's current details
+    get_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
+    get_client.return_value.query.return_value = mocker.Mock(
+        result_rows=[("old_event",)]
+    )
+    services.get_warehouse_event_names(clickhouse_connection, "test-env-key")
+
+    # When — the connection details change
+    setattr(
+        clickhouse_connection,
+        changed_field,
+        {**getattr(clickhouse_connection, changed_field), **new_value},
+    )
+    clickhouse_connection.save()
+    get_client.return_value.query.return_value = mocker.Mock(
+        result_rows=[("new_event",)]
+    )
+    result = services.get_warehouse_event_names(clickhouse_connection, "test-env-key")
+
+    # Then — the stale cache entry is not served
+    assert result == WarehouseEventNames(events=["new_event"], is_truncated=False)
+    assert get_client.return_value.query.call_count == 2
+
+
 def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
     mocker: MockerFixture,
 ) -> None:

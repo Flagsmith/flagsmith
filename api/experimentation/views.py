@@ -62,7 +62,6 @@ from experimentation.serializers import (
 from experimentation.services import (
     annotate_warehouse_event_stats,
     apply_experiment_rollout,
-    clear_customer_warehouse_caches,
     create_experiment_audit_log,
     create_metric_audit_log,
     create_warehouse_audit_log,
@@ -129,13 +128,10 @@ class WarehouseConnectionViewSet(
         create_warehouse_audit_log(
             connection, self._get_user(self.request), action="updated"
         )
-        details_changed = (
+        if connection.warehouse_type == WarehouseType.CLICKHOUSE and (
             "config" in serializer.validated_data
             or "credentials" in serializer.validated_data
-        )
-        if details_changed:
-            clear_customer_warehouse_caches(connection)
-        if connection.warehouse_type == WarehouseType.CLICKHOUSE and details_changed:
+        ):
             verify_clickhouse_connection(connection)
 
     def perform_destroy(self, instance: WarehouseConnection) -> None:
@@ -237,7 +233,15 @@ class WarehouseConnectionViewSet(
                     "events": serializers.ListField(child=serializers.CharField()),
                     "is_truncated": serializers.BooleanField(),
                 },
-            )
+            ),
+            400: inline_serializer(
+                name="WarehouseEventNamesUnsupported",
+                fields={"detail": serializers.CharField()},
+            ),
+            503: inline_serializer(
+                name="WarehouseEventNamesUnavailable",
+                fields={"detail": serializers.CharField()},
+            ),
         },
     )
     @action(detail=True, methods=["get"], url_path="events")

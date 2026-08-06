@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import time
 import typing
 from dataclasses import replace
@@ -110,8 +112,17 @@ WAREHOUSE_EVENT_NAMES_LIMIT = 500
 
 _CUSTOMER_EVENT_UNAVAILABLE = "unavailable"
 
-_CUSTOMER_EVENT_STATS_CACHE_KEY = "experimentation:customer_event_stats:{}"
-_CUSTOMER_EVENT_NAMES_CACHE_KEY = "experimentation:customer_event_names:{}"
+
+def _customer_cache_key(kind: str, connection: "WarehouseConnection") -> str:
+    """Key cached warehouse reads by the connection's details, so a config,
+    credential, or type change can neither serve nor store stale reads."""
+    details = json.dumps(
+        [connection.warehouse_type, connection.config, connection.credentials],
+        sort_keys=True,
+    )
+    digest = hashlib.sha256(details.encode()).hexdigest()[:12]
+    return f"experimentation:customer_{kind}:{connection.id}:{digest}"
+
 
 # A delivery run stops taking on new objects after this long, leaving room for
 # the slowest possible in-flight insert to still land inside the task timeout.
@@ -1120,7 +1131,7 @@ def _get_customer_warehouse_event_stats_cached(
     ClickHouse instance, or None when it's unreachable. Results — including
     failures — are cached briefly so read endpoints don't open a connection to
     the customer's host on every request."""
-    cache_key = _CUSTOMER_EVENT_STATS_CACHE_KEY.format(connection.id)
+    cache_key = _customer_cache_key("event_stats", connection)
     cached = cache.get(cache_key)
     if isinstance(cached, WarehouseEventStats):
         return cached
@@ -1158,7 +1169,7 @@ def _get_customer_warehouse_event_names_cached(
 ) -> WarehouseEventNames | None:
     """Query the customer's ClickHouse instance, caching results — including
     failures — to spare their host repeated connections."""
-    cache_key = _CUSTOMER_EVENT_NAMES_CACHE_KEY.format(connection.id)
+    cache_key = _customer_cache_key("event_names", connection)
     cached = cache.get(cache_key)
     if isinstance(cached, WarehouseEventNames):
         return cached
@@ -1188,13 +1199,3 @@ def _get_customer_warehouse_event_names_cached(
     event_names = _build_event_names(rows)
     cache.set(cache_key, event_names, CUSTOMER_EVENT_NAMES_CACHE_SECONDS)
     return event_names
-
-
-def clear_customer_warehouse_caches(connection: "WarehouseConnection") -> None:
-    """Drop cached warehouse reads so they don't outlive a connection change."""
-    cache.delete_many(
-        [
-            _CUSTOMER_EVENT_STATS_CACHE_KEY.format(connection.id),
-            _CUSTOMER_EVENT_NAMES_CACHE_KEY.format(connection.id),
-        ]
-    )
