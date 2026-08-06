@@ -2,6 +2,12 @@ import { FC, useState } from 'react'
 import ProjectFilter from 'components/ProjectFilter'
 import StatItem from 'components/StatItem'
 import { billingPeriods, freePeriods, Req } from 'common/types/requests'
+
+// Every widget below the selector assumes a billing period, so a paid plan is
+// not offered rolling windows to compare a monthly allowance against.
+const paidBillingPeriods = billingPeriods.filter((period) =>
+  `${period.value}`.includes('billing_period'),
+)
 import UsageBanner from './UsageBanner'
 import UsageChart from './UsageChart'
 import GraceChip from './GraceChip'
@@ -54,17 +60,28 @@ const buildTiles = (view: UsageView, percent: number): Tile[] => {
     },
     {
       label: '% of plan consumed',
-      sub: view.period.isBillingPeriod ? 'this billing period' : 'this period',
+      sub: view.period.isBillingPeriod ? 'this billing period' : 'this window',
       value: view.limit ? `${percent}%` : '—',
     },
-    {
-      label: 'Days remaining',
-      sub: view.period.isBillingPeriod
-        ? `resets ${view.period.resetsAt || '(needs the billing period)'}`
-        : 'in this rolling window',
-      value: view.period.daysRemaining ? `${view.period.daysRemaining}` : '—',
-    },
   ]
+
+  // Over the limit, the useful count is how long it has been true, not what is
+  // left of a period. On a rolling window there is no end to count down to at
+  // all, so the tile is dropped rather than invented.
+  if (view.daysOverLimit) {
+    tiles.push({
+      badge: { text: `${view.daysOverLimit} days`, tone: 'danger' },
+      label: 'Days over limit',
+      sub: view.overLimitSince ? `since ${view.overLimitSince}` : '',
+      value: `${view.daysOverLimit}`,
+    })
+  } else if (view.period.isBillingPeriod && view.period.daysRemaining) {
+    tiles.push({
+      label: 'Days remaining',
+      sub: `resets ${view.period.resetsAt}`,
+      value: `${view.period.daysRemaining}`,
+    })
+  }
 
   if (view.restricted) {
     tiles.push({
@@ -124,7 +141,7 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
             <Select
               onChange={(v: any) => setBillingPeriod(v.value)}
               value={billingPeriods.find((v) => v.value === billingPeriod)}
-              options={isOnFreePlanPeriods ? freePeriods : billingPeriods}
+              options={isOnFreePlanPeriods ? freePeriods : paidBillingPeriods}
             />
           </div>
           <div className='usage-proto__select'>
@@ -146,7 +163,10 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
           {view.period.label}
         </span>
         <span className='usage-proto__strip-right'>
-          <GraceChip grace={view.grace} daysLeft={view.graceDaysLeft} />
+          <span className='usage-proto__sub'>
+            {view.period.isBillingPeriod ? 'Billing period' : 'Rolling window'}
+          </span>
+          <GraceChip grace={view.grace} />
           {view.period.resetsAt && <span>Resets {view.period.resetsAt}</span>}
         </span>
       </div>

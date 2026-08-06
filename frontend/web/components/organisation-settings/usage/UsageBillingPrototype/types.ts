@@ -79,6 +79,9 @@ export type UsageView = {
   restricted: boolean
   /** End-of-period usage at the current run rate. Null when it is too early to say. */
   projected: number | null
+  /** Days since usage crossed the limit, and the date it happened. */
+  daysOverLimit?: number
+  overLimitSince?: string
   /** Overage in currency. Null until per-org pricing is queryable. */
   overageCost: number | null
   notifications: UsageNotification[]

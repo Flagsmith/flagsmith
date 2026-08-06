@@ -102,6 +102,7 @@ const buildBreakdowns = (
 })
 
 type ScenarioInput = {
+  daysOverLimit?: number
   plan: UsageView['plan']
   limit: number
   percent: number
@@ -117,6 +118,7 @@ type ScenarioInput = {
 
 const buildView = ({
   daysElapsed,
+  daysOverLimit,
   grace,
   graceDaysLeft,
   isBillingPeriod = true,
@@ -135,6 +137,7 @@ const buildView = ({
   return {
     breakdowns: buildBreakdowns(total),
     channels: { email: true, inApp: true },
+    daysOverLimit,
     grace,
     graceDaysLeft,
     limit,
@@ -142,6 +145,9 @@ const buildView = ({
       { enabled: true, percent: 75 },
       { enabled: true, percent: 100 },
     ],
+    overLimitSince: daysOverLimit
+      ? moment().subtract(daysOverLimit, 'days').format('D MMM')
+      : undefined,
     overageCost,
     period: {
       daysRemaining: periodDays - daysElapsed,
@@ -154,6 +160,7 @@ const buildView = ({
 
       selectValue: isBillingPeriod ? 'current_billing_period' : undefined,
     },
+
     plan,
     // Run rate to the end of the period. Deliberately null early on, which is
     // the rule #8188 has to settle.
@@ -176,6 +183,7 @@ export const FIXTURES: Record<Exclude<ScenarioId, 'live'>, UsageView> = {
   }),
   'free-countdown': buildView({
     daysElapsed: 22,
+    daysOverLimit: 4,
     grace: 'countdown',
     graceDaysLeft: 4,
     isBillingPeriod: false,
@@ -187,6 +195,7 @@ export const FIXTURES: Record<Exclude<ScenarioId, 'live'>, UsageView> = {
   }),
   'free-restricted': buildView({
     daysElapsed: 27,
+    daysOverLimit: 7,
     grace: 'restricted',
     isBillingPeriod: false,
     limit: 50_000,
@@ -206,6 +215,7 @@ export const FIXTURES: Record<Exclude<ScenarioId, 'live'>, UsageView> = {
   }),
   'over-charged': buildView({
     daysElapsed: 21,
+    daysOverLimit: 9,
     grace: 'used',
     limit: 2_000_000,
     overageCost: 1340,
@@ -215,6 +225,7 @@ export const FIXTURES: Record<Exclude<ScenarioId, 'live'>, UsageView> = {
   }),
   'over-covered': buildView({
     daysElapsed: 19,
+    daysOverLimit: 6,
     grace: 'covering',
     limit: 2_000_000,
     percent: 118,

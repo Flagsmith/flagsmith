@@ -5,7 +5,6 @@ import { GraceState } from './types'
 
 type GraceChipProps = {
   grace: GraceState
-  daysLeft?: number
 }
 
 const TONE: Record<GraceState, BadgeTone> = {
@@ -18,7 +17,7 @@ const TONE: Record<GraceState, BadgeTone> = {
 
 const LABEL: Record<GraceState, string> = {
   available: 'Grace period: available',
-  countdown: 'Grace period: ending',
+  countdown: 'Grace period: ending soon',
   covering: 'Grace period: covering this period',
   restricted: 'Restricted',
   used: 'Grace period: used',
@@ -37,15 +36,10 @@ const EXPLANATION: Record<GraceState, string> = {
 }
 
 /** PROTOTYPE (#8184). Grace period status, per the "Grace period states" design. */
-const GraceChip: FC<GraceChipProps> = ({ daysLeft, grace }) => {
-  const label =
-    grace === 'countdown' && daysLeft ? `${daysLeft} days left` : LABEL[grace]
-
-  return (
-    <Tooltip title={<UsageBadge tone={TONE[grace]}>{label}</UsageBadge>}>
-      {EXPLANATION[grace]}
-    </Tooltip>
-  )
-}
+const GraceChip: FC<GraceChipProps> = ({ grace }) => (
+  <Tooltip title={<UsageBadge tone={TONE[grace]}>{LABEL[grace]}</UsageBadge>}>
+    {EXPLANATION[grace]}
+  </Tooltip>
+)
 
 export default GraceChip
