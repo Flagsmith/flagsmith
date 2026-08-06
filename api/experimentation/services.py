@@ -42,6 +42,7 @@ from experimentation.dataclasses import (
     ResultsAggregates,
     ResultsSummary,
     RolloutSpec,
+    WarehouseEventNames,
     WarehouseEventStats,
 )
 from experimentation.metrics import (
@@ -103,8 +104,11 @@ CLICKHOUSE_CONNECT_TIMEOUT_SECONDS = 5
 CLICKHOUSE_QUERY_TIMEOUT_SECONDS = 30
 CLICKHOUSE_VERIFY_TIMEOUT_SECONDS = 5
 CUSTOMER_EVENT_STATS_CACHE_SECONDS = 60
+CUSTOMER_EVENT_NAMES_CACHE_SECONDS = 300
+WAREHOUSE_EVENT_NAMES_LIMIT = 500
 
 _CUSTOMER_EVENT_STATS_UNAVAILABLE = "unavailable"
+_CUSTOMER_EVENT_NAMES_UNAVAILABLE = "unavailable"
 
 # A delivery run stops taking on new objects after this long, leaving room for
 # the slowest possible in-flight insert to still land inside the task timeout.
@@ -142,16 +146,49 @@ def _get_clickhouse_client() -> Client:
     return Client(host, **kwargs)
 
 
-def get_unique_event_names(environment_key: str) -> list[str]:
-    """Return the distinct event names recorded for `environment_key`,
-    ordered alphabetically."""
-    rows = _get_clickhouse_client().execute(
-        "SELECT DISTINCT event FROM events "
-        "WHERE environment_key = %(environment_key)s "
-        "ORDER BY event",
-        {"environment_key": environment_key},
+_EVENT_NAMES_QUERY = (
+    "SELECT DISTINCT event FROM events "
+    "WHERE environment_key = %(environment_key)s "
+    "ORDER BY event LIMIT %(limit)s"
+)
+
+
+def _event_names_query_params(environment_key: str) -> dict[str, str | int]:
+    # Fetch one row past the limit so truncation is detectable.
+    return {
+        "environment_key": environment_key,
+        "limit": WAREHOUSE_EVENT_NAMES_LIMIT + 1,
+    }
+
+
+def _build_event_names(
+    rows: "Sequence[Sequence[typing.Any]]",
+) -> WarehouseEventNames:
+    names = [row[0] for row in rows]
+    return WarehouseEventNames(
+        events=names[:WAREHOUSE_EVENT_NAMES_LIMIT],
+        is_truncated=len(names) > WAREHOUSE_EVENT_NAMES_LIMIT,
     )
-    return [row[0] for row in rows]
+
+
+def get_warehouse_event_names(
+    connection: "WarehouseConnection",
+    environment_key: str,
+) -> WarehouseEventNames | None:
+    """Return the distinct event names recorded for `environment_key`, capped
+    at WAREHOUSE_EVENT_NAMES_LIMIT; None when the warehouse is unavailable."""
+    if connection.warehouse_type == WarehouseType.CLICKHOUSE:
+        return _get_customer_warehouse_event_names_cached(connection, environment_key)
+    if not settings.EXPERIMENTATION_CLICKHOUSE_URL:
+        return None
+    try:
+        rows = _get_clickhouse_client().execute(
+            _EVENT_NAMES_QUERY,
+            _event_names_query_params(environment_key),
+        )
+    except Exception:
+        return None
+    return _build_event_names(rows)
 
 
 _EVENT_STATS_QUERY = (
@@ -1109,3 +1146,41 @@ def _get_customer_warehouse_event_stats_cached(
         return None
     cache.set(cache_key, stats, CUSTOMER_EVENT_STATS_CACHE_SECONDS)
     return stats
+
+
+def _get_customer_warehouse_event_names_cached(
+    connection: "WarehouseConnection",
+    environment_key: str,
+) -> WarehouseEventNames | None:
+    """Query the customer's ClickHouse instance, caching results — including
+    failures — to spare their host repeated connections."""
+    cache_key = f"experimentation:customer_event_names:{connection.id}"
+    cached = cache.get(cache_key)
+    if isinstance(cached, WarehouseEventNames):
+        return cached
+    if cached == _CUSTOMER_EVENT_NAMES_UNAVAILABLE:
+        return None
+    try:
+        with warehouse_delivery_service.delivery_client(
+            connection,
+            send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
+        ) as client:
+            rows = client.query(
+                _EVENT_NAMES_QUERY,
+                parameters=_event_names_query_params(environment_key),
+            ).result_rows
+    except Exception:
+        cache.set(
+            cache_key,
+            _CUSTOMER_EVENT_NAMES_UNAVAILABLE,
+            CUSTOMER_EVENT_NAMES_CACHE_SECONDS,
+        )
+        logger.warning(
+            "connection.event_names_failed",
+            environment__id=connection.environment_id,
+            exc_info=True,
+        )
+        return None
+    event_names = _build_event_names(rows)
+    cache.set(cache_key, event_names, CUSTOMER_EVENT_NAMES_CACHE_SECONDS)
+    return event_names

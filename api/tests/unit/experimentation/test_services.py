@@ -22,6 +22,7 @@ from experimentation.dataclasses import (
     MetricSpec,
     ResultsAggregates,
     RolloutSpec,
+    WarehouseEventNames,
     WarehouseEventStats,
 )
 from experimentation.models import (
@@ -108,28 +109,136 @@ def test_get_clickhouse_client__dsn_timeouts__are_preserved(
     services._get_clickhouse_client.cache_clear()
 
 
-def test_get_unique_event_names__events_present__returns_ordered_names(
+@pytest.mark.parametrize(
+    "rows, expected",
+    [
+        (
+            [("conversion",), ("page_view",)],
+            WarehouseEventNames(events=["conversion", "page_view"], is_truncated=False),
+        ),
+        ([], WarehouseEventNames(events=[], is_truncated=False)),
+        (
+            [(f"event_{i:03d}",) for i in range(501)],
+            WarehouseEventNames(
+                events=[f"event_{i:03d}" for i in range(500)], is_truncated=True
+            ),
+        ),
+    ],
+    ids=["few", "none", "truncated"],
+)
+def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names(
+    warehouse_connection: WarehouseConnection,
+    settings: SettingsWrapper,
+    rows: list[tuple[str]],
+    expected: WarehouseEventNames,
     mocker: MockerFixture,
 ) -> None:
     # Given
+    settings.EXPERIMENTATION_CLICKHOUSE_URL = "clickhouse://ch.example.com/db"
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = [("conversion",), ("page_view",)]
+    mock_client.execute.return_value = rows
     mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
     )
 
     # When
-    result = services.get_unique_event_names("env-key-123")
+    result = services.get_warehouse_event_names(warehouse_connection, "env-key-123")
 
     # Then
-    assert result == ["conversion", "page_view"]
+    assert result == expected
     mock_client.execute.assert_called_once_with(
         "SELECT DISTINCT event FROM events "
         "WHERE environment_key = %(environment_key)s "
-        "ORDER BY event",
-        {"environment_key": "env-key-123"},
+        "ORDER BY event LIMIT %(limit)s",
+        {"environment_key": "env-key-123", "limit": 501},
     )
+
+
+@pytest.mark.parametrize(
+    "clickhouse_url, execute_side_effect",
+    [
+        ("", None),
+        ("clickhouse://ch.example.com/db", Exception("connection refused")),
+    ],
+    ids=["unconfigured", "unreachable"],
+)
+def test_get_warehouse_event_names__flagsmith_warehouse_unavailable__returns_none(
+    warehouse_connection: WarehouseConnection,
+    settings: SettingsWrapper,
+    clickhouse_url: str,
+    execute_side_effect: Exception | None,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.EXPERIMENTATION_CLICKHOUSE_URL = clickhouse_url
+    mock_client = mocker.Mock()
+    mock_client.execute.side_effect = execute_side_effect
+    mocker.patch(
+        "experimentation.services._get_clickhouse_client",
+        return_value=mock_client,
+    )
+
+    # When
+    result = services.get_warehouse_event_names(warehouse_connection, "env-key-123")
+
+    # Then
+    assert result is None
+
+
+@pytest.mark.parametrize(
+    "query_result, expected",
+    [
+        (
+            [("conversion",), ("page_view",)],
+            WarehouseEventNames(events=["conversion", "page_view"], is_truncated=False),
+        ),
+        (Exception("connection refused"), None),
+    ],
+    ids=["reachable", "unreachable"],
+)
+def test_get_warehouse_event_names__clickhouse_connection__queries_customer_instance(
+    clickhouse_connection: WarehouseConnection,
+    reset_cache: None,
+    query_result: Exception | list[tuple[str]],
+    expected: WarehouseEventNames | None,
+    log: StructuredLogCapture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
+    if isinstance(query_result, Exception):
+        get_client.return_value.query.side_effect = query_result
+    else:
+        get_client.return_value.query.return_value = mocker.Mock(
+            result_rows=query_result
+        )
+
+    # When
+    result = services.get_warehouse_event_names(clickhouse_connection, "test-env-key")
+
+    # Then
+    assert result == expected
+    get_client.return_value.query.assert_called_once_with(
+        "SELECT DISTINCT event FROM events "
+        "WHERE environment_key = %(environment_key)s "
+        "ORDER BY event LIMIT %(limit)s",
+        parameters={"environment_key": "test-env-key", "limit": 501},
+    )
+    get_client.return_value.close.assert_called_once_with()
+    assert any(
+        event["event"] == "connection.event_names_failed" for event in log.events
+    ) == (expected is None)
+
+    # When — the outcome is cached, so a second request doesn't reconnect
+    fresh_connection = WarehouseConnection.objects.get(id=clickhouse_connection.id)
+    second_result = services.get_warehouse_event_names(fresh_connection, "test-env-key")
+
+    # Then
+    get_client.assert_called_once()
+    assert second_result == expected
 
 
 def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
@@ -393,24 +502,6 @@ def test_build_exposures_summary__no_buckets__empty_summary() -> None:
         excluded_identities=0,
         timeseries=ExposuresTimeseries(granularity="hour", points=[]),
     )
-
-
-def test_get_unique_event_names__no_events__returns_empty_list(
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mock_client = mocker.Mock()
-    mock_client.execute.return_value = []
-    mocker.patch(
-        "experimentation.services._get_clickhouse_client",
-        return_value=mock_client,
-    )
-
-    # When
-    result = services.get_unique_event_names("env-key-123")
-
-    # Then
-    assert result == []
 
 
 @pytest.mark.parametrize(
