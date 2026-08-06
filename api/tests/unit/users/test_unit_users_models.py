@@ -17,7 +17,7 @@ from users.models import (
     FFAdminUser,
     UserPermissionGroup,
 )
-
+import typing
 
 def test_belongs_to__user_in_organisation__returns_true(
     admin_user: FFAdminUser,
