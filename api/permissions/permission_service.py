@@ -218,7 +218,10 @@ def user_has_organisation_permission(
     # 3. Check role permissions (only if RBAC is installed)
     if settings.IS_RBAC_INSTALLED:  # pragma: no cover
         role_filter = get_role_permission_filter(
-            user, Organisation, permission_key, allow_admin=False
+            user,
+            Organisation, # type: ignore[arg-type]
+            permission_key,
+            allow_admin=False
         )
         if base_qs.filter(role_filter).exists():
             return True
