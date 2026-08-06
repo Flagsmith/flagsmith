@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import typing
+
 from common.projects.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_PROJECT,
@@ -16,7 +18,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-import typing
+
 from audit.constants import PROJECT_CREATED_MESSAGE, PROJECT_DELETED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
@@ -120,7 +122,7 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         AuditLog.objects.create(
             project=project,
             author=None if is_master_api_key_user else self.request.user,
-            master_api_key=self.request.user.key if is_master_api_key_user else None, # type: ignore[union-attr]
+            master_api_key=self.request.user.key if is_master_api_key_user else None,  # type: ignore[union-attr]
             related_object_id=project.id,
             related_object_type=RelatedObjectType.PROJECT.name,
             log=PROJECT_CREATED_MESSAGE % project.name,
@@ -134,7 +136,9 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             AuditLog.objects.create(
                 project=None,
                 author=None if is_master_api_key_user else self.request.user,
-                master_api_key=self.request.user.key if is_master_api_key_user else None,  # type: ignore[union-attr]
+                master_api_key=self.request.user.key
+                if is_master_api_key_user
+                else None,  # type: ignore[union-attr]
                 related_object_id=instance.id,
                 related_object_type=RelatedObjectType.PROJECT.name,
                 log=PROJECT_DELETED_MESSAGE % instance.name,
