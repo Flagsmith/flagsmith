@@ -202,24 +202,28 @@ def user_has_organisation_permission(
     if is_user_organisation_admin(user, organisation):
         return True
 
-    # NOTE: since we store organisation admin slightly differently
-    # compared to project and environment `get_base_permission_filter`
-    # with allow_admin=True will not work for organisation
-    base_filter = get_base_permission_filter(
-        user,
-        Organisation,  # type: ignore[arg-type]
-        permission_key,
-        allow_admin=False,
-    )
-    filter_ = base_filter & Q(id=organisation.id)
+    # Base query to ensure the user actually belongs to the organisation
+    base_qs = Organisation.objects.filter(id=organisation.id, users=user)
 
-    queryset = Organisation.objects.filter(filter_)
+    # 1. Check direct user permissions (Fastest)
+    user_filter = get_user_permission_filter(user, permission_key, allow_admin=False)
+    if base_qs.filter(user_filter).exists():
+        return True
 
-    # Final check to verify that user belongs to organisation
-    queryset = queryset.filter(users=user)
+    # 2. Check group permissions
+    group_filter = get_group_permission_filter(user, permission_key, allow_admin=False)
+    if base_qs.filter(group_filter).exists():
+        return True
 
-    return queryset.exists()  # type: ignore[no-any-return]
+    # 3. Check role permissions (only if RBAC is installed)
+    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
+        role_filter = get_role_permission_filter(
+            user, Organisation, permission_key, allow_admin=False
+        )
+        if base_qs.filter(role_filter).exists():
+            return True
 
+    return False
 
 def master_api_key_has_organisation_permission(
     master_api_key: "MasterAPIKey", organisation: Organisation, permission_key: str
