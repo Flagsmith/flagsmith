@@ -221,7 +221,7 @@ def user_has_organisation_permission(
             user,
             # Type gap: get_role_permission_filter type hint expects an instance,
             # but safely handles the model class at runtime.
-            Organisation,
+            typing.cast(typing.Any, Organisation),
             permission_key,
             allow_admin=False,
         )
