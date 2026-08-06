@@ -7,7 +7,7 @@ from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from telemetry.spans import set_span_attribute
-
+import typing
 from .rbac_wrapper import (  # type: ignore[attr-defined]
     get_permitted_environments_for_master_api_key_using_roles,
     get_permitted_projects_for_master_api_key_using_roles,
