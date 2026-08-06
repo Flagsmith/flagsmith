@@ -7,7 +7,11 @@ from django.db.models import Count, Prefetch, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    extend_schema,
+    inline_serializer,
+)
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import Throttled, ValidationError
@@ -34,6 +38,7 @@ from experimentation.models import (
     ExperimentStatus,
     Metric,
     WarehouseConnection,
+    WarehouseConnectionStatus,
     WarehouseType,
 )
 from experimentation.permissions import (
@@ -97,8 +102,12 @@ class WarehouseConnectionViewSet(
             "update",
             "partial_update",
             "test_warehouse_connection",
+            "test_warehouse_connection_config",
         ):
             self.throttle_scope = "warehouse_connection_write"
+            return [*super().get_throttles(), ScopedRateThrottle()]
+        if self.action in ("list", "retrieve"):
+            self.throttle_scope = "warehouse_connection_read"
             return [*super().get_throttles(), ScopedRateThrottle()]
         return super().get_throttles()
 
@@ -166,6 +175,52 @@ class WarehouseConnectionViewSet(
             refresh_warehouse_connection_status(connection, connection.event_stats)
         serializer = self.get_serializer(connection)
         return Response(serializer.data)
+
+    @extend_schema(
+        operation_id=(
+            "api_v1_environments_warehouse_connections_"
+            "test_warehouse_connection_config_create"
+        ),
+        responses={
+            200: inline_serializer(
+                name="WarehouseConnectionTestResult",
+                fields={
+                    "status": serializers.ChoiceField(
+                        choices=WarehouseConnectionStatus.choices
+                    ),
+                    "status_detail": serializers.CharField(allow_null=True),
+                },
+            )
+        },
+    )
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="test-warehouse-connection",
+        url_name="test-warehouse-connection-config",
+    )
+    def test_warehouse_connection_config(
+        self, request: Request, **kwargs: object
+    ) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if serializer.validated_data.get("warehouse_type") != WarehouseType.CLICKHOUSE:
+            return Response(
+                {
+                    "detail": "Connection testing is not supported for this warehouse type."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        connection = WarehouseConnection(
+            environment=self._get_environment(),
+            warehouse_type=serializer.validated_data["warehouse_type"],
+            config=serializer.validated_data.get("config"),
+            credentials=serializer.validated_data.get("credentials"),
+        )
+        verify_clickhouse_connection(connection, persist=False)
+        return Response(
+            {"status": connection.status, "status_detail": connection.status_detail}
+        )
 
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         environment = self._get_environment()

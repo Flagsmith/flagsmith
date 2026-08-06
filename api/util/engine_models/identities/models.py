@@ -7,6 +7,7 @@ from pydantic_collections import BaseCollectionModel  # type: ignore[import-unty
 
 from util.engine_models.features.models import FeatureStateModel
 from util.engine_models.identities.traits.models import TraitModel
+from util.engine_models.identities.traits.types import ContextValue
 from util.engine_models.utils.datetime import utcnow_with_tz
 from util.engine_models.utils.exceptions import DuplicateFeatureState
 
@@ -42,6 +43,8 @@ class IdentityModel(BaseModel):
         default_factory=IdentityFeaturesList
     )
     identity_traits: typing.List[TraitModel] = Field(default_factory=list)
+    # System-owned (e.g. cohort membership); unreachable by SDK and admin trait writes.
+    system_traits: typing.Optional[typing.Dict[str, ContextValue]] = None
     identity_uuid: UUID4 = Field(default_factory=uuid.uuid4)
     django_id: typing.Optional[int] = None
 

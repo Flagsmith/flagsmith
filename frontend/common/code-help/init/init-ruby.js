@@ -3,7 +3,6 @@ import Constants from 'common/constants'
 export default (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT },
-  customFeature,
 ) => `require "flagsmith"
 
 $flagsmith = Flagsmith::Client.new(
@@ -13,14 +12,13 @@ $flagsmith = Flagsmith::Client.new(
     : '\n'
 })
 
-// Load the environment's flags locally
+# Load the environment's flags
 $flags = $flagsmith.get_environment_flags
 
-// Check for a feature
-$is_enabled = $flags.is_feature_enabled('${customFeature || FEATURE_NAME}')
+# Check whether the feature is enabled, or read its value
+$is_enabled = $flags.is_feature_enabled('${FEATURE_NAME}')
+$feature_value = $flags.get_feature_value('${FEATURE_NAME_ALT || FEATURE_NAME}')
 
-// Or, use the value of a feature
-$feature_value = $flags.get_feature_value('${
-  customFeature || FEATURE_NAME_ALT
-}')
+puts "${FEATURE_NAME} enabled: #{$is_enabled}"
+puts "${FEATURE_NAME_ALT || FEATURE_NAME} value: #{$feature_value}"
 `

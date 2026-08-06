@@ -8,6 +8,7 @@ from rest_framework.test import APIClient
 
 from features.constants import RESERVED_VARIANT_KEY_MESSAGE
 from features.models import Feature
+from features.multivariate.models import MultivariateFeatureOption
 from organisations.models import Organisation
 from projects.models import Project
 from users.models import FFAdminUser
@@ -418,6 +419,91 @@ def test_create_mv_option__total_allocation_exceeds_100__returns_bad_request(  #
     assert response.json()["default_percentage_allocation"] == [
         "Invalid percentage allocation"
     ]
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_mv_option__environment_allocation_drifted_from_option_default__returns_bad_request(  # type: ignore[no-untyped-def]  # noqa: E501
+    project, environment, environment_api_key, mv_option_50_percent, client, feature
+):
+    """
+    Reproduces https://github.com/Flagsmith/flagsmith/issues/7369: an
+    environment's actual `MultivariateFeatureStateValue.percentage_allocation`
+    can drift from the option's `default_percentage_allocation` via a
+    per-environment edit. Adding a new option that only overflows 100% for
+    that one environment must still be rejected, not just options that
+    overflow the option-level defaults.
+    """
+    # Given - the existing option's allocation is bumped from 50% to 100% for
+    # this environment only, so this environment's actual feature state values
+    # (100%) have diverged from the option-level default (50%).
+    get_feature_states_url = reverse(
+        "api-v1:environments:environment-featurestates-list", args=[environment_api_key]
+    )
+    feature_state = next(
+        filter(
+            lambda fs: fs["feature"] == feature,
+            client.get(get_feature_states_url).json()["results"],
+        )
+    )
+    mv_fsv = feature_state["multivariate_feature_state_values"][0]
+    update_url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment_api_key, feature_state["id"]],
+    )
+    update_response = client.put(
+        update_url,
+        data=json.dumps(
+            {
+                "id": feature_state["id"],
+                "feature_state_value": "big",
+                "multivariate_feature_state_values": [
+                    {
+                        "multivariate_feature_option": mv_fsv[
+                            "multivariate_feature_option"
+                        ],
+                        "id": mv_fsv["id"],
+                        "percentage_allocation": 100,
+                    }
+                ],
+                "identity": None,
+                "enabled": False,
+                "feature": feature,
+                "environment": environment,
+                "feature_segment": None,
+            }
+        ),
+        content_type="application/json",
+    )
+    assert update_response.status_code == status.HTTP_200_OK
+
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 10,
+    }
+
+    # When - a new option is added. At the option level, 50% + 10% = 60% <= 100%,
+    # so this looks valid, but it would push this environment's actual
+    # allocation to 110%.
+    response = client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    # The option must not be left half wired-up (created, but missing feature
+    # state values for the environment that rejected it).
+    assert MultivariateFeatureOption.objects.filter(feature=feature).count() == 1
 
 
 @pytest.mark.parametrize(

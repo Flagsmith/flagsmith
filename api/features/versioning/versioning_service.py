@@ -1,7 +1,8 @@
 import typing
 
 from common.core.utils import using_database_replica
-from django.db.models import Prefetch, Q, QuerySet
+from django.db.models import F, Prefetch, Q, QuerySet, Value, Window
+from django.db.models.functions import Coalesce, RowNumber
 from django.utils import timezone
 from rest_framework.exceptions import NotFound, ValidationError
 
@@ -108,6 +109,10 @@ def get_environment_flags_dict(
     # for each feature.
     feature_states_dict = {}  # type: ignore[var-annotated]
     for feature_state in feature_states:
+        # Every feature state in the queryset belongs to `environment`;
+        # populating the relation up front keeps `feature_state.environment`
+        # accesses from querying the database.
+        feature_state.environment = environment
         key = key_function(feature_state)
         current_feature_state = feature_states_dict.get(key)
         if not current_feature_state or feature_state > current_feature_state:
@@ -584,26 +589,44 @@ def _get_feature_states_queryset(
     if from_replica:
         feature_state_manager = using_database_replica(FeatureState.objects)
 
-    queryset = (
-        feature_state_manager.get_live_feature_states(
-            environment=environment,
-            additional_filters=additional_filters,
-        )
-        .select_related(
-            "environment",
-            "feature",
-            "feature_state_value",
-            "environment_feature_version",
-            "feature_segment",
-            *additional_select_related_args,
-        )
-        .prefetch_related(*additional_prefetch_related_args)
+    queryset = feature_state_manager.get_live_feature_states(
+        environment=environment,
+        additional_filters=additional_filters,
     )
 
     if feature_name:
         queryset = queryset.filter(feature__name__iexact=feature_name)
 
-    return queryset
+    if not environment.use_v2_feature_versioning:
+        queryset = _exclude_superseded_versions(queryset)
+
+    return queryset.select_related(
+        "feature",
+        "feature_state_value",
+        "environment_feature_version",
+        "feature_segment",
+        *additional_select_related_args,
+    ).prefetch_related(*additional_prefetch_related_args)
+
+
+def _exclude_superseded_versions(  # TODO incorporate into get_live_feature_states https://github.com/Flagsmith/flagsmith/issues/8127
+    queryset: QuerySet[FeatureState],
+) -> QuerySet[FeatureState]:
+    """
+    Exclude feature states superseded by a newer live version of the same
+    environment default, segment override, or identity override.
+    """
+    return queryset.annotate(
+        version_rank=Window(
+            expression=RowNumber(),
+            partition_by=[
+                F("feature_id"),
+                Coalesce("feature_segment_id", Value(0)),
+                Coalesce("identity_id", Value(0)),
+            ],
+            order_by=[F("live_from").desc(), F("version").desc()],
+        ),
+    ).filter(version_rank=1)
 
 
 def _get_distinct_key(

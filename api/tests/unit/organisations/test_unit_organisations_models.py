@@ -9,6 +9,10 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from environments.models import Environment
+from experimentation.models import (
+    IngestionInfrastructureStatus,
+    OrganisationIngestionInfrastructure,
+)
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
     Organisation,
@@ -371,6 +375,66 @@ def test_is_paid__cancelled_subscription__returns_false(  # type: ignore[no-unty
 
     # When / Then
     assert organisation.is_paid is False
+
+
+@pytest.fixture
+def self_hosted_licenced_organisation(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> Organisation:
+    # A self-hosted enterprise licence: enterprise plan, no billing provider
+    # (so no subscription_id), and entitlements sourced from the licence.
+    organisation.subscription.plan = "enterprise"
+    organisation.subscription.save()
+
+    licence = mocker.Mock()
+    licence.get_licence_information.return_value = mocker.Mock(
+        num_seats=3,
+        num_projects=5,
+    )
+    mocker.patch.object(
+        Organisation,
+        "licence",
+        new_callable=mocker.PropertyMock,
+        return_value=licence,
+        create=True,
+    )
+    mocker.patch("organisations.models.is_enterprise", return_value=True)
+    mocker.patch("organisations.models.is_saas", return_value=False)
+    return organisation
+
+
+def test_is_paid__self_hosted_licence__returns_true(
+    self_hosted_licenced_organisation: Organisation,
+) -> None:
+    # Given a self-hosted licenced organisation
+    # When we read its paid status
+    # Then it is paid despite having no billing subscription_id
+    assert self_hosted_licenced_organisation.subscription.subscription_id is None
+    assert self_hosted_licenced_organisation.is_paid is True
+
+
+def test_has_enterprise_subscription__self_hosted_licence__returns_true(
+    self_hosted_licenced_organisation: Organisation,
+) -> None:
+    # Given a self-hosted licenced organisation
+    # When we check the enterprise entitlement gate
+    # Then it is granted
+    assert self_hosted_licenced_organisation.has_enterprise_subscription() is True
+
+
+def test_get_subscription_metadata__self_hosted_licence__uses_licence_limits(
+    self_hosted_licenced_organisation: Organisation,
+) -> None:
+    # Given a self-hosted licenced organisation
+    # When we read its subscription metadata
+    metadata = (
+        self_hosted_licenced_organisation.subscription.get_subscription_metadata()
+    )
+
+    # Then the limits come from the licence, not a billing subscription
+    assert metadata.seats == 3
+    assert metadata.projects == 5
 
 
 def test_get_subscription_metadata__chargebee_subscription__returns_chargebee_metadata(  # type: ignore[no-untyped-def]
@@ -893,3 +957,44 @@ def test_update_plan__valid_plan_id__updates_fields_from_chargebee(
     assert subscription.max_seats == 5
     assert subscription.max_api_calls == 500000
     assert subscription.cancellation_date is None
+
+
+def test_organisation__after_delete_without_infrastructure__does_not_deprovision(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    deprovision = mocker.patch(
+        "experimentation.organisation_ingestion_service"
+        ".deprovision_ingestion_infrastructure",
+    )
+
+    # When
+    organisation.delete()
+
+    # Then
+    deprovision.assert_not_called()
+
+
+def test_organisation__delete_with_created_infrastructure__deprovisions_aws_resources(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    OrganisationIngestionInfrastructure.objects.create(
+        organisation=organisation,
+        status=IngestionInfrastructureStatus.CREATED,
+        bucket_name="flagsmith-events-lake-org-1-123456789012-eu-west-2-an",
+        stream_name="events-ingestion-org-1",
+    )
+    deprovision = mocker.patch(
+        "experimentation.organisation_ingestion_service"
+        ".deprovision_ingestion_infrastructure",
+    )
+    organisation_id = organisation.id
+
+    # When
+    organisation.delete()
+
+    # Then
+    deprovision.assert_called_once_with(organisation_id)

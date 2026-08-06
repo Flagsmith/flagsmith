@@ -59,6 +59,18 @@ type FeatureValueTabProps = {
   onRemoveMultivariateOption?: (id: number) => void
 }
 
+// No tooltip when using variations (no single value to describe).
+const getValueTooltip = (
+  hasVariations: boolean,
+  isEdit: boolean,
+): string | undefined => {
+  if (hasVariations) return undefined
+  const seedsAllEnvironments = isEdit
+    ? ''
+    : '<br/>Setting this when creating a feature will set the value for all environments. You can edit this individually for each environment once the feature is created.'
+  return `${Constants.strings.REMOTE_CONFIG_DESCRIPTION}${seedsAllEnvironments}`
+}
+
 const FeatureValueTab: FC<FeatureValueTabProps> = ({
   environmentFlag,
   environmentId,
@@ -354,13 +366,8 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
                 placeholder="e.g. 'big' "
               />
             }
-            tooltip={`${Constants.strings.REMOTE_CONFIG_DESCRIPTION}${
-              !isEdit
-                ? '<br/>Setting this when creating a feature will set the value for all environments. You can edit this individually for each environment once the feature is created.'
-                : ''
-            }`}
+            tooltip={getValueTooltip(hasVariations, isEdit)}
             title={valueTitle}
-            hideTooltipIcon={hasVariations}
           />
           {canCompareValue && (
             <div className='text-end mt-2'>

@@ -127,6 +127,7 @@ def test_stream_access_logs__valid_encrypted_objects__returns_parsed_logs(
 
     # Next, let's create a bucket
     bucket_name = settings.AWS_SSE_LOGS_BUCKET_NAME
+    assert bucket_name
     s3_client = boto3.client("s3", region_name="eu-west-2")
     s3_client.create_bucket(
         Bucket=bucket_name,

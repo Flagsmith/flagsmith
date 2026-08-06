@@ -61,6 +61,8 @@ def send_environment_update_message_for_environment(environment):  # type: ignor
 def stream_access_logs(
     timeout_seconds: int = 300,
 ) -> Generator[SSEAccessLogs, None, None]:
+    assert settings.AWS_SSE_LOGS_BUCKET_NAME
+
     gpg = gnupg.GPG(gnupghome=GNUPG_HOME)
     bucket = boto3.resource("s3").Bucket(settings.AWS_SSE_LOGS_BUCKET_NAME)
 

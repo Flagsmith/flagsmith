@@ -10,6 +10,7 @@ from django.db import models
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
+    AFTER_DELETE,
     AFTER_SAVE,
     BEFORE_DELETE,
     LifecycleModelMixin,
@@ -114,8 +115,15 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
             self.subscription_information_cache
         )
 
+    def has_enterprise_licence(self) -> bool:
+        return is_enterprise() and hasattr(self, "licence")
+
     @property
     def is_paid(self):  # type: ignore[no-untyped-def]
+        # A self-hosted licence is the entitlement in its own right; it has no
+        # billing provider, so there is no subscription_id to check.
+        if self.has_enterprise_licence():
+            return True
         return (
             self.has_paid_subscription() and self.subscription.cancellation_date is None
         )
@@ -149,6 +157,19 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     def cancel_subscription(self):  # type: ignore[no-untyped-def]
         if self.has_paid_subscription():
             self.subscription.prepare_for_cancel()
+
+    @hook(AFTER_DELETE)
+    def teardown_ingestion_infrastructure(self):  # type: ignore[no-untyped-def]
+        if not hasattr(self, "ingestion_infrastructure"):
+            return
+
+        from experimentation.tasks import (
+            teardown_organisation_ingestion_infrastructure,
+        )
+
+        teardown_organisation_ingestion_infrastructure.delay(
+            kwargs={"organisation_id": self.id},
+        )
 
     @hook(AFTER_CREATE)
     def create_subscription(self):  # type: ignore[no-untyped-def]
@@ -429,7 +450,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         return cb_metadata
 
     def _get_subscription_metadata_for_self_hosted(self) -> BaseSubscriptionMetadata:
-        if is_enterprise() and hasattr(self.organisation, "licence"):
+        if self.organisation.has_enterprise_licence():
             licence_information = self.organisation.licence.get_licence_information()
             return BaseSubscriptionMetadata(
                 seats=licence_information.num_seats,

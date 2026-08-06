@@ -1,8 +1,9 @@
 import Constants from 'common/constants'
+// Flag names are user-defined and need not be valid JS identifiers, so the
+// snippet reads flags by key and keeps its own local variable names.
 export default (
   envId,
-  { FEATURE_FUNCTION, FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_CLIENT },
-  customFeature,
+  { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_CLIENT },
 ) => `import ${LIB_NAME} from "${NPM_CLIENT}"; // Add this line if you're using ${LIB_NAME} via npm
 
 ${LIB_NAME}.init({
@@ -15,23 +16,19 @@ ${LIB_NAME}.init({
         // Determines if the update came from the server or local cached storage
         const { isFromServer } = params;
 
-        // Check for a feature
-        if (${LIB_NAME}.hasFeature("${customFeature || FEATURE_NAME}")) {
-            ${FEATURE_FUNCTION}();
-        }
-
-        // Or, use the value of a feature
-        const ${FEATURE_NAME_ALT} = ${LIB_NAME}.getValue("${
-  customFeature || FEATURE_NAME_ALT
+        // Check whether the feature is enabled, or read its value
+        const isEnabled = ${LIB_NAME}.hasFeature("${FEATURE_NAME}");
+        const featureValue = ${LIB_NAME}.getValue("${
+  FEATURE_NAME_ALT || FEATURE_NAME
 }");
+        console.log("${FEATURE_NAME} enabled:", isEnabled, { isFromServer });
+        console.log("${FEATURE_NAME_ALT || FEATURE_NAME} value:", featureValue);
 
-        // Check whether value has changed
-        const ${FEATURE_NAME_ALT}Old = oldFlags["${
-  customFeature || FEATURE_NAME_ALT
-}"]
-        && oldFlags["${customFeature || FEATURE_NAME_ALT}"].value;
+        // Check whether the value has changed
+        const previousValue = oldFlags["${FEATURE_NAME_ALT || FEATURE_NAME}"]
+            && oldFlags["${FEATURE_NAME_ALT || FEATURE_NAME}"].value;
 
-        if (${FEATURE_NAME_ALT} !== ${FEATURE_NAME_ALT}Old) {
+        if (featureValue !== previousValue) {
             // Value has changed, do something here
         }
     }

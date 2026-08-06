@@ -124,6 +124,7 @@ INSTALLED_APPS = [
     "features.release_pipelines.core",
     "segments",
     "segment_membership",
+    "cohorts",
     "clickhouse",
     "app",
     "e2etests",
@@ -367,6 +368,7 @@ REST_FRAMEWORK = {
         "user": USER_THROTTLE_RATE,
         "influx_query": "5/min",
         "warehouse_connection_write": "10/min",
+        "warehouse_connection_read": "60/min",
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_RENDERER_CLASSES": [
@@ -601,6 +603,9 @@ SPECTACULAR_SETTINGS = {
         "WebhookScopeTypeEnum": ["organisation", "environment"],
         "SegmentRuleTypeEnum": "segments.models.SegmentRule.RULE_TYPES",
         "FeatureValueTypeEnum": ["integer", "string", "boolean"],
+        "WarehouseConnectionStatusEnum": (
+            "experimentation.models.WarehouseConnectionStatus.choices"
+        ),
     },
     "COMPONENT_NO_READ_ONLY_REQUIRED": True,
 }
@@ -1538,6 +1543,9 @@ SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS = env.int(
 # Always installed: the router fences the `clickhouse` app's migrations off
 # the default Postgres database whether or not a CH alias is configured.
 DATABASE_ROUTERS.append("app.routers.ClickHouseRouter")
+
+# Should be registered last.
+DATABASE_ROUTERS.append("app.routers.ReplicaRouter")
 
 if CLICKHOUSE_ENABLED:
     _clickhouse_db: dict[str, Any] = {

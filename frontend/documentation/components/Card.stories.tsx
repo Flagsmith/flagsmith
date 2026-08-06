@@ -5,6 +5,7 @@ import Card from 'components/Card'
 
 const meta: Meta = {
   parameters: {
+    chromatic: { disableSnapshot: false },
     docs: {
       description: {
         component:

@@ -148,6 +148,17 @@ export const colorBorderStrong =
 export const colorBorderSuccess = 'var(--color-border-success, #27ab95)'
 export const colorBorderWarning = 'var(--color-border-warning, #ff9f43)'
 
+// Code
+export const colorCodeBuiltin = 'var(--color-code-builtin, #d4b050)'
+export const colorCodeComment = 'var(--color-code-comment, #9da4ae)'
+export const colorCodeKeyword = 'var(--color-code-keyword, #6837fc)'
+export const colorCodeLiteral = 'var(--color-code-literal, #0b8bb2)'
+export const colorCodeName = 'var(--color-code-name, #ef4d56)'
+export const colorCodeString = 'var(--color-code-string, #27ab95)'
+export const colorCodeText = 'var(--color-code-text, #2d3443)'
+export const colorCodeTitle = 'var(--color-code-title, #0aaddf)'
+export const colorCodeVariable = 'var(--color-code-variable, #d06907)'
+
 // Icon
 export const colorIconAction = 'var(--color-icon-action, #6837fc)'
 export const colorIconDanger = 'var(--color-icon-danger, #ef4d56)'

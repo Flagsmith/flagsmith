@@ -21,8 +21,7 @@ import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import { AttributeName } from 'common/types/responses'
 import SAMLAttributeMappingTable from 'components/pages/organisation-settings/tabs/sso/saml/SAMLAttributeMappingTable'
-import Input from 'components/base/forms/Input'
-import Icon from 'components/icons/Icon'
+import CopyField from 'components/CopyField'
 import Project from 'common/project'
 
 type CreateSAML = {
@@ -59,9 +58,6 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
     `./auth/saml/${name}/response/`,
     new Request(Project.api).url, // Project.api can be relative, e.g. /api/v1/
   ).href
-  const copyAcsUrl = () => {
-    Utils.copyToClipboard(acsUrl)
-  }
 
   useEffect(() => {
     if (isSuccess && data) {
@@ -126,7 +122,6 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
           className: 'full-width',
         }}
         type='text'
-        name='Name*'
       />
 
       <InputGroup
@@ -144,7 +139,6 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
           name: 'groupName',
         }}
         type='text'
-        name='Frontend URL*'
       />
       <InputGroup
         className='mt-2 mb-4'
@@ -216,32 +210,14 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
         </div>
       )}
       {isEdit && (
-        <div className='mt-12'>
-          <Tooltip
-            title={
-              <label>
-                Assertion Consumer Service (ACS) URL
-                <Icon name='info-outlined' />
-              </label>
-            }
-          >
-            Also known as sign-on URL. Your identity provider needs to know this
-            URL to send SAML responses to it.
-          </Tooltip>
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className='flex flex-row gap-2'
-          >
-            <Input className='w-full flex-1' value={acsUrl} readOnly />
-            <Button
-              onClick={() => {
-                copyAcsUrl()
-              }}
-              className='me-2 btn-with-icon'
-            >
-              <Icon name='copy' width={20} />
-            </Button>
-          </div>
+        // stopPropagation: prevent clicks on the read-only input from
+        // bubbling into the parent Tabs panel.
+        <div className='mt-12' onClick={(e) => e.stopPropagation()}>
+          <CopyField
+            value={acsUrl}
+            title='Assertion Consumer Service (ACS) URL'
+            tooltip='Also known as sign-on URL. Your identity provider needs to know this URL to send SAML responses to it.'
+          />
         </div>
       )}
       <div className='text-right py-2'>
@@ -278,8 +254,8 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
                 if (res.data) {
                   setName(res.data.name)
                   setFrontendUrl(res.data.frontend_url)
-                  setMetadataXml(res.data.idp_metadata_xml)
-                  setAllowIdpInitiated(res.data.allow_idp_initiated)
+                  setMetadataXml(res.data.idp_metadata_xml ?? '')
+                  setAllowIdpInitiated(res.data.allow_idp_initiated ?? false)
                   setPreviousName(res.data.name)
                   toast('SAML configuration updated!')
                 }
@@ -289,8 +265,8 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
                 if (res.data) {
                   setName(res.data.name)
                   setFrontendUrl(res.data.frontend_url)
-                  setMetadataXml(res.data.idp_metadata_xml)
-                  setAllowIdpInitiated(res.data.allow_idp_initiated)
+                  setMetadataXml(res.data.idp_metadata_xml ?? '')
+                  setAllowIdpInitiated(res.data.allow_idp_initiated ?? false)
                   toast('SAML configuration Created!')
                   setIsEdit(true)
                   setPreviousName(res.data.name)
@@ -341,7 +317,6 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
             className: 'full-width',
           }}
           type='text'
-          name='Name*'
         />
         <div className='text-right'>
           <Button

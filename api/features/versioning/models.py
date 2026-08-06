@@ -102,7 +102,22 @@ class EnvironmentFeatureVersion(  # type: ignore[django-manager-missing]
     objects = EnvironmentFeatureVersionManager()  # type: ignore[misc]
 
     class Meta:
-        indexes = [Index(fields=("environment", "feature"))]
+        indexes = [
+            Index(fields=("environment", "feature")),
+            # Serve "latest published version" lookups, e.g. the
+            # `last_modified_in_*_environment` feature list annotations,
+            # without scanning a feature's whole version history.
+            Index(
+                name="efv_feature_published_created",
+                fields=("feature", "-created_at"),
+                condition=Q(published_at__isnull=False, deleted_at__isnull=True),
+            ),
+            Index(
+                name="efv_env_feature_pub_created",
+                fields=("environment", "feature", "-created_at"),
+                condition=Q(published_at__isnull=False, deleted_at__isnull=True),
+            ),
+        ]
         constraints = [
             models.UniqueConstraint(
                 fields=["feature", "environment", "pipeline_stage"],

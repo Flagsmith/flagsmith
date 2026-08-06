@@ -71,6 +71,35 @@ Attributes:
  - `feature.count`
  - `organisation.id`
 
+### `cohorts.membership.applied`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:61`
+
+Attributes:
+ - `adds.count`
+ - `cohort.id`
+ - `environment.id`
+ - `removes.count`
+
+### `cohorts.membership.apply.skipped`
+
+Logged at `info` from:
+ - `api/cohorts/tasks.py:23`
+ - `api/cohorts/tasks.py:29`
+
+Attributes:
+ - `cohort.id`
+ - `reason`
+
+### `cohorts.membership.apply.throttled`
+
+Logged at `warning` from:
+ - `api/cohorts/tasks.py:37`
+
+Attributes:
+ - `cohort.id`
+
 ### `core.encrypted_field.decrypt_failed`
 
 Logged at `warning` from:
@@ -91,7 +120,7 @@ Attributes:
 ### `experimentation.exposures.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:100`
+ - `api/experimentation/tasks.py:189`
 
 Attributes:
  - `environment.id`
@@ -103,26 +132,63 @@ Attributes:
 ### `experimentation.ingestion_infra.bucket_created`
 
 Logged at `info` from:
- - `api/experimentation/ingestion_infra_service.py:95`
+ - `api/experimentation/ingestion_infra_service.py:110`
 
 Attributes:
  - `bucket.name`
  - `organisation.id`
 
-### `experimentation.ingestion_infra.stream_created`
+### `experimentation.ingestion_infra.deprovisioned`
 
 Logged at `info` from:
- - `api/experimentation/ingestion_infra_service.py:186`
+ - `api/experimentation/ingestion_infra_service.py:267`
 
 Attributes:
  - `bucket.name`
  - `organisation.id`
  - `stream.name`
 
+### `experimentation.ingestion_infra.provision_failed`
+
+Logged at `error` from:
+ - `api/experimentation/organisation_ingestion_service.py:41`
+
+Attributes:
+ - `exc_info`
+ - `organisation.id`
+
+### `experimentation.ingestion_infra.provisioned`
+
+Logged at `info` from:
+ - `api/experimentation/organisation_ingestion_service.py:52`
+
+Attributes:
+ - `bucket.name`
+ - `organisation.id`
+ - `stream.name`
+
+### `experimentation.ingestion_infra.stream_created`
+
+Logged at `info` from:
+ - `api/experimentation/ingestion_infra_service.py:221`
+
+Attributes:
+ - `bucket.name`
+ - `organisation.id`
+ - `stream.name`
+
+### `experimentation.ingestion_infra.torn_down`
+
+Logged at `info` from:
+ - `api/experimentation/organisation_ingestion_service.py:70`
+
+Attributes:
+ - `organisation.id`
+
 ### `experimentation.results.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:136`
+ - `api/experimentation/tasks.py:225`
 
 Attributes:
  - `environment.id`
@@ -385,6 +451,40 @@ Logged at `info` from:
 Attributes:
  - `organisation.id`
 
+### `oauth2_metadata.registration.rejected`
+
+Logged at `error` from:
+ - `api/oauth2_metadata/views.py:171`
+
+Attributes:
+ - `client.name`
+ - `error`
+ - `error_description`
+ - `redirect_uris`
+ - `user_agent`
+
+### `onboarding.environment.already_evaluated`
+
+Logged at `info` from:
+ - `api/environments/onboarding/services.py:23`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+ - `sdk.label`
+
+### `onboarding.environment.first_evaluated`
+
+Logged at `info` from:
+ - `api/environments/onboarding/services.py:32`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+ - `sdk.label`
+
 ### `platform_hub.no_analytics_database_configured`
 
 Logged at `warning` from:
@@ -560,16 +660,25 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:878`
+ - `api/experimentation/services.py:1041`
 
 Attributes:
  - `environment.id`
  - `organisation.id`
 
+### `warehouse.connection.event_stats_failed`
+
+Logged at `warning` from:
+ - `api/experimentation/services.py:1104`
+
+Attributes:
+ - `environment.id`
+ - `exc_info`
+
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:790`
+ - `api/experimentation/services.py:815`
 
 Attributes:
  - `environment.id`
@@ -578,7 +687,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:854`
+ - `api/experimentation/services.py:1016`
 
 Attributes:
  - `environment.id`
@@ -588,16 +697,74 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:863`
+ - `api/experimentation/services.py:1026`
 
 Attributes:
  - `environment.id`
  - `organisation.id`
 
+### `warehouse.delivery.all_objects_rejected`
+
+Logged at `error` from:
+ - `api/experimentation/services.py:971`
+
+Attributes:
+ - `connection.id`
+ - `environment.id`
+ - `objects.rejected_count`
+ - `organisation.id`
+
+### `warehouse.delivery.budget_exhausted`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:860`
+
+Attributes:
+ - `connection.id`
+ - `environment.id`
+ - `objects.remaining_count`
+ - `organisation.id`
+
+### `warehouse.delivery.completed`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:981`
+
+Attributes:
+ - `connection.id`
+ - `environment.id`
+ - `objects.count`
+ - `objects.rejected_count`
+ - `organisation.id`
+ - `rows.count`
+
+### `warehouse.delivery.failed`
+
+Logged at `error` from:
+ - `api/experimentation/services.py:954`
+
+Attributes:
+ - `connection.id`
+ - `environment.id`
+ - `exc_info`
+ - `organisation.id`
+
+### `warehouse.delivery.object_rejected`
+
+Logged at `error` from:
+ - `api/experimentation/services.py:889`
+
+Attributes:
+ - `connection.id`
+ - `environment.id`
+ - `exc_info`
+ - `organisation.id`
+ - `s3.key`
+
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:412`
+ - `api/experimentation/services.py:437`
 
 Attributes:
  - `environment.id`
@@ -607,7 +774,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:398`
+ - `api/experimentation/services.py:423`
 
 Attributes:
  - `environment.id`

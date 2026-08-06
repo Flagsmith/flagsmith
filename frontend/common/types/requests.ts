@@ -147,6 +147,8 @@ export interface PipelineStageRequest {
   actions: StageActionRequest[]
 }
 
+type WarehouseConfigValue = string | number | boolean
+
 export type Req = {
   getFeatureCodeReferences: {
     projectId: number
@@ -763,6 +765,9 @@ export type Req = {
     environment?: number
     feature?: number
   }
+  getAllEnvironmentFeatureStates: {
+    environmentKey: string
+  }
   getFeatureSegment: { id: number }
   getSamlConfiguration: { name: string }
   getSamlConfigurations: { organisation_id: number }
@@ -872,6 +877,7 @@ export type Req = {
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
   getEnvironmentMetrics: { id: number }
+  getEnvironmentOnboardingStatus: { environmentKey: string }
   getUserEnvironmentPermissions: {
     environmentId: string
     userId: number
@@ -957,17 +963,13 @@ export type Req = {
     environmentFlagId: number
     body: UpdateFeatureStateBody
   }
-  getExperimentResults: {
-    environmentId: string
-    featureName: string
-    getAdminDashboardMetrics: {
-      days?: number
-    }
-    createCleanupIssue: {
-      organisation_id: number
-      body: {
-        feature_id: number
-      }
+  getAdminDashboardMetrics: {
+    days?: number
+  }
+  createCleanupIssue: {
+    organisation_id: number
+    body: {
+      feature_id: number
     }
   }
   getIdentityOverrides: {
@@ -1032,15 +1034,24 @@ export type Req = {
     environmentId: string
     warehouse_type: string
     name?: string
-    config?: Record<string, string>
+    config?: Record<string, WarehouseConfigValue>
+    credentials?: { password: string }
   }
   deleteWarehouseConnection: { environmentId: string; id: number }
   testWarehouseConnection: { environmentId: string; id: number }
+  testWarehouseConnectionConfig: {
+    environmentId: string
+    warehouse_type: string
+    name?: string
+    config?: Record<string, WarehouseConfigValue>
+    credentials?: { password: string }
+  }
   updateWarehouseConnection: {
     environmentId: string
     id: number
     name?: string
-    config?: Record<string, string>
+    config?: Record<string, WarehouseConfigValue>
+    credentials?: { password: string }
   }
   getExperiments: PagedRequest<{
     environmentId: string

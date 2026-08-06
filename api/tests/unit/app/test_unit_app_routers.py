@@ -5,6 +5,8 @@ from django.apps import apps
 from django.db import models
 
 from app import routers
+from environments.models import Environment
+from features.models import Feature, FeatureState
 
 
 @pytest.fixture(autouse=True)
@@ -235,3 +237,65 @@ def test_clickhouse_router_allow_migrate__given_db_and_app_label__returns_expect
 
     # Then
     assert result is expected
+
+
+@pytest.mark.parametrize(
+    ["db1", "db2", "expected"],
+    [
+        ("default", "default", True),
+        ("default", "replica_1", True),
+        ("replica_1", "default", True),
+        ("replica_1", "replica_2", True),
+        ("default", "cross_region_replica_1", True),
+        ("replica_1", "cross_region_replica_1", True),
+        ("default", None, None),
+        (None, None, None),
+        ("default", "analytics", None),
+        ("analytics", "analytics", None),
+        ("replica_1", "task_processor", None),
+    ],
+)
+def test_replica_router_allow_relation__given_databases__returns_expected(
+    db1: str | None,
+    db2: str | None,
+    expected: bool | None,
+) -> None:
+    # Given
+    class SomeModel(models.Model):
+        class Meta:
+            app_label = "some_app"
+
+    obj1, obj2 = SomeModel(), SomeModel()
+    obj1._state.db = db1
+    obj2._state.db = db2
+
+    router = routers.ReplicaRouter()
+
+    # When
+    result = router.allow_relation(obj1, obj2)
+
+    # Then
+    assert result is expected
+
+
+def test_replica_router_allow_relation__replica_instance__allows_primary_assignment(
+    environment: Environment,
+    feature: Feature,
+) -> None:
+    """
+    Regression test for https://github.com/Flagsmith/flagsmith/issues/8167 —
+    the SDK flags endpoint reads feature states from a replica, then primes the
+    `environment` foreign key with the primary-loaded environment.
+    """
+    # Given
+    feature_state = FeatureState.objects.get(
+        environment=environment, feature=feature, feature_segment=None, identity=None
+    )
+    # Simulate a feature state loaded via `using_database_replica`
+    feature_state._state.db = "replica_1"
+
+    # When
+    feature_state.environment = environment
+
+    # Then
+    assert feature_state.environment is environment

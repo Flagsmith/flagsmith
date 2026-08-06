@@ -1,15 +1,12 @@
 import Constants from 'common/constants'
 
-export default (
-  envId,
-  { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID },
-  userId,
-) => `
+export default (envId, { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID }, userId) => `
 use flagsmith::{Flag, Flagsmith, FlagsmithOptions};
 
 let options = FlagsmithOptions {${
-  Constants.isCustomFlagsmithUrl() &&
-  `api_url: "${Constants.getFlagsmithSDKUrl()}".to_string(),\n`
+  Constants.isCustomFlagsmithUrl()
+    ? `api_url: "${Constants.getFlagsmithSDKUrl()}".to_string(),\n`
+    : ''
 }..Default::default()};
 let flagsmith = Flagsmith::new(
     "${envId}".to_string(),

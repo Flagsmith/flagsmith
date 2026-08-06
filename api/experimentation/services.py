@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+import time
 import typing
 from dataclasses import replace
 from functools import lru_cache
 
 import structlog
+from clickhouse_connect.driver.exceptions import ClickHouseError
 from clickhouse_driver import Client
-from clickhouse_driver import errors as clickhouse_errors
 from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
+from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -18,8 +20,8 @@ from rest_framework.exceptions import ValidationError
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from core.dataclasses import AuthorData
-from core.network import is_internal_address
 from environments.tasks import rebuild_environment_document
+from experimentation import warehouse_delivery_service
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
@@ -44,6 +46,8 @@ from experimentation.dataclasses import (
 )
 from experimentation.metrics import (
     flagsmith_experimentation_warehouse_connection_verifications_total,
+    flagsmith_experimentation_warehouse_delivery_objects_total,
+    flagsmith_experimentation_warehouse_delivery_runs_total,
 )
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
@@ -52,6 +56,8 @@ from experimentation.models import (
     MetricAggregation,
     MetricDirection,
     WarehouseConnectionStatus,
+    WarehouseDeliveryLog,
+    WarehouseDeliveryOutcome,
     WarehouseType,
 )
 from experimentation.results_query import _EXPOSURES_CTE, ResultsQueryBuilder
@@ -61,7 +67,6 @@ from experimentation.stats import (
     compare_to_control,
     srm_p_value,
 )
-from experimentation.types import ClickHouseConfig, ClickHouseCredentials
 from features.models import FeatureState
 from features.value_types import BOOLEAN, INTEGER, STRING
 from features.versioning.dataclasses import FlagChangeSet, MultivariateValueChangeSet
@@ -83,6 +88,8 @@ if typing.TYPE_CHECKING:
     from collections.abc import Sequence
     from datetime import datetime
 
+    from clickhouse_connect.driver.client import Client as ClickHouseHTTPClient
+
     from experimentation.models import Metric, WarehouseConnection
     from experimentation.types import ExposureGranularity
     from features.feature_states.models import FeatureValueType
@@ -95,6 +102,13 @@ logger = structlog.get_logger("warehouse")
 CLICKHOUSE_CONNECT_TIMEOUT_SECONDS = 5
 CLICKHOUSE_QUERY_TIMEOUT_SECONDS = 30
 CLICKHOUSE_VERIFY_TIMEOUT_SECONDS = 5
+CUSTOMER_EVENT_STATS_CACHE_SECONDS = 60
+
+_CUSTOMER_EVENT_STATS_UNAVAILABLE = "unavailable"
+
+# A delivery run stops taking on new objects after this long, leaving room for
+# the slowest possible in-flight insert to still land inside the task timeout.
+DELIVERY_TIME_BUDGET_SECONDS = 210
 
 
 def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
@@ -140,18 +154,29 @@ def get_unique_event_names(environment_key: str) -> list[str]:
     return [row[0] for row in rows]
 
 
-def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
-    """Return event counts recorded for `environment_key` in the warehouse."""
-    rows = _get_clickhouse_client().execute(
-        "SELECT count() AS total, uniqExact(event) AS unique "
-        "FROM events WHERE environment_key = %(environment_key)s",
-        {"environment_key": environment_key},
-    )
+_EVENT_STATS_QUERY = (
+    "SELECT count() AS total, uniqExact(event) AS unique "
+    "FROM events WHERE environment_key = %(environment_key)s"
+)
+
+
+def _build_event_stats(
+    rows: Sequence[Sequence[typing.Any]],
+) -> WarehouseEventStats:
     total, unique = rows[0] if rows else (0, 0)
     return WarehouseEventStats(
         total_events_received=int(total),
         unique_events_count=int(unique),
     )
+
+
+def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
+    """Return event counts recorded for `environment_key` in the warehouse."""
+    rows = _get_clickhouse_client().execute(
+        _EVENT_STATS_QUERY,
+        {"environment_key": environment_key},
+    )
+    return _build_event_stats(rows)
 
 
 EXPOSURE_BUCKETS_QUERY = (
@@ -795,59 +820,196 @@ def mark_warehouse_pending_connection(
     return connection
 
 
-class InternalAddressError(Exception):
-    pass
+def mark_warehouse_delivery_failed(
+    connection: WarehouseConnection,
+    detail: str,
+) -> None:
+    connection.status = WarehouseConnectionStatus.ERRORED
+    connection.status_detail = detail[:255]
+    connection.save(update_fields=["status", "status_detail"])
 
 
-def _describe_verification_error(error: Exception) -> str:
-    if isinstance(error, clickhouse_errors.ServerException):
-        # 516 = AUTHENTICATION_FAILED (not in clickhouse_driver.errors.ErrorCodes)
-        if error.code == 516:
-            return "Authentication failed."
-        if error.code == clickhouse_errors.ErrorCodes.UNKNOWN_DATABASE:
-            return "Database does not exist."
-        return "The ClickHouse server rejected the request."
-    if isinstance(error, (clickhouse_errors.SocketTimeoutError, TimeoutError)):
-        return "The connection timed out."
-    if isinstance(error, clickhouse_errors.NetworkError):
-        return "Could not connect to the host."
-    if isinstance(error, InternalAddressError):
-        return "Host must not target internal or private network addresses."
-    if isinstance(error, KeyError):
-        return "Stored connection details are incomplete."
-    return "Verification failed."
+def mark_warehouse_delivery_succeeded(connection: WarehouseConnection) -> None:
+    if connection.status == WarehouseConnectionStatus.CONNECTED:
+        return
+
+    connection.status = WarehouseConnectionStatus.CONNECTED
+    connection.status_detail = None
+    connection.save(update_fields=["status", "status_detail"])
 
 
-def verify_clickhouse_connection(connection: WarehouseConnection) -> None:
-    """Run SELECT 1 against the customer's ClickHouse and set the status to
-    connected or errored; never raises."""
+def _deliver_pending_objects(
+    client: ClickHouseHTTPClient,
+    *,
+    bucket_name: str,
+    pending: list[str],
+    connection: WarehouseConnection,
+) -> tuple[int, int, int]:
+    log = logger.bind(
+        connection__id=connection.id,
+        environment__id=connection.environment_id,
+        organisation__id=connection.environment.project.organisation_id,
+    )
+    # A run that outlives the task timeout is retried while its own thread
+    # keeps delivering, so it must finish first: whatever is left is picked up
+    # on the next tick.
+    deadline = time.monotonic() + DELIVERY_TIME_BUDGET_SECONDS
+    delivered_count = rejected_count = rows_count = 0
+    for index, s3_key in enumerate(pending):
+        if time.monotonic() > deadline:
+            log.info(
+                "delivery.budget_exhausted",
+                objects__remaining_count=len(pending) - index,
+            )
+            break
+        try:
+            object_rows_count = warehouse_delivery_service.deliver_object(
+                client,
+                bucket_name,
+                s3_key,
+            )
+        except warehouse_delivery_service.ObjectRejectedError as exc:
+            # This object's contents are the problem; the ones behind it are
+            # still deliverable.
+            warehouse_delivery_service.move_object(
+                bucket_name,
+                s3_key,
+                to_prefix=warehouse_delivery_service.FAILED_PREFIX,
+            )
+            WarehouseDeliveryLog.objects.create(
+                connection=connection,
+                s3_key=s3_key,
+                outcome=WarehouseDeliveryOutcome.REJECTED,
+                error=str(exc),
+            )
+            rejected_count += 1
+            flagsmith_experimentation_warehouse_delivery_objects_total.labels(
+                result="rejected"
+            ).inc()
+            log.error(
+                "delivery.object_rejected",
+                s3__key=s3_key,
+                exc_info=True,
+            )
+            continue
+        warehouse_delivery_service.move_object(
+            bucket_name,
+            s3_key,
+            to_prefix=warehouse_delivery_service.ARCHIVE_PREFIX,
+        )
+        WarehouseDeliveryLog.objects.create(
+            connection=connection,
+            s3_key=s3_key,
+            outcome=WarehouseDeliveryOutcome.DELIVERED,
+            rows_count=object_rows_count,
+        )
+        rows_count += object_rows_count
+        delivered_count += 1
+        flagsmith_experimentation_warehouse_delivery_objects_total.labels(
+            result="delivered"
+        ).inc()
+    return delivered_count, rejected_count, rows_count
+
+
+def deliver_warehouse_events(
+    connection: WarehouseConnection,
+    *,
+    bucket_name: str,
+) -> None:
+    """Deliver the environment's pending event objects to the connection's
+    warehouse, surfacing the outcome on the connection's status."""
+    log = logger.bind(
+        connection__id=connection.id,
+        environment__id=connection.environment_id,
+        organisation__id=connection.environment.project.organisation_id,
+    )
+    pending = warehouse_delivery_service.list_pending_objects(
+        bucket_name,
+        environment_key=connection.environment.api_key,
+    )
+    if not pending:
+        return
+
+    try:
+        with warehouse_delivery_service.delivery_client(connection) as client:
+            delivered_count, rejected_count, rows_count = _deliver_pending_objects(
+                client,
+                bucket_name=bucket_name,
+                pending=pending,
+                connection=connection,
+            )
+    except (warehouse_delivery_service.DeliveryConfigError, ClickHouseError) as exc:
+        # The warehouse itself is unusable; deliver nothing, leave every
+        # remaining object in place for the next run, and surface the
+        # breakage on the connection. Anything else — an S3 failure, a bug
+        # here — is ours, so it propagates and fails the task instead of
+        # blaming the customer's warehouse.
+        mark_warehouse_delivery_failed(
+            connection,
+            detail=warehouse_delivery_service.describe_warehouse_error(exc),
+        )
+        flagsmith_experimentation_warehouse_delivery_runs_total.labels(
+            result="failure"
+        ).inc()
+        log.error("delivery.failed", exc_info=exc)
+        return
+
+    if delivered_count == 0 and rejected_count:
+        # Records all come from one ingestion pipeline, so every object being
+        # rejected points at the table's schema rather than the objects.
+        mark_warehouse_delivery_failed(
+            connection,
+            detail=(
+                f"The warehouse rejected every event object. Check that the "
+                f"`{warehouse_delivery_service.EVENTS_TABLE_NAME}` table "
+                f"matches the expected schema."
+            ),
+        )
+        flagsmith_experimentation_warehouse_delivery_runs_total.labels(
+            result="failure"
+        ).inc()
+        log.error(
+            "delivery.all_objects_rejected",
+            objects__rejected_count=rejected_count,
+        )
+        return
+
+    mark_warehouse_delivery_succeeded(connection)
+    flagsmith_experimentation_warehouse_delivery_runs_total.labels(
+        result="success"
+    ).inc()
+    log.info(
+        "delivery.completed",
+        objects__count=delivered_count,
+        objects__rejected_count=rejected_count,
+        rows__count=rows_count,
+    )
+
+
+def verify_clickhouse_connection(
+    connection: WarehouseConnection,
+    persist: bool = True,
+) -> None:
+    """Check the customer's events table exists, connecting over the same
+    client, interface and port that delivery uses, and set the status to
+    connected or errored; never raises. With persist=False, the status is only
+    set on the in-memory instance, allowing unsaved connections to be
+    tested."""
     log = logger.bind(environment__id=connection.environment_id)
     try:
         log = log.bind(organisation__id=connection.environment.project.organisation_id)
-        config = typing.cast(ClickHouseConfig, connection.config or {})
-        credentials = typing.cast(ClickHouseCredentials, connection.credentials or {})
-        # Re-check right before connecting: DNS may resolve differently than it
-        # did at validation time, and rows may predate host validation.
-        if is_internal_address(config["host"], include_shared=True):
-            raise InternalAddressError(config["host"])
-        client = Client(
-            config["host"],
-            port=config["port"],
-            user=config["username"],
-            password=credentials["password"],
-            database=config["database"],
-            secure=config["secure"],
-            connect_timeout=CLICKHOUSE_CONNECT_TIMEOUT_SECONDS,
+        with warehouse_delivery_service.delivery_client(
+            connection,
             send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
-        )
-        try:
-            client.execute("SELECT 1")
-        finally:
-            client.disconnect()
+        ) as client:
+            warehouse_delivery_service.check_events_table_exists(client)
     except Exception as error:
         connection.status = WarehouseConnectionStatus.ERRORED
-        connection.status_detail = _describe_verification_error(error)
-        connection.save(update_fields=["status", "status_detail"])
+        connection.status_detail = warehouse_delivery_service.describe_warehouse_error(
+            error
+        )
+        if persist:
+            connection.save(update_fields=["status", "status_detail"])
         flagsmith_experimentation_warehouse_connection_verifications_total.labels(
             result="failure"
         ).inc()
@@ -856,7 +1018,8 @@ def verify_clickhouse_connection(connection: WarehouseConnection) -> None:
 
     connection.status = WarehouseConnectionStatus.CONNECTED
     connection.status_detail = None
-    connection.save(update_fields=["status", "status_detail"])
+    if persist:
+        connection.save(update_fields=["status", "status_detail"])
     flagsmith_experimentation_warehouse_connection_verifications_total.labels(
         result="success"
     ).inc()
@@ -887,9 +1050,16 @@ def annotate_warehouse_event_stats(
     connection: WarehouseConnection,
     environment_key: str,
 ) -> None:
-    """Attach live warehouse event stats to a flagsmith connection. No-op for
-    non-flagsmith connections or when no warehouse is configured; leaves stats
-    unset when the warehouse is unreachable. Read-only: never changes status."""
+    """Attach live warehouse event stats to a connection — from the managed
+    warehouse for flagsmith connections, from the customer's instance for
+    clickhouse ones. No-op for other types or when no warehouse is configured;
+    leaves stats unset when the warehouse is unreachable. Read-only: never
+    changes status."""
+    if connection.warehouse_type == WarehouseType.CLICKHOUSE:
+        stats = _get_customer_warehouse_event_stats_cached(connection, environment_key)
+        if stats is not None:
+            connection.event_stats = stats
+        return
     if (
         connection.warehouse_type != WarehouseType.FLAGSMITH
         or not settings.EXPERIMENTATION_CLICKHOUSE_URL
@@ -899,3 +1069,43 @@ def annotate_warehouse_event_stats(
         connection.event_stats = get_warehouse_event_stats(environment_key)
     except Exception:
         return
+
+
+def _get_customer_warehouse_event_stats_cached(
+    connection: WarehouseConnection,
+    environment_key: str,
+) -> WarehouseEventStats | None:
+    """Return event counts recorded for `environment_key` in the customer's
+    ClickHouse instance, or None when it's unreachable. Results — including
+    failures — are cached briefly so read endpoints don't open a connection to
+    the customer's host on every request."""
+    cache_key = f"experimentation:customer_event_stats:{connection.id}"
+    cached = cache.get(cache_key)
+    if isinstance(cached, WarehouseEventStats):
+        return cached
+    if cached == _CUSTOMER_EVENT_STATS_UNAVAILABLE:
+        return None
+    try:
+        with warehouse_delivery_service.delivery_client(
+            connection,
+            send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
+        ) as client:
+            rows = client.query(
+                _EVENT_STATS_QUERY,
+                parameters={"environment_key": environment_key},
+            ).result_rows
+        stats = _build_event_stats(rows)
+    except Exception:
+        cache.set(
+            cache_key,
+            _CUSTOMER_EVENT_STATS_UNAVAILABLE,
+            CUSTOMER_EVENT_STATS_CACHE_SECONDS,
+        )
+        logger.warning(
+            "connection.event_stats_failed",
+            environment__id=connection.environment_id,
+            exc_info=True,
+        )
+        return None
+    cache.set(cache_key, stats, CUSTOMER_EVENT_STATS_CACHE_SECONDS)
+    return stats

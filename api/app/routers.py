@@ -1,9 +1,13 @@
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
+from common.core.utils import ReplicaNamePrefix
 from django.db.models import Model
 
 AnalyticsDatabaseName = Literal["analytics"]
 ClickHouseDatabaseName = Literal["clickhouse"]
+
+PRIMARY_DATABASE_NAME = "default"
+REPLICA_NAME_PREFIXES: tuple[str, ...] = get_args(ReplicaNamePrefix)
 
 
 class AnalyticsRouter:
@@ -73,4 +77,33 @@ class ClickHouseRouter:
             return app_label in self.route_app_labels
         if app_label in self.route_app_labels:
             return False
+        return None
+
+
+class ReplicaRouter:
+    """
+    Treat the primary database and its read replicas as one logical database.
+
+    Replicas hold copies of the primary's data, so an object read from a replica
+    can legitimately be related to an object read from the primary.
+
+    Only `allow_relation` is implemented.
+
+    This router must be registered last so that the restrictions of other routers
+    keep taking precedence.
+    """
+
+    def allow_relation(self, obj1: Model, obj2: Model, **hints: Any) -> bool | None:
+        databases = (obj1._state.db, obj2._state.db)
+        if all(
+            database is not None
+            and (
+                database == PRIMARY_DATABASE_NAME
+                or database.startswith(REPLICA_NAME_PREFIXES)
+            )
+            for database in databases
+        ):
+            return True
+        # Defer to the remaining routers for anything
+        # that isn't the primary or one of its replicas.
         return None

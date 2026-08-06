@@ -5,19 +5,29 @@ from decimal import Decimal
 from typing import Iterable
 
 from boto3.dynamodb.conditions import Attr, Key
+from botocore.exceptions import ClientError
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import NotFound
 
 from edge_api.identities.search import EdgeIdentitySearchData
-from environments.dynamodb.constants import IDENTITIES_PAGINATION_LIMIT
-from environments.dynamodb.wrappers.exceptions import CapacityBudgetExceeded
+from environments.dynamodb.constants import (
+    IDENTITIES_PAGINATION_LIMIT,
+    SYSTEM_TRAIT_WRITE_MAX_ATTEMPTS,
+)
+from environments.dynamodb.wrappers.exceptions import (
+    CapacityBudgetExceeded,
+    SystemTraitWriteRaceError,
+)
 from util.engine_models.context.mappers import (
     is_context_in_segment,
     map_environment_identity_to_context,
 )
 from util.engine_models.identities.models import IdentityModel
-from util.mappers import map_identity_to_identity_document
+from util.mappers import (
+    map_engine_identity_to_identity_document,
+    map_identity_to_identity_document,
+)
 
 from .base import BaseDynamoWrapper
 
@@ -32,6 +42,17 @@ if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
 
 logger = logging.getLogger(__name__)
+
+
+def _system_trait_value_matches(
+    stored_value: object,
+    document_value: bool | int | Decimal | str,
+) -> bool:
+    # The bool check stops `Decimal(1) == True` false positives.
+    return (
+        isinstance(stored_value, bool) == isinstance(document_value, bool)
+        and stored_value == document_value
+    )
 
 
 class DynamoIdentityWrapper(BaseDynamoWrapper):
@@ -62,6 +83,117 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
 
     def get_item(self, composite_key: str) -> typing.Optional[dict]:  # type: ignore[type-arg]
         return self.table.get_item(Key={"composite_key": composite_key}).get("Item")  # type: ignore[union-attr]
+
+    def set_system_trait(
+        self,
+        *,
+        environment_api_key: str,
+        identifier: str,
+        trait_key: str,
+        trait_value: bool | int | float | str = True,
+    ) -> None:
+        """Idempotently set a system trait on an identity document.
+
+        Writes only touch the `system_traits.<trait_key>` attribute, so
+        concurrent writes to other attributes are never overwritten; the
+        document is created if missing. Each write is conditional on the
+        document shape just read — a lost race re-reads and retries, and
+        `SystemTraitWriteRaceError` is raised once attempts are exhausted.
+
+        Assumes stored documents never carry `system_traits` as NULL — the
+        document mapper omits the attribute when unset.
+        """
+        composite_key = IdentityModel.generate_composite_key(
+            environment_api_key, identifier
+        )
+        # DynamoDB rejects floats and returns all numbers as Decimal.
+        document_value: bool | int | Decimal | str = (
+            Decimal(str(trait_value)) if isinstance(trait_value, float) else trait_value
+        )
+        for _ in range(SYSTEM_TRAIT_WRITE_MAX_ATTEMPTS):
+            # Strongly consistent read: a replication-lagged hint would burn
+            # retry attempts on conditional writes that can never succeed.
+            document = self.table.get_item(  # type: ignore[union-attr]
+                Key={"composite_key": composite_key}, ConsistentRead=True
+            ).get("Item")
+            system_traits = document.get("system_traits") if document else None
+            if isinstance(system_traits, dict) and _system_trait_value_matches(
+                system_traits.get(trait_key), document_value
+            ):
+                return
+            try:
+                if document is None:
+                    self.table.put_item(  # type: ignore[union-attr]
+                        Item=map_engine_identity_to_identity_document(
+                            IdentityModel(
+                                identifier=identifier,
+                                environment_api_key=environment_api_key,
+                                system_traits={trait_key: trait_value},
+                            )
+                        ),
+                        ConditionExpression="attribute_not_exists(composite_key)",
+                    )
+                elif isinstance(system_traits, dict):
+                    self.table.update_item(  # type: ignore[union-attr]
+                        Key={"composite_key": composite_key},
+                        UpdateExpression="SET system_traits.#tk = :value",
+                        ConditionExpression="attribute_exists(system_traits)",
+                        ExpressionAttributeNames={"#tk": trait_key},
+                        ExpressionAttributeValues={":value": document_value},
+                    )
+                else:
+                    # If another writer created system_traits after we read
+                    # the document, this write does nothing and their traits
+                    # survive; the returned attributes tell us which happened.
+                    response = self.table.update_item(  # type: ignore[union-attr]
+                        Key={"composite_key": composite_key},
+                        UpdateExpression=(
+                            "SET system_traits = if_not_exists(system_traits, :init)"
+                        ),
+                        # Without this condition, update_item would re-create
+                        # a just-deleted identity as an empty document
+                        # containing nothing but this trait.
+                        ConditionExpression="attribute_exists(composite_key)",
+                        ExpressionAttributeValues={
+                            ":init": {trait_key: document_value}
+                        },
+                        ReturnValues="ALL_NEW",
+                    )
+                    written_traits = response["Attributes"].get("system_traits")
+                    if isinstance(written_traits, dict) and _system_trait_value_matches(
+                        written_traits.get(trait_key), document_value
+                    ):
+                        return
+                    continue
+                return
+            except ClientError as exc:
+                if exc.response["Error"]["Code"] != "ConditionalCheckFailedException":
+                    raise
+        raise SystemTraitWriteRaceError(composite_key)
+
+    def unset_system_trait(
+        self,
+        *,
+        environment_api_key: str,
+        identifier: str,
+        trait_key: str,
+    ) -> None:
+        """Idempotently remove a system trait from an identity document."""
+        composite_key = IdentityModel.generate_composite_key(
+            environment_api_key, identifier
+        )
+        try:
+            self.table.update_item(  # type: ignore[union-attr]
+                Key={"composite_key": composite_key},
+                UpdateExpression="REMOVE system_traits.#tk",
+                # Failing this condition covers every no-op case at once:
+                # missing document, missing system_traits, or trait already absent.
+                ConditionExpression="attribute_exists(system_traits.#tk)",
+                ExpressionAttributeNames={"#tk": trait_key},
+            )
+        except ClientError as exc:
+            if exc.response["Error"]["Code"] != "ConditionalCheckFailedException":
+                raise
 
     def delete_item(self, composite_key: str):  # type: ignore[no-untyped-def]
         self.table.delete_item(Key={"composite_key": composite_key})  # type: ignore[union-attr]

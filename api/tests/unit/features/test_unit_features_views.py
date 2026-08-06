@@ -742,7 +742,7 @@ def test_sdk_feature_states_get__no_identifier__returns_feature_list(
     ["use_replica", "is_new_identity", "num_queries"],
     [
         pytest.param(False, True, 9, id="default_database,new_identity"),
-        pytest.param(False, False, 8, id="default_database,existing_identity"),
+        pytest.param(False, False, 6, id="default_database,existing_identity"),
         pytest.param(True, True, 9, id="replica_database,new_identity"),
         pytest.param(True, False, 7, id="replica_database,existing_identity"),
     ],
@@ -795,7 +795,7 @@ def test_SDKFeatureStates_get__given_identifier__responds_200_with_feature_list(
     ["use_replica", "is_new_identity", "num_queries"],
     [
         pytest.param(False, True, 9, id="default_database,new_identity"),
-        pytest.param(False, False, 8, id="default_database,existing_identity"),
+        pytest.param(False, False, 6, id="default_database,existing_identity"),
         pytest.param(True, True, 9, id="replica_database,new_identity"),
         pytest.param(True, False, 7, id="replica_database,existing_identity"),
     ],
@@ -846,7 +846,7 @@ def test_sdk_feature_states_get__identifier_and_existing_feature__returns_featur
     ["use_replica", "is_new_identity", "num_queries"],
     [
         pytest.param(False, True, 8, id="default_database,new_identity"),
-        pytest.param(False, False, 7, id="default_database,existing_identity"),
+        pytest.param(False, False, 5, id="default_database,existing_identity"),
         pytest.param(True, True, 8, id="replica_database,new_identity"),
         pytest.param(True, False, 6, id="replica_database,existing_identity"),
     ],
@@ -1413,6 +1413,103 @@ def test_get_flags__user_throttle_set__is_not_throttled(  # type: ignore[no-unty
 
         # Then
         assert response.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.parametrize(
+    "headers,expected_sdk_label",
+    [
+        (
+            {"Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/9.3.1"},
+            "flagsmith-js-sdk",
+        ),
+        (
+            {"User-Agent": "flagsmith-python-sdk/6.0.0"},
+            "flagsmith-python-sdk",
+        ),
+        (
+            {
+                "Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/9.3.1",
+                "User-Agent": "flagsmith-python-sdk/6.0.0",
+            },
+            "flagsmith-js-sdk",
+        ),
+    ],
+)
+def test_get_flags__environment_never_evaluated__records_first_evaluation(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+    headers: dict[str, str],
+    expected_sdk_label: str,
+) -> None:
+    # Given
+    record_environment_first_evaluation = mocker.patch.object(
+        views, "record_environment_first_evaluation"
+    )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/", headers=headers)
+
+    # Then
+    assert response.status_code == 200
+    record_environment_first_evaluation.assert_called_once_with(
+        environment, expected_sdk_label
+    )
+
+
+@pytest.mark.parametrize(
+    "headers",
+    [
+        {},
+        {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15"
+        },
+    ],
+)
+def test_get_flags__sdk_not_identified__does_not_record_first_evaluation(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+    headers: dict[str, str],
+) -> None:
+    # Given
+    record_environment_first_evaluation = mocker.patch.object(
+        views, "record_environment_first_evaluation"
+    )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/", headers=headers)
+
+    # Then
+    assert response.status_code == 200
+    record_environment_first_evaluation.assert_not_called()
+
+
+def test_get_flags__environment_already_evaluated__does_not_record_first_evaluation(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    record_environment_first_evaluation = mocker.patch.object(
+        views, "record_environment_first_evaluation"
+    )
+    environment.first_evaluated_at = timezone.now()
+    environment.first_evaluated_sdk_label = "flagsmith-js-sdk"
+    environment.save(update_fields=["first_evaluated_at", "first_evaluated_sdk_label"])
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(
+        "/api/v1/flags/",
+        headers={"Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/9.3.1"},
+    )
+
+    # Then
+    assert response.status_code == 200
+    record_environment_first_evaluation.assert_not_called()
 
 
 def test_list_feature_states__simple_view_set__returns_expected_count(
@@ -2534,6 +2631,7 @@ def test_list_features__dynamo_enabled__calls_get_overrides_data(
     assert response.status_code == status.HTTP_200_OK
     mock_get_overrides_data.assert_called_once_with(
         dynamo_enabled_project_environment_one,
+        feature_ids=[feature.id],
     )
 
 
@@ -3579,7 +3677,7 @@ def test_list_features__without_rbac__no_n_plus_1(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=18,
+        num_queries=17,
     )
 
 
@@ -3604,7 +3702,7 @@ def test_list_features__with_rbac__no_n_plus_1(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=19,
+        num_queries=18,
     )
 
 
@@ -4238,7 +4336,7 @@ def test_list_features__last_modified_without_rbac__returns_expected(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=20,
+        num_queries=19,
     )
 
 
@@ -4266,7 +4364,7 @@ def test_list_features__last_modified_with_rbac__returns_expected(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=21,
+        num_queries=20,
     )
 
 

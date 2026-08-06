@@ -14,7 +14,7 @@ const meta: Meta<typeof OnboardingTerminal> = {
     docs: {
       description: {
         component:
-          'The onboarding verify console. The checklist ticks as the user acts (copy install, copy snippet), and the first evaluation flips the badge to LIVE and prints the connection receipt. Always dark, since a terminal reads the same in light and dark mode.',
+          'The onboarding verify console. The checklist ticks as the user acts (copy install, copy snippet), and the first evaluation flips the badge to LIVE and prints the connection receipt, naming the SDK that reported it when Core could identify it. Always dark, since a terminal reads the same in light and dark mode.',
       },
     },
     layout: 'padded',
@@ -37,4 +37,14 @@ export const SnippetsCopied: Story = {
 
 export const Connected: Story = {
   args: { connected: true, installCopied: true, snippetCopied: true },
+}
+
+// Core identifies the SDK from the user agent, so the receipt can name it.
+export const ConnectedWithSdkLabel: Story = {
+  args: {
+    connected: true,
+    installCopied: true,
+    sdkLabel: 'flagsmith-python-sdk',
+    snippetCopied: true,
+  },
 }

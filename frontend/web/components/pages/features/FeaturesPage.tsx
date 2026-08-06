@@ -56,14 +56,9 @@ function isSkeletonItem(
 type FeaturesPageProps = {
   pageTitle?: string
   forcedTagIds?: number[]
-  defaultExperiment?: boolean
 }
 
-const FeaturesPage: FC<FeaturesPageProps> = ({
-  defaultExperiment,
-  forcedTagIds,
-  pageTitle,
-}) => {
+const FeaturesPage: FC<FeaturesPageProps> = ({ forcedTagIds, pageTitle }) => {
   const history = useHistory()
   const routeContext = useRouteContext()
   const projectId = routeContext.projectId!
@@ -207,7 +202,6 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
         environmentId={environmentId}
         history={history}
         projectId={projectId}
-        defaultExperiment={defaultExperiment}
       />,
       'side-modal create-feature-modal',
     )
@@ -287,7 +281,6 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
             removeFlag={removeFlag}
             projectFlag={projectFlag}
             isCompact={isCompact}
-            experimentMode={defaultExperiment}
           />
         )}
       </Permission>
@@ -300,7 +293,6 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
       toggleFlag,
       removeFlag,
       isCompact,
-      defaultExperiment,
     ],
   )
 

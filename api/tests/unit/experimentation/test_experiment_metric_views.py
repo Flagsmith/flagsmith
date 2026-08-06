@@ -64,6 +64,7 @@ def test_attach_metric__valid__returns_201(
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["metric_name"] == "Sessions per User"
+    assert data["direction"] == "up"
     assert data["expected_direction"] == "increase"
     assert ExperimentMetric.objects.filter(
         experiment=experiment, metric=metric
