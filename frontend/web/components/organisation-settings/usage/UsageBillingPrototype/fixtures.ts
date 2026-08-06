@@ -21,6 +21,8 @@ export type ScenarioId =
   | 'over-charged'
   | 'free-countdown'
   | 'free-restricted'
+  | 'free-restricted-now'
+  | 'over-200'
 
 export const SCENARIOS: { id: ScenarioId; label: string }[] = [
   { id: 'live', label: 'Live data' },
@@ -28,8 +30,10 @@ export const SCENARIOS: { id: ScenarioId; label: string }[] = [
   { id: 'approaching', label: 'Approaching limit' },
   { id: 'over-covered', label: 'Over limit, grace covering' },
   { id: 'over-charged', label: 'Over limit, charged' },
+  { id: 'over-200', label: 'Over limit, 200%+' },
   { id: 'free-countdown', label: 'Free, grace countdown' },
   { id: 'free-restricted', label: 'Free, restricted' },
+  { id: 'free-restricted-now', label: 'Free, restricted immediately' },
 ]
 
 // A day's share of the period, shaped so the cumulative line has a believable
@@ -103,6 +107,8 @@ const buildBreakdowns = (
 
 type ScenarioInput = {
   daysOverLimit?: number
+  restrictedImmediately?: boolean
+  resumesAt?: string
   plan: UsageView['plan']
   limit: number
   percent: number
@@ -129,6 +135,8 @@ const buildView = ({
   periodLabel,
   plan,
   restricted = false,
+  restrictedImmediately,
+  resumesAt,
 }: ScenarioInput): UsageView => {
   const total = Math.round((limit * percent) / 100)
   const periodStart = moment().subtract(daysElapsed - 1, 'days')
@@ -152,9 +160,11 @@ const buildView = ({
     period: {
       daysRemaining: periodDays - daysElapsed,
       isBillingPeriod,
-      label:
-        periodLabel ??
-        `${periodStart.format('D MMM')} to ${resetsAt.format('D MMM YYYY')}`,
+      label: periodLabel
+        ? `${periodLabel} · ${periodStart.format('D MMM')} to ${moment().format(
+            'D MMM YYYY',
+          )}`
+        : `${periodStart.format('D MMM')} to ${resetsAt.format('D MMM YYYY')}`,
       // Rolling windows never reset, so they get no reset date.
       resetsAt: isBillingPeriod ? resetsAt.format('D MMM YYYY') : '',
 
@@ -167,6 +177,8 @@ const buildView = ({
     projected:
       daysElapsed >= 5 ? Math.round((total / daysElapsed) * periodDays) : null,
     restricted,
+    restrictedImmediately,
+    resumesAt,
     series: buildSeries(total, daysElapsed, periodStart),
     total,
   }
@@ -205,11 +217,35 @@ export const FIXTURES: Record<Exclude<ScenarioId, 'live'>, UsageView> = {
     plan: 'free',
     restricted: true,
   }),
+  'free-restricted-now': buildView({
+    daysElapsed: 24,
+    daysOverLimit: 1,
+    grace: 'restricted',
+    isBillingPeriod: false,
+    limit: 50_000,
+    percent: 121,
+    periodDays: 30,
+    periodLabel: 'Last 30 days',
+    plan: 'free',
+    restricted: true,
+    restrictedImmediately: true,
+    resumesAt: '14 Aug 2026',
+  }),
   healthy: buildView({
     daysElapsed: 17,
     grace: 'available',
     limit: 2_000_000,
     percent: 62,
+    periodDays: 30,
+    plan: 'paid',
+  }),
+  'over-200': buildView({
+    daysElapsed: 26,
+    daysOverLimit: 13,
+    grace: 'not-applied',
+    limit: 2_000_000,
+    overageCost: 2280,
+    percent: 214,
     periodDays: 30,
     plan: 'paid',
   }),

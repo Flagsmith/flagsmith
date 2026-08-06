@@ -20,6 +20,7 @@ export type GraceState =
   | 'used' // paid, later month over 100% or any month at 200%+, charged
   | 'countdown' // free, over 100%, inside the 7-day window
   | 'restricted' // free, window elapsed, access stopped
+  | 'not-applied' // paid, at or above 200%, grace never applies
 
 export type UsagePeriod = {
   label: string
@@ -77,6 +78,10 @@ export type UsageView = {
   graceDaysLeft?: number
   /** Free orgs past the grace window: flag serving and admin access stopped. */
   restricted: boolean
+  /** Restricted the same day, because grace had already been used. */
+  restrictedImmediately?: boolean
+  /** When service comes back on its own, once usage leaves the window. */
+  resumesAt?: string
   /** End-of-period usage at the current run rate. Null when it is too early to say. */
   projected: number | null
   /** Days since usage crossed the limit, and the date it happened. */

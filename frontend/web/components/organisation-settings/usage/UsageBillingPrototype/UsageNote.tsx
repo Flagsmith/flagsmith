@@ -35,9 +35,15 @@ const noteFor = (view: UsageView, percent: number): Note | null => {
 
   if (view.restricted) {
     return {
-      text: `Flag serving is paused. Reduce usage below ${compact(
-        limit,
-      )} calls or upgrade to restore service.`,
+      text: view.resumesAt
+        ? `Flag serving is paused. Service resumes on ${
+            view.resumesAt
+          } if usage stays below ${compact(
+            limit,
+          )}, or immediately if you upgrade.`
+        : `Flag serving is paused. Reduce usage below ${compact(
+            limit,
+          )} calls or upgrade to restore service.`,
       tone: 'danger',
     }
   }
@@ -62,6 +68,14 @@ const noteFor = (view: UsageView, percent: number): Note | null => {
     }
   }
 
+  if (view.grace === 'not-applied') {
+    return {
+      text: `Overage this period: ~${compact(over)} calls (${overPercent}%)${
+        view.overageCost ? `, estimated ${currency(view.overageCost)}` : ''
+      }. Past 200% the grace period does not apply.`,
+      tone: 'danger',
+    }
+  }
   if (view.grace === 'used') {
     return {
       text: `Overage this period: ~${compact(over)} calls (${overPercent}%)${

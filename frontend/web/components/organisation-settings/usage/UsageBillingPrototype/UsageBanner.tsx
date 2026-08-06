@@ -18,8 +18,22 @@ const bannerFor = (view: UsageView): Banner | null => {
   if (view.restricted) {
     return {
       action: 'Upgrade plan',
-      body: 'Flag serving and admin access are paused until usage drops below your limit or you upgrade. This page stays available so you can see what happened.',
+      body: view.restrictedImmediately
+        ? `You went over your free plan limit again. Your grace period was already used, so flag serving was paused straight away rather than after 7 days.${
+            view.resumesAt
+              ? ` Service resumes on ${view.resumesAt} if usage stays below the limit, or immediately if you upgrade.`
+              : ''
+          }`
+        : 'Flag serving and admin access are paused until usage drops below your limit or you upgrade. This page stays available so you can see what happened.',
       title: 'Your organisation is restricted',
+      tone: 'danger',
+    }
+  }
+  if (view.grace === 'not-applied') {
+    return {
+      action: 'Upgrade plan',
+      body: 'Above 200% of your plan limit the grace period does not apply, so overage is charged for this billing period.',
+      title: 'Your organisation is more than 200% over its plan limit',
       tone: 'danger',
     }
   }
