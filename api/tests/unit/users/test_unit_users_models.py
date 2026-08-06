@@ -7,13 +7,14 @@ from django.db.utils import IntegrityError
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
+from permissions.permission_service import user_has_organisation_permission
 from projects.models import Project
 from tests.types import WithProjectPermissionsCallable
 from users.models import (
     FFAdminUser,
     UserPermissionGroup,
 )
-from permissions.permission_service import user_has_organisation_permission
+
 
 def test_belongs_to__user_in_organisation__returns_true(
     admin_user: FFAdminUser,
@@ -267,7 +268,7 @@ def test_user_has_organisation_permission__evaluating_permission__executes_max_4
     django_assert_max_num_queries,
     django_user_model,
     organisation,
-)->None:
+) -> None:
     # Given
     user = django_user_model.objects.create(email="test_query_count@example.com")
     user.add_organisation(organisation)
