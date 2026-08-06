@@ -3,14 +3,17 @@ import uuid
 import pytest
 from common.projects.permissions import VIEW_PROJECT
 from django.db.utils import IntegrityError
-from users.models import user_has_organisation_permission
 
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
 from projects.models import Project
 from tests.types import WithProjectPermissionsCallable
-from users.models import FFAdminUser, UserPermissionGroup
+from users.models import (
+    FFAdminUser,
+    UserPermissionGroup,
+    user_has_organisation_permission,
+)
 
 
 def test_belongs_to__user_in_organisation__returns_true(
@@ -259,6 +262,7 @@ def test_email_domain__valid_email__returns_domain():  # type: ignore[no-untyped
     # Then
     assert FFAdminUser(email="test@example.com").email_domain == "example.com"
 
+
 @pytest.mark.django_db
 def test_user_has_organisation_permission_query_count(
     django_assert_max_num_queries,
@@ -270,16 +274,14 @@ def test_user_has_organisation_permission_query_count(
     user.add_organisation(organisation)
 
     # When / Then
-    # We assert that checking permissions takes a maximum of 4 DB queries 
+    # We assert that checking permissions takes a maximum of 4 DB queries
     # (1 base check + up to 3 for user/group/role filters)
-    # If a join explosion is reintroduced, this will fail because the query 
+    # If a join explosion is reintroduced, this will fail because the query
     # complexity and count will change drastically.
     with django_assert_max_num_queries(4):
         has_permission = user_has_organisation_permission(
-            user=user, 
-            organisation=organisation, 
-            permission_key="MANAGE_USER_GROUPS"
+            user=user, organisation=organisation, permission_key="MANAGE_USER_GROUPS"
         )
-        
+
     # The user has no explicit permissions in this setup, so it should return False
     assert has_permission is False

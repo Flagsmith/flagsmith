@@ -225,6 +225,7 @@ def user_has_organisation_permission(
 
     return False
 
+
 def master_api_key_has_organisation_permission(
     master_api_key: "MasterAPIKey", organisation: Organisation, permission_key: str
 ) -> bool:
