@@ -105,10 +105,10 @@ CLICKHOUSE_QUERY_TIMEOUT_SECONDS = 30
 CLICKHOUSE_VERIFY_TIMEOUT_SECONDS = 5
 CUSTOMER_EVENT_STATS_CACHE_SECONDS = 60
 CUSTOMER_EVENT_NAMES_CACHE_SECONDS = 300
+CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS = 60
 WAREHOUSE_EVENT_NAMES_LIMIT = 500
 
-_CUSTOMER_EVENT_STATS_UNAVAILABLE = "unavailable"
-_CUSTOMER_EVENT_NAMES_UNAVAILABLE = "unavailable"
+_CUSTOMER_EVENT_UNAVAILABLE = "unavailable"
 
 # A delivery run stops taking on new objects after this long, leaving room for
 # the slowest possible in-flight insert to still land inside the task timeout.
@@ -146,7 +146,7 @@ def _get_clickhouse_client() -> Client:
     return Client(host, **kwargs)
 
 
-_EVENT_NAMES_QUERY = (
+_CLICKHOUSE_EVENT_NAMES_QUERY = (
     "SELECT event FROM events "
     "WHERE environment_key = %(environment_key)s "
     "GROUP BY event ORDER BY max(timestamp) DESC LIMIT %(limit)s"
@@ -164,7 +164,7 @@ def _event_names_query_params(environment_key: str) -> dict[str, str | int]:
 def _build_event_names(
     rows: "Sequence[Sequence[typing.Any]]",
 ) -> WarehouseEventNames:
-    names = [row[0] for row in rows]
+    names = [event for (event,) in rows]
     return WarehouseEventNames(
         events=names[:WAREHOUSE_EVENT_NAMES_LIMIT],
         is_truncated=len(names) > WAREHOUSE_EVENT_NAMES_LIMIT,
@@ -184,7 +184,7 @@ def get_warehouse_event_names(
         return None
     try:
         rows = _get_clickhouse_client().execute(
-            _EVENT_NAMES_QUERY,
+            _CLICKHOUSE_EVENT_NAMES_QUERY,
             _event_names_query_params(environment_key),
         )
     except Exception:
@@ -1121,7 +1121,7 @@ def _get_customer_warehouse_event_stats_cached(
     cached = cache.get(cache_key)
     if isinstance(cached, WarehouseEventStats):
         return cached
-    if cached == _CUSTOMER_EVENT_STATS_UNAVAILABLE:
+    if cached == _CUSTOMER_EVENT_UNAVAILABLE:
         return None
     try:
         with warehouse_delivery_service.delivery_client(
@@ -1136,7 +1136,7 @@ def _get_customer_warehouse_event_stats_cached(
     except Exception:
         cache.set(
             cache_key,
-            _CUSTOMER_EVENT_STATS_UNAVAILABLE,
+            _CUSTOMER_EVENT_UNAVAILABLE,
             CUSTOMER_EVENT_STATS_CACHE_SECONDS,
         )
         logger.warning(
@@ -1159,7 +1159,7 @@ def _get_customer_warehouse_event_names_cached(
     cached = cache.get(cache_key)
     if isinstance(cached, WarehouseEventNames):
         return cached
-    if cached == _CUSTOMER_EVENT_NAMES_UNAVAILABLE:
+    if cached == _CUSTOMER_EVENT_UNAVAILABLE:
         return None
     try:
         with warehouse_delivery_service.delivery_client(
@@ -1167,14 +1167,14 @@ def _get_customer_warehouse_event_names_cached(
             send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
         ) as client:
             rows = client.query(
-                _EVENT_NAMES_QUERY,
+                _CLICKHOUSE_EVENT_NAMES_QUERY,
                 parameters=_event_names_query_params(environment_key),
             ).result_rows
     except Exception:
         cache.set(
             cache_key,
-            _CUSTOMER_EVENT_NAMES_UNAVAILABLE,
-            CUSTOMER_EVENT_NAMES_CACHE_SECONDS,
+            _CUSTOMER_EVENT_UNAVAILABLE,
+            CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS,
         )
         logger.warning(
             "connection.event_names_failed",
