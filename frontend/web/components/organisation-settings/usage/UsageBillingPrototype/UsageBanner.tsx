@@ -35,7 +35,7 @@ const bannerFor = (view: UsageView): Banner | null => {
   }
   if (view.grace === 'covering') {
     return {
-      body: 'This month is covered by your grace period, so there is no overage charge. A later month over the limit will be charged.',
+      body: 'This month is covered by your grace period, so there is no overage charge. Any future billing periods that exceed your plan limits will be charged.',
       title: 'Your organisation is over its plan limit',
       tone: 'warning',
     }
