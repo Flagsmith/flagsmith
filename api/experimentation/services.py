@@ -105,8 +105,9 @@ logger = structlog.get_logger("warehouse")
 CLICKHOUSE_CONNECT_TIMEOUT_SECONDS = 5
 CLICKHOUSE_QUERY_TIMEOUT_SECONDS = 30
 CLICKHOUSE_VERIFY_TIMEOUT_SECONDS = 5
+CLICKHOUSE_EVENT_NAMES_TIMEOUT_SECONDS = 15
 CUSTOMER_EVENT_STATS_CACHE_SECONDS = 60
-CUSTOMER_EVENT_NAMES_CACHE_SECONDS = 300
+EVENT_NAMES_CACHE_SECONDS = 300
 CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS = 60
 WAREHOUSE_EVENT_NAMES_LIMIT = 500
 
@@ -114,10 +115,12 @@ _CUSTOMER_EVENT_UNAVAILABLE = "unavailable"
 
 
 def _customer_cache_key(kind: str, connection: "WarehouseConnection") -> str:
-    """Key cached warehouse reads by the connection's details, so a config,
-    credential, or type change can neither serve nor store stale reads."""
+    """Key cached warehouse reads by the connection's non-secret details, so a
+    config or type change can neither serve nor store stale reads. Credentials
+    stay out of the key material: they don't determine what the warehouse
+    holds, so rotating them keeps the cache valid."""
     details = json.dumps(
-        [connection.warehouse_type, connection.config, connection.credentials],
+        [connection.warehouse_type, connection.config],
         sort_keys=True,
     )
     digest = hashlib.sha256(details.encode()).hexdigest()[:12]
@@ -185,25 +188,47 @@ def _build_event_names(
     )
 
 
+EVENT_NAMES_SUPPORTED_WAREHOUSE_TYPES = (
+    WarehouseType.FLAGSMITH,
+    WarehouseType.CLICKHOUSE,
+)
+
+
 def get_warehouse_event_names(
     connection: "WarehouseConnection",
     environment_key: str,
 ) -> WarehouseEventNames | None:
-    """Return the distinct event names recorded for `environment_key`, most
-    recently seen first, capped at WAREHOUSE_EVENT_NAMES_LIMIT; None when the
-    warehouse is unavailable."""
     if connection.warehouse_type == WarehouseType.CLICKHOUSE:
-        return _get_customer_warehouse_event_names_cached(connection, environment_key)
+        return _get_customer_clickhouse_event_names(connection, environment_key)
+    if connection.warehouse_type == WarehouseType.FLAGSMITH:
+        return _get_flagsmith_clickhouse_event_names(environment_key)
+    raise ValueError(f"Unsupported warehouse type: {connection.warehouse_type}")
+
+
+def _get_flagsmith_clickhouse_event_names(
+    environment_key: str,
+) -> WarehouseEventNames | None:
     if not settings.EXPERIMENTATION_CLICKHOUSE_URL:
         return None
+    cache_key = f"experimentation:event_names:{environment_key}"
+    cached = cache.get(cache_key)
+    if isinstance(cached, WarehouseEventNames):
+        return cached
     try:
         rows = _get_clickhouse_client().execute(
             _CLICKHOUSE_EVENT_NAMES_QUERY,
             _event_names_query_params(environment_key),
         )
     except Exception:
+        logger.warning(
+            "connection.event_names_failed",
+            environment__key=environment_key,
+            exc_info=True,
+        )
         return None
-    return _build_event_names(rows)
+    event_names = _build_event_names(rows)
+    cache.set(cache_key, event_names, EVENT_NAMES_CACHE_SECONDS)
+    return event_names
 
 
 _EVENT_STATS_QUERY = (
@@ -1163,7 +1188,7 @@ def _get_customer_warehouse_event_stats_cached(
     return stats
 
 
-def _get_customer_warehouse_event_names_cached(
+def _get_customer_clickhouse_event_names(
     connection: "WarehouseConnection",
     environment_key: str,
 ) -> WarehouseEventNames | None:
@@ -1178,7 +1203,7 @@ def _get_customer_warehouse_event_names_cached(
     try:
         with warehouse_delivery_service.delivery_client(
             connection,
-            send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
+            send_receive_timeout=CLICKHOUSE_EVENT_NAMES_TIMEOUT_SECONDS,
         ) as client:
             rows = client.query(
                 _CLICKHOUSE_EVENT_NAMES_QUERY,
@@ -1197,5 +1222,5 @@ def _get_customer_warehouse_event_names_cached(
         )
         return None
     event_names = _build_event_names(rows)
-    cache.set(cache_key, event_names, CUSTOMER_EVENT_NAMES_CACHE_SECONDS)
+    cache.set(cache_key, event_names, EVENT_NAMES_CACHE_SECONDS)
     return event_names

@@ -60,6 +60,7 @@ from experimentation.serializers import (
     WarehouseConnectionSerializer,
 )
 from experimentation.services import (
+    EVENT_NAMES_SUPPORTED_WAREHOUSE_TYPES,
     annotate_warehouse_event_stats,
     apply_experiment_rollout,
     create_experiment_audit_log,
@@ -248,10 +249,7 @@ class WarehouseConnectionViewSet(
     def events(self, request: Request, **kwargs: object) -> Response:
         """List the distinct event names in the connection's warehouse."""
         connection: WarehouseConnection = self.get_object()
-        if connection.warehouse_type not in (
-            WarehouseType.FLAGSMITH,
-            WarehouseType.CLICKHOUSE,
-        ):
+        if connection.warehouse_type not in EVENT_NAMES_SUPPORTED_WAREHOUSE_TYPES:
             return Response(
                 {"detail": "Event listing is not supported for this warehouse type."},
                 status=status.HTTP_400_BAD_REQUEST,

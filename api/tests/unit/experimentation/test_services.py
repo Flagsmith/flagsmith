@@ -129,6 +129,7 @@ def test_get_clickhouse_client__dsn_timeouts__are_preserved(
 def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names(
     warehouse_connection: WarehouseConnection,
     settings: SettingsWrapper,
+    reset_cache: None,
     rows: list[tuple[str]],
     expected: WarehouseEventNames,
     mocker: MockerFixture,
@@ -154,6 +155,15 @@ def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names(
         {"environment_key": "env-key-123", "limit": 501},
     )
 
+    # When — the result is cached, so a second request doesn't hit the warehouse
+    second_result = services.get_warehouse_event_names(
+        warehouse_connection, "env-key-123"
+    )
+
+    # Then
+    mock_client.execute.assert_called_once()
+    assert second_result == expected
+
 
 @pytest.mark.parametrize(
     "clickhouse_url, execute_side_effect",
@@ -166,8 +176,10 @@ def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names(
 def test_get_warehouse_event_names__flagsmith_warehouse_unavailable__returns_none(
     warehouse_connection: WarehouseConnection,
     settings: SettingsWrapper,
+    reset_cache: None,
     clickhouse_url: str,
     execute_side_effect: Exception | None,
+    log: StructuredLogCapture,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -184,6 +196,9 @@ def test_get_warehouse_event_names__flagsmith_warehouse_unavailable__returns_non
 
     # Then
     assert result is None
+    assert any(
+        event["event"] == "connection.event_names_failed" for event in log.events
+    ) == (execute_side_effect is not None)
 
 
 @pytest.mark.parametrize(
@@ -242,18 +257,20 @@ def test_get_warehouse_event_names__clickhouse_connection__queries_customer_inst
 
 
 @pytest.mark.parametrize(
-    "changed_field, new_value",
+    "changed_field, new_value, expected_events, expected_query_count",
     [
-        ("config", {"host": "new.acme-corp.example"}),
-        ("credentials", {"password": "rotated"}),
+        ("config", {"host": "new.acme-corp.example"}, ["new_event"], 2),
+        ("credentials", {"password": "rotated"}, ["old_event"], 1),
     ],
-    ids=["config", "credentials"],
+    ids=["config-bypasses-cache", "credentials-keep-cache"],
 )
-def test_get_warehouse_event_names__connection_details_changed__bypasses_cache(
+def test_get_warehouse_event_names__connection_details_changed__cache_keyed_by_config(
     clickhouse_connection: WarehouseConnection,
     reset_cache: None,
     changed_field: str,
     new_value: dict[str, str],
+    expected_events: list[str],
+    expected_query_count: int,
     mocker: MockerFixture,
 ) -> None:
     # Given — a cached result for the connection's current details
@@ -277,9 +294,25 @@ def test_get_warehouse_event_names__connection_details_changed__bypasses_cache(
     )
     result = services.get_warehouse_event_names(clickhouse_connection, "test-env-key")
 
-    # Then — the stale cache entry is not served
-    assert result == WarehouseEventNames(events=["new_event"], is_truncated=False)
-    assert get_client.return_value.query.call_count == 2
+    # Then — a config change re-queries; a credential rotation keeps the cache
+    assert result == WarehouseEventNames(events=expected_events, is_truncated=False)
+    assert get_client.return_value.query.call_count == expected_query_count
+
+
+def test_get_warehouse_event_names__unsupported_type__raises(
+    environment: Environment,
+) -> None:
+    # Given
+    connection = WarehouseConnection(
+        environment=environment,
+        warehouse_type=WarehouseType.SNOWFLAKE,
+        name="Snowflake",
+        config={"account_identifier": "acme"},
+    )
+
+    # When / Then
+    with pytest.raises(ValueError, match="Unsupported warehouse type"):
+        services.get_warehouse_event_names(connection, "test-env-key")
 
 
 def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
