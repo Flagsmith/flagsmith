@@ -18,6 +18,22 @@ def test_serializer_field_mapping__model_url_field__maps_to_no_ssrf_url_field() 
     assert ModelSerializer.serializer_field_mapping[models.URLField] is NoSSRFURLField
 
 
+def test_serializer_field_mapping__gitlab_instance_url__builds_no_ssrf_url_field() -> (
+    None
+):
+    # Given — `GitLabConfigurationSerializer` relies on the mapping instead
+    # of declaring `gitlab_instance_url` explicitly.
+    from integrations.gitlab.serializers import GitLabConfigurationSerializer
+
+    # When
+    built_field = GitLabConfigurationSerializer().fields["gitlab_instance_url"]
+
+    # Then
+    assert type(built_field) is NoSSRFURLField
+    with pytest.raises(ValidationError):
+        built_field.run_validation("http://127.0.0.1/")
+
+
 @pytest.fixture()
 def field() -> NoSSRFURLField:
     return NoSSRFURLField()

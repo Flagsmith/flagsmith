@@ -7,6 +7,10 @@ from .models import FeatureExternalResource
 
 class FeatureExternalResourceSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     metadata = serializers.JSONField(required=False, allow_null=True, default=None)
+    # Not SSRF-relevant: never fetched server-side, only regex-matched and
+    # passed as GitHub API payload data. Overrides the SSRF-safe default so
+    # self-hosted GitHub/GitLab instances on internal hosts still work.
+    url = serializers.URLField()
 
     class Meta:
         model = FeatureExternalResource
