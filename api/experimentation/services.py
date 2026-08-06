@@ -110,6 +110,9 @@ WAREHOUSE_EVENT_NAMES_LIMIT = 500
 
 _CUSTOMER_EVENT_UNAVAILABLE = "unavailable"
 
+_CUSTOMER_EVENT_STATS_CACHE_KEY = "experimentation:customer_event_stats:{}"
+_CUSTOMER_EVENT_NAMES_CACHE_KEY = "experimentation:customer_event_names:{}"
+
 # A delivery run stops taking on new objects after this long, leaving room for
 # the slowest possible in-flight insert to still land inside the task timeout.
 DELIVERY_TIME_BUDGET_SECONDS = 210
@@ -1117,7 +1120,7 @@ def _get_customer_warehouse_event_stats_cached(
     ClickHouse instance, or None when it's unreachable. Results — including
     failures — are cached briefly so read endpoints don't open a connection to
     the customer's host on every request."""
-    cache_key = f"experimentation:customer_event_stats:{connection.id}"
+    cache_key = _CUSTOMER_EVENT_STATS_CACHE_KEY.format(connection.id)
     cached = cache.get(cache_key)
     if isinstance(cached, WarehouseEventStats):
         return cached
@@ -1155,7 +1158,7 @@ def _get_customer_warehouse_event_names_cached(
 ) -> WarehouseEventNames | None:
     """Query the customer's ClickHouse instance, caching results — including
     failures — to spare their host repeated connections."""
-    cache_key = f"experimentation:customer_event_names:{connection.id}"
+    cache_key = _CUSTOMER_EVENT_NAMES_CACHE_KEY.format(connection.id)
     cached = cache.get(cache_key)
     if isinstance(cached, WarehouseEventNames):
         return cached
@@ -1185,3 +1188,13 @@ def _get_customer_warehouse_event_names_cached(
     event_names = _build_event_names(rows)
     cache.set(cache_key, event_names, CUSTOMER_EVENT_NAMES_CACHE_SECONDS)
     return event_names
+
+
+def clear_customer_warehouse_caches(connection: "WarehouseConnection") -> None:
+    """Drop cached warehouse reads so they don't outlive a connection change."""
+    cache.delete_many(
+        [
+            _CUSTOMER_EVENT_STATS_CACHE_KEY.format(connection.id),
+            _CUSTOMER_EVENT_NAMES_CACHE_KEY.format(connection.id),
+        ]
+    )

@@ -2,6 +2,7 @@ import socket
 
 import pytest
 from clickhouse_connect.driver.exceptions import OperationalError
+from django.core.cache import cache
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -1922,3 +1923,36 @@ def test_get_events__unsupported_type__returns_400(
         "detail": "Event listing is not supported for this warehouse type."
     }
     get_event_names.assert_not_called()
+
+
+def test_patch__connection_details_changed__clears_customer_warehouse_caches(
+    admin_client: APIClient,
+    environment: Environment,
+    clickhouse_connection: WarehouseConnection,
+    enable_features: EnableFeaturesFixture,
+    reset_cache: None,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    mocker.patch("experimentation.views.verify_clickhouse_connection")
+    stats_key = f"experimentation:customer_event_stats:{clickhouse_connection.id}"
+    names_key = f"experimentation:customer_event_names:{clickhouse_connection.id}"
+    cache.set(stats_key, "stale", 300)
+    cache.set(names_key, "stale", 300)
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"credentials": {"password": "new-password"}},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert cache.get(stats_key) is None
+    assert cache.get(names_key) is None

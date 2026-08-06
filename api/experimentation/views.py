@@ -62,6 +62,7 @@ from experimentation.serializers import (
 from experimentation.services import (
     annotate_warehouse_event_stats,
     apply_experiment_rollout,
+    clear_customer_warehouse_caches,
     create_experiment_audit_log,
     create_metric_audit_log,
     create_warehouse_audit_log,
@@ -128,10 +129,13 @@ class WarehouseConnectionViewSet(
         create_warehouse_audit_log(
             connection, self._get_user(self.request), action="updated"
         )
-        if connection.warehouse_type == WarehouseType.CLICKHOUSE and (
+        details_changed = (
             "config" in serializer.validated_data
             or "credentials" in serializer.validated_data
-        ):
+        )
+        if details_changed:
+            clear_customer_warehouse_caches(connection)
+        if connection.warehouse_type == WarehouseType.CLICKHOUSE and details_changed:
             verify_clickhouse_connection(connection)
 
     def perform_destroy(self, instance: WarehouseConnection) -> None:
