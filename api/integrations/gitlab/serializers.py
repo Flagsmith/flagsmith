@@ -4,14 +4,11 @@ from rest_framework import serializers
 
 from integrations.common.serializers import BaseProjectIntegrationModelSerializer
 from integrations.gitlab.models import GitLabConfiguration
-from webhooks.fields import NoSSRFURLField
 
 WRITE_ONLY_PLACEHOLDER = "write-only"
 
 
 class GitLabConfigurationSerializer(BaseProjectIntegrationModelSerializer):
-    gitlab_instance_url = NoSSRFURLField(max_length=200)
-
     class Meta:
         model = GitLabConfiguration
         fields = ("id", "gitlab_instance_url", "access_token", "labeling_enabled")

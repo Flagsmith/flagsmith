@@ -2,9 +2,20 @@ import socket
 from unittest import mock
 
 import pytest
+from django.db import models
 from rest_framework.exceptions import ValidationError
+from rest_framework.serializers import ModelSerializer
 
 from webhooks.fields import NoSSRFURLField
+
+
+def test_serializer_field_mapping__model_url_field__maps_to_no_ssrf_url_field() -> None:
+    # Given — registered in `WebhooksAppConfig.ready()`, so any
+    # `ModelSerializer` built from a `models.URLField` gets this field
+    # automatically, without declaring it on each serializer.
+
+    # When / Then
+    assert ModelSerializer.serializer_field_mapping[models.URLField] is NoSSRFURLField
 
 
 @pytest.fixture()
