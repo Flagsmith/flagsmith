@@ -17,11 +17,11 @@ import {
   Tag,
 } from 'common/types/responses'
 import {
-  DEMO_FLAG_NAME,
+  ONBOARDING_FLAG_NAME,
   ONBOARDING_TAG,
-  findDemoFlag,
-  shouldSeedDemoFlag,
-} from './demoFlag'
+  findOnboardingFlag,
+  shouldSeedOnboardingFlag,
+} from './onboardingFlag'
 import { SmartDefaults } from 'components/pages/onboarding/hooks/useSmartDefaults'
 import { createOrganisationViaAccountStore } from './createOrganisationViaAccountStore'
 import API from 'project/api'
@@ -47,7 +47,7 @@ export type OnboardingBootstrap = {
   environment: Environment
   featureName: string
   // False when the project already had flags, so nothing was seeded.
-  hasDemoFlag: boolean
+  hasOnboardingFlag: boolean
 }
 
 async function ensureOrganisation(
@@ -157,18 +157,18 @@ async function ensureFlag(
     .unwrap()
   const results = flags?.results ?? []
   const onboardingTag = await findOnboardingTag(store, project.id)
-  const existing = findDemoFlag(results, onboardingTag)
+  const existing = findOnboardingFlag(results, onboardingTag)
   if (existing) {
     return existing
   }
-  if (!shouldSeedDemoFlag(results)) {
+  if (!shouldSeedOnboardingFlag(results)) {
     return undefined
   }
   const created = await store
     .dispatch(
       projectFlagService.endpoints.createProjectFlag.initiate({
         body: {
-          name: DEMO_FLAG_NAME,
+          name: ONBOARDING_FLAG_NAME,
           project: project.id,
           type: 'STANDARD',
         } as Req['createProjectFlag']['body'],
@@ -226,8 +226,8 @@ export async function bootstrapOnboarding(
   AppActions.refreshOrganisation()
   return {
     environment,
-    featureName: flag?.name ?? DEMO_FLAG_NAME,
-    hasDemoFlag: !!flag,
+    featureName: flag?.name ?? ONBOARDING_FLAG_NAME,
+    hasOnboardingFlag: !!flag,
     organisationId: organisation.id,
     organisationName: organisation.name,
     project,

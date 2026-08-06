@@ -31,7 +31,7 @@ const OnboardingFlow: FC = () => {
     environment,
     environmentKey,
     featureName: bootstrappedFeatureName,
-    hasDemoFlag,
+    hasOnboardingFlag,
     organisationId,
     organisationName,
     projectId,
@@ -200,7 +200,7 @@ const OnboardingFlow: FC = () => {
   }
 
   // ensureFlag seeded nothing, so there is no flag to tour with.
-  if (!hasDemoFlag) {
+  if (!hasOnboardingFlag) {
     return (
       <div className='onboarding-flow mx-auto text-center'>
         <h2 className='mb-2'>You’re already set up</h2>
