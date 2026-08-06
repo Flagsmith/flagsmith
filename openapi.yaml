@@ -7092,6 +7092,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WarehouseEventNamesResult'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseEventNamesUnsupported'
+        '503':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseEventNamesUnavailable'
       security:
         - tokenAuth: []
         - Master API Key: []
@@ -27990,6 +28002,20 @@ components:
       required:
         - events
         - is_truncated
+    WarehouseEventNamesUnavailable:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+        - detail
+    WarehouseEventNamesUnsupported:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+        - detail
     WarehouseTypeEnum:
       description: |-
         * `flagsmith` - Flagsmith
