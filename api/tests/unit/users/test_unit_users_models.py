@@ -264,7 +264,7 @@ def test_email_domain__valid_email__returns_domain():  # type: ignore[no-untyped
 
 
 @pytest.mark.django_db
-def test_user_has_organisation_permission_query_count(
+def test_user_has_organisation_permission__evaluating_permission__executes_max_4_queries(
     django_assert_max_num_queries,
     django_user_model,
     organisation,
