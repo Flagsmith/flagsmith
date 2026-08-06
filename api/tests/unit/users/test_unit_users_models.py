@@ -3,7 +3,9 @@ import uuid
 
 import pytest
 from common.projects.permissions import VIEW_PROJECT
+from django.db import connection
 from django.db.utils import IntegrityError
+from django.test.utils import CaptureQueriesContext
 
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import UserOrganisationPermission
@@ -15,8 +17,7 @@ from users.models import (
     FFAdminUser,
     UserPermissionGroup,
 )
-from django.db import connection
-from django.test.utils import CaptureQueriesContext
+
 
 def test_belongs_to__user_in_organisation__returns_true(
     admin_user: FFAdminUser,
@@ -284,7 +285,7 @@ def test_user_has_organisation_permission__evaluating_permission__avoids_join_ex
     # Then
     assert has_permission is False
 
-    # The old regression executed exactly 1 massive query. 
+    # The old regression executed exactly 1 massive query.
     # The new logic evaluates sequentially, executing 3 to 4 isolated queries in the worst case.
     assert len(ctx.captured_queries) > 1
 
@@ -294,4 +295,6 @@ def test_user_has_organisation_permission__evaluating_permission__avoids_join_ex
     for query in ctx.captured_queries:
         sql = query["sql"].lower()
         is_massive_join = "userpermission" in sql and "grouppermission" in sql
-        assert not is_massive_join, "Regression detected: Massive JOIN cross-product found in SQL shape"
+        assert not is_massive_join, (
+            "Regression detected: Massive JOIN cross-product found in SQL shape"
+        )
