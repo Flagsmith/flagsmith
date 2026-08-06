@@ -7069,6 +7069,46 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+  '/api/v1/environments/{environment_api_key}/warehouse-connections/{connection_id}/events/':
+    get:
+      operationId: api_v1_environments_warehouse_connections_events_list
+      description: List the distinct event names in the connection's warehouse.
+      parameters:
+        - name: connection_id
+          in: path
+          description: A unique integer value identifying this warehouse connection.
+          required: true
+          schema:
+            type: integer
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseEventNamesResult'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseEventNamesUnsupported'
+        '503':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseEventNamesUnavailable'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
   '/api/v1/environments/{environment_api_key}/warehouse-connections/{connection_id}/test-warehouse-connection/':
     post:
       operationId: api_v1_environments_warehouse_connections_test_warehouse_connection_create
@@ -27950,6 +27990,32 @@ components:
       required:
         - status
         - status_detail
+    WarehouseEventNamesResult:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            type: string
+        is_truncated:
+          type: boolean
+      required:
+        - events
+        - is_truncated
+    WarehouseEventNamesUnavailable:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+        - detail
+    WarehouseEventNamesUnsupported:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+        - detail
     WarehouseTypeEnum:
       description: |-
         * `flagsmith` - Flagsmith
