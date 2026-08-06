@@ -7,8 +7,8 @@ import { getSubscriptionMetadata } from 'common/services/useSubscriptionMetadata
 import Dispatcher from 'common/dispatcher/dispatcher'
 import BaseStore from './base/_store'
 import data from 'common/data/base/_data'
+import { isNumericId } from 'common/utils/isNumericId'
 import filter from 'lodash/filter'
-import find from 'lodash/find'
 import findIndex from 'lodash/findIndex'
 import keyBy from 'lodash/keyBy'
 
@@ -75,10 +75,7 @@ const controller = {
     const idInt = parseInt(id)
     store.saving()
     if (store.model) {
-      store.model.projects = filter(
-        store.model.projects,
-        (p) => p.id !== idInt,
-      )
+      store.model.projects = filter(store.model.projects, (p) => p.id !== idInt)
       store.model.keyedProjects = keyBy(store.model.projects, 'id')
     }
     API.trackEvent(Constants.events.REMOVE_PROJECT)
@@ -118,6 +115,11 @@ const controller = {
       })
   },
   getOrganisation: (id, force) => {
+    // store.id seeds to the string 'account' and the dispatcher falls back to
+    // it, so a non-numeric id reaches here. The API can only reject it.
+    if (!isNumericId(id)) {
+      return
+    }
     if (`${id}` !== `${store.id}` || force) {
       store.id = id
       store.loading()
@@ -211,7 +213,9 @@ const controller = {
             projects.sort((a, b) => {
               const textA = a.name.toLowerCase()
               const textB = b.name.toLowerCase()
-              return textA < textB ? -1 : textA > textB ? 1 : 0
+              // Not localeCompare: it orders accents differently.
+              if (textA < textB) return -1
+              return textA > textB ? 1 : 0
             })
             store.model.projects = projects
             store.model.keyedProjects = keyBy(store.model.projects, 'id')
