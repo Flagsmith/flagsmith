@@ -14,7 +14,7 @@ from users.models import (
     FFAdminUser,
     UserPermissionGroup,
 )
-
+import typing
 
 def test_belongs_to__user_in_organisation__returns_true(
     admin_user: FFAdminUser,
@@ -265,9 +265,9 @@ def test_email_domain__valid_email__returns_domain():  # type: ignore[no-untyped
 
 @pytest.mark.django_db
 def test_user_has_organisation_permission__evaluating_permission__executes_max_4_queries(
-    django_assert_max_num_queries,
-    django_user_model,
-    organisation,
+    django_assert_max_num_queries: typing.Any,
+    django_user_model: typing.Any,
+    organisation: typing.Any,
 ) -> None:
     # Given
     user = django_user_model.objects.create(email="test_query_count@example.com")
