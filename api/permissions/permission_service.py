@@ -219,6 +219,8 @@ def user_has_organisation_permission(
     if settings.IS_RBAC_INSTALLED:  # pragma: no cover
         role_filter = get_role_permission_filter(
             user,
+            # Type gap: get_role_permission_filter type hint expects an instance, 
+            # but safely handles the model class at runtime.
             Organisation,  # type: ignore[arg-type]
             permission_key,
             allow_admin=False,
