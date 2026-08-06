@@ -1,7 +1,9 @@
 import { isNumericId } from 'common/utils/isNumericId'
 
 describe('isNumericId', () => {
-  it.each([1, 42, '7'])('accepts %p', (id) => {
+  // '007' is deliberate: DRF coerces a leading-zero string to the key 7, so the
+  // request works and rejecting it would be stricter than the API.
+  it.each([1, 42, '7', '007'])('accepts %p', (id) => {
     expect(isNumericId(id)).toBe(true)
   })
 
