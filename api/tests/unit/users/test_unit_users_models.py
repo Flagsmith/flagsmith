@@ -12,9 +12,8 @@ from tests.types import WithProjectPermissionsCallable
 from users.models import (
     FFAdminUser,
     UserPermissionGroup,
-    user_has_organisation_permission,
 )
-
+from permissions.permission_service import user_has_organisation_permission
 
 def test_belongs_to__user_in_organisation__returns_true(
     admin_user: FFAdminUser,
@@ -268,7 +267,7 @@ def test_user_has_organisation_permission__evaluating_permission__executes_max_4
     django_assert_max_num_queries,
     django_user_model,
     organisation,
-):
+)->None:
     # Given
     user = django_user_model.objects.create(email="test_query_count@example.com")
     user.add_organisation(organisation)
