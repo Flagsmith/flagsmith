@@ -1,5 +1,6 @@
 from django.db import models
 
+from cohorts.constants import COHORT_SYSTEM_TRAIT_KEY_PREFIX
 from core.models import SoftDeleteExportableModel
 
 
@@ -25,6 +26,10 @@ class Cohort(SoftDeleteExportableModel):
     )
     version = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def system_trait_key(self) -> str:
+        return f"{COHORT_SYSTEM_TRAIT_KEY_PREFIX}{self.uuid}"
 
     class Meta:
         constraints = [
