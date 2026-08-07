@@ -2,6 +2,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from audit.types import AuditLogChangeDetail, ChangeType
 from environments.serializers import EnvironmentSerializerLight
 from projects.serializers import ProjectListSerializer
@@ -74,8 +75,25 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):  # type: ignore[t
     )
     def get_change_details(self, instance: AuditLog) -> list[AuditLogChangeDetail]:
         if history_record := instance.history_record:
+            changes = history_record.get_change_details()  # type: ignore[attr-defined]
+
+            # For segment updates, include rule/condition diffs.
+            if (
+                instance.related_object_type == RelatedObjectType.SEGMENT.name
+                and history_record.history_type == "~"  # type: ignore[attr-defined]
+                and getattr(history_record, "version", None)
+            ):
+                from segments.audit_helpers import (
+                    get_segment_rules_change_details,
+                )
+
+                changes = list(changes) + get_segment_rules_change_details(
+                    segment_id=instance.related_object_id,  # type: ignore[arg-type]
+                    current_version=history_record.version,  # type: ignore[attr-defined]
+                )
+
             return AuditLogChangeDetailsSerializer(  # type: ignore[return-value]
-                instance=history_record.get_change_details(),  # type: ignore[attr-defined]
+                instance=changes,
                 many=True,
             ).data
 
