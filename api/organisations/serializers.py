@@ -12,7 +12,6 @@ from organisations.chargebee import (  # type: ignore[attr-defined]
 )
 from organisations.invites.models import Invite
 from users.models import FFAdminUser, UserPermissionGroup
-from webhooks.fields import NoSSRFURLField
 
 from .models import (
     Organisation,
@@ -235,8 +234,6 @@ class PortalUrlSerializer(serializers.Serializer):  # type: ignore[type-arg]
 
 
 class OrganisationWebhookSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
-    url = NoSSRFURLField()
-
     class Meta:
         model = OrganisationWebhook
         fields = ("id", "url", "enabled", "secret", "created_at", "updated_at")

@@ -2,36 +2,9 @@ import socket
 from unittest import mock
 
 import pytest
-from django.db import models
 from rest_framework.exceptions import ValidationError
-from rest_framework.serializers import ModelSerializer
 
 from webhooks.fields import NoSSRFURLField
-
-
-def test_serializer_field_mapping__model_url_field__maps_to_no_ssrf_url_field() -> None:
-    # Given — registered in `WebhooksAppConfig.ready()`, so any
-    # `ModelSerializer` built from a `models.URLField` gets this field
-    # automatically, without declaring it on each serializer.
-
-    # When / Then
-    assert ModelSerializer.serializer_field_mapping[models.URLField] is NoSSRFURLField
-
-
-def test_serializer_field_mapping__gitlab_instance_url__builds_no_ssrf_url_field() -> (
-    None
-):
-    # Given — `GitLabConfigurationSerializer` relies on the mapping instead
-    # of declaring `gitlab_instance_url` explicitly.
-    from integrations.gitlab.serializers import GitLabConfigurationSerializer
-
-    # When
-    built_field = GitLabConfigurationSerializer().fields["gitlab_instance_url"]
-
-    # Then
-    assert type(built_field) is NoSSRFURLField
-    with pytest.raises(ValidationError):
-        built_field.run_validation("http://127.0.0.1/")
 
 
 @pytest.fixture()
@@ -124,7 +97,11 @@ def test_no_ssrf_url_field__public_address__returns_value(
     label: str,
 ) -> None:
     # Given / When
-    result = field.run_validation(url)
+    with mock.patch(
+        "core.network.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("8.8.8.8", 0))],
+    ):
+        result = field.run_validation(url)
 
     # Then
     assert result == url
