@@ -62,13 +62,14 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
             "is_active",
             "marketing_consent_given",
             "uuid",
+            "sign_up_type",
         )
         read_only_fields = ("is_active", "uuid", "marketing_consent_given")
-        write_only_fields = ("sign_up_type",)
         extra_kwargs = {
+            "sign_up_type": {"required": False},
             "email": {
                 "validators": list[object](),
-            }
+            },
         }
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
