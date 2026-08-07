@@ -466,6 +466,7 @@ Attributes:
 ### `onboarding.environment.already_evaluated`
 
 Logged at `info` from:
+ - `api/segment_membership/tasks.py:112`
  - `api/environments/onboarding/services.py:23`
 
 Attributes:
@@ -476,6 +477,8 @@ Attributes:
 
 ### `onboarding.environment.first_evaluated`
 
+Logged at `exception` from:
+ - `api/segment_membership/tasks.py:105`
 Logged at `info` from:
  - `api/environments/onboarding/services.py:32`
 
@@ -487,6 +490,9 @@ Attributes:
 
 ### `platform_hub.no_analytics_database_configured`
 
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:69`
+ - `api/segment_membership/tasks.py:74`
 Logged at `warning` from:
  - `api/platform_hub/services.py:116`
  - `api/platform_hub/services.py:206`
@@ -516,6 +522,7 @@ Attributes:
 ### `segment_membership.refresh.project.completed`
 
 Logged at `info` from:
+ - `api/segment_membership/tasks.py:187`
  - `api/segment_membership/tasks.py:266`
 
 Attributes:
@@ -526,6 +533,7 @@ Attributes:
 ### `segment_membership.refresh.project.failed`
 
 Logged at `exception` from:
+ - `api/segment_membership/tasks.py:160`
  - `api/segment_membership/tasks.py:239`
 
 Attributes:
@@ -534,6 +542,8 @@ Attributes:
 ### `segment_membership.refresh.project.skipped`
 
 Logged at `info` from:
+ - `api/segment_membership/tasks.py:131`
+ - `api/segment_membership/tasks.py:140`
  - `api/segment_membership/tasks.py:206`
  - `api/segment_membership/tasks.py:218`
 
@@ -573,6 +583,27 @@ Logged at `warning` from:
 Attributes:
  - `organisation.id`
  - `reason`
+
+### `segment_membership.tombstone.skipped`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:211`
+ - `api/segment_membership/tasks.py:224`
+ - `api/segment_membership/tasks.py:233`
+
+Attributes:
+ - `env_key`
+ - `identifier`
+ - `reason`
+
+### `segment_membership.tombstone.written`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:247`
+
+Attributes:
+ - `env_key`
+ - `identifier`
 
 ### `segments.serializers.segment_revision_created`
 
