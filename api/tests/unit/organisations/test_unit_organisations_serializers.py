@@ -2,7 +2,29 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from organisations.models import Organisation
-from organisations.serializers import UpdateSubscriptionSerializer
+from organisations.serializers import (
+    OrganisationSerializerFull,
+    UpdateSubscriptionSerializer,
+)
+
+
+def test_organisation_serializer_full__onboarding_org__serialises_onboarding_variant(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_onboarding_variant_mock = mocker.patch(
+        "organisations.serializers.get_onboarding_variant",
+        return_value="single_page",
+        autospec=True,
+    )
+
+    # When
+    data = OrganisationSerializerFull(instance=organisation).data
+
+    # Then
+    assert data["onboarding_variant"] == "single_page"
+    get_onboarding_variant_mock.assert_called_once_with(organisation)
 
 
 def test_update_subscription_serializer__create__updates_subscription(

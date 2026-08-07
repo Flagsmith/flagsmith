@@ -11,6 +11,7 @@ from organisations.chargebee import (  # type: ignore[attr-defined]
     get_subscription_data_from_hosted_page,
 )
 from organisations.invites.models import Invite
+from organisations.services import OnboardingVariant, get_onboarding_variant
 from users.models import FFAdminUser, UserPermissionGroup
 
 from .models import (
@@ -40,6 +41,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):  # type: ignore[type-
 class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]
     subscription = SubscriptionSerializer(required=False)
     role = serializers.SerializerMethodField()
+    onboarding_variant = serializers.SerializerMethodField()
 
     class Meta:
         model = Organisation
@@ -56,6 +58,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "block_access_to_admin",
             "restrict_project_create_to_admin",
             "force_2fa",
+            "onboarding_variant",
         )
         read_only_fields = (
             "id",
@@ -71,6 +74,10 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
         if self.context.get("request"):
             user = self.context["request"].user
             return user.get_organisation_role(instance)
+
+    @extend_schema_field({"type": "string", "enum": ["control", "single_page"]})
+    def get_onboarding_variant(self, instance: Organisation) -> OnboardingVariant:
+        return get_onboarding_variant(instance)
 
 
 class OrganisationSerializerBasic(serializers.ModelSerializer):  # type: ignore[type-arg]

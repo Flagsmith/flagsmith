@@ -5714,6 +5714,13 @@
       "NullEnum": {
         "type": "null"
       },
+      "OnboardingVariantEnum": {
+        "type": "string",
+        "enum": [
+          "control",
+          "single_page"
+        ]
+      },
       "OrganisationSerializerFull": {
         "type": "object",
         "properties": {
@@ -5773,6 +5780,14 @@
           },
           "force_2fa": {
             "type": "boolean"
+          },
+          "onboarding_variant": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OnboardingVariantEnum"
+              }
+            ],
+            "readOnly": true
           }
         },
         "required": [

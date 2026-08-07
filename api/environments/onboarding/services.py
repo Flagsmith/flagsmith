@@ -1,8 +1,11 @@
 import structlog
 from django.utils import timezone
+from openfeature.evaluation_context import EvaluationContext
+from openfeature.track import TrackingEventDetails
 
 from app_analytics.types import KnownSDK
 from environments.models import Environment
+from integrations.flagsmith.client import get_openfeature_client
 
 logger = structlog.get_logger("onboarding")
 
@@ -28,5 +31,15 @@ def record_environment_first_evaluation(
     environment.save(update_fields=["first_evaluated_at", "first_evaluated_sdk_label"])
 
     Environment.write_environment_documents(environment_id=environment.id)
+
+    get_openfeature_client().track(
+        "environment.first_evaluated",
+        evaluation_context=EvaluationContext(
+            targeting_key=environment.project.organisation.openfeature_evaluation_context.targeting_key,
+        ),
+        tracking_event_details=TrackingEventDetails(
+            attributes={"sdk_label": sdk_label},
+        ),
+    )
 
     log.info("environment.first_evaluated")

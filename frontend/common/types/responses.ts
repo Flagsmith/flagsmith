@@ -516,6 +516,7 @@ export type Subscription = {
   notes: string | null
 }
 
+export type OnboardingVariant = 'control' | 'single_page'
 export type Organisation = {
   id: number
   name: string
@@ -527,6 +528,7 @@ export type Organisation = {
   persist_trait_data: boolean
   block_access_to_admin: boolean
   restrict_project_create_to_admin: boolean
+  onboarding_variant: OnboardingVariant
 }
 export type Identity = {
   id: string

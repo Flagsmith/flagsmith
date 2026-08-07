@@ -22162,6 +22162,11 @@ components:
         is_new_user:
           type: boolean
           readOnly: true
+    OnboardingVariantEnum:
+      type: string
+      enum:
+        - control
+        - single_page
     OrganisationAPIUsageNotification:
       type: object
       properties:
@@ -22233,6 +22238,10 @@ components:
           type: boolean
         force_2fa:
           type: boolean
+        onboarding_variant:
+          allOf:
+            - $ref: '#/components/schemas/OnboardingVariantEnum'
+          readOnly: true
       required:
         - name
     OrganisationWebhook:
@@ -22243,6 +22252,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         enabled:
           type: boolean
@@ -24185,6 +24195,10 @@ components:
           type: boolean
         force_2fa:
           type: boolean
+        onboarding_variant:
+          allOf:
+            - $ref: '#/components/schemas/OnboardingVariantEnum'
+          readOnly: true
     PatchedOrganisationWebhook:
       type: object
       properties:
@@ -24193,6 +24207,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         enabled:
           type: boolean
@@ -25045,6 +25060,7 @@ components:
         url:
           type: string
           format: uri
+          maxLength: 200
         enabled:
           type: boolean
         created_at:
@@ -25066,6 +25082,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         secret:
           type: string
@@ -28035,6 +28052,7 @@ components:
         url:
           type: string
           format: uri
+          maxLength: 200
         enabled:
           type: boolean
         created_at:
@@ -28058,6 +28076,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         secret:
           type: string
