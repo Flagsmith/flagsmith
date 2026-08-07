@@ -173,7 +173,7 @@ def test_user_has_organisation_permission__evaluating_permission__executes_exact
     # Using an exact query count verifies the sequential EXISTS pattern is working.
     # If the regression returns (a single massive JOIN cross-product), it will execute
     # as 1 query and fail this strict assertion.
-    with django_assert_num_queries(4):
+    with django_assert_num_queries(3):
         has_permission = user_has_organisation_permission(
             user=user, organisation=organisation, permission_key="MANAGE_USER_GROUPS"
         )
