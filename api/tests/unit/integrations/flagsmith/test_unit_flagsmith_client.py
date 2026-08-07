@@ -156,11 +156,22 @@ def test_initialise_provider__offline_mode_disabled__initialises_with_server_key
     settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = api_url
     settings.FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = False
 
-    mock_flagsmith_class = mocker.patch("integrations.flagsmith.client.Flagsmith")
-    mock_provider_class = mocker.patch(
-        "integrations.flagsmith.client.FlagsmithProvider"
+    mock_flagsmith_class = mocker.patch(
+        "integrations.flagsmith.client.Flagsmith",
+        autospec=True,
     )
-    mock_openfeature_api = mocker.patch("integrations.flagsmith.client.openfeature_api")
+    mock_provider_class = mocker.patch(
+        "integrations.flagsmith.client.FlagsmithProvider",
+        autospec=True,
+    )
+    mock_exposure_hook_class = mocker.patch(
+        "integrations.flagsmith.client.FlagsmithExposureHook",
+        autospec=True,
+    )
+    mock_openfeature_api = mocker.patch(
+        "integrations.flagsmith.client.openfeature_api",
+        autospec=True,
+    )
 
     # When
     initialise_provider(**get_provider_kwargs())
@@ -182,6 +193,11 @@ def test_initialise_provider__offline_mode_disabled__initialises_with_server_key
         domain=DEFAULT_OPENFEATURE_DOMAIN,
     )
 
+    mock_exposure_hook_class.assert_called_once_with(mock_provider_class.return_value)
+    mock_openfeature_api.add_hooks.assert_called_once_with(
+        [mock_exposure_hook_class.return_value]
+    )
+
     mock_local_file_handler_class.assert_called_once_with(ENVIRONMENT_JSON_PATH)
 
 
@@ -194,11 +210,18 @@ def test_initialise_provider__offline_mode_enabled__initialises_with_offline_han
     # Given
     settings.FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = True
 
-    mock_flagsmith_class = mocker.patch("integrations.flagsmith.client.Flagsmith")
-    mock_provider_class = mocker.patch(
-        "integrations.flagsmith.client.FlagsmithProvider"
+    mock_flagsmith_class = mocker.patch(
+        "integrations.flagsmith.client.Flagsmith",
+        autospec=True,
     )
-    mock_openfeature_api = mocker.patch("integrations.flagsmith.client.openfeature_api")
+    mock_provider_class = mocker.patch(
+        "integrations.flagsmith.client.FlagsmithProvider",
+        autospec=True,
+    )
+    mock_openfeature_api = mocker.patch(
+        "integrations.flagsmith.client.openfeature_api",
+        autospec=True,
+    )
 
     # When
     initialise_provider(**get_provider_kwargs())
