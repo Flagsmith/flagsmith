@@ -261,6 +261,18 @@ def trigger_update_version_webhooks(environment_feature_version_uuid: str) -> No
     )
 
 
+def _build_feature_state_change_summary(fs: FeatureState) -> str:
+    if fs.identity_id:
+        scope = f"Identity override ({fs.identity.identifier})"  # type: ignore[union-attr]
+    elif fs.feature_segment_id:
+        scope = f"Segment override ({fs.feature_segment.segment.name})"  # type: ignore[union-attr]
+    else:
+        scope = "Environment default"
+
+    state = "enabled" if fs.enabled else "disabled"
+    return f"{scope}: {state}"
+
+
 @register_task_handler()
 def create_environment_feature_version_published_audit_log_task(
     environment_feature_version_uuid: str,
@@ -269,12 +281,31 @@ def create_environment_feature_version_published_audit_log_task(
         "environment", "feature"
     ).get(uuid=environment_feature_version_uuid)
 
+    header = (
+        ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
+        % environment_feature_version.feature.name
+    )
+
+    changed_states = get_updated_feature_states_for_version(environment_feature_version)
+
+    if changed_states:
+        changed_states = list(
+            FeatureState.objects.filter(
+                id__in=[fs.id for fs in changed_states]
+            ).select_related("feature_segment__segment", "identity")
+        )
+        change_lines = "\n".join(
+            f"- {_build_feature_state_change_summary(fs)}" for fs in changed_states
+        )
+        log = f"{header}\n{change_lines}"
+    else:
+        log = header
+
     AuditLog.objects.create(
         environment=environment_feature_version.environment,
         related_object_type=RelatedObjectType.EF_VERSION.name,
         related_object_uuid=environment_feature_version.uuid,
-        log=ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
-        % environment_feature_version.feature.name,
+        log=log,
         author_id=environment_feature_version.published_by_id,
         master_api_key_id=environment_feature_version.published_by_api_key_id,
     )
