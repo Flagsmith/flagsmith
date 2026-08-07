@@ -342,6 +342,7 @@ def _get_start_date_and_stop_date_for_subscribed_organisation(
                 raise NotFound("No billing periods found for this organisation.")
 
             month_delta = relativedelta(now, starts_at).months
+            month_delta += relativedelta(now, starts_at).years * 12
             date_start = relativedelta(months=month_delta) + starts_at
             return date_start, now
 

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from 'storybook'
 import StatItem from 'components/StatItem'
+import StatusBadge from 'components/experiments/StatusBadge'
 
 const meta: Meta<typeof StatItem> = {
   component: StatItem,
@@ -54,5 +55,33 @@ export const StringValue: Story = {
     icon: 'layers',
     label: 'Plan',
     value: 'Scale-Up',
+  },
+}
+
+export const WithSub: Story = {
+  args: {
+    icon: 'bar-chart',
+    label: 'Total API Calls',
+    sub: 'of 2M plan limit',
+    value: 1240000,
+  },
+}
+
+export const WithBadge: Story = {
+  args: {
+    badge: <StatusBadge status='running' />,
+    icon: 'flask',
+    label: 'Experiment',
+    sub: 'started 12 days ago',
+    value: 'Checkout v2',
+  },
+}
+
+// The icon is optional: dense rows of figures often read better without one.
+export const WithoutIcon: Story = {
+  args: {
+    label: '% of plan consumed',
+    sub: 'this billing period',
+    value: '62%',
   },
 }
