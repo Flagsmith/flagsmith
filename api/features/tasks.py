@@ -6,6 +6,7 @@ from task_processor.decorators import (
 )
 
 from environments.models import Webhook
+from features.constants import ENVIRONMENT
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
@@ -21,11 +22,20 @@ logger = logging.getLogger(__name__)
 
 
 def trigger_feature_state_change_webhooks(  # type: ignore[no-untyped-def]
-    instance: FeatureState, event_type: WebhookEventType = WebhookEventType.FLAG_UPDATED
+    instance: FeatureState, event_type: WebhookEventType | None = None
 ):
-    assert event_type in [WebhookEventType.FLAG_UPDATED, WebhookEventType.FLAG_DELETED]
+    # FLAG_CREATED is inferred from the FeatureState history below; callers only
+    # pass explicit event types for non-default behaviour like deletes.
+    assert event_type in [
+        None,
+        WebhookEventType.FLAG_UPDATED,
+        WebhookEventType.FLAG_DELETED,
+    ]
 
     history_instance = instance.history.first()
+    event_type = event_type or _get_feature_state_webhook_event_type(
+        instance, history_instance
+    )
     timestamp = (
         history_instance.history_date.strftime(WEBHOOK_DATETIME_FORMAT)
         if history_instance and history_instance.history_date
@@ -62,6 +72,23 @@ def trigger_feature_state_change_webhooks(  # type: ignore[no-untyped-def]
             event_type.value,
         )
     )
+
+
+def _get_feature_state_webhook_event_type(
+    instance: FeatureState,
+    history_instance: HistoricalFeatureState | None,
+) -> WebhookEventType:
+    if (
+        history_instance
+        and history_instance.history_type == "+"
+        and instance.change_request_id is None
+        and instance.type == ENVIRONMENT
+        and instance.environment is not None
+        and instance.environment.created_date <= instance.feature.created_date
+    ):
+        return WebhookEventType.FLAG_CREATED
+
+    return WebhookEventType.FLAG_UPDATED
 
 
 def _get_previous_state(

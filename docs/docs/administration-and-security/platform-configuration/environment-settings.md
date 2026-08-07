@@ -38,12 +38,12 @@ You can define any number of webhook endpoints per environment. Each event will 
 
 ### Events That Trigger Webhooks
 
-The following events will generate a webhook action (all sent as `event_type: "FLAG_UPDATED"`):
+The following events will generate a webhook action:
 
-- Creating a new feature
-- Updating a feature value/state in an environment
-- Overriding a feature for an identity
-- Overriding a feature for a segment
+- Creating a new feature (`event_type: "FLAG_CREATED"`)
+- Updating a feature value/state in an environment (`event_type: "FLAG_UPDATED"`)
+- Overriding a feature for an identity (`event_type: "FLAG_UPDATED"`)
+- Overriding a feature for a segment (`event_type: "FLAG_UPDATED"`)
 
 ### Environment Webhook Payload
 

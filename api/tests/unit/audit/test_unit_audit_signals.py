@@ -418,6 +418,28 @@ def test_trigger_feature_state_change_webhooks__versioned_environment__skips_web
     mock_trigger_webhooks.assert_not_called()
 
 
+def test_trigger_feature_state_change_webhooks__versioned_environment_feature_created__triggers_webhook(
+    environment_v2_versioning: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_trigger_webhooks = mocker.patch(
+        "features.tasks.trigger_feature_state_change_webhooks"
+    )
+
+    # When
+    feature = Feature.objects.create(
+        name="v2_created_feature",
+        project=environment_v2_versioning.project,
+    )
+
+    # Then
+    mock_trigger_webhooks.assert_called_once()
+    called_feature_state = mock_trigger_webhooks.call_args.args[0]
+    assert called_feature_state.feature_id == feature.id
+    assert called_feature_state.environment_id == environment_v2_versioning.id
+
+
 def test_trigger_feature_state_change_webhooks__deleted_feature_state__skips_webhook(
     environment: Environment,
     feature: Feature,

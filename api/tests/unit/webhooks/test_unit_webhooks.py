@@ -21,6 +21,7 @@ from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from core.signing import sign_payload
 from environments.models import Environment, Webhook
 from organisations.models import Organisation, OrganisationWebhook
+from webhooks.serializers import WebhookSerializer
 from webhooks.webhooks import (
     WebhookEventType,
     WebhookType,
@@ -30,6 +31,19 @@ from webhooks.webhooks import (
     call_webhook_with_failure_mail_after_retries,
     generate_environment_sample_webhook_data,
 )
+
+
+def test_webhook_serializer__flag_created_event_type__is_valid() -> None:
+    # Given
+    serializer = WebhookSerializer(
+        data={"event_type": WebhookEventType.FLAG_CREATED.value, "data": {}}
+    )
+
+    # When
+    is_valid = serializer.is_valid()
+
+    # Then
+    assert is_valid is True
 
 
 @mock.patch("webhooks.webhooks.requests")

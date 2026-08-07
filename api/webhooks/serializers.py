@@ -4,7 +4,15 @@ from webhooks.fields import NoSSRFURLField
 
 
 class WebhookSerializer(serializers.Serializer[None]):
-    event_type = serializers.ChoiceField(choices=["FLAG_UPDATED", "AUDIT_LOG_CREATED"])
+    event_type = serializers.ChoiceField(
+        choices=[
+            "FLAG_CREATED",
+            "FLAG_UPDATED",
+            "FLAG_DELETED",
+            "AUDIT_LOG_CREATED",
+            "NEW_VERSION_PUBLISHED",
+        ]
+    )
     data = serializers.DictField()  # type: ignore[assignment]
 
 
