@@ -27,6 +27,15 @@ export const warehouseConnectionService = service
           url: `environments/${environmentId}/warehouse-connections/${id}/`,
         }),
       }),
+      getWarehouseConnectionEvents: builder.query<
+        Res['warehouseConnectionEvents'],
+        Req['getWarehouseConnectionEvents']
+      >({
+        providesTags: [{ id: 'EVENTS', type: 'WarehouseConnection' }],
+        query: ({ environmentId, id }) => ({
+          url: `environments/${environmentId}/warehouse-connections/${id}/events/`,
+        }),
+      }),
       getWarehouseConnections: builder.query<
         Res['warehouseConnections'],
         Req['getWarehouseConnections']
@@ -75,6 +84,7 @@ export const warehouseConnectionService = service
 export const {
   useCreateWarehouseConnectionMutation,
   useDeleteWarehouseConnectionMutation,
+  useGetWarehouseConnectionEventsQuery,
   useGetWarehouseConnectionsQuery,
   useTestWarehouseConnectionConfigMutation,
   useTestWarehouseConnectionMutation,
