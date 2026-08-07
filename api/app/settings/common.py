@@ -384,6 +384,9 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    # Must come after CorsMiddleware: it can short-circuit with a response of
+    # its own, and CorsMiddleware needs to wrap it to add CORS headers to that.
+    "core.middleware.query_params.RejectNulByteQueryParamsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
