@@ -1,3 +1,5 @@
+import typing
+
 from organisations.models import Organisation, UserOrganisation
 from organisations.permissions.models import (
     OrganisationPermissionModel,
@@ -156,3 +158,34 @@ def test_user_has_organisation_permission__user_removed_from_organisation__retur
         organisation=organisation,
         permission_key=CREATE_PROJECT,
     )
+
+
+def test_user_has_organisation_permission__evaluating_permission__executes_exact_queries(
+    django_assert_num_queries: typing.Any,
+    django_user_model: typing.Any,
+    organisation: typing.Any,
+) -> None:
+    # Given
+    user = django_user_model.objects.create(email="test_sequential_eval@example.com")
+    user.add_organisation(organisation)
+
+    # When
+    with django_assert_num_queries(3) as ctx:
+        has_permission = user_has_organisation_permission(
+            user=user, organisation=organisation, permission_key="MANAGE_USER_GROUPS"
+        )
+
+    # Then
+    assert has_permission is False
+
+    # Verify the exact queries executed match the expected sequential EXISTS pattern
+    queries = [query["sql"].lower() for query in ctx.captured_queries]
+
+    # Query 1: Base user organisation role check
+    assert "organisations_userorganisation" in queries[0]
+
+    # Query 2: User-specific permission check
+    assert "organisation_permissions_userorganisationpermission" in queries[1]
+
+    # Query 3: Group-specific permission check
+    assert "organisation_permissions_userpermissiongroup" in queries[2]
