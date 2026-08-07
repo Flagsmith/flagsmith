@@ -8,7 +8,10 @@ from environments.tasks import rebuild_environment_document
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import trigger_update_version_webhooks
-from features.workflows.core.exceptions import ChangeRequestNotApprovedError
+from features.workflows.core.exceptions import (
+    ChangeRequestNotApprovedError,
+    ChangeRequestStaleError,
+)
 
 if TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest
@@ -27,6 +30,8 @@ class ChangeRequestCommitService:
                 "Change request has not been approved by all required approvers."
             )
 
+        self._raise_if_stale()
+
         self._publish_feature_states()
         self._publish_environment_feature_versions(committed_by)
         self._publish_change_sets(committed_by)
@@ -44,6 +49,24 @@ class ChangeRequestCommitService:
             )
 
         self.change_request.save()
+
+    def _raise_if_stale(self) -> None:
+        # Mirror the conflict check already performed for scheduled change
+        # sets (see `publish_version_change_set`) so that a manual commit
+        # can't silently overwrite overrides published by another change
+        # request since this one was created.
+        if self.change_request.ignore_conflicts:
+            return
+
+        for change_set in self.change_request.change_sets.all():
+            if change_set.get_conflicts():
+                logger.warning(
+                    "change_request.stale",
+                    organisation__id=self.change_request.project.organisation_id,
+                    environment__id=self.change_request.environment_id,
+                    change_request__id=self.change_request.id,
+                )
+                raise ChangeRequestStaleError()
 
     def _publish_feature_states(self) -> None:
         now = timezone.now()
