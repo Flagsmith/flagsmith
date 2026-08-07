@@ -76,7 +76,7 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
             ),
         ]
 
-    @hook(AFTER_CREATE)  # type: ignore[misc]
+    @hook(AFTER_CREATE)
     def sync_to_ingestion_on_create(self) -> None:
         from experimentation.tasks import (
             provision_external_warehouse_ingestion_infrastructure,
@@ -93,7 +93,7 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
             kwargs={"environment_id": self.environment_id},
         )
 
-    @hook(AFTER_DELETE)  # type: ignore[misc]
+    @hook(AFTER_DELETE)
     def sync_to_ingestion_on_delete(self) -> None:
         from experimentation.tasks import remove_environment_ingestion_keys
 

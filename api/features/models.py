@@ -140,7 +140,7 @@ class Feature(  # type: ignore[django-manager-missing]
         # TODO: after upgrade to Django 4.0 use UniqueConstraint()
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
-    @hook(AFTER_SAVE)  # type: ignore[misc]
+    @hook(AFTER_SAVE)
     def create_github_comment(self) -> None:
         from integrations.github.github import call_github_task
 
@@ -159,7 +159,7 @@ class Feature(  # type: ignore[django-manager-missing]
                 feature_states=None,
             )
 
-    @hook(AFTER_SAVE)  # type: ignore[misc]
+    @hook(AFTER_SAVE)
     def create_gitlab_comment(self) -> None:
         from features.feature_external_resources.models import (
             GITLAB_RESOURCE_TYPES,
@@ -182,7 +182,7 @@ class Feature(  # type: ignore[django-manager-missing]
     def create_feature_states(self):  # type: ignore[no-untyped-def]
         FeatureState.create_initial_feature_states_for_feature(feature=self)
 
-    @hook(AFTER_SAVE)  # type: ignore[misc]
+    @hook(AFTER_SAVE)
     def delete_identity_overrides(self) -> None:
         # Note that we have to use conditional logic on self.deleted_at inside
         # the hook method because the django-lifecycle logic for when / was / is_not
@@ -439,7 +439,7 @@ class FeatureSegment(
     def _get_environment(self) -> "Environment":
         return self.environment
 
-    @hook(AFTER_DELETE)  # type: ignore[misc]
+    @hook(AFTER_DELETE)
     def create_github_comment(self) -> None:
         from integrations.github.github import call_github_task
 
