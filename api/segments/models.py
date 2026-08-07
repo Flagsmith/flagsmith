@@ -98,6 +98,10 @@ class Segment(
         Feature, on_delete=models.CASCADE, related_name="segments", null=True
     )
 
+    rules_data = models.JSONField(
+        null=True,
+    )
+
     version = models.IntegerField(default=1, null=True)
 
     version_of = models.ForeignKey(

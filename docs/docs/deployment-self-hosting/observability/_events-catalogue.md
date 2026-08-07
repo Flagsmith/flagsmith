@@ -103,7 +103,7 @@ Attributes:
 ### `core.encrypted_field.decrypt_failed`
 
 Logged at `warning` from:
- - `api/core/fields.py:37`
+ - `api/core/fields.py:62`
 
 Attributes:
  - `exc_info`
@@ -577,7 +577,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:158`
+ - `api/segments/serializers.py:169`
 
 Attributes:
  - `revision_id`

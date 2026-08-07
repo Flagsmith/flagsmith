@@ -14,6 +14,10 @@ from segment_membership.constants import MAX_SEGMENT_MEMBERS_PAGE_SIZE
 from segment_membership.models import SegmentMembershipCount
 from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule
+from segments.types import LegacySegmentRule
+
+# TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
+from segments.types import SegmentRule as SegmentRuleType
 
 logger = structlog.get_logger(__name__)
 
@@ -101,6 +105,8 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         Because WritableNestedModelSerializer uses `initial_data` instead of `data`
         we need to override the `__init__` method to remove rules and conditions
         that are marked for deletion.
+
+        TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
         """
         data = kwargs.get("data")
         if data and "rules" in data:
@@ -127,7 +133,11 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             "metadata",
             "membership_counts",
         ]
-        read_only_fields = ["membership_counts"]
+        read_only_fields = [
+            "membership_counts",
+            "project",
+            "version_of",
+        ]
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)
@@ -147,6 +157,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         metadata_data = validated_data.pop("metadata", [])
         segment = super().create(validated_data)  # type: ignore[no-untyped-call]
         self._update_metadata(segment, metadata_data)
+        self._set_rules_data(segment, validated_data["rules"])
         enqueue_membership_refresh(segment.project)
         return segment
 
@@ -162,8 +173,43 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                 )
             segment = super().update(segment, validated_data)  # type: ignore[no-untyped-call]
         self._update_metadata(segment, metadata)
+        self._set_rules_data(segment, validated_data["rules"])
         enqueue_membership_refresh(segment.project)
         return segment
+
+    def _set_rules_data(self, segment: Segment, rules: list[LegacySegmentRule]) -> None:
+        """Set the .rules_data attribute
+        TODO: Delete this as per https://github.com/Flagsmith/flagsmith/issues/7818
+        """
+        segment.rules_data = self._cleanup_rules_and_conditions(rules)
+        segment.save(update_fields=["rules_data"])
+
+    def _cleanup_rules_and_conditions(
+        self, rules_data: list[LegacySegmentRule]
+    ) -> list[SegmentRuleType]:
+        """Remove any `id` fields and `delete: true` items from rules and conditions
+
+        In https://github.com/Flagsmith/flagsmith/issues/7814, we moved from a
+        SegmentRule and Condition tree to a JSON field. This cleanup exists to
+        keep the interface compatible."""
+        return [
+            {
+                "type": rule_data["type"],
+                "conditions": [
+                    {
+                        "property": condition_data["property"],
+                        "operator": condition_data["operator"],
+                        "value": condition_data.get("value"),
+                        "description": condition_data.get("description"),
+                    }
+                    for condition_data in rule_data.get("conditions", [])
+                    if not condition_data.get("delete")
+                ],
+                "rules": self._cleanup_rules_and_conditions(rule_data.get("rules", [])),
+            }
+            for rule_data in rules_data
+            if not rule_data.get("delete")
+        ]
 
     def _get_rules_and_conditions_without_deleted(
         self, rules_data: DictList
@@ -175,8 +221,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         or conditions including both an `"id"` field and `"delete": true` were
         later soft-deleted in the database.
 
-        TODO: Deprecate this in favor of not sending unwanted rules and
-        conditions in the input.
+        TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
         """
         return [
             {
