@@ -5,6 +5,7 @@ from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
+from django.shortcuts import get_object_or_404
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.viewsets import GenericViewSet
@@ -21,14 +22,16 @@ class EnvironmentFeatureVersionPermissions(BasePermission):
             return True
 
         environment_pk = view.kwargs["environment_pk"]
-        environment = Environment.objects.get(id=environment_pk)
+        environment = get_object_or_404(Environment, id=environment_pk)
 
         tag_ids = None
         required_permission = UPDATE_FEATURE_STATE
 
         if required_permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
             feature_id = view.kwargs["feature_pk"]
-            feature = Feature.objects.get(id=feature_id, project=environment.project)
+            feature = get_object_or_404(
+                Feature, id=feature_id, project=environment.project
+            )
             tag_ids = list(feature.tags.values_list("id", flat=True))
 
         return request.user.has_environment_permission(  # type: ignore[union-attr,no-any-return]
@@ -70,7 +73,7 @@ class EnvironmentFeatureVersionRetrievePermissions(BasePermission):
 class EnvironmentFeatureVersionFeatureStatePermissions(BasePermission):
     def has_permission(self, request: Request, view: GenericViewSet) -> bool:  # type: ignore[override,type-arg]
         environment_pk = view.kwargs["environment_pk"]
-        environment = Environment.objects.get(id=environment_pk)
+        environment = get_object_or_404(Environment, id=environment_pk)
 
         if view.action == "list":
             return request.user.has_environment_permission(  # type: ignore[union-attr,no-any-return]
