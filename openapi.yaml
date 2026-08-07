@@ -22252,6 +22252,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         enabled:
           type: boolean
@@ -24206,6 +24207,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         enabled:
           type: boolean
@@ -25058,6 +25060,7 @@ components:
         url:
           type: string
           format: uri
+          maxLength: 200
         enabled:
           type: boolean
         created_at:
@@ -25079,6 +25082,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         secret:
           type: string
@@ -28048,6 +28052,7 @@ components:
         url:
           type: string
           format: uri
+          maxLength: 200
         enabled:
           type: boolean
         created_at:
@@ -28071,6 +28076,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         secret:
           type: string
