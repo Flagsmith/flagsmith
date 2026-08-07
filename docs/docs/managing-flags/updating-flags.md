@@ -38,7 +38,7 @@ Values are passed as a `value` object with a `type` and a `value` string:
 
 ### Toggle a flag on or off
 
-The simplest case — flip a feature flag in an environment:
+The simplest case — enable a feature flag in an environment:
 
 ```bash
 curl -X PATCH 'https://api.flagsmith.com/api/__future__/environments/{environment_key}/features/{feature_id}/' \
