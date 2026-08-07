@@ -466,7 +466,7 @@ Attributes:
 ### `onboarding.environment.already_evaluated`
 
 Logged at `info` from:
- - `api/environments/onboarding/services.py:23`
+ - `api/environments/onboarding/services.py:26`
 
 Attributes:
  - `environment.id`
@@ -477,7 +477,7 @@ Attributes:
 ### `onboarding.environment.first_evaluated`
 
 Logged at `info` from:
- - `api/environments/onboarding/services.py:32`
+ - `api/environments/onboarding/services.py:45`
 
 Attributes:
  - `environment.id`

@@ -67,7 +67,7 @@ dependencies = [
     "pydantic>=2.12.0,<3.0.0",
     "pydantic-collections>=0.6.0,<0.7.0",
     "pyngo>=2.4.1,<2.5.0",
-    "flagsmith>=5.3.0,<6.0.0",
+    "flagsmith>=6.2.0,<7.0.0",
     "openfeature-sdk>=0.9.0,<0.10.0",
     "openfeature-provider-flagsmith>=0.2.0",
     "python-gnupg>=0.5.1,<0.6.0",
@@ -159,6 +159,8 @@ explicit = true
 [tool.uv.sources]
 flagsmith-private = { index = "flagsmith-pypi-production" }
 django-clickhouse-backend = { git = "https://github.com/jayvynl/django-clickhouse-backend", rev = "d884c7d" }
+# TODO: back to PyPI once Flagsmith/flagsmith-openfeature-provider-python#37 is released
+openfeature-provider-flagsmith = { git = "https://github.com/Flagsmith/flagsmith-openfeature-provider-python", rev = "b8aa9310dbedc8658606c0958eae7a78f8dac6df" }
 
 [tool.uv]
 required-version = ">=0.11.18"  # Ensure this matches the version in .pre-commit-config.yaml
@@ -244,10 +246,10 @@ override-dependencies = [
     "executing==2.2.1",
     "fancycompleter==0.9.1",
     "filelock==3.20.3",
-    "flagsmith==5.3.0",
+    "flagsmith==6.2.0",
     # flagsmith-common version is set via the [project] dependency spec which
     # also carries the extras; an override here would strip the extras.
-    "flagsmith-flag-engine==10.1.0",
+    "flagsmith-flag-engine==10.2.0",
     "freezegun==1.5.5",
     "genson==1.2.2",
     "google-api-core==2.29.0",
