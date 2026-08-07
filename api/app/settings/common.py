@@ -378,6 +378,7 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "api.openapi.AutoSchema",
 }
 MIDDLEWARE = [
+    "core.middleware.query_params.NullCharacterQueryParamMiddleware",
     "common.core.middleware.APIResponseVersionHeaderMiddleware",
     "common.gunicorn.middleware.RouteLoggerMiddleware",
     "django.middleware.security.SecurityMiddleware",
