@@ -111,6 +111,7 @@ def test_list_amplitude_config__config_exists__returns_config_list(
         "id": config.id,
         "api_key": config.api_key,
         "base_url": config.base_url,
+        "latest_health": None,
     }
 
     assert response.data == [expected_response]

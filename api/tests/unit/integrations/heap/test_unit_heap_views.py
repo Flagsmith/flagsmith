@@ -109,6 +109,7 @@ def test_list_heap_config__config_exists__returns_config_list(
         "api_key": config.api_key,
         "id": config.id,
         "base_url": None,
+        "latest_health": None,
     }
     assert response.data == [expected_response]
 
