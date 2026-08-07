@@ -626,6 +626,51 @@ def test_list_segments__without_rbac__expected_num_queries(
     assert response_json["count"] == num_segments
 
 
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
+@pytest.mark.parametrize(
+    "client, expected_num_queries",
+    [
+        (lazy_fixture("admin_master_api_key_client"), 12),
+        (lazy_fixture("admin_client"), 14),
+    ],
+)
+def test_retrieve_segment__without_rbac__expected_num_queries(
+    django_assert_num_queries: DjangoAssertNumQueries,
+    project: Project,
+    client: APIClient,
+    required_a_segment_metadata_field: MetadataModelField,
+    expected_num_queries: int,
+) -> None:
+    # Given
+    # A segment with metadata and multiple rules and conditions to expose any N+1 issues.
+    segment = Segment.objects.create(project=project, name="test segment")
+    Metadata.objects.create(
+        object_id=segment.id,
+        content_type=ContentType.objects.get_for_model(segment),
+        model_field=required_a_segment_metadata_field,
+        field_value="test",
+    )
+    all_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    for _ in range(3):
+        any_rule = SegmentRule.objects.create(rule=all_rule, type=SegmentRule.ANY_RULE)
+        Condition.objects.create(property="foo", value="bar", rule=any_rule)
+
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project.id, segment.id],
+    )
+
+    # When
+    with django_assert_num_queries(expected_num_queries):
+        response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
 def test_list_segments__system_segment_exists__excludes_system_segment(
     project: Project,
     admin_client: APIClient,
