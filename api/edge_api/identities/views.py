@@ -176,8 +176,20 @@ class EdgeIdentityViewSet(
         if not environment.project.organisation.persist_trait_data:
             raise TraitPersistenceError()
         edge_identity = self.get_object()
+        # `pyngo.drf_error_details` assumes every pydantic error has a non-empty
+        # `loc`, which isn't true when the payload itself isn't an object (e.g. a
+        # JSON array), so that case is rejected here before it ever reaches
+        # `TraitModel.model_validate`/`drf_error_details`.
+        if not isinstance(request.data, typing.Mapping):
+            raise ValidationError(
+                {
+                    "non_field_errors": [
+                        "Expected an object with trait_key and trait_value."
+                    ]
+                }
+            )
         try:
-            trait = TraitModel(**request.data)
+            trait = TraitModel.model_validate(request.data)
         except pydantic.ValidationError as validation_error:
             raise ValidationError(
                 drf_error_details(validation_error)
