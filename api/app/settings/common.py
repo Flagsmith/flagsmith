@@ -343,6 +343,10 @@ TASK_PROCESSOR_DATABASES = env.list(
 
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 DCR_THROTTLE_RATE = env("DCR_THROTTLE_RATE", "500/month")
+OIDC_TOKEN_EXCHANGE_THROTTLE_RATE = env("OIDC_TOKEN_EXCHANGE_THROTTLE_RATE", "60/min")
+TRUST_RELATIONSHIP_ACCESS_TOKEN_LIFETIME_SECONDS = env.int(
+    "TRUST_RELATIONSHIP_ACCESS_TOKEN_LIFETIME_SECONDS", default=3600
+)
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", default=None)
 MASTER_API_KEY_THROTTLE_RATE = env("MASTER_API_KEY_THROTTLE_RATE", default=None)
@@ -354,6 +358,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
         "api_keys.authentication.MasterAPIKeyAuthentication",
         "oauth2_metadata.authentication.OAuth2BearerTokenAuthentication",
+        "trust_relationships.authentication.TrustRelationshipTokenAuthentication",
     ),
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
@@ -362,6 +367,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
         "dcr_register": DCR_THROTTLE_RATE,
+        "oidc_token_exchange": OIDC_TOKEN_EXCHANGE_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
         "master_api_key": MASTER_API_KEY_THROTTLE_RATE,
         "mfa_code": "5/min",

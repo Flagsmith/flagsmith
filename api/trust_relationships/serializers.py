@@ -11,6 +11,23 @@ from trust_relationships.services import (
 )
 
 
+class TokenExchangeRequestSerializer(serializers.Serializer[None]):
+    token = serializers.CharField(
+        help_text="An OIDC token issued by a trusted identity provider, "
+        "e.g. a GitHub Actions job token.",
+    )
+
+
+class TokenExchangeResponseSerializer(serializers.Serializer[dict[str, Any]]):
+    access_token = serializers.CharField(
+        help_text="Short-lived access token for the Admin API.",
+    )
+    token_type = serializers.CharField(help_text='Always "Bearer".')
+    expires_in = serializers.IntegerField(
+        help_text="Access token lifetime in seconds.",
+    )
+
+
 class ClaimRuleSerializer(serializers.Serializer[None]):
     claim = serializers.CharField(max_length=255)
     values = serializers.ListField(

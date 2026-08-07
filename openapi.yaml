@@ -544,6 +544,37 @@ paths:
         - {}
       tags:
         - Authentication
+  /api/v1/auth/oidc/token/:
+    post:
+      operationId: oidc_token_exchange
+      description: Exchange an OIDC token issued by a trusted identity provider for a short-lived Flagsmith access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenExchangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenExchangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenExchangeRequest'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenExchangeResponse'
+        '400':
+          description: Request body is invalid.
+        '401':
+          description: 'Token validation failed, or no trust relationship matches the token.'
+      security:
+        - {}
+      tags:
+        - Authentication
   '/api/v1/auth/saml/{name}/metadata/':
     get:
       operationId: api_v1_auth_saml_metadata_retrieve
@@ -27067,6 +27098,30 @@ components:
           type: string
         email:
           type: string
+    TokenExchangeRequest:
+      type: object
+      properties:
+        token:
+          description: 'An OIDC token issued by a trusted identity provider, e.g. a GitHub Actions job token.'
+          type: string
+      required:
+        - token
+    TokenExchangeResponse:
+      type: object
+      properties:
+        access_token:
+          description: Short-lived access token for the Admin API.
+          type: string
+        token_type:
+          description: Always "Bearer".
+          type: string
+        expires_in:
+          description: Access token lifetime in seconds.
+          type: integer
+      required:
+        - access_token
+        - expires_in
+        - token_type
     Trait:
       type: object
       properties:
