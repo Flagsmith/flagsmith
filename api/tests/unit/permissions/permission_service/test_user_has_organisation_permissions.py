@@ -159,6 +159,7 @@ def test_user_has_organisation_permission__user_removed_from_organisation__retur
         permission_key=CREATE_PROJECT,
     )
 
+
 def test_user_has_organisation_permission__evaluating_permission__executes_exact_queries(
     django_assert_num_queries: typing.Any,
     django_user_model: typing.Any,
@@ -179,12 +180,12 @@ def test_user_has_organisation_permission__evaluating_permission__executes_exact
 
     # Verify the exact queries executed match the expected sequential EXISTS pattern
     queries = [query["sql"].lower() for query in ctx.captured_queries]
-    
+
     # Query 1: Base user organisation role check
     assert "organisations_userorganisation" in queries[0]
-    
+
     # Query 2: User-specific permission check
     assert "organisation_permissions_userorganisationpermission" in queries[1]
-    
+
     # Query 3: Group-specific permission check
     assert "organisation_permissions_userpermissiongroup" in queries[2]
