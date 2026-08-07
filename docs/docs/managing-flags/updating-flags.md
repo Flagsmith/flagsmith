@@ -174,4 +174,4 @@ curl -X PATCH 'https://api.flagsmith.com/api/__future__/environments/{environmen
 ```
 
 In both `environment_default` and `segment_overrides`, the `variants` list **must** include all variants for the
-feature, even if their weight is zero.
+feature, even if their weight is zero, and regardless of the HTTP verb used (`PUT` or `PATCH`).
