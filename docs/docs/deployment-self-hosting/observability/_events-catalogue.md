@@ -625,6 +625,35 @@ Attributes:
  - `feature_name`
  - `sentry_action`
 
+### `trust_relationships.created`
+
+Logged at `info` from:
+ - `api/trust_relationships/services.py:48`
+
+Attributes:
+ - `organisation.id`
+ - `trust_relationship.id`
+ - `trust_relationship.issuer`
+
+### `trust_relationships.deleted`
+
+Logged at `info` from:
+ - `api/trust_relationships/services.py:94`
+
+Attributes:
+ - `organisation.id`
+ - `trust_relationship.id`
+
+### `trust_relationships.updated`
+
+Logged at `info` from:
+ - `api/trust_relationships/services.py:79`
+
+Attributes:
+ - `organisation.id`
+ - `trust_relationship.id`
+ - `trust_relationship.issuer`
+
 ### `usage_reporting.run.skipped`
 
 Logged at `debug` from:
