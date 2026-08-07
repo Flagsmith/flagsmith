@@ -596,6 +596,7 @@ SPECTACULAR_SETTINGS = {
     "POSTPROCESSING_HOOKS": [
         "drf_spectacular.hooks.postprocess_schema_enums",
         "api.openapi.postprocessing_assign_tags",
+        "api.openapi.postprocessing_add_trait_value_max_length",
     ],
     "ENUM_NAME_OVERRIDES": {
         # Overrides to use specific schema names for fields named "type".
