@@ -1,3 +1,5 @@
+import typing
+
 from organisations.models import Organisation, UserOrganisation
 from organisations.permissions.models import (
     OrganisationPermissionModel,
@@ -11,7 +13,7 @@ from organisations.permissions.permissions import (
 from permissions.models import PermissionModel
 from permissions.permission_service import user_has_organisation_permission
 from users.models import FFAdminUser, UserPermissionGroup
-import typing
+
 
 def test_user_has_organisation_permission__no_permissions_assigned__returns_false(
     staff_user: FFAdminUser,
@@ -169,7 +171,7 @@ def test_user_has_organisation_permission__evaluating_permission__executes_exact
 
     # When / Then
     # Using an exact query count verifies the sequential EXISTS pattern is working.
-    # If the regression returns (a single massive JOIN cross-product), it will execute 
+    # If the regression returns (a single massive JOIN cross-product), it will execute
     # as 1 query and fail this strict assertion.
     with django_assert_num_queries(4):
         has_permission = user_has_organisation_permission(

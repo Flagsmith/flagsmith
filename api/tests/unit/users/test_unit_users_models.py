@@ -1,4 +1,3 @@
-import typing
 import uuid
 
 import pytest
@@ -8,7 +7,6 @@ from django.db.utils import IntegrityError
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
-from permissions.permission_service import user_has_organisation_permission
 from projects.models import Project
 from tests.types import WithProjectPermissionsCallable
 from users.models import (
@@ -262,5 +260,3 @@ def test_email_domain__valid_email__returns_domain():  # type: ignore[no-untyped
     # Given / When
     # Then
     assert FFAdminUser(email="test@example.com").email_domain == "example.com"
-
-
