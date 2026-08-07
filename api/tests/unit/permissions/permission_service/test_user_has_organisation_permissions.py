@@ -11,7 +11,7 @@ from organisations.permissions.permissions import (
 from permissions.models import PermissionModel
 from permissions.permission_service import user_has_organisation_permission
 from users.models import FFAdminUser, UserPermissionGroup
-
+import typing
 
 def test_user_has_organisation_permission__no_permissions_assigned__returns_false(
     staff_user: FFAdminUser,
@@ -156,3 +156,24 @@ def test_user_has_organisation_permission__user_removed_from_organisation__retur
         organisation=organisation,
         permission_key=CREATE_PROJECT,
     )
+
+
+def test_user_has_organisation_permission__evaluating_permission__executes_exact_queries(
+    django_assert_num_queries: typing.Any,
+    django_user_model: typing.Any,
+    organisation: typing.Any,
+) -> None:
+    # Given
+    user = django_user_model.objects.create(email="test_sequential_eval@example.com")
+    user.add_organisation(organisation)
+
+    # When / Then
+    # Using an exact query count verifies the sequential EXISTS pattern is working.
+    # If the regression returns (a single massive JOIN cross-product), it will execute 
+    # as 1 query and fail this strict assertion.
+    with django_assert_num_queries(4):
+        has_permission = user_has_organisation_permission(
+            user=user, organisation=organisation, permission_key="MANAGE_USER_GROUPS"
+        )
+
+    assert has_permission is False

@@ -3,9 +3,7 @@ import uuid
 
 import pytest
 from common.projects.permissions import VIEW_PROJECT
-from django.db import connection
 from django.db.utils import IntegrityError
-from django.test.utils import CaptureQueriesContext
 
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import UserOrganisationPermission
@@ -266,35 +264,3 @@ def test_email_domain__valid_email__returns_domain():  # type: ignore[no-untyped
     assert FFAdminUser(email="test@example.com").email_domain == "example.com"
 
 
-@pytest.mark.django_db
-@pytest.mark.django_db
-def test_user_has_organisation_permission__evaluating_permission__avoids_join_explosion(
-    django_user_model: typing.Any,
-    organisation: typing.Any,
-) -> None:
-    # Given
-    user = django_user_model.objects.create(email="test_query_count@example.com")
-    user.add_organisation(organisation)
-
-    # When
-    with CaptureQueriesContext(connection) as ctx:
-        has_permission = user_has_organisation_permission(
-            user=user, organisation=organisation, permission_key="MANAGE_USER_GROUPS"
-        )
-
-    # Then
-    assert has_permission is False
-
-    # The old regression executed exactly 1 massive query.
-    # The new logic evaluates sequentially, executing 3 to 4 isolated queries in the worst case.
-    assert len(ctx.captured_queries) > 1
-
-    # Guard against the SQL shape regression:
-    # The expensive join cross-product evaluated user, group, and role permissions in a single statement.
-    # We verify that no single executed query attempts to join multiple permission tables together.
-    for query in ctx.captured_queries:
-        sql = query["sql"].lower()
-        is_massive_join = "userpermission" in sql and "grouppermission" in sql
-        assert not is_massive_join, (
-            "Regression detected: Massive JOIN cross-product found in SQL shape"
-        )
