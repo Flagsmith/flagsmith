@@ -87,7 +87,7 @@ export async function getRolesMasterAPIKeyWithMasterAPIKeyRoles(
 
 export async function deleteMasterAPIKeyWithMasterAPIKeyRoles(
   store: any,
-  data: Req['getMasterAPIKeyWithMasterAPIKeyRoles'],
+  data: Req['deleteMasterAPIKeyWithMasterAPIKeyRoles'],
   options?: Parameters<
     typeof masterAPIKeyWithMasterAPIKeyRoleService.endpoints.deleteMasterAPIKeyWithMasterAPIKeyRoles.initiate
   >[1],

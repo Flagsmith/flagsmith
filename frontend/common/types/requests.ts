@@ -33,6 +33,7 @@ import {
   TagStrategy,
   FeatureType,
   LifecycleStage,
+  TrustRelationshipClaimRule,
 } from './responses'
 import { UtmsType } from './utms'
 
@@ -496,7 +497,11 @@ export type Req = {
   getRoleMasterApiKey: { org_id: number; role_id: number; id: string }
   updateRoleMasterApiKey: { org_id: number; role_id: number; id: string }
   deleteRoleMasterApiKey: { org_id: number; role_id: number; id: string }
-  createRoleMasterApiKey: { org_id: number; role_id: number }
+  createRoleMasterApiKey: {
+    org_id: number
+    role_id: number
+    body: { master_api_key: string }
+  }
   getMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
   deleteMasterAPIKeyWithMasterAPIKeyRoles: {
     org_id: number
@@ -504,6 +509,29 @@ export type Req = {
     role_id: number
   }
   getRolesMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
+  getTrustRelationships: { organisation_id: number }
+  createTrustRelationship: {
+    organisation_id: number
+    body: {
+      name: string
+      issuer: string
+      audience: string
+      claim_rules: TrustRelationshipClaimRule[]
+      is_admin: boolean
+    }
+  }
+  updateTrustRelationship: {
+    organisation_id: number
+    id: number
+    body: {
+      name: string
+      issuer: string
+      audience: string
+      claim_rules: TrustRelationshipClaimRule[]
+      is_admin: boolean
+    }
+  }
+  deleteTrustRelationship: { organisation_id: number; id: number }
   createLaunchDarklyProjectImport: {
     project_id: number
     body: {
