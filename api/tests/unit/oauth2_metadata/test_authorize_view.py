@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import secrets
+from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -332,3 +333,164 @@ def test_get__flagsmith_cli_requests_admin_api__returns_application_info(
     assert data["application"]["client_id"] == FLAGSMITH_CLI_CLIENT_ID
     assert "admin-api" in data["scopes"]
     assert data["is_verified"] is True
+
+
+# ---------------------------------------------------------------------------
+# CIMD integration — OAuthAuthorizeView with HTTPS URL client_ids
+# ---------------------------------------------------------------------------
+
+CIMD_CLIENT_ID_URL = "https://cimd.example.com/oauth/metadata"
+
+
+def _mock_cimd_doc(
+    client_id: str = CIMD_CLIENT_ID_URL,
+    client_name: str = "CIMD Test App",
+    redirect_uris: list[str] | None = None,
+) -> dict:
+    return {
+        "client_id": client_id,
+        "client_name": client_name,
+        "redirect_uris": redirect_uris or ["https://example.com/callback"],
+    }
+
+
+def test_get__cimd_client_id__resolves_and_returns_application_info(
+    auth_client: APIClient,
+    pkce_pair: tuple[str, str],
+    db: None,
+) -> None:
+    # Given
+    _verifier, challenge = pkce_pair
+    doc = _mock_cimd_doc()
+
+    # When
+    with (
+        patch("oauth2_metadata.cimd._fetch_cimd_document", return_value=doc),
+        patch("oauth2_metadata.cimd._is_public_hostname", return_value=True),
+        patch("oauth2_metadata.cimd.cache"),
+    ):
+        response = auth_client.get(
+            "/api/v1/oauth/authorize/",
+            {
+                "client_id": CIMD_CLIENT_ID_URL,
+                "response_type": "code",
+                "redirect_uri": "https://example.com/callback",
+                "scope": "mcp",
+                "code_challenge": challenge,
+                "code_challenge_method": "S256",
+            },
+        )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["application"]["name"] == "CIMD Test App"
+    assert data["application"]["client_id"] == CIMD_CLIENT_ID_URL
+    assert data["is_verified"] is False
+
+
+def test_get__cimd_client_id_resolution_fails__returns_400(
+    auth_client: APIClient,
+    pkce_pair: tuple[str, str],
+    db: None,
+) -> None:
+    # Given
+    _verifier, challenge = pkce_pair
+
+    # When
+    with (
+        patch(
+            "oauth2_metadata.cimd._fetch_cimd_document",
+            side_effect=ValueError("unreachable"),
+        ),
+        patch("oauth2_metadata.cimd.cache"),
+    ):
+        response = auth_client.get(
+            "/api/v1/oauth/authorize/",
+            {
+                "client_id": CIMD_CLIENT_ID_URL,
+                "response_type": "code",
+                "redirect_uri": "https://example.com/callback",
+                "scope": "mcp",
+                "code_challenge": challenge,
+                "code_challenge_method": "S256",
+            },
+        )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+    assert data["error"] == "invalid_client"
+
+
+def test_post__cimd_consent_allow__returns_redirect(
+    auth_client: APIClient,
+    db: None,
+) -> None:
+    # Given
+    _verifier, challenge = _pkce_pair()
+    doc = _mock_cimd_doc()
+
+    # When
+    with (
+        patch("oauth2_metadata.cimd._fetch_cimd_document", return_value=doc),
+        patch("oauth2_metadata.cimd._is_public_hostname", return_value=True),
+        patch("oauth2_metadata.cimd.cache"),
+    ):
+        response = auth_client.post(
+            "/api/v1/oauth/authorize/",
+            {
+                "allow": True,
+                "client_id": CIMD_CLIENT_ID_URL,
+                "response_type": "code",
+                "redirect_uri": "https://example.com/callback",
+                "scope": "mcp",
+                "code_challenge": challenge,
+                "code_challenge_method": "S256",
+                "state": "cimd-test-state",
+            },
+            format="json",
+        )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    redirect_uri = response.json()["redirect_uri"]
+    parsed = urlparse(redirect_uri)
+    query_params = parse_qs(parsed.query)
+    assert "code" in query_params
+    assert query_params["state"] == ["cimd-test-state"]
+
+
+def test_post__cimd_client_id_resolution_fails__returns_400(
+    auth_client: APIClient,
+    db: None,
+) -> None:
+    # Given
+    _verifier, challenge = _pkce_pair()
+
+    # When
+    with (
+        patch(
+            "oauth2_metadata.cimd._fetch_cimd_document",
+            side_effect=ValueError("unreachable"),
+        ),
+        patch("oauth2_metadata.cimd.cache"),
+    ):
+        response = auth_client.post(
+            "/api/v1/oauth/authorize/",
+            {
+                "allow": True,
+                "client_id": CIMD_CLIENT_ID_URL,
+                "response_type": "code",
+                "redirect_uri": "https://example.com/callback",
+                "scope": "mcp",
+                "code_challenge": challenge,
+                "code_challenge_method": "S256",
+            },
+            format="json",
+        )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+    assert data["error"] == "invalid_client"
