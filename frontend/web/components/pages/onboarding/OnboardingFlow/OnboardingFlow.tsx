@@ -1,6 +1,7 @@
 import React, { FC, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
+import Link from 'components/base/link'
 import Icon from 'components/icons/Icon'
 import OnboardingHeader from 'components/pages/onboarding/OnboardingHeader'
 import ThemeToggle from 'components/ThemeToggle'
@@ -30,6 +31,7 @@ const OnboardingFlow: FC = () => {
     environment,
     environmentKey,
     featureName: bootstrappedFeatureName,
+    hasOnboardingFlag,
     organisationId,
     organisationName,
     projectId,
@@ -193,6 +195,27 @@ const OnboardingFlow: FC = () => {
           Something went wrong creating your starter project. Please try again.
         </p>
         <Button onClick={() => window.location.reload()}>Try again</Button>
+      </div>
+    )
+  }
+
+  // ensureFlag seeded nothing, so there is no flag to tour with.
+  if (!hasOnboardingFlag) {
+    return (
+      <div className='onboarding-flow mx-auto text-center'>
+        <h2 className='mb-2'>You’re already set up</h2>
+        <p className='text-muted mb-3'>
+          {projectDisplayName} already has flags, so we haven’t added a demo
+          one.
+        </p>
+        <div className='d-flex justify-content-center align-items-center gap-3'>
+          <Button onClick={skipToApp}>Go to your projects</Button>
+          <Link
+            to={`/project/${projectId}/environment/${environmentKey}/features`}
+          >
+            View flags in {projectDisplayName}
+          </Link>
+        </div>
       </div>
     )
   }
