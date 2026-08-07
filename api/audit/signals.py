@@ -217,11 +217,20 @@ def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ign
 
     # Handle FeatureState, FeatureStateValue, and MultivariateFeatureStateValue audit logs
     # All these types have related_object_type=FEATURE_STATE
-    if isinstance(audited_instance, (FeatureStateValue, MultivariateFeatureStateValue)):
-        feature_state = audited_instance.feature_state
-    elif isinstance(audited_instance, FeatureState):
-        feature_state = audited_instance
-    else:
+    try:
+        if isinstance(
+            audited_instance, (FeatureStateValue, MultivariateFeatureStateValue)
+        ):
+            feature_state = audited_instance.feature_state
+        elif isinstance(audited_instance, FeatureState):
+            feature_state = audited_instance
+        else:
+            return
+    except FeatureState.DoesNotExist:
+        logger.debug(
+            "FeatureState no longer exists for audit log %d, skipping.",
+            instance.pk,
+        )
         return
 
     if feature_state.is_scheduled:
