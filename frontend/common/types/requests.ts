@@ -61,6 +61,20 @@ export type UpdateFeatureStateBody = {
   multivariate_feature_state_values?: MultivariateOption[] | null
 }
 
+// Value payload for the consolidated update-flag endpoints (#7641).
+// The value is always sent as a string; type tells the API how to parse it.
+export type UpdateFeatureValueType = 'string' | 'integer' | 'boolean'
+export type UpdateFeatureValue = {
+  type: UpdateFeatureValueType
+  value: string
+}
+export type UpdateFeatureSegmentOverride = {
+  segmentId: number
+  priority?: number | null
+  enabled: boolean
+  value: FlagsmithValue
+}
+
 export type PagedRequest<T> = T & {
   page?: number
   page_size?: number
@@ -962,6 +976,21 @@ export type Req = {
     environmentId: string
     environmentFlagId: number
     body: UpdateFeatureStateBody
+  }
+  toggleFeature: {
+    environment: Environment
+    environmentFlag: FeatureState
+    projectFlag: ProjectFlag
+  }
+  updateFeature: {
+    environment: Environment
+    projectFlag: ProjectFlag
+    environmentDefault: {
+      enabled: boolean
+      value: FlagsmithValue
+    }
+    removeSegmentIds?: number[]
+    segmentOverrides?: UpdateFeatureSegmentOverride[]
   }
   getAdminDashboardMetrics: {
     days?: number

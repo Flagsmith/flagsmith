@@ -1491,6 +1491,13 @@ export type Res = {
     }
   }
   featureState: FeatureState
+  toggleFeature: void
+  // saved is false when the update was not eligible for the consolidated
+  // endpoint (#7641) and the caller should fall back to the legacy paths
+  updateFeature: {
+    environmentDefault?: TypedFeatureState
+    saved: boolean
+  }
   adminDashboardMetrics: {
     summary: {
       total_organisations: number
