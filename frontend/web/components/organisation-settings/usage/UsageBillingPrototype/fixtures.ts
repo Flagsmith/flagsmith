@@ -118,8 +118,6 @@ type ScenarioInput = {
   graceDaysLeft?: number
   restricted?: boolean
   overageCost?: number | null
-  periodLabel?: string
-  isBillingPeriod?: boolean
 }
 
 const buildView = ({
@@ -127,12 +125,10 @@ const buildView = ({
   daysOverLimit,
   grace,
   graceDaysLeft,
-  isBillingPeriod = true,
   limit,
   overageCost = null,
   percent,
   periodDays,
-  periodLabel,
   plan,
   restricted = false,
   restrictedImmediately,
@@ -159,16 +155,14 @@ const buildView = ({
     overageCost,
     period: {
       daysRemaining: periodDays - daysElapsed,
-      isBillingPeriod,
-      label: periodLabel
-        ? `${periodLabel} · ${periodStart.format('D MMM')} to ${moment().format(
-            'D MMM YYYY',
-          )}`
-        : `${periodStart.format('D MMM')} to ${resetsAt.format('D MMM YYYY')}`,
+      isBillingPeriod: true,
+      label: `${periodStart.format('D MMM')} to ${resetsAt.format(
+        'D MMM YYYY',
+      )}`,
       // Rolling windows never reset, so they get no reset date.
-      resetsAt: isBillingPeriod ? resetsAt.format('D MMM YYYY') : '',
+      resetsAt: resetsAt.format('D MMM YYYY'),
 
-      selectValue: isBillingPeriod ? 'current_billing_period' : undefined,
+      selectValue: 'current_billing_period',
     },
 
     plan,
@@ -198,22 +192,18 @@ export const FIXTURES: Record<Exclude<ScenarioId, 'live'>, UsageView> = {
     daysOverLimit: 4,
     grace: 'countdown',
     graceDaysLeft: 4,
-    isBillingPeriod: false,
     limit: 50_000,
     percent: 112,
     periodDays: 30,
-    periodLabel: 'Last 30 days',
     plan: 'free',
   }),
   'free-restricted': buildView({
     daysElapsed: 27,
     daysOverLimit: 7,
     grace: 'restricted',
-    isBillingPeriod: false,
     limit: 50_000,
     percent: 137,
     periodDays: 30,
-    periodLabel: 'Last 30 days',
     plan: 'free',
     restricted: true,
   }),
@@ -221,15 +211,13 @@ export const FIXTURES: Record<Exclude<ScenarioId, 'live'>, UsageView> = {
     daysElapsed: 24,
     daysOverLimit: 1,
     grace: 'restricted',
-    isBillingPeriod: false,
     limit: 50_000,
     percent: 121,
     periodDays: 30,
-    periodLabel: 'Last 30 days',
     plan: 'free',
     restricted: true,
     restrictedImmediately: true,
-    resumesAt: '14 Aug 2026',
+    resumesAt: 'the period resets',
   }),
   healthy: buildView({
     daysElapsed: 17,

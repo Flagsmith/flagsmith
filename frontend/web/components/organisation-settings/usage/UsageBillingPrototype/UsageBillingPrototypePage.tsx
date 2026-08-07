@@ -128,9 +128,6 @@ const UsageBillingPrototypePage: FC<UsageBillingPrototypePageProps> = ({
             scenario === 'live' ? billingPeriod : view.period.selectValue
           }
           setBillingPeriod={setBillingPeriod}
-          isOnFreePlanPeriods={
-            scenario === 'live' ? isOnFreePlanPeriods : view.plan === 'free'
-          }
         />
       ) : (
         <UsageNotifications

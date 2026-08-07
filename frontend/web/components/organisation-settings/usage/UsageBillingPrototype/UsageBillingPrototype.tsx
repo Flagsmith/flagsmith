@@ -1,11 +1,11 @@
 import { FC, useState } from 'react'
 import ProjectFilter from 'components/ProjectFilter'
 import StatItem from 'components/StatItem'
-import { billingPeriods, freePeriods, Req } from 'common/types/requests'
+import { billingPeriods, Req } from 'common/types/requests'
 
-// Every widget below the selector assumes a billing period, so a paid plan is
-// not offered rolling windows to compare a monthly allowance against.
-const paidBillingPeriods = billingPeriods.filter((period) =>
+// Every widget below the selector assumes a billing period, and free plans now
+// have one too, so rolling windows are not offered to anybody.
+const billingPeriodOptions = billingPeriods.filter((period) =>
   `${period.value}`.includes('billing_period'),
 )
 import UsageBanner from './UsageBanner'
@@ -26,7 +26,6 @@ type UsageBillingPrototypeProps = {
   setBillingPeriod: (
     period: Req['getOrganisationUsage']['billing_period'],
   ) => void
-  isOnFreePlanPeriods: boolean
 }
 
 type Tile = {
@@ -115,7 +114,6 @@ const buildTiles = (view: UsageView, percent: number): Tile[] => {
  */
 const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
   billingPeriod,
-  isOnFreePlanPeriods,
   organisationId,
   project,
   setBillingPeriod,
@@ -141,7 +139,7 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
             <Select
               onChange={(v: any) => setBillingPeriod(v.value)}
               value={billingPeriods.find((v) => v.value === billingPeriod)}
-              options={isOnFreePlanPeriods ? freePeriods : paidBillingPeriods}
+              options={billingPeriodOptions}
             />
           </div>
           <div className='usage-proto__select'>
