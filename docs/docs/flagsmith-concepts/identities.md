@@ -12,7 +12,7 @@ Identities are created within Flagsmith automatically the first time they are id
 
 The SDK part of the Flagsmith API is public by design; the environment key is intended to be public. When identifying users, it is important to use an identity value that is not easy to guess. For example, if you used an incrementing integer to identify your users, it would be trivial to request identities by enumerating this integer. This would effectively provide public access to any user traits that are associated with users.
 
-We strongly recommend using an unguessable, unidentifiable identity key, such as a [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier), when identifying your users, to prevent unintentionally leaking identity trait data.
+We strongly recommend using an unguessable, unidentifiable identity key, such as a [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier), when identifying your users, to prevent unintentionally leaking identity trait data. The same principle extends to traits and identifiers themselves: see [Personally Identifiable Information (PII)](#pii) for the related rule on not storing PII in Flagsmith.
 
 :::
 
@@ -29,7 +29,7 @@ and modifying their flags.
 
 ## Identity Traits
 
-You can also use Flagsmith to store 'traits' against identities. traits are key/value pairs that are associated with individual identities for a particular environment. traits have two purposes outlined below, but the main use case is to drive [segments](./segments).
+You can also use Flagsmith to store 'traits' against identities. Traits are key/value pairs associated with individual identities for a particular environment. The main use case is to drive [segments](./segments), but they can also be used as a [lightweight data-store](#using-traits-as-a-data-store) for low-value information about your users.
 
 :::important
 
@@ -54,35 +54,6 @@ Here we are setting the trait key `app_version` with the value of `YourApplicati
 
 Traits are completely free-form. You can store any number of traits, with any relevant information you see fit, in the platform and then use segments to control features based on these trait values.
 
-## Identity and Trait Storage
-
-Identities are persisted within the Flagsmith platform, along with any traits that have been assigned to them. When flags are evaluated for an identity, the full complement of traits stored within the platform are used, even if they were not all sent as part of the request.
-
-This can be useful if, at runtime, your application does not have all the relevant trait data available for that particular identity; any traits provided will be combined with the traits stored within Flagsmith before the evaluation engine runs.
-
-There are some [exceptions to this rule](/integrating-with-flagsmith/sdks/server-side) with Server-side SDKs running in local evaluation mode.
-
-:::info
-
-Note that, when using our SaaS platform, there might be a short delay from the initial request to write or update traits for an identity and them being used in subsequent evaluations.
-
-:::
-
-### Using Traits as a Data-store
-
-Traits can also be used to store additional data about your users that would be cumbersome to store within your application. Some possible uses for traits could be:
-
-- Storing whether the user has accepted a new set of terms and conditions.
-- Storing the last viewed page of the application so that you can resume the users place later, across any device.
-
-Generally if they are lower-value pieces of information about your user, it might be simpler/easier to store them in Flagsmith rather than in your core application.
-
-Traits are stored natively as either numbers, strings or booleans.
-
-## Traits Powering Segments
-
-Traits can be used within your application, but they can also be used to power [segments](/flagsmith-concepts/segments).
-
 ## Trait Value Data Types
 
 :::tip
@@ -100,11 +71,71 @@ Trait values can be stored as one of four different data types:
 
 If you need to store 64 bit integers or very high precision floats we suggest storing them as strings and then doing the type conversion within the SDK.
 
-## Transient Traits and Identities {#transient-traits}
+## Identity and Trait Storage
 
-In some privacy-sensitive cases, you may want to evaluate flags based on traits without persisting those traits in Flagsmith long term. Transient traits and identities let you send data for evaluation while avoiding long-lived storage in the platform. See your SDK documentation for how to mark traits or identities as transient when evaluating flags.
+Trait values can be **persistent** or **transient**. The choice is based on the nature of the data, not on implementation complexity or sequencing.
 
-For more information, see:
+Persistent traits are stored against the identity and reused on subsequent evaluations, even when they are not sent as part of the request. Transient traits are passed at evaluation time and not stored.
 
-- [Managing identities](/flagsmith-concepts/identities).
+When flags are evaluated for an identity, the full complement of persistent traits stored within the platform are combined with any traits provided in the request before the evaluation engine runs. This is useful when your application does not have all the relevant trait data available at runtime.
 
+There are some [exceptions to this rule](/integrating-with-flagsmith/sdks/server-side) with Server-side SDKs running in local evaluation mode.
+
+:::info
+
+When using our SaaS platform, there might be a short delay from the initial request to write or update traits for an identity and them being used in subsequent evaluations.
+
+:::
+
+### When traits should be persistent
+
+Use persistent traits for stable attributes you want Flagsmith to remember across evaluations:
+
+- Plan tier (`plan: scale-up`)
+- Role (`role: admin`)
+- Locale preference (`locale: en-GB`)
+- Toggles set by another service (e.g. `beta_opted_in: true`)
+
+Persistent traits let an identity carry trait data that the evaluating service does not have direct access to. You can pre-associate traits via the [API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api), or set them from a separate service that has access to different information.
+
+They also reduce the payload your SDK has to send on every evaluation, because Flagsmith reuses the stored values when the trait is not supplied in the request.
+
+### Using traits as a data-store
+
+Persistent traits can also be used to store additional data about your users that would be cumbersome to store within your application. Some possible uses include:
+
+- Storing whether the user has accepted a new set of terms and conditions.
+- Storing the last viewed page of the application so that you can resume the user's place later, across any device.
+
+Generally, if these are lower-value pieces of information about your user, it might be simpler to store them in Flagsmith rather than in your core application. Apply the [PII rule](#pii) here as well: do not use this pattern to store identifying personal data.
+
+### When traits should be transient {#transient-traits}
+
+Use transient traits for ever-changing values that should not be stored long-term:
+
+- Location (`country: FR`)
+- Device (`device_type: mobile`)
+- IP address
+- Session-scoped values that are only meaningful for this evaluation
+
+See your SDK documentation for the syntax to mark traits or identities as transient when evaluating flags. The mechanism is supported across client-side and server-side SDKs.
+
+### Personally Identifiable Information (PII) {#pii}
+
+PII must be transient. This is a hard rule, not a preference. Email addresses, phone numbers, full names, and any other identifying personal data should never be stored as persistent traits in Flagsmith.
+
+The same rule extends to the identifier itself: use a non-PII identifier such as a UUID, a hashed user ID, or another anonymised value. Using an email address, username, or other PII as the identifier means PII ends up persisted in Flagsmith as the identity record, which is the very thing the PII-as-transient rule is designed to prevent.
+
+The unifying principle: no PII in Flagsmith, anywhere, neither as identifier nor as persistent trait.
+
+If your privacy review treats a value as PII, do not store it in Flagsmith.
+
+### Passing traits at evaluation time
+
+:::tip
+
+Always pass the complete set of traits you have available to you with each evaluation request.
+
+:::
+
+For persistent traits, the value you pass replaces the stored one for this evaluation and going forward. For transient traits, the value must be passed each time, since it is not stored.
