@@ -1231,6 +1231,10 @@ BUCKETED_ANALYTICS_DATA_RETENTION_DAYS = env.int(
 )
 
 DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
+# Number of days after which a newly created invite link expires when no explicit
+# expiry is provided. Defaults to None, which keeps the previous behaviour of
+# links never expiring unless an expiry date is set explicitly.
+INVITE_LINK_EXPIRY_DAYS = env.int("INVITE_LINK_EXPIRY_DAYS", default=None)
 PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
 PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)
 COOKIE_AUTH_ENABLED = env.bool("COOKIE_AUTH_ENABLED", default=False)
