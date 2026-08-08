@@ -577,7 +577,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:169`
+ - `api/segments/serializers.py:170`
 
 Attributes:
  - `revision_id`

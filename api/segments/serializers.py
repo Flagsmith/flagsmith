@@ -1,7 +1,6 @@
 from typing import Any
 
 import structlog
-from django.conf import settings
 from django.db import transaction
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
@@ -18,6 +17,7 @@ from segments.types import LegacySegmentRule
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
 from segments.types import SegmentRule as SegmentRuleType
+from segments.validators import SegmentRulesValidator
 
 logger = structlog.get_logger(__name__)
 
@@ -138,6 +138,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             "project",
             "version_of",
         ]
+        validators = [SegmentRulesValidator()]
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)
@@ -149,20 +150,20 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         organisation = project.organisation
 
         self._validate_required_metadata(organisation, metadata, project)
-        self._validate_segment_rules_conditions_limit(attrs["rules"])
         self._validate_project_segment_limit(project)
         return attrs
 
     def create(self, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
         metadata_data = validated_data.pop("metadata", [])
+        self._set_rules_data(validated_data)
         segment = super().create(validated_data)  # type: ignore[no-untyped-call]
         self._update_metadata(segment, metadata_data)
-        self._set_rules_data(segment, validated_data["rules"])
         enqueue_membership_refresh(segment.project)
         return segment
 
     def update(self, segment: Segment, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
         metadata = validated_data.pop("metadata", [])
+        self._set_rules_data(validated_data)
         with transaction.atomic():
             if not segment.change_request:
                 segment_revision = segment.clone(is_revision=True)
@@ -173,16 +174,16 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                 )
             segment = super().update(segment, validated_data)  # type: ignore[no-untyped-call]
         self._update_metadata(segment, metadata)
-        self._set_rules_data(segment, validated_data["rules"])
         enqueue_membership_refresh(segment.project)
         return segment
 
-    def _set_rules_data(self, segment: Segment, rules: list[LegacySegmentRule]) -> None:
+    def _set_rules_data(self, validated_data: dict[str, Any]) -> None:
         """Set the .rules_data attribute
         TODO: Delete this as per https://github.com/Flagsmith/flagsmith/issues/7818
         """
-        segment.rules_data = self._cleanup_rules_and_conditions(rules)
-        segment.save(update_fields=["rules_data"])
+        validated_data["rules_data"] = self._cleanup_rules_and_conditions(
+            validated_data["rules"]
+        )
 
     def _cleanup_rules_and_conditions(
         self, rules_data: list[LegacySegmentRule]
@@ -247,25 +248,6 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             raise ValidationError(
                 {
                     "project": "The project has reached the maximum allowed segments limit."
-                }
-            )
-
-    def _validate_segment_rules_conditions_limit(self, rules_data: DictList) -> None:
-        if self.instance and getattr(self.instance, "whitelisted_segment", None):
-            return
-
-        def _count_conditions(rules_data: DictList) -> int:
-            return sum(
-                len(rule.get("conditions", []))
-                + _count_conditions(rule.get("rules", []))
-                for rule in rules_data
-            )
-
-        condition_count = _count_conditions(rules_data)
-        if condition_count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
-            raise ValidationError(
-                {
-                    "segment": f"The segment has {condition_count} conditions, which exceeds the maximum condition count of {settings.SEGMENT_RULES_CONDITIONS_LIMIT}."
                 }
             )
 
