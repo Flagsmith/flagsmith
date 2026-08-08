@@ -699,11 +699,8 @@ def test_change_request_commit__v2_versioning__publishes_environment_feature_ver
 
     change_request.environment_feature_versions.add(environment_feature_version)
 
-    mock_rebuild_environment_document_task = mocker.patch(
-        "core.workflows_services.rebuild_environment_document"
-    )
-    mock_trigger_update_version_webhooks = mocker.patch(
-        "core.workflows_services.trigger_update_version_webhooks"
+    mock_signal = mocker.patch(
+        "core.workflows_services.environment_feature_version_published"
     )
 
     # When
@@ -715,15 +712,8 @@ def test_change_request_commit__v2_versioning__publishes_environment_feature_ver
     assert environment_feature_version.published_by == admin_user
     assert environment_feature_version.live_from == now
 
-    mock_rebuild_environment_document_task.delay.assert_called_once_with(
-        kwargs={"environment_id": environment.id},
-        delay_until=environment_feature_version.live_from,
-    )
-    mock_trigger_update_version_webhooks.delay.assert_called_once_with(
-        kwargs={
-            "environment_feature_version_uuid": str(environment_feature_version.uuid)
-        },
-        delay_until=environment_feature_version.live_from,
+    mock_signal.send.assert_called_once_with(
+        EnvironmentFeatureVersion, instance=environment_feature_version
     )
 
 

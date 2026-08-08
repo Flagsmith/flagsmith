@@ -44,7 +44,10 @@ def cache_fields(instance: EnvironmentFeatureVersion, **kwargs):  # type: ignore
 
 
 @receiver(environment_feature_version_published, sender=EnvironmentFeatureVersion)
-def update_environment_document(instance: EnvironmentFeatureVersion, **kwargs):  # type: ignore[no-untyped-def]
+def update_environment_document(instance: EnvironmentFeatureVersion, **kwargs) -> None:  # type: ignore[no-untyped-def]
+    now = timezone.now()
+    if not instance.live_from or instance.live_from <= now:
+        return
     rebuild_environment_document.delay(
         kwargs={"environment_id": instance.environment_id},
         delay_until=instance.live_from,
