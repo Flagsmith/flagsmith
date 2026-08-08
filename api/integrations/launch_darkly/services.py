@@ -665,11 +665,23 @@ def _create_boolean_feature_states_with_segments_identities(
 ) -> None:
     for ld_environment_key, environment in environments_by_ld_environment_key.items():
         ld_flag_config = ld_flag["environments"][ld_environment_key]
+        is_flag_on = ld_flag_config["on"]
+        variation_idx = (
+            ld_flag_config.get("fallthrough", {}).get("variation")
+            if is_flag_on
+            else ld_flag_config.get("offVariation")
+        )
+        enabled = is_flag_on
+        if variation_idx is not None:
+            variation_value = ld_flag["variations"][variation_idx]["value"]
+            if isinstance(variation_value, bool):
+                enabled = variation_value
+
         feature_state, _ = FeatureState.objects.update_or_create(
             feature=feature,
             feature_segment=None,
             environment=environment,
-            defaults={"enabled": ld_flag_config["on"]},
+            defaults={"enabled": enabled},
         )
 
         FeatureStateValue.objects.update_or_create(
