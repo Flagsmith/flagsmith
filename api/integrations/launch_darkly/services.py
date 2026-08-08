@@ -491,7 +491,7 @@ def _import_targets(
                     [
                         {
                             "trait_key": "key",
-                            "trait_value": identifier,  # type: ignore[typeddict-item]
+                            "trait_value": identifier,
                         }
                     ]
                 )
@@ -1043,7 +1043,7 @@ def _create_segments_from_ld(
                 [
                     {
                         "trait_key": "key",
-                        "trait_value": identifier,  # type: ignore[typeddict-item]
+                        "trait_value": identifier,
                     }
                 ]
             )
