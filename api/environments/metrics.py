@@ -17,7 +17,8 @@ flagsmith_environment_document_cache_queries_total = prometheus_client.Counter(
 flagsmith_environment_document_writes_total = prometheus_client.Counter(
     "flagsmith_environment_document_writes_total",
     "Environment documents written to DynamoDB. `result` label is either `success` or "
-    "`failure`.",
+    "`failure`. A batch write that fails counts every document it carried, since "
+    "DynamoDB does not report which of them were persisted.",
     ["result"],
 )
 

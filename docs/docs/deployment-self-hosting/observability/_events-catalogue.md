@@ -111,7 +111,7 @@ Attributes:
 ### `dynamodb.environment_document.written`
 
 Logged at `info` from:
- - `api/environments/dynamodb/wrappers/environment_wrapper.py:114`
+ - `api/environments/dynamodb/wrappers/environment_wrapper.py:130`
 
 Attributes:
  - `document.bytes`
@@ -121,7 +121,7 @@ Attributes:
 ### `dynamodb.environment_document_compressed`
 
 Logged at `info` from:
- - `api/environments/dynamodb/wrappers/environment_wrapper.py:95`
+ - `api/environments/dynamodb/wrappers/environment_wrapper.py:100`
 
 Attributes:
  - `environment_api_key`

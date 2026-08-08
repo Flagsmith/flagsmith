@@ -50,7 +50,7 @@ Labels:
 
 Counter.
 
-Environment documents written to DynamoDB. `result` label is either `success` or `failure`.
+Environment documents written to DynamoDB. `result` label is either `success` or `failure`. A batch write that fails counts every document it carried, since DynamoDB does not report which of them were persisted.
 
 Labels:
  - `result`

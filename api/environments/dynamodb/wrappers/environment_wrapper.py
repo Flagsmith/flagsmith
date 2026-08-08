@@ -72,10 +72,15 @@ class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper, abc.ABC):
         )
 
         assert self.table
-        written = 0
+        # `batch_writer` only buffers documents, flushing them when it fills up and
+        # when the context exits, so nothing is known to be written until then.
+        attempted = 0
+        # (environment id, feature states count, document size in bytes)
+        pending_events: list[tuple[int, int, int]] = []
         try:
             with self.table.batch_writer() as writer:
                 for environment in environments:
+                    attempted += 1
                     organisation = environment.project.organisation
                     if openfeature_client.get_boolean_value(
                         "compress_dynamo_documents",
@@ -110,23 +115,26 @@ class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper, abc.ABC):
                             compressed="false",
                         ).observe(document_bytes)
 
-                    written += 1
-                    logger.info(
-                        "environment_document.written",
-                        environment__id=environment.id,
-                        feature_states__count=feature_states_count,
-                        document__bytes=document_bytes,
+                    pending_events.append(
+                        (environment.id, feature_states_count, document_bytes)
                     )
         except Exception:
-            # The batch writer flushes on exit, so a failure can cover documents
-            # already handed to it as well as the one being written.
+            # A failed batch does not report which of its documents were persisted,
+            # so every document it carried is counted.
             flagsmith_environment_document_writes_total.labels(result="failure").inc(
-                max(written, 1)
+                attempted
             )
             raise
 
+        for environment_id, feature_states_count, document_bytes in pending_events:
+            logger.info(
+                "environment_document.written",
+                environment__id=environment_id,
+                feature_states__count=feature_states_count,
+                document__bytes=document_bytes,
+            )
         flagsmith_environment_document_writes_total.labels(result="success").inc(
-            written
+            attempted
         )
 
 

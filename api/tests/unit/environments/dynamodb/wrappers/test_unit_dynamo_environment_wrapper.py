@@ -143,6 +143,34 @@ def test_write_environments__failed_write__counts_failure(
     )
 
 
+def test_write_environments__batch_flush_fails__counts_failure_without_logging(
+    environment: Environment,
+    assert_metric: AssertMetricFixture,
+    log: StructuredLogCapture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    # `put_item` only buffers the document — the batch is flushed when the writer's
+    # context exits, which is where a write can still fail.
+    dynamo_environment_wrapper = DynamoEnvironmentWrapper()
+    mocked_dynamo_table = mocker.patch.object(dynamo_environment_wrapper, "_table")
+    mocked_dynamo_table.batch_writer.return_value.__exit__.side_effect = RuntimeError(
+        "DynamoDB unavailable"
+    )
+
+    # When
+    with pytest.raises(RuntimeError):
+        dynamo_environment_wrapper.write_environments([environment])
+
+    # Then
+    assert not log.has("environment_document.written")
+    assert_metric(
+        name="flagsmith_environment_document_writes_total",
+        labels={"result": "failure"},
+        value=1.0,
+    )
+
+
 def test_write_environments__compress_dynamo_documents_enabled__logs_expected(
     environment: Environment,
     dynamo_environment_wrapper: DynamoEnvironmentWrapper,
