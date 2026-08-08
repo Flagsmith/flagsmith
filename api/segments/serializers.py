@@ -1,7 +1,6 @@
 from typing import Any
 
 import structlog
-from django.conf import settings
 from django.db import transaction
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
@@ -14,6 +13,11 @@ from segment_membership.constants import MAX_SEGMENT_MEMBERS_PAGE_SIZE
 from segment_membership.models import SegmentMembershipCount
 from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule
+from segments.types import LegacySegmentRule
+
+# TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
+from segments.types import SegmentRule as SegmentRuleType
+from segments.validators import SegmentRulesValidator
 
 logger = structlog.get_logger(__name__)
 
@@ -101,6 +105,8 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         Because WritableNestedModelSerializer uses `initial_data` instead of `data`
         we need to override the `__init__` method to remove rules and conditions
         that are marked for deletion.
+
+        TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
         """
         data = kwargs.get("data")
         if data and "rules" in data:
@@ -127,7 +133,12 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             "metadata",
             "membership_counts",
         ]
-        read_only_fields = ["membership_counts"]
+        read_only_fields = [
+            "membership_counts",
+            "project",
+            "version_of",
+        ]
+        validators = [SegmentRulesValidator()]
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)
@@ -139,12 +150,12 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         organisation = project.organisation
 
         self._validate_required_metadata(organisation, metadata, project)
-        self._validate_segment_rules_conditions_limit(attrs["rules"])
         self._validate_project_segment_limit(project)
         return attrs
 
     def create(self, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
         metadata_data = validated_data.pop("metadata", [])
+        self._set_rules_data(validated_data)
         segment = super().create(validated_data)  # type: ignore[no-untyped-call]
         self._update_metadata(segment, metadata_data)
         enqueue_membership_refresh(segment.project)
@@ -152,6 +163,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
 
     def update(self, segment: Segment, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
         metadata = validated_data.pop("metadata", [])
+        self._set_rules_data(validated_data)
         with transaction.atomic():
             if not segment.change_request:
                 segment_revision = segment.clone(is_revision=True)
@@ -165,6 +177,41 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         enqueue_membership_refresh(segment.project)
         return segment
 
+    def _set_rules_data(self, validated_data: dict[str, Any]) -> None:
+        """Set the .rules_data attribute
+        TODO: Delete this as per https://github.com/Flagsmith/flagsmith/issues/7818
+        """
+        validated_data["rules_data"] = self._cleanup_rules_and_conditions(
+            validated_data["rules"]
+        )
+
+    def _cleanup_rules_and_conditions(
+        self, rules_data: list[LegacySegmentRule]
+    ) -> list[SegmentRuleType]:
+        """Remove any `id` fields and `delete: true` items from rules and conditions
+
+        In https://github.com/Flagsmith/flagsmith/issues/7814, we moved from a
+        SegmentRule and Condition tree to a JSON field. This cleanup exists to
+        keep the interface compatible."""
+        return [
+            {
+                "type": rule_data["type"],
+                "conditions": [
+                    {
+                        "property": condition_data["property"],
+                        "operator": condition_data["operator"],
+                        "value": condition_data.get("value"),
+                        "description": condition_data.get("description"),
+                    }
+                    for condition_data in rule_data.get("conditions", [])
+                    if not condition_data.get("delete")
+                ],
+                "rules": self._cleanup_rules_and_conditions(rule_data.get("rules", [])),
+            }
+            for rule_data in rules_data
+            if not rule_data.get("delete")
+        ]
+
     def _get_rules_and_conditions_without_deleted(
         self, rules_data: DictList
     ) -> DictList:
@@ -175,8 +222,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         or conditions including both an `"id"` field and `"delete": true` were
         later soft-deleted in the database.
 
-        TODO: Deprecate this in favor of not sending unwanted rules and
-        conditions in the input.
+        TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
         """
         return [
             {
@@ -202,25 +248,6 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             raise ValidationError(
                 {
                     "project": "The project has reached the maximum allowed segments limit."
-                }
-            )
-
-    def _validate_segment_rules_conditions_limit(self, rules_data: DictList) -> None:
-        if self.instance and getattr(self.instance, "whitelisted_segment", None):
-            return
-
-        def _count_conditions(rules_data: DictList) -> int:
-            return sum(
-                len(rule.get("conditions", []))
-                + _count_conditions(rule.get("rules", []))
-                for rule in rules_data
-            )
-
-        condition_count = _count_conditions(rules_data)
-        if condition_count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
-            raise ValidationError(
-                {
-                    "segment": f"The segment has {condition_count} conditions, which exceeds the maximum condition count of {settings.SEGMENT_RULES_CONDITIONS_LIMIT}."
                 }
             )
 

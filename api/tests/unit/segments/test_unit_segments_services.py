@@ -44,6 +44,7 @@ def _create_segment_with_nested_rules(
     return segment
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__called_with_valid_segment__soft_deletes_segment(
     project: Project, admin_user: FFAdminUser
 ) -> None:
@@ -59,6 +60,7 @@ def test_delete_segment__called_with_valid_segment__soft_deletes_segment(
     assert segment.deleted_at is not None
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__segment_with_nested_rules__soft_deletes_all_rules(
     project: Project, admin_user: FFAdminUser
 ) -> None:
@@ -88,6 +90,7 @@ def test_delete_segment__segment_with_nested_rules__soft_deletes_all_rules(
         assert rule.deleted_at is not None
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__segment_with_nested_conditions__soft_deletes_all_conditions(
     project: Project, admin_user: FFAdminUser
 ) -> None:
@@ -109,6 +112,7 @@ def test_delete_segment__segment_with_nested_conditions__soft_deletes_all_condit
         assert condition.deleted_at is not None
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__called_with_author__creates_audit_log(
     project: Project, admin_user: FFAdminUser
 ) -> None:
@@ -134,6 +138,7 @@ def test_delete_segment__called_with_author__creates_audit_log(
     assert audit_log.related_object_uuid == segment_uuid
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__segment_with_revision__deletes_all_versions(
     project: Project, admin_user: FFAdminUser
 ) -> None:
@@ -152,6 +157,7 @@ def test_delete_segment__segment_with_revision__deletes_all_versions(
     assert revision.deleted_at is not None
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__varying_segment_sizes__query_count_is_constant(
     project: Project, admin_user: FFAdminUser
 ) -> None:
@@ -180,6 +186,7 @@ def test_delete_segment__varying_segment_sizes__query_count_is_constant(
     assert small_query_count == large_query_count == 26
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__segment_without_rules__soft_deletes_segment(
     project: Project, admin_user: FFAdminUser
 ) -> None:
@@ -195,6 +202,7 @@ def test_delete_segment__segment_without_rules__soft_deletes_segment(
     assert segment.deleted_at is not None
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__called_with_master_api_key__records_api_key_in_audit_log(
     project: Project, organisation: Organisation
 ) -> None:
@@ -221,6 +229,7 @@ def test_delete_segment__called_with_master_api_key__records_api_key_in_audit_lo
     assert audit_log.author is None
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__segment_with_feature_segment__deletes_feature_segments(
     project: Project,
     environment: Environment,
@@ -242,6 +251,7 @@ def test_delete_segment__segment_with_feature_segment__deletes_feature_segments(
     assert not FeatureSegment.objects.filter(id=feature_segment_id).exists()
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__segment_with_feature_state__cascades_to_feature_states(
     project: Project,
     environment: Environment,
@@ -268,6 +278,7 @@ def test_delete_segment__segment_with_feature_state__cascades_to_feature_states(
     assert not FeatureState.objects.filter(id=feature_state_id).exists()
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_copy_rules_and_conditions_from__source_with_nested_rules__copies_rules(
     project: Project,
 ) -> None:
@@ -294,6 +305,7 @@ def test_copy_rules_and_conditions_from__source_with_nested_rules__copies_rules(
     assert target_condition_count == source_condition_count
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_copy_rules_and_conditions_from__target_has_existing_rules__replaces_existing_rules(
     project: Project,
 ) -> None:
@@ -324,6 +336,7 @@ def test_copy_rules_and_conditions_from__target_has_existing_rules__replaces_exi
     assert target_rule_count == source_rule_count
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_copy_rules_and_conditions_from__varying_segment_sizes__query_count_is_constant(
     project: Project,
 ) -> None:

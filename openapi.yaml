@@ -18537,6 +18537,7 @@ components:
             - 'null'
         project:
           type: integer
+          readOnly: true
         feature:
           type:
             - integer
@@ -18545,6 +18546,7 @@ components:
           type:
             - integer
             - 'null'
+          readOnly: true
         rules:
           type: array
           items:
@@ -18564,7 +18566,6 @@ components:
             - 'null'
       required:
         - name
-        - project
         - rules
     ChangeRequestUpdate:
       description: Adds nested create feature
@@ -22243,6 +22244,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         enabled:
           type: boolean
@@ -24193,6 +24195,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         enabled:
           type: boolean
@@ -24582,6 +24585,7 @@ components:
             - 'null'
         project:
           type: integer
+          readOnly: true
         feature:
           type:
             - integer
@@ -24590,6 +24594,7 @@ components:
           type:
             - integer
             - 'null'
+          readOnly: true
         rules:
           type: array
           items:
@@ -25045,6 +25050,7 @@ components:
         url:
           type: string
           format: uri
+          maxLength: 200
         enabled:
           type: boolean
         created_at:
@@ -25066,6 +25072,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         secret:
           type: string
@@ -26255,6 +26262,7 @@ components:
             - 'null'
         project:
           type: integer
+          readOnly: true
         feature:
           type:
             - integer
@@ -26263,6 +26271,7 @@ components:
           type:
             - integer
             - 'null'
+          readOnly: true
         rules:
           type: array
           items:
@@ -26278,7 +26287,6 @@ components:
           readOnly: true
       required:
         - name
-        - project
         - rules
     SegmentAssociatedFeatureState:
       type: object
@@ -28035,6 +28043,7 @@ components:
         url:
           type: string
           format: uri
+          maxLength: 200
         enabled:
           type: boolean
         created_at:
@@ -28058,6 +28067,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         secret:
           type: string
