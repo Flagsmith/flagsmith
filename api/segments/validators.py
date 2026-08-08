@@ -28,7 +28,9 @@ class SegmentRulesValidator:
         if not self._is_whitelisted(serializer):
             self._validate_condition_count(rules_data)
 
-    def _validate_depth(self, rules_data: list[LegacySegmentRule], _depth: int = 1) -> None:
+    def _validate_depth(
+        self, rules_data: list[LegacySegmentRule], _depth: int = 1
+    ) -> None:
         for rule_data in rules_data:
             if _depth >= SEGMENT_RULES_MAX_DEPTH and rule_data.get("rules"):
                 raise ValidationError(
