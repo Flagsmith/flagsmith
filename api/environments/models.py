@@ -17,6 +17,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
+    BEFORE_CREATE,
     BEFORE_SAVE,
     LifecycleModel,
     hook,
@@ -82,7 +83,9 @@ environment_api_key_wrapper = DynamoEnvironmentAPIKeyWrapper()
 class Environment(
     LifecycleModel,  # type: ignore[misc]
     abstract_base_auditable_model_factory(  # type: ignore[misc]
-        change_details_excluded_fields=["updated_at"],
+        # `is_creating` is an internal lifecycle flag, and is cleared without a
+        # historical record, so its recorded value is always stale.
+        change_details_excluded_fields=["updated_at", "is_creating"],
         historical_records_excluded_fields=["uuid"],
     ),
     SoftDeleteObject,  # type: ignore[misc]
@@ -180,9 +183,21 @@ class Environment(
     class Meta:
         ordering = ["id"]
 
+    @hook(BEFORE_CREATE)  # type: ignore[misc]
+    def mark_as_creating(self) -> None:
+        # The environment row is committed before `create_feature_states` seeds its
+        # initial feature states, so anything reading the environment in between sees
+        # it without any flags. `is_creating` marks that window for the environment
+        # document writer. Clones set the flag in `clone()` instead, since create
+        # hooks don't fire for them.
+        self.is_creating = True
+
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def create_feature_states(self) -> None:
         FeatureState.create_initial_feature_states_for_environment(environment=self)
+        self.is_creating = False
+        # Update the row directly to avoid re-triggering hooks for a lifecycle flag.
+        Environment.objects.filter(id=self.id).update(is_creating=False)
 
     @hook(AFTER_UPDATE)  # type: ignore[misc]
     def clear_environment_cache(self) -> None:

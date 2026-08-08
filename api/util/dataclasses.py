@@ -10,3 +10,4 @@ class CompressedEnvironmentDocument:
     document: Document
     compressed_size_bytes: int
     compression_ratio: float
+    feature_states_count: int

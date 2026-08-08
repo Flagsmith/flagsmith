@@ -200,6 +200,7 @@ def _get_compressed_environment_document(
     adapter: "TypeAdapter[Any]",
 ) -> CompressedEnvironmentDocument:
     uncompressed_size_bytes = estimate_document_size(document)
+    feature_states_count = len(cast(List[DocumentValue], document["feature_states"]))
     document["compressed"] = True
     compressed_document = adapter.validate_python(document)
     compressed_size_bytes = estimate_document_size(compressed_document)
@@ -207,6 +208,7 @@ def _get_compressed_environment_document(
         document=cast(Document, compressed_document),
         compressed_size_bytes=compressed_size_bytes,
         compression_ratio=compressed_size_bytes / uncompressed_size_bytes,
+        feature_states_count=feature_states_count,
     )
 
 
