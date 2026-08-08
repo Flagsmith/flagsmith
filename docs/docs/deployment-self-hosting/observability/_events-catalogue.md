@@ -103,19 +103,39 @@ Attributes:
 ### `core.encrypted_field.decrypt_failed`
 
 Logged at `warning` from:
- - `api/core/fields.py:37`
+ - `api/core/fields.py:62`
 
 Attributes:
  - `exc_info`
 
+### `dynamodb.environment_document.written`
+
+Logged at `info` from:
+ - `api/environments/dynamodb/wrappers/environment_wrapper.py:114`
+
+Attributes:
+ - `document.bytes`
+ - `environment.id`
+ - `feature_states.count`
+
 ### `dynamodb.environment_document_compressed`
 
 Logged at `info` from:
- - `api/environments/dynamodb/wrappers/environment_wrapper.py:92`
+ - `api/environments/dynamodb/wrappers/environment_wrapper.py:95`
 
 Attributes:
  - `environment_api_key`
  - `environment_id`
+
+### `environments.environment_document.written_while_seeding`
+
+Logged at `warning` from:
+ - `api/environments/tasks.py:83`
+
+Attributes:
+ - `audit_log.id`
+ - `environment.id`
+ - `project.id`
 
 ### `experimentation.exposures.compute_failed`
 

@@ -1,8 +1,11 @@
+from unittest.mock import ANY
+
 import pytest
 from boto3.dynamodb.types import Binary
 from common.test_tools import AssertMetricFixture
 from django.core.exceptions import ObjectDoesNotExist
 from mypy_boto3_dynamodb.service_resource import Table
+from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
 from environments.dynamodb import DynamoEnvironmentWrapper
@@ -99,6 +102,47 @@ def test_write_environments__uncompressed__observes_size_metric(
     )
 
 
+def test_write_environments__successful_write__counts_success(
+    environment: Environment,
+    dynamo_environment_wrapper: DynamoEnvironmentWrapper,
+    flagsmith_environment_table: Table,
+    assert_metric: AssertMetricFixture,
+) -> None:
+    # Given / When
+    dynamo_environment_wrapper.write_environments([environment])
+
+    # Then
+    assert_metric(
+        name="flagsmith_environment_document_writes_total",
+        labels={"result": "success"},
+        value=1.0,
+    )
+
+
+def test_write_environments__failed_write__counts_failure(
+    environment: Environment,
+    assert_metric: AssertMetricFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    dynamo_environment_wrapper = DynamoEnvironmentWrapper()
+    mocked_dynamo_table = mocker.patch.object(dynamo_environment_wrapper, "_table")
+    mocked_dynamo_table.batch_writer.return_value.__enter__.return_value.put_item.side_effect = RuntimeError(
+        "DynamoDB unavailable"
+    )
+
+    # When
+    with pytest.raises(RuntimeError):
+        dynamo_environment_wrapper.write_environments([environment])
+
+    # Then
+    assert_metric(
+        name="flagsmith_environment_document_writes_total",
+        labels={"result": "failure"},
+        value=1.0,
+    )
+
+
 def test_write_environments__compress_dynamo_documents_enabled__logs_expected(
     environment: Environment,
     dynamo_environment_wrapper: DynamoEnvironmentWrapper,
@@ -118,6 +162,13 @@ def test_write_environments__compress_dynamo_documents_enabled__logs_expected(
             "environment_api_key": environment.api_key,
             "environment_id": environment.id,
             "event": "environment-document-compressed",
+            "level": "info",
+        },
+        {
+            "environment__id": environment.id,
+            "feature_states__count": 0,
+            "document__bytes": ANY,
+            "event": "environment_document.written",
             "level": "info",
         },
     ]

@@ -21,6 +21,7 @@ from environments.dynamodb.utils import (
 from environments.metrics import (
     flagsmith_dynamo_environment_document_compression_ratio,
     flagsmith_dynamo_environment_document_size_bytes,
+    flagsmith_environment_document_writes_total,
 )
 from integrations.flagsmith.client import get_openfeature_client
 from util.mappers import (
@@ -71,37 +72,62 @@ class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper, abc.ABC):
         )
 
         assert self.table
-        with self.table.batch_writer() as writer:
-            for environment in environments:
-                organisation = environment.project.organisation
-                if openfeature_client.get_boolean_value(
-                    "compress_dynamo_documents",
-                    default_value=False,
-                    evaluation_context=organisation.openfeature_evaluation_context,
-                ):
-                    result = self._map_compressed_environment_document(environment)
-                    writer.put_item(Item=result.document)
+        written = 0
+        try:
+            with self.table.batch_writer() as writer:
+                for environment in environments:
+                    organisation = environment.project.organisation
+                    if openfeature_client.get_boolean_value(
+                        "compress_dynamo_documents",
+                        default_value=False,
+                        evaluation_context=organisation.openfeature_evaluation_context,
+                    ):
+                        result = self._map_compressed_environment_document(environment)
+                        writer.put_item(Item=result.document)
 
-                    flagsmith_dynamo_environment_document_size_bytes.labels(
-                        table=self.get_table_name(),
-                        compressed="true",
-                    ).observe(result.compressed_size_bytes)
-                    flagsmith_dynamo_environment_document_compression_ratio.labels(
-                        table=self.get_table_name(),
-                    ).observe(result.compression_ratio)
+                        flagsmith_dynamo_environment_document_size_bytes.labels(
+                            table=self.get_table_name(),
+                            compressed="true",
+                        ).observe(result.compressed_size_bytes)
+                        flagsmith_dynamo_environment_document_compression_ratio.labels(
+                            table=self.get_table_name(),
+                        ).observe(result.compression_ratio)
+                        logger.info(
+                            "environment-document-compressed",
+                            environment_id=environment.id,
+                            environment_api_key=environment.api_key,
+                        )
+                        document_bytes = result.compressed_size_bytes
+                        feature_states_count = result.feature_states_count
+                    else:
+                        item = self._map_environment_document(environment)
+                        writer.put_item(Item=item)
+
+                        document_bytes = estimate_document_size(item)
+                        feature_states_count = len(item["feature_states"])
+                        flagsmith_dynamo_environment_document_size_bytes.labels(
+                            table=self.get_table_name(),
+                            compressed="false",
+                        ).observe(document_bytes)
+
+                    written += 1
                     logger.info(
-                        "environment-document-compressed",
-                        environment_id=environment.id,
-                        environment_api_key=environment.api_key,
+                        "environment_document.written",
+                        environment__id=environment.id,
+                        feature_states__count=feature_states_count,
+                        document__bytes=document_bytes,
                     )
-                else:
-                    item = self._map_environment_document(environment)
-                    writer.put_item(Item=item)
+        except Exception:
+            # The batch writer flushes on exit, so a failure can cover documents
+            # already handed to it as well as the one being written.
+            flagsmith_environment_document_writes_total.labels(result="failure").inc(
+                max(written, 1)
+            )
+            raise
 
-                    flagsmith_dynamo_environment_document_size_bytes.labels(
-                        table=self.get_table_name(),
-                        compressed="false",
-                    ).observe(estimate_document_size(item))
+        flagsmith_environment_document_writes_total.labels(result="success").inc(
+            written
+        )
 
 
 class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
