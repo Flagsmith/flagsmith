@@ -25,6 +25,7 @@ INSERTED_AT = datetime(2026, 5, 8, 12, 0, 0, tzinfo=timezone.utc)
                     {"trait_key": "plan", "trait_value": "growth"},
                 ],
             },
+            ("env-key", "alice", "env_x_alice", {"plan": "growth"}, False),
             ("env-key", "alice", "env_x_alice", {"plan": "growth"}, INSERTED_AT),
             id="single string trait",
         ),
@@ -37,6 +38,7 @@ INSERTED_AT = datetime(2026, 5, 8, 12, 0, 0, tzinfo=timezone.utc)
                 "created_date": "2026-05-08T00:00:00Z",
                 "identity_traits": [],
             },
+            ("env-key", "alice", "env_x_alice", None, False),
             ("env-key", "alice", "env_x_alice", None, INSERTED_AT),
             id="empty traits collapse to NULL",
         ),
@@ -51,6 +53,7 @@ INSERTED_AT = datetime(2026, 5, 8, 12, 0, 0, tzinfo=timezone.utc)
                     {"trait_key": "age", "trait_value": Decimal("18")},
                 ],
             },
+            ("env-key", "alice", "env_x_alice", {"age": 18}, False),
             ("env-key", "alice", "env_x_alice", {"age": 18}, INSERTED_AT),
             id="whole-number Decimal narrows to int",
         ),
@@ -65,6 +68,7 @@ INSERTED_AT = datetime(2026, 5, 8, 12, 0, 0, tzinfo=timezone.utc)
                     {"trait_key": "score", "trait_value": Decimal("1.5")},
                 ],
             },
+            ("env-key", "alice", "env_x_alice", {"score": 1.5}, False),
             ("env-key", "alice", "env_x_alice", {"score": 1.5}, INSERTED_AT),
             id="fractional Decimal narrows to float",
         ),
@@ -179,6 +183,7 @@ INSERTED_AT = datetime(2026, 5, 8, 12, 0, 0, tzinfo=timezone.utc)
                 "alice",
                 "env_x_alice",
                 {"plan": "growth", "team": "alpha"},
+                False,
                 INSERTED_AT,
             ),
             id="multiple traits flatten to a single dict",
@@ -187,6 +192,30 @@ INSERTED_AT = datetime(2026, 5, 8, 12, 0, 0, tzinfo=timezone.utc)
 )
 def test_map_identity_document_to_clickhouse_row__cases__return_expected(
     doc: DynamoIdentity,
+    expected: tuple[str, str, str, dict[str, object] | None, bool],
+) -> None:
+    # Given a Dynamo identity document
+    # When mapped onto an IDENTITIES row
+    # Then it lines up positionally with the IDENTITIES schema
+    assert map_identity_document_to_clickhouse_row("env-key", doc) == expected
+
+
+def test_map_identity_document_to_clickhouse_row__is_deleted_true__sets_flag() -> None:
+    # Given a Dynamo identity document and is_deleted=True
+    doc: DynamoIdentity = {
+        "identity_uuid": UUID_A,
+        "identifier": "alice",
+        "environment_api_key": "env-key",
+        "composite_key": "env_x_alice",
+        "created_date": "2026-05-08T00:00:00Z",
+        "identity_traits": [],
+    }
+
+    # When mapped with is_deleted=True
+    result = map_identity_document_to_clickhouse_row("env-key", doc, is_deleted=True)
+
+    # Then the flag is set in the returned tuple
+    assert result == ("env-key", "alice", "env_x_alice", None, True)
     expected: ClickHouseIdentityRow,
 ) -> None:
     # Given

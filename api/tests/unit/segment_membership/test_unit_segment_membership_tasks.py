@@ -139,6 +139,25 @@ def test_seed_organisation_identities__insert_fails__logs_and_continues(
     seed_organisation_identities(project.organisation_id)
 
     # Then
+    open_cursor.assert_called_with(
+        log_comment=(
+            f"flagsmith:segment_membership:backfill"
+            f":org_{project.organisation_id}"
+            f":project_{project.id}"
+        )
+    )
+    sql, rows_arg = cursor.executemany.call_args.args
+    assert sql == (
+        "INSERT INTO IDENTITIES "
+        "(environment_id, identifier, identity_key, traits, is_deleted) VALUES"
+    )
+    assert {row[0] for row in rows_arg} == {environment.api_key}
+    assert {row[1] for row in rows_arg} == {"a", "b"}
+    assert any(
+        e["event"] == "backfill.environment.completed" and e["rows__count"] == 2
+        for e in log.events
+    )
+    refresh_dispatch.delay.assert_called_once_with(args=(project.id,))
     assert log.events == [
         {
             "event": "seed.environment.failed",
@@ -562,3 +581,112 @@ def test_refresh_project_segment_counts__never_matched_pair__no_row_written(
     assert not SegmentMembershipCount.objects.filter(
         segment=segment, environment=environment
     ).exists()
+
+
+def test_write_identity_deletion_tombstone_to_clickhouse__clickhouse_disabled__skips(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    settings.CLICKHOUSE_ENABLED = False
+    spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
+
+    # When
+    tasks.write_identity_deletion_tombstone_to_clickhouse(
+        env_key="env-abc",
+        identifier="alice",
+        identity_key="env-abc_alice",
+    )
+
+    # Then
+    spy.assert_not_called()
+    assert any(e["event"] == "tombstone.skipped" for e in log.events)
+
+
+def test_write_identity_deletion_tombstone_to_clickhouse__clickhouse_enabled__writes_tombstone(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    cursor = MagicMock()
+    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    open_cursor.return_value.__enter__.return_value = cursor
+
+    # When
+    tasks.write_identity_deletion_tombstone_to_clickhouse(
+        env_key=environment.api_key,
+        identifier="alice",
+        identity_key=f"{environment.api_key}_alice",
+    )
+
+    # Then — exactly one INSERT with is_deleted=True
+    sql, rows_arg = cursor.executemany.call_args.args
+    assert sql == (
+        "INSERT INTO IDENTITIES "
+        "(environment_id, identifier, identity_key, traits, is_deleted) VALUES"
+    )
+    assert len(rows_arg) == 1
+    row = rows_arg[0]
+    assert row[0] == environment.api_key  # environment_id
+    assert row[1] == "alice"  # identifier
+    assert row[2] == f"{environment.api_key}_alice"  # identity_key
+    assert row[3] is None  # traits — NULL for tombstone
+    assert row[4] is True  # is_deleted
+    assert any(e["event"] == "tombstone.written" for e in log.events)
+
+
+def test_write_identity_deletion_tombstone_to_clickhouse__segment_membership_disabled__skips(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    environment: Environment,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    settings.CLICKHOUSE_ENABLED = True
+    spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
+
+    # When
+    tasks.write_identity_deletion_tombstone_to_clickhouse(
+        env_key=environment.api_key,
+        identifier="alice",
+        identity_key=f"{environment.api_key}_alice",
+    )
+
+    # Then
+    spy.assert_not_called()
+    assert any(
+        e["event"] == "tombstone.skipped"
+        and e["reason"] == "segment_membership_disabled"
+        for e in log.events
+    )
+
+
+def test_write_identity_deletion_tombstone_to_clickhouse__environment_not_found__skips(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    db: None,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    settings.CLICKHOUSE_ENABLED = True
+    spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
+
+    # When
+    tasks.write_identity_deletion_tombstone_to_clickhouse(
+        env_key="missing-env-key",
+        identifier="alice",
+        identity_key="missing-env-key_alice",
+    )
+
+    # Then
+    spy.assert_not_called()
+    assert any(
+        e["event"] == "tombstone.skipped" and e["reason"] == "environment_not_found"
+        for e in log.events
+    )
