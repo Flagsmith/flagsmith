@@ -93,6 +93,19 @@
       "multivariate_feature_state_values": []
     },
     {
+      "django_id": 1426373,
+      "enabled": false,
+      "feature": {
+        "id": 192793,
+        "name": "code_references_ui_stats",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "374a17d7-5dee-41f7-8636-2c78d09f4612",
+      "multivariate_feature_state_values": []
+    },
+    {
       "django_id": 1229327,
       "enabled": false,
       "feature": {
@@ -106,21 +119,47 @@
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 1229328,
-      "enabled": true,
+      "django_id": 1493885,
+      "enabled": false,
       "feature": {
-        "id": 195394,
+        "id": 208450,
         "name": "experimentation_warehouse_connection",
         "type": "STANDARD"
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "fe8067b9-efef-4f02-a6d9-0d1ed901f7fa",
+      "featurestate_uuid": "4f983dde-dec7-4172-b7ca-78518ae45b50",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 1468106,
-      "enabled": true,
+      "django_id": 1423610,
+      "enabled": false,
+      "feature": {
+        "id": 209449,
+        "name": "segment_membership_inspection",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "8f8dd554-73cf-4d50-bcbc-9ff4e2d351a3",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1493888,
+      "enabled": false,
+      "feature": {
+        "id": 209779,
+        "name": "experimental_flags",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "ddc44d3f-416e-4d47-8a5f-0bb1a4d84334",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1483251,
+      "enabled": false,
       "feature": {
         "id": 216082,
         "name": "feature_lifecycle",
@@ -128,7 +167,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "93aeeaf9-492a-4fbf-badd-7dafb26cb553",
+      "featurestate_uuid": "aa3e2309-5cae-4606-875d-0b927cd07c6c",
       "multivariate_feature_state_values": []
     }
   ],
