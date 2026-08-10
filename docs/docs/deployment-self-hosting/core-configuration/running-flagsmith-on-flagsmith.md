@@ -43,7 +43,9 @@ that offline, so the defaults apply without you creating anything. To have the A
 - `FLAGSMITH_ON_FLAGSMITH_SERVER_KEY`
   - A server-side environment key for the project above. Required when offline mode is off.
 - `FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL`
-  - The API the server-side SDK talks to. Defaults to `FLAGSMITH_ON_FLAGSMITH_API_URL`.
+  - The API the server-side SDK talks to. Falls back to the API's own `FLAGSMITH_ON_FLAGSMITH_API_URL`, which is unset by
+    default — this is a separate variable from the frontend one above, unless you run the unified image where both are
+    read from the same environment.
 
 ## Verification and Usage
 
