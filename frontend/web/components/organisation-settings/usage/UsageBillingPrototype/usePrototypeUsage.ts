@@ -42,12 +42,29 @@ const buildLiveView = (
     return { cumulative: running, day: event.day }
   })
 
-  const totals = (breakdownUsage ?? usage)?.totals
+  const source = breakdownUsage ?? usage
+  const totals = source?.totals
+
+  // Every event row carries the SDK that made the call, so this dimension is a
+  // grouping of the response we already have rather than another request.
+  const bySdk = new Map<string, number>()
+  for (const event of source?.events_list ?? []) {
+    const key = event.labels?.user_agent || 'Unknown'
+    bySdk.set(
+      key,
+      (bySdk.get(key) ?? 0) +
+        (event.flags ?? 0) +
+        (event.identities ?? 0) +
+        (event.traits ?? 0) +
+        (event.environment_document ?? 0),
+    )
+  }
 
   return {
     breakdowns: {
-      // The API only breaks usage down by request type today. The other
-      // dimensions need work that is not raised yet, so they stay empty.
+      // Project and environment exist on usage-data as filters, not as a
+      // grouping, so they need one request per key or a group_by parameter.
+      // Neither is worth doing in the prototype. See the epic.
       environment: [],
       project: [],
       'request-type': [
@@ -72,7 +89,9 @@ const buildLiveView = (
           value: totals?.environmentDocument ?? 0,
         },
       ],
-      sdk: [],
+      sdk: [...bySdk.entries()]
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value),
     },
     channels: { email: true, inApp: true },
     // Grace state is not serialised by the API yet (see the epic), so live
