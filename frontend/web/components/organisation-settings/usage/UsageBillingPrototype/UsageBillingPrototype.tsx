@@ -97,16 +97,9 @@ const buildTiles = (view: UsageView, percent: number): Tile[] => {
       sub: 'charged at the end of the period',
       value: currency(view.overageCost),
     })
-  } else if (!view.period.isBillingPeriod) {
-    // No period to project to, and free plans are restricted rather than
-    // charged, so the slot answers what actually happens at the limit.
-    tiles.push({
-      badge: { text: 'Free plan', tone: 'neutral', withDot: false },
-      label: 'If you reach 100%',
-      sub: 'serving stops after a short grace period',
-      value: 'Flags pause',
-    })
-  } else {
+  } else if (view.period.isBillingPeriod) {
+    // A trailing window has no end to run to, so it gets no tile here rather
+    // than a substitute one. The row is shorter on those plans by design.
     tiles.push({
       badge: { text: 'Estimate', tone: 'neutral', withDot: false },
       label: 'Projected end-of-period',
