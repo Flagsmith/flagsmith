@@ -18,8 +18,6 @@ class CohortViewSet(
     mixins.RetrieveModelMixin,
     mixins.DestroyModelMixin,
 ):
-    """Manage trait-synced cohorts for an environment."""
-
     serializer_class = CohortSerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, CohortPlanPermission, CohortPermission]
