@@ -2,172 +2,1942 @@
   "api_key": "masked",
   "feature_states": [
     {
-      "django_id": 1091609,
-      "enabled": false,
-      "feature": {
-        "id": 91559,
-        "name": "api_usage_alerting",
-        "type": "STANDARD"
-      },
-      "feature_segment": null,
-      "feature_state_value": null,
-      "featurestate_uuid": "30d81348-9c9e-4494-a575-2a8e876143bc",
-      "multivariate_feature_state_values": []
-    },
-    {
-      "django_id": 966786,
+      "django_id": 1006269,
       "enabled": true,
       "feature": {
-        "id": 96656,
-        "name": "api_limiting_stop_serving_flags",
-        "type": "STANDARD"
-      },
-      "feature_segment": null,
-      "feature_state_value": null,
-      "featurestate_uuid": "c849b8fa-7eb3-4ada-a2ef-92abc8acb015",
-      "multivariate_feature_state_values": []
-    },
-    {
-      "django_id": 966788,
-      "enabled": true,
-      "feature": {
-        "id": 96657,
-        "name": "api_limiting_block_access_to_admin",
-        "type": "STANDARD"
-      },
-      "feature_segment": null,
-      "feature_state_value": null,
-      "featurestate_uuid": "077c46f8-b5c4-40b8-bd03-5916f00381bf",
-      "multivariate_feature_state_values": []
-    },
-    {
-      "django_id": 882483,
-      "enabled": true,
-      "feature": {
-        "id": 98035,
-        "name": "api_usage_overage_charges",
-        "type": "STANDARD"
-      },
-      "feature_segment": null,
-      "feature_state_value": null,
-      "featurestate_uuid": "558369e9-d083-44c5-96f7-240c115b12b6",
-      "multivariate_feature_state_values": []
-    },
-    {
-      "django_id": 933832,
-      "enabled": false,
-      "feature": {
-        "id": 148935,
-        "name": "enable_feature_versioning_for_new_environments",
-        "type": "STANDARD"
-      },
-      "feature_segment": null,
-      "feature_state_value": null,
-      "featurestate_uuid": "1d584003-a0cc-46dd-aeea-30f392a4da80",
-      "multivariate_feature_state_values": []
-    },
-    {
-      "django_id": 907926,
-      "enabled": false,
-      "feature": {
-        "id": 149200,
-        "name": "sdk_metrics_labels",
+        "id": 24,
+        "name": "try_it",
         "type": "STANDARD"
       },
       "feature_segment": null,
       "feature_state_value": "",
-      "featurestate_uuid": "b6aacfaf-5b02-4b58-9156-f018ffa85c2d",
+      "featurestate_uuid": "6451d5a9-9989-4d79-8d6e-f4b15a55e223",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 1207975,
+      "django_id": 5814,
       "enabled": true,
       "feature": {
-        "id": 189491,
-        "name": "compress_dynamo_documents",
+        "id": 1530,
+        "name": "segment_operators",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "[\n  {\n    \"value\": \"EQUAL\",\n    \"label\": \"Exactly Matches (=)\"\n  },\n  {\n    \"value\": \"NOT_EQUAL\",\n    \"label\": \"Does not match (!=)\"\n  },\n  {\n    \"value\": \"PERCENTAGE_SPLIT\",\n    \"label\": \"% Split\"\n  },\n  {\n    \"value\": \"GREATER_THAN\",\n    \"label\": \">\",\n    \"type\": \"number\"\n  },\n  {\n    \"value\": \"GREATER_THAN_INCLUSIVE\",\n    \"label\": \">=\",\n    \"type\": \"number\"\n  },\n  {\n    \"value\": \"LESS_THAN\",\n    \"label\": \"<\",\n    \"type\": \"number\"\n  },\n  {\n    \"value\": \"LESS_THAN_INCLUSIVE\",\n    \"label\": \"<=\",\n    \"type\": \"number\"\n  },\n  {\n    \"value\": \"GREATER_THAN:semver\",\n    \"label\": \"SemVer >\",\n    \"append\": \":semver\"\n  },\n  {\n    \"value\": \"GREATER_THAN_INCLUSIVE:semver\",\n    \"label\": \"SemVer >=\",\n    \"append\": \":semver\"\n  },\n  {\n    \"value\": \"LESS_THAN:semver\",\n    \"label\": \"SemVer <\",\n    \"append\": \":semver\"\n  },\n  {\n    \"value\": \"LESS_THAN_INCLUSIVE:semver\",\n    \"label\": \"SemVer <=\",\n    \"append\": \":semver\"\n  },\n  {\n    \"value\": \"MODULO\",\n    \"label\": \"Modulo\",\n    \"valuePlaceholder\": \"Divisor|Remainder\"\n  },\n  {\n    \"value\": \"CONTAINS\",\n    \"label\": \"Contains\"\n  },\n  {\n    \"value\": \"NOT_CONTAINS\",\n    \"label\": \"Does not contain\"\n  },\n  {\n    \"value\": \"IN\",\n    \"label\": \"In\",\n    \"warning\": \"Check your SDK version supports the IN operator. <a href=\\\"https://docs.flagsmith.com/clients/overview#sdk-compatibility\\\">See SDK compatibility docs</a>.\",\n    \"valuePlaceholder\": \"Value1,Value2\"\n  },\n  {\n    \"value\": \"REGEX\",\n    \"label\": \"Matches regex\"\n  },\n  {\n    \"value\": \"IS_SET\",\n    \"label\": \"Is set\",\n    \"hideValue\": true\n  },\n  {\n    \"value\": \"IS_NOT_SET\",\n    \"label\": \"Is not set\",\n    \"hideValue\": true\n  }\n]",
+      "featurestate_uuid": "77153671-acaf-4f4a-a84b-0eadd1941b08",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 12306,
+      "enabled": true,
+      "feature": {
+        "id": 2712,
+        "name": "oauth_github",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "{\n  \"url\": \"https://github.com/login/oauth/authorize?scope=user&client_id=b706a0da3e9d3115ea9d&redirect_uri=https%3A%2F%2Fapp.flagsmith.com%2Foauth%2Fgithub\"\n}",
+      "featurestate_uuid": "3dcf796e-ee2c-464a-9258-3863649428f8",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 12309,
+      "enabled": true,
+      "feature": {
+        "id": 2713,
+        "name": "oauth_google",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "{\n \"clientId\":\"232959427810-br6ltnrgouktp0ngsbs04o14ueb9rch0.apps.googleusercontent.com\"\n}",
+      "featurestate_uuid": "51c7fb92-a27a-4548-bd08-db3fea744952",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 27321,
+      "enabled": true,
+      "feature": {
+        "id": 5538,
+        "name": "plan_based_access",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "2923a55b-a0ef-44b0-a7bc-139f0de04e50",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 27417,
+      "enabled": true,
+      "feature": {
+        "id": 5560,
+        "name": "integrations",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "[\"amplitude\",\"datadog\",\"dynatrace\",\"new-relic\",\"segment\",\"rudderstack\",\"webhook\",\"slack\", \"heap\",\"mixpanel\"]",
+      "featurestate_uuid": "706d50a5-4398-47af-bb9d-16f1bdc85bd4",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1490431,
+      "enabled": true,
+      "feature": {
+        "id": 5564,
+        "name": "integration_data",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "{\n  \"amplitude\": {\n    \"categories\": [\n      \"Analytics\"\n    ],\n    \"description\": \"Sends data on what flags served to each identity.\",\n    \"docs\": \"https://docs.flagsmith.com/integrations/analytics/amplitude\",\n    \"fields\": [\n      {\n        \"hidden\": true,\n        \"key\": \"api_key\",\n        \"label\": \"API Key\"\n      },\n      {\n        \"key\": \"base_url\",\n        \"label\": \"Base URL\"\n      }\n    ],\n    \"image\": \"/static/images/integrations/amplitude.svg\",\n    \"perEnvironment\": true,\n    \"project\": true,\n    \"title\": \"Amplitude\"\n  },\n  \"backstage\": {\n    \"categories\": [\n      \"Enterprise tools\"\n    ],\n    \"description\": \"View your Flagsmith feature flags inside your Backstage developer portal.\",\n    \"docs\": \"https://docs.flagsmith.com/third-party-integrations/backstage\",\n    \"external\": true,\n    \"image\": \"/static/images/integrations/backstage.svg\",\n    \"perEnvironment\": false,\n    \"title\": \"Backstage\"\n  },\n  \"code-references\": {\n    \"categories\": [\n      \"Developer tools\"\n    ],\n    \"description\": \"Integrate with Code References to track feature flag usage in your codebase, and unlock new functionality in Flagsmith.\",\n    \"docs\": \"https://docs.flagsmith.com/managing-flags/code-references\",\n    \"external\": true,\n    \"image\": \"/static/images/integrations/code-references.svg\",\n    \"perEnvironment\": false,\n    \"title\": \"Code References\"\n  },\n  \"datadog\": {\n    \"categories\": [\n      \"Monitoring\"\n    ],\n    \"description\": \"Sends events to Datadog for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.\",\n    \"docs\": \"https://docs.flagsmith.com/integrations/apm/datadog\",\n    \"fields\": [\n      {\n        \"key\": \"base_url\",\n        \"label\": \"Base URL\"\n      },\n      {\n        \"hidden\": true,\n        \"key\": \"api_key\",\n        \"label\": \"API Key\"\n      },\n      {\n        \"default\": true,\n        \"inputType\": \"checkbox\",\n        \"key\": \"use_custom_source\",\n        \"label\": \"Use Custom Source\"\n      }\n    ],\n    \"image\": \"/static/images/integrations/datadog.svg\",\n    \"perEnvironment\": false,\n    \"project\": true,\n    \"title\": \"Datadog\"\n  },\n  \"dynatrace\": {\n    \"categories\": [\n      \"Monitoring\"\n    ],\n    \"description\": \"Sends events to Dynatrace for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.\",\n    \"docs\": \"https://docs.flagsmith.com/integrations/apm/dynatrace\",\n    \"fields\": [\n      {\n        \"key\": \"base_url\",\n        \"label\": \"Base URL\"\n      },\n      {\n        \"hidden\": true,\n        \"key\": \"api_key\",\n        \"label\": \"API Key\"\n      },\n      {\n        \"key\": \"entity_selector\",\n        \"label\": \"Entity Selector\"\n      }\n    ],\n    \"image\": \"/static/images/integrations/dynatrace.svg\",\n    \"perEnvironment\": true,\n    \"project\": true,\n    \"title\": \"Dynatrace\"\n  },\n  \"github\": {\n    \"categories\": [\n      \"CI/CD\"\n    ],\n    \"description\": \"View your Flagsmith Flags inside your GitHub Issues and Pull Request.\",\n    \"docs\": \"https://docs.flagsmith.com/integrations/project-management/github\",\n    \"external\": true,\n    \"image\": \"/static/images/integrations/github.svg\",\n    \"isExternalInstallation\": true,\n    \"linkedFeatures\": [\n      \"FEATURE_LINKS\"\n    ],\n    \"organisation\": true,\n    \"perEnvironment\": false,\n    \"title\": \"GitHub\"\n  },\n  \"gitlab\": {\n    \"categories\": [\n      \"CI/CD\"\n    ],\n    \"description\": \"Link GitLab issues and merge requests to feature flags.\",\n    \"docs\": \"https://docs.flagsmith.com/third-party-integrations/project-management/gitlab\",\n    \"fields\": [\n      {\n        \"default\": \"https://gitlab.com\",\n        \"key\": \"gitlab_instance_url\",\n        \"label\": \"GitLab Instance URL\"\n      },\n      {\n        \"hidden\": true,\n        \"key\": \"access_token\",\n        \"label\": \"Access Token\"\n      },\n      {\n        \"default\": false,\n        \"inputType\": \"checkbox\",\n        \"key\": \"labeling_enabled\",\n        \"label\": \"Add \\\"Flagsmith Feature\\\" label to linked issues and MRs\"\n      }\n    ],\n    \"image\": \"/static/images/integrations/gitlab.svg\",\n    \"linkedFeatures\": [\n      \"FEATURE_LINKS\"\n    ],\n    \"perEnvironment\": false,\n    \"project\": true,\n    \"title\": \"GitLab\"\n  },\n  \"grafana\": {\n    \"categories\": [\n      \"Monitoring\"\n    ],\n    \"description\": \"Receive Flagsmith annotations to your Grafana instance on feature flag and segment changes.\",\n    \"docs\": \"https://docs.flagsmith.com/integrations/apm/grafana\",\n    \"fields\": [\n      {\n        \"default\": \"https://grafana.com\",\n        \"key\": \"base_url\",\n        \"label\": \"Base URL\"\n      },\n      {\n        \"hidden\": true,\n        \"key\": \"api_key\",\n        \"label\": \"Service account token\"\n      }\n    ],\n    \"image\": \"/static/images/integrations/grafana.svg\",\n    \"organisation\": true,\n    \"perEnvironment\": false,\n    \"project\": true,\n    \"title\": \"Grafana\"\n  },\n  \"heap\": {\n    \"categories\": [\n      \"Analytics\"\n    ],\n    \"description\": \"Sends data on what flags served to each identity.\",\n    \"docs\": \"https://docs.flagsmith.com/integrations/analytics/heap\",\n    \"fields\": [\n      {\n        \"hidden\": true,\n        \"key\": \"api_key\",\n        \"label\": \"API Key\"\n      }, {\n        \"default\": \"https://heapanalytics.com\",\n        \"key\": \"base_url\",\n        \"label\": \"Base URL\",\n        \"options\": [\n          { \"label\": \"US\", \"value\": \"https://heapanalytics.com\" },\n          { \"label\": \"EU\", \"value\": \"https://c.eu.heap-api.com\" }\n        ]\n      }\n    ],\n    \"image\": \"/static/images/integrations/heap.svg\",\n    \"perEnvironment\": true,\n    \"project\": true,\n    \"title\": \"Heap Analytics\"\n  },\n  \"jira\": {\n    \"categories\": [\n      \"Project Management\"\n    ],\n    \"description\": \"View your Flagsmith Flags inside Jira.\",\n    \"docs\": \"https://docs.flagsmith.com/integrations/project-management/jira\",\n    \"external\": true,\n    \"image\": \"/static/images/integrations/jira.svg\",\n    \"organisation\": true,\n    \"perEnvironment\": false,\n    \"project\": true,\n    \"title\": \"Jira\"\n  },\n  \"mcp\": {\n    \"organisation\": true,\n    \"image\": \"/static/images/integrations/mcp.svg\",\n    \"docs\": \"https://docs.flagsmith.com/integrating-with-flagsmith/mcp-server\",\n    \"external\": false,\n    \"customUI\": true,\n    \"title\": \"Flagsmith MCP Server\",\n    \"description\": \"Allow AI assistants and agents to interact with your feature flag infrastructure, including managing flags, segments, and release workflows.\",\n    \"categories\": [\n      \"AI\"\n    ]\n  },\n  \"mixpanel\": {\n    \"categories\": [\n      \"Analytics\"\n    ],\n    \"description\": \"Sends data on what flags served to each identity.\",\n    \"docs\": \"https://docs.flagsmith.com/integrations/analytics/mixpanel\",\n    \"fields\": [\n      {\n        \"hidden\": true,\n        \"key\": \"api_key\",\n        \"label\": \"Project Token\"\n      },{\n        \"default\": \"https://api.mixpanel.com\",\n        \"key\": \"base_url\",\n        \"label\": \"Base URL\",\n        \"options\": [\n          { \"label\": \"US\", \"value\": \"https://api.mixpanel.com\" },\n          { \"label\": \"EU\", \"value\": \"https://api-eu.mixpanel.com\" },\n          { \"label\": \"India\", \"value\": \"https://api-in.mixpanel.com\" }\n        ]\n      }\n    ],\n    \"image\": \"/static/images/integrations/mp.svg\",\n    \"perEnvironment\": true,\n    \"project\": true,\n    \"title\": \"Mixpanel\"\n  },\n  \"new-relic\": {\n    \"categories\": [\n      \"Monitoring\"\n    ],\n    \"description\": \"Sends events to New Relic for when flags are created, updated and removed.\",\n    \"docs\": \"https://docs.flagsmith.com/integrations/apm/newrelic\",\n    \"fields\": [\n      {\n        \"key\": \"base_url\",\n        \"label\": \"New Relic Base URL\"\n      },\n      {\n        \"hidden\": true,\n        \"key\": \"api_key\",\n        \"label\": \"New Relic API Key\"\n      },\n      {\n        \"key\": \"app_id\",\n        \"label\": \"New Relic Application ID\"\n      }\n    ],\n    \"image\": \"/static/images/integrations/new_relic.svg\",\n    \"perEnvironment\": false,\n    \"project\": true,\n    \"title\": \"New Relic\"\n  },\n  \"rudderstack\": {\n    \"categories\": [\n      \"Analytics\"\n    ],\n    \"description\": \"Sends data on what flags served to each identity.\",\n    \"docs\": \"https://docs.flagsmith.com/integrations/analytics/rudderstack\",\n    \"fields\": [\n      {\n        \"key\": \"base_url\",\n        \"label\": \"Rudderstack Data Plane URL\"\n      },\n      {\n        \"hidden\": true,\n        \"key\": \"api_key\",\n        \"label\": \"API Key\"\n      }\n    ],\n    \"image\": \"/static/images/integrations/rudderstack.svg\",\n    \"perEnvironment\": true,\n    \"project\": true,\n    \"title\": \"Rudderstack\"\n  },\n  \"segment\": {\n    \"categories\": [\n      \"Analytics\"\n    ],\n    \"description\": \"Sends data on what flags served to each identity.\",\n    \"docs\": \"https://docs.flagsmith.com/integrations/analytics/segment\",\n    \"fields\": [\n      {\n        \"hidden\": true,\n        \"key\": \"api_key\",\n        \"label\": \"API Key\"\n      }\n    ],\n    \"image\": \"/static/images/integrations/segment.svg\",\n    \"perEnvironment\": true,\n    \"project\": true,\n    \"title\": \"Segment\"\n  },\n  \"sentry\": {\n    \"categories\": [\n      \"Monitoring\"\n    ],\n    \"description\": \"Send flag change events to Sentry.\",\n    \"docs\": \"https://docs.flagsmith.com/integrations/apm/sentry\",\n    \"fields\": [\n      {\n        \"key\": \"webhook_url\",\n        \"label\": \"Webhook URL\"\n      },\n      {\n        \"hidden\": true,\n        \"key\": \"secret\",\n        \"label\": \"Secret\"\n      }\n    ],\n    \"image\": \"/static/images/integrations/sentry.svg\",\n    \"perEnvironment\": true,\n    \"title\": \"Sentry\"\n  },\n  \"slack\": {\n    \"categories\": [\n      \"Messaging\"\n    ],\n    \"description\": \"Sends messages to Slack when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.\",\n    \"docs\": \"https://docs.flagsmith.com/integrations/slack\",\n    \"image\": \"/static/images/integrations/slack.svg\",\n    \"isOauth\": true,\n    \"perEnvironment\": true,\n    \"project\": true,\n    \"title\": \"Slack\"\n  },\n  \"webhook\": {\n    \"categories\": [\n      \"Webhooks\"\n    ],\n    \"description\": \"Sends data on what flags served to each identity to a Webhook Endpoint you provide.\",\n    \"docs\": \"https://docs.flagsmith.com/integrations/webhook\",\n    \"fields\": [\n      {\n        \"key\": \"url\",\n        \"label\": \"Your Webhook URL Endpoint\"\n      },\n      {\n        \"hidden\": true,\n        \"key\": \"secret\",\n        \"label\": \"Your Webhook Secret\"\n      }\n    ],\n    \"image\": \"/static/images/integrations/webhooks.svg\",\n    \"perEnvironment\": true,\n    \"project\": true,\n    \"title\": \"Webhook\"\n  }\n}",
+      "featurestate_uuid": "216ec0a9-f835-4e38-9a8a-ab46fa703a1e",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 29557,
+      "enabled": true,
+      "feature": {
+        "id": 6006,
+        "name": "usage_chart",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "bba1eb92-7fdd-4eeb-8e35-db4220af82eb",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 34291,
+      "enabled": true,
+      "feature": {
+        "id": 6903,
+        "name": "scaleup_audit",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "a24bfb7a-dd7d-4029-bfa1-9d0faaa93475",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 659587,
+      "enabled": false,
+      "feature": {
+        "id": 7168,
+        "name": "butter_bar",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "f02729e8-9f8a-4422-8a04-323ddbbf4e2b",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 37185,
+      "enabled": true,
+      "feature": {
+        "id": 7460,
+        "name": "flag_analytics",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "40629803-f862-4cd6-826a-1428e982e9a3",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 41661,
+      "enabled": false,
+      "feature": {
+        "id": 8266,
+        "name": "dark_mode",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "19f8b29f-6e90-488d-980c-dabfe4b11072",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 44941,
+      "enabled": false,
+      "feature": {
+        "id": 8798,
+        "name": "read_only_mode",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "f37dec34-36ac-4a9e-a75d-8f84fffbfd0b",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 53306,
+      "enabled": true,
+      "feature": {
+        "id": 10202,
+        "name": "saml",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "11a27730-d5ee-4748-8b18-2f90f9cc0b64",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 62247,
+      "enabled": true,
+      "feature": {
+        "id": 11639,
+        "name": "payments_enabled",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "e44c099d-5b79-41a2-827e-85dd2258c7f1",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 730844,
+      "enabled": false,
+      "feature": {
+        "id": 11727,
+        "name": "disable_create_org",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "cf3addc8-1330-4530-b738-8dc54afa2ab7",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 72074,
+      "enabled": true,
+      "feature": {
+        "id": 13507,
+        "name": "restrict_project_create_to_admin",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "bf9698cf-0771-4455-840e-a10d82201f6e",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 78231,
+      "enabled": true,
+      "feature": {
+        "id": 14884,
+        "name": "upgrade_subscription",
         "type": "STANDARD"
       },
       "feature_segment": null,
       "feature_state_value": "",
-      "featurestate_uuid": "e0d380a6-bdbc-4ad6-ae6f-b8b77d8beae6",
+      "featurestate_uuid": "1d07453e-b83d-42e2-968a-46f9b2d7afe8",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 1426373,
-      "enabled": false,
+      "django_id": 80126,
+      "enabled": true,
       "feature": {
-        "id": 192793,
-        "name": "code_references_ui_stats",
+        "id": 15278,
+        "name": "compare_environments",
         "type": "STANDARD"
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "374a17d7-5dee-41f7-8636-2c78d09f4612",
+      "featurestate_uuid": "778b6d2d-2695-4539-9031-0e3bb5db28f6",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 1229327,
-      "enabled": false,
+      "django_id": 80522,
+      "enabled": true,
       "feature": {
-        "id": 195393,
-        "name": "get_current_api_usage_deprecated",
+        "id": 15372,
+        "name": "not_operator",
         "type": "STANDARD"
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "e7ed0d54-b17c-4df1-ab98-5f8dc9597127",
+      "featurestate_uuid": "543f608d-b238-452f-9278-631fd731472e",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 1493885,
-      "enabled": false,
+      "django_id": 80601,
+      "enabled": true,
       "feature": {
-        "id": 208450,
-        "name": "experimentation_warehouse_connection",
+        "id": 15394,
+        "name": "force_2fa",
         "type": "STANDARD"
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "4f983dde-dec7-4172-b7ca-78518ae45b50",
+      "featurestate_uuid": "32572a21-a61a-4676-bb20-ade197aaed27",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 1423610,
-      "enabled": false,
+      "django_id": 82617,
+      "enabled": true,
       "feature": {
-        "id": 209449,
-        "name": "segment_membership_inspection",
+        "id": 15875,
+        "name": "disable_oauth_registration",
         "type": "STANDARD"
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "8f8dd554-73cf-4d50-bcbc-9ff4e2d351a3",
+      "featurestate_uuid": "361cb44e-85c3-47e8-bb88-f6ca19e453ff",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 1493888,
-      "enabled": false,
+      "django_id": 83448,
+      "enabled": true,
       "feature": {
-        "id": 209779,
-        "name": "experimental_flags",
+        "id": 16077,
+        "name": "update_feature_state_permission",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "Adds the UPDATE_FEATURE_STATE permission to the environment",
+      "featurestate_uuid": "52f7fe27-ee45-406a-8530-7b60c1587845",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 84541,
+      "enabled": true,
+      "feature": {
+        "id": 16404,
+        "name": "organisation_permissions",
         "type": "STANDARD"
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "ddc44d3f-416e-4d47-8a5f-0bb1a4d84334",
+      "featurestate_uuid": "f511c6fc-c5fd-47b8-9d55-4abfe9c64be1",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 1483251,
+      "django_id": 86729,
+      "enabled": true,
+      "feature": {
+        "id": 16814,
+        "name": "audit_api_search",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": 10,
+      "featurestate_uuid": "36e88210-9640-441a-a565-f0720bb82092",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 86856,
+      "enabled": true,
+      "feature": {
+        "id": 16857,
+        "name": "mailing_list",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "f070157a-8e5c-4251-b576-0f425d29bdfe",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 91378,
+      "enabled": true,
+      "feature": {
+        "id": 17718,
+        "name": "tags",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "621434c2-361e-42cf-8197-2d5b5bb806fb",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 92783,
+      "enabled": true,
+      "feature": {
+        "id": 18059,
+        "name": "serverside_sdk_keys",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "44211d8f-56b4-43a2-b363-8dc38e6fad79",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 102263,
       "enabled": false,
       "feature": {
-        "id": 216082,
+        "id": 19868,
+        "name": "search_algorithm",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "v1",
+      "featurestate_uuid": "3e5e744d-597b-4035-8aa3-1fee9e7464df",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 102558,
+      "enabled": true,
+      "feature": {
+        "id": 19941,
+        "name": "4eyes",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "e192f6d2-50fc-434b-8419-a1dc2e1cadaf",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 108835,
+      "enabled": true,
+      "feature": {
+        "id": 21107,
+        "name": "edge_identities",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "a8382de5-e001-4f76-a599-7cb3151a1775",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 109067,
+      "enabled": true,
+      "feature": {
+        "id": 21165,
+        "name": "scheduling",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "1acb3aa6-012b-40b6-aa99-6140f775c547",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 114111,
+      "enabled": true,
+      "feature": {
+        "id": 22017,
+        "name": "manage_identities_permission",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "",
+      "featurestate_uuid": "ec5a934a-2d82-4912-913e-53f0767741cd",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 125940,
+      "enabled": true,
+      "feature": {
+        "id": 24103,
+        "name": "beta_features",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "{\n  \"experimental (handle with care!)\": [\n      {\n        \"flag\":\"scheduling\",\n        \"hasEnabled\": true,\n        \"description\": \"Allows you to schedule feature modifications at a certain date and time\"\n      }\n  ],\n  \"examples\": [\n    {\n     \"flag\":\"try_it\",\n     \"hasEnabled\": true,\n     \"description\":\"Determines if the try it panels show on each of the pages\"\n    },\n    {\n      \"flag\":\"butter_bar\",\n      \"description\": \"Shows a message bar on all pages\",\n      \"hasValue\": true\n    }\n  ]\n}",
+      "featurestate_uuid": "e29f1c7b-f40f-4104-9ddb-feb3751755df",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 131744,
+      "enabled": true,
+      "feature": {
+        "id": 25009,
+        "name": "allow_client_traits",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "996c95b3-c67a-4dc5-bbfb-7e511378a20f",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 132889,
+      "enabled": true,
+      "feature": {
+        "id": 25213,
+        "name": "master_api_key",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "70f747b9-f73f-406f-aa03-a8c76b93ff37",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 134768,
+      "enabled": true,
+      "feature": {
+        "id": 25514,
+        "name": "edge_migrator",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "60a07d18-57af-4e05-8436-74ac97fef16b",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 137914,
+      "enabled": true,
+      "feature": {
+        "id": 26026,
+        "name": "segment_associated_features",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "ff9024b7-3d4b-4422-93ba-ca446886424e",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 144946,
+      "enabled": true,
+      "feature": {
+        "id": 26840,
+        "name": "use_admin_identity_featurestates",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "e1363e3b-b72d-4206-8c01-9e860ee557c5",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 147567,
+      "enabled": false,
+      "feature": {
+        "id": 27854,
+        "name": "sso_idp",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "af784b2d-1078-4a20-9ac3-a672ffa2b2ef",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 148632,
+      "enabled": true,
+      "feature": {
+        "id": 28083,
+        "name": "flag_based_segments",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "700294ec-0a3b-4663-ae7b-9f103041f1ee",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 153949,
+      "enabled": true,
+      "feature": {
+        "id": 29223,
+        "name": "prevent_flag_defaults",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "",
+      "featurestate_uuid": "7573e380-dde9-4f5f-a2b3-0381d6627071",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 163832,
+      "enabled": true,
+      "feature": {
+        "id": 30754,
+        "name": "default_user_groups",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "1167a66f-4871-499b-bac4-1b02e00270a1",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 171839,
+      "enabled": true,
+      "feature": {
+        "id": 32474,
+        "name": "group_external_ids",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "a5f97fdd-8844-4576-a0bd-2d69bd84dd1f",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 179313,
+      "enabled": true,
+      "feature": {
+        "id": 33869,
+        "name": "rotate_api_token",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "f26c6f8f-db5a-44c9-813c-92595e8e9078",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 183915,
+      "enabled": true,
+      "feature": {
+        "id": 34604,
+        "name": "tag_environments",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "7b546539-9a89-4877-a4d1-191f28ac416a",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 186234,
+      "enabled": true,
+      "feature": {
+        "id": 34947,
+        "name": "case_sensitive_flags",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "e176f735-3ca9-4b7d-951c-fdb654b42dc3",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 186299,
+      "enabled": true,
+      "feature": {
+        "id": 34967,
+        "name": "feature_name_regex",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "c6e5e4bb-d1e1-4286-b98c-198b4328dfd5",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 186827,
+      "enabled": true,
+      "feature": {
+        "id": 35097,
+        "name": "view_identities_permission",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "69b06cb4-c0aa-484c-a5b9-976f59a08152",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 187091,
+      "enabled": true,
+      "feature": {
+        "id": 35163,
+        "name": "auto_seats",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "d345c323-1ec8-49eb-9997-fb8f949ed7ca",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 196492,
+      "enabled": true,
+      "feature": {
+        "id": 37075,
+        "name": "usage_filter",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "99a910f9-9f7a-48b0-b1a6-acd02dfd3d6b",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 208623,
+      "enabled": true,
+      "feature": {
+        "id": 39317,
+        "name": "delete_organisation",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "aeb7c749-d97f-4ca6-a81e-a202731d97d0",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 208709,
+      "enabled": true,
+      "feature": {
+        "id": 39340,
+        "name": "delete_environment",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "3663aaf6-1471-474a-9641-d93f7fabc06d",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 208725,
+      "enabled": true,
+      "feature": {
+        "id": 39344,
+        "name": "delete_project",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "f2bafc8a-1bd2-4033-a234-03e9d825099e",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 211013,
+      "enabled": true,
+      "feature": {
+        "id": 39871,
+        "name": "hide_disabled_flags_environment",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "23d7914e-be6a-4c86-a0fc-03f2bcac1482",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 224356,
+      "enabled": true,
+      "feature": {
+        "id": 41896,
+        "name": "group_admins",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "55a70f39-32b6-44f7-b6c9-133380d1dc65",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 245857,
+      "enabled": false,
+      "feature": {
+        "id": 45632,
+        "name": "disable_users_as_reviewers",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "e23ba866-f999-4f05-ac60-2835309fca43",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 245864,
+      "enabled": true,
+      "feature": {
+        "id": 45633,
+        "name": "enable_groups_as_reviewers",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "95ba92be-36e2-4033-941c-de4a52ccd3ed",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 245909,
+      "enabled": false,
+      "feature": {
+        "id": 45645,
+        "name": "configure_hide_sensitive_data",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "0fc517b9-7ada-414b-bf8f-c8085a4353b0",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 247380,
+      "enabled": true,
+      "feature": {
+        "id": 42925,
+        "name": "change_email",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "82835bc5-1f20-4d97-8ca4-328d5a53e820",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 247381,
+      "enabled": true,
+      "feature": {
+        "id": 44132,
+        "name": "delete_account",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "c46417d6-f99f-4b67-be4d-d42311c2c288",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 247953,
+      "enabled": true,
+      "feature": {
+        "id": 46034,
+        "name": "is_server_key_only",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "d0c23413-0deb-476e-9a1d-04f178b40a9f",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 251164,
+      "enabled": false,
+      "feature": {
+        "id": 46691,
+        "name": "max_api_calls_alert",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "afd00db5-32bf-43b9-9ae5-05ae1664716c",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 256819,
+      "enabled": true,
+      "feature": {
+        "id": 47408,
+        "name": "compare_identities",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "a17a4c58-c1f2-4905-9c7d-db46e966bc12",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 259270,
+      "enabled": false,
+      "feature": {
+        "id": 47729,
+        "name": "verify_seats_limit_for_invite_links",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "14044108-20c7-4a9d-9160-d2b77d032bb5",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 263457,
+      "enabled": true,
+      "feature": {
+        "id": 48378,
+        "name": "consistent_hashing_setting",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "Displays the setting to control the `use_identity_composite_key_for_hashing` environment attribute",
+      "featurestate_uuid": "ca8b6af7-0a43-4af8-8f80-9f00716b2830",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1487983,
+      "enabled": false,
+      "feature": {
+        "id": 52226,
+        "name": "feature_versioning",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "7e1424e5-8f1d-47c9-b120-e14e85cab3b4",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1448698,
+      "enabled": true,
+      "feature": {
+        "id": 54542,
+        "name": "announcement",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "{\n  \"id\":\"scalingfeatureflags\",\n  \"title\":\"Read Our eBook\",\n  \"description\":\"A practical guide to introducing feature flags at scale, written with OpenFeature & eBay\",\n  \"buttonText\":\"Get the Guide\",\n  \"url\":\"https://143451822.fs1.hubspotusercontent-eu1.net/hubfs/143451822/eBooks/eBook:%20Scaling%20Feature%20Flags%20-%20A%20Roadmap%20for%20Safer%20Releases%20&%20Faster%20Development.pdf\",\n  \"isClosable\":true\n}",
+      "featurestate_uuid": "38e5697e-39dd-490b-bda2-07fac422b2dd",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 324144,
+      "enabled": true,
+      "feature": {
+        "id": 55820,
+        "name": "show_role_management",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "d561f98e-ad4a-472d-b41b-f9a61b56b1af",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 343049,
+      "enabled": true,
+      "feature": {
+        "id": 58966,
+        "name": "import_project",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "7e97715a-e802-4775-970e-65d56a711413",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 552532,
+      "enabled": true,
+      "feature": {
+        "id": 60004,
+        "name": "enable_metadata",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "e5fc2781-aefa-42a3-87b4-849ad61b8fcc",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 359901,
+      "enabled": true,
+      "feature": {
+        "id": 61517,
+        "name": "manage_segment_overrides_env_role",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "df53063c-a390-4eaf-a75a-04a33197a492",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 369357,
+      "enabled": false,
+      "feature": {
+        "id": 62797,
+        "name": "a_temp_feature",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": 23,
+      "featurestate_uuid": "faef907d-d795-407d-8321-b182cb167a6b",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 369505,
+      "enabled": true,
+      "feature": {
+        "id": 62821,
+        "name": "relay_events_key",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "44a0-a706-8840",
+      "featurestate_uuid": "0d4c4c9b-9b04-4be6-8435-ddb817264e6e",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 384169,
+      "enabled": true,
+      "feature": {
+        "id": 64378,
+        "name": "payments_on_blocked_page",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "e1a14cc4-8a9f-4aae-94d8-3ce808d38b10",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 386161,
+      "enabled": true,
+      "feature": {
+        "id": 64578,
+        "name": "flagsmith_import_export",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "befde57b-3c36-4a31-be55-9e4854b8bab5",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 387303,
+      "enabled": false,
+      "feature": {
+        "id": 64850,
+        "name": "show_dunning_banner",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "8c42b688-3394-4f17-821e-79a819c288a6",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 388176,
+      "enabled": true,
+      "feature": {
+        "id": 64955,
+        "name": "show_edge_identity_overrides",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "314ce7e8-99d6-4a83-b8f3-b1b01fbb13de",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 418209,
+      "enabled": true,
+      "feature": {
+        "id": 71098,
+        "name": "audit_log_detail",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "6180b4c6-e42b-4d6b-9ed3-6c372272bfc7",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 445334,
+      "enabled": false,
+      "feature": {
+        "id": 75564,
+        "name": "split_testing",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "2e633223-eea6-4883-9a86-381e147359ca",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 538029,
+      "enabled": true,
+      "feature": {
+        "id": 80177,
+        "name": "github_integration",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "db617585-b97e-4adf-ae70-db13aca0e0f2",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 470861,
+      "enabled": true,
+      "feature": {
+        "id": 80570,
+        "name": "feature_enabled_state_filter",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "415cdb49-9184-477f-8a0d-f6e6a45cf927",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 505111,
+      "enabled": true,
+      "feature": {
+        "id": 88732,
+        "name": "owners_filter",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "fe8fd17b-048a-4c19-9d3f-6ae28793ff11",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 536102,
+      "enabled": true,
+      "feature": {
+        "id": 89860,
+        "name": "clone_identities",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "e53f510f-4be6-46b1-8f02-4c47ec15581b",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 510477,
+      "enabled": false,
+      "feature": {
+        "id": 89949,
+        "name": "delighted",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "a335fe7b-854d-4539-b385-43bd62306d57",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 527505,
+      "enabled": true,
+      "feature": {
+        "id": 93497,
+        "name": "realtime_setting",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "26d68c6a-1f10-424f-8607-7ad9daf0d30f",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 552400,
+      "enabled": true,
+      "feature": {
+        "id": 95121,
+        "name": "saml_configuration",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "40302846-6654-4750-8c6f-2e42126cfb82",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1396864,
+      "enabled": true,
+      "feature": {
+        "id": 97823,
+        "name": "announcement_per_page",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "1dad1235-11b3-4fa5-b961-8c9127f3ecd5",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 608166,
+      "enabled": true,
+      "feature": {
+        "id": 103658,
+        "name": "organisation_integrations",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "ad4d5dab-7a85-450d-951c-03766d466d0f",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 602306,
+      "enabled": true,
+      "feature": {
+        "id": 106530,
+        "name": "manage_tags_permission",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "e67db718-9229-4f20-a594-31d8e4f84da2",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 589122,
+      "enabled": true,
+      "feature": {
+        "id": 106531,
+        "name": "use_identity_overrides_in_local_eval",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "34edc0fb-45e1-49b6-8778-e27022370f9f",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 677584,
+      "enabled": true,
+      "feature": {
+        "id": 106706,
+        "name": "identity_aliases",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "43e84f9c-23c1-4fc5-8ee1-9a66c4bee2bd",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 641984,
+      "enabled": true,
+      "feature": {
+        "id": 107426,
+        "name": "tag_based_permissions",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "fe462fc9-9599-493f-b6e5-c7370c3ca523",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 595932,
+      "enabled": false,
+      "feature": {
+        "id": 107855,
+        "name": "checkout_v2",
+        "type": "MULTIVARIATE"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "89d6e467-6cc1-4540-8c64-3835e6099f54",
+      "multivariate_feature_state_values": [
+        {
+          "id": 51209,
+          "multivariate_feature_option": {
+            "id": 15119,
+            "key": null,
+            "value": "designB"
+          },
+          "mv_fs_value_uuid": "96789caf-8515-4e35-bf3f-8a9362d2ec14",
+          "percentage_allocation": 0
+        },
+        {
+          "id": 51208,
+          "multivariate_feature_option": {
+            "id": 15118,
+            "key": null,
+            "value": "designC"
+          },
+          "mv_fs_value_uuid": "1c821447-586b-41db-bd20-2e49e53c4381",
+          "percentage_allocation": 0
+        }
+      ]
+    },
+    {
+      "django_id": 995345,
+      "enabled": true,
+      "feature": {
+        "id": 115482,
+        "name": "segment_change_requests",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "2ce0c842-217f-4fae-bf44-8b7a4d255090",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 930427,
+      "enabled": true,
+      "feature": {
+        "id": 123174,
+        "name": "feature_health",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "{\"beta\": true}",
+      "featurestate_uuid": "93e3f9fc-9970-41a2-a228-fddbe9ae9a7f",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 700744,
+      "enabled": false,
+      "feature": {
+        "id": 126798,
+        "name": "maintenance_mode",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "27a0e573-d403-4dcd-915e-4930ed2d0a86",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 783412,
+      "enabled": true,
+      "feature": {
+        "id": 133853,
+        "name": "test_webhook_backend",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "60983fe3-b280-4aeb-99de-8b791903ec66",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 783403,
+      "enabled": true,
+      "feature": {
+        "id": 134566,
+        "name": "clone_segment",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "73996990-cc5a-4c01-b227-a78660af2c67",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 883017,
+      "enabled": true,
+      "feature": {
+        "id": 135918,
+        "name": "welcome_page",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "d3e90cc6-53d7-470a-82fc-243e0c75229f",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 910185,
+      "enabled": true,
+      "feature": {
+        "id": 141014,
+        "name": "environment_metrics",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "0c369a2a-1d73-4eec-b471-039d46d81c12",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 783401,
+      "enabled": true,
+      "feature": {
+        "id": 141928,
+        "name": "inspect_permissions",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "1d599f8e-80ef-4e7b-bdac-c1812b757f3e",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1011070,
+      "enabled": false,
+      "feature": {
+        "id": 142918,
+        "name": "release_pipelines",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "99da0cbb-a14a-4a0b-a214-690a23dc6e61",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 906444,
+      "enabled": false,
+      "feature": {
+        "id": 144040,
+        "name": "integration_onboarding",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "04aaa8a3-08ef-48f9-bfae-76951c12a859",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 885847,
+      "enabled": false,
+      "feature": {
+        "id": 145653,
+        "name": "project_metrics_tooltip",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "Coming soon",
+      "featurestate_uuid": "47f9ba7a-1d68-4260-aff9-f423b00632fa",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 920409,
+      "enabled": true,
+      "feature": {
+        "id": 150165,
+        "name": "context_values",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "[{\"label\": \"Identity Key\", \"value\": \"$.identity.key\"}, {\"label\": \"Identifier\", \"value\": \"$.identity.identifier\"}, {\"label\": \"Environment Name\", \"value\": \"$.environment.name\"}]",
+      "featurestate_uuid": "6f395804-2fc0-4e1a-bc05-4c951192f1e0",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 995349,
+      "enabled": true,
+      "feature": {
+        "id": 153943,
+        "name": "hosting_preferences",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "ec889f1c-a888-4ef2-8c80-c9b4dc366e64",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 962829,
+      "enabled": false,
+      "feature": {
+        "id": 153985,
+        "name": "pipelines-phased-rollout",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "1fef8e11-7cb7-474d-84a1-52af57a480a9",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1148559,
+      "enabled": true,
+      "feature": {
+        "id": 155774,
+        "name": "git_code_references",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "32f9f861-f8f4-4655-a840-f10052e4e3b0",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1482582,
+      "enabled": false,
+      "feature": {
+        "id": 160696,
+        "name": "sdk_usage_charts",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "",
+      "featurestate_uuid": "ecb2a7d9-403e-4cbd-9590-9a8c8e0abacc",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1042091,
+      "enabled": true,
+      "feature": {
+        "id": 168686,
+        "name": "pylon_chat",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "4873c5a6-fed4-467a-905c-94ba2c63bd25",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1137268,
+      "enabled": false,
+      "feature": {
+        "id": 185491,
+        "name": "platform_hub",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "",
+      "featurestate_uuid": "df78fa64-c281-4bff-9df1-76844d3f60cd",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1400529,
+      "enabled": false,
+      "feature": {
+        "id": 185504,
         "name": "feature_lifecycle",
         "type": "STANDARD"
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "aa3e2309-5cae-4606-875d-0b927cd07c6c",
+      "featurestate_uuid": "deab6c13-a13c-4002-b102-0af17df58502",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1493937,
+      "enabled": false,
+      "feature": {
+        "id": 185615,
+        "name": "experimental_flags",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "ded4f142-aabc-4297-9752-115f0ef4065b",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1140202,
+      "enabled": false,
+      "feature": {
+        "id": 185976,
+        "name": "persona_based_views",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "dc0fb006-3ea6-4b44-b951-48de47272714",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1141075,
+      "enabled": false,
+      "feature": {
+        "id": 186274,
+        "name": "test-feature-create",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "7cade734-853a-4bf8-b396-e9327ac37e84",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1141082,
+      "enabled": false,
+      "feature": {
+        "id": 186276,
+        "name": "example",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "3ec46a73-68db-432e-a7a3-be9316193942",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1146738,
+      "enabled": false,
+      "feature": {
+        "id": 187060,
+        "name": "project_custom_fields",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "e56d7f56-f226-4828-bf75-de817d96670c",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1163465,
+      "enabled": false,
+      "feature": {
+        "id": 189436,
+        "name": "checkout_experiment",
+        "type": "MULTIVARIATE"
+      },
+      "feature_segment": null,
+      "feature_state_value": "designA",
+      "featurestate_uuid": "8f0f62f7-9951-453d-963f-4e8b74a61810",
+      "multivariate_feature_state_values": [
+        {
+          "id": 201903,
+          "multivariate_feature_option": {
+            "id": 24807,
+            "key": null,
+            "value": "designB"
+          },
+          "mv_fs_value_uuid": "1c99e79d-1cd2-40d2-8333-95cd6cb71cac",
+          "percentage_allocation": 20
+        }
+      ]
+    },
+    {
+      "django_id": 1177072,
+      "enabled": false,
+      "feature": {
+        "id": 190637,
+        "name": "organisation_api_keys_created_by",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "cdfedd5d-b547-462b-b26c-bd9d0ccb569e",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1245556,
+      "enabled": false,
+      "feature": {
+        "id": 196351,
+        "name": "gram_chat",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "8feb5efe-f458-42ca-9013-c1513267c39b",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1253794,
+      "enabled": true,
+      "feature": {
+        "id": 197563,
+        "name": "rtk_server_side_sdk_keys",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "0397f9b3-b708-4ed8-b426-bb8f120ec5e6",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1279748,
+      "enabled": true,
+      "feature": {
+        "id": 197593,
+        "name": "rtk_payment_modal_migration",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "83e4171b-81e9-41b8-b7d3-f6c1c68f3b66",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1390217,
+      "enabled": true,
+      "feature": {
+        "id": 203316,
+        "name": "test_sentry_integration",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "b6f4c0dc-cf66-491f-97f3-24804ff0d088",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1404955,
+      "enabled": false,
+      "feature": {
+        "id": 205458,
+        "name": "segment_any_rule_type",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "36fa214d-a699-4ed8-b605-b05e02d600d5",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1407383,
+      "enabled": false,
+      "feature": {
+        "id": 206558,
+        "name": "display_feature_null_values",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "575515ca-fa47-402e-9163-2cd41251ff61",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1493943,
+      "enabled": false,
+      "feature": {
+        "id": 208348,
+        "name": "experimentation_warehouse_connection",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "fc3c0163-b8cd-458f-a1b8-8dff9e76e011",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1440302,
+      "enabled": false,
+      "feature": {
+        "id": 211418,
+        "name": "onboarding_quickstart_flow",
+        "type": "MULTIVARIATE"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "b05bac5f-2172-42fc-85ec-841c045823c4",
+      "multivariate_feature_state_values": [
+        {
+          "id": 361128,
+          "multivariate_feature_option": {
+            "id": 30000,
+            "key": "single_page",
+            "value": ""
+          },
+          "mv_fs_value_uuid": "c8e58a0d-d2b4-4d17-8a85-7ba2258a7812",
+          "percentage_allocation": 0
+        }
+      ]
+    },
+    {
+      "django_id": 1475371,
+      "enabled": true,
+      "feature": {
+        "id": 211805,
+        "name": "experiments_fake_door",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "7e128d93-aca5-4ca1-9b9f-186ea8f25d33",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1443488,
+      "enabled": false,
+      "feature": {
+        "id": 211985,
+        "name": "new_header",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "e101da24-543e-46c4-9cd4-17db229089b2",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1493946,
+      "enabled": false,
+      "feature": {
+        "id": 212451,
+        "name": "experiment_metrics",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "c6eecfab-d07b-4e7e-a54c-1dfc94f43a61",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1521624,
+      "enabled": false,
+      "feature": {
+        "id": 225351,
+        "name": "signup_corporate_only",
+        "type": "MULTIVARIATE"
+      },
+      "feature_segment": null,
+      "feature_state_value": "",
+      "featurestate_uuid": "9ef38bc0-dbea-4304-8f7d-8ccea3d4eb38",
+      "multivariate_feature_state_values": [
+        {
+          "id": 360830,
+          "multivariate_feature_option": {
+            "id": 29646,
+            "key": "signup_corporate_only",
+            "value": ""
+          },
+          "mv_fs_value_uuid": "18d87cd0-7244-4396-a6f2-4eb9d58c3a68",
+          "percentage_allocation": 0
+        }
+      ]
+    },
+    {
+      "django_id": 1547673,
+      "enabled": false,
+      "feature": {
+        "id": 231343,
+        "name": "trust_relationships",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "8c826ba8-3816-47f7-8542-c1219fb7ecf0",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1552896,
+      "enabled": false,
+      "feature": {
+        "id": 233260,
+        "name": "clickhouse_warehouse",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "2dfa2c8e-c1a2-442f-942e-d072b05ac599",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1559881,
+      "enabled": false,
+      "feature": {
+        "id": 235203,
+        "name": "my_new_demo_feature",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "3e6d23da-46c7-4738-9f34-cbb02b4ca746",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1564368,
+      "enabled": false,
+      "feature": {
+        "id": 236504,
+        "name": "dark_mode_nav_toggle",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "e2315bde-4a40-44ed-9d83-1fd92d4593cf",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1590188,
+      "enabled": false,
+      "feature": {
+        "id": 241852,
+        "name": "api_usage_alerting",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "c83ad003-7231-4e5b-a4ec-b35bedc4b5c6",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1590194,
+      "enabled": true,
+      "feature": {
+        "id": 241853,
+        "name": "api_limiting_stop_serving_flags",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "6492e3f6-6429-43f7-9edc-44e314a66f66",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1590200,
+      "enabled": true,
+      "feature": {
+        "id": 241854,
+        "name": "api_limiting_block_access_to_admin",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "031d2db9-d9be-4b64-bb8a-0d063878ff5b",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1590206,
+      "enabled": true,
+      "feature": {
+        "id": 241855,
+        "name": "api_usage_overage_charges",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "ee4661bb-68b1-4f91-ba22-6762302dea3e",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1590212,
+      "enabled": false,
+      "feature": {
+        "id": 241856,
+        "name": "enable_feature_versioning_for_new_environments",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "c046a458-39b4-4a59-bcb8-ce3bff4707bb",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1590218,
+      "enabled": false,
+      "feature": {
+        "id": 241857,
+        "name": "sdk_metrics_labels",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "82290a21-ea9e-43c4-850a-0e31b6e2c9d2",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1590228,
+      "enabled": false,
+      "feature": {
+        "id": 241859,
+        "name": "get_current_api_usage_deprecated",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "428259a7-8d60-4313-bf4a-4be1e6a42e3b",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1590234,
+      "enabled": false,
+      "feature": {
+        "id": 241860,
+        "name": "segment_membership_inspection",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "87f9c9d7-bb5c-4c1d-b01c-9f350e019160",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1590241,
+      "enabled": true,
+      "feature": {
+        "id": 241861,
+        "name": "compress_dynamo_documents",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "c954677b-6f35-4711-bd5f-5eb12c117f74",
       "multivariate_feature_state_values": []
     }
   ],
@@ -176,7 +1946,7 @@
   "project": {
     "hide_disabled_flags": false,
     "id": 0,
-    "name": "Flagsmith API",
+    "name": "Flagsmith Website",
     "organisation": {
       "feature_analytics": false,
       "id": 0,
@@ -186,5 +1956,5 @@
     },
     "segments": []
   },
-  "use_identity_composite_key_for_hashing": true
+  "use_identity_composite_key_for_hashing": false
 }

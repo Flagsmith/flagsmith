@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/Flagsmith/flagsmith-cli/main/schema/flagsmith.json",
-  "project": 11737,
+  "project": 12,
   "organisation": 13,
   "environment": "Production"
 }
