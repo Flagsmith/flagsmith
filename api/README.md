@@ -112,7 +112,9 @@ ai_enabled = client.get_boolean_value(
 
 Organisations expose an `openfeature_evaluation_context` property carrying common traits — use it for org-scoped targeting. For other subjects, build an `EvaluationContext` with a stable `targeting_key` and the attributes your targeting rules need.
 
-Add your feature as early as possible to the Flagsmith on Flagsmith project, and run the `updateflagsmithenvironment` management command to synchronise the local cache. You can use [Flagsmith MCP](https://docs.flagsmith.com/integrating-with-flagsmith/mcp-server) to integrate Flagsmith in your development flow.
+Add your feature as early as possible to the Flagsmith on Flagsmith project. You can use [the Flagsmith CLI](https://docs.flagsmith.com/integrating-with-flagsmith/CLI) to integrate Flagsmith in your development flow.
+
+Self-hosted installations evaluate against the offline defaults in `integrations/flagsmith/data/environment.json`, so a flag that is missing from it falls back to the default value at its call site. The `update-flagsmith-environment` workflow refreshes that document daily and raises a pull request; dispatch it manually once your flag exists to pick it up sooner, or run the Flagsmith CLI command that powers the workflow.
 
 ### Code guidelines: migrations
 
