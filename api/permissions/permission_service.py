@@ -1,4 +1,3 @@
-import typing
 from typing import TYPE_CHECKING, List, Set, Union
 
 from django.conf import settings
@@ -200,33 +199,44 @@ def get_permitted_environments_for_master_api_key(
 def user_has_organisation_permission(
     user: "FFAdminUser", organisation: Organisation, permission_key: str
 ) -> bool:
+    """
+    Check if user has the given permission on an organisation.
+
+    Runs separate queries with early returns:
+    1. Organisation admin - admins hold every organisation permission.
+    2. Organisation membership - check to prevent orphaned permission
+       records from granting access.
+    3. Direct user permission - checks UserOrganisationPermission.
+    4. Group permission - checks via user's group memberships.
+    5. Role permission - RBAC check, only if enabled.
+    """
     if is_user_organisation_admin(user, organisation):
         return True
 
-    # Base query to ensure the user actually belongs to the organisation
-    base_qs = Organisation.objects.filter(id=organisation.id, users=user)
+    # Check: verify user belongs to the organisation
+    if not Organisation.objects.filter(id=organisation.id, users=user).exists():
+        return False
 
-    # 1. Check direct user permissions (Fastest)
+    # NOTE: since we store organisation admin slightly differently
+    # compared to project and environment, allow_admin=True will not
+    # work for organisation
+
+    # Check direct permission
     user_filter = get_user_permission_filter(user, permission_key, allow_admin=False)
-    if base_qs.filter(user_filter).exists():
+    if Organisation.objects.filter(user_filter & Q(id=organisation.id)).exists():
         return True
 
-    # 2. Check group permissions
+    # Check group permission
     group_filter = get_group_permission_filter(user, permission_key, allow_admin=False)
-    if base_qs.filter(group_filter).exists():
+    if Organisation.objects.filter(group_filter & Q(id=organisation.id)).exists():
         return True
 
-    # 3. Check role permissions (only if RBAC is installed)
+    # Check role permission (only if RBAC installed)
     if settings.IS_RBAC_INSTALLED:  # pragma: no cover
         role_filter = get_role_permission_filter(
-            user,
-            # Type gap: get_role_permission_filter type hint expects an instance,
-            # but safely handles the model class at runtime.
-            typing.cast(typing.Any, Organisation),
-            permission_key,
-            allow_admin=False,
+            user, Organisation, permission_key, allow_admin=False
         )
-        if base_qs.filter(role_filter).exists():
+        if Organisation.objects.filter(role_filter & Q(id=organisation.id)).exists():
             return True
 
     return False
