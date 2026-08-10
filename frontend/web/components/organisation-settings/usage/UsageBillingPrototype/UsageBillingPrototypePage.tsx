@@ -1,5 +1,4 @@
 import { FC, useMemo, useState } from 'react'
-import Utils, { planNames } from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
 import BareButton from 'components/base/forms/BareButton'
 import { Req } from 'common/types/requests'
@@ -36,15 +35,15 @@ const UsageBillingPrototypePage: FC<UsageBillingPrototypePageProps> = ({
   // request per key, so only the visible one is fetched.
   const [dimension, setDimension] = useState<BreakdownDimension>('request-type')
 
-  const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
   const orgSubscription = AccountStore.getOrganisation()?.subscription
-  const isOnFreePlanPeriods =
-    planNames.free === currentPlan ||
-    !orgSubscription?.has_active_billing_periods
+  // Ask the subscription whether it has a period, rather than inferring it from
+  // the plan's name. Same result today, since a free plan has no billing term,
+  // but it means an organisation that gains one is shown it.
+  const isOnFreePlanPeriods = !orgSubscription?.has_active_billing_periods
 
   const [billingPeriod, setBillingPeriod] = useState<
     Req['getOrganisationUsage']['billing_period']
-  >(isOnFreePlanPeriods ? '90_day_period' : 'current_billing_period')
+  >(isOnFreePlanPeriods ? undefined : 'current_billing_period')
 
   // Notifications live here rather than in the settings screen, so removing
   // one takes its marker off the meter. Null until edited, so switching
