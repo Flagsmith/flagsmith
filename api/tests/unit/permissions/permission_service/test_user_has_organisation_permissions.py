@@ -160,32 +160,95 @@ def test_user_has_organisation_permission__user_removed_from_organisation__retur
     )
 
 
-def test_user_has_organisation_permission__evaluating_permission__executes_exact_queries(
+def test_user_has_organisation_permission__direct_permission__short_circuits_in_three_queries(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
     django_assert_num_queries: typing.Any,
-    django_user_model: typing.Any,
-    organisation: typing.Any,
 ) -> None:
     # Given
-    user = django_user_model.objects.create(email="test_sequential_eval@example.com")
-    user.add_organisation(organisation)
+    user_org_permission = UserOrganisationPermission.objects.create(
+        user=staff_user, organisation=organisation
+    )
+    user_org_permission.permissions.add(CREATE_PROJECT)  # type: ignore[arg-type]
 
     # When
-    with django_assert_num_queries(3) as ctx:
-        has_permission = user_has_organisation_permission(
-            user=user, organisation=organisation, permission_key="MANAGE_USER_GROUPS"
+    # Should take only 3 queries:
+    # 1. Check if user is org admin (is_user_organisation_admin)
+    # 2. Check organisation membership
+    # 3. Check direct user permission (short-circuits here)
+    with django_assert_num_queries(3):
+        result = user_has_organisation_permission(
+            staff_user, organisation, CREATE_PROJECT
         )
 
     # Then
-    assert has_permission is False
+    assert result is True
 
-    # Verify the exact queries executed match the expected sequential EXISTS pattern
-    queries = [query["sql"].lower() for query in ctx.captured_queries]
 
-    # Query 1: Base user organisation role check
-    assert "organisations_userorganisation" in queries[0]
+def test_user_has_organisation_permission__group_permission__short_circuits_in_four_queries(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    user_permission_group: UserPermissionGroup,
+    django_assert_num_queries: typing.Any,
+) -> None:
+    # Given
+    user_permission_group.users.add(staff_user)
+    group_org_permission = UserPermissionGroupOrganisationPermission.objects.create(
+        group=user_permission_group, organisation=organisation
+    )
+    group_org_permission.permissions.add(CREATE_PROJECT)  # type: ignore[arg-type]
 
-    # Query 2: User-specific permission check
-    assert "organisation_permissions_userorganisationpermission" in queries[1]
+    # When
+    # Should take only 4 queries:
+    # 1. Check if user is org admin (is_user_organisation_admin)
+    # 2. Check organisation membership
+    # 3. Check direct user permission (not found)
+    # 4. Check group permission (short-circuits here)
+    with django_assert_num_queries(4):
+        result = user_has_organisation_permission(
+            staff_user, organisation, CREATE_PROJECT
+        )
 
-    # Query 3: Group-specific permission check
-    assert "organisation_permissions_userpermissiongroup" in queries[2]
+    # Then
+    assert result is True
+
+
+def test_user_has_organisation_permission__no_permissions_assigned__checks_each_source_in_four_queries(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    django_assert_num_queries: typing.Any,
+) -> None:
+    # Given / When
+    # Should take exactly 4 queries, one per permission source — never a
+    # single combined query joining the user and group permission tables:
+    # 1. Check if user is org admin (is_user_organisation_admin)
+    # 2. Check organisation membership
+    # 3. Check direct user permission (not found)
+    # 4. Check group permission (not found; role check skipped without RBAC)
+    with django_assert_num_queries(4):
+        result = user_has_organisation_permission(
+            staff_user, organisation, MANAGE_USER_GROUPS
+        )
+
+    # Then
+    assert result is False
+
+
+def test_user_has_organisation_permission__user_not_in_organisation__short_circuits_in_two_queries(
+    organisation: Organisation,
+    django_assert_num_queries: typing.Any,
+) -> None:
+    # Given
+    user = FFAdminUser.objects.create(email="not-a-member@example.com")
+
+    # When
+    # Should take only 2 queries:
+    # 1. Check if user is org admin (is_user_organisation_admin)
+    # 2. Check organisation membership (short-circuits here)
+    with django_assert_num_queries(2):
+        result = user_has_organisation_permission(
+            user, organisation, MANAGE_USER_GROUPS
+        )
+
+    # Then
+    assert result is False
