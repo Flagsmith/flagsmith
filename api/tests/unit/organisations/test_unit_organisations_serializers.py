@@ -27,6 +27,44 @@ def test_organisation_serializer_full__onboarding_org__serialises_onboarding_var
     get_onboarding_variant_mock.assert_called_once_with(organisation)
 
 
+def test_organisation_serializer_full__create_with_targeting_key__persists_write_only(
+    db: None,
+) -> None:
+    # Given
+    serializer = OrganisationSerializerFull(
+        data={"name": "Test Org", "targeting_key": "a" * 32}
+    )
+
+    # When
+    serializer.is_valid(raise_exception=True)
+    organisation = serializer.save()
+
+    # Then
+    assert organisation.targeting_key == "a" * 32
+    assert "targeting_key" not in serializer.data
+
+
+def test_organisation_serializer_full__update_targeting_key__ignored(
+    organisation: Organisation,
+) -> None:
+    # Given
+    organisation.targeting_key = "a" * 32
+    organisation.save(update_fields=["targeting_key"])
+
+    serializer = OrganisationSerializerFull(
+        instance=organisation,
+        data={"name": organisation.name, "targeting_key": "b" * 32},
+    )
+
+    # When
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+
+    # Then
+    organisation.refresh_from_db()
+    assert organisation.targeting_key == "a" * 32
+
+
 def test_update_subscription_serializer__create__updates_subscription(
     organisation: Organisation,
     mocker: MockerFixture,

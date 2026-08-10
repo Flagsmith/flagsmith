@@ -45,6 +45,23 @@ def test_record_environment_first_evaluation__first_evaluation__tracks_conversio
     }
 
 
+def test_record_environment_first_evaluation__org_targeting_key_set__tracks_with_stored_key(
+    environment: Environment,
+    mock_openfeature_client: MagicMock,
+) -> None:
+    # Given
+    organisation = environment.project.organisation
+    organisation.targeting_key = "a" * 32
+    organisation.save(update_fields=["targeting_key"])
+
+    # When
+    record_environment_first_evaluation(environment, "flagsmith-python-sdk")
+
+    # Then
+    call_args = mock_openfeature_client.track.call_args
+    assert call_args.kwargs["evaluation_context"].targeting_key == "a" * 32
+
+
 def test_record_environment_first_evaluation__already_evaluated__does_not_track(
     environment: Environment,
     mock_openfeature_client: MagicMock,
