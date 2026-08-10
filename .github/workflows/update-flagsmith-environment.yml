@@ -9,9 +9,9 @@ permissions:
   contents: read
 
 env:
-  # TODO: change to 12 when the projects merge — https://github.com/Flagsmith/flagsmith/issues/7988
-  FLAGSMITH_PROJECT: "11737"
-  FLAGSMITH_DOCUMENT_ENVIRONMENT: Production
+  # The CLI finds flagsmith.json by walking up from the working directory, so
+  # from the repository root it needs pointing at ours.
+  FLAGSMITH_CONFIG_PATH: api/flagsmith.json
   FLAGSMITH_DOCUMENT_PATH: api/integrations/flagsmith/data/environment.json
 
 jobs:
@@ -30,13 +30,18 @@ jobs:
         with:
           client-id: ${{ vars.FLAGSMITH_ENGINEERING_GH_APP_ID }}
           private-key: ${{ secrets.FLAGSMITH_ENGINEERING_GH_APP_PRIVATE_KEY }}
+          # Only what create-pull-request needs: push the branch, open and label
+          # the pull request.
+          permission-contents: write
+          permission-pull-requests: write
 
       - name: Install Flagsmith CLI
         run: curl -fsSL https://raw.githubusercontent.com/Flagsmith/flagsmith-cli/main/install.sh | sh
 
       - name: Update defaults
         run: |
-          flagsmith environment document "$FLAGSMITH_DOCUMENT_ENVIRONMENT" --no-input --jq '{
+          set -euo pipefail  # TODO https://github.com/Flagsmith/flagsmith-cli/issues/78
+          flagsmith environment document --no-input --jq '{
             id: 0,
             api_key: "masked",
             name,
