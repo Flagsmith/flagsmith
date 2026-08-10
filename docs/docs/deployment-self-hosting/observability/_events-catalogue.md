@@ -103,7 +103,7 @@ Attributes:
 ### `core.encrypted_field.decrypt_failed`
 
 Logged at `warning` from:
- - `api/core/fields.py:37`
+ - `api/core/fields.py:62`
 
 Attributes:
  - `exc_info`
