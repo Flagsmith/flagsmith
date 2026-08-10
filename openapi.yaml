@@ -2037,6 +2037,114 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+  '/api/v1/environments/{environment_api_key}/cohorts/':
+    get:
+      operationId: api_v1_environments_cohorts_list
+      description: Manage trait-synced cohorts for an environment.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cohort'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+    post:
+      operationId: api_v1_environments_cohorts_create
+      description: Manage trait-synced cohorts for an environment.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cohort'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Cohort'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Cohort'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cohort'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+  '/api/v1/environments/{environment_api_key}/cohorts/{cohort_id}/':
+    get:
+      operationId: api_v1_environments_cohorts_retrieve
+      description: Manage trait-synced cohorts for an environment.
+      parameters:
+        - name: cohort_id
+          in: path
+          description: A unique integer value identifying this cohort.
+          required: true
+          schema:
+            type: integer
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cohort'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+    delete:
+      operationId: api_v1_environments_cohorts_destroy
+      description: Manage trait-synced cohorts for an environment.
+      parameters:
+        - name: cohort_id
+          in: path
+          description: A unique integer value identifying this cohort.
+          required: true
+          schema:
+            type: integer
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No response body
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
   '/api/v1/environments/{environment_api_key}/create-change-request/':
     post:
       operationId: create_environment_feature_change_request
@@ -18681,6 +18789,35 @@ components:
           maxLength: 2000
       required:
         - name
+    Cohort:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 2000
+        segment:
+          type: integer
+          readOnly: true
+        source_type:
+          allOf:
+            - $ref: '#/components/schemas/SourceTypeEnum'
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - name
     Condition:
       type: object
       properties:
@@ -26518,6 +26655,11 @@ components:
           type: boolean
       required:
         - channel_id
+    SourceTypeEnum:
+      description: '* `csv` - CSV'
+      type: string
+      enum:
+        - csv
     StageAction:
       type: object
       properties:
