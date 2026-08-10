@@ -8,12 +8,6 @@ on:
 permissions:
   contents: read
 
-env:
-  # The CLI finds flagsmith.json by walking up from the working directory, so
-  # from the repository root it needs pointing at ours.
-  FLAGSMITH_CONFIG_PATH: api/flagsmith.json
-  FLAGSMITH_DOCUMENT_PATH: api/integrations/flagsmith/data/environment.json
-
 jobs:
   update_server_defaults:
     runs-on: depot-ubuntu-latest
@@ -39,28 +33,7 @@ jobs:
         run: curl -fsSL https://raw.githubusercontent.com/Flagsmith/flagsmith-cli/main/install.sh | sh
 
       - name: Update defaults
-        run: |
-          set -euo pipefail  # TODO https://github.com/Flagsmith/flagsmith-cli/issues/78
-          flagsmith environment document --no-input --jq '{
-            id: 0,
-            api_key: "masked",
-            name,
-            use_identity_composite_key_for_hashing,
-            feature_states,
-            project: {
-              id: 0,
-              name: .project.name,
-              hide_disabled_flags: .project.hide_disabled_flags,
-              segments: [],
-              organisation: {
-                id: 0,
-                name: .project.organisation.name,
-                feature_analytics: .project.organisation.feature_analytics,
-                stop_serving_flags: .project.organisation.stop_serving_flags,
-                persist_trait_data: .project.organisation.persist_trait_data
-              }
-            }
-          }' | jq . > "$FLAGSMITH_DOCUMENT_PATH"
+        run: make -C api update-flagsmith-environment
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1

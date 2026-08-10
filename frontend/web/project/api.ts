@@ -139,18 +139,18 @@ const API = {
     return flagsmith
       .identify(`${user.id}`, {
         email: user.email,
-        'organisation.id': currentOrganisation
-          ? String(currentOrganisation.id)
-          : null,
-        'organisation.name': currentOrganisation?.name ?? null,
         organisations: user.organisations
           ? user.organisations.map((o) => String(o.id)).join(',')
           : '',
-        // Mirrors the trait the API sends for organisation-scoped evaluation, so
-        // that plan-based segments match identically on both sides.
-        'subscription.plan': currentOrganisation
-          ? currentOrganisation.subscription?.plan ?? ''
-          : null,
+        // A null trait value deletes the trait, and this runs before an
+        // organisation is selected — on signup, and on the way to /create — so
+        // send these only when there is one to describe. They mirror the traits
+        // the API sends, so that org-scoped segments match on both sides.
+        ...(currentOrganisation && {
+          'organisation.id': String(currentOrganisation.id),
+          'organisation.name': currentOrganisation.name,
+          'subscription.plan': currentOrganisation.subscription?.plan ?? '',
+        }),
       })
       .then(() =>
         flagsmith.setTrait(
