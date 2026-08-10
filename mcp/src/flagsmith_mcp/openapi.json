@@ -5714,13 +5714,6 @@
       "NullEnum": {
         "type": "null"
       },
-      "OnboardingVariantEnum": {
-        "type": "string",
-        "enum": [
-          "control",
-          "single_page"
-        ]
-      },
       "OrganisationSerializerFull": {
         "type": "object",
         "properties": {
@@ -5781,13 +5774,14 @@
           "force_2fa": {
             "type": "boolean"
           },
-          "onboarding_variant": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/OnboardingVariantEnum"
-              }
+          "targeting_key": {
+            "description": "Flagsmith-on-Flagsmith targeting key. Immutable; org.<id> is used when unset.",
+            "type": [
+              "string",
+              "null"
             ],
-            "readOnly": true
+            "maxLength": 64,
+            "writeOnly": true
           }
         },
         "required": [
