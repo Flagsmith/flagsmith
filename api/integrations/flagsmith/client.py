@@ -24,8 +24,8 @@ from openfeature.client import OpenFeatureClient
 from openfeature_flagsmith.hooks import FlagsmithExposureHook
 from openfeature_flagsmith.provider import FlagsmithProvider
 
+from integrations.flagsmith.constants import ENVIRONMENT_JSON_PATH
 from integrations.flagsmith.exceptions import FlagsmithIntegrationError
-from integrations.flagsmith.flagsmith_service import ENVIRONMENT_JSON_PATH
 
 DEFAULT_OPENFEATURE_DOMAIN = "flagsmith-api"
 

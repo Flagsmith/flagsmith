@@ -17,8 +17,8 @@ from integrations.flagsmith.client import (
     get_provider_kwargs,
     initialise_provider,
 )
+from integrations.flagsmith.constants import ENVIRONMENT_JSON_PATH
 from integrations.flagsmith.exceptions import FlagsmithIntegrationError
-from integrations.flagsmith.flagsmith_service import ENVIRONMENT_JSON_PATH
 
 
 @pytest.fixture()
