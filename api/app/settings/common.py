@@ -1136,6 +1136,12 @@ if SCIM_INSTALLED:
         "GROUP_ADAPTER": "scim.adapters.GroupAdapter",
         "GROUP_FILTER_PARSER": "scim.filters.GroupFilterQuery",
         "GROUP_MODEL": "users.models.UserPermissionGroup",
+        # django-scim2's own discovery documents advertise the full RFC 7643 schema and
+        # capabilities we do not implement. Identity providers build their app user
+        # profile from `/Schemas`, so anything advertised there becomes a mapping a
+        # customer can configure and we silently ignore.
+        "SCHEMAS_GETTER": "scim.schemas.get_schemas",
+        "SERVICE_PROVIDER_CONFIG_MODEL": "scim.models.ScimServiceProviderConfig",
         "USER_ADAPTER": "scim.adapters.UserAdapter",
         "USER_FILTER_PARSER": "scim.filters.UserFilterQuery",
     }
