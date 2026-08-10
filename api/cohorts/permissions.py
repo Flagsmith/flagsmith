@@ -1,6 +1,5 @@
 from common.environments.permissions import VIEW_ENVIRONMENT
 from common.projects.permissions import MANAGE_SEGMENTS
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.views import APIView
@@ -12,7 +11,27 @@ from users.models import FFAdminUser
 
 _READ_ACTIONS = ("list", "retrieve")
 
-_MinimumPlanPermission = require_minimum_plan(SubscriptionPlanFamily.START_UP)
+_MinimumStartupPlan = require_minimum_plan(SubscriptionPlanFamily.START_UP)
+
+
+class CohortPlanPermission(_MinimumStartupPlan):  # type: ignore[misc,valid-type]
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        try:
+            environment = Environment.objects.get(
+                api_key=view.kwargs.get("environment_api_key")
+            )
+        except Environment.DoesNotExist:
+            return False
+        # The base class reads the organisation from an `organisation` request
+        # param our URLs don't carry; the project provides it instead.
+        return bool(super().has_object_permission(request, view, environment.project))
+
+    def has_object_permission(
+        self, request: Request, view: APIView, obj: object
+    ) -> bool:
+        # DRF hands us a Cohort here, which doesn't carry an organisation;
+        # re-run the environment-based check instead.
+        return self.has_permission(request, view)
 
 
 class CohortPermission(BasePermission):
@@ -23,15 +42,6 @@ class CohortPermission(BasePermission):
             )
         except Environment.DoesNotExist:
             return False
-        # Cohorts are a paid feature. The plan permission reads the
-        # organisation off the object it's given; the project carries it.
-        plan_permission = _MinimumPlanPermission()
-        if not plan_permission.has_object_permission(
-            request, view, environment.project
-        ):
-            # `message` exists on the concrete class the factory returns, but
-            # its return annotation (`type[BasePermission]`) hides it.
-            raise PermissionDenied(plan_permission.message)  # type: ignore[attr-defined]
         user: FFAdminUser = request.user  # type: ignore[assignment]
         if getattr(view, "action", None) in _READ_ACTIONS:
             return user.has_environment_permission(VIEW_ENVIRONMENT, environment)

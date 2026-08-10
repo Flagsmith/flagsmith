@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from cohorts import services
 from cohorts.models import Cohort
-from cohorts.permissions import CohortPermission
+from cohorts.permissions import CohortPermission, CohortPlanPermission
 from cohorts.serializers import CohortSerializer
 from environments.views import NestedEnvironmentViewSet
 
@@ -22,7 +22,7 @@ class CohortViewSet(
 
     serializer_class = CohortSerializer
     pagination_class = None
-    permission_classes = [IsAuthenticated, CohortPermission]
+    permission_classes = [IsAuthenticated, CohortPlanPermission, CohortPermission]
     model_class = Cohort
     lookup_field = "id"
     lookup_url_kwarg = "cohort_id"
