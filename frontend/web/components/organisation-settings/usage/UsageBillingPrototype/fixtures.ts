@@ -2,6 +2,7 @@ import moment from 'moment'
 import {
   BreakdownDimension,
   BreakdownRow,
+  USAGE_ALERT_THRESHOLDS,
   UsagePoint,
   UsageView,
 } from './types'
@@ -162,10 +163,10 @@ const buildView = ({
     grace,
     graceDaysLeft,
     limit,
-    notifications: [
-      { enabled: true, percent: 75 },
-      { enabled: true, percent: 100 },
-    ],
+    notifications: USAGE_ALERT_THRESHOLDS.map((percent) => ({
+      enabled: true,
+      percent,
+    })),
     overLimitSince: daysOverLimit
       ? moment().subtract(daysOverLimit, 'days').format('D MMM')
       : undefined,

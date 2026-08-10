@@ -11,7 +11,12 @@ import { useGetProjectsQuery } from 'common/services/useProject'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { getStore } from 'common/store'
 import { FIXTURES, ScenarioId } from './fixtures'
-import { BreakdownDimension, BreakdownRow, UsageView } from './types'
+import {
+  BreakdownDimension,
+  BreakdownRow,
+  USAGE_ALERT_THRESHOLDS,
+  UsageView,
+} from './types'
 
 /**
  * PROTOTYPE (#8184). The one place the page gets its data.
@@ -162,10 +167,10 @@ const buildLiveView = (
     // data can only ever show the neutral case.
     grace: 'available',
     limit,
-    notifications: [
-      { enabled: true, percent: 75 },
-      { enabled: true, percent: 100 },
-    ],
+    notifications: USAGE_ALERT_THRESHOLDS.map((percent) => ({
+      enabled: true,
+      percent,
+    })),
     // Needs per-org pricing, which is not queryable yet.
     overageCost: null,
     period: {

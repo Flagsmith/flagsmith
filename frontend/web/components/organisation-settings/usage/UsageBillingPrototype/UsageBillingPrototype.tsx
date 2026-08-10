@@ -236,7 +236,12 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
             />
           </div>
           {view.notifications
-            .filter((notification) => notification.enabled)
+            // Above the limit the meter is already full, so those thresholds
+            // would stack on top of each other at the far end.
+            .filter(
+              (notification) =>
+                notification.enabled && notification.percent <= 100,
+            )
             .map((notification) => (
               <span
                 key={notification.percent}

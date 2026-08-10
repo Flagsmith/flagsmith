@@ -67,6 +67,14 @@ export type UsageNotification = {
   enabled: boolean
 }
 
+/**
+ * What the backend actually notifies on, from
+ * `api/organisations/constants.py`. The page showed 75 and 100 only, which is
+ * two of eight. Everything above 100 fires once the limit is already passed,
+ * so the meter draws only the ones at or below it.
+ */
+export const USAGE_ALERT_THRESHOLDS = [75, 90, 100, 120, 200, 300, 400, 500]
+
 export type UsageView = {
   plan: PlanKind
   period: UsagePeriod
