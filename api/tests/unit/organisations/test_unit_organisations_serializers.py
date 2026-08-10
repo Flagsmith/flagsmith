@@ -8,25 +8,6 @@ from organisations.serializers import (
 )
 
 
-def test_organisation_serializer_full__onboarding_org__serialises_onboarding_variant(
-    organisation: Organisation,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    get_onboarding_variant_mock = mocker.patch(
-        "organisations.serializers.get_onboarding_variant",
-        return_value="single_page",
-        autospec=True,
-    )
-
-    # When
-    data = OrganisationSerializerFull(instance=organisation).data
-
-    # Then
-    assert data["onboarding_variant"] == "single_page"
-    get_onboarding_variant_mock.assert_called_once_with(organisation)
-
-
 def test_organisation_serializer_full__create_with_targeting_key__persists_write_only(
     db: None,
 ) -> None:

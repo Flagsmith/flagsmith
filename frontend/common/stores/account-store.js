@@ -4,6 +4,7 @@ import find from 'lodash/find'
 import findIndex from 'lodash/findIndex'
 import get from 'lodash/get'
 import { storageGet, storageSet } from 'common/safeLocalStorage'
+import { clearOnboardingTargetingKey } from 'common/utils/onboardingEntry'
 import Dispatcher from 'common/dispatcher/dispatcher'
 import BaseStore from './base/_store'
 import data from 'common/data/base/_data'
@@ -77,7 +78,7 @@ const controller = {
         API.ajaxHandler(store, e)
       })
   },
-  createOrganisation: (name) => {
+  createOrganisation: (name, targetingKey) => {
     store.saving()
     if (
       !AccountStore.model?.organisations ||
@@ -100,8 +101,12 @@ const controller = {
     return data
       .post(`${Project.api}organisations/`, {
         name,
+        ...(targetingKey ? { targeting_key: targetingKey } : {}),
       })
       .then(async (res) => {
+        if (targetingKey) {
+          clearOnboardingTargetingKey()
+        }
         if (store.model) {
           store.model.organisations = store.model.organisations.concat([
             { ...res, role: 'ADMIN' },
@@ -299,7 +304,7 @@ const controller = {
           )
         }
         if (organisation_name) {
-          await controller.createOrganisation(organisation_name, true)
+          await controller.createOrganisation(organisation_name)
         }
         store.isSaving = false
 
@@ -559,7 +564,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.selectOrganisation(action.id)
       break
     case Actions.CREATE_ORGANISATION:
-      controller.createOrganisation(action.name)
+      controller.createOrganisation(action.name, action.targetingKey)
       break
     case Actions.ACCEPT_INVITE:
       controller.acceptInvite(action.id)

@@ -12,6 +12,10 @@ import AppLoader from './AppLoader'
 import ButterBar from './ButterBar'
 import AccountSettingsPage from './pages/AccountSettingsPage'
 import ProjectStore from 'common/stores/project-store'
+import {
+  decideOnboardingEntry,
+  getStoredOnboardingVariant,
+} from 'common/utils/onboardingEntry'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -139,18 +143,20 @@ const App = class extends Component {
       // New users with no organisation go through the single-page onboarding
       // flow when it's enabled - it creates the organisation itself, so it
       // replaces the legacy /create page. Everyone else still gets /create.
-      // The flag must be evaluated for the identified user, not whatever the
-      // SDK last held, so wait for identify to settle before routing.
-      // Capped at 2s: a degraded flags API falls back to routing with the
-      // already-loaded flags instead of blocking the redirect.
+      // The entry decision is made under a server-assigned anonymous
+      // identity whose identifier later becomes the organisation's
+      // targeting key, so bucketing never diverges from this decision.
+      // Capped at 2s: a degraded flags API falls back to the legacy page
+      // instead of blocking the redirect.
       Promise.race([
-        Promise.resolve(API.flagsmithIdentify()).catch(() => {}),
-        new Promise((resolve) => setTimeout(resolve, 2000)),
-      ]).then(() => {
-        if (
-          AccountStore.getUser()?.isGettingStarted &&
-          Utils.getFlagsmithHasFeature('onboarding_quickstart_flow')
-        ) {
+        AccountStore.getUser()?.isGettingStarted
+          ? decideOnboardingEntry().catch(() => 'control')
+          : Promise.resolve('control'),
+        new Promise((resolve) => setTimeout(() => resolve('control'), 2000)),
+      ]).then((variant) => {
+        // Restore the logged-in identity for the rest of the app.
+        Promise.resolve(API.flagsmithIdentify()).catch(() => {})
+        if (variant === 'single_page') {
           this.props.history.replace('/getting-started')
         } else {
           this.props.history.replace(`/create${query}`)
@@ -241,7 +247,7 @@ const App = class extends Component {
     const pathname = location.pathname
     const isOnboardingFlow =
       pathname === '/getting-started' &&
-      Utils.getFlagsmithHasFeature('onboarding_quickstart_flow')
+      getStoredOnboardingVariant() === 'single_page'
 
     const projectId = this.getProjectId(this.props)
     const environmentId = this.getEnvironmentId(this.props)
