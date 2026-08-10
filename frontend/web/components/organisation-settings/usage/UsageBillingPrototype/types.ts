@@ -19,6 +19,7 @@ export type GraceState =
   | 'covering' // paid, first month at 100-200%, not charged
   | 'used' // paid, later month over 100% or any month at 200%+, charged
   | 'countdown' // free, over 100%, inside the 7-day window
+  | 'exhausted' // free, over 100%, grace already spent, can be cut off any run
   | 'restricted' // free, window elapsed, access stopped
   | 'not-applied' // paid, at or above 200%, grace never applies
 
@@ -74,7 +75,12 @@ export type UsageView = {
   series: UsagePoint[]
   breakdowns: Record<BreakdownDimension, BreakdownRow[]>
   grace: GraceState
-  /** Only set while `grace` is 'countdown'. */
+  /**
+   * Only set while `grace` is 'countdown', and only when the API can say. The
+   * lag is 7 days from the qualifying usage notification, but that date is not
+   * exposed today, so the UI has to read as "may be paused" without it rather
+   * than invent a number.
+   */
   graceDaysLeft?: number
   /** Free orgs past the grace window: flag serving and admin access stopped. */
   restricted: boolean

@@ -22,6 +22,8 @@ export type ScenarioId =
   | 'free-healthy'
   | 'free-approaching'
   | 'free-countdown'
+  | 'free-countdown-dated'
+  | 'free-grace-exhausted'
   | 'free-restricted'
   | 'free-restricted-now'
   | 'over-200'
@@ -35,7 +37,12 @@ export const SCENARIOS: { id: ScenarioId; label: string }[] = [
   { id: 'over-200', label: 'Over limit, 200%+' },
   { id: 'free-healthy', label: 'Free, healthy' },
   { id: 'free-approaching', label: 'Free, approaching limit' },
-  { id: 'free-countdown', label: 'Free, grace countdown' },
+  { id: 'free-countdown', label: 'Free, over limit (grace intact)' },
+  {
+    id: 'free-countdown-dated',
+    label: 'Free, grace countdown (needs API support)',
+  },
+  { id: 'free-grace-exhausted', label: 'Free, over limit (grace used)' },
   { id: 'free-restricted', label: 'Free, restricted' },
   { id: 'free-restricted-now', label: 'Free, restricted immediately' },
 ]
@@ -223,13 +230,37 @@ export const FIXTURES: Record<Exclude<ScenarioId, 'live'>, UsageView> = {
     periodDays: 30,
     plan: 'free',
   }),
+  // Today's truth: we know they are over and that grace is intact, but not how
+  // long is left, because the notification date is not exposed.
   'free-countdown': buildView({
     daysElapsed: 22,
     daysOverLimit: 4,
     grace: 'countdown',
-    graceDaysLeft: 4,
     limit: 50_000,
     percent: 112,
+    periodDays: 30,
+    plan: 'free',
+  }),
+  // The same state once the API can answer "how long". Kept separate so the
+  // gap between what we can say now and what we want to say is visible.
+  'free-countdown-dated': buildView({
+    daysElapsed: 22,
+    daysOverLimit: 4,
+    grace: 'countdown',
+    graceDaysLeft: 3,
+    limit: 50_000,
+    percent: 112,
+    periodDays: 30,
+    plan: 'free',
+  }),
+  // Over the limit with grace already spent. No countdown exists for this org;
+  // the next task run can cut them off.
+  'free-grace-exhausted': buildView({
+    daysElapsed: 25,
+    daysOverLimit: 2,
+    grace: 'exhausted',
+    limit: 50_000,
+    percent: 108,
     periodDays: 30,
     plan: 'free',
   }),
