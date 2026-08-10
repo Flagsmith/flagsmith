@@ -56,134 +56,157 @@ Please go to the following page and choose a password: http://localhost:8000/pas
 <table>
   <tbody>
     <tr>
-      <td align="center" width="150">
+      <td align="center" width="130">
         <a href="https://connectwise.com/">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="static-files/users/connectwise-dark.svg">
-            <img src="static-files/users/connectwise-light.svg" alt="ConnectWise" width="136">
+            <img src="static-files/users/connectwise-light.svg" alt="ConnectWise" width="128">
           </picture>
         </a>
       </td>
-      <td align="center" width="150">
+      <td align="center" width="130">
         <a href="https://creditas.com/">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="static-files/users/creditas-dark.svg">
-            <img src="static-files/users/creditas-light.svg" alt="Creditas" width="118">
+            <img src="static-files/users/creditas-light.svg" alt="Creditas" width="110">
           </picture>
         </a>
       </td>
-      <td align="center" width="150">
+      <td align="center" width="130">
         <a href="https://cytiva.com/">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="static-files/users/cytiva-dark.svg">
-            <img src="static-files/users/cytiva-light.svg" alt="Cytiva" width="110">
+            <img src="static-files/users/cytiva-light.svg" alt="Cytiva" width="102">
           </picture>
         </a>
       </td>
-      <td align="center" width="150">
+      <td align="center" width="130">
         <a href="https://dfds.com/">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="static-files/users/dfds-dark.svg">
-            <img src="static-files/users/dfds-light.svg" alt="DFDS" width="104">
+            <img src="static-files/users/dfds-light.svg" alt="DFDS" width="96">
           </picture>
         </a>
       </td>
-      <td align="center" width="150">
+      <td align="center" width="130">
         <a href="https://doist.com/">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="static-files/users/doist-dark.svg">
-            <img src="static-files/users/doist-light.svg" alt="Doist" width="86">
+            <img src="static-files/users/doist-light.svg" alt="Doist" width="80">
           </picture>
         </a>
       </td>
-    </tr>
-    <tr>
-      <td align="center" width="150">
+      <td align="center" width="130">
         <a href="https://dpr.com/">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="static-files/users/dpr-dark.svg">
-            <img src="static-files/users/dpr-light.svg" alt="DPR Construction" width="100">
-          </picture>
-        </a>
-      </td>
-      <td align="center" width="150">
-        <a href="https://emerson.com/">
-          <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/emerson-dark.png">
-            <img src="static-files/users/emerson-light.png" alt="Emerson" width="118">
-          </picture>
-        </a>
-      </td>
-      <td align="center" width="150">
-        <a href="https://idexx.com/">
-          <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/idexx-dark.svg">
-            <img src="static-files/users/idexx-light.svg" alt="IDEXX" width="104">
-          </picture>
-        </a>
-      </td>
-      <td align="center" width="150">
-        <a href="https://libertyglobal.com/">
-          <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/liberty-global-dark.svg">
-            <img src="static-files/users/liberty-global-light.svg" alt="Liberty Global" width="74">
-          </picture>
-        </a>
-      </td>
-      <td align="center" width="150">
-        <a href="https://manomano.com/">
-          <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/manomano-dark.svg">
-            <img src="static-files/users/manomano-light.svg" alt="ManoMano" width="122">
+            <img src="static-files/users/dpr-light.svg" alt="DPR Construction" width="94">
           </picture>
         </a>
       </td>
     </tr>
     <tr>
-      <td align="center" width="150">
+      <td align="center" width="130">
+        <a href="https://emerson.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/emerson-dark.png">
+            <img src="static-files/users/emerson-light.png" alt="Emerson" width="110">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://ford.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/ford-dark.png">
+            <img src="static-files/users/ford-light.png" alt="Ford" width="96">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://idexx.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/idexx-dark.svg">
+            <img src="static-files/users/idexx-light.svg" alt="IDEXX" width="97">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://libertyglobal.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/liberty-global-dark.svg">
+            <img src="static-files/users/liberty-global-light.svg" alt="Liberty Global" width="68">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://manomano.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/manomano-dark.svg">
+            <img src="static-files/users/manomano-light.svg" alt="ManoMano" width="114">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
         <a href="https://sailpoint.com/">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="static-files/users/sailpoint-dark.svg">
-            <img src="static-files/users/sailpoint-light.svg" alt="SailPoint" width="124">
+            <img src="static-files/users/sailpoint-light.svg" alt="SailPoint" width="116">
           </picture>
         </a>
       </td>
-      <td align="center" width="150">
+    </tr>
+    <tr>
+      <td align="center" width="130">
         <a href="https://stingray.com/">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="static-files/users/stingray-dark.svg">
-            <img src="static-files/users/stingray-light.svg" alt="Stingray" width="118">
+            <img src="static-files/users/stingray-light.svg" alt="Stingray" width="110">
           </picture>
         </a>
       </td>
-      <td align="center" width="150">
+      <td align="center" width="130">
         <a href="https://totvs.com.br/">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="static-files/users/totvs-dark.svg">
-            <img src="static-files/users/totvs-light.svg" alt="TOTVS" width="122">
+            <img src="static-files/users/totvs-light.svg" alt="TOTVS" width="114">
           </picture>
         </a>
       </td>
-      <td align="center" width="150">
+      <td align="center" width="130">
         <a href="https://trimble.com/">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="static-files/users/trimble-dark.svg">
-            <img src="static-files/users/trimble-light.svg" alt="Trimble" width="122">
+            <img src="static-files/users/trimble-light.svg" alt="Trimble" width="114">
           </picture>
         </a>
       </td>
-      <td align="center" width="150">
+      <td align="center" width="130">
         <a href="https://varonis.com/">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="static-files/users/varonis-dark.svg">
-            <img src="static-files/users/varonis-light.svg" alt="Varonis" width="126">
+            <img src="static-files/users/varonis-light.svg" alt="Varonis" width="118">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://vontobel.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/vontobel-dark.svg">
+            <img src="static-files/users/vontobel-light.svg" alt="Vontobel" width="112">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://wistia.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/wistia-dark.svg">
+            <img src="static-files/users/wistia-light.svg" alt="Wistia" width="112">
           </picture>
         </a>
       </td>
     </tr>
   </tbody>
 </table>
-
 See [USERS.md](USERS.md) for the full list of companies using Flagsmith. If your company uses Flagsmith and you'd like
 to be listed, open a pull request adding yourself — and if you appear there and would rather not, open a PR or an issue
 and we will remove you straight away.

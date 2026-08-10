@@ -37,6 +37,7 @@ Please keep the table sorted alphabetically.
 | FEMSA Salud | <https://femsasalud.com/> |
 | Finary | <https://finary.com/> |
 | Flybits | <https://flybits.com/> |
+| Ford | <https://ford.com/> |
 | FundingPartner | <https://fundingpartner.no/> |
 | Hypofriend | <https://hypofriend.de/> |
 | iConnections | <https://iconnections.io/> |
@@ -87,6 +88,8 @@ Please keep the table sorted alphabetically.
 | Varonis | <https://varonis.com/> |
 | Ventura Securities | <https://venturasecurities.com/> |
 | Verbit | <https://verbit.ai/> |
+| Vontobel | <https://vontobel.com/> |
+| Wistia | <https://wistia.com/> |
 | Xepelin | <https://xepelin.com/> |
 | Zaptec | <https://zaptec.com/> |
 | Zilo | <https://zilo.co.uk/> |
