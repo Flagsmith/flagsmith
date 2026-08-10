@@ -1,10 +1,11 @@
 import { FC, useState } from 'react'
 import ProjectFilter from 'components/ProjectFilter'
 import StatItem from 'components/StatItem'
-import { billingPeriods, Req } from 'common/types/requests'
+import { billingPeriods, freePeriods, Req } from 'common/types/requests'
 
-// Every widget below the selector assumes a billing period, and free plans now
-// have one too, so rolling windows are not offered to anybody.
+// A plan with a billing period is not offered rolling windows, because the
+// widgets below the selector describe a period that starts and ends. Orgs on a
+// trailing window get the reverse, since they have no period to select.
 const billingPeriodOptions = billingPeriods.filter((period) =>
   `${period.value}`.includes('billing_period'),
 )
@@ -96,6 +97,15 @@ const buildTiles = (view: UsageView, percent: number): Tile[] => {
       sub: 'charged at the end of the period',
       value: currency(view.overageCost),
     })
+  } else if (!view.period.isBillingPeriod) {
+    // No period to project to, and free plans are restricted rather than
+    // charged, so the slot answers what actually happens at the limit.
+    tiles.push({
+      badge: { text: 'Free plan', tone: 'neutral', withDot: false },
+      label: 'If you reach 100%',
+      sub: 'serving stops after a short grace period',
+      value: 'Flags pause',
+    })
   } else {
     tiles.push({
       badge: { text: 'Estimate', tone: 'neutral', withDot: false },
@@ -139,7 +149,9 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
             <Select
               onChange={(v: any) => setBillingPeriod(v.value)}
               value={billingPeriods.find((v) => v.value === billingPeriod)}
-              options={billingPeriodOptions}
+              options={
+                view.period.isBillingPeriod ? billingPeriodOptions : freePeriods
+              }
             />
           </div>
           <div className='usage-proto__select'>
@@ -172,7 +184,11 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
       <div className='usage-proto__panel'>
         <div className='usage-proto__headline'>
           <div>
-            <div className='usage-proto__label'>Plan usage this period</div>
+            <div className='usage-proto__label'>
+              {view.period.isBillingPeriod
+                ? 'Plan usage this period'
+                : 'Allowance used, last 30 days'}
+            </div>
             <div className='usage-proto__big'>
               <span className={`usage-proto__pct usage-proto__pct--${tone}`}>
                 {view.limit ? `${percent}%` : compact(view.total)}
@@ -252,14 +268,23 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
 
       <div className='usage-proto__panel'>
         <div className='usage-proto__panel-head'>
-          <strong>Usage vs plan limit</strong>
-          <span className='usage-proto__sub'>Cumulative · this period</span>
+          <strong>
+            {view.period.isBillingPeriod
+              ? 'Usage vs plan limit'
+              : 'Daily usage'}
+          </strong>
+          <span className='usage-proto__sub'>
+            {view.period.isBillingPeriod
+              ? 'Cumulative · this period'
+              : `Calls per day · ${view.period.label}`}
+          </span>
         </div>
         <UsageChart
           series={view.series}
           limit={view.limit}
           projected={view.projected}
           daysRemaining={view.period.daysRemaining}
+          isBillingPeriod={view.period.isBillingPeriod}
         />
       </div>
 

@@ -137,6 +137,12 @@ const buildView = ({
   const total = Math.round((limit * percent) / 100)
   const periodStart = moment().subtract(daysElapsed - 1, 'days')
   const resetsAt = periodStart.clone().add(periodDays, 'days')
+  // Free limits are enforced over a trailing 30 days, so there is no period
+  // start to count from and no end to project to. Paid resets with the billing
+  // term. Cancelled subscriptions roll like free, which this fixture set does
+  // not cover yet.
+  const rolling = plan === 'free'
+  const windowStart = moment().subtract(periodDays - 1, 'days')
 
   return {
     breakdowns: buildBreakdowns(total),
@@ -153,27 +159,43 @@ const buildView = ({
       ? moment().subtract(daysOverLimit, 'days').format('D MMM')
       : undefined,
     overageCost,
-    period: {
-      daysRemaining: periodDays - daysElapsed,
-      isBillingPeriod: true,
-      label: `${periodStart.format('D MMM')} to ${resetsAt.format(
-        'D MMM YYYY',
-      )}`,
-      // Rolling windows never reset, so they get no reset date.
-      resetsAt: resetsAt.format('D MMM YYYY'),
-
-      selectValue: 'current_billing_period',
-    },
+    period: rolling
+      ? {
+          // Nothing to count down to: the window moves forward every day.
+          daysRemaining: 0,
+          isBillingPeriod: false,
+          label: `${windowStart.format('D MMM')} to ${moment().format(
+            'D MMM YYYY',
+          )}`,
+          // Rolling windows never reset, so they get no reset date.
+          resetsAt: '',
+          selectValue: undefined,
+        }
+      : {
+          daysRemaining: periodDays - daysElapsed,
+          isBillingPeriod: true,
+          label: `${periodStart.format('D MMM')} to ${resetsAt.format(
+            'D MMM YYYY',
+          )}`,
+          resetsAt: resetsAt.format('D MMM YYYY'),
+          selectValue: 'current_billing_period',
+        },
 
     plan,
     // Run rate to the end of the period. Deliberately null early on, which is
-    // the rule #8188 has to settle.
+    // the rule #8188 has to settle. A rolling window has no end to run to, and
+    // projecting a total that can fall is the part that misleads, so it stays
+    // null there.
     projected:
-      daysElapsed >= 5 ? Math.round((total / daysElapsed) * periodDays) : null,
+      !rolling && daysElapsed >= 5
+        ? Math.round((total / daysElapsed) * periodDays)
+        : null,
     restricted,
     restrictedImmediately,
     resumesAt,
-    series: buildSeries(total, daysElapsed, periodStart),
+    series: rolling
+      ? buildSeries(total, periodDays, windowStart)
+      : buildSeries(total, daysElapsed, periodStart),
     total,
   }
 }

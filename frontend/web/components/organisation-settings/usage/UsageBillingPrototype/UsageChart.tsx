@@ -2,6 +2,7 @@ import { FC, useMemo } from 'react'
 import moment from 'moment'
 import {
   Area,
+  Bar,
   CartesianGrid,
   ComposedChart,
   ReferenceArea,
@@ -26,6 +27,12 @@ type UsageChartProps = {
   /** End-of-period usage at the current run rate, or null when too early. */
   projected: number | null
   daysRemaining: number
+  /**
+   * False on a trailing window. Cumulative against a ceiling only reads
+   * correctly when the total resets, so rolling windows get daily volume
+   * instead. See the daily branch below.
+   */
+  isBillingPeriod?: boolean
 }
 
 const ACCENT = colorSurfaceAction
@@ -44,10 +51,22 @@ type Row = {
  */
 const UsageChart: FC<UsageChartProps> = ({
   daysRemaining,
+  isBillingPeriod = true,
   limit,
   projected,
   series,
 }) => {
+  // Daily deltas off the same cumulative series, so the rolling view needs no
+  // second data shape from the API.
+  const dailyRows = useMemo(
+    () =>
+      series.map((point, index) => ({
+        daily: point.cumulative - (series[index - 1]?.cumulative ?? 0),
+        day: point.day,
+      })),
+    [series],
+  )
+
   const rows = useMemo<Row[]>(() => {
     const actual: Row[] = series.map((point, index) => ({
       cumulative: point.cumulative,
@@ -84,6 +103,49 @@ const UsageChart: FC<UsageChartProps> = ({
   // instead of being clipped by the top of the chart.
   const ceiling = peak ? Math.round(peak * 1.08) : 0
   const today = series[series.length - 1]
+
+  // Trailing window: show what each day contributed. No ceiling line, because
+  // the limit applies to the window total rather than to any single day, and
+  // no projection, because the total can fall as old days drop off the back.
+  if (!isBillingPeriod) {
+    return (
+      <ResponsiveContainer height={320} width='100%'>
+        <ComposedChart data={dailyRows} margin={{ left: 0, right: 16, top: 8 }}>
+          <CartesianGrid
+            strokeDasharray='3 5'
+            strokeOpacity={0.4}
+            vertical={false}
+          />
+          <XAxis
+            dataKey='day'
+            height={64}
+            angle={-90}
+            textAnchor='end'
+            interval={Math.ceil((dailyRows.length || 1) / 12)}
+            tickFormatter={(day: string) => moment(day).format('D MMM')}
+            tick={{ dx: -4, fill: colorTextSecondary, fontSize: 11 }}
+            tickLine={false}
+            axisLine={{ stroke: colorTextSecondary }}
+          />
+          <YAxis
+            tick={{ fill: colorTextSecondary, fontSize: 11 }}
+            axisLine={{ stroke: colorTextSecondary }}
+            tickFormatter={(value: number) => compact(value)}
+          />
+          <Tooltip
+            labelFormatter={(day: string) => moment(day).format('D MMM')}
+            formatter={(value: number) => [compact(value), 'Calls']}
+          />
+          <Bar
+            dataKey='daily'
+            fill={ACCENT}
+            radius={[3, 3, 0, 0]}
+            isAnimationActive={false}
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
+    )
+  }
 
   return (
     <ResponsiveContainer height={320} width='100%'>
