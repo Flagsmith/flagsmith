@@ -1,5 +1,6 @@
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 import CreatableSelect from 'react-select/creatable'
+import { InputActionMeta } from 'react-select'
 import {
   useGetWarehouseConnectionEventsQuery,
   useGetWarehouseConnectionsQuery,
@@ -33,6 +34,19 @@ const EventNameSelect: FC<EventNameSelectProps> = ({ onChange, value }) => {
   )
   const options = useMemo(() => buildEventOptions(data?.events), [data?.events])
   const showWarning = isSuccess && isUnknownEvent(value, data?.events)
+  const [inputValue, setInputValue] = useState('')
+
+  // Keep the typed text on blur (react-select discards it by default) so
+  // clicking outside commits the value instead of clearing it.
+  const handleInputChange = (val: string, meta: InputActionMeta) => {
+    if (meta.action === 'input-change') setInputValue(val)
+    if (meta.action === 'set-value') setInputValue('')
+  }
+  const handleBlur = () => {
+    if (!inputValue) return
+    onChange(inputValue)
+    setInputValue('')
+  }
 
   return (
     <div className='event-name-select'>
@@ -42,6 +56,9 @@ const EventNameSelect: FC<EventNameSelectProps> = ({ onChange, value }) => {
         classNamePrefix='react-select'
         isClearable
         isLoading={isLoading}
+        inputValue={inputValue}
+        onInputChange={handleInputChange}
+        onBlur={handleBlur}
         maxMenuHeight={200}
         menuPlacement='auto'
         options={options}
