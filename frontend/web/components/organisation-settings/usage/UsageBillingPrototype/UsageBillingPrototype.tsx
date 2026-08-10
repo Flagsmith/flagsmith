@@ -42,7 +42,19 @@ const toneForPercent = (percent: number): 'success' | 'warning' | 'danger' => {
   return 'success'
 }
 
+/**
+ * Every tile's sub-line states the scope or boundary its value applies to:
+ * what it is measured against, or the date it counts to or from. Never the
+ * method, which the badge already carries, and never advice, which belongs in
+ * the banner.
+ */
 const buildTiles = (view: UsageView, percent: number): Tile[] => {
+  const rolling = !view.period.isBillingPeriod
+  // "Plan limit" is the paid framing. A trailing window is an allowance, which
+  // is the word the headline and the strip already use.
+  const allowanceWord = rolling ? 'allowance' : 'plan limit'
+  const periodWord = rolling ? 'last 30 days' : 'this billing period'
+
   const tiles: Tile[] = [
     {
       badge:
@@ -54,13 +66,13 @@ const buildTiles = (view: UsageView, percent: number): Tile[] => {
             },
       label: 'Total API calls',
       sub: view.limit
-        ? `of ${compact(view.limit)} plan limit`
-        : 'no plan limit',
+        ? `of ${compact(view.limit)} ${allowanceWord}`
+        : 'no limit',
       value: compact(view.total),
     },
     {
-      label: '% of plan consumed',
-      sub: view.period.isBillingPeriod ? 'this billing period' : 'this window',
+      label: rolling ? '% of allowance used' : '% of plan consumed',
+      sub: periodWord,
       value: view.limit ? `${percent}%` : '—',
     },
   ]
@@ -87,14 +99,18 @@ const buildTiles = (view: UsageView, percent: number): Tile[] => {
     tiles.push({
       badge: { text: 'Paused', tone: 'danger' },
       label: 'Flag serving',
-      sub: 'resumes on upgrade',
+      // The banner says service also returns when usage falls back under the
+      // limit, so the tile says both rather than only the upgrade path.
+      sub: view.resumesAt
+        ? `until ${view.resumesAt}`
+        : 'until usage drops or you upgrade',
       value: 'Paused',
     })
   } else if (view.overageCost !== null) {
     tiles.push({
       badge: { text: 'Estimate', tone: 'neutral', withDot: false },
       label: 'Est. overage cost',
-      sub: 'charged at the end of the period',
+      sub: 'for this billing period',
       value: currency(view.overageCost),
     })
   } else if (view.period.isBillingPeriod) {
@@ -103,7 +119,9 @@ const buildTiles = (view: UsageView, percent: number): Tile[] => {
     tiles.push({
       badge: { text: 'Estimate', tone: 'neutral', withDot: false },
       label: 'Projected end-of-period',
-      sub: view.projected ? 'at the current run rate' : 'too early to project',
+      sub: view.projected
+        ? `by ${view.period.resetsAt}`
+        : 'too early to project',
       value: view.projected ? compact(view.projected) : '—',
     })
   }

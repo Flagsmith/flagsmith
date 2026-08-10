@@ -19,6 +19,8 @@ export type ScenarioId =
   | 'approaching'
   | 'over-covered'
   | 'over-charged'
+  | 'free-healthy'
+  | 'free-approaching'
   | 'free-countdown'
   | 'free-restricted'
   | 'free-restricted-now'
@@ -31,6 +33,8 @@ export const SCENARIOS: { id: ScenarioId; label: string }[] = [
   { id: 'over-covered', label: 'Over limit, grace covering' },
   { id: 'over-charged', label: 'Over limit, charged' },
   { id: 'over-200', label: 'Over limit, 200%+' },
+  { id: 'free-healthy', label: 'Free, healthy' },
+  { id: 'free-approaching', label: 'Free, approaching limit' },
   { id: 'free-countdown', label: 'Free, grace countdown' },
   { id: 'free-restricted', label: 'Free, restricted' },
   { id: 'free-restricted-now', label: 'Free, restricted immediately' },
@@ -209,6 +213,16 @@ export const FIXTURES: Record<Exclude<ScenarioId, 'live'>, UsageView> = {
     periodDays: 30,
     plan: 'paid',
   }),
+  // The two states most free orgs are actually in. A trailing window is always
+  // full, so daysElapsed matches the window length.
+  'free-approaching': buildView({
+    daysElapsed: 30,
+    grace: 'available',
+    limit: 50_000,
+    percent: 78,
+    periodDays: 30,
+    plan: 'free',
+  }),
   'free-countdown': buildView({
     daysElapsed: 22,
     daysOverLimit: 4,
@@ -216,6 +230,14 @@ export const FIXTURES: Record<Exclude<ScenarioId, 'live'>, UsageView> = {
     graceDaysLeft: 4,
     limit: 50_000,
     percent: 112,
+    periodDays: 30,
+    plan: 'free',
+  }),
+  'free-healthy': buildView({
+    daysElapsed: 30,
+    grace: 'available',
+    limit: 50_000,
+    percent: 62,
     periodDays: 30,
     plan: 'free',
   }),
@@ -239,7 +261,8 @@ export const FIXTURES: Record<Exclude<ScenarioId, 'live'>, UsageView> = {
     plan: 'free',
     restricted: true,
     restrictedImmediately: true,
-    resumesAt: 'the period resets',
+    // No resumesAt: a trailing window never resets, so there is no date to
+    // promise. The tile carries the condition instead.
   }),
   healthy: buildView({
     daysElapsed: 17,
