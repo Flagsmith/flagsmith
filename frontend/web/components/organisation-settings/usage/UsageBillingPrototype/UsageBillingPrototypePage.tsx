@@ -7,7 +7,7 @@ import UsageBillingPrototype from './UsageBillingPrototype'
 import UsageNotifications from './UsageNotifications'
 import usePrototypeUsage from './usePrototypeUsage'
 import { ScenarioId, SCENARIOS } from './fixtures'
-import { UsageNotification } from './types'
+import { BreakdownDimension, UsageNotification } from './types'
 import './UsageBillingPrototype.scss'
 
 type UsageBillingPrototypePageProps = {
@@ -32,6 +32,9 @@ const UsageBillingPrototypePage: FC<UsageBillingPrototypePageProps> = ({
   const [scenario, setScenario] = useState<ScenarioId>('healthy')
   const [tab, setTab] = useState<Tab>('usage')
   const [project, setProject] = useState<string | undefined>()
+  // Lives here rather than in the panel because each breakdown costs one
+  // request per key, so only the visible one is fetched.
+  const [dimension, setDimension] = useState<BreakdownDimension>('request-type')
 
   const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
   const orgSubscription = AccountStore.getOrganisation()?.subscription
@@ -52,6 +55,7 @@ const UsageBillingPrototypePage: FC<UsageBillingPrototypePageProps> = ({
 
   const baseView = usePrototypeUsage({
     billingPeriod,
+    dimension,
     isOnFreePlanPeriods,
     organisationId,
     // ProjectFilter hands back the id as a string, the query wants the pk.
@@ -122,6 +126,8 @@ const UsageBillingPrototypePage: FC<UsageBillingPrototypePageProps> = ({
           organisationId={organisationId}
           project={project}
           setProject={setProject}
+          dimension={dimension}
+          setDimension={setDimension}
           // Fixtures do not re-query, so the selector follows the fixture
           // rather than contradicting the period shown underneath it.
           billingPeriod={

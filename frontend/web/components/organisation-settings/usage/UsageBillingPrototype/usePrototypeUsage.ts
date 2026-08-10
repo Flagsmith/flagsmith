@@ -1,11 +1,17 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import moment from 'moment'
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
-import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
+import {
+  organisationUsageService,
+  useGetOrganisationUsageQuery,
+} from 'common/services/useOrganisationUsage'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
+import { useGetProjectsQuery } from 'common/services/useProject'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { getStore } from 'common/store'
 import { FIXTURES, ScenarioId } from './fixtures'
-import { UsageView } from './types'
+import { BreakdownDimension, BreakdownRow, UsageView } from './types'
 
 /**
  * PROTOTYPE (#8184). The one place the page gets its data.
@@ -21,6 +27,64 @@ type Params = {
   billingPeriod: Req['getOrganisationUsage']['billing_period']
   projectId?: number
   isOnFreePlanPeriods: boolean
+  /** Only the visible dimension is fetched, since each one costs N requests. */
+  dimension: BreakdownDimension
+}
+
+type UsageKey = { label: string; args: Partial<Req['getOrganisationUsage']> }
+
+/**
+ * usage-data takes project_id and environment_id as filters rather than as a
+ * grouping, so a breakdown is one request per key, summed here. A group_by on
+ * the endpoint would make this a single call.
+ */
+const useKeyedUsage = (
+  keys: UsageKey[],
+  organisationId: number,
+  billingPeriod: Req['getOrganisationUsage']['billing_period'],
+  enabled: boolean,
+): BreakdownRow[] => {
+  const [rows, setRows] = useState<BreakdownRow[]>([])
+  // Keys come from a query result, so a new array identity arrives on every
+  // render. Compare by content to avoid refetching in a loop.
+  const signature = JSON.stringify(keys)
+
+  useEffect(() => {
+    if (!enabled || !keys.length) {
+      setRows([])
+      return
+    }
+    let cancelled = false
+    Promise.all(
+      keys.map((key) =>
+        getStore()
+          .dispatch(
+            organisationUsageService.endpoints.getOrganisationUsage.initiate({
+              billing_period: billingPeriod,
+              organisationId,
+              ...key.args,
+            }),
+          )
+          .unwrap()
+          .then((res) => ({
+            label: key.label,
+            value: res?.totals?.total ?? 0,
+          }))
+          .catch(() => ({ label: key.label, value: 0 })),
+      ),
+    ).then((result) => {
+      if (cancelled) return
+      setRows(
+        result.filter((row) => row.value > 0).sort((a, b) => b.value - a.value),
+      )
+    })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signature, organisationId, billingPeriod, enabled])
+
+  return rows
 }
 
 const buildLiveView = (
@@ -127,12 +191,57 @@ const buildLiveView = (
 
 const usePrototypeUsage = ({
   billingPeriod,
+  dimension,
   isOnFreePlanPeriods,
   organisationId,
   projectId,
   scenario,
 }: Params): UsageView => {
   const isLive = scenario === 'live'
+  const wantsProjects = isLive && dimension === 'project'
+  // Environments belong to projects, so without one selected this would fan
+  // out to every project times every environment. The panel asks for a project
+  // instead.
+  const wantsEnvironments = isLive && dimension === 'environment' && !!projectId
+
+  const { data: projects } = useGetProjectsQuery(
+    { organisationId },
+    { skip: !organisationId || !wantsProjects },
+  )
+  const { data: environments } = useGetEnvironmentsQuery(
+    { projectId: projectId ?? 0 },
+    { skip: !projectId || !wantsEnvironments },
+  )
+
+  const projectKeys = useMemo<UsageKey[]>(
+    () =>
+      (projects ?? []).map((project) => ({
+        args: { projectId: project.id },
+        label: project.name,
+      })),
+    [projects],
+  )
+  const environmentKeys = useMemo<UsageKey[]>(
+    () =>
+      (environments?.results ?? []).map((environment) => ({
+        args: { environmentId: `${environment.id}`, projectId },
+        label: environment.name,
+      })),
+    [environments, projectId],
+  )
+
+  const projectRows = useKeyedUsage(
+    projectKeys,
+    organisationId,
+    billingPeriod,
+    wantsProjects,
+  )
+  const environmentRows = useKeyedUsage(
+    environmentKeys,
+    organisationId,
+    billingPeriod,
+    wantsEnvironments,
+  )
 
   const { data: orgUsage } = useGetOrganisationUsageQuery(
     { billing_period: billingPeriod, organisationId },
@@ -151,12 +260,20 @@ const usePrototypeUsage = ({
     if (!isLive) {
       return FIXTURES[scenario]
     }
-    return buildLiveView(
+    const view = buildLiveView(
       orgUsage,
       filteredUsage,
       subscriptionMeta?.max_api_calls ?? null,
       isOnFreePlanPeriods,
     )
+    return {
+      ...view,
+      breakdowns: {
+        ...view.breakdowns,
+        environment: environmentRows,
+        project: projectRows,
+      },
+    }
   }, [
     isLive,
     scenario,
@@ -164,6 +281,8 @@ const usePrototypeUsage = ({
     filteredUsage,
     subscriptionMeta,
     isOnFreePlanPeriods,
+    projectRows,
+    environmentRows,
   ])
 }
 

@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC } from 'react'
 import ProjectFilter from 'components/ProjectFilter'
 import StatItem from 'components/StatItem'
 import { billingPeriods, freePeriods, Req } from 'common/types/requests'
@@ -27,6 +27,8 @@ type UsageBillingPrototypeProps = {
   setBillingPeriod: (
     period: Req['getOrganisationUsage']['billing_period'],
   ) => void
+  dimension: BreakdownDimension
+  setDimension: (dimension: BreakdownDimension) => void
 }
 
 type Tile = {
@@ -135,14 +137,14 @@ const buildTiles = (view: UsageView, percent: number): Tile[] => {
  */
 const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
   billingPeriod,
+  dimension,
   organisationId,
   project,
   setBillingPeriod,
+  setDimension,
   setProject,
   view,
 }) => {
-  const [dimension, setDimension] = useState<BreakdownDimension>('request-type')
-
   const percent = view.limit ? Math.round((view.total / view.limit) * 100) : 0
   const tone = toneForPercent(percent)
   const rows = view.breakdowns[dimension]
@@ -320,7 +322,9 @@ const UsageBillingPrototype: FC<UsageBillingPrototypeProps> = ({
         <div className='usage-proto__breakdown'>
           {!rows.length && (
             <div className='usage-proto__sub'>
-              The API does not break usage down this way yet.
+              {dimension === 'environment' && !project
+                ? 'Pick a project to see its environments.'
+                : 'No usage recorded for this breakdown.'}
             </div>
           )}
           {[...rows]
