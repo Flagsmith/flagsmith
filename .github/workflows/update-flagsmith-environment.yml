@@ -9,9 +9,6 @@ permissions:
   contents: read
 
 env:
-  # The CLI finds flagsmith.json by walking up from the working directory, so
-  # from the repository root it needs pointing at ours.
-  FLAGSMITH_CONFIG_PATH: api/flagsmith.json
   FLAGSMITH_DOCUMENT_PATH: api/integrations/flagsmith/data/environment.json
 
 jobs:
