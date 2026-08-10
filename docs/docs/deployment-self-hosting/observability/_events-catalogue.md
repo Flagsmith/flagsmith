@@ -71,10 +71,40 @@ Attributes:
  - `feature.count`
  - `organisation.id`
 
+### `cohorts.cohort.created`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:123`
+
+Attributes:
+ - `cohort.id`
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+ - `segment.id`
+
+### `cohorts.cohort.deleted`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:162`
+
+Attributes:
+ - `cohort.id`
+ - `environment.id`
+
+### `cohorts.cohort.deletion_requested`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:150`
+
+Attributes:
+ - `cohort.id`
+ - `environment.id`
+
 ### `cohorts.membership.applied`
 
 Logged at `info` from:
- - `api/cohorts/services.py:61`
+ - `api/cohorts/services.py:74`
 
 Attributes:
  - `adds.count`
@@ -95,7 +125,7 @@ Attributes:
 ### `cohorts.membership.apply.throttled`
 
 Logged at `warning` from:
- - `api/cohorts/tasks.py:37`
+ - `api/cohorts/tasks.py:39`
 
 Attributes:
  - `cohort.id`

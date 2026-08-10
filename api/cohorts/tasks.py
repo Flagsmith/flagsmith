@@ -31,6 +31,8 @@ def apply_cohort_membership_deltas(cohort_id: int) -> None:
     try:
         for _ in range(COHORT_MEMBERSHIP_APPLY_MAX_BATCHES_PER_RUN):
             if not services.apply_pending_memberships(cohort):
+                if cohort.deletion_requested_at is not None:
+                    services.finalise_cohort_deletion(cohort)
                 return
     except ClientError as exc:
         if exc.response["Error"]["Code"] in DYNAMODB_THROTTLING_ERROR_CODES:

@@ -1,11 +1,24 @@
+import typing
+
 import structlog
+from django.db import transaction
 from django.db.models import QuerySet
 from django.utils import timezone
+from flag_engine.segments.constants import IS_SET
 
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from cohorts.constants import COHORT_MEMBERSHIP_APPLY_BATCH_SIZE
 from cohorts.metrics import flagsmith_cohorts_membership_deltas_applied_total
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
+from core.dataclasses import AuthorData
 from environments.dynamodb import DynamoIdentityWrapper
+from segments.models import Condition, Segment, SegmentRule
+from segments.services import delete_segment
+
+if typing.TYPE_CHECKING:
+    from environments.models import Environment
+    from users.models import FFAdminUser
 
 logger = structlog.get_logger("cohorts")
 
@@ -66,3 +79,88 @@ def apply_pending_memberships(cohort: Cohort) -> bool:
             removes__count=removed_count,
         )
     return pending_memberships(cohort).exists()
+
+
+def _resolve_audit_log_author(user: "FFAdminUser") -> dict[str, int | None]:
+    if getattr(user, "is_master_api_key_user", False):
+        return {"author_id": None, "master_api_key_id": user.key.id}
+    return {"author_id": user.pk, "master_api_key_id": None}
+
+
+def _create_cohort_audit_log(
+    cohort: Cohort,
+    user: "FFAdminUser",
+    *,
+    action: str,
+) -> None:
+    AuditLog.objects.create(
+        environment=cohort.environment,
+        project=cohort.environment.project,
+        **_resolve_audit_log_author(user),
+        related_object_id=cohort.id,
+        related_object_type=RelatedObjectType.COHORT.name,
+        log=f"Cohort '{cohort.segment.name}' {action}",
+    )
+
+
+def create_cohort(
+    *,
+    environment: "Environment",
+    name: str,
+    user: "FFAdminUser",
+) -> Cohort:
+    with transaction.atomic():
+        segment = Segment.objects.create(name=name, project=environment.project)
+        rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+        cohort: Cohort = Cohort.objects.create(environment=environment, segment=segment)
+        Condition.objects.create(
+            rule=rule,
+            operator=IS_SET,
+            property=cohort.system_trait_key,
+            created_with_segment=True,
+        )
+    _create_cohort_audit_log(cohort, user, action="created")
+    logger.info(
+        "cohort.created",
+        cohort__id=cohort.id,
+        segment__id=segment.id,
+        environment__id=environment.id,
+        project__id=environment.project_id,
+        organisation__id=environment.project.organisation_id,
+    )
+    return cohort
+
+
+def delete_cohort(cohort: Cohort, user: "FFAdminUser") -> None:
+    from cohorts.tasks import apply_cohort_membership_deltas
+
+    cohort.deletion_requested_at = timezone.now()
+    cohort.save(update_fields=["deletion_requested_at"])
+    _create_cohort_audit_log(cohort, user, action="deleted")
+    if not (
+        cohort.environment.project.enable_dynamo_db
+        and DynamoIdentityWrapper().is_enabled
+    ):
+        finalise_cohort_deletion(cohort)
+        return
+    CohortMembership.objects.filter(cohort=cohort).update(
+        state=CohortMembershipState.PENDING_REMOVE, updated_at=timezone.now()
+    )
+    apply_cohort_membership_deltas.delay(kwargs={"cohort_id": cohort.id})
+    logger.info(
+        "cohort.deletion_requested",
+        cohort__id=cohort.id,
+        environment__id=cohort.environment_id,
+    )
+
+
+def finalise_cohort_deletion(cohort: Cohort) -> None:
+    segment = cohort.segment
+    with transaction.atomic():
+        cohort.delete()
+        delete_segment(segment, AuthorData())
+    logger.info(
+        "cohort.deleted",
+        cohort__id=cohort.id,
+        environment__id=cohort.environment_id,
+    )

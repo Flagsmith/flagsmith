@@ -26,6 +26,9 @@ class Cohort(SoftDeleteExportableModel):
     )
     version = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Deletion drains memberships from DynamoDB first; the cohort is only
+    # soft-deleted once drained. This marks it as awaiting that final step.
+    deletion_requested_at = models.DateTimeField(null=True, blank=True)
 
     @property
     def system_trait_key(self) -> str:
