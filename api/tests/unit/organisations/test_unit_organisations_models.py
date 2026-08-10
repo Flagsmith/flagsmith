@@ -304,6 +304,8 @@ def test_is_auto_seat_upgrade_available__given_plan_and_seat_count__returns_expe
         ("scale-up", 1),
         ("startup-v2", 1),
         (None, 1),
+        ("Scale-Up-v4-USD-Yearly", 4),
+        ("Scale-Up-v4-USD-Monthly", 4),
     ],
 )
 def test_get_scaleup_plan_version__given_plan__returns_expected(

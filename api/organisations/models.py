@@ -312,7 +312,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         return self.subscription_plan_family == SubscriptionPlanFamily.ENTERPRISE
 
     def get_scaleup_plan_version(self) -> int:
-        if match := re.match(r"scale-up-v(\d+)", self.plan or ""):
+        if match := re.match(r"scale-up-v(\d+)", self.plan or "", re.IGNORECASE):
             return int(match.group(1))
         return 1
 
