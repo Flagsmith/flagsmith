@@ -9,7 +9,6 @@ import { useRouteContext } from 'components/providers/RouteContext'
 import { AggregateUsageDataItem } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
-import { planNames } from 'common/utils/utils'
 import { Req } from 'common/types/requests'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
@@ -43,11 +42,11 @@ const OrganisationUsagePage: FC = () => {
   ])
 
   const colours = ['#0AADDF', '#27AB95', '#FF9F43', '#EF4D56']
-  const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
   const orgSubscription = AccountStore.getOrganisation()?.subscription
-  const isOnFreePlanPeriods =
-    planNames.free === currentPlan ||
-    !orgSubscription?.has_active_billing_periods
+  // Ask the subscription whether it has a period, rather than inferring it from
+  // the plan's name. Same result today, since a free plan has no billing term,
+  // but it means an organisation that gains one is shown it.
+  const isOnFreePlanPeriods = !orgSubscription?.has_active_billing_periods
 
   const [billingPeriod, setBillingPeriod] = useState<
     Req['getOrganisationUsage']['billing_period']
