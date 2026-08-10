@@ -146,6 +146,11 @@ const API = {
         organisations: user.organisations
           ? user.organisations.map((o) => String(o.id)).join(',')
           : '',
+        // Mirrors the trait the API sends for organisation-scoped evaluation, so
+        // that plan-based segments match identically on both sides.
+        'subscription.plan': currentOrganisation
+          ? currentOrganisation.subscription?.plan ?? ''
+          : null,
       })
       .then(() =>
         flagsmith.setTrait(
