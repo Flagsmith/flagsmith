@@ -15,6 +15,7 @@ import ProjectStore from 'common/stores/project-store'
 import {
   decideOnboardingEntry,
   getStoredOnboardingVariant,
+  persistOnboardingEntry,
 } from 'common/utils/onboardingEntry'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
@@ -150,10 +151,13 @@ const App = class extends Component {
       // instead of blocking the redirect.
       Promise.race([
         AccountStore.getUser()?.isGettingStarted
-          ? decideOnboardingEntry().catch(() => 'control')
-          : Promise.resolve('control'),
-        new Promise((resolve) => setTimeout(() => resolve('control'), 2000)),
-      ]).then((variant) => {
+          ? decideOnboardingEntry().catch(() => null)
+          : Promise.resolve(null),
+        new Promise((resolve) => setTimeout(() => resolve(null), 2000)),
+      ]).then((decision) => {
+        // Only an accepted decision is persisted: a decision losing the
+        // race must not store its assignment after routing has happened.
+        const variant = decision ? persistOnboardingEntry(decision) : 'control'
         // Restore the logged-in identity for the rest of the app.
         Promise.resolve(API.flagsmithIdentify()).catch(() => {})
         if (variant === 'single_page') {
