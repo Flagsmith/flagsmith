@@ -2,8 +2,6 @@ from flag_engine.segments.constants import IS_SET
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
-from audit.models import AuditLog
-from audit.related_object_type import RelatedObjectType
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
 from cohorts.services import (
     apply_pending_memberships,
@@ -13,7 +11,6 @@ from cohorts.services import (
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
 from segments.models import Segment, SegmentRule
-from users.models import FFAdminUser
 
 
 def test_apply_pending_memberships__no_pending_rows__returns_false(
@@ -122,10 +119,9 @@ def test_apply_pending_memberships__row_transitioned_mid_write__not_flipped(
 
 def test_create_cohort__valid_name__creates_segment_with_is_set_condition(
     environment: Environment,
-    admin_user: FFAdminUser,
 ) -> None:
     # Given / When
-    cohort = create_cohort(environment=environment, name="Beta users", user=admin_user)
+    cohort = create_cohort(environment=environment, name="Beta users")
 
     # Then
     segment = cohort.segment
@@ -139,19 +135,14 @@ def test_create_cohort__valid_name__creates_segment_with_is_set_condition(
     assert condition.created_with_segment is True
 
 
-def test_create_cohort__valid_name__writes_audit_log_and_event(
+def test_create_cohort__valid_name__logs_created_event(
     environment: Environment,
-    admin_user: FFAdminUser,
     log: StructuredLogCapture,
 ) -> None:
     # Given / When
-    cohort = create_cohort(environment=environment, name="Beta users", user=admin_user)
+    cohort = create_cohort(environment=environment, name="Beta users")
 
     # Then
-    audit_log = AuditLog.objects.get(related_object_type=RelatedObjectType.COHORT.name)
-    assert audit_log.related_object_id == cohort.id
-    assert audit_log.author == admin_user
-    assert audit_log.log == "Cohort 'Beta users' created"
     assert log.has(
         "cohort.created",
         cohort__id=cohort.id,
@@ -162,7 +153,6 @@ def test_create_cohort__valid_name__writes_audit_log_and_event(
 
 def test_delete_cohort__non_edge__deletes_cohort_and_segment_immediately(
     cohort: Cohort,
-    admin_user: FFAdminUser,
     log: StructuredLogCapture,
 ) -> None:
     # Given
@@ -171,20 +161,17 @@ def test_delete_cohort__non_edge__deletes_cohort_and_segment_immediately(
     )
 
     # When
-    delete_cohort(cohort, admin_user)
+    delete_cohort(cohort)
 
     # Then
     assert not Cohort.objects.filter(id=cohort.id).exists()
     assert not Segment.objects.filter(id=cohort.segment_id).exists()
     assert not CohortMembership.objects.filter(cohort_id=cohort.id).exists()
-    audit_log = AuditLog.objects.get(related_object_type=RelatedObjectType.COHORT.name)
-    assert audit_log.log == f"Cohort '{cohort.segment.name}' deleted"
     assert log.has("cohort.deleted", cohort__id=cohort.id)
 
 
 def test_delete_cohort__edge__drains_traits_then_deletes(
     edge_cohort: Cohort,
-    admin_user: FFAdminUser,
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
     log: StructuredLogCapture,
 ) -> None:
@@ -201,7 +188,7 @@ def test_delete_cohort__edge__drains_traits_then_deletes(
     CohortMembership.objects.create(cohort=edge_cohort, identifier="pending")
 
     # When (synchronous task runner executes the enqueued applier inline)
-    delete_cohort(edge_cohort, admin_user)
+    delete_cohort(edge_cohort)
 
     # Then
     document = dynamodb_identity_wrapper.get_item(f"{api_key}_applied")

@@ -1,20 +1,14 @@
-import typing
-
 from django.db.models import QuerySet
 from rest_framework import mixins, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.serializers import BaseSerializer
 
 from cohorts import services
 from cohorts.models import Cohort
 from cohorts.permissions import CohortPermission
 from cohorts.serializers import CohortSerializer
 from environments.views import NestedEnvironmentViewSet
-
-if typing.TYPE_CHECKING:
-    from users.models import FFAdminUser
 
 
 class CohortViewSet(
@@ -44,16 +38,6 @@ class CohortViewSet(
             .order_by("id")
         )
 
-    def perform_create(self, serializer: BaseSerializer[Cohort]) -> None:
-        serializer.save(
-            environment=self._get_environment(),
-            user=self._get_user(self.request),
-        )
-
     def destroy(self, request: Request, *args: object, **kwargs: object) -> Response:
-        services.delete_cohort(self.get_object(), self._get_user(request))
+        services.delete_cohort(self.get_object())
         return Response(status=status.HTTP_202_ACCEPTED)
-
-    @staticmethod
-    def _get_user(request: Request) -> "FFAdminUser":
-        return request.user  # type: ignore[return-value]

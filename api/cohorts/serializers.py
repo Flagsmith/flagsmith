@@ -26,5 +26,4 @@ class CohortSerializer(serializers.ModelSerializer[Cohort]):
         return create_cohort(
             environment=validated_data["environment"],
             name=validated_data["segment"]["name"],
-            user=validated_data["user"],
         )
