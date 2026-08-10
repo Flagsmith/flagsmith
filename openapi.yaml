@@ -2061,6 +2061,7 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+      x-flagsmith-minimum-plan: START_UP
     post:
       operationId: api_v1_environments_cohorts_create
       description: Manage trait-synced cohorts for an environment.
@@ -2094,6 +2095,7 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+      x-flagsmith-minimum-plan: START_UP
   '/api/v1/environments/{environment_api_key}/cohorts/{cohort_id}/':
     get:
       operationId: api_v1_environments_cohorts_retrieve
@@ -2122,6 +2124,7 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+      x-flagsmith-minimum-plan: START_UP
     delete:
       operationId: api_v1_environments_cohorts_destroy
       description: Manage trait-synced cohorts for an environment.
@@ -2145,6 +2148,7 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+      x-flagsmith-minimum-plan: START_UP
   '/api/v1/environments/{environment_api_key}/create-change-request/':
     post:
       operationId: create_environment_feature_change_request
