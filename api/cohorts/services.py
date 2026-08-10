@@ -16,6 +16,7 @@ from segments.services import delete_segment
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
+    from projects.models import Project
 
 logger = structlog.get_logger("cohorts")
 
@@ -100,17 +101,15 @@ def create_cohort(*, environment: "Environment", name: str) -> Cohort:
     return cohort
 
 
+def edge_sync_enabled(project: "Project") -> bool:
+    return bool(project.enable_dynamo_db and DynamoIdentityWrapper().is_enabled)
+
+
 def delete_cohort(cohort: Cohort) -> None:
     from cohorts.tasks import apply_cohort_membership_deltas
 
     cohort.deletion_requested_at = timezone.now()
     cohort.save(update_fields=["deletion_requested_at"])
-    if not (
-        cohort.environment.project.enable_dynamo_db
-        and DynamoIdentityWrapper().is_enabled
-    ):
-        finalise_cohort_deletion(cohort)
-        return
     CohortMembership.objects.filter(cohort=cohort).update(
         state=CohortMembershipState.PENDING_REMOVE, updated_at=timezone.now()
     )

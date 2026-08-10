@@ -10,7 +10,7 @@ from cohorts.services import (
 )
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
-from segments.models import Segment, SegmentRule
+from segments.models import SegmentRule
 
 
 def test_apply_pending_memberships__no_pending_rows__returns_false(
@@ -149,25 +149,6 @@ def test_create_cohort__valid_name__logs_created_event(
         segment__id=cohort.segment_id,
         environment__id=environment.id,
     )
-
-
-def test_delete_cohort__non_edge__deletes_cohort_and_segment_immediately(
-    cohort: Cohort,
-    log: StructuredLogCapture,
-) -> None:
-    # Given
-    CohortMembership.objects.create(
-        cohort=cohort, identifier="user-1", state=CohortMembershipState.APPLIED
-    )
-
-    # When
-    delete_cohort(cohort)
-
-    # Then
-    assert not Cohort.objects.filter(id=cohort.id).exists()
-    assert not Segment.objects.filter(id=cohort.segment_id).exists()
-    assert not CohortMembership.objects.filter(cohort_id=cohort.id).exists()
-    assert log.has("cohort.deleted", cohort__id=cohort.id)
 
 
 def test_delete_cohort__edge__drains_traits_then_deletes(

@@ -85,7 +85,9 @@ def test_apply_cohort_membership_deltas__non_edge_project__skips(
     log: StructuredLogCapture,
 ) -> None:
     # Given
-    mocker.patch("cohorts.tasks.DynamoIdentityWrapper").return_value.is_enabled = True
+    mocker.patch(
+        "cohorts.services.DynamoIdentityWrapper"
+    ).return_value.is_enabled = True
     membership = CohortMembership.objects.create(cohort=cohort, identifier="user-1")
 
     # When
@@ -131,7 +133,9 @@ def test_apply_cohort_membership_deltas__dynamo_throttled__raises_backoff(
     log: StructuredLogCapture,
 ) -> None:
     # Given
-    mocker.patch("cohorts.tasks.DynamoIdentityWrapper").return_value.is_enabled = True
+    mocker.patch(
+        "cohorts.services.DynamoIdentityWrapper"
+    ).return_value.is_enabled = True
     mocker.patch.object(
         services,
         "apply_pending_memberships",
@@ -152,7 +156,9 @@ def test_apply_cohort_membership_deltas__other_client_error__reraises(
     log: StructuredLogCapture,
 ) -> None:
     # Given
-    mocker.patch("cohorts.tasks.DynamoIdentityWrapper").return_value.is_enabled = True
+    mocker.patch(
+        "cohorts.services.DynamoIdentityWrapper"
+    ).return_value.is_enabled = True
     mocker.patch.object(
         services,
         "apply_pending_memberships",

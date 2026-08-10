@@ -9,6 +9,7 @@ from cohorts.models import Cohort
 from cohorts.permissions import CohortPermission, CohortPlanPermission
 from cohorts.serializers import CohortSerializer
 from environments.views import NestedEnvironmentViewSet
+from projects.exceptions import DynamoNotEnabledError
 
 
 class CohortViewSet(
@@ -24,6 +25,13 @@ class CohortViewSet(
     model_class = Cohort
     lookup_field = "id"
     lookup_url_kwarg = "cohort_id"
+
+    def initial(self, request: Request, *args: object, **kwargs: object) -> None:
+        super().initial(request, *args, **kwargs)
+        # Cohorts only sync to edge identities for now; core (Postgres
+        # identities) support comes later.
+        if not services.edge_sync_enabled(self._get_environment().project):
+            raise DynamoNotEnabledError()
 
     def get_queryset(self) -> QuerySet[Cohort]:
         # A cohort awaiting drain-then-delete is already gone from the

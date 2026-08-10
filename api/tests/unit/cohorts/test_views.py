@@ -3,12 +3,15 @@ from common.environments.permissions import VIEW_ENVIRONMENT
 from common.projects.permissions import MANAGE_SEGMENTS
 from django.urls import reverse
 from django.utils import timezone
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from cohorts.models import Cohort
+from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
 from organisations.models import Subscription
+from projects.models import Project
 from segments.models import Segment
 from tests.types import (
     WithEnvironmentPermissionsCallable,
@@ -18,13 +21,18 @@ from tests.types import (
 
 def test_create_cohort__staff_with_manage_segments__returns_201(
     staff_client: APIClient,
-    environment: Environment,
+    dynamo_enabled_project: Project,
+    dynamo_enabled_project_environment_one: Environment,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
+    with_project_permissions(  # type: ignore[call-arg]
+        [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
+    )
     url = reverse(
-        "api-v1:environments:cohorts:cohorts-list", args=[environment.api_key]
+        "api-v1:environments:cohorts:cohorts-list",
+        args=[dynamo_enabled_project_environment_one.api_key],
     )
 
     # When
@@ -35,7 +43,7 @@ def test_create_cohort__staff_with_manage_segments__returns_201(
     cohort = Cohort.objects.get(id=response.json()["id"])
     assert response.json()["name"] == "Beta users"
     assert response.json()["segment"] == cohort.segment_id
-    assert cohort.environment == environment
+    assert cohort.environment == dynamo_enabled_project_environment_one
 
 
 def test_create_cohort__staff_without_permission__returns_403(
@@ -69,12 +77,15 @@ def test_create_cohort__unknown_environment__returns_403(
 
 def test_list_cohorts__deletion_requested_cohort__excluded(
     staff_client: APIClient,
-    environment: Environment,
-    cohort: Cohort,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    environment = edge_cohort.environment
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT], environment_id=environment.id
+    )
     deleting_segment = Segment.objects.create(
         name="going away", project=environment.project
     )
@@ -92,21 +103,24 @@ def test_list_cohorts__deletion_requested_cohort__excluded(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert [row["id"] for row in response.json()] == [cohort.id]
-    assert response.json()[0]["name"] == cohort.segment.name
+    assert [row["id"] for row in response.json()] == [edge_cohort.id]
+    assert response.json()[0]["name"] == edge_cohort.segment.name
 
 
 def test_delete_cohort__staff_with_manage_segments__returns_202(
     staff_client: APIClient,
-    environment: Environment,
-    cohort: Cohort,
+    dynamo_enabled_project: Project,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
+    with_project_permissions(  # type: ignore[call-arg]
+        [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
+    )
     url = reverse(
         "api-v1:environments:cohorts:cohorts-detail",
-        args=[environment.api_key, cohort.id],
+        args=[edge_cohort.environment.api_key, edge_cohort.id],
     )
 
     # When
@@ -114,7 +128,7 @@ def test_delete_cohort__staff_with_manage_segments__returns_202(
 
     # Then
     assert response.status_code == status.HTTP_202_ACCEPTED
-    assert not Cohort.objects.filter(id=cohort.id).exists()
+    assert not Cohort.objects.filter(id=edge_cohort.id).exists()
 
 
 @pytest.mark.saas_mode
@@ -139,12 +153,36 @@ def test_create_cohort__saas_free_plan__returns_403(
     )
 
 
-@pytest.mark.saas_mode
 def test_create_cohort__saas_startup_plan__returns_201(
+    staff_client: APIClient,
+    dynamo_enabled_project: Project,
+    dynamo_enabled_project_environment_one: Environment,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    with_project_permissions: WithProjectPermissionsCallable,
+    startup_subscription: Subscription,
+    mocker: MockerFixture,
+) -> None:
+    # Given (saas_mode's fake filesystem breaks moto, so patch is_saas instead)
+    mocker.patch("organisations.subscriptions.permissions.is_saas", return_value=True)
+    with_project_permissions(  # type: ignore[call-arg]
+        [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:cohorts-list",
+        args=[dynamo_enabled_project_environment_one.api_key],
+    )
+
+    # When
+    response = staff_client.post(url, data={"name": "Beta users"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_create_cohort__non_edge_project__returns_400(
     staff_client: APIClient,
     environment: Environment,
     with_project_permissions: WithProjectPermissionsCallable,
-    startup_subscription: Subscription,
 ) -> None:
     # Given
     with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
@@ -156,4 +194,5 @@ def test_create_cohort__saas_startup_plan__returns_201(
     response = staff_client.post(url, data={"name": "Beta users"}, format="json")
 
     # Then
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Dynamo DB is not enabled for this project"

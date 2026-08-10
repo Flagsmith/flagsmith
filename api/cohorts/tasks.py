@@ -11,7 +11,6 @@ from cohorts.constants import (
     DYNAMODB_THROTTLING_ERROR_CODES,
 )
 from cohorts.models import Cohort
-from environments.dynamodb import DynamoIdentityWrapper
 
 logger = structlog.get_logger("cohorts")
 
@@ -22,10 +21,7 @@ def apply_cohort_membership_deltas(cohort_id: int) -> None:
     if (cohort := Cohort.objects.filter(id=cohort_id).first()) is None:
         log.info("membership.apply.skipped", reason="cohort_missing")
         return
-    if not (
-        cohort.environment.project.enable_dynamo_db
-        and DynamoIdentityWrapper().is_enabled
-    ):
+    if not services.edge_sync_enabled(cohort.environment.project):
         log.info("membership.apply.skipped", reason="not_edge")
         return
     try:
