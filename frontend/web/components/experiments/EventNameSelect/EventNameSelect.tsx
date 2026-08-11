@@ -40,7 +40,10 @@ const EventNameSelect: FC<EventNameSelectProps> = ({ onChange, value }) => {
   // clicking outside commits the value instead of clearing it.
   const handleInputChange = (val: string, meta: InputActionMeta) => {
     if (meta.action === 'input-change') setInputValue(val)
-    if (meta.action === 'set-value') setInputValue('')
+  }
+  const handleChange = (option: EventOption | null) => {
+    setInputValue('')
+    onChange(option?.value ?? '')
   }
   const handleBlur = () => {
     if (!inputValue) return
@@ -63,7 +66,7 @@ const EventNameSelect: FC<EventNameSelectProps> = ({ onChange, value }) => {
         menuPlacement='auto'
         options={options}
         value={value ? { label: value, value } : null}
-        onChange={(option: EventOption | null) => onChange(option?.value ?? '')}
+        onChange={handleChange}
         placeholder='e.g. checkout_completed'
         formatCreateLabel={(input: string) => `Use "${input}"`}
         noOptionsMessage={() => 'Type to add a new event'}
