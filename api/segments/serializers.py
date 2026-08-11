@@ -1,6 +1,7 @@
-from typing import Any
+from typing import Any, cast
 
 import structlog
+from django.conf import settings
 from django.db import transaction
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
@@ -12,16 +13,17 @@ from projects.models import Project
 from segment_membership.constants import MAX_SEGMENT_MEMBERS_PAGE_SIZE
 from segment_membership.models import SegmentMembershipCount
 from segment_membership.services import enqueue_membership_refresh
-from segments.models import Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
 from segments.types import LegacySegmentRule
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
 from segments.types import SegmentRule as SegmentRuleType
-from segments.validators import SegmentRulesValidator
 
 logger = structlog.get_logger(__name__)
 
 DictList = list[dict[str, Any]]
+
+SEGMENT_RULES_MAX_DEPTH = 2
 
 
 class SegmentMembershipCountSerializer(
@@ -138,7 +140,10 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             "project",
             "version_of",
         ]
-        validators = [SegmentRulesValidator()]
+
+    def to_internal_value(self, data: dict[str, Any]) -> Any:
+        self._validate_rules_depth(data.get("rules", []))
+        return super().to_internal_value(data)
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)
@@ -151,6 +156,10 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
 
         self._validate_required_metadata(organisation, metadata, project)
         self._validate_project_segment_limit(project)
+
+        if "rules" in attrs:
+            self._validate_rules_condition_count(attrs["rules"])
+
         return attrs
 
     def create(self, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
@@ -176,6 +185,52 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         self._update_metadata(segment, metadata)
         enqueue_membership_refresh(segment.project)
         return segment
+
+    def _validate_rules_depth(
+        self, rules_data: list[LegacySegmentRule], _depth: int = 1
+    ) -> None:
+        # Raise loudly because the interface ignores rules nested too deep
+        for rule_data in rules_data:
+            if _depth >= SEGMENT_RULES_MAX_DEPTH and rule_data.get("rules"):
+                raise ValidationError(
+                    {
+                        "segment": [
+                            f"Rules must not be nested more than "
+                            f"{SEGMENT_RULES_MAX_DEPTH} levels deep."
+                        ]
+                    }
+                )
+            self._validate_rules_depth(rule_data.get("rules", []), _depth + 1)
+
+    def _validate_rules_condition_count(
+        self, rules_data: list[LegacySegmentRule]
+    ) -> None:
+        if self._can_segment_own_more_conditions_than_limit():
+            return
+
+        condition_count = self._count_conditions(rules_data)
+        if condition_count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
+            raise ValidationError(
+                {
+                    "segment": [
+                        f"The segment has {condition_count} conditions, "
+                        f"which exceeds the maximum condition count of "
+                        f"{settings.SEGMENT_RULES_CONDITIONS_LIMIT}."
+                    ]
+                }
+            )
+
+    def _count_conditions(self, rules_data: list[LegacySegmentRule]) -> int:
+        return sum(
+            len(rule_data.get("conditions", []))
+            + self._count_conditions(rule_data.get("rules", []))
+            for rule_data in rules_data
+        )
+
+    def _can_segment_own_more_conditions_than_limit(self) -> bool:
+        if self.instance is not None and (segment := cast(Segment, self.instance)).id:
+            return WhitelistedSegment.objects.filter(segment=segment).exists()
+        return False
 
     def _set_rules_data(self, validated_data: dict[str, Any]) -> None:
         """Set the .rules_data attribute
