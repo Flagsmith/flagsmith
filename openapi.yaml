@@ -2040,28 +2040,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/cohorts/':
     get:
       operationId: api_v1_environments_cohorts_list
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: List the environment's cohorts.
       parameters:
         - name: environment_api_key
           in: path
@@ -2085,28 +2064,7 @@ paths:
       x-flagsmith-minimum-plan: START_UP
     post:
       operationId: api_v1_environments_cohorts_create
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Create a cohort and the managed segment that targets it.
       parameters:
         - name: environment_api_key
           in: path
@@ -2141,28 +2099,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/cohorts/{cohort_id}/':
     get:
       operationId: api_v1_environments_cohorts_retrieve
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Retrieve a cohort.
       parameters:
         - name: cohort_id
           in: path
@@ -2190,28 +2127,7 @@ paths:
       x-flagsmith-minimum-plan: START_UP
     delete:
       operationId: api_v1_environments_cohorts_destroy
-      description: |-
-        Abstract base class for generic types.
-
-        On Python 3.12 and newer, generic classes implicitly inherit from
-        Generic when they declare a parameter list after the class's name::
-
-            class Mapping[KT, VT]:
-                def __getitem__(self, key: KT) -> VT:
-                    ...
-                # Etc.
-
-        On older versions of Python, however, generic classes have to
-        explicitly inherit from Generic.
-
-        After a class has been declared to be generic, it can then be used as
-        follows::
-
-            def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    return default
+      description: Request cohort deletion. Memberships are drained from identity data first; the cohort and its segment are deleted once drained.
       parameters:
         - name: cohort_id
           in: path
@@ -2225,7 +2141,7 @@ paths:
           schema:
             type: string
       responses:
-        '204':
+        '202':
           description: No response body
       security:
         - tokenAuth: []
