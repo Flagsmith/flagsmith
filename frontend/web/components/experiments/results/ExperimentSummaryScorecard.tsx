@@ -51,16 +51,12 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
             loading={!hasResults}
             value={
               summary?.winnerName ? (
-                <span
-                  className={summary.controlWins ? undefined : 'text-success'}
-                >
-                  <VariantName
-                    fit
-                    colour={summary.winnerColour}
-                    fontSize={24}
-                    name={summary.winnerName}
-                  />
-                </span>
+                <VariantName
+                  fit
+                  colour={summary.winnerColour}
+                  fontSize={24}
+                  name={summary.winnerName}
+                />
               ) : undefined
             }
           />
