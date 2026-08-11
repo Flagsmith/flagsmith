@@ -3,6 +3,10 @@ import typing
 
 import requests
 
+from integrations.common.constants import (
+    INTEGRATION_REQUEST_TIMEOUT_SECONDS,
+)
+
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from features.models import FeatureState
@@ -30,7 +34,12 @@ class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper[MixpanelUserData]):
         }
 
     def _identify_user(self, user_data: MixpanelUserData) -> None:
-        response = requests.post(self.url, headers=self.headers, json=user_data)
+        response = requests.post(
+            self.url,
+            headers=self.headers,
+            json=user_data,
+            timeout=INTEGRATION_REQUEST_TIMEOUT_SECONDS,
+        )
         logger.debug(
             "Sent event to Mixpanel. Response code was: %s" % response.status_code
         )
