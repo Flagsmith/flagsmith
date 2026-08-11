@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core import signing
 from django.utils import timezone
 from flag_engine.segments import constants
+from flag_engine.segments.types import ConditionOperator
 from requests.exceptions import RequestException
 
 from environments.identities.models import Identity
@@ -41,6 +42,10 @@ from projects.models import Project
 from projects.tags.models import Tag
 from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule
+from segments.types import SegmentCondition
+
+# TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
+from segments.types import SegmentRule as SegmentRuleType
 from users.models import FFAdminUser
 from util.db import closing_stale_connections
 from util.util import iter_chunked_concat, truncate
@@ -141,7 +146,7 @@ def _create_tags_from_ld(
     return tags_by_ld_tag
 
 
-def _ld_operator_to_flagsmith_operator(ld_operator: str) -> Optional[str]:
+def _ld_operator_to_flagsmith_operator(ld_operator: str) -> Optional[ConditionOperator]:
     """
     Convert a Launch Darkly operator to its closest Flagsmith equivalent. If not convertible, return None.
 
@@ -290,6 +295,109 @@ def _create_feature_segments_for_segment_match_clauses(
     return feature_states
 
 
+def _clauses_to_segment_subrules(
+    import_request: LaunchDarklyImportRequest,
+    segment_name: str,
+    clauses: list[Clause],
+) -> list[SegmentRuleType]:
+    """Convert Launch Darkly clauses into subrules for a segment's "ALL" root rule."""
+    subrules: list[SegmentRuleType] = []
+    negated_subrule: Optional[SegmentRuleType] = None
+
+    for clause in clauses:
+        _property = clause["attribute"]
+        operator = _ld_operator_to_flagsmith_operator(clause["op"])
+        if operator is None:
+            _log_error(
+                import_request=import_request,
+                error_message=f"Can't map launch darkly operator: {clause['op']}"
+                f" skipping for segment: {segment_name}",
+            )
+            continue
+
+        conditions: list[SegmentCondition] = []
+        for value in _convert_ld_values(
+            [str(value) for value in clause["values"]], clause["op"]
+        ):
+            if len(value) > settings.SEGMENT_CONDITION_VALUE_LIMIT:
+                _log_error(
+                    import_request=import_request,
+                    error_message=(
+                        f"Segment condition value '{truncate(value)}' for property '{_property}' exceeds the limit of"
+                        f" {settings.SEGMENT_CONDITION_VALUE_LIMIT} characters,"
+                        f" skipping for segment '{segment_name}'"
+                    ),
+                )
+                continue
+            conditions.append(
+                {
+                    "property": _property,
+                    "operator": operator,
+                    "value": value,
+                    "description": None,
+                }
+            )
+
+        if clause["negate"] is True:
+            if negated_subrule is None:
+                negated_subrule = {
+                    "type": constants.NONE_RULE,
+                    "conditions": [],
+                    "rules": [],
+                }
+                subrules.append(negated_subrule)
+            negated_subrule["conditions"] += conditions
+        else:
+            subrules.append(
+                {"type": constants.ANY_RULE, "conditions": conditions, "rules": []}
+            )
+
+    return subrules
+
+
+def _users_to_segment_subrules(
+    import_request: LaunchDarklyImportRequest,
+    segment_name: str,
+    users: list[str],
+    negate: bool,
+) -> list[SegmentRuleType]:
+    """Convert Launch Darkly's targeted user lists into subrules for a segment's "ALL" root rule."""
+    if len(users) == 0:
+        return []
+
+    subrules: list[SegmentRuleType] = []
+    for identities_string in iter_chunked_concat(
+        values=users,
+        delimiter=",",
+        max_len=settings.SEGMENT_CONDITION_VALUE_LIMIT,
+    ):
+        if len(identities_string) > settings.SEGMENT_CONDITION_VALUE_LIMIT:
+            _log_error(
+                import_request=import_request,
+                error_message=(
+                    f"Targeting key '{truncate(identities_string)}' exceeds the limit of"
+                    f" {settings.SEGMENT_CONDITION_VALUE_LIMIT} characters, "
+                    f"skipping for segment '{segment_name}'"
+                ),
+            )
+            continue
+        subrules.append(
+            {
+                "type": constants.NONE_RULE if negate else constants.ANY_RULE,
+                "conditions": [
+                    {
+                        "property": "key",
+                        "operator": constants.IN,
+                        "value": identities_string,
+                        "description": None,
+                    }
+                ],
+                "rules": [],
+            }
+        )
+    return subrules
+
+
 def _create_segment_rule_for_segment(
     import_request: LaunchDarklyImportRequest,
     segment: Segment,
@@ -341,14 +449,6 @@ def _create_segment_rule_for_segment(
             # Create a condition for each value. Each condition is "OR"ed together.
             for value in values:
                 if len(value) > settings.SEGMENT_CONDITION_VALUE_LIMIT:
-                    _log_error(
-                        import_request=import_request,
-                        error_message=(
-                            f"Segment condition value '{truncate(value)}' for property '{_property}' exceeds the limit of"
-                            f" {settings.SEGMENT_CONDITION_VALUE_LIMIT} characters,"
-                            f" skipping for segment '{segment.name}'"
-                        ),
-                    )
                     continue
                 Condition.objects.update_or_create(
                     rule=target_rule,
@@ -357,12 +457,6 @@ def _create_segment_rule_for_segment(
                     operator=operator,
                     created_with_segment=True,
                 )
-        else:
-            _log_error(
-                import_request=import_request,
-                error_message=f"Can't map launch darkly operator: {clause['op']}"
-                f" skipping for segment: {segment.name}",
-            )
 
     return parent_rule
 
@@ -409,7 +503,20 @@ def _create_feature_segment_from_clauses(
         name=rule_name, project=project, feature=feature
     )
 
+    subrules = _clauses_to_segment_subrules(
+        import_request=import_request,
+        segment_name=segment.name,
+        clauses=clauses,
+    )
+    rules_data = segment.rules_data or [  # LaunchDarkly environments share the segment
+        {"type": constants.ALL_RULE, "conditions": [], "rules": []}
+    ]
+    rules_data[0]["rules"] += subrules
+    segment.rules_data = rules_data
+    segment.save(update_fields=["rules_data"])
+
     # Create a targeting rule for the new feature-specific segment.
+    # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
     _create_segment_rule_for_segment(
         import_request=import_request,
         segment=segment,
@@ -974,14 +1081,6 @@ def _include_users_to_segment(
         max_len=settings.SEGMENT_CONDITION_VALUE_LIMIT,
     ):
         if len(identities_string) > settings.SEGMENT_CONDITION_VALUE_LIMIT:
-            _log_error(
-                import_request=import_request,
-                error_message=(
-                    f"Targeting key '{truncate(identities_string)}' exceeds the limit of"
-                    f" {settings.SEGMENT_CONDITION_VALUE_LIMIT} characters, "
-                    f"skipping for segment '{segment.name}'"
-                ),
-            )
             continue
         included_rule = SegmentRule.objects.create(
             rule=parent_rule,
@@ -1024,9 +1123,17 @@ def _create_segments_from_ld(
 
         # TODO: Tagging segments is not supported yet. https://github.com/Flagsmith/flagsmith/issues/3241
 
+        subrules: list[SegmentRuleType] = []
+
         # Create the segment rule for the segment.
         rules = ld_segment["rules"]
         for rule in rules:
+            subrules += _clauses_to_segment_subrules(
+                import_request=import_request,
+                segment_name=segment.name,
+                clauses=rule["clauses"],
+            )
+            # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
             _create_segment_rule_for_segment(
                 import_request=import_request,
                 segment=segment,
@@ -1048,6 +1155,20 @@ def _create_segments_from_ld(
                 ]
             )
 
+        subrules += _users_to_segment_subrules(
+            import_request=import_request,
+            segment_name=segment.name,
+            users=ld_segment["included"],
+            negate=False,
+        )
+        subrules += _users_to_segment_subrules(
+            import_request=import_request,
+            segment_name=segment.name,
+            users=ld_segment["excluded"],
+            negate=True,
+        )
+
+        # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
         _include_users_to_segment(
             import_request=import_request,
             segment=segment,
@@ -1072,7 +1193,13 @@ def _create_segments_from_ld(
 
         # Create an empty rule if there are no rules. This is required to create an "SegmentRule" object.
         # Otherwise, UI fails to display the segment.
+        # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
         SegmentRule.objects.get_or_create(segment=segment, type=SegmentRule.ALL_RULE)
+
+        segment.rules_data = [
+            {"type": constants.ALL_RULE, "conditions": [], "rules": subrules}
+        ]
+        segment.save(update_fields=["rules_data"])
 
     return segments_by_ld_key
 
