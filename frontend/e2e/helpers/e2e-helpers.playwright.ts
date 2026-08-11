@@ -538,7 +538,18 @@ export class E2EHelpers {
   ) {
     await this.click(byId('show-create-segment-btn'));
     const flagsmith = await getFlagsmith();
-    if (flagsmith.hasFeature('create_segment_with_external_sources')) {
+    const segmentSources = flagsmith.getValue(
+      'create_segment_with_external_sources',
+      {
+        fallback: null,
+        json: true,
+      },
+    );
+    if (
+      flagsmith.hasFeature('create_segment_with_external_sources') &&
+      Array.isArray(segmentSources) &&
+      segmentSources.some((source) => source?.visible !== false)
+    ) {
       await this.click(byId('create-segment-manually'));
     }
     await this.setText(byId('segmentID'), name);

@@ -12,8 +12,12 @@ import {
 import { useHasPermission } from 'common/providers/Permission'
 import API from 'project/api'
 import Button from 'components/base/forms/Button'
+import Chip from 'components/base/Chip'
 import CreateSegmentModal from 'components/modals/CreateSegment'
-import CreateSegmentSourcesModal from 'components/modals/CreateSegmentSourcesModal'
+import CreateSegmentFromCsv from 'components/modals/CreateSegmentFromCsv'
+import CreateSegmentSourcesModal, {
+  getSegmentSources,
+} from 'components/modals/CreateSegmentSourcesModal'
 import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
 
@@ -100,11 +104,32 @@ const SegmentsPage: FC = () => {
     )
   }
 
+  const openCreateSegmentFromCsvDrawer = () => {
+    openModal(
+      <div className='d-flex align-items-center gap-2'>
+        New Segment
+        <Chip size='xs' variant='accent'>
+          CSV
+        </Chip>
+      </div>,
+      <CreateSegmentFromCsv projectId={projectId} />,
+      'side-modal create-new-segment-modal',
+    )
+  }
+
   const newSegment = () => {
-    if (Utils.getFlagsmithHasFeature('create_segment_with_external_sources')) {
+    const sources = getSegmentSources()
+    if (
+      Utils.getFlagsmithHasFeature('create_segment_with_external_sources') &&
+      sources.length
+    ) {
       openModal(
         'Create Segment',
-        <CreateSegmentSourcesModal onManual={openCreateSegmentDrawer} />,
+        <CreateSegmentSourcesModal
+          sources={sources}
+          onManual={openCreateSegmentDrawer}
+          onCsv={openCreateSegmentFromCsvDrawer}
+        />,
         'p-0 modal--wide',
       )
     } else {
