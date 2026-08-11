@@ -105,14 +105,14 @@
 
   // Text
   --color-text-action: var(--purple-600);
-  --color-text-danger: var(--red-500);
+  --color-text-danger: var(--red-700);
   --color-text-default: var(--slate-600);
   --color-text-disabled: var(--slate-300);
   --color-text-info: var(--blue-500);
   --color-text-secondary: var(--slate-500);
-  --color-text-success: var(--green-500);
+  --color-text-success: var(--green-600);
   --color-text-tertiary: var(--slate-300);
-  --color-text-warning: var(--orange-500);
+  --color-text-warning: var(--orange-800);
 
   // Code
   --color-code-builtin: var(--gold-700);
@@ -208,10 +208,13 @@
   --color-surface-success: oklch(from var(--green-500) 0.18 0.02 h);
   --color-surface-warning: oklch(from var(--orange-500) 0.18 0.02 h);
   --color-text-action: var(--purple-400);
+  --color-text-danger: var(--red-500);
   --color-text-default: var(--slate-0);
   --color-text-disabled: oklch(from var(--slate-0) l c h / 0.32);
   --color-text-secondary: var(--slate-300);
+  --color-text-success: var(--green-500);
   --color-text-tertiary: oklch(from var(--slate-0) l c h / 0.48);
+  --color-text-warning: var(--orange-500);
   --color-code-builtin: var(--gold-400);
   --color-code-comment: var(--slate-500);
   --color-code-keyword: var(--purple-400);
