@@ -10,7 +10,7 @@ from cohorts.services import (
 )
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
-from segments.models import SegmentRule
+from segments.models import SegmentManagedBy, SegmentRule
 
 
 def test_apply_pending_memberships__no_pending_rows__returns_false(
@@ -127,6 +127,7 @@ def test_create_cohort__valid_name__creates_segment_with_is_set_condition(
     segment = cohort.segment
     assert segment.name == "Beta users"
     assert segment.project == environment.project
+    assert segment.managed_by == SegmentManagedBy.COHORT
     rule = segment.rules.get()
     assert rule.type == SegmentRule.ALL_RULE
     condition = rule.conditions.get()

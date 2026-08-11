@@ -77,6 +77,10 @@ class SegmentConditionManager(ConfiguredOrderManager["Condition"]):
     setting_name = "SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED"
 
 
+class SegmentManagedBy(models.TextChoices):
+    COHORT = "cohort", "Cohort"
+
+
 class Segment(
     LifecycleModelMixin,  # type: ignore[misc]
     SoftDeleteExportableModel,
@@ -121,6 +125,12 @@ class Segment(
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
     is_system_segment = models.BooleanField(default=False)
+    # A managed segment is created and maintained by another feature (e.g. a
+    # cohort). Unlike system segments it stays visible in the API, but the
+    # dashboard renders it differently and cannot edit it.
+    managed_by = models.CharField(
+        max_length=50, choices=SegmentManagedBy.choices, default="", blank=True
+    )
 
     objects = SegmentManager()  # type: ignore[misc]
 
@@ -158,6 +168,9 @@ class Segment(
         cloned_segment.uuid = uuid.uuid4()
         cloned_segment.version_of = None  # Unset for now
         cloned_segment.version = 0  # Unset for now
+        if not is_revision:
+            # A copy belongs to the user, not to whatever manages the original.
+            cloned_segment.managed_by = ""
         for attr_name, value in extra_attrs.items():
             setattr(cloned_segment, attr_name, value)
         cloned_segment.save()

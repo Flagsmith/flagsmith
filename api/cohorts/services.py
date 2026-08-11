@@ -11,7 +11,7 @@ from cohorts.metrics import flagsmith_cohorts_membership_deltas_applied_total
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
 from core.dataclasses import AuthorData
 from environments.dynamodb import DynamoIdentityWrapper
-from segments.models import Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
 from segments.services import delete_segment
 
 if typing.TYPE_CHECKING:
@@ -81,7 +81,11 @@ def apply_pending_memberships(cohort: Cohort) -> bool:
 
 def create_cohort(*, environment: "Environment", name: str) -> Cohort:
     with transaction.atomic():
-        segment = Segment.objects.create(name=name, project=environment.project)
+        segment = Segment.objects.create(
+            name=name,
+            project=environment.project,
+            managed_by=SegmentManagedBy.COHORT,
+        )
         rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
         cohort: Cohort = Cohort.objects.create(environment=environment, segment=segment)
         Condition.objects.create(

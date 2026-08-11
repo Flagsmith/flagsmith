@@ -33,7 +33,13 @@ from metadata.models import (
 )
 from organisations.models import Organisation
 from projects.models import Project
-from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
+from segments.models import (
+    Condition,
+    Segment,
+    SegmentManagedBy,
+    SegmentRule,
+    WhitelistedSegment,
+)
 from tests.types import WithProjectPermissionsCallable
 from util.mappers import map_identity_to_identity_document
 
@@ -2014,3 +2020,48 @@ def test_delete_segment__cohort_managed__returns_403(
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert Segment.objects.filter(id=segment.id).exists()
+
+
+def test_create_segment__managed_by_in_payload__ignored(
+    admin_client: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    data = {
+        "name": "New segment",
+        "project": project.id,
+        "managed_by": SegmentManagedBy.COHORT,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["managed_by"] == ""
+    assert Segment.objects.get(id=response.json()["id"]).managed_by == ""
+
+
+def test_clone_segment__managed_segment__clone_is_not_managed(
+    admin_client: APIClient,
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    Segment.objects.filter(id=segment.id).update(managed_by=SegmentManagedBy.COHORT)
+    url = reverse(
+        "api-v1:projects:project-segments-clone", args=[project.id, segment.id]
+    )
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps({"name": "my copy"}), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert Segment.objects.get(id=response.json()["id"]).managed_by == ""
