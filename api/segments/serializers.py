@@ -142,7 +142,6 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         read_only_fields = [
             "membership_counts",
             "project",
-            "version_of",
         ]
 
     def to_internal_value(self, data: dict[str, Any]) -> Any:
