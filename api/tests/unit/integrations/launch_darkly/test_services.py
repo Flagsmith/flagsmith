@@ -115,7 +115,7 @@ def test_process_import_request__write_error__persists_no_import_data(
 ) -> None:
     # Given
     mocker.patch(
-        "integrations.launch_darkly.services.enqueue_membership_refresh",
+        "integrations.launch_darkly.services._create_features_from_ld",
         side_effect=RuntimeError(),
     )
 

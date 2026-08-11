@@ -1312,4 +1312,6 @@ def process_import_request(
             )
 
             # Refresh membership counts for the segments the import just created.
-            enqueue_membership_refresh(import_request.project)
+            transaction.on_commit(
+                lambda: enqueue_membership_refresh(import_request.project)
+            )
