@@ -3,13 +3,12 @@ import typing
 
 import requests
 
-from integrations.common.constants import (
-    INTEGRATION_REQUEST_TIMEOUT_SECONDS,
-)
-
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from features.models import FeatureState
+from integrations.common.constants import (
+    INTEGRATION_REQUEST_TIMEOUT_SECONDS,
+)
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
 from .constants import DEFAULT_HEAP_API_URL

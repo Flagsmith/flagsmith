@@ -3,11 +3,10 @@ import logging
 
 import requests
 
+from audit.models import AuditLog
 from integrations.common.constants import (
     INTEGRATION_REQUEST_TIMEOUT_SECONDS,
 )
-
-from audit.models import AuditLog
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 
 logger = logging.getLogger(__name__)

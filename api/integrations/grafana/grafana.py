@@ -4,11 +4,10 @@ from typing import Any
 
 import requests
 
+from audit.models import AuditLog
 from integrations.common.constants import (
     INTEGRATION_REQUEST_TIMEOUT_SECONDS,
 )
-
-from audit.models import AuditLog
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 from integrations.grafana.mappers import (
     map_audit_log_record_to_grafana_annotation,

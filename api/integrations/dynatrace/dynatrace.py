@@ -3,14 +3,13 @@ import logging
 
 import requests
 
-from integrations.common.constants import (
-    INTEGRATION_REQUEST_TIMEOUT_SECONDS,
-)
-
 from audit.models import AuditLog
 from audit.services import get_audited_instance_from_audit_log_record
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
+from integrations.common.constants import (
+    INTEGRATION_REQUEST_TIMEOUT_SECONDS,
+)
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 from segments.models import Segment
 
