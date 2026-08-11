@@ -39,6 +39,9 @@ const controller = {
         return data.post(`${Project.api}users/join/${id}/`)
       })
       .then((res) => {
+        // Membership of any organisation spends the onboarding entry
+        // decision — a later organisation must not consume a stale key.
+        clearOnboardingTargetingKey()
         store.savedId = res.id
         store.model.organisations.push(res)
         const ev = Constants.events.ACCEPT_INVITE(res.name)
@@ -104,9 +107,9 @@ const controller = {
         ...(targetingKey ? { targeting_key: targetingKey } : {}),
       })
       .then(async (res) => {
-        if (targetingKey) {
-          clearOnboardingTargetingKey()
-        }
+        // Membership of any organisation spends the onboarding entry
+        // decision — a later organisation must not consume a stale key.
+        clearOnboardingTargetingKey()
         if (store.model) {
           store.model.organisations = store.model.organisations.concat([
             { ...res, role: 'ADMIN' },
