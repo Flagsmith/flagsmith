@@ -4,7 +4,12 @@ import {
   getStoredOnboardingTargetingKey,
   getStoredOnboardingVariant,
   persistOnboardingEntry,
-} from 'common/utils/onboardingEntry'
+} from 'common/experiments/onboardingQuickstart'
+
+jest.mock('project/api', () => ({
+  __esModule: true,
+  default: { trackTraits: jest.fn() },
+}))
 
 jest.mock('@flagsmith/flagsmith', () => ({
   getContext: jest.fn(),

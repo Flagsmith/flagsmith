@@ -8,7 +8,7 @@ import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
 import API from 'project/api'
 import AppActions from 'common/dispatcher/app-actions'
-import { getStoredOnboardingTargetingKey } from 'common/utils/onboardingEntry'
+import { getStoredOnboardingTargetingKey } from 'common/experiments/onboardingQuickstart'
 import Utils from 'common/utils/utils'
 // @ts-ignore
 import Project from 'common/project'
