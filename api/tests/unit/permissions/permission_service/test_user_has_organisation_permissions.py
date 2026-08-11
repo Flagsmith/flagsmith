@@ -1,5 +1,8 @@
 import typing
 
+import pytest
+from django.conf import settings
+
 from organisations.models import Organisation, UserOrganisation
 from organisations.permissions.models import (
     OrganisationPermissionModel,
@@ -213,6 +216,10 @@ def test_user_has_organisation_permission__group_permission__short_circuits_in_f
     assert result is True
 
 
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
 def test_user_has_organisation_permission__no_permissions_assigned__checks_each_source_in_four_queries(
     staff_user: FFAdminUser,
     organisation: Organisation,
@@ -226,6 +233,32 @@ def test_user_has_organisation_permission__no_permissions_assigned__checks_each_
     # 3. Check direct user permission (not found)
     # 4. Check group permission (not found; role check skipped without RBAC)
     with django_assert_num_queries(4):
+        result = user_has_organisation_permission(
+            staff_user, organisation, MANAGE_USER_GROUPS
+        )
+
+    # Then
+    assert result is False
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is False,
+    reason="Skip this test if RBAC is not installed",
+)
+def test_user_has_organisation_permission__no_permissions_assigned_with_rbac__checks_each_source_in_five_queries(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    django_assert_num_queries: typing.Any,
+) -> None:
+    # Given / When
+    # Should take exactly 5 queries, one per permission source — never a
+    # single combined query joining the user and group permission tables:
+    # 1. Check if user is org admin (is_user_organisation_admin)
+    # 2. Check organisation membership
+    # 3. Check direct user permission (not found)
+    # 4. Check group permission (not found)
+    # 5. Check role permission (not found)
+    with django_assert_num_queries(5):
         result = user_has_organisation_permission(
             staff_user, organisation, MANAGE_USER_GROUPS
         )
