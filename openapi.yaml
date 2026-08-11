@@ -18670,6 +18670,10 @@ components:
           items:
             $ref: '#/components/schemas/SegmentMembershipCount'
           readOnly: true
+        managed_by:
+          allOf:
+            - $ref: '#/components/schemas/ManagedByEnum'
+          readOnly: true
         change_request:
           type:
             - integer
@@ -21875,6 +21879,11 @@ components:
           $ref: '#/components/schemas/UserList'
       required:
         - user
+    ManagedByEnum:
+      description: '* `cohort` - Cohort'
+      type: string
+      enum:
+        - cohort
     MasterAPIKey:
       type: object
       properties:
@@ -24746,6 +24755,10 @@ components:
           items:
             $ref: '#/components/schemas/SegmentMembershipCount'
           readOnly: true
+        managed_by:
+          allOf:
+            - $ref: '#/components/schemas/ManagedByEnum'
+          readOnly: true
     PatchedSegmentConfiguration:
       type: object
       properties:
@@ -26420,6 +26433,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SegmentMembershipCount'
+          readOnly: true
+        managed_by:
+          allOf:
+            - $ref: '#/components/schemas/ManagedByEnum'
           readOnly: true
       required:
         - name

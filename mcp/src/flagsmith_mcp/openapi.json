@@ -5460,6 +5460,13 @@
           "last_name"
         ]
       },
+      "ManagedByEnum": {
+        "description": "* `cohort` - Cohort",
+        "type": "string",
+        "enum": [
+          "cohort"
+        ]
+      },
       "Metadata": {
         "type": "object",
         "properties": {
@@ -6896,6 +6903,14 @@
             "items": {
               "$ref": "#/components/schemas/SegmentMembershipCount"
             },
+            "readOnly": true
+          },
+          "managed_by": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ManagedByEnum"
+              }
+            ],
             "readOnly": true
           }
         },
