@@ -1113,6 +1113,40 @@ def test_update_segment__valid_rules__updates_segment_with_rules(
     }
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+def test_patch_segment__rules_omitted__preserves_rules(
+    admin_client: APIClient,
+    project: Project,
+    segment_rules: list[SegmentRuleType],
+) -> None:
+    # Given
+    create_response = admin_client.post(
+        f"/api/v1/projects/{project.id}/segments/",
+        data={
+            "name": "unpatched people",
+            "description": "Still in the Matrix",
+            "rules": segment_rules,
+        },
+        format="json",
+    )
+    segment_id = create_response.json()["id"]
+
+    # When
+    response = admin_client.patch(
+        f"/api/v1/projects/{project.id}/segments/{segment_id}/",
+        data={"name": "patched people"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    segment = Segment.objects.get(id=segment_id)
+    assert segment.name == "patched people"
+    assert segment.description == "Still in the Matrix"
+    assert segment.rules_data == segment_rules
+    assert response.json()["rules"] == create_response.json()["rules"]
+
+
 def test_update_segment__versioned_segment__creates_new_version(
     admin_client: APIClient,
     project: Project,

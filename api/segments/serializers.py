@@ -181,6 +181,8 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         """Set the .rules_data attribute
         TODO: Delete this as per https://github.com/Flagsmith/flagsmith/issues/7818
         """
+        if "rules" not in validated_data:
+            return  # PATCH support
         validated_data["rules_data"] = self._cleanup_rules_and_conditions(
             validated_data["rules"]
         )
