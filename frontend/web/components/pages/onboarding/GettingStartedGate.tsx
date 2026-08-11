@@ -9,13 +9,12 @@ const GettingStartedGate: FC = () => {
   // The entry decision made at routing time (Flagsmith-on-Flagsmith,
   // anonymous identity) decides the flow; users without one get the
   // legacy page.
-  const storedVariant = getStoredOnboardingVariant()
-  const variant = storedVariant ?? 'control'
+  const variant = getStoredOnboardingVariant()
 
   useEffect(() => {
-    if (!storedVariant) return
-    API.trackTraits({ onboarding_variant: storedVariant })
-  }, [storedVariant])
+    if (!variant) return
+    API.trackTraits({ onboarding_variant: variant })
+  }, [variant])
 
   return variant === 'single_page' ? <OnboardingFlow /> : <GettingStartedPage />
 }
