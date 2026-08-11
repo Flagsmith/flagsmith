@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import moment from 'moment'
-import { Res } from 'common/types/responses'
+import { OrganisationUsageNotification, Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
+import { useGetOrganisationUsageNotificationsQuery } from 'common/services/useOrganisationUsageNotification'
 import {
   organisationUsageService,
   useGetOrganisationUsageQuery,
@@ -92,12 +93,45 @@ const useKeyedUsage = (
   return rows
 }
 
+/**
+ * What the usage notifications tell us about being over the limit.
+ *
+ * The endpoint returns the threshold crossings inside the current period, so
+ * the earliest one at or above 100% is when this organisation went over, and
+ * the free grace window runs 7 days from it.
+ */
+const GRACE_DAYS = 7
+
+const readOverLimit = (
+  notifications: OrganisationUsageNotification[] | undefined,
+) => {
+  const overLimit = (notifications ?? [])
+    .filter((notification) => notification.percent_usage >= 100)
+    .sort((a, b) => (a.notified_at < b.notified_at ? -1 : 1))
+
+  const first = overLimit[0]
+  if (!first) {
+    return {}
+  }
+
+  const since = moment(first.notified_at)
+  const daysOverLimit = Math.max(0, moment().diff(since, 'days'))
+
+  return {
+    daysOverLimit: daysOverLimit || undefined,
+    graceDaysLeft: Math.max(0, GRACE_DAYS - daysOverLimit) || undefined,
+    overLimitSince: since.format('D MMM'),
+  }
+}
+
 const buildLiveView = (
   usage: Res['organisationUsage'] | undefined,
   breakdownUsage: Res['organisationUsage'] | undefined,
   limit: number | null,
   isOnFreePlanPeriods: boolean,
+  notifications: OrganisationUsageNotification[] | undefined,
 ): UsageView => {
+  const overLimit = readOverLimit(notifications)
   const events = [...(usage?.events_list ?? [])].sort((a, b) =>
     a.day < b.day ? -1 : 1,
   )
@@ -163,9 +197,11 @@ const buildLiveView = (
         .sort((a, b) => b.value - a.value),
     },
     channels: { email: true, inApp: true },
-    // Grace state is not serialised by the API yet (see the epic), so live
-    // data can only ever show the neutral case.
-    grace: 'available',
+    ...overLimit,
+    // Whether grace has already been spent is still not exposed, so an
+    // organisation that is over the limit is shown the countdown rather than
+    // the "grace already used" case. See #8256.
+    grace: overLimit.daysOverLimit ? 'countdown' : 'available',
     limit,
     notifications: USAGE_ALERT_THRESHOLDS.map((percent) => ({
       enabled: true,
@@ -260,6 +296,10 @@ const usePrototypeUsage = ({
     { id: organisationId },
     { skip: !organisationId || !isLive },
   )
+  const { data: notifications } = useGetOrganisationUsageNotificationsQuery(
+    { organisationId },
+    { skip: !organisationId || !isLive },
+  )
 
   return useMemo(() => {
     if (!isLive) {
@@ -270,6 +310,7 @@ const usePrototypeUsage = ({
       filteredUsage,
       subscriptionMeta?.max_api_calls ?? null,
       isOnFreePlanPeriods,
+      notifications?.results,
     )
     return {
       ...view,
@@ -288,6 +329,7 @@ const usePrototypeUsage = ({
     isOnFreePlanPeriods,
     projectRows,
     environmentRows,
+    notifications,
   ])
 }
 

@@ -205,6 +205,9 @@ export type Req = {
       | 'previous_billing_period'
       | '90_day_period'
   }
+  getOrganisationUsageNotifications: {
+    organisationId: number
+  }
   getWebhooks: {
     environmentId: string
   }
