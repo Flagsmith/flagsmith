@@ -155,6 +155,10 @@
                     "value": "https://edge.api.flagsmith.com/api/v1/"
                 },
                 {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_EVENTS_API_URL",
+                    "value": "https://events.api.flagsmith.com/"
+                },
+                {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
                     "value": "False"
                 },

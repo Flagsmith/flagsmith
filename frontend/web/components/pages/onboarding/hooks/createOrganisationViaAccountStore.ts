@@ -1,5 +1,6 @@
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
+import { getStoredOnboardingTargetingKey } from 'common/utils/onboardingEntry'
 
 /**
  * Create an organisation through the legacy account store rather than the RTK
@@ -37,5 +38,8 @@ export const createOrganisationViaAccountStore = (
     }, 20000)
     AccountStore.on('saved', onSaved)
     AccountStore.on('problem', onProblem)
-    AppActions.createOrganisation(name)
+    AppActions.createOrganisation(
+      name,
+      getStoredOnboardingTargetingKey() ?? undefined,
+    )
   })

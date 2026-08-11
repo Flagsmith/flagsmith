@@ -22233,6 +22233,13 @@ components:
           type: boolean
         force_2fa:
           type: boolean
+        targeting_key:
+          description: Flagsmith-on-Flagsmith targeting key. Immutable; org.<id> is used when unset.
+          type:
+            - string
+            - 'null'
+          maxLength: 64
+          writeOnly: true
       required:
         - name
     OrganisationWebhook:
@@ -24186,6 +24193,13 @@ components:
           type: boolean
         force_2fa:
           type: boolean
+        targeting_key:
+          description: Flagsmith-on-Flagsmith targeting key. Immutable; org.<id> is used when unset.
+          type:
+            - string
+            - 'null'
+          maxLength: 64
+          writeOnly: true
     PatchedOrganisationWebhook:
       type: object
       properties:

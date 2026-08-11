@@ -1,30 +1,22 @@
 import React, { FC, useEffect } from 'react'
-import flagsmith from '@flagsmith/flagsmith'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import {
-  getOnboardingVariant,
-  isSinglePageOnboarding,
-} from 'common/utils/getOnboardingVariant'
+import { getStoredOnboardingVariant } from 'common/utils/onboardingEntry'
 import API from 'project/api'
 import GettingStartedPage from 'components/pages/GettingStartedPage'
 import OnboardingFlow from './OnboardingFlow'
 
 const GettingStartedGate: FC = () => {
-  // ConfigProvider re-renders the gate on every SDK fetch; only tag the
-  // variant once the server has answered for this identity.
-  const trustworthy =
-    !flagsmith.loadingState?.isFetching &&
-    flagsmith.loadingState?.source === 'SERVER' &&
-    !!flagsmith.getContext().identity
-
-  const variant = getOnboardingVariant()
+  // The entry decision made at routing time (Flagsmith-on-Flagsmith,
+  // anonymous identity) decides the flow; users without one get the
+  // legacy page.
+  const variant = getStoredOnboardingVariant()
 
   useEffect(() => {
-    if (!trustworthy) return
+    if (!variant) return
     API.trackTraits({ onboarding_variant: variant })
-  }, [trustworthy, variant])
+  }, [variant])
 
-  return isSinglePageOnboarding() ? <OnboardingFlow /> : <GettingStartedPage />
+  return variant === 'single_page' ? <OnboardingFlow /> : <GettingStartedPage />
 }
 
 export default ConfigProvider(GettingStartedGate)

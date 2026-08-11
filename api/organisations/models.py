@@ -90,6 +90,12 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         default=False, help_text="Record feature analytics in InfluxDB"
     )
     force_2fa = models.BooleanField(default=False)
+    targeting_key = models.CharField(
+        max_length=64,
+        null=True,
+        blank=True,
+        help_text="Flagsmith-on-Flagsmith targeting key. Immutable; org.<id> is used when unset.",
+    )
 
     class Meta:
         ordering = ["id"]
@@ -134,7 +140,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     @property
     def openfeature_evaluation_context(self) -> EvaluationContext:
         return EvaluationContext(
-            targeting_key=f"org.{self.id}",
+            targeting_key=self.targeting_key or f"org.{self.id}",
             attributes={
                 "organisation.id": self.id,
                 "organisation.name": self.name,
