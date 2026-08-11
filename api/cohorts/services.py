@@ -108,17 +108,18 @@ def edge_sync_enabled(project: "Project") -> bool:
 def delete_cohort(cohort: Cohort) -> None:
     from cohorts.tasks import apply_cohort_membership_deltas
 
-    cohort.deletion_requested_at = timezone.now()
-    cohort.save(update_fields=["deletion_requested_at"])
-    logger.info(
-        "cohort.deletion_requested",
-        cohort__id=cohort.id,
-        environment__id=cohort.environment_id,
-    )
-    CohortMembership.objects.filter(cohort=cohort).update(
-        state=CohortMembershipState.PENDING_REMOVE, updated_at=timezone.now()
-    )
-    apply_cohort_membership_deltas.delay(kwargs={"cohort_id": cohort.id})
+    with transaction.atomic():
+        cohort.deletion_requested_at = timezone.now()
+        cohort.save(update_fields=["deletion_requested_at"])
+        logger.info(
+            "cohort.deletion_requested",
+            cohort__id=cohort.id,
+            environment__id=cohort.environment_id,
+        )
+        CohortMembership.objects.filter(cohort=cohort).update(
+            state=CohortMembershipState.PENDING_REMOVE, updated_at=timezone.now()
+        )
+        apply_cohort_membership_deltas.delay(kwargs={"cohort_id": cohort.id})
 
 
 def finalise_cohort_deletion(cohort: Cohort) -> None:
