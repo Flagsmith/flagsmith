@@ -95,7 +95,7 @@ Attributes:
 ### `cohorts.cohort.deletion_requested`
 
 Logged at `info` from:
- - `api/cohorts/services.py:117`
+ - `api/cohorts/services.py:113`
 
 Attributes:
  - `cohort.id`

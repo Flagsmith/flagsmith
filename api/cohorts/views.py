@@ -1,4 +1,5 @@
 from django.db.models import QuerySet
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -12,6 +13,20 @@ from environments.views import NestedEnvironmentViewSet
 from projects.exceptions import DynamoNotEnabledError
 
 
+@extend_schema_view(
+    list=extend_schema(description="List the environment's cohorts."),
+    create=extend_schema(
+        description="Create a cohort and the managed segment that targets it."
+    ),
+    retrieve=extend_schema(description="Retrieve a cohort."),
+    destroy=extend_schema(
+        description=(
+            "Request cohort deletion. Memberships are drained from identity "
+            "data first; the cohort and its segment are deleted once drained."
+        ),
+        responses={202: None},
+    ),
+)
 class CohortViewSet(
     NestedEnvironmentViewSet[Cohort],
     mixins.ListModelMixin,
