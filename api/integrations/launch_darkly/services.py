@@ -508,11 +508,11 @@ def _create_feature_segment_from_clauses(
         segment_name=segment.name,
         clauses=clauses,
     )
-    rules_data = segment.rules_data or [  # LaunchDarkly environments share the segment
+    rules = segment.rules_data or [  # LaunchDarkly environments share the segment
         {"type": constants.ALL_RULE, "conditions": [], "rules": []}
     ]
-    rules_data[0]["rules"] += subrules
-    segment.rules_data = rules_data
+    rules[0]["rules"] += subrules
+    segment.rules_data = rules
     segment.save(update_fields=["rules_data"])
 
     # Create a targeting rule for the new feature-specific segment.

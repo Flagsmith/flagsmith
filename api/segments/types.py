@@ -13,10 +13,17 @@ class SegmentCondition(TypedDict):
     description: str | None
 
 
-class SegmentRule(TypedDict):
+class _BaseSegmentRule(TypedDict):
     type: RuleType
     conditions: list[SegmentCondition]
-    rules: list["SegmentRule"]
+
+
+class NestedSegmentRule(_BaseSegmentRule):
+    pass
+
+
+class SegmentRule(_BaseSegmentRule):
+    rules: list[NestedSegmentRule]
 
 
 class LegacySegmentCondition(SegmentCondition):
@@ -24,9 +31,16 @@ class LegacySegmentCondition(SegmentCondition):
     delete: NotRequired[bool]
 
 
-class LegacySegmentRule(TypedDict):
+class _BaseLegacySegmentRule(TypedDict):
     id: NotRequired[int]
     delete: NotRequired[bool]
     type: RuleType
     conditions: list[LegacySegmentCondition]
-    rules: list["LegacySegmentRule"]
+
+
+class LegacyNestedSegmentRule(_BaseLegacySegmentRule):
+    pass
+
+
+class LegacySegmentRule(_BaseLegacySegmentRule):
+    rules: list[LegacyNestedSegmentRule]

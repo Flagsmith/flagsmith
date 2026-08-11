@@ -458,7 +458,6 @@ def segment_rules() -> list[SegmentRuleType]:
                             "description": "Jumping very high does not count!",
                         },
                     ],
-                    "rules": [],
                 },
             ],
         }

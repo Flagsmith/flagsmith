@@ -5,7 +5,7 @@ from django.apps.registry import Apps
 from django.db import migrations, models
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 
-RuleType = dict[str, typing.Any]
+SegmentRule = dict[str, typing.Any]
 
 BATCH_SIZE = 500
 
@@ -50,7 +50,7 @@ def nullify_segment_rules_data(
     Segment.objects.filter(rules_data__isnull=False).update(rules_data=None)
 
 
-def _rasterise_segment_rules(obj: typing.Any) -> list[RuleType]:
+def _rasterise_segment_rules(obj: typing.Any) -> list[SegmentRule]:
     return [
         {
             "type": rule.type,

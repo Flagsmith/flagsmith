@@ -14,7 +14,11 @@ from segment_membership.constants import MAX_SEGMENT_MEMBERS_PAGE_SIZE
 from segment_membership.models import SegmentMembershipCount
 from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
-from segments.types import LegacySegmentRule
+from segments.types import (
+    LegacySegmentCondition,
+    LegacySegmentRule,
+    SegmentCondition,
+)
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
 from segments.types import SegmentRule as SegmentRuleType
@@ -186,29 +190,25 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         enqueue_membership_refresh(segment.project)
         return segment
 
-    def _validate_rules_depth(
-        self, rules_data: list[LegacySegmentRule], _depth: int = 1
-    ) -> None:
+    def _validate_rules_depth(self, rules: list[LegacySegmentRule]) -> None:
         # Raise loudly because the interface ignores rules nested too deep
-        for rule_data in rules_data:
-            if _depth >= SEGMENT_RULES_MAX_DEPTH and rule_data.get("rules"):
-                raise ValidationError(
-                    {
-                        "segment": [
-                            f"Rules must not be nested more than "
-                            f"{SEGMENT_RULES_MAX_DEPTH} levels deep."
-                        ]
-                    }
-                )
-            self._validate_rules_depth(rule_data.get("rules", []), _depth + 1)
+        for rule in rules:
+            for nested_rule in rule.get("rules", []):
+                if nested_rule.get("rules"):
+                    raise ValidationError(
+                        {
+                            "segment": [
+                                f"Rules must not be nested more than "
+                                f"{SEGMENT_RULES_MAX_DEPTH} levels deep."
+                            ]
+                        }
+                    )
 
-    def _validate_rules_condition_count(
-        self, rules_data: list[LegacySegmentRule]
-    ) -> None:
+    def _validate_rules_condition_count(self, rules: list[LegacySegmentRule]) -> None:
         if self._can_segment_own_more_conditions_than_limit():
             return
 
-        condition_count = self._count_conditions(rules_data)
+        condition_count = self._count_conditions(rules)
         if condition_count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
             raise ValidationError(
                 {
@@ -220,11 +220,14 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                 }
             )
 
-    def _count_conditions(self, rules_data: list[LegacySegmentRule]) -> int:
+    def _count_conditions(self, rules: list[LegacySegmentRule]) -> int:
         return sum(
-            len(rule_data.get("conditions", []))
-            + self._count_conditions(rule_data.get("rules", []))
-            for rule_data in rules_data
+            len(rule.get("conditions", []))
+            + sum(
+                len(nested_rule.get("conditions", []))
+                for nested_rule in rule.get("rules", [])
+            )
+            for rule in rules
         )
 
     def _can_segment_own_more_conditions_than_limit(self) -> bool:
@@ -243,7 +246,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         )
 
     def _cleanup_rules_and_conditions(
-        self, rules_data: list[LegacySegmentRule]
+        self, rules: list[LegacySegmentRule]
     ) -> list[SegmentRuleType]:
         """Remove any `id` fields and `delete: true` items from rules and conditions
 
@@ -252,21 +255,35 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         keep the interface compatible."""
         return [
             {
-                "type": rule_data["type"],
-                "conditions": [
+                "type": rule["type"],
+                "conditions": self._cleanup_conditions(rule.get("conditions", [])),
+                "rules": [
                     {
-                        "property": condition_data["property"],
-                        "operator": condition_data["operator"],
-                        "value": condition_data.get("value"),
-                        "description": condition_data.get("description"),
+                        "type": nested_rule["type"],
+                        "conditions": self._cleanup_conditions(
+                            nested_rule.get("conditions", [])
+                        ),
                     }
-                    for condition_data in rule_data.get("conditions", [])
-                    if not condition_data.get("delete")
+                    for nested_rule in rule.get("rules", [])
+                    if not nested_rule.get("delete")
                 ],
-                "rules": self._cleanup_rules_and_conditions(rule_data.get("rules", [])),
             }
-            for rule_data in rules_data
-            if not rule_data.get("delete")
+            for rule in rules
+            if not rule.get("delete")
+        ]
+
+    def _cleanup_conditions(
+        self, conditions: list[LegacySegmentCondition]
+    ) -> list[SegmentCondition]:
+        return [
+            {
+                "property": condition["property"],
+                "operator": condition["operator"],
+                "value": condition.get("value"),
+                "description": condition.get("description"),
+            }
+            for condition in conditions
+            if not condition.get("delete")
         ]
 
     def _get_rules_and_conditions_without_deleted(
