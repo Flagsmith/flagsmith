@@ -6865,7 +6865,8 @@
             ]
           },
           "project": {
-            "type": "integer"
+            "type": "integer",
+            "readOnly": true
           },
           "feature": {
             "type": [
@@ -6901,7 +6902,6 @@
         },
         "required": [
           "name",
-          "project",
           "rules"
         ]
       },
