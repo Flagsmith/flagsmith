@@ -329,7 +329,6 @@ def test_process_import_request__valid_segments__creates_segment_per_environment
                                     "description": None,
                                 }
                             ],
-                            "rules": [],
                         }
                     ],
                 }
@@ -353,7 +352,6 @@ def test_process_import_request__valid_segments__creates_segment_per_environment
                                     "description": None,
                                 }
                             ],
-                            "rules": [],
                         },
                         {
                             "type": SegmentRule.ANY_RULE,
@@ -365,7 +363,6 @@ def test_process_import_request__valid_segments__creates_segment_per_environment
                                     "description": None,
                                 }
                             ],
-                            "rules": [],
                         },
                         {
                             "type": SegmentRule.ANY_RULE,
@@ -377,7 +374,6 @@ def test_process_import_request__valid_segments__creates_segment_per_environment
                                     "description": None,
                                 }
                             ],
-                            "rules": [],
                         },
                         {
                             "type": SegmentRule.ANY_RULE,  # included users
@@ -389,7 +385,6 @@ def test_process_import_request__valid_segments__creates_segment_per_environment
                                     "description": None,
                                 }
                             ],
-                            "rules": [],
                         },
                         {
                             "type": SegmentRule.NONE_RULE,  # excluded users
@@ -401,7 +396,6 @@ def test_process_import_request__valid_segments__creates_segment_per_environment
                                     "description": None,
                                 }
                             ],
-                            "rules": [],
                         },
                     ],
                 }
@@ -425,7 +419,6 @@ def test_process_import_request__valid_segments__creates_segment_per_environment
                                     "description": None,
                                 }
                             ],
-                            "rules": [],
                         },
                         {
                             "type": SegmentRule.NONE_RULE,  # excluded users
@@ -437,7 +430,6 @@ def test_process_import_request__valid_segments__creates_segment_per_environment
                                     "description": None,
                                 }
                             ],
-                            "rules": [],
                         },
                     ],
                 }
@@ -741,7 +733,6 @@ def test_process_import_request__valid_rules__creates_feature_specific_segments(
                                     "description": None,
                                 }
                             ],
-                            "rules": [],
                         },
                         {
                             "type": SegmentRule.ANY_RULE,
@@ -753,7 +744,6 @@ def test_process_import_request__valid_rules__creates_feature_specific_segments(
                                     "description": None,
                                 }
                             ],
-                            "rules": [],
                         },
                     ],
                 }
@@ -777,7 +767,6 @@ def test_process_import_request__valid_rules__creates_feature_specific_segments(
                                     "description": None,
                                 }
                             ],
-                            "rules": [],
                         },
                         {
                             "type": SegmentRule.NONE_RULE,  # negated clauses pool here
@@ -795,7 +784,6 @@ def test_process_import_request__valid_rules__creates_feature_specific_segments(
                                     "description": None,
                                 },
                             ],
-                            "rules": [],
                         },
                     ],
                 }
@@ -819,7 +807,6 @@ def test_process_import_request__valid_rules__creates_feature_specific_segments(
                                     "description": None,
                                 }
                             ],
-                            "rules": [],
                         },
                     ],
                 }
@@ -985,9 +972,7 @@ def test_process_import_request__valid_rules__imports_correctly_x_replaced_above
                 {
                     "type": SegmentRule.ALL_RULE,
                     "conditions": [],
-                    "rules": [
-                        {"type": SegmentRule.ANY_RULE, "conditions": [], "rules": []}
-                    ],
+                    "rules": [{"type": SegmentRule.ANY_RULE, "conditions": []}],
                 }
             ],
             f"Segment condition value 'xxxxx...xxxxx' for property 'p1' exceeds the"

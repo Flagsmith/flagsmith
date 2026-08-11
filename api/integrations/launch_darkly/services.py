@@ -295,14 +295,15 @@ def _create_feature_segments_for_segment_match_clauses(
     return feature_states
 
 
-def _clauses_to_segment_subrules(
+def _add_clauses_to_segment_rule(
     import_request: LaunchDarklyImportRequest,
     segment_name: str,
     clauses: list[Clause],
-) -> list[SegmentRuleType]:
-    """Convert Launch Darkly clauses into subrules for a segment's "ALL" root rule."""
-    subrules: list[SegmentRuleType] = []
-    negated_subrule: Optional[SegmentRuleType] = None
+    rule: SegmentRuleType,
+) -> None:
+    """Add Launch Darkly clauses to a segment's "ALL" root rule as subrules."""
+    subrules = rule["rules"]
+    negated_subrule_index: Optional[int] = None
 
     for clause in clauses:
         _property = clause["attribute"]
@@ -339,33 +340,22 @@ def _clauses_to_segment_subrules(
             )
 
         if clause["negate"] is True:
-            if negated_subrule is None:
-                negated_subrule = {
-                    "type": constants.NONE_RULE,
-                    "conditions": [],
-                    "rules": [],
-                }
-                subrules.append(negated_subrule)
-            negated_subrule["conditions"] += conditions
+            if negated_subrule_index is None:
+                subrules.append({"type": constants.NONE_RULE, "conditions": []})
+                negated_subrule_index = len(subrules) - 1
+            subrules[negated_subrule_index]["conditions"] += conditions
         else:
-            subrules.append(
-                {"type": constants.ANY_RULE, "conditions": conditions, "rules": []}
-            )
-
-    return subrules
+            subrules.append({"type": constants.ANY_RULE, "conditions": conditions})
 
 
-def _users_to_segment_subrules(
+def _add_users_to_segment_rule(
     import_request: LaunchDarklyImportRequest,
     segment_name: str,
     users: list[str],
     negate: bool,
-) -> list[SegmentRuleType]:
-    """Convert Launch Darkly's targeted user lists into subrules for a segment's "ALL" root rule."""
-    if len(users) == 0:
-        return []
-
-    subrules: list[SegmentRuleType] = []
+    rule: SegmentRuleType,
+) -> None:
+    """Add Launch Darkly's targeted user lists to a segment's "ALL" root rule as subrules."""
     for identities_string in iter_chunked_concat(
         values=users,
         delimiter=",",
@@ -381,7 +371,7 @@ def _users_to_segment_subrules(
                 ),
             )
             continue
-        subrules.append(
+        rule["rules"].append(
             {
                 "type": constants.NONE_RULE if negate else constants.ANY_RULE,
                 "conditions": [
@@ -392,10 +382,8 @@ def _users_to_segment_subrules(
                         "description": None,
                     }
                 ],
-                "rules": [],
             }
         )
-    return subrules
 
 
 def _create_segment_rule_for_segment(
@@ -503,15 +491,16 @@ def _create_feature_segment_from_clauses(
         name=rule_name, project=project, feature=feature
     )
 
-    subrules = _clauses_to_segment_subrules(
+    rules: list[SegmentRuleType] = (
+        segment.rules_data  # LaunchDarkly environments share the segment
+        or [{"type": constants.ALL_RULE, "conditions": [], "rules": []}]
+    )
+    _add_clauses_to_segment_rule(
         import_request=import_request,
         segment_name=segment.name,
         clauses=clauses,
+        rule=rules[0],
     )
-    rules = segment.rules_data or [  # LaunchDarkly environments share the segment
-        {"type": constants.ALL_RULE, "conditions": [], "rules": []}
-    ]
-    rules[0]["rules"] += subrules
     segment.rules_data = rules
     segment.save(update_fields=["rules_data"])
 
@@ -1123,15 +1112,20 @@ def _create_segments_from_ld(
 
         # TODO: Tagging segments is not supported yet. https://github.com/Flagsmith/flagsmith/issues/3241
 
-        subrules: list[SegmentRuleType] = []
+        root_rule: SegmentRuleType = {
+            "type": constants.ALL_RULE,
+            "conditions": [],
+            "rules": [],
+        }
 
         # Create the segment rule for the segment.
         rules = ld_segment["rules"]
         for rule in rules:
-            subrules += _clauses_to_segment_subrules(
+            _add_clauses_to_segment_rule(
                 import_request=import_request,
                 segment_name=segment.name,
                 clauses=rule["clauses"],
+                rule=root_rule,
             )
             # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
             _create_segment_rule_for_segment(
@@ -1155,17 +1149,19 @@ def _create_segments_from_ld(
                 ]
             )
 
-        subrules += _users_to_segment_subrules(
+        _add_users_to_segment_rule(
             import_request=import_request,
             segment_name=segment.name,
             users=ld_segment["included"],
             negate=False,
+            rule=root_rule,
         )
-        subrules += _users_to_segment_subrules(
+        _add_users_to_segment_rule(
             import_request=import_request,
             segment_name=segment.name,
             users=ld_segment["excluded"],
             negate=True,
+            rule=root_rule,
         )
 
         # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
@@ -1196,9 +1192,7 @@ def _create_segments_from_ld(
         # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
         SegmentRule.objects.get_or_create(segment=segment, type=SegmentRule.ALL_RULE)
 
-        segment.rules_data = [
-            {"type": constants.ALL_RULE, "conditions": [], "rules": subrules}
-        ]
+        segment.rules_data = [root_rule]
         segment.save(update_fields=["rules_data"])
 
     return segments_by_ld_key

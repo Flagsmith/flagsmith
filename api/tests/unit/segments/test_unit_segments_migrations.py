@@ -385,7 +385,6 @@ def test_0031_add_segment_rules_data__forwards__backfill_segment_rules_data(
                                     "description": None,
                                 }
                             ],
-                            "rules": [],
                         }
                     ],
                 }

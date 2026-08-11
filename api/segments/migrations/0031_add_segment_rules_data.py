@@ -52,29 +52,36 @@ def nullify_segment_rules_data(
 
 def _rasterise_segment_rules(obj: typing.Any) -> list[SegmentRule]:
     return [
-        {
-            "type": rule.type,
-            "conditions": [
-                {
-                    "property": condition.property,
-                    "operator": condition.operator,
-                    "value": condition.value,
-                    "description": condition.description,
-                }
-                for condition in (
-                    rule.live_conditions
-                    if hasattr(rule, "live_conditions")  # We only prefetch two levels deep
-                    else rule.conditions.filter(deleted_at__isnull=True)
-                )
-            ],
-            "rules": _rasterise_segment_rules(rule),
-        }
+        _rasterise_segment_rule(rule)
         for rule in (
             obj.live_rules
             if hasattr(obj, "live_rules")  # We only prefetch two levels deep
             else obj.rules.filter(deleted_at__isnull=True)
         )
     ]
+
+
+def _rasterise_segment_rule(rule: typing.Any) -> SegmentRule:
+    rule_data: SegmentRule = {
+        "type": rule.type,
+        "conditions": [
+            {
+                "property": condition.property,
+                "operator": condition.operator,
+                "value": condition.value,
+                "description": condition.description,
+            }
+            for condition in (
+                rule.live_conditions
+                if hasattr(rule, "live_conditions")  # We only prefetch two levels deep
+                else rule.conditions.filter(deleted_at__isnull=True)
+            )
+        ],
+    }
+    # Top-level rules always carry "rules"; nested ones only for legacy deeper nesting.
+    if (subrules := _rasterise_segment_rules(rule)) or rule.segment_id:
+        rule_data["rules"] = subrules
+    return rule_data
 
 
 class Migration(migrations.Migration):

@@ -18,12 +18,12 @@ class _BaseSegmentRule(TypedDict):
     conditions: list[SegmentCondition]
 
 
-class NestedSegmentRule(_BaseSegmentRule):
+class _NestedSegmentRule(_BaseSegmentRule):
     pass
 
 
 class SegmentRule(_BaseSegmentRule):
-    rules: list[NestedSegmentRule]
+    rules: list[_NestedSegmentRule]
 
 
 class LegacySegmentCondition(SegmentCondition):
