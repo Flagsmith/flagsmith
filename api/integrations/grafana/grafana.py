@@ -4,6 +4,10 @@ from typing import Any
 
 import requests
 
+from integrations.common.constants import (
+    INTEGRATION_REQUEST_TIMEOUT_SECONDS,
+)
+
 from audit.models import AuditLog
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 from integrations.grafana.mappers import (
@@ -36,6 +40,7 @@ class GrafanaWrapper(AbstractBaseEventIntegrationWrapper):
             url=self.url,
             headers=self._headers(),
             data=json.dumps(event),
+            timeout=INTEGRATION_REQUEST_TIMEOUT_SECONDS,
         )
 
         logger.debug(
