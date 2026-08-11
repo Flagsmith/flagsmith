@@ -168,9 +168,6 @@ class Segment(
         cloned_segment.uuid = uuid.uuid4()
         cloned_segment.version_of = None  # Unset for now
         cloned_segment.version = 0  # Unset for now
-        if not is_revision:
-            # A copy belongs to the user, not to whatever manages the original.
-            cloned_segment.managed_by = ""
         for attr_name, value in extra_attrs.items():
             setattr(cloned_segment, attr_name, value)
         cloned_segment.save()

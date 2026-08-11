@@ -2046,13 +2046,14 @@ def test_create_segment__managed_by_in_payload__ignored(
     assert Segment.objects.get(id=response.json()["id"]).managed_by == ""
 
 
-def test_clone_segment__managed_segment__clone_is_not_managed(
+def test_clone_segment__cohort_managed__returns_403(
     admin_client: APIClient,
     project: Project,
     segment: Segment,
+    environment: Environment,
 ) -> None:
     # Given
-    Segment.objects.filter(id=segment.id).update(managed_by=SegmentManagedBy.COHORT)
+    Cohort.objects.create(environment=environment, segment=segment)
     url = reverse(
         "api-v1:projects:project-segments-clone", args=[project.id, segment.id]
     )
@@ -2063,5 +2064,5 @@ def test_clone_segment__managed_segment__clone_is_not_managed(
     )
 
     # Then
-    assert response.status_code == status.HTTP_201_CREATED
-    assert Segment.objects.get(id=response.json()["id"]).managed_by == ""
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert Segment.objects.count() == 1
