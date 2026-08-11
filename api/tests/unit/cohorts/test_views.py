@@ -36,12 +36,18 @@ def test_create_cohort__staff_with_manage_segments__returns_201(
     )
 
     # When
-    response = staff_client.post(url, data={"name": "Beta users"}, format="json")
+    response = staff_client.post(
+        url,
+        data={"name": "Beta users", "description": "Early access group"},
+        format="json",
+    )
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     cohort = Cohort.objects.get(id=response.json()["id"])
     assert response.json()["name"] == "Beta users"
+    assert response.json()["description"] == "Early access group"
+    assert cohort.segment.description == "Early access group"
     assert response.json()["segment"] == cohort.segment_id
     assert cohort.environment == dynamo_enabled_project_environment_one
 

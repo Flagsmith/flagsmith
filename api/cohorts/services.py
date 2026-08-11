@@ -79,11 +79,17 @@ def apply_pending_memberships(cohort: Cohort) -> bool:
     return pending_memberships(cohort).exists()
 
 
-def create_cohort(*, environment: "Environment", name: str) -> Cohort:
+def create_cohort(
+    *,
+    environment: "Environment",
+    name: str,
+    description: str | None = None,
+) -> Cohort:
     with transaction.atomic():
         segment = Segment.objects.create(
             name=name,
             project=environment.project,
+            description=description,
             managed_by=SegmentManagedBy.COHORT,
         )
         rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
