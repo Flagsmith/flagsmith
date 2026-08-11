@@ -16,7 +16,7 @@ import {
   decideOnboardingEntry,
   getStoredOnboardingVariant,
   persistOnboardingEntry,
-} from 'common/utils/onboardingEntry'
+} from 'common/experiments/onboardingQuickstart'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import ConfigProvider from 'common/providers/ConfigProvider'

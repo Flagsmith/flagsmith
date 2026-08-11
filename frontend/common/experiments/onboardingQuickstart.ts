@@ -1,6 +1,19 @@
+import { useEffect } from 'react'
 import flagsmith from '@flagsmith/flagsmith'
 import { OnboardingVariant } from 'common/types/responses'
 import { storageGet, storageRemove, storageSet } from 'common/safeLocalStorage'
+import API from 'project/api'
+
+/**
+ * The onboarding quickstart experiment: new users are served either the
+ * legacy getting-started page (`control`) or the single-page onboarding
+ * flow (`single_page`), split on organisations via the
+ * `onboarding_quickstart_flow` Flagsmith-on-Flagsmith flag.
+ *
+ * Everything the experiment touches on the frontend imports from this
+ * module. When the experiment concludes, delete this module and unpick
+ * its importers.
+ */
 
 const TARGETING_KEY_STORAGE_KEY = 'onboarding_targeting_key'
 const VARIANT_STORAGE_KEY = 'onboarding_variant'
@@ -59,7 +72,27 @@ export const getStoredOnboardingVariant = (): OnboardingVariant | null => {
 export const getStoredOnboardingTargetingKey = (): string | null =>
   storageGet(TARGETING_KEY_STORAGE_KEY)
 
-// Called once an organisation owns the key; a later organisation must not
-// reuse it, or two organisations would share one experiment subject.
+// Called once the user holds membership of any organisation; a later
+// organisation must not consume the key, or two organisations would
+// share one experiment subject.
 export const clearOnboardingTargetingKey = (): void =>
   storageRemove(TARGETING_KEY_STORAGE_KEY)
+
+/**
+ * The stored entry decision, with the variant tagged onto the user's
+ * analytics profile as a side effect. `variant` is null for users who
+ * never went through the entry decision — render them the legacy page.
+ */
+export function useOnboardingQuickstart(): {
+  isSinglePage: boolean
+  variant: OnboardingVariant | null
+} {
+  const variant = getStoredOnboardingVariant()
+
+  useEffect(() => {
+    if (!variant) return
+    API.trackTraits({ onboarding_variant: variant })
+  }, [variant])
+
+  return { isSinglePage: variant === 'single_page', variant }
+}

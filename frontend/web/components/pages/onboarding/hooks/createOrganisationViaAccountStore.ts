@@ -1,6 +1,6 @@
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
-import { getStoredOnboardingTargetingKey } from 'common/utils/onboardingEntry'
+import { getStoredOnboardingTargetingKey } from 'common/experiments/onboardingQuickstart'
 
 /**
  * Create an organisation through the legacy account store rather than the RTK
