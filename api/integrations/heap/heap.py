@@ -3,6 +3,10 @@ import typing
 
 import requests
 
+from integrations.common.constants import (
+    INTEGRATION_REQUEST_TIMEOUT_SECONDS,
+)
+
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from features.models import FeatureState
@@ -21,7 +25,11 @@ class HeapWrapper(AbstractBaseIdentityIntegrationWrapper):  # type: ignore[type-
         self.url = f"{base_url}/api/track"
 
     def _identify_user(self, user_data: dict) -> None:  # type: ignore[type-arg]
-        response = requests.post(self.url, json=user_data)
+        response = requests.post(
+            self.url,
+            json=user_data,
+            timeout=INTEGRATION_REQUEST_TIMEOUT_SECONDS,
+        )
         logger.debug("Sent event to Heap. Response code was: %s" % response.status_code)
 
     def generate_user_data(
