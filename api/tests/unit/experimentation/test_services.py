@@ -48,7 +48,7 @@ from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.versioning.dataclasses import MultivariateValueChangeSet
-from segments.models import Condition
+from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
 
@@ -1514,6 +1514,64 @@ def test_apply_experiment_rollout__no_segment__creates_segment_and_override(
     segment = experiment.rollout_segment
     assert segment is not None
     assert segment.is_system_segment is True
+    assert segment.rules_data == [
+        {
+            "type": SegmentRule.ALL_RULE,
+            "conditions": [
+                {
+                    "property": "$.identity.key",
+                    "operator": PERCENTAGE_SPLIT,
+                    "value": "42.0",
+                    "description": None,
+                }
+            ],
+            "rules": [],
+        }
+    ]
+
+    override = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__segment=segment,
+    )
+    assert override.enabled is True
+    allocations = {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in override.multivariate_feature_state_values.all()
+    }
+    assert allocations == {option_a.id: 60.0, option_b.id: 40.0}
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+def test_apply_experiment_rollout__no_segment__creates_segment_and_override_x_replaced_above(
+    experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=42.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # Then
+    experiment.refresh_from_db()
+    segment = experiment.rollout_segment
+    assert segment is not None
+    assert segment.is_system_segment is True
     condition = Condition.objects.get(rule__segment=segment)
     assert condition.operator == PERCENTAGE_SPLIT
     assert condition.value == "42.0"
@@ -1676,6 +1734,56 @@ def test_apply_experiment_rollout__existing_segment__leaves_default_allocations(
 
 
 def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enabled(
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    experiment = experiment_with_rollout
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=False,
+            rollout_percentage=80.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # Then
+    segment = Segment.objects.get(pk=experiment.rollout_segment_id)
+    assert segment.rules_data == [
+        {
+            "type": SegmentRule.ALL_RULE,
+            "conditions": [
+                {
+                    "property": "$.identity.key",
+                    "operator": PERCENTAGE_SPLIT,
+                    "value": "80.0",
+                    "description": None,
+                }
+            ],
+            "rules": [],
+        }
+    ]
+    override = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__segment=experiment.rollout_segment,
+    )
+    assert override.enabled is False
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enabled_x_replaced_above(
     experiment_with_rollout: Experiment,
     multivariate_options: list[MultivariateFeatureOption],
     admin_user: FFAdminUser,
