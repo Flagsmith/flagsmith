@@ -1,3 +1,5 @@
+from typing import cast
+
 import pytest
 from django.conf import settings
 from pytest import FixtureRequest
@@ -74,4 +76,4 @@ from tests.types import InvalidSegmentRulesCase
     ],
 )
 def invalid_rules_case(request: FixtureRequest) -> InvalidSegmentRulesCase:
-    return request.param  # type: ignore[no-any-return]
+    return cast(InvalidSegmentRulesCase, request.param)
