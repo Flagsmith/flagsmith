@@ -3,6 +3,10 @@ import logging
 
 import requests
 
+from integrations.common.constants import (
+    INTEGRATION_REQUEST_TIMEOUT_SECONDS,
+)
+
 from audit.models import AuditLog
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 
@@ -46,7 +50,9 @@ class DataDogWrapper(AbstractBaseEventIntegrationWrapper):
             event["source_type_name"] = FLAGSMITH_SOURCE_TYPE_NAME
 
         response = self.session.post(
-            f"{self.events_url}?api_key={self.api_key}", data=json.dumps(event)
+            f"{self.events_url}?api_key={self.api_key}",
+            data=json.dumps(event),
+            timeout=INTEGRATION_REQUEST_TIMEOUT_SECONDS,
         )
         logger.debug(
             "Sent event to DataDog. Response code was %s" % response.status_code
