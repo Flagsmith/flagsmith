@@ -124,6 +124,7 @@ def test_process_import_request__write_error__persists_no_import_data(
         process_import_request(import_request)
 
     # Then
+    import_request.refresh_from_db()
     assert import_request.completed_at
     assert import_request.status["result"] == "failure"
     assert not Environment.objects.filter(project=project).exists()
