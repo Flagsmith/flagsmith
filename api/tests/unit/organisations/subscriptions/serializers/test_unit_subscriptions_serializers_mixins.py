@@ -14,6 +14,7 @@ from organisations.subscriptions.serializers.mixins import (
     (
         ("invalid-plan-id", ("invalid-plan-id",), ""),
         ("invalid-plan-id", tuple(), "invalid-.*"),
+        ("Scale-Up-v4-USD-Yearly", tuple(), r"^(free|startup.*|scale-up.*)$"),
     ),
 )
 def test_read_only_if_not_valid_plan_mixin__invalid_plan__sets_fields_read_only(
