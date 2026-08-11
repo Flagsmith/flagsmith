@@ -6,6 +6,7 @@ from typing import Any, Callable, Generator, Iterable, Optional, Tuple
 
 from django.conf import settings
 from django.core import signing
+from django.db import transaction
 from django.utils import timezone
 from flag_engine.segments import constants
 from flag_engine.segments.types import ConditionOperator
@@ -1273,41 +1274,42 @@ def process_import_request(
                 )
                 raise
 
-        # Create environments
-        environments_by_ld_environment_key = _create_environments_from_ld(
-            ld_environments=ld_environments,
-            project_id=import_request.project_id,
-        )
+        with transaction.atomic():
+            # Create environments
+            environments_by_ld_environment_key = _create_environments_from_ld(
+                ld_environments=ld_environments,
+                project_id=import_request.project_id,
+            )
 
-        # Create segments using `ld_segment_tags`
-        # TODO populate with LD tags when https://github.com/Flagsmith/flagsmith/issues/3241 is done
-        segment_tags_by_ld_tag: dict[str, Tag] = {}
-        segments_by_ld_key = _create_segments_from_ld(
-            import_request=import_request,
-            ld_segments=ld_segments,
-            environments_by_ld_environment_key=environments_by_ld_environment_key,
-            tags_by_ld_tag=segment_tags_by_ld_tag,
-            project_id=import_request.project_id,
-        )
+            # Create segments using `ld_segment_tags`
+            # TODO populate with LD tags when https://github.com/Flagsmith/flagsmith/issues/3241 is done
+            segment_tags_by_ld_tag: dict[str, Tag] = {}
+            segments_by_ld_key = _create_segments_from_ld(
+                import_request=import_request,
+                ld_segments=ld_segments,
+                environments_by_ld_environment_key=environments_by_ld_environment_key,
+                tags_by_ld_tag=segment_tags_by_ld_tag,
+                project_id=import_request.project_id,
+            )
 
-        # Create flags
-        flag_tags_by_ld_tag = _create_tags_from_ld(
-            ld_tags=ld_flag_tags,
-            project_id=import_request.project_id,
-        )
-        _create_features_from_ld(
-            import_request=import_request,
-            ld_flags=ld_flags,
-            environments_by_ld_environment_key=environments_by_ld_environment_key,
-            tags_by_ld_tag=flag_tags_by_ld_tag,
-            segments_by_ld_key=segments_by_ld_key,
-            project_id=import_request.project_id,
-        )
+            # Create flags
+            flag_tags_by_ld_tag = _create_tags_from_ld(
+                ld_tags=ld_flag_tags,
+                project_id=import_request.project_id,
+            )
+            _create_features_from_ld(
+                import_request=import_request,
+                ld_flags=ld_flags,
+                environments_by_ld_environment_key=environments_by_ld_environment_key,
+                tags_by_ld_tag=flag_tags_by_ld_tag,
+                segments_by_ld_key=segments_by_ld_key,
+                project_id=import_request.project_id,
+            )
 
-        # Count deprecated flags for reporting
-        import_request.status["deprecated_flag_count"] = sum(
-            1 for ld_flag in ld_flags if ld_flag["deprecated"]
-        )
+            # Count deprecated flags for reporting
+            import_request.status["deprecated_flag_count"] = sum(
+                1 for ld_flag in ld_flags if ld_flag["deprecated"]
+            )
 
-        # Refresh membership counts for the segments the import just created.
-        enqueue_membership_refresh(import_request.project)
+            # Refresh membership counts for the segments the import just created.
+            enqueue_membership_refresh(import_request.project)

@@ -108,6 +108,30 @@ def test_process_import_request__api_error__expected_status(
 
 
 @pytest.mark.django_db(transaction=True)
+def test_process_import_request__write_error__persists_no_import_data(
+    mocker: MockerFixture,
+    project: Project,
+    import_request: LaunchDarklyImportRequest,
+) -> None:
+    # Given
+    mocker.patch(
+        "integrations.launch_darkly.services.enqueue_membership_refresh",
+        side_effect=RuntimeError(),
+    )
+
+    # When
+    with pytest.raises(RuntimeError):
+        process_import_request(import_request)
+
+    # Then
+    assert import_request.completed_at
+    assert import_request.status["result"] == "failure"
+    assert not Environment.objects.filter(project=project).exists()
+    assert not Feature.objects.filter(project=project).exists()
+    assert not Segment.objects.filter(project=project).exists()
+
+
+@pytest.mark.django_db(transaction=True)
 def test_process_import_request__success__expected_status(  # type: ignore[no-untyped-def]
     project: Project,
     import_request: LaunchDarklyImportRequest,
