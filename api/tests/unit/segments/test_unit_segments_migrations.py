@@ -255,8 +255,10 @@ def test_add_versioning_to_segments__reverse__deletes_historical_versions(
 )
 def test_0031_add_segment_rules_data__forwards__backfill_segment_rules_data(
     migrator: Migrator,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Given
+    monkeypatch.setattr(migration_0031, "BATCH_SIZE", 2)
     state = migrator.apply_initial_migration(
         ("segments", "0031_add_segment_rules_data")
     )
@@ -275,7 +277,23 @@ def test_0031_add_segment_rules_data__forwards__backfill_segment_rules_data(
     segment.save()
     top_rule = SegmentRule.objects.create(segment=segment, type="ALL")
     nested_rule = SegmentRule.objects.create(rule=top_rule, type="ANY")
-    SegmentRule.objects.create(rule=top_rule, type="ANY", deleted_at=timezone.now())
+    deep_rule = SegmentRule.objects.create(rule=nested_rule, type="NONE")
+    deleted_rule = SegmentRule.objects.create(
+        rule=top_rule, type="ANY", deleted_at=timezone.now()
+    )
+    orphaned_rule = SegmentRule.objects.create(rule=deleted_rule, type="ANY")
+    Condition.objects.create(
+        rule=orphaned_rule,
+        operator=constants.EQUAL,
+        property="ghost",
+        value="true",
+    )
+    Condition.objects.create(
+        rule=top_rule,
+        operator=constants.IS_SET,
+        property="email",
+        value="",
+    )
     Condition.objects.create(
         rule=nested_rule,
         operator=constants.EQUAL,
@@ -290,6 +308,12 @@ def test_0031_add_segment_rules_data__forwards__backfill_segment_rules_data(
         value="210",
         deleted_at=timezone.now(),
     )
+    Condition.objects.create(
+        rule=deep_rule,
+        operator=constants.CONTAINS,
+        property="country",
+        value="GB",
+    )
 
     deleted_segment = Segment.objects.create(
         name="Deleted", project=project, deleted_at=timezone.now()
@@ -303,6 +327,24 @@ def test_0031_add_segment_rules_data__forwards__backfill_segment_rules_data(
     )
     SegmentRule.objects.create(segment=old_version_segment, type="ALL")
 
+    empty_segment = Segment.objects.create(name="Empty", project=project)
+    empty_segment.version_of_id = empty_segment.id
+    empty_segment.save()
+
+    batched_segments = []
+    for i in range(3):  # spans several batches
+        batched_segment = Segment.objects.create(name=f"Batched {i}", project=project)
+        batched_segment.version_of_id = batched_segment.id
+        batched_segment.save()
+        rule = SegmentRule.objects.create(segment=batched_segment, type="ALL")
+        Condition.objects.create(
+            rule=rule,
+            operator=constants.EQUAL,
+            property="batch",
+            value=str(i),
+        )
+        batched_segments.append(batched_segment)
+
     # When
     migration_0031.backfill_segment_rules_data(state.apps)
 
@@ -313,7 +355,14 @@ def test_0031_add_segment_rules_data__forwards__backfill_segment_rules_data(
     assert segment.rules_data == [
         {
             "type": "ALL",
-            "conditions": [],
+            "conditions": [
+                {
+                    "property": "email",
+                    "operator": constants.IS_SET,
+                    "value": "",
+                    "description": None,
+                }
+            ],
             "rules": [
                 {
                     "type": "ANY",
@@ -325,13 +374,46 @@ def test_0031_add_segment_rules_data__forwards__backfill_segment_rules_data(
                             "description": "Adults only",
                         }
                     ],
-                    "rules": [],
+                    "rules": [  # We mistakenly supported deeper rules in the past
+                        {
+                            "type": "NONE",
+                            "conditions": [
+                                {
+                                    "property": "country",
+                                    "operator": constants.CONTAINS,
+                                    "value": "GB",
+                                    "description": None,
+                                }
+                            ],
+                            "rules": [],
+                        }
+                    ],
                 }
             ],
         }
     ]
     assert deleted_segment.rules_data is None
     assert old_version_segment.rules_data is None
+
+    empty_segment.refresh_from_db()
+    assert empty_segment.rules_data == []
+
+    for i, batched_segment in enumerate(batched_segments):
+        batched_segment.refresh_from_db()
+        assert batched_segment.rules_data == [
+            {
+                "type": "ALL",
+                "conditions": [
+                    {
+                        "property": "batch",
+                        "operator": constants.EQUAL,
+                        "value": str(i),
+                        "description": None,
+                    }
+                ],
+                "rules": [],
+            }
+        ]
 
 
 @pytest.mark.skipif(

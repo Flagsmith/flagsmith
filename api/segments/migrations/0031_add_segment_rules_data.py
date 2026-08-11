@@ -32,7 +32,7 @@ def backfill_segment_rules_data(
         models.Prefetch("live_rules__conditions", conditions, to_attr="live_conditions"),
         models.Prefetch("live_rules__rules", rules, to_attr="live_rules"),
         models.Prefetch("live_rules__live_rules__conditions", conditions, to_attr="live_conditions"),
-        models.Prefetch("live_rules__live_rules__rules", rules, to_attr="live_rules"),  # rasterise recurses one level deeper
+        models.Prefetch("live_rules__live_rules__rules", rules, to_attr="live_rules"),  # Empty almost all cases
     ).order_by("id")
 
     last_id = 0  # don't leroy jenkins local memory
@@ -61,11 +61,19 @@ def _rasterise_segment_rules(obj: typing.Any) -> list[SegmentRule]:
                     "value": condition.value,
                     "description": condition.description,
                 }
-                for condition in rule.live_conditions
+                for condition in (
+                    rule.live_conditions
+                    if hasattr(rule, "live_conditions")  # We only prefetch two levels deep
+                    else rule.conditions.filter(deleted_at__isnull=True)
+                )
             ],
             "rules": _rasterise_segment_rules(rule),
         }
-        for rule in obj.live_rules
+        for rule in (
+            obj.live_rules
+            if hasattr(obj, "live_rules")  # We only prefetch two levels deep
+            else obj.rules.filter(deleted_at__isnull=True)
+        )
     ]
 
 
