@@ -1113,6 +1113,36 @@ def test_update_segment__valid_rules__updates_segment_with_rules(
     }
 
 
+def test_update_segment__rules_and_conditions_with_ids__ignores_ids(
+    admin_client: APIClient,
+    project: Project,
+    segment: Segment,
+    segment_rules: list[SegmentRuleType],
+) -> None:
+    # Given
+    segment_rules[0]["conditions"][0]["value"] = "blue"
+    expected_rules = deepcopy(segment_rules)
+    segment_rules[0]["id"] = 42  # type: ignore[typeddict-unknown-key]
+    segment_rules[0]["conditions"][0]["id"] = 43  # type: ignore[typeddict-unknown-key]
+    segment_rules[0]["rules"][0]["id"] = 44  # type: ignore[typeddict-unknown-key]
+    segment_rules[0]["rules"][0]["conditions"][0]["id"] = 45  # type: ignore[typeddict-unknown-key]
+
+    # When
+    response = admin_client.put(
+        f"/api/v1/projects/{project.id}/segments/{segment.id}/",
+        data={
+            "name": segment.name,
+            "rules": segment_rules,
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    segment.refresh_from_db()
+    assert segment.rules_data == expected_rules
+
+
 # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_patch_segment__rules_omitted__preserves_rules(
     admin_client: APIClient,
