@@ -803,6 +803,32 @@ def test_set_system_trait__document_without_system_traits__creates_system_traits
     assert document["system_traits"] == {"cohort_x": True}
 
 
+def test_set_system_trait__null_system_traits__replaces_with_map(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given - a document written with `system_traits: null` by another service
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+            "identity_traits": [{"trait_key": "plan", "trait_value": "pro"}],
+            "system_traits": None,
+        }
+    )
+
+    # When
+    dynamodb_identity_wrapper.set_system_trait(
+        environment_api_key="api-key", identifier="user-1", trait_key="cohort_x"
+    )
+
+    # Then
+    document = dynamodb_identity_wrapper.get_item("api-key_user-1")
+    assert document is not None
+    assert document["system_traits"] == {"cohort_x": True}
+    assert document["identity_traits"] == [{"trait_key": "plan", "trait_value": "pro"}]
+
+
 def test_set_system_trait__missing_document__creates_document(
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
 ) -> None:
