@@ -151,6 +151,19 @@ def process_subscription(request: Request) -> Response:  # noqa: C901
         chargebee_subscription=subscription,
         customer_email=customer["email"],
     )
+
+    # `update_plan` only reads the plan's own metadata, so seats and API calls
+    # bought as addons never reach the subscription, and a subscription whose
+    # plan is unchanged is never updated at all. The extracted metadata accounts
+    # for both the plan and its addons, so use it as the source of truth.
+    if (
+        existing_subscription.max_seats != subscription_metadata.seats
+        or existing_subscription.max_api_calls != subscription_metadata.api_calls
+    ):
+        existing_subscription.max_seats = subscription_metadata.seats
+        existing_subscription.max_api_calls = subscription_metadata.api_calls
+        existing_subscription.save()
+
     osic_defaults = {
         "chargebee_updated_at": timezone.now(),
         "allowed_30d_api_calls": subscription_metadata.api_calls,

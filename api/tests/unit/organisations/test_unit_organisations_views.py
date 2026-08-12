@@ -1402,6 +1402,117 @@ def test_chargebee_webhook__plan_changed__updates_seats_and_api_calls(  # type: 
         assert subscription_information_cache.chargebee_updated_at > updated_at
 
 
+@mock.patch("organisations.models.get_plan_meta_data")
+@mock.patch("organisations.chargebee.webhook_handlers.extract_subscription_metadata")
+def test_chargebee_webhook__seats_added_to_same_plan__updates_seats(
+    mock_extract_subscription_metadata: MagicMock,
+    mock_get_plan_meta_data: MagicMock,
+    subscription: Subscription,
+    admin_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    chargebee_email = "chargebee@test.com"
+    url = reverse("api-v1:chargebee-webhook")
+
+    subscription.subscription_id = "sub-id"
+    subscription.plan = "scale-up-v2"
+    subscription.max_seats = 5
+    subscription.max_api_calls = 1_000_000
+    subscription.save()
+
+    # An additional seat addon raises the allowance without changing the plan.
+    mock_extract_subscription_metadata.return_value = ChargebeeObjMetadata(
+        seats=6,
+        api_calls=1_000_000,
+        projects=10,
+        chargebee_email=chargebee_email,
+    )
+
+    data = {
+        "content": {
+            "subscription": {
+                "status": "active",
+                "id": subscription.subscription_id,
+                "plan_id": subscription.plan,
+            },
+            "customer": {"email": chargebee_email},
+        }
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_get_plan_meta_data.assert_not_called()
+
+    subscription.refresh_from_db()
+    assert subscription.max_seats == 6
+
+    subscription_information_cache = (
+        OrganisationSubscriptionInformationCache.objects.get(organisation=organisation)
+    )
+    assert subscription_information_cache.allowed_seats == 6
+
+
+@mock.patch("organisations.models.get_plan_meta_data")
+@mock.patch("organisations.chargebee.webhook_handlers.extract_subscription_metadata")
+def test_chargebee_webhook__plan_changed_with_addons__updates_seats(
+    mock_extract_subscription_metadata: MagicMock,
+    mock_get_plan_meta_data: MagicMock,
+    subscription: Subscription,
+    admin_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    chargebee_email = "chargebee@test.com"
+    url = reverse("api-v1:chargebee-webhook")
+
+    subscription.subscription_id = "sub-id"
+    subscription.save()
+
+    # The plan on its own allows 5 seats, but the subscription also carries
+    # addons worth 3 more.
+    mock_get_plan_meta_data.return_value = {"seats": 5, "api_calls": 1_000_000}
+    mock_extract_subscription_metadata.return_value = ChargebeeObjMetadata(
+        seats=8,
+        api_calls=1_000_000,
+        projects=10,
+        chargebee_email=chargebee_email,
+    )
+
+    data = {
+        "content": {
+            "subscription": {
+                "status": "active",
+                "id": subscription.subscription_id,
+                "plan_id": "scale-up-v2",
+            },
+            "customer": {"email": chargebee_email},
+        }
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    subscription.refresh_from_db()
+    assert subscription.plan == "scale-up-v2"
+    assert subscription.max_seats == 8
+
+    subscription_information_cache = (
+        OrganisationSubscriptionInformationCache.objects.get(organisation=organisation)
+    )
+    assert subscription_information_cache.allowed_seats == 8
+
+
 def test_delete_organisation__other_org_exists__preserves_other_subscriptions(  # type: ignore[no-untyped-def]
     admin_client, admin_user, organisation, subscription
 ) -> None:
