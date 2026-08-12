@@ -24,6 +24,9 @@ from environments.dynamodb.wrappers.exceptions import (
     SystemTraitWriteRaceError,
 )
 from environments.identities.models import Identity
+from environments.identities.traits.constants import (
+    TRAIT_STRING_VALUE_MAX_LENGTH,
+)
 from environments.identities.traits.models import Trait
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import (
@@ -433,6 +436,20 @@ def test_get_segment_ids__system_trait_backed_segment__returns_correct_ids(
 
     # Then
     assert segment_ids == [member_segment.id]
+
+
+def test_set_system_trait__oversized_string_value__raises() -> None:
+    # Given
+    wrapper = DynamoIdentityWrapper()
+
+    # When / Then
+    with pytest.raises(ValueError):
+        wrapper.set_system_trait(
+            environment_api_key="key",
+            identifier="user",
+            trait_key="flagsmith_cohort_a",
+            trait_value="x" * (TRAIT_STRING_VALUE_MAX_LENGTH + 1),
+        )
 
 
 def test_get_segment_ids__in_operator_with_integer_traits__returns_matching_segment(

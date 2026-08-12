@@ -19,6 +19,9 @@ from environments.dynamodb.wrappers.exceptions import (
     CapacityBudgetExceeded,
     SystemTraitWriteRaceError,
 )
+from environments.identities.traits.constants import (
+    TRAIT_STRING_VALUE_MAX_LENGTH,
+)
 from util.engine_models.context.mappers import (
     is_context_in_segment,
     map_environment_identity_to_context,
@@ -103,6 +106,17 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         Assumes stored documents never carry `system_traits` as NULL — the
         document mapper omits the attribute when unset.
         """
+        if (
+            isinstance(trait_value, str)
+            and len(trait_value) > TRAIT_STRING_VALUE_MAX_LENGTH
+        ):
+            # The Edge API caps trait values at this length when parsing
+            # identity documents; a longer value there makes every flag
+            # request for the identity fail.
+            raise ValueError(
+                "System trait value must be at most "
+                f"{TRAIT_STRING_VALUE_MAX_LENGTH} characters."
+            )
         composite_key = IdentityModel.generate_composite_key(
             environment_api_key, identifier
         )
