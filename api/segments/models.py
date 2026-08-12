@@ -78,6 +78,9 @@ class SegmentConditionManager(ConfiguredOrderManager["Condition"]):
 
 
 class SegmentManagedBy(models.TextChoices):
+    # The explicit empty member puts "" in generated API schemas — it's the
+    # value every unmanaged segment carries.
+    UNMANAGED = "", "Unmanaged"
     COHORT = "cohort", "Cohort"
 
 
