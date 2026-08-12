@@ -1,11 +1,22 @@
+import typing
+
 import structlog
+from django.db import transaction
 from django.db.models import QuerySet
 from django.utils import timezone
+from flag_engine.segments.constants import IS_SET
 
 from cohorts.constants import COHORT_MEMBERSHIP_APPLY_BATCH_SIZE
 from cohorts.metrics import flagsmith_cohorts_membership_deltas_applied_total
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
+from core.dataclasses import AuthorData
 from environments.dynamodb import DynamoIdentityWrapper
+from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
+from segments.services import delete_segment
+
+if typing.TYPE_CHECKING:
+    from environments.models import Environment
+    from projects.models import Project
 
 logger = structlog.get_logger("cohorts")
 
@@ -66,3 +77,68 @@ def apply_pending_memberships(cohort: Cohort) -> bool:
             removes__count=removed_count,
         )
     return pending_memberships(cohort).exists()
+
+
+def create_cohort(
+    *,
+    environment: "Environment",
+    name: str,
+    description: str | None = None,
+) -> Cohort:
+    with transaction.atomic():
+        segment = Segment.objects.create(
+            name=name,
+            project=environment.project,
+            description=description,
+            managed_by=SegmentManagedBy.COHORT,
+        )
+        rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+        cohort: Cohort = Cohort.objects.create(environment=environment, segment=segment)
+        Condition.objects.create(
+            rule=rule,
+            operator=IS_SET,
+            property=cohort.system_trait_key,
+            created_with_segment=True,
+        )
+    logger.info(
+        "cohort.created",
+        cohort__id=cohort.id,
+        segment__id=segment.id,
+        environment__id=environment.id,
+        project__id=environment.project_id,
+        organisation__id=environment.project.organisation_id,
+    )
+    return cohort
+
+
+def edge_sync_enabled(project: "Project") -> bool:
+    return bool(project.enable_dynamo_db and DynamoIdentityWrapper().is_enabled)
+
+
+def delete_cohort(cohort: Cohort) -> None:
+    from cohorts.tasks import apply_cohort_membership_deltas
+
+    with transaction.atomic():
+        cohort.deletion_requested_at = timezone.now()
+        cohort.save(update_fields=["deletion_requested_at"])
+        logger.info(
+            "cohort.deletion_requested",
+            cohort__id=cohort.id,
+            environment__id=cohort.environment_id,
+        )
+        CohortMembership.objects.filter(cohort=cohort).update(
+            state=CohortMembershipState.PENDING_REMOVE, updated_at=timezone.now()
+        )
+        apply_cohort_membership_deltas.delay(kwargs={"cohort_id": cohort.id})
+
+
+def finalise_cohort_deletion(cohort: Cohort) -> None:
+    segment = cohort.segment
+    with transaction.atomic():
+        cohort.delete()
+        delete_segment(segment, AuthorData())
+    logger.info(
+        "cohort.deleted",
+        cohort__id=cohort.id,
+        environment__id=cohort.environment_id,
+    )

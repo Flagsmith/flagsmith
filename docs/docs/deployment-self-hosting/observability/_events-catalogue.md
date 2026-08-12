@@ -71,10 +71,40 @@ Attributes:
  - `feature.count`
  - `organisation.id`
 
+### `cohorts.cohort.created`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:103`
+
+Attributes:
+ - `cohort.id`
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+ - `segment.id`
+
+### `cohorts.cohort.deleted`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:140`
+
+Attributes:
+ - `cohort.id`
+ - `environment.id`
+
+### `cohorts.cohort.deletion_requested`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:124`
+
+Attributes:
+ - `cohort.id`
+ - `environment.id`
+
 ### `cohorts.membership.applied`
 
 Logged at `info` from:
- - `api/cohorts/services.py:61`
+ - `api/cohorts/services.py:72`
 
 Attributes:
  - `adds.count`
@@ -85,8 +115,8 @@ Attributes:
 ### `cohorts.membership.apply.skipped`
 
 Logged at `info` from:
- - `api/cohorts/tasks.py:23`
- - `api/cohorts/tasks.py:29`
+ - `api/cohorts/tasks.py:22`
+ - `api/cohorts/tasks.py:25`
 
 Attributes:
  - `cohort.id`
@@ -95,7 +125,7 @@ Attributes:
 ### `cohorts.membership.apply.throttled`
 
 Logged at `warning` from:
- - `api/cohorts/tasks.py:37`
+ - `api/cohorts/tasks.py:35`
 
 Attributes:
  - `cohort.id`
@@ -577,7 +607,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:158`
+ - `api/segments/serializers.py:159`
 
 Attributes:
  - `revision_id`
@@ -795,7 +825,7 @@ Attributes:
 ### `workflows.change_request.committed`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:39`
+ - `api/core/workflows_services.py:45`
 
 Attributes:
  - `environment.id`
@@ -805,7 +835,7 @@ Attributes:
 ### `workflows.missing_live_segment`
 
 Logged at `warning` from:
- - `api/core/workflows_services.py:114`
+ - `api/core/workflows_services.py:130`
 
 Attributes:
  - `draft_segment`
@@ -813,7 +843,7 @@ Attributes:
 ### `workflows.segment_revision_created`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:119`
+ - `api/core/workflows_services.py:135`
 
 Attributes:
  - `revision_id`

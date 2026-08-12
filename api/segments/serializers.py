@@ -126,8 +126,9 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             "rules",
             "metadata",
             "membership_counts",
+            "managed_by",
         ]
-        read_only_fields = ["membership_counts"]
+        read_only_fields = ["membership_counts", "managed_by"]
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)
