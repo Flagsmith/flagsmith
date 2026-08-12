@@ -18671,8 +18671,9 @@ components:
             $ref: '#/components/schemas/SegmentMembershipCount'
           readOnly: true
         managed_by:
-          allOf:
+          oneOf:
             - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
         change_request:
           type:
@@ -21884,7 +21885,9 @@ components:
       required:
         - user
     ManagedByEnum:
-      description: '* `cohort` - Cohort'
+      description: |-
+        * `` - Unmanaged
+        * `cohort` - Cohort
       type: string
       enum:
         - cohort
@@ -24760,8 +24763,9 @@ components:
             $ref: '#/components/schemas/SegmentMembershipCount'
           readOnly: true
         managed_by:
-          allOf:
+          oneOf:
             - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
     PatchedSegmentConfiguration:
       type: object
@@ -26439,8 +26443,9 @@ components:
             $ref: '#/components/schemas/SegmentMembershipCount'
           readOnly: true
         managed_by:
-          allOf:
+          oneOf:
             - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
       required:
         - name

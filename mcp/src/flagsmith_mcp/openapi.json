@@ -5461,7 +5461,7 @@
         ]
       },
       "ManagedByEnum": {
-        "description": "* `cohort` - Cohort",
+        "description": "* `` - Unmanaged\n* `cohort` - Cohort",
         "type": "string",
         "enum": [
           "cohort"
@@ -6906,9 +6906,12 @@
             "readOnly": true
           },
           "managed_by": {
-            "allOf": [
+            "oneOf": [
               {
                 "$ref": "#/components/schemas/ManagedByEnum"
+              },
+              {
+                "$ref": "#/components/schemas/BlankEnum"
               }
             ],
             "readOnly": true
