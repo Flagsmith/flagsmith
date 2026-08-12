@@ -43,6 +43,8 @@ class CohortPermission(BasePermission):
         except Environment.DoesNotExist:
             return False
         user: FFAdminUser = request.user  # type: ignore[assignment]
+        if not user.has_environment_permission(VIEW_ENVIRONMENT, environment):
+            return False
         if getattr(view, "action", None) in _READ_ACTIONS:
-            return user.has_environment_permission(VIEW_ENVIRONMENT, environment)
+            return True
         return user.has_project_permission(MANAGE_SEGMENTS, environment.project)
