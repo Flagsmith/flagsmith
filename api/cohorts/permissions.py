@@ -1,4 +1,7 @@
-from common.environments.permissions import VIEW_ENVIRONMENT
+from common.environments.permissions import (
+    MANAGE_SEGMENT_OVERRIDES,
+    VIEW_ENVIRONMENT,
+)
 from common.projects.permissions import MANAGE_SEGMENTS
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
@@ -47,4 +50,6 @@ class CohortPermission(BasePermission):
             return False
         if getattr(view, "action", None) in _READ_ACTIONS:
             return True
-        return user.has_project_permission(MANAGE_SEGMENTS, environment.project)
+        return user.has_environment_permission(
+            MANAGE_SEGMENT_OVERRIDES, environment
+        ) and user.has_project_permission(MANAGE_SEGMENTS, environment.project)

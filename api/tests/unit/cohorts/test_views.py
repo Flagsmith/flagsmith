@@ -1,5 +1,8 @@
 import pytest
-from common.environments.permissions import VIEW_ENVIRONMENT
+from common.environments.permissions import (
+    MANAGE_SEGMENT_OVERRIDES,
+    VIEW_ENVIRONMENT,
+)
 from common.projects.permissions import MANAGE_SEGMENTS
 from django.urls import reverse
 from django.utils import timezone
@@ -32,7 +35,8 @@ def test_create_cohort__staff_with_manage_segments__returns_201(
         [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
     )
     with_environment_permissions(  # type: ignore[call-arg]
-        [VIEW_ENVIRONMENT], environment_id=dynamo_enabled_project_environment_one.id
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES],
+        environment_id=dynamo_enabled_project_environment_one.id,
     )
     url = reverse(
         "api-v1:environments:cohorts:cohorts-list",
@@ -79,6 +83,26 @@ def test_create_cohort__manage_segments_without_environment_access__returns_403(
 ) -> None:
     # Given - project-level segment rights, but no access to the environment
     with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:environments:cohorts:cohorts-list", args=[environment.api_key]
+    )
+
+    # When
+    response = staff_client.post(url, data={"name": "Beta users"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_create_cohort__without_manage_segment_overrides__returns_403(
+    staff_client: APIClient,
+    environment: Environment,
+    with_project_permissions: WithProjectPermissionsCallable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given - segment rights and environment access, but no override rights
+    with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
     url = reverse(
         "api-v1:environments:cohorts:cohorts-list", args=[environment.api_key]
     )
@@ -148,7 +172,8 @@ def test_delete_cohort__staff_with_manage_segments__returns_202(
         [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
     )
     with_environment_permissions(  # type: ignore[call-arg]
-        [VIEW_ENVIRONMENT], environment_id=edge_cohort.environment_id
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES],
+        environment_id=edge_cohort.environment_id,
     )
     url = reverse(
         "api-v1:environments:cohorts:cohorts-detail",
@@ -201,7 +226,8 @@ def test_create_cohort__saas_startup_plan__returns_201(
         [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
     )
     with_environment_permissions(  # type: ignore[call-arg]
-        [VIEW_ENVIRONMENT], environment_id=dynamo_enabled_project_environment_one.id
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES],
+        environment_id=dynamo_enabled_project_environment_one.id,
     )
     url = reverse(
         "api-v1:environments:cohorts:cohorts-list",
@@ -223,7 +249,9 @@ def test_create_cohort__non_edge_project__returns_400(
 ) -> None:
     # Given
     with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
-    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES]
+    )
     url = reverse(
         "api-v1:environments:cohorts:cohorts-list", args=[environment.api_key]
     )
