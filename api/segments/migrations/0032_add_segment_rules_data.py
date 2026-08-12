@@ -78,8 +78,7 @@ def _rasterise_segment_rule(rule: typing.Any) -> SegmentRule:
             )
         ],
     }
-    # Top-level rules always carry "rules"; nested ones only for legacy deeper nesting.
-    if (subrules := _rasterise_segment_rules(rule)) or rule.segment_id:
+    if (subrules := _rasterise_segment_rules(rule)):
         rule_data["rules"] = subrules
     return rule_data
 

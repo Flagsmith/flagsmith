@@ -374,7 +374,8 @@ def test_0032_add_segment_rules_data__forwards__backfill_segment_rules_data(
                             "description": "Adults only",
                         }
                     ],
-                    "rules": [  # We mistakenly supported deeper rules in the past
+                    # Our UI never allowed more than two levels, but our API did
+                    "rules": [
                         {
                             "type": "NONE",
                             "conditions": [
@@ -410,7 +411,7 @@ def test_0032_add_segment_rules_data__forwards__backfill_segment_rules_data(
                         "description": None,
                     }
                 ],
-                "rules": [],
+                # NOTE: Empty rules are dropped at any level!
             }
         ]
 
