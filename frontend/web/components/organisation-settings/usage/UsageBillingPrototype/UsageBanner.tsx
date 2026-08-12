@@ -37,23 +37,15 @@ const bannerFor = (view: UsageView): Banner | null => {
       tone: 'danger',
     }
   }
-  if (view.grace === 'exhausted') {
-    return {
-      action: 'Upgrade plan',
-      body: 'Your grace period has already been used, so flag serving can be paused at any time while usage stays over the limit.',
-      title: 'Your organisation is over its plan limit',
-      tone: 'danger',
-    }
-  }
   if (view.grace === 'countdown') {
     return {
       action: 'Upgrade plan',
-      // Only promise a date when the API gave us one. The 7 day lag runs from
-      // the usage notification, which is not exposed yet, so without it the
-      // honest statement is that serving may pause, with no countdown.
+      // The 7 days is a notification period rather than a consumable grace:
+      // every organisation that crosses 100% gets it, every time. The exact
+      // days left need the notification date, which is not exposed yet.
       body: view.graceDaysLeft
         ? `You are over your plan limit. Flag serving pauses in ${view.graceDaysLeft} days unless usage drops back under the limit.`
-        : 'You are over your plan limit. Flag serving may be paused if usage stays over it. Dropping back under the limit stops that happening.',
+        : 'You are over your plan limit. You have 7 days to bring usage back under it before flag serving pauses.',
       title: 'Your organisation is over its plan limit',
       tone: 'warning',
     }

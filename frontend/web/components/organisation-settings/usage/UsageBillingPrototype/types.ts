@@ -11,15 +11,16 @@ import { Req } from 'common/types/requests'
 export type PlanKind = 'free' | 'paid'
 
 /**
- * Grace period, as designed in "Grace period states". Paid orgs get one
- * billing month up to 200%; free orgs get 7 days after crossing 100%.
+ * Two different things share the name. Paid plans have a grace period: one
+ * billing month up to 200%, consumed once and never again. Free plans have a
+ * notification period: 7 days after crossing 100%, given every time and never
+ * consumed.
  */
 export type GraceState =
   | 'available' // under the limit, grace intact
   | 'covering' // paid, first month at 100-200%, not charged
   | 'used' // paid, later month over 100% or any month at 200%+, charged
-  | 'countdown' // free, over 100%, inside the 7-day window
-  | 'exhausted' // free, over 100%, grace already spent, can be cut off any run
+  | 'countdown' // free, over 100%, inside the 7-day notification period
   | 'restricted' // free, window elapsed, access stopped
   | 'not-applied' // paid, at or above 200%, grace never applies
 
