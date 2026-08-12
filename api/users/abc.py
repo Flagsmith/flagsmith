@@ -18,6 +18,10 @@ class UserABC(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def get_admin_organisations(self) -> QuerySet[Organisation]:
+        raise NotImplementedError()
+
+    @abstractmethod
     def is_project_admin(self, project: "Project") -> bool:
         raise NotImplementedError()
 
