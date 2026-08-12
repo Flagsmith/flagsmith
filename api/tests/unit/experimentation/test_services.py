@@ -1,4 +1,3 @@
-import threading
 from dataclasses import asdict
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
@@ -63,7 +62,7 @@ def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
         "clickhouse://user:pass@ch.example.com:9440/flagsmith_exp?secure=True"
     )
     mock_client_cls = mocker.patch("experimentation.services.Client")
-    services._clickhouse_clients.__dict__.clear()
+    services._get_clickhouse_client.cache_clear()
 
     # When
     client = services._get_clickhouse_client()
@@ -81,7 +80,7 @@ def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
         client_name=settings.CLICKHOUSE_CONNECTION_CLIENT_NAME,
     )
     assert client is mock_client_cls.return_value
-    services._clickhouse_clients.__dict__.clear()
+    services._get_clickhouse_client.cache_clear()
 
 
 def test_get_clickhouse_client__dsn_timeouts__are_preserved(
@@ -93,7 +92,7 @@ def test_get_clickhouse_client__dsn_timeouts__are_preserved(
         "clickhouse://ch.example.com:9000/db?connect_timeout=1&send_receive_timeout=2"
     )
     mock_client_cls = mocker.patch("experimentation.services.Client")
-    services._clickhouse_clients.__dict__.clear()
+    services._get_clickhouse_client.cache_clear()
 
     # When
     services._get_clickhouse_client()
@@ -107,10 +106,10 @@ def test_get_clickhouse_client__dsn_timeouts__are_preserved(
         send_receive_timeout=2,
         client_name=settings.CLICKHOUSE_CONNECTION_CLIENT_NAME,
     )
-    services._clickhouse_clients.__dict__.clear()
+    services._get_clickhouse_client.cache_clear()
 
 
-def test_get_clickhouse_client__per_thread_and_timeout__caches_distinct_clients(
+def test_get_clickhouse_client__per_timeout__caches_distinct_clients(
     mocker: MockerFixture,
     settings: SettingsWrapper,
 ) -> None:
@@ -120,7 +119,7 @@ def test_get_clickhouse_client__per_thread_and_timeout__caches_distinct_clients(
         "experimentation.services.Client",
         side_effect=lambda *args, **kwargs: mocker.Mock(),
     )
-    services._clickhouse_clients.__dict__.clear()
+    services._get_clickhouse_client.cache_clear()
 
     # When
     client = services._get_clickhouse_client()
@@ -128,23 +127,16 @@ def test_get_clickhouse_client__per_thread_and_timeout__caches_distinct_clients(
     background_client = services._get_clickhouse_client(
         send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
     )
-    other_thread_clients = []
-    thread = threading.Thread(
-        target=lambda: other_thread_clients.append(services._get_clickhouse_client())
-    )
-    thread.start()
-    thread.join()
 
     # Then
     assert client is same_client
     assert background_client is not client
-    assert other_thread_clients[0] is not client
-    assert mock_client_cls.call_count == 3
+    assert mock_client_cls.call_count == 2
     assert (
         mock_client_cls.call_args_list[1].kwargs["send_receive_timeout"]
         == services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS
     )
-    services._clickhouse_clients.__dict__.clear()
+    services._get_clickhouse_client.cache_clear()
 
 
 @pytest.mark.parametrize(

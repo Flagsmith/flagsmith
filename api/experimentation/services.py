@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-import threading
 import time
 import typing
 from dataclasses import replace
+from functools import lru_cache
 
 import structlog
 from clickhouse_connect.driver.exceptions import ClickHouseError
@@ -149,9 +149,7 @@ def is_experiment_feature_enabled(organisation: Organisation) -> bool:
     )
 
 
-_clickhouse_clients = threading.local()
-
-
+@lru_cache(maxsize=2)
 def _get_clickhouse_client(
     send_receive_timeout: int = CLICKHOUSE_QUERY_TIMEOUT_SECONDS,
 ) -> Client:
@@ -159,20 +157,13 @@ def _get_clickhouse_client(
 
     The database is taken from the DSN path, so queries can reference the
     `events` table unqualified. Connect and query timeouts are bounded unless the
-    DSN overrides them.
-
-    clickhouse-driver clients are not thread-safe, so one client is cached per
-    thread and requested timeout.
+    DSN overrides them. One client is cached per requested timeout.
     """
-    clients: dict[int, Client] = getattr(_clickhouse_clients, "clients", None) or {}
-    _clickhouse_clients.clients = clients
-    if (client := clients.get(send_receive_timeout)) is None:
-        host, kwargs = parse_url(settings.EXPERIMENTATION_CLICKHOUSE_URL)
-        kwargs.setdefault("connect_timeout", CLICKHOUSE_CONNECT_TIMEOUT_SECONDS)
-        kwargs.setdefault("send_receive_timeout", send_receive_timeout)
-        kwargs.setdefault("client_name", settings.CLICKHOUSE_CONNECTION_CLIENT_NAME)
-        client = clients[send_receive_timeout] = Client(host, **kwargs)
-    return client
+    host, kwargs = parse_url(settings.EXPERIMENTATION_CLICKHOUSE_URL)
+    kwargs.setdefault("connect_timeout", CLICKHOUSE_CONNECT_TIMEOUT_SECONDS)
+    kwargs.setdefault("send_receive_timeout", send_receive_timeout)
+    kwargs.setdefault("client_name", settings.CLICKHOUSE_CONNECTION_CLIENT_NAME)
+    return Client(host, **kwargs)
 
 
 _CLICKHOUSE_EVENT_NAMES_QUERY = (

@@ -34,7 +34,7 @@ def mock_clickhouse_stats(
     events re-patch experimentation.services.get_warehouse_event_stats; tests for the
     unconfigured/erroring paths override the setting / raise."""
     settings.EXPERIMENTATION_CLICKHOUSE_URL = "clickhouse://localhost:9000/test"
-    services._clickhouse_clients.__dict__.clear()
+    services._get_clickhouse_client.cache_clear()
     mock_client = mocker.Mock()
     mock_client.execute.return_value = [(0, 0)]
     return mocker.patch(
