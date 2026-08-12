@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useLocation } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import OnboardingHeader from 'components/pages/onboarding/OnboardingHeader'
@@ -10,6 +10,7 @@ import OnboardingFlagsTable from 'components/pages/onboarding/OnboardingFlagsTab
 import OnboardingNextSteps, {
   OnboardingNextStep,
 } from 'components/pages/onboarding/OnboardingNextSteps'
+import OnboardingRolloutQuest from 'components/pages/onboarding/OnboardingRolloutQuest'
 import { useEnsureOnboardingResources } from 'components/pages/onboarding/hooks/useEnsureOnboardingResources'
 import { useOnboardingFlagRename } from 'components/pages/onboarding/hooks/useOnboardingFlagRename'
 import { useOnboardingFlag } from 'components/pages/onboarding/hooks/useOnboardingFlag'
@@ -39,6 +40,10 @@ const OnboardingFlow: FC = () => {
   } = useEnsureOnboardingResources()
 
   const history = useHistory()
+  const location = useLocation()
+  // The open quest lives in the URL, so refresh and back both behave.
+  const rolloutQuestOpen =
+    new URLSearchParams(location.search).get('quest') === 'rollout'
   const [updateOrganisation] = useUpdateOrganisationMutation()
   const [updateProject] = useUpdateProjectMutation()
 
@@ -144,8 +149,8 @@ const OnboardingFlow: FC = () => {
     }
   }
 
-  // Each next-step card deep-links to the flag's real config; nothing faked.
-  const goToNextStep = (step: OnboardingNextStep) => {
+  // Where a quest ends up: the flag's real config, nothing faked.
+  const goToFlagConfig = (step: OnboardingNextStep) => {
     if (projectId === null) {
       return
     }
@@ -160,6 +165,17 @@ const OnboardingFlow: FC = () => {
     // Tab param is the slugified tab label (see TabMenu/Tabs urlParam).
     const tab = step === 'rollout' ? 'segment-overrides' : 'value'
     history.push(`${base}/features?feature=${flagId}&tab=${tab}`)
+  }
+
+  // Rollout is the one quest with a screen of its own: the segment overrides
+  // tab alone explains none of the steps a rollout takes. The others still go
+  // straight to their config. The param keeps the screen on refresh and back.
+  const goToNextStep = (step: OnboardingNextStep) => {
+    if (step === 'rollout') {
+      history.push('/getting-started?quest=rollout')
+      return
+    }
+    goToFlagConfig(step)
   }
 
   const diagnosticIds = {
@@ -193,6 +209,18 @@ const OnboardingFlow: FC = () => {
       })
     }
   }
+  const trackRollout = (event: { category: string; event: string }) =>
+    API.trackEvent({ ...event, extra: diagnosticIds })
+
+  useEffect(() => {
+    if (!rolloutQuestOpen) return
+    API.trackEvent({
+      ...Constants.events.ONBOARDING_ROLLOUT_VIEWED,
+      extra: diagnosticIds,
+    })
+    // Once per opening, not on every id settling.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rolloutQuestOpen])
 
   if (status === 'creating' || leavingForConsent) {
     return (
@@ -212,6 +240,25 @@ const OnboardingFlow: FC = () => {
         </p>
         <Button onClick={() => window.location.reload()}>Try again</Button>
       </div>
+    )
+  }
+
+  if (rolloutQuestOpen) {
+    return (
+      <OnboardingRolloutQuest
+        featureName={featureName}
+        onContinue={() => {
+          trackRollout(Constants.events.ONBOARDING_ROLLOUT_CONTINUED)
+          goToFlagConfig('rollout')
+        }}
+        onDismiss={() => history.push('/getting-started')}
+        onNotifyMe={() =>
+          trackRollout(Constants.events.ONBOARDING_ROLLOUT_NOTIFY_ME)
+        }
+        onFeedback={() =>
+          trackRollout(Constants.events.ONBOARDING_ROLLOUT_FEEDBACK)
+        }
+      />
     )
   }
 

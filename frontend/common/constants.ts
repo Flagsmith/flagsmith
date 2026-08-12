@@ -284,6 +284,23 @@ const Constants = {
       'category': 'Onboarding',
       'event': 'Onboarding flag toggled',
     },
+    'ONBOARDING_ROLLOUT_CONTINUED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout quest continued',
+    },
+    'ONBOARDING_ROLLOUT_FEEDBACK': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout feedback opened',
+    },
+    // The fake door's only real signal: demand for one-click rollouts.
+    'ONBOARDING_ROLLOUT_NOTIFY_ME': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout notify me',
+    },
+    'ONBOARDING_ROLLOUT_VIEWED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout quest viewed',
+    },
     'ONBOARDING_SNIPPET_COPIED': {
       'category': 'Onboarding',
       'event': 'Onboarding snippet copied',

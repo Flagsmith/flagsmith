@@ -1,0 +1,58 @@
+// The gradual rollout quest. Layout comes from utilities in the markup; this
+// file holds type sizes, the two card paddings, the numbered step markers and
+// the "Coming soon" badge. Secondary text isn't a utility: Bootstrap's
+// .text-secondary (gold, !important) would win over our token utility.
+.onboarding-rollout-quest {
+  max-width: 720px;
+
+  &__title {
+    font-size: 24px;
+  }
+
+  &__card-title,
+  &__soon-title {
+    font-size: 16px;
+  }
+
+  &__body {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+  }
+
+  &__card,
+  &__soon {
+    padding: 24px;
+  }
+
+  // Numbered, but the marker is the styled circle below, not a list bullet.
+  &__steps {
+    list-style: none;
+  }
+
+  &__step-number {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  &__step-title {
+    font-size: 14px;
+  }
+
+  // The icon inherits it via currentColor.
+  &__notified {
+    font-size: 13px;
+  }
+
+  &__prerequisite {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+
+    code {
+      font-size: 12px;
+    }
+  }
+}
