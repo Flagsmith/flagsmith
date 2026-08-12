@@ -19,14 +19,14 @@ from environments.dynamodb.wrappers.exceptions import (
     CapacityBudgetExceeded,
     SystemTraitWriteRaceError,
 )
-from environments.identities.traits.constants import (
-    TRAIT_STRING_VALUE_MAX_LENGTH,
-)
 from util.engine_models.context.mappers import (
     is_context_in_segment,
     map_environment_identity_to_context,
 )
 from util.engine_models.identities.models import IdentityModel
+from util.engine_models.identities.traits.constants import (
+    TRAIT_STRING_VALUE_MAX_LENGTH,
+)
 from util.mappers import (
     map_engine_identity_to_identity_document,
     map_identity_to_identity_document,

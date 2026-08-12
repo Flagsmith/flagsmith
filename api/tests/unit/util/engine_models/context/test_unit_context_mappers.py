@@ -30,3 +30,31 @@ def test_map_environment_identity_to_context__system_traits__merged_with_system_
         "plan": "free",
         "flagsmith_cohort_a": True,
     }
+
+
+def test_map_environment_identity_to_context__override_traits__system_traits_win(
+    environment: Environment,
+) -> None:
+    # Given
+    identity = IdentityModel(
+        identifier="user-1",
+        environment_api_key=environment.api_key,
+        system_traits={"flagsmith_cohort_a": True},
+    )
+    override_traits = [
+        TraitModel(trait_key="plan", trait_value="trial"),
+        TraitModel(trait_key="flagsmith_cohort_a", trait_value="override-written"),
+    ]
+
+    # When
+    context = map_environment_identity_to_context(
+        environment=environment, identity=identity, override_traits=override_traits
+    )
+
+    # Then
+    identity_context = context["identity"]
+    assert identity_context is not None
+    assert identity_context["traits"] == {
+        "plan": "trial",
+        "flagsmith_cohort_a": True,
+    }
