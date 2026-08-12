@@ -29,9 +29,6 @@ from experimentation.services import (
     deliver_warehouse_events,
 )
 
-# Warehouse computes may legitimately run for up to
-# `CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS`, e.g. while an idled
-# ClickHouse Cloud service wakes up.
 COMPUTE_TASK_TIMEOUT = timedelta(minutes=3)
 
 logger = structlog.get_logger("experimentation")
