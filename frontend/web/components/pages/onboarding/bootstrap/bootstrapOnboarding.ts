@@ -19,7 +19,9 @@ import {
 import {
   DEMO_FLAG_NAME,
   ONBOARDING_TAG,
+  canResumeDemoFlag,
   findDemoFlag,
+  findOnboardingTag,
   shouldSeedDemoFlag,
 } from './demoFlag'
 import { SmartDefaults } from 'components/pages/onboarding/hooks/useSmartDefaults'
@@ -46,7 +48,8 @@ export type OnboardingBootstrap = {
   project: ProjectSummary
   environment: Environment
   featureName: string
-  // False when the project already had flags, so nothing was seeded.
+  // False when the project holds flags that aren't ours, so there is nothing
+  // here we may seed, toggle or rename.
   hasDemoFlag: boolean
 }
 
@@ -134,14 +137,14 @@ async function ensureEnvironments(
     .unwrap()
 }
 
-async function findOnboardingTag(
+async function fetchOnboardingTag(
   store: Store,
   projectId: number,
 ): Promise<Tag | undefined> {
   const tags = await store
     .dispatch(tagService.endpoints.getTags.initiate({ projectId }))
     .unwrap()
-  return tags?.find((t) => t.label === ONBOARDING_TAG.label)
+  return findOnboardingTag(tags ?? [])
 }
 
 async function ensureFlag(
@@ -156,10 +159,10 @@ async function ensureFlag(
     )
     .unwrap()
   const results = flags?.results ?? []
-  const onboardingTag = await findOnboardingTag(store, project.id)
+  const onboardingTag = await fetchOnboardingTag(store, project.id)
   const existing = findDemoFlag(results, onboardingTag)
   if (existing) {
-    return existing
+    return canResumeDemoFlag(results, existing) ? existing : undefined
   }
   if (!shouldSeedDemoFlag(results)) {
     return undefined
@@ -187,7 +190,7 @@ async function ensureOnboardingTag(
 ): Promise<void> {
   try {
     const tag =
-      (await findOnboardingTag(store, project.id)) ??
+      (await fetchOnboardingTag(store, project.id)) ??
       (await store
         .dispatch(
           tagService.endpoints.createTag.initiate({
