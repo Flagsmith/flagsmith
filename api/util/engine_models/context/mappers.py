@@ -42,10 +42,6 @@ def map_environment_identity_to_context(
     :param override_traits: A list of TraitModel objects, to be used in place of
         `identity.identity_traits` if provided.
     :return: An EvaluationContext containing the environment and identity.
-
-    Diverges from upstream: `identity.system_traits` are merged into the
-    context's traits and take precedence over both stored traits and
-    `override_traits`.
     """
     traits = {
         trait.trait_key: trait.trait_value
@@ -54,9 +50,8 @@ def map_environment_identity_to_context(
         )
     }
     if identity.system_traits:
-        # Without this precedence, any SDK client could spoof cohort
-        # membership by writing a trait named like a cohort key. The Edge API
-        # applies the same rule in its own context mapper — keep them in step.
+        # System-owned traits are not user data: on a key clash, the system
+        # value wins.
         traits.update(identity.system_traits)
     return {
         "environment": {

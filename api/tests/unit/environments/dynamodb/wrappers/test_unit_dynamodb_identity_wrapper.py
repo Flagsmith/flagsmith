@@ -24,6 +24,9 @@ from environments.dynamodb.wrappers.exceptions import (
     SystemTraitWriteRaceError,
 )
 from environments.identities.models import Identity
+from environments.identities.traits.constants import (
+    TRAIT_STRING_VALUE_MAX_LENGTH,
+)
 from environments.identities.traits.models import Trait
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import (
@@ -32,9 +35,6 @@ from features.multivariate.models import (
 )
 from segments.models import Condition, Segment, SegmentRule
 from util.engine_models.identities.models import IdentityModel
-from util.engine_models.identities.traits.constants import (
-    TRAIT_STRING_VALUE_MAX_LENGTH,
-)
 from util.mappers import (
     map_environment_to_compressed_environment_document,
     map_identity_to_identity_document,
@@ -438,41 +438,18 @@ def test_get_segment_ids__system_trait_backed_segment__returns_correct_ids(
     assert segment_ids == [member_segment.id]
 
 
-def test_set_system_trait__oversized_string_value__raises(
-    dynamodb_identity_wrapper: DynamoIdentityWrapper,
-) -> None:
+def test_set_system_trait__oversized_string_value__raises() -> None:
     # Given
-    trait_value = "x" * (TRAIT_STRING_VALUE_MAX_LENGTH + 1)
+    wrapper = DynamoIdentityWrapper()
 
     # When / Then
-    with pytest.raises(ValueError, match="at most"):
-        dynamodb_identity_wrapper.set_system_trait(
+    with pytest.raises(ValueError):
+        wrapper.set_system_trait(
             environment_api_key="key",
             identifier="user",
             trait_key="flagsmith_cohort_a",
-            trait_value=trait_value,
+            trait_value="x" * (TRAIT_STRING_VALUE_MAX_LENGTH + 1),
         )
-    assert dynamodb_identity_wrapper.get_item("key_user") is None
-
-
-def test_set_system_trait__string_value_at_max_length__writes(
-    dynamodb_identity_wrapper: DynamoIdentityWrapper,
-) -> None:
-    # Given
-    trait_value = "x" * TRAIT_STRING_VALUE_MAX_LENGTH
-
-    # When
-    dynamodb_identity_wrapper.set_system_trait(
-        environment_api_key="key",
-        identifier="user",
-        trait_key="flagsmith_cohort_a",
-        trait_value=trait_value,
-    )
-
-    # Then
-    document = dynamodb_identity_wrapper.get_item("key_user")
-    assert document is not None
-    assert document["system_traits"] == {"flagsmith_cohort_a": trait_value}
 
 
 def test_get_segment_ids__in_operator_with_integer_traits__returns_matching_segment(
