@@ -27,20 +27,22 @@ class SegmentRule(_BaseSegmentRule):
 
 
 class LegacySegmentCondition(SegmentCondition):
+    # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
     id: NotRequired[int]
     delete: NotRequired[bool]
 
 
 class _BaseLegacySegmentRule(TypedDict):
+    # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
     id: NotRequired[int]
     delete: NotRequired[bool]
     type: RuleType
     conditions: list[LegacySegmentCondition]
 
 
-class LegacyNestedSegmentRule(_BaseLegacySegmentRule):
+class _LegacyNestedSegmentRule(_BaseLegacySegmentRule):
     pass
 
 
 class LegacySegmentRule(_BaseLegacySegmentRule):
-    rules: list[LegacyNestedSegmentRule]
+    rules: list[_LegacyNestedSegmentRule]

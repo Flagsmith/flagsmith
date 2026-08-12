@@ -3,6 +3,7 @@ from typing import Any, cast
 import structlog
 from django.conf import settings
 from django.db import transaction
+from drf_spectacular.utils import extend_schema_field
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -84,6 +85,8 @@ class _NestedSegmentRuleSerializer(_BaseSegmentRuleSerializer):
         ]
 
 
+# TODO: Replace with list[types.SegmentRule] as per https://github.com/Flagsmith/flagsmith/issues/7818
+@extend_schema_field(list[LegacySegmentRule])  # type: ignore[arg-type]
 class SegmentRuleSerializer(_BaseSegmentRuleSerializer):
     rules = _NestedSegmentRuleSerializer(
         many=True,
