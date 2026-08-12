@@ -27,6 +27,7 @@ import ExternalResourcesTable from 'components/ExternalResourcesTable'
 import GitHubLinkSection from 'components/GitHubLinkSection'
 import GitLabLinkSection from 'components/GitLabLinkSection'
 import type { ExternalResource } from 'common/types/responses'
+import { hasUnmatchedIdentityOverride } from 'common/utils/multivariate'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import FeatureHistory from 'components/FeatureHistory'
 import { getChangeRequests } from 'common/services/useChangeRequest'
@@ -330,6 +331,17 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     const hasMultivariate =
       props.environmentFlag?.multivariate_feature_state_values?.length
 
+    // A multivariate override is stored as the control value plus a variation
+    // at 100%, so its value is normally re-synced to the control on save. An
+    // override predating the flag becoming multivariate holds a value that
+    // this model cannot express, and re-syncing would destroy it.
+    const keepsOwnValue = hasUnmatchedIdentityOverride({
+      controlValue:
+        projectFlag.environment_feature_state?.feature_state_value ?? null,
+      overrideValue: environmentFlag.feature_state_value ?? null,
+      variationOverrides: environmentFlag.multivariate_feature_state_values,
+    })
+
     if (identity) {
       !isSaving &&
         projectFlag.name &&
@@ -339,9 +351,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           identity,
           identityFlag: Object.assign({}, props.identityFlag || {}, {
             enabled: environmentFlag.enabled,
-            feature_state_value: hasMultivariate
-              ? props.environmentFlag?.feature_state_value
-              : cleanInputValue(environmentFlag.feature_state_value),
+            feature_state_value:
+              hasMultivariate && !keepsOwnValue
+                ? props.environmentFlag?.feature_state_value
+                : cleanInputValue(environmentFlag.feature_state_value),
             multivariate_options:
               environmentFlag.multivariate_feature_state_values,
           }),

@@ -20,6 +20,7 @@ import {
   MultivariateOption,
   ProjectFlag,
 } from 'common/types/responses'
+import { hasUnmatchedIdentityOverride } from 'common/utils/multivariate'
 import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
 import { useHasPermission } from 'common/providers/Permission'
@@ -281,6 +282,23 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     !!multivariate_options.length
   )
 
+  const controlValue =
+    projectFlag.environment_feature_state?.feature_state_value ?? null
+
+  // An override that predates the flag becoming multivariate holds a value the
+  // control/variation radios cannot express, so surface it rather than letting
+  // the control row imply the identity is on the environment default.
+  const unmatchedOverride =
+    !!identity &&
+    hasVariations &&
+    hasUnmatchedIdentityOverride({
+      controlValue,
+      overrideValue: featureState.feature_state_value ?? null,
+      variationOverrides: identityVariations,
+    })
+      ? { value: featureState.feature_state_value ?? null }
+      : undefined
+
   if (compareOpen && canCompareValue && environmentId) {
     return (
       <div className={`${identity ? 'mx-3' : ''}`}>
@@ -412,14 +430,15 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
         <div>
           <FormGroup className='mb-4'>
             {variationsInfo}
+            {!!unmatchedOverride && (
+              <WarningMessage warningMessage="This identity override contains a value that is not one of this flag's variations. We recommend changing it." />
+            )}
             <VariationOptions
               canCreateFeature={false}
               disabled
               select
-              controlValue={
-                projectFlag.environment_feature_state?.feature_state_value ??
-                null
-              }
+              unmatchedOverride={unmatchedOverride}
+              controlValue={controlValue}
               controlPercentage={controlPercentage}
               variationOverrides={identityVariations as any}
               setValue={(value) =>

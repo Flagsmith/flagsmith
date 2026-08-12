@@ -22,6 +22,10 @@ interface VariationOptionsProps {
   readOnly?: boolean
   removeVariation: (i: number) => void
   select?: boolean
+  // An override value that is neither the control value nor one of the
+  // variations. Shown read-only and selected, so the identity does not read as
+  // being on the control value.
+  unmatchedOverride?: { value: FlagsmithValue }
   setValue: (value: FlagsmithValue) => void
   setVariations: (variations: VariationOverride[]) => void
   unsavedVariations?: boolean[]
@@ -46,6 +50,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
   select,
   setValue,
   setVariations,
+  unmatchedOverride,
   unsavedVariations,
   updateVariation,
   variationOverrides,
@@ -56,8 +61,9 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
     return null
   }
   const controlSelected =
-    !variationOverrides ||
-    !variationOverrides.find((v) => v.percentage_allocation === 100)
+    !unmatchedOverride &&
+    (!variationOverrides ||
+      !variationOverrides.find((v) => v.percentage_allocation === 100))
   return (
     <>
       {invalid && (
@@ -65,6 +71,21 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
           className='mt-2'
           error='Your variation percentage splits total to over 100%'
         />
+      )}
+      {select && !!unmatchedOverride && (
+        <div className='panel panel--flat panel-without-heading mb-2'>
+          <div className='panel-content'>
+            <Row>
+              <Flex>
+                <ValueEditor
+                  disabled
+                  value={Utils.getTypedValue(unmatchedOverride.value)}
+                />
+              </Flex>
+              <div className='btn-radio btn-radio-on ml-2' />
+            </Row>
+          </div>
+        </div>
       )}
       {select && (
         <div className='panel panel--flat panel-without-heading mb-2'>
