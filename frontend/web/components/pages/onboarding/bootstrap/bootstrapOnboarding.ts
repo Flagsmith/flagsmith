@@ -24,6 +24,7 @@ import {
   findOnboardingTag,
   shouldSeedDemoFlag,
 } from './demoFlag'
+import { newestProject } from './onboardingProject'
 import { SmartDefaults } from 'components/pages/onboarding/hooks/useSmartDefaults'
 import { createOrganisationViaAccountStore } from './createOrganisationViaAccountStore'
 import API from 'project/api'
@@ -81,7 +82,7 @@ async function ensureProject(
   const projects = await store
     .dispatch(projectService.endpoints.getProjects.initiate({ organisationId }))
     .unwrap()
-  const existing = projects?.[0]
+  const existing = newestProject(projects ?? [])
   if (existing) {
     return existing
   }
