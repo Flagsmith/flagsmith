@@ -1,5 +1,6 @@
 import pytest
 from botocore.exceptions import ClientError
+from django.utils import timezone
 from prometheus_client import REGISTRY
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
@@ -9,6 +10,7 @@ from cohorts import services
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
 from cohorts.tasks import apply_cohort_membership_deltas
 from environments.dynamodb import DynamoIdentityWrapper
+from segments.models import Segment
 
 
 def test_apply_cohort_membership_deltas__pending_adds__applies_to_documents(
@@ -83,7 +85,9 @@ def test_apply_cohort_membership_deltas__non_edge_project__skips(
     log: StructuredLogCapture,
 ) -> None:
     # Given
-    mocker.patch("cohorts.tasks.DynamoIdentityWrapper").return_value.is_enabled = True
+    mocker.patch(
+        "cohorts.services.DynamoIdentityWrapper"
+    ).return_value.is_enabled = True
     membership = CohortMembership.objects.create(cohort=cohort, identifier="user-1")
 
     # When
@@ -129,7 +133,9 @@ def test_apply_cohort_membership_deltas__dynamo_throttled__raises_backoff(
     log: StructuredLogCapture,
 ) -> None:
     # Given
-    mocker.patch("cohorts.tasks.DynamoIdentityWrapper").return_value.is_enabled = True
+    mocker.patch(
+        "cohorts.services.DynamoIdentityWrapper"
+    ).return_value.is_enabled = True
     mocker.patch.object(
         services,
         "apply_pending_memberships",
@@ -150,7 +156,9 @@ def test_apply_cohort_membership_deltas__other_client_error__reraises(
     log: StructuredLogCapture,
 ) -> None:
     # Given
-    mocker.patch("cohorts.tasks.DynamoIdentityWrapper").return_value.is_enabled = True
+    mocker.patch(
+        "cohorts.services.DynamoIdentityWrapper"
+    ).return_value.is_enabled = True
     mocker.patch.object(
         services,
         "apply_pending_memberships",
@@ -203,3 +211,35 @@ def test_apply_cohort_membership_deltas__deltas_applied__increments_metric(
 
     # Then
     assert REGISTRY.get_sample_value(metric, {"operation": "add"}) == before + 1
+
+
+def test_apply_cohort_membership_deltas__deletion_requested__finalises_after_drain(
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    api_key = edge_cohort.environment.api_key
+    dynamodb_identity_wrapper.set_system_trait(
+        environment_api_key=api_key,
+        identifier="member",
+        trait_key=edge_cohort.system_trait_key,
+    )
+    CohortMembership.objects.create(
+        cohort=edge_cohort,
+        identifier="member",
+        state=CohortMembershipState.PENDING_REMOVE,
+    )
+    edge_cohort.deletion_requested_at = timezone.now()
+    edge_cohort.save()
+
+    # When
+    apply_cohort_membership_deltas(cohort_id=edge_cohort.id)
+
+    # Then
+    document = dynamodb_identity_wrapper.get_item(f"{api_key}_member")
+    assert document is not None
+    assert document["system_traits"] == {}
+    assert not Cohort.objects.filter(id=edge_cohort.id).exists()
+    assert not Segment.objects.filter(id=edge_cohort.segment_id).exists()
+    assert log.has("cohort.deleted", cohort__id=edge_cohort.id)

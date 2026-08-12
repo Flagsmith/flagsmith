@@ -19,6 +19,9 @@ from environments.dynamodb.wrappers.exceptions import (
     CapacityBudgetExceeded,
     SystemTraitWriteRaceError,
 )
+from environments.identities.traits.constants import (
+    TRAIT_STRING_VALUE_MAX_LENGTH,
+)
 from util.engine_models.context.mappers import (
     is_context_in_segment,
     map_environment_identity_to_context,
@@ -100,9 +103,20 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         document shape just read — a lost race re-reads and retries, and
         `SystemTraitWriteRaceError` is raised once attempts are exhausted.
 
-        Assumes stored documents never carry `system_traits` as NULL — the
-        document mapper omits the attribute when unset.
+        A `system_traits` attribute stored as NULL is treated as absent and
+        replaced.
         """
+        if (
+            isinstance(trait_value, str)
+            and len(trait_value) > TRAIT_STRING_VALUE_MAX_LENGTH
+        ):
+            # The Edge API caps trait values at this length when parsing
+            # identity documents; a longer value there makes every flag
+            # request for the identity fail.
+            raise ValueError(
+                "System trait value must be at most "
+                f"{TRAIT_STRING_VALUE_MAX_LENGTH} characters."
+            )
         composite_key = IdentityModel.generate_composite_key(
             environment_api_key, identifier
         )
@@ -143,28 +157,26 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                     )
                 else:
                     # If another writer created system_traits after we read
-                    # the document, this write does nothing and their traits
-                    # survive; the returned attributes tell us which happened.
-                    response = self.table.update_item(  # type: ignore[union-attr]
+                    # the document, this write fails the condition and the
+                    # retry adds the trait to their map instead. A NULL
+                    # system_traits counts as absent: nothing can be added
+                    # to it, so it is replaced wholesale.
+                    self.table.update_item(  # type: ignore[union-attr]
                         Key={"composite_key": composite_key},
-                        UpdateExpression=(
-                            "SET system_traits = if_not_exists(system_traits, :init)"
+                        UpdateExpression="SET system_traits = :init",
+                        # Without the composite_key clause, update_item would
+                        # re-create a just-deleted identity as an empty
+                        # document containing nothing but this trait.
+                        ConditionExpression=(
+                            "attribute_exists(composite_key)"
+                            " AND (attribute_not_exists(system_traits)"
+                            " OR attribute_type(system_traits, :null))"
                         ),
-                        # Without this condition, update_item would re-create
-                        # a just-deleted identity as an empty document
-                        # containing nothing but this trait.
-                        ConditionExpression="attribute_exists(composite_key)",
                         ExpressionAttributeValues={
-                            ":init": {trait_key: document_value}
+                            ":init": {trait_key: document_value},
+                            ":null": "NULL",
                         },
-                        ReturnValues="ALL_NEW",
                     )
-                    written_traits = response["Attributes"].get("system_traits")
-                    if isinstance(written_traits, dict) and _system_trait_value_matches(
-                        written_traits.get(trait_key), document_value
-                    ):
-                        return
-                    continue
                 return
             except ClientError as exc:
                 if exc.response["Error"]["Code"] != "ConditionalCheckFailedException":

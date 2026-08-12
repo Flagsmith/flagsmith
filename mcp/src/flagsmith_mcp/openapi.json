@@ -5460,6 +5460,13 @@
           "last_name"
         ]
       },
+      "ManagedByEnum": {
+        "description": "* `` - Unmanaged\n* `cohort` - Cohort",
+        "type": "string",
+        "enum": [
+          "cohort"
+        ]
+      },
       "Metadata": {
         "type": "object",
         "properties": {
@@ -5773,6 +5780,15 @@
           },
           "force_2fa": {
             "type": "boolean"
+          },
+          "targeting_key": {
+            "description": "Flagsmith-on-Flagsmith targeting key. Immutable; org.<id> is used when unset.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 64,
+            "writeOnly": true
           }
         },
         "required": [
@@ -6897,6 +6913,17 @@
             "items": {
               "$ref": "#/components/schemas/SegmentMembershipCount"
             },
+            "readOnly": true
+          },
+          "managed_by": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ManagedByEnum"
+              },
+              {
+                "$ref": "#/components/schemas/BlankEnum"
+              }
+            ],
             "readOnly": true
           }
         },

@@ -138,8 +138,10 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             "rules",
             "metadata",
             "membership_counts",
+            "managed_by",
         ]
         read_only_fields = [
+            "managed_by",
             "membership_counts",
             "project",
         ]

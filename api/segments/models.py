@@ -77,6 +77,13 @@ class SegmentConditionManager(ConfiguredOrderManager["Condition"]):
     setting_name = "SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED"
 
 
+class SegmentManagedBy(models.TextChoices):
+    # The explicit empty member puts "" in generated API schemas — it's the
+    # value every unmanaged segment carries.
+    UNMANAGED = "", "Unmanaged"
+    COHORT = "cohort", "Cohort"
+
+
 class Segment(
     LifecycleModelMixin,  # type: ignore[misc]
     SoftDeleteExportableModel,
@@ -123,6 +130,12 @@ class Segment(
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
     is_system_segment = models.BooleanField(default=False)
+    # A managed segment is created and maintained by another feature (e.g. a
+    # cohort). Unlike system segments it stays visible in the API, but the
+    # dashboard renders it differently and cannot edit it.
+    managed_by = models.CharField(
+        max_length=50, choices=SegmentManagedBy.choices, default="", blank=True
+    )
 
     objects = SegmentManager()  # type: ignore[misc]
 

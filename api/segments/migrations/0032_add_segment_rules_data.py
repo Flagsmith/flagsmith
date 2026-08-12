@@ -87,7 +87,7 @@ def _rasterise_segment_rule(rule: typing.Any) -> SegmentRule:
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("segments", "0030_add_default_to_segment_version"),
+        ("segments", "0031_segment_managed_by"),
     ]
 
     operations = [

@@ -516,6 +516,7 @@ export type Subscription = {
   notes: string | null
 }
 
+export type OnboardingVariant = 'control' | 'single_page'
 export type Organisation = {
   id: number
   name: string
