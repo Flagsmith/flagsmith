@@ -235,35 +235,44 @@ def test_change_request_commit__valid_request__emits_structlog_event(
     } in log.events
 
 
-def test_change_request_commit__stale_change_set__raises_exception_and_does_not_revert_conflicting_change(
-    environment_v2_versioning: Environment,
+def _create_conflicting_change_requests(
+    environment: Environment,
     feature: Feature,
     segment: Segment,
-    admin_user: FFAdminUser,
-) -> None:
-    # Given
-    # An existing, published segment override on the feature.
+    user: FFAdminUser,
+    ignore_conflicts: bool = False,
+) -> ChangeRequest:
+    """
+    Set up an existing, published segment override on `feature`, plus two
+    change requests that both target it.
+
+    CR A captures the full state of that override (e.g., as part of
+    reordering overrides on the feature) when it is created. CR B changes
+    the value of the same override, and is committed here, leaving CR A
+    stale. CR A is returned, uncommitted.
+    """
     current_version = EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
-        environment_v2_versioning.id
+        environment.id
     ).get(feature=feature)
     feature_segment = FeatureSegment.objects.create(
         segment=segment,
         feature=feature,
-        environment=environment_v2_versioning,
+        environment=environment,
         environment_feature_version=current_version,
     )
     FeatureState.objects.create(
-        environment=environment_v2_versioning,
+        environment=environment,
         feature=feature,
         feature_segment=feature_segment,
         environment_feature_version=current_version,
         enabled=False,
     )
 
-    # CR A captures the full state of that override (e.g., as part of
-    # reordering overrides on the feature) when it is created.
-    change_request_a = ChangeRequest.objects.create(
-        environment=environment_v2_versioning, title="CR A", user=admin_user
+    change_request_a: ChangeRequest = ChangeRequest.objects.create(
+        environment=environment,
+        title="CR A",
+        user=user,
+        ignore_conflicts=ignore_conflicts,
     )
     VersionChangeSet.objects.create(
         change_request=change_request_a,
@@ -282,10 +291,8 @@ def test_change_request_commit__stale_change_set__raises_exception_and_does_not_
         ),
     )
 
-    # And CR B changes the value of that same override, and is published
-    # first.
     change_request_b = ChangeRequest.objects.create(
-        environment=environment_v2_versioning, title="CR B", user=admin_user
+        environment=environment, title="CR B", user=user
     )
     VersionChangeSet.objects.create(
         change_request=change_request_b,
@@ -303,7 +310,21 @@ def test_change_request_commit__stale_change_set__raises_exception_and_does_not_
             ]
         ),
     )
-    change_request_b.commit(admin_user)
+    change_request_b.commit(user)
+
+    return change_request_a
+
+
+def test_change_request_commit__stale_change_set__raises_exception_and_does_not_revert_conflicting_change(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    change_request_a = _create_conflicting_change_requests(
+        environment_v2_versioning, feature, segment, admin_user
+    )
 
     # When / Then
     # Committing CR A should now be blocked, since it is stale: its
@@ -330,66 +351,9 @@ def test_change_request_commit__stale_change_set_but_ignore_conflicts__commits_a
     # Given
     # Same setup as above, but CR A has `ignore_conflicts` set, which is
     # the existing opt-out already respected by scheduled publishes.
-    current_version = EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
-        environment_v2_versioning.id
-    ).get(feature=feature)
-    feature_segment = FeatureSegment.objects.create(
-        segment=segment,
-        feature=feature,
-        environment=environment_v2_versioning,
-        environment_feature_version=current_version,
+    change_request_a = _create_conflicting_change_requests(
+        environment_v2_versioning, feature, segment, admin_user, ignore_conflicts=True
     )
-    FeatureState.objects.create(
-        environment=environment_v2_versioning,
-        feature=feature,
-        feature_segment=feature_segment,
-        environment_feature_version=current_version,
-        enabled=False,
-    )
-
-    change_request_a = ChangeRequest.objects.create(
-        environment=environment_v2_versioning,
-        title="CR A",
-        user=admin_user,
-        ignore_conflicts=True,
-    )
-    VersionChangeSet.objects.create(
-        change_request=change_request_a,
-        feature=feature,
-        feature_states_to_update=json.dumps(
-            [
-                {
-                    "feature_segment": {"segment": segment.id},
-                    "enabled": False,
-                    "feature_state_value": {
-                        "type": STRING,
-                        "string_value": "original value",
-                    },
-                }
-            ]
-        ),
-    )
-
-    change_request_b = ChangeRequest.objects.create(
-        environment=environment_v2_versioning, title="CR B", user=admin_user
-    )
-    VersionChangeSet.objects.create(
-        change_request=change_request_b,
-        feature=feature,
-        feature_states_to_update=json.dumps(
-            [
-                {
-                    "feature_segment": {"segment": segment.id},
-                    "enabled": True,
-                    "feature_state_value": {
-                        "type": STRING,
-                        "string_value": "concurrent value",
-                    },
-                }
-            ]
-        ),
-    )
-    change_request_b.commit(admin_user)
 
     # When
     change_request_a.commit(admin_user)
@@ -398,6 +362,13 @@ def test_change_request_commit__stale_change_set_but_ignore_conflicts__commits_a
     # commit succeeds, and (as documented by `ignore_conflicts`) CR A's
     # captured state overwrites CR B's published change.
     assert change_request_a.committed_at is not None
+
+    latest_flags = get_environment_flags_list(
+        environment=environment_v2_versioning, feature_name=feature.name
+    )
+    override = next(fs for fs in latest_flags if fs.feature_segment_id is not None)
+    assert override.enabled is False
+    assert override.get_feature_state_value() == "original value"
 
 
 def test_change_request_create__valid_environment__creates_audit_log(  # type: ignore[no-untyped-def]
