@@ -30,6 +30,9 @@ from metadata.models import Metadata
 from projects.models import Project
 from segments.services import copy_segment_rules_and_conditions
 
+# TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
+from segments.types import SegmentRule as SegmentRuleType
+
 ModelT = typing.TypeVar("ModelT", bound=models.Model)
 
 logger = logging.getLogger(__name__)
@@ -104,6 +107,10 @@ class Segment(
     feature = models.ForeignKey(
         Feature, on_delete=models.CASCADE, related_name="segments", null=True
     )
+
+    rules_data: models.JSONField[
+        list[SegmentRuleType], list[SegmentRuleType] | None
+    ] = models.JSONField(null=True)
 
     version = models.IntegerField(default=1, null=True)
 
