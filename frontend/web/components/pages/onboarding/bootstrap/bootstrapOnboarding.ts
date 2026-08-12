@@ -159,7 +159,10 @@ async function ensureFlag(
     )
     .unwrap()
   const results = flags?.results ?? []
-  const onboardingTag = await fetchOnboardingTag(store, project.id)
+  // Not fatal: without the tag we fall back to matching on the name.
+  const onboardingTag = await fetchOnboardingTag(store, project.id).catch(
+    () => undefined,
+  )
   const existing = findDemoFlag(results, onboardingTag)
   if (existing) {
     return canResumeDemoFlag(results, existing) ? existing : undefined
