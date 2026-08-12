@@ -24,3 +24,7 @@ class CannotApproveOwnChangeRequest(FeatureWorkflowError):
 
 class ChangeRequestDeletionError(FeatureWorkflowError):
     status_code = status.HTTP_400_BAD_REQUEST  # type: ignore[assignment]
+
+
+class CannotModifyManagedSegmentError(FeatureWorkflowError):
+    status_code = status.HTTP_400_BAD_REQUEST  # type: ignore[assignment]

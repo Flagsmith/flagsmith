@@ -304,6 +304,8 @@ def test_is_auto_seat_upgrade_available__given_plan_and_seat_count__returns_expe
         ("scale-up", 1),
         ("startup-v2", 1),
         (None, 1),
+        ("Scale-Up-v4-USD-Yearly", 4),
+        ("Scale-Up-v4-USD-Monthly", 4),
     ],
 )
 def test_get_scaleup_plan_version__given_plan__returns_expected(
@@ -998,3 +1000,27 @@ def test_organisation__delete_with_created_infrastructure__deprovisions_aws_reso
 
     # Then
     deprovision.assert_called_once_with(organisation_id)
+
+
+def test_organisation_openfeature_evaluation_context__no_targeting_key__uses_org_id(
+    organisation: Organisation,
+) -> None:
+    # Given / When
+    context = organisation.openfeature_evaluation_context
+
+    # Then
+    assert context.targeting_key == f"org.{organisation.id}"
+
+
+def test_organisation_openfeature_evaluation_context__targeting_key_set__uses_it(
+    organisation: Organisation,
+) -> None:
+    # Given
+    organisation.targeting_key = "a" * 32
+    organisation.save(update_fields=["targeting_key"])
+
+    # When
+    context = organisation.openfeature_evaluation_context
+
+    # Then
+    assert context.targeting_key == "a" * 32

@@ -45,10 +45,11 @@ const AppActions = Object.assign({}, BaseAppActions, {
       segmentOverrides,
     })
   },
-  createOrganisation(name) {
+  createOrganisation(name, targetingKey) {
     Dispatcher.handleViewAction({
       actionType: Actions.CREATE_ORGANISATION,
       name,
+      targetingKey,
     })
   },
   createProject(name) {

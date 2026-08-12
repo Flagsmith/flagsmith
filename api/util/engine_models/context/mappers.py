@@ -43,6 +43,16 @@ def map_environment_identity_to_context(
         `identity.identity_traits` if provided.
     :return: An EvaluationContext containing the environment and identity.
     """
+    traits = {
+        trait.trait_key: trait.trait_value
+        for trait in (
+            override_traits if override_traits is not None else identity.identity_traits
+        )
+    }
+    if identity.system_traits:
+        # System-owned traits are not user data: on a key clash, the system
+        # value wins.
+        traits.update(identity.system_traits)
     return {
         "environment": {
             "key": environment.api_key,
@@ -51,14 +61,7 @@ def map_environment_identity_to_context(
         "identity": {
             "identifier": identity.identifier,
             "key": str(identity.django_id or identity.composite_key),
-            "traits": {
-                trait.trait_key: trait.trait_value
-                for trait in (
-                    override_traits
-                    if override_traits is not None
-                    else identity.identity_traits
-                )
-            },
+            "traits": traits,
         },
     }
 

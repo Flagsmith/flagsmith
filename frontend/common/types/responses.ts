@@ -516,6 +516,7 @@ export type Subscription = {
   notes: string | null
 }
 
+export type OnboardingVariant = 'control' | 'single_page'
 export type Organisation = {
   id: number
   name: string
@@ -1279,6 +1280,11 @@ export type WarehouseConnectionTestResult = {
   status_detail: string | null
 }
 
+export type WarehouseConnectionEvents = {
+  events: string[]
+  is_truncated: boolean
+}
+
 export type WarehouseConnection = {
   id: number
   warehouse_type: WarehouseType
@@ -1523,6 +1529,7 @@ export type Res = {
   gitlabIssues: PagedResponse<GitLabIssue>
   gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
   warehouseConnections: WarehouseConnection[]
+  warehouseConnectionEvents: WarehouseConnectionEvents
   warehouseConnectionTestResult: WarehouseConnectionTestResult
   experiments: PagedResponse<Experiment> & {
     currentPage: number

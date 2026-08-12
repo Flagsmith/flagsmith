@@ -21,6 +21,7 @@ from rest_framework.test import APIClient
 from audit.constants import SEGMENT_DELETED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from cohorts.models import Cohort
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
@@ -32,7 +33,13 @@ from metadata.models import (
 )
 from organisations.models import Organisation
 from projects.models import Project
-from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
+from segments.models import (
+    Condition,
+    Segment,
+    SegmentManagedBy,
+    SegmentRule,
+    WhitelistedSegment,
+)
 from tests.types import WithProjectPermissionsCallable
 from util.mappers import map_identity_to_identity_document
 
@@ -1967,3 +1974,95 @@ def test_create_segment__body_project_differs_from_url__does_not_create_in_other
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["project"] == project.id
     assert not Segment.objects.filter(project=other_project).exists()
+
+
+def test_update_segment__cohort_managed__returns_403(
+    admin_client: APIClient,
+    project: Project,
+    segment: Segment,
+    environment: Environment,
+) -> None:
+    # Given
+    Cohort.objects.create(environment=environment, segment=segment)
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    data = {
+        "name": "New segment name",
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+    }
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_delete_segment__cohort_managed__returns_403(
+    admin_client: APIClient,
+    project: Project,
+    segment: Segment,
+    environment: Environment,
+) -> None:
+    # Given
+    Cohort.objects.create(environment=environment, segment=segment)
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert Segment.objects.filter(id=segment.id).exists()
+
+
+def test_create_segment__managed_by_in_payload__ignored(
+    admin_client: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    data = {
+        "name": "New segment",
+        "project": project.id,
+        "managed_by": SegmentManagedBy.COHORT,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["managed_by"] == ""
+    assert Segment.objects.get(id=response.json()["id"]).managed_by == ""
+
+
+def test_clone_segment__cohort_managed__returns_403(
+    admin_client: APIClient,
+    project: Project,
+    segment: Segment,
+    environment: Environment,
+) -> None:
+    # Given
+    Cohort.objects.create(environment=environment, segment=segment)
+    url = reverse(
+        "api-v1:projects:project-segments-clone", args=[project.id, segment.id]
+    )
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps({"name": "my copy"}), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert Segment.objects.count() == 1

@@ -56,8 +56,8 @@ const ExperimentRecommendation: FC<ExperimentRecommendationProps> = ({
         <VariantName name={summary.winnerName} colour={summary.winnerColour} />{' '}
         is outperforming{' '}
         <VariantName name='Control' colour={summary.controlColour} /> by{' '}
-        {summary.liftVsControl} with {summary.chanceToBest} probability of being
-        the best variant.
+        {summary.liftValue} with {summary.chanceToBest} probability of being the
+        best variant.
       </div>
       <div className='mt-2'>
         Consider rolling out{' '}

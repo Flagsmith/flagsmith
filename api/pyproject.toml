@@ -67,9 +67,9 @@ dependencies = [
     "pydantic>=2.12.0,<3.0.0",
     "pydantic-collections>=0.6.0,<0.7.0",
     "pyngo>=2.4.1,<2.5.0",
-    "flagsmith>=5.3.0,<6.0.0",
+    "flagsmith>=6.2.0,<7.0.0",
     "openfeature-sdk>=0.9.0,<0.10.0",
-    "openfeature-provider-flagsmith>=0.2.0",
+    "openfeature-provider-flagsmith>=1.0.0,<2.0.0",
     "python-gnupg>=0.5.1,<0.6.0",
     "django-redis>=5.4.0,<6.0.0",
     "pygithub>=2.8,<2.9.0",
@@ -88,7 +88,7 @@ dependencies = [
 
 [project.optional-dependencies]
 private = [
-    "flagsmith-private>=0.11.2,<1",
+    "flagsmith-private>=0.11.4,<1",
 ]
 dev = [
     "django-test-migrations>=1.2.0,<2.0.0",
@@ -244,10 +244,10 @@ override-dependencies = [
     "executing==2.2.1",
     "fancycompleter==0.9.1",
     "filelock==3.20.3",
-    "flagsmith==5.3.0",
+    "flagsmith==6.2.0",
     # flagsmith-common version is set via the [project] dependency spec which
     # also carries the extras; an override here would strip the extras.
-    "flagsmith-flag-engine==10.1.0",
+    "flagsmith-flag-engine==10.2.0",
     "freezegun==1.5.5",
     "genson==1.2.2",
     "google-api-core==2.29.0",
@@ -294,7 +294,7 @@ override-dependencies = [
     "nodeenv==1.9.1",
     "oauth2client==4.1.3",
     "oauthlib==3.2.2",
-    "openfeature-provider-flagsmith==0.2.0",
+    "openfeature-provider-flagsmith==1.0.0",
     "openfeature-sdk==0.9.0",
     "opentelemetry-api==1.40.0",
     "opentelemetry-exporter-otlp-proto-common==1.40.0",

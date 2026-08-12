@@ -9,7 +9,10 @@ from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
 from projects.models import Project
 from tests.types import WithProjectPermissionsCallable
-from users.models import FFAdminUser, UserPermissionGroup
+from users.models import (
+    FFAdminUser,
+    UserPermissionGroup,
+)
 
 
 def test_belongs_to__user_in_organisation__returns_true(

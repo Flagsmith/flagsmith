@@ -13,7 +13,7 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from experimentation import services
-from experimentation.dataclasses import WarehouseEventStats
+from experimentation.dataclasses import WarehouseEventNames, WarehouseEventStats
 from experimentation.models import (
     WarehouseConnection,
     WarehouseConnectionStatus,
@@ -1846,3 +1846,79 @@ def test_patch__clickhouse_null_credentials__returns_400(
     assert "password" in response.json()["credentials"]
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.credentials == {"password": "hunter2"}
+
+
+@pytest.mark.parametrize(
+    "service_result, expected_status, expected_body",
+    [
+        (
+            WarehouseEventNames(events=["conversion"], is_truncated=False),
+            status.HTTP_200_OK,
+            {"events": ["conversion"], "is_truncated": False},
+        ),
+        (
+            None,
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            {"detail": "The warehouse is currently unreachable."},
+        ),
+    ],
+    ids=["reachable", "unreachable"],
+)
+def test_get_events__warehouse_availability__maps_to_response(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+    enable_features: EnableFeaturesFixture,
+    service_result: WarehouseEventNames | None,
+    expected_status: int,
+    expected_body: dict[str, object],
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    mocker.patch(
+        "experimentation.views.get_warehouse_event_names",
+        return_value=service_result,
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-events",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == expected_status
+    assert response.json() == expected_body
+
+
+def test_get_events__unsupported_type__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    get_event_names = mocker.patch("experimentation.views.get_warehouse_event_names")
+    connection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.SNOWFLAKE,
+        name="Snowflake",
+        config={"account_identifier": "acme"},
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-events",
+        args=[environment.api_key, connection.id],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "detail": "Event listing is not supported for this warehouse type."
+    }
+    get_event_names.assert_not_called()

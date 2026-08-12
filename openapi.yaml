@@ -2037,6 +2037,118 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+  '/api/v1/environments/{environment_api_key}/cohorts/':
+    get:
+      operationId: api_v1_environments_cohorts_list
+      description: List the environment's cohorts.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cohort'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
+    post:
+      operationId: api_v1_environments_cohorts_create
+      description: Create a cohort and the managed segment that targets it.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cohort'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Cohort'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Cohort'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cohort'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
+  '/api/v1/environments/{environment_api_key}/cohorts/{cohort_id}/':
+    get:
+      operationId: api_v1_environments_cohorts_retrieve
+      description: Retrieve a cohort.
+      parameters:
+        - name: cohort_id
+          in: path
+          description: A unique integer value identifying this cohort.
+          required: true
+          schema:
+            type: integer
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cohort'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
+    delete:
+      operationId: api_v1_environments_cohorts_destroy
+      description: Request cohort deletion. Memberships are drained from identity data first; the cohort and its segment are deleted once drained.
+      parameters:
+        - name: cohort_id
+          in: path
+          description: A unique integer value identifying this cohort.
+          required: true
+          schema:
+            type: integer
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '202':
+          description: No response body
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
   '/api/v1/environments/{environment_api_key}/create-change-request/':
     post:
       operationId: create_environment_feature_change_request
@@ -7064,6 +7176,46 @@ paths:
       responses:
         '204':
           description: No response body
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+  '/api/v1/environments/{environment_api_key}/warehouse-connections/{connection_id}/events/':
+    get:
+      operationId: api_v1_environments_warehouse_connections_events_list
+      description: List the distinct event names in the connection's warehouse.
+      parameters:
+        - name: connection_id
+          in: path
+          description: A unique integer value identifying this warehouse connection.
+          required: true
+          schema:
+            type: integer
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseEventNamesResult'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseEventNamesUnsupported'
+        '503':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseEventNamesUnavailable'
       security:
         - tokenAuth: []
         - Master API Key: []
@@ -18518,6 +18670,11 @@ components:
           items:
             $ref: '#/components/schemas/SegmentMembershipCount'
           readOnly: true
+        managed_by:
+          oneOf:
+            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/BlankEnum'
+          readOnly: true
         change_request:
           type:
             - integer
@@ -18639,6 +18796,39 @@ components:
         name:
           type: string
           maxLength: 2000
+      required:
+        - name
+    Cohort:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 2000
+        description:
+          type:
+            - string
+            - 'null'
+        segment:
+          type: integer
+          readOnly: true
+        source_type:
+          allOf:
+            - $ref: '#/components/schemas/SourceTypeEnum'
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
       required:
         - name
     Condition:
@@ -21694,6 +21884,13 @@ components:
           $ref: '#/components/schemas/UserList'
       required:
         - user
+    ManagedByEnum:
+      description: |-
+        * `` - Unmanaged
+        * `cohort` - Cohort
+      type: string
+      enum:
+        - cohort
     MasterAPIKey:
       type: object
       properties:
@@ -22193,6 +22390,13 @@ components:
           type: boolean
         force_2fa:
           type: boolean
+        targeting_key:
+          description: Flagsmith-on-Flagsmith targeting key. Immutable; org.<id> is used when unset.
+          type:
+            - string
+            - 'null'
+          maxLength: 64
+          writeOnly: true
       required:
         - name
     OrganisationWebhook:
@@ -22203,6 +22407,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         enabled:
           type: boolean
@@ -24145,6 +24350,13 @@ components:
           type: boolean
         force_2fa:
           type: boolean
+        targeting_key:
+          description: Flagsmith-on-Flagsmith targeting key. Immutable; org.<id> is used when unset.
+          type:
+            - string
+            - 'null'
+          maxLength: 64
+          writeOnly: true
     PatchedOrganisationWebhook:
       type: object
       properties:
@@ -24153,6 +24365,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         enabled:
           type: boolean
@@ -24562,6 +24775,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SegmentMembershipCount'
+          readOnly: true
+        managed_by:
+          oneOf:
+            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
     PatchedSegmentConfiguration:
       type: object
@@ -25005,6 +25223,7 @@ components:
         url:
           type: string
           format: uri
+          maxLength: 200
         enabled:
           type: boolean
         created_at:
@@ -25026,6 +25245,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         secret:
           type: string
@@ -26236,6 +26456,11 @@ components:
           items:
             $ref: '#/components/schemas/SegmentMembershipCount'
           readOnly: true
+        managed_by:
+          oneOf:
+            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/BlankEnum'
+          readOnly: true
       required:
         - name
         - project
@@ -26474,6 +26699,11 @@ components:
           type: boolean
       required:
         - channel_id
+    SourceTypeEnum:
+      description: '* `csv` - CSV'
+      type: string
+      enum:
+        - csv
     StageAction:
       type: object
       properties:
@@ -27950,6 +28180,32 @@ components:
       required:
         - status
         - status_detail
+    WarehouseEventNamesResult:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            type: string
+        is_truncated:
+          type: boolean
+      required:
+        - events
+        - is_truncated
+    WarehouseEventNamesUnavailable:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+        - detail
+    WarehouseEventNamesUnsupported:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+        - detail
     WarehouseTypeEnum:
       description: |-
         * `flagsmith` - Flagsmith
@@ -27969,6 +28225,7 @@ components:
         url:
           type: string
           format: uri
+          maxLength: 200
         enabled:
           type: boolean
         created_at:
@@ -27992,6 +28249,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         secret:
           type: string
