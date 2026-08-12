@@ -191,19 +191,23 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         enqueue_membership_refresh(segment.project)
         return segment
 
-    def _validate_rules_depth(self, rules: list[LegacySegmentRule]) -> None:
-        # Raise loudly because the interface ignores rules nested too deep
+    def _validate_rules_depth(
+        self, rules: list[LegacySegmentRule], _depth: int = 1
+    ) -> None:
+        # The serializer just ignores rules nested too deep, so we raise for clarity.
+        if rules and _depth > SEGMENT_RULES_MAX_DEPTH:
+            raise ValidationError(
+                {
+                    "segment": [
+                        f"Rules must not be nested more than "
+                        f"{SEGMENT_RULES_MAX_DEPTH} levels deep."
+                    ]
+                }
+            )
         for rule in rules:
-            for nested_rule in rule.get("rules", []):
-                if nested_rule.get("rules"):
-                    raise ValidationError(
-                        {
-                            "segment": [
-                                f"Rules must not be nested more than "
-                                f"{SEGMENT_RULES_MAX_DEPTH} levels deep."
-                            ]
-                        }
-                    )
+            self._validate_rules_depth(
+                cast(list[LegacySegmentRule], rule.get("rules", [])), _depth + 1
+            )
 
     def _validate_rules_condition_count(self, rules: list[LegacySegmentRule]) -> None:
         if self._can_segment_own_more_conditions_than_limit():
