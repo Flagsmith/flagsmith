@@ -213,11 +213,10 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             )
 
     def _validate_rules_condition_count(self, rules: list[LegacySegmentRule]) -> None:
-        if self._can_segment_own_more_conditions_than_limit():
-            return
-
         condition_count = self._count_conditions(rules)
         if condition_count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
+            if self._can_segment_own_more_conditions_than_limit():
+                return
             raise ValidationError(
                 {
                     "segment": [
