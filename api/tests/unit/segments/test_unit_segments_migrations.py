@@ -8,7 +8,7 @@ from django_test_migrations.migrator import Migrator
 from flag_engine.segments import constants
 from pytest_django.fixtures import SettingsWrapper
 
-migration_0031 = import_module("segments.migrations.0031_add_segment_rules_data")
+migration_0032 = import_module("segments.migrations.0032_add_segment_rules_data")
 
 
 @pytest.mark.skipif(
@@ -253,14 +253,14 @@ def test_add_versioning_to_segments__reverse__deletes_historical_versions(
     test_settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_0031_add_segment_rules_data__forwards__backfill_segment_rules_data(
+def test_0032_add_segment_rules_data__forwards__backfill_segment_rules_data(
     migrator: Migrator,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Given
-    monkeypatch.setattr(migration_0031, "BATCH_SIZE", 2)
+    monkeypatch.setattr(migration_0032, "BATCH_SIZE", 2)
     state = migrator.apply_initial_migration(
-        ("segments", "0031_add_segment_rules_data")
+        ("segments", "0032_add_segment_rules_data")
     )
 
     Organisation = state.apps.get_model("organisations", "Organisation")
@@ -346,7 +346,7 @@ def test_0031_add_segment_rules_data__forwards__backfill_segment_rules_data(
         batched_segments.append(batched_segment)
 
     # When
-    migration_0031.backfill_segment_rules_data(state.apps)
+    migration_0032.backfill_segment_rules_data(state.apps)
 
     # Then
     segment.refresh_from_db()
@@ -419,12 +419,12 @@ def test_0031_add_segment_rules_data__forwards__backfill_segment_rules_data(
     test_settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_0031_add_segment_rules_data__backwards__nullify_segment_rules_data(
+def test_0032_add_segment_rules_data__backwards__nullify_segment_rules_data(
     migrator: Migrator,
 ) -> None:
     # Given
     state = migrator.apply_initial_migration(
-        ("segments", "0031_add_segment_rules_data")
+        ("segments", "0032_add_segment_rules_data")
     )
 
     Organisation = state.apps.get_model("organisations", "Organisation")
@@ -442,7 +442,7 @@ def test_0031_add_segment_rules_data__backwards__nullify_segment_rules_data(
     blank_segment = Segment.objects.create(name="Blank", project=project)
 
     # When
-    migration_0031.nullify_segment_rules_data(state.apps)
+    migration_0032.nullify_segment_rules_data(state.apps)
 
     # Then
     backfilled_segment.refresh_from_db()

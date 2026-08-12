@@ -110,6 +110,7 @@ def test_create_segment__valid_rules__creates_segment_with_rules(
         "version_of": created_segment.id,
         "metadata": [],
         "membership_counts": [],
+        "managed_by": "",
         "rules": [
             {
                 "id": mocker.ANY,
@@ -1101,6 +1102,7 @@ def test_update_segment__valid_rules__updates_segment_with_rules(
         "version_of": segment.id,
         "metadata": [],
         "membership_counts": [],
+        "managed_by": "",
         "rules": [
             {
                 "id": mocker.ANY,
@@ -2035,6 +2037,7 @@ def test_update_segment__whitelisted_segment_exceeds_max_conditions__returns_200
         "version_of": segment.id,
         "metadata": [],
         "membership_counts": [],
+        "managed_by": "",
         "rules": [
             {
                 "id": mocker.ANY,
@@ -2218,6 +2221,7 @@ def test_clone_segment__valid_name__returns_cloned_segment(
             "version_of": cloned_segment.id,
             "metadata": [],
             "membership_counts": [],
+            "managed_by": "",
             "rules": [],  # TODO: Should contain rules as per https://github.com/Flagsmith/flagsmith/issues/7818
         }
     )
