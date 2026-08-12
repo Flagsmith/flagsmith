@@ -16,9 +16,7 @@ from segment_membership.models import SegmentMembershipCount
 from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
 from segments.types import (
-    LegacySegmentCondition,
     LegacySegmentRule,
-    SegmentCondition,
 )
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
@@ -248,14 +246,14 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         """
         if "rules" not in validated_data:
             return  # PATCH support
-        validated_data["rules_data"] = self._cleanup_rules_and_conditions(
+        validated_data["rules_data"] = self._get_clean_rules_and_conditions(
             validated_data["rules"]
         )
 
-    def _cleanup_rules_and_conditions(
+    def _get_clean_rules_and_conditions(
         self, rules: list[LegacySegmentRule]
     ) -> list[SegmentRuleType]:
-        """Remove any `id` fields and `delete: true` items from rules and conditions
+        """Remove obsolete items from rules and conditions
 
         In https://github.com/Flagsmith/flagsmith/issues/7814, we moved from a
         SegmentRule and Condition tree to a JSON field. This cleanup exists to
@@ -263,34 +261,21 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         return [
             {
                 "type": rule["type"],
-                "conditions": self._cleanup_conditions(rule.get("conditions", [])),
-                "rules": [
+                "conditions": [
                     {
-                        "type": nested_rule["type"],
-                        "conditions": self._cleanup_conditions(
-                            nested_rule.get("conditions", [])
-                        ),
+                        "property": condition["property"],
+                        "operator": condition["operator"],
+                        "value": condition.get("value"),
+                        "description": condition.get("description"),
                     }
-                    for nested_rule in rule.get("rules", [])
-                    if not nested_rule.get("delete")
+                    for condition in rule.get("conditions", [])
+                    if not condition.get("delete")
                 ],
+                # Cleanup type-ignore as per https://github.com/Flagsmith/flagsmith/issues/8280
+                "rules": self._get_clean_rules_and_conditions(rule.get("rules", [])),  # type: ignore[typeddict-item,arg-type]
             }
             for rule in rules
             if not rule.get("delete")
-        ]
-
-    def _cleanup_conditions(
-        self, conditions: list[LegacySegmentCondition]
-    ) -> list[SegmentCondition]:
-        return [
-            {
-                "property": condition["property"],
-                "operator": condition["operator"],
-                "value": condition.get("value"),
-                "description": condition.get("description"),
-            }
-            for condition in conditions
-            if not condition.get("delete")
         ]
 
     def _get_rules_and_conditions_without_deleted(

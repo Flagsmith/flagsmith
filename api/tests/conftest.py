@@ -458,6 +458,8 @@ def segment_rules() -> list[SegmentRuleType]:
                             "description": "Jumping very high does not count!",
                         },
                     ],
+                    # Cleanup type-ignore as per https://github.com/Flagsmith/flagsmith/issues/8280
+                    "rules": [],  # type: ignore[typeddict-unknown-key]
                 },
             ],
         }
