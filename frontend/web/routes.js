@@ -2,7 +2,7 @@ import React from 'react'
 import { Route, Switch } from 'react-router-dom'
 
 import App from './components/App' // App Wrapper
-import HomePage from './components/pages/HomePage'
+import HomePage from './components/pages/home-page'
 import Maintenance from './components/Maintenance'
 import CreateOrganisationPage from './components/pages/CreateOrganisationPage'
 import CreateEnvironmentPage from './components/pages/CreateEnvironmentPage'

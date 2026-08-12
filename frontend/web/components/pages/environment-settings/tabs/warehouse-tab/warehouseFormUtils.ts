@@ -20,8 +20,8 @@ export const getTestFailureWarning = (detail: string | null): string => {
   if (detail && isMissingEventsTableDetail(detail)) {
     return `${punctuate(
       detail,
-    )} You can save anyway and test again later, but events won't be delivered until the table exists.`
+    )}\nYou can save anyway and test again later, but events won't be delivered until the table exists.`
   }
   const reason = detail ? `: ${punctuate(detail)}` : '.'
-  return `We couldn't establish a connection${reason} You can save anyway and test again later, but events won't be delivered until the connection succeeds.`
+  return `We couldn't establish a connection${reason}\nYou can save anyway and test again later, but events won't be delivered until the connection succeeds.`
 }

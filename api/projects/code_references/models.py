@@ -17,6 +17,8 @@ class VCSRepository(models.Model):
     )
 
     # Provider-agnostic URL to the web UI of the repository, e.g. https://github.flagsmith.com/backend/
+    # Deliberately not a `NoSSRFURLField`: only ever rendered as a link, never
+    # fetched server-side, and self-hosted instances live on internal hosts.
     url = models.URLField()
 
     vcs_provider = models.CharField(

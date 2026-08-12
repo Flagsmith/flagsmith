@@ -214,6 +214,17 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         next_cursor = members[-1]["identifier"] if has_more else None
         return Response({"results": members, "next_cursor": next_cursor})
 
+    def check_object_permissions(self, request: Request, obj: Segment) -> None:
+        super().check_object_permissions(request, obj)
+        if (
+            self.action in ("update", "partial_update", "destroy", "clone")
+            and obj.cohorts.exists()
+        ):
+            raise PermissionDenied(
+                "This segment is managed by a cohort and cannot be edited "
+                "or cloned directly."
+            )
+
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         segment = self.get_object()
         author = AuthorData.from_request(request)

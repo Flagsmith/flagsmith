@@ -10,13 +10,17 @@ if TYPE_CHECKING:  # pragma: no cover
     from environments.models import Environment
 
 
-SDKDocumentValue: TypeAlias = dict[str, "SDKDocumentValue"] | str | bool | None | float
+SDKDocumentValue: TypeAlias = (
+    dict[str, "SDKDocumentValue"] | list["SDKDocumentValue"] | str | bool | None | float
+)
 SDKDocument: TypeAlias = dict[str, SDKDocumentValue]
 
-SDK_DOCUMENT_EXCLUDE = {
-    *IDENTITY_INTEGRATIONS_RELATION_NAMES,
-    "dynatrace_config",
-    "onboarding_pending",
+SDK_DOCUMENT_EXCLUDE: dict[str, bool | dict[str, set[str]]] = {
+    **dict.fromkeys(IDENTITY_INTEGRATIONS_RELATION_NAMES, True),
+    "dynatrace_config": True,
+    "onboarding_pending": True,
+    # System-owned identity data must never reach local-eval SDKs.
+    "identity_overrides": {"__all__": {"system_traits"}},
 }
 
 

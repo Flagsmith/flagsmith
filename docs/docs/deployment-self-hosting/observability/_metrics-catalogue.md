@@ -9,6 +9,15 @@ Labels:
  - `ci_commit_sha`
  - `version`
 
+### `flagsmith_cohorts_membership_deltas_applied`
+
+Counter.
+
+Total number of cohort membership ledger rows transitioned to their applied state after the corresponding identity document write. The `operation` label is either `add` or `remove`.
+
+Labels:
+ - `operation`
+
 ### `flagsmith_dynamo_environment_document_compression_ratio`
 
 Histogram.

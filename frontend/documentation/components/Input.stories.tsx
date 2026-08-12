@@ -4,7 +4,7 @@ import type { Meta, StoryObj } from 'storybook'
 import Input from 'components/base/forms/Input'
 
 const meta: Meta = {
-  parameters: { layout: 'centered' },
+  parameters: { chromatic: { disableSnapshot: false }, layout: 'centered' },
   title: 'Components/Forms/Input',
 }
 export default meta

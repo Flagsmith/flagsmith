@@ -8,6 +8,7 @@ import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
 import API from 'project/api'
 import AppActions from 'common/dispatcher/app-actions'
+import { getStoredOnboardingTargetingKey } from 'common/utils/onboardingEntry'
 import Utils from 'common/utils/utils'
 // @ts-ignore
 import Project from 'common/project'
@@ -115,7 +116,10 @@ const CreateOrganisationPage: React.FC = () => {
               `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
             )
           }
-          AppActions.createOrganisation(name)
+          AppActions.createOrganisation(
+            name,
+            getStoredOnboardingTargetingKey() ?? undefined,
+          )
         }}
       >
         <CondensedRow>

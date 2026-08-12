@@ -178,6 +178,10 @@ urlpatterns = [
         include("experimentation.urls"),
     ),
     path(
+        "<str:environment_api_key>/cohorts/",
+        include("cohorts.urls"),
+    ),
+    path(
         "<str:environment_api_key>/experiments/",
         include("experimentation.experiment_urls"),
     ),

@@ -198,14 +198,14 @@ export const colorSurfaceWarning =
 
 // Text
 export const colorTextAction = 'var(--color-text-action, #6837fc)'
-export const colorTextDanger = 'var(--color-text-danger, #ef4d56)'
+export const colorTextDanger = 'var(--color-text-danger, #bb1720)'
 export const colorTextDefault = 'var(--color-text-default, #1a2634)'
 export const colorTextDisabled = 'var(--color-text-disabled, #9da4ae)'
 export const colorTextInfo = 'var(--color-text-info, #0aaddf)'
 export const colorTextSecondary = 'var(--color-text-secondary, #656d7b)'
-export const colorTextSuccess = 'var(--color-text-success, #27ab95)'
+export const colorTextSuccess = 'var(--color-text-success, #13787b)'
 export const colorTextTertiary = 'var(--color-text-tertiary, #9da4ae)'
-export const colorTextWarning = 'var(--color-text-warning, #ff9f43)'
+export const colorTextWarning = 'var(--color-text-warning, #9f5208)'
 
 // Chart
 export const colorChart1 = 'var(--color-chart-1, #0aaddf)'

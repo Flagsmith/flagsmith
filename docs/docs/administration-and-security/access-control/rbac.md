@@ -6,7 +6,7 @@ sidebar_position: 1
 
 :::info
 
-Role-based access control requires an [Enterprise subscription](https://www.flagsmith.com/pricing).
+Role-based access control requires an [Enterprise or Scale-Up subscription](https://www.flagsmith.com/pricing).
 
 :::
 
