@@ -6,7 +6,7 @@ from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.types import Binary
 from botocore.exceptions import ClientError
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.segments.constants import IN
+from flag_engine.segments.constants import IN, IS_SET
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -398,6 +398,41 @@ def test_get_segment_ids__segment_with_feature_overrides__returns_correct_ids(
 
     # Then
     assert segment_ids == [identity_matching_segment.id]
+
+
+def test_get_segment_ids__system_trait_backed_segment__returns_correct_ids(
+    project: "Project",
+    environment: "Environment",
+    identity: "Identity",
+    mocker: "MockerFixture",
+) -> None:
+    # Given - two IS_SET segments: one keyed to a system trait the identity
+    # carries, one keyed to a system trait it does not
+    member_segment = Segment.objects.create(name="Cohort members", project=project)
+    rule = SegmentRule.objects.create(segment=member_segment, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(rule=rule, operator=IS_SET, property="flagsmith_cohort_a")
+    other_segment = Segment.objects.create(name="Other cohort", project=project)
+    other_rule = SegmentRule.objects.create(
+        segment=other_segment, type=SegmentRule.ALL_RULE
+    )
+    Condition.objects.create(
+        rule=other_rule, operator=IS_SET, property="flagsmith_cohort_b"
+    )
+
+    identity_document = map_identity_to_identity_document(identity)
+    identity_document["system_traits"] = {"flagsmith_cohort_a": True}
+    identity_uuid = identity_document["identity_uuid"]
+
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
+    )
+
+    # When
+    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)  # type: ignore[arg-type]
+
+    # Then
+    assert segment_ids == [member_segment.id]
 
 
 def test_get_segment_ids__in_operator_with_integer_traits__returns_matching_segment(
