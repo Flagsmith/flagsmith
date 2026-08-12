@@ -1,3 +1,4 @@
+import threading
 from dataclasses import asdict
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
@@ -62,7 +63,7 @@ def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
         "clickhouse://user:pass@ch.example.com:9440/flagsmith_exp?secure=True"
     )
     mock_client_cls = mocker.patch("experimentation.services.Client")
-    services._get_clickhouse_client.cache_clear()
+    services._clickhouse_clients.__dict__.clear()
 
     # When
     client = services._get_clickhouse_client()
@@ -80,7 +81,7 @@ def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
         client_name=settings.CLICKHOUSE_CONNECTION_CLIENT_NAME,
     )
     assert client is mock_client_cls.return_value
-    services._get_clickhouse_client.cache_clear()
+    services._clickhouse_clients.__dict__.clear()
 
 
 def test_get_clickhouse_client__dsn_timeouts__are_preserved(
@@ -92,7 +93,7 @@ def test_get_clickhouse_client__dsn_timeouts__are_preserved(
         "clickhouse://ch.example.com:9000/db?connect_timeout=1&send_receive_timeout=2"
     )
     mock_client_cls = mocker.patch("experimentation.services.Client")
-    services._get_clickhouse_client.cache_clear()
+    services._clickhouse_clients.__dict__.clear()
 
     # When
     services._get_clickhouse_client()
@@ -106,7 +107,44 @@ def test_get_clickhouse_client__dsn_timeouts__are_preserved(
         send_receive_timeout=2,
         client_name=settings.CLICKHOUSE_CONNECTION_CLIENT_NAME,
     )
-    services._get_clickhouse_client.cache_clear()
+    services._clickhouse_clients.__dict__.clear()
+
+
+def test_get_clickhouse_client__per_thread_and_timeout__caches_distinct_clients(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.EXPERIMENTATION_CLICKHOUSE_URL = "clickhouse://ch.example.com/db"
+    mock_client_cls = mocker.patch(
+        "experimentation.services.Client",
+        side_effect=lambda *args, **kwargs: mocker.Mock(),
+    )
+    services._clickhouse_clients.__dict__.clear()
+
+    # When
+    client = services._get_clickhouse_client()
+    same_client = services._get_clickhouse_client()
+    background_client = services._get_clickhouse_client(
+        send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+    )
+    other_thread_clients = []
+    thread = threading.Thread(
+        target=lambda: other_thread_clients.append(services._get_clickhouse_client())
+    )
+    thread.start()
+    thread.join()
+
+    # Then
+    assert client is same_client
+    assert background_client is not client
+    assert other_thread_clients[0] is not client
+    assert mock_client_cls.call_count == 3
+    assert (
+        mock_client_cls.call_args_list[1].kwargs["send_receive_timeout"]
+        == services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS
+    )
+    services._clickhouse_clients.__dict__.clear()
 
 
 @pytest.mark.parametrize(
@@ -327,7 +365,7 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
     ]
     mock_client = mocker.Mock()
     mock_client.execute.return_value = rows
-    mocker.patch(
+    mock_get_client = mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
     )
@@ -378,6 +416,9 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
         "window_start": window_start,
         "window_end": window_end,
     }
+    mock_get_client.assert_called_once_with(
+        send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+    )
 
 
 def test_get_exposure_buckets__hour_granularity__buckets_by_hour(
@@ -795,7 +836,7 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     ]
     mock_client = mocker.Mock()
     mock_client.execute.return_value = (rows, _result_columns(4))
-    mocker.patch(
+    mock_get_client = mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
     )
@@ -862,6 +903,9 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     assert params["metric_2_event"] == "page_view"
     assert params["metric_3_event"] == "session"
     assert params["window_end"] == window_end
+    mock_get_client.assert_called_once_with(
+        send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+    )
 
 
 def test_get_metric_variant_stats__three_variants__maps_all_variants(

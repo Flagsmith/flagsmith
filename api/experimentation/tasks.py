@@ -6,6 +6,7 @@ from task_processor.decorators import (
     register_recurring_task,
     register_task_handler,
 )
+from task_processor.exceptions import TaskBackoffError
 
 from environments.models import Environment, EnvironmentAPIKey
 from experimentation import ingestion_sync_service
@@ -27,6 +28,11 @@ from experimentation.services import (
     compute_results_summary,
     deliver_warehouse_events,
 )
+
+# Warehouse computes may legitimately run for up to
+# `CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS`, e.g. while an idled
+# ClickHouse Cloud service wakes up.
+COMPUTE_TASK_TIMEOUT = timedelta(minutes=3)
 
 logger = structlog.get_logger("experimentation")
 
@@ -162,7 +168,7 @@ def clean_up_old_warehouse_delivery_logs() -> None:
     ).delete()
 
 
-@register_task_handler()
+@register_task_handler(timeout=COMPUTE_TASK_TIMEOUT)
 def compute_experiment_exposures(experiment_id: int) -> None:
     experiment = (
         Experiment.objects.select_related("environment__project", "feature")
@@ -194,12 +200,14 @@ def compute_experiment_exposures(experiment_id: int) -> None:
             environment__id=experiment.environment_id,
             organisation__id=experiment.environment.project.organisation_id,
         )
+        if isinstance(exc, OSError):
+            raise TaskBackoffError() from exc
         return
 
     exposures.record_refresh(summary, as_of)
 
 
-@register_task_handler()
+@register_task_handler(timeout=COMPUTE_TASK_TIMEOUT)
 def compute_experiment_results(experiment_id: int) -> None:
     experiment = (
         Experiment.objects.select_related("environment__project", "feature")
@@ -229,6 +237,8 @@ def compute_experiment_results(experiment_id: int) -> None:
             environment__id=experiment.environment_id,
             organisation__id=experiment.environment.project.organisation_id,
         )
+        if isinstance(exc, OSError):
+            raise TaskBackoffError() from exc
         return
 
     results.record_refresh(summary, as_of)

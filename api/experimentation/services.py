@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import threading
 import time
 import typing
 from dataclasses import replace
-from functools import lru_cache
 
 import structlog
 from clickhouse_connect.driver.exceptions import ClickHouseError
@@ -104,6 +104,7 @@ logger = structlog.get_logger("warehouse")
 
 CLICKHOUSE_CONNECT_TIMEOUT_SECONDS = 5
 CLICKHOUSE_QUERY_TIMEOUT_SECONDS = 30
+CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS = 120
 CLICKHOUSE_VERIFY_TIMEOUT_SECONDS = 5
 CLICKHOUSE_EVENT_NAMES_TIMEOUT_SECONDS = 15
 CUSTOMER_EVENT_STATS_CACHE_SECONDS = 60
@@ -148,19 +149,30 @@ def is_experiment_feature_enabled(organisation: Organisation) -> bool:
     )
 
 
-@lru_cache(maxsize=1)
-def _get_clickhouse_client() -> Client:
+_clickhouse_clients = threading.local()
+
+
+def _get_clickhouse_client(
+    send_receive_timeout: int = CLICKHOUSE_QUERY_TIMEOUT_SECONDS,
+) -> Client:
     """Build a clickhouse-driver client for the experimentation event store.
 
     The database is taken from the DSN path, so queries can reference the
     `events` table unqualified. Connect and query timeouts are bounded unless the
     DSN overrides them.
+
+    clickhouse-driver clients are not thread-safe, so one client is cached per
+    thread and requested timeout.
     """
-    host, kwargs = parse_url(settings.EXPERIMENTATION_CLICKHOUSE_URL)
-    kwargs.setdefault("connect_timeout", CLICKHOUSE_CONNECT_TIMEOUT_SECONDS)
-    kwargs.setdefault("send_receive_timeout", CLICKHOUSE_QUERY_TIMEOUT_SECONDS)
-    kwargs.setdefault("client_name", settings.CLICKHOUSE_CONNECTION_CLIENT_NAME)
-    return Client(host, **kwargs)
+    clients: dict[int, Client] = getattr(_clickhouse_clients, "clients", None) or {}
+    _clickhouse_clients.clients = clients
+    if (client := clients.get(send_receive_timeout)) is None:
+        host, kwargs = parse_url(settings.EXPERIMENTATION_CLICKHOUSE_URL)
+        kwargs.setdefault("connect_timeout", CLICKHOUSE_CONNECT_TIMEOUT_SECONDS)
+        kwargs.setdefault("send_receive_timeout", send_receive_timeout)
+        kwargs.setdefault("client_name", settings.CLICKHOUSE_CONNECTION_CLIENT_NAME)
+        client = clients[send_receive_timeout] = Client(host, **kwargs)
+    return client
 
 
 _CLICKHOUSE_EVENT_NAMES_QUERY = (
@@ -344,7 +356,9 @@ def get_exposure_buckets(
     window_end: datetime,
     granularity: ExposureGranularity,
 ) -> list[ExposureBucket]:
-    rows = _get_clickhouse_client().execute(
+    rows = _get_clickhouse_client(
+        send_receive_timeout=CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+    ).execute(
         EXPOSURE_BUCKETS_QUERY.format(
             bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
         ),
@@ -387,9 +401,9 @@ def get_metric_variant_stats(
     }
     builder.add_metric_params(params)
 
-    rows, columns = _get_clickhouse_client().execute(
-        builder.build_query(), params, with_column_types=True
-    )
+    rows, columns = _get_clickhouse_client(
+        send_receive_timeout=CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+    ).execute(builder.build_query(), params, with_column_types=True)
     exposure_counts, metric_stats = builder.decode_rows(
         rows, [name for name, _type in columns]
     )
