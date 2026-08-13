@@ -24,15 +24,10 @@ const OnboardingRolloutQuest: FC<OnboardingRolloutQuestProps> = ({
   onFeedback,
   onNotifyMe,
 }) => (
-  <div className='onboarding-rollout-quest mx-auto d-flex flex-column gap-4'>
-    <div className='d-flex flex-column gap-1'>
-      <h2 className='onboarding-rollout-quest__title m-0 fw-bold text-default'>
-        Roll out gradually
-      </h2>
-      <p className='onboarding-rollout-quest__body text-secondary m-0'>
-        Release {featureName} to a growing percentage of your users.
-      </p>
-    </div>
+  <div className='onboarding-rollout-quest p-4 d-flex flex-column gap-4'>
+    <p className='onboarding-rollout-quest__body text-secondary m-0'>
+      Release {featureName} to a growing percentage of your users.
+    </p>
 
     <section className='onboarding-rollout-quest__card bg-surface-default border-default rounded-xl d-flex flex-column gap-3'>
       <h3 className='onboarding-rollout-quest__card-title m-0 fw-bold text-default'>

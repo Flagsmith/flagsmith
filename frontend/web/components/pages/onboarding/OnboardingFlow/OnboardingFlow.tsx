@@ -10,9 +10,7 @@ import OnboardingFlagsTable from 'components/pages/onboarding/OnboardingFlagsTab
 import OnboardingNextSteps, {
   OnboardingNextStep,
 } from 'components/pages/onboarding/OnboardingNextSteps'
-import OnboardingRolloutQuest, {
-  useRolloutQuest,
-} from 'components/pages/onboarding/OnboardingRolloutQuest'
+import { useRolloutQuest } from 'components/pages/onboarding/OnboardingRolloutQuest'
 import { useEnsureOnboardingResources } from 'components/pages/onboarding/hooks/useEnsureOnboardingResources'
 import { useOnboardingFlagRename } from 'components/pages/onboarding/hooks/useOnboardingFlagRename'
 import { useOnboardingFlag } from 'components/pages/onboarding/hooks/useOnboardingFlag'
@@ -168,20 +166,20 @@ const OnboardingFlow: FC = () => {
     history.push(`${base}/features?feature=${flagId}&tab=${tab}`)
   }
 
-  const goToNextStep = (step: OnboardingNextStep) =>
-    step === 'rollout' ? rolloutQuest.open() : goToFlagConfig(step)
-
   const diagnosticIds = {
     environment_id: environment?.id,
     organisation_id: organisationId,
     project_id: projectId,
   }
-  const rolloutQuest = useRolloutQuest({
+  const openRolloutQuest = useRolloutQuest({
     diagnosticIds,
     featureName,
     onContinue: () => goToFlagConfig('rollout'),
     who: { email: profile?.email, organisation: organisationDisplayName },
   })
+
+  const goToNextStep = (step: OnboardingNextStep) =>
+    step === 'rollout' ? openRolloutQuest() : goToFlagConfig(step)
   const trackSnippetCopied = (snippet: OnboardingSnippet) =>
     API.trackEvent({
       ...Constants.events.ONBOARDING_SNIPPET_COPIED,
@@ -228,10 +226,6 @@ const OnboardingFlow: FC = () => {
         <Button onClick={() => window.location.reload()}>Try again</Button>
       </div>
     )
-  }
-
-  if (rolloutQuest.isOpen) {
-    return <OnboardingRolloutQuest {...rolloutQuest.props} />
   }
 
   return (
