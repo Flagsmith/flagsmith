@@ -1,4 +1,10 @@
+from collections.abc import Iterable
 from typing import Any
+
+from oauth2_provider.scopes import get_scopes_backend
+
+from oauth2_metadata.constants import SCOPE_GRANTS
+from oauth2_metadata.types import ScopeDescription
 
 _RFC7591_ERROR_CODES: dict[str, str] = {
     "redirect_uris": "invalid_redirect_uri",
@@ -7,6 +13,25 @@ _RFC7591_ERROR_CODES: dict[str, str] = {
     "response_types": "invalid_client_metadata",
     "token_endpoint_auth_method": "invalid_client_metadata",
 }
+
+
+def map_scopes_to_descriptions(
+    scopes: Iterable[str],
+) -> dict[str, ScopeDescription]:
+    """Describe scopes for a consent screen.
+
+    The label is the scope registry's own one-liner; the grants spell it out.
+    A scope with nothing written about it is described by its label alone,
+    so an added scope is never presented as granting nothing.
+    """
+    all_scopes: dict[str, str] = get_scopes_backend().get_all_scopes()
+    return {
+        scope: ScopeDescription(
+            label=all_scopes.get(scope, scope),
+            grants=list(SCOPE_GRANTS.get(scope, ())),
+        )
+        for scope in scopes
+    }
 
 
 def map_drf_error_to_rfc7591_error_body(errors: dict[str, Any]) -> dict[str, str]:

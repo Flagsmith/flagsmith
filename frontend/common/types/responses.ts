@@ -517,6 +517,11 @@ export type Subscription = {
 }
 
 export type OnboardingVariant = 'control' | 'single_page'
+// What consenting to an OAuth scope grants, as the API describes it.
+export type OAuthScopeDescription = {
+  label: string
+  grants: string[]
+}
 export type Organisation = {
   id: number
   name: string
@@ -1516,7 +1521,7 @@ export type Res = {
   }
   validateOAuthAuthorize: {
     application: { name: string; client_id: string }
-    scopes: Record<string, string>
+    scopes: Record<string, OAuthScopeDescription>
     redirect_uri: string
     is_verified: boolean
   }
