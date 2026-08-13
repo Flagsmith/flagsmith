@@ -4,6 +4,8 @@ import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
 
+from core.migration_helpers import PostgresOnlyRunSQL
+
 
 class Migration(migrations.Migration):
 
@@ -89,13 +91,29 @@ class Migration(migrations.Migration):
             ],
             options={
                 "ordering": ("id",),
-                "constraints": [
-                    models.UniqueConstraint(
+            },
+        ),
+        # Partial indexes are Postgres-only; downstream forks running other
+        # vendors keep the constraint in Django's state without it existing in
+        # the database.
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.AddConstraint(
+                    model_name="trustrelationship",
+                    constraint=models.UniqueConstraint(
                         condition=models.Q(("deleted_at__isnull", True)),
                         fields=("issuer", "audience"),
                         name="unique_live_issuer_audience",
-                    )
-                ],
-            },
+                    ),
+                ),
+            ],
+            database_operations=[
+                PostgresOnlyRunSQL(
+                    'CREATE UNIQUE INDEX "unique_live_issuer_audience" '
+                    'ON "trust_relationships_trustrelationship" '
+                    '("issuer", "audience") WHERE "deleted_at" IS NULL;',
+                    reverse_sql='DROP INDEX "unique_live_issuer_audience";',
+                ),
+            ],
         ),
     ]
