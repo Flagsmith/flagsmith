@@ -61,7 +61,14 @@ class Migration(migrations.Migration):
                         max_length=500,
                     ),
                 ),
-                ("claim_rules", models.JSONField(blank=True, default=list)),
+                (
+                    "claim_rules",
+                    models.JSONField(
+                        blank=True,
+                        default=list,
+                        help_text="Constraints an exchanged token's claims must satisfy.",
+                    ),
+                ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 (
                     "created_by",

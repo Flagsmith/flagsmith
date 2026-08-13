@@ -9,9 +9,10 @@ from trust_relationships.services import (
     create_trust_relationship,
     update_trust_relationship,
 )
+from trust_relationships.types import ClaimRule
 
 
-class ClaimRuleSerializer(serializers.Serializer[None]):
+class ClaimRuleSerializer(serializers.Serializer[ClaimRule]):
     claim = serializers.CharField(max_length=255)
     values = serializers.ListField(
         child=serializers.CharField(max_length=500),
@@ -60,11 +61,12 @@ class TrustRelationshipSerializer(serializers.ModelSerializer[TrustRelationship]
             )
         return is_admin
 
-    def validate_claim_rules(
-        self, claim_rules: list[dict[str, Any]]
-    ) -> list[dict[str, Any]]:
+    def validate_claim_rules(self, claim_rules: list[ClaimRule]) -> list[ClaimRule]:
         # DRF yields OrderedDicts; store plain JSON.
-        return [dict(rule) for rule in claim_rules]
+        return [
+            ClaimRule(claim=rule["claim"], values=rule["values"])
+            for rule in claim_rules
+        ]
 
     def create(self, validated_data: dict[str, Any]) -> TrustRelationship:
         validated_data.setdefault("claim_rules", [])

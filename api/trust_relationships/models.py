@@ -1,38 +1,52 @@
+from datetime import datetime
+
 from django.db import models
 from softdelete.models import SoftDeleteObject  # type: ignore[import-untyped]
 
 from api_keys.models import MasterAPIKey
 from organisations.models import Organisation
+from trust_relationships.types import ClaimRule
+from users.models import FFAdminUser
 
 
 class TrustRelationship(SoftDeleteObject):  # type: ignore[misc]
-    organisation = models.ForeignKey(  # type: ignore[var-annotated]
+    organisation: models.ForeignKey[Organisation, Organisation] = models.ForeignKey(
         Organisation,
         on_delete=models.CASCADE,
         related_name="trust_relationships",
     )
-    name = models.CharField(  # type: ignore[var-annotated]
+    name: models.CharField[str, str] = models.CharField(
         max_length=100,
         help_text="Display name for this trust relationship.",
     )
-    issuer = models.URLField(  # type: ignore[var-annotated]
+    issuer: models.URLField[str, str] = models.URLField(
         max_length=500,
         help_text="OIDC issuer URL expected in exchanged tokens' `iss` claim.",
     )
-    audience = models.CharField(  # type: ignore[var-annotated]
+    audience: models.CharField[str, str] = models.CharField(
         max_length=500,
         help_text="Expected value of the `aud` claim in exchanged tokens.",
     )
-    claim_rules = models.JSONField(default=list, blank=True)
-    master_api_key = models.OneToOneField(  # type: ignore[var-annotated]
-        MasterAPIKey,
-        on_delete=models.CASCADE,
-        related_name="trust_relationship",
+    claim_rules: models.JSONField[list[ClaimRule], list[ClaimRule]] = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Constraints an exchanged token's claims must satisfy.",
     )
-    created_by = models.ForeignKey(  # type: ignore[var-annotated]
-        "users.FFAdminUser", on_delete=models.SET_NULL, null=True, blank=True
+    master_api_key: models.OneToOneField[MasterAPIKey, MasterAPIKey] = (
+        models.OneToOneField(
+            MasterAPIKey,
+            on_delete=models.CASCADE,
+            related_name="trust_relationship",
+        )
     )
-    created_at = models.DateTimeField(auto_now_add=True)  # type: ignore[var-annotated]
+    created_by: models.ForeignKey[FFAdminUser | None, FFAdminUser | None] = (
+        models.ForeignKey(
+            FFAdminUser, on_delete=models.SET_NULL, null=True, blank=True
+        )
+    )
+    created_at: models.DateTimeField[datetime, datetime] = models.DateTimeField(
+        auto_now_add=True
+    )
 
     class Meta:
         ordering = ("id",)

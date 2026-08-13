@@ -658,7 +658,7 @@ Attributes:
 ### `trust_relationships.created`
 
 Logged at `info` from:
- - `api/trust_relationships/services.py:48`
+ - `api/trust_relationships/services.py:47`
 
 Attributes:
  - `organisation.id`
@@ -668,7 +668,7 @@ Attributes:
 ### `trust_relationships.deleted`
 
 Logged at `info` from:
- - `api/trust_relationships/services.py:94`
+ - `api/trust_relationships/services.py:93`
 
 Attributes:
  - `organisation.id`
@@ -677,7 +677,7 @@ Attributes:
 ### `trust_relationships.updated`
 
 Logged at `info` from:
- - `api/trust_relationships/services.py:79`
+ - `api/trust_relationships/services.py:78`
 
 Attributes:
  - `organisation.id`

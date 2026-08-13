@@ -1,10 +1,9 @@
-from typing import Any
-
 import structlog
 from django.db import transaction
 
 from api_keys.models import MasterAPIKey
 from trust_relationships.models import TrustRelationship
+from trust_relationships.types import ClaimRule
 from users.models import FFAdminUser
 
 logger = structlog.get_logger("trust_relationships")
@@ -24,7 +23,7 @@ def create_trust_relationship(
     issuer: str,
     audience: str,
     is_admin: bool,
-    claim_rules: list[dict[str, Any]],
+    claim_rules: list[ClaimRule],
     created_by: FFAdminUser | None = None,
 ) -> TrustRelationship:
     with transaction.atomic():
@@ -61,7 +60,7 @@ def update_trust_relationship(
     issuer: str,
     audience: str,
     is_admin: bool,
-    claim_rules: list[dict[str, Any]],
+    claim_rules: list[ClaimRule],
 ) -> TrustRelationship:
     with transaction.atomic():
         master_api_key = trust_relationship.master_api_key
