@@ -696,3 +696,32 @@ def test_edge_identities_update_trait__persist_trait_data_disabled__returns_400(
     )
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_edge_identities_update_trait__malformed_traits_payload__returns_400(  # type: ignore[no-untyped-def]
+    admin_client,
+    dynamo_enabled_environment,
+    environment_api_key,
+    identity_document,
+    edge_identity_dynamo_wrapper_mock,
+):
+    # Given
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document
+    )
+    identity_uuid = identity_document["identity_uuid"]
+    url = reverse(
+        "api-v1:environments:environment-edge-identities-update-traits",
+        args=[environment_api_key, identity_uuid],
+    )
+    # A JSON array instead of the expected object.
+    data = [{"trait_key": "some_key", "trait_value": "some_value"}]
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    edge_identity_dynamo_wrapper_mock.put_item.assert_not_called()
