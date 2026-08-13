@@ -16,6 +16,7 @@ import {
   decideOnboardingEntry,
   getStoredOnboardingVariant,
   persistOnboardingEntry,
+  trackOnboardingExposure,
 } from 'common/utils/onboardingEntry'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
@@ -158,6 +159,12 @@ const App = class extends Component {
         // Only an accepted decision is persisted: a decision losing the
         // race must not store its assignment after routing has happened.
         const variant = decision ? persistOnboardingEntry(decision) : 'control'
+        // Exposure records the variant we are about to route to, not the one
+        // the flag returned: a decision that lost the race, or that came back
+        // without a targeting key, was never shown to anyone.
+        if (decision) {
+          trackOnboardingExposure(decision, variant)
+        }
         // Restore the logged-in identity for the rest of the app.
         Promise.resolve(API.flagsmithIdentify()).catch(() => {})
         if (variant === 'single_page') {
