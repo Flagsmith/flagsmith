@@ -115,6 +115,9 @@ def test_create_trust_relationship__malformed_claim_rules__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["claim_rules"] == [
+        {"values": ["Ensure this field has at least 1 elements."]}
+    ]
 
 
 def test_list_trust_relationships__existing__returns_trust_relationships(
@@ -247,10 +250,11 @@ def test_create_trust_relationship__same_issuer_and_audience_as_deleted__returns
     trust_relationship: int,
 ) -> None:
     # Given
-    admin_client.delete(
+    delete_response = admin_client.delete(
         f"/api/v1/organisations/{organisation}"
         f"/trust-relationships/{trust_relationship}/"
     )
+    assert delete_response.status_code == status.HTTP_204_NO_CONTENT
     url = f"/api/v1/organisations/{organisation}/trust-relationships/"
     data = {
         "name": "GitHub Actions (recreated)",
