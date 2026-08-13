@@ -45,7 +45,7 @@ def create_feature_with_api(
 def create_mv_option_with_api(
     client: APIClient,
     project_id: int,
-    feature_id: int,
+    feature_id: str,
     default_percentage_allocation: float,
     value: str,
     key: str | None = None,
