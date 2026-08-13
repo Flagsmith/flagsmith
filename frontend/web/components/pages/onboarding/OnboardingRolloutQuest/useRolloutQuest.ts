@@ -53,7 +53,7 @@ const useRolloutQuest = ({
           trackRolloutInterest(ROLLOUT_BETA_REQUESTED, who)
         },
       }),
-      'p-0 modal--wide',
+      'modal--wide',
     )
   }
 }

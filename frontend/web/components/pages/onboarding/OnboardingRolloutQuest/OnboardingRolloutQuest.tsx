@@ -24,7 +24,7 @@ const OnboardingRolloutQuest: FC<OnboardingRolloutQuestProps> = ({
   onFeedback,
   onNotifyMe,
 }) => (
-  <div className='onboarding-rollout-quest p-4 d-flex flex-column gap-4'>
+  <div className='onboarding-rollout-quest d-flex flex-column gap-4'>
     <p className='onboarding-rollout-quest__body text-secondary m-0'>
       Release {featureName} to a growing percentage of your users.
     </p>
