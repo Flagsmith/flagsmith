@@ -29,20 +29,16 @@ const OnboardingRolloutQuest: FC<OnboardingRolloutQuestProps> = ({
       Release {featureName} to a growing percentage of your users.
     </p>
 
-    <section className='onboarding-rollout-quest__card bg-surface-muted rounded-xl d-flex flex-column gap-3'>
-      <h3 className='onboarding-rollout-quest__card-title m-0 fw-bold text-default'>
-        How to roll out gradually today
-      </h3>
-      <ol className='onboarding-rollout-quest__steps d-flex flex-column gap-3 m-0 p-0'>
+    <section className='onboarding-rollout-quest__card bg-surface-muted rounded-xl p-4 d-flex flex-column gap-3'>
+      <h6 className='m-0'>How to roll out gradually today</h6>
+      <ol className='list-unstyled d-flex flex-column gap-3 m-0'>
         {getRolloutSteps(featureName).map((step, index) => (
           <li key={step.title} className='d-flex gap-3'>
-            <span className='onboarding-rollout-quest__step-number bg-surface-action-subtle text-action rounded-full d-flex align-items-center justify-content-center flex-shrink-0'>
+            <span className='onboarding-rollout-quest__step-number bg-surface-action-subtle text-action rounded-full fs-captionSmall fw-bold d-flex align-items-center justify-content-center flex-shrink-0'>
               {index + 1}
             </span>
             <span className='d-flex flex-column gap-1'>
-              <span className='onboarding-rollout-quest__step-title fw-bold text-default'>
-                {step.title}
-              </span>
+              <span className='fw-bold text-default'>{step.title}</span>
               <span className='onboarding-rollout-quest__body text-secondary'>
                 {step.body}
               </span>

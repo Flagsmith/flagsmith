@@ -28,8 +28,8 @@ export const RolloutPrerequisite: FC = () => (
     <Icon name='info' width={14} className='icon-secondary' />
     <span>
       Percentage splits only apply to users you identify. If your app doesn’t
-      call <code>flagsmith.identify(...)</code> yet, add it first, or everyone
-      keeps getting the same value.
+      call <code className='fs-captionSmall'>flagsmith.identify(...)</code> yet,
+      add it first, or everyone keeps getting the same value.
     </span>
   </p>
 )

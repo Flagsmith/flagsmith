@@ -1,18 +1,8 @@
 .onboarding-rollout-quest {
-  &__card-title,
-  &__soon-title {
-    font-size: 16px;
-  }
-
   // 1.5 rather than .lh-base, which is 1.375 here.
   &__body {
     font-size: 13px;
     line-height: 1.5;
-  }
-
-  &__card,
-  &__soon {
-    padding: 24px;
   }
 
   // The fill alone is near-invisible in dark mode, where the card and the modal
@@ -22,32 +12,13 @@
     border: 1px solid var(--color-border-default);
   }
 
-  // The marker is the styled circle below, not a list bullet.
-  &__steps {
-    list-style: none;
-  }
-
   &__step-number {
     width: 24px;
     height: 24px;
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  &__step-title {
-    font-size: 14px;
-  }
-
-  &__notified {
-    font-size: 13px;
   }
 
   &__prerequisite {
     font-size: 12px;
     line-height: 1.5;
-
-    code {
-      font-size: 12px;
-    }
   }
 }

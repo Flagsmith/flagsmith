@@ -23,23 +23,21 @@ const RolloutComingSoonCard: FC<RolloutComingSoonCardProps> = ({
     onNotifyMe()
   }
   return (
-    <section className='onboarding-rollout-quest__soon bg-surface-action-subtle rounded-xl d-flex flex-column gap-2'>
+    <section className='bg-surface-action-subtle rounded-xl p-4 d-flex flex-column gap-2'>
       {/* Accent rather than the design's solid purple: there is no inverse
           text token, and white on the dark-mode action surface is ~3.2:1. */}
       <Chip variant='accent' size='xs' className='align-self-start'>
         <Icon name='flash' width={12} />
         Coming soon
       </Chip>
-      <h3 className='onboarding-rollout-quest__soon-title m-0 fw-bold text-default'>
-        We’re making gradual rollouts one-click
-      </h3>
+      <h6 className='m-0'>We’re making gradual rollouts one-click</h6>
       <p className='onboarding-rollout-quest__body text-secondary m-0'>
         Soon you’ll ramp a flag up on a schedule automatically, without editing
         segments by hand. Want early access?
       </p>
       <div className='d-flex align-items-center gap-3'>
         {notified ? (
-          <span className='onboarding-rollout-quest__notified d-inline-flex align-items-center gap-2 text-action'>
+          <span className='fs-caption d-inline-flex align-items-center gap-2 text-action'>
             <Icon name='checkmark-circle' width={16} />
             Thanks, we’ll be in touch.
           </span>
