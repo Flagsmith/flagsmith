@@ -7,4 +7,13 @@
   // Top padding gives the theme-toggle row room to breathe from the very edge;
   // sides + bottom keep the reading column off the edges.
   padding: 24px 24px 40px;
+
+  // The terminal states are one short block, so centre them rather than
+  // leaving them stranded at the top of an otherwise empty page.
+  &--message {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 70vh;
+  }
 }

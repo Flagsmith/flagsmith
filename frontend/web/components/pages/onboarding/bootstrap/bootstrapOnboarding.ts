@@ -17,12 +17,11 @@ import {
   Tag,
 } from 'common/types/responses'
 import {
+  DEMO_FLAG_DESCRIPTION,
   DEMO_FLAG_NAME,
   ONBOARDING_TAG,
-  canResumeDemoFlag,
   findDemoFlag,
   findOnboardingTag,
-  shouldSeedDemoFlag,
 } from './demoFlag'
 import { SmartDefaults } from 'components/pages/onboarding/hooks/useSmartDefaults'
 import { createOrganisationViaAccountStore } from './createOrganisationViaAccountStore'
@@ -48,9 +47,6 @@ export type OnboardingBootstrap = {
   project: ProjectSummary
   environment: Environment
   featureName: string
-  // False when the project holds flags that aren't ours, so there is nothing
-  // here we may seed, toggle or rename.
-  hasDemoFlag: boolean
 }
 
 async function ensureOrganisation(
@@ -147,43 +143,61 @@ async function fetchOnboardingTag(
   return findOnboardingTag(tags ?? [])
 }
 
+async function listFlags(
+  store: Store,
+  project: ProjectSummary,
+): Promise<ProjectFlag[]> {
+  const flags = await store
+    .dispatch(
+      projectFlagService.endpoints.getProjectFlags.initiate(
+        { project: `${project.id}` },
+        { forceRefetch: true },
+      ),
+    )
+    .unwrap()
+  return flags?.results ?? []
+}
+
 async function ensureFlag(
   store: Store,
   project: ProjectSummary,
-): Promise<ProjectFlag | undefined> {
-  const flags = await store
-    .dispatch(
-      projectFlagService.endpoints.getProjectFlags.initiate({
-        project: `${project.id}`,
-      }),
-    )
-    .unwrap()
-  const results = flags?.results ?? []
-  // Not fatal: without the tag we fall back to matching on the name.
+): Promise<ProjectFlag> {
+  // Not fatal: without the tag we fall back to the flag's own description.
   const onboardingTag = await fetchOnboardingTag(store, project.id).catch(
     () => undefined,
   )
-  const existing = findDemoFlag(results, onboardingTag)
+  const existing = findDemoFlag(await listFlags(store, project), onboardingTag)
   if (existing) {
-    return canResumeDemoFlag(results, existing) ? existing : undefined
+    return existing
   }
-  if (!shouldSeedDemoFlag(results)) {
-    return undefined
-  }
-  const created = await store
-    .dispatch(
-      projectFlagService.endpoints.createProjectFlag.initiate({
-        body: {
-          name: DEMO_FLAG_NAME,
-          project: project.id,
-          type: 'STANDARD',
-        } as Req['createProjectFlag']['body'],
-        project_id: project.id,
-      }),
+  try {
+    const created = await store
+      .dispatch(
+        projectFlagService.endpoints.createProjectFlag.initiate({
+          body: {
+            description: DEMO_FLAG_DESCRIPTION,
+            name: DEMO_FLAG_NAME,
+            project: project.id,
+            type: 'STANDARD',
+          } as Req['createProjectFlag']['body'],
+          project_id: project.id,
+        }),
+      )
+      .unwrap()
+    API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
+    return created
+  } catch (e) {
+    // Names are unique per project, so a clash means our flag is already here
+    // and we failed to recognise it: someone edited its description, or removed
+    // the tag. Take it rather than dropping the user out of the tour.
+    const clash = (await listFlags(store, project)).find(
+      (f) => f.name === DEMO_FLAG_NAME,
     )
-    .unwrap()
-  API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
-  return created
+    if (!clash) {
+      throw e
+    }
+    return clash
+  }
 }
 
 async function ensureOnboardingTag(
@@ -226,14 +240,11 @@ export async function bootstrapOnboarding(
   const project = await ensureProject(store, organisation.id, input.defaults)
   const environment = await ensureEnvironments(store, project)
   const flag = await ensureFlag(store, project)
-  if (flag) {
-    await ensureOnboardingTag(store, project, flag)
-  }
+  await ensureOnboardingTag(store, project, flag)
   AppActions.refreshOrganisation()
   return {
     environment,
-    featureName: flag?.name ?? DEMO_FLAG_NAME,
-    hasDemoFlag: !!flag,
+    featureName: flag.name,
     organisationId: organisation.id,
     organisationName: organisation.name,
     project,

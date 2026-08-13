@@ -2,9 +2,14 @@ import { ProjectFlag, Tag } from 'common/types/responses'
 
 export const DEMO_FLAG_NAME = 'show_demo_button'
 
+// Set on the flag we create, and carried over by the tour's rename, so it
+// identifies our flag after the name has changed. Also tells anyone looking at
+// their flag list why it is there.
+export const DEMO_FLAG_DESCRIPTION = 'Created during onboarding'
+
 export const ONBOARDING_TAG = {
   color: '#3cb371',
-  description: 'Created during onboarding',
+  description: DEMO_FLAG_DESCRIPTION,
   label: 'Onboarding',
 }
 
@@ -16,23 +21,14 @@ export const findOnboardingTag = (tags: Tag[]): Tag | undefined =>
       t.description === ONBOARDING_TAG.description,
   )
 
-// A previous run's flag. Tag first: renaming is a delete and recreate, so the
-// name alone is not reliable.
+// Our flag, in descending order of how much the signal is worth. The tour
+// renames by delete and recreate, carrying the tags and description over, so
+// the name is the one thing that doesn't survive it: it only identifies flags
+// seeded before we set a description.
 export const findDemoFlag = (
   flags: ProjectFlag[],
   onboardingTag?: Tag,
 ): ProjectFlag | undefined =>
   (onboardingTag && flags.find((f) => f.tags?.includes(onboardingTag.id))) ||
+  flags.find((f) => f.description === DEMO_FLAG_DESCRIPTION) ||
   flags.find((f) => f.name === DEMO_FLAG_NAME)
-
-// Only seed into an empty project: features are project-level, so an unwanted
-// flag shows up in every environment, production included.
-export const shouldSeedDemoFlag = (flags: ProjectFlag[]): boolean =>
-  !flags.length
-
-// The tour toggles and renames what it finds, so only carry on while ours is
-// the only flag here. One flag is also what a mid-tour refresh finds.
-export const canResumeDemoFlag = (
-  flags: ProjectFlag[],
-  flag: ProjectFlag,
-): boolean => flags.length === 1 && flags[0].id === flag.id
