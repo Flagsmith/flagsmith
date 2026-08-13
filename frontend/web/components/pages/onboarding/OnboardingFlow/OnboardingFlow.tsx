@@ -1,5 +1,5 @@
-import React, { FC, useEffect, useState } from 'react'
-import { useHistory, useLocation } from 'react-router-dom'
+import React, { FC, useState } from 'react'
+import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import OnboardingHeader from 'components/pages/onboarding/OnboardingHeader'
@@ -10,11 +10,9 @@ import OnboardingFlagsTable from 'components/pages/onboarding/OnboardingFlagsTab
 import OnboardingNextSteps, {
   OnboardingNextStep,
 } from 'components/pages/onboarding/OnboardingNextSteps'
-import OnboardingRolloutQuest from 'components/pages/onboarding/OnboardingRolloutQuest'
-import trackRolloutInterest, {
-  ROLLOUT_BETA_REQUESTED,
-  ROLLOUT_FEEDBACK_CLICKED,
-} from 'components/pages/onboarding/OnboardingRolloutQuest/trackRolloutInterest'
+import OnboardingRolloutQuest, {
+  useRolloutQuest,
+} from 'components/pages/onboarding/OnboardingRolloutQuest'
 import { useEnsureOnboardingResources } from 'components/pages/onboarding/hooks/useEnsureOnboardingResources'
 import { useOnboardingFlagRename } from 'components/pages/onboarding/hooks/useOnboardingFlagRename'
 import { useOnboardingFlag } from 'components/pages/onboarding/hooks/useOnboardingFlag'
@@ -45,10 +43,6 @@ const OnboardingFlow: FC = () => {
   } = useEnsureOnboardingResources()
 
   const history = useHistory()
-  const location = useLocation()
-  // The open quest lives in the URL, so refresh and back both behave.
-  const rolloutQuestOpen =
-    new URLSearchParams(location.search).get('quest') === 'rollout'
   const [updateOrganisation] = useUpdateOrganisationMutation()
   const [updateProject] = useUpdateProjectMutation()
   // Already fetched by useEnsureOnboardingResources, so this is a cache read.
@@ -174,22 +168,20 @@ const OnboardingFlow: FC = () => {
     history.push(`${base}/features?feature=${flagId}&tab=${tab}`)
   }
 
-  // Rollout is the one quest with a screen of its own: the segment overrides
-  // tab alone explains none of the steps a rollout takes. The others still go
-  // straight to their config. The param keeps the screen on refresh and back.
-  const goToNextStep = (step: OnboardingNextStep) => {
-    if (step === 'rollout') {
-      history.push('/getting-started?quest=rollout')
-      return
-    }
-    goToFlagConfig(step)
-  }
+  const goToNextStep = (step: OnboardingNextStep) =>
+    step === 'rollout' ? rolloutQuest.open() : goToFlagConfig(step)
 
   const diagnosticIds = {
     environment_id: environment?.id,
     organisation_id: organisationId,
     project_id: projectId,
   }
+  const rolloutQuest = useRolloutQuest({
+    diagnosticIds,
+    featureName,
+    onContinue: () => goToFlagConfig('rollout'),
+    who: { email: profile?.email, organisation: organisationDisplayName },
+  })
   const trackSnippetCopied = (snippet: OnboardingSnippet) =>
     API.trackEvent({
       ...Constants.events.ONBOARDING_SNIPPET_COPIED,
@@ -216,22 +208,6 @@ const OnboardingFlow: FC = () => {
       })
     }
   }
-  const trackRollout = (event: { category: string; event: string }) =>
-    API.trackEvent({ ...event, extra: diagnosticIds })
-  const whoIsAsking = {
-    email: profile?.email,
-    organisation: organisationDisplayName,
-  }
-
-  useEffect(() => {
-    if (!rolloutQuestOpen) return
-    API.trackEvent({
-      ...Constants.events.ONBOARDING_ROLLOUT_VIEWED,
-      extra: diagnosticIds,
-    })
-    // Once per opening, not on every id settling.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rolloutQuestOpen])
 
   if (status === 'creating' || leavingForConsent) {
     return (
@@ -254,25 +230,8 @@ const OnboardingFlow: FC = () => {
     )
   }
 
-  if (rolloutQuestOpen) {
-    return (
-      <OnboardingRolloutQuest
-        featureName={featureName}
-        onContinue={() => {
-          trackRollout(Constants.events.ONBOARDING_ROLLOUT_CONTINUED)
-          goToFlagConfig('rollout')
-        }}
-        onDismiss={() => history.push('/getting-started')}
-        onNotifyMe={() => {
-          trackRollout(Constants.events.ONBOARDING_ROLLOUT_NOTIFY_ME)
-          trackRolloutInterest(ROLLOUT_BETA_REQUESTED, whoIsAsking)
-        }}
-        onFeedback={() => {
-          trackRollout(Constants.events.ONBOARDING_ROLLOUT_FEEDBACK)
-          trackRolloutInterest(ROLLOUT_FEEDBACK_CLICKED, whoIsAsking)
-        }}
-      />
-    )
+  if (rolloutQuest.isOpen) {
+    return <OnboardingRolloutQuest {...rolloutQuest.props} />
   }
 
   return (
