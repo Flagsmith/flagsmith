@@ -1997,8 +1997,10 @@ def test_update_segment__whitelisted_segment_exceeds_max_conditions__returns_200
     mocker: MockerFixture,
     project: Project,
     segment: Segment,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED = True
     WhitelistedSegment.objects.create(segment=segment)
     timestamp = "2099-01-01T00:00:00Z"
     over_limit_rule: SegmentRuleType = {
