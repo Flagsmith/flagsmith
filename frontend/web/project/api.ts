@@ -14,6 +14,10 @@ import flagsmith from '@flagsmith/flagsmith'
 import Utils from 'common/utils/utils'
 import loadChat, { identifyChatUser } from 'common/loadChat'
 
+// Days, or an absolute date. This is js-cookie's own attribute type, spelled
+// out because the package ships no types.
+type CookieExpiry = number | Date
+
 // One hour, in the days js-cookie expects.
 const REDIRECT_COOKIE_EXPIRY_DAYS = 1 / 24
 
@@ -282,12 +286,10 @@ const API = {
     return flagsmith.logout()
   },
 
-  // `expires` is in days, or a Date - js-cookie ships no types, so it is
-  // spelled out here rather than imported.
   setCookie(
     key: string,
     v?: string,
-    attributes?: { expires?: number | Date },
+    attributes?: { expires?: CookieExpiry },
   ): void {
     if (!v) {
       Cookies.remove(key, { domain: Project.cookieDomain, path: '/' })
