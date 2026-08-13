@@ -11,17 +11,20 @@ import OnboardingNextSteps, {
   OnboardingNextStep,
 } from 'components/pages/onboarding/OnboardingNextSteps'
 import OnboardingRolloutQuest from 'components/pages/onboarding/OnboardingRolloutQuest'
+import trackRolloutInterest, {
+  ROLLOUT_BETA_REQUESTED,
+  ROLLOUT_FEEDBACK_CLICKED,
+} from 'components/pages/onboarding/OnboardingRolloutQuest/trackRolloutInterest'
 import { useEnsureOnboardingResources } from 'components/pages/onboarding/hooks/useEnsureOnboardingResources'
 import { useOnboardingFlagRename } from 'components/pages/onboarding/hooks/useOnboardingFlagRename'
 import { useOnboardingFlag } from 'components/pages/onboarding/hooks/useOnboardingFlag'
 import { useOnboardingConnection } from 'components/pages/onboarding/hooks/useOnboardingConnection'
 import { useUpdateOrganisationMutation } from 'common/services/useOrganisation'
 import { useUpdateProjectMutation } from 'common/services/useProject'
+import { useGetProfileQuery } from 'common/services/useProfile'
 import API from 'project/api'
 import Constants from 'common/constants'
 import { isPendingAuthorisation } from 'common/utils/pendingAuthorisation'
-import flagsmith from '@flagsmith/flagsmith'
-import AccountStore from 'common/stores/account-store'
 import './OnboardingFlow.scss'
 
 type OnboardingSnippet = 'install' | 'wire'
@@ -48,6 +51,8 @@ const OnboardingFlow: FC = () => {
     new URLSearchParams(location.search).get('quest') === 'rollout'
   const [updateOrganisation] = useUpdateOrganisationMutation()
   const [updateProject] = useUpdateProjectMutation()
+  // Already fetched by useEnsureOnboardingResources, so this is a cache read.
+  const { data: profile } = useGetProfileQuery({})
 
   // A client waiting on the consent screen sent this user here to sign up. It
   // is answered once the workspace exists, never on load: bootstrapping is a
@@ -213,18 +218,10 @@ const OnboardingFlow: FC = () => {
   }
   const trackRollout = (event: { category: string; event: string }) =>
     API.trackEvent({ ...event, extra: diagnosticIds })
-
-  // Interest in the door goes where the other fake doors report, carrying who
-  // asked. Ids alone tell us an organisation wants this and give us no way to
-  // reply to them. Matches the segment sources door in #8272.
-  const trackRolloutInterest = (event: string) =>
-    flagsmith.trackEvent(event, {
-      metadata: {
-        email: AccountStore.getUser()?.email,
-        organisation: AccountStore.getOrganisation()?.name,
-        source: 'onboarding-rollout-quest',
-      },
-    })
+  const whoIsAsking = {
+    email: profile?.email,
+    organisation: organisationDisplayName,
+  }
 
   useEffect(() => {
     if (!rolloutQuestOpen) return
@@ -268,11 +265,11 @@ const OnboardingFlow: FC = () => {
         onDismiss={() => history.push('/getting-started')}
         onNotifyMe={() => {
           trackRollout(Constants.events.ONBOARDING_ROLLOUT_NOTIFY_ME)
-          trackRolloutInterest('rollout_beta_requested')
+          trackRolloutInterest(ROLLOUT_BETA_REQUESTED, whoIsAsking)
         }}
         onFeedback={() => {
           trackRollout(Constants.events.ONBOARDING_ROLLOUT_FEEDBACK)
-          trackRolloutInterest('rollout_feedback_clicked')
+          trackRolloutInterest(ROLLOUT_FEEDBACK_CLICKED, whoIsAsking)
         }}
       />
     )
