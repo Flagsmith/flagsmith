@@ -57,10 +57,8 @@ const OnboardingRolloutQuest: FC<OnboardingRolloutQuestProps> = ({
         target='_blank'
         className='align-self-start'
       >
-        <span className='d-inline-flex align-items-center gap-2'>
-          <Icon name='file-text' width={14} />
-          Read the gradual rollout guide
-        </span>
+        <Icon name='file-text' width={14} />
+        Read the gradual rollout guide
       </Button>
     </section>
 
@@ -68,10 +66,8 @@ const OnboardingRolloutQuest: FC<OnboardingRolloutQuestProps> = ({
 
     <div className='d-flex align-items-center gap-3'>
       <Button onClick={onContinue}>
-        <span className='d-inline-flex align-items-center gap-2'>
-          <Icon name='layers' width={14} />
-          Create a rollout segment
-        </span>
+        <Icon name='layers' width={14} />
+        Create a rollout segment
       </Button>
       <Button theme='text' onClick={onDismiss}>
         Maybe later

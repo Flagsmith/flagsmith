@@ -45,10 +45,8 @@ const RolloutComingSoonCard: FC<RolloutComingSoonCardProps> = ({
           </span>
         ) : (
           <Button onClick={notifyMe}>
-            <span className='d-inline-flex align-items-center gap-2'>
-              <Icon name='bell' width={14} />
-              Notify me
-            </span>
+            <Icon name='bell' width={14} />
+            Notify me
           </Button>
         )}
         {/* No target: a mailto in a new tab leaves a blank tab behind. */}
