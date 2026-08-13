@@ -40,9 +40,7 @@ class TrustRelationship(SoftDeleteObject):  # type: ignore[misc]
         )
     )
     created_by: models.ForeignKey[FFAdminUser | None, FFAdminUser | None] = (
-        models.ForeignKey(
-            FFAdminUser, on_delete=models.SET_NULL, null=True, blank=True
-        )
+        models.ForeignKey(FFAdminUser, on_delete=models.SET_NULL, null=True, blank=True)
     )
     created_at: models.DateTimeField[datetime, datetime] = models.DateTimeField(
         auto_now_add=True
