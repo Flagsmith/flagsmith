@@ -4,8 +4,7 @@ import Icon from 'components/icons/Icon'
 export const ROLLOUT_GUIDE_URL =
   'https://docs.flagsmith.com/managing-flags/rollout/rollout-by-percentage'
 
-// The manual method, as the guide describes it. Written as the steps someone
-// takes today, not as a workaround: gradual rollout is possible right now.
+// The steps someone takes today, not a workaround: this works right now.
 export const getRolloutSteps = (
   featureName: string,
 ): { title: string; body: string }[] => [

@@ -1,7 +1,5 @@
-// The gradual rollout quest. Layout comes from utilities in the markup; this
-// file holds type sizes, the two card paddings, the numbered step markers and
-// the "Coming soon" badge. Secondary text isn't a utility: Bootstrap's
-// .text-secondary (gold, !important) would win over our token utility.
+// Secondary text isn't a utility here: Bootstrap's .text-secondary is gold and
+// !important, so it would win over our token utility.
 .onboarding-rollout-quest {
   max-width: 720px;
 

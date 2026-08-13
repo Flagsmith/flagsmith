@@ -11,16 +11,12 @@ import './OnboardingRolloutQuest.scss'
 
 export type OnboardingRolloutQuestProps = {
   featureName: string
-  // Continues to the flag's segment overrides, where the rollout is set up.
   onContinue: () => void
   onDismiss: () => void
   onNotifyMe: () => void
   onFeedback: () => void
 }
 
-// The "Gradual rollout" quest. It sits between the next-step card and the
-// segment overrides tab, because landing straight in that tab explains none of
-// the steps the rollout actually takes.
 const OnboardingRolloutQuest: FC<OnboardingRolloutQuestProps> = ({
   featureName,
   onContinue,
