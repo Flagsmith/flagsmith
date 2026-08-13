@@ -25148,7 +25148,6 @@ components:
             $ref: '#/components/schemas/ClaimRule'
         is_admin:
           type: boolean
-          default: true
         master_api_key_id:
           type: string
           readOnly: true
@@ -27341,7 +27340,6 @@ components:
             $ref: '#/components/schemas/ClaimRule'
         is_admin:
           type: boolean
-          default: true
         master_api_key_id:
           type: string
           readOnly: true
@@ -27359,6 +27357,7 @@ components:
           readOnly: true
       required:
         - audience
+        - is_admin
         - issuer
         - name
     Type975Enum:

@@ -21,7 +21,9 @@ class ClaimRuleSerializer(serializers.Serializer[ClaimRule]):
 
 
 class TrustRelationshipSerializer(serializers.ModelSerializer[TrustRelationship]):
-    is_admin = serializers.BooleanField(default=True)
+    # Deliberately required: an omitted `is_admin` on a full update would
+    # otherwise silently escalate a non-admin trust relationship to admin.
+    is_admin = serializers.BooleanField()
     claim_rules = ClaimRuleSerializer(many=True, required=False)
     master_api_key_id = serializers.CharField(read_only=True)
     master_api_key_prefix = serializers.CharField(

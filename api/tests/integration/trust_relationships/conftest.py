@@ -15,6 +15,7 @@ def trust_relationship(
             "issuer": "https://token.actions.githubusercontent.com",
             "audience": "https://github.com/Flagsmith",
             "claim_rules": [{"claim": "repository", "values": ["Flagsmith/flagsmith"]}],
+            "is_admin": True,
         },
         format="json",
     )

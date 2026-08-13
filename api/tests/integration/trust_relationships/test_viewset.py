@@ -14,6 +14,7 @@ def test_create_trust_relationship__valid_data__returns_backing_key_details(
         "issuer": "https://token.actions.githubusercontent.com",
         "audience": "https://github.com/Flagsmith",
         "claim_rules": [{"claim": "repository", "values": ["Flagsmith/flagsmith"]}],
+        "is_admin": True,
     }
 
     # When
@@ -42,6 +43,7 @@ def test_create_trust_relationship__trailing_slash_issuer__returns_normalised_is
         "name": "GitHub Actions",
         "issuer": "https://token.actions.githubusercontent.com/",
         "audience": "https://github.com/Flagsmith",
+        "is_admin": True,
     }
 
     # When
@@ -62,6 +64,7 @@ def test_create_trust_relationship__http_issuer__returns_400(
         "name": "GitHub Actions",
         "issuer": "http://token.actions.githubusercontent.com",
         "audience": "https://github.com/Flagsmith",
+        "is_admin": True,
     }
 
     # When
@@ -108,6 +111,7 @@ def test_create_trust_relationship__malformed_claim_rules__returns_400(
         "issuer": "https://token.actions.githubusercontent.com",
         "audience": "https://github.com/Flagsmith",
         "claim_rules": [{"claim": "repository", "values": []}],
+        "is_admin": True,
     }
 
     # When
@@ -152,6 +156,7 @@ def test_update_trust_relationship__new_values__returns_updated_values(
         "issuer": "https://token.actions.githubusercontent.com",
         "audience": "flagsmith-prod",
         "claim_rules": [{"claim": "environment", "values": ["production"]}],
+        "is_admin": True,
     }
 
     # When
@@ -164,6 +169,81 @@ def test_update_trust_relationship__new_values__returns_updated_values(
     assert response.json()["claim_rules"] == [
         {"claim": "environment", "values": ["production"]}
     ]
+
+
+def test_create_trust_relationship__missing_is_admin__returns_400(
+    admin_client: APIClient,
+    organisation: int,
+) -> None:
+    # Given
+    url = f"/api/v1/organisations/{organisation}/trust-relationships/"
+    data = {
+        "name": "GitHub Actions",
+        "issuer": "https://token.actions.githubusercontent.com",
+        "audience": "https://github.com/Flagsmith",
+    }
+
+    # When
+    response = admin_client.post(url, data=data, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["is_admin"] == ["This field is required."]
+
+
+def test_update_trust_relationship__missing_is_admin__returns_400(
+    admin_client: APIClient,
+    organisation: int,
+    trust_relationship: int,
+) -> None:
+    # Given: a full update that forgets is_admin must not silently escalate
+    # the trust relationship's privileges
+    url = (
+        f"/api/v1/organisations/{organisation}"
+        f"/trust-relationships/{trust_relationship}/"
+    )
+    data = {
+        "name": "GitHub Actions (prod)",
+        "issuer": "https://token.actions.githubusercontent.com",
+        "audience": "flagsmith-prod",
+    }
+
+    # When
+    response = admin_client.put(url, data=data, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["is_admin"] == ["This field is required."]
+
+
+def test_partial_update_trust_relationship__omitted_is_admin__preserves_is_admin(
+    admin_client: APIClient,
+    organisation: int,
+    trust_relationship: int,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.IS_RBAC_INSTALLED = True
+    url = (
+        f"/api/v1/organisations/{organisation}"
+        f"/trust-relationships/{trust_relationship}/"
+    )
+    assert (
+        admin_client.patch(url, data={"is_admin": False}, format="json").json()[
+            "is_admin"
+        ]
+        is False
+    )
+
+    # When
+    response = admin_client.patch(
+        url, data={"name": "GitHub Actions (prod)"}, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["name"] == "GitHub Actions (prod)"
+    assert response.json()["is_admin"] is False
 
 
 def test_delete_trust_relationship__existing__removes_trust_relationship(
@@ -212,6 +292,7 @@ def test_create_trust_relationship__master_api_key_auth__returns_401(
         "name": "GitHub Actions",
         "issuer": "https://token.actions.githubusercontent.com",
         "audience": "https://github.com/Flagsmith",
+        "is_admin": True,
     }
 
     # When
@@ -232,6 +313,7 @@ def test_create_trust_relationship__duplicate_issuer_and_audience__returns_400(
         "name": "GitHub Actions (duplicate)",
         "issuer": "https://token.actions.githubusercontent.com",
         "audience": "https://github.com/Flagsmith",
+        "is_admin": True,
     }
 
     # When
@@ -260,6 +342,7 @@ def test_create_trust_relationship__same_issuer_and_audience_as_deleted__returns
         "name": "GitHub Actions (recreated)",
         "issuer": "https://token.actions.githubusercontent.com",
         "audience": "https://github.com/Flagsmith",
+        "is_admin": True,
     }
 
     # When
@@ -280,6 +363,7 @@ def test_create_trust_relationship__long_name__returns_201(
         "name": "GitHub Actions (Flagsmith/flagsmith-workflow-tools)",
         "issuer": "https://token.actions.githubusercontent.com",
         "audience": "https://github.com/Flagsmith/flagsmith-workflow-tools",
+        "is_admin": True,
     }
 
     # When
@@ -299,6 +383,7 @@ def test_create_trust_relationship__issuer_with_query_string__returns_400(
         "name": "GitHub Actions",
         "issuer": "https://token.actions.githubusercontent.com?ref=main",
         "audience": "https://github.com/Flagsmith",
+        "is_admin": True,
     }
 
     # When
