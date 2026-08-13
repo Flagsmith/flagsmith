@@ -7,13 +7,17 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { sentryWebpackPlugin } = require('@sentry/webpack-plugin')
 const base = require('../rspack.config')
 
+// One release id for both the app and the sourcemap upload, so Sentry can
+// match events to maps and de-minify traces.
+const SENTRY_RELEASE = Date.now().toString()
+
 const extraPlugins = [
   new rspack.CssExtractRspackPlugin({
     chunkFilename: '[id].[fullhash].css',
     filename: '[name].[fullhash].css',
   }),
   new rspack.DefinePlugin({
-    SENTRY_RELEASE_VERSION: JSON.stringify(Date.now().toString()),
+    SENTRY_RELEASE_VERSION: JSON.stringify(SENTRY_RELEASE),
     __DEV__: false,
   }),
 ]
@@ -74,6 +78,7 @@ module.exports = {
               authToken: process.env.SENTRY_AUTH_TOKEN,
               org: 'flagsmith',
               project: 'flagsmith-frontend',
+              release: { name: SENTRY_RELEASE },
             }),
           ]
         : [],
