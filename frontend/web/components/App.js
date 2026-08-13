@@ -17,6 +17,7 @@ import {
   getStoredOnboardingVariant,
   persistOnboardingEntry,
 } from 'common/utils/onboardingEntry'
+import { AUTHORISE_PATH } from 'common/utils/pendingAuthorisation'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -140,6 +141,17 @@ const App = class extends Component {
       return
     }
 
+    // The consent screen is a destination, not a stop on the way to one, so
+    // never redirect away from it. Creating an organisation re-fires this while
+    // the organisation list is still refreshing, and the branch below would
+    // then yank the user off a request they were about to authorise.
+    if (this.props.location.pathname.startsWith(AUTHORISE_PATH)) {
+      return
+    }
+
+    // A signup with a consent request waiting keeps its redirect cookie
+    // through the branch below: onboarding provisions the organisation the
+    // client needs, then answers the request itself.
     if (!AccountStore.getOrganisation() && !invite) {
       // New users with no organisation go through the single-page onboarding
       // flow when it's enabled - it creates the organisation itself, so it

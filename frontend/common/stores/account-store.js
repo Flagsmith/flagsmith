@@ -266,7 +266,9 @@ const controller = {
             // never let analytics break the login flow
           }
         }
-        return controller.onLogin()
+        // Signing up through an identity provider is still a signup, so it
+        // gets the same onboarding entry decision as `register` makes.
+        return controller.onLogin(!!res.is_new_user && !API.getInvite())
       })
       .catch((e) => API.ajaxHandler(store, e))
   },

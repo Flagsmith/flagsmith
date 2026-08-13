@@ -9,6 +9,7 @@ import Button from 'components/base/forms/Button'
 import API from 'project/api'
 import AppActions from 'common/dispatcher/app-actions'
 import { getStoredOnboardingTargetingKey } from 'common/utils/onboardingEntry'
+import { isPendingAuthorisation } from 'common/utils/pendingAuthorisation'
 import Utils from 'common/utils/utils'
 // @ts-ignore
 import Project from 'common/project'
@@ -52,6 +53,17 @@ const CreateOrganisationPage: React.FC = () => {
         updateTools({
           hosting_preferences: hosting,
         })
+      }
+
+      // A client waiting on the consent screen sent this user here to sign up,
+      // and the organisation it needed now exists. Answer it before going on:
+      // it returns the browser to onboarding once the user has authorised.
+      // Replaced, not pushed - going Back to a spent request only errors.
+      const pending = API.getRedirect()
+      if (isPendingAuthorisation(pending)) {
+        API.setRedirect('')
+        history.replace(pending)
+        return
       }
 
       history.push('/getting-started')

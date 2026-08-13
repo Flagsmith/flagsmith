@@ -14,6 +14,9 @@ import flagsmith from '@flagsmith/flagsmith'
 import Utils from 'common/utils/utils'
 import loadChat, { identifyChatUser } from 'common/loadChat'
 
+// One hour, in the days js-cookie expects.
+const REDIRECT_COOKIE_EXPIRY_DAYS = 1 / 24
+
 const API = {
   ajaxHandler(
     store: { error?: any; goneABitWest: () => void },
@@ -196,7 +199,9 @@ const API = {
   },
 
   getRedirect(): string | undefined {
-    return API.getCookie('redirect')
+    // Read without the refresh getCookie does: a redirect is consumed once, so
+    // reading it must not extend how long a stale one can fire.
+    return Cookies.get('redirect')
   },
 
   getReferrer(): any {
@@ -277,12 +282,18 @@ const API = {
     return flagsmith.logout()
   },
 
-  setCookie(key: string, v?: string): void {
+  // `expires` is in days, or a Date - js-cookie ships no types, so it is
+  // spelled out here rather than imported.
+  setCookie(
+    key: string,
+    v?: string,
+    attributes?: { expires?: number | Date },
+  ): void {
     if (!v) {
       Cookies.remove(key, { domain: Project.cookieDomain, path: '/' })
       Cookies.remove(key, { path: '/' })
     } else {
-      const opts = { expires: 30, path: '/' }
+      const opts = { expires: 30, path: '/', ...attributes }
       if (!E2E)
         Object.assign(opts, {
           sameSite: Project.cookieSameSite || 'none',
@@ -305,7 +316,10 @@ const API = {
   },
 
   setRedirect(v: string): void {
-    API.setCookie('redirect', v)
+    // Set moments before a login and consumed moments after. Kept short so an
+    // abandoned one - a CLI login the user walked away from, say - cannot
+    // hijack a login weeks later.
+    API.setCookie('redirect', v, { expires: REDIRECT_COOKIE_EXPIRY_DAYS })
   },
 
   trackEvent(data: {
