@@ -8,15 +8,8 @@ type RolloutInterest = {
   organisation?: string
 }
 
-/**
- * Interest in the door, reported where the other fake doors report and
- * carrying who asked. The onboarding funnel events record that an
- * organisation wants this; these record who to reply to. Same shape as the
- * segment sources door.
- *
- * Takes who rather than reading it, so the caller supplies it from the queries
- * it already holds.
- */
+// The onboarding funnel events say an organisation wants this; this says who to
+// reply to. Sent through flagsmith.trackEvent, same as the segment sources door.
 const trackRolloutInterest = (
   event: string,
   { email, organisation }: RolloutInterest,

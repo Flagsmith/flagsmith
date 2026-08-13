@@ -11,9 +11,8 @@ export type RolloutComingSoonCardProps = {
   onFeedback: () => void
 }
 
-// The one thing we don't ship yet: doing the three steps above in a single
-// action. It promises a simpler flow, never the capability, which already
-// exists.
+// The one thing we don't ship yet: the three steps above in a single action. It
+// promises a simpler flow, never the capability.
 const RolloutComingSoonCard: FC<RolloutComingSoonCardProps> = ({
   onFeedback,
   onNotifyMe,

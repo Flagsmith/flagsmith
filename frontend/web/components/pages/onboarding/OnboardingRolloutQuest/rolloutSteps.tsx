@@ -4,7 +4,6 @@ import Icon from 'components/icons/Icon'
 export const ROLLOUT_GUIDE_URL =
   'https://docs.flagsmith.com/managing-flags/rollout/rollout-by-percentage'
 
-// The steps someone takes today, not a workaround: this works right now.
 export const getRolloutSteps = (
   featureName: string,
 ): { title: string; body: string }[] => [
@@ -22,8 +21,8 @@ export const getRolloutSteps = (
   },
 ]
 
-// The prerequisite the guide flags. Without it the override reaches nobody and
-// the user has no way to tell, so it sits with the steps rather than in docs.
+// Sits with the steps rather than in docs: without it the override reaches
+// nobody and the user has no way to tell.
 export const RolloutPrerequisite: FC = () => (
   <p className='onboarding-rollout-quest__prerequisite text-secondary d-flex gap-2 m-0'>
     <Icon name='info' width={14} className='icon-secondary' />

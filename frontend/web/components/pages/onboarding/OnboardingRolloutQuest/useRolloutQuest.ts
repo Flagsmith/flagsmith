@@ -11,18 +11,13 @@ type UseRolloutQuest = {
   featureName: string
   /** Where "Create a rollout segment" ends up. */
   onContinue: () => void
-  /** Onboarding funnel context, as the other onboarding events send it. */
   diagnosticIds: Record<string, unknown>
   /** Who to reply to when someone asks for access. */
   who: { email?: string; organisation?: string }
 }
 
-/**
- * Opens the gradual rollout quest, with its analytics.
- *
- * Rollout is the one next step that explains itself before sending you on:
- * the segment overrides tab alone shows none of the steps a rollout takes.
- */
+// The segment overrides tab alone shows none of the steps a rollout takes, so
+// this opens first.
 const useRolloutQuest = ({
   diagnosticIds,
   featureName,

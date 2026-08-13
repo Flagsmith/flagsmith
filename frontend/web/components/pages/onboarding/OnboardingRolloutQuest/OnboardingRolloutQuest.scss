@@ -15,7 +15,7 @@
     padding: 24px;
   }
 
-  // Numbered, but the marker is the styled circle below, not a list bullet.
+  // The marker is the styled circle below, not a list bullet.
   &__steps {
     list-style: none;
   }
@@ -31,7 +31,6 @@
     font-size: 14px;
   }
 
-  // The icon inherits it via currentColor.
   &__notified {
     font-size: 13px;
   }
