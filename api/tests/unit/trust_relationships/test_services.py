@@ -8,6 +8,7 @@ from trust_relationships.services import (
     delete_trust_relationship,
     update_trust_relationship,
 )
+from trust_relationships.types import ClaimRule
 from users.models import FFAdminUser
 
 
@@ -20,7 +21,9 @@ def test_create_trust_relationship__valid_data__creates_hidden_backing_key(
     name = "GitHub Actions"
     issuer = "https://token.actions.githubusercontent.com"
     audience = "https://github.com/Flagsmith"
-    claim_rules = [{"claim": "repository", "values": ["Flagsmith/flagsmith"]}]
+    claim_rules: list[ClaimRule] = [
+        {"claim": "repository", "values": ["Flagsmith/flagsmith"]}
+    ]
 
     # When
     trust_relationship = create_trust_relationship(
