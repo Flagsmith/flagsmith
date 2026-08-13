@@ -1425,11 +1425,13 @@ if not 0 <= FEATURE_VALUE_LIMIT <= 2000000:
         "FEATURE_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
     )
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 SEGMENT_RULES_CONDITIONS_LIMIT = env.int("SEGMENT_RULES_CONDITIONS_LIMIT", 100)
 
 # These settings are to handle large datasets / odd behaviour where rules and conditions
 # often aren't returned in the order that they were created in, which the code implicitly
 # expects.
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
     "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED", default=False
 )
@@ -1437,6 +1439,7 @@ SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
 # In SaaS, we need to be able to split out rules and conditions
 # (since the ordering issue has been evident on rules for longer, and
 # only recently happened to conditions).
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
     "SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
     default=SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED,
