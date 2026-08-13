@@ -29,7 +29,7 @@ const OnboardingRolloutQuest: FC<OnboardingRolloutQuestProps> = ({
       <h2 className='onboarding-rollout-quest__title m-0 fw-bold text-default'>
         Roll out gradually
       </h2>
-      <p className='onboarding-rollout-quest__body m-0'>
+      <p className='onboarding-rollout-quest__body text-secondary m-0'>
         Release {featureName} to a growing percentage of your users.
       </p>
     </div>
@@ -48,7 +48,7 @@ const OnboardingRolloutQuest: FC<OnboardingRolloutQuestProps> = ({
               <span className='onboarding-rollout-quest__step-title fw-bold text-default'>
                 {step.title}
               </span>
-              <span className='onboarding-rollout-quest__body'>
+              <span className='onboarding-rollout-quest__body text-secondary'>
                 {step.body}
               </span>
             </span>

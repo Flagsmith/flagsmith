@@ -34,7 +34,7 @@ const RolloutComingSoonCard: FC<RolloutComingSoonCardProps> = ({
       <h3 className='onboarding-rollout-quest__soon-title m-0 fw-bold text-default'>
         We’re making gradual rollouts one-click
       </h3>
-      <p className='onboarding-rollout-quest__body m-0'>
+      <p className='onboarding-rollout-quest__body text-secondary m-0'>
         Soon you’ll ramp a flag up on a schedule automatically, without editing
         segments by hand. Want early access?
       </p>

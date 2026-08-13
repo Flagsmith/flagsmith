@@ -25,7 +25,7 @@ export const getRolloutSteps = (
 // The prerequisite the guide flags. Without it the override reaches nobody and
 // the user has no way to tell, so it sits with the steps rather than in docs.
 export const RolloutPrerequisite: FC = () => (
-  <p className='onboarding-rollout-quest__prerequisite d-flex gap-2 m-0'>
+  <p className='onboarding-rollout-quest__prerequisite text-secondary d-flex gap-2 m-0'>
     <Icon name='info' width={14} className='icon-secondary' />
     <span>
       Percentage splits only apply to users you identify. If your app doesn’t
