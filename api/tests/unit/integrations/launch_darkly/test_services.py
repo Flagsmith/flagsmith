@@ -2,6 +2,7 @@ import csv
 import io
 import json
 from operator import attrgetter
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -26,6 +27,9 @@ from integrations.launch_darkly.services import (
 from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
+
+# TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
+from segments.types import SegmentRule as SegmentRuleType
 from users.models import FFAdminUser
 
 
@@ -101,6 +105,31 @@ def test_process_import_request__api_error__expected_status(
     assert import_request.ld_token == ""
     assert import_request.status["result"] == "failure"
     assert import_request.status["error_messages"] == [expected_error_message]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__write_error__persists_no_import_data(
+    mocker: MockerFixture,
+    project: Project,
+    import_request: LaunchDarklyImportRequest,
+) -> None:
+    # Given
+    mocker.patch(
+        "integrations.launch_darkly.services._create_features_from_ld",
+        side_effect=RuntimeError(),
+    )
+
+    # When
+    with pytest.raises(RuntimeError):
+        process_import_request(import_request)
+
+    # Then
+    import_request.refresh_from_db()
+    assert import_request.completed_at
+    assert import_request.status["result"] == "failure"
+    assert not Environment.objects.filter(project=project).exists()
+    assert not Feature.objects.filter(project=project).exists()
+    assert not Segment.objects.filter(project=project).exists()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -285,7 +314,204 @@ def test_process_import_request__already_completed__does_not_reprocess(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_process_import_request__valid_segments__imports_correctly(  # type: ignore[no-untyped-def]
+def test_process_import_request__valid_segments__creates_segment_per_environment(
+    project: Project,
+    import_request: LaunchDarklyImportRequest,
+) -> None:
+    # Given / When
+    process_import_request(import_request)
+
+    # Then
+    segments = Segment.objects.filter(project=project, feature_id=None)
+
+    assert set(segments.values_list("name", flat=True)) == {
+        "User List (Override for test)",
+        "User List (Override for production)",
+        "Dynamic List (Override for test)",
+        "Dynamic List (Override for production)",
+        "Dynamic List 2 (Override for test)",
+        "Dynamic List 2 (Override for production)",
+    }
+
+
+@pytest.mark.parametrize(
+    "segment_name, expected_rules_data",
+    [
+        pytest.param(
+            "Dynamic List (Override for test)",
+            [
+                {
+                    "type": SegmentRule.ALL_RULE,
+                    "conditions": [],
+                    "rules": [
+                        {
+                            "type": SegmentRule.ANY_RULE,
+                            "conditions": [
+                                {
+                                    "property": "email",
+                                    "operator": segment_constants.REGEX,
+                                    "value": ".*@gmail\\.com",
+                                    "description": None,
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+            id="targeting-rules-only",
+        ),
+        pytest.param(
+            "Dynamic List 2 (Override for production)",
+            [
+                {
+                    "type": SegmentRule.ALL_RULE,
+                    "conditions": [],
+                    "rules": [
+                        {
+                            "type": SegmentRule.ANY_RULE,
+                            "conditions": [
+                                {
+                                    "property": "p1",
+                                    "operator": segment_constants.IN,
+                                    "value": "1,2",
+                                    "description": None,
+                                }
+                            ],
+                        },
+                        {
+                            "type": SegmentRule.ANY_RULE,
+                            "conditions": [
+                                {
+                                    "property": "p2",
+                                    "operator": segment_constants.GREATER_THAN,
+                                    "value": "1.0.0:semver",
+                                    "description": None,
+                                }
+                            ],
+                        },
+                        {
+                            "type": SegmentRule.ANY_RULE,
+                            "conditions": [
+                                {
+                                    "property": "p3",
+                                    "operator": segment_constants.REGEX,
+                                    "value": "foo[0-9]{0,1}",
+                                    "description": None,
+                                }
+                            ],
+                        },
+                        {
+                            "type": SegmentRule.ANY_RULE,  # included users
+                            "conditions": [
+                                {
+                                    "property": "key",
+                                    "operator": segment_constants.IN,
+                                    "value": "foo",
+                                    "description": None,
+                                }
+                            ],
+                        },
+                        {
+                            "type": SegmentRule.NONE_RULE,  # excluded users
+                            "conditions": [
+                                {
+                                    "property": "key",
+                                    "operator": segment_constants.IN,
+                                    "value": "bar",
+                                    "description": None,
+                                }
+                            ],
+                        },
+                    ],
+                }
+            ],
+            id="targeting-rules-and-user-lists",
+        ),
+        pytest.param(
+            "User List (Override for test)",
+            [
+                {
+                    "type": SegmentRule.ALL_RULE,
+                    "conditions": [],
+                    "rules": [
+                        {
+                            "type": SegmentRule.ANY_RULE,  # included users
+                            "conditions": [
+                                {
+                                    "property": "key",
+                                    "operator": segment_constants.IN,
+                                    "value": "user-102,user-101",
+                                    "description": None,
+                                }
+                            ],
+                        },
+                        {
+                            "type": SegmentRule.NONE_RULE,  # excluded users
+                            "conditions": [
+                                {
+                                    "property": "key",
+                                    "operator": segment_constants.IN,
+                                    "value": "user-103",
+                                    "description": None,
+                                }
+                            ],
+                        },
+                    ],
+                }
+            ],
+            id="user-lists-only",
+        ),
+    ],
+)
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__valid_segments__imports_correctly(
+    project: Project,
+    import_request: LaunchDarklyImportRequest,
+    segment_name: str,
+    expected_rules_data: list[SegmentRuleType],
+) -> None:
+    # Given / When
+    process_import_request(import_request)
+
+    # Then
+    segment = Segment.objects.get(name=segment_name, project=project)
+    assert segment.rules_data == expected_rules_data
+
+
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__valid_segments__creates_identities_with_key_traits(
+    project: Project,
+    import_request: LaunchDarklyImportRequest,
+) -> None:
+    # Given / When
+    process_import_request(import_request)
+
+    # Then
+    assert set(
+        Identity.objects.filter(environment__project=project).values_list(
+            "identifier",
+            "identity_traits__trait_key",
+            "identity_traits__string_value",
+        )
+    ) == {
+        (identifier, "key", identifier)
+        for identifier in (
+            "bar",
+            "foo",
+            "user1",
+            "user2",
+            "user-101",
+            "user-102",
+            "user-103",
+            "user-1005",
+            "user-10006",
+        )
+    }
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__valid_segments__imports_correctly_x_replaced_above(  # type: ignore[no-untyped-def]
     project: Project,
     import_request: LaunchDarklyImportRequest,
 ):
@@ -486,7 +712,152 @@ def test_process_import_request__valid_segments__imports_correctly(  # type: ign
 
 
 @pytest.mark.django_db(transaction=True)
-def test_process_import_request__valid_rules__imports_correctly(  # type: ignore[no-untyped-def]
+def test_process_import_request__valid_rules__creates_feature_specific_segments(
+    project: Project,
+    import_request: LaunchDarklyImportRequest,
+) -> None:
+    # Given / When
+    process_import_request(import_request)
+
+    # Then
+    segments = Segment.objects.filter(project=project).exclude(feature_id=None)
+
+    assert set(segments.values_list("name", flat=True)) == {
+        # Feature Segments
+        "Regular And",
+        "Reverted And",
+        "Just Not",
+        # Feature Segments without descriptions
+        "imported-56725db6-3d2a-4ed6-a2a1-60ef94ac62d5",
+        "imported-a132f4aa-ad51-43c6-8d03-f18d6a5b205d",
+        "imported-c034ec70-fcb3-4c15-9bea-b9fa0b341b4f",
+        # Individual targeting rules converted as custom segments
+        "individual-targeting-variation-0",
+        "individual-targeting-variation-1",
+        "individual-targeting-variation-2",
+    }
+
+
+@pytest.mark.parametrize(
+    "segment_name, expected_rules_data",
+    [
+        pytest.param(
+            "Regular And",
+            [
+                {
+                    "type": SegmentRule.ALL_RULE,
+                    "conditions": [],
+                    "rules": [
+                        {
+                            "type": SegmentRule.ANY_RULE,
+                            "conditions": [
+                                {
+                                    "property": "p1",
+                                    "operator": segment_constants.LESS_THAN_INCLUSIVE,
+                                    "value": "5",
+                                    "description": None,
+                                }
+                            ],
+                        },
+                        {
+                            "type": SegmentRule.ANY_RULE,
+                            "conditions": [
+                                {
+                                    "property": "p2",
+                                    "operator": segment_constants.GREATER_THAN,
+                                    "value": "1",
+                                    "description": None,
+                                }
+                            ],
+                        },
+                    ],
+                }
+            ],
+            id="plain-clauses-only",
+        ),
+        pytest.param(
+            "Reverted And",
+            [
+                {
+                    "type": SegmentRule.ALL_RULE,
+                    "conditions": [],
+                    "rules": [
+                        {
+                            "type": SegmentRule.ANY_RULE,
+                            "conditions": [
+                                {
+                                    "property": "p1",
+                                    "operator": segment_constants.REGEX,
+                                    "value": ".*bar",
+                                    "description": None,
+                                }
+                            ],
+                        },
+                        {
+                            "type": SegmentRule.NONE_RULE,  # negated clauses pool here
+                            "conditions": [
+                                {
+                                    "property": "p2",
+                                    "operator": segment_constants.CONTAINS,
+                                    "value": "forbidden",
+                                    "description": None,
+                                },
+                                {
+                                    "property": "p2",
+                                    "operator": segment_constants.CONTAINS,
+                                    "value": "words",
+                                    "description": None,
+                                },
+                            ],
+                        },
+                    ],
+                }
+            ],
+            id="plain-and-negated-clauses",
+        ),
+        pytest.param(
+            "Just Not",
+            [
+                {
+                    "type": SegmentRule.ALL_RULE,
+                    "conditions": [],
+                    "rules": [
+                        {
+                            "type": SegmentRule.NONE_RULE,
+                            "conditions": [
+                                {
+                                    "property": "p1",
+                                    "operator": segment_constants.IN,
+                                    "value": "this,that",
+                                    "description": None,
+                                }
+                            ],
+                        },
+                    ],
+                }
+            ],
+            id="negated-clauses-only",
+        ),
+    ],
+)
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__valid_rules__imports_correctly(
+    project: Project,
+    import_request: LaunchDarklyImportRequest,
+    segment_name: str,
+    expected_rules_data: list[SegmentRuleType],
+) -> None:
+    # Given / When
+    process_import_request(import_request)
+
+    # Then
+    segment = Segment.objects.get(name=segment_name, project=project)
+    assert segment.rules_data == expected_rules_data
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__valid_rules__imports_correctly_x_replaced_above(  # type: ignore[no-untyped-def]
     project: Project,
     import_request: LaunchDarklyImportRequest,
 ):
@@ -582,8 +953,152 @@ def test_process_import_request__valid_rules__imports_correctly(  # type: ignore
     }
 
 
+@pytest.mark.parametrize(
+    "ld_segment_data, expected_rules_data, expected_error_message",
+    [
+        pytest.param(
+            {
+                "rules": [
+                    {
+                        "clauses": [
+                            {
+                                "attribute": "p1",
+                                "op": "arcaneOp",
+                                "values": ["x"],
+                                "negate": False,
+                            }
+                        ]
+                    }
+                ]
+            },
+            [{"type": SegmentRule.ALL_RULE, "conditions": [], "rules": []}],
+            "Can't map launch darkly operator: arcaneOp"
+            " skipping for segment: Unsupported (Override for test)",
+            id="unsupported-operator",
+        ),
+        pytest.param(
+            {
+                "rules": [
+                    {
+                        "clauses": [
+                            {
+                                "attribute": "p1",
+                                "op": "contains",
+                                "values": [
+                                    "x" * (settings.SEGMENT_CONDITION_VALUE_LIMIT + 1)
+                                ],
+                                "negate": False,
+                            }
+                        ]
+                    }
+                ]
+            },
+            [
+                {
+                    "type": SegmentRule.ALL_RULE,
+                    "conditions": [],
+                    "rules": [{"type": SegmentRule.ANY_RULE, "conditions": []}],
+                }
+            ],
+            f"Segment condition value 'xxxxx...xxxxx' for property 'p1' exceeds the"
+            f" limit of {settings.SEGMENT_CONDITION_VALUE_LIMIT} characters,"
+            f" skipping for segment 'Unsupported (Override for test)'",
+            id="condition-value-over-limit",
+        ),
+        pytest.param(
+            {"included": ["y" * (settings.SEGMENT_CONDITION_VALUE_LIMIT + 1)]},
+            [{"type": SegmentRule.ALL_RULE, "conditions": [], "rules": []}],
+            f"Targeting key 'yyyyy...yyyyy' exceeds the limit of"
+            f" {settings.SEGMENT_CONDITION_VALUE_LIMIT} characters, "
+            f"skipping for segment 'Unsupported (Override for test)'",
+            id="targeting-key-over-limit",
+        ),
+    ],
+)
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__unsupported_segment_data__skips_and_logs_error(
+    project: Project,
+    ld_client_class_mock: MagicMock,
+    import_request: LaunchDarklyImportRequest,
+    ld_segment_data: dict[str, Any],
+    expected_rules_data: list[SegmentRuleType],
+    expected_error_message: str,
+) -> None:
+    # Given
+    ld_client_class_mock.return_value.get_segments.return_value = [
+        {
+            "name": "Unsupported",
+            "key": "unsupported",
+            "deleted": False,
+            "included": [],
+            "excluded": [],
+            "includedContexts": [],
+            "excludedContexts": [],
+            "rules": [],
+            **ld_segment_data,
+        }
+    ]
+
+    # When
+    process_import_request(import_request)
+
+    # Then
+    segment = Segment.objects.get(
+        name="Unsupported (Override for test)", project=project
+    )
+    assert segment.rules_data == expected_rules_data
+    assert expected_error_message in import_request.status["error_messages"]
+
+
 @pytest.mark.django_db(transaction=True)
 def test_process_import_request__large_segments__correctly_imported(
+    request: pytest.FixtureRequest,
+    ld_client_class_mock: MagicMock,
+    import_request: LaunchDarklyImportRequest,
+    snapshot: SnapshotFixture,
+) -> None:
+    # Given
+    expected_status_snapshot = snapshot(
+        "test_process_import_request__large_segments__correctly_imported__import_request_status.json"
+    )
+    expected_rules_data_snapshot = snapshot(
+        "test_process_import_request__large_segments__correctly_imported__rules_data.json"
+    )
+    expected_segment_names = [
+        "Large Dynamic List (Override for test)",
+        "Large Dynamic List (Override for production)",
+        "Large User List (Override for test)",
+        "Large User List (Override for production)",
+    ]
+    large_segments_response_path = (
+        request.path.parent / "client_responses/get_segments__large_segments.json"
+    )
+    ld_client_class_mock.return_value.get_segments.return_value = json.loads(
+        large_segments_response_path.read_text()
+    )
+
+    # When
+    process_import_request(import_request)
+
+    # Then
+    status_json = json.dumps(import_request.status, indent=2, sort_keys=True)
+    assert status_json == expected_status_snapshot
+
+    segments = sorted(
+        Segment.objects.filter(
+            project=import_request.project, name__in=expected_segment_names
+        ),
+        key=attrgetter("name"),
+    )
+    rules_data_json = json.dumps(
+        {segment.name: segment.rules_data for segment in segments}, indent=2
+    )
+    assert rules_data_json == expected_rules_data_snapshot
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__large_segments__correctly_imported_x_replaced_above(
     request: pytest.FixtureRequest,
     ld_client_class_mock: MagicMock,
     import_request: LaunchDarklyImportRequest,

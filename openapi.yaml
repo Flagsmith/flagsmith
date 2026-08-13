@@ -18649,6 +18649,7 @@ components:
             - 'null'
         project:
           type: integer
+          readOnly: true
         feature:
           type:
             - integer
@@ -18681,7 +18682,6 @@ components:
             - 'null'
       required:
         - name
-        - project
         - rules
     ChangeRequestUpdate:
       description: Adds nested create feature
@@ -24755,6 +24755,7 @@ components:
             - 'null'
         project:
           type: integer
+          readOnly: true
         feature:
           type:
             - integer
@@ -26435,6 +26436,7 @@ components:
             - 'null'
         project:
           type: integer
+          readOnly: true
         feature:
           type:
             - integer
@@ -26463,7 +26465,6 @@ components:
           readOnly: true
       required:
         - name
-        - project
         - rules
     SegmentAssociatedFeatureState:
       type: object

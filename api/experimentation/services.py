@@ -16,7 +16,7 @@ from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
-from flag_engine.segments.constants import PERCENTAGE_SPLIT
+from flag_engine.segments.constants import ALL_RULE, PERCENTAGE_SPLIT
 from rest_framework.exceptions import ValidationError
 
 from audit.models import AuditLog
@@ -80,6 +80,9 @@ from features.versioning.versioning_service import (
 )
 from integrations.flagsmith.client import get_openfeature_client
 from segments.models import Condition, Segment, SegmentRule
+
+# TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
+from segments.types import SegmentRule as SegmentRuleType
 
 _ROLLOUT_VALUE_TYPE: dict[str, "FeatureValueType"] = {
     INTEGER: "integer",
@@ -650,6 +653,23 @@ def transition_experiment_status(
     return experiment
 
 
+def _rollout_segment_rules(rollout_percentage: float) -> list[SegmentRuleType]:
+    return [
+        {
+            "type": ALL_RULE,
+            "conditions": [
+                {
+                    "property": "$.identity.key",
+                    "operator": PERCENTAGE_SPLIT,
+                    "value": str(rollout_percentage),
+                    "description": None,
+                }
+            ],
+            "rules": [],
+        }
+    ]
+
+
 def _create_rollout_segment(
     experiment: Experiment, rollout_percentage: float
 ) -> Segment:
@@ -657,7 +677,10 @@ def _create_rollout_segment(
         name=f"experiment-{experiment.id}-rollout",
         project=experiment.feature.project,
         is_system_segment=True,
+        rules_data=_rollout_segment_rules(rollout_percentage),
     )
+
+    # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
     rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
     Condition.objects.create(
         rule=rule,
@@ -665,6 +688,7 @@ def _create_rollout_segment(
         property="$.identity.key",
         value=str(rollout_percentage),
     )
+
     return segment
 
 
@@ -689,11 +713,16 @@ def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
 def _sync_rollout_segment(experiment: Experiment, rollout_percentage: float) -> Segment:
     segment = experiment.rollout_segment
     if segment is not None:
+        segment.rules_data = _rollout_segment_rules(rollout_percentage)
+        segment.save(update_fields=["rules_data"])
+
+        # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
         condition = Condition.objects.get(
             rule__segment=segment, operator=PERCENTAGE_SPLIT
         )
         condition.value = str(rollout_percentage)
         condition.save()
+
         return segment
     segment = _create_rollout_segment(experiment, rollout_percentage)
     experiment.rollout_segment = segment
