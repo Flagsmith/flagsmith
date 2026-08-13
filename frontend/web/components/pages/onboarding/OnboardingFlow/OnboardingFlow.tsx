@@ -20,6 +20,8 @@ import { useUpdateProjectMutation } from 'common/services/useProject'
 import API from 'project/api'
 import Constants from 'common/constants'
 import { isPendingAuthorisation } from 'common/utils/pendingAuthorisation'
+import flagsmith from '@flagsmith/flagsmith'
+import AccountStore from 'common/stores/account-store'
 import './OnboardingFlow.scss'
 
 type OnboardingSnippet = 'install' | 'wire'
@@ -212,6 +214,18 @@ const OnboardingFlow: FC = () => {
   const trackRollout = (event: { category: string; event: string }) =>
     API.trackEvent({ ...event, extra: diagnosticIds })
 
+  // Interest in the door goes where the other fake doors report, carrying who
+  // asked. Ids alone tell us an organisation wants this and give us no way to
+  // reply to them. Matches the segment sources door in #8272.
+  const trackRolloutInterest = (event: string) =>
+    flagsmith.trackEvent(event, {
+      metadata: {
+        email: AccountStore.getUser()?.email,
+        organisation: AccountStore.getOrganisation()?.name,
+        source: 'onboarding-rollout-quest',
+      },
+    })
+
   useEffect(() => {
     if (!rolloutQuestOpen) return
     API.trackEvent({
@@ -252,12 +266,14 @@ const OnboardingFlow: FC = () => {
           goToFlagConfig('rollout')
         }}
         onDismiss={() => history.push('/getting-started')}
-        onNotifyMe={() =>
+        onNotifyMe={() => {
           trackRollout(Constants.events.ONBOARDING_ROLLOUT_NOTIFY_ME)
-        }
-        onFeedback={() =>
+          trackRolloutInterest('rollout_beta_requested')
+        }}
+        onFeedback={() => {
           trackRollout(Constants.events.ONBOARDING_ROLLOUT_FEEDBACK)
-        }
+          trackRolloutInterest('rollout_feedback_clicked')
+        }}
       />
     )
   }
