@@ -15,6 +15,13 @@
     padding: 24px;
   }
 
+  // The fill alone is near-invisible in dark mode, where the card and the modal
+  // are a shade apart. .border-default sets only a colour, so the shorthand
+  // lives here, as it does in MetricsTable and VariationTable.
+  &__card {
+    border: 1px solid var(--color-border-default);
+  }
+
   // The marker is the styled circle below, not a list bullet.
   &__steps {
     list-style: none;

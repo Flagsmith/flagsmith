@@ -29,7 +29,7 @@ const OnboardingRolloutQuest: FC<OnboardingRolloutQuestProps> = ({
       Release {featureName} to a growing percentage of your users.
     </p>
 
-    <section className='onboarding-rollout-quest__card bg-surface-default border-default rounded-xl d-flex flex-column gap-3'>
+    <section className='onboarding-rollout-quest__card bg-surface-muted rounded-xl d-flex flex-column gap-3'>
       <h3 className='onboarding-rollout-quest__card-title m-0 fw-bold text-default'>
         How to roll out gradually today
       </h3>
