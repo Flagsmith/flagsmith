@@ -1,8 +1,11 @@
 """https://docs.flagsmith.com/managing-flags/updating-flags"""
 
+from typing import get_args
+
 from rest_framework import serializers
 
 from features.feature_states.exceptions import FeatureValueError
+from features.feature_states.models import FeatureValueType
 from features.feature_types import MULTIVARIATE
 from features.future.types import (
     EnvironmentDefaultRequest,
@@ -18,7 +21,7 @@ from segments.models import Segment
 class FlagValueSerializer(serializers.Serializer[FlagValue]):
     """A flag value, typed by the caller so it survives the round trip as a string."""
 
-    type = serializers.ChoiceField(choices=["string", "integer", "boolean"])
+    type = serializers.ChoiceField(choices=get_args(FeatureValueType))
     value = serializers.CharField(allow_blank=True)
 
 
