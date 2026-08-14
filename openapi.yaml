@@ -12,6 +12,107 @@ servers:
   - url: 'https://api.flagsmith.com'
     description: Flagsmith API
 paths:
+  '/api/__future__/environments/{environment_key}/features/{feature_id}/':
+    get:
+      operationId: api___future___environments_features_retrieve
+      description: Read what the flag serves in the environment.
+      parameters:
+        - name: environment_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateFlagResponse'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - experimental
+    put:
+      operationId: api___future___environments_features_update
+      description: 'Replace the properties given, resetting what they omit.'
+      parameters:
+        - name: environment_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFlagRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UpdateFlagRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateFlagRequest'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateFlagResponse'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - experimental
+    patch:
+      operationId: api___future___environments_features_partial_update
+      description: 'Update the properties given, leaving the rest as they are.'
+      parameters:
+        - name: environment_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateFlagRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateFlagRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateFlagRequest'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateFlagResponse'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - experimental
   '/api/experiments/environments/{environment_key}/delete-segment-override/':
     post:
       operationId: api_experiments_environments_delete_segment_override_create
@@ -25402,6 +25503,17 @@ components:
           allOf:
             - $ref: '#/components/schemas/LifecycleStageEnum'
           readOnly: true
+    PatchedUpdateFlagRequest:
+      type: object
+      properties:
+        environment_default:
+          $ref: '#/components/schemas/UpdateFlagRequestEnvironmentDefaultRequest'
+        segment_overrides:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateFlagRequestSegmentOverrideRequest'
+          title: Segment Overrides
+      title: UpdateFlagRequest
     PatchedUser:
       type: object
       properties:
@@ -27415,6 +27527,12 @@ components:
         - is_admin
         - issuer
         - name
+    Type68aEnum:
+      type: string
+      enum:
+        - string
+        - integer
+        - boolean
     Type975Enum:
       description: |-
         * `int` - Integer
@@ -27699,6 +27817,185 @@ components:
         - enabled
         - feature
         - value
+    UpdateFlagRequest:
+      type: object
+      properties:
+        environment_default:
+          $ref: '#/components/schemas/UpdateFlagRequestEnvironmentDefaultRequest'
+        segment_overrides:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateFlagRequestSegmentOverrideRequest'
+          title: Segment Overrides
+      title: UpdateFlagRequest
+    UpdateFlagRequestEnvironmentDefaultRequest:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          title: Enabled
+        value:
+          $ref: '#/components/schemas/UpdateFlagRequestFlagValue'
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateFlagRequestVariant'
+          title: Variants
+      title: EnvironmentDefaultRequest
+    UpdateFlagRequestFlagValue:
+      type: object
+      properties:
+        type:
+          allOf:
+            - $ref: '#/components/schemas/Type68aEnum'
+          title: Type
+        value:
+          type: string
+          title: Value
+      required:
+        - type
+        - value
+      title: FlagValue
+    UpdateFlagRequestSegmentOverrideRequest:
+      type: object
+      properties:
+        segment:
+          $ref: '#/components/schemas/UpdateFlagRequestSegmentReference'
+        enabled:
+          type: boolean
+          title: Enabled
+        priority:
+          type: integer
+          title: Priority
+        value:
+          $ref: '#/components/schemas/UpdateFlagRequestFlagValue'
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateFlagRequestVariant'
+          title: Variants
+      required:
+        - segment
+      title: SegmentOverrideRequest
+    UpdateFlagRequestSegmentReference:
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+      required:
+        - id
+      title: SegmentReference
+    UpdateFlagRequestVariant:
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        weight:
+          type: number
+          title: Weight
+      required:
+        - id
+        - weight
+      title: Variant
+    UpdateFlagResponse:
+      type: object
+      properties:
+        environment_default:
+          $ref: '#/components/schemas/UpdateFlagResponseEnvironmentDefaultResponse'
+        segment_overrides:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateFlagResponseSegmentOverrideResponse'
+          title: Segment Overrides
+      required:
+        - environment_default
+        - segment_overrides
+      title: UpdateFlagResponse
+    UpdateFlagResponseEnvironmentDefaultResponse:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          title: Enabled
+        value:
+          anyOf:
+            - $ref: '#/components/schemas/UpdateFlagResponseFlagValue'
+            - type: 'null'
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateFlagResponseVariant'
+          title: Variants
+      required:
+        - enabled
+        - value
+        - variants
+      title: EnvironmentDefaultResponse
+    UpdateFlagResponseFlagValue:
+      type: object
+      properties:
+        type:
+          allOf:
+            - $ref: '#/components/schemas/Type68aEnum'
+          title: Type
+        value:
+          type: string
+          title: Value
+      required:
+        - type
+        - value
+      title: FlagValue
+    UpdateFlagResponseSegmentOverrideResponse:
+      type: object
+      properties:
+        segment:
+          $ref: '#/components/schemas/UpdateFlagResponseSegmentReference'
+        priority:
+          type: integer
+          title: Priority
+        enabled:
+          type: boolean
+          title: Enabled
+        value:
+          anyOf:
+            - $ref: '#/components/schemas/UpdateFlagResponseFlagValue'
+            - type: 'null'
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateFlagResponseVariant'
+          title: Variants
+      required:
+        - segment
+        - priority
+        - enabled
+        - value
+        - variants
+      title: SegmentOverrideResponse
+    UpdateFlagResponseSegmentReference:
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+      required:
+        - id
+      title: SegmentReference
+    UpdateFlagResponseVariant:
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        weight:
+          type: number
+          title: Weight
+      required:
+        - id
+        - weight
+      title: Variant
     UpdateFlagV2:
       type: object
       properties:

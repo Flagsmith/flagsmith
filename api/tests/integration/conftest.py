@@ -17,6 +17,7 @@ from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.enums import EnvironmentDocumentCacheMode
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
+from users.models import FFAdminUser
 
 
 @pytest.fixture()
@@ -218,36 +219,42 @@ def server_side_sdk_client(
 
 
 @pytest.fixture()
-def default_feature_value():  # type: ignore[no-untyped-def]
+def default_feature_value() -> str:
     return "default_value"
 
 
 @pytest.fixture()
-def feature_name():  # type: ignore[no-untyped-def]
+def feature_name() -> str:
     return "feature_1"
 
 
 @pytest.fixture()
-def feature_2_name():  # type: ignore[no-untyped-def]
+def feature_2_name() -> str:
     return "feature_2"
 
 
 @pytest.fixture()
-def mv_feature_name():  # type: ignore[no-untyped-def]
+def mv_feature_name() -> str:
     return "mv_feature"
 
 
 @pytest.fixture()
-def feature(admin_client, project, default_feature_value, feature_name):  # type: ignore[no-untyped-def]
-    data = {
-        "name": feature_name,
-        "initial_value": default_feature_value,
-        "project": project,
-    }
-    url = reverse("api-v1:projects:project-features-list", args=[project])
-
-    response = admin_client.post(url, data=data)
-    return response.json()["id"]
+def feature(
+    admin_client: APIClient,
+    project: int,
+    default_feature_value: str,
+    feature_name: str,
+) -> int:
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/",
+        data={
+            "name": feature_name,
+            "initial_value": default_feature_value,
+            "project": project,
+        },
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    return int(response.json()["id"])
 
 
 @pytest.fixture()
@@ -542,11 +549,15 @@ def admin_master_api_key_client(admin_master_api_key: dict) -> APIClient:  # typ
 
 
 @pytest.fixture()
-def non_admin_client(organisation, django_user_model, api_client):  # type: ignore[no-untyped-def]
+def non_admin_client(
+    django_user_model: type[FFAdminUser],
+    organisation: int,
+) -> APIClient:
     user = django_user_model.objects.create(username="non_admin_user")
     user.add_organisation(Organisation.objects.get(id=organisation))
-    api_client.force_authenticate(user=user)
-    return api_client
+    client = APIClient()
+    client.force_authenticate(user=user)
+    return client
 
 
 @pytest.fixture()
