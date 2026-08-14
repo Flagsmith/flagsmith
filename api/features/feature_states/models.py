@@ -14,6 +14,12 @@ from features.value_types import (
 # TODO: use Pydantic TypeAdapter to map serializer data to DTOs
 FeatureValueType = Literal["string", "integer", "boolean"]
 
+API_VALUE_TYPES: dict[str, FeatureValueType] = {
+    INTEGER: "integer",
+    STRING: "string",
+    BOOLEAN: "boolean",
+}
+
 
 class AbstractBaseFeatureValueModel(models.Model):
     class Meta:

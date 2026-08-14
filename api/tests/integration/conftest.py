@@ -17,6 +17,7 @@ from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.enums import EnvironmentDocumentCacheMode
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
+from users.models import FFAdminUser
 
 
 @pytest.fixture()
@@ -547,11 +548,15 @@ def admin_master_api_key_client(admin_master_api_key: dict) -> APIClient:  # typ
 
 
 @pytest.fixture()
-def non_admin_client(organisation, django_user_model, api_client):  # type: ignore[no-untyped-def]
+def non_admin_client(
+    django_user_model: type[FFAdminUser],
+    organisation: int,
+) -> APIClient:
     user = django_user_model.objects.create(username="non_admin_user")
     user.add_organisation(Organisation.objects.get(id=organisation))
-    api_client.force_authenticate(user=user)
-    return api_client
+    client = APIClient()
+    client.force_authenticate(user=user)
+    return client
 
 
 @pytest.fixture()

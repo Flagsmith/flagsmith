@@ -716,6 +716,188 @@ def test_update_flag__patch_segment_override_variants__reweights_for_segment_onl
     ]
 
 
+def test_update_flag__new_segment_override_without_variants__inherits_environment_default_variants(
+    admin_client: APIClient,
+    default_feature_value: str,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    mv_feature: int,
+    mv_feature_variants: list[int],
+    segment: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    variant_a, variant_b = mv_feature_variants
+    setup_response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
+        UpdateFlagRequest(
+            {
+                "environment_default": {
+                    "variants": [
+                        {"id": variant_a, "weight": 25},
+                        {"id": variant_b, "weight": 25.5},
+                    ],
+                },
+            }
+        ),
+        format="json",
+    )
+    assert setup_response.status_code == 200
+    log.events.clear()
+
+    # When
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
+        UpdateFlagRequest(
+            {"segment_overrides": [{"segment": {"id": segment}, "enabled": True}]}
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "environment_default": {
+            "enabled": False,
+            "value": {"type": "string", "value": default_feature_value},
+            "variants": [
+                {"id": variant_a, "weight": 25},
+                {"id": variant_b, "weight": 25.5},
+            ],
+        },
+        "segment_overrides": [
+            {
+                "segment": {"id": segment},
+                "priority": 0,
+                "enabled": True,
+                "value": {"type": "string", "value": default_feature_value},
+                "variants": [
+                    {"id": variant_a, "weight": 25},
+                    {"id": variant_b, "weight": 25.5},
+                ],
+            },
+        ],
+    }
+    override = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=mv_feature,
+    ).get(feature_segment__segment_id=segment)
+    assert dict(
+        override.multivariate_feature_state_values.values_list(
+            "multivariate_feature_option_id", "percentage_allocation"
+        )
+    ) == {variant_a: 25, variant_b: 25.5}
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "flag.updated",
+            "organisation__id": versioned_environment.project.organisation_id,
+            "project__id": versioned_environment.project_id,
+            "environment__id": versioned_environment.id,
+            "feature__id": mv_feature,
+            "segment_overrides__created__segment__ids": [segment],
+            "segment_overrides__updated__segment__ids": [],
+            "segment_overrides__deleted__segment__ids": [],
+        },
+    ]
+
+
+def test_update_flag__put_segment_override_without_variants__inherits_environment_default_variants(
+    admin_client: APIClient,
+    default_feature_value: str,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    mv_feature: int,
+    mv_feature_variants: list[int],
+    segment: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    variant_a, variant_b = mv_feature_variants
+    setup_response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
+        UpdateFlagRequest(
+            {
+                "environment_default": {
+                    "variants": [
+                        {"id": variant_a, "weight": 25},
+                        {"id": variant_b, "weight": 25.5},
+                    ],
+                },
+                "segment_overrides": [
+                    {
+                        "segment": {"id": segment},
+                        "enabled": True,
+                        "variants": [
+                            {"id": variant_a, "weight": 50},
+                            {"id": variant_b, "weight": 0},
+                        ],
+                    },
+                ],
+            }
+        ),
+        format="json",
+    )
+    assert setup_response.status_code == 200
+    log.events.clear()
+
+    # When
+    response = admin_client.put(
+        f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
+        UpdateFlagRequest(
+            {"segment_overrides": [{"segment": {"id": segment}, "enabled": True}]}
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "environment_default": {
+            "enabled": False,
+            "value": {"type": "string", "value": default_feature_value},
+            "variants": [
+                {"id": variant_a, "weight": 25},
+                {"id": variant_b, "weight": 25.5},
+            ],
+        },
+        "segment_overrides": [
+            {
+                "segment": {"id": segment},
+                "priority": 0,
+                "enabled": True,
+                "value": {"type": "string", "value": default_feature_value},
+                "variants": [
+                    {"id": variant_a, "weight": 25},
+                    {"id": variant_b, "weight": 25.5},
+                ],
+            },
+        ],
+    }
+    override = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=mv_feature,
+    ).get(feature_segment__segment_id=segment)
+    assert dict(
+        override.multivariate_feature_state_values.values_list(
+            "multivariate_feature_option_id", "percentage_allocation"
+        )
+    ) == {variant_a: 25, variant_b: 25.5}
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "flag.updated",
+            "organisation__id": versioned_environment.project.organisation_id,
+            "project__id": versioned_environment.project_id,
+            "environment__id": versioned_environment.id,
+            "feature__id": mv_feature,
+            "segment_overrides__created__segment__ids": [],
+            "segment_overrides__updated__segment__ids": [segment],
+            "segment_overrides__deleted__segment__ids": [],
+        },
+    ]
+
+
 def test_update_flag__put_environment_default__replaces_environment_default(
     admin_client: APIClient,
     environment_api_key: str,
@@ -1416,6 +1598,45 @@ def test_update_flag__variant_omitted__responds_400(
         feature_id=mv_feature,
         feature_segment=None,
     ).get()
+    assert dict(
+        environment_default.multivariate_feature_state_values.values_list(
+            "multivariate_feature_option_id", "percentage_allocation"
+        )
+    ) == {variant_a: 10, variant_b: 20}
+    assert log.events == []
+
+
+def test_update_flag__put_environment_default_without_variants__responds_400(
+    admin_client: APIClient,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    mv_feature: int,
+    mv_feature_variants: list[int],
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    variant_a, variant_b = mv_feature_variants
+
+    # When
+    response = admin_client.put(
+        f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
+        UpdateFlagRequest({"environment_default": {"enabled": True}}),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "environment_default": {
+            "variants": ["Must include all feature's variants."],
+        },
+    }
+    environment_default = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=mv_feature,
+        feature_segment=None,
+    ).get()
+    assert environment_default.enabled is False
     assert dict(
         environment_default.multivariate_feature_state_values.values_list(
             "multivariate_feature_option_id", "percentage_allocation"

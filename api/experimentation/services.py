@@ -70,8 +70,9 @@ from experimentation.stats import (
     compare_to_control,
     srm_p_value,
 )
+from features.feature_states.models import API_VALUE_TYPES
 from features.models import FeatureState
-from features.value_types import BOOLEAN, INTEGER, STRING
+from features.value_types import BOOLEAN, STRING
 from features.versioning.dataclasses import FlagChangeSet, MultivariateValueChangeSet
 from features.versioning.versioning_service import (
     get_environment_flags_list,
@@ -83,12 +84,6 @@ from segments.models import Condition, Segment, SegmentRule
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
 from segments.types import SegmentRule as SegmentRuleType
-
-_ROLLOUT_VALUE_TYPE: dict[str, "FeatureValueType"] = {
-    INTEGER: "integer",
-    STRING: "string",
-    BOOLEAN: "boolean",
-}
 
 if typing.TYPE_CHECKING:
     from collections.abc import Sequence
@@ -858,7 +853,7 @@ def _serialize_feature_state_value(
         return "", "string"
     return (
         str(value.value).lower() if value.type == BOOLEAN else str(value.value),
-        _ROLLOUT_VALUE_TYPE.get(value.type or STRING, "string"),
+        API_VALUE_TYPES.get(value.type or STRING, "string"),
     )
 
 
