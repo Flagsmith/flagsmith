@@ -4,31 +4,12 @@ import jwt
 import pytest
 import responses as responses_lib
 from pytest_mock import MockerFixture
-from rest_framework import status
-from rest_framework.test import APIClient
 
+from organisations.models import Organisation
 from tests.test_helpers import OIDCIssuerStub
+from trust_relationships.models import TrustRelationship
 from trust_relationships.oidc import get_jwks_client
-
-
-@pytest.fixture()
-def trust_relationship(
-    admin_client: APIClient,
-    organisation: int,
-) -> int:
-    response = admin_client.post(
-        f"/api/v1/organisations/{organisation}/trust-relationships/",
-        data={
-            "name": "GitHub Actions",
-            "issuer": "https://token.actions.githubusercontent.com",
-            "audience": "https://github.com/Flagsmith",
-            "claim_rules": [{"claim": "repository", "values": ["Flagsmith/flagsmith"]}],
-            "is_admin": True,
-        },
-        format="json",
-    )
-    assert response.status_code == status.HTTP_201_CREATED
-    return response.json()["id"]  # type: ignore[no-any-return]
+from trust_relationships.services import create_trust_relationship
 
 
 @pytest.fixture(autouse=True)
@@ -58,6 +39,12 @@ def oidc_issuer(
 
 
 @pytest.fixture()
-def machine_client() -> APIClient:
-    # A client that is never force-authenticated
-    return APIClient()
+def github_trust_relationship(organisation: Organisation) -> TrustRelationship:
+    return create_trust_relationship(
+        organisation_id=organisation.id,
+        name="GitHub Actions",
+        issuer="https://token.actions.githubusercontent.com",
+        audience="https://github.com/Flagsmith",
+        is_admin=True,
+        claim_rules=[{"claim": "repository", "values": ["Flagsmith/*"]}],
+    )
