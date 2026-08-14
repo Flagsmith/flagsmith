@@ -10,6 +10,10 @@ import {
   useCreateTrustRelationshipMutation,
   useUpdateTrustRelationshipMutation,
 } from 'common/services/useTrustRelationship'
+import {
+  trustRelationshipAlertError,
+  trustRelationshipFieldErrors,
+} from 'components/pages/organisation-settings/tabs/trust-relationships/errors'
 import useTrustRelationshipRoles from 'components/pages/organisation-settings/tabs/trust-relationships/hooks/useTrustRelationshipRoles'
 import TrustRelationshipPermissionsFields from 'components/pages/organisation-settings/tabs/trust-relationships/TrustRelationshipPermissionsFields'
 import WorkflowSetupSnippet, {
@@ -49,22 +53,18 @@ const TrustRelationshipModal: FC<TrustRelationshipModalProps> = ({
     updateTrustRelationship,
     { error: updateError, isLoading: isUpdating },
   ] = useUpdateTrustRelationshipMutation()
-  const fieldErrors = ((createError || updateError) as { data?: any })?.data
+  const error = createError || updateError
   // Field-keyed errors render inline on their inputs; the alert carries
   // whatever has no field to attach to.
-  const alertError = useMemo(() => {
-    const error = (createError || updateError) as { data?: any } | undefined
-    const data = error?.data
-    if (data && typeof data === 'object' && !Array.isArray(data)) {
-      const rest = Object.fromEntries(
-        Object.entries(data).filter(
-          ([key]) => !['audience', 'issuer', 'name'].includes(key),
-        ),
-      )
-      return Object.keys(rest).length ? { ...error, data: rest } : null
-    }
-    return error
-  }, [createError, updateError])
+  const fieldErrors = useMemo(
+    () => trustRelationshipFieldErrors(error),
+    [error],
+  )
+  const alertError = useMemo(
+    () =>
+      trustRelationshipAlertError(error, 'Could not save trust relationship'),
+    [error],
+  )
 
   const onIsAdminChange = () => {
     // Turning admin on detaches any assigned roles server-side.
@@ -129,21 +129,21 @@ const TrustRelationshipModal: FC<TrustRelationshipModalProps> = ({
     <div className='p-4'>
       <InputGroup
         title='Name'
-        inputProps={{ className: 'full-width', error: fieldErrors?.name }}
+        inputProps={{ className: 'full-width', error: fieldErrors.name }}
         value={name}
         onChange={(e: InputEvent) => setName(Utils.safeParseEventValue(e))}
         placeholder='e.g. GitHub Actions'
       />
       <InputGroup
         title='Trusted issuer URL'
-        inputProps={{ className: 'full-width', error: fieldErrors?.issuer }}
+        inputProps={{ className: 'full-width', error: fieldErrors.issuer }}
         value={issuer}
         onChange={(e: InputEvent) => setIssuer(Utils.safeParseEventValue(e))}
         placeholder='e.g. https://token.actions.githubusercontent.com'
       />
       <InputGroup
         title='Expected audience'
-        inputProps={{ className: 'full-width', error: fieldErrors?.audience }}
+        inputProps={{ className: 'full-width', error: fieldErrors.audience }}
         value={audience}
         onChange={(e: InputEvent) => setAudience(Utils.safeParseEventValue(e))}
         placeholder='e.g. https://github.com/YourOrg'

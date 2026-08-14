@@ -15,6 +15,7 @@ import {
   useCreateTrustRelationshipMutation,
   useUpdateTrustRelationshipMutation,
 } from 'common/services/useTrustRelationship'
+import { trustRelationshipErrorMessage } from 'components/pages/organisation-settings/tabs/trust-relationships/errors'
 import useTrustRelationshipRoles from 'components/pages/organisation-settings/tabs/trust-relationships/hooks/useTrustRelationshipRoles'
 import TrustRelationshipPermissionsFields from 'components/pages/organisation-settings/tabs/trust-relationships/TrustRelationshipPermissionsFields'
 import WorkflowSetupSnippet, {
@@ -87,6 +88,19 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
     updateTrustRelationship,
     { error: updateError, isLoading: isUpdating },
   ] = useUpdateTrustRelationshipMutation()
+  // This form derives name, issuer and audience, so no error has an input of
+  // its own to render against — they all belong in the alert.
+  const error = createError || updateError
+  const alertError = useMemo(
+    () =>
+      error
+        ? trustRelationshipErrorMessage(
+            error,
+            'Could not save trust relationship',
+          )
+        : null,
+    [error],
+  )
 
   const isUnresolvedPin = !!pinnedRepoId && !pinnedRepo
   const owner = selectedRepo?.owner?.login || manualOwner.trim()
@@ -291,7 +305,7 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
         onAddRole={addRole}
         onRemoveRole={removeRole}
       />
-      <ErrorMessage error={createError || updateError} />
+      <ErrorMessage error={alertError} />
       <div className='text-right mt-4'>
         <Button
           onClick={save}
