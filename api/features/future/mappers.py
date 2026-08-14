@@ -1,15 +1,14 @@
 """https://docs.flagsmith.com/managing-flags/updating-flags"""
 
 from features.feature_states.models import API_VALUE_TYPES
-from features.models import FeatureState, FeatureStateValue
-
-from .types import (
+from features.future.types import (
     EnvironmentDefaultResponse,
     FlagValue,
     SegmentOverrideResponse,
     SegmentReference,
     Variant,
 )
+from features.models import FeatureState, FeatureStateValue
 
 
 def map_flag_value(feature_state_value: FeatureStateValue) -> FlagValue | None:

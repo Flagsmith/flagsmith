@@ -9,20 +9,23 @@ from django.db.models import Q
 
 from api_keys.user import APIKeyUser
 from environments.models import Environment
-from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
-from features.multivariate.models import MultivariateFeatureStateValue
-from features.versioning.models import EnvironmentFeatureVersion
-from features.versioning.versioning_service import get_environment_flags_list
-from users.models import FFAdminUser
-
-from .mappers import map_environment_default, map_segment_override, map_variants
-from .types import (
+from features.future.mappers import (
+    map_environment_default,
+    map_segment_override,
+    map_variants,
+)
+from features.future.types import (
     EnvironmentDefaultRequest,
     SegmentOverrideRequest,
     UpdateFlagRequest,
     UpdateFlagResponse,
     Variant,
 )
+from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
+from features.multivariate.models import MultivariateFeatureStateValue
+from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.versioning_service import get_environment_flags_list
+from users.models import FFAdminUser
 
 logger = structlog.get_logger("features")
 

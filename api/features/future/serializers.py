@@ -3,16 +3,15 @@
 from rest_framework import serializers
 
 from features.feature_types import MULTIVARIATE
-from features.models import Feature, FeatureStateValue
-from segments.models import Segment
-
-from .types import (
+from features.future.types import (
     EnvironmentDefaultRequest,
     FlagValue,
     SegmentOverrideRequest,
     UpdateFlagRequest,
     Variant,
 )
+from features.models import Feature, FeatureStateValue
+from segments.models import Segment
 
 
 class FlagValueSerializer(serializers.Serializer[FlagValue]):

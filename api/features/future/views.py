@@ -10,13 +10,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from environments.models import Environment
+from features.future.exceptions import ChangeRequestsEnabledError
+from features.future.permissions import check_update_permissions
+from features.future.serializers import UpdateFlagSerializer
+from features.future.services import update_flag
+from features.future.types import UpdateFlagRequest, UpdateFlagResponse
 from features.models import Feature
-
-from .exceptions import ChangeRequestsEnabledError
-from .permissions import check_update_permissions
-from .serializers import UpdateFlagSerializer
-from .services import update_flag
-from .types import UpdateFlagRequest, UpdateFlagResponse
 
 logger = structlog.get_logger("features")
 
