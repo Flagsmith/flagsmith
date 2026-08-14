@@ -33,16 +33,17 @@ def test_create_trust_relationship__valid_data__returns_backing_key_details(
     ]
 
 
-def test_create_trust_relationship__trailing_slash_issuer__returns_normalised_issuer(
+def test_create_trust_relationship__trailing_slash_issuer__returns_issuer_verbatim(
     admin_client: APIClient,
     organisation: int,
 ) -> None:
-    # Given
+    # Given: an issuer that ends in a slash, as Auth0's does. `iss` is matched
+    # by exact string at exchange time, so the slash must survive the round trip.
     url = f"/api/v1/organisations/{organisation}/trust-relationships/"
     data = {
-        "name": "GitHub Actions",
-        "issuer": "https://token.actions.githubusercontent.com/",
-        "audience": "https://github.com/Flagsmith",
+        "name": "Auth0",
+        "issuer": "https://tenant.eu.auth0.com/",
+        "audience": "https://api.flagsmith.com",
         "is_admin": True,
     }
 
@@ -51,7 +52,7 @@ def test_create_trust_relationship__trailing_slash_issuer__returns_normalised_is
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["issuer"] == "https://token.actions.githubusercontent.com"
+    assert response.json()["issuer"] == "https://tenant.eu.auth0.com/"
 
 
 def test_create_trust_relationship__http_issuer__returns_400(

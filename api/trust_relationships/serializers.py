@@ -71,7 +71,10 @@ class TrustRelationshipSerializer(serializers.ModelSerializer[TrustRelationship]
             raise serializers.ValidationError(
                 "Issuer must not contain a query string or fragment."
             )
-        return issuer.rstrip("/")
+        # Stored verbatim: OIDC matches `iss` by exact string, and issuers
+        # such as Auth0's legitimately end in a slash. Discovery strips the
+        # slash locally when building its URL.
+        return issuer
 
     def validate_is_admin(self, is_admin: bool) -> bool:
         if is_admin is False and not settings.IS_RBAC_INSTALLED:

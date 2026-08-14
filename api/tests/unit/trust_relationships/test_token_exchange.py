@@ -11,6 +11,7 @@ from trust_relationships.exceptions import (
     NoMatchingTrustRelationshipError,
 )
 from trust_relationships.models import TrustRelationship
+from trust_relationships.serializers import TrustRelationshipSerializer
 from trust_relationships.services import (
     create_trust_relationship,
     decode_access_token,
@@ -51,15 +52,20 @@ def test_exchange_oidc_token__issuer_with_trailing_slash__matches(
     responses: responses_lib.RequestsMock,
     mocker: MockerFixture,
 ) -> None:
-    # Given: a trust relationship whose issuer ends in a slash, as Auth0's does
+    # Given: a trust relationship whose issuer ends in a slash, as Auth0's
+    # does, created through the serializer the API writes through
     issuer = "https://tenant.eu.auth0.com/"
-    trust_relationship = create_trust_relationship(
-        organisation_id=organisation.id,
-        name="Auth0",
-        issuer=issuer,
-        audience="https://api.flagsmith.com",
-        is_admin=True,
-        claim_rules=[],
+    serializer = TrustRelationshipSerializer(
+        data={
+            "name": "Auth0",
+            "issuer": issuer,
+            "audience": "https://api.flagsmith.com",
+            "is_admin": True,
+        }
+    )
+    assert serializer.is_valid(), serializer.errors
+    trust_relationship = serializer.save(
+        organisation_id=organisation.id, created_by=None
     )
     oidc_issuer = OIDCIssuerStub(issuer)
     responses.add(
