@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import classNames from 'classnames'
 import { useHistory } from 'react-router-dom'
 
 import { useHasPermission } from 'common/providers/Permission'
@@ -6,8 +7,10 @@ import { useHasPermission } from 'common/providers/Permission'
 import { Segment } from 'common/types/responses'
 import SegmentAction from './components/SegmentAction'
 import { SegmentMembershipTotalBadge } from 'components/segments/SegmentMembershipBadge'
+import Chip from 'components/base/Chip'
 import ConfirmCloneSegment from 'components/modals/ConfirmCloneSegment'
 import { useCloneSegmentMutation } from 'common/services/useSegment'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { handleRemoveSegment } from 'components/modals/ConfirmRemoveSegment'
 import { ProjectPermission } from 'common/types/permissions.types'
 
@@ -19,7 +22,16 @@ interface SegmentRowProps {
 
 const SegmentRow: FC<SegmentRowProps> = ({ index, projectId, segment }) => {
   const history = useHistory()
-  const { description, feature, id, name } = segment
+  const { cohort, description, feature, id, name } = segment
+
+  const { data: environments } = useGetEnvironmentsQuery(
+    { projectId: Number(projectId) },
+    { skip: !cohort },
+  )
+  const cohortEnvironment = environments?.results?.find(
+    (environment) => environment.id === cohort?.environment,
+  )
+  const isPendingDeletion = !!cohort?.deletion_requested_at
 
   const { permission: manageSegmentsPermission } = useHasPermission({
     id: projectId,
@@ -65,11 +77,18 @@ const SegmentRow: FC<SegmentRowProps> = ({ index, projectId, segment }) => {
   }
 
   return (
-    <Row className='list-item clickable' key={id} space>
+    <Row
+      className={classNames('list-item', {
+        'clickable': !isPendingDeletion,
+        'opacity-50': isPendingDeletion,
+      })}
+      key={id}
+      space
+    >
       <Flex
         className='table-column px-3'
         onClick={
-          manageSegmentsPermission
+          manageSegmentsPermission && !isPendingDeletion
             ? () =>
                 history.push(
                   `${document.location.pathname.replace(/\/$/, '')}/${id}`,
@@ -82,6 +101,21 @@ const SegmentRow: FC<SegmentRowProps> = ({ index, projectId, segment }) => {
           {feature && (
             <div className='chip chip--xs ml-2'>Feature-Specific</div>
           )}
+          {!!cohort && (
+            <Chip className='ml-2' size='xs' variant='accent'>
+              {cohort.source_type.toUpperCase()}
+            </Chip>
+          )}
+          {!!cohort && !!cohortEnvironment && (
+            <Chip className='ml-2' size='xs'>
+              {cohortEnvironment.name}
+            </Chip>
+          )}
+          {isPendingDeletion && (
+            <Chip className='ml-2' size='xs'>
+              Deleting
+            </Chip>
+          )}
           <SegmentMembershipTotalBadge
             memberships={segment.membership_counts}
           />
@@ -91,13 +125,15 @@ const SegmentRow: FC<SegmentRowProps> = ({ index, projectId, segment }) => {
         </div>
       </Flex>
       <div className='table-column'>
-        <SegmentAction
-          index={index}
-          isRemoveDisabled={!manageSegmentsPermission}
-          isCloneDisabled={!manageSegmentsPermission}
-          onRemove={onRemoveSegmentClick}
-          onClone={handleCloneSegment}
-        />
+        {!isPendingDeletion && (
+          <SegmentAction
+            index={index}
+            isRemoveDisabled={!manageSegmentsPermission}
+            isCloneDisabled={!manageSegmentsPermission}
+            onRemove={onRemoveSegmentClick}
+            onClone={handleCloneSegment}
+          />
+        )}
       </div>
     </Row>
   )
