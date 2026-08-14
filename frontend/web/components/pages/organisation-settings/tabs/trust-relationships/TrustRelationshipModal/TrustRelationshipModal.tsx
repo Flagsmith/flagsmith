@@ -1,8 +1,7 @@
 import React, { FC, useMemo, useState } from 'react'
-import { IonIcon } from '@ionic/react'
-import { close as closeIcon } from 'ionicons/icons'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
+import Icon from 'components/icons/Icon'
 import Input from 'components/base/forms/Input'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
@@ -189,8 +188,9 @@ const TrustRelationshipModal: FC<TrustRelationshipModalProps> = ({
             onClick={() =>
               setClaimRules((rules) => rules.filter((_, i) => i !== index))
             }
+            aria-label='Remove rule'
           >
-            <IonIcon icon={closeIcon} />
+            <Icon name='close' width={16} />
           </Button>
         </Row>
       ))}
