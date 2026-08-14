@@ -677,7 +677,7 @@ Attributes:
 ### `trust_relationships.token.exchanged`
 
 Logged at `info` from:
- - `api/trust_relationships/services.py:227`
+ - `api/trust_relationships/services.py:234`
 
 Attributes:
  - `organisation.id`
@@ -687,13 +687,13 @@ Attributes:
 ### `trust_relationships.token.rejected`
 
 Logged at `info` from:
- - `api/trust_relationships/services.py:169`
- - `api/trust_relationships/services.py:173`
- - `api/trust_relationships/services.py:183`
- - `api/trust_relationships/services.py:196`
- - `api/trust_relationships/services.py:201`
- - `api/trust_relationships/services.py:217`
- - `api/trust_relationships/services.py:222`
+ - `api/trust_relationships/services.py:172`
+ - `api/trust_relationships/services.py:176`
+ - `api/trust_relationships/services.py:186`
+ - `api/trust_relationships/services.py:203`
+ - `api/trust_relationships/services.py:208`
+ - `api/trust_relationships/services.py:224`
+ - `api/trust_relationships/services.py:229`
 
 Attributes:
  - `reason`

@@ -111,6 +111,18 @@ def test_exchange_oidc_token__audience_mismatch__raises_no_match(
         exchange_oidc_token(token)
 
 
+def test_exchange_oidc_token__no_audience__raises_no_match(
+    oidc_issuer: OIDCIssuerStub,
+    github_trust_relationship: TrustRelationship,
+) -> None:
+    # Given
+    token = oidc_issuer.sign_token(repository="Flagsmith/flagsmith")
+
+    # When / Then
+    with pytest.raises(NoMatchingTrustRelationshipError):
+        exchange_oidc_token(token)
+
+
 def test_exchange_oidc_token__claim_rules_mismatch__raises_no_match(
     oidc_issuer: OIDCIssuerStub,
     github_trust_relationship: TrustRelationship,

@@ -164,6 +164,9 @@ def exchange_oidc_token(token: str) -> TokenExchangeResult:
     """
     try:
         header = jwt.get_unverified_header(token)
+        # The signing keys are discovered from the issuer, so `iss` has to be
+        # read before the signature can be checked. Nothing read here is
+        # trusted: the token is decoded again, with verification, below.
         unverified_claims = jwt.decode(token, options={"verify_signature": False})
     except jwt.InvalidTokenError as exc:
         logger.info("token.rejected", reason="malformed", token__issuer=None)
@@ -190,6 +193,10 @@ def exchange_oidc_token(token: str) -> TokenExchangeResult:
             token,
             signing_key.key,
             algorithms=ALLOWED_SIGNING_ALGORITHMS,
+            # One issuer can back several trust relationships, so there is no
+            # single audience for PyJWT to check against. `aud` is matched
+            # against the candidates below instead; a token carrying no `aud`
+            # matches none of them.
             options={"verify_aud": False, "require": ["exp", "iat"]},
         )
     except jwt.PyJWKClientError as exc:
