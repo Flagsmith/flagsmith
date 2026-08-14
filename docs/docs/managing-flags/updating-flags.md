@@ -311,8 +311,9 @@ Content-Type: application/json
 }
 ```
 
-In both `environment_default` and `segment_overrides`, the `variants` list **must** include all variants for the
-feature, even if their weight is zero, and regardless of the HTTP verb used (`PUT` or `PATCH`).
+When present, in both `environment_default` and `segment_overrides`, the `variants` list **must** include all variants
+for the feature, even if their weight is zero.
 
 Because `PUT` replaces `environment_default` in full, it **must** carry `variants` for a multivariate feature. A segment
-override that omits `variants` inherits the weights of the environment default instead.
+override that omits `variants` inherits the weights of the environment default, unless `PATCH` is updating an existing
+override, which keeps its own weights.
