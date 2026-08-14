@@ -13,6 +13,25 @@
     border-color: var(--color-border-action);
   }
 
+  // Status colours carry their meaning in the fill, so an outline only adds
+  // noise. Transparent rather than removed, so a status chip is the same
+  // height as a bordered one beside it.
+  &--success,
+  &--warning,
+  &--info,
+  &--muted {
+    border-color: transparent;
+  }
+
+  // Status dot. currentColor, so it follows the variant with nothing to wire.
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
   // Sizes (default is the base above).
   &--sm {
     padding: 3px 8px;

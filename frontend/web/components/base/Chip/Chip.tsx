@@ -5,12 +5,20 @@ import { colorIconSecondary } from 'common/theme/tokens'
 import './Chip.scss'
 
 export type ChipSize = 'default' | 'sm' | 'xs'
-export type ChipVariant = 'neutral' | 'accent'
+export type ChipVariant =
+  | 'neutral'
+  | 'accent'
+  | 'success'
+  | 'warning'
+  | 'info'
+  | 'muted'
 
 export type ChipProps = {
   children: ReactNode
   variant?: ChipVariant
   size?: ChipSize
+  /** Fully rounded ends, for status and count badges. */
+  pill?: boolean
   truncate?: boolean
   onRemove?: () => void
   onClick?: () => void
@@ -30,7 +38,11 @@ export type ChipProps = {
 // bg + text come from token utilities; the variant border lives in Chip.scss.
 const VARIANT_UTILITIES: Record<ChipVariant, string> = {
   accent: 'bg-surface-action-subtle text-action',
+  info: 'bg-surface-info text-info',
+  muted: 'bg-surface-muted text-secondary',
   neutral: 'bg-surface-subtle text-default',
+  success: 'bg-surface-success text-success',
+  warning: 'bg-surface-warning text-warning',
 }
 
 // Token-based chip primitive. Uses `ds-chip` rather than the legacy `.chip`
@@ -46,6 +58,7 @@ const Chip = ({
   onClick,
   onKeyDown,
   onRemove,
+  pill = false,
   ref,
   role,
   size = 'default',
@@ -58,10 +71,11 @@ const Chip = ({
     <span
       ref={ref}
       className={classNames(
-        'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-sm',
+        'ds-chip d-inline-flex align-items-center align-middle gap-1',
+        pill ? 'rounded-full' : 'rounded-sm',
         VARIANT_UTILITIES[variant],
+        `ds-chip--${variant}`,
         {
-          'ds-chip--accent': variant === 'accent',
           'ds-chip--clickable': interactive,
           [`ds-chip--${size}`]: size !== 'default',
           'ds-chip--truncate': truncate,
