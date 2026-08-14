@@ -147,8 +147,8 @@ curl -X PATCH 'https://api.flagsmith.com/api/__future__/environments/{environmen
   -d '{
     "environment_default": {
       "variants": [
-        {"key": "variant_a", "weight": 10},
-        {"key": "variant_b", "weight": 10.5}
+        {"id": 33, "weight": 10},
+        {"id": 34, "weight": 10.5}
       ]
     }
   }'
@@ -165,8 +165,8 @@ curl -X PATCH 'https://api.flagsmith.com/api/__future__/environments/{environmen
       {
         "segment": {"id": 101},
         "variants": [
-          {"key": "variant_a", "weight": 25},
-          {"key": "variant_b", "weight": 25}
+          {"id": 33, "weight": 25},
+          {"id": 34, "weight": 25}
         ]
       }
     ]

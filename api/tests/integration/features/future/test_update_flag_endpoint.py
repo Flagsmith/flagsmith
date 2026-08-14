@@ -42,19 +42,17 @@ def mv_feature_variants(
     admin_client: APIClient,
     project: int,
     mv_feature: int,
-) -> None:
-    for key, value, default_percentage_allocation in [
-        ("variant_a", "a", 10),
-        ("variant_b", "b", 20),
-    ]:
+) -> list[int]:
+    return [
         create_mv_option_with_api(
             admin_client,
             project,
             mv_feature,
             default_percentage_allocation,
             value,
-            key=key,
         )
+        for value, default_percentage_allocation in [("a", 10), ("b", 20)]
+    ]
 
 
 def test_update_flag__patch_environment_default_enabled__toggles_flag(
@@ -130,23 +128,26 @@ def test_update_flag__patch_environment_default_value__updates_value(
     assert environment_default.get_feature_state_value() == 1000
 
 
-@pytest.mark.usefixtures("mv_feature_variants")
 def test_update_flag__patch_environment_default_variants__reweights_variants(
     admin_client: APIClient,
     default_feature_value: str,
     environment_api_key: str,
     mv_feature: int,
+    mv_feature_variants: list[int],
     versioned_environment: Environment,
 ) -> None:
-    # Given / When
+    # Given
+    variant_a, variant_b = mv_feature_variants
+
+    # When
     response = admin_client.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
         UpdateFlagRequest(
             {
                 "environment_default": {
                     "variants": [
-                        {"key": "variant_a", "weight": 25},
-                        {"key": "variant_b", "weight": 25.5},
+                        {"id": variant_a, "weight": 25},
+                        {"id": variant_b, "weight": 25.5},
                     ],
                 },
             }
@@ -161,8 +162,8 @@ def test_update_flag__patch_environment_default_variants__reweights_variants(
             "enabled": False,
             "value": {"type": "string", "value": default_feature_value},
             "variants": [
-                {"key": "variant_a", "weight": 25},
-                {"key": "variant_b", "weight": 25.5},
+                {"id": variant_a, "weight": 25},
+                {"id": variant_b, "weight": 25.5},
             ],
         },
         "segment_overrides": [],
@@ -174,9 +175,9 @@ def test_update_flag__patch_environment_default_variants__reweights_variants(
     ).get()
     assert dict(
         environment_default.multivariate_feature_state_values.values_list(
-            "multivariate_feature_option__key", "percentage_allocation"
+            "multivariate_feature_option_id", "percentage_allocation"
         )
-    ) == {"variant_a": 25, "variant_b": 25.5}
+    ) == {variant_a: 25, variant_b: 25.5}
 
 
 def test_update_flag__patch_segment_override_enabled__creates_override(
@@ -481,16 +482,19 @@ def test_update_flag__patch_segment_override_priority__writes_priority_as_given(
     ) == {segment: 1, segment_2: 1}
 
 
-@pytest.mark.usefixtures("mv_feature_variants")
 def test_update_flag__patch_segment_override_variants__reweights_for_segment_only(
     admin_client: APIClient,
     default_feature_value: str,
     environment_api_key: str,
     mv_feature: int,
+    mv_feature_variants: list[int],
     segment: int,
     versioned_environment: Environment,
 ) -> None:
-    # Given / When
+    # Given
+    variant_a, variant_b = mv_feature_variants
+
+    # When
     response = admin_client.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
         UpdateFlagRequest(
@@ -499,8 +503,8 @@ def test_update_flag__patch_segment_override_variants__reweights_for_segment_onl
                     {
                         "segment": {"id": segment},
                         "variants": [
-                            {"key": "variant_a", "weight": 25},
-                            {"key": "variant_b", "weight": 25.5},
+                            {"id": variant_a, "weight": 25},
+                            {"id": variant_b, "weight": 25.5},
                         ],
                     },
                 ],
@@ -516,8 +520,8 @@ def test_update_flag__patch_segment_override_variants__reweights_for_segment_onl
             "enabled": False,
             "value": {"type": "string", "value": default_feature_value},
             "variants": [
-                {"key": "variant_a", "weight": 10},
-                {"key": "variant_b", "weight": 20},
+                {"id": variant_a, "weight": 10},
+                {"id": variant_b, "weight": 20},
             ],
         },
         "segment_overrides": [
@@ -527,8 +531,8 @@ def test_update_flag__patch_segment_override_variants__reweights_for_segment_onl
                 "enabled": False,
                 "value": {"type": "string", "value": default_feature_value},
                 "variants": [
-                    {"key": "variant_a", "weight": 25},
-                    {"key": "variant_b", "weight": 25.5},
+                    {"id": variant_a, "weight": 25},
+                    {"id": variant_b, "weight": 25.5},
                 ],
             },
         ],
@@ -541,16 +545,16 @@ def test_update_flag__patch_segment_override_variants__reweights_for_segment_onl
         live_feature_states.get(
             feature_segment__segment_id=segment
         ).multivariate_feature_state_values.values_list(
-            "multivariate_feature_option__key", "percentage_allocation"
+            "multivariate_feature_option_id", "percentage_allocation"
         )
-    ) == {"variant_a": 25, "variant_b": 25.5}
+    ) == {variant_a: 25, variant_b: 25.5}
     assert dict(
         live_feature_states.get(
             feature_segment=None
         ).multivariate_feature_state_values.values_list(
-            "multivariate_feature_option__key", "percentage_allocation"
+            "multivariate_feature_option_id", "percentage_allocation"
         )
-    ) == {"variant_a": 10, "variant_b": 20}
+    ) == {variant_a: 10, variant_b: 20}
 
 
 def test_update_flag__put_environment_default__replaces_environment_default(

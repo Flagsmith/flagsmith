@@ -12,7 +12,7 @@ class FlagValue(TypedDict):
 
 
 class Variant(TypedDict):
-    key: str
+    id: int
     weight: float  # Percentage between 0 and 100
 
 
