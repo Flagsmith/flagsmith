@@ -39,8 +39,8 @@ const RolloutComingSoonCard: FC<RolloutComingSoonCardProps> = ({
       </Chip>
       <h6 className='m-0'>We’re making gradual rollouts one-click</h6>
       <p className='fs-caption lh-sm text-secondary m-0'>
-        Soon you’ll ramp a flag up on a schedule automatically, without editing
-        segments by hand. Want early access?
+        Automatically release according to a schedule, without manual editing of
+        segments. Want early access?
       </p>
       <div className='d-flex align-items-center gap-3'>
         {alreadyAsked ? (

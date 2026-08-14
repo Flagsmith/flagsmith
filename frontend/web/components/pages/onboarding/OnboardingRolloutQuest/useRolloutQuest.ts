@@ -30,7 +30,8 @@ const useRolloutQuest = ({
   return () => {
     track(Constants.events.ONBOARDING_ROLLOUT_VIEWED)
     openModal(
-      'Roll out gradually',
+      // Matches the next-step card that opens it.
+      'Gradual rollout',
       React.createElement(OnboardingRolloutQuest, {
         featureName,
         onContinue: () => {
