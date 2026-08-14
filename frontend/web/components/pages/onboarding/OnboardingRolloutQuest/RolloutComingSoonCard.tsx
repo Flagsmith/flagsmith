@@ -1,7 +1,9 @@
 import React, { FC, useState } from 'react'
+import flagsmith from '@flagsmith/flagsmith'
 import Button from 'components/base/forms/Button'
 import Chip from 'components/base/Chip'
 import Icon from 'components/icons/Icon'
+import { ROLLOUT_BETA_REQUESTED } from './trackRolloutInterest'
 
 export const ROLLOUT_FEEDBACK_URL =
   'mailto:support@flagsmith.com?subject=Gradual%20rollout'
@@ -17,9 +19,14 @@ const RolloutComingSoonCard: FC<RolloutComingSoonCardProps> = ({
   onFeedback,
   onNotifyMe,
 }) => {
+  // A trait rather than local state, so asking survives a reload and the beta
+  // can later be handed out by targeting it. Read at render, as Announcement
+  // does, so it still resolves if traits land after mount.
   const [notified, setNotified] = useState(false)
+  const alreadyAsked = notified || !!flagsmith.getTrait(ROLLOUT_BETA_REQUESTED)
   const notifyMe = () => {
     setNotified(true)
+    flagsmith.setTrait(ROLLOUT_BETA_REQUESTED, true)
     onNotifyMe()
   }
   return (
@@ -31,12 +38,12 @@ const RolloutComingSoonCard: FC<RolloutComingSoonCardProps> = ({
         Coming soon
       </Chip>
       <h6 className='m-0'>We’re making gradual rollouts one-click</h6>
-      <p className='onboarding-rollout-quest__body text-secondary m-0'>
+      <p className='fs-caption lh-sm text-secondary m-0'>
         Soon you’ll ramp a flag up on a schedule automatically, without editing
         segments by hand. Want early access?
       </p>
       <div className='d-flex align-items-center gap-3'>
-        {notified ? (
+        {alreadyAsked ? (
           <span className='fs-caption d-inline-flex align-items-center gap-2 text-action'>
             <Icon name='checkmark-circle' width={16} />
             Thanks, we’ll be in touch.

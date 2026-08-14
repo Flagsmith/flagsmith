@@ -24,8 +24,9 @@ export const getRolloutSteps = (
 // Sits with the steps rather than in docs: without it the override reaches
 // nobody and the user has no way to tell.
 export const RolloutPrerequisite: FC = () => (
-  <p className='onboarding-rollout-quest__prerequisite text-secondary d-flex gap-2 m-0'>
-    <Icon name='info' width={14} className='icon-secondary' />
+  <p className='fs-captionSmall lh-sm text-secondary d-flex gap-2 m-0'>
+    {/* info hardcodes a blue fill, so it needs telling to inherit. */}
+    <Icon name='info' width={14} fill='currentColor' />
     <span>
       Percentage splits only apply to users you identify. If your app doesn’t
       call <code className='fs-captionSmall'>flagsmith.identify(...)</code> yet,

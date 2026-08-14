@@ -178,8 +178,14 @@ const OnboardingFlow: FC = () => {
     who: { email: profile?.email, organisation: organisationDisplayName },
   })
 
+  // Off, rollout deep-links to the overrides tab like every other next step.
+  const rolloutQuestEnabled = Utils.getFlagsmithHasFeature(
+    'onboarding_rollout_quest',
+  )
   const goToNextStep = (step: OnboardingNextStep) =>
-    step === 'rollout' ? openRolloutQuest() : goToFlagConfig(step)
+    step === 'rollout' && rolloutQuestEnabled
+      ? openRolloutQuest()
+      : goToFlagConfig(step)
   const trackSnippetCopied = (snippet: OnboardingSnippet) =>
     API.trackEvent({
       ...Constants.events.ONBOARDING_SNIPPET_COPIED,

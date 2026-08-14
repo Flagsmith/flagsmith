@@ -1,10 +1,4 @@
 .onboarding-rollout-quest {
-  // 1.5 rather than .lh-base, which is 1.375 here.
-  &__body {
-    font-size: 13px;
-    line-height: 1.5;
-  }
-
   // The fill alone is near-invisible in dark mode, where the card and the modal
   // are a shade apart. .border-default sets only a colour, so the shorthand
   // lives here, as it does in MetricsTable and VariationTable.
@@ -15,10 +9,5 @@
   &__step-number {
     width: 24px;
     height: 24px;
-  }
-
-  &__prerequisite {
-    font-size: 12px;
-    line-height: 1.5;
   }
 }

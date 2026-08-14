@@ -18,7 +18,7 @@ const trackRolloutInterest = (
     metadata: {
       email,
       organisation,
-      source: 'onboarding-rollout-quest',
+      origin: 'onboarding-rollout-quest',
     },
   })
 }

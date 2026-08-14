@@ -25,7 +25,7 @@ const OnboardingRolloutQuest: FC<OnboardingRolloutQuestProps> = ({
   onNotifyMe,
 }) => (
   <div className='onboarding-rollout-quest d-flex flex-column gap-4'>
-    <p className='onboarding-rollout-quest__body text-secondary m-0'>
+    <p className='fs-caption lh-sm text-secondary m-0'>
       Release {featureName} to a growing percentage of your users.
     </p>
 
@@ -39,7 +39,7 @@ const OnboardingRolloutQuest: FC<OnboardingRolloutQuestProps> = ({
             </span>
             <span className='d-flex flex-column gap-1'>
               <span className='fw-bold text-default'>{step.title}</span>
-              <span className='onboarding-rollout-quest__body text-secondary'>
+              <span className='fs-caption lh-sm text-secondary'>
                 {step.body}
               </span>
             </span>
