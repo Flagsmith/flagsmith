@@ -1,7 +1,12 @@
 """https://docs.flagsmith.com/managing-flags/updating-flags"""
 
+from collections.abc import Sequence
+
+from django.utils.text import get_text_list
 from rest_framework import status
 from rest_framework.exceptions import APIException
+
+from segments.models import Segment
 
 
 class ChangeRequestsEnabledError(APIException):
@@ -22,4 +27,13 @@ class DuplicatePriorityError(APIException):
     """Raised where a flag's segment overrides would end up sharing a priority."""
 
     status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "Segment overrides must not share a priority."
+
+    def __init__(self, segments: Sequence[Segment]) -> None:
+        conflicted = get_text_list(
+            [f"{segment.id} ({segment.name})" for segment in segments],
+            "and",
+        )
+        super().__init__(
+            f"The overrides for segments {conflicted} are in conflict; "
+            "provide explicit priority values."
+        )

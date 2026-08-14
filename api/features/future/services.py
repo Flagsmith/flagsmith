@@ -1,11 +1,13 @@
 """https://docs.flagsmith.com/managing-flags/updating-flags"""
 
 from collections.abc import Collection, Sequence
+from itertools import groupby
+from operator import attrgetter
 from typing import NamedTuple
 
 import structlog
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Q
 
 from api_keys.user import APIKeyUser
 from environments.models import Environment
@@ -193,21 +195,19 @@ def _check_priorities(
     version: EnvironmentFeatureVersion | None,
 ) -> None:
     """Precedence between two segment overrides sharing a priority is undefined."""
-    duplicate = (
+    feature_segments = (
         FeatureSegment.objects.filter(
             environment=environment,
             feature=feature,
             environment_feature_version=version,
         )
-        .values("priority")
-        .annotate(count=Count("priority"))
-        .filter(count__gt=1)
-        .order_by("priority")
-        .values_list("priority", flat=True)
-        .first()
+        .select_related("segment")
+        .order_by("priority", "segment_id")
     )
-    if duplicate is not None:
-        raise DuplicatePriorityError(f"Duplicate priority: {duplicate}.")
+    for _priority, sharing in groupby(feature_segments, attrgetter("priority")):
+        segments = [feature_segment.segment for feature_segment in sharing]
+        if len(segments) > 1:
+            raise DuplicatePriorityError(segments)
 
 
 class WrittenSegmentOverrides(NamedTuple):

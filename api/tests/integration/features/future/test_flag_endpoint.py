@@ -816,7 +816,13 @@ def test_update_flag__patch_segment_override_priority_in_use__responds_400(
 
     # Then
     assert response.status_code == 400
-    assert response.json() == {"detail": "Duplicate priority: 1."}
+    assert response.json() == {
+        "detail": (
+            f"The overrides for segments {segment} (Test Segment) and "
+            f"{segment_2} (Test Segment 2) are in conflict; "
+            "provide explicit priority values."
+        ),
+    }
     assert dict(
         FeatureState.objects.get_live_feature_states(
             environment=versioned_environment,
@@ -859,7 +865,13 @@ def test_update_flag__patch_second_segment_override_without_priority__responds_4
 
     # Then
     assert response.status_code == 400
-    assert response.json() == {"detail": "Duplicate priority: 0."}
+    assert response.json() == {
+        "detail": (
+            f"The overrides for segments {segment} (Test Segment) and "
+            f"{segment_2} (Test Segment 2) are in conflict; "
+            "provide explicit priority values."
+        ),
+    }
     assert dict(
         FeatureState.objects.get_live_feature_states(
             environment=versioned_environment,
