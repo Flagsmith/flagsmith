@@ -13,6 +13,32 @@ servers:
     description: Flagsmith API
 paths:
   '/api/__future__/environments/{environment_key}/features/{feature_id}/':
+    get:
+      operationId: api___future___environments_features_retrieve
+      description: Read what the flag serves in the environment.
+      parameters:
+        - name: environment_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateFlagResponse'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - experimental
     put:
       operationId: api___future___environments_features_update
       description: 'Replace the properties given, resetting what they omit.'
