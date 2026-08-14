@@ -111,6 +111,7 @@ def test_create_segment__valid_rules__creates_segment_with_rules(
         "metadata": [],
         "membership_counts": [],
         "managed_by": "",
+        "cohort": None,
         "rules": [
             {
                 "id": mocker.ANY,
@@ -675,8 +676,8 @@ def test_get_segment_by_uuid__existing_segment__returns_segment_data(  # type: i
 @pytest.mark.parametrize(
     "client, num_queries",
     [
-        (lazy_fixture("admin_master_api_key_client"), 13),
-        (lazy_fixture("admin_client"), 15),
+        (lazy_fixture("admin_master_api_key_client"), 14),
+        (lazy_fixture("admin_client"), 16),
     ],
 )
 def test_list_segments__without_rbac__expected_num_queries(
@@ -732,8 +733,8 @@ def test_list_segments__system_segment_exists__excludes_system_segment(
 @pytest.mark.parametrize(
     "client, num_queries",
     [
-        (lazy_fixture("admin_master_api_key_client"), 13),
-        (lazy_fixture("admin_client"), 16),
+        (lazy_fixture("admin_master_api_key_client"), 14),
+        (lazy_fixture("admin_client"), 17),
     ],
 )
 def test_list_segments__with_rbac__expected_num_queries(
@@ -1103,6 +1104,7 @@ def test_update_segment__valid_rules__updates_segment_with_rules(
         "metadata": [],
         "membership_counts": [],
         "managed_by": "",
+        "cohort": None,
         "rules": [
             {
                 "id": mocker.ANY,
@@ -2040,6 +2042,7 @@ def test_update_segment__whitelisted_segment_exceeds_max_conditions__returns_200
         "metadata": [],
         "membership_counts": [],
         "managed_by": "",
+        "cohort": None,
         "rules": [
             {
                 "id": mocker.ANY,
@@ -2224,6 +2227,7 @@ def test_clone_segment__valid_name__returns_cloned_segment(
             "metadata": [],
             "membership_counts": [],
             "managed_by": "",
+            "cohort": None,
             "rules": [],  # TODO: Should contain rules as per https://github.com/Flagsmith/flagsmith/issues/7818
         }
     )
@@ -2400,3 +2404,30 @@ def test_clone_segment__cohort_managed__returns_403(
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert Segment.objects.count() == 1
+
+
+def test_list_segments__cohort_managed__returns_cohort_summary(
+    admin_client: APIClient,
+    project: Project,
+    segment: Segment,
+    environment: Environment,
+) -> None:
+    # Given
+    cohort = Cohort.objects.create(environment=environment, segment=segment)
+    plain_segment = Segment.objects.create(name="plain", project=project)
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    results = {result["id"]: result for result in response.json()["results"]}
+    assert results[segment.id]["cohort"] == {
+        "deletion_requested_at": None,
+        "environment": environment.id,
+        "id": cohort.id,
+        "source_type": "csv",
+        "version": 0,
+    }
+    assert results[plain_segment.id]["cohort"] is None

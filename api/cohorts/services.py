@@ -1,3 +1,5 @@
+import csv
+import io
 import typing
 
 import structlog
@@ -5,9 +7,23 @@ from django.db import transaction
 from django.db.models import QuerySet
 from django.utils import timezone
 from flag_engine.segments.constants import IS_SET
+from rest_framework.exceptions import ValidationError
 
-from cohorts.constants import COHORT_MEMBERSHIP_APPLY_BATCH_SIZE
-from cohorts.metrics import flagsmith_cohorts_membership_deltas_applied_total
+from cohorts.constants import (
+    COHORT_CSV_MEMBERSHIP_CREATE_BATCH_SIZE,
+    COHORT_IDENTIFIER_MAX_BYTES,
+    COHORT_MEMBERSHIP_APPLY_BATCH_SIZE,
+)
+from cohorts.dataclasses import (
+    CohortCsvIgnoredRows,
+    CohortCsvSyncResult,
+    CsvIdentifierExtraction,
+)
+from cohorts.metrics import (
+    flagsmith_cohorts_csv_sync_identifiers,
+    flagsmith_cohorts_csv_syncs_total,
+    flagsmith_cohorts_membership_deltas_applied_total,
+)
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
 from core.dataclasses import AuthorData
 from environments.dynamodb import DynamoIdentityWrapper
@@ -109,6 +125,130 @@ def create_cohort(
         organisation__id=environment.project.organisation_id,
     )
     return cohort
+
+
+def extract_identifiers_from_csv(
+    file: typing.IO[bytes],
+    *,
+    identifier_column: int = 0,
+    has_header: bool = True,
+) -> CsvIdentifierExtraction:
+    # The upload size cap keeps a full read cheap.
+    text = io.StringIO(file.read().decode("utf-8-sig", errors="replace"), newline="")
+    reader = csv.reader(text)
+    seen: set[str] = set()
+    identifiers: list[str] = []
+    empty_count = duplicate_count = too_long_count = 0
+    try:
+        for row_number, row in enumerate(reader):
+            if has_header and row_number == 0:
+                continue
+            if not row:
+                continue
+            value = (
+                row[identifier_column].strip() if identifier_column < len(row) else ""
+            )
+            if not value:
+                empty_count += 1
+            elif len(value.encode()) > COHORT_IDENTIFIER_MAX_BYTES:
+                too_long_count += 1
+            elif value in seen:
+                duplicate_count += 1
+            else:
+                seen.add(value)
+                identifiers.append(value)
+    except csv.Error as exc:
+        raise ValidationError({"file": "Could not parse the CSV file."}) from exc
+    return CsvIdentifierExtraction(
+        identifiers=identifiers,
+        empty_count=empty_count,
+        duplicate_count=duplicate_count,
+        too_long_count=too_long_count,
+    )
+
+
+def sync_cohort_memberships_from_csv(
+    *,
+    cohort: Cohort,
+    file: typing.IO[bytes],
+    identifier_column: int = 0,
+    has_header: bool = True,
+) -> CohortCsvSyncResult:
+    from cohorts.tasks import apply_cohort_membership_deltas
+
+    extraction = extract_identifiers_from_csv(
+        file, identifier_column=identifier_column, has_header=has_header
+    )
+    if not extraction.identifiers:
+        raise ValidationError({"file": "No valid identifiers found in the CSV file."})
+
+    incoming = set(extraction.identifiers)
+    added = removed = unchanged = 0
+    with transaction.atomic():
+        # Serialise concurrent syncs of the same cohort.
+        locked_cohort = Cohort.objects.select_for_update().get(id=cohort.id)
+        existing = {
+            membership.identifier: membership
+            for membership in CohortMembership.objects.filter(cohort=cohort).only(
+                "id", "identifier", "state"
+            )
+        }
+        CohortMembership.objects.bulk_create(
+            [
+                CohortMembership(cohort=cohort, identifier=identifier)
+                for identifier in extraction.identifiers
+                if identifier not in existing
+            ],
+            batch_size=COHORT_CSV_MEMBERSHIP_CREATE_BATCH_SIZE,
+        )
+        added += len(incoming - existing.keys())
+
+        readd_ids: list[int] = []
+        remove_ids: list[int] = []
+        for identifier, membership in existing.items():
+            if identifier in incoming:
+                if membership.state == CohortMembershipState.PENDING_REMOVE:
+                    readd_ids.append(membership.id)
+                else:
+                    unchanged += 1
+            elif membership.state != CohortMembershipState.PENDING_REMOVE:
+                # A pending add may have had its trait written by a concurrent
+                # applier run, so drain it via pending remove, never delete.
+                remove_ids.append(membership.id)
+
+        added += CohortMembership.objects.filter(id__in=readd_ids).update(
+            state=CohortMembershipState.PENDING_ADD, updated_at=timezone.now()
+        )
+        removed += CohortMembership.objects.filter(id__in=remove_ids).update(
+            state=CohortMembershipState.PENDING_REMOVE, updated_at=timezone.now()
+        )
+
+        locked_cohort.version += 1
+        locked_cohort.save(update_fields=["version"])
+        apply_cohort_membership_deltas.delay(kwargs={"cohort_id": cohort.id})
+
+    flagsmith_cohorts_csv_syncs_total.inc()
+    flagsmith_cohorts_csv_sync_identifiers.observe(len(incoming))
+    logger.info(
+        "csv.synced",
+        cohort__id=cohort.id,
+        environment__id=cohort.environment_id,
+        cohort__version=locked_cohort.version,
+        adds__count=added,
+        removes__count=removed,
+        unchanged__count=unchanged,
+    )
+    return CohortCsvSyncResult(
+        version=locked_cohort.version,
+        added=added,
+        removed=removed,
+        unchanged=unchanged,
+        ignored=CohortCsvIgnoredRows(
+            empty=extraction.empty_count,
+            duplicates=extraction.duplicate_count,
+            too_long=extraction.too_long_count,
+        ),
+    )
 
 
 def edge_sync_enabled(project: "Project") -> bool:
