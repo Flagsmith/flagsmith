@@ -36,6 +36,8 @@ Values are passed as a `value` object with a `type` and a `value` string:
 | `integer` | `{"type": "integer", "value": "42"}`   |
 | `boolean` | `{"type": "boolean", "value": "true"}` |
 
+Both methods respond with the flag's complete state in the environment, whichever properties were sent.
+
 ### Toggle a flag on or off
 
 The simplest case — enable a feature flag in an environment:
@@ -47,6 +49,16 @@ curl -X PATCH 'https://api.flagsmith.com/api/__future__/environments/{environmen
   -d '{
     "environment_default": {"enabled": true}
   }'
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "environment_default": {"enabled": true, "value": {"type": "string", "value": "hello"}, "variants": []},
+  "segment_overrides": []
+}
 ```
 
 ### Update a feature value
@@ -62,6 +74,16 @@ curl -X PATCH 'https://api.flagsmith.com/api/__future__/environments/{environmen
       "value": {"type": "integer", "value": "1000"}
     }
   }'
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "environment_default": {"enabled": true, "value": {"type": "integer", "value": "1000"}, "variants": []},
+  "segment_overrides": []
+}
 ```
 
 ### Roll out a feature to a segment
@@ -91,6 +113,31 @@ curl -X PATCH 'https://api.flagsmith.com/api/__future__/environments/{environmen
   }'
 ```
 
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "environment_default": {"enabled": false, "value": {"type": "string", "value": "standard"}, "variants": []},
+  "segment_overrides": [
+    {
+      "segment": {"id": 101},
+      "priority": 10,
+      "enabled": true,
+      "value": {"type": "string", "value": "standard"},
+      "variants": []
+    },
+    {
+      "segment": {"id": 202},
+      "priority": 20,
+      "enabled": true,
+      "value": {"type": "string", "value": "standard"},
+      "variants": []
+    }
+  ]
+}
+```
+
 Segments can also override the feature's value for the environment:
 
 ```bash
@@ -105,6 +152,31 @@ curl -X PATCH 'https://api.flagsmith.com/api/__future__/environments/{environmen
       }
     ]
   }'
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "environment_default": {"enabled": false, "value": {"type": "string", "value": "standard"}, "variants": []},
+  "segment_overrides": [
+    {
+      "segment": {"id": 101},
+      "priority": 10,
+      "enabled": true,
+      "value": {"type": "string", "value": "enterprise"},
+      "variants": []
+    },
+    {
+      "segment": {"id": 202},
+      "priority": 20,
+      "enabled": true,
+      "value": {"type": "string", "value": "standard"},
+      "variants": []
+    }
+  ]
+}
 ```
 
 Overrides listed in a `PATCH` payload are added or updated by segment; overrides not listed are left unchanged. When
@@ -131,6 +203,24 @@ curl -X PUT 'https://api.flagsmith.com/api/__future__/environments/{environment_
   }'
 ```
 
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "environment_default": {"enabled": false, "value": {"type": "string", "value": "standard"}, "variants": []},
+  "segment_overrides": [
+    {
+      "segment": {"id": 101},
+      "priority": 10,
+      "enabled": false,
+      "value": {"type": "string", "value": "enterprise"},
+      "variants": []
+    }
+  ]
+}
+```
+
 ### Re-weight variants (A/B/n)
 
 On previously configured multivariate features (e.g. experiments), the weight of each variant can be adjusted in the
@@ -154,6 +244,23 @@ curl -X PATCH 'https://api.flagsmith.com/api/__future__/environments/{environmen
   }'
 ```
 
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "environment_default": {
+    "enabled": true,
+    "value": {"type": "string", "value": "control"},
+    "variants": [
+      {"id": 33, "weight": 10},
+      {"id": 34, "weight": 10.5}
+    ]
+  },
+  "segment_overrides": []
+}
+```
+
 Within the same request as above, or separately, you can also set different weights for a segment:
 
 ```bash
@@ -171,6 +278,34 @@ curl -X PATCH 'https://api.flagsmith.com/api/__future__/environments/{environmen
       }
     ]
   }'
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "environment_default": {
+    "enabled": true,
+    "value": {"type": "string", "value": "control"},
+    "variants": [
+      {"id": 33, "weight": 10},
+      {"id": 34, "weight": 10.5}
+    ]
+  },
+  "segment_overrides": [
+    {
+      "segment": {"id": 101},
+      "priority": 0,
+      "enabled": true,
+      "value": {"type": "string", "value": "control"},
+      "variants": [
+        {"id": 33, "weight": 25},
+        {"id": 34, "weight": 25}
+      ]
+    }
+  ]
+}
 ```
 
 In both `environment_default` and `segment_overrides`, the `variants` list **must** include all variants for the
