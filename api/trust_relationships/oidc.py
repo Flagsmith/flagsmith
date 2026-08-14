@@ -31,7 +31,7 @@ def get_jwks_client(issuer: str) -> jwt.PyJWKClient:
         raise InvalidTokenError("Unable to resolve issuer signing keys.") from exc
     if urlparse(jwks_uri).scheme != "https":
         raise InvalidTokenError("Issuer JWKS endpoint must be served over https.")
-    return jwt.PyJWKClient(jwks_uri, cache_keys=True)
+    return jwt.PyJWKClient(jwks_uri, cache_keys=True, timeout=DISCOVERY_TIMEOUT_SECONDS)
 
 
 def match_claim_rules(

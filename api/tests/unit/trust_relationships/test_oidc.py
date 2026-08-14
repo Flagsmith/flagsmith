@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 import responses as responses_lib
 
+from trust_relationships.constants import DISCOVERY_TIMEOUT_SECONDS
 from trust_relationships.exceptions import InvalidTokenError
 from trust_relationships.oidc import get_jwks_client, match_claim_rules
 
@@ -74,6 +75,24 @@ def test_match_claim_rules__various_rules__returns_expected(
 
     # Then
     assert result is expected
+
+
+def test_get_jwks_client__valid_discovery__applies_discovery_timeout(
+    responses: responses_lib.RequestsMock,
+) -> None:
+    # Given
+    issuer = "https://timeout.example.com"
+    responses.add(
+        responses_lib.GET,
+        f"{issuer}/.well-known/openid-configuration",
+        json={"jwks_uri": f"{issuer}/.well-known/jwks"},
+    )
+
+    # When
+    client = get_jwks_client(issuer)
+
+    # Then: PyJWKClient would otherwise fetch keys on its own 30s default
+    assert client.timeout == DISCOVERY_TIMEOUT_SECONDS
 
 
 def test_get_jwks_client__discovery_error__raises_invalid(
