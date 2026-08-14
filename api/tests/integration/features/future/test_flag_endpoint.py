@@ -1459,7 +1459,7 @@ def test_update_flag__put_environment_default_and_segment_overrides__replaces_bo
     ]
 
 
-def test_update_flag__change_requests_enabled__responds_400(
+def test_update_flag__change_requests_enabled__responds_409(
     admin_client_new: APIClient,
     environment_api_key: str,
     feature: int,
@@ -1478,9 +1478,10 @@ def test_update_flag__change_requests_enabled__responds_400(
     )
 
     # Then
-    assert response.status_code == 400
+    assert response.status_code == 409
     assert response.json() == {
         "detail": "Cannot update flags in an environment with change requests enabled.",
+        "code": "change_requests_enabled",
     }
     environment_default = FeatureState.objects.get_live_feature_states(
         environment=versioned_environment,

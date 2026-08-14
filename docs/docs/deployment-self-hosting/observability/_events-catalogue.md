@@ -267,7 +267,7 @@ Attributes:
 ### `features.flag.update_rejected`
 
 Logged at `warning` from:
- - `api/features/future/views.py:101`
+ - `api/features/future/views.py:102`
 
 Attributes:
  - `environment.id`

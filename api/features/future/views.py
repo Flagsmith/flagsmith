@@ -98,15 +98,16 @@ class FlagAPIView(APIView):
         feature = _get_feature(environment, feature_id)
 
         if environment.is_workflow_enabled:
+            api_error = ChangeRequestsEnabledError()
             logger.warning(
                 "flag.update_rejected",
                 organisation__id=environment.project.organisation_id,
                 project__id=environment.project_id,
                 environment__id=environment.id,
                 feature__id=feature.id,
-                reason="change_requests_enabled",
+                reason=api_error.default_code,
             )
-            raise ChangeRequestsEnabledError()
+            raise api_error
 
         serializer = UpdateFlagSerializer(
             data=request.data,
