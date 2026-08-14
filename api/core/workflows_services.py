@@ -107,12 +107,17 @@ class ChangeRequestCommitService:
             change_set.publish(user=published_by)
 
     @transaction.atomic
+    @transaction.atomic
     def _publish_segments(self) -> None:
         for draft_segment in self.change_request.segments.all():
             live_segment = draft_segment.version_of
             if not live_segment:  # pragma: no cover
                 logger.warning("missing-live-segment", draft_segment=draft_segment.uuid)
                 continue
+
+            # Prevent overwriting system segments
+            if getattr(live_segment, 'is_system_segment', False):
+                raise ValueError("System segments cannot be overwritten via change request drafts.")
 
             # Make a revision of the live segment
             revision = live_segment.clone(is_revision=True)
