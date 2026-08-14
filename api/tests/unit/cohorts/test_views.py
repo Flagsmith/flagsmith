@@ -10,7 +10,7 @@ from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from cohorts.models import Cohort
+from cohorts.models import Cohort, CohortSyncKey
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
 from organisations.models import Subscription
@@ -262,3 +262,96 @@ def test_create_cohort__non_edge_project__returns_201(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert Cohort.objects.get(id=response.json()["id"]).environment == environment
+
+
+def test_create_sync_key__staff_with_permissions__returns_201_with_plaintext_key(
+    staff_client: APIClient,
+    environment: Environment,
+    with_project_permissions: WithProjectPermissionsCallable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES]
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:sync-keys-list", args=[environment.api_key]
+    )
+
+    # When
+    response = staff_client.post(url, data={"name": "Amplitude prod"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    key = CohortSyncKey.objects.get(environment=environment)
+    assert response.json()["prefix"] == key.prefix
+    assert response.json()["key"].startswith(key.prefix)
+    assert key.name == "Amplitude prod"
+
+
+def test_create_sync_key__staff_without_permission__returns_403(
+    staff_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:cohorts:sync-keys-list", args=[environment.api_key]
+    )
+
+    # When
+    response = staff_client.post(url, data={"name": "Amplitude prod"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_list_sync_keys__revoked_key__excluded_and_plaintext_never_returned(
+    staff_client: APIClient,
+    environment: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    CohortSyncKey.objects.create_key(name="live", environment=environment)
+    revoked, _ = CohortSyncKey.objects.create_key(
+        name="revoked", environment=environment
+    )
+    revoked.revoked = True
+    revoked.save()
+    url = reverse(
+        "api-v1:environments:cohorts:sync-keys-list", args=[environment.api_key]
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert [(row["name"], row["key"]) for row in response.json()] == [("live", None)]
+
+
+def test_delete_sync_key__existing_key__revokes(
+    staff_client: APIClient,
+    environment: Environment,
+    with_project_permissions: WithProjectPermissionsCallable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES]
+    )
+    key, _ = CohortSyncKey.objects.create_key(name="old", environment=environment)
+    url = reverse(
+        "api-v1:environments:cohorts:sync-keys-detail",
+        args=[environment.api_key, key.prefix],
+    )
+
+    # When
+    response = staff_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    key.refresh_from_db()
+    assert key.revoked is True

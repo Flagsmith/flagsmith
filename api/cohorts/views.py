@@ -1,14 +1,16 @@
 from django.db.models import QuerySet
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import mixins, status
+from rest_framework import mixins, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import BaseSerializer
 
 from cohorts import services
-from cohorts.models import Cohort
+from cohorts.models import Cohort, CohortSyncKey
 from cohorts.permissions import CohortPermission, CohortPlanPermission
-from cohorts.serializers import CohortSerializer
+from cohorts.serializers import CohortSerializer, CohortSyncKeySerializer
+from environments.models import Environment
 from environments.views import NestedEnvironmentViewSet
 
 
@@ -54,3 +56,40 @@ class CohortViewSet(
     def destroy(self, request: Request, *args: object, **kwargs: object) -> Response:
         services.delete_cohort(self.get_object())
         return Response(status=status.HTTP_202_ACCEPTED)
+
+
+@extend_schema_view(
+    create=extend_schema(
+        description=(
+            "Create a cohort sync key. The response is the only time the "
+            "plaintext key is available."
+        )
+    ),
+    destroy=extend_schema(description="Revoke a cohort sync key."),
+)
+class CohortSyncKeyViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet[CohortSyncKey],
+):
+    serializer_class = CohortSyncKeySerializer
+    pagination_class = None
+    permission_classes = [IsAuthenticated, CohortPlanPermission, CohortPermission]
+    lookup_field = "prefix"
+
+    def get_queryset(self) -> QuerySet[CohortSyncKey]:
+        return CohortSyncKey.objects.filter(
+            environment__api_key=self.kwargs.get("environment_api_key"),
+            revoked=False,
+        ).order_by("-created")
+
+    def perform_create(self, serializer: BaseSerializer[CohortSyncKey]) -> None:
+        environment = Environment.objects.get(
+            api_key=self.kwargs.get("environment_api_key")
+        )
+        serializer.save(environment=environment, created_by=self.request.user)
+
+    def perform_destroy(self, instance: CohortSyncKey) -> None:
+        instance.revoked = True
+        instance.save(update_fields=["revoked"])
