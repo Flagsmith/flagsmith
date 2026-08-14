@@ -4,7 +4,7 @@ import { service } from 'common/service'
 
 export const trustRelationshipService = service
   .enhanceEndpoints({
-    addTagTypes: ['TrustRelationship'],
+    addTagTypes: ['TrustRelationship', 'MasterAPIKeyWithMasterAPIKeyRole'],
   })
   .injectEndpoints({
     endpoints: (builder) => ({
@@ -42,9 +42,12 @@ export const trustRelationshipService = service
         Res['trustRelationship'],
         Req['updateTrustRelationship']
       >({
+        // Turning `is_admin` on detaches the backing key's roles server-side,
+        // so the cached role list has to go with it.
         invalidatesTags: (res) => [
           { id: 'LIST', type: 'TrustRelationship' },
           { id: res?.id, type: 'TrustRelationship' },
+          'MasterAPIKeyWithMasterAPIKeyRole',
         ],
         query: (query: Req['updateTrustRelationship']) => ({
           body: query.body,
