@@ -50,6 +50,8 @@ ORGANISATION_TAG_KEY = "organisation_id"
 # Firehose writes delivery failures to this CloudWatch log group and stream.
 LOG_GROUP_NAME_PREFIX = "/aws/kinesisfirehose/"
 LOG_STREAM_NAME = "DestinationDelivery"
+# Must be one of the values accepted by CloudWatch Logs PutRetentionPolicy.
+LOG_RETENTION_DAYS = 365
 
 
 def _add_account_regional_namespace_header(
@@ -199,6 +201,10 @@ def _create_delivery_stream(
     log_group_name = get_log_group_name(organisation_id)
     logs = _get_logs_client()
     logs.create_log_group(logGroupName=log_group_name)
+    logs.put_retention_policy(
+        logGroupName=log_group_name,
+        retentionInDays=LOG_RETENTION_DAYS,
+    )
     logs.create_log_stream(
         logGroupName=log_group_name,
         logStreamName=LOG_STREAM_NAME,

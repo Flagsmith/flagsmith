@@ -176,6 +176,8 @@ class EdgeIdentityViewSet(
         if not environment.project.organisation.persist_trait_data:
             raise TraitPersistenceError()
         edge_identity = self.get_object()
+        if not isinstance(request.data, dict):
+            raise ValidationError({"detail": "Request data must be a JSON object."})
         try:
             trait = TraitModel(**request.data)
         except pydantic.ValidationError as validation_error:

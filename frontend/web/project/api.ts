@@ -14,6 +14,13 @@ import flagsmith from '@flagsmith/flagsmith'
 import Utils from 'common/utils/utils'
 import loadChat, { identifyChatUser } from 'common/loadChat'
 
+// Days, or an absolute date. This is js-cookie's own attribute type, spelled
+// out because the package ships no types.
+type CookieExpiry = number | Date
+
+// One hour, in the days js-cookie expects.
+const REDIRECT_COOKIE_EXPIRY_DAYS = 1 / 24
+
 const API = {
   ajaxHandler(
     store: { error?: any; goneABitWest: () => void },
@@ -139,13 +146,18 @@ const API = {
     return flagsmith
       .identify(`${user.id}`, {
         email: user.email,
-        'organisation.id': currentOrganisation
-          ? String(currentOrganisation.id)
-          : null,
-        'organisation.name': currentOrganisation?.name ?? null,
         organisations: user.organisations
           ? user.organisations.map((o) => String(o.id)).join(',')
           : '',
+        // A null trait value deletes the trait, and this runs before an
+        // organisation is selected — on signup, and on the way to /create — so
+        // send these only when there is one to describe. They mirror the traits
+        // the API sends, so that org-scoped segments match on both sides.
+        ...(currentOrganisation && {
+          'organisation.id': String(currentOrganisation.id),
+          'organisation.name': currentOrganisation.name,
+          'subscription.plan': currentOrganisation.subscription?.plan ?? '',
+        }),
       })
       .then(() =>
         flagsmith.setTrait(
@@ -191,7 +203,9 @@ const API = {
   },
 
   getRedirect(): string | undefined {
-    return API.getCookie('redirect')
+    // Read without the refresh getCookie does: a redirect is consumed once, so
+    // reading it must not extend how long a stale one can fire.
+    return Cookies.get('redirect')
   },
 
   getReferrer(): any {
@@ -272,12 +286,16 @@ const API = {
     return flagsmith.logout()
   },
 
-  setCookie(key: string, v?: string): void {
+  setCookie(
+    key: string,
+    v?: string,
+    attributes?: { expires?: CookieExpiry },
+  ): void {
     if (!v) {
       Cookies.remove(key, { domain: Project.cookieDomain, path: '/' })
       Cookies.remove(key, { path: '/' })
     } else {
-      const opts = { expires: 30, path: '/' }
+      const opts = { expires: 30, path: '/', ...attributes }
       if (!E2E)
         Object.assign(opts, {
           sameSite: Project.cookieSameSite || 'none',
@@ -300,7 +318,10 @@ const API = {
   },
 
   setRedirect(v: string): void {
-    API.setCookie('redirect', v)
+    // Set moments before a login and consumed moments after. Kept short so an
+    // abandoned one - a CLI login the user walked away from, say - cannot
+    // hijack a login weeks later.
+    API.setCookie('redirect', v, { expires: REDIRECT_COOKIE_EXPIRY_DAYS })
   },
 
   trackEvent(data: {

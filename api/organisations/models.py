@@ -65,7 +65,7 @@ class OrganisationRole(models.TextChoices):
     USER = ("USER", "User")
 
 
-class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[misc]
+class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[django-manager-missing,misc]
     name = models.CharField(max_length=2000)
     has_requested_features = models.BooleanField(default=False)
     webhook_notification_email = models.EmailField(null=True, blank=True)
@@ -90,6 +90,12 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         default=False, help_text="Record feature analytics in InfluxDB"
     )
     force_2fa = models.BooleanField(default=False)
+    targeting_key = models.CharField(
+        max_length=64,
+        null=True,
+        blank=True,
+        help_text="Flagsmith-on-Flagsmith targeting key. Immutable; org.<id> is used when unset.",
+    )
 
     class Meta:
         ordering = ["id"]
@@ -134,7 +140,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     @property
     def openfeature_evaluation_context(self) -> EvaluationContext:
         return EvaluationContext(
-            targeting_key=f"org.{self.id}",
+            targeting_key=self.targeting_key or f"org.{self.id}",
             attributes={
                 "organisation.id": self.id,
                 "organisation.name": self.name,
@@ -312,7 +318,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         return self.subscription_plan_family == SubscriptionPlanFamily.ENTERPRISE
 
     def get_scaleup_plan_version(self) -> int:
-        if match := re.match(r"scale-up-v(\d+)", self.plan or ""):
+        if match := re.match(r"scale-up-v(\d+)", self.plan or "", re.IGNORECASE):
             return int(match.group(1))
         return 1
 

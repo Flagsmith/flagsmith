@@ -1030,6 +1030,7 @@ export type Req = {
     environmentId: string
     exclude_event_stats?: boolean
   }
+  getWarehouseConnectionEvents: { environmentId: string; id: number }
   createWarehouseConnection: {
     environmentId: string
     warehouse_type: string

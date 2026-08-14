@@ -8,20 +8,6 @@ import Utils from 'common/utils/utils'
 import Icon from 'components/icons/Icon'
 import Logo from 'components/Logo'
 
-// Frontend-maintained scope descriptions. The backend returns `mcp` as an
-// umbrella scope; we expand it into granular descriptions for the consent UI.
-// If a scope is not found here, the backend description is used as fallback.
-const SCOPE_DESCRIPTIONS: Record<string, string[]> = {
-  mcp: [
-    'Manage feature flags, toggle states, and update values',
-    'Create and manage audience targeting segments',
-    'View and configure environments',
-    'View and update project settings',
-    'Create and review change requests',
-    'View organisation details, roles, and groups',
-  ],
-}
-
 const OAuthAuthorizePage = () => {
   const location = useLocation()
   const [isRedirecting, setIsRedirecting] = useState(false)
@@ -135,25 +121,21 @@ const OAuthAuthorizePage = () => {
             YOUR ACCOUNT WILL BE USED TO:
           </p>
           <div className='d-flex flex-column gap-3'>
+            {/* The API describes each scope: its grants when it has any,
+                otherwise its label, so a new scope still says something. */}
             {Object.entries(data.scopes).flatMap(([scope, description]) => {
-              const descriptions = SCOPE_DESCRIPTIONS[scope]
-              if (descriptions) {
-                return descriptions.map((desc, i) => (
-                  <div
-                    key={`${scope}-${i}`}
-                    className='oauth-authorize__scope-item'
-                  >
-                    <Icon name='checkmark' width={20} fill='#6837fc' />
-                    <span>{desc}</span>
-                  </div>
-                ))
-              }
-              return [
-                <div key={scope} className='oauth-authorize__scope-item'>
+              const items = description.grants?.length
+                ? description.grants
+                : [description.label]
+              return items.map((item, i) => (
+                <div
+                  key={`${scope}-${i}`}
+                  className='oauth-authorize__scope-item'
+                >
                   <Icon name='checkmark' width={20} fill='#6837fc' />
-                  <span>{description}</span>
-                </div>,
-              ]
+                  <span>{item}</span>
+                </div>
+              ))
             })}
           </div>
         </div>

@@ -7,7 +7,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 from oauth2_provider.exceptions import OAuthToolkitError
 from oauth2_provider.models import get_application_model
-from oauth2_provider.scopes import get_scopes_backend
 from oauth2_provider.views.mixins import OAuthLibMixin
 from rest_framework import status
 from rest_framework import status as drf_status
@@ -18,7 +17,10 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from oauth2_metadata.dataclasses import OAuthConfig
-from oauth2_metadata.mappers import map_drf_error_to_rfc7591_error_body
+from oauth2_metadata.mappers import (
+    map_drf_error_to_rfc7591_error_body,
+    map_scopes_to_descriptions,
+)
 from oauth2_metadata.metrics import flagsmith_oauth2_dcr_registrations_total
 from oauth2_metadata.serializers import (
     TOKEN_ENDPOINT_AUTH_METHODS,
@@ -84,15 +86,13 @@ class OAuthAuthorizeView(OAuthLibMixin, APIView):  # type: ignore[misc]
         application = Application.objects.get(
             client_id=credentials["client_id"],
         )
-        all_scopes = get_scopes_backend().get_all_scopes()
-        scopes_dict: dict[str, str] = {s: all_scopes.get(s, s) for s in scopes}
         return Response(
             {
                 "application": {
                     "name": application.name,
                     "client_id": application.client_id,
                 },
-                "scopes": scopes_dict,
+                "scopes": map_scopes_to_descriptions(scopes),
                 "redirect_uri": credentials.get("redirect_uri", ""),
                 # skip_authorization is safe to reuse here: this custom view
                 # always shows the consent screen regardless of this flag.

@@ -823,7 +823,7 @@ const Utils = Object.assign({}, BaseUtils, {
       if (!rule.value) {
         return false
       }
-      return !!semver.valid(`${rule.value.split(':')[0]}`)
+      return !!semver.valid(`${rule.value}`.split(':')[0])
     }
 
     switch (rule.operator) {
@@ -846,7 +846,7 @@ const Utils = Object.assign({}, BaseUtils, {
         if (!rule.value) {
           return false
         }
-        const valueSplit = rule.value.split('|')
+        const valueSplit = `${rule.value}`.split('|')
         if (valueSplit.length === 2) {
           const [divisor, remainder] = [
             parseFloat(valueSplit[0]),

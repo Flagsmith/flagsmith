@@ -18,6 +18,7 @@ const FRUITS: MultiSelectOption[] = [
 const meta: Meta<typeof MultiSelect> = {
   component: MultiSelect,
   parameters: {
+    chromatic: { disableSnapshot: false },
     docs: {
       description: {
         component:

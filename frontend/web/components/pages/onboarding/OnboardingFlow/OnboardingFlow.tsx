@@ -1,9 +1,9 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import OnboardingHeader from 'components/pages/onboarding/OnboardingHeader'
-import ThemeToggle from 'components/pages/onboarding/ThemeToggle'
+import ThemeToggle from 'components/ThemeToggle'
 import OnboardingConnectPanel from 'components/pages/onboarding/OnboardingConnectPanel'
 import OnboardingTerminal from 'components/pages/onboarding/OnboardingTerminal'
 import OnboardingFlagsTable from 'components/pages/onboarding/OnboardingFlagsTable'
@@ -18,6 +18,7 @@ import { useUpdateOrganisationMutation } from 'common/services/useOrganisation'
 import { useUpdateProjectMutation } from 'common/services/useProject'
 import API from 'project/api'
 import Constants from 'common/constants'
+import { isPendingAuthorisation } from 'common/utils/pendingAuthorisation'
 import './OnboardingFlow.scss'
 
 type OnboardingSnippet = 'install' | 'wire'
@@ -40,6 +41,23 @@ const OnboardingFlow: FC = () => {
   const history = useHistory()
   const [updateOrganisation] = useUpdateOrganisationMutation()
   const [updateProject] = useUpdateProjectMutation()
+
+  // A client waiting on the consent screen sent this user here to sign up. It
+  // is answered once the workspace exists, never on load: bootstrapping is a
+  // chain of creates, and navigating away mid-chain leaves it half done. The
+  // client returns the browser here afterwards, by then with nothing pending.
+  const [leavingForConsent, setLeavingForConsent] = useState(false)
+  useEffect(() => {
+    if (status !== 'ready') {
+      return
+    }
+    const pending = API.getRedirect()
+    if (isPendingAuthorisation(pending)) {
+      API.setRedirect('')
+      setLeavingForConsent(true)
+      history.replace(pending)
+    }
+  }, [status, history])
 
   // Chromeless flow, so it owns its only exit.
   const skipToApp = () =>
@@ -176,7 +194,7 @@ const OnboardingFlow: FC = () => {
     }
   }
 
-  if (status === 'creating') {
+  if (status === 'creating' || leavingForConsent) {
     return (
       <div className='onboarding-flow mx-auto text-center'>
         <Loader />

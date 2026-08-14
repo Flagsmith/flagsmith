@@ -13,6 +13,7 @@ import { useHasPermission } from 'common/providers/Permission'
 import API from 'project/api'
 import Button from 'components/base/forms/Button'
 import CreateSegmentModal from 'components/modals/CreateSegment'
+import CreateSegmentSourcesModal from 'components/modals/CreateSegmentSourcesModal'
 import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
 
@@ -85,7 +86,7 @@ const SegmentsPage: FC = () => {
     )
   }, [showFeatureSpecific, history])
 
-  const newSegment = () => {
+  const openCreateSegmentDrawer = () => {
     openModal(
       'New Segment',
       <CreateSegmentModal
@@ -97,6 +98,18 @@ const SegmentsPage: FC = () => {
       />,
       'side-modal create-new-segment-modal',
     )
+  }
+
+  const newSegment = () => {
+    if (Utils.getFlagsmithHasFeature('create_segment_with_external_sources')) {
+      openModal(
+        'Create Segment',
+        <CreateSegmentSourcesModal onManual={openCreateSegmentDrawer} />,
+        'p-0 modal--wide',
+      )
+    } else {
+      openCreateSegmentDrawer()
+    }
   }
 
   const { permission: manageSegmentsPermission } = useHasPermission({
