@@ -65,7 +65,7 @@ class OrganisationRole(models.TextChoices):
     USER = ("USER", "User")
 
 
-class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[misc]
+class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[django-manager-missing,misc]
     name = models.CharField(max_length=2000)
     has_requested_features = models.BooleanField(default=False)
     webhook_notification_email = models.EmailField(null=True, blank=True)

@@ -12571,6 +12571,183 @@ paths:
         - Master API Key: []
       tags:
         - Organisations
+  '/api/v1/organisations/{organisation_pk}/trust-relationships/':
+    get:
+      operationId: api_v1_organisations_trust_relationships_list
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTrustRelationshipList'
+      security:
+        - tokenAuth: []
+      tags:
+        - Organisations
+    post:
+      operationId: api_v1_organisations_trust_relationships_create
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrustRelationship'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TrustRelationship'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TrustRelationship'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustRelationship'
+      security:
+        - tokenAuth: []
+      tags:
+        - Organisations
+  '/api/v1/organisations/{organisation_pk}/trust-relationships/{id}/':
+    get:
+      operationId: api_v1_organisations_trust_relationships_retrieve
+      parameters:
+        - name: id
+          in: path
+          description: A unique integer value identifying this trust relationship.
+          required: true
+          schema:
+            type: integer
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustRelationship'
+      security:
+        - tokenAuth: []
+      tags:
+        - Organisations
+    put:
+      operationId: api_v1_organisations_trust_relationships_update
+      parameters:
+        - name: id
+          in: path
+          description: A unique integer value identifying this trust relationship.
+          required: true
+          schema:
+            type: integer
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrustRelationship'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TrustRelationship'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TrustRelationship'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustRelationship'
+      security:
+        - tokenAuth: []
+      tags:
+        - Organisations
+    patch:
+      operationId: api_v1_organisations_trust_relationships_partial_update
+      parameters:
+        - name: id
+          in: path
+          description: A unique integer value identifying this trust relationship.
+          required: true
+          schema:
+            type: integer
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTrustRelationship'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTrustRelationship'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTrustRelationship'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustRelationship'
+      security:
+        - tokenAuth: []
+      tags:
+        - Organisations
+    delete:
+      operationId: api_v1_organisations_trust_relationships_destroy
+      parameters:
+        - name: id
+          in: path
+          description: A unique integer value identifying this trust relationship.
+          required: true
+          schema:
+            type: integer
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: No response body
+      security:
+        - tokenAuth: []
+      tags:
+        - Organisations
   '/api/v1/organisations/{organisation_pk}/usage-data/':
     get:
       operationId: api_v1_organisations_usage_data_retrieve
@@ -18767,6 +18944,21 @@ components:
         - UPDATE
         - DELETE
         - UNKNOWN
+    ClaimRule:
+      type: object
+      properties:
+        claim:
+          type: string
+          maxLength: 255
+        values:
+          type: array
+          items:
+            type: string
+            maxLength: 500
+          minItems: 1
+      required:
+        - claim
+        - values
     CloneEnvironment:
       type: object
       properties:
@@ -23430,6 +23622,29 @@ components:
       required:
         - count
         - results
+    PaginatedTrustRelationshipList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          format: uri
+          example: 'http://api.example.org/accounts/?page=4'
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          example: 'http://api.example.org/accounts/?page=2'
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrustRelationship'
+      required:
+        - count
+        - results
     PaginatedUserList:
       type: object
       properties:
@@ -24908,6 +25123,46 @@ components:
           format: date-time
           readOnly: true
           title: DateCreated
+    PatchedTrustRelationship:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          description: Display name for this trust relationship.
+          type: string
+          maxLength: 100
+        issuer:
+          description: OIDC issuer URL expected in exchanged tokens' `iss` claim.
+          type: string
+          format: uri
+          maxLength: 500
+        audience:
+          description: Expected value of the `aud` claim in exchanged tokens.
+          type: string
+          maxLength: 500
+        claim_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClaimRule'
+        is_admin:
+          type: boolean
+        master_api_key_id:
+          type: string
+          readOnly: true
+        master_api_key_prefix:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          type:
+            - integer
+            - 'null'
+          readOnly: true
     PatchedUpdateEnvironment:
       description: |-
         Mixin to add read only status to fields in a given serializer based on the existence
@@ -27060,6 +27315,51 @@ components:
       enum:
         - ON_ENTER
         - WAIT_FOR
+    TrustRelationship:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          description: Display name for this trust relationship.
+          type: string
+          maxLength: 100
+        issuer:
+          description: OIDC issuer URL expected in exchanged tokens' `iss` claim.
+          type: string
+          format: uri
+          maxLength: 500
+        audience:
+          description: Expected value of the `aud` claim in exchanged tokens.
+          type: string
+          maxLength: 500
+        claim_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClaimRule'
+        is_admin:
+          type: boolean
+        master_api_key_id:
+          type: string
+          readOnly: true
+        master_api_key_prefix:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          type:
+            - integer
+            - 'null'
+          readOnly: true
+      required:
+        - audience
+        - is_admin
+        - issuer
+        - name
     Type975Enum:
       description: |-
         * `int` - Integer

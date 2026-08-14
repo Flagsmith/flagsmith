@@ -23,6 +23,7 @@ from organisations.views import (
     OrganisationAPIUsageNotificationView,
     OrganisationWebhookViewSet,
 )
+from trust_relationships.views import TrustRelationshipViewSet
 from users.views import (
     FFAdminUserViewSet,
     UserPermissionGroupViewSet,
@@ -63,6 +64,11 @@ organisations_router.register(
 )
 organisations_router.register(
     r"master-api-keys", MasterAPIKeyViewSet, basename="organisation-master-api-keys"
+)
+organisations_router.register(
+    r"trust-relationships",
+    TrustRelationshipViewSet,
+    basename="organisation-trust-relationships",
 )
 organisations_router.register(
     "user-permissions",
