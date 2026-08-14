@@ -4,6 +4,7 @@ import Highlight from './Highlight'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import Icon from './icons/Icon'
+import CalloutBar from './CalloutBar'
 
 type Snippets = Record<string, string>
 
@@ -143,7 +144,6 @@ const SnippetItem: FC<SnippetItemProps> = ({
       />
       <Highlight
         forceExpanded
-        preventEscape
         className={
           Constants.codeHelp.keys[
             languageKey as keyof typeof Constants.codeHelp.keys
@@ -222,28 +222,13 @@ const CodeHelp: FC<CodeHelpProps> = ({
   return (
     <div>
       {!hideHeader && (
-        <div style={{ cursor: 'pointer' }} onClick={() => setVisible(!visible)}>
-          <div className='flex-row'>
-            <div
-              className='flex flex-1'
-              style={isMobile ? { overflowX: 'scroll' } : {}}
-            >
-              <div>
-                <pre className='hljs-header'>
-                  <span />
-                  {'<>'} Code example:{' '}
-                  <span className='hljs-description'>{title}</span>
-                  <span className='hljs-icon'>
-                    <Icon
-                      name={visible ? 'chevron-down' : 'chevron-right'}
-                      width={16}
-                    />
-                  </span>
-                </pre>
-              </div>
-            </div>
-          </div>
-        </div>
+        <CalloutBar
+          icon={<>{'<>'}</>}
+          prefix='Code example:'
+          label={title}
+          expanded={visible}
+          onClick={() => setVisible(!visible)}
+        />
       )}
 
       {visible && (

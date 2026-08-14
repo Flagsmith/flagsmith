@@ -1,10 +1,14 @@
 import uuid
+from importlib import import_module
 
 import pytest
 from django.conf import settings as test_settings
+from django.utils import timezone
 from django_test_migrations.migrator import Migrator
 from flag_engine.segments import constants
 from pytest_django.fixtures import SettingsWrapper
+
+migration_0032 = import_module("segments.migrations.0032_add_segment_rules_data")
 
 
 @pytest.mark.skipif(
@@ -243,3 +247,206 @@ def test_add_versioning_to_segments__reverse__deletes_historical_versions(
 
     new_segment_v3 = NewSegment.objects.get(id=version_3.id)
     assert new_segment_v3.deleted_at is None
+
+
+@pytest.mark.skipif(
+    test_settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
+def test_0032_add_segment_rules_data__forwards__backfill_segment_rules_data(
+    migrator: Migrator,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given
+    monkeypatch.setattr(migration_0032, "BATCH_SIZE", 2)
+    state = migrator.apply_initial_migration(
+        ("segments", "0032_add_segment_rules_data")
+    )
+
+    Organisation = state.apps.get_model("organisations", "Organisation")
+    Project = state.apps.get_model("projects", "Project")
+    Segment = state.apps.get_model("segments", "Segment")
+    SegmentRule = state.apps.get_model("segments", "SegmentRule")
+    Condition = state.apps.get_model("segments", "Condition")
+
+    organisation = Organisation.objects.create(name="Test Org")
+    project = Project.objects.create(name="Test Project", organisation=organisation)
+
+    segment = Segment.objects.create(name="Current", project=project)
+    segment.version_of_id = segment.id
+    segment.save()
+    top_rule = SegmentRule.objects.create(segment=segment, type="ALL")
+    nested_rule = SegmentRule.objects.create(rule=top_rule, type="ANY")
+    deep_rule = SegmentRule.objects.create(rule=nested_rule, type="NONE")
+    deleted_rule = SegmentRule.objects.create(
+        rule=top_rule, type="ANY", deleted_at=timezone.now()
+    )
+    orphaned_rule = SegmentRule.objects.create(rule=deleted_rule, type="ANY")
+    Condition.objects.create(
+        rule=orphaned_rule,
+        operator=constants.EQUAL,
+        property="ghost",
+        value="true",
+    )
+    Condition.objects.create(
+        rule=top_rule,
+        operator=constants.IS_SET,
+        property="email",
+        value="",
+    )
+    Condition.objects.create(
+        rule=nested_rule,
+        operator=constants.EQUAL,
+        property="age",
+        value="21",
+        description="Adults only",
+    )
+    Condition.objects.create(
+        rule=nested_rule,
+        operator=constants.GREATER_THAN,
+        property="height",
+        value="210",
+        deleted_at=timezone.now(),
+    )
+    Condition.objects.create(
+        rule=deep_rule,
+        operator=constants.CONTAINS,
+        property="country",
+        value="GB",
+    )
+
+    deleted_segment = Segment.objects.create(
+        name="Deleted", project=project, deleted_at=timezone.now()
+    )
+    deleted_segment.version_of_id = deleted_segment.id
+    deleted_segment.save()
+    SegmentRule.objects.create(segment=deleted_segment, type="ALL")
+
+    old_version_segment = Segment.objects.create(
+        name="Old version", project=project, version_of_id=segment.id
+    )
+    SegmentRule.objects.create(segment=old_version_segment, type="ALL")
+
+    empty_segment = Segment.objects.create(name="Empty", project=project)
+    empty_segment.version_of_id = empty_segment.id
+    empty_segment.save()
+
+    batched_segments = []
+    for i in range(3):  # spans several batches
+        batched_segment = Segment.objects.create(name=f"Batched {i}", project=project)
+        batched_segment.version_of_id = batched_segment.id
+        batched_segment.save()
+        rule = SegmentRule.objects.create(segment=batched_segment, type="ALL")
+        Condition.objects.create(
+            rule=rule,
+            operator=constants.EQUAL,
+            property="batch",
+            value=str(i),
+        )
+        batched_segments.append(batched_segment)
+
+    # When
+    migration_0032.backfill_segment_rules_data(state.apps)
+
+    # Then
+    segment.refresh_from_db()
+    deleted_segment.refresh_from_db()
+    old_version_segment.refresh_from_db()
+    assert segment.rules_data == [
+        {
+            "type": "ALL",
+            "conditions": [
+                {
+                    "property": "email",
+                    "operator": constants.IS_SET,
+                    "value": "",
+                    "description": None,
+                }
+            ],
+            "rules": [
+                {
+                    "type": "ANY",
+                    "conditions": [
+                        {
+                            "property": "age",
+                            "operator": constants.EQUAL,
+                            "value": "21",
+                            "description": "Adults only",
+                        }
+                    ],
+                    # Our UI never allowed more than two levels, but our API did
+                    "rules": [
+                        {
+                            "type": "NONE",
+                            "conditions": [
+                                {
+                                    "property": "country",
+                                    "operator": constants.CONTAINS,
+                                    "value": "GB",
+                                    "description": None,
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+    ]
+    assert deleted_segment.rules_data is None
+    assert old_version_segment.rules_data is None
+
+    empty_segment.refresh_from_db()
+    assert empty_segment.rules_data == []
+
+    for i, batched_segment in enumerate(batched_segments):
+        batched_segment.refresh_from_db()
+        assert batched_segment.rules_data == [
+            {
+                "type": "ALL",
+                "conditions": [
+                    {
+                        "property": "batch",
+                        "operator": constants.EQUAL,
+                        "value": str(i),
+                        "description": None,
+                    }
+                ],
+                # NOTE: Empty rules are dropped at any level!
+            }
+        ]
+
+
+@pytest.mark.skipif(
+    test_settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
+def test_0032_add_segment_rules_data__backwards__nullify_segment_rules_data(
+    migrator: Migrator,
+) -> None:
+    # Given
+    state = migrator.apply_initial_migration(
+        ("segments", "0032_add_segment_rules_data")
+    )
+
+    Organisation = state.apps.get_model("organisations", "Organisation")
+    Project = state.apps.get_model("projects", "Project")
+    Segment = state.apps.get_model("segments", "Segment")
+
+    organisation = Organisation.objects.create(name="Test Org")
+    project = Project.objects.create(name="Test Project", organisation=organisation)
+
+    backfilled_segment = Segment.objects.create(
+        name="Backfilled",
+        project=project,
+        rules_data=[{"type": "ALL", "conditions": [], "rules": []}],
+    )
+    blank_segment = Segment.objects.create(name="Blank", project=project)
+
+    # When
+    migration_0032.nullify_segment_rules_data(state.apps)
+
+    # Then
+    backfilled_segment.refresh_from_db()
+    blank_segment.refresh_from_db()
+    assert backfilled_segment.rules_data is None
+    assert blank_segment.rules_data is None

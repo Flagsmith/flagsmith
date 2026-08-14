@@ -234,6 +234,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                               for your plan.{' '}
                               {usedSeats && (
                                 <>
+                                  {/* eslint-disable-next-line no-nested-ternary */}
                                   {overSeats &&
                                   (!verifySeatsLimit || !autoSeats) ? (
                                     <strong>
@@ -347,8 +348,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           data-test='invite-link'
                                           inputClassName='input input--wide'
                                           type='text'
-                                          readonly='readonly'
-                                          title={<h3>Link</h3>}
+                                          readOnly
                                           placeholder='Link'
                                           size='small'
                                         />

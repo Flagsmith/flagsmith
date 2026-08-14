@@ -36,6 +36,10 @@
     color: var(--color-text-tertiary);
   }
 
+  &__test-error {
+    white-space: pre-line;
+  }
+
   &__note {
     padding: 12px 14px;
     background: var(--color-surface-info-subtle, var(--color-surface-muted));

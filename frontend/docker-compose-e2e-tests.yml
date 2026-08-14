@@ -7,6 +7,7 @@ version: '3'
 services:
   db:
     image: docker.io/library/postgres:15-alpine
+    command: postgres -c max_connections=${PG_MAX_CONNECTIONS:-100}
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: flagsmith

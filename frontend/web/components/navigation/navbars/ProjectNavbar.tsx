@@ -60,7 +60,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
             location.pathname.startsWith(`/project/${projectId}/lifecycle`)
           }
         >
-          Feature Lifecycle
+          Lifecycle
         </NavSubLink>
       )}
       <Permission
@@ -114,25 +114,23 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
       >
         Compare
       </NavSubLink>
+      {projectAdmin && Utils.getFlagsmithHasFeature('release_pipelines') && (
+        <NavSubLink
+          icon={<Icon name='flash' />}
+          id='release-pipelines-link'
+          to={`/project/${projectId}/release-pipelines`}
+        >
+          Pipelines
+        </NavSubLink>
+      )}
       {projectAdmin && (
-        <>
-          {Utils.getFlagsmithHasFeature('release_pipelines') && (
-            <NavSubLink
-              icon={<Icon name='flash' />}
-              id='release-pipelines-link'
-              to={`/project/${projectId}/release-pipelines`}
-            >
-              Release Pipelines
-            </NavSubLink>
-          )}
-          <NavSubLink
-            icon={<Icon name='setting' width={24} />}
-            id='project-settings-link'
-            to={`/project/${projectId}/settings`}
-          >
-            Project Settings
-          </NavSubLink>
-        </>
+        <NavSubLink
+          icon={<Icon name='setting' width={24} />}
+          id='project-settings-link'
+          to={`/project/${projectId}/settings`}
+        >
+          Project Settings
+        </NavSubLink>
       )}
     </OverflowNav>
   )

@@ -1,16 +1,37 @@
 .content-card {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   padding: 24px;
+
+  &--compact {
+    gap: 8px;
+    padding: 16px;
+  }
   background: var(--color-surface-subtle);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-lg);
+
+  &--white {
+    background: var(--color-surface-default);
+  }
+
+  &__heading {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
 
   &__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+  }
+
+  &__description {
+    font-size: var(--font-body-sm-size);
+    color: var(--color-text-secondary);
+    margin: 0;
   }
 
   .input-container {
@@ -19,8 +40,8 @@
 
   &__title {
     font-size: var(--font-body-size, 0.875rem);
-    font-weight: var(--font-weight-bold, 700);
-    color: var(--color-text-default);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
     margin: 0;
   }
 }

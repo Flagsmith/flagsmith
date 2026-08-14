@@ -9,6 +9,8 @@ import Tooltip from 'components/Tooltip'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 import WarehouseEventCodeHelp from './WarehouseEventCodeHelp'
+import WarehouseSetupSqlHelp from './WarehouseSetupSqlHelp'
+import { CLICKHOUSE_DEFAULTS } from './clickhouseConfig'
 import WarehouseStats from './WarehouseStats'
 
 type WarehouseConnectionCardProps = {
@@ -16,7 +18,9 @@ type WarehouseConnectionCardProps = {
   onDelete: () => void
   onEdit?: () => void
   onSendTestEvent: () => void
+  onTestConnection?: () => void
   isSendingTestEvent: boolean
+  isLoadingStats?: boolean
 }
 
 const STATUS_COLOUR: Record<WarehouseConnectionStatus, string> = {
@@ -40,10 +44,12 @@ const TYPE_LABEL: Partial<Record<WarehouseType, string>> = {
 
 const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   connection,
+  isLoadingStats,
   isSendingTestEvent,
   onDelete,
   onEdit,
   onSendTestEvent,
+  onTestConnection,
 }) => {
   const typeLabel =
     connection.warehouse_type !== 'flagsmith'
@@ -53,6 +59,12 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   const isFlagsmith = connection.warehouse_type === 'flagsmith'
   const isPending = connection.status === 'pending_connection'
   const isConnected = connection.status === 'connected'
+  // ClickHouse connections are born connected, so the first-event nudge stays
+  // until events actually arrive in the customer's warehouse.
+  const showSendFirstEvent = isFlagsmith
+    ? !isPending && !isConnected
+    : connection.warehouse_type === 'clickhouse' &&
+      !connection.total_events_received
 
   const handleDelete = () => {
     openConfirm({
@@ -78,7 +90,11 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
               }
               place='top'
             >
-              {STATUS_LABEL[connection.status]}
+              {connection.status === 'errored' && connection.status_detail
+                ? `${STATUS_LABEL[connection.status]}: ${
+                    connection.status_detail
+                  }`
+                : STATUS_LABEL[connection.status]}
             </Tooltip>
           </div>
           {typeLabel && (
@@ -88,12 +104,17 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
                 'account_identifier' in connection.config &&
                 connection.config.account_identifier &&
                 `: ${connection.config.account_identifier}`}
+              {connection.config &&
+                'host' in connection.config &&
+                connection.config.host &&
+                `: ${connection.config.host}`}
             </span>
           )}
         </div>
         <div className='d-flex flex-row align-items-center gap-2'>
           {onEdit && (
             <Button
+              id='warehouse-connection-edit'
               size='xSmall'
               className='btn btn-with-icon'
               onClick={onEdit}
@@ -102,6 +123,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
             </Button>
           )}
           <Button
+            id='warehouse-connection-delete'
             size='xSmall'
             className='btn btn-with-icon'
             onClick={handleDelete}
@@ -114,6 +136,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
       <WarehouseStats
         errored={connection.status === 'errored'}
         lastEventReceived='-'
+        loading={isLoadingStats}
         totalEventsReceived={connection.total_events_received}
         uniqueEventsCount={connection.unique_events_count}
       />
@@ -128,14 +151,33 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
         </div>
       )}
       <WarehouseEventCodeHelp />
+      {connection.warehouse_type === 'clickhouse' && (
+        <div className='mt-3'>
+          <WarehouseSetupSqlHelp
+            database={
+              (connection.config &&
+                'database' in connection.config &&
+                connection.config.database) ||
+              CLICKHOUSE_DEFAULTS.database
+            }
+          />
+        </div>
+      )}
       <div className='d-flex justify-content-end mt-3'>
-        {!isFlagsmith && (
-          <Button theme='outline' size='small' disabled>
-            Test connection
+        {onTestConnection && !isConnected && (
+          <Button
+            id='warehouse-connection-test'
+            theme='outline'
+            size='small'
+            onClick={onTestConnection}
+            disabled={isSendingTestEvent}
+          >
+            {isSendingTestEvent ? 'Testing...' : 'Test connection'}
           </Button>
         )}
-        {isFlagsmith && !isPending && !isConnected && (
+        {showSendFirstEvent && (
           <Button
+            id='warehouse-send-first-event'
             theme='primary'
             size='small'
             onClick={onSendTestEvent}

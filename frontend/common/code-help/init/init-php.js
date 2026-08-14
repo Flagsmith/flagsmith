@@ -1,8 +1,7 @@
 import Constants from 'common/constants'
-export default (
-  envId,
-  { FEATURE_NAME, FEATURE_NAME_ALT },
-) => `use Flagsmith\\Flagsmith;
+export default (envId, { FEATURE_NAME, FEATURE_NAME_ALT }) => `<?php
+
+use Flagsmith\\Flagsmith;
 
 $flagsmith = new Flagsmith('${envId}'${
   Constants.isCustomFlagsmithUrl()
@@ -10,9 +9,10 @@ $flagsmith = new Flagsmith('${envId}'${
     : ''
 });
 
-// Check for a feature
-$${FEATURE_NAME} = $flags->isFeatureEnabled('${FEATURE_NAME}');
+// The method below triggers a network request
+$flags = $flagsmith->getEnvironmentFlags();
 
-// Or use the value of a feature
-$${FEATURE_NAME_ALT} = $flags->getFeatureValue('${FEATURE_NAME_ALT}')
+// Check whether the feature is enabled, or read its value
+$isEnabled = $flags->isFeatureEnabled('${FEATURE_NAME}');
+$featureValue = $flags->getFeatureValue('${FEATURE_NAME_ALT || FEATURE_NAME}');
 `

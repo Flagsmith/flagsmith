@@ -68,28 +68,28 @@ def distinct_identity_featurestate(
             EdgeV2MigrationStatus.NOT_STARTED,
             "get_core_overrides_data",
             [],
-            {"skip_identity_overrides": True},
+            {"feature_ids": [1, 2, 3], "skip_identity_overrides": True},
         ),
         (
             True,
             EdgeV2MigrationStatus.IN_PROGRESS,
             "get_core_overrides_data",
             [],
-            {"skip_identity_overrides": True},
+            {"feature_ids": [1, 2, 3], "skip_identity_overrides": True},
         ),
         (
             True,
             EdgeV2MigrationStatus.COMPLETE,
             "get_edge_overrides_data",
             [],
-            {},
+            {"feature_ids": [1, 2, 3]},
         ),
         (
             False,
             ANY,
             "get_core_overrides_data",
             [],
-            {},
+            {"feature_ids": [1, 2, 3]},
         ),
     ],
 )
@@ -117,7 +117,7 @@ def test_get_overrides_data__various_dynamo_configs__calls_expected_getter(
     environment.project.edge_v2_migration_status = edge_v2_migration_status
 
     # When
-    get_overrides_data(environment)
+    get_overrides_data(environment, feature_ids=[1, 2, 3])
 
     # Then
     mocked_override_getters.pop(expected_overrides_getter_name).assert_called_once_with(
@@ -147,7 +147,13 @@ def test_feature_get_overrides_data__edge_project_not_migrated_to_v2__return_exp
     environment.project.edge_v2_migration_status = edge_v2_migration_status
 
     # When
-    overrides_data = get_overrides_data(environment)
+    overrides_data = get_overrides_data(
+        environment,
+        feature_ids=[
+            distinct_identity_featurestate.feature_id,
+            distinct_segment_featurestate.feature_id,
+        ],
+    )
 
     # Then
     assert (
@@ -190,7 +196,14 @@ def test_get_core_overrides_data__multiple_overrides__returns_correct_counts(
     fs_to_delete.delete()
 
     # When
-    overrides_data = get_core_overrides_data(environment)
+    overrides_data = get_core_overrides_data(
+        environment,
+        feature_ids=[
+            feature.id,
+            distinct_identity_featurestate.feature_id,
+            distinct_segment_featurestate.feature_id,
+        ],
+    )
 
     # Then
     assert overrides_data[feature.id].num_identity_overrides == 1
@@ -242,7 +255,14 @@ def test_get_edge_overrides_data__multiple_overrides__returns_correct_counts(
     edge_identity.save(admin_user)
 
     # When
-    overrides_data = get_edge_overrides_data(environment)
+    overrides_data = get_edge_overrides_data(
+        environment,
+        feature_ids=[
+            feature.id,
+            distinct_identity_featurestate.feature_id,
+            distinct_segment_featurestate.feature_id,
+        ],
+    )
 
     # Then
     assert overrides_data[feature.id].num_identity_overrides == 1
@@ -294,7 +314,10 @@ def test_get_edge_overrides_data__deleted_feature__skips_deleted(  # type: ignor
     feature.delete()
 
     # When
-    overrides_data = get_edge_overrides_data(environment)
+    overrides_data = get_edge_overrides_data(
+        environment,
+        feature_ids=[feature.id, distinct_identity_featurestate.feature_id],
+    )
 
     # Then - we only have one identity override(for the feature that still exists)
     assert len(overrides_data) == 1

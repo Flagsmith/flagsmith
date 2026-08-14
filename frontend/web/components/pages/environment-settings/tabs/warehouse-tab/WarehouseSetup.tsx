@@ -1,29 +1,42 @@
 import { FC, useState } from 'react'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
+import BareButton from 'components/base/forms/BareButton'
 import { WarehouseType } from 'common/types/responses'
 import { ConfigFormData } from './ConfigForm'
-import SelectableCard from './SelectableCard'
+import SelectableCard from 'components/base/SelectableCard'
 import ConfigForm from './ConfigForm'
+import Utils from 'common/utils/utils'
+import ClickHouseConfigForm from './ClickHouseConfigForm'
+import WarehouseSqlSnippet from './WarehouseSqlSnippet'
+import { getClickHouseOnboardingSql } from './clickhouseSetupSql'
+import { ClickHouseFormData } from './clickhouseConfig'
 import './WarehouseSetup.scss'
 
 type WarehouseSetupProps = {
+  environmentId: string
   onEnableFlagsmith: () => void
   onCreateSnowflake: (data: ConfigFormData) => Promise<unknown>
+  onCreateClickHouse: (data: ClickHouseFormData) => Promise<unknown>
   isCreating: boolean
 }
 
 type WarehouseTypeOption = WarehouseType | 'bigquery' | 'databricks'
 
-const CONFIGURABLE_TYPES: WarehouseTypeOption[] = ['flagsmith', 'snowflake']
-
 const WarehouseSetup: FC<WarehouseSetupProps> = ({
+  environmentId,
   isCreating,
+  onCreateClickHouse,
   onCreateSnowflake,
   onEnableFlagsmith,
 }) => {
   const [selectedType, setSelectedType] =
     useState<WarehouseTypeOption>('flagsmith')
+  const [sqlExpanded, setSqlExpanded] = useState(true)
+  const clickhouseEnabled = Utils.getFlagsmithHasFeature('clickhouse_warehouse')
+  const configurableTypes: WarehouseTypeOption[] = clickhouseEnabled
+    ? ['flagsmith', 'clickhouse']
+    : ['flagsmith']
 
   return (
     <div className='warehouse-setup'>
@@ -48,12 +61,27 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
           </div>
           <div className='warehouse-setup__type-card'>
             <SelectableCard
+              icon={<Icon name='layers' width={20} />}
+              title='ClickHouse'
+              description='Open-source OLAP database'
+              selected={selectedType === 'clickhouse'}
+              onClick={() => clickhouseEnabled && setSelectedType('clickhouse')}
+              disabled={!clickhouseEnabled}
+            />
+            {!clickhouseEnabled && (
+              <span className='warehouse-setup__coming-soon'>Coming Soon</span>
+            )}
+          </div>
+          <div className='warehouse-setup__type-card'>
+            <SelectableCard
               icon={<Icon name='flash' width={20} />}
               title='Snowflake'
               description='Cloud data warehouse'
-              selected={selectedType === 'snowflake'}
-              onClick={() => setSelectedType('snowflake')}
+              selected={false}
+              onClick={() => {}}
+              disabled
             />
+            <span className='warehouse-setup__coming-soon'>Coming Soon</span>
           </div>
           <div className='warehouse-setup__type-card'>
             <SelectableCard
@@ -88,6 +116,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
           </p>
           <div>
             <Button
+              id='warehouse-enable'
               theme='primary'
               size='small'
               disabled={isCreating}
@@ -106,7 +135,59 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
         />
       )}
 
-      {!CONFIGURABLE_TYPES.includes(selectedType) && (
+      {selectedType === 'clickhouse' && (
+        <div className='warehouse-setup__steps'>
+          <div className='warehouse-setup__step'>
+            <div className='warehouse-setup__step-rail'>
+              <div className='warehouse-setup__step-marker'>1</div>
+              <div className='warehouse-setup__step-connector' />
+            </div>
+            <div className='warehouse-setup__step-content'>
+              <BareButton
+                className='warehouse-setup__step-toggle mb-2'
+                aria-expanded={sqlExpanded}
+                onClick={() => setSqlExpanded(!sqlExpanded)}
+              >
+                <h6 className='mb-0'>
+                  Configure your warehouse for experimentation
+                </h6>
+                <Icon
+                  name={sqlExpanded ? 'chevron-up' : 'chevron-down'}
+                  width={22}
+                  fill='#656D7B'
+                />
+              </BareButton>
+              {sqlExpanded && (
+                <>
+                  <p className='text-muted mb-3'>
+                    Run this once against your ClickHouse instance using an
+                    administrative user. Replace {'<USER>'} and{' '}
+                    {'<CHANGE_ME_PASSWORD>'} with your own values.
+                  </p>
+                  <WarehouseSqlSnippet sql={getClickHouseOnboardingSql()} />
+                </>
+              )}
+            </div>
+          </div>
+          <div className='warehouse-setup__step'>
+            <div className='warehouse-setup__step-rail'>
+              <div className='warehouse-setup__step-marker'>2</div>
+            </div>
+            <div className='warehouse-setup__step-content'>
+              <h6 className='mb-2'>Connect your warehouse</h6>
+              <p className='text-muted mb-3'>
+                Enter the connection details for the user you created in step 1.
+              </p>
+              <ClickHouseConfigForm
+                environmentId={environmentId}
+                onSave={onCreateClickHouse}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!configurableTypes.includes(selectedType) && (
         <div className='warehouse-setup__flagsmith-card'>
           <p className='warehouse-setup__flagsmith-description'>
             Coming soon. This warehouse type is not yet available.

@@ -7,7 +7,10 @@
         {
             "name": "flagsmith-api",
             "command": [
-                "serve"
+                "start",
+                "--keep-alive",
+                "75",
+                "api"
             ],
             "cpu": 0,
             "portMappings": [
@@ -227,6 +230,10 @@
                     "value": "https://edge.api.flagsmith.com/api/v1/"
                 },
                 {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_EVENTS_API_URL",
+                    "value": "https://events.api.flagsmith.com/"
+                },
+                {
                     "name": "FLAGSMITH_API_URL",
                     "value": "https://api.flagsmith.com"
                 },
@@ -250,6 +257,10 @@
                 },
                 {
                     "name": "DJANGO_SECRET_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DJANGO_SECRET_KEY::"
+                },
+                {
+                    "name": "WAREHOUSE_CREDENTIALS_SECRET",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DJANGO_SECRET_KEY::"
                 },
                 {

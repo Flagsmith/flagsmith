@@ -10,8 +10,13 @@ import Icon from 'components/icons/Icon'
 import TagValues from 'components/tags/TagValues'
 import Switch from 'components/Switch'
 import Button from 'components/base/forms/Button'
-import { Environment, ProjectFlag } from 'common/types/responses'
+import {
+  Environment,
+  FeatureStateValue,
+  ProjectFlag,
+} from 'common/types/responses'
 import Constants from 'common/constants'
+import Utils from 'common/utils/utils'
 import CreateFlagModal from 'components/modals/create-feature'
 
 type RouteParams = {
@@ -75,34 +80,12 @@ const EnvironmentRow: FC<EnvironmentRowProps> = ({
 
   const enabled = currentState?.enabled ?? flag.default_enabled
 
-  // Extract the actual value from feature_state_value object
-  const getDisplayValue = (featureStateValue: any) => {
-    if (!featureStateValue) return null
-
-    // If it's already a primitive value, return it
-    if (typeof featureStateValue !== 'object') return featureStateValue
-
-    // Extract value based on type
-    const { boolean_value, float_value, integer_value, string_value, type } =
-      featureStateValue
-
-    switch (type) {
-      case 'unicode':
-        return string_value
-      case 'int':
-        return integer_value
-      case 'bool':
-        return boolean_value
-      case 'float':
-        return float_value
-      default:
-        return null
-    }
-  }
-
-  const value = getDisplayValue(
-    currentState?.feature_state_value ?? flag.initial_value,
-  )
+  // Extract the actual value, falling back to the flag's initial value.
+  const value = currentState
+    ? Utils.featureStateToValue(
+        currentState.feature_state_value as unknown as FeatureStateValue,
+      )
+    : flag.initial_value
 
   return (
     <tr>

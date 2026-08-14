@@ -116,3 +116,25 @@ def test_delete_webhook_config__existing_config__returns_204(  # type: ignore[no
     # Then
     assert res.status_code == status.HTTP_204_NO_CONTENT
     assert not WebhookConfiguration.objects.filter(environment=environment).exists()
+
+
+def test_create_webhook_config__private_ip_url__returns_400(  # type: ignore[no-untyped-def]
+    admin_client, organisation, environment
+):
+    # Given
+    url = reverse(
+        "api-v1:environments:integrations-webhook-list",
+        args=[environment.api_key],
+    )
+    data = {"url": "http://127.0.0.1/webhooks", "secret": "random_secret"}
+
+    # When
+    response = admin_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert not WebhookConfiguration.objects.filter(environment=environment).exists()

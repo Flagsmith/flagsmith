@@ -77,7 +77,7 @@ const MetricsPage: FC = () => {
   )
 
   const { data: warehouseConnections } = useGetWarehouseConnectionsQuery(
-    { environmentId: environmentId ?? '' },
+    { environmentId: environmentId ?? '', exclude_event_stats: true },
     { skip: !environmentId || !isEnabled },
   )
 
@@ -223,7 +223,10 @@ const MetricsPage: FC = () => {
           <p className='text-muted mb-4'>
             Create your first metric to measure experiment outcomes.
           </p>
-          <Button onClick={() => history.push(`${metricsPath}?create=true`)}>
+          <Button
+            id='metrics-page-create-empty'
+            onClick={() => history.push(`${metricsPath}?create=true`)}
+          >
             <Icon name='plus' width={16} />
             Create Metric
           </Button>
@@ -234,7 +237,7 @@ const MetricsPage: FC = () => {
       <>
         {!!connection && (
           <div className='metrics-page__banner d-flex align-items-center justify-content-between gap-3 mb-3 rounded-md bg-surface-subtle'>
-            <span className='metrics-page__banner-text d-flex align-items-center gap-2 text-secondary'>
+            <span className='metrics-page__banner-text d-flex align-items-center gap-2'>
               <Icon name='layers' width={16} className='text-action' />
               Metrics are computed from your <strong>
                 {warehouseLabel}
@@ -261,7 +264,10 @@ const MetricsPage: FC = () => {
               search
             />
           </div>
-          <Button onClick={() => history.push(`${metricsPath}?create=true`)}>
+          <Button
+            id='metrics-page-create'
+            onClick={() => history.push(`${metricsPath}?create=true`)}
+          >
             <Icon name='plus' width={16} />
             Create Metric
           </Button>

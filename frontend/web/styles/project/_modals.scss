@@ -257,6 +257,9 @@ $side-width: 800px;
   .side-modal--narrow .modal-dialog {
     width: 640px !important;
   }
+  .modal--wide .modal-dialog {
+    max-width: 860px;
+  }
 }
 
 @media (max-width: 600px) {

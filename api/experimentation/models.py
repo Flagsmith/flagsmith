@@ -1,6 +1,6 @@
-import typing
 from dataclasses import asdict
 from datetime import datetime
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from django.db import models
 from django.db.models import Q
@@ -12,16 +12,19 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     hook,
 )
 
+from core.fields import EncryptedJSONField
 from core.models import SoftDeleteExportableModel
 from environments.models import Environment
-from experimentation.tasks import (
-    add_environment_key_to_ingestion,
-    delete_environment_key_from_ingestion,
+from experimentation.dataclasses import (
+    ExposuresSummary,
+    ResultsSummary,
+    WarehouseEventStats,
 )
 from experimentation.types import MetricDefinition
 
-if typing.TYPE_CHECKING:
-    from experimentation.dataclasses import ExposuresSummary, WarehouseEventStats
+# A computation's payload is the serialised form of its summary dataclass; the
+# concrete subclass binds which one, so record_refresh stays type-safe per panel.
+SummaryT = TypeVar("SummaryT", ExposuresSummary, ResultsSummary)
 
 
 class WarehouseType(models.TextChoices):
@@ -52,10 +55,12 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
         choices=WarehouseConnectionStatus.choices,
         default=WarehouseConnectionStatus.CREATED,
     )
+    status_detail = models.CharField(max_length=255, null=True, blank=True)
     name = models.CharField(max_length=255)
     config: models.JSONField[dict[str, object] | None, dict[str, object] | None] = (
         models.JSONField(null=True, blank=True)
     )
+    credentials = EncryptedJSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Populated at serialization time for flagsmith connections from ClickHouse;
@@ -73,15 +78,80 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
 
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def sync_to_ingestion_on_create(self) -> None:
-        add_environment_key_to_ingestion.delay(
-            kwargs={"environment_api_key": self.environment.api_key},
+        from experimentation.tasks import (
+            provision_external_warehouse_ingestion_infrastructure,
+            write_environment_ingestion_keys,
+        )
+
+        if self.warehouse_type == WarehouseType.FLAGSMITH:
+            write_environment_ingestion_keys.delay(
+                kwargs={"environment_id": self.environment_id},
+            )
+            return
+
+        provision_external_warehouse_ingestion_infrastructure.delay(
+            kwargs={"environment_id": self.environment_id},
         )
 
     @hook(AFTER_DELETE)  # type: ignore[misc]
     def sync_to_ingestion_on_delete(self) -> None:
-        delete_environment_key_from_ingestion.delay(
-            kwargs={"environment_api_key": self.environment.api_key},
+        from experimentation.tasks import remove_environment_ingestion_keys
+
+        remove_environment_ingestion_keys.delay(
+            kwargs={"environment_id": self.environment_id},
         )
+
+
+class IngestionInfrastructureStatus(models.TextChoices):
+    PENDING = "pending", "Pending"
+    CREATED = "created", "Created"
+    ERRORED = "errored", "Errored"
+
+
+class OrganisationIngestionInfrastructure(models.Model):
+    organisation = models.OneToOneField(
+        "organisations.Organisation",
+        on_delete=models.DO_NOTHING,
+        related_name="ingestion_infrastructure",
+    )
+    status = models.CharField(
+        max_length=50,
+        choices=IngestionInfrastructureStatus.choices,
+        default=IngestionInfrastructureStatus.PENDING,
+    )
+    bucket_name = models.CharField(max_length=255, null=True, blank=True)
+    stream_name = models.CharField(max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class WarehouseDeliveryOutcome(models.TextChoices):
+    DELIVERED = "delivered", "Delivered"
+    REJECTED = "rejected", "Rejected"
+
+
+class WarehouseDeliveryLog(models.Model):
+    connection = models.ForeignKey(
+        WarehouseConnection,
+        on_delete=models.CASCADE,
+        related_name="delivery_logs",
+    )
+    # S3's own key length limit.
+    s3_key = models.CharField(max_length=1024)
+    outcome = models.CharField(
+        max_length=50,
+        choices=WarehouseDeliveryOutcome.choices,
+    )
+    rows_count = models.PositiveIntegerField(null=True, blank=True)
+    error = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["connection", "created_at"]),
+            # Serves the retention cleanup, which filters on created_at alone.
+            models.Index(fields=["created_at"]),
+        ]
 
 
 class ExperimentStatus(models.TextChoices):
@@ -121,6 +191,13 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
     updated_at = models.DateTimeField(auto_now=True)
     started_at = models.DateTimeField(null=True, blank=True)
     ended_at = models.DateTimeField(null=True, blank=True)
+    rollout_segment = models.OneToOneField(
+        "segments.Segment",
+        on_delete=models.SET_NULL,
+        related_name="experiment_rollout",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         constraints = [
@@ -132,19 +209,34 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
         ]
 
 
-class ExperimentExposures(models.Model):
-    experiment = models.OneToOneField(
-        Experiment,
-        on_delete=models.CASCADE,
-        related_name="exposures",
-    )
+class ExperimentComputation(models.Model, Generic[SummaryT]):
+    """One cached, refreshable warehouse computation per experiment: a single row
+    updated in place, frozen once ``is_final``. A failed refresh preserves the
+    last good payload so the UI keeps showing real data with a staleness note."""
+
     as_of = models.DateTimeField(null=True, blank=True)
     payload: models.JSONField[dict[str, object] | None, dict[str, object] | None] = (
         models.JSONField(null=True, blank=True)
     )
     last_error_at = models.DateTimeField(null=True, blank=True)
+    refresh_requested_at = models.DateTimeField(null=True, blank=True)
 
-    def record_refresh(self, summary: "ExposuresSummary", as_of: datetime) -> None:
+    if TYPE_CHECKING:
+        # Each concrete subclass defines this as a OneToOneField; declared here
+        # so is_final can read the experiment without the field assignment.
+        experiment: "models.OneToOneField[Experiment, Experiment]"
+
+    class Meta:
+        abstract = True
+
+    @property
+    def is_final(self) -> bool:
+        ended_at = self.experiment.ended_at
+        return (
+            ended_at is not None and self.as_of is not None and self.as_of >= ended_at
+        )
+
+    def record_refresh(self, summary: SummaryT, as_of: datetime) -> None:
         self.payload = asdict(summary)
         self.as_of = as_of
         self.last_error_at = None
@@ -153,6 +245,26 @@ class ExperimentExposures(models.Model):
     def record_failure(self) -> None:
         self.last_error_at = timezone.now()
         self.save(update_fields=["last_error_at"])
+
+    def record_refresh_request(self) -> None:
+        self.refresh_requested_at = timezone.now()
+        self.save(update_fields=["refresh_requested_at"])
+
+
+class ExperimentExposures(ExperimentComputation[ExposuresSummary]):
+    experiment = models.OneToOneField(
+        Experiment,
+        on_delete=models.CASCADE,
+        related_name="exposures",
+    )
+
+
+class ExperimentResults(ExperimentComputation[ResultsSummary]):
+    experiment = models.OneToOneField(
+        Experiment,
+        on_delete=models.CASCADE,
+        related_name="results",
+    )
 
 
 class MetricAggregation(models.TextChoices):

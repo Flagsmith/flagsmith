@@ -1,6 +1,7 @@
 import React, { FC, useState } from 'react'
 import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
+import EventNameSelect from 'components/experiments/EventNameSelect'
 import {
   canSubmitMetric,
   DEFAULT_METRIC_FORM_STATE,
@@ -149,23 +150,25 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
             >
               Event name
             </label>
-            <Input
-              id='metric-event'
+            <EventNameSelect
               value={state.event}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                update({ event: e.target.value })
-              }
-              placeholder='e.g. checkout_completed'
+              onChange={(event) => update({ event })}
             />
           </div>
         </div>
       </div>
 
       <div className='create-metric-form__actions d-flex justify-content-end gap-2 pt-2'>
-        <Button theme='outline' onClick={handleCancel} disabled={isSaving}>
+        <Button
+          id='metric-form-cancel'
+          theme='outline'
+          onClick={handleCancel}
+          disabled={isSaving}
+        >
           Cancel
         </Button>
         <Button
+          id='metric-form-submit'
           theme='primary'
           onClick={handleSubmit}
           disabled={!canSubmitMetric(state) || isSaving}

@@ -1,13 +1,15 @@
 import os
+from importlib import resources
 
 import openapi_pydantic as openapi
 import pytest
 from fastmcp import Client
 from mcp.types import ToolAnnotations
+from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
-from respx import MockRouter
 
 from flagsmith_mcp import config, constants, server
+from flagsmith_mcp.middleware import RootRouterMiddleware
 
 
 @pytest.mark.parametrize(
@@ -64,7 +66,7 @@ from flagsmith_mcp import config, constants, server
     ],
 )
 async def test_create_server__mcp_route__annotates_tool_per_method(
-    respx_mock: MockRouter,
+    fs: FakeFilesystem,
     method: str,
     expected: ToolAnnotations,
 ) -> None:
@@ -78,9 +80,8 @@ async def test_create_server__mcp_route__annotates_tool_per_method(
         info=openapi.Info(title="Flagsmith API", version="1.0.0"),
         paths={"/things/": openapi.PathItem.model_validate({method: operation})},
     )
-    respx_mock.get(constants.OPENAPI_SPEC_URL).respond(
-        json=spec.model_dump(by_alias=True, exclude_none=True, mode="json")
-    )
+    path = resources.files("flagsmith_mcp").joinpath(constants.OPENAPI_SPEC_FILENAME)
+    fs.create_file(str(path), contents=spec.model_dump_json())
 
     # When
     async with Client(transport=server.create_server(config.Settings())) as client:
@@ -91,7 +92,7 @@ async def test_create_server__mcp_route__annotates_tool_per_method(
 
 
 async def test_create_server__untagged_route__excluded_from_tools(
-    respx_mock: MockRouter,
+    fs: FakeFilesystem,
 ) -> None:
     # Given a spec with one mcp-tagged route and one untagged route
     spec = openapi.OpenAPI(
@@ -112,9 +113,8 @@ async def test_create_server__untagged_route__excluded_from_tools(
             ),
         },
     )
-    respx_mock.get(constants.OPENAPI_SPEC_URL).respond(
-        json=spec.model_dump(by_alias=True, exclude_none=True, mode="json")
-    )
+    path = resources.files("flagsmith_mcp").joinpath(constants.OPENAPI_SPEC_FILENAME)
+    fs.create_file(str(path), contents=spec.model_dump_json())
 
     # When
     async with Client(transport=server.create_server(config.Settings())) as client:
@@ -193,9 +193,12 @@ def test_run__http_transport__banner_off_uvicorn_logs_propagated(
     # When
     server.run()
 
-    # Then
-    create_server_mock.return_value.run.assert_called_once_with(
-        transport="http",
-        show_banner=False,
-        uvicorn_config={"log_config": None},
-    )
+    # Then the server is served on the streamable HTTP path, with logs
+    # propagated and the root router installed
+    _, kwargs = create_server_mock.return_value.run.call_args
+    assert kwargs["transport"] == "http"
+    assert kwargs["show_banner"] is False
+    assert kwargs["path"] == constants.STREAMABLE_HTTP_PATH
+    assert kwargs["uvicorn_config"] == {"log_config": None}
+    (root_router,) = kwargs["middleware"]
+    assert root_router.cls is RootRouterMiddleware

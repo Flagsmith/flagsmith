@@ -50,6 +50,7 @@ const MetricsTable: FC<MetricsTableProps> = ({ metrics, onDelete, onEdit }) => {
             </td>
             <td className='metrics-table__actions'>
               <Button
+                id={`metrics-table-edit-${metric.id}`}
                 type='button'
                 size='small'
                 className='btn btn-with-icon'
@@ -58,6 +59,7 @@ const MetricsTable: FC<MetricsTableProps> = ({ metrics, onDelete, onEdit }) => {
                 <Icon name='edit' width={16} fill='#656D7B' />
               </Button>
               <Button
+                id={`metrics-table-delete-${metric.id}`}
                 type='button'
                 size='small'
                 className='btn btn-with-icon'

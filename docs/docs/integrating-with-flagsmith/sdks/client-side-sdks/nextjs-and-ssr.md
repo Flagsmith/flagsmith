@@ -202,6 +202,11 @@ The same can be accomplished without using Next.js.
 Step 1: Initialising the SDK and passing the resulting state to the client.
 
 ```javascript
+import { createFlagsmithInstance } from "@flagsmith/flagsmith/isomorphic";
+
+// Create a fresh instance per request to prevent identity leaking across concurrent SSR requests
+const flagsmith = createFlagsmithInstance();
+
 await flagsmith.init({
  // fetches flags on the server
  environmentID: '<YOUR_ENVIRONMENT_KEY>',

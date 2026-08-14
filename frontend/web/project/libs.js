@@ -42,8 +42,10 @@ window.RequiredElement = propTypes.node.isRequired;
 window.Link = Link;
 window.NavLink = NavLink;
 
-// Analytics
-if (Project.ga) {
+// Analytics — not loaded in E2E runs, where widgets can overlay the UI
+const disableThirdPartyScripts = !!window.E2E
+
+if (Project.ga && !disableThirdPartyScripts) {
     (function (i, s, o, g, r, a, m) {
         i.GoogleAnalyticsObject = r; i[r] = i[r] || function () {
             (i[r].q = i[r].q || []).push(arguments);
@@ -85,7 +87,7 @@ if(Project.linkedinPartnerTracking) {
     document.body.appendChild(img);
 }
 
-if(Project.hubspot) {
+if(Project.hubspot && !disableThirdPartyScripts) {
     var script = document.createElement("script");
     script.type = "text/javascript";
     script.id = "hs-script-loader";

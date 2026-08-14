@@ -7,7 +7,8 @@
         {
             "name": "flagsmith-task-processor",
             "command": [
-                "run-task-processor"
+                "start",
+                "task-processor"
             ],
             "portMappings": [
                 {
@@ -29,7 +30,7 @@
                 "interval": 10,
                 "timeout": 2,
                 "retries": 5,
-                "startPeriod": 5
+                "startPeriod": 30
             },
             "essential": true,
             "environment": [
@@ -154,6 +155,10 @@
                     "value": "https://edge.api.flagsmith.com/api/v1/"
                 },
                 {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_EVENTS_API_URL",
+                    "value": "https://events.api.flagsmith.com/"
+                },
+                {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
                     "value": "False"
                 },
@@ -196,6 +201,10 @@
                 {
                     "name": "INGESTION_REDIS_URL",
                     "value": "rediss://serverless-redis-cache-c4q8sw.serverless.euw2.cache.amazonaws.com:6379"
+                },
+                {
+                    "name": "INGESTION_FIREHOSE_DELIVERY_ROLE_ARN",
+                    "value": "arn:aws:iam::084060095745:role/experiment-events-firehose-delivery-external-warehouse"
                 }
             ],
             "secrets": [
@@ -209,6 +218,10 @@
                 },
                 {
                     "name": "DJANGO_SECRET_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DJANGO_SECRET_KEY::"
+                },
+                {
+                    "name": "WAREHOUSE_CREDENTIALS_SECRET",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DJANGO_SECRET_KEY::"
                 },
                 {
@@ -262,6 +275,10 @@
                 {
                     "name": "CLICKHOUSE_URL",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:clickhouse-url-kB2CK9"
+                },
+                {
+                    "name": "EXPERIMENTATION_CLICKHOUSE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:EXPERIMENTATION_CLICKHOUSE_URL::"
                 }
             ],
             "logConfiguration": {

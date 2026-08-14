@@ -7,7 +7,7 @@ import type { IconName } from 'components/icons/Icon'
 import '../docs.scss'
 
 const meta: Meta = {
-  parameters: { layout: 'padded' },
+  parameters: { chromatic: { disableSnapshot: false }, layout: 'padded' },
   title: 'Components/Icons',
 }
 export default meta

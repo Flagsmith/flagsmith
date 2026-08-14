@@ -9,6 +9,7 @@ from pytest_mock import MockerFixture
 from segments.models import Condition, Segment, SegmentRule
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_Condition_str__valid_condition__returns_readable_representation(
     segment: Segment,
     segment_rule: SegmentRule,
@@ -28,6 +29,7 @@ def test_Condition_str__valid_condition__returns_readable_representation(
     assert result == "Condition for ALL rule for Segment - segment: foo EQUAL bar"
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 @pytest.mark.parametrize(
     "delete",
     [
@@ -55,6 +57,7 @@ def test_Condition_get_skip_create_audit_log__rule_deleted__returns_true(
     assert condition.get_skip_create_audit_log() is True
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 @pytest.mark.parametrize(
     "delete",
     [
@@ -102,6 +105,7 @@ def test_LiveSegmentManager__cloned_segment_exists__returns_only_highest_version
     assert queryset4.first() == segment
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 @pytest.mark.parametrize(
     "get_parents",
     [
@@ -129,6 +133,7 @@ def test_SegmentRule_clean__invalid_parent_count__raises_validation_error(
     )
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_SegmentRule_get_skip_create_audit_log__always__returns_true(
     segment: Segment,
 ) -> None:
@@ -144,6 +149,7 @@ def test_SegmentRule_get_skip_create_audit_log__always__returns_true(
     assert result is True
 
 
+# TODO: Revisit as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_Segment_delete__multiple_rules_conditions__schedules_audit_log_task_once(
     mocker: MockerFixture, segment: Segment
 ) -> None:
@@ -202,8 +208,42 @@ def test_Segment_clone__empty_segment__returns_new_revision(
     assert segment.version == original_version + 1
 
 
+@pytest.mark.parametrize(
+    "is_revision, expected_cloned_version, expected_source_version",
+    [
+        pytest.param(True, 5, 6, id="revision"),
+        pytest.param(False, 1, 5, id="standalone"),
+    ],
+)
+def test_Segment_clone__given_is_revision__returns_cloned_segment(
+    is_revision: bool,
+    expected_cloned_version: int,
+    expected_source_version: int,
+    segment: Segment,
+) -> None:
+    # Given
+    segment.version = 5
+    segment.save()
+
+    # When
+    cloned_segment = segment.clone(is_revision=is_revision)
+
+    # Then
+    assert cloned_segment != segment
+    cloned_segment.refresh_from_db()
+    assert cloned_segment.uuid != segment.uuid
+    assert cloned_segment.project == segment.project
+    assert cloned_segment.name == segment.name
+    assert cloned_segment.description == segment.description
+    assert cloned_segment.rules_data == segment.rules_data
+    assert cloned_segment.version == expected_cloned_version
+    assert cloned_segment.version_of == (segment if is_revision else cloned_segment)
+    segment.refresh_from_db()
+    assert segment.version == expected_source_version
+
+
 @pytest.mark.parametrize("is_revision", [True, False])
-def test_Segment_clone__segment_with_rules__returns_new_segment_with_copied_rules_and_conditions(
+def test_Segment_clone__segment_with_rules__returns_new_segment_with_copied_rules_and_conditions_x_replaced_above(
     is_revision: bool,
     segment: Segment,
 ) -> None:

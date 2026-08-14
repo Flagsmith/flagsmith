@@ -64,7 +64,7 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
       <Button
         disabled={!data}
         theme='text'
-        className='text-primary'
+        className='text-action'
         onClick={handleFocus}
       >
         Edit

@@ -46,7 +46,7 @@ const meta: Meta<ButtonType> = {
     theme: 'primary',
   },
   component: Button,
-  parameters: { layout: 'centered' },
+  parameters: { chromatic: { disableSnapshot: false }, layout: 'centered' },
   title: 'Components/Button',
 }
 

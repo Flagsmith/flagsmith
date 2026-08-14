@@ -44,10 +44,12 @@ dependencies = [
     "drf-writable-nested>=0.6.2,<0.7.0",
     "django-filter>=2.4.0,<2.5.0",
     "flagsmith-flag-engine>=10.1.0,<11.0.0",
-    "flagsmith-sql-flag-engine>=0.1.0,<0.2.0",
+    "flagsmith-sql-flag-engine>=0.2.0,<0.3.0",
     "django-clickhouse-backend>=1.4,<2.0",
-    "clickhouse-driver",
+    "clickhouse-driver==0.2.11",
+    "clickhouse-connect>=1.6.0,<2.0.0",
     "boto3>=1.35.95,<1.36.0",
+    "smart-open[s3]>=7.0.0,<8.0.0",
     "slack-sdk>=3.9.0,<3.10.0",
     "asgiref>=3.8.1,<3.9.0",
     "djangorestframework-api-key>=2.2.0,<2.3.0",
@@ -65,16 +67,16 @@ dependencies = [
     "pydantic>=2.12.0,<3.0.0",
     "pydantic-collections>=0.6.0,<0.7.0",
     "pyngo>=2.4.1,<2.5.0",
-    "flagsmith>=5.3.0,<6.0.0",
+    "flagsmith>=6.2.0,<7.0.0",
     "openfeature-sdk>=0.9.0,<0.10.0",
-    "openfeature-provider-flagsmith>=0.2.0",
+    "openfeature-provider-flagsmith>=1.0.0,<2.0.0",
     "python-gnupg>=0.5.1,<0.6.0",
     "django-redis>=5.4.0,<6.0.0",
     "pygithub>=2.8,<2.9.0",
     "hubspot-api-client>=12.0.0,<13.0.0",
     "djangorestframework-dataclasses>=1.3.1,<2.0.0",
     "pyotp>=2.9.0,<3.0.0",
-    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.9.1,<4",
+    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.12.1,<4",
     "django-stubs>=5.1.3,<6.0.0",
     "tzdata>=2024.1,<2025.0.0",
     "djangorestframework-simplejwt>=5.5.1,<6.0.0",
@@ -86,7 +88,7 @@ dependencies = [
 
 [project.optional-dependencies]
 private = [
-    "flagsmith-private>=0.9.0,<1",
+    "flagsmith-private>=0.11.4,<1",
 ]
 dev = [
     "django-test-migrations>=1.2.0,<2.0.0",
@@ -108,13 +110,14 @@ dev = [
     "pytest>=7.2.2,<8.0.0",
     "pytest-django>=4.8.0,<5.0.0",
     "pytest-cov>=4.1.0,<4.2.0",
-    "datamodel-code-generator>=0.25,<0.26.0",
+    "datamodel-code-generator>=0.64,<0.65",
     "requests-mock>=1.11.0,<2.0.0",
     "django-extensions>=3.2.3,<4.0.0",
     "pdbpp>=0.10.3,<0.11.0",
     "mypy-boto3-dynamodb>=1.33.0,<2.0.0",
+    "mypy-boto3-s3>=1.36.0,<2.0.0",
     "pytest-structlog>=1.1,<2.0.0",
-    "pyfakefs>=5.7.4,<6.0.0",
+    "pyfakefs>=6.0.0,<7.0.0",
     "mypy>=1.15.0,<2.0.0",
     "djangorestframework-stubs>=3.15.2,<4.0.0",
     "boto3-stubs>=1.36.20,<2.0.0",
@@ -157,10 +160,14 @@ explicit = true
 
 [tool.uv.sources]
 flagsmith-private = { index = "flagsmith-pypi-production" }
-clickhouse-driver = { git = "https://github.com/Flagsmith/clickhouse-driver", branch = "newjson" }
+django-clickhouse-backend = { git = "https://github.com/jayvynl/django-clickhouse-backend", rev = "d884c7d" }
 
 [tool.uv]
 required-version = ">=0.11.18"  # Ensure this matches the version in .pre-commit-config.yaml
+override-dependencies = [
+    # TODO: remove once https://github.com/jayvynl/django-clickhouse-backend/issues/172 is closed
+    "clickhouse-driver==0.2.11",
+]
 
 [tool.ruff]
 line-length = 88
@@ -229,6 +236,9 @@ addopts = [
 ]
 console_output_style = 'count'
 log_level = 'INFO'
+markers = [
+  "clickhouse: test requires a live ClickHouse database (see the clickhouse_db fixture)",
+]
 
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]

@@ -21,7 +21,7 @@ def delete_segment(
     reducing the number of database queries from O(n) to O(1) where n is
     the number of rules and conditions.
 
-    Note: This is a temporary solution until we redesign the segment data model.
+    TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
     """
     from features.models import FeatureSegment
     from segments.models import Condition, Segment, SegmentRule
@@ -88,6 +88,7 @@ def copy_segment_rules_and_conditions(
 
     If target has existing rules, they are hard-deleted first.
 
+    TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
     """
     from segments.models import Condition, SegmentRule
 

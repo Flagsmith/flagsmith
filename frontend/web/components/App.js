@@ -12,6 +12,12 @@ import AppLoader from './AppLoader'
 import ButterBar from './ButterBar'
 import AccountSettingsPage from './pages/AccountSettingsPage'
 import ProjectStore from 'common/stores/project-store'
+import {
+  decideOnboardingEntry,
+  getStoredOnboardingVariant,
+  persistOnboardingEntry,
+} from 'common/utils/onboardingEntry'
+import { AUTHORISE_PATH } from 'common/utils/pendingAuthorisation'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -135,9 +141,43 @@ const App = class extends Component {
       return
     }
 
+    // The consent screen is a destination, not a stop on the way to one, so
+    // never redirect away from it. Creating an organisation re-fires this while
+    // the organisation list is still refreshing, and the branch below would
+    // then yank the user off a request they were about to authorise.
+    if (this.props.location.pathname.startsWith(AUTHORISE_PATH)) {
+      return
+    }
+
+    // A signup with a consent request waiting keeps its redirect cookie
+    // through the branch below: onboarding provisions the organisation the
+    // client needs, then answers the request itself.
     if (!AccountStore.getOrganisation() && !invite) {
-      // If user has no organisation redirect to /create
-      this.props.history.replace(`/create${query}`)
+      // New users with no organisation go through the single-page onboarding
+      // flow when it's enabled - it creates the organisation itself, so it
+      // replaces the legacy /create page. Everyone else still gets /create.
+      // The entry decision is made under a server-assigned anonymous
+      // identity whose identifier later becomes the organisation's
+      // targeting key, so bucketing never diverges from this decision.
+      // Capped at 2s: a degraded flags API falls back to the legacy page
+      // instead of blocking the redirect.
+      Promise.race([
+        AccountStore.getUser()?.isGettingStarted
+          ? decideOnboardingEntry().catch(() => null)
+          : Promise.resolve(null),
+        new Promise((resolve) => setTimeout(() => resolve(null), 2000)),
+      ]).then((decision) => {
+        // Only an accepted decision is persisted: a decision losing the
+        // race must not store its assignment after routing has happened.
+        const variant = decision ? persistOnboardingEntry(decision) : 'control'
+        // Restore the logged-in identity for the rest of the app.
+        Promise.resolve(API.flagsmithIdentify()).catch(() => {})
+        if (variant === 'single_page') {
+          this.props.history.replace('/getting-started')
+        } else {
+          this.props.history.replace(`/create${query}`)
+        }
+      })
       return
     }
 
@@ -221,6 +261,9 @@ const App = class extends Component {
   render() {
     const { location } = this.props
     const pathname = location.pathname
+    const isOnboardingFlow =
+      pathname === '/getting-started' &&
+      getStoredOnboardingVariant() === 'single_page'
 
     const projectId = this.getProjectId(this.props)
     const environmentId = this.getEnvironmentId(this.props)
@@ -273,24 +316,35 @@ const App = class extends Component {
           onLogin={this.onLogin}
         >
           {({ isSaving, user }, { twoFactorLogin }) => {
-            return user && user.twoFactorPrompt ? (
-              <div className='col-md-6 push-md-3 mt-5'>
-                <TwoFactorPrompt
-                  pin={this.state.pin}
-                  error={this.state.error}
-                  onSubmit={() => {
-                    this.setState({ error: false })
-                    twoFactorLogin(this.state.pin, () => {
-                      this.setState({ error: true })
-                    })
-                  }}
-                  isLoading={isSaving}
-                  onChange={(e) =>
-                    this.setState({ pin: Utils.safeParseEventValue(e) })
-                  }
-                />
-              </div>
-            ) : (
+            if (user && user.twoFactorPrompt) {
+              return (
+                <div className='col-md-6 push-md-3 mt-5'>
+                  <TwoFactorPrompt
+                    pin={this.state.pin}
+                    error={this.state.error}
+                    onSubmit={() => {
+                      this.setState({ error: false })
+                      twoFactorLogin(this.state.pin, () => {
+                        this.setState({ error: true })
+                      })
+                    }}
+                    isLoading={isSaving}
+                    onChange={(e) =>
+                      this.setState({ pin: Utils.safeParseEventValue(e) })
+                    }
+                  />
+                </div>
+              )
+            }
+
+            // Chromeless onboarding: render only the flow - no nav, sidebar or
+            // header links - so the user can't navigate away mid-flow. The flow
+            // provides its own Skip escape.
+            if (isOnboardingFlow) {
+              return <div>{this.props.children}</div>
+            }
+
+            return (
               <Nav
                 header={
                   <>

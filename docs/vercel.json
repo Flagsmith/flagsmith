@@ -145,6 +145,14 @@
             "destination": "/experimentation-ab-testing"
         },
         {
+            "source": "/experimentation/ab-testing",
+            "destination": "/experimentation-ab-testing"
+        },
+        {
+            "source": "/experiment-statistics",
+            "destination": "/experimentation/statistics"
+        },
+        {
             "source": "/permissions",
             "destination": "/administration-and-security/access-control/rbac"
         },
@@ -167,10 +175,6 @@
         {
             "source": "/flag-analytics",
             "destination": "/managing-flags/flag-analytics"
-        },
-        {
-            "source": "/experimentation/ab-testing",
-            "destination": "/experimentation-ab-testing"
         },
         {
             "source": "/experimentation/flag-analytics",

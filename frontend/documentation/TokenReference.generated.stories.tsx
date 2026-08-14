@@ -205,7 +205,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-danger</code>
             </td>
             <td>
-              <code>var(--red-500)</code>
+              <code>var(--red-700)</code>
             </td>
           </tr>
           <tr>
@@ -213,7 +213,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-success</code>
             </td>
             <td>
-              <code>var(--green-500)</code>
+              <code>var(--green-600)</code>
             </td>
           </tr>
           <tr>
@@ -221,7 +221,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-warning</code>
             </td>
             <td>
-              <code>var(--orange-500)</code>
+              <code>var(--orange-800)</code>
             </td>
           </tr>
           <tr>
@@ -230,6 +230,89 @@ export const AllTokens: StoryObj = {
             </td>
             <td>
               <code>var(--blue-500)</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>Colour: code</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--color-code-text</code>
+            </td>
+            <td>
+              <code>var(--slate-700)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-comment</code>
+            </td>
+            <td>
+              <code>var(--slate-300)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-keyword</code>
+            </td>
+            <td>
+              <code>var(--purple-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-name</code>
+            </td>
+            <td>
+              <code>var(--red-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-literal</code>
+            </td>
+            <td>
+              <code>var(--blue-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-string</code>
+            </td>
+            <td>
+              <code>var(--green-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-variable</code>
+            </td>
+            <td>
+              <code>var(--orange-700)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-title</code>
+            </td>
+            <td>
+              <code>var(--blue-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-builtin</code>
+            </td>
+            <td>
+              <code>var(--gold-700)</code>
             </td>
           </tr>
         </tbody>

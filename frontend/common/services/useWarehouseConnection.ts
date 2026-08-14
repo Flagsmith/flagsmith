@@ -27,13 +27,24 @@ export const warehouseConnectionService = service
           url: `environments/${environmentId}/warehouse-connections/${id}/`,
         }),
       }),
+      getWarehouseConnectionEvents: builder.query<
+        Res['warehouseConnectionEvents'],
+        Req['getWarehouseConnectionEvents']
+      >({
+        providesTags: [{ id: 'EVENTS', type: 'WarehouseConnection' }],
+        query: ({ environmentId, id }) => ({
+          url: `environments/${environmentId}/warehouse-connections/${id}/events/`,
+        }),
+      }),
       getWarehouseConnections: builder.query<
         Res['warehouseConnections'],
         Req['getWarehouseConnections']
       >({
         providesTags: [{ id: 'LIST', type: 'WarehouseConnection' }],
-        query: ({ environmentId }) => ({
-          url: `environments/${environmentId}/warehouse-connections/`,
+        query: ({ environmentId, exclude_event_stats }) => ({
+          url: `environments/${environmentId}/warehouse-connections/${
+            exclude_event_stats ? '?exclude_event_stats=true' : ''
+          }`,
         }),
       }),
       testWarehouseConnection: builder.mutation<
@@ -44,6 +55,16 @@ export const warehouseConnectionService = service
         query: ({ environmentId, id }) => ({
           method: 'POST',
           url: `environments/${environmentId}/warehouse-connections/${id}/test-warehouse-connection/`,
+        }),
+      }),
+      testWarehouseConnectionConfig: builder.mutation<
+        Res['warehouseConnectionTestResult'],
+        Req['testWarehouseConnectionConfig']
+      >({
+        query: ({ environmentId, ...body }) => ({
+          body,
+          method: 'POST',
+          url: `environments/${environmentId}/warehouse-connections/test-warehouse-connection/`,
         }),
       }),
       updateWarehouseConnection: builder.mutation<
@@ -63,7 +84,9 @@ export const warehouseConnectionService = service
 export const {
   useCreateWarehouseConnectionMutation,
   useDeleteWarehouseConnectionMutation,
+  useGetWarehouseConnectionEventsQuery,
   useGetWarehouseConnectionsQuery,
+  useTestWarehouseConnectionConfigMutation,
   useTestWarehouseConnectionMutation,
   useUpdateWarehouseConnectionMutation,
 } = warehouseConnectionService

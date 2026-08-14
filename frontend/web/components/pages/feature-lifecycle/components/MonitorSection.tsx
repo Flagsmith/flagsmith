@@ -7,13 +7,13 @@ import type { FilterState } from 'common/types/featureFilters'
 type MonitorSectionProps = {
   flags: ProjectFlag[]
   isLoading: boolean
-  isCheckingEvaluations: boolean
   error: unknown
   projectId: number
   filters: FilterState
   hasFilters: boolean
   onFilterChange: (updates: Partial<FilterState>) => void
   onClearFilters: () => void
+  onFeatureClick?: (flag: ProjectFlag) => void
 }
 
 const MonitorSection: FC<MonitorSectionProps> = ({
@@ -21,25 +21,14 @@ const MonitorSection: FC<MonitorSectionProps> = ({
   filters,
   flags,
   hasFilters,
-  isCheckingEvaluations,
   isLoading,
   onClearFilters,
+  onFeatureClick,
   onFilterChange,
   projectId,
 }) => {
   const { goToPage, nextPage, pageItems, paging, prevPage } =
     useClientPagination({ items: flags })
-
-  if (isCheckingEvaluations && !isLoading) {
-    return (
-      <div className='text-center py-4'>
-        <Loader />
-        <p className='text-muted mt-2'>
-          Checking evaluation data for features...
-        </p>
-      </div>
-    )
-  }
 
   return (
     <SectionShell
@@ -53,7 +42,8 @@ const MonitorSection: FC<MonitorSectionProps> = ({
       hasFilters={hasFilters}
       onFilterChange={onFilterChange}
       onClearFilters={onClearFilters}
-      emptyLabel='No stale features with zero code references are being evaluated in the selected environments.'
+      onFeatureClick={onFeatureClick}
+      emptyLabel='No stale features with zero code references are being evaluated in this environment.'
       nextPage={nextPage}
       prevPage={prevPage}
       goToPage={goToPage}

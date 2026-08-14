@@ -349,6 +349,8 @@ class WebhookViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
+    """Manage webhooks for an environment."""
+
     serializer_class = WebhookSerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
@@ -363,6 +365,8 @@ class EnvironmentAPIKeyViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
+    """Manage server-side SDK keys for an environment."""
+
     serializer_class = EnvironmentAPIKeySerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, EnvironmentAdminPermission]

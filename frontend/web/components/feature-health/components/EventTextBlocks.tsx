@@ -48,11 +48,11 @@ const EventTextBlocks: React.FC<EventTextBlocksProps> = ({ textBlocks }) => {
 
   return (
     <div className='d-flex flex-column m-0 gap-2 flex-1'>
-      <strong className='text-body'>Incident Insights</strong>
+      <strong className='text-default'>Incident Insights</strong>
       {textBlocks.map((textBlock, index) => (
         <div key={`${textBlock.text}-${index}`}>
           {textBlock.title && (
-            <div className='mb-2 text-body'>
+            <div className='mb-2 text-default'>
               <strong style={{ color }}>{textBlock.title ?? 'Event'}</strong>
               {!!textBlock.text && (
                 <IonIcon
