@@ -2149,6 +2149,53 @@ paths:
       tags:
         - Environments
       x-flagsmith-minimum-plan: START_UP
+  '/api/v1/environments/{environment_api_key}/cohorts/{cohort_id}/sync-csv/':
+    post:
+      operationId: api_v1_environments_cohorts_sync_csv_create
+      description: Replace the cohort's members with the identifiers found in the uploaded CSV file and trigger a sync to identity data. `identifier_column` is the 0-based index of the column holding the identifiers; `has_header` skips the first row when true.
+      parameters:
+        - name: cohort_id
+          in: path
+          description: A unique integer value identifying this cohort.
+          required: true
+          schema:
+            type: integer
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CohortCsvSync'
+      responses:
+        '202':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CohortCsvSyncResult'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
   '/api/v1/environments/{environment_api_key}/create-change-request/':
     post:
       operationId: create_environment_feature_change_request
@@ -18853,6 +18900,11 @@ components:
             - $ref: '#/components/schemas/ManagedByEnum'
             - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
+        cohort:
+          oneOf:
+            - $ref: '#/components/schemas/_SegmentCohort'
+            - type: 'null'
+          readOnly: true
         change_request:
           type:
             - integer
@@ -19007,6 +19059,11 @@ components:
           type:
             - string
             - 'null'
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/Metadata'
+          writeOnly: true
         segment:
           type: integer
           readOnly: true
@@ -19023,6 +19080,60 @@ components:
           readOnly: true
       required:
         - name
+    CohortCsvSync:
+      type: object
+      properties:
+        file:
+          type: string
+          format: uri
+        identifier_column:
+          type: integer
+          default: 0
+          minimum: 0
+        has_header:
+          type: boolean
+          default: true
+      required:
+        - file
+    CohortCsvSyncIgnoredRows:
+      type: object
+      properties:
+        empty:
+          type: integer
+          minimum: 0
+        duplicates:
+          type: integer
+          minimum: 0
+        too_long:
+          type: integer
+          minimum: 0
+      required:
+        - duplicates
+        - empty
+        - too_long
+    CohortCsvSyncResult:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 0
+        added:
+          type: integer
+          minimum: 0
+        removed:
+          type: integer
+          minimum: 0
+        unchanged:
+          type: integer
+          minimum: 0
+        ignored:
+          $ref: '#/components/schemas/CohortCsvSyncIgnoredRows'
+      required:
+        - added
+        - ignored
+        - removed
+        - unchanged
+        - version
     Condition:
       type: object
       properties:
@@ -24997,6 +25108,11 @@ components:
             - $ref: '#/components/schemas/ManagedByEnum'
             - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
+        cohort:
+          oneOf:
+            - $ref: '#/components/schemas/_SegmentCohort'
+            - type: 'null'
+          readOnly: true
     PatchedSegmentConfiguration:
       type: object
       properties:
@@ -26717,6 +26833,11 @@ components:
           oneOf:
             - $ref: '#/components/schemas/ManagedByEnum'
             - $ref: '#/components/schemas/BlankEnum'
+          readOnly: true
+        cohort:
+          oneOf:
+            - $ref: '#/components/schemas/_SegmentCohort'
+            - type: 'null'
           readOnly: true
       required:
         - name
@@ -28758,6 +28879,27 @@ components:
           writeOnly: true
       required:
         - type
+    _SegmentCohort:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        environment:
+          type: integer
+        source_type:
+          $ref: '#/components/schemas/SourceTypeEnum'
+        version:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        deletion_requested_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+      required:
+        - environment
   securitySchemes:
     Environment API Key:
       type: apiKey
