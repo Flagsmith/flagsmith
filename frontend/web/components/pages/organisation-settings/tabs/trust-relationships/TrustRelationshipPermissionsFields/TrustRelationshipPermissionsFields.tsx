@@ -49,7 +49,16 @@ const TrustRelationshipPermissionsFields: FC<
             {roles.map((role) => (
               <Row
                 key={role.id}
+                role='button'
+                tabIndex={0}
+                aria-label={`Remove role ${role.name}`}
                 onClick={() => onRemoveRole(role.id)}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onRemoveRole(role.id)
+                  }
+                }}
                 className='chip'
               >
                 <span className='font-weight-bold'>{role.name}</span>
