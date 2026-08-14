@@ -16,6 +16,8 @@ const Project = {
   flagsmithClientEdgeAPI: 'https://edge.bullet-train-staging.win/api/v1/',
 
   flagsmithClientEventsAPI: 'https://events.bullet-train-staging.win/',
+
+  hubspot: '//js-eu1.hs-scripts.com/143451822.js',
   // This is used for Sentry tracking
   maintenance: false,
   plans: {
