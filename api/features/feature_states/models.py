@@ -4,6 +4,7 @@ from typing import Literal
 from django.conf import settings
 from django.db import models
 
+from features.feature_states.exceptions import FeatureValueError
 from features.value_types import (
     BOOLEAN,
     FEATURE_STATE_VALUE_TYPES,
@@ -60,19 +61,19 @@ class AbstractBaseFeatureValueModel(models.Model):
                 try:
                     typed_value = int(value)
                 except ValueError:
-                    raise ValueError(f"'{value}' is not a valid integer")
+                    raise FeatureValueError(f"'{value}' is not a valid integer")
                 field = "integer_value"
                 type_const = INTEGER
             case "boolean":
                 if value.lower() not in ("true", "false"):
-                    raise ValueError(
+                    raise FeatureValueError(
                         f"'{value}' is not a valid boolean (use 'true' or 'false')"
                     )
                 typed_value = value.lower() == "true"
                 field = "boolean_value"
                 type_const = BOOLEAN
             case _:
-                raise ValueError(
+                raise FeatureValueError(
                     f"'{type_}' is not a valid type (use 'string', 'integer', or 'boolean')"
                 )
 

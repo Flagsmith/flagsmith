@@ -2,6 +2,7 @@
 
 from rest_framework import serializers
 
+from features.feature_states.exceptions import FeatureValueError
 from features.feature_types import MULTIVARIATE
 from features.future.types import (
     EnvironmentDefaultRequest,
@@ -52,8 +53,8 @@ class FlagStateSerializer(serializers.Serializer[dict[str, object]]):
     def validate_value(self, value: FlagValue) -> FlagValue:
         try:
             FeatureStateValue().set_value(value["value"], value["type"])
-        except ValueError as exc:
-            raise serializers.ValidationError(str(exc)) from exc
+        except FeatureValueError as error:
+            raise serializers.ValidationError(str(error)) from error
         return value
 
     def validate_variants(self, variants: list[Variant]) -> list[Variant]:
