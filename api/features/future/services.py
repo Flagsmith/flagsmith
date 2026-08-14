@@ -132,7 +132,7 @@ def _write_segment_override(
         feature_segment.save(update_fields=["priority"])
 
     if replace or "enabled" in changes:
-        feature_state.enabled = changes.get("enabled", False)
+        feature_state.enabled = changes.get("enabled", environment_default.enabled)
         feature_state.save(update_fields=["enabled"])
 
     feature_state_value = feature_state.feature_state_value

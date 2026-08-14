@@ -184,7 +184,8 @@ adding a new segment override, if `priority` is omitted, it defaults to the over
 `segment_overrides` list. An existing override keeps its priority unless you send a new one. The lowest number has the
 highest priority, and no two overrides may share one: a request that would leave two on the same number is rejected.
 
-A new segment override serves whatever the environment default serves, until you give it a `value` of its own.
+A segment override serves whatever the environment default serves — `enabled`, `value` and `variants` alike — until you
+give it its own. `PUT` restores that for whatever it omits.
 
 ### Remove a segment override
 

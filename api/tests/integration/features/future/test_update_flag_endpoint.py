@@ -387,7 +387,7 @@ def test_update_flag__patch_segment_override_value__overrides_value(
     ]
 
 
-def test_update_flag__patch_segment_override_without_value__inherits_environment_default_value(
+def test_update_flag__new_segment_override_without_state__inherits_environment_default_state(
     admin_client_new: APIClient,
     environment_api_key: str,
     feature: int,
@@ -399,7 +399,12 @@ def test_update_flag__patch_segment_override_without_value__inherits_environment
     setup_response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
-            {"environment_default": {"value": {"type": "string", "value": "control"}}}
+            {
+                "environment_default": {
+                    "enabled": True,
+                    "value": {"type": "string", "value": "control"},
+                },
+            }
         ),
         format="json",
     )
@@ -409,9 +414,7 @@ def test_update_flag__patch_segment_override_without_value__inherits_environment
     # When
     response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
-        UpdateFlagRequest(
-            {"segment_overrides": [{"segment": {"id": segment}, "enabled": True}]}
-        ),
+        UpdateFlagRequest({"segment_overrides": [{"segment": {"id": segment}}]}),
         format="json",
     )
 
@@ -419,7 +422,7 @@ def test_update_flag__patch_segment_override_without_value__inherits_environment
     assert response.status_code == 200
     assert response.json() == {
         "environment_default": {
-            "enabled": False,
+            "enabled": True,
             "value": {"type": "string", "value": "control"},
             "variants": [],
         },
@@ -437,6 +440,7 @@ def test_update_flag__patch_segment_override_without_value__inherits_environment
         environment=versioned_environment,
         feature_id=feature,
     ).get(feature_segment__segment_id=segment)
+    assert override.enabled is True
     assert override.get_feature_state_value() == "control"
     assert log.events == [
         {
@@ -1181,7 +1185,7 @@ def test_update_flag__put_segment_overrides__replaces_segment_overrides(
             {
                 "segment": {"id": segment},
                 "priority": 10,
-                "enabled": False,
+                "enabled": True,
                 "value": {"type": "string", "value": "enterprise"},
                 "variants": [],
             },
