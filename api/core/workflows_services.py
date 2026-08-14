@@ -116,8 +116,10 @@ class ChangeRequestCommitService:
                 continue
 
             # Prevent overwriting system segments
-            if getattr(live_segment, 'is_system_segment', False):
-                raise ValueError("System segments cannot be overwritten via change request drafts.")
+            if getattr(live_segment, "is_system_segment", False):
+                raise ValueError(
+                    "System segments cannot be overwritten via change request drafts."
+                )
 
             # Make a revision of the live segment
             revision = live_segment.clone(is_revision=True)
