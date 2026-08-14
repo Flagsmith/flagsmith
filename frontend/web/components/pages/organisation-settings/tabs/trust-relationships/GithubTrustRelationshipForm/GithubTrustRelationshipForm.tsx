@@ -266,8 +266,12 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
       />
       {!!audience && (
         <>
-          <label>Audience</label>
-          <Input className='full-width' value={audience} readOnly />
+          <InputGroup
+            title='Audience'
+            component={
+              <Input className='full-width' value={audience} readOnly />
+            }
+          />
           <WorkflowSetupSnippet
             audience={audience}
             environment={environment.trim() || undefined}
