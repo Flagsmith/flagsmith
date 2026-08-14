@@ -1,7 +1,13 @@
 import pytest
+from django.contrib.contenttypes.models import ContentType
 
 from cohorts.models import Cohort
 from environments.models import Environment
+from metadata.models import (
+    MetadataField,
+    MetadataModelField,
+    MetadataModelFieldRequirement,
+)
 from projects.models import Project
 from segments.models import Segment
 
@@ -10,6 +16,23 @@ from segments.models import Segment
 def cohort(environment: Environment, segment: Segment) -> Cohort:
     cohort: Cohort = Cohort.objects.create(environment=environment, segment=segment)
     return cohort
+
+
+@pytest.fixture()
+def required_segment_metadata_field_for_dynamo_project(
+    a_metadata_field: MetadataField,
+    dynamo_enabled_project: Project,
+) -> MetadataModelField:
+    model_field: MetadataModelField = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=ContentType.objects.get_for_model(Segment),
+    )
+    MetadataModelFieldRequirement.objects.create(
+        content_type=ContentType.objects.get_for_model(Project),
+        object_id=dynamo_enabled_project.id,
+        model_field=model_field,
+    )
+    return model_field
 
 
 @pytest.fixture()
