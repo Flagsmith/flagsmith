@@ -11,3 +11,10 @@ class ChangeRequestsEnabledError(APIException):
     default_detail = (
         "Cannot update flags in an environment with change requests enabled."
     )
+
+
+class DuplicatePriorityError(APIException):
+    """Raised where a flag's segment overrides would end up sharing a priority."""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Segment overrides must not share a priority."

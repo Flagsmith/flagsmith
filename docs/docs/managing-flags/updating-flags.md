@@ -181,10 +181,10 @@ Content-Type: application/json
 
 Overrides listed in a `PATCH` payload are added or updated by segment; overrides not listed are left unchanged. When
 adding a new segment override, if `priority` is omitted, it defaults to the override's position in the
-`segment_overrides` list. The lowest number has the highest priority.
+`segment_overrides` list. An existing override keeps its priority unless you send a new one. The lowest number has the
+highest priority, and no two overrides may share one: a request that would leave two on the same number is rejected.
 
-A new segment override serves whatever the environment default serves, until you give it a `value` of its own. An
-existing override keeps its priority unless you send a new one.
+A new segment override serves whatever the environment default serves, until you give it a `value` of its own.
 
 ### Remove a segment override
 

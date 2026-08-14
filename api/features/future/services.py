@@ -5,10 +5,11 @@ from typing import NamedTuple
 
 import structlog
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 
 from api_keys.user import APIKeyUser
 from environments.models import Environment
+from features.future.exceptions import DuplicatePriorityError
 from features.future.mappers import (
     map_environment_default,
     map_segment_override,
@@ -186,6 +187,29 @@ def _delete_segment_overrides(
     feature_segments.filter(segment_id__in=segment_ids).delete()
 
 
+def _check_priorities(
+    environment: Environment,
+    feature: Feature,
+    version: EnvironmentFeatureVersion | None,
+) -> None:
+    """Precedence between two segment overrides sharing a priority is undefined."""
+    duplicate = (
+        FeatureSegment.objects.filter(
+            environment=environment,
+            feature=feature,
+            environment_feature_version=version,
+        )
+        .values("priority")
+        .annotate(count=Count("priority"))
+        .filter(count__gt=1)
+        .order_by("priority")
+        .values_list("priority", flat=True)
+        .first()
+    )
+    if duplicate is not None:
+        raise DuplicatePriorityError(f"Duplicate priority: {duplicate}.")
+
+
 class WrittenSegmentOverrides(NamedTuple):
     created: list[int]
     updated: list[int]
@@ -234,6 +258,8 @@ def _write_segment_overrides(
             replace=replace or segment_id in written.created,
             environment_default=environment_default,
         )
+
+    _check_priorities(environment, feature, version)
 
     return written
 
