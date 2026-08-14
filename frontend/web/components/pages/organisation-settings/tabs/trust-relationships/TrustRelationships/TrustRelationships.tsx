@@ -18,15 +18,18 @@ import {
   useGetTrustRelationshipsQuery,
 } from 'common/services/useTrustRelationship'
 
+// The issuer always reads in full; a known provider gets a badge alongside it.
 const IssuerCell: FC<{ issuer: string }> = ({ issuer }) => {
   const provider = providerForIssuer(issuer)
-  if (!provider) {
-    return <span className='font-monospace'>{issuer}</span>
-  }
   return (
-    <Tooltip title={<span aria-label={provider.label}>{provider.icon}</span>}>
-      {`<span class="font-monospace">${issuer}</span>`}
-    </Tooltip>
+    <Row className='gap-1 align-items-center'>
+      {!!provider && (
+        <span className='d-flex' aria-hidden>
+          {provider.icon}
+        </span>
+      )}
+      <span className='font-monospace'>{issuer}</span>
+    </Row>
   )
 }
 
