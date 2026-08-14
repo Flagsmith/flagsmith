@@ -58,7 +58,10 @@ export function toParsedCsv(
   if (!rawRows.length) {
     return { columns: [], rows: [] }
   }
-  const columnCount = Math.max(...rawRows.map((cells) => cells.length))
+  const columnCount = rawRows.reduce(
+    (max, cells) => Math.max(max, cells.length),
+    0,
+  )
   if (hasHeaders) {
     const [header, ...rows] = rawRows
     return {
@@ -95,4 +98,12 @@ export function extractIdentifiers(
     }
   }
   return { duplicateCount, emptyCount, identifiers }
+}
+
+export function toCsvColumn(values: string[]): string {
+  return values
+    .map((value) =>
+      /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value,
+    )
+    .join('\n')
 }

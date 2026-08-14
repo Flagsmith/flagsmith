@@ -5,6 +5,7 @@ import {
   FeatureStateValue,
   ImportStrategy,
   Approval,
+  Metadata,
   MultivariateOption,
   SAMLConfiguration,
   Segment,
@@ -168,6 +169,26 @@ export type Req = {
   createSegment: {
     projectId: number
     segment: Omit<Segment, 'id' | 'uuid' | 'project'>
+  }
+  createCohort: {
+    environmentApiKey: string
+    projectId: number
+    name: string
+    description?: string
+    metadata?: Metadata[]
+  }
+  deleteCohort: {
+    environmentApiKey: string
+    cohortId: number
+    projectId: number
+  }
+  syncCohortCsv: {
+    environmentApiKey: string
+    cohortId: number
+    projectId: number
+    file: File
+    identifier_column?: number
+    has_header?: boolean
   }
   cloneSegment: {
     projectId: number
