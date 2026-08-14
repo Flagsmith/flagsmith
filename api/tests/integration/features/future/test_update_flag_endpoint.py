@@ -90,7 +90,7 @@ def mv_feature_variants(
 
 
 def test_update_flag__patch_environment_default_enabled__toggles_flag(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     default_feature_value: str,
     environment_api_key: str,
     feature: int,
@@ -106,7 +106,7 @@ def test_update_flag__patch_environment_default_enabled__toggles_flag(
     assert environment_default.enabled is False
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest({"environment_default": {"enabled": True}}),
         format="json",
@@ -144,14 +144,14 @@ def test_update_flag__patch_environment_default_enabled__toggles_flag(
 
 
 def test_update_flag__patch_environment_default_value__updates_value(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     feature: int,
     log: StructuredLogCapture,
     versioned_environment: Environment,
 ) -> None:
     # Given / When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {"environment_default": {"value": {"type": "integer", "value": "1000"}}}
@@ -191,7 +191,7 @@ def test_update_flag__patch_environment_default_value__updates_value(
 
 
 def test_update_flag__patch_environment_default_variants__reweights_variants(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     default_feature_value: str,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -203,7 +203,7 @@ def test_update_flag__patch_environment_default_variants__reweights_variants(
     variant_a, variant_b = mv_feature_variants
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
         UpdateFlagRequest(
             {
@@ -257,7 +257,7 @@ def test_update_flag__patch_environment_default_variants__reweights_variants(
 
 
 def test_update_flag__patch_segment_override_enabled__creates_override(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     default_feature_value: str,
     environment_api_key: str,
     feature: int,
@@ -266,7 +266,7 @@ def test_update_flag__patch_segment_override_enabled__creates_override(
     versioned_environment: Environment,
 ) -> None:
     # Given / When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {"segment_overrides": [{"segment": {"id": segment}, "enabled": True}]}
@@ -316,7 +316,7 @@ def test_update_flag__patch_segment_override_enabled__creates_override(
 
 
 def test_update_flag__patch_segment_override_value__overrides_value(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     default_feature_value: str,
     environment_api_key: str,
     feature: int,
@@ -325,7 +325,7 @@ def test_update_flag__patch_segment_override_value__overrides_value(
     versioned_environment: Environment,
 ) -> None:
     # Given / When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {
@@ -388,7 +388,7 @@ def test_update_flag__patch_segment_override_value__overrides_value(
 
 
 def test_update_flag__patch_segment_override_without_value__inherits_environment_default_value(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     feature: int,
     log: StructuredLogCapture,
@@ -396,7 +396,7 @@ def test_update_flag__patch_segment_override_without_value__inherits_environment
     versioned_environment: Environment,
 ) -> None:
     # Given
-    setup_response = admin_client.patch(
+    setup_response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {"environment_default": {"value": {"type": "string", "value": "control"}}}
@@ -407,7 +407,7 @@ def test_update_flag__patch_segment_override_without_value__inherits_environment
     log.events.clear()
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {"segment_overrides": [{"segment": {"id": segment}, "enabled": True}]}
@@ -454,7 +454,7 @@ def test_update_flag__patch_segment_override_without_value__inherits_environment
 
 
 def test_update_flag__patch_segment_overrides_without_priority__sets_priority_from_position(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     default_feature_value: str,
     environment_api_key: str,
     feature: int,
@@ -464,7 +464,7 @@ def test_update_flag__patch_segment_overrides_without_priority__sets_priority_fr
     versioned_environment: Environment,
 ) -> None:
     # Given
-    setup_response = admin_client.patch(
+    setup_response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {
@@ -484,7 +484,7 @@ def test_update_flag__patch_segment_overrides_without_priority__sets_priority_fr
     log.events.clear()
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {
@@ -545,7 +545,7 @@ def test_update_flag__patch_segment_overrides_without_priority__sets_priority_fr
 
 
 def test_update_flag__patch_segment_override_priority__writes_priority_as_given(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     default_feature_value: str,
     environment_api_key: str,
     feature: int,
@@ -555,7 +555,7 @@ def test_update_flag__patch_segment_override_priority__writes_priority_as_given(
     versioned_environment: Environment,
 ) -> None:
     # Given
-    setup_response = admin_client.patch(
+    setup_response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {
@@ -575,7 +575,7 @@ def test_update_flag__patch_segment_override_priority__writes_priority_as_given(
     log.events.clear()
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {"segment_overrides": [{"segment": {"id": segment}, "priority": 1}]}
@@ -632,7 +632,7 @@ def test_update_flag__patch_segment_override_priority__writes_priority_as_given(
 
 
 def test_update_flag__patch_segment_override_variants__reweights_for_segment_only(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     default_feature_value: str,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -645,7 +645,7 @@ def test_update_flag__patch_segment_override_variants__reweights_for_segment_onl
     variant_a, variant_b = mv_feature_variants
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
         UpdateFlagRequest(
             {
@@ -721,7 +721,7 @@ def test_update_flag__patch_segment_override_variants__reweights_for_segment_onl
 
 
 def test_update_flag__new_segment_override_without_variants__inherits_environment_default_variants(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     default_feature_value: str,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -732,7 +732,7 @@ def test_update_flag__new_segment_override_without_variants__inherits_environmen
 ) -> None:
     # Given
     variant_a, variant_b = mv_feature_variants
-    setup_response = admin_client.patch(
+    setup_response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
         UpdateFlagRequest(
             {
@@ -750,7 +750,7 @@ def test_update_flag__new_segment_override_without_variants__inherits_environmen
     log.events.clear()
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
         UpdateFlagRequest(
             {"segment_overrides": [{"segment": {"id": segment}, "enabled": True}]}
@@ -807,7 +807,7 @@ def test_update_flag__new_segment_override_without_variants__inherits_environmen
 
 
 def test_update_flag__put_segment_override_without_variants__inherits_environment_default_variants(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     default_feature_value: str,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -818,7 +818,7 @@ def test_update_flag__put_segment_override_without_variants__inherits_environmen
 ) -> None:
     # Given
     variant_a, variant_b = mv_feature_variants
-    setup_response = admin_client.patch(
+    setup_response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
         UpdateFlagRequest(
             {
@@ -846,7 +846,7 @@ def test_update_flag__put_segment_override_without_variants__inherits_environmen
     log.events.clear()
 
     # When
-    response = admin_client.put(
+    response = admin_client_new.put(
         f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
         UpdateFlagRequest(
             {"segment_overrides": [{"segment": {"id": segment}, "enabled": True}]}
@@ -903,14 +903,14 @@ def test_update_flag__put_segment_override_without_variants__inherits_environmen
 
 
 def test_update_flag__put_environment_default__replaces_environment_default(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     feature: int,
     log: StructuredLogCapture,
     versioned_environment: Environment,
 ) -> None:
     # Given
-    setup_response = admin_client.patch(
+    setup_response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {
@@ -926,7 +926,7 @@ def test_update_flag__put_environment_default__replaces_environment_default(
     log.events.clear()
 
     # When
-    response = admin_client.put(
+    response = admin_client_new.put(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest({"environment_default": {"enabled": True}}),
         format="json",
@@ -965,7 +965,7 @@ def test_update_flag__put_environment_default__replaces_environment_default(
 
 
 def test_update_flag__put_segment_overrides__replaces_segment_overrides(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     feature: int,
     log: StructuredLogCapture,
@@ -974,7 +974,7 @@ def test_update_flag__put_segment_overrides__replaces_segment_overrides(
     versioned_environment: Environment,
 ) -> None:
     # Given
-    setup_response = admin_client.patch(
+    setup_response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {
@@ -994,7 +994,7 @@ def test_update_flag__put_segment_overrides__replaces_segment_overrides(
     log.events.clear()
 
     # When
-    response = admin_client.put(
+    response = admin_client_new.put(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {
@@ -1057,7 +1057,7 @@ def test_update_flag__put_segment_overrides__replaces_segment_overrides(
 
 
 def test_update_flag__put_environment_default_and_segment_overrides__replaces_both(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     feature: int,
     log: StructuredLogCapture,
@@ -1066,7 +1066,7 @@ def test_update_flag__put_environment_default_and_segment_overrides__replaces_bo
     versioned_environment: Environment,
 ) -> None:
     # Given
-    setup_response = admin_client.patch(
+    setup_response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {
@@ -1085,7 +1085,7 @@ def test_update_flag__put_environment_default_and_segment_overrides__replaces_bo
     log.events.clear()
 
     # When
-    response = admin_client.put(
+    response = admin_client_new.put(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {
@@ -1152,7 +1152,7 @@ def test_update_flag__put_environment_default_and_segment_overrides__replaces_bo
 
 
 def test_update_flag__change_requests_enabled__responds_400(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     feature: int,
     log: StructuredLogCapture,
@@ -1163,7 +1163,7 @@ def test_update_flag__change_requests_enabled__responds_400(
     versioned_environment.save()
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest({"environment_default": {"enabled": True}}),
         format="json",
@@ -1194,7 +1194,7 @@ def test_update_flag__change_requests_enabled__responds_400(
 
 
 def test_update_flag__value_not_matching_type__responds_400(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     default_feature_value: str,
     environment_api_key: str,
     feature: int,
@@ -1202,7 +1202,7 @@ def test_update_flag__value_not_matching_type__responds_400(
     versioned_environment: Environment,
 ) -> None:
     # Given / When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {"environment_default": {"value": {"type": "integer", "value": "abc"}}}
@@ -1226,7 +1226,7 @@ def test_update_flag__value_not_matching_type__responds_400(
 
 @pytest.mark.parametrize("body", [[], "segment_overrides"])
 def test_update_flag__body_is_not_an_object__responds_400(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     body: object,
     environment_api_key: str,
     feature: int,
@@ -1234,7 +1234,7 @@ def test_update_flag__body_is_not_an_object__responds_400(
     versioned_environment: Environment,
 ) -> None:
     # Given / When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         body,
         format="json",
@@ -1247,7 +1247,7 @@ def test_update_flag__body_is_not_an_object__responds_400(
 
 
 def test_update_flag__unknown_feature__responds_404(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     feature: int,
     log: StructuredLogCapture,
@@ -1256,7 +1256,7 @@ def test_update_flag__unknown_feature__responds_404(
     unknown_feature = feature + 1
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{unknown_feature}/",
         UpdateFlagRequest({"environment_default": {"enabled": True}}),
         format="json",
@@ -1269,12 +1269,12 @@ def test_update_flag__unknown_feature__responds_404(
 
 
 def test_update_flag__unknown_environment__responds_404(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     feature: int,
     log: StructuredLogCapture,
 ) -> None:
     # Given / When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/unknown-api-key/features/{feature}/",
         UpdateFlagRequest({"environment_default": {"enabled": True}}),
         format="json",
@@ -1313,7 +1313,7 @@ def test_update_flag__user_without_environment_permissions__responds_404(
 
 
 def test_update_flag__unknown_segment__responds_400(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     feature: int,
     log: StructuredLogCapture,
@@ -1324,7 +1324,7 @@ def test_update_flag__unknown_segment__responds_400(
     unknown_segment = segment + 1
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {
@@ -1353,7 +1353,7 @@ def test_update_flag__unknown_segment__responds_400(
 
 
 def test_update_flag__duplicate_segment_overrides__responds_400(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     feature: int,
     log: StructuredLogCapture,
@@ -1361,7 +1361,7 @@ def test_update_flag__duplicate_segment_overrides__responds_400(
     versioned_environment: Environment,
 ) -> None:
     # Given / When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {
@@ -1391,7 +1391,7 @@ def test_update_flag__duplicate_segment_overrides__responds_400(
 
 
 def test_update_flag__segment_from_another_project__responds_400(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     feature: int,
     log: StructuredLogCapture,
@@ -1399,7 +1399,7 @@ def test_update_flag__segment_from_another_project__responds_400(
     versioned_environment: Environment,
 ) -> None:
     # Given / When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {
@@ -1545,7 +1545,7 @@ def test_update_flag__manage_segment_overrides_permission__gates_segment_overrid
 
 
 def test_update_flag__unknown_variant__responds_400(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     log: StructuredLogCapture,
     mv_feature: int,
@@ -1557,7 +1557,7 @@ def test_update_flag__unknown_variant__responds_400(
     unknown_variant = variant_b + 1
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
         UpdateFlagRequest(
             {
@@ -1593,7 +1593,7 @@ def test_update_flag__unknown_variant__responds_400(
 
 
 def test_update_flag__variant_omitted__responds_400(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     log: StructuredLogCapture,
     mv_feature: int,
@@ -1604,7 +1604,7 @@ def test_update_flag__variant_omitted__responds_400(
     variant_a, variant_b = mv_feature_variants
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
         UpdateFlagRequest(
             {"environment_default": {"variants": [{"id": variant_a, "weight": 30}]}}
@@ -1633,7 +1633,7 @@ def test_update_flag__variant_omitted__responds_400(
 
 
 def test_update_flag__put_environment_default_without_variants__responds_400(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     log: StructuredLogCapture,
     mv_feature: int,
@@ -1644,7 +1644,7 @@ def test_update_flag__put_environment_default_without_variants__responds_400(
     variant_a, variant_b = mv_feature_variants
 
     # When
-    response = admin_client.put(
+    response = admin_client_new.put(
         f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
         UpdateFlagRequest({"environment_default": {"enabled": True}}),
         format="json",
@@ -1672,7 +1672,7 @@ def test_update_flag__put_environment_default_without_variants__responds_400(
 
 
 def test_update_flag__variant_weights_over_100__responds_400(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     log: StructuredLogCapture,
     mv_feature: int,
@@ -1683,7 +1683,7 @@ def test_update_flag__variant_weights_over_100__responds_400(
     variant_a, variant_b = mv_feature_variants
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
         UpdateFlagRequest(
             {
@@ -1717,7 +1717,7 @@ def test_update_flag__variant_weights_over_100__responds_400(
 
 
 def test_update_flag__variants_on_standard_feature__responds_400(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     feature: int,
     log: StructuredLogCapture,
@@ -1728,7 +1728,7 @@ def test_update_flag__variants_on_standard_feature__responds_400(
     variant_a, _ = mv_feature_variants
 
     # When
-    response = admin_client.patch(
+    response = admin_client_new.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {"environment_default": {"variants": [{"id": variant_a, "weight": 10}]}}
