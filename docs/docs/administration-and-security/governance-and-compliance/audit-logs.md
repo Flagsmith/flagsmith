@@ -51,7 +51,7 @@ Flagsmith will send a `POST` request to your webhook URL with the following payl
 }
 ```
 
-`related_object_type` is one of: `FEATURE`, `FEATURE_STATE`, `SEGMENT`, `ENVIRONMENT`, `CHANGE_REQUEST`, `EDGE_IDENTITY`, `IMPORT_REQUEST`, `EF_VERSION`, `FEATURE_HEALTH`.
+`related_object_type` is one of: `FEATURE`, `FEATURE_STATE`, `SEGMENT`, `ENVIRONMENT`, `CHANGE_REQUEST`, `EDGE_IDENTITY`, `IMPORT_REQUEST`, `EF_VERSION`, `FEATURE_HEALTH`, `RELEASE_PIPELINE`, `WAREHOUSE_CONNECTION`, `EXPERIMENT`, `METRIC`.
 
 `related_object_id` is the integer primary key of the related object; `related_object_uuid` is its UUID. Which field is populated depends on the audit type. `EF_VERSION` and `EDGE_IDENTITY` entries populate only `related_object_uuid`. `SEGMENT` deletion entries populate both. Other entries populate `related_object_id`. When parsing, check both fields.
 
@@ -86,17 +86,21 @@ hmac.compare_digest(expected_signature, received_signature) is True
 The `related_object_type` field in the audit log payload indicates the type of resource that was affected. The possible
 values are:
 
-| Value               | Description                    |
-| ------------------- | ------------------------------ |
-| `FEATURE`           | Feature (flag / remote config) |
-| `FEATURE_STATE`     | Feature state                  |
-| `SEGMENT`           | Segment                        |
-| `ENVIRONMENT`       | Environment                    |
-| `CHANGE_REQUEST`    | Change request                 |
-| `EDGE_IDENTITY`     | Edge identity                  |
-| `IMPORT_REQUEST`    | Import request                 |
-| `EF_VERSION`        | Environment feature version    |
-| `FEATURE_HEALTH`    | Feature health status          |
+| Value                  | Description                    |
+| ---------------------- | ------------------------------ |
+| `FEATURE`              | Feature (flag / remote config) |
+| `FEATURE_STATE`        | Feature state                  |
+| `SEGMENT`              | Segment                        |
+| `ENVIRONMENT`          | Environment                    |
+| `CHANGE_REQUEST`       | Change request                 |
+| `EDGE_IDENTITY`        | Edge identity                  |
+| `IMPORT_REQUEST`       | Import request                 |
+| `EF_VERSION`           | Environment feature version    |
+| `FEATURE_HEALTH`       | Feature health status          |
+| `RELEASE_PIPELINE`     | Release pipeline               |
+| `WAREHOUSE_CONNECTION` | Warehouse connection           |
+| `EXPERIMENT`           | Experiment                     |
+| `METRIC`               | Metric                         |
 
 ## Audit Log Event Types
 
@@ -219,3 +223,44 @@ Provided by <provider>
 Reason:
 <reason>
 ```
+
+### `RELEASE_PIPELINE`
+
+See [Release Pipelines](/managing-flags/release-pipeline) for an overview of the feature.
+
+| Event | `log` template | Deployment |
+| --- | --- | --- |
+| Release pipeline created | `Release Pipeline: <name> created` | All |
+| Release pipeline deleted | `Release Pipeline: <name> deleted` | All |
+
+Updating a release pipeline does not emit an audit log record.
+
+### `WAREHOUSE_CONNECTION`
+
+| Event | `log` template | Deployment |
+| --- | --- | --- |
+| Warehouse connection created | `Warehouse connection created for environment <env>` | All |
+| Warehouse connection updated | `Warehouse connection updated for environment <env>` | All |
+| Warehouse connection deleted | `Warehouse connection deleted for environment <env>` | All |
+
+### `EXPERIMENT`
+
+| Event | `log` template | Deployment |
+| --- | --- | --- |
+| Experiment created | `Experiment '<name>' created for environment <env>` | All |
+| Experiment updated | `Experiment '<name>' updated for environment <env>` | All |
+| Experiment deleted | `Experiment '<name>' deleted for environment <env>` | All |
+| Experiment status changed | `Experiment '<name>' <status> for environment <env>` | All |
+
+Status changes reuse the same template with the new status substituted for the action, so `<status>` is one of
+`running`, `paused`, or `completed`. Update events are only recorded when at least one field actually changed.
+
+### `METRIC`
+
+| Event | `log` template | Deployment |
+| --- | --- | --- |
+| Metric created | `Metric '<name>' created` | All |
+| Metric updated | `Metric '<name>' updated` | All |
+| Metric deleted | `Metric '<name>' deleted` | All |
+
+Update events are only recorded when at least one field actually changed.
