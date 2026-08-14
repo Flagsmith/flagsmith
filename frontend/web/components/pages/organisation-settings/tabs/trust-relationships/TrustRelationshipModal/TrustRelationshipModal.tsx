@@ -17,9 +17,8 @@ import {
 } from 'components/pages/organisation-settings/tabs/trust-relationships/errors'
 import useTrustRelationshipRoles from 'components/pages/organisation-settings/tabs/trust-relationships/hooks/useTrustRelationshipRoles'
 import TrustRelationshipPermissionsFields from 'components/pages/organisation-settings/tabs/trust-relationships/TrustRelationshipPermissionsFields'
-import WorkflowSetupSnippet, {
-  GITHUB_ISSUER,
-} from 'components/pages/organisation-settings/tabs/trust-relationships/WorkflowSetupSnippet'
+import WorkflowSetupSnippet from 'components/pages/organisation-settings/tabs/trust-relationships/WorkflowSetupSnippet'
+import { GITHUB_ISSUER } from 'components/pages/organisation-settings/tabs/trust-relationships/github'
 
 type ClaimRuleRow = { claim: string; values: string }
 
@@ -211,7 +210,7 @@ const TrustRelationshipModal: FC<TrustRelationshipModalProps> = ({
           audience={audience}
           environment={
             claimRules
-              .find((rule) => rule.claim === 'environment')
+              .find((rule) => rule.claim.trim() === 'environment')
               ?.values.split(',')[0]
               ?.trim() || undefined
           }
