@@ -1324,4 +1324,3 @@ def test_change_request_commit__system_segment_draft__raises_value_error(
     change_request.refresh_from_db()
     assert feature_state.version == initial_version
     assert change_request.committed_at is None
-
