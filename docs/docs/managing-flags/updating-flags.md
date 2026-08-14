@@ -25,8 +25,8 @@ Learn more in the [API specification](link TODO).
 ## Updating a flag
 
 We support both `PATCH` and `PUT` methods for updating a flag. Both accept optional `environment_default` and
-`segment_overrides` properties. Attributes omitted from a `PATCH` payload are left unchanged, while `PUT` replaces
-each property it receives in full — use it with caution.
+`segment_overrides` properties. Attributes omitted from a `PATCH` payload are left unchanged, while `PUT` replaces each
+property it receives in full — use it with caution.
 
 Values are passed as a `value` object with a `type` and a `value` string:
 
@@ -183,6 +183,9 @@ Overrides listed in a `PATCH` payload are added or updated by segment; overrides
 adding a new segment override, if `priority` is omitted, it defaults to the override's position in the
 `segment_overrides` list. The lowest number has the highest priority.
 
+A new segment override serves whatever the environment default serves, until you give it a `value` of its own. An
+existing override keeps its priority unless you send a new one.
+
 ### Remove a segment override
 
 To remove a segment override, `PUT` the full list of overrides without it. `PUT` replaces the whole set, deleting any
@@ -310,3 +313,6 @@ Content-Type: application/json
 
 In both `environment_default` and `segment_overrides`, the `variants` list **must** include all variants for the
 feature, even if their weight is zero, and regardless of the HTTP verb used (`PUT` or `PATCH`).
+
+Because `PUT` replaces `environment_default` in full, it **must** carry `variants` for a multivariate feature. A segment
+override that omits `variants` inherits the weights of the environment default instead.
