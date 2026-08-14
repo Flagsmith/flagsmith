@@ -8683,6 +8683,12 @@ paths:
                         - type: integer
                         - type: boolean
                         - type: string
+                    variant:
+                      type: string
+                      nullable: true
+                    reason:
+                      type: string
+                      nullable: true
                   required:
                     - enabled
                     - feature
@@ -8777,6 +8783,12 @@ paths:
                         - type: integer
                         - type: boolean
                         - type: string
+                    variant:
+                      type: string
+                      nullable: true
+                    reason:
+                      type: string
+                      nullable: true
                   required:
                     - enabled
                     - feature
@@ -28058,6 +28070,16 @@ components:
             - type: string
             - type: 'null'
           title: Feature State Value
+        variant:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Variant
+        reason:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Reason
       required:
         - feature
         - enabled
