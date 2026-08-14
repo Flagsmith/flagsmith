@@ -23,8 +23,8 @@ export type OnboardingEntryDecision = {
 export async function decideOnboardingEntry(
   email?: string,
 ): Promise<OnboardingEntryDecision> {
-  // No trait means no segment override can match, and email is the only trait
-  // we have before the organisation exists.
+  // Only used to match segment overrides, not for bucketing. An override on
+  // another trait needs that trait passed here too.
   // @ts-expect-error transient is missing from the SDK's identify type
   await flagsmith.identify('', email ? { email } : {}, true)
   const flag = flagsmith.getExperimentFlag('onboarding_quickstart_flow')
