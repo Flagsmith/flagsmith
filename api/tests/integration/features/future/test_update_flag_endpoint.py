@@ -1105,3 +1105,165 @@ def test_update_flag__manage_segment_overrides_permission__gates_segment_overrid
     override = live_feature_states.get(feature_segment__segment_id=segment)
     assert override.enabled is True
     assert live_feature_states.get(feature_segment=None).enabled is False
+
+
+def test_update_flag__unknown_variant__responds_400(
+    admin_client: APIClient,
+    environment_api_key: str,
+    mv_feature: int,
+    mv_feature_variants: list[int],
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    variant_a, variant_b = mv_feature_variants
+    unknown_variant = variant_b + 1
+
+    # When
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
+        UpdateFlagRequest(
+            {
+                "environment_default": {
+                    "variants": [
+                        {"id": variant_a, "weight": 10},
+                        {"id": unknown_variant, "weight": 20},
+                    ],
+                },
+            }
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "environment_default": {
+            "variants": ["Variant not found."],
+        },
+    }
+    environment_default = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=mv_feature,
+        feature_segment=None,
+    ).get()
+    assert dict(
+        environment_default.multivariate_feature_state_values.values_list(
+            "multivariate_feature_option_id", "percentage_allocation"
+        )
+    ) == {variant_a: 10, variant_b: 20}
+
+
+def test_update_flag__variant_omitted__responds_400(
+    admin_client: APIClient,
+    environment_api_key: str,
+    mv_feature: int,
+    mv_feature_variants: list[int],
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    variant_a, variant_b = mv_feature_variants
+
+    # When
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
+        UpdateFlagRequest(
+            {"environment_default": {"variants": [{"id": variant_a, "weight": 30}]}}
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "environment_default": {
+            "variants": ["Must include all feature's variants."],
+        },
+    }
+    environment_default = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=mv_feature,
+        feature_segment=None,
+    ).get()
+    assert dict(
+        environment_default.multivariate_feature_state_values.values_list(
+            "multivariate_feature_option_id", "percentage_allocation"
+        )
+    ) == {variant_a: 10, variant_b: 20}
+
+
+def test_update_flag__variant_weights_over_100__responds_400(
+    admin_client: APIClient,
+    environment_api_key: str,
+    mv_feature: int,
+    mv_feature_variants: list[int],
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    variant_a, variant_b = mv_feature_variants
+
+    # When
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
+        UpdateFlagRequest(
+            {
+                "environment_default": {
+                    "variants": [
+                        {"id": variant_a, "weight": 60},
+                        {"id": variant_b, "weight": 50},
+                    ],
+                },
+            }
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "environment_default": {"variants": ["Total weight must not exceed 100."]},
+    }
+    environment_default = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=mv_feature,
+        feature_segment=None,
+    ).get()
+    assert dict(
+        environment_default.multivariate_feature_state_values.values_list(
+            "multivariate_feature_option_id", "percentage_allocation"
+        )
+    ) == {variant_a: 10, variant_b: 20}
+
+
+def test_update_flag__variants_on_standard_feature__responds_400(
+    admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    mv_feature_variants: list[int],
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    variant_a, _ = mv_feature_variants
+
+    # When
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest(
+            {"environment_default": {"variants": [{"id": variant_a, "weight": 10}]}}
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "environment_default": {"variants": ["Feature is not multivariate."]},
+    }
+    assert (
+        not FeatureState.objects.get_live_feature_states(
+            environment=versioned_environment,
+            feature_id=feature,
+            feature_segment=None,
+        )
+        .get()
+        .multivariate_feature_state_values.exists()
+    )
