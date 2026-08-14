@@ -89,6 +89,101 @@ def mv_feature_variants(
     ]
 
 
+def test_get_flag__user_authorised__returns_flag_state(
+    admin_client_new: APIClient,
+    default_feature_value: str,
+    environment_api_key: str,
+    feature: int,
+    log: StructuredLogCapture,
+    segment: int,
+) -> None:
+    # Given
+    setup_response = admin_client_new.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest(
+            {
+                "environment_default": {"enabled": True},
+                "segment_overrides": [{"segment": {"id": segment}, "priority": 3}],
+            }
+        ),
+        format="json",
+    )
+    assert setup_response.status_code == 200
+    log.events.clear()
+
+    # When
+    response = admin_client_new.get(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "environment_default": {
+            "enabled": True,
+            "value": {"type": "string", "value": default_feature_value},
+            "variants": [],
+        },
+        "segment_overrides": [
+            {
+                "segment": {"id": segment},
+                "priority": 3,
+                "enabled": True,
+                "value": {"type": "string", "value": default_feature_value},
+                "variants": [],
+            },
+        ],
+    }
+    assert log.events == []
+
+
+def test_get_flag__change_requests_enabled__returns_flag_state(
+    admin_client_new: APIClient,
+    default_feature_value: str,
+    environment_api_key: str,
+    feature: int,
+    log: StructuredLogCapture,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    versioned_environment.minimum_change_request_approvals = 2
+    versioned_environment.save()
+
+    # When
+    response = admin_client_new.get(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "environment_default": {
+            "enabled": False,
+            "value": {"type": "string", "value": default_feature_value},
+            "variants": [],
+        },
+        "segment_overrides": [],
+    }
+    assert log.events == []
+
+
+def test_get_flag__user_not_authorised__responds_404(
+    non_admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    log: StructuredLogCapture,
+) -> None:
+    # Given / When
+    response = non_admin_client.get(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+    )
+
+    # Then
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not found."}
+    assert log.events == []
+
+
 def test_update_flag__patch_environment_default_enabled__toggles_flag(
     admin_client_new: APIClient,
     default_feature_value: str,

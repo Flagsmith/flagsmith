@@ -7,14 +7,14 @@ Use at your own risk - breaking changes may occur without prior notice.
 
 from django.urls import path
 
-from features.future.views import UpdateFlagAPIView
+from features.future.views import FlagAPIView
 
 app_name = "future"
 
 urlpatterns = [
     path(
         "environments/<str:environment_key>/features/<int:feature_id>/",
-        UpdateFlagAPIView.as_view(),
-        name="update-flag",
+        FlagAPIView.as_view(),
+        name="flag",
     ),
 ]

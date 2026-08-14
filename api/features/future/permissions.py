@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from common.environments.permissions import (
     MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
 )
 from rest_framework.exceptions import NotFound, PermissionDenied
 
@@ -15,6 +16,20 @@ PROPERTY_PERMISSIONS = {
     "environment_default": UPDATE_FEATURE_STATE,
     "segment_overrides": MANAGE_SEGMENT_OVERRIDES,
 }
+
+READ_PERMISSIONS = [VIEW_ENVIRONMENT, *PROPERTY_PERMISSIONS.values()]
+
+
+def check_read_permissions(user: UserABC, environment: Environment) -> None:
+    """Authorise a caller to read a flag.
+
+    A caller who may neither view nor write the environment is not told it exists.
+    """
+    if not any(
+        user.has_environment_permission(permission, environment)
+        for permission in READ_PERMISSIONS
+    ):
+        raise NotFound()
 
 
 def check_update_permissions(

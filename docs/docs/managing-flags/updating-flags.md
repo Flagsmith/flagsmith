@@ -12,8 +12,8 @@ eventually make them canonical.
 
 **These endpoints are experimental and may change without notice.** Note these limitations:
 
-- They cannot be used when [change requests](/administration-and-security/governance-and-compliance/change-requests) are
-  enabled.
+- Flags cannot be updated when [change requests](/administration-and-security/governance-and-compliance/change-requests)
+  are enabled. Reading them still works.
 - They do not support identity overrides.
 
 These may be lifted in the future.
@@ -21,6 +21,25 @@ These may be lifted in the future.
 :::
 
 Learn more in the [API specification](https://api.flagsmith.com/api/v1/docs/#/experimental).
+
+## Reading a flag
+
+`GET` returns everything the flag serves in an environment, in the same shape the update methods respond with:
+
+```bash
+curl 'https://api.flagsmith.com/api/__future__/environments/{environment_key}/features/{feature_id}/' \
+  -H 'Authorization: Api-Key {api_key}'
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "environment_default": {"enabled": true, "value": {"type": "string", "value": "hello"}, "variants": []},
+  "segment_overrides": []
+}
+```
 
 ## Updating a flag
 

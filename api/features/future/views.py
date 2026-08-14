@@ -13,19 +13,52 @@ from rest_framework.views import APIView
 
 from environments.models import Environment
 from features.future.exceptions import ChangeRequestsEnabledError
-from features.future.permissions import check_update_permissions
+from features.future.permissions import (
+    check_read_permissions,
+    check_update_permissions,
+)
 from features.future.serializers import UpdateFlagSerializer
-from features.future.services import update_flag
+from features.future.services import get_flag, update_flag
 from features.future.types import UpdateFlagRequest, UpdateFlagResponse
 from features.models import Feature
 
 logger = structlog.get_logger("features")
 
 
-class UpdateFlagAPIView(APIView):
-    """Update what a flag serves in an environment."""
+def _get_environment(environment_key: str) -> Environment:
+    try:
+        return Environment.objects.get(api_key=environment_key)  # type: ignore[no-any-return]
+    except Environment.DoesNotExist:
+        raise NotFound() from None
+
+
+def _get_feature(environment: Environment, feature_id: int) -> Feature:
+    try:
+        return Feature.objects.get(  # type: ignore[no-any-return]
+            id=feature_id, project_id=environment.project_id
+        )
+    except Feature.DoesNotExist:
+        raise NotFound() from None
+
+
+class FlagAPIView(APIView):
+    """Read or update what a flag serves in an environment."""
 
     permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        responses=UpdateFlagResponse,
+        tags=["experimental"],
+        description="Read what the flag serves in the environment.",
+    )
+    def get(self, request: Request, environment_key: str, feature_id: int) -> Response:
+        assert not isinstance(request.user, AnonymousUser)
+
+        environment = _get_environment(environment_key)
+        check_read_permissions(request.user, environment)
+        feature = _get_feature(environment, feature_id)
+
+        return Response(get_flag(environment=environment, feature=feature))
 
     @extend_schema(
         request=UpdateFlagRequest,
@@ -60,19 +93,9 @@ class UpdateFlagAPIView(APIView):
         if not isinstance(request.data, Mapping):
             raise ValidationError("Expected an object.")
 
-        try:
-            environment = Environment.objects.get(api_key=environment_key)
-        except Environment.DoesNotExist:
-            raise NotFound() from None
+        environment = _get_environment(environment_key)
         check_update_permissions(request.user, environment, request.data)
-
-        try:
-            feature = Feature.objects.get(
-                id=feature_id,
-                project_id=environment.project_id,
-            )
-        except Feature.DoesNotExist:
-            raise NotFound() from None
+        feature = _get_feature(environment, feature_id)
 
         if environment.is_workflow_enabled:
             logger.warning(
