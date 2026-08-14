@@ -85,7 +85,6 @@ const CreateSegmentSourcesModal: FC<CreateSegmentSourcesModalType> = ({
     if (!selected) {
       return
     }
-    trackSourceEvent('segment_source_beta_requested', selected)
     setRequested((prev) => [...prev, selected.key])
   }
 
