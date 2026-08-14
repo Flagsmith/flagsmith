@@ -9,7 +9,12 @@ from oauth2_provider.models import Application
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from oauth2_metadata.constants import FLAGSMITH_CLI_CLIENT_ID
+from oauth2_metadata.constants import (
+    FLAGSMITH_CLI_CLIENT_ID,
+    SCOPE_ADMIN_API,
+    SCOPE_GRANTS,
+    SCOPE_MCP,
+)
 
 
 def _pkce_pair() -> tuple[str, str]:
@@ -82,7 +87,10 @@ def test_get__valid_params__returns_application_info(
     data = response.json()
     assert data["application"]["name"] == "Test App"
     assert data["application"]["client_id"] == oauth_application.client_id
-    assert "mcp" in data["scopes"]
+    assert data["scopes"]["mcp"] == {
+        "label": "MCP access",
+        "grants": list(SCOPE_GRANTS[SCOPE_MCP]),
+    }
     assert data["redirect_uri"] == "https://example.com/callback"
     assert data["is_verified"] is False
 
@@ -330,5 +338,8 @@ def test_get__flagsmith_cli_requests_admin_api__returns_application_info(
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["application"]["client_id"] == FLAGSMITH_CLI_CLIENT_ID
-    assert "admin-api" in data["scopes"]
+    assert data["scopes"]["admin-api"] == {
+        "label": "Admin API access",
+        "grants": list(SCOPE_GRANTS[SCOPE_ADMIN_API]),
+    }
     assert data["is_verified"] is True

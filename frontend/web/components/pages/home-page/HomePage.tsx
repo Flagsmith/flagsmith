@@ -228,8 +228,11 @@ const HomePage: React.FC = () => {
     )
   }
 
+  // Re-encoded, because fromParam decodes: a redirect carrying its own query
+  // (an OAuth consent request does) would otherwise be truncated at its first
+  // `&` as the rest leaked into this page's own params.
   const redirect = Utils.fromParam().redirect
-    ? `?redirect=${Utils.fromParam().redirect}`
+    ? `?redirect=${encodeURIComponent(Utils.fromParam().redirect)}`
     : ''
   // Pushed rather than replaced, so Back returns to the signup form with what
   // was typed still in it.
