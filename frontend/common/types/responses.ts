@@ -1417,6 +1417,7 @@ export type Res = {
     prefix: string
     roles: RolePermissionUser[]
   }
+  rolesMasterAPIKeyWithMasterAPIKeyRoles: PagedResponse<Role>
   userWithRoles: PagedResponse<Role>
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>

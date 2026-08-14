@@ -1,20 +1,6 @@
 import { createRoleHandlers } from 'components/pages/organisation-settings/tabs/trust-relationships/hooks/useTrustRelationshipRoles'
 import { SelectedRole } from 'components/pages/organisation-settings/tabs/trust-relationships/TrustRelationshipPermissionsFields'
 import { TrustRelationship } from 'common/types/responses'
-import { createRoleMasterApiKey } from 'common/services/useRoleMasterApiKey'
-import { deleteMasterAPIKeyWithMasterAPIKeyRoles } from 'common/services/useMasterAPIKeyWithMasterAPIKeyRole'
-
-jest.mock('common/store', () => ({ getStore: () => ({}) }))
-jest.mock('common/services/useRoleMasterApiKey', () => ({
-  createRoleMasterApiKey: jest.fn(),
-}))
-jest.mock('common/services/useMasterAPIKeyWithMasterAPIKeyRole', () => ({
-  deleteMasterAPIKeyWithMasterAPIKeyRoles: jest.fn(),
-  getRolesMasterAPIKeyWithMasterAPIKeyRoles: jest.fn(),
-}))
-
-const mockCreate = createRoleMasterApiKey as jest.Mock
-const mockDelete = deleteMasterAPIKeyWithMasterAPIKeyRoles as jest.Mock
 
 const trustRelationship = {
   audience: 'https://github.com/Flagsmith',
@@ -31,125 +17,183 @@ const trustRelationship = {
 
 const role: SelectedRole = { id: 7, name: 'Deployer' }
 
-const trackRoles = () => {
+const trackPendingRoles = () => {
   let state: SelectedRole[] = [role]
-  const setRoles = jest.fn(
+  const setPendingRoles = jest.fn(
     (
       update: SelectedRole[] | ((previous: SelectedRole[]) => SelectedRole[]),
     ) => {
       state = typeof update === 'function' ? update(state) : update
     },
   )
-  return { getState: () => state, setRoles }
+  return { getState: () => state, setPendingRoles }
 }
+
+// Lets the mutation promise chain settle before asserting.
+const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0))
+
+const mutations = () => ({
+  assignRole: jest.fn().mockResolvedValue({}),
+  detachRole: jest.fn().mockResolvedValue({}),
+})
 
 beforeEach(() => {
   ;(global as { toast?: unknown }).toast = jest.fn()
 })
 
 describe('addRole', () => {
-  it('does not update local state when the API call fails', async () => {
+  it('warns and leaves the selection alone when the API call fails', async () => {
     // Given
-    mockCreate.mockResolvedValue({ error: { status: 403 } })
-    const { getState, setRoles } = trackRoles()
+    const { assignRole, detachRole } = mutations()
+    assignRole.mockRejectedValue({ status: 403 })
+    const { getState, setPendingRoles } = trackPendingRoles()
     const handlers = createRoleHandlers({
+      assignRole,
+      detachRole,
       organisationId: 1,
-      setRoles,
+      setPendingRoles,
       trustRelationship,
     })
 
     // When
     handlers.addRole({ id: 8, name: 'Reader' })
-    await mockCreate.mock.results[0].value
+    await flushPromises()
 
     // Then
-    expect(setRoles).not.toHaveBeenCalled()
+    expect(setPendingRoles).not.toHaveBeenCalled()
     expect(getState()).toEqual([role])
     expect(toast).toHaveBeenCalledWith('Could not assign role', 'danger')
   })
 
-  it('updates local state when the API call succeeds', async () => {
+  it('assigns against the backing key in edit mode', async () => {
     // Given
-    mockCreate.mockResolvedValue({ data: {} })
-    const { getState, setRoles } = trackRoles()
+    const { assignRole, detachRole } = mutations()
+    const { setPendingRoles } = trackPendingRoles()
     const handlers = createRoleHandlers({
+      assignRole,
+      detachRole,
       organisationId: 1,
-      setRoles,
+      setPendingRoles,
       trustRelationship,
     })
 
     // When
     handlers.addRole({ id: 8, name: 'Reader' })
-    await mockCreate.mock.results[0].value
+    await flushPromises()
 
     // Then
-    expect(getState()).toEqual([role, { id: 8, name: 'Reader' }])
+    expect(assignRole).toHaveBeenCalledWith({
+      body: { master_api_key: 'key-id' },
+      org_id: 1,
+      role_id: 8,
+    })
+    // The cache, not local state, carries the assigned roles in edit mode.
+    expect(setPendingRoles).not.toHaveBeenCalled()
     expect(toast).toHaveBeenCalledWith('Role assigned')
   })
 
-  it('updates local state without an API call in create mode', () => {
+  it('holds the selection without an API call in create mode', () => {
     // Given
-    const { getState, setRoles } = trackRoles()
-    const handlers = createRoleHandlers({ organisationId: 1, setRoles })
+    const { assignRole, detachRole } = mutations()
+    const { getState, setPendingRoles } = trackPendingRoles()
+    const handlers = createRoleHandlers({
+      assignRole,
+      detachRole,
+      organisationId: 1,
+      setPendingRoles,
+    })
 
     // When
     handlers.addRole({ id: 8, name: 'Reader' })
 
     // Then
-    expect(mockCreate).not.toHaveBeenCalled()
+    expect(assignRole).not.toHaveBeenCalled()
     expect(getState()).toEqual([role, { id: 8, name: 'Reader' }])
   })
 })
 
 describe('removeRole', () => {
-  it('does not update local state when the API call fails', async () => {
+  it('warns when the API call fails', async () => {
     // Given
-    mockDelete.mockResolvedValue({ error: { status: 403 } })
-    const { getState, setRoles } = trackRoles()
+    const { assignRole, detachRole } = mutations()
+    detachRole.mockRejectedValue({ status: 403 })
+    const { getState, setPendingRoles } = trackPendingRoles()
     const handlers = createRoleHandlers({
+      assignRole,
+      detachRole,
       organisationId: 1,
-      setRoles,
+      setPendingRoles,
       trustRelationship,
     })
 
     // When
     handlers.removeRole(role.id)
-    await mockDelete.mock.results[0].value
+    await flushPromises()
 
     // Then
-    expect(setRoles).not.toHaveBeenCalled()
+    expect(setPendingRoles).not.toHaveBeenCalled()
     expect(getState()).toEqual([role])
     expect(toast).toHaveBeenCalledWith('Could not remove role', 'danger')
   })
 
-  it('updates local state when the API call succeeds', async () => {
+  it('detaches from the backing key in edit mode', async () => {
     // Given
-    mockDelete.mockResolvedValue({ data: {} })
-    const { getState, setRoles } = trackRoles()
+    const { assignRole, detachRole } = mutations()
+    const { setPendingRoles } = trackPendingRoles()
     const handlers = createRoleHandlers({
+      assignRole,
+      detachRole,
       organisationId: 1,
-      setRoles,
+      setPendingRoles,
       trustRelationship,
     })
 
     // When
     handlers.removeRole(role.id)
-    await mockDelete.mock.results[0].value
+    await flushPromises()
 
     // Then
-    expect(getState()).toEqual([])
+    expect(detachRole).toHaveBeenCalledWith({
+      org_id: 1,
+      prefix: 'prefix',
+      role_id: role.id,
+    })
+    expect(setPendingRoles).not.toHaveBeenCalled()
     expect(toast).toHaveBeenCalledWith('Role removed')
+  })
+
+  it('drops the selection without an API call in create mode', () => {
+    // Given
+    const { assignRole, detachRole } = mutations()
+    const { getState, setPendingRoles } = trackPendingRoles()
+    const handlers = createRoleHandlers({
+      assignRole,
+      detachRole,
+      organisationId: 1,
+      setPendingRoles,
+    })
+
+    // When
+    handlers.removeRole(role.id)
+
+    // Then
+    expect(detachRole).not.toHaveBeenCalled()
+    expect(getState()).toEqual([])
   })
 })
 
 describe('assignRoles', () => {
   it('resolves false when any assignment fails', async () => {
     // Given
-    mockCreate
-      .mockResolvedValueOnce({ data: {} })
-      .mockResolvedValueOnce({ error: { status: 404 } })
-    const { setRoles } = trackRoles()
-    const handlers = createRoleHandlers({ organisationId: 1, setRoles })
+    const { assignRole, detachRole } = mutations()
+    assignRole.mockResolvedValueOnce({}).mockRejectedValueOnce({ status: 404 })
+    const { setPendingRoles } = trackPendingRoles()
+    const handlers = createRoleHandlers({
+      assignRole,
+      detachRole,
+      organisationId: 1,
+      setPendingRoles,
+    })
 
     // When
     const allAssigned = await handlers.assignRoles('key-id', [
@@ -159,19 +203,29 @@ describe('assignRoles', () => {
 
     // Then
     expect(allAssigned).toBe(false)
-    expect(mockCreate).toHaveBeenCalledTimes(2)
+    expect(assignRole).toHaveBeenCalledTimes(2)
   })
 
   it('resolves true when every assignment succeeds', async () => {
     // Given
-    mockCreate.mockResolvedValue({ data: {} })
-    const { setRoles } = trackRoles()
-    const handlers = createRoleHandlers({ organisationId: 1, setRoles })
+    const { assignRole, detachRole } = mutations()
+    const { setPendingRoles } = trackPendingRoles()
+    const handlers = createRoleHandlers({
+      assignRole,
+      detachRole,
+      organisationId: 1,
+      setPendingRoles,
+    })
 
     // When
     const allAssigned = await handlers.assignRoles('key-id', [role])
 
     // Then
     expect(allAssigned).toBe(true)
+    expect(assignRole).toHaveBeenCalledWith({
+      body: { master_api_key: 'key-id' },
+      org_id: 1,
+      role_id: role.id,
+    })
   })
 })
