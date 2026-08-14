@@ -167,7 +167,8 @@ required-version = ">=0.11.18"  # Ensure this matches the version in .pre-commit
 override-dependencies = [
     # TODO: remove once https://github.com/jayvynl/django-clickhouse-backend/issues/172 is closed
     "clickhouse-driver==0.2.11",
-    # TODO: remove once flagsmith-private removes it's constraint on cryptography
+    # TODO: remove once flagsmith-private removes its constraint on cryptography
+    #  see here: https://github.com/Flagsmith/flagsmith-private/blob/c443004baf58af9c24341c604844c1dc26a2a609/pyproject.toml#L9-L13
     "cryptography>=49.0.0",
 ]
 
