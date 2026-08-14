@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react'
 import { GithubIcon } from 'components/icons/GithubIcon'
-import { GITHUB_ISSUER } from './WorkflowSetupSnippet'
+import { GITHUB_ISSUER } from './github'
 
 // Known OIDC providers, keyed by issuer. Add an entry here to give a future
 // preset (GitLab CI, Kubernetes, ...) its own badge in the list view.

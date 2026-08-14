@@ -10,7 +10,7 @@ import GithubTrustRelationshipForm from 'components/pages/organisation-settings/
 import { trustRelationshipErrorMessage } from 'components/pages/organisation-settings/tabs/trust-relationships/errors'
 import NewTrustRelationshipModal from 'components/pages/organisation-settings/tabs/trust-relationships/NewTrustRelationshipModal'
 import TrustRelationshipModal from 'components/pages/organisation-settings/tabs/trust-relationships/TrustRelationshipModal'
-import { isGithubFormEditable } from 'components/pages/organisation-settings/tabs/trust-relationships/WorkflowSetupSnippet'
+import { isGithubFormEditable } from 'components/pages/organisation-settings/tabs/trust-relationships/github'
 import { providerForIssuer } from 'components/pages/organisation-settings/tabs/trust-relationships/providers'
 import { TrustRelationship } from 'common/types/responses'
 import {

@@ -1,6 +1,1 @@
-export {
-  default,
-  GITHUB_ISSUER,
-  isGithubFormEditable,
-  isDefaultGithubAudience,
-} from './WorkflowSetupSnippet'
+export { default } from './WorkflowSetupSnippet'

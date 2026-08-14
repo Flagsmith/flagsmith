@@ -18,9 +18,8 @@ import {
 import { trustRelationshipErrorMessage } from 'components/pages/organisation-settings/tabs/trust-relationships/errors'
 import useTrustRelationshipRoles from 'components/pages/organisation-settings/tabs/trust-relationships/hooks/useTrustRelationshipRoles'
 import TrustRelationshipPermissionsFields from 'components/pages/organisation-settings/tabs/trust-relationships/TrustRelationshipPermissionsFields'
-import WorkflowSetupSnippet, {
-  GITHUB_ISSUER,
-} from 'components/pages/organisation-settings/tabs/trust-relationships/WorkflowSetupSnippet'
+import WorkflowSetupSnippet from 'components/pages/organisation-settings/tabs/trust-relationships/WorkflowSetupSnippet'
+import { GITHUB_ISSUER } from 'components/pages/organisation-settings/tabs/trust-relationships/github'
 
 type GithubTrustRelationshipFormProps = {
   organisationId: number

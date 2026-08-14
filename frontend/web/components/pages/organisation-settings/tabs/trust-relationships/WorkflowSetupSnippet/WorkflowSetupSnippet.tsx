@@ -1,29 +1,7 @@
 import React, { FC, useMemo } from 'react'
 import CodeCard from 'components/pages/onboarding/OnboardingConnectPanel/CodeCard'
 import Icon from 'components/icons/Icon'
-import { TrustRelationship } from 'common/types/responses'
-
-export const GITHUB_ISSUER = 'https://token.actions.githubusercontent.com'
-
-// Claims the GitHub form can round-trip; anything else edits as freeform.
-const GITHUB_FORM_CLAIMS = ['repository', 'repository_id', 'environment']
-
-export const isGithubFormEditable = (
-  trustRelationship: TrustRelationship,
-): boolean =>
-  trustRelationship.issuer === GITHUB_ISSUER &&
-  trustRelationship.claim_rules.every(
-    (rule) =>
-      GITHUB_FORM_CLAIMS.includes(rule.claim) && rule.values.length === 1,
-  ) &&
-  trustRelationship.claim_rules.some(
-    (rule) => rule.claim === 'repository' || rule.claim === 'repository_id',
-  )
-
-const GITHUB_OWNER_AUDIENCE_REGEX = /^https:\/\/github\.com\/[^/]+$/
-
-export const isDefaultGithubAudience = (audience: string): boolean =>
-  GITHUB_OWNER_AUDIENCE_REGEX.test(audience)
+import { isDefaultGithubAudience } from 'components/pages/organisation-settings/tabs/trust-relationships/github'
 
 type WorkflowSetupSnippetProps = {
   audience: string
