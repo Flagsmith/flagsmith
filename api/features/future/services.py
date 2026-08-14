@@ -273,6 +273,10 @@ def update_flag(
     author: FFAdminUser | APIKeyUser,
 ) -> UpdateFlagResponse:
     """Write the given parts of a flag, whichever versioning the environment uses."""
+    writes_nothing = not changes if replace else not any(changes.values())
+    if writes_nothing:
+        return get_flag(environment=environment, feature=feature)
+
     written = WrittenSegmentOverrides([], [], [])
 
     with transaction.atomic():

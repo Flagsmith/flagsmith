@@ -11,6 +11,7 @@ from rest_framework.test import APIClient
 from environments.models import Environment
 from features.future.types import UpdateFlagRequest
 from features.models import FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import enable_v2_versioning
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
@@ -87,6 +88,55 @@ def mv_feature_variants(
         )
         for value, default_percentage_allocation in [("a", 10), ("b", 20)]
     ]
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        pytest.param(UpdateFlagRequest({}), id="no_properties"),
+        pytest.param(
+            UpdateFlagRequest({"environment_default": {}}),
+            id="empty_environment_default",
+        ),
+        pytest.param(
+            UpdateFlagRequest({"segment_overrides": []}), id="empty_segment_overrides"
+        ),
+    ],
+)
+def test_update_flag__patch_changing_nothing__writes_nothing(
+    admin_client_new: APIClient,
+    changes: UpdateFlagRequest,
+    default_feature_value: str,
+    environment_api_key: str,
+    feature: int,
+    log: StructuredLogCapture,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    versions = EnvironmentFeatureVersion.objects.filter(
+        environment=versioned_environment, feature_id=feature
+    )
+    version_count = versions.count()
+
+    # When
+    response = admin_client_new.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        changes,
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "environment_default": {
+            "enabled": False,
+            "value": {"type": "string", "value": default_feature_value},
+            "variants": [],
+        },
+        "segment_overrides": [],
+    }
+    assert versions.count() == version_count
+    assert log.events == []
 
 
 def test_get_flag__user_authorised__returns_flag_state(

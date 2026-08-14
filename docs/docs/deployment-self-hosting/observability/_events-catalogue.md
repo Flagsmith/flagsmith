@@ -279,7 +279,7 @@ Attributes:
 ### `features.flag.updated`
 
 Logged at `info` from:
- - `api/features/future/services.py:315`
+ - `api/features/future/services.py:319`
 
 Attributes:
  - `environment.id`
