@@ -81,8 +81,19 @@
       color: $text-icon-light;
     }
   }
+  .alert-success {
+    .title {
+      color: $text-icon-light;
+    }
+    strong {
+      color: $text-icon-light;
+    }
+  }
   .alert-warning {
     background-color: $warning-solid-dark-alert;
+    strong {
+      color: $text-icon-light;
+    }
   }
   .alert-danger{
     background-color: $danger-solid-dark-alert

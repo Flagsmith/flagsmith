@@ -1,5 +1,6 @@
 from django.db import models
 
+from core.fields import NoSSRFURLField
 from core.models import SoftDeleteExportableModel
 
 
@@ -9,7 +10,7 @@ class GitLabConfiguration(SoftDeleteExportableModel):
         on_delete=models.CASCADE,
         related_name="gitlab_config",
     )
-    gitlab_instance_url = models.URLField(max_length=200)
+    gitlab_instance_url = NoSSRFURLField(max_length=200)
     access_token = models.CharField(max_length=300)
     labeling_enabled = models.BooleanField(default=False)
 

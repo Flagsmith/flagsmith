@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
-        self.exporter = S3OrganisationExporter()  # type: ignore[no-untyped-call]
+        self.exporter = S3OrganisationExporter()
 
     def add_arguments(self, parser: CommandParser):  # type: ignore[no-untyped-def]
         parser.add_argument(

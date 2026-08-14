@@ -45,7 +45,7 @@ const SetupStep: FC<SetupStepProps> = ({
         search: search || undefined,
         type: 'MULTIVARIATE',
       },
-      { skip: !numericEnvId },
+      { refetchOnMountOrArgChange: true, skip: !numericEnvId },
     )
 
   const multivariateFeatures = featureList?.results ?? []

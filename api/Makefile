@@ -11,6 +11,8 @@ UV_VERSION ?= $(shell python -c 'import tomllib; print(tomllib.load(open("pyproj
 
 OPENAPI_FORMAT_VERSION ?= 1.23.0
 
+FLAGSMITH_DOCUMENT_PATH ?= integrations/flagsmith/data/environment.json
+
 -include .env-local
 -include .env-codeartifact
 -include $(DOTENV_OVERRIDE_FILE)
@@ -205,3 +207,31 @@ generate-docs-private:
 .PHONY: add-known-sdk-version
 add-known-sdk-version:
 	uv run python scripts/add-known-sdk-version.py $(opts)
+
+.PHONY: update-flagsmith-environment
+update-flagsmith-environment:
+	project=$$(jq -er .project ../flagsmith.json) && \
+	tag=$$(flagsmith api "/api/v1/projects/$$project/tags/" --no-input \
+	  | jq -er '(if type == "array" then . else .results end) | map(select(.label == "api")) | .[0].id') && \
+	ids=$$(flagsmith api "/api/v1/projects/$$project/features/?tags=$$tag&page_size=1000" --no-input \
+	  | jq -ec '[.results[].id]') && \
+	flagsmith environment document --no-input | jq --argjson ids "$$ids" '{ \
+	  id: 0, \
+	  api_key: "masked", \
+	  name, \
+	  use_identity_composite_key_for_hashing, \
+	  feature_states: [.feature_states[] | select(.feature.id | IN($$ids[]))], \
+	  project: { \
+	    id: 0, \
+	    name: .project.name, \
+	    hide_disabled_flags: .project.hide_disabled_flags, \
+	    segments: [], \
+	    organisation: { \
+	      id: 0, \
+	      name: .project.organisation.name, \
+	      feature_analytics: .project.organisation.feature_analytics, \
+	      stop_serving_flags: .project.organisation.stop_serving_flags, \
+	      persist_trait_data: .project.organisation.persist_trait_data \
+	    } \
+	  } \
+	}' > $(FLAGSMITH_DOCUMENT_PATH)

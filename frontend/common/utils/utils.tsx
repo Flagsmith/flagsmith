@@ -180,12 +180,6 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return null
   },
-  escapeHtml(html: string) {
-    const text = document.createTextNode(html)
-    const p = document.createElement('p')
-    p.appendChild(text)
-    return p.innerHTML
-  },
   featureStateToValue(featureState: FeatureStateValue) {
     if (!featureState) {
       return null
@@ -381,6 +375,9 @@ const Utils = Object.assign({}, BaseUtils, {
   },
   getFlagsmithValue(key: string) {
     return flagsmith.getValue(key)
+  },
+  getFlagsmithVariant(key: string) {
+    return flagsmith.getAllFlags()[key]?.variant
   },
 
   getIdentitiesEndpoint(_project: ProjectType) {
@@ -826,7 +823,7 @@ const Utils = Object.assign({}, BaseUtils, {
       if (!rule.value) {
         return false
       }
-      return !!semver.valid(`${rule.value.split(':')[0]}`)
+      return !!semver.valid(`${rule.value}`.split(':')[0])
     }
 
     switch (rule.operator) {
@@ -849,7 +846,7 @@ const Utils = Object.assign({}, BaseUtils, {
         if (!rule.value) {
           return false
         }
-        const valueSplit = rule.value.split('|')
+        const valueSplit = `${rule.value}`.split('|')
         if (valueSplit.length === 2) {
           const [divisor, remainder] = [
             parseFloat(valueSplit[0]),

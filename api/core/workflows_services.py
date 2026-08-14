@@ -8,7 +8,10 @@ from environments.tasks import rebuild_environment_document
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import trigger_update_version_webhooks
-from features.workflows.core.exceptions import ChangeRequestNotApprovedError
+from features.workflows.core.exceptions import (
+    CannotModifyManagedSegmentError,
+    ChangeRequestNotApprovedError,
+)
 
 if TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest
@@ -26,6 +29,9 @@ class ChangeRequestCommitService:
             raise ChangeRequestNotApprovedError(
                 "Change request has not been approved by all required approvers."
             )
+        # Runs before anything publishes: commit is not atomic as a whole, so
+        # raising any later would leave the change request half-applied.
+        self._validate_segments_are_not_cohort_managed()
 
         self._publish_feature_states()
         self._publish_environment_feature_versions(committed_by)
@@ -108,6 +114,17 @@ class ChangeRequestCommitService:
 
     
     
+    def _validate_segments_are_not_cohort_managed(self) -> None:
+        for draft_segment in self.change_request.segments.all():
+            if (
+                live_segment := draft_segment.version_of
+            ) and live_segment.cohorts.exists():
+                raise CannotModifyManagedSegmentError(
+                    "Segments managed by a cohort cannot be changed "
+                    "via a change request."
+                )
+
+    @transaction.atomic
     def _publish_segments(self) -> None:
         for draft_segment in self.change_request.segments.all():
             live_segment = draft_segment.version_of

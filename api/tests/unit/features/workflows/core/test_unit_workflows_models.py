@@ -20,6 +20,7 @@ from audit.constants import (
 )
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from cohorts.models import Cohort
 from core.helpers import get_current_site_url
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
@@ -31,6 +32,7 @@ from features.versioning.tasks import enable_v2_versioning, publish_version_chan
 from features.versioning.versioning_service import get_environment_flags_list
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
+    CannotModifyManagedSegmentError,
     ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
 )
@@ -944,6 +946,30 @@ def test_change_request_commit__with_draft_segment__publishes_segment_rules(
     ) == [
         {"property": "property3a", "operator": EQUAL, "value": "value3a"},
     ]
+
+
+def test_change_request_commit__draft_targets_cohort_managed_segment__raises(
+    segment: Segment,
+    environment: Environment,
+    change_request: ChangeRequest,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    Cohort.objects.create(environment=environment, segment=segment)
+    Segment.objects.create(
+        name="new-name",
+        change_request=change_request,
+        project=segment.project,
+        version_of=segment,
+    )
+
+    # When / Then
+    with pytest.raises(CannotModifyManagedSegmentError):
+        change_request.commit(admin_user)
+    segment.refresh_from_db()
+    assert segment.name != "new-name"
+    change_request.refresh_from_db()
+    assert change_request.committed_at is None
 
 
 def test_change_request_commit__multiple_scheduled_with_ignore_conflicts__applies_in_order(

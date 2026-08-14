@@ -544,6 +544,37 @@ paths:
         - {}
       tags:
         - Authentication
+  /api/v1/auth/oidc/token/:
+    post:
+      operationId: oidc_token_exchange
+      description: Exchange an OIDC token issued by a trusted identity provider for a short-lived Flagsmith access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenExchangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenExchangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenExchangeRequest'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenExchangeResponse'
+        '400':
+          description: Request body is invalid.
+        '401':
+          description: 'Token validation failed, or no trust relationship matches the token.'
+      security:
+        - {}
+      tags:
+        - Authentication
   '/api/v1/auth/saml/{name}/metadata/':
     get:
       operationId: api_v1_auth_saml_metadata_retrieve
@@ -2037,6 +2068,118 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+  '/api/v1/environments/{environment_api_key}/cohorts/':
+    get:
+      operationId: api_v1_environments_cohorts_list
+      description: List the environment's cohorts.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cohort'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
+    post:
+      operationId: api_v1_environments_cohorts_create
+      description: Create a cohort and the managed segment that targets it.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cohort'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Cohort'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Cohort'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cohort'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
+  '/api/v1/environments/{environment_api_key}/cohorts/{cohort_id}/':
+    get:
+      operationId: api_v1_environments_cohorts_retrieve
+      description: Retrieve a cohort.
+      parameters:
+        - name: cohort_id
+          in: path
+          description: A unique integer value identifying this cohort.
+          required: true
+          schema:
+            type: integer
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cohort'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
+    delete:
+      operationId: api_v1_environments_cohorts_destroy
+      description: Request cohort deletion. Memberships are drained from identity data first; the cohort and its segment are deleted once drained.
+      parameters:
+        - name: cohort_id
+          in: path
+          description: A unique integer value identifying this cohort.
+          required: true
+          schema:
+            type: integer
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '202':
+          description: No response body
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
   '/api/v1/environments/{environment_api_key}/create-change-request/':
     post:
       operationId: create_environment_feature_change_request
@@ -6507,6 +6650,25 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+  '/api/v1/environments/{environment_api_key}/onboarding-status/':
+    get:
+      operationId: api_v1_environments_onboarding_status_retrieve
+      description: Obtain information on whether features for this environment have been evaluated yet.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentOnboardingStatus'
+      tags:
+        - Environments
   '/api/v1/environments/{environment_api_key}/user-group-permissions/':
     get:
       operationId: api_v1_environments_user_group_permissions_list
@@ -7050,6 +7212,46 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+  '/api/v1/environments/{environment_api_key}/warehouse-connections/{connection_id}/events/':
+    get:
+      operationId: api_v1_environments_warehouse_connections_events_list
+      description: List the distinct event names in the connection's warehouse.
+      parameters:
+        - name: connection_id
+          in: path
+          description: A unique integer value identifying this warehouse connection.
+          required: true
+          schema:
+            type: integer
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseEventNamesResult'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseEventNamesUnsupported'
+        '503':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseEventNamesUnavailable'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
   '/api/v1/environments/{environment_api_key}/warehouse-connections/{connection_id}/test-warehouse-connection/':
     post:
       operationId: api_v1_environments_warehouse_connections_test_warehouse_connection_create
@@ -7085,6 +7287,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WarehouseConnection'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+  '/api/v1/environments/{environment_api_key}/warehouse-connections/test-warehouse-connection/':
+    post:
+      operationId: api_v1_environments_warehouse_connections_test_warehouse_connection_config_create
+      description: Manage data warehouse connections for an environment.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WarehouseConnection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WarehouseConnection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WarehouseConnection'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseConnectionTestResult'
       security:
         - tokenAuth: []
         - Master API Key: []
@@ -12364,6 +12600,183 @@ paths:
       security:
         - tokenAuth: []
         - Master API Key: []
+      tags:
+        - Organisations
+  '/api/v1/organisations/{organisation_pk}/trust-relationships/':
+    get:
+      operationId: api_v1_organisations_trust_relationships_list
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTrustRelationshipList'
+      security:
+        - tokenAuth: []
+      tags:
+        - Organisations
+    post:
+      operationId: api_v1_organisations_trust_relationships_create
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrustRelationship'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TrustRelationship'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TrustRelationship'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustRelationship'
+      security:
+        - tokenAuth: []
+      tags:
+        - Organisations
+  '/api/v1/organisations/{organisation_pk}/trust-relationships/{id}/':
+    get:
+      operationId: api_v1_organisations_trust_relationships_retrieve
+      parameters:
+        - name: id
+          in: path
+          description: A unique integer value identifying this trust relationship.
+          required: true
+          schema:
+            type: integer
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustRelationship'
+      security:
+        - tokenAuth: []
+      tags:
+        - Organisations
+    put:
+      operationId: api_v1_organisations_trust_relationships_update
+      parameters:
+        - name: id
+          in: path
+          description: A unique integer value identifying this trust relationship.
+          required: true
+          schema:
+            type: integer
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrustRelationship'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TrustRelationship'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TrustRelationship'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustRelationship'
+      security:
+        - tokenAuth: []
+      tags:
+        - Organisations
+    patch:
+      operationId: api_v1_organisations_trust_relationships_partial_update
+      parameters:
+        - name: id
+          in: path
+          description: A unique integer value identifying this trust relationship.
+          required: true
+          schema:
+            type: integer
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTrustRelationship'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTrustRelationship'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTrustRelationship'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustRelationship'
+      security:
+        - tokenAuth: []
+      tags:
+        - Organisations
+    delete:
+      operationId: api_v1_organisations_trust_relationships_destroy
+      parameters:
+        - name: id
+          in: path
+          description: A unique integer value identifying this trust relationship.
+          required: true
+          schema:
+            type: integer
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: No response body
+      security:
+        - tokenAuth: []
       tags:
         - Organisations
   '/api/v1/organisations/{organisation_pk}/usage-data/':
@@ -18444,6 +18857,7 @@ components:
             - 'null'
         project:
           type: integer
+          readOnly: true
         feature:
           type:
             - integer
@@ -18465,13 +18879,17 @@ components:
           items:
             $ref: '#/components/schemas/SegmentMembershipCount'
           readOnly: true
+        managed_by:
+          oneOf:
+            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/BlankEnum'
+          readOnly: true
         change_request:
           type:
             - integer
             - 'null'
       required:
         - name
-        - project
         - rules
     ChangeRequestUpdate:
       description: Adds nested create feature
@@ -18557,6 +18975,21 @@ components:
         - UPDATE
         - DELETE
         - UNKNOWN
+    ClaimRule:
+      type: object
+      properties:
+        claim:
+          type: string
+          maxLength: 255
+        values:
+          type: array
+          items:
+            type: string
+            maxLength: 500
+          minItems: 1
+      required:
+        - claim
+        - values
     CloneEnvironment:
       type: object
       properties:
@@ -18586,6 +19019,39 @@ components:
         name:
           type: string
           maxLength: 2000
+      required:
+        - name
+    Cohort:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 2000
+        description:
+          type:
+            - string
+            - 'null'
+        segment:
+          type: integer
+          readOnly: true
+        source_type:
+          allOf:
+            - $ref: '#/components/schemas/SourceTypeEnum'
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
       required:
         - name
     Condition:
@@ -19659,6 +20125,21 @@ components:
           items:
             $ref: '#/components/schemas/MetricItem'
           readOnly: true
+    EnvironmentOnboardingStatus:
+      type: object
+      properties:
+        first_evaluated_at:
+          description: When the environment's flags were first evaluated by an SDK.
+          type:
+            - string
+            - 'null'
+          format: date-time
+        first_evaluated_sdk_label:
+          description: SDK that first evaluated the environment's flags.
+          type:
+            - string
+            - 'null'
+          maxLength: 100
     EnvironmentRetrieveSerializerWithMetadata:
       description: Functionality for serializers that need to handle metadata
       type: object
@@ -20113,6 +20594,10 @@ components:
           readOnly: true
         aggregation:
           type: string
+          readOnly: true
+        direction:
+          allOf:
+            - $ref: '#/components/schemas/DirectionEnum'
           readOnly: true
         expected_direction:
           $ref: '#/components/schemas/ExpectedDirectionEnum'
@@ -21622,6 +22107,13 @@ components:
           $ref: '#/components/schemas/UserList'
       required:
         - user
+    ManagedByEnum:
+      description: |-
+        * `` - Unmanaged
+        * `cohort` - Cohort
+      type: string
+      enum:
+        - cohort
     MasterAPIKey:
       type: object
       properties:
@@ -22121,6 +22613,13 @@ components:
           type: boolean
         force_2fa:
           type: boolean
+        targeting_key:
+          description: Flagsmith-on-Flagsmith targeting key. Immutable; org.<id> is used when unset.
+          type:
+            - string
+            - 'null'
+          maxLength: 64
+          writeOnly: true
       required:
         - name
     OrganisationWebhook:
@@ -22131,6 +22630,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         enabled:
           type: boolean
@@ -23153,6 +23653,29 @@ components:
       required:
         - count
         - results
+    PaginatedTrustRelationshipList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          format: uri
+          example: 'http://api.example.org/accounts/?page=4'
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          example: 'http://api.example.org/accounts/?page=2'
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrustRelationship'
+      required:
+        - count
+        - results
     PaginatedUserList:
       type: object
       properties:
@@ -23619,6 +24142,10 @@ components:
         aggregation:
           type: string
           readOnly: true
+        direction:
+          allOf:
+            - $ref: '#/components/schemas/DirectionEnum'
+          readOnly: true
         expected_direction:
           $ref: '#/components/schemas/ExpectedDirectionEnum'
         created_at:
@@ -24069,6 +24596,13 @@ components:
           type: boolean
         force_2fa:
           type: boolean
+        targeting_key:
+          description: Flagsmith-on-Flagsmith targeting key. Immutable; org.<id> is used when unset.
+          type:
+            - string
+            - 'null'
+          maxLength: 64
+          writeOnly: true
     PatchedOrganisationWebhook:
       type: object
       properties:
@@ -24077,6 +24611,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         enabled:
           type: boolean
@@ -24466,6 +25001,7 @@ components:
             - 'null'
         project:
           type: integer
+          readOnly: true
         feature:
           type:
             - integer
@@ -24486,6 +25022,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SegmentMembershipCount'
+          readOnly: true
+        managed_by:
+          oneOf:
+            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
     PatchedSegmentConfiguration:
       type: object
@@ -24613,6 +25154,46 @@ components:
           format: date-time
           readOnly: true
           title: DateCreated
+    PatchedTrustRelationship:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          description: Display name for this trust relationship.
+          type: string
+          maxLength: 100
+        issuer:
+          description: OIDC issuer URL expected in exchanged tokens' `iss` claim.
+          type: string
+          format: uri
+          maxLength: 500
+        audience:
+          description: Expected value of the `aud` claim in exchanged tokens.
+          type: string
+          maxLength: 500
+        claim_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClaimRule'
+        is_admin:
+          type: boolean
+        master_api_key_id:
+          type: string
+          readOnly: true
+        master_api_key_prefix:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          type:
+            - integer
+            - 'null'
+          readOnly: true
     PatchedUpdateEnvironment:
       description: |-
         Mixin to add read only status to fields in a given serializer based on the existence
@@ -24929,6 +25510,7 @@ components:
         url:
           type: string
           format: uri
+          maxLength: 200
         enabled:
           type: boolean
         created_at:
@@ -24950,6 +25532,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         secret:
           type: string
@@ -26139,6 +26722,7 @@ components:
             - 'null'
         project:
           type: integer
+          readOnly: true
         feature:
           type:
             - integer
@@ -26160,9 +26744,13 @@ components:
           items:
             $ref: '#/components/schemas/SegmentMembershipCount'
           readOnly: true
+        managed_by:
+          oneOf:
+            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/BlankEnum'
+          readOnly: true
       required:
         - name
-        - project
         - rules
     SegmentAssociatedFeatureState:
       type: object
@@ -26398,6 +26986,11 @@ components:
           type: boolean
       required:
         - channel_id
+    SourceTypeEnum:
+      description: '* `csv` - CSV'
+      type: string
+      enum:
+        - csv
     StageAction:
       type: object
       properties:
@@ -26695,6 +27288,30 @@ components:
           type: string
         email:
           type: string
+    TokenExchangeRequest:
+      type: object
+      properties:
+        token:
+          description: 'An OIDC token issued by a trusted identity provider, e.g. a GitHub Actions job token.'
+          type: string
+      required:
+        - token
+    TokenExchangeResponse:
+      type: object
+      properties:
+        access_token:
+          description: Short-lived access token for the Admin API.
+          type: string
+        token_type:
+          description: Always "Bearer".
+          type: string
+        expires_in:
+          description: Access token lifetime in seconds.
+          type: integer
+      required:
+        - access_token
+        - expires_in
+        - token_type
     Trait:
       type: object
       properties:
@@ -26753,6 +27370,51 @@ components:
       enum:
         - ON_ENTER
         - WAIT_FOR
+    TrustRelationship:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          description: Display name for this trust relationship.
+          type: string
+          maxLength: 100
+        issuer:
+          description: OIDC issuer URL expected in exchanged tokens' `iss` claim.
+          type: string
+          format: uri
+          maxLength: 500
+        audience:
+          description: Expected value of the `aud` claim in exchanged tokens.
+          type: string
+          maxLength: 500
+        claim_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClaimRule'
+        is_admin:
+          type: boolean
+        master_api_key_id:
+          type: string
+          readOnly: true
+        master_api_key_prefix:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          type:
+            - integer
+            - 'null'
+          readOnly: true
+      required:
+        - audience
+        - is_admin
+        - issuer
+        - name
     Type975Enum:
       description: |-
         * `int` - Integer
@@ -27862,6 +28524,44 @@ components:
         - pending_connection
         - connected
         - errored
+    WarehouseConnectionTestResult:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/WarehouseConnectionStatusEnum'
+        status_detail:
+          type:
+            - string
+            - 'null'
+      required:
+        - status
+        - status_detail
+    WarehouseEventNamesResult:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            type: string
+        is_truncated:
+          type: boolean
+      required:
+        - events
+        - is_truncated
+    WarehouseEventNamesUnavailable:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+        - detail
+    WarehouseEventNamesUnsupported:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+        - detail
     WarehouseTypeEnum:
       description: |-
         * `flagsmith` - Flagsmith
@@ -27881,6 +28581,7 @@ components:
         url:
           type: string
           format: uri
+          maxLength: 200
         enabled:
           type: boolean
         created_at:
@@ -27904,6 +28605,7 @@ components:
           readOnly: true
         url:
           type: string
+          format: uri
           maxLength: 200
         secret:
           type: string

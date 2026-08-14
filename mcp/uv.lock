@@ -628,11 +628,11 @@ server = [
 
 [[package]]
 name = "flagsmith-common"
-version = "3.12.0"
+version = "3.12.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/0d/3b/d2876f51fe700901ae4bbc5cbf1942ffc7da3551ae169c425c8af7597f73/flagsmith_common-3.12.0.tar.gz", hash = "sha256:df95852688f2b65539c022b324cc7fc46955dc5a7e6e50b1b317bbcd2f469c0f", size = 61568, upload-time = "2026-07-14T17:45:51.415Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/65/95/d281ac745444cefbd14f2311f9879203c457e40edb24ea017c3af50b3a77/flagsmith_common-3.12.1.tar.gz", hash = "sha256:352bb77168d781754420075c0c8e57a27ad92f0459810cea4deeea263594e22a", size = 62044, upload-time = "2026-07-30T10:29:15.433Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5d/95/70a95753ace1b275c8c7d034980287354433c9f243ef0083e34742c812a0/flagsmith_common-3.12.0-py3-none-any.whl", hash = "sha256:960342ce9e9db035607ab9bc09378adb441f698551cb227292b1ae59da675554", size = 99859, upload-time = "2026-07-14T17:45:49.925Z" },
+    { url = "https://files.pythonhosted.org/packages/c8/cb/476da683b30ad251e440cac74cb60967459436541b7f5ae87f707c8dd599/flagsmith_common-3.12.1-py3-none-any.whl", hash = "sha256:7274b80d91fd6040e03f5519942e7cba52cfa7e327ac0f10366dbe4ab71824c7", size = 100097, upload-time = "2026-07-30T10:29:14.031Z" },
 ]
 
 [package.optional-dependencies]
@@ -682,7 +682,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastmcp", specifier = ">=3.3.1,<4.0.0" },
-    { name = "flagsmith-common", extras = ["otel"], specifier = ">=3.12.0,<4.0.0" },
+    { name = "flagsmith-common", extras = ["otel"], specifier = ">=3.12.1,<4.0.0" },
     { name = "opentelemetry-instrumentation-httpx", specifier = ">=0.46b0,<1.0.0" },
     { name = "prometheus-client", specifier = ">=0.21.0,<1.0.0" },
     { name = "pydantic-settings", specifier = ">=2.0.0,<3.0.0" },
@@ -691,7 +691,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "flagsmith-common", extras = ["test-tools"], specifier = ">=3.12.0,<4.0.0" },
+    { name = "flagsmith-common", extras = ["test-tools"], specifier = ">=3.12.1,<4.0.0" },
     { name = "mypy", specifier = ">=2.1.0,<3.0.0" },
     { name = "openapi-pydantic", specifier = ">=0.5.0,<1.0.0" },
     { name = "pyfakefs", specifier = ">=6.0.0,<7.0.0" },

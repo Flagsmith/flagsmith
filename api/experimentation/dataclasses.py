@@ -25,6 +25,12 @@ class WarehouseEventStats:
 
 
 @dataclass(frozen=True)
+class WarehouseEventNames:
+    events: list[str]
+    is_truncated: bool
+
+
+@dataclass(frozen=True)
 class ExposureBucket:
     variant: str
     bucket: datetime

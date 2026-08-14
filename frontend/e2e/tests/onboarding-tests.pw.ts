@@ -20,11 +20,30 @@ test.describe('Onboarding', () => {
 
     await addErrorLogging();
 
+    // Drive the verify console's real first-evaluation signal: Edge
+    // reports to Core, which the page polls at onboarding-status/. Flip
+    // firstEvaluated to simulate that landing (there's no real SDK eval here).
+    let firstEvaluated = false;
+    await page.route(/onboarding-status\//, (route) =>
+      route.fulfill({
+        json: {
+          first_evaluated_at: firstEvaluated ? '2024-01-01T00:00:00Z' : null,
+          first_evaluated_sdk_label: firstEvaluated ? 'flagsmith-js-sdk' : null,
+        },
+      }),
+    );
+
     // The welcome heading means bootstrap settled (loader, then heading/error).
     const flowReady = async () =>
       page
         .getByRole('heading', { name: /Welcome/ })
         .waitFor({ state: 'visible', timeout: 30000 });
+
+    // The console polls every few seconds, so LIVE lands shortly after the flip.
+    const waitConnected = () =>
+      expect(page.getByText('LIVE', { exact: true })).toBeVisible({
+        timeout: 15000,
+      });
 
     // The features page syncs the slideout state to the URL with
     // history.replace, which aborts a full navigation that is still in
@@ -32,7 +51,7 @@ test.describe('Onboarding', () => {
     const gotoOnboarding = async () => {
       for (let attempt = 0; ; attempt++) {
         try {
-          await page.goto('/getting-started?connected');
+          await page.goto('/getting-started');
           return;
         } catch (e) {
           if (attempt >= 2) throw e;
@@ -74,12 +93,15 @@ test.describe('Onboarding', () => {
     await page.getByRole('button', { name: 'Copy code snippet' }).click();
     await expect(page.getByText('Copy code snippet')).toContainText('✓');
 
-    // No real first evaluation in a test, so force the connected state via
-    // ?connected (the #7767 stub); that unlocks the toggle and flips LIVE.
-    log('Force the connected state');
-    await gotoOnboarding();
-    await flowReady();
-    await expect(page.getByText('LIVE', { exact: true })).toBeVisible();
+    // The first evaluation lands; the console polls onboarding-status/ and
+    // flips to LIVE on its own - no reload needed.
+    log('First evaluation received, console flips to LIVE');
+    firstEvaluated = true;
+    await waitConnected();
+
+    // The console names the SDK that reported the evaluation, from the mocked
+    // first_evaluated_sdk_label above.
+    await expect(page.getByText(/flagsmith-js-sdk/)).toBeVisible();
 
     // Two switches on the page (theme + flag), so scope to the flags region.
     log('Toggle the flag');
@@ -101,7 +123,7 @@ test.describe('Onboarding', () => {
     // Rename the flag. Names are immutable, so this delete + recreates; the
     // Onboarding tag must survive (the recreate carries the old flag's tags).
     log('Rename the flag');
-    const flagInput = page.getByLabel('Flag name');
+    const flagInput = page.getByLabel('Edit flag');
     await flagInput.fill('renamed_demo_flag');
     await flagInput.press('Enter');
 
@@ -114,12 +136,16 @@ test.describe('Onboarding', () => {
     // Reload to prove it persisted (bootstrap reuses the renamed flag).
     await page.reload();
     await flowReady();
-    await expect(page.getByLabel('Flag name')).toHaveValue('renamed_demo_flag');
+    await expect(page.getByLabel('Edit flag')).toHaveValue('renamed_demo_flag');
     await expect(
       page
         .getByRole('region', { name: 'Your flags' })
         .getByText('Onboarding', { exact: true }),
     ).toBeVisible();
+    // The reload dropped the connected latch, so wait for the console to flip
+    // back before snapshotting: the badge state would otherwise race the first
+    // poll and diff against the baseline.
+    await waitConnected();
     await visualSnapshot(page, 'onboarding-renamed', testInfo);
 
     // The next-quest cards unlock once connected, each deep-linking to the
@@ -136,11 +162,13 @@ test.describe('Onboarding', () => {
 
     await gotoOnboarding();
     await flowReady();
+    await waitConnected();
     await page.getByRole('button', { name: /Remote config/ }).click();
     await expect(page).toHaveURL(/\/features\?feature=\d+&tab=value/);
 
     await gotoOnboarding();
     await flowReady();
+    await waitConnected();
     await page.getByRole('button', { name: /Experiment/ }).click();
     await expect(page).toHaveURL(/\/experiments$/);
   });

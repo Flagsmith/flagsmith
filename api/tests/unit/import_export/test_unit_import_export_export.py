@@ -70,9 +70,7 @@ def test_export_organisation__default_org__returns_export(db):  # type: ignore[n
     export = export_organisation(organisation.id)
 
     # Then
-    assert export
-
-    # TODO: test whether the export is importable
+    assert list(export)
 
 
 def test_export_projects__project_with_integrations__returns_export(organisation):  # type: ignore[no-untyped-def]
@@ -123,7 +121,7 @@ def test_export_projects__non_live_segment_version_exists__exports_only_live_seg
         rule=segment_rule2, operator=EQUAL, property="foo", value="bar"
     )
     # When
-    export = export_projects(organisation.id)
+    export = list(export_projects(organisation.id))
 
     # Then
     # only the project and the live segment should be exported
@@ -196,8 +194,10 @@ def test_export_metadata__environment_with_metadata__exports_and_reimports_corre
         field_value="some_data",
     )
     # When
-    exported_environment = export_environments(environment.project.organisation_id)
-    exported_metadata = export_metadata(organisation.id)
+    exported_environment = list(
+        export_environments(environment.project.organisation_id)
+    )
+    exported_metadata = list(export_metadata(organisation.id))
 
     data = exported_environment + exported_metadata
 
@@ -275,7 +275,7 @@ def test_export_features__standard_and_mv_features__returns_export_without_owner
     )
 
     # When
-    export = export_features(organisation_id=project.organisation_id)
+    export = list(export_features(organisation_id=project.organisation_id))
 
     # Then
     assert export
@@ -506,7 +506,7 @@ def test_export_edge_identities__identities_with_overrides_and_traits__exports_a
 
     # When
     mocker.patch("edge_api.identities.export.EXPORT_EDGE_IDENTITY_PAGINATION_LIMIT", 1)
-    export_json = export_edge_identities(project.organisation_id)
+    export_json = list(export_edge_identities(project.organisation_id))
 
     # Let's load the data
     file_path = f"/tmp/{uuid.uuid4()}.json"
@@ -596,7 +596,7 @@ def test_organisation_exporter_export_to_s3__valid_organisation__uploads_to_s3( 
 
     s3_client = boto3.client("s3")
 
-    exporter = S3OrganisationExporter(s3_client=s3_client)  # type: ignore[no-untyped-call]
+    exporter = S3OrganisationExporter(s3_client=s3_client)
 
     # When
     exporter.export_to_s3(organisation.id, bucket_name, file_key)
@@ -616,7 +616,7 @@ def test_export_projects__dynamo_db_project__reimports_with_dynamo_disabled(
     )
 
     # When - we export the data
-    data = export_projects(organisation.id)
+    data = list(export_projects(organisation.id))
 
     # and delete the project
     project.hard_delete()

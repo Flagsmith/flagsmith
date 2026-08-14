@@ -35,13 +35,13 @@ def test_get_available_scopes__dcr_registered_application__excludes_admin_api(
     db: None,
 ) -> None:
     # Given
-    application = create_oauth2_application(
+    registered = create_oauth2_application(
         client_name="Third Party App",
         redirect_uris=["https://example.com/callback"],
     )
 
     # When
-    scopes = FlagsmithScopes().get_available_scopes(application=application)
+    scopes = FlagsmithScopes().get_available_scopes(application=registered.application)
 
     # Then
     assert set(scopes) == {SCOPE_MCP}
@@ -72,13 +72,13 @@ def test_get_default_scopes__dcr_registered_application__defaults_to_mcp(
     db: None,
 ) -> None:
     # Given
-    application = create_oauth2_application(
+    registered = create_oauth2_application(
         client_name="Third Party App",
         redirect_uris=["https://example.com/callback"],
     )
 
     # When
-    scopes = FlagsmithScopes().get_default_scopes(application=application)
+    scopes = FlagsmithScopes().get_default_scopes(application=registered.application)
 
     # Then
     assert scopes == [SCOPE_MCP]

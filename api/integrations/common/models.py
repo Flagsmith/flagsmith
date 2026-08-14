@@ -8,6 +8,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     hook,
 )
 
+from core.fields import NoSSRFURLField
 from core.models import SoftDeleteExportableModel
 from environments.models import Environment
 
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class IntegrationsModel(SoftDeleteExportableModel):
-    base_url = models.URLField(blank=False, null=True)
+    base_url = NoSSRFURLField(blank=False, null=True)
     api_key = models.CharField(max_length=100, blank=False, null=False)
 
     class Meta:

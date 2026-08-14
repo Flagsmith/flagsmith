@@ -21,6 +21,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = ["core.throttling.UserRateThrottle"
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "login": "100/min",
     "dcr_register": "100/min",
+    "oidc_token_exchange": "100/min",
     "mfa_code": "5/min",
     "invite": "10/min",
     "signup": "100/min",
@@ -28,6 +29,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "master_api_key": "100000/day",
     "influx_query": "50/min",
     "warehouse_connection_write": "1000/min",
+    "warehouse_connection_read": "1000/min",
 }
 
 AWS_SSE_LOGS_BUCKET_NAME = "test_bucket"

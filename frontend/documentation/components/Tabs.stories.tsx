@@ -28,6 +28,7 @@ const meta: Meta<DirtyMarkerArgs> = {
   },
   decorators: [withRouter],
   parameters: {
+    chromatic: { disableSnapshot: false },
     docs: {
       description: {
         component:

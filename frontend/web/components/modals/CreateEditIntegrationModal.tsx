@@ -12,6 +12,7 @@ import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
 import { ensureTrailingSlash } from 'common/utils/ensureTrailingSlash'
 import Input from 'components/base/forms/Input'
+import Checkbox from 'components/base/forms/Checkbox'
 import {
   IntegrationData,
   IntegrationField,
@@ -414,7 +415,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
       isValid={!!formData[field.key]}
       type={field.hidden ? 'password' : field.inputType || 'text'}
       className='full-width mb-2'
-      autocomplete={field.hidden ? 'new-password' : 'off'}
+      autoComplete={field.hidden ? 'new-password' : 'off'}
     />
   )
 
@@ -436,12 +437,11 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
     if (field.inputType === 'checkbox') {
       return (
         <div key={field.key} className='mt-3 mb-2'>
-          <Input
+          <Checkbox
             id={field.label.replace(/ /g, '')}
-            value={formData[field.key] ?? field.default}
             label={field.label}
-            onChange={(e: any) => update(field.key, e)}
-            type='checkbox'
+            checked={!!(formData[field.key] ?? field.default)}
+            onChange={(value) => update(field.key, value)}
           />
         </div>
       )
@@ -540,7 +540,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
               isValid={!!formData.channel_id}
               type='text'
               className='full-width mt-2'
-              autocomplete='off'
+              autoComplete='off'
             />
           </div>
         )}

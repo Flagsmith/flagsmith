@@ -138,15 +138,15 @@ app.get('/config/project-overrides', (req, res) => {
 // FLAGSMITH_PROXY_API_URL should end with the hostname and not /api/v1/
 // e.g. FLAGSMITH_PROXY_API_URL=http://api.flagsmith.com/
 if (process.env.FLAGSMITH_PROXY_API_URL) {
-  const { createProxyMiddleware } = require('http-proxy-middleware')
-  app.use(
-    '/api/v1/',
-    createProxyMiddleware({
-      changeOrigin: true,
-      target: process.env.FLAGSMITH_PROXY_API_URL,
-      xfwd: true,
-    }),
-  )
+    const { createProxyMiddleware } = require('http-proxy-middleware')
+    app.use(
+      createProxyMiddleware({
+        pathFilter: (pathname) => pathname === '/api/v1' || pathname.startsWith('/api/v1/'),
+        changeOrigin: true,
+        target: process.env.FLAGSMITH_PROXY_API_URL,
+        xfwd: true,
+      })
+    )
 }
 
 if (isDev) {

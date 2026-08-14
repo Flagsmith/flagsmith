@@ -1,58 +1,14 @@
 import { FC, useMemo } from 'react'
 import InfoMessage from 'components/InfoMessage'
 import { BayesianResultsSummary, Experiment } from 'common/types/responses'
-import { getPrimaryMetric } from 'components/experiments/constants'
-import {
-  formatLiftPct,
-  getMetricResult,
-  getVariantIdentities,
-  getWinningVariant,
-  isLiftFavourable,
-} from './derive'
+import { deriveSummary } from './derive'
 import StatCard from './StatCard'
+import VariantName from './VariantName'
 
 type ExperimentSummaryScorecardProps = {
   usersEnrolled: number | null
   experiment?: Experiment
   results?: BayesianResultsSummary
-}
-
-export type SummaryStats = {
-  winnerName: string
-  winnerColour: string
-  controlColour: string
-  chanceToBest: string
-  liftVsControl: string
-  liftFavourable: boolean
-}
-
-export const deriveSummary = (
-  experiment: Experiment,
-  results: BayesianResultsSummary,
-): SummaryStats | null => {
-  const metric = getPrimaryMetric(experiment)
-  if (!metric) return null
-  const metricResult = getMetricResult(results, metric.metric)
-  if (!metricResult) return null
-
-  const identities = getVariantIdentities(experiment.feature)
-  const winner = getWinningVariant(metricResult, identities)
-  if (!winner) return null
-
-  const winnerIdentity = identities.find((v) => v.key === winner.key)
-  const controlIdentity = identities.find((v) => v.isControl)
-
-  return {
-    chanceToBest: `${Math.round(winner.chanceToWin * 100)}%`,
-    controlColour: controlIdentity?.colour ?? '',
-    liftFavourable: isLiftFavourable(
-      winner.inference.lift,
-      metric.expected_direction,
-    ),
-    liftVsControl: formatLiftPct(winner.inference.lift),
-    winnerColour: winnerIdentity?.colour ?? '',
-    winnerName: winner.name,
-  }
 }
 
 const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
@@ -66,6 +22,13 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
   )
   const hasResults = !!results
 
+  let liftClassName = 'text-secondary' // neutral
+  if (summary?.liftTone === 'success') liftClassName = 'text-success'
+  if (summary?.liftTone === 'danger') liftClassName = 'text-danger'
+
+  // Give long winner names room by borrowing a column from Users enrolled.
+  const wideWinner = (summary?.winnerName.length ?? 0) > 15
+
   return (
     <>
       {!summary && hasResults && (
@@ -75,20 +38,25 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
         </InfoMessage>
       )}
       <div className='row g-3 mb-4'>
-        <div className='col-md-3'>
+        <div className={wideWinner ? 'col-md-2' : 'col-md-3'}>
           <StatCard
             label='Users enrolled'
             loading={usersEnrolled === null}
             value={usersEnrolled?.toLocaleString()}
           />
         </div>
-        <div className='col-md-3'>
+        <div className={wideWinner ? 'col-md-4' : 'col-md-3'}>
           <StatCard
             label='Winning variation'
             loading={!hasResults}
             value={
               summary?.winnerName ? (
-                <span className='text-success'>{summary.winnerName}</span>
+                <VariantName
+                  fit
+                  colour={summary.winnerColour}
+                  fontSize={24}
+                  name={summary.winnerName}
+                />
               ) : undefined
             }
           />
@@ -97,22 +65,26 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
           <StatCard
             label='Chance to be best'
             loading={!hasResults}
-            value={summary?.chanceToBest}
+            value={
+              summary?.chanceToBest ? (
+                <span
+                  className={
+                    summary.chanceToBestHigh ? 'text-success' : undefined
+                  }
+                >
+                  {summary.chanceToBest}
+                </span>
+              ) : undefined
+            }
           />
         </div>
         <div className='col-md-3'>
           <StatCard
-            label='Lift vs control'
+            label={summary?.liftLabel ?? 'Lift vs control'}
             loading={!hasResults}
             value={
-              summary?.liftVsControl ? (
-                <span
-                  className={
-                    summary.liftFavourable ? 'text-success' : 'text-danger'
-                  }
-                >
-                  {summary.liftVsControl}
-                </span>
+              summary?.liftValue ? (
+                <span className={liftClassName}>{summary.liftValue}</span>
               ) : undefined
             }
           />

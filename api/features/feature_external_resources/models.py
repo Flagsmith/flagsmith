@@ -53,6 +53,9 @@ tag_by_type_and_state = {
 
 
 class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignore[misc]
+    # Deliberately not a `NoSSRFURLField`: this URL is never fetched, only parsed
+    # for its path segments, with the request itself going to `GITHUB_API_URL`.
+    # Restricting it would break self-hosted GitHub instances on internal hosts.
     url = models.URLField()
     type = models.CharField(max_length=20, choices=ResourceType.choices)
 

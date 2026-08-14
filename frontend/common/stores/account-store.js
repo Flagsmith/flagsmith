@@ -4,6 +4,7 @@ import find from 'lodash/find'
 import findIndex from 'lodash/findIndex'
 import get from 'lodash/get'
 import { storageGet, storageSet } from 'common/safeLocalStorage'
+import { clearOnboardingTargetingKey } from 'common/utils/onboardingEntry'
 import Dispatcher from 'common/dispatcher/dispatcher'
 import BaseStore from './base/_store'
 import data from 'common/data/base/_data'
@@ -38,6 +39,9 @@ const controller = {
         return data.post(`${Project.api}users/join/${id}/`)
       })
       .then((res) => {
+        // Membership of any organisation spends the onboarding entry
+        // decision — a later organisation must not consume a stale key.
+        clearOnboardingTargetingKey()
         store.savedId = res.id
         store.model.organisations.push(res)
         const ev = Constants.events.ACCEPT_INVITE(res.name)
@@ -77,7 +81,7 @@ const controller = {
         API.ajaxHandler(store, e)
       })
   },
-  createOrganisation: (name) => {
+  createOrganisation: (name, targetingKey) => {
     store.saving()
     if (
       !AccountStore.model?.organisations ||
@@ -100,8 +104,12 @@ const controller = {
     return data
       .post(`${Project.api}organisations/`, {
         name,
+        ...(targetingKey ? { targeting_key: targetingKey } : {}),
       })
       .then(async (res) => {
+        // Membership of any organisation spends the onboarding entry
+        // decision — a later organisation must not consume a stale key.
+        clearOnboardingTargetingKey()
         if (store.model) {
           store.model.organisations = store.model.organisations.concat([
             { ...res, role: 'ADMIN' },
@@ -258,7 +266,9 @@ const controller = {
             // never let analytics break the login flow
           }
         }
-        return controller.onLogin()
+        // Signing up through an identity provider is still a signup, so it
+        // gets the same onboarding entry decision as `register` makes.
+        return controller.onLogin(!!res.is_new_user && !API.getInvite())
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
@@ -299,7 +309,7 @@ const controller = {
           )
         }
         if (organisation_name) {
-          await controller.createOrganisation(organisation_name, true)
+          await controller.createOrganisation(organisation_name)
         }
         store.isSaving = false
 
@@ -559,7 +569,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.selectOrganisation(action.id)
       break
     case Actions.CREATE_ORGANISATION:
-      controller.createOrganisation(action.name)
+      controller.createOrganisation(action.name, action.targetingKey)
       break
     case Actions.ACCEPT_INVITE:
       controller.acceptInvite(action.id)

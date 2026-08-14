@@ -467,6 +467,7 @@ def test_map_environment_to_engine__multiple_segments_and_versions__returns_expe
         use_identity_overrides_in_local_eval=environment.use_identity_overrides_in_local_eval,
         hide_sensitive_data=environment.hide_sensitive_data,
         hide_disabled_flags=environment.hide_disabled_flags,
+        onboarding_pending=True,
         amplitude_config=None,
         dynatrace_config=None,
         heap_config=None,

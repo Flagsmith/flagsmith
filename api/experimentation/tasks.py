@@ -1,11 +1,35 @@
+from datetime import timedelta
+
 import structlog
 from django.utils import timezone
-from task_processor.decorators import register_task_handler
+from task_processor.decorators import (
+    register_recurring_task,
+    register_task_handler,
+)
+from task_processor.exceptions import TaskBackoffError
 
 from environments.models import Environment, EnvironmentAPIKey
 from experimentation import ingestion_sync_service
-from experimentation.models import Experiment, ExperimentExposures, ExperimentResults
-from experimentation.services import compute_exposures_summary, compute_results_summary
+from experimentation.constants import DELIVERY_INTERVAL, DELIVERY_LOG_RETENTION
+from experimentation.models import (
+    Experiment,
+    ExperimentExposures,
+    ExperimentResults,
+    WarehouseConnection,
+    WarehouseDeliveryLog,
+    WarehouseType,
+)
+from experimentation.organisation_ingestion_service import (
+    disable_ingestion_for_organisation,
+    enable_ingestion_for_organisation,
+)
+from experimentation.services import (
+    compute_exposures_summary,
+    compute_results_summary,
+    deliver_warehouse_events,
+)
+
+COMPUTE_TASK_TIMEOUT = timedelta(minutes=3)
 
 logger = structlog.get_logger("experimentation")
 
@@ -46,6 +70,35 @@ def remove_environment_ingestion_keys(environment_id: int) -> None:
     ingestion_sync_service.delete_ingestion_key(environment.api_key)
     for api_key in environment.api_keys.all():
         ingestion_sync_service.delete_ingestion_key(api_key.key)
+    ingestion_sync_service.delete_ingestion_destination(environment.api_key)
+
+
+@register_task_handler()
+def provision_external_warehouse_ingestion_infrastructure(environment_id: int) -> None:
+    environment = (
+        Environment.objects.select_related("project__organisation")
+        .filter(id=environment_id)
+        .first()
+    )
+    if environment is None:
+        return
+
+    infrastructure = enable_ingestion_for_organisation(environment.project.organisation)
+    if not infrastructure.stream_name:
+        raise RuntimeError("Provisioned ingestion infrastructure has no stream name")
+    # Set the destination before publishing the ingestion keys: the keys gate
+    # the pipeline, so a key without a destination would route events to the
+    # default stream until this write lands.
+    ingestion_sync_service.set_ingestion_destination(
+        environment.api_key,
+        stream_name=infrastructure.stream_name,
+    )
+    write_environment_ingestion_keys(environment_id)
+
+
+@register_task_handler()
+def teardown_organisation_ingestion_infrastructure(organisation_id: int) -> None:
+    disable_ingestion_for_organisation(organisation_id)
 
 
 @register_task_handler()
@@ -73,7 +126,46 @@ def remove_environment_ingestion_key(key: str) -> None:
     ingestion_sync_service.delete_ingestion_key(key)
 
 
-@register_task_handler()
+@register_recurring_task(run_every=DELIVERY_INTERVAL)
+def deliver_events_to_external_warehouses() -> None:
+    connection_ids = WarehouseConnection.objects.filter(
+        warehouse_type=WarehouseType.CLICKHOUSE,
+    ).values_list("id", flat=True)
+    for connection_id in connection_ids:
+        deliver_events_for_connection.delay(kwargs={"connection_id": connection_id})
+
+
+@register_task_handler(timeout=timedelta(minutes=9))
+def deliver_events_for_connection(connection_id: int) -> None:
+    connection = (
+        WarehouseConnection.objects.select_related(
+            "environment__project__organisation__ingestion_infrastructure",
+        )
+        .filter(id=connection_id)
+        .first()
+    )
+    if connection is None:
+        return
+
+    infrastructure = getattr(
+        connection.environment.project.organisation,
+        "ingestion_infrastructure",
+        None,
+    )
+    if infrastructure is None or not infrastructure.bucket_name:
+        return
+
+    deliver_warehouse_events(connection, bucket_name=infrastructure.bucket_name)
+
+
+@register_recurring_task(run_every=timedelta(days=1))
+def clean_up_old_warehouse_delivery_logs() -> None:
+    WarehouseDeliveryLog.objects.filter(
+        created_at__lt=timezone.now() - DELIVERY_LOG_RETENTION,
+    ).delete()
+
+
+@register_task_handler(timeout=COMPUTE_TASK_TIMEOUT)
 def compute_experiment_exposures(experiment_id: int) -> None:
     experiment = (
         Experiment.objects.select_related("environment__project", "feature")
@@ -105,12 +197,14 @@ def compute_experiment_exposures(experiment_id: int) -> None:
             environment__id=experiment.environment_id,
             organisation__id=experiment.environment.project.organisation_id,
         )
+        if isinstance(exc, OSError):
+            raise TaskBackoffError() from exc
         return
 
     exposures.record_refresh(summary, as_of)
 
 
-@register_task_handler()
+@register_task_handler(timeout=COMPUTE_TASK_TIMEOUT)
 def compute_experiment_results(experiment_id: int) -> None:
     experiment = (
         Experiment.objects.select_related("environment__project", "feature")
@@ -140,6 +234,8 @@ def compute_experiment_results(experiment_id: int) -> None:
             environment__id=experiment.environment_id,
             organisation__id=experiment.environment.project.organisation_id,
         )
+        if isinstance(exc, OSError):
+            raise TaskBackoffError() from exc
         return
 
     results.record_refresh(summary, as_of)

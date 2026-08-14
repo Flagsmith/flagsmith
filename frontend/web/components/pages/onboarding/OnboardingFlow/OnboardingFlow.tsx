@@ -1,9 +1,9 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import OnboardingHeader from 'components/pages/onboarding/OnboardingHeader'
-import ThemeToggle from 'components/pages/onboarding/ThemeToggle'
+import ThemeToggle from 'components/ThemeToggle'
 import OnboardingConnectPanel from 'components/pages/onboarding/OnboardingConnectPanel'
 import OnboardingTerminal from 'components/pages/onboarding/OnboardingTerminal'
 import OnboardingFlagsTable from 'components/pages/onboarding/OnboardingFlagsTable'
@@ -16,7 +16,12 @@ import { useOnboardingFlag } from 'components/pages/onboarding/hooks/useOnboardi
 import { useOnboardingConnection } from 'components/pages/onboarding/hooks/useOnboardingConnection'
 import { useUpdateOrganisationMutation } from 'common/services/useOrganisation'
 import { useUpdateProjectMutation } from 'common/services/useProject'
+import API from 'project/api'
+import Constants from 'common/constants'
+import { isPendingAuthorisation } from 'common/utils/pendingAuthorisation'
 import './OnboardingFlow.scss'
+
+type OnboardingSnippet = 'install' | 'wire'
 
 // The single-page onboarding flow, rendered at /getting-started when
 // onboarding_quickstart_flow is on (see GettingStartedGate).
@@ -36,6 +41,23 @@ const OnboardingFlow: FC = () => {
   const history = useHistory()
   const [updateOrganisation] = useUpdateOrganisationMutation()
   const [updateProject] = useUpdateProjectMutation()
+
+  // A client waiting on the consent screen sent this user here to sign up. It
+  // is answered once the workspace exists, never on load: bootstrapping is a
+  // chain of creates, and navigating away mid-chain leaves it half done. The
+  // client returns the browser here afterwards, by then with nothing pending.
+  const [leavingForConsent, setLeavingForConsent] = useState(false)
+  useEffect(() => {
+    if (status !== 'ready') {
+      return
+    }
+    const pending = API.getRedirect()
+    if (isPendingAuthorisation(pending)) {
+      API.setRedirect('')
+      setLeavingForConsent(true)
+      history.replace(pending)
+    }
+  }, [status, history])
 
   // Chromeless flow, so it owns its only exit.
   const skipToApp = () =>
@@ -60,8 +82,9 @@ const OnboardingFlow: FC = () => {
     projectId,
   })
 
-  // Connection is stubbed until #7767 (useOnboardingConnection); the toggle is real.
-  const connection = useOnboardingConnection()
+  // Real first-evaluation signal: polls the environment's onboarding
+  // status until Edge reports its first SDK evaluation.
+  const connection = useOnboardingConnection(environmentKey)
   // Session-only: a reload resets the checklist. Fine for onboarding.
   const [installCopied, setInstallCopied] = useState(false)
   const [snippetCopied, setSnippetCopied] = useState(false)
@@ -139,7 +162,39 @@ const OnboardingFlow: FC = () => {
     history.push(`${base}/features?feature=${flagId}&tab=${tab}`)
   }
 
-  if (status === 'creating') {
+  const diagnosticIds = {
+    environment_id: environment?.id,
+    organisation_id: organisationId,
+    project_id: projectId,
+  }
+  const trackSnippetCopied = (snippet: OnboardingSnippet) =>
+    API.trackEvent({
+      ...Constants.events.ONBOARDING_SNIPPET_COPIED,
+      extra: { ...diagnosticIds, snippet },
+    })
+  const handleCopyInstall = () => {
+    trackSnippetCopied('install')
+    setInstallCopied(true)
+  }
+  const handleCopyWire = () => {
+    trackSnippetCopied('wire')
+    setSnippetCopied(true)
+  }
+  const handleCopyPrompt = () =>
+    API.trackEvent({
+      ...Constants.events.ONBOARDING_AI_CONNECT,
+      extra: diagnosticIds,
+    })
+  const handleToggleFlag = async (enabled: boolean) => {
+    if (await toggleFlag(enabled)) {
+      API.trackEvent({
+        ...Constants.events.ONBOARDING_FLAG_TOGGLED,
+        extra: { ...diagnosticIds, enabled },
+      })
+    }
+  }
+
+  if (status === 'creating' || leavingForConsent) {
     return (
       <div className='onboarding-flow mx-auto text-center'>
         <Loader />
@@ -177,17 +232,19 @@ const OnboardingFlow: FC = () => {
       <OnboardingConnectPanel
         environmentKey={environmentKey}
         featureName={featureName}
-        onCopyInstall={() => setInstallCopied(true)}
-        onCopyWire={() => setSnippetCopied(true)}
+        onCopyInstall={handleCopyInstall}
+        onCopyWire={handleCopyWire}
+        onCopyPrompt={handleCopyPrompt}
       />
       <OnboardingTerminal
         featureName={featureName}
         installCopied={installCopied}
         snippetCopied={snippetCopied}
-        connected={connection === 'connected'}
+        connected={connection.status === 'connected'}
+        sdkLabel={connection.sdkLabel}
       />
       <OnboardingFlagsTable
-        status={connection === 'connected' ? 'connected' : 'waiting'}
+        status={connection.status === 'connected' ? 'connected' : 'waiting'}
         flags={[
           {
             description: 'Controls the demo button shown to your users',
@@ -196,12 +253,12 @@ const OnboardingFlow: FC = () => {
             tags: flagTags,
           },
         ]}
-        onToggle={(_flag, next) => toggleFlag(next)}
+        onToggle={(_flag, next) => handleToggleFlag(next)}
         togglingFlag={isToggling ? featureName : null}
         togglesReady={flagStateReady}
       />
       <OnboardingNextSteps
-        locked={connection !== 'connected'}
+        locked={connection.status !== 'connected'}
         onSelect={goToNextStep}
       />
       <div className='d-flex justify-content-end'>

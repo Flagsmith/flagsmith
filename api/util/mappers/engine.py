@@ -358,6 +358,7 @@ def map_environment_to_engine(
         hide_sensitive_data=environment.hide_sensitive_data,
         hide_disabled_flags=environment.hide_disabled_flags,
         use_identity_overrides_in_local_eval=environment.use_identity_overrides_in_local_eval,
+        onboarding_pending=environment.first_evaluated_at is None,
         #
         # Relationships:
         project=project_model,

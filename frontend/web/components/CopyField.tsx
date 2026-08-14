@@ -1,33 +1,41 @@
-import React, { FC } from 'react'
+import React, { FC, useId } from 'react'
 import Button from './base/forms/Button'
 import Flex from './base/grid/Flex'
+import FieldLabel from './base/forms/FieldLabel'
 import Icon from './icons/Icon'
 import Input from './base/forms/Input'
 import Row from './base/grid/Row'
+import { TooltipProps } from './Tooltip'
 import Utils from 'common/utils/utils'
 
-// Minimal read-only input + icon-only Copy button pattern. The codebase has
-// half a dozen consumers rolling this inline (CreateSAML's ACS URL, SDK
-// keys, webhook URLs, etc.) — they should all migrate here in a follow-up.
-// Keep the API tight for now to avoid pre-committing to choices that don't
-// fit every existing consumer.
+// Read-only input + icon-only Copy button. Optionally renders a wired label
+// (with tooltip) above the row — use `title` + `tooltip` for that, matching
+// InputGroup's prop naming convention.
 type CopyFieldProps = {
   value: string
   className?: string
   'data-test'?: string
+  title?: string
+  tooltip?: string
+  tooltipPlace?: TooltipProps['place']
 }
 
 const CopyField: FC<CopyFieldProps> = ({
   className,
   'data-test': dataTest,
+  title,
+  tooltip,
+  tooltipPlace,
   value,
 }) => {
   const onCopy = () => Utils.copyToClipboard(value)
+  const inputId = useId()
 
-  return (
+  const row = (
     <Row className='gap-2 align-items-center'>
       <Flex>
         <Input
+          id={inputId}
           value={value}
           readOnly
           className={className}
@@ -43,6 +51,21 @@ const CopyField: FC<CopyFieldProps> = ({
         <Icon name='copy' width={20} />
       </Button>
     </Row>
+  )
+
+  if (!title) return row
+
+  return (
+    <div>
+      <FieldLabel
+        htmlFor={inputId}
+        tooltip={tooltip}
+        tooltipPlace={tooltipPlace}
+      >
+        {title}
+      </FieldLabel>
+      {row}
+    </div>
   )
 }
 

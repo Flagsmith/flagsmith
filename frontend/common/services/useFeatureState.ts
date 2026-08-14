@@ -3,6 +3,7 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 import { getFeatureSegment } from './useFeatureSegment'
+import { recursivePageGet } from 'common/utils/recursivePageGet'
 import { getStore } from 'common/store'
 export const addFeatureSegmentsToFeatureStates = async (v) => {
   if (typeof v.feature_segment !== 'number') {
@@ -18,10 +19,22 @@ export const addFeatureSegmentsToFeatureStates = async (v) => {
 }
 export const featureStateService = service
   .enhanceEndpoints({
-    addTagTypes: ['FeatureState', 'FeatureList', 'Environment'],
+    addTagTypes: ['FeatureState', 'FeatureList', 'Environment', 'ProjectFlag'],
   })
   .injectEndpoints({
     endpoints: (builder) => ({
+      getAllEnvironmentFeatureStates: builder.query<
+        Res['featureStates'],
+        Req['getAllEnvironmentFeatureStates']
+      >({
+        providesTags: [{ id: 'LIST', type: 'FeatureState' }],
+        queryFn: async (query, _baseQueryApi, _extraOptions, baseQuery) =>
+          recursivePageGet<FeatureState>(
+            `environments/${query.environmentKey}/featurestates/?page_size=999`,
+            null,
+            baseQuery,
+          ),
+      }),
       getFeatureStates: builder.query<
         Res['featureStates'],
         Req['getFeatureStates']
@@ -58,6 +71,7 @@ export const featureStateService = service
           { id: 'LIST', type: 'FeatureList' },
           { id: 'LIST', type: 'FeatureState' },
           { id: 'METRICS', type: 'Environment' },
+          { type: 'ProjectFlag' },
         ],
         query: (query: Req['updateFeatureState']) => ({
           body: query.body,
@@ -92,5 +106,8 @@ export async function updateFeatureState(
   )
 }
 
-export const { useGetFeatureStatesQuery, useUpdateFeatureStateMutation } =
-  featureStateService
+export const {
+  useGetAllEnvironmentFeatureStatesQuery,
+  useGetFeatureStatesQuery,
+  useUpdateFeatureStateMutation,
+} = featureStateService
