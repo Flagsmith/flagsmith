@@ -1284,6 +1284,7 @@ def test_change_request_commit__v1_segment_override_draft__inherits_mv_hashing_s
     draft_feature_state.refresh_from_db()
     assert draft_feature_state.mv_hashing_salt == live_override.id
 
+
 def test_change_request_commit__system_segment_draft__raises_value_error(
     segment: Segment,
     change_request: ChangeRequest,
@@ -1313,7 +1314,8 @@ def test_change_request_commit__system_segment_draft__raises_value_error(
 
     # When / Then
     with pytest.raises(
-        ValueError, match="System segments cannot be overwritten via change request drafts."
+        ValueError,
+        match="System segments cannot be overwritten via change request drafts.",
     ):
         change_request.commit(admin_user)
 
