@@ -20,7 +20,7 @@ These may be lifted in the future.
 
 :::
 
-Learn more in the [API specification](link TODO).
+Learn more in the [API specification](https://api.flagsmith.com/api/v1/docs/#/experimental).
 
 ## Updating a flag
 
