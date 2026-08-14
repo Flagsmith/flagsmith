@@ -20,7 +20,7 @@ logger = structlog.get_logger("workflows")
 class ChangeRequestCommitService:
     def __init__(self, change_request: "ChangeRequest") -> None:
         self.change_request = change_request
-
+    @transaction.atomic
     def commit(self, committed_by: "FFAdminUser") -> None:
         if not self.change_request.is_approved():
             raise ChangeRequestNotApprovedError(
@@ -106,8 +106,8 @@ class ChangeRequestCommitService:
         for change_set in self.change_request.change_sets.all():
             change_set.publish(user=published_by)
 
-    @transaction.atomic
-    @transaction.atomic
+    
+    
     def _publish_segments(self) -> None:
         for draft_segment in self.change_request.segments.all():
             live_segment = draft_segment.version_of
