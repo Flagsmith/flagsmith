@@ -1,7 +1,8 @@
 """https://docs.flagsmith.com/managing-flags/updating-flags"""
 
 from collections.abc import Sequence
-from typing import NotRequired, TypedDict
+
+from typing_extensions import NotRequired, TypedDict
 
 from features.feature_states.models import FeatureValueType
 
