@@ -253,6 +253,7 @@ def feature(
             "project": project,
         },
     )
+    assert response.status_code == status.HTTP_201_CREATED
     return int(response.json()["id"])
 
 

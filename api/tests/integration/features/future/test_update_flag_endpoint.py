@@ -42,6 +42,7 @@ def segment_2(
         },
         format="json",
     )
+    assert response.status_code == 201
     return int(response.json()["id"])
 
 
@@ -50,11 +51,13 @@ def segment_in_other_project(
     admin_client: APIClient,
     organisation: int,
 ) -> int:
-    other_project = admin_client.post(
+    project_response = admin_client.post(
         "/api/v1/projects/",
         {"name": "Other Project", "organisation": organisation},
         format="json",
-    ).json()["id"]
+    )
+    assert project_response.status_code == 201
+    other_project = project_response.json()["id"]
     response = admin_client.post(
         f"/api/v1/projects/{other_project}/segments/",
         {
@@ -64,6 +67,7 @@ def segment_in_other_project(
         },
         format="json",
     )
+    assert response.status_code == 201
     return int(response.json()["id"])
 
 
