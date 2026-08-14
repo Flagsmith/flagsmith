@@ -17,15 +17,15 @@ const trustRelationship = {
 
 const role: SelectedRole = { id: 7, name: 'Deployer' }
 
+type PendingRolesUpdate =
+  | SelectedRole[]
+  | ((previous: SelectedRole[]) => SelectedRole[])
+
 const trackPendingRoles = () => {
   let state: SelectedRole[] = [role]
-  const setPendingRoles = jest.fn(
-    (
-      update: SelectedRole[] | ((previous: SelectedRole[]) => SelectedRole[]),
-    ) => {
-      state = typeof update === 'function' ? update(state) : update
-    },
-  )
+  const setPendingRoles = jest.fn((update: PendingRolesUpdate) => {
+    state = typeof update === 'function' ? update(state) : update
+  })
   return { getState: () => state, setPendingRoles }
 }
 
