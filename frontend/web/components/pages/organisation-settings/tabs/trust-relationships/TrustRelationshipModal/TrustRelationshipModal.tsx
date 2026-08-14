@@ -1,6 +1,7 @@
 import React, { FC, useMemo, useState } from 'react'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import Icon from 'components/icons/Icon'
 import Input from 'components/base/forms/Input'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -148,7 +149,7 @@ const TrustRelationshipModal: FC<TrustRelationshipModalProps> = ({
         onChange={(e: InputEvent) => setAudience(Utils.safeParseEventValue(e))}
         placeholder='e.g. https://github.com/YourOrg'
       />
-      <label>Claim matching rules</label>
+      <FieldLabel>Claim matching rules</FieldLabel>
       {claimRules.map((rule, index) => (
         <Row key={index} className='mb-2 gap-2'>
           <Flex>
