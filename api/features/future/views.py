@@ -1,9 +1,11 @@
 """https://docs.flagsmith.com/managing-flags/updating-flags"""
 
+from collections.abc import Mapping
+
 import structlog
 from django.contrib.auth.models import AnonymousUser
 from drf_spectacular.utils import extend_schema
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -54,6 +56,9 @@ class UpdateFlagAPIView(APIView):
         replace: bool,
     ) -> Response:
         assert not isinstance(request.user, AnonymousUser)
+
+        if not isinstance(request.data, Mapping):
+            raise ValidationError("Expected an object.")
 
         try:
             environment = Environment.objects.get(api_key=environment_key)

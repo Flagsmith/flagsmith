@@ -1,6 +1,6 @@
 """https://docs.flagsmith.com/managing-flags/updating-flags"""
 
-from collections.abc import Container
+from collections.abc import Mapping
 
 from common.environments.permissions import (
     MANAGE_SEGMENT_OVERRIDES,
@@ -18,7 +18,7 @@ PROPERTY_PERMISSIONS = {
 
 
 def check_update_permissions(
-    user: UserABC, environment: Environment, properties: Container[str]
+    user: UserABC, environment: Environment, properties: Mapping[str, object]
 ) -> None:
     """Authorise a caller to write the flag properties they sent.
 

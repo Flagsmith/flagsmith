@@ -1220,6 +1220,28 @@ def test_update_flag__value_not_matching_type__responds_400(
     assert log.events == []
 
 
+@pytest.mark.parametrize("body", [[], "segment_overrides"])
+def test_update_flag__body_is_not_an_object__responds_400(
+    admin_client: APIClient,
+    body: object,
+    environment_api_key: str,
+    feature: int,
+    log: StructuredLogCapture,
+    versioned_environment: Environment,
+) -> None:
+    # Given / When
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        body,
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == ["Expected an object."]
+    assert log.events == []
+
+
 def test_update_flag__unknown_feature__responds_404(
     admin_client: APIClient,
     environment_api_key: str,
