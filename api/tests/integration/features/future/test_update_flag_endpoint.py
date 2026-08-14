@@ -1,13 +1,20 @@
 """https://docs.flagsmith.com/managing-flags/updating-flags"""
 
 import pytest
+from common.environments.permissions import (
+    MANAGE_SEGMENT_OVERRIDES,
+    UPDATE_FEATURE_STATE,
+)
 from rest_framework.test import APIClient
 
 from environments.models import Environment
 from features.future.types import UpdateFlagRequest
 from features.models import FeatureState
 from features.versioning.tasks import enable_v2_versioning
+from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
+from tests.types import WithEnvironmentPermissionsCallable
+from users.models import FFAdminUser
 
 
 @pytest.fixture(params=["feature_versioning_v1", "feature_versioning_v2"], autouse=True)
@@ -30,6 +37,28 @@ def segment_2(
         {
             "name": "Test Segment 2",
             "project": project,
+            "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        },
+        format="json",
+    )
+    return int(response.json()["id"])
+
+
+@pytest.fixture()
+def segment_in_other_project(
+    admin_client: APIClient,
+    organisation: int,
+) -> int:
+    other_project = admin_client.post(
+        "/api/v1/projects/",
+        {"name": "Other Project", "organisation": organisation},
+        format="json",
+    ).json()["id"]
+    response = admin_client.post(
+        f"/api/v1/projects/{other_project}/segments/",
+        {
+            "name": "Other Segment",
+            "project": other_project,
             "rules": [{"type": "ALL", "rules": [], "conditions": []}],
         },
         format="json",
@@ -759,3 +788,320 @@ def test_update_flag__put_environment_default_and_segment_overrides__replaces_bo
         ).get_feature_state_value()
         == 42
     )
+
+
+def test_update_flag__change_requests_enabled__responds_400(
+    admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    versioned_environment.minimum_change_request_approvals = 2
+    versioned_environment.save()
+
+    # When
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest({"environment_default": {"enabled": True}}),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "Cannot update flags in an environment with change requests enabled.",
+    }
+    environment_default = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+        feature_segment=None,
+    ).get()
+    assert environment_default.enabled is False
+
+
+def test_update_flag__value_not_matching_type__responds_400(
+    admin_client: APIClient,
+    default_feature_value: str,
+    environment_api_key: str,
+    feature: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given / When
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest(
+            {"environment_default": {"value": {"type": "integer", "value": "abc"}}}
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "environment_default": {"value": ["'abc' is not a valid integer"]},
+    }
+    environment_default = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+        feature_segment=None,
+    ).get()
+    assert environment_default.get_feature_state_value() == default_feature_value
+
+
+def test_update_flag__unknown_feature__responds_404(
+    admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+) -> None:
+    # Given
+    unknown_feature = feature + 1
+
+    # When
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{unknown_feature}/",
+        UpdateFlagRequest({"environment_default": {"enabled": True}}),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not found."}
+
+
+def test_update_flag__unknown_environment__responds_404(
+    admin_client: APIClient,
+    feature: int,
+) -> None:
+    # Given / When
+    response = admin_client.patch(
+        f"/api/__future__/environments/unknown-api-key/features/{feature}/",
+        UpdateFlagRequest({"environment_default": {"enabled": True}}),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not found."}
+
+
+def test_update_flag__user_without_environment_permissions__responds_404(
+    non_admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given / When
+    response = non_admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest({"environment_default": {"enabled": True}}),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not found."}
+    environment_default = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+        feature_segment=None,
+    ).get()
+    assert environment_default.enabled is False
+
+
+def test_update_flag__unknown_segment__responds_400(
+    admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    unknown_segment = segment + 1
+
+    # When
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest(
+            {
+                "segment_overrides": [
+                    {"segment": {"id": unknown_segment}, "enabled": True},
+                ],
+            }
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "segment_overrides": [{"segment": {"id": ["Segment not found."]}}],
+    }
+    assert (
+        not FeatureState.objects.get_live_feature_states(
+            environment=versioned_environment,
+            feature_id=feature,
+        )
+        .exclude(feature_segment=None)
+        .exists()
+    )
+
+
+def test_update_flag__duplicate_segment_overrides__responds_400(
+    admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given / When
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest(
+            {
+                "segment_overrides": [
+                    {"segment": {"id": segment}, "enabled": True},
+                    {"segment": {"id": segment}, "enabled": False},
+                ],
+            }
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "segment_overrides": [f"Duplicate segment: {segment}."],
+    }
+    assert (
+        not FeatureState.objects.get_live_feature_states(
+            environment=versioned_environment,
+            feature_id=feature,
+        )
+        .exclude(feature_segment=None)
+        .exists()
+    )
+
+
+def test_update_flag__segment_from_another_project__responds_400(
+    admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    segment_in_other_project: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given / When
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest(
+            {
+                "segment_overrides": [
+                    {"segment": {"id": segment_in_other_project}, "enabled": True},
+                ],
+            }
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "segment_overrides": [{"segment": {"id": ["Segment not found."]}}],
+    }
+    assert (
+        not FeatureState.objects.get_live_feature_states(
+            environment=versioned_environment,
+            feature_id=feature,
+        )
+        .exclude(feature_segment=None)
+        .exists()
+    )
+
+
+def test_update_flag__update_feature_state_permission__gates_environment_default_only(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    organisation: int,
+    segment: int,
+    versioned_environment: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    staff_user.add_organisation(Organisation.objects.get(id=organisation))
+    with_environment_permissions([UPDATE_FEATURE_STATE], environment, False)
+
+    # When
+    environment_default_response = staff_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest({"environment_default": {"enabled": True}}),
+        format="json",
+    )
+    segment_overrides_response = staff_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest(
+            {
+                "segment_overrides": [
+                    {"segment": {"id": segment}, "enabled": True},
+                ],
+            }
+        ),
+        format="json",
+    )
+
+    # Then
+    assert environment_default_response.status_code == 200
+    assert segment_overrides_response.status_code == 403
+    live_feature_states = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+    )
+    assert live_feature_states.get(feature_segment=None).enabled is True
+    assert not live_feature_states.exclude(feature_segment=None).exists()
+
+
+def test_update_flag__manage_segment_overrides_permission__gates_segment_overrides_only(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    organisation: int,
+    segment: int,
+    versioned_environment: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    staff_user.add_organisation(Organisation.objects.get(id=organisation))
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES], environment, False)
+
+    # When
+    segment_overrides_response = staff_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest(
+            {
+                "segment_overrides": [
+                    {"segment": {"id": segment}, "enabled": True},
+                ],
+            }
+        ),
+        format="json",
+    )
+    environment_default_response = staff_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest({"environment_default": {"enabled": True}}),
+        format="json",
+    )
+
+    # Then
+    assert segment_overrides_response.status_code == 200
+    assert environment_default_response.status_code == 403
+    live_feature_states = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+    )
+    override = live_feature_states.get(feature_segment__segment_id=segment)
+    assert override.enabled is True
+    assert live_feature_states.get(feature_segment=None).enabled is False
