@@ -1,4 +1,9 @@
-import { extractIdentifiers, parseCsvText, toParsedCsv } from 'common/utils/csv'
+import {
+  extractIdentifiers,
+  parseCsvText,
+  toCsvColumn,
+  toParsedCsv,
+} from 'common/utils/csv'
 
 describe('parseCsvText', () => {
   const cases: [string, string, string[][]][] = [
@@ -77,5 +82,23 @@ describe('extractIdentifiers', () => {
       emptyCount: 1,
       identifiers: ['y'],
     })
+  })
+})
+
+describe('toCsvColumn', () => {
+  test.each([
+    ['plain values', ['a', 'b'], 'a\nb'],
+    ['comma quoted', ['Doe, Jane', 'b'], '"Doe, Jane"\nb'],
+    ['quote escaped', ['say "hi"'], '"say ""hi"""'],
+    ['newline quoted', ['line1\nline2'], '"line1\nline2"'],
+  ])('%s', (_, values, expected) => {
+    expect(toCsvColumn(values)).toEqual(expected)
+  })
+
+  test('round-trips through parseCsvText', () => {
+    const values = ['plain', 'Doe, Jane', 'say "hi"', 'multi\nline']
+    expect(parseCsvText(toCsvColumn(values)).map((row) => row[0])).toEqual(
+      values,
+    )
   })
 })

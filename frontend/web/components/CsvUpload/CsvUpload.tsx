@@ -9,6 +9,7 @@ import './CsvUpload.scss'
 
 export type CsvUploadType = {
   value: File | null
+  maxSizeBytes?: number
   rowCount?: number
   onChange: (file: File, text: string) => void
 }
@@ -20,7 +21,12 @@ const formatFileSize = (bytes: number) => {
   return `${(bytes / 1024).toFixed(1)} KB`
 }
 
-const CsvUpload: FC<CsvUploadType> = ({ onChange, rowCount, value }) => {
+const CsvUpload: FC<CsvUploadType> = ({
+  maxSizeBytes,
+  onChange,
+  rowCount,
+  value,
+}) => {
   const [error, setError] = useState('')
 
   const onDrop = useCallback(
@@ -46,12 +52,17 @@ const CsvUpload: FC<CsvUploadType> = ({ onChange, rowCount, value }) => {
     accept: {
       'text/csv': ['.csv'],
     },
+    maxSize: maxSizeBytes,
     multiple: false,
     noClick: true,
     noKeyboard: true,
     onDrop,
-    onDropRejected: () => {
-      setError('Please select a CSV file')
+    onDropRejected: (rejections) => {
+      setError(
+        rejections[0]?.errors?.[0]?.code === 'file-too-large' && maxSizeBytes
+          ? `Please select a file smaller than ${formatFileSize(maxSizeBytes)}`
+          : 'Please select a CSV file',
+      )
     },
   })
 
@@ -91,7 +102,11 @@ const CsvUpload: FC<CsvUploadType> = ({ onChange, rowCount, value }) => {
           </div>
         )}
       </div>
-      {!!error && <ErrorMessage error={error} />}
+      {!!error && (
+        <div className='mt-3'>
+          <ErrorMessage error={error} />
+        </div>
+      )}
     </div>
   )
 }

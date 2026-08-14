@@ -3,8 +3,18 @@ import classNames from 'classnames'
 import Constants from 'common/constants'
 import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
-import { extractIdentifiers, parseCsvText, toParsedCsv } from 'common/utils/csv'
+import {
+  extractIdentifiers,
+  parseCsvText,
+  toCsvColumn,
+  toParsedCsv,
+} from 'common/utils/csv'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
+import {
+  useCreateCohortMutation,
+  useSyncCohortCsvMutation,
+} from 'common/services/useCohort'
+import { Metadata } from 'common/types/responses'
 import AccountStore from 'common/stores/account-store'
 import { colorIconSuccess } from 'common/theme/tokens'
 import Button from 'components/base/forms/Button'
@@ -21,6 +31,8 @@ import Tabs from 'components/navigation/TabMenu/Tabs'
 import './CreateSegmentFromCsv.scss'
 
 const PREVIEW_ROW_COUNT = 5
+// Mirrors the API's COHORT_CSV_MAX_FILE_SIZE_BYTES.
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 
 type CreateSegmentFromCsvType = {
   projectId: number | string
@@ -35,6 +47,14 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
   const [hasHeaders, setHasHeaders] = useState(true)
   const [selectedColumn, setSelectedColumn] = useState<number | null>(null)
   const [tab, setTab] = useState(0)
+  const [metadata, setMetadata] = useState<Metadata[]>([])
+  const [createdCohortId, setCreatedCohortId] = useState<number | null>(null)
+
+  const [createCohort, { error: createError, isLoading: isCreating }] =
+    useCreateCohortMutation()
+  const [syncCohortCsv, { error: syncError, isLoading: isSyncing }] =
+    useSyncCohortCsvMutation()
+  const isSaving = isCreating || isSyncing
 
   const metadataEnable = Utils.getPlansPermission('METADATA')
   const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
@@ -60,9 +80,25 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
     [parsed.rows, columnIndex],
   )
 
+  // Only the identifier column leaves the browser.
+  const csvColumn = useMemo(
+    () => (extraction ? toCsvColumn(extraction.identifiers) : ''),
+    [extraction],
+  )
+  // Quoting can expand values, so the generated upload needs its own check.
+  const isUploadTooLarge = useMemo(
+    () => new Blob([csvColumn]).size > MAX_FILE_SIZE_BYTES,
+    [csvColumn],
+  )
+
   const isBlocked = !!extraction && !extraction.identifiers.length
   const canSubmit =
-    !!name && !!environmentId && !!file && !!extraction && !isBlocked
+    !!name &&
+    !!environmentId &&
+    !!file &&
+    !!extraction &&
+    !isBlocked &&
+    !isUploadTooLarge
 
   const onFile = (newFile: File, text: string) => {
     setFile(newFile)
@@ -70,9 +106,43 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
     setSelectedColumn(null)
   }
 
-  const save = (e: FormEvent) => {
+  const save = async (e: FormEvent) => {
     e.preventDefault()
-    // TODO: submit to the cohorts API once the creation endpoint exists
+    if (!canSubmit || !extraction) {
+      return
+    }
+    try {
+      // Keep the created cohort across a failed sync so retrying only syncs.
+      let cohortId = createdCohortId
+      if (cohortId === null) {
+        const cohort = await createCohort({
+          description: description || undefined,
+          environmentApiKey: environmentId,
+          metadata,
+          name,
+          projectId: Number(projectId),
+        }).unwrap()
+        cohortId = cohort.id
+        setCreatedCohortId(cohortId)
+      }
+      const result = await syncCohortCsv({
+        cohortId,
+        environmentApiKey: environmentId,
+        file: new File([csvColumn], 'identifiers.csv', { type: 'text/csv' }),
+        has_header: false,
+        projectId: Number(projectId),
+      }).unwrap()
+      toast(
+        `Segment created with ${result.added} ${
+          result.added === 1 ? 'identity' : 'identities'
+        }`,
+        'success',
+        10000,
+      )
+      closeModal()
+    } catch {
+      // Errors surface via the mutation error states below.
+    }
   }
 
   const columnName = columnIndex === null ? '' : parsed.columns[columnIndex]
@@ -126,7 +196,6 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
           <EnvironmentSelect
             inputId='environment-select'
             projectId={Number(projectId)}
-            idField='id'
             size='default'
             value={environmentId}
             onChange={(value) => setEnvironmentId(`${value}`)}
@@ -139,6 +208,7 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
       <div className='mb-4'>
         <CsvUpload
           value={file}
+          maxSizeBytes={MAX_FILE_SIZE_BYTES}
           rowCount={file ? parsed.rows.length : undefined}
           onChange={onFile}
         />
@@ -250,11 +320,21 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
               error={`No valid identifiers found in "${columnName}". Choose a different column or check your file.`}
             />
           )}
+          {isUploadTooLarge && (
+            <ErrorMessage error='The extracted identifiers exceed the 10MB upload limit. Reduce the number of rows and try again.' />
+          )}
         </>
       )}
+      {!!(createError || syncError) && (
+        <ErrorMessage error={createError || syncError} />
+      )}
       <div className='text-right py-3'>
-        <Button data-test='create-segment' disabled={!canSubmit} type='submit'>
-          Create Segment
+        <Button
+          data-test='create-segment'
+          disabled={!canSubmit || isSaving}
+          type='submit'
+        >
+          {isSaving ? 'Creating Segment...' : 'Create Segment'}
         </Button>
       </div>
     </form>
@@ -281,6 +361,7 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
                 projectId={Number(projectId)}
                 entityContentType={segmentContentType.id}
                 entity={segmentContentType.model}
+                onChange={(m) => setMetadata(m as Metadata[])}
               />
             }
           />
