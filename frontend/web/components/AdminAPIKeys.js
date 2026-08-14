@@ -413,6 +413,9 @@ export default class AdminAPIKeys extends PureComponent {
           isLoading: false,
         })
       })
+      .catch(() => {
+        this.setState({ isLoading: false })
+      })
   }
 
   remove = (v) => {
