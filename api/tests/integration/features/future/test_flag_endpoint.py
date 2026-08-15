@@ -2060,3 +2060,349 @@ def test_update_flag__variants_on_standard_feature__responds_400(
         .multivariate_feature_state_values.exists()
     )
     assert log.events == []
+
+
+@pytest.fixture()
+def two_segment_overrides(
+    admin_client_new: APIClient,
+    environment_api_key: str,
+    feature: int,
+    log: StructuredLogCapture,
+    segment: int,
+    segment_2: int,
+    versioned_environment: Environment,
+) -> None:
+    response = admin_client_new.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest(
+            {
+                "segment_overrides": [
+                    {
+                        "segment": {"id": segment},
+                        "enabled": True,
+                        "priority": 0,
+                        "value": {"type": "string", "value": "enterprise"},
+                    },
+                    {
+                        "segment": {"id": segment_2},
+                        "enabled": True,
+                        "priority": 1,
+                        "value": {"type": "string", "value": "startup"},
+                    },
+                ],
+            }
+        ),
+        format="json",
+    )
+    assert response.status_code == 200
+    log.events.clear()
+
+
+def test_delete_segment_override__existing_override__removes_override(
+    admin_client_new: APIClient,
+    default_feature_value: str,
+    environment_api_key: str,
+    feature: int,
+    log: StructuredLogCapture,
+    segment: int,
+    segment_2: int,
+    two_segment_overrides: None,
+    versioned_environment: Environment,
+) -> None:
+    # Given / When
+    response = admin_client_new.delete(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}"
+        f"/segment-overrides/{segment}/",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "environment_default": {
+            "enabled": False,
+            "value": {"type": "string", "value": default_feature_value},
+            "variants": [],
+        },
+        "segment_overrides": [
+            {
+                "segment": {"id": segment_2},
+                "priority": 1,
+                "enabled": True,
+                "value": {"type": "string", "value": "startup"},
+                "variants": [],
+            },
+        ],
+    }
+    live_feature_states = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+    )
+    assert dict(
+        live_feature_states.exclude(feature_segment=None).values_list(
+            "feature_segment__segment_id", "feature_segment__priority"
+        )
+    ) == {segment_2: 1}
+    assert live_feature_states.get(feature_segment=None).enabled is False
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "flag.updated",
+            "organisation__id": versioned_environment.project.organisation_id,
+            "project__id": versioned_environment.project_id,
+            "environment__id": versioned_environment.id,
+            "feature__id": feature,
+            "segment_overrides__created__segment__ids": [],
+            "segment_overrides__updated__segment__ids": [],
+            "segment_overrides__deleted__segment__ids": [segment],
+        },
+    ]
+
+
+def test_delete_segment_override__last_override__removes_override(
+    admin_client_new: APIClient,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    setup_response = admin_client_new.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest(
+            {"segment_overrides": [{"segment": {"id": segment}, "enabled": True}]}
+        ),
+        format="json",
+    )
+    assert setup_response.status_code == 200
+
+    # When
+    response = admin_client_new.delete(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}"
+        f"/segment-overrides/{segment}/",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json()["segment_overrides"] == []
+    assert (
+        not FeatureState.objects.get_live_feature_states(
+            environment=versioned_environment,
+            feature_id=feature,
+        )
+        .exclude(feature_segment=None)
+        .exists()
+    )
+
+
+def test_delete_segment_override__environment_versioned__publishes_new_version(
+    admin_client_new: APIClient,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    two_segment_overrides: None,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    versions = EnvironmentFeatureVersion.objects.filter(
+        environment=versioned_environment,
+        feature_id=feature,
+        published_at__isnull=False,
+    )
+    version_count = versions.count()
+
+    # When
+    response = admin_client_new.delete(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}"
+        f"/segment-overrides/{segment}/",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert versions.count() == version_count + (
+        1 if versioned_environment.use_v2_feature_versioning else 0
+    )
+
+
+def test_delete_segment_override__no_override__responds_404(
+    admin_client_new: APIClient,
+    environment_api_key: str,
+    feature: int,
+    log: StructuredLogCapture,
+    segment: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    versions = EnvironmentFeatureVersion.objects.filter(
+        environment=versioned_environment, feature_id=feature
+    )
+    version_count = versions.count()
+
+    # When
+    response = admin_client_new.delete(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}"
+        f"/segment-overrides/{segment}/",
+    )
+
+    # Then
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Segment override not found."}
+    assert versions.count() == version_count
+    assert log.events == []
+
+
+def test_delete_segment_override__unknown_feature__responds_404(
+    admin_client_new: APIClient,
+    environment_api_key: str,
+    feature: int,
+    log: StructuredLogCapture,
+    segment: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    unknown_feature = feature + 1
+
+    # When
+    response = admin_client_new.delete(
+        f"/api/__future__/environments/{environment_api_key}"
+        f"/features/{unknown_feature}/segment-overrides/{segment}/",
+    )
+
+    # Then
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not found."}
+    assert log.events == []
+
+
+def test_delete_segment_override__unknown_environment__responds_404(
+    admin_client_new: APIClient,
+    feature: int,
+    log: StructuredLogCapture,
+    segment: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given / When
+    response = admin_client_new.delete(
+        f"/api/__future__/environments/unknown-api-key/features/{feature}"
+        f"/segment-overrides/{segment}/",
+    )
+
+    # Then
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not found."}
+    assert log.events == []
+
+
+def test_delete_segment_override__change_requests_enabled__responds_409(
+    admin_client_new: APIClient,
+    environment_api_key: str,
+    feature: int,
+    log: StructuredLogCapture,
+    segment: int,
+    two_segment_overrides: None,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    versioned_environment.minimum_change_request_approvals = 2
+    versioned_environment.save()
+
+    # When
+    response = admin_client_new.delete(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}"
+        f"/segment-overrides/{segment}/",
+    )
+
+    # Then
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "Cannot update flags in an environment with change requests enabled.",
+        "code": "change_requests_enabled",
+    }
+    assert (
+        FeatureState.objects.get_live_feature_states(
+            environment=versioned_environment,
+            feature_id=feature,
+        )
+        .filter(feature_segment__segment_id=segment)
+        .exists()
+    )
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "flag.update_rejected",
+            "organisation__id": versioned_environment.project.organisation_id,
+            "project__id": versioned_environment.project_id,
+            "environment__id": versioned_environment.id,
+            "feature__id": feature,
+            "reason": "change_requests_enabled",
+        },
+    ]
+
+
+def test_delete_segment_override__user_without_environment_permissions__responds_404(
+    environment_api_key: str,
+    feature: int,
+    log: StructuredLogCapture,
+    non_admin_client: APIClient,
+    segment: int,
+    two_segment_overrides: None,
+    versioned_environment: Environment,
+) -> None:
+    # Given / When
+    response = non_admin_client.delete(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}"
+        f"/segment-overrides/{segment}/",
+    )
+
+    # Then
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not found."}
+    assert (
+        FeatureState.objects.get_live_feature_states(
+            environment=versioned_environment,
+            feature_id=feature,
+        )
+        .filter(feature_segment__segment_id=segment)
+        .exists()
+    )
+    assert log.events == []
+
+
+@pytest.mark.parametrize(
+    "permission, expected_status_code",
+    [
+        pytest.param(MANAGE_SEGMENT_OVERRIDES, 200, id="manage_segment_overrides"),
+        pytest.param(UPDATE_FEATURE_STATE, 403, id="update_feature_state"),
+    ],
+)
+def test_delete_segment_override__environment_permission__gates_override(
+    environment: int,
+    environment_api_key: str,
+    expected_status_code: int,
+    feature: int,
+    organisation: int,
+    permission: str,
+    segment: int,
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    two_segment_overrides: None,
+    versioned_environment: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    staff_user.add_organisation(Organisation.objects.get(id=organisation))
+    with_environment_permissions([permission], environment, False)
+
+    # When
+    response = staff_client.delete(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}"
+        f"/segment-overrides/{segment}/",
+    )
+
+    # Then
+    assert response.status_code == expected_status_code
+    assert FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+    ).filter(feature_segment__segment_id=segment).exists() is (
+        expected_status_code != 200
+    )

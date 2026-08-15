@@ -48,3 +48,10 @@ def check_update_permissions(
         raise NotFound()
     if any(property_name in properties for property_name in denied):
         raise PermissionDenied()
+
+
+def check_segment_overrides_permissions(
+    user: UserABC, environment: Environment
+) -> None:
+    """Authorise a caller to write a flag's segment overrides."""
+    check_update_permissions(user, environment, {"segment_overrides": None})
