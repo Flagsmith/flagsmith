@@ -1,5 +1,5 @@
-import json
 import uuid
+import json
 
 import pytest
 from common.projects.permissions import (
@@ -106,8 +106,7 @@ def test_list_mv_options__feature_in_other_project__returns_404(
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
-
-
+    
 def test_partially_updating_multivariate_option_success(
     admin_client: APIClient,
     project: Project,
@@ -115,14 +114,17 @@ def test_partially_updating_multivariate_option_success(
 ) -> None:
     # Given
     mv_option = multivariate_feature.multivariate_options.first()
+    
+    assert mv_option is not None
+    
     url = reverse(
         "api-v1:projects:feature-mv-options-detail",
         args=[project.id, multivariate_feature.id, mv_option.id],
     )
-
+    
     new_key = "hero"
     data = {"key": new_key}
-
+    
     initial_allocation = mv_option.default_percentage_allocation
 
     # When
@@ -132,7 +134,8 @@ def test_partially_updating_multivariate_option_success(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-
+    
     mv_option.refresh_from_db()
     assert mv_option.key == new_key
     assert mv_option.default_percentage_allocation == initial_allocation
+

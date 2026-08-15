@@ -142,9 +142,10 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
             )
 
     def _validate_key_is_unique(self, attrs: dict[str, typing.Any]) -> None:
-        key = attrs.get("key")
+        key = attrs.get("key", getattr(self.instance, "key", None))
         if key is None:
             return
+        
         feature = attrs.get("feature", getattr(self.instance, "feature", None))
         if self._get_siblings(feature).filter(key=key).exists():
             raise ValidationError(
