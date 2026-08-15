@@ -3,14 +3,13 @@
 from collections.abc import Mapping
 
 import structlog
-from django.contrib.auth.models import AnonymousUser
 from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.types import AuthenticatedRequest
 from environments.models import Environment
 from features.future.exceptions import ChangeRequestsEnabledError
 from features.future.permissions import (
@@ -68,9 +67,9 @@ class FlagAPIView(APIView):
         tags=["experimental"],
         description="Read what the flag serves in the environment.",
     )
-    def get(self, request: Request, environment_key: str, feature_id: int) -> Response:
-        assert not isinstance(request.user, AnonymousUser)
-
+    def get(
+        self, request: AuthenticatedRequest, environment_key: str, feature_id: int
+    ) -> Response:
         environment = _get_environment(environment_key)
         check_read_permissions(request.user, environment)
         feature = _get_feature(environment, feature_id)
@@ -84,7 +83,7 @@ class FlagAPIView(APIView):
         description="Update the properties given, leaving the rest as they are.",
     )
     def patch(
-        self, request: Request, environment_key: str, feature_id: int
+        self, request: AuthenticatedRequest, environment_key: str, feature_id: int
     ) -> Response:
         return self._update_flag(request, environment_key, feature_id, replace=False)
 
@@ -94,19 +93,19 @@ class FlagAPIView(APIView):
         tags=["experimental"],
         description="Replace the properties given, resetting what they omit.",
     )
-    def put(self, request: Request, environment_key: str, feature_id: int) -> Response:
+    def put(
+        self, request: AuthenticatedRequest, environment_key: str, feature_id: int
+    ) -> Response:
         return self._update_flag(request, environment_key, feature_id, replace=True)
 
     def _update_flag(
         self,
-        request: Request,
+        request: AuthenticatedRequest,
         environment_key: str,
         feature_id: int,
         *,
         replace: bool,
     ) -> Response:
-        assert not isinstance(request.user, AnonymousUser)
-
         if not isinstance(request.data, Mapping):
             raise ValidationError("Expected an object.")
 
@@ -147,10 +146,12 @@ class SegmentOverrideAPIView(APIView):
         ),
     )
     def delete(
-        self, request: Request, environment_key: str, feature_id: int, segment_id: int
+        self,
+        request: AuthenticatedRequest,
+        environment_key: str,
+        feature_id: int,
+        segment_id: int,
     ) -> Response:
-        assert not isinstance(request.user, AnonymousUser)
-
         environment = _get_environment(environment_key)
         check_segment_overrides_permissions(request.user, environment)
         feature = _get_feature(environment, feature_id)
