@@ -82,12 +82,12 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
-        
+
         # Safely get feature and allocation, falling back to instance for PATCH requests
         feature = attrs.get("feature", getattr(self.instance, "feature", None))
         default_percentage_allocation = attrs.get(
-            "default_percentage_allocation", 
-            getattr(self.instance, "default_percentage_allocation", 0)
+            "default_percentage_allocation",
+            getattr(self.instance, "default_percentage_allocation", 0),
         )
 
         total_sibling_percentage_allocation = (
@@ -96,7 +96,7 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
             )["total_percentage_allocation"]
             or 0
         )
-        
+
         total_percentage_allocation = (
             total_sibling_percentage_allocation + default_percentage_allocation
         )
@@ -145,7 +145,7 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
         key = attrs.get("key")
         if key is None:
             return
-        feature = attrs.get("feature",getattr(self.instance, "feature",None))
+        feature = attrs.get("feature", getattr(self.instance, "feature", None))
         if self._get_siblings(feature).filter(key=key).exists():
             raise ValidationError(
                 {
