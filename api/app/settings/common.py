@@ -1160,6 +1160,10 @@ if SCIM_INSTALLED:
         "USER_FILTER_PARSER": "scim.filters.UserFilterQuery",
     }
 
+EDGE_PROXY_INSTALLED = importlib.util.find_spec("edge_proxy") is not None
+if EDGE_PROXY_INSTALLED:
+    INSTALLED_APPS.append("edge_proxy")
+
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Used to keep edge identities in sync by forwarding the http requests
