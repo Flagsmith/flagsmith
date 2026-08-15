@@ -161,7 +161,6 @@ const CreateEditTag: FC<CreateEditTagType> = ({
           className='mb-0'
           id='tag-label'
           data-test='tag-label'
-          autoFocus
           inputProps={{
             className: 'full-width mb-2',
             name: 'create-tag-name',

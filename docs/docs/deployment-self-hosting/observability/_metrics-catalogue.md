@@ -9,6 +9,15 @@ Labels:
  - `ci_commit_sha`
  - `version`
 
+### `flagsmith_cohorts_membership_deltas_applied`
+
+Counter.
+
+Total number of cohort membership ledger rows transitioned to their applied state after the corresponding identity document write. The `operation` label is either `add` or `remove`.
+
+Labels:
+ - `operation`
+
 ### `flagsmith_dynamo_environment_document_compression_ratio`
 
 Histogram.
@@ -46,6 +55,24 @@ Outcomes of connection verification attempts against customers&#x27; own data wa
 Labels:
  - `result`
 
+### `flagsmith_experimentation_warehouse_delivery_objects`
+
+Counter.
+
+Buffered S3 event objects processed by delivery to customers&#x27; own data warehouses. `result` label is `delivered` for objects inserted and archived, or `rejected` for objects the warehouse refused, which are moved aside and never retried.
+
+Labels:
+ - `result`
+
+### `flagsmith_experimentation_warehouse_delivery_runs`
+
+Counter.
+
+Outcomes of per-connection runs delivering buffered event objects to customers&#x27; own data warehouses. `result` label is either `success` or `failure`; a failed run delivers nothing and is retried on the next tick.
+
+Labels:
+ - `result`
+
 ### `flagsmith_http_server_request_duration_seconds`
 
 Histogram.
@@ -78,6 +105,16 @@ Labels:
  - `route`
  - `method`
  - `response_status`
+
+### `flagsmith_oauth2_dcr_registrations`
+
+Counter.
+
+Total OAuth2 dynamic client registration requests, labelled by the requested token endpoint auth method and whether the registration was accepted or rejected.
+
+Labels:
+ - `token_endpoint_auth_method`
+ - `outcome`
 
 ### `flagsmith_segment_membership_backfill_duration_seconds`
 

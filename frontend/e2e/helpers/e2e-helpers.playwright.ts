@@ -537,8 +537,11 @@ export class E2EHelpers {
     topLevelRuleType: 'ALL' | 'ANY' = 'ALL',
   ) {
     await this.click(byId('show-create-segment-btn'));
-    await this.setText(byId('segmentID'), name);
     const flagsmith = await getFlagsmith();
+    if (flagsmith.hasFeature('create_segment_with_external_sources')) {
+      await this.click(byId('create-segment-manually'));
+    }
+    await this.setText(byId('segmentID'), name);
     if (flagsmith.hasFeature('segment_any_rule_type')) {
       await this.click(byId(`top-level-rule-type-${topLevelRuleType}`));
     }

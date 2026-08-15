@@ -8,6 +8,7 @@ from custom_auth.views import (
     FFAdminUserViewSet,
     delete_token,
 )
+from trust_relationships.views import OIDCTokenExchangeView
 
 app_name = "custom_auth"
 
@@ -38,4 +39,9 @@ urlpatterns = [
     path("", include("djoser.urls")),
     path("", include("custom_auth.mfa.trench.urls")),  # MFA
     path("oauth/", include("custom_auth.oauth.urls")),
+    path(
+        "oidc/token/",
+        OIDCTokenExchangeView.as_view(),
+        name="oidc-token-exchange",
+    ),
 ]

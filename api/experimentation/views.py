@@ -1,4 +1,5 @@
 import logging
+from dataclasses import asdict
 from datetime import timedelta
 from typing import Any
 
@@ -7,7 +8,11 @@ from django.db.models import Count, Prefetch, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    extend_schema,
+    inline_serializer,
+)
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import Throttled, ValidationError
@@ -34,6 +39,7 @@ from experimentation.models import (
     ExperimentStatus,
     Metric,
     WarehouseConnection,
+    WarehouseConnectionStatus,
     WarehouseType,
 )
 from experimentation.permissions import (
@@ -54,12 +60,14 @@ from experimentation.serializers import (
     WarehouseConnectionSerializer,
 )
 from experimentation.services import (
+    EVENT_NAMES_SUPPORTED_WAREHOUSE_TYPES,
     annotate_warehouse_event_stats,
     apply_experiment_rollout,
     create_experiment_audit_log,
     create_metric_audit_log,
     create_warehouse_audit_log,
     enable_experiment_rollout,
+    get_warehouse_event_names,
     mark_warehouse_pending_connection,
     refresh_warehouse_connection_status,
     transition_experiment_status,
@@ -97,8 +105,12 @@ class WarehouseConnectionViewSet(
             "update",
             "partial_update",
             "test_warehouse_connection",
+            "test_warehouse_connection_config",
         ):
             self.throttle_scope = "warehouse_connection_write"
+            return [*super().get_throttles(), ScopedRateThrottle()]
+        if self.action in ("list", "retrieve", "events"):
+            self.throttle_scope = "warehouse_connection_read"
             return [*super().get_throttles(), ScopedRateThrottle()]
         return super().get_throttles()
 
@@ -166,6 +178,91 @@ class WarehouseConnectionViewSet(
             refresh_warehouse_connection_status(connection, connection.event_stats)
         serializer = self.get_serializer(connection)
         return Response(serializer.data)
+
+    @extend_schema(
+        operation_id=(
+            "api_v1_environments_warehouse_connections_"
+            "test_warehouse_connection_config_create"
+        ),
+        responses={
+            200: inline_serializer(
+                name="WarehouseConnectionTestResult",
+                fields={
+                    "status": serializers.ChoiceField(
+                        choices=WarehouseConnectionStatus.choices
+                    ),
+                    "status_detail": serializers.CharField(allow_null=True),
+                },
+            )
+        },
+    )
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="test-warehouse-connection",
+        url_name="test-warehouse-connection-config",
+    )
+    def test_warehouse_connection_config(
+        self, request: Request, **kwargs: object
+    ) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if serializer.validated_data.get("warehouse_type") != WarehouseType.CLICKHOUSE:
+            return Response(
+                {
+                    "detail": "Connection testing is not supported for this warehouse type."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        connection = WarehouseConnection(
+            environment=self._get_environment(),
+            warehouse_type=serializer.validated_data["warehouse_type"],
+            config=serializer.validated_data.get("config"),
+            credentials=serializer.validated_data.get("credentials"),
+        )
+        verify_clickhouse_connection(connection, persist=False)
+        return Response(
+            {"status": connection.status, "status_detail": connection.status_detail}
+        )
+
+    @extend_schema(
+        operation_id="api_v1_environments_warehouse_connections_events_list",
+        responses={
+            200: inline_serializer(
+                name="WarehouseEventNamesResult",
+                fields={
+                    "events": serializers.ListField(child=serializers.CharField()),
+                    "is_truncated": serializers.BooleanField(),
+                },
+            ),
+            400: inline_serializer(
+                name="WarehouseEventNamesUnsupported",
+                fields={"detail": serializers.CharField()},
+            ),
+            503: inline_serializer(
+                name="WarehouseEventNamesUnavailable",
+                fields={"detail": serializers.CharField()},
+            ),
+        },
+    )
+    @action(detail=True, methods=["get"], url_path="events")
+    def events(self, request: Request, **kwargs: object) -> Response:
+        """List the distinct event names in the connection's warehouse."""
+        connection: WarehouseConnection = self.get_object()
+        if connection.warehouse_type not in EVENT_NAMES_SUPPORTED_WAREHOUSE_TYPES:
+            return Response(
+                {"detail": "Event listing is not supported for this warehouse type."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        event_names = get_warehouse_event_names(
+            connection, self.kwargs["environment_api_key"]
+        )
+        if event_names is None:
+            return Response(
+                {"detail": "The warehouse is currently unreachable."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        return Response(asdict(event_names))
 
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         environment = self._get_environment()

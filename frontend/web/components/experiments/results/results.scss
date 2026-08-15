@@ -17,6 +17,27 @@
   color: var(--color-text-secondary);
 }
 
+// Block display keeps the element's width pinned to the container so the
+// fit observer sees resizes; ellipsis is the floor when the font can't
+// shrink further. (Bootstrap's .text-truncate helper isn't in this build.)
+.variant-name--fit {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Caps' optical centre sits ~0.35em above the baseline, so lift the dot's
+// bottom edge by that minus half its height. Text stays on the baseline.
+.variant-name__swatch {
+  vertical-align: calc(0.35em - 4px);
+
+  &--lg {
+    vertical-align: calc(0.35em - 6px);
+  }
+}
+
 .experiment-results {
   &__legend-row {
     display: flex;
@@ -56,9 +77,13 @@
     position: relative;
     flex: 1;
     height: 12px;
-    background: var(--color-surface-muted);
+    background: var(--color-surface-emphasis);
     border-radius: var(--radius-full);
     overflow: hidden;
+
+    @media (max-width: 1263px) {
+      display: none;
+    }
   }
 
   &__lift-zero {
@@ -172,6 +197,14 @@
     padding-right: 6px;
   }
 
+  &__axis-row-label-text {
+    // The label's width is capped inline; min-width lets this flex item shrink
+    // below its intrinsic width so the ellipsis actually kicks in.
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   &__axis-tracks {
     position: relative;
     padding: 12px 0;
@@ -213,7 +246,7 @@
   &__win-prob-track {
     width: 100px;
     height: 6px;
-    background: var(--color-surface-muted);
+    background: var(--color-surface-emphasis);
     border-radius: var(--radius-full);
     overflow: hidden;
     flex-shrink: 0;
@@ -293,6 +326,14 @@
     font-size: 10px;
     font-weight: var(--font-weight-bold);
     white-space: nowrap;
+  }
+
+  // h4 typography without the heading semantics — stat values shouldn't
+  // appear in the document outline.
+  &__stat-value {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: var(--font-weight-bold);
   }
 
   &__refresh {

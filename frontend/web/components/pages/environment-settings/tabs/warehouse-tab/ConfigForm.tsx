@@ -3,6 +3,7 @@ import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
 import ErrorMessage from 'components/ErrorMessage'
 import { SnowflakeConfig } from 'common/types/responses'
+import { getButtonLabel } from './warehouseFormUtils'
 import './ConfigForm.scss'
 
 export type ConfigFormData = SnowflakeConfig & { name: string }
@@ -13,11 +14,6 @@ type ConfigFormProps = {
   isEdit?: boolean
   initialConfig?: SnowflakeConfig
   initialName?: string
-}
-
-const getButtonLabel = (isEdit: boolean, isSaving: boolean): string => {
-  if (isSaving) return isEdit ? 'Saving...' : 'Creating...'
-  return isEdit ? 'Save changes' : 'Save and continue'
 }
 
 const DEFAULTS: SnowflakeConfig = {

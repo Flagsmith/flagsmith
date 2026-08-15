@@ -1,8 +1,7 @@
 import * as amplitude from '@amplitude/analytics-browser'
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/dist/query/react'
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
-import { FetchBaseQueryArgs } from '@reduxjs/toolkit/dist/query/fetchBaseQuery'
-import { CreateApiOptions } from '@reduxjs/toolkit/dist/query/createApi'
+import { CreateApiOptions, FetchBaseQueryArgs } from '@reduxjs/toolkit/query'
 import { StoreStateType } from './store'
 
 import Project from './project'

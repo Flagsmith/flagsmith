@@ -516,6 +516,12 @@ export type Subscription = {
   notes: string | null
 }
 
+export type OnboardingVariant = 'control' | 'single_page'
+// What consenting to an OAuth scope grants, as the API describes it.
+export type OAuthScopeDescription = {
+  label: string
+  grants: string[]
+}
 export type Organisation = {
   id: number
   name: string
@@ -671,6 +677,8 @@ export type ExperimentMetric = {
   metric: number
   metric_name: string
   aggregation: MetricAggregation
+  // Absent from API responses until the backend exposes it; treat as 'up'.
+  direction?: MetricDirection
   expected_direction: ExpectedDirection
   created_at: string
 }
@@ -1242,29 +1250,6 @@ export interface UsageEventsList extends AggregateUsageDataItem {
   }
 }
 
-export type ExperimentVariantResult = {
-  variant: string
-  evaluations: number
-  conversions: number
-  conversion_rate: number
-}
-
-export type ExperimentStatistics = {
-  p_value: number
-  significant: boolean
-  chance_to_win: Record<string, number>
-  lift: string
-  winner: string | null
-  recommendation: string
-  sample_size_warning: string | null
-}
-
-export type ExperimentResults = {
-  feature: string
-  variants: ExperimentVariantResult[]
-  statistics: ExperimentStatistics
-}
-
 export type WarehouseConnectionStatus =
   | 'created'
   | 'pending_connection'
@@ -1282,12 +1267,36 @@ export type SnowflakeConfig = {
   user: string
 }
 
+export type ClickHouseConfig = {
+  host: string
+  port: number
+  database: string
+  username: string
+  secure: boolean
+}
+
+export type WarehouseConfigResponse =
+  | SnowflakeConfig
+  | ClickHouseConfig
+  | Record<string, never>
+
+export type WarehouseConnectionTestResult = {
+  status: WarehouseConnectionStatus
+  status_detail: string | null
+}
+
+export type WarehouseConnectionEvents = {
+  events: string[]
+  is_truncated: boolean
+}
+
 export type WarehouseConnection = {
   id: number
   warehouse_type: WarehouseType
   status: WarehouseConnectionStatus
+  status_detail: string | null
   name: string
-  config: SnowflakeConfig | Record<string, never>
+  config: WarehouseConfigResponse
   created_at: string
   total_events_received: number | null
   unique_events_count: number | null
@@ -1443,6 +1452,12 @@ export type Res = {
       rank: number
     }[]
   }
+  environmentOnboardingStatus: {
+    // Null until the environment's first SDK evaluation is reported by Edge.
+    first_evaluated_at: string | null
+    // A Core `KnownSDK` label (e.g. 'flagsmith-js-sdk') or 'unknown'.
+    first_evaluated_sdk_label: string | null
+  }
   profile: User
   onboarding: {}
   userPermissions: UserPermission[]
@@ -1482,7 +1497,6 @@ export type Res = {
     }
   }
   featureState: FeatureState
-  experimentResults: ExperimentResults
   adminDashboardMetrics: {
     summary: {
       total_organisations: number
@@ -1507,7 +1521,7 @@ export type Res = {
   }
   validateOAuthAuthorize: {
     application: { name: string; client_id: string }
-    scopes: Record<string, string>
+    scopes: Record<string, OAuthScopeDescription>
     redirect_uri: string
     is_verified: boolean
   }
@@ -1520,6 +1534,8 @@ export type Res = {
   gitlabIssues: PagedResponse<GitLabIssue>
   gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
   warehouseConnections: WarehouseConnection[]
+  warehouseConnectionEvents: WarehouseConnectionEvents
+  warehouseConnectionTestResult: WarehouseConnectionTestResult
   experiments: PagedResponse<Experiment> & {
     currentPage: number
     pageSize: number

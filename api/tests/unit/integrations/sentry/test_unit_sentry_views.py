@@ -106,3 +106,24 @@ def test_sentry_change_tracking_setup__invalid_payload__rejects_with_400(
     # Then
     assert response.status_code == 400
     assert response.json() == errors
+
+
+def test_sentry_change_tracking_setup__private_ip_webhook_url__rejects_with_400(
+    admin_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    url = f"/api/v1/environments/{environment.api_key}/integrations/sentry/"
+    payload = {
+        "webhook_url": "http://127.0.0.1/webhook",
+        "secret": "hush hush!",
+    }
+
+    # When
+    response = admin_client.post(url, payload, format="json")
+
+    # Then
+    assert response.status_code == 400
+    assert not SentryChangeTrackingConfiguration.objects.filter(
+        environment=environment
+    ).exists()

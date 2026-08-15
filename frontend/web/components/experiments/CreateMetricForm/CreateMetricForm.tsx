@@ -1,6 +1,7 @@
 import React, { FC, useState } from 'react'
 import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
+import EventNameSelect from 'components/experiments/EventNameSelect'
 import {
   canSubmitMetric,
   DEFAULT_METRIC_FORM_STATE,
@@ -149,13 +150,9 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
             >
               Event name
             </label>
-            <Input
-              id='metric-event'
+            <EventNameSelect
               value={state.event}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                update({ event: e.target.value })
-              }
-              placeholder='e.g. checkout_completed'
+              onChange={(event) => update({ event })}
             />
           </div>
         </div>

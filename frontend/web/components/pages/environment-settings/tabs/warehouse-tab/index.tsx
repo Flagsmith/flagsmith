@@ -6,11 +6,13 @@ import {
   useTestWarehouseConnectionMutation,
   useUpdateWarehouseConnectionMutation,
 } from 'common/services/useWarehouseConnection'
-import { SnowflakeConfig } from 'common/types/responses'
+import { ClickHouseConfig, SnowflakeConfig } from 'common/types/responses'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
 import WarehouseSetup from './WarehouseSetup'
 import WarehouseSetupSkeleton from './WarehouseSetupSkeleton'
 import ConfigForm from './ConfigForm'
+import ClickHouseConfigForm from './ClickHouseConfigForm'
+import { ClickHouseFormData } from './clickhouseConfig'
 import sendWarehouseTestEvent from './sendWarehouseTestEvent'
 import { getWarehousePollingInterval } from './warehousePolling'
 
@@ -56,6 +58,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
   }, [baseConnection, connectionsWithStats])
   const connectionId = connection?.id
   const connectionStatus = connection?.status
+  const connectionType = connection?.warehouse_type
 
   const [testConnection, { isLoading: isSendingTestEvent }] =
     useTestWarehouseConnectionMutation()
@@ -65,6 +68,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
   }, [connection])
 
   useEffect(() => {
+    if (connectionType !== 'flagsmith') return
     const interval = getWarehousePollingInterval(connectionStatus)
     if (!interval || connectionId === undefined) return
     testConnection({ environmentId, id: connectionId })
@@ -72,7 +76,13 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
       testConnection({ environmentId, id: connectionId })
     }, interval)
     return () => clearInterval(timer)
-  }, [connectionStatus, connectionId, environmentId, testConnection])
+  }, [
+    connectionStatus,
+    connectionId,
+    connectionType,
+    environmentId,
+    testConnection,
+  ])
 
   const handleEnableFlagsmith = () => {
     openConfirm({
@@ -122,6 +132,47 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
       })
   }
 
+  const handleCreateClickHouse = (data: ClickHouseFormData) =>
+    createConnection({
+      environmentId,
+      warehouse_type: 'clickhouse',
+      ...data,
+    })
+      .unwrap()
+      .then(() => toast('Warehouse connection created'))
+
+  const handleUpdateClickHouse = (data: ClickHouseFormData) => {
+    if (!connection) return Promise.reject()
+    return updateConnection({
+      environmentId,
+      id: connection.id,
+      ...data,
+    })
+      .unwrap()
+      .then(() => {
+        setEditing(false)
+        toast('Warehouse connection updated')
+      })
+  }
+
+  const handleTestConnection = () => {
+    if (!connection) return
+    testConnection({ environmentId, id: connection.id })
+      .unwrap()
+      .then((result) => {
+        if (result.status === 'connected') {
+          toast('Connection verified')
+        } else {
+          toast(
+            result.status_detail ||
+              'Connection failed — check your credentials',
+            'danger',
+          )
+        }
+      })
+      .catch(() => toast('Failed to test connection', 'danger'))
+  }
+
   const handleDelete = () => {
     if (!connection) return
     deleteConnection({ environmentId, id: connection.id })
@@ -167,8 +218,10 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     return (
       <div className='mt-4 col-md-12'>
         <WarehouseSetup
+          environmentId={environmentId}
           onEnableFlagsmith={handleEnableFlagsmith}
           onCreateSnowflake={handleCreateSnowflake}
+          onCreateClickHouse={handleCreateClickHouse}
           isCreating={isCreating || isEnabling}
         />
       </div>
@@ -189,6 +242,21 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     )
   }
 
+  if (editing && connection.warehouse_type === 'clickhouse') {
+    return (
+      <div className='mt-4 col-md-12'>
+        <ClickHouseConfigForm
+          isEdit
+          environmentId={environmentId}
+          initialConfig={connection.config as ClickHouseConfig}
+          initialName={connection.name}
+          onSave={handleUpdateClickHouse}
+          onCancel={() => setEditing(false)}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className='mt-4 col-md-12'>
       <WarehouseConnectionCard
@@ -200,6 +268,11 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
             : undefined
         }
         onSendTestEvent={handleSendTestEvent}
+        onTestConnection={
+          connection.warehouse_type === 'clickhouse'
+            ? handleTestConnection
+            : undefined
+        }
         isSendingTestEvent={isSendingTestEvent}
         isLoadingStats={isFetchingStats}
       />

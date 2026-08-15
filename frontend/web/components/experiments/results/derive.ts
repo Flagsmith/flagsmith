@@ -1,15 +1,22 @@
 import moment from 'moment'
 import { ChartDataPoint, buildChartColorMap } from 'components/charts'
 import {
+  colorTextDanger,
+  colorTextSecondary,
+  colorTextSuccess,
+} from 'common/theme/tokens'
+import {
   BayesianMetricResult,
   BayesianResultsSummary,
-  ExpectedDirection,
+  Experiment,
   ExperimentFeature,
   ExposureGranularity,
   ExposuresSummary,
   Inference,
+  MetricDirection,
   MultivariateOption,
 } from 'common/types/responses'
+import { getPrimaryMetric } from 'components/experiments/constants'
 
 // Mirrors api/features/constants.py CONTROL_VARIANT_KEY.
 export const CONTROL_VARIANT_KEY = 'control'
@@ -118,12 +125,28 @@ export const getResultsTotalUsers = (
   return Object.values(firstMetric.variants).reduce((sum, v) => sum + v.n, 0)
 }
 
+// A lift is favourable when it moves with the metric's inherent polarity
+// (direction), e.g. a drop in a lower-is-better metric. The experiment-level
+// expected_direction guardrail deliberately plays no part in colouring.
 export const isLiftFavourable = (
   lift: number,
-  direction: ExpectedDirection,
-): boolean => {
-  if (direction === 'increase' || direction === 'not_decrease') return lift > 0
-  return lift < 0
+  direction: MetricDirection,
+): boolean => (direction === 'down' ? lift < 0 : lift > 0)
+
+export const getLiftColour = (
+  lift: number,
+  direction: MetricDirection,
+): string => {
+  if (direction === 'informational') return colorTextSecondary
+  return isLiftFavourable(lift, direction) ? colorTextSuccess : colorTextDanger
+}
+
+// Extreme rounded probabilities would read as certainties — hedge them.
+export const formatChancePct = (chance: number): string => {
+  const pct = Math.round(chance * 100)
+  if (pct >= 100) return '> 99%'
+  if (pct <= 0) return '< 1%'
+  return `${pct}%`
 }
 
 export const formatLiftPct = (lift: number): string => {
@@ -141,28 +164,127 @@ export type WinningVariant = {
   key: string
   name: string
   chanceToWin: number
-  inference: Inference
+  inference: Inference | null
+  isControl: boolean
+}
+
+// chance_to_win is pairwise — P(variant beats control) — so chances don't sum
+// to 1 across arms. P(control is best) = P(no variant beats it); the Bonferroni
+// bound 1 - Σ chance_to_win is exact for one variant, conservative otherwise.
+// The bound is only meaningful over all arms, so it stays null (and control
+// can't be declared the winner) until every treatment has inference.
+export const getControlChanceToWin = (
+  metricResult: BayesianMetricResult,
+  identities: VariantIdentity[],
+): number | null => {
+  const treatments = identities.filter((v) => !v.isControl)
+  if (!treatments.length) return null
+  let treatmentChancesTotal = 0
+  for (const v of treatments) {
+    const inf = metricResult.inference[v.key]
+    if (!inf) return null
+    treatmentChancesTotal += inf.chance_to_win
+  }
+  return Math.max(0, 1 - treatmentChancesTotal)
+}
+
+export const getBestTreatment = (
+  metricResult: BayesianMetricResult,
+  identities: VariantIdentity[],
+): WinningVariant | null => {
+  let best: WinningVariant | null = null
+  for (const v of identities) {
+    if (v.isControl) continue
+    const inf = metricResult.inference[v.key]
+    if (!inf) continue
+    if (!best || inf.chance_to_win > best.chanceToWin) {
+      best = {
+        chanceToWin: inf.chance_to_win,
+        inference: inf,
+        isControl: false,
+        key: v.key,
+        name: v.name,
+      }
+    }
+  }
+  return best
 }
 
 export const getWinningVariant = (
   metricResult: BayesianMetricResult,
   identities: VariantIdentity[],
+  best: WinningVariant | null = getBestTreatment(metricResult, identities),
 ): WinningVariant | null => {
-  let best: WinningVariant | null = null
-  identities.forEach((v) => {
-    if (v.isControl) return
-    const inf = metricResult.inference[v.key]
-    if (!inf) return
-    if (!best || inf.chance_to_win > best.chanceToWin) {
-      best = {
-        chanceToWin: inf.chance_to_win,
-        inference: inf,
-        key: v.key,
-        name: v.name,
-      }
+  if (!best) return null
+  const control = identities.find((v) => v.isControl)
+  const controlChance = getControlChanceToWin(metricResult, identities)
+  if (control && controlChance !== null && controlChance > best.chanceToWin) {
+    return {
+      chanceToWin: controlChance,
+      inference: null,
+      isControl: true,
+      key: control.key,
+      name: control.name,
     }
-  })
+  }
   return best
+}
+
+export type LiftTone = 'success' | 'danger' | 'neutral'
+
+export type SummaryStats = {
+  winnerName: string
+  winnerColour: string
+  controlColour: string
+  controlWins: boolean
+  chanceToBest: string
+  chanceToBestHigh: boolean
+  liftLabel: string
+  liftValue: string
+  liftTone: LiftTone
+}
+
+export const deriveSummary = (
+  experiment: Experiment,
+  results: BayesianResultsSummary,
+): SummaryStats | null => {
+  const metric = getPrimaryMetric(experiment)
+  if (!metric) return null
+  const metricResult = getMetricResult(results, metric.metric)
+  if (!metricResult) return null
+
+  const identities = getVariantIdentities(experiment.feature)
+  const bestTreatment = getBestTreatment(metricResult, identities)
+  const winner = getWinningVariant(metricResult, identities, bestTreatment)
+  if (!winner) return null
+
+  const winnerIdentity = identities.find((v) => v.key === winner.key)
+  const controlIdentity = identities.find((v) => v.isControl)
+
+  const direction = metric.direction ?? 'up'
+  let lift: number | null = winner.inference?.lift ?? null
+  if (winner.isControl) {
+    // Control's lead, kept in control's terms: the best treatment's lift
+    // negated, so the magnitude matches the delta column and axis chart.
+    lift = bestTreatment?.inference ? -bestTreatment.inference.lift : null
+  }
+
+  let liftTone: LiftTone = 'neutral'
+  if (lift !== null && direction !== 'informational') {
+    liftTone = isLiftFavourable(lift, direction) ? 'success' : 'danger'
+  }
+
+  return {
+    chanceToBest: formatChancePct(winner.chanceToWin),
+    chanceToBestHigh: winner.chanceToWin > 0.9,
+    controlColour: controlIdentity?.colour ?? '',
+    controlWins: winner.isControl,
+    liftLabel: winner.isControl ? 'Control vs best variant' : 'Lift vs control',
+    liftTone,
+    liftValue: lift !== null ? formatLiftPct(lift) : 'Baseline',
+    winnerColour: winnerIdentity?.colour ?? '',
+    winnerName: winner.name,
+  }
 }
 
 export type AxisRange = { min: number; max: number }

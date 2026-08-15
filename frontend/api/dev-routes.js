@@ -68,12 +68,12 @@ module.exports = function setupRoutes(app) {
   if (process.env.FLAGSMITH_PROXY_API_URL) {
     const { createProxyMiddleware } = require('http-proxy-middleware')
     app.use(
-      '/api/v1/',
       createProxyMiddleware({
+        pathFilter: (pathname) => pathname === '/api/v1' || pathname.startsWith('/api/v1/'),
         changeOrigin: true,
         target: process.env.FLAGSMITH_PROXY_API_URL,
         xfwd: true,
-      }),
+      })
     )
   }
 

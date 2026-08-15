@@ -99,6 +99,48 @@ def test_delete_ingestion_key__valid_key__deletes_from_redis(
     )
 
 
+def test_set_ingestion_destination__valid_stream__writes_stream_name(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = mocker.Mock()
+    mocker.patch(
+        "experimentation.ingestion_sync_service._get_client",
+        return_value=mock_client,
+    )
+
+    # When
+    ingestion_sync_service.set_ingestion_destination(
+        "client-env-key",
+        stream_name="events-ingestion-org-1",
+    )
+
+    # Then
+    mock_client.set.assert_called_once_with(
+        "experimentation:environment_destinations:client-env-key",
+        "events-ingestion-org-1",
+    )
+
+
+def test_delete_ingestion_destination__valid_key__deletes_from_redis(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = mocker.Mock()
+    mocker.patch(
+        "experimentation.ingestion_sync_service._get_client",
+        return_value=mock_client,
+    )
+
+    # When
+    ingestion_sync_service.delete_ingestion_destination("client-env-key")
+
+    # Then
+    mock_client.delete.assert_called_once_with(
+        "experimentation:environment_destinations:client-env-key",
+    )
+
+
 def test_set_ingestion_key__redis_error__propagates(
     mocker: MockerFixture,
 ) -> None:

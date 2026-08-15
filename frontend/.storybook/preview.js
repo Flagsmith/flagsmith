@@ -55,6 +55,8 @@ global.Select = (props) =>
 window.Tooltip = Tooltip
 window.Row = Row
 window.FormGroup = FormGroup
+// isMobile is set at app boot; stub it so components that read it render in Storybook.
+window.isMobile = false
 
 /** @type { import('storybook').Preview } */
 const preview = {
@@ -104,6 +106,10 @@ const preview = {
       container: DocsContainer,
     },
     chromatic: {
+      // Off by default; opt in per story with `disableSnapshot: false`. Opted
+      // in: components still styling dark mode with hand-written `.dark` blocks,
+      // plus SemanticTokens for token values no component exercises.
+      disableSnapshot: true,
       modes: {
         light: allModes.light,
         dark: allModes.dark,

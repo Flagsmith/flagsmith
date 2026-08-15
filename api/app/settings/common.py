@@ -124,6 +124,7 @@ INSTALLED_APPS = [
     "features.release_pipelines.core",
     "segments",
     "segment_membership",
+    "cohorts",
     "clickhouse",
     "app",
     "e2etests",
@@ -134,6 +135,7 @@ INSTALLED_APPS = [
     "projects.code_references",
     "projects.tags",
     "api_keys",
+    "trust_relationships",
     "webhooks",
     "metrics",
     "onboarding",
@@ -341,6 +343,10 @@ TASK_PROCESSOR_DATABASES = env.list(
 
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 DCR_THROTTLE_RATE = env("DCR_THROTTLE_RATE", "500/month")
+OIDC_TOKEN_EXCHANGE_THROTTLE_RATE = env("OIDC_TOKEN_EXCHANGE_THROTTLE_RATE", "60/min")
+TRUST_RELATIONSHIP_ACCESS_TOKEN_LIFETIME_SECONDS = env.int(
+    "TRUST_RELATIONSHIP_ACCESS_TOKEN_LIFETIME_SECONDS", default=3600
+)
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", default=None)
 MASTER_API_KEY_THROTTLE_RATE = env("MASTER_API_KEY_THROTTLE_RATE", default=None)
@@ -352,6 +358,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
         "api_keys.authentication.MasterAPIKeyAuthentication",
         "oauth2_metadata.authentication.OAuth2BearerTokenAuthentication",
+        "trust_relationships.authentication.TrustRelationshipTokenAuthentication",
     ),
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
@@ -360,6 +367,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
         "dcr_register": DCR_THROTTLE_RATE,
+        "oidc_token_exchange": OIDC_TOKEN_EXCHANGE_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
         "master_api_key": MASTER_API_KEY_THROTTLE_RATE,
         "mfa_code": "5/min",
@@ -367,6 +375,7 @@ REST_FRAMEWORK = {
         "user": USER_THROTTLE_RATE,
         "influx_query": "5/min",
         "warehouse_connection_write": "10/min",
+        "warehouse_connection_read": "60/min",
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_RENDERER_CLASSES": [
@@ -601,6 +610,9 @@ SPECTACULAR_SETTINGS = {
         "WebhookScopeTypeEnum": ["organisation", "environment"],
         "SegmentRuleTypeEnum": "segments.models.SegmentRule.RULE_TYPES",
         "FeatureValueTypeEnum": ["integer", "string", "boolean"],
+        "WarehouseConnectionStatusEnum": (
+            "experimentation.models.WarehouseConnectionStatus.choices"
+        ),
     },
     "COMPONENT_NO_READ_ONLY_REQUIRED": True,
 }
@@ -1131,6 +1143,12 @@ if SCIM_INSTALLED:
         "GROUP_ADAPTER": "scim.adapters.GroupAdapter",
         "GROUP_FILTER_PARSER": "scim.filters.GroupFilterQuery",
         "GROUP_MODEL": "users.models.UserPermissionGroup",
+        # django-scim2's own discovery documents advertise the full RFC 7643 schema and
+        # capabilities we do not implement. Identity providers build their app user
+        # profile from `/Schemas`, so anything advertised there becomes a mapping a
+        # customer can configure and we silently ignore.
+        "SCHEMAS_GETTER": "scim.schemas.get_schemas",
+        "SERVICE_PROVIDER_CONFIG_MODEL": "scim.models.ScimServiceProviderConfig",
         "USER_ADAPTER": "scim.adapters.UserAdapter",
         "USER_FILTER_PARSER": "scim.filters.UserFilterQuery",
     }
@@ -1298,6 +1316,9 @@ FLAGSMITH_ON_FLAGSMITH_SERVER_KEY = env(
 FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = env(
     "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL", default=FLAGSMITH_ON_FLAGSMITH_API_URL
 )
+FLAGSMITH_ON_FLAGSMITH_SERVER_EVENTS_API_URL = env(
+    "FLAGSMITH_ON_FLAGSMITH_SERVER_EVENTS_API_URL", default=None
+)
 
 FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID = env.int(
     "FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID",
@@ -1411,11 +1432,13 @@ if not 0 <= FEATURE_VALUE_LIMIT <= 2000000:
         "FEATURE_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
     )
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 SEGMENT_RULES_CONDITIONS_LIMIT = env.int("SEGMENT_RULES_CONDITIONS_LIMIT", 100)
 
 # These settings are to handle large datasets / odd behaviour where rules and conditions
 # often aren't returned in the order that they were created in, which the code implicitly
 # expects.
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
     "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED", default=False
 )
@@ -1423,6 +1446,7 @@ SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
 # In SaaS, we need to be able to split out rules and conditions
 # (since the ordering issue has been evident on rules for longer, and
 # only recently happened to conditions).
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
     "SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
     default=SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED,
@@ -1538,6 +1562,9 @@ SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS = env.int(
 # Always installed: the router fences the `clickhouse` app's migrations off
 # the default Postgres database whether or not a CH alias is configured.
 DATABASE_ROUTERS.append("app.routers.ClickHouseRouter")
+
+# Should be registered last.
+DATABASE_ROUTERS.append("app.routers.ReplicaRouter")
 
 if CLICKHOUSE_ENABLED:
     _clickhouse_db: dict[str, Any] = {

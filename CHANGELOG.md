@@ -1,5 +1,218 @@
 # Changelog
 
+## [2.262.0](https://github.com/Flagsmith/flagsmith/compare/v2.261.0...v2.262.0) (2026-08-11)
+
+
+### Features
+
+* changed CR ordering to from newest to oldest created ([#8182](https://github.com/Flagsmith/flagsmith/issues/8182)) ([7fa105a](https://github.com/Flagsmith/flagsmith/commit/7fa105abcfce90b498e7a8928c0ff073d5a59cfe))
+* **cohorts:** add cohorts app with membership ledger models ([#8211](https://github.com/Flagsmith/flagsmith/issues/8211)) ([038d531](https://github.com/Flagsmith/flagsmith/commit/038d5319b9e5b088ffbe6b6e5800d5efc350cf8c))
+* **cohorts:** apply membership deltas to edge identities in batches ([#8213](https://github.com/Flagsmith/flagsmith/issues/8213)) ([377f203](https://github.com/Flagsmith/flagsmith/commit/377f203a3719efd6c004eb80202fb724d92d98ab))
+* **ds:** add Link for navigation ([#8179](https://github.com/Flagsmith/flagsmith/issues/8179)) ([dc7f354](https://github.com/Flagsmith/flagsmith/commit/dc7f3544498e63bf810b0cea99d275c133b3c4b2))
+* **experimentation:** set 365-day retention on Firehose CloudWatch log groups ([#8214](https://github.com/Flagsmith/flagsmith/issues/8214)) ([d6da2ff](https://github.com/Flagsmith/flagsmith/commit/d6da2ff17dcab9df9e039bb36a58cc0b01b537f2))
+* expose distinct warehouse event names per connection ([#8231](https://github.com/Flagsmith/flagsmith/issues/8231)) ([e9de7ba](https://github.com/Flagsmith/flagsmith/commit/e9de7babd442deabb82fdd77f1f11c853c693e84))
+* **Flagsmith on Flagsmith:** Migrate the API over to the dashboard project ([#8253](https://github.com/Flagsmith/flagsmith/issues/8253)) ([1377f1e](https://github.com/Flagsmith/flagsmith/commit/1377f1e7c55fe4bf0c249ed6d7145d8062b28383))
+* **identities:** add system_traits to engine identity document model ([#8212](https://github.com/Flagsmith/flagsmith/issues/8212)) ([bb69175](https://github.com/Flagsmith/flagsmith/commit/bb69175b3baef54021af0d11a979dde8f2fb2405))
+* metric event name combobox fed by warehouse events ([#8234](https://github.com/Flagsmith/flagsmith/issues/8234)) ([124dc1a](https://github.com/Flagsmith/flagsmith/commit/124dc1ab423cd07992f95ebb84af69dc15a74e86))
+* **onboarding:** Org-level onboarding experiment events ([#8242](https://github.com/Flagsmith/flagsmith/issues/8242)) ([0ec7755](https://github.com/Flagsmith/flagsmith/commit/0ec77557f7eb85b0cd6bf510b8100a5c1e00c9a8))
+* theme toggle ([#8128](https://github.com/Flagsmith/flagsmith/issues/8128)) ([0e30489](https://github.com/Flagsmith/flagsmith/commit/0e30489fcd52f336daaa0e6db0037ec1e15d1d02))
+
+
+### Bug Fixes
+
+* account for RBAC role query in org permission query-count test ([#8260](https://github.com/Flagsmith/flagsmith/issues/8260)) ([c761517](https://github.com/Flagsmith/flagsmith/commit/c76151762646978ee108d22fd7748b4703909764))
+* **auth:** disable Google sign-in button until OAuth script is ready ([#8201](https://github.com/Flagsmith/flagsmith/issues/8201)) ([be02b3c](https://github.com/Flagsmith/flagsmith/commit/be02b3cdde4e65c513c4a0fc1a6b3ae514c593fe))
+* experiment form UX fixes ([#8251](https://github.com/Flagsmith/flagsmith/issues/8251)) ([ef22e00](https://github.com/Flagsmith/flagsmith/commit/ef22e0052377dbedda1ce7be18d16d20f30c7733))
+* experiment results polish ([#8166](https://github.com/Flagsmith/flagsmith/issues/8166)) ([c2d3cd6](https://github.com/Flagsmith/flagsmith/commit/c2d3cd6da4ca74facc4bc865233a91c5de50f1ce))
+* **Features:** add remove option to feature settings panel ([#8203](https://github.com/Flagsmith/flagsmith/issues/8203)) ([2786102](https://github.com/Flagsmith/flagsmith/commit/27861027cb8e6bda224a21061f62d4418bb1f9b5))
+* make warehouse connection test failures more visible ([#8207](https://github.com/Flagsmith/flagsmith/issues/8207)) ([882ed14](https://github.com/Flagsmith/flagsmith/commit/882ed147a7d903b2ff87deee236a69a120e7eb71))
+* match Scale-Up plan ids case-insensitively ([#8249](https://github.com/Flagsmith/flagsmith/issues/8249)) ([ef41e05](https://github.com/Flagsmith/flagsmith/commit/ef41e0554b868d0b55cac7949e99bdb6f25e3cca))
+* **Multivariate:** API accepts multivariate percentage splits over 100% ([#8151](https://github.com/Flagsmith/flagsmith/issues/8151)) ([fc33002](https://github.com/Flagsmith/flagsmith/commit/fc33002f81a47c932a34bde09f8f2da50d6e8369))
+* resolve slow DB query in org permission check ([#8228](https://github.com/Flagsmith/flagsmith/issues/8228)) ([#8230](https://github.com/Flagsmith/flagsmith/issues/8230)) ([7be291d](https://github.com/Flagsmith/flagsmith/commit/7be291d75f55cafef94bd12da89dfe4c2ec2701a))
+* **SCIM:** Discovery endpoints advertise attributes and capabilities we ignore ([#8254](https://github.com/Flagsmith/flagsmith/issues/8254)) ([f08b4e0](https://github.com/Flagsmith/flagsmith/commit/f08b4e0f859e9cf88547dcad1632125ee94d9921))
+* **signup:** add a route to login when the email already has an account ([#8177](https://github.com/Flagsmith/flagsmith/issues/8177)) ([029995e](https://github.com/Flagsmith/flagsmith/commit/029995e461f726c5fe09463f9e5eeae17ca32a84))
+* **tokens:** text on surfaces fails WCAG AA contrast ([#8236](https://github.com/Flagsmith/flagsmith/issues/8236)) ([ed45277](https://github.com/Flagsmith/flagsmith/commit/ed4527790f9cef4420a66325f94b2394017a68c4))
+* **Utils:** coerce non-string values before split in validateRule ([#8198](https://github.com/Flagsmith/flagsmith/issues/8198)) ([d4bf413](https://github.com/Flagsmith/flagsmith/commit/d4bf4134a72b6e3df2966f16a3e9b6fa453a3ff1))
+* **webhooks:** validate organisation and integration URLs against SSRF ([#8220](https://github.com/Flagsmith/flagsmith/issues/8220)) ([eeac6b3](https://github.com/Flagsmith/flagsmith/commit/eeac6b3de9073c610355c12216f78e1f3127f42a))
+
+
+### CI
+
+* pre-commit autoupdate ([#8210](https://github.com/Flagsmith/flagsmith/issues/8210)) ([47e9edf](https://github.com/Flagsmith/flagsmith/commit/47e9edf19375d02e1a888adeb5c94fd84a2ca088))
+
+
+### Docs
+
+* added RBAC to scale-up and enterprise instead of enterprise only ([#8190](https://github.com/Flagsmith/flagsmith/issues/8190)) ([3f8978c](https://github.com/Flagsmith/flagsmith/commit/3f8978c3543ba2f0cd8efe24db0bf9985ed97c07))
+* Document supported SCIM features and correct the deprovisioning and base URL guidance ([#8221](https://github.com/Flagsmith/flagsmith/issues/8221)) ([3a496c3](https://github.com/Flagsmith/flagsmith/commit/3a496c3f5eb65644d5bb2c1a8038340227b94ac7))
+* Document the new Flagsmith CLI and deprecate the legacy CLI docs ([#8216](https://github.com/Flagsmith/flagsmith/issues/8216)) ([fb78687](https://github.com/Flagsmith/flagsmith/commit/fb78687f3ec13daa97988c36c6ce99a33568d655))
+
+
+### Refactoring
+
+* **styles:** semantic colors on links ([#8181](https://github.com/Flagsmith/flagsmith/issues/8181)) ([fce1bcd](https://github.com/Flagsmith/flagsmith/commit/fce1bcdf17153333b5f5fda5bce657a150d9592f))
+
+## [2.261.0](https://github.com/Flagsmith/flagsmith/compare/v2.260.0...v2.261.0) (2026-07-31)
+
+
+### Features
+
+* Log per-object warehouse delivery outcomes ([#8170](https://github.com/Flagsmith/flagsmith/issues/8170)) ([10a3bb7](https://github.com/Flagsmith/flagsmith/commit/10a3bb79b4e638516b687a6b5ebf28435ed4bddb))
+
+
+### Bug Fixes
+
+* **api:** DCR rejects client names containing colons ([#8194](https://github.com/Flagsmith/flagsmith/issues/8194)) ([9f3a4ee](https://github.com/Flagsmith/flagsmith/commit/9f3a4eef36044630f5ea4df69ce2e69b9d99cf6f))
+* consolidate copy field pattern usage ([#8169](https://github.com/Flagsmith/flagsmith/issues/8169)) ([fd78b2b](https://github.com/Flagsmith/flagsmith/commit/fd78b2b77a7d6c730f96aa7af4f01bed679687a2))
+* **onboarding:** stop polling while the verify console is hidden ([#8157](https://github.com/Flagsmith/flagsmith/issues/8157)) ([b372dc1](https://github.com/Flagsmith/flagsmith/commit/b372dc10a1ce18e96ddf1df7e6ff4d800d226a99))
+* **SDK:** Flag fetches fail when replica databases are configured ([#8168](https://github.com/Flagsmith/flagsmith/issues/8168)) ([6cf55a4](https://github.com/Flagsmith/flagsmith/commit/6cf55a43a6547aef1417d81123984e8490ca2de9))
+
+## [2.260.0](https://github.com/Flagsmith/flagsmith/compare/v2.259.0...v2.260.0) (2026-07-30)
+
+
+### Features
+
+* Ask for the ClickHouse HTTPS port instead of inferring it from the native port ([#8152](https://github.com/Flagsmith/flagsmith/issues/8152)) ([3e455a9](https://github.com/Flagsmith/flagsmith/commit/3e455a930259d1af5760226c5f4aec6ad60474ab))
+
+
+### Dependency Updates
+
+* **api:** update dependency datamodel-code-generator to &gt;=0.64,&lt;0.65 [security] ([#8148](https://github.com/Flagsmith/flagsmith/issues/8148)) ([4720225](https://github.com/Flagsmith/flagsmith/commit/47202256b883ba604d969f7e58df6a2cbdf25c91))
+* Bump flagsmith-common to 3.12.1 ([#8162](https://github.com/Flagsmith/flagsmith/issues/8162)) ([5442257](https://github.com/Flagsmith/flagsmith/commit/5442257558c23a5568b2285f942677ec2d7c17eb))
+
+## [2.259.0](https://github.com/Flagsmith/flagsmith/compare/v2.258.0...v2.259.0) (2026-07-29)
+
+
+### Features
+
+* ClickHouse database setup SQL on the warehouse card and docs ([#8112](https://github.com/Flagsmith/flagsmith/issues/8112)) ([f8eeab0](https://github.com/Flagsmith/flagsmith/commit/f8eeab052e4e63112ce5fe1fa3a56b629362c66a))
+* **onboarding:** wire the verify console to the real first-evaluation signal ([#8132](https://github.com/Flagsmith/flagsmith/issues/8132)) ([b8073b9](https://github.com/Flagsmith/flagsmith/commit/b8073b9d8ba60826b6e002d8325a81304bb5d105))
+* push delivery of buffered events to external ClickHouse warehouses ([#8107](https://github.com/Flagsmith/flagsmith/issues/8107)) ([41b8b9f](https://github.com/Flagsmith/flagsmith/commit/41b8b9fdadc8aee3b501b7b7e8463761e4d1f130))
+* Redesign Compare Environments page ([#7965](https://github.com/Flagsmith/flagsmith/issues/7965)) ([acb3eb9](https://github.com/Flagsmith/flagsmith/commit/acb3eb9bb51c57e9c4030d1c44dbf39b184927ee))
+* verify ClickHouse events table and query customer event stats ([#8116](https://github.com/Flagsmith/flagsmith/issues/8116)) ([551ac44](https://github.com/Flagsmith/flagsmith/commit/551ac4430772f01f31a46fe76f12bbb2f95a93ae))
+
+
+### Bug Fixes
+
+* **code-help:** correct the identity and segment snippets ([#8146](https://github.com/Flagsmith/flagsmith/issues/8146)) ([4d32782](https://github.com/Flagsmith/flagsmith/commit/4d3278297d6b7d229ecc6d3ea2829cffc456e7a9))
+* **code-help:** make the SDK snippets runnable ([#8145](https://github.com/Flagsmith/flagsmith/issues/8145)) ([238babf](https://github.com/Flagsmith/flagsmith/commit/238babf14c4fe37cc18266f6405bbd9d15fa1037))
+* **docker:** API image crashes on startup under a non-default runAsUser ([#8158](https://github.com/Flagsmith/flagsmith/issues/8158)) ([5e9eba9](https://github.com/Flagsmith/flagsmith/commit/5e9eba93f617e4df6252f5e36caeaafcf8f17353))
+
+
+### Dependency Updates
+
+* **frontend:** bump immutable, postcss, fast-uri and rspack [security] ([#8156](https://github.com/Flagsmith/flagsmith/issues/8156)) ([968e2c3](https://github.com/Flagsmith/flagsmith/commit/968e2c3ace13cee5cf8975ea1279e3736f187699))
+
+
+### Docs
+
+* Add stale flag detection documentation ([#8142](https://github.com/Flagsmith/flagsmith/issues/8142)) ([b14dd0c](https://github.com/Flagsmith/flagsmith/commit/b14dd0c4c9a261d6a469fe548efd3e7e4a92fa62))
+
+## [2.258.0](https://github.com/Flagsmith/flagsmith/compare/v2.257.1...v2.258.0) (2026-07-28)
+
+
+### Features
+
+* **api:** Support confidential clients in OAuth dynamic client registration ([#8138](https://github.com/Flagsmith/flagsmith/issues/8138)) ([ec9fd4a](https://github.com/Flagsmith/flagsmith/commit/ec9fd4ab4ed914cd60b7cd91041af35209efc067))
+
+
+### CI
+
+* pre-commit autoupdate ([#8118](https://github.com/Flagsmith/flagsmith/issues/8118)) ([067b6de](https://github.com/Flagsmith/flagsmith/commit/067b6dea0a6847de64982be35345e2a03fc110d1))
+
+## [2.257.1](https://github.com/Flagsmith/flagsmith/compare/v2.257.0...v2.257.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* **api:** DCR rejects registrations without a client_name ([#8129](https://github.com/Flagsmith/flagsmith/issues/8129)) ([1201efd](https://github.com/Flagsmith/flagsmith/commit/1201efddd2a36268aa07e4c858d9f15631878fff))
+
+## [2.257.0](https://github.com/Flagsmith/flagsmith/compare/v2.256.1...v2.257.0) (2026-07-28)
+
+
+### Features
+
+* **experiments:** colour lift by metric direction ([#8099](https://github.com/Flagsmith/flagsmith/issues/8099)) ([0668c09](https://github.com/Flagsmith/flagsmith/commit/0668c09ee42030575e79838ad4309fd0144321c8))
+
+
+### Bug Fixes
+
+* **api:** OAuth dynamic client registration fails for Claude Desktop ([#8114](https://github.com/Flagsmith/flagsmith/issues/8114)) ([aecbbb6](https://github.com/Flagsmith/flagsmith/commit/aecbbb646ed356a8a588f5ed3deb89cea0eb9e46))
+
+
+### Performance Improvements
+
+* **SDK:** Decouple SDK identity request cost from version history ([#8096](https://github.com/Flagsmith/flagsmith/issues/8096)) ([bea1512](https://github.com/Flagsmith/flagsmith/commit/bea1512a643956c9325f198b8fcc01a5352a5a35))
+
+
+### Refactoring
+
+* **code-help:** escape snippets centrally instead of in source strings ([#8062](https://github.com/Flagsmith/flagsmith/issues/8062)) ([4d5fff8](https://github.com/Flagsmith/flagsmith/commit/4d5fff8f2cff7df429e527c160123309bebc6bbd))
+
+## [2.256.1](https://github.com/Flagsmith/flagsmith/compare/v2.256.0...v2.256.1) (2026-07-27)
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Fix API boot failure in SaaS ([#8108](https://github.com/Flagsmith/flagsmith/issues/8108)) ([db1f611](https://github.com/Flagsmith/flagsmith/commit/db1f611d98ca89d84071bdc11637125d40396090))
+
+## [2.256.0](https://github.com/Flagsmith/flagsmith/compare/v2.255.1...v2.256.0) (2026-07-27)
+
+
+### Features
+
+* clickhouse warehouse setup UI ([#8028](https://github.com/Flagsmith/flagsmith/issues/8028)) ([30bf03a](https://github.com/Flagsmith/flagsmith/commit/30bf03aa32b43d9d20a14e3df077609493e66613))
+* **Environments:** Track first evaluation with a new Onboarding interface ([#8063](https://github.com/Flagsmith/flagsmith/issues/8063)) ([3c9cc97](https://github.com/Flagsmith/flagsmith/commit/3c9cc971ea100f731085a455e7a3f3df10af6993))
+* **experimentation:** enable Firehose CloudWatch error logging ([#8068](https://github.com/Flagsmith/flagsmith/issues/8068)) ([506b838](https://github.com/Flagsmith/flagsmith/commit/506b8386b06d9cb212a27d15e45c2e38c1a96b7d))
+* **experimentation:** provision per-org ingestion infra on external warehouse connect ([#8052](https://github.com/Flagsmith/flagsmith/issues/8052)) ([076e431](https://github.com/Flagsmith/flagsmith/commit/076e431c822eec52d76459fb03526750d6331cf8))
+* **experimentation:** seed per-environment ingestion destination in Redis ([#8080](https://github.com/Flagsmith/flagsmith/issues/8080)) ([e97cef6](https://github.com/Flagsmith/flagsmith/commit/e97cef63c19149b4ff43e0b1d9eb2b80a6db868c))
+* **experiments:** expose metric direction on experiment metrics API ([#8098](https://github.com/Flagsmith/flagsmith/issues/8098)) ([8ac19b9](https://github.com/Flagsmith/flagsmith/commit/8ac19b9f38a4ed47e349c63b6cf034a269883123))
+* **onboarding:** funnel analytics for the new flow ([#7960](https://github.com/Flagsmith/flagsmith/issues/7960)) ([cfcaf1c](https://github.com/Flagsmith/flagsmith/commit/cfcaf1c4bee875b61444d2bc74f388a6460def33))
+* stateless warehouse connection test endpoint ([#8060](https://github.com/Flagsmith/flagsmith/issues/8060)) ([6bf7a23](https://github.com/Flagsmith/flagsmith/commit/6bf7a23204d35ae33a6a392659f8468cc102da0a))
+* Stream S3 organisation exports ([#6612](https://github.com/Flagsmith/flagsmith/issues/6612)) ([46ae7a0](https://github.com/Flagsmith/flagsmith/commit/46ae7a06bc52dca1582faf623d3b97fb7f8b6f6c))
+
+
+### Bug Fixes
+
+* ClickHouse form follow-ups from [#8028](https://github.com/Flagsmith/flagsmith/issues/8028) review ([#8092](https://github.com/Flagsmith/flagsmith/issues/8092)) ([80e50a2](https://github.com/Flagsmith/flagsmith/commit/80e50a2cdd4035387ec1f87b8b674d10d44593c4))
+* **docs:** Google Tag Manager is not loading ([#8094](https://github.com/Flagsmith/flagsmith/issues/8094)) ([c174d2e](https://github.com/Flagsmith/flagsmith/commit/c174d2e8a940f1ed3b8e2227c387273adfece831))
+* **experiments:** results page control-wins state, lift colours, dark mode ([#8091](https://github.com/Flagsmith/flagsmith/issues/8091)) ([44b2464](https://github.com/Flagsmith/flagsmith/commit/44b2464d7a2baca89f77c1f4a565ce366c5c0cbe))
+* **MCP:** deploy the released image instead of redeploying the old one ([#8093](https://github.com/Flagsmith/flagsmith/issues/8093)) ([5e2c954](https://github.com/Flagsmith/flagsmith/commit/5e2c954d71c2e8bbd652e14e733e94a860538eca))
+* **onboarding:** Onboarding marker PUT too restrictive ([#8097](https://github.com/Flagsmith/flagsmith/issues/8097)) ([b9105aa](https://github.com/Flagsmith/flagsmith/commit/b9105aaf35ec8952f9613f7390c24452dd3f1f00))
+* **onboarding:** review-feedback polish ([#7989](https://github.com/Flagsmith/flagsmith/issues/7989)) ([f7e9e17](https://github.com/Flagsmith/flagsmith/commit/f7e9e1764f593ca7d5e4013f84929f589dfa1466))
+* **organisations:** Treat self-hosted licence as paid ([#8066](https://github.com/Flagsmith/flagsmith/issues/8066)) ([02a92d7](https://github.com/Flagsmith/flagsmith/commit/02a92d7264c6b4b4e00a2b9fd10998b7c68c719a))
+* Preserve /api/v1 prefix in frontend proxy (Fixes [#7974](https://github.com/Flagsmith/flagsmith/issues/7974)) ([#8004](https://github.com/Flagsmith/flagsmith/issues/8004)) ([6d9a4e5](https://github.com/Flagsmith/flagsmith/commit/6d9a4e594c57758d095b40d03fcaa646a5795fe6))
+* remove v0.1 experiment flag toggle from create feature modal ([#7907](https://github.com/Flagsmith/flagsmith/issues/7907)) ([94ac7af](https://github.com/Flagsmith/flagsmith/commit/94ac7afbbc743157558d429d67a4cfbbc7eced0c))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Fix keep-alive ([#8106](https://github.com/Flagsmith/flagsmith/issues/8106)) ([96f54b8](https://github.com/Flagsmith/flagsmith/commit/96f54b8e5d7f34670006409a803fa9406126d15f))
+
+
+### Dependency Updates
+
+* **frontend:** update dependency dompurify to v3.4.12 [security] ([#8064](https://github.com/Flagsmith/flagsmith/issues/8064)) ([8abadae](https://github.com/Flagsmith/flagsmith/commit/8abadaeea3681bbc5681dc871359881963b3fe72))
+
+
+### Performance Improvements
+
+* **features:** Decouple feature list query cost from project version history ([#8084](https://github.com/Flagsmith/flagsmith/issues/8084)) ([ba98880](https://github.com/Flagsmith/flagsmith/commit/ba9888071e6ebf52676d960b416605c3f1fe987f))
+
+
+### Refactoring
+
+* **analytics:** make trackEvent/trackTraits error-safe, tag onboarding variant when flags are ready ([#8061](https://github.com/Flagsmith/flagsmith/issues/8061)) ([36f579f](https://github.com/Flagsmith/flagsmith/commit/36f579fed4f2a754d3707f36c5c85b6a21e4a306))
+* **forms:** migrate Input to TS ([#7762](https://github.com/Flagsmith/flagsmith/issues/7762)) ([7665750](https://github.com/Flagsmith/flagsmith/commit/76657509de8587c0db6e2eeb9790892e0a6735c9))
+* **styles:** theme-adaptive shared code theme ([#8023](https://github.com/Flagsmith/flagsmith/issues/8023)) ([77c41d4](https://github.com/Flagsmith/flagsmith/commit/77c41d4eabc9b669d2aac04eb22bfa412c481214))
+
+## [2.255.1](https://github.com/Flagsmith/flagsmith/compare/v2.255.0...v2.255.1) (2026-07-21)
+
+
+### Bug Fixes
+
+* block HubSpot and Google Analytics in E2E runs ([#8056](https://github.com/Flagsmith/flagsmith/issues/8056)) ([fff78d9](https://github.com/Flagsmith/flagsmith/commit/fff78d9dc15bec69dd7c89adfbf90598657e6fba))
+
 ## [2.255.0](https://github.com/Flagsmith/flagsmith/compare/v2.254.0...v2.255.0) (2026-07-21)
 
 
