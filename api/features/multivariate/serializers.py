@@ -145,7 +145,7 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
         key = attrs.get("key", getattr(self.instance, "key", None))
         if key is None:
             return
-        
+
         feature = attrs.get("feature", getattr(self.instance, "feature", None))
         if self._get_siblings(feature).filter(key=key).exists():
             raise ValidationError(
