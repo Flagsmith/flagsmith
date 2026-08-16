@@ -15,10 +15,11 @@ from environments.models import Environment
 from features.future.exceptions import ChangeRequestsEnabledError
 from features.future.permissions import (
     check_read_permissions,
+    check_segment_overrides_permissions,
     check_update_permissions,
 )
 from features.future.serializers import UpdateFlagSerializer
-from features.future.services import get_flag, update_flag
+from features.future.services import delete_segment_override, get_flag, update_flag
 from features.future.types import UpdateFlagRequest, UpdateFlagResponse
 from features.models import Feature
 
@@ -39,6 +40,22 @@ def _get_feature(environment: Environment, feature_id: int) -> Feature:
         )
     except Feature.DoesNotExist:
         raise NotFound() from None
+
+
+def _check_change_requests_disabled(environment: Environment, feature: Feature) -> None:
+    """Refuse to write a flag that can only be changed by a change request."""
+    if not environment.is_workflow_enabled:
+        return
+    api_error = ChangeRequestsEnabledError()
+    logger.warning(
+        "flag.update_rejected",
+        organisation__id=environment.project.organisation_id,
+        project__id=environment.project_id,
+        environment__id=environment.id,
+        feature__id=feature.id,
+        reason=api_error.default_code,
+    )
+    raise api_error
 
 
 class FlagAPIView(APIView):
@@ -96,18 +113,7 @@ class FlagAPIView(APIView):
         environment = _get_environment(environment_key)
         check_update_permissions(request.user, environment, request.data)
         feature = _get_feature(environment, feature_id)
-
-        if environment.is_workflow_enabled:
-            api_error = ChangeRequestsEnabledError()
-            logger.warning(
-                "flag.update_rejected",
-                organisation__id=environment.project.organisation_id,
-                project__id=environment.project_id,
-                environment__id=environment.id,
-                feature__id=feature.id,
-                reason=api_error.default_code,
-            )
-            raise api_error
+        _check_change_requests_disabled(environment, feature)
 
         serializer = UpdateFlagSerializer(
             data=request.data,
@@ -121,6 +127,40 @@ class FlagAPIView(APIView):
                 feature=feature,
                 changes=serializer.validated_data,
                 replace=replace,
+                author=request.user,
+            )
+        )
+
+
+class SegmentOverrideAPIView(APIView):
+    """Remove what a flag serves to a segment in an environment."""
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        # Responds with the flag, like the other methods, rather than no content.
+        responses={200: UpdateFlagResponse},
+        tags=["experimental"],
+        description=(
+            "Remove the flag's override for the segment, "
+            "leaving the rest of the flag as it is."
+        ),
+    )
+    def delete(
+        self, request: Request, environment_key: str, feature_id: int, segment_id: int
+    ) -> Response:
+        assert not isinstance(request.user, AnonymousUser)
+
+        environment = _get_environment(environment_key)
+        check_segment_overrides_permissions(request.user, environment)
+        feature = _get_feature(environment, feature_id)
+        _check_change_requests_disabled(environment, feature)
+
+        return Response(
+            delete_segment_override(
+                environment=environment,
+                feature=feature,
+                segment_id=segment_id,
                 author=request.user,
             )
         )

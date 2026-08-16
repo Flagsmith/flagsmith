@@ -208,7 +208,38 @@ give it its own. `PUT` restores that for whatever it omits.
 
 ### Remove a segment override
 
-To remove a segment override, `PUT` the full list of overrides without it. `PUT` replaces the whole set, deleting any
+To remove a single segment override, `DELETE` it by segment:
+
+```bash
+curl -X DELETE 'https://api.flagsmith.com/api/__future__/environments/{environment_key}/features/{feature_id}/segment-overrides/{segment_id}/' \
+  -H 'Authorization: Api-Key {api_key}'
+```
+
+Like the update methods, this responds with the flag's complete state in the environment:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "environment_default": {"enabled": false, "value": {"type": "string", "value": "standard"}, "variants": []},
+  "segment_overrides": [
+    {
+      "segment": {"id": 101},
+      "priority": 10,
+      "enabled": true,
+      "value": {"type": "string", "value": "enterprise"},
+      "variants": []
+    }
+  ]
+}
+```
+
+The remaining overrides keep their priorities.
+
+A flag that has no override for the segment will respond `404`.
+
+Alternatively, `PUT` the full list of overrides without the one to remove. `PUT` replaces the whole set, deleting any
 override not listed:
 
 ```bash

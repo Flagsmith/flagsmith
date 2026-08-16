@@ -9,7 +9,10 @@ from django.db.models import Count, Q
 
 from api_keys.user import APIKeyUser
 from environments.models import Environment
-from features.future.exceptions import DuplicatePriorityError
+from features.future.exceptions import (
+    DuplicatePriorityError,
+    SegmentOverrideNotFoundError,
+)
 from features.future.mappers import (
     map_environment_default,
     map_segment_override,
@@ -68,6 +71,27 @@ def _get_feature_states_to_write(
             "feature_state_value",
         ).prefetch_related("multivariate_feature_state_values")
     )
+
+
+def _publish_version(
+    version: EnvironmentFeatureVersion, author: FFAdminUser | APIKeyUser
+) -> None:
+    # `UserABC.__subclasshook__` matches any user against `APIKeyUser`
+    published_by = author if isinstance(author, FFAdminUser) else None
+    version.publish(
+        published_by=published_by,
+        published_by_api_key=None if published_by else author.key,
+    )
+
+
+def _get_overrides_by_segment_id(
+    feature_states: Sequence[FeatureState],
+) -> dict[int, FeatureState]:
+    return {
+        feature_segment.segment_id: feature_state
+        for feature_state in feature_states
+        if (feature_segment := feature_state.feature_segment) is not None
+    }
 
 
 def _write_variants(feature_state: FeatureState, variants: Sequence[Variant]) -> None:
@@ -299,22 +323,13 @@ def update_flag(
                 feature=feature,
                 version=version,
                 environment_default=environment_default,
-                overrides={
-                    feature_segment.segment_id: feature_state
-                    for feature_state in feature_states
-                    if (feature_segment := feature_state.feature_segment) is not None
-                },
+                overrides=_get_overrides_by_segment_id(feature_states),
                 changes=override_changes,
                 replace=replace,
             )
 
         if version is not None:
-            # `UserABC.__subclasshook__` matches any user against `APIKeyUser`
-            published_by = author if isinstance(author, FFAdminUser) else None
-            version.publish(
-                published_by=published_by,
-                published_by_api_key=None if published_by else author.key,
-            )
+            _publish_version(version, author)
 
     logger.info(
         "flag.updated",
@@ -325,6 +340,45 @@ def update_flag(
         segment_overrides__created__segment__ids=written.created,
         segment_overrides__updated__segment__ids=written.updated,
         segment_overrides__deleted__segment__ids=written.deleted,
+    )
+
+    return get_flag(environment=environment, feature=feature)
+
+
+def delete_segment_override(
+    *,
+    environment: Environment,
+    feature: Feature,
+    segment_id: int,
+    author: FFAdminUser | APIKeyUser,
+) -> UpdateFlagResponse:
+    """Remove a flag's override for one segment, leaving the rest of the flag alone."""
+    with transaction.atomic():
+        version = _create_draft_version(environment, feature)
+        feature_states = _get_feature_states_to_write(environment, feature, version)
+
+        if segment_id not in _get_overrides_by_segment_id(feature_states):
+            raise SegmentOverrideNotFoundError()
+
+        _delete_segment_overrides(
+            environment=environment,
+            feature=feature,
+            version=version,
+            segment_ids=[segment_id],
+        )
+
+        if version is not None:
+            _publish_version(version, author)
+
+    logger.info(
+        "flag.updated",
+        organisation__id=environment.project.organisation_id,
+        project__id=environment.project_id,
+        environment__id=environment.id,
+        feature__id=feature.id,
+        segment_overrides__created__segment__ids=[],
+        segment_overrides__updated__segment__ids=[],
+        segment_overrides__deleted__segment__ids=[segment_id],
     )
 
     return get_flag(environment=environment, feature=feature)
