@@ -28,6 +28,7 @@ def _subscription_metadata(mocker: MockerFixture) -> None:
         return_value=metadata,
     )
 
+
 def test_list_audit_logs__with_project_filter__makes_expected_queries(  # type: ignore[no-untyped-def]
     admin_client,
     project,
@@ -46,7 +47,8 @@ def test_list_audit_logs__with_project_filter__makes_expected_queries(  # type: 
     # Then
     assert res.status_code == status.HTTP_200_OK
     assert res.json()["count"] == 4
-    
+
+
 def test_retrieve_audit_log__environment_change__includes_change_details(
     admin_client: APIClient,
     project: int,
@@ -381,7 +383,7 @@ def test_retrieve_audit_log__segment_override_created_and_deleted__includes_chan
     # now let's check that we have some information about the change
     assert delete_override_audit_log_details["change_type"] == "DELETE"
     assert delete_override_audit_log_details["change_details"] == []
-    
+
 
 def test_retrieve_audit_log__segment_override_created_for_feature_value__includes_change_details(
     admin_client: APIClient,
@@ -438,4 +440,3 @@ def test_retrieve_audit_log__segment_override_created_for_feature_value__include
     assert audit_log_details["change_details"] == [
         {"field": "string_value", "old": "default_value", "new": "foo"},
     ]
-    
