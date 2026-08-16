@@ -108,7 +108,7 @@ def test_list_mv_options__feature_in_other_project__returns_404(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_partially_updating_multivariate_option_success(
+def test_partial_update_multivariate_option__valid_data__returns_200_and_updates(
     admin_client: APIClient,
     project: Project,
     multivariate_feature: Feature,
