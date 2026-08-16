@@ -90,6 +90,42 @@ def mv_feature_variants(
     ]
 
 
+@pytest.fixture()
+def two_segment_overrides(
+    admin_client_new: APIClient,
+    environment_api_key: str,
+    feature: int,
+    log: StructuredLogCapture,
+    segment: int,
+    segment_2: int,
+    versioned_environment: Environment,
+) -> None:
+    response = admin_client_new.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest(
+            {
+                "segment_overrides": [
+                    {
+                        "segment": {"id": segment},
+                        "enabled": True,
+                        "priority": 0,
+                        "value": {"type": "string", "value": "enterprise"},
+                    },
+                    {
+                        "segment": {"id": segment_2},
+                        "enabled": True,
+                        "priority": 1,
+                        "value": {"type": "string", "value": "startup"},
+                    },
+                ],
+            }
+        ),
+        format="json",
+    )
+    assert response.status_code == 200
+    log.events.clear()
+
+
 @pytest.mark.parametrize(
     "changes",
     [
@@ -2060,42 +2096,6 @@ def test_update_flag__variants_on_standard_feature__responds_400(
         .multivariate_feature_state_values.exists()
     )
     assert log.events == []
-
-
-@pytest.fixture()
-def two_segment_overrides(
-    admin_client_new: APIClient,
-    environment_api_key: str,
-    feature: int,
-    log: StructuredLogCapture,
-    segment: int,
-    segment_2: int,
-    versioned_environment: Environment,
-) -> None:
-    response = admin_client_new.patch(
-        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
-        UpdateFlagRequest(
-            {
-                "segment_overrides": [
-                    {
-                        "segment": {"id": segment},
-                        "enabled": True,
-                        "priority": 0,
-                        "value": {"type": "string", "value": "enterprise"},
-                    },
-                    {
-                        "segment": {"id": segment_2},
-                        "enabled": True,
-                        "priority": 1,
-                        "value": {"type": "string", "value": "startup"},
-                    },
-                ],
-            }
-        ),
-        format="json",
-    )
-    assert response.status_code == 200
-    log.events.clear()
 
 
 def test_delete_segment_override__existing_override__removes_override(
