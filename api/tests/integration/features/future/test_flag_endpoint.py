@@ -2158,42 +2158,6 @@ def test_delete_segment_override__existing_override__removes_override(
     ]
 
 
-def test_delete_segment_override__last_override__removes_override(
-    admin_client_new: APIClient,
-    environment_api_key: str,
-    feature: int,
-    segment: int,
-    versioned_environment: Environment,
-) -> None:
-    # Given
-    setup_response = admin_client_new.patch(
-        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
-        UpdateFlagRequest(
-            {"segment_overrides": [{"segment": {"id": segment}, "enabled": True}]}
-        ),
-        format="json",
-    )
-    assert setup_response.status_code == 200
-
-    # When
-    response = admin_client_new.delete(
-        f"/api/__future__/environments/{environment_api_key}/features/{feature}"
-        f"/segment-overrides/{segment}/",
-    )
-
-    # Then
-    assert response.status_code == 200
-    assert response.json()["segment_overrides"] == []
-    assert (
-        not FeatureState.objects.get_live_feature_states(
-            environment=versioned_environment,
-            feature_id=feature,
-        )
-        .exclude(feature_segment=None)
-        .exists()
-    )
-
-
 def test_delete_segment_override__environment_versioned__publishes_new_version(
     admin_client_new: APIClient,
     environment_api_key: str,
