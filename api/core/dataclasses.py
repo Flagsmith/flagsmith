@@ -13,6 +13,10 @@ class AuthorData:
     user: "FFAdminUser | None" = None
     api_key: "MasterAPIKey | None" = None
 
+    def __post_init__(self) -> None:
+        if self.user and self.api_key:
+            raise ValueError("Author must be either a user or a MasterAPIKey")
+
     @classmethod
     def from_request(cls, request: "Request") -> "AuthorData":
         from users.models import FFAdminUser

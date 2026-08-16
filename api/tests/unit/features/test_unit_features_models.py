@@ -9,6 +9,7 @@ from django.utils import timezone
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 
+from core.dataclasses import AuthorData
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
@@ -1476,7 +1477,7 @@ def test_feature_state_create__with_environment_feature_version__does_not_trigge
         environment=environment_v2_versioning,
         feature_segment=feature_segment,
     )
-    new_version.publish(admin_user)
+    new_version.publish(AuthorData(user=admin_user))
 
     # Then - Webhooks are not triggered for versioned environments
     # (handled by trigger_update_version_webhooks instead)

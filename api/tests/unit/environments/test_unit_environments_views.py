@@ -18,6 +18,7 @@ from rest_framework.test import APIClient
 from api_keys.models import MasterAPIKey
 from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
 from core.constants import STRING
+from core.dataclasses import AuthorData
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey, Webhook
@@ -1359,7 +1360,7 @@ def test_retrieve_environment__v2_versioning_with_old_versions__returns_correct_
 
     EnvironmentFeatureVersion.objects.create(
         feature=feature, environment=environment_v2_versioning
-    ).publish(staff_user)
+    ).publish(AuthorData(user=staff_user))
 
     # When
     response = admin_client_new.get(url)

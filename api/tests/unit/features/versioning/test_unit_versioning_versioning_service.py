@@ -271,7 +271,7 @@ def test_get_environment_flags_list__v2_versioning_with_published_version__retur
     )
     environment_feature_1_version_2_feature_state.enabled = True
     environment_feature_1_version_2_feature_state.save()
-    environment_feature_1_version_2.publish(admin_user)
+    environment_feature_1_version_2.publish(AuthorData(user=admin_user))
 
     # When
     with django_assert_num_queries(2):
@@ -317,7 +317,7 @@ def test_get_environment_flags_list__v2_segment_override_removed__excludes_overr
         feature_segment__segment=segment,
         environment_feature_version=new_version,
     ).delete()
-    new_version.publish(published_by=admin_user)
+    new_version.publish(AuthorData(user=admin_user))
 
     # When
     environment_feature_states = get_environment_flags_list(
@@ -346,7 +346,9 @@ def test_get_current_live_environment_feature_version__unpublished_and_future_ve
     future_version = EnvironmentFeatureVersion.objects.create(
         environment=environment_v2_versioning, feature=feature
     )
-    future_version.publish(staff_user, live_from=timezone.now() + timedelta(days=1))
+    future_version.publish(
+        AuthorData(user=staff_user), live_from=timezone.now() + timedelta(days=1)
+    )
 
     # When
     latest_version = get_current_live_environment_feature_version(
@@ -495,7 +497,7 @@ def test_get_updated_feature_states_for_version__environment_value_changed__retu
     v1_segment_override.feature_state_value.type = STRING
     v1_segment_override.feature_state_value.string_value = "segment_value"
     v1_segment_override.feature_state_value.save()
-    v1.publish(published_by=staff_user)
+    v1.publish(AuthorData(user=staff_user))
 
     # Create v2 - environment feature state value changes but segment override stays same
     v2 = EnvironmentFeatureVersion.objects.create(
@@ -544,7 +546,7 @@ def test_get_updated_feature_states_for_version__segment_override_value_changed_
     v1_segment_override.feature_state_value.type = STRING
     v1_segment_override.feature_state_value.string_value = "segment_value_v1"
     v1_segment_override.feature_state_value.save()
-    v1.publish(published_by=staff_user)
+    v1.publish(AuthorData(user=staff_user))
 
     # Create v2 - segment override value changes but environment default stays same
     v2 = EnvironmentFeatureVersion.objects.create(
@@ -618,7 +620,7 @@ def test_get_updated_feature_states_for_version__mv_allocation_changed__returns_
         multivariate_feature_option=mv_option_2,
         percentage_allocation=40,
     )
-    v1.publish(published_by=staff_user)
+    v1.publish(AuthorData(user=staff_user))
 
     # Create v2 - change the multivariate percentage allocations in segment override
     v2 = EnvironmentFeatureVersion.objects.create(
@@ -700,7 +702,7 @@ def test_get_updated_feature_states_for_version__mv_control_value_changed__retur
         multivariate_feature_option=mv_option_2,
         percentage_allocation=50,
     )
-    v1.publish(published_by=staff_user)
+    v1.publish(AuthorData(user=staff_user))
 
     # Create v2 - change the control value but keep multivariate allocations the same
     v2 = EnvironmentFeatureVersion.objects.create(
