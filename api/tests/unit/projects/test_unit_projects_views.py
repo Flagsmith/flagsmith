@@ -1117,4 +1117,3 @@ def test_delete_project__valid_request__creates_audit_log(
     assert audit_log.related_object_type == RelatedObjectType.PROJECT.name
     assert audit_log.log == PROJECT_DELETED_MESSAGE % project_name
     assert audit_log.related_object_id == project.id
-    
