@@ -1075,7 +1075,7 @@ def test_list_projects__default_enforce_feature_owners__returns_false(
 
 
 def test_create_project__valid_request__creates_audit_log(
-    admin_client, organisation
+    admin_client: APIClient, organisation: Organisation
 ) -> None:
     # Given
     url = reverse("api-v1:projects:project-list")
@@ -1098,7 +1098,7 @@ def test_create_project__valid_request__creates_audit_log(
 
 
 def test_delete_project__valid_request__creates_audit_log(
-    admin_client, project, organisation
+    admin_client: APIClient, project: Project, organisation: Organisation
 ) -> None:
     # Given
     url = reverse("api-v1:projects:project-detail", args=[project.id])
@@ -1117,3 +1117,4 @@ def test_delete_project__valid_request__creates_audit_log(
     assert audit_log.related_object_type == RelatedObjectType.PROJECT.name
     assert audit_log.log == PROJECT_DELETED_MESSAGE % project_name
     assert audit_log.related_object_id == project.id
+    
