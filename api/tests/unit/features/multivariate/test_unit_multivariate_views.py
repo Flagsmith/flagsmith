@@ -118,10 +118,7 @@ def test_partial_update_multivariate_option__valid_data__returns_200_and_updates
 
     assert mv_option is not None
 
-    url = reverse(
-        "api-v1:projects:feature-mv-options-detail",
-        args=[project.id, multivariate_feature.id, mv_option.id],
-    )
+    url = f"/api/v1/projects/{project.id}/features/{multivariate_feature.id}/mv-options/{mv_option.id}/"
 
     new_key = "hero"
     data = {"key": new_key}
