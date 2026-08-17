@@ -2424,6 +2424,7 @@ paths:
           schema:
             type: string
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -19368,7 +19369,6 @@ components:
           type: string
           readOnly: true
         name:
-          description: A free-form name for the API key. Need not be unique. 50 characters max.
           type: string
           maxLength: 50
         created:
@@ -19380,6 +19380,8 @@ components:
             - string
             - 'null'
           readOnly: true
+      required:
+        - name
     CohortSyncMembers:
       type: object
       properties:
