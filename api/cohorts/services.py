@@ -9,10 +9,7 @@ from flag_engine.segments.constants import IS_SET
 from audit.constants import SEGMENT_CREATED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
-from cohorts.constants import (
-    COHORT_MEMBERSHIP_APPLY_BATCH_SIZE,
-    COHORT_MEMBERSHIP_UPSERT_BATCH_SIZE,
-)
+from cohorts.constants import COHORT_MEMBERSHIP_APPLY_BATCH_SIZE
 from cohorts.metrics import flagsmith_cohorts_membership_deltas_applied_total
 from cohorts.models import (
     Cohort,
@@ -160,7 +157,9 @@ def add_cohort_members(cohort: Cohort, identifiers: "typing.Iterable[str]") -> N
         # to pending and the identity write it triggers is idempotent.
         CohortMembership.objects.bulk_create(
             rows,
-            batch_size=COHORT_MEMBERSHIP_UPSERT_BATCH_SIZE,
+            # Postgres rejects a statement carrying more than 65535 bind
+            # parameters, which a single large batch would exceed.
+            batch_size=1000,
             update_conflicts=True,
             unique_fields=["cohort", "identifier"],
             update_fields=["state", "updated_at"],
