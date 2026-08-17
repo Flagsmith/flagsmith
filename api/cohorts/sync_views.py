@@ -1,11 +1,3 @@
-"""Endpoints Amplitude calls to keep a Flagsmith cohort in step with one of
-its behavioural cohorts.
-
-Amplitude fixes the routes, field names and status codes used here — see
-https://amplitude.com/docs/partners/create-a-cohort-sync-integration — so
-they cannot be renamed to suit our own conventions.
-"""
-
 import typing
 import uuid as uuid_module
 

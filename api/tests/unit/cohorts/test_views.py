@@ -390,27 +390,3 @@ def test_create_sync_key__missing_name__returns_400(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert not CohortSyncKey.objects.exists()
-
-
-def test_create_sync_key__non_edge_project__returns_400(
-    staff_client: APIClient,
-    environment: Environment,
-    with_project_permissions: WithProjectPermissionsCallable,
-    with_environment_permissions: WithEnvironmentPermissionsCallable,
-) -> None:
-    # Given
-    with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
-    with_environment_permissions(  # type: ignore[call-arg]
-        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES]
-    )
-    url = reverse(
-        "api-v1:environments:cohorts:sync-keys-list", args=[environment.api_key]
-    )
-
-    # When
-    response = staff_client.post(url, data={"name": "Amplitude prod"}, format="json")
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == "Dynamo DB is not enabled for this project"
-    assert not CohortSyncKey.objects.exists()

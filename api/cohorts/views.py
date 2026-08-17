@@ -88,10 +88,6 @@ class CohortSyncKeyViewSet(
         environment = Environment.objects.get(
             api_key=self.kwargs.get("environment_api_key")
         )
-        # Refuse the key here rather than let the external source discover it,
-        # where nobody who can fix it is watching.
-        if not services.edge_sync_enabled(environment.project):
-            raise DynamoNotEnabledError()
         serializer.save(environment=environment, created_by=self.request.user)
 
     def perform_destroy(self, instance: CohortSyncKey) -> None:
