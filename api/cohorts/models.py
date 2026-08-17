@@ -49,9 +49,6 @@ class Cohort(SoftDeleteExportableModel):
 
 
 class CohortSyncKey(AbstractAPIKey):
-    """Bearer credential an external cohort source uses to call the
-    cohort-sync endpoints; scopes every call to one environment."""
-
     environment = models.ForeignKey(
         "environments.Environment",
         on_delete=models.CASCADE,
