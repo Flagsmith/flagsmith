@@ -1,5 +1,5 @@
 from django.db import models
-from rest_framework_api_key.models import AbstractAPIKey, APIKeyManager
+from rest_framework_api_key.models import AbstractAPIKey
 
 from cohorts.constants import COHORT_SYSTEM_TRAIT_KEY_PREFIX
 from core.models import SoftDeleteExportableModel
@@ -48,10 +48,6 @@ class Cohort(SoftDeleteExportableModel):
         ]
 
 
-class CohortSyncKeyManager(APIKeyManager):
-    pass
-
-
 class CohortSyncKey(AbstractAPIKey):
     """Bearer credential an external cohort source uses to call the
     cohort-sync endpoints; scopes every call to one environment."""
@@ -65,7 +61,9 @@ class CohortSyncKey(AbstractAPIKey):
         "users.FFAdminUser", on_delete=models.SET_NULL, null=True, blank=True
     )
 
-    objects = CohortSyncKeyManager()  # type: ignore[misc]
+    class Meta(AbstractAPIKey.Meta):
+        verbose_name = "cohort sync key"
+        verbose_name_plural = "cohort sync keys"
 
 
 class CohortMembershipState(models.TextChoices):

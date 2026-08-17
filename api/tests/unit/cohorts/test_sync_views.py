@@ -3,9 +3,12 @@ import typing
 from django.urls import reverse
 from django.utils import timezone
 from flag_engine.segments.constants import IS_SET
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from cohorts.models import (
     Cohort,
     CohortMembership,
@@ -323,3 +326,76 @@ def test_amplitude_add_members__empty_user_ids__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_amplitude_create_list__valid_key__audits_and_queues_environment_update(
+    cohort_sync_key: _KeyAndPlaintext,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    key, plaintext = cohort_sync_key
+    client = _authenticated_client(plaintext)
+    url = reverse("api-v1:cohort-sync:amplitude-list")
+
+    # When
+    response = client.post(url, data={"name": "Beta users"}, format="json")
+
+    # Then - the audit record carries no user, names the source, and is the
+    # hook that rebuilds the environment document.
+    assert response.status_code == status.HTTP_200_OK
+    cohort = Cohort.objects.get(uuid=response.json()["list_id"])
+    audit_log = AuditLog.objects.get(related_object_id=cohort.segment_id)
+    assert audit_log.author is None
+    assert audit_log.master_api_key is None
+    assert audit_log.environment == key.environment
+    assert audit_log.related_object_type == RelatedObjectType.SEGMENT.name
+    assert audit_log.log == (
+        "New Segment created: Beta users (via Amplitude cohort sync)"
+    )
+    assert audit_log.environment_document_updated is True
+
+
+def test_amplitude_create_list__valid_key__history_records_no_user(
+    cohort_sync_key: _KeyAndPlaintext,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    _, plaintext = cohort_sync_key
+    client = _authenticated_client(plaintext)
+    url = reverse("api-v1:cohort-sync:amplitude-list")
+
+    # When
+    response = client.post(url, data={"name": "Beta users"}, format="json")
+
+    # Then - a machine caller leaves no user on historical records; stamping
+    # one would fail, since the sync key is not a Flagsmith user.
+    assert response.status_code == status.HTTP_200_OK
+    cohort = Cohort.objects.get(uuid=response.json()["list_id"])
+    history_record = cohort.segment.history.get()
+    assert history_record.history_user is None
+    assert history_record.master_api_key is None
+
+
+def test_amplitude_add_members__master_api_key_throttle_enabled__succeeds(
+    cohort_sync_key: _KeyAndPlaintext,
+    amplitude_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    settings: SettingsWrapper,
+) -> None:
+    # Given - the throttle that reads master API key attributes off the caller
+    settings.REST_FRAMEWORK = {
+        **settings.REST_FRAMEWORK,
+        "DEFAULT_THROTTLE_CLASSES": ["core.throttling.MasterAPIKeyUserRateThrottle"],
+        "DEFAULT_THROTTLE_RATES": {"master_api_key": "1000/minute"},
+    }
+    _, plaintext = cohort_sync_key
+    client = _authenticated_client(plaintext)
+    url = reverse(
+        "api-v1:cohort-sync:amplitude-add", kwargs={"pk": str(amplitude_cohort.uuid)}
+    )
+
+    # When
+    response = client.post(url, data={"user_ids": ["user-1"]}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK

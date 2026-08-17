@@ -1,16 +1,25 @@
+"""Endpoints Amplitude calls to keep a Flagsmith cohort in step with one of
+its behavioural cohorts.
+
+Amplitude fixes the routes, field names and status codes used here — see
+https://amplitude.com/docs/partners/create-a-cohort-sync-integration — so
+they cannot be renamed to suit our own conventions.
+"""
+
+import typing
 import uuid as uuid_module
 
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from cohorts import services
 from cohorts.authentication import CohortSyncKeyAuthentication
 from cohorts.models import Cohort, CohortSourceType, CohortSyncKey
+from cohorts.permissions import HasCohortSyncKey
 from cohorts.serializers import (
     AmplitudeListSerializer,
     CohortSyncMembersSerializer,
@@ -36,7 +45,7 @@ _LIST_RESPONSE = inline_serializer(
 )
 class AmplitudeCohortSyncViewSet(viewsets.ViewSet):
     authentication_classes = [CohortSyncKeyAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [HasCohortSyncKey]
 
     def create(self, request: Request) -> Response:
         serializer = AmplitudeListSerializer(data=request.data)
@@ -44,7 +53,7 @@ class AmplitudeCohortSyncViewSet(viewsets.ViewSet):
         environment = self._get_key(request).environment
         if not services.edge_sync_enabled(environment.project):
             raise DynamoNotEnabledError()
-        cohort = services.create_cohort(
+        cohort = services.create_cohort_for_source(
             environment=environment,
             name=serializer.validated_data["name"],
             source_type=CohortSourceType.AMPLITUDE,
@@ -68,8 +77,8 @@ class AmplitudeCohortSyncViewSet(viewsets.ViewSet):
         return Response()
 
     def _get_key(self, request: Request) -> CohortSyncKey:
-        assert isinstance(request.auth, CohortSyncKey)
-        return request.auth
+        # HasCohortSyncKey has already established the type.
+        return typing.cast(CohortSyncKey, request.auth)
 
     def _get_cohort(self, request: Request, pk: str) -> Cohort:
         try:

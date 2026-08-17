@@ -37,6 +37,9 @@ class CohortSerializer(serializers.ModelSerializer[Cohort]):
 
 class CohortSyncKeySerializer(serializers.ModelSerializer[CohortSyncKey]):
     key = serializers.SerializerMethodField()
+    # The model field carries a default, which DRF would read as optional;
+    # saving without a name fails at the database instead.
+    name = serializers.CharField(max_length=50)
 
     class Meta:
         model = CohortSyncKey

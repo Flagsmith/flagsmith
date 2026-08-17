@@ -266,14 +266,20 @@ def test_create_cohort__non_edge_project__returns_201(
 
 def test_create_sync_key__staff_with_permissions__returns_201_with_plaintext_key(
     staff_client: APIClient,
-    environment: Environment,
+    dynamo_enabled_project: Project,
+    dynamo_enabled_project_environment_one: Environment,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
     with_project_permissions: WithProjectPermissionsCallable,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
+    environment = dynamo_enabled_project_environment_one
+    with_project_permissions(  # type: ignore[call-arg]
+        [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
+    )
     with_environment_permissions(  # type: ignore[call-arg]
-        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES]
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES],
+        environment_id=environment.id,
     )
     url = reverse(
         "api-v1:environments:cohorts:sync-keys-list", args=[environment.api_key]
@@ -355,3 +361,56 @@ def test_delete_sync_key__existing_key__revokes(
     assert response.status_code == status.HTTP_204_NO_CONTENT
     key.refresh_from_db()
     assert key.revoked is True
+
+
+def test_create_sync_key__missing_name__returns_400(
+    staff_client: APIClient,
+    dynamo_enabled_project: Project,
+    dynamo_enabled_project_environment_one: Environment,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    with_project_permissions: WithProjectPermissionsCallable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions(  # type: ignore[call-arg]
+        [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
+    )
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES],
+        environment_id=dynamo_enabled_project_environment_one.id,
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:sync-keys-list",
+        args=[dynamo_enabled_project_environment_one.api_key],
+    )
+
+    # When
+    response = staff_client.post(url, data={}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert not CohortSyncKey.objects.exists()
+
+
+def test_create_sync_key__non_edge_project__returns_400(
+    staff_client: APIClient,
+    environment: Environment,
+    with_project_permissions: WithProjectPermissionsCallable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES]
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:sync-keys-list", args=[environment.api_key]
+    )
+
+    # When
+    response = staff_client.post(url, data={"name": "Amplitude prod"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Dynamo DB is not enabled for this project"
+    assert not CohortSyncKey.objects.exists()

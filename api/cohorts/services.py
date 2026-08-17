@@ -6,7 +6,13 @@ from django.db.models import QuerySet
 from django.utils import timezone
 from flag_engine.segments.constants import IS_SET
 
-from cohorts.constants import COHORT_MEMBERSHIP_APPLY_BATCH_SIZE
+from audit.constants import SEGMENT_CREATED_MESSAGE
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
+from cohorts.constants import (
+    COHORT_MEMBERSHIP_APPLY_BATCH_SIZE,
+    COHORT_MEMBERSHIP_UPSERT_BATCH_SIZE,
+)
 from cohorts.metrics import flagsmith_cohorts_membership_deltas_applied_total
 from cohorts.models import (
     Cohort,
@@ -116,6 +122,32 @@ def create_cohort(
     return cohort
 
 
+def create_cohort_for_source(
+    *,
+    environment: "Environment",
+    name: str,
+    source_type: CohortSourceType,
+) -> Cohort:
+    """Create a cohort on behalf of an external source, where no Flagsmith
+    user is acting."""
+    cohort = create_cohort(environment=environment, name=name, source_type=source_type)
+    # Nothing records a user for these calls, so the audit log that Flagsmith
+    # derives from historical records is skipped — and with it the environment
+    # document rebuild that makes the new segment visible to SDKs. Write the
+    # record here instead, naming the source that asked for the cohort.
+    AuditLog.objects.create(
+        environment=environment,
+        project=environment.project,
+        related_object_id=cohort.segment_id,
+        related_object_type=RelatedObjectType.SEGMENT.name,
+        log=(
+            f"{SEGMENT_CREATED_MESSAGE % cohort.segment.name} "
+            f"(via {CohortSourceType(source_type).label} cohort sync)"
+        ),
+    )
+    return cohort
+
+
 def add_cohort_members(cohort: Cohort, identifiers: "typing.Iterable[str]") -> None:
     from cohorts.tasks import apply_cohort_membership_deltas
 
@@ -128,6 +160,7 @@ def add_cohort_members(cohort: Cohort, identifiers: "typing.Iterable[str]") -> N
         # to pending and the identity write it triggers is idempotent.
         CohortMembership.objects.bulk_create(
             rows,
+            batch_size=COHORT_MEMBERSHIP_UPSERT_BATCH_SIZE,
             update_conflicts=True,
             unique_fields=["cohort", "identifier"],
             update_fields=["state", "updated_at"],
@@ -145,10 +178,11 @@ def add_cohort_members(cohort: Cohort, identifiers: "typing.Iterable[str]") -> N
 def remove_cohort_members(cohort: Cohort, identifiers: "typing.Iterable[str]") -> None:
     from cohorts.tasks import apply_cohort_membership_deltas
 
+    unique_identifiers = set(identifiers)
     with transaction.atomic():
         # Removing a non-member is a no-op: only existing rows flip.
-        updated = CohortMembership.objects.filter(
-            cohort=cohort, identifier__in=set(identifiers)
+        matched = CohortMembership.objects.filter(
+            cohort=cohort, identifier__in=unique_identifiers
         ).update(state=CohortMembershipState.PENDING_REMOVE, updated_at=timezone.now())
         apply_cohort_membership_deltas.delay(kwargs={"cohort_id": cohort.id})
     logger.info(
@@ -156,7 +190,8 @@ def remove_cohort_members(cohort: Cohort, identifiers: "typing.Iterable[str]") -
         cohort__id=cohort.id,
         environment__id=cohort.environment_id,
         action="remove",
-        deltas__count=updated,
+        deltas__count=len(unique_identifiers),
+        members__matched=matched,
     )
 
 

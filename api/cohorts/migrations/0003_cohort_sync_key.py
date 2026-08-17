@@ -83,8 +83,8 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name": "API key",
-                "verbose_name_plural": "API keys",
+                "verbose_name": "cohort sync key",
+                "verbose_name_plural": "cohort sync keys",
                 "ordering": ("-created",),
                 "abstract": False,
             },
