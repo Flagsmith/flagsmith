@@ -62,6 +62,10 @@ class AmplitudeListSerializer(serializers.Serializer[None]):
 
 class CohortSyncMembersSerializer(serializers.Serializer[None]):
     # Child length mirrors CohortMembership.identifier.
+    # TODO: this counts characters, but identity data is stored with a
+    # 1024-byte identifier limit, so a multibyte identifier is accepted here
+    # and only fails once we try to write it. Check the byte length, together
+    # with the same check for CSV uploads.
     user_ids = serializers.ListField(
         child=serializers.CharField(max_length=2000), min_length=1
     )
