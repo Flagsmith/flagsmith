@@ -9,8 +9,12 @@ button.btn {
   height: $btn-line-height;
   white-space: nowrap;
   color: white;
+  // Bootstrap's focus ring is a wide box-shadow glow; this replaces it with
+  // the same outline BareButton uses, so icon-only buttons show focus too.
   &:focus-visible {
     box-shadow: none;
+    outline: 2px solid var(--color-border-action);
+    outline-offset: 2px;
   }
 
   &-link {
