@@ -20,7 +20,7 @@ button.btn {
   &-link {
     color: $primary;
     &:hover,
-    &:focus {
+    &:focus-visible {
       background: transparent;
     }
     &.btn:active {
@@ -32,7 +32,7 @@ button.btn {
   &-danger {
     color: white;
     &:hover,
-    &:focus {
+    &:focus-visible {
       color: white;
       background-color: $btn-danger-hover;
     }
@@ -48,7 +48,7 @@ button.btn {
   &-success {
     color: white;
     &:hover,
-    &:focus {
+    &:focus-visible {
       color: white;
       background-color: $btn-success-hover;
     }
@@ -76,7 +76,7 @@ button.btn {
       color: $primary;
     }
     &:hover,
-    &:focus {
+    &:focus-visible {
       background-color: $btn-outline-hover-bg;
       color: $primary;
     }
@@ -89,7 +89,7 @@ button.btn {
       border-color: $alert-danger-border-color !important;
       color: $danger !important;
       &:hover,
-      &:focus {
+      &:focus-visible {
         background-color: $danger-alfa-8;
       }
       &.btn:active {
@@ -103,7 +103,7 @@ button.btn {
     background-color: $btn-secondary-bg !important;
 
     &:hover,
-    &:focus {
+    &:focus-visible {
       background-color: $btn-secondary-hover-bg !important;
       color: $body-color;
     }
@@ -118,7 +118,7 @@ button.btn {
     background-color: $btn-tertiary-bg;
     box-shadow: 0 10px 20px rgba(247, 213, 110, .2);
     &:hover,
-    &:focus {
+    &:focus-visible {
       background-color: $btn-tertiary-hover-bg;
       color: $body-color;
     }
@@ -131,7 +131,7 @@ button.btn {
   &-success {
     background-color: $btn-success;
     &:hover,
-    &:focus {
+    &:focus-visible {
       background-color: $btn-success-hover;
       color: $text-icon-light;
     }
@@ -160,7 +160,7 @@ button.btn {
     path {
       fill: var(--color-icon-secondary);
     }
-    &:hover,&:focus {
+    &:hover,&:focus-visible {
       background-color: $bg-light300;
       path {
         fill: var(--color-icon-default);
@@ -184,7 +184,7 @@ button.btn {
         }
       }
     }
-    &:focus {
+    &:focus-visible {
       background-color: $basic-alpha-8 !important;
       svg {
         path {
@@ -300,7 +300,7 @@ button.btn-link {
   text-transform: inherit;
   font-weight: 500;
   &:hover,
-  &:focus {
+  &:focus-visible {
     color: var(--color-text-action);
     background: transparent;
     text-decoration: underline;
@@ -356,7 +356,7 @@ $add-btn-size: 34px;
   .btn {
     &.btn-icon {
       color: $body-color-dark;
-      &:hover,&:focus {
+      &:hover,&:focus-visible {
         background-color: $bg-dark300;
       }
     }
@@ -364,7 +364,7 @@ $add-btn-size: 34px;
       color: white;
       background-color: $btn-secondary-bg-dark !important;
       &:hover,
-      &:focus {
+      &:focus-visible {
         background-color: $btn-secondary-hover-bg-dark !important;
       }
       &:active {
@@ -375,7 +375,7 @@ $add-btn-size: 34px;
     &.btn-success {
       background-color: $btn-success;
       &:hover,
-      &:focus {
+      &:focus-visible {
         background-color: $btn-success-hover;
         color: $text-icon-light;
       }
@@ -397,7 +397,7 @@ $add-btn-size: 34px;
         border-color: $primary400;
         background-color: $btn-outline-hover-bg-dark;
       }
-      &:focus {
+      &:focus-visible {
         background-color: $btn-outline-focus-bg-dark;
       }
       &:active {
