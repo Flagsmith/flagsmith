@@ -251,3 +251,27 @@ def test_apply_pending_memberships__unknown_core_leaver__drops_row(
     # Then
     assert not CohortMembership.objects.filter(cohort=cohort).exists()
     assert not Identity.objects.filter(identifier="ghost").exists()
+
+
+def test_apply_pending_memberships__leaver_key_already_gone__drops_row(
+    cohort: Cohort,
+) -> None:
+    # Given - an identity whose key was already removed, as after a retry
+    identity = Identity.objects.create(
+        environment=cohort.environment,
+        identifier="member",
+        system_traits={"flagsmith_cohort_other": True},
+    )
+    CohortMembership.objects.create(
+        cohort=cohort,
+        identifier="member",
+        state=CohortMembershipState.PENDING_REMOVE,
+    )
+
+    # When
+    apply_pending_memberships(cohort)
+
+    # Then
+    identity.refresh_from_db()
+    assert identity.system_traits == {"flagsmith_cohort_other": True}
+    assert not CohortMembership.objects.filter(cohort=cohort).exists()
