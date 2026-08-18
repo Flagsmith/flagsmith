@@ -8,7 +8,8 @@ Organisation, or a short-lived access token obtained through an [OIDC trust rela
 
 :::info
 
-Granular permissions for your API tokens and OIDC trust relationships require an [Enterprise or Scale-Up subscription](https://flagsmith.com/pricing).
+Granular permissions for your API tokens and OIDC trust relationships require an
+[Enterprise or Scale-Up subscription](https://flagsmith.com/pricing).
 
 :::
 
@@ -31,8 +32,9 @@ prefixed with `Api-Key`.
 Authorization: Api-Key <API TOKEN FROM ORGANISATION PAGE>
 ```
 
-This token grants access to manage all projects within that organisation, so be sure to keep it secure and never expose
-it in client-side applications.
+An API token acts with the permissions selected when it was created: either full organisation admin — able to manage all
+projects within that organisation — or a set of RBAC roles. Be sure to keep it secure and never expose it in client-side
+applications.
 
 For SaaS customers, the base URL for the Admin API is `https://api.flagsmith.com/`. If you are self-hosting, you will
 need to use your own API URL.
@@ -51,12 +53,14 @@ the same way cloud providers implement workload identity federation.
 
 #### GitHub Actions
 
-The GitHub Actions form only asks for a repository and, optionally, a GitHub environment:
+The GitHub Actions form asks for a repository and, optionally, a GitHub environment and a workflow filename:
 
 - **Repository**: with the Flagsmith GitHub integration installed, pick the repository from a list — the trust
   relationship then pins the repository's ID. Without the integration, type the owner and name.
 - **GitHub environment**: if set, tokens must carry the matching `environment` claim, so the workflow job must run in
   that GitHub environment.
+- **Workflow filename**: if set, tokens must come from that workflow file — matched via the `workflow_ref` claim —
+  regardless of branch or tag.
 - **Is admin / roles**: the permissions granted to exchanged tokens — either full organisation admin, or a set of RBAC
   roles, exactly as with Master API Keys.
 
@@ -82,6 +86,8 @@ curl -X POST 'https://api.flagsmith.com/api/v1/auth/oidc/token/' \
   -H 'Content-Type: application/json' \
   -d '{"token": "<OIDC TOKEN>"}'
 ```
+
+If you are self-hosting, replace `https://api.flagsmith.com` with your own API URL.
 
 A successful exchange returns a short-lived access token:
 
