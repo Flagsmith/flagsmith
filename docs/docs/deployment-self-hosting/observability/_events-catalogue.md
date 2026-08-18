@@ -74,7 +74,7 @@ Attributes:
 ### `cohorts.cohort.created`
 
 Logged at `info` from:
- - `api/cohorts/services.py:156`
+ - `api/cohorts/services.py:167`
 
 Attributes:
  - `cohort.id`
@@ -86,7 +86,7 @@ Attributes:
 ### `cohorts.cohort.deleted`
 
 Logged at `info` from:
- - `api/cohorts/services.py:193`
+ - `api/cohorts/services.py:204`
 
 Attributes:
  - `cohort.id`
@@ -95,7 +95,7 @@ Attributes:
 ### `cohorts.cohort.deletion_requested`
 
 Logged at `info` from:
- - `api/cohorts/services.py:177`
+ - `api/cohorts/services.py:188`
 
 Attributes:
  - `cohort.id`
@@ -104,7 +104,7 @@ Attributes:
 ### `cohorts.membership.applied`
 
 Logged at `info` from:
- - `api/cohorts/services.py:125`
+ - `api/cohorts/services.py:136`
 
 Attributes:
  - `adds.count`

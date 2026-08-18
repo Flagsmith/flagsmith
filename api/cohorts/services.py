@@ -2,7 +2,8 @@ import typing
 
 import structlog
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import F, Func, QuerySet, Value
+from django.db.models.fields.json import JSONField
 from django.utils import timezone
 from flag_engine.segments.constants import IS_SET
 
@@ -57,6 +58,20 @@ def _write_to_edge_identities(
     return added_ids, removed_ids
 
 
+# Postgres merges and drops a key in a single statement, so a cohort applying
+# to an identity never has to read, lock, or overwrite another cohort's keys.
+class _JSONBMerge(Func):
+    arg_joiner = " || "
+    template = "%(expressions)s"
+    output_field = JSONField()
+
+
+class _JSONBDropKey(Func):
+    arg_joiner = " - "
+    template = "%(expressions)s"
+    output_field = JSONField()
+
+
 def _write_to_core_identities(
     cohort: Cohort, batch: list[CohortMembership]
 ) -> tuple[list[int], list[int]]:
@@ -80,21 +95,17 @@ def _write_to_core_identities(
         ],
         ignore_conflicts=True,
     )
-    with transaction.atomic():
-        # Locked for the read-modify-write below: two cohorts applying to the
-        # same identity at once would otherwise drop one of their keys.
-        identities = Identity.objects.select_for_update().filter(
-            environment_id=cohort.environment_id,
-            identifier__in=[*joiners, *leavers],
+    identities = Identity.objects.filter(environment_id=cohort.environment_id)
+    if joiners:
+        identities.filter(identifier__in=joiners).update(
+            system_traits=_JSONBMerge(
+                F("system_traits"), Value({trait_key: True}, JSONField())
+            )
         )
-        changed = []
-        for identity in identities:
-            if identity.identifier in joiners:
-                identity.system_traits[trait_key] = True
-            elif identity.system_traits.pop(trait_key, None) is None:
-                continue
-            changed.append(identity)
-        Identity.objects.bulk_update(changed, ["system_traits"])
+    if leavers:
+        identities.filter(identifier__in=leavers).update(
+            system_traits=_JSONBDropKey(F("system_traits"), Value(trait_key))
+        )
     return list(joiners.values()), list(leavers.values())
 
 
