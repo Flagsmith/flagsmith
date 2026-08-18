@@ -339,7 +339,6 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                   >
                     {featureStateLeft && (
                       <FeatureValue
-                        includeEmpty={false}
                         value={featureStateLeft?.feature_state_value}
                       />
                     )}
@@ -358,7 +357,6 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                   >
                     {featureStateRight && (
                       <FeatureValue
-                        includeEmpty={false}
                         value={featureStateRight?.feature_state_value}
                       />
                     )}

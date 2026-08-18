@@ -98,6 +98,7 @@ def test_delete_invite_link__valid_invite__returns_204(
     settings: SettingsWrapper,
     organisation: Organisation,
     admin_client: APIClient,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     settings.ENABLE_CHARGEBEE = True
@@ -107,9 +108,10 @@ def test_delete_invite_link__valid_invite__returns_204(
         args=[organisation.pk, invite.pk],
     )
 
-    # update subscription to add another seat
-    organisation.subscription.max_seats = 3
-    organisation.subscription.save()
+    mocker.patch(
+        "organisations.models.Organisation.over_plan_seats_limit",
+        return_value=False,
+    )
 
     # When
     response = admin_client.delete(url)

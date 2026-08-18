@@ -28,6 +28,7 @@ import {
 } from 'common/services/useSegment'
 import Utils from 'common/utils/utils'
 import AssociatedSegmentOverrides from 'components/segments/AssociatedSegmentOverrides'
+import { SegmentMembershipTotalBadge } from 'components/segments/SegmentMembershipBadge'
 import Button from 'components/base/forms/Button'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -74,6 +75,7 @@ type CreateSegmentType = {
   onComplete?: (segment: Segment) => void
   readOnly?: boolean
   segment?: Segment
+  membersEnabled: boolean
 }
 type CreateSegmentError = {
   status: number
@@ -102,6 +104,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   identities,
   identitiesLoading,
   identity,
+  membersEnabled,
   onCancel,
   onComplete,
   page,
@@ -229,6 +232,25 @@ const CreateSegment: FC<CreateSegmentType> = ({
     setRules(newRules)
   }
 
+  const topLevelRuleType: 'ALL' | 'ANY' =
+    rules[0]?.type === 'ANY' ? 'ANY' : 'ALL'
+  const hasMixedTopLevelRuleTypes =
+    rules.length > 1 && rules.some((r) => r.type !== rules[0]?.type)
+
+  const setTopLevelRuleType = (newType: 'ALL' | 'ANY') => {
+    const subRuleType = newType === 'ANY' ? 'ALL' : 'ANY'
+    const newRules = cloneDeep(rules)
+    for (const topRule of newRules) {
+      topRule.type = newType
+      topRule.rules = topRule.rules.map((subRule) => {
+        if (subRule.delete || subRule.type === 'NONE') return subRule
+        return { ...subRule, type: subRuleType as SegmentRule['type'] }
+      })
+    }
+    setRules(newRules)
+    setValueChanged(true)
+  }
+
   const save = async (e: FormEvent) => {
     try {
       Utils.preventDefault(e)
@@ -271,7 +293,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [valueChanged, setValueChanged] = useState(false)
   const [metadataValueChanged, setMetadataValueChanged] = useState(false)
   const onClosing = useCallback(() => {
-    return new Promise((resolve) => {
+    return new Promise<boolean>((resolve) => {
       if (valueChanged) {
         openConfirm({
           body: 'Closing this will discard your unsaved changes.',
@@ -286,6 +308,19 @@ const CreateSegment: FC<CreateSegmentType> = ({
       }
     })
   }, [valueChanged])
+  // The condensed/inline drawer (e.g. creating a feature-specific segment) is
+  // closed via the `onCancel` prop, which bypasses the modal's intercept-close
+  // handler above. Guard it so unsaved changes prompt the same confirmation (#5368).
+  const handleCancel = useCallback(() => {
+    if (!onCancel) {
+      return
+    }
+    onClosing().then((shouldClose) => {
+      if (shouldClose) {
+        onCancel()
+      }
+    })
+  }, [onCancel, onClosing])
   const onCreateChangeRequest = async (changeRequestData: {
     approvals: []
     description: string
@@ -405,6 +440,12 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const rulesEl = (
     <div className='overflow-visible'>
       <div>
+        {hasMixedTopLevelRuleTypes && (
+          <InfoMessage className='mb-4'>
+            This segment has top-level rules with mixed types. Changing the rule
+            type will normalise all top-level rules to the same type.
+          </InfoMessage>
+        )}
         <div className='mb-4'>
           {rules.map((topRule, rulesIndex) =>
             topRule.rules.map((rule, i) => {
@@ -414,7 +455,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
               const displayIndex = rulesToShow.indexOf(rule)
               return (
                 <div key={`${rulesIndex}-${i}`}>
-                  <SegmentRuleDivider rule={rule} index={displayIndex} />
+                  <SegmentRuleDivider
+                    rule={rule}
+                    index={displayIndex}
+                    topLevelRuleType={topLevelRuleType}
+                  />
                   <Rule
                     showDescription={showDescriptions}
                     readOnly={readOnly}
@@ -422,6 +467,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     rule={rule}
                     index={i}
                     operators={operators}
+                    conditionLabel={rule.type === 'ALL' ? 'And' : 'Or'}
                     onChange={(v: SegmentRule) => {
                       setValueChanged(true)
                       updateRule(rulesIndex, i, v)
@@ -438,27 +484,38 @@ const CreateSegment: FC<CreateSegmentType> = ({
         </div>
         {hasNoRules && (
           <InfoMessage>
-            Add at least one AND/NOT rule to create a segment.
+            {topLevelRuleType === 'ANY'
+              ? 'Add at least one OR rule to create a segment.'
+              : 'Add at least one AND/NOT rule to create a segment.'}
           </InfoMessage>
         )}
         <Row className='justify-content-end'>
           {!readOnly && (
-            <div onClick={() => addRule('ANY')} className='text-center'>
+            <div
+              onClick={() =>
+                addRule(topLevelRuleType === 'ANY' ? 'ALL' : 'ANY')
+              }
+              className='text-center'
+            >
               <Button theme='outline' data-test='add-rule' type='button'>
-                Add AND Condition
+                {topLevelRuleType === 'ANY'
+                  ? 'Add OR Condition'
+                  : 'Add AND Condition'}
               </Button>
             </div>
           )}
-          <div onClick={() => addRule('NONE')} className='text-center'>
-            <Button
-              theme='outline'
-              className='ml-2 btn--outline-danger'
-              data-test='add-rule'
-              type='button'
-            >
-              Add AND NOT Condition
-            </Button>
-          </div>
+          {topLevelRuleType !== 'ANY' && (
+            <div onClick={() => addRule('NONE')} className='text-center'>
+              <Button
+                theme='outline'
+                className='ml-2 btn--outline-danger'
+                data-test='add-rule'
+                type='button'
+              >
+                Add AND NOT Condition
+              </Button>
+            </div>
+          )}
         </Row>
       </div>
     </div>
@@ -527,7 +584,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 isSaving={isSaving}
                 isValid={isValid}
                 isLimitReached={isLimitReached}
-                onCancel={onCancel}
+                onCancel={handleCancel}
+                topLevelRuleType={topLevelRuleType}
+                setTopLevelRuleType={setTopLevelRuleType}
               />
             </div>
           </TabItem>
@@ -539,10 +598,21 @@ const CreateSegment: FC<CreateSegmentType> = ({
               />
             </div>
           </TabItem>
-          <TabItem tabLabel='Identities'>
+          <TabItem
+            tabLabelString='Identities'
+            tabLabel={
+              <>
+                Identities
+                <SegmentMembershipTotalBadge
+                  memberships={segment.membership_counts}
+                />
+              </>
+            }
+          >
             <div className='my-4'>
               <CreateSegmentUsersTabContent
                 projectId={projectId}
+                segmentId={segment.id}
                 environmentId={environmentId}
                 setEnvironmentId={setEnvironmentId}
                 identitiesLoading={identitiesLoading}
@@ -552,6 +622,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 name={name}
                 searchInput={searchInput}
                 setSearchInput={setSearchInput}
+                memberships={segment.membership_counts}
+                membersEnabled={membersEnabled}
               />
             </div>
           </TabItem>
@@ -591,7 +663,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 isSaving={isSaving}
                 isValid={isValid}
                 isLimitReached={isLimitReached}
-                onCancel={onCancel}
+                onCancel={handleCancel}
+                topLevelRuleType={topLevelRuleType}
+                setTopLevelRuleType={setTopLevelRuleType}
               />
             </div>
           </TabItem>
@@ -628,7 +702,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
               isSaving={isSaving}
               isValid={isValid}
               isLimitReached={isLimitReached}
-              onCancel={onCancel}
+              onCancel={handleCancel}
+              topLevelRuleType={topLevelRuleType}
+              setTopLevelRuleType={setTopLevelRuleType}
             />
           </div>
         )}
@@ -681,6 +757,15 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
 
   const isEdge = Utils.getIsEdge()
 
+  // Availability is derived strictly from the backend: membership counts are
+  // only present for membership-enabled orgs (see `is_membership_enabled`), so
+  // their presence gates the UI without a separate frontend flag. When enabled
+  // and the project uses edge, the Identities tab uses the dedicated segment
+  // members endpoint, so the legacy identities list (and its request) is not
+  // needed.
+  const membersEnabled =
+    (segmentData?.membership_counts?.length ?? 0) > 0 && isEdge
+
   const { data: identities, isLoading: identitiesLoading } =
     useGetIdentitiesQuery(
       {
@@ -693,7 +778,7 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
         q: search,
       },
       {
-        skip: !environmentId,
+        skip: !environmentId || membersEnabled,
       },
     )
 
@@ -713,6 +798,7 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
       page={page}
       environmentId={environmentId}
       setEnvironmentId={setEnvironmentId}
+      membersEnabled={membersEnabled}
     />
   )
 }

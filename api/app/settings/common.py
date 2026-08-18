@@ -58,6 +58,11 @@ ENABLE_GZIP_COMPRESSION = env.bool("ENABLE_GZIP_COMPRESSION", default=False)
 
 SECRET_KEY = env("DJANGO_SECRET_KEY", default=get_random_secret_key())
 
+WAREHOUSE_CREDENTIALS_SECRET = env(
+    "WAREHOUSE_CREDENTIALS_SECRET",
+    default=SECRET_KEY,
+)
+
 HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
 
 MAX_PROJECTS_IN_FREE_PLAN = 1
@@ -118,6 +123,9 @@ INSTALLED_APPS = [
     "features.workflows.core",
     "features.release_pipelines.core",
     "segments",
+    "segment_membership",
+    "cohorts",
+    "clickhouse",
     "app",
     "e2etests",
     "simple_history",
@@ -127,6 +135,7 @@ INSTALLED_APPS = [
     "projects.code_references",
     "projects.tags",
     "api_keys",
+    "trust_relationships",
     "webhooks",
     "metrics",
     "onboarding",
@@ -167,6 +176,7 @@ INSTALLED_APPS = [
     "softdelete",
     "metadata",
     "app_analytics",
+    "experimentation",
     "oauth2_metadata",
 ]
 
@@ -180,6 +190,11 @@ DJANGO_DB_CONN_MAX_AGE = 0 if db_conn_max_age == -1 else db_conn_max_age
 DJANGO_DB_CONN_HEALTH_CHECKS = env.bool("DJANGO_DB_CONN_HEALTH_CHECKS", False)
 
 DATABASE_ROUTERS: list[str] = []
+
+FLAGSMITH_MIGRATE_DATABASES: list[str] = []
+FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES: list[str] = []
+FLAGSMITH_STARTUP_COMMANDS = ["bootstrap"]
+
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
     DATABASES = {
@@ -189,6 +204,8 @@ if "DATABASE_URL" in os.environ:
             conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         ),
     }
+    FLAGSMITH_MIGRATE_DATABASES.append("default")
+    FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("default")
     REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
     REPLICA_DATABASE_URLS = (
         env.list(
@@ -246,6 +263,8 @@ if "DATABASE_URL" in os.environ:
             conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         )
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
+        FLAGSMITH_MIGRATE_DATABASES.append("analytics")
+        FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("analytics")
 elif "DJANGO_DB_NAME" in os.environ:
     # If there is no DATABASE_URL configured, check for old style DB config parameters
     DATABASES = {
@@ -260,6 +279,8 @@ elif "DJANGO_DB_NAME" in os.environ:
             "CONN_HEALTH_CHECKS": DJANGO_DB_CONN_HEALTH_CHECKS,
         },
     }
+    FLAGSMITH_MIGRATE_DATABASES.append("default")
+    FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("default")
     if "DJANGO_DB_NAME_ANALYTICS" in os.environ:
         DATABASES["analytics"] = {
             "ENGINE": "django.db.backends.postgresql",
@@ -273,6 +294,8 @@ elif "DJANGO_DB_NAME" in os.environ:
         }
 
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
+        FLAGSMITH_MIGRATE_DATABASES.append("analytics")
+        FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("analytics")
 
 # Task processor database — OPTIONALLY SEPARATED
 TASK_PROCESSOR_DATABASE_URL = env("TASK_PROCESSOR_DATABASE_URL", default=None)
@@ -302,6 +325,8 @@ if TASK_PROCESSOR_DATABASE_URL or TASK_PROCESSOR_DATABASE_NAME:
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
         }
     DATABASE_ROUTERS.insert(0, "task_processor.routers.TaskProcessorRouter")
+    FLAGSMITH_MIGRATE_DATABASES.append("task_processor")
+    FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("task_processor")
 
     # Consume any remaining tasks from 'default' when opting in to 'task_processor' database
     _task_processor_databases = ["default", "task_processor"]
@@ -318,6 +343,10 @@ TASK_PROCESSOR_DATABASES = env.list(
 
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 DCR_THROTTLE_RATE = env("DCR_THROTTLE_RATE", "500/month")
+OIDC_TOKEN_EXCHANGE_THROTTLE_RATE = env("OIDC_TOKEN_EXCHANGE_THROTTLE_RATE", "60/min")
+TRUST_RELATIONSHIP_ACCESS_TOKEN_LIFETIME_SECONDS = env.int(
+    "TRUST_RELATIONSHIP_ACCESS_TOKEN_LIFETIME_SECONDS", default=3600
+)
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", default=None)
 MASTER_API_KEY_THROTTLE_RATE = env("MASTER_API_KEY_THROTTLE_RATE", default=None)
@@ -329,6 +358,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
         "api_keys.authentication.MasterAPIKeyAuthentication",
         "oauth2_metadata.authentication.OAuth2BearerTokenAuthentication",
+        "trust_relationships.authentication.TrustRelationshipTokenAuthentication",
     ),
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
@@ -337,19 +367,22 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
         "dcr_register": DCR_THROTTLE_RATE,
+        "oidc_token_exchange": OIDC_TOKEN_EXCHANGE_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
         "master_api_key": MASTER_API_KEY_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
         "user": USER_THROTTLE_RATE,
         "influx_query": "5/min",
+        "warehouse_connection_write": "10/min",
+        "warehouse_connection_read": "60/min",
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_RENDERER_CLASSES": [
         "util.renderers.PydanticJSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
-    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_SCHEMA_CLASS": "api.openapi.AutoSchema",
 }
 MIDDLEWARE = [
     "common.core.middleware.APIResponseVersionHeaderMiddleware",
@@ -364,6 +397,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    "telemetry.middleware.MCPUsageLoggerMiddleware",  # Must come last!
 ]
 
 ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
@@ -390,6 +424,9 @@ INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
 USE_CACHE_FOR_USAGE_DATA = env.bool("USE_CACHE_FOR_USAGE_DATA", default=True)
+
+# Base URL of the Control Plane that licensed Instances report usage snapshots to.
+CONTROL_PLANE_URL = env.str("CONTROL_PLANE_URL", default=None)
 
 API_USAGE_CACHE_SECONDS = env.int("API_USAGE_CACHE_SECONDS", default=0)
 
@@ -560,12 +597,22 @@ SPECTACULAR_SETTINGS = {
         "edge_api.identities.openapi",
         "environments.identities.traits.openapi",
     ],
+    "PREPROCESSING_HOOKS": [
+        "api.openapi.preprocessing_filter_spec",
+    ],
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+        "api.openapi.postprocessing_assign_tags",
+    ],
     "ENUM_NAME_OVERRIDES": {
         # Overrides to use specific schema names for fields named "type".
         # If this is not set, drf-spectacular will generate schema names like "Type975Enum".
         "WebhookScopeTypeEnum": ["organisation", "environment"],
         "SegmentRuleTypeEnum": "segments.models.SegmentRule.RULE_TYPES",
         "FeatureValueTypeEnum": ["integer", "string", "boolean"],
+        "WarehouseConnectionStatusEnum": (
+            "experimentation.models.WarehouseConnectionStatus.choices"
+        ),
     },
     "COMPONENT_NO_READ_ONLY_REQUIRED": True,
 }
@@ -774,6 +821,14 @@ REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
     "REDIS_CLUSTER_READ_FROM_REPLICAS", default=True
 )
 
+# Redis Cluster URL used to communicate with the event ingestion server.
+INGESTION_REDIS_URL = env.str("INGESTION_REDIS_URL", default="")
+
+# ARN of the IAM role Firehose assumes to deliver experiment events to S3.
+INGESTION_FIREHOSE_DELIVERY_ROLE_ARN = env.str(
+    "INGESTION_FIREHOSE_DELIVERY_ROLE_ARN", default=""
+)
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -919,10 +974,16 @@ OAUTH2_PROVIDER = {
     "ACCESS_TOKEN_EXPIRE_SECONDS": 60 * 15,  # 15 minutes
     "REFRESH_TOKEN_EXPIRE_SECONDS": 60 * 60 * 24 * 30,  # 30 days
     "ROTATE_REFRESH_TOKEN": True,
+    "REFRESH_TOKEN_REUSE_PROTECTION": True,
+    "REFRESH_TOKEN_GRACE_PERIOD_SECONDS": 60 * 2,
     "PKCE_REQUIRED": True,
     "ALLOWED_CODE_CHALLENGE_METHODS": ["S256"],
-    "SCOPES": {"mcp": "MCP access"},
+    "SCOPES": {
+        "mcp": "MCP access",
+        "admin-api": "Admin API access",
+    },
     "DEFAULT_SCOPES": ["mcp"],
+    "SCOPES_BACKEND_CLASS": "oauth2_metadata.scopes.FlagsmithScopes",
     "ALLOWED_GRANT_TYPES": [
         "authorization_code",
         "refresh_token",
@@ -1065,6 +1126,33 @@ IS_RBAC_INSTALLED = importlib.util.find_spec("rbac") is not None
 if IS_RBAC_INSTALLED:
     INSTALLED_APPS.append("rbac")
 
+SCIM_INSTALLED = importlib.util.find_spec("scim") is not None
+if SCIM_INSTALLED:
+    INSTALLED_APPS += ["django_scim", "scim"]
+    SCIM_SERVICE_PROVIDER = {
+        "AUTHENTICATION_SCHEMES": [
+            {
+                "type": "oauthbearertoken",
+                "name": "OAuth Bearer Token",
+                "description": "Per-organisation bearer token issued via the SCIM configuration API.",
+            },
+        ],
+        "AUTH_CHECK_MIDDLEWARE": "scim.middleware.ScimAuthenticationMiddleware",
+        "BASE_LOCATION_GETTER": "core.helpers.get_request_base_url",
+        "GET_EXTRA_MODEL_FILTER_KWARGS_GETTER": "scim.filters.get_extra_model_filter_kwargs_getter",
+        "GROUP_ADAPTER": "scim.adapters.GroupAdapter",
+        "GROUP_FILTER_PARSER": "scim.filters.GroupFilterQuery",
+        "GROUP_MODEL": "users.models.UserPermissionGroup",
+        # django-scim2's own discovery documents advertise the full RFC 7643 schema and
+        # capabilities we do not implement. Identity providers build their app user
+        # profile from `/Schemas`, so anything advertised there becomes a mapping a
+        # customer can configure and we silently ignore.
+        "SCHEMAS_GETTER": "scim.schemas.get_schemas",
+        "SERVICE_PROVIDER_CONFIG_MODEL": "scim.models.ScimServiceProviderConfig",
+        "USER_ADAPTER": "scim.adapters.UserAdapter",
+        "USER_FILTER_PARSER": "scim.filters.UserFilterQuery",
+    }
+
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Used to keep edge identities in sync by forwarding the http requests
@@ -1187,6 +1275,7 @@ CORS_ALLOW_HEADERS = list(
         )
     )
 )
+CORS_EXPOSE_HEADERS = ["Retry-After"]
 
 # Hubspot settings
 HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
@@ -1226,6 +1315,9 @@ FLAGSMITH_ON_FLAGSMITH_SERVER_KEY = env(
 )
 FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = env(
     "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL", default=FLAGSMITH_ON_FLAGSMITH_API_URL
+)
+FLAGSMITH_ON_FLAGSMITH_SERVER_EVENTS_API_URL = env(
+    "FLAGSMITH_ON_FLAGSMITH_SERVER_EVENTS_API_URL", default=None
 )
 
 FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID = env.int(
@@ -1340,11 +1432,13 @@ if not 0 <= FEATURE_VALUE_LIMIT <= 2000000:
         "FEATURE_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
     )
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 SEGMENT_RULES_CONDITIONS_LIMIT = env.int("SEGMENT_RULES_CONDITIONS_LIMIT", 100)
 
 # These settings are to handle large datasets / odd behaviour where rules and conditions
 # often aren't returned in the order that they were created in, which the code implicitly
 # expects.
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
     "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED", default=False
 )
@@ -1352,6 +1446,7 @@ SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
 # In SaaS, we need to be able to split out rules and conditions
 # (since the ordering issue has been evident on rules for longer, and
 # only recently happened to conditions).
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
     "SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
     default=SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED,
@@ -1389,11 +1484,6 @@ ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = env.list(
     default=[],
 )
 
-# Date on which versioning is released. This is used to give any scale up
-# subscriptions created before this date full audit log and versioning
-# history.
-VERSIONING_RELEASE_DATE = env.date("VERSIONING_RELEASE_DATE", default=None)
-
 SUBSCRIPTION_LICENCE_PUBLIC_KEY = env.str(
     "SUBSCRIPTION_LICENCE_PUBLIC_KEY",
     """
@@ -1429,3 +1519,74 @@ REQUIRE_AUTHENTICATION_FOR_API_DOCS = env.bool(
 PYLON_IDENTITY_VERIFICATION_SECRET = env.str("PYLON_IDENTITY_VERIFICATION_SECRET", None)
 
 OSIC_UPDATE_BATCH_SIZE = env.int("OSIC_UPDATE_BATCH_SIZE", default=500)
+
+# ClickHouse backs the segment_membership backfill and refresh tasks. Set
+# CLICKHOUSE_URL (DSN form) or any CLICKHOUSE_HOST + discrete fields to enable.
+# Discrete settings override the matching field parsed from the URL.
+CLICKHOUSE_URL = env.str("CLICKHOUSE_URL", default=None)
+CLICKHOUSE_HOST = env.str("CLICKHOUSE_HOST", default=None)
+CLICKHOUSE_PORT = env.int("CLICKHOUSE_PORT", default=None)
+CLICKHOUSE_USER = env.str("CLICKHOUSE_USER", default=None)
+CLICKHOUSE_PASSWORD = env.str("CLICKHOUSE_PASSWORD", default=None)
+CLICKHOUSE_DATABASE = env.str("CLICKHOUSE_DATABASE", default=None)
+CLICKHOUSE_SECURE = env.bool("CLICKHOUSE_SECURE", default=None)
+
+CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
+
+CLICKHOUSE_CONNECTION_CLIENT_NAME = "flagsmith-core-api"
+
+# DSN for the ClickHouse instance holding ingested experimentation events.
+# TODO: consolidate connection management across the two CH use cases
+#  https://github.com/Flagsmith/flagsmith/issues/8033
+EXPERIMENTATION_CLICKHOUSE_URL = env.str("EXPERIMENTATION_CLICKHOUSE_URL", default=None)
+
+SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS = env.int(
+    "SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS", default=6
+)
+SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS = env.int(
+    "SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS", default=1
+)
+if (
+    SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS
+    > SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS
+):
+    raise ImproperlyConfigured(
+        "SEGMENT_MEMBERSHIP_REFRESH_PROJECT_STAGGER_WINDOW_HOURS must not exceed "
+        "SEGMENT_MEMBERSHIP_REFRESH_INTERVAL_HOURS."
+    )
+SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS = env.int(
+    "SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS",
+    default=120,  # We can expect the identity deletion to propagate by T+120 seconds based on Edge CDC SLO.
+)
+
+# Always installed: the router fences the `clickhouse` app's migrations off
+# the default Postgres database whether or not a CH alias is configured.
+DATABASE_ROUTERS.append("app.routers.ClickHouseRouter")
+
+# Should be registered last.
+DATABASE_ROUTERS.append("app.routers.ReplicaRouter")
+
+if CLICKHOUSE_ENABLED:
+    _clickhouse_db: dict[str, Any] = {
+        "ENGINE": "core.db_backends.clickhouse",
+        "HOST": CLICKHOUSE_HOST,
+        "PORT": CLICKHOUSE_PORT,
+        "USER": CLICKHOUSE_USER,
+        "PASSWORD": CLICKHOUSE_PASSWORD,
+        "NAME": CLICKHOUSE_DATABASE,
+        "OPTIONS": {
+            "dsn": CLICKHOUSE_URL,
+            "secure": CLICKHOUSE_SECURE,
+            "settings": {
+                # ClickHouse Cloud 25.12 requires this for `JSON`-column DDL.
+                "allow_experimental_json_type": 1,
+                # Block each DDL statement until every replica has applied it.
+                # Prevents replicated deployments (e.g. ClickHouse Cloud)
+                # from breaking migrations with Error 517.
+                "alter_sync": 2,
+            },
+            "client_name": CLICKHOUSE_CONNECTION_CLIENT_NAME,
+        },
+    }
+    DATABASES["clickhouse"] = _clickhouse_db  # type: ignore[assignment]
+    FLAGSMITH_MIGRATE_DATABASES.append("clickhouse")

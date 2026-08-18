@@ -3,11 +3,11 @@
 ### Local development
 
 The project assumes the following tools installed:
-- [Python](https://www.python.org/downloads/). Any version allowed by `requires-python` in `pyproject.toml` is supported.
-- [GNU Make](https://www.gnu.org/software/make/).
-- Docker or a compatible tool like [Podman](https://podman.io/). We recommend [OrbStack](https://orbstack.dev/) for macOS.
+- [uv](https://github.com/astral-sh/uv)
+- [GNU Make](https://www.gnu.org/software/make/)
+- [Docker](https://www.docker.com/) — or compatible software such as [OrbStack](https://orbstack.dev/) or [Podman](https://podman.io/).
 
-To install dev dependencies, run `make install`.
+To install dev dependencies, run `make install opts='--extra dev'`. Only Flagsmith maintainers can run `uv lock` due to private dependencies.
 
 To run linters, run `make lint`.
 
@@ -112,7 +112,17 @@ ai_enabled = client.get_boolean_value(
 
 Organisations expose an `openfeature_evaluation_context` property carrying common traits — use it for org-scoped targeting. For other subjects, build an `EvaluationContext` with a stable `targeting_key` and the attributes your targeting rules need.
 
-Add your feature as early as possible to the Flagsmith on Flagsmith project, and run the `updateflagsmithenvironment` management command to synchronise the local cache. You can use [Flagsmith MCP](https://docs.flagsmith.com/integrating-with-flagsmith/mcp-server) to integrate Flagsmith in your development flow.
+One project serves both this API and the dashboard, and the two identify differently. The API evaluates per organisation: targeting key `org.<id>`, with `organisation.id`, `organisation.name` and `subscription.plan`. The dashboard evaluates per user: targeting key `<user.id>`, with `email`, `organisation.id` and `organisation.name` for the user's current organisation, and `organisations` listing every organisation they belong to. That leads to three conventions:
+
+- Mark a flag only this API reads as server-key-only, so it is never served to a browser, and tag it `api`.
+- Target `organisation.id` for gradual rollout, not `email` or `$.identity.key`. Only `organisation.id` means the same thing on both sides, and a percentage split keyed on anything else buckets users rather than organisations.
+- Target `organisation.id` or `organisation.name` for a flag both sides read; avoid using `organisations`.
+
+Add your feature as early as possible to the Flagsmith on Flagsmith project. You can use [the Flagsmith CLI](https://docs.flagsmith.com/integrating-with-flagsmith/CLI) to integrate Flagsmith in your development flow.
+
+Self-hosted installations evaluate against the offline defaults in `integrations/flagsmith/data/environment.json`, so a flag that is missing from it falls back to the default value at its call site. That document holds only the flags tagged `api`, so tag yours or it will not reach self-hosted installations.
+
+To refresh it, run `make update-flagsmith-environment`. This needs the [Flagsmith CLI](https://docs.flagsmith.com/integrating-with-flagsmith/CLI) and an Admin API credential — a browser login via `flagsmith login` is enough. The `update-flagsmith-environment` workflow runs the same target daily and opens a pull request, so dispatching it is the alternative to running it yourself.
 
 ### Code guidelines: migrations
 

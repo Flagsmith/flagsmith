@@ -2,8 +2,9 @@ import typing
 
 import pytest
 from django.contrib.sites.models import Site
+from django.test import RequestFactory
 
-from core.helpers import get_current_site_url
+from core.helpers import get_current_site_url, get_request_base_url
 
 if typing.TYPE_CHECKING:
     from pytest_django.fixtures import DjangoAssertNumQueries, SettingsWrapper
@@ -136,3 +137,26 @@ def test_get_current_site__localhost__return_expected(
 
     # Then
     assert url == f"http://{expected_domain}"
+
+
+def test_get_request_base_url__no_request__returns_empty_string() -> None:
+    # Given / When
+    url = get_request_base_url()
+
+    # Then
+    assert url == ""
+
+
+def test_get_request_base_url__request__returns_absolute_base_url(
+    rf: RequestFactory,
+    settings: "SettingsWrapper",
+) -> None:
+    # Given
+    settings.ALLOWED_HOSTS = ["some-host.example.com"]
+    request = rf.get("/api/v1/some/path", HTTP_HOST="some-host.example.com")
+
+    # When
+    url = get_request_base_url(request)
+
+    # Then
+    assert url == "http://some-host.example.com/"

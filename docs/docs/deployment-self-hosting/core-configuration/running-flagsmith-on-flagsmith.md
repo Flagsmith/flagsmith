@@ -15,6 +15,9 @@ To do this, first create a new project within your self-hosted Flagsmith applica
 use to control the features of the self-hosted Flagsmith instance. We will then point the self-hosted frontend dashboard
 at this Flagsmith project in order to control what features show for your self-hosted Flagsmith instance.
 
+A single project serves both layers. The dashboard reads it with a client-side key, and the API reads it with a
+server-side key; flags meant for the API alone are marked server-key-only so they are never served to a browser.
+
 ## Environment Variables
 
 Once you have created the project, you need to set the following
@@ -31,6 +34,18 @@ Once you have created the project, you need to set the following
     variable is `https://edge.api.flagsmith.com/api/v1/`. For example, if you were running everything locally using the
     standard [docker-compose setup](https://github.com/Flagsmith/flagsmith-docker), you would use
     `http://localhost:8000/api/v1/`
+
+The API side needs no configuration. It ships with a bundled copy of our own environment document and evaluates against
+that offline, so the defaults apply without you creating anything. To have the API read your project instead, set:
+
+- `FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE`
+  - Set to `False` to evaluate against a live environment.
+- `FLAGSMITH_ON_FLAGSMITH_SERVER_KEY`
+  - A server-side environment key for the project above. Required when offline mode is off.
+- `FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL`
+  - The API the server-side SDK talks to. Falls back to the API's own `FLAGSMITH_ON_FLAGSMITH_API_URL`, which is unset by
+    default — this is a separate variable from the frontend one above, unless you run the unified image where both are
+    read from the same environment.
 
 ## Verification and Usage
 

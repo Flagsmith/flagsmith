@@ -9,6 +9,10 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "sdk",
+      link: {
+        type: "doc",
+        id: "sdk-api/sdk",
+      },
       items: [
         {
           type: "doc",

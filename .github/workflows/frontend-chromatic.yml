@@ -1,20 +1,23 @@
 name: Frontend Chromatic
 
 on:
+  # Nothing outside these paths can change how a story renders. The lockfile is
+  # included alongside package.json because `npm ci` installs from it, so a
+  # transitive bump can change rendering without package.json moving.
   push:
     branches: [main]
-    paths:
+    paths: &story_paths
       - frontend/web/components/**
       - frontend/web/styles/**
       - frontend/common/theme/**
       - frontend/documentation/**
       - frontend/.storybook/**
+      - frontend/package.json
+      - frontend/package-lock.json
       - .github/workflows/frontend-chromatic.yml
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    paths:
-      - frontend/**
-      - .github/workflows/frontend-chromatic.yml
+    paths: *story_paths
 
 permissions:
   contents: read
@@ -23,12 +26,15 @@ jobs:
   chromatic:
     name: Chromatic
     runs-on: ubuntu-latest
-    # Dependabot PRs use a separate secrets store, so they can't read
-    # CHROMATIC_PROJECT_TOKEN. main's post-merge push runs Chromatic
-    # with full secrets, so coverage isn't lost.
+    # Fork PRs (incl. Dependabot) can't read CHROMATIC_PROJECT_TOKEN — GitHub
+    # withholds repo secrets from pull_request runs originating from forks, so
+    # Chromatic would fail with "Missing project token". Skip them here; main's
+    # post-merge push runs Chromatic with full secrets, so coverage isn't lost.
     if: |
       github.actor != 'dependabot[bot]'
       && (github.event_name == 'push' || github.event.pull_request.draft == false)
+      && (github.event_name == 'push'
+        || github.event.pull_request.head.repo.full_name == github.repository)
 
     defaults:
       run:

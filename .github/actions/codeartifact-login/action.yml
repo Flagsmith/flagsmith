@@ -1,0 +1,32 @@
+name: CodeArtifact login
+description: |
+  Assume the production CodeArtifact role via OIDC, fetch an
+  authorisation token, and export uv credentials for the
+  `flagsmith-pypi-production` index.
+
+outputs:
+  token:
+    description: CodeArtifact authorisation token
+    value: ${{ steps.codeartifact.outputs.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Configure AWS credentials for CodeArtifact
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::084060095745:role/codeartifact-github-actions-production
+        aws-region: eu-west-2
+
+    - name: Fetch CodeArtifact authorisation token
+      id: codeartifact
+      shell: bash
+      run: |
+        token=$(aws codeartifact get-authorization-token \
+          --domain flagsmith-production \
+          --domain-owner 084060095745 \
+          --query authorizationToken --output text)
+        echo "::add-mask::$token"
+        echo "token=$token" >> "$GITHUB_OUTPUT"
+        echo "UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws" >> "$GITHUB_ENV"
+        echo "UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD=$token" >> "$GITHUB_ENV"

@@ -72,7 +72,7 @@ The page looks like this:
 
 For the purposes of this quickstart tutorial, we will import the SDK inline into our web page:
 
-<CodeBlock>{ `<script src="https://cdn.jsdelivr.net/npm/flagsmith@`}<JsVersion />{`/index.js"></script>` } </CodeBlock>
+<CodeBlock>{ `<script src="https://cdn.jsdelivr.net/npm/@flagsmith/flagsmith@`}<JsVersion />{`/index.js"></script>` } </CodeBlock>
 
 ## 3. Connect to the Flagsmith API
 
@@ -127,7 +127,7 @@ Our entire web page now reads like this:
  <head>
   <meta charset="utf-8" />
   <title>Flagsmith Quickstart Guide</title>
-  <script src="https://cdn.jsdelivr.net/npm/flagsmith@`}<JsVersion />{`/index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@flagsmith/flagsmith@`}<JsVersion />{`/index.js"></script>
   <script>
    flagsmith.init({
     environmentID: 'ZfmJTbLQZrhZVHkVhXbsNi',

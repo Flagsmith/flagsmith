@@ -1,0 +1,70 @@
+name: API Documentation Artefacts Auto-Update
+
+on:
+  pull_request:
+    paths:
+      - api/**
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: api
+
+env:
+  DOTENV_OVERRIDE_FILE: .env-ci
+
+jobs:
+  fix-docs-artefacts:
+    runs-on: depot-ubuntu-latest
+    name: Fix Documentation Artefacts
+    permissions:
+      contents: read # For actions/checkout
+      id-token: write # For CodeArtifact OIDC
+
+    steps:
+      - name: Generate GitHub App token with push access
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.FLAGSMITH_ENGINEERING_GH_APP_ID }}
+          private-key: ${{ secrets.FLAGSMITH_ENGINEERING_GH_APP_PRIVATE_KEY }}
+
+      - name: Cloning repo
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - uses: ./.github/actions/install-uv
+        with:
+          working-directory: api
+
+      - name: Install SAML Dependencies
+        run: sudo apt-get install -y xmlsec1
+
+      - name: Generate public documentation artefacts
+        run: |
+          make install-packages opts='--extra dev'
+          make generate-docs
+
+      - name: Authenticate with CodeArtifact
+        uses: ./.github/actions/codeartifact-login
+
+      - name: Generate private documentation artefacts
+        run: make generate-docs-private
+
+      - name: Commit and push fixes
+        run: |
+          git add --all
+          if git diff --cached --quiet; then
+            echo "Documentation artefacts are up to date."
+            exit 0
+          fi
+          git config user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+          git config user.email '${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+          git commit --message 'chore: Update documentation artefacts'
+          git push || { git pull --rebase && git push; }

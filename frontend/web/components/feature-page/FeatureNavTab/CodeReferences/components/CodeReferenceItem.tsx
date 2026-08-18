@@ -32,8 +32,10 @@ const CodeReferenceItem: React.FC<CodeReferenceItemProps> = ({
         rel='noreferrer'
         onClick={() => {
           flagsmith.trackEvent('code_references_click_permalink', {
-            feature_id: featureId,
-            vcs_provider: vcsProvider,
+            metadata: {
+              feature_id: featureId,
+              vcs_provider: vcsProvider,
+            },
           })
         }}
       >

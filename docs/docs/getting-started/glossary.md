@@ -16,7 +16,7 @@ This glossary provides concise definitions for some of the key concepts within F
 
 - [**Environment**](/flagsmith-concepts/data-model#environments): Environments are a way to separate the configuration of your features. A project can have any number of environments.
 
-- [**Environment Document**](/integrating-with-flagsmith/integration-overview): A JSON document containing all configuration for feature flags in an environment.
+- [**Environment Document**](/integrating-with-flagsmith/sdks/#the-environment-document): A JSON document containing all configuration for feature flags in an environment.
 
 - [**Feature**](/flagsmith-concepts/data-model#features): A configuration that can be enabled, disabled, or set to a specific value. Features are shared across all Environments in a project, but their values/states can be modified between Environments.
 
@@ -24,7 +24,7 @@ This glossary provides concise definitions for some of the key concepts within F
 
 - [**Identity**](/flagsmith-concepts/data-model#identities): An entity within a particular environment, against which you can manage and override feature settings.
 
-- [**Local Evaluation Mode**](/integrating-with-flagsmith/integration-overview): A mode where the SDK evaluates feature flags locally using a downloaded environment document, reducing latency and API calls.
+- [**Local Evaluation Mode**](/integrating-with-flagsmith/sdks/#local-evaluation): A mode where the SDK evaluates feature flags locally using a downloaded environment document, reducing latency and API calls.
 
 - [**Multivariate Flag**](/managing-flags/core-management): A feature flag that can take on multiple values (not just on/off), useful for A/B testing.
 

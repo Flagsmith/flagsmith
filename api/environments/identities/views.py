@@ -27,13 +27,14 @@ from environments.identities.serializers import (
     IdentitySerializer,
     SDKIdentitiesQuerySerializer,
 )
+from environments.identities.services import replace_identity_environment
 from environments.models import Environment
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from environments.sdk.serializers import (
     IdentifyWithTraitsSerializer,
     IdentitySerializerWithTraitsAndSegments,
 )
-from features.serializers import SDKFeatureStateSerializer
+from features.serializers import SDKIdentityFeatureStateSerializer
 from integrations.integration import identify_integrations
 from util.views import SDKAPIView
 
@@ -121,9 +122,10 @@ class SDKIdentitiesDeprecated(SDKAPIView):
         if not is_new_identity and is_database_replica_setup():
             identity = (
                 using_database_replica(Identity.objects)
-                .with_context()
+                .with_traits()
                 .get(id=identity.id)
             )
+            replace_identity_environment(identity, request.environment)
 
         traits_data = identity.get_all_user_traits()  # type: ignore[no-untyped-call]
 
@@ -189,9 +191,10 @@ class SDKIdentities(SDKAPIView):
         if not is_new_identity and is_database_replica_setup():
             identity = (
                 using_database_replica(Identity.objects)
-                .with_context()
+                .with_traits()
                 .get(id=identity.id)
             )
+            replace_identity_environment(identity, request.environment)
 
         self.identity = identity
 
@@ -290,7 +293,9 @@ class SDKIdentities(SDKAPIView):
             additional_filters=self._get_additional_filters(),
         ):
             if feature_state.feature.name == feature_name:
-                serializer = SDKFeatureStateSerializer(feature_state, context=context)
+                serializer = SDKIdentityFeatureStateSerializer(
+                    feature_state, context=context
+                )
                 return Response(
                     data=serializer.data, status=status.HTTP_200_OK, headers=headers
                 )

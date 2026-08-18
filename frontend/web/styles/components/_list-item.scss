@@ -35,7 +35,7 @@
   }
   a:hover svg {
     path {
-      fill: $primary;
+      fill: var(--color-text-action);
     }
   }
 }
@@ -43,14 +43,8 @@
 .dark {
   .list-item {
     color: $text-icon-light;
-    &.clickable:hover .btn-link {
-      color: $primary400;
-    }
-      .btn-link {
-      color: $primary400;
-      path {
-        fill: $primary400;
-      }
+    .btn-link path {
+      fill: var(--color-text-action);
     }
   }
 }

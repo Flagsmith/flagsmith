@@ -4,6 +4,7 @@ import find from 'lodash/find'
 import findIndex from 'lodash/findIndex'
 import get from 'lodash/get'
 import { storageGet, storageSet } from 'common/safeLocalStorage'
+import { clearOnboardingTargetingKey } from 'common/utils/onboardingEntry'
 import Dispatcher from 'common/dispatcher/dispatcher'
 import BaseStore from './base/_store'
 import data from 'common/data/base/_data'
@@ -17,6 +18,8 @@ import { hidePylon, identifyChatUser } from 'common/loadChat'
 import { service } from 'common/service'
 import { getBuildVersion } from 'common/services/useBuildVersion'
 import { createOnboardingSupportOptIn } from 'common/services/useOnboardingSupportOptIn'
+import flagsmith from '@flagsmith/flagsmith'
+import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 
 const controller = {
   acceptInvite: (id) => {
@@ -36,6 +39,9 @@ const controller = {
         return data.post(`${Project.api}users/join/${id}/`)
       })
       .then((res) => {
+        // Membership of any organisation spends the onboarding entry
+        // decision — a later organisation must not consume a stale key.
+        clearOnboardingTargetingKey()
         store.savedId = res.id
         store.model.organisations.push(res)
         const ev = Constants.events.ACCEPT_INVITE(res.name)
@@ -75,7 +81,7 @@ const controller = {
         API.ajaxHandler(store, e)
       })
   },
-  createOrganisation: (name) => {
+  createOrganisation: (name, targetingKey) => {
     store.saving()
     if (
       !AccountStore.model?.organisations ||
@@ -98,8 +104,12 @@ const controller = {
     return data
       .post(`${Project.api}organisations/`, {
         name,
+        ...(targetingKey ? { targeting_key: targetingKey } : {}),
       })
       .then(async (res) => {
+        // Membership of any organisation spends the onboarding entry
+        // decision — a later organisation must not consume a stale key.
+        clearOnboardingTargetingKey()
         if (store.model) {
           store.model.organisations = store.model.organisations.concat([
             { ...res, role: 'ADMIN' },
@@ -244,7 +254,21 @@ const controller = {
         }
 
         data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
-        return controller.onLogin()
+        if (res.is_new_user) {
+          try {
+            flagsmith.trackEvent('new_signup', {
+              metadata: {
+                invite: !!API.getInvite(),
+                signup_method: type,
+              },
+            })
+          } catch (e) {
+            // never let analytics break the login flow
+          }
+        }
+        // Signing up through an identity provider is still a signup, so it
+        // gets the same onboarding entry decision as `register` makes.
+        return controller.onLogin(!!res.is_new_user && !API.getInvite())
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
@@ -265,13 +289,27 @@ const controller = {
       .then(async (res) => {
         data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         API.trackEvent(Constants.events.REGISTER)
+        const freeEmailDomain = isFreeEmailDomain(user.email)
+        try {
+          flagsmith.trackEvent('new_signup', {
+            metadata: {
+              ...(freeEmailDomain && { domain: user.email.split('@')[1] }),
+              free_email_domain: freeEmailDomain,
+              invite: !!API.getInvite(),
+              signup_method: 'email',
+              utm_source: user.utm_data?.utm_source,
+            },
+          })
+        } catch (e) {
+          // never let analytics break the signup flow
+        }
         if (API.getReferrer()) {
           API.trackEvent(
             Constants.events.REFERRER_REGISTERED(API.getReferrer().utm_source),
           )
         }
         if (organisation_name) {
-          await controller.createOrganisation(organisation_name, true)
+          await controller.createOrganisation(organisation_name)
         }
         store.isSaving = false
 
@@ -368,10 +406,9 @@ const controller = {
         return
       }
 
-      //Skip logout in E2E since parallel sessions may be using a shared token
-      ;(E2E
-        ? Promise.resolve()
-        : data.post(`${Project.api}auth/logout/`, {})
+      ;(Project.cookieAuthEnabled && !E2E
+        ? data.post(`${Project.api}auth/logout/`, {})
+        : Promise.resolve()
       ).finally(() => {
         API.setCookie('t', '')
         data.setToken(null)
@@ -532,7 +569,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.selectOrganisation(action.id)
       break
     case Actions.CREATE_ORGANISATION:
-      controller.createOrganisation(action.name)
+      controller.createOrganisation(action.name, action.targetingKey)
       break
     case Actions.ACCEPT_INVITE:
       controller.acceptInvite(action.id)

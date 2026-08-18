@@ -113,7 +113,7 @@ export const ProjectInformation = ({ project }: ProjectInformationProps) => {
           </div>
         )}
 
-        <div className='text-right'>
+        <div className={classNames('text-right', { 'mt-4': !hasVersioning })}>
           <Button
             type='submit'
             id='save-proj-btn'

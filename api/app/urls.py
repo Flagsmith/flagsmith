@@ -37,6 +37,9 @@ if not settings.TASK_PROCESSOR_MODE:
             r"^api/experiments/",
             include("api.urls.experiments", namespace="api-experiments"),
         ),
+        re_path(
+            r"^api/__future__/", include("api.urls.future", namespace="api-future")
+        ),
         re_path(r"^admin/", admin.site.urls),
         re_path(
             r"^sales-dashboard/",
@@ -103,10 +106,22 @@ if settings.SAML_INSTALLED:  # pragma: no cover
     from organisations.subscriptions.permissions import require_minimum_plan
 
     scale_up_permission = require_minimum_plan(SubscriptionPlanFamily.SCALE_UP)
-    SamlConfigurationViewSet.permission_classes += [scale_up_permission]
+    SamlConfigurationViewSet.permission_classes = [
+        *SamlConfigurationViewSet.permission_classes,
+        scale_up_permission,
+    ]
 
     urlpatterns += [
         path("api/v1/auth/saml/", include("saml.urls")),
+    ]
+
+if settings.SCIM_INSTALLED:  # pragma: no cover
+    urlpatterns += [
+        path("api/v1/scim/v2/", include("django_scim.urls")),
+        path(
+            "api/v1/organisations/<int:organisation_pk>/scim/",
+            include("scim.urls"),
+        ),
     ]
 
 if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover

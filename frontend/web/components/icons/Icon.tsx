@@ -17,9 +17,11 @@ export type IconName =
   | 'clock'
   | 'close'
   | 'close-circle'
+  | 'cloud-upload'
   | 'code'
   | 'copy'
   | 'copy-outlined'
+  | 'difference'
   | 'edit'
   | 'eye'
   | 'eye-off'
@@ -85,6 +87,33 @@ const Icon: FC<IconType> = ({
   ...rest
 }) => {
   switch (name) {
+    case 'cloud-upload': {
+      return (
+        <svg
+          width={width || '24'}
+          height={height || width || '24'}
+          viewBox='0 0 512 512'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+          {...rest}
+        >
+          <path
+            d='M320 367.79h76c55 0 100-29.21 100-83.6s-53-81.47-96-83.6c-8.89-85.06-71-136.8-144-136.8-69 0-113.44 45.79-128 91.2-60 5.7-112 43.88-112 106.4s54 106.4 120 106.4h56'
+            stroke={fill || 'currentColor'}
+            strokeWidth='32'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <path
+            d='M320 255.79l-64-64-64 64M256 448.21V207.79'
+            stroke={fill || 'currentColor'}
+            strokeWidth='32'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+        </svg>
+      )
+    }
     case 'code': {
       return (
         <svg
@@ -577,6 +606,26 @@ const Icon: FC<IconType> = ({
             d='M9 12V13H5.667C5.299 13 5 12.701 5 12.333V5.667C5 5.299 5.299 5 5.667 5H12.333C12.701 5 13 5.299 13 5.667V9H12C10.346 9 9 10.346 9 12ZM18 9H15V5.667C15 4.196 13.804 3 12.333 3H5.667C4.196 3 3 4.196 3 5.667V12.333C3 13.804 4.196 15 5.667 15H9V18C9 19.654 10.346 21 12 21H18C19.654 21 21 19.654 21 18V12C21 10.346 19.654 9 18 9Z'
             fill={fill || 'currentColor'}
           />
+        </svg>
+      )
+    }
+    case 'difference': {
+      return (
+        <svg
+          width={width || '16'}
+          height={width || '16'}
+          viewBox='0 0 24 24'
+          fill='none'
+          stroke={fill || 'currentColor'}
+          strokeWidth='2'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <circle cx='18' cy='18' r='3' />
+          <circle cx='6' cy='6' r='3' />
+          <path d='M13 6h3a2 2 0 0 1 2 2v7' />
+          <path d='M11 18H8a2 2 0 0 1-2-2V9' />
         </svg>
       )
     }

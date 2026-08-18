@@ -1,0 +1,461 @@
+import {
+  CONTROL_VARIANT_KEY,
+  buildTicks,
+  computeLiftRange,
+  computeAxisRange,
+  buildExposuresChartData,
+  LiftTone,
+  deriveSummary,
+  formatBucketLabel,
+  formatChancePct,
+  getControlChanceToWin,
+  getHeadlineTotal,
+  getVariantIdentities,
+  getVariantTotals,
+  getWinningVariant,
+  isLiftFavourable,
+  liftToPercent,
+  valueToPercent,
+} from 'components/experiments/results/derive'
+import {
+  BayesianMetricResult,
+  BayesianResultsSummary,
+  Experiment,
+  ExperimentFeature,
+  ExposuresSummary,
+  MetricDirection,
+  MultivariateOption,
+} from 'common/types/responses'
+
+type OptionalMetricDirection = MetricDirection | undefined
+
+const option = (over: Partial<MultivariateOption>): MultivariateOption => ({
+  boolean_value: undefined,
+  default_percentage_allocation: 0,
+  id: 1,
+  integer_value: undefined,
+  key: null,
+  string_value: '',
+  type: 'unicode',
+  uuid: 'u',
+  ...over,
+})
+
+const feature = (over: Partial<ExperimentFeature> = {}): ExperimentFeature => ({
+  id: 1,
+  initial_value: 'off',
+  multivariate_options: [],
+  name: 'checkout',
+  type: 'MULTIVARIATE',
+  ...over,
+})
+
+describe('getVariantIdentities', () => {
+  it('puts control first using the feature initial value', () => {
+    const result = getVariantIdentities(feature())
+    expect(result[0]).toMatchObject({
+      isControl: true,
+      key: CONTROL_VARIANT_KEY,
+      name: 'Control',
+      value: 'off',
+    })
+  })
+
+  it('names treatments by position and joins on the option key slug', () => {
+    const result = getVariantIdentities(
+      feature({
+        multivariate_options: [
+          option({
+            id: 10,
+            key: 'variant_b',
+            string_value: 'big',
+            type: 'unicode',
+          }),
+          option({
+            id: 11,
+            key: 'variant_c',
+            string_value: 'huge',
+            type: 'unicode',
+          }),
+        ],
+      }),
+    )
+    expect(result.map((v) => [v.key, v.name, v.value, v.isControl])).toEqual([
+      ['control', 'Control', 'off', true],
+      ['variant_b', 'variant_b', 'big', false],
+      ['variant_c', 'variant_c', 'huge', false],
+    ])
+  })
+
+  it('assigns each variant a distinct colour', () => {
+    const result = getVariantIdentities(
+      feature({
+        multivariate_options: [
+          option({ id: 10, key: 'b' }),
+          option({ id: 11, key: 'c' }),
+        ],
+      }),
+    )
+    const colours = result.map((v) => v.colour)
+    expect(new Set(colours).size).toBe(colours.length)
+  })
+
+  it('falls back to a synthetic key and typed value when key is null', () => {
+    const result = getVariantIdentities(
+      feature({
+        multivariate_options: [
+          option({ id: 10, integer_value: 42, key: null, type: 'int' }),
+        ],
+      }),
+    )
+    expect(result[1]).toMatchObject({
+      key: 'Variant_1',
+      name: 'Variant_1',
+      value: '42',
+    })
+  })
+})
+
+const identities = getVariantIdentities(
+  feature({
+    multivariate_options: [
+      option({ id: 10, key: 'b', string_value: 'big' }),
+      option({ id: 11, key: 'c', string_value: 'huge' }),
+    ],
+  }),
+)
+
+const summary: ExposuresSummary = {
+  excluded_identities: 5,
+  timeseries: {
+    granularity: 'day',
+    points: [
+      {
+        bucket: '2026-06-12T00:00:00+00:00',
+        new_identities: { b: 10, control: 20 },
+      },
+      {
+        bucket: '2026-06-13T00:00:00+00:00',
+        new_identities: { c: 4, control: 5 },
+      },
+    ],
+  },
+}
+
+describe('buildExposuresChartData', () => {
+  it('produces cumulative series carrying forward missing variants', () => {
+    const { points, series } = buildExposuresChartData(summary, identities)
+    expect(series).toEqual(['control', 'b', 'c'])
+    expect(points).toEqual([
+      { b: 10, c: 0, control: 20, day: '12 Jun' },
+      { b: 10, c: 4, control: 25, day: '13 Jun' },
+    ])
+  })
+
+  it('maps colours and labels from identities', () => {
+    const { colorMap, seriesLabels } = buildExposuresChartData(
+      summary,
+      identities,
+    )
+    expect(seriesLabels).toEqual({
+      b: 'b',
+      c: 'c',
+      control: 'Control',
+    })
+    expect(Object.keys(colorMap).sort()).toEqual(['b', 'c', 'control'])
+  })
+})
+
+describe('getVariantTotals / getHeadlineTotal', () => {
+  it('totals each variant and computes share of the headline', () => {
+    const headline = getHeadlineTotal(summary)
+    expect(headline).toBe(39) // 20+10 + 5+4
+    const totals = getVariantTotals(summary, identities)
+    expect(totals.map((t) => [t.key, t.total])).toEqual([
+      ['control', 25],
+      ['b', 10],
+      ['c', 4],
+    ])
+    expect(totals[0].share).toBeCloseTo(25 / 39)
+  })
+
+  it('returns zero shares when there is no data', () => {
+    const empty: ExposuresSummary = {
+      excluded_identities: 0,
+      timeseries: { granularity: 'day', points: [] },
+    }
+    expect(getHeadlineTotal(empty)).toBe(0)
+    expect(
+      getVariantTotals(empty, identities).every((t) => t.share === 0),
+    ).toBe(true)
+  })
+})
+
+describe('formatBucketLabel', () => {
+  it('formats day buckets as "D MMM"', () => {
+    expect(formatBucketLabel('2026-06-12T00:00:00+00:00', 'day')).toBe('12 Jun')
+  })
+  it('formats hour buckets with the hour', () => {
+    expect(formatBucketLabel('2026-06-12T14:00:00+00:00', 'hour')).toBe(
+      '12 Jun 14:00',
+    )
+  })
+})
+
+const metricResult: BayesianMetricResult = {
+  inference: {
+    b: {
+      chance_to_win: 0.75,
+      ci_high: 0.24,
+      ci_low: -0.12,
+      lift: 0.08,
+    },
+    c: {
+      chance_to_win: 0.25,
+      ci_high: 0.08,
+      ci_low: -0.06,
+      lift: -0.02,
+    },
+  },
+  metric_id: 1,
+  variants: {},
+}
+
+describe('axis helpers', () => {
+  it('pads the axis range around treatment credible intervals', () => {
+    expect(computeAxisRange(identities, metricResult)).toEqual({
+      max: 0.294,
+      min: -0.174,
+    })
+  })
+
+  it('uses the default balanced range when there is no inference data', () => {
+    expect(computeAxisRange(identities)).toEqual({
+      max: 0.13,
+      min: -0.13,
+    })
+  })
+
+  it('converts values to percentages within an axis range', () => {
+    expect(valueToPercent(0, { max: 0.3, min: -0.3 })).toBe(50)
+    expect(valueToPercent(0.15, { max: 0.3, min: -0.3 })).toBe(75)
+  })
+
+  it('builds readable ticks for compact percentage ranges', () => {
+    expect(buildTicks({ max: 0.13, min: -0.13 })).toEqual([
+      -0.1, -0.05, 0, 0.05, 0.1,
+    ])
+  })
+})
+
+describe('liftToPercent', () => {
+  it('centres zero and clamps values outside the range', () => {
+    expect(liftToPercent(0, 0.3)).toBe(50)
+    expect(liftToPercent(0.15, 0.3)).toBe(75)
+    expect(liftToPercent(-0.6, 0.3)).toBe(0)
+    expect(liftToPercent(0.6, 0.3)).toBe(100)
+  })
+})
+
+const losingMetricResult: BayesianMetricResult = {
+  ...metricResult,
+  inference: {
+    b: { chance_to_win: 0.05, ci_high: 0.02, ci_low: -0.3, lift: -0.15 },
+    c: { chance_to_win: 0.1, ci_high: 0.04, ci_low: -0.2, lift: -0.09 },
+  },
+}
+
+describe('getWinningVariant', () => {
+  it('returns the treatment with the highest chance of beating control', () => {
+    expect(getWinningVariant(metricResult, identities)).toMatchObject({
+      chanceToWin: 0.75,
+      isControl: false,
+      key: 'b',
+    })
+  })
+
+  it('returns control when no treatment is likely to beat it', () => {
+    expect(getWinningVariant(losingMetricResult, identities)).toMatchObject({
+      chanceToWin: 0.85,
+      inference: null,
+      isControl: true,
+      key: CONTROL_VARIANT_KEY,
+      name: 'Control',
+    })
+  })
+
+  it('returns null when no treatment has inference data', () => {
+    expect(
+      getWinningVariant({ ...metricResult, inference: {} }, identities),
+    ).toBeNull()
+  })
+})
+
+describe('getControlChanceToWin', () => {
+  it('infers the control chance from the treatment chances', () => {
+    expect(getControlChanceToWin(losingMetricResult, identities)).toBeCloseTo(
+      0.85,
+    )
+  })
+
+  it('clamps the control chance at zero when treatment chances exceed one', () => {
+    expect(getControlChanceToWin(metricResult, identities)).toBe(0)
+  })
+
+  it.each<[string, BayesianMetricResult['inference']]>([
+    ['no treatment', {}],
+    ['only some treatments', { b: metricResult.inference.b }],
+    ['a null-inference treatment', { b: metricResult.inference.b, c: null }],
+  ])('returns null when %s has inference data', (_, inference) => {
+    expect(
+      getControlChanceToWin({ ...metricResult, inference }, identities),
+    ).toBeNull()
+  })
+})
+
+describe('deriveSummary', () => {
+  const experiment: Experiment = {
+    created_at: '2026-06-01T00:00:00Z',
+    ended_at: null,
+    feature: feature({
+      multivariate_options: [
+        option({ id: 10, key: 'b', string_value: 'big' }),
+        option({ id: 11, key: 'c', string_value: 'huge' }),
+      ],
+    }),
+    hypothesis: '',
+    id: 1,
+    metrics: [
+      {
+        aggregation: 'occurrence',
+        created_at: '2026-06-01T00:00:00Z',
+        direction: 'up',
+        expected_direction: 'increase',
+        id: 1,
+        metric: 1,
+        metric_name: 'Signup',
+      },
+    ],
+    name: 'exp',
+    started_at: null,
+    status: 'running',
+    updated_at: '2026-06-01T00:00:00Z',
+  }
+  const results = (mr: BayesianMetricResult): BayesianResultsSummary => ({
+    metrics: [mr],
+    srm_p_value: null,
+  })
+
+  it('summarises the winning treatment with its lift vs control', () => {
+    expect(deriveSummary(experiment, results(metricResult))).toMatchObject({
+      chanceToBest: '75%',
+      chanceToBestHigh: false,
+      controlWins: false,
+      liftLabel: 'Lift vs control',
+      liftTone: 'success',
+      liftValue: '+8.0%',
+      winnerName: 'b',
+    })
+  })
+
+  it('summarises a winning control with the best treatment lift negated', () => {
+    expect(
+      deriveSummary(experiment, results(losingMetricResult)),
+    ).toMatchObject({
+      chanceToBest: '85%',
+      controlWins: true,
+      liftLabel: 'Control vs best variant',
+      liftTone: 'success',
+      liftValue: '+9.0%',
+      winnerName: 'Control',
+    })
+  })
+
+  it('caps the winning control lead at +100% when a treatment collapses to zero', () => {
+    const wipedOut: BayesianMetricResult = {
+      ...losingMetricResult,
+      inference: {
+        b: { chance_to_win: 0.05, ci_high: -0.9, ci_low: -1, lift: -1 },
+        c: { chance_to_win: 0.03, ci_high: -0.3, ci_low: -0.7, lift: -0.5 },
+      },
+    }
+    expect(deriveSummary(experiment, results(wipedOut))).toMatchObject({
+      chanceToBestHigh: true,
+      controlWins: true,
+      liftLabel: 'Control vs best variant',
+      liftTone: 'success',
+      liftValue: '+100.0%',
+    })
+  })
+
+  it.each<[OptionalMetricDirection, LiftTone]>([
+    ['up', 'success'],
+    ['down', 'danger'],
+    ['informational', 'neutral'],
+    [undefined, 'success'], // legacy payloads without direction default to up
+  ])(
+    'tones the positive winning lift for a %s metric as %s',
+    (direction, tone) => {
+      const exp: Experiment = {
+        ...experiment,
+        metrics: [{ ...experiment.metrics[0], direction }],
+      }
+      expect(deriveSummary(exp, results(metricResult))?.liftTone).toBe(tone)
+    },
+  )
+})
+
+describe('formatChancePct', () => {
+  it.each<[number, string]>([
+    [1, '> 99%'],
+    [0.996, '> 99%'],
+    [0.994, '99%'],
+    [0.75, '75%'],
+    [0.006, '1%'],
+    [0.004, '< 1%'],
+    [0, '< 1%'],
+  ])('formats a %d chance as %s', (chance, expected) => {
+    expect(formatChancePct(chance)).toBe(expected)
+  })
+})
+
+describe('isLiftFavourable', () => {
+  it.each<[number, MetricDirection, boolean]>([
+    [0.08, 'up', true],
+    [-0.08, 'up', false],
+    [-0.08, 'down', true],
+    [0.08, 'down', false],
+  ])(
+    'judges a %d lift on a %s metric as favourable=%s',
+    (lift, direction, expected) => {
+      expect(isLiftFavourable(lift, direction)).toBe(expected)
+    },
+  )
+})
+
+describe('computeLiftRange', () => {
+  it('pads the largest treatment interval magnitude beyond the default range', () => {
+    expect(
+      computeLiftRange(identities, {
+        ...metricResult,
+        inference: {
+          ...metricResult.inference,
+          b: {
+            chance_to_win: 0.75,
+            ci_high: 0.5,
+            ci_low: -0.12,
+            lift: 0.08,
+          },
+        },
+      }),
+    ).toBeCloseTo(0.55)
+  })
+
+  it('keeps a stable default range when there is no inference data', () => {
+    expect(computeLiftRange(identities)).toBe(0.33)
+  })
+
+  it('keeps the stable default range for compact intervals', () => {
+    expect(computeLiftRange(identities, metricResult)).toBe(0.33)
+  })
+})

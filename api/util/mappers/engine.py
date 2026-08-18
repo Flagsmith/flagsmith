@@ -152,7 +152,11 @@ def map_feature_state_to_engine(
 
     return FeatureStateModel(
         enabled=feature_state.enabled,
-        django_id=feature_state.pk,
+        # The engine and SDKs seed multivariate variant allocation on django_id,
+        # so feeding it the bucketing seed keeps variant assignment stable when
+        # a feature state is recreated, without changing the engine model or
+        # environment document schema. See issue #7913.
+        django_id=feature_state.mv_hashing_seed,
         feature_state_value=feature_state.get_feature_state_value(),
         featurestate_uuid=feature_state.uuid,
         feature_segment=feature_segment_model,
@@ -185,7 +189,9 @@ def map_feature_to_engine(feature: "Feature") -> FeatureModel:
 def map_mv_option_to_engine(
     mv_option: "MultivariateFeatureOption",
 ) -> MultivariateFeatureOptionModel:
-    return MultivariateFeatureOptionModel(value=mv_option.value, id=mv_option.id)
+    return MultivariateFeatureOptionModel(
+        value=mv_option.value, id=mv_option.id, key=mv_option.key
+    )
 
 
 def map_environment_to_engine(
@@ -352,6 +358,7 @@ def map_environment_to_engine(
         hide_sensitive_data=environment.hide_sensitive_data,
         hide_disabled_flags=environment.hide_disabled_flags,
         use_identity_overrides_in_local_eval=environment.use_identity_overrides_in_local_eval,
+        onboarding_pending=environment.first_evaluated_at is None,
         #
         # Relationships:
         project=project_model,

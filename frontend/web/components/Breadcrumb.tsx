@@ -16,7 +16,7 @@ const Breadcrumb: FC<BreadcrumbType> = ({
     <div className='d-flex align-items-center my-2 py-1'>
       {items?.map((item) => (
         <>
-          <Link className='text-primary h6 mb-0' to={item.url}>
+          <Link className='text-action h6 mb-0' to={item.url}>
             {item.title}
           </Link>
           <div className='text-muted mx-2 h6 mb-0'>/</div>
@@ -24,7 +24,7 @@ const Breadcrumb: FC<BreadcrumbType> = ({
       ))}
       {isCurrentPageMuted ? (
         <div
-          className='active h6 text-muted lh-sm '
+          className='active h6 text-muted mb-0'
           aria-current='page'
           style={{ opacity: 0.6 }}
         >

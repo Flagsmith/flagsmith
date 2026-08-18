@@ -216,6 +216,16 @@ def test_trigger_update_version_webhooks__version_with_changes__triggers_flag_up
         flag_updated_env_body["data"]["previous_state"]["feature_state_value"]
         == v1_fs.get_feature_state_value()
     )
+    assert (
+        flag_updated_env_body["data"]["new_state"]["multivariate_feature_state_values"]
+        == []
+    )
+    assert (
+        flag_updated_env_body["data"]["previous_state"][
+            "multivariate_feature_state_values"
+        ]
+        == []
+    )
     assert flag_updated_env_body["data"]["changed_by"] == staff_user.email
     assert "timestamp" in flag_updated_env_body["data"]
 
@@ -235,6 +245,7 @@ def test_trigger_update_version_webhooks__version_with_changes__triggers_flag_up
                 {
                     "enabled": v2_fs.enabled,
                     "value": v2_fs.get_feature_state_value(),
+                    "multivariate_feature_state_values": [],
                 }
             ],
         },
@@ -284,10 +295,114 @@ def test_trigger_update_version_webhooks__version_without_changes__triggers_only
                 {
                     "enabled": v2.feature_states.first().enabled,
                     "value": v2.feature_states.first().get_feature_state_value(),
+                    "multivariate_feature_state_values": [],
                 }
             ],
         },
     }
+
+
+@responses.activate
+def test_trigger_update_version_webhooks__multivariate_feature__includes_mv_values_in_payloads(
+    multivariate_feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    v1 = EnvironmentFeatureVersion.objects.get(
+        feature=multivariate_feature, environment=environment_v2_versioning
+    )
+    v1_fs = v1.feature_states.first()
+
+    # Bump one option's allocation in v2 so we count as a change and so
+    # previous/new mv values differ.
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=multivariate_feature
+    )
+    v2_fs = v2.feature_states.first()
+    v2_mv_values = list(
+        v2_fs.multivariate_feature_state_values.select_related(
+            "multivariate_feature_option"
+        ).order_by("multivariate_feature_option_id")
+    )
+    bumped_mv_value = v2_mv_values[0]
+    original_allocation = bumped_mv_value.percentage_allocation
+    bumped_mv_value.percentage_allocation = original_allocation + 5
+    bumped_mv_value.save()
+    v2.publish(published_by=staff_user)
+
+    environment_webhook_url = "https://example.com/env-webhook/"
+    Webhook.objects.create(
+        environment=environment_v2_versioning,
+        url=environment_webhook_url,
+        enabled=True,
+    )
+    responses.post(url=environment_webhook_url, status=200)
+
+    # When
+    trigger_update_version_webhooks(str(v2.uuid))
+
+    # Then
+    flag_updated_body = json.loads(responses.calls[0].request.body)  # type: ignore[union-attr]
+    assert flag_updated_body["event_type"] == WebhookEventType.FLAG_UPDATED.name
+
+    expected_new_mv_payload = [
+        {
+            "id": mv.id,
+            "multivariate_feature_option": {
+                "id": mv.multivariate_feature_option_id,
+                "value": mv.multivariate_feature_option.value,
+            },
+            "percentage_allocation": mv.percentage_allocation,
+        }
+        for mv in v2_fs.multivariate_feature_state_values.select_related(
+            "multivariate_feature_option"
+        ).order_by("multivariate_feature_option_id")
+    ]
+    assert (
+        sorted(
+            flag_updated_body["data"]["new_state"]["multivariate_feature_state_values"],
+            key=lambda mv: mv["multivariate_feature_option"]["id"],
+        )
+        == expected_new_mv_payload
+    )
+
+    expected_previous_mv_payload = [
+        {
+            "id": mv.id,
+            "multivariate_feature_option": {
+                "id": mv.multivariate_feature_option_id,
+                "value": mv.multivariate_feature_option.value,
+            },
+            "percentage_allocation": mv.percentage_allocation,
+        }
+        for mv in v1_fs.multivariate_feature_state_values.select_related(
+            "multivariate_feature_option"
+        ).order_by("multivariate_feature_option_id")
+    ]
+    assert (
+        sorted(
+            flag_updated_body["data"]["previous_state"][
+                "multivariate_feature_state_values"
+            ],
+            key=lambda mv: mv["multivariate_feature_option"]["id"],
+        )
+        == expected_previous_mv_payload
+    )
+
+    # NEW_VERSION_PUBLISHED summary event should also carry mv values.
+    new_version_body = json.loads(responses.calls[1].request.body)  # type: ignore[union-attr]
+    assert new_version_body["event_type"] == WebhookEventType.NEW_VERSION_PUBLISHED.name
+    summary_mv_payload = new_version_body["data"]["feature_states"][0][
+        "multivariate_feature_state_values"
+    ]
+    assert (
+        sorted(
+            summary_mv_payload,
+            key=lambda mv: mv["multivariate_feature_option"]["id"],
+        )
+        == expected_new_mv_payload
+    )
 
 
 def test_enable_v2_versioning__scheduled_changes_exist__converts_published_scheduled_changes(
@@ -393,6 +508,72 @@ def test_enable_v2_versioning__scheduled_changes_exist__converts_published_sched
     assert (
         another_environment_fs.change_request
         == published_scheduled_cr_another_environment
+    )
+
+
+def test_enable_v2_versioning__multi_feature_scheduled_changes__each_efv_matches_feature(
+    environment: Environment,
+    project: Project,
+    feature: Feature,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    now = timezone.now()
+    one_hour_from_now = now + timedelta(hours=1)
+    two_hours_from_now = now + timedelta(hours=2)
+
+    feature_b = Feature.objects.create(name="feature_b", project=project)
+    feature_c = Feature.objects.create(name="feature_c", project=project)
+
+    cr_b = ChangeRequest.objects.create(
+        environment=environment,
+        title="Scheduled change for feature_b",
+        user=staff_user,
+    )
+    scheduled_fs_b = FeatureState.objects.create(
+        feature=feature_b,
+        enabled=True,
+        environment=environment,
+        live_from=one_hour_from_now,
+        change_request=cr_b,
+        version=None,
+    )
+    cr_b.commit(staff_user)
+
+    cr_c = ChangeRequest.objects.create(
+        environment=environment,
+        title="Scheduled change for feature_c",
+        user=staff_user,
+    )
+    scheduled_fs_c = FeatureState.objects.create(
+        feature=feature_c,
+        enabled=True,
+        environment=environment,
+        live_from=two_hours_from_now,
+        change_request=cr_c,
+        version=None,
+    )
+    cr_c.commit(staff_user)
+
+    # When
+    enable_v2_versioning(environment.id)
+
+    # Then
+    scheduled_fs_b.refresh_from_db()
+    scheduled_fs_c.refresh_from_db()
+
+    assert scheduled_fs_b.environment_feature_version is not None
+    assert scheduled_fs_b.environment_feature_version.feature_id == feature_b.id, (
+        f"scheduled FS for feature_b is bound to an EFV for "
+        f"feature_id={scheduled_fs_b.environment_feature_version.feature_id}; "
+        f"expected {feature_b.id}"
+    )
+
+    assert scheduled_fs_c.environment_feature_version is not None
+    assert scheduled_fs_c.environment_feature_version.feature_id == feature_c.id, (
+        f"scheduled FS for feature_c is bound to an EFV for "
+        f"feature_id={scheduled_fs_c.environment_feature_version.feature_id}; "
+        f"expected {feature_c.id}"
     )
 
 

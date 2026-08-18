@@ -16,6 +16,58 @@
 // 4. Optionally include utilities API last to generate classes based on the Sass map in `_utilities.scss`
 
 @import "../project/spacing-utils";
+
+// Colour is owned by the design-system token utilities (_token-utilities.scss).
+// Drop the overlapping keys from Bootstrap's text-colour utility so `.text-*`
+// resolve to the tokens, not Bootstrap's `$theme-colors`. Otherwise Bootstrap's
+// `!important` copy wins the cascade and the token utility is dead.
+// - secondary/success/danger/warning/info: token utilities take over. Values are
+//   identical to Bootstrap (secondary excepted, that is the intended yellow->grey
+//   fix), so this is a no-op for the others.
+// - light/black/white-50/black-50: unused, no token equivalent, dropped.
+// Not removed: primary, dark, body, muted, white, reset. Bootstrap still
+// generates these; muted resolves to the token via $text-muted (_variables.scss).
+$_color-util: map-get($utilities, "color");
+$_color-util: map-merge(
+  $_color-util,
+  (
+    values:
+      map-remove(
+        map-get($_color-util, "values"),
+        "secondary",
+        "success",
+        "danger",
+        "warning",
+        "info",
+        "light",
+        "black",
+        "white-50",
+        "black-50"
+      )
+  )
+);
+$utilities: map-merge($utilities, ("color": $_color-util));
+
+// Border colour: token border utilities take over. Values are identical to
+// Bootstrap's, so a no-op; it just moves ownership to the token layer.
+$_border-util: map-get($utilities, "border-color");
+$_border-util: map-merge(
+  $_border-util,
+  (values: map-remove(map-get($_border-util, "values"), "danger", "info", "success", "warning"))
+);
+$utilities: map-merge($utilities, ("border-color": $_border-util));
+
+// Shadow scale is owned by the token utilities (--shadow-*). Drop sm/lg/none so
+// `.shadow-sm` / `.shadow-lg` / `.shadow-none` use the DS tokens, consistent with
+// the token-only `.shadow-md` / `.shadow-xl`. Bootstrap's suffixless `.shadow`
+// (the `null` key) is left in place.
+$_shadow-util: map-get($utilities, "shadow");
+$_shadow-util: map-merge(
+  $_shadow-util,
+  (values: map-remove(map-get($_shadow-util, "values"), "sm", "lg", "none"))
+);
+$utilities: map-merge($utilities, ("shadow": $_shadow-util));
+
 @import "~bootstrap/scss/utilities/api";
 
 // 5. Include any optional Bootstrap CSS as needed

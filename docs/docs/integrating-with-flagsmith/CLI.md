@@ -6,43 +6,65 @@ sidebar_position: 40
 
 # Flagsmith CLI
 
-Flagsmith has a [CLI tool](https://github.com/Flagsmith/flagsmith-cli) that you can use to help in your development
-workflows.
+The [Flagsmith CLI](https://github.com/Flagsmith/flagsmith-cli) lets you manage flags, segments, features, projects and
+environments from your terminal, and evaluate flags the way an SDK would. This enables CI/CD, scripting, and
+development workflows use cases.
+
+:::info
+
+The Flagsmith CLI V2 is currently in open beta. We're excited for you to try it and provide any feedback via [GitHub Issues](https://github.com/Flagsmith/flagsmith-cli/issues).
+
+:::
+
+:::info
+
+Looking for the previous npm-based CLI (`@flagsmith/cli`)? Its documentation has moved to
+[Legacy CLI](/integrating-with-flagsmith/legacy-cli).
+
+:::
 
 ## Installation
 
-Install globally:
+Install with the install script:
 
 ```bash
-npm install -g flagsmith-cli
+curl -fsSL https://raw.githubusercontent.com/Flagsmith/flagsmith-cli/main/install.sh | sh
 ```
 
-## Sample Usage
+This installs the binary to `$HOME/.local/bin` and adds it to your `PATH`.
+
+On Windows:
+
+```powershell
+irm https://raw.githubusercontent.com/Flagsmith/flagsmith-cli/main/install.ps1 | iex
+```
+
+You can also install with Go, run it via Docker, or download a pre-built archive from [GitHub Releases](https://github.com/Flagsmith/flagsmith-cli/releases).
+See the [README](https://github.com/Flagsmith/flagsmith-cli#install) for all installation options.
+
+## Quickstart
 
 ```bash
-USAGE
-  $ flagsmith get [ENVIRONMENT] [-o <value>] [-a <value>] [-i <value>]
-
-ARGUMENTS
-  ENVIRONMENT  The flagsmith environment key to use,
-  defaults to the environment variable FLAGSMITH_ENVIRONMENT
-
-FLAGS
-  -a, --api=<value>       The API URL to fetch the feature flags from
-  -i, --identity=<value>  The identity for which to fetch feature flags
-  -o, --output=<value>    [default: ./flagsmith.json] The file path output
-
-DESCRIPTION
-  Retrieve flagsmith feature flags from the Flagsmith API and output them to a file.
-
-EXAMPLES
-  $ FLAGSMITH_ENVIRONMENT=x flagsmith get
-
-  $ flagsmith get <ENVIRONMENT_ID>
-
-  $ flagsmith get --o ./my-file.json
-
-  $ flagsmith get --a https://flagsmith.example.com/api/v1/
-
-  $ flagsmith get --i flagsmith_identity
+flagsmith init          # log in, pick a project + environment, write flagsmith.json
+flagsmith flag list     # list the flags in the current environment
 ```
+
+## Usage
+
+The CLI covers flags, segments, features, organisations, projects, environments, SDK-style flag evaluation, and raw API
+access. A few examples:
+
+```bash
+flagsmith flag enable my_feature                 # toggle a flag in the current environment
+flagsmith evaluate --identity some_user          # the flags an SDK would resolve for an identity
+flagsmith environment document                   # output the local-evaluation environment document
+flagsmith api /projects/                         # call any Flagsmith endpoint with the CLI's credentials
+```
+
+Common conventions:
+
+- `--json` for machine-readable output; `--jq <expr>` to filter it.
+- Static credentials: `FLAGSMITH_API_KEY` (Admin API) or `FLAGSMITH_ENVIRONMENT_KEY` (SDK).
+- Self-hosted: `--api-url` or `FLAGSMITH_API_URL`.
+
+For the full command reference, see the [README](https://github.com/Flagsmith/flagsmith-cli#commands).

@@ -1,3 +1,5 @@
+from typing import Any
+
 from rest_framework import serializers
 
 from core.dataclasses import AuthorData
@@ -6,6 +8,7 @@ from features.models import Feature, FeatureState
 from features.versioning.dataclasses import (
     FlagChangeSet,
     FlagChangeSetV2,
+    MultivariateValueChangeSet,
     SegmentOverrideChangeSet,
 )
 from features.versioning.versioning_service import (
@@ -128,11 +131,36 @@ class EnvironmentDefaultSerializer(serializers.Serializer):  # type: ignore[type
     value = FeatureValueSerializer(required=True)
 
 
+class MultivariateValueSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    multivariate_feature_option = serializers.IntegerField(required=True)
+    percentage_allocation = serializers.FloatField(
+        required=True, min_value=0, max_value=100
+    )
+
+
+def validate_multivariate_state_values(
+    feature: Feature, multivariate_values: list[dict[str, Any]]
+) -> None:
+    if not multivariate_values:
+        return
+    option_ids = [mv["multivariate_feature_option"] for mv in multivariate_values]
+    if len(option_ids) != len(set(option_ids)):
+        raise serializers.ValidationError("Multivariate options must be unique")
+    valid = set(feature.multivariate_options.values_list("id", flat=True))
+    if invalid := set(option_ids) - valid:
+        raise serializers.ValidationError(
+            f"Multivariate options {sorted(invalid)} do not belong to the feature"
+        )
+
+
 class SegmentOverrideSerializer(serializers.Serializer):  # type: ignore[type-arg]
     segment_id = serializers.IntegerField(required=True)
     priority = serializers.IntegerField(required=False, allow_null=True)
     enabled = serializers.BooleanField(required=True)
     value = FeatureValueSerializer(required=True)
+    multivariate_feature_state_values = MultivariateValueSerializer(
+        many=True, required=False
+    )
 
 
 class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer):
@@ -159,6 +187,20 @@ class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer):
 
         return value
 
+    def validate(self, data: dict) -> dict:  # type: ignore[type-arg]
+        overrides = data.get("segment_overrides", [])
+        if any(o.get("multivariate_feature_state_values") for o in overrides):
+            feature = Feature.objects.filter(
+                project_id=self.environment.project_id, **data["feature"]
+            ).first()
+            if feature is not None:
+                for override in overrides:
+                    validate_multivariate_state_values(
+                        feature,
+                        override.get("multivariate_feature_state_values", []),
+                    )
+        return data
+
     @property
     def change_set_v2(self) -> FlagChangeSetV2:
         validated_data = self.validated_data
@@ -172,12 +214,24 @@ class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer):
         for override_data in segment_overrides_data:
             value_data = override_data["value"]
 
+            multivariate_data = override_data.get("multivariate_feature_state_values")
             segment_override = SegmentOverrideChangeSet(
                 segment_id=override_data["segment_id"],
                 enabled=override_data["enabled"],
                 feature_state_value=value_data["value"],
                 type_=value_data["type"],
                 priority=override_data.get("priority"),
+                multivariate_values=[
+                    MultivariateValueChangeSet(
+                        multivariate_feature_option_id=mv[
+                            "multivariate_feature_option"
+                        ],
+                        percentage_allocation=mv["percentage_allocation"],
+                    )
+                    for mv in multivariate_data
+                ]
+                if multivariate_data
+                else None,
             )
             segment_overrides.append(segment_override)
 

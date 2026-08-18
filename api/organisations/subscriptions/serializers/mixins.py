@@ -29,8 +29,13 @@ class ReadOnlyIfNotValidPlanMixin:
 
     def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
+        # Chargebee plan ids cannot be renamed and are mixed-case as of
+        # Scale-Up v4 (e.g. "Scale-Up-v4-USD-Yearly"), so match them
+        # case-insensitively.
         self.invalid_plans_regex_matcher = (
-            re.compile(self.invalid_plans_regex) if self.invalid_plans_regex else None
+            re.compile(self.invalid_plans_regex, re.IGNORECASE)
+            if self.invalid_plans_regex
+            else None
         )
 
     def get_fields(self, *args, **kwargs):  # type: ignore[no-untyped-def]

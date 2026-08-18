@@ -4,6 +4,15 @@ from dataclasses import dataclass
 from typing import Any
 
 from django.conf import settings
+from oauth2_provider.models import Application
+
+
+@dataclass(frozen=True)
+class RegisteredClient:
+    """An application created via dynamic client registration."""
+
+    application: Application
+    client_secret: str
 
 
 @dataclass(frozen=True)

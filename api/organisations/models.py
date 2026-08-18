@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 from typing import Any
 
@@ -9,6 +10,7 @@ from django.db import models
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
+    AFTER_DELETE,
     AFTER_SAVE,
     BEFORE_DELETE,
     LifecycleModelMixin,
@@ -63,7 +65,7 @@ class OrganisationRole(models.TextChoices):
     USER = ("USER", "User")
 
 
-class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[misc]
+class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[django-manager-missing,misc]
     name = models.CharField(max_length=2000)
     has_requested_features = models.BooleanField(default=False)
     webhook_notification_email = models.EmailField(null=True, blank=True)
@@ -88,6 +90,12 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         default=False, help_text="Record feature analytics in InfluxDB"
     )
     force_2fa = models.BooleanField(default=False)
+    targeting_key = models.CharField(
+        max_length=64,
+        null=True,
+        blank=True,
+        help_text="Flagsmith-on-Flagsmith targeting key. Immutable; org.<id> is used when unset.",
+    )
 
     class Meta:
         ordering = ["id"]
@@ -113,8 +121,15 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
             self.subscription_information_cache
         )
 
+    def has_enterprise_licence(self) -> bool:
+        return is_enterprise() and hasattr(self, "licence")
+
     @property
     def is_paid(self):  # type: ignore[no-untyped-def]
+        # A self-hosted licence is the entitlement in its own right; it has no
+        # billing provider, so there is no subscription_id to check.
+        if self.has_enterprise_licence():
+            return True
         return (
             self.has_paid_subscription() and self.subscription.cancellation_date is None
         )
@@ -125,7 +140,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     @property
     def openfeature_evaluation_context(self) -> EvaluationContext:
         return EvaluationContext(
-            targeting_key=f"org.{self.id}",
+            targeting_key=self.targeting_key or f"org.{self.id}",
             attributes={
                 "organisation.id": self.id,
                 "organisation.name": self.name,
@@ -133,14 +148,9 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
             },
         )
 
-    def over_plan_seats_limit(self, additional_seats: int = 0):  # type: ignore[no-untyped-def]
-        if self.has_paid_subscription():
-            susbcription_metadata = self.subscription.get_subscription_metadata()
-            return self.num_seats + additional_seats > susbcription_metadata.seats
-
-        return self.num_seats + additional_seats > getattr(
-            self.subscription, "max_seats", MAX_SEATS_IN_FREE_PLAN
-        )
+    def over_plan_seats_limit(self, additional_seats: int = 0) -> bool:
+        subscription_metadata = self.subscription.get_subscription_metadata()
+        return self.num_seats + additional_seats > subscription_metadata.seats
 
     def reset_alert_status(self):  # type: ignore[no-untyped-def]
         self.alerted_over_plan_limit = False
@@ -153,6 +163,19 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     def cancel_subscription(self):  # type: ignore[no-untyped-def]
         if self.has_paid_subscription():
             self.subscription.prepare_for_cancel()
+
+    @hook(AFTER_DELETE)
+    def teardown_ingestion_infrastructure(self):  # type: ignore[no-untyped-def]
+        if not hasattr(self, "ingestion_infrastructure"):
+            return
+
+        from experimentation.tasks import (
+            teardown_organisation_ingestion_infrastructure,
+        )
+
+        teardown_organisation_ingestion_infrastructure.delay(
+            kwargs={"organisation_id": self.id},
+        )
 
     @hook(AFTER_CREATE)
     def create_subscription(self):  # type: ignore[no-untyped-def]
@@ -294,6 +317,11 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     def is_enterprise(self) -> bool:
         return self.subscription_plan_family == SubscriptionPlanFamily.ENTERPRISE
 
+    def get_scaleup_plan_version(self) -> int:
+        if match := re.match(r"scale-up-v(\d+)", self.plan or "", re.IGNORECASE):
+            return int(match.group(1))
+        return 1
+
     @hook(AFTER_SAVE, when="plan", has_changed=True)
     def update_api_limit_access_block(self):  # type: ignore[no-untyped-def]
         if not getattr(self.organisation, "api_limit_access_block", None):
@@ -419,24 +447,16 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         else:
             cb_metadata = get_subscription_metadata_from_id(self.subscription_id)  # type: ignore[assignment,arg-type]
 
-        if self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP and (
-            settings.VERSIONING_RELEASE_DATE is None
-            or (
-                self.subscription_date is not None
-                and self.subscription_date < settings.VERSIONING_RELEASE_DATE
-            )
-        ):
-            # Logic to grandfather old scale up plan customers to give them
-            # full access to audit log and feature history.
+        # Pre-v4 Scale-Up customers keep unlimited audit log. Feature
+        # history always honours the cache value.
+        is_scale_up = self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
+        if is_scale_up and self.get_scaleup_plan_version() < 4:
             cb_metadata.audit_log_visibility_days = None
-            cb_metadata.feature_history_visibility_days = None
 
         return cb_metadata
 
     def _get_subscription_metadata_for_self_hosted(self) -> BaseSubscriptionMetadata:
-        if is_enterprise() and hasattr(
-            self.organisation, "licence"
-        ):  # pragma: no cover
+        if self.organisation.has_enterprise_licence():
             licence_information = self.organisation.licence.get_licence_information()
             return BaseSubscriptionMetadata(
                 seats=licence_information.num_seats,
