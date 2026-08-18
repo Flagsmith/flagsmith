@@ -76,12 +76,12 @@ def _write_to_core_identities(
     cohort: Cohort, batch: list[CohortMembership]
 ) -> tuple[list[int], list[int]]:
     trait_key = cohort.system_trait_key
-    joiners = {
+    added_by_identifier = {
         row.identifier: row.id
         for row in batch
         if row.state == CohortMembershipState.PENDING_ADD
     }
-    leavers = {
+    removed_by_identifier = {
         row.identifier: row.id
         for row in batch
         if row.state == CohortMembershipState.PENDING_REMOVE
@@ -91,22 +91,22 @@ def _write_to_core_identities(
     Identity.objects.bulk_create(
         [
             Identity(environment_id=cohort.environment_id, identifier=identifier)
-            for identifier in joiners
+            for identifier in added_by_identifier
         ],
         ignore_conflicts=True,
     )
     identities = Identity.objects.filter(environment_id=cohort.environment_id)
-    if joiners:
-        identities.filter(identifier__in=joiners).update(
+    if added_by_identifier:
+        identities.filter(identifier__in=added_by_identifier).update(
             system_traits=_JSONBMerge(
                 F("system_traits"), Value({trait_key: True}, JSONField())
             )
         )
-    if leavers:
-        identities.filter(identifier__in=leavers).update(
+    if removed_by_identifier:
+        identities.filter(identifier__in=removed_by_identifier).update(
             system_traits=_JSONBDropKey(F("system_traits"), Value(trait_key))
         )
-    return list(joiners.values()), list(leavers.values())
+    return list(added_by_identifier.values()), list(removed_by_identifier.values())
 
 
 def apply_pending_memberships(cohort: Cohort) -> bool:
