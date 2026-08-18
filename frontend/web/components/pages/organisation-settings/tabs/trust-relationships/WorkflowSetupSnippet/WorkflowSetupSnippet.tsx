@@ -4,16 +4,18 @@ import Icon from 'components/icons/Icon'
 import Project from 'common/project'
 import { isDefaultGithubAudience } from 'components/pages/organisation-settings/tabs/trust-relationships/github'
 
-const SAAS_API_URL = 'https://api.flagsmith.com'
+const SAAS_API_HOST = 'api.flagsmith.com'
 
 // The CLI defaults to the SaaS API, so the snippet only needs an explicit
 // api-url on other instances. It takes the base URL without /api/v1, which
 // the CLI appends itself.
 export const getNonDefaultApiUrl = (): string | undefined => {
   // Project.api can be relative, e.g. /api/v1/
-  const resolved = new Request(Project.api).url
-  const baseUrl = resolved.replace(/\/api\/v1\/?$/, '')
-  return baseUrl === SAAS_API_URL ? undefined : baseUrl
+  const resolved = new URL(Project.api, window.location.origin)
+  if (resolved.host === SAAS_API_HOST) {
+    return undefined
+  }
+  return resolved.href.replace(/\/api\/v1\/?$/, '')
 }
 
 type WorkflowSetupSnippetProps = {
