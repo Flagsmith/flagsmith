@@ -1,7 +1,7 @@
-import React, { FC, useState } from 'react'
-import { IonIcon } from '@ionic/react'
-import { close as closeIcon } from 'ionicons/icons'
+import { FC, useId, useState } from 'react'
 import Button from 'components/base/forms/Button'
+import Chip from 'components/base/Chip'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import Switch from 'components/Switch'
 import MyRoleSelect from 'components/MyRoleSelect'
@@ -29,12 +29,17 @@ const TrustRelationshipPermissionsFields: FC<
   roles,
 }) => {
   const [showRoles, setShowRoles] = useState(false)
+  const isAdminId = useId()
+  const rolesLabelId = useId()
 
   return (
     <>
       <Row className='mb-3 mt-4 gap-2'>
-        <label className='mb-0'>Is admin</label>
+        <FieldLabel htmlFor={isAdminId} className='mb-0'>
+          Is admin
+        </FieldLabel>
         <Switch
+          id={isAdminId}
           onChange={onIsAdminChange}
           checked={isAdmin}
           disabled={!Utils.getPlansPermission('RBAC') && isAdmin}
@@ -44,29 +49,25 @@ const TrustRelationshipPermissionsFields: FC<
       <PlanBasedBanner feature='RBAC' theme='description' className='mb-4' />
       {!isAdmin && (
         <>
-          <Row className='mb-3'>
-            <label className='mr-2'>Roles:</label>
-            {roles.map((role) => (
-              <Row
-                key={role.id}
-                role='button'
-                tabIndex={0}
-                aria-label={`Remove role ${role.name}`}
-                onClick={() => onRemoveRole(role.id)}
-                onKeyDown={(e: React.KeyboardEvent) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    onRemoveRole(role.id)
-                  }
-                }}
-                className='chip'
-              >
-                <span className='font-weight-bold'>{role.name}</span>
-                <span className='chip-icon ion'>
-                  <IonIcon icon={closeIcon} style={{ fontSize: '13px' }} />
-                </span>
-              </Row>
-            ))}
+          <Row className='mb-3 gap-2'>
+            <FieldLabel id={rolesLabelId} className='mb-0'>
+              Roles
+            </FieldLabel>
+            <div
+              role='group'
+              aria-labelledby={rolesLabelId}
+              className='d-flex flex-wrap gap-2'
+            >
+              {roles.map((role) => (
+                <Chip
+                  key={role.id}
+                  variant='accent'
+                  onRemove={() => onRemoveRole(role.id)}
+                >
+                  {role.name}
+                </Chip>
+              ))}
+            </div>
           </Row>
           <Row className='mb-3'>
             <Button theme='text' onClick={() => setShowRoles(!showRoles)}>
