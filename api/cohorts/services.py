@@ -76,37 +76,38 @@ def _write_to_core_identities(
     cohort: Cohort, batch: list[CohortMembership]
 ) -> tuple[list[int], list[int]]:
     trait_key = cohort.system_trait_key
-    added_by_identifier = {
-        row.identifier: row.id
-        for row in batch
-        if row.state == CohortMembershipState.PENDING_ADD
-    }
-    removed_by_identifier = {
-        row.identifier: row.id
-        for row in batch
-        if row.state == CohortMembershipState.PENDING_REMOVE
-    }
+    added_ids: list[int] = []
+    removed_ids: list[int] = []
+    added_identifiers: list[str] = []
+    removed_identifiers: list[str] = []
+    for row in batch:
+        if row.state == CohortMembershipState.PENDING_ADD:
+            added_ids.append(row.id)
+            added_identifiers.append(row.identifier)
+        else:
+            removed_ids.append(row.id)
+            removed_identifiers.append(row.identifier)
     # A member who has never identified still gets their trait, so that it is
     # already in place the first time they do.
     Identity.objects.bulk_create(
         [
             Identity(environment_id=cohort.environment_id, identifier=identifier)
-            for identifier in added_by_identifier
+            for identifier in added_identifiers
         ],
         ignore_conflicts=True,
     )
     identities = Identity.objects.filter(environment_id=cohort.environment_id)
-    if added_by_identifier:
-        identities.filter(identifier__in=added_by_identifier).update(
+    if added_identifiers:
+        identities.filter(identifier__in=added_identifiers).update(
             system_traits=_JSONBMerge(
                 F("system_traits"), Value({trait_key: True}, JSONField())
             )
         )
-    if removed_by_identifier:
-        identities.filter(identifier__in=removed_by_identifier).update(
+    if removed_identifiers:
+        identities.filter(identifier__in=removed_identifiers).update(
             system_traits=_JSONBDropKey(F("system_traits"), Value(trait_key))
         )
-    return list(added_by_identifier.values()), list(removed_by_identifier.values())
+    return added_ids, removed_ids
 
 
 def apply_pending_memberships(cohort: Cohort) -> bool:
