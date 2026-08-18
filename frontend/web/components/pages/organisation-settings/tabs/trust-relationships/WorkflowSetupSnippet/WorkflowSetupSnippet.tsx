@@ -1,7 +1,20 @@
 import React, { FC, useMemo } from 'react'
 import CodeCard from 'components/pages/onboarding/OnboardingConnectPanel/CodeCard'
 import Icon from 'components/icons/Icon'
+import Project from 'common/project'
 import { isDefaultGithubAudience } from 'components/pages/organisation-settings/tabs/trust-relationships/github'
+
+const SAAS_API_URL = 'https://api.flagsmith.com'
+
+// The CLI defaults to the SaaS API, so the snippet only needs an explicit
+// api-url on other instances. It takes the base URL without /api/v1, which
+// the CLI appends itself.
+export const getNonDefaultApiUrl = (): string | undefined => {
+  // Project.api can be relative, e.g. /api/v1/
+  const resolved = new Request(Project.api).url
+  const baseUrl = resolved.replace(/\/api\/v1\/?$/, '')
+  return baseUrl === SAAS_API_URL ? undefined : baseUrl
+}
 
 type WorkflowSetupSnippetProps = {
   audience: string
@@ -24,8 +37,19 @@ const WorkflowSetupSnippet: FC<WorkflowSetupSnippetProps> = ({
       '    steps:',
       '      - uses: Flagsmith/setup-cli@v1',
     )
+    const withInputs: string[] = []
     if (!isDefaultAudience) {
-      lines.push('        with:', `          audience: ${audience}`)
+      withInputs.push(`audience: ${audience}`)
+    }
+    const apiUrl = getNonDefaultApiUrl()
+    if (apiUrl) {
+      withInputs.push(`api-url: ${apiUrl}`)
+    }
+    if (withInputs.length) {
+      lines.push(
+        '        with:',
+        ...withInputs.map((input) => `          ${input}`),
+      )
     }
     return lines.join('\n')
   }, [environment, isDefaultAudience, audience])
