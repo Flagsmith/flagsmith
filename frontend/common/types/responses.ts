@@ -1302,6 +1302,24 @@ export type WarehouseConnection = {
   unique_events_count: number | null
 }
 
+export type TrustRelationshipClaimRule = {
+  claim: string
+  values: string[]
+}
+
+export type TrustRelationship = {
+  id: number
+  name: string
+  issuer: string
+  audience: string
+  claim_rules: TrustRelationshipClaimRule[]
+  is_admin: boolean
+  master_api_key_id: string
+  master_api_key_prefix: string
+  created_at: string
+  created_by: number | null
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -1392,11 +1410,14 @@ export type Res = {
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   roleMasterApiKey: { id: number; master_api_key: string; role: number }
+  trustRelationship: TrustRelationship
+  trustRelationships: PagedResponse<TrustRelationship>
   masterAPIKeyWithMasterAPIKeyRoles: {
     id: string
     prefix: string
     roles: RolePermissionUser[]
   }
+  rolesMasterAPIKeyWithMasterAPIKeyRoles: PagedResponse<Role>
   userWithRoles: PagedResponse<Role>
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>

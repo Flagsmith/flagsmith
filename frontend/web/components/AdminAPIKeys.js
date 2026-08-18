@@ -7,6 +7,8 @@ import OrganisationStore from 'common/stores/organisation-store'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import Token from './Token'
 import JSONReference from './JSONReference'
+import PageTitle from './PageTitle'
+import PlanBasedBanner from './PlanBasedAccess'
 import Button from './base/forms/Button'
 import DateSelect from './DateSelect'
 import Icon from './icons/Icon'
@@ -201,8 +203,8 @@ export class CreateAPIKey extends PureComponent {
                 />
               </Flex>
               <>
-                <Row className='mb-3 mt-4'>
-                  <label className='mr-2'>Is admin</label>
+                <Row className='mb-3 mt-4 gap-2'>
+                  <label className='mb-0'>Is admin</label>
                   <Switch
                     onChange={() => {
                       this.setState({
@@ -212,7 +214,13 @@ export class CreateAPIKey extends PureComponent {
                     checked={is_admin}
                     disabled={!Utils.getPlansPermission('RBAC') && is_admin}
                   />
+                  <PlanBasedBanner feature='RBAC' theme='badge' />
                 </Row>
+                <PlanBasedBanner
+                  feature='RBAC'
+                  theme='description'
+                  className='mb-4'
+                />
                 {!is_admin && (
                   <>
                     <Row className='mb-3 mt-4'>
@@ -405,6 +413,9 @@ export default class AdminAPIKeys extends PureComponent {
           isLoading: false,
         })
       })
+      .catch(() => {
+        this.setState({ isLoading: false })
+      })
   }
 
   remove = (v) => {
@@ -439,12 +450,19 @@ export default class AdminAPIKeys extends PureComponent {
           title={'API Keys'}
           json={apiKeys}
         />
-        <Column className='my-4 ml-0 col-md-6'>
-          <h5 className='mb-1'>{`${'Manage'} API Keys`}</h5>
-          <p className='mb-0 fs-small lh-sm'>
-            {`API keys are used to authenticate with the Admin API.`}
-          </p>
-          <div className='mb-4 fs-small lh-sm'>
+        <div className='mt-4'>
+          <PageTitle
+            title='API keys'
+            cta={
+              <Button
+                onClick={this.createAPIKey}
+                disabled={this.state.isLoading}
+              >
+                {`Create API Key`}
+              </Button>
+            }
+          >
+            {`API keys are used to authenticate with the Admin API. `}
             <Button
               theme='text'
               href='https://docs.flagsmith.com/integrations/terraform#terraform-api-key'
@@ -453,11 +471,8 @@ export default class AdminAPIKeys extends PureComponent {
             >
               {`Learn about API Keys.`}
             </Button>
-          </div>
-          <Button onClick={this.createAPIKey} disabled={this.state.isLoading}>
-            {`Create API Key`}
-          </Button>
-        </Column>
+          </PageTitle>
+        </div>
         {(this.state.isLoading || !OrganisationStore.model?.users) && (
           <div className='text-center'>
             <Loader />
