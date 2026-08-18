@@ -39,7 +39,7 @@ proxy:
     Authorization: Api-Key FLAGSMITH_API_TOKEN
 ```
 
-- `FLAGSMITH_API_TOKEN`: obtain from Organisation Settings > API Keys in Flagsmith.
+- `FLAGSMITH_API_TOKEN`: obtain from Organisation Settings > API Access in Flagsmith.
 - If you are self-hosting Flagsmith, replace the `target` URL with your own Flagsmith API address, e.g.
   `https://flagsmith.example.com/api/v1`.
 

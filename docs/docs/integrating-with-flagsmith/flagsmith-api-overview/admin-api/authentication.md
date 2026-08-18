@@ -6,6 +6,12 @@ sidebar_label: Authentication
 To interact with the Admin API, you need to authenticate your requests using an API Token associated with your
 Organisation, or a short-lived access token obtained through an [OIDC trust relationship](#oidc-trust-relationships).
 
+:::info
+
+Granular permissions for your API tokens and OIDC trust relationships require an [Enterprise or Scale-Up subscription](https://flagsmith.com/pricing).
+
+:::
+
 ## Generating an API Token
 
 You can generate an API Token from the **Organisation Settings** page in the Flagsmith dashboard.
@@ -48,8 +54,7 @@ the same way cloud providers implement workload identity federation.
 The GitHub Actions form only asks for a repository and, optionally, a GitHub environment:
 
 - **Repository**: with the Flagsmith GitHub integration installed, pick the repository from a list — the trust
-  relationship then pins the repository's immutable ID, which is robust against renames. Without the integration, type
-  the owner and name, which are matched against the token's `repository` claim.
+  relationship then pins the repository's ID. Without the integration, type the owner and name.
 - **GitHub environment**: if set, tokens must carry the matching `environment` claim, so the workflow job must run in
   that GitHub environment.
 - **Is admin / roles**: the permissions granted to exchanged tokens — either full organisation admin, or a set of RBAC
