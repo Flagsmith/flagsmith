@@ -21,6 +21,10 @@ class Identity(models.Model):
     environment = models.ForeignKey(
         Environment, related_name="identities", on_delete=models.CASCADE
     )
+    # Traits Flagsmith owns rather than the customer, such as cohort
+    # membership. Kept off the traits table so that they are neither served to
+    # nor writable by SDKs, matching `system_traits` on edge identity documents.
+    system_traits = models.JSONField(default=dict)
 
     objects = IdentityManager()
 

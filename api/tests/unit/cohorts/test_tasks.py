@@ -10,6 +10,7 @@ from cohorts import services
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
 from cohorts.tasks import apply_cohort_membership_deltas
 from environments.dynamodb import DynamoIdentityWrapper
+from environments.identities.models import Identity
 from segments.models import Segment
 
 
@@ -79,15 +80,10 @@ def test_apply_cohort_membership_deltas__pending_removes__drops_trait_and_rows(
     assert not CohortMembership.objects.filter(cohort=edge_cohort).exists()
 
 
-def test_apply_cohort_membership_deltas__non_edge_project__skips(
+def test_apply_cohort_membership_deltas__non_edge_project__writes_to_postgres(
     cohort: Cohort,
-    mocker: MockerFixture,
-    log: StructuredLogCapture,
 ) -> None:
-    # Given
-    mocker.patch(
-        "cohorts.services.DynamoIdentityWrapper"
-    ).return_value.is_enabled = True
+    # Given - a project whose identities live in Postgres
     membership = CohortMembership.objects.create(cohort=cohort, identifier="user-1")
 
     # When
@@ -95,8 +91,9 @@ def test_apply_cohort_membership_deltas__non_edge_project__skips(
 
     # Then
     membership.refresh_from_db()
-    assert membership.state == CohortMembershipState.PENDING_ADD
-    assert log.has("membership.apply.skipped", cohort__id=cohort.id, reason="not_edge")
+    assert membership.state == CohortMembershipState.APPLIED
+    identity = Identity.objects.get(environment=cohort.environment, identifier="user-1")
+    assert identity.system_traits == {cohort.system_trait_key: True}
 
 
 def test_apply_cohort_membership_deltas__missing_cohort__skips(

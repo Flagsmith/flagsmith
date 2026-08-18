@@ -241,13 +241,13 @@ def test_create_cohort__saas_startup_plan__returns_201(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_create_cohort__non_edge_project__returns_400(
+def test_create_cohort__non_edge_project__returns_201(
     staff_client: APIClient,
     environment: Environment,
     with_project_permissions: WithProjectPermissionsCallable,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
-    # Given
+    # Given - a project whose identities live in Postgres
     with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
     with_environment_permissions(  # type: ignore[call-arg]
         [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES]
@@ -260,5 +260,5 @@ def test_create_cohort__non_edge_project__returns_400(
     response = staff_client.post(url, data={"name": "Beta users"}, format="json")
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == "Dynamo DB is not enabled for this project"
+    assert response.status_code == status.HTTP_201_CREATED
+    assert Cohort.objects.get(id=response.json()["id"]).environment == environment

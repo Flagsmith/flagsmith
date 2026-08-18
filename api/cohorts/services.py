@@ -11,6 +11,7 @@ from cohorts.metrics import flagsmith_cohorts_membership_deltas_applied_total
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
 from core.dataclasses import AuthorData
 from environments.dynamodb import DynamoIdentityWrapper
+from environments.identities.models import Identity
 from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
 from segments.services import delete_segment
 
@@ -30,15 +31,12 @@ def pending_memberships(cohort: Cohort) -> "QuerySet[CohortMembership]":
     return CohortMembership.objects.filter(cohort=cohort, state__in=_PENDING_STATES)
 
 
-def apply_pending_memberships(cohort: Cohort) -> bool:
+def _write_to_edge_identities(
+    cohort: Cohort, batch: list[CohortMembership]
+) -> tuple[list[int], list[int]]:
     identity_wrapper = DynamoIdentityWrapper()
     environment_api_key: str = cohort.environment.api_key
     trait_key = cohort.system_trait_key
-    batch = list(
-        pending_memberships(cohort).order_by("id")[:COHORT_MEMBERSHIP_APPLY_BATCH_SIZE]
-    )
-    if not batch:
-        return False
     added_ids: list[int] = []
     removed_ids: list[int] = []
     for row in batch:
@@ -56,6 +54,61 @@ def apply_pending_memberships(cohort: Cohort) -> bool:
                 trait_key=trait_key,
             )
             removed_ids.append(row.id)
+    return added_ids, removed_ids
+
+
+def _write_to_core_identities(
+    cohort: Cohort, batch: list[CohortMembership]
+) -> tuple[list[int], list[int]]:
+    trait_key = cohort.system_trait_key
+    joiners = {
+        row.identifier: row.id
+        for row in batch
+        if row.state == CohortMembershipState.PENDING_ADD
+    }
+    leavers = {
+        row.identifier: row.id
+        for row in batch
+        if row.state == CohortMembershipState.PENDING_REMOVE
+    }
+    # A member who has never identified still gets their trait, so that it is
+    # already in place the first time they do.
+    Identity.objects.bulk_create(
+        [
+            Identity(environment_id=cohort.environment_id, identifier=identifier)
+            for identifier in joiners
+        ],
+        ignore_conflicts=True,
+    )
+    with transaction.atomic():
+        # Locked for the read-modify-write below: two cohorts applying to the
+        # same identity at once would otherwise drop one of their keys.
+        identities = Identity.objects.select_for_update().filter(
+            environment_id=cohort.environment_id,
+            identifier__in=[*joiners, *leavers],
+        )
+        changed = []
+        for identity in identities:
+            if identity.identifier in joiners:
+                identity.system_traits[trait_key] = True
+            elif identity.system_traits.pop(trait_key, None) is None:
+                continue
+            changed.append(identity)
+        Identity.objects.bulk_update(changed, ["system_traits"])
+    return list(joiners.values()), list(leavers.values())
+
+
+def apply_pending_memberships(cohort: Cohort) -> bool:
+    batch = list(
+        pending_memberships(cohort).order_by("id")[:COHORT_MEMBERSHIP_APPLY_BATCH_SIZE]
+    )
+    if not batch:
+        return False
+    added_ids, removed_ids = (
+        _write_to_edge_identities(cohort, batch)
+        if edge_sync_enabled(cohort.environment.project)
+        else _write_to_core_identities(cohort, batch)
+    )
     added_count = CohortMembership.objects.filter(
         id__in=added_ids, state=CohortMembershipState.PENDING_ADD
     ).update(state=CohortMembershipState.APPLIED, updated_at=timezone.now())
