@@ -10,7 +10,7 @@ import OnboardingFlagsTable from 'components/pages/onboarding/OnboardingFlagsTab
 import OnboardingNextSteps, {
   OnboardingNextStep,
 } from 'components/pages/onboarding/OnboardingNextSteps'
-import { useRolloutQuest } from 'components/pages/onboarding/OnboardingRolloutQuest'
+import { openRolloutQuest } from 'components/pages/onboarding/OnboardingRolloutQuest'
 import { useEnsureOnboardingResources } from 'components/pages/onboarding/hooks/useEnsureOnboardingResources'
 import { useOnboardingFlagRename } from 'components/pages/onboarding/hooks/useOnboardingFlagRename'
 import { useOnboardingFlag } from 'components/pages/onboarding/hooks/useOnboardingFlag'
@@ -171,12 +171,6 @@ const OnboardingFlow: FC = () => {
     organisation_id: organisationId,
     project_id: projectId,
   }
-  const openRolloutQuest = useRolloutQuest({
-    diagnosticIds,
-    featureName,
-    onContinue: () => goToFlagConfig('rollout'),
-    who: { email: profile?.email, organisation: organisationDisplayName },
-  })
 
   // Off, rollout deep-links to the overrides tab like every other next step.
   const rolloutQuestEnabled = Utils.getFlagsmithHasFeature(
@@ -184,7 +178,12 @@ const OnboardingFlow: FC = () => {
   )
   const goToNextStep = (step: OnboardingNextStep) =>
     step === 'rollout' && rolloutQuestEnabled
-      ? openRolloutQuest()
+      ? openRolloutQuest({
+          diagnosticIds,
+          featureName,
+          onContinue: () => goToFlagConfig('rollout'),
+          who: { email: profile?.email, organisation: organisationDisplayName },
+        })
       : goToFlagConfig(step)
   const trackSnippetCopied = (snippet: OnboardingSnippet) =>
     API.trackEvent({
