@@ -19,7 +19,11 @@ import { trustRelationshipErrorMessage } from 'components/pages/organisation-set
 import useTrustRelationshipRoles from 'components/pages/organisation-settings/tabs/trust-relationships/hooks/useTrustRelationshipRoles'
 import TrustRelationshipPermissionsFields from 'components/pages/organisation-settings/tabs/trust-relationships/TrustRelationshipPermissionsFields'
 import WorkflowSetupSnippet from 'components/pages/organisation-settings/tabs/trust-relationships/WorkflowSetupSnippet'
-import { GITHUB_ISSUER } from 'components/pages/organisation-settings/tabs/trust-relationships/github'
+import {
+  GITHUB_ISSUER,
+  githubWorkflowRefPattern,
+  parseGithubWorkflowFilename,
+} from 'components/pages/organisation-settings/tabs/trust-relationships/github'
 
 type GithubTrustRelationshipFormProps = {
   organisationId: number
@@ -60,6 +64,10 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
   )
   const [environment, setEnvironment] = useState(
     ruleValue(trustRelationship, 'environment') || '',
+  )
+  const [workflowFilename, setWorkflowFilename] = useState(
+    parseGithubWorkflowFilename(ruleValue(trustRelationship, 'workflow_ref')) ||
+      '',
   )
   const [isAdmin, setIsAdmin] = useState(trustRelationship?.is_admin ?? true)
   const { addRole, assignRoles, clearRoles, removeRole, roles } =
@@ -147,6 +155,12 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
     }
     if (environment.trim()) {
       claimRules.push({ claim: 'environment', values: [environment.trim()] })
+    }
+    if (workflowFilename.trim()) {
+      claimRules.push({
+        claim: 'workflow_ref',
+        values: [githubWorkflowRefPattern(workflowFilename.trim())],
+      })
     }
     const body = {
       audience,
@@ -269,6 +283,16 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
           setEnvironment(Utils.safeParseEventValue(e))
         }
         placeholder='e.g. production'
+      />
+      <InputGroup
+        title='Workflow filename (optional)'
+        tooltip='If set, only this workflow file can exchange tokens, on any branch or tag.'
+        inputProps={{ className: 'full-width' }}
+        value={workflowFilename}
+        onChange={(e: InputEvent) =>
+          setWorkflowFilename(Utils.safeParseEventValue(e))
+        }
+        placeholder='e.g. deploy.yml'
       />
       {!!audience && (
         <>
