@@ -288,6 +288,12 @@ const Constants = {
       'category': 'Onboarding',
       'event': 'Onboarding rollout quest continued',
     },
+    // Only "Maybe later". Closing the modal from its chrome is not tracked, so
+    // abandonment is viewed minus continued minus this.
+    'ONBOARDING_ROLLOUT_DISMISSED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout quest dismissed',
+    },
     'ONBOARDING_ROLLOUT_FEEDBACK': {
       'category': 'Onboarding',
       'event': 'Onboarding rollout feedback opened',

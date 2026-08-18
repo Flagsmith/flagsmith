@@ -38,7 +38,10 @@ const openRolloutQuest = ({
         closeModal()
         onContinue()
       },
-      onDismiss: () => closeModal(),
+      onDismiss: () => {
+        track(Constants.events.ONBOARDING_ROLLOUT_DISMISSED)
+        closeModal()
+      },
       onFeedback: () => {
         track(Constants.events.ONBOARDING_ROLLOUT_FEEDBACK)
         trackRolloutInterest(ROLLOUT_FEEDBACK_CLICKED, who)
