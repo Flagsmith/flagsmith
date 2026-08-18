@@ -1,8 +1,15 @@
-import React, { FC, useState } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
+import Button from 'components/base/forms/Button'
+import ProviderCard from 'components/pages/organisation-settings/tabs/trust-relationships/ProviderCard'
+import {
+  TRUST_RELATIONSHIP_PROVIDERS,
+  TrustRelationshipProvider,
+} from 'components/pages/organisation-settings/tabs/trust-relationships/providers'
 import GithubTrustRelationshipForm from 'components/pages/organisation-settings/tabs/trust-relationships/GithubTrustRelationshipForm'
 import TrustRelationshipModal from 'components/pages/organisation-settings/tabs/trust-relationships/TrustRelationshipModal'
+import './NewTrustRelationshipModal.scss'
 
-type Provider = 'github' | 'other'
+const ICON_SIZE = 40
 
 type NewTrustRelationshipModalProps = {
   organisationId: number
@@ -13,55 +20,70 @@ const NewTrustRelationshipModal: FC<NewTrustRelationshipModalProps> = ({
   existingAudiences,
   organisationId,
 }) => {
-  const [provider, setProvider] = useState<Provider | null>(null)
+  const [provider, setProvider] = useState<TrustRelationshipProvider | null>(
+    null,
+  )
+  const formRef = useRef<HTMLDivElement>(null)
 
-  if (provider === 'github') {
+  useEffect(() => {
+    // Land on the first field, which depends on the provider and, for GitHub, on
+    // whether the integration is installed.
+    formRef.current
+      ?.querySelector<HTMLElement>(
+        'input:not([readonly]):not([type=hidden]), textarea',
+      )
+      ?.focus()
+  }, [provider])
+
+  if (!provider) {
     return (
-      <GithubTrustRelationshipForm
-        organisationId={organisationId}
-        existingAudiences={existingAudiences}
-      />
+      <div className='p-4'>
+        <p className='text-secondary mb-3'>
+          Choose how your CI will authenticate.
+        </p>
+        <div className='d-flex flex-column gap-3'>
+          {TRUST_RELATIONSHIP_PROVIDERS.map((option) => (
+            <ProviderCard
+              key={option.key}
+              onClick={() => setProvider(option)}
+              icon={option.icon(ICON_SIZE)}
+              title={option.label}
+              description={option.description}
+              badge={option.badge}
+            />
+          ))}
+        </div>
+      </div>
     )
-  }
-  if (provider === 'other') {
-    return <TrustRelationshipModal organisationId={organisationId} />
   }
 
   return (
-    <div className='p-4'>
-      <div
-        className='panel--grey p-3 mb-3 clickable'
-        data-test='provider-github'
-        role='button'
-        tabIndex={0}
-        onClick={() => setProvider('github')}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') setProvider('github')
-        }}
-      >
-        <h6 className='mb-1'>GitHub Actions</h6>
-        <div className='text-muted fs-small'>
-          Let workflows in a GitHub repository authenticate with their OIDC job
-          token. Recommended if your CI runs on GitHub Actions.
+    <>
+      <div className='px-4 pt-4'>
+        <div className='fs-small text-secondary text-uppercase mb-2'>
+          Provider
+        </div>
+        <div className='new-trust-relationship__provider d-flex align-items-center gap-3 p-3 rounded-lg bg-surface-subtle'>
+          <span className='d-flex' aria-hidden>
+            {provider.icon(ICON_SIZE - 12)}
+          </span>
+          <div className='flex-fill fw-semibold'>{provider.label}</div>
+          <Button theme='text' onClick={() => setProvider(null)}>
+            Change
+          </Button>
         </div>
       </div>
-      <div
-        className='panel--grey p-3 clickable'
-        data-test='provider-other'
-        role='button'
-        tabIndex={0}
-        onClick={() => setProvider('other')}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') setProvider('other')
-        }}
-      >
-        <h6 className='mb-1'>Other OIDC provider</h6>
-        <div className='text-muted fs-small'>
-          Configure a custom issuer, audience and claim matching rules for any
-          OIDC identity provider, such as GitLab CI or Kubernetes.
-        </div>
+      <div ref={formRef}>
+        {provider.key === 'github' ? (
+          <GithubTrustRelationshipForm
+            organisationId={organisationId}
+            existingAudiences={existingAudiences}
+          />
+        ) : (
+          <TrustRelationshipModal organisationId={organisationId} />
+        )}
       </div>
-    </div>
+    </>
   )
 }
 

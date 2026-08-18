@@ -1,6 +1,7 @@
 import { TrustRelationship } from 'common/types/responses'
 
 export const GITHUB_ISSUER = 'https://token.actions.githubusercontent.com'
+export const GITHUB_LABEL = 'GitHub Actions'
 
 // Claims the GitHub form can round-trip; anything else edits as freeform.
 const GITHUB_FORM_CLAIMS = ['repository', 'repository_id', 'environment']
