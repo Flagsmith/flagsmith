@@ -27,10 +27,6 @@
     min-width: 0;
   }
 
-  &__name {
-    font-weight: var(--font-weight-medium);
-  }
-
   // A grid rather than two rows, so both values start at the same edge however
   // wide the labels render.
   &__config {
@@ -41,21 +37,9 @@
     margin: 0;
     // Keeps the label on the first line of a value that wraps.
     align-items: baseline;
-
-    // The list's own margins would break the grid rows apart.
-    dt,
-    dd {
-      margin: 0;
-    }
   }
 
   &__config-label {
-    font-weight: var(--font-weight-medium);
     letter-spacing: 0.04em;
-  }
-
-  // Issuers and audiences are long and have no spaces to break on.
-  &__config-value {
-    overflow-wrap: anywhere;
   }
 }
