@@ -43,13 +43,13 @@ const ConfigurationCell: FC<{ trustRelationship: TrustRelationship }> = ({
   trustRelationship,
 }) => (
   <dl className='trust-relationships__config'>
-    <dt className='trust-relationships__config-label font-weight-medium fs-captionSmall text-secondary text-uppercase m-0'>
+    <dt className='font-weight-medium fs-captionSmall text-secondary text-uppercase m-0'>
       Issuer
     </dt>
     <dd className='font-monospace text-break m-0'>
       {trustRelationship.issuer}
     </dd>
-    <dt className='trust-relationships__config-label font-weight-medium fs-captionSmall text-secondary text-uppercase m-0'>
+    <dt className='font-weight-medium fs-captionSmall text-secondary text-uppercase m-0'>
       Audience
     </dt>
     <dd className='font-monospace text-break m-0'>

@@ -1,8 +1,7 @@
-// Column widths and the issuer/audience grid: what the utilities cannot express.
 .trust-relationships {
-  // Both cells stack two lines, so they need more room than `.table-column`
-  // gives a single-line cell. Qualified so it outranks the shorthand there
-  // whichever order the two stylesheets land in.
+  // 12px matches the side padding and gives the two stacked lines room.
+  // Double class so it beats `.table-column`'s padding shorthand whichever
+  // order the stylesheets land in.
   &__name-column.table-column,
   &__config-column.table-column {
     padding-block: 0.75rem;
@@ -13,7 +12,6 @@
     min-width: 0;
   }
 
-  // The two URLs need roughly twice the room the name does.
   &__config-column {
     flex: 2 1 0;
     min-width: 0;
@@ -23,6 +21,7 @@
     flex: 0 0 80px;
   }
 
+  // Lets a long name shrink rather than widen the column and break the ratio.
   &__name-body {
     min-width: 0;
   }
@@ -37,9 +36,5 @@
     margin: 0;
     // Keeps the label on the first line of a value that wraps.
     align-items: baseline;
-  }
-
-  &__config-label {
-    letter-spacing: 0.04em;
   }
 }
