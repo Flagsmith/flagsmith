@@ -19,6 +19,13 @@ import {
 } from 'common/services/useTrustRelationship'
 import './TrustRelationships.scss'
 
+// Header and body cells share these, so a column cannot drift out of alignment.
+const COLUMN = {
+  config: 'trust-relationships__config-column table-column',
+  name: 'trust-relationships__name-column table-column px-3',
+  narrow: 'trust-relationships__narrow-column table-column',
+}
+
 const NameCell: FC<{ trustRelationship: TrustRelationship }> = ({
   trustRelationship,
 }) => (
@@ -161,18 +168,10 @@ const TrustRelationships: FC<TrustRelationshipsProps> = ({
           items={data.results}
           header={
             <Row className='table-header'>
-              <div className='trust-relationships__name-column table-column px-3'>
-                Name
-              </div>
-              <div className='trust-relationships__config-column table-column'>
-                OIDC configuration
-              </div>
-              <div className='trust-relationships__narrow-column table-column'>
-                Is admin
-              </div>
-              <div className='trust-relationships__narrow-column table-column'>
-                Remove
-              </div>
+              <div className={COLUMN.name}>Name</div>
+              <div className={COLUMN.config}>OIDC configuration</div>
+              <div className={COLUMN.narrow}>Is admin</div>
+              <div className={COLUMN.narrow}>Remove</div>
             </Row>
           }
           renderRow={(trustRelationship: TrustRelationship) => (
@@ -182,19 +181,19 @@ const TrustRelationships: FC<TrustRelationshipsProps> = ({
               onClick={() => editTrustRelationship(trustRelationship)}
               data-test={`trust-relationship-${trustRelationship.id}`}
             >
-              <div className='trust-relationships__name-column table-column px-3'>
+              <div className={COLUMN.name}>
                 <NameCell trustRelationship={trustRelationship} />
               </div>
-              <div className='trust-relationships__config-column table-column'>
+              <div className={COLUMN.config}>
                 <ConfigurationCell trustRelationship={trustRelationship} />
               </div>
               <div
-                className='trust-relationships__narrow-column table-column'
+                className={COLUMN.narrow}
                 onClick={(e) => e.stopPropagation()}
               >
                 <Switch checked={trustRelationship.is_admin} disabled />
               </div>
-              <div className='trust-relationships__narrow-column table-column'>
+              <div className={COLUMN.narrow}>
                 <Button
                   className='btn btn-with-icon'
                   onClick={(e) => {
