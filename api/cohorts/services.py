@@ -10,13 +10,15 @@ from cohorts.constants import COHORT_MEMBERSHIP_APPLY_BATCH_SIZE
 from cohorts.metrics import flagsmith_cohorts_membership_deltas_applied_total
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
 from core.dataclasses import AuthorData
-from environments.dynamodb import DynamoIdentityWrapper
+from environments.identities.system_traits import (
+    set_system_trait,
+    unset_system_trait,
+)
 from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
 from segments.services import delete_segment
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
-    from projects.models import Project
 
 logger = structlog.get_logger("cohorts")
 
@@ -31,9 +33,6 @@ def pending_memberships(cohort: Cohort) -> "QuerySet[CohortMembership]":
 
 
 def apply_pending_memberships(cohort: Cohort) -> bool:
-    identity_wrapper = DynamoIdentityWrapper()
-    environment_api_key: str = cohort.environment.api_key
-    trait_key = cohort.system_trait_key
     batch = list(
         pending_memberships(cohort).order_by("id")[:COHORT_MEMBERSHIP_APPLY_BATCH_SIZE]
     )
@@ -41,21 +40,19 @@ def apply_pending_memberships(cohort: Cohort) -> bool:
         return False
     added_ids: list[int] = []
     removed_ids: list[int] = []
+    added_identifiers: list[str] = []
+    removed_identifiers: list[str] = []
     for row in batch:
         if row.state == CohortMembershipState.PENDING_ADD:
-            identity_wrapper.set_system_trait(
-                environment_api_key=environment_api_key,
-                identifier=row.identifier,
-                trait_key=trait_key,
-            )
             added_ids.append(row.id)
+            added_identifiers.append(row.identifier)
         else:
-            identity_wrapper.unset_system_trait(
-                environment_api_key=environment_api_key,
-                identifier=row.identifier,
-                trait_key=trait_key,
-            )
             removed_ids.append(row.id)
+            removed_identifiers.append(row.identifier)
+    environment = cohort.environment
+    trait_key = cohort.system_trait_key
+    set_system_trait(environment, trait_key, added_identifiers)
+    unset_system_trait(environment, trait_key, removed_identifiers)
     added_count = CohortMembership.objects.filter(
         id__in=added_ids, state=CohortMembershipState.PENDING_ADD
     ).update(state=CohortMembershipState.APPLIED, updated_at=timezone.now())
@@ -109,10 +106,6 @@ def create_cohort(
         organisation__id=environment.project.organisation_id,
     )
     return cohort
-
-
-def edge_sync_enabled(project: "Project") -> bool:
-    return bool(project.enable_dynamo_db and DynamoIdentityWrapper().is_enabled)
 
 
 def delete_cohort(cohort: Cohort) -> None:

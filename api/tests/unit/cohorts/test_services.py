@@ -9,6 +9,7 @@ from cohorts.services import (
     delete_cohort,
 )
 from environments.dynamodb import DynamoIdentityWrapper
+from environments.identities.models import Identity
 from environments.models import Environment
 from segments.models import SegmentManagedBy, SegmentRule
 
@@ -29,12 +30,12 @@ def test_apply_pending_memberships__no_pending_rows__returns_false(
 
 
 def test_apply_pending_memberships__pending_rows__applies_and_flips(
-    cohort: Cohort,
+    edge_cohort: Cohort,
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
 ) -> None:
     # Given
-    api_key = cohort.environment.api_key
-    trait_key = cohort.system_trait_key
+    api_key = edge_cohort.environment.api_key
+    trait_key = edge_cohort.system_trait_key
     dynamodb_identity_wrapper.put_item(
         {
             "composite_key": f"{api_key}_member",
@@ -43,15 +44,15 @@ def test_apply_pending_memberships__pending_rows__applies_and_flips(
             "system_traits": {trait_key: True},
         }
     )
-    CohortMembership.objects.create(cohort=cohort, identifier="joiner")
+    CohortMembership.objects.create(cohort=edge_cohort, identifier="joiner")
     CohortMembership.objects.create(
-        cohort=cohort,
+        cohort=edge_cohort,
         identifier="member",
         state=CohortMembershipState.PENDING_REMOVE,
     )
 
     # When
-    result = apply_pending_memberships(cohort)
+    result = apply_pending_memberships(edge_cohort)
 
     # Then
     assert result is False
@@ -62,7 +63,7 @@ def test_apply_pending_memberships__pending_rows__applies_and_flips(
     assert member_document is not None
     assert member_document["system_traits"] == {}
     assert list(
-        CohortMembership.objects.filter(cohort=cohort).values_list(
+        CohortMembership.objects.filter(cohort=edge_cohort).values_list(
             "identifier", "state"
         )
     ) == [("joiner", CohortMembershipState.APPLIED)]
@@ -70,7 +71,6 @@ def test_apply_pending_memberships__pending_rows__applies_and_flips(
 
 def test_apply_pending_memberships__more_rows_than_batch__returns_true(
     cohort: Cohort,
-    dynamodb_identity_wrapper: DynamoIdentityWrapper,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -92,13 +92,17 @@ def test_apply_pending_memberships__more_rows_than_batch__returns_true(
 
 
 def test_apply_pending_memberships__row_transitioned_mid_write__not_flipped(
-    cohort: Cohort,
+    edge_cohort: Cohort,
     mocker: MockerFixture,
     log: StructuredLogCapture,
 ) -> None:
     # Given
-    membership = CohortMembership.objects.create(cohort=cohort, identifier="user-1")
-    wrapper_mock = mocker.patch("cohorts.services.DynamoIdentityWrapper").return_value
+    membership = CohortMembership.objects.create(
+        cohort=edge_cohort, identifier="user-1"
+    )
+    wrapper_mock = mocker.patch(
+        "environments.identities.system_traits.DynamoIdentityWrapper"
+    ).return_value
 
     def transition_row(**kwargs: str) -> None:
         CohortMembership.objects.filter(id=membership.id).update(
@@ -108,7 +112,7 @@ def test_apply_pending_memberships__row_transitioned_mid_write__not_flipped(
     wrapper_mock.set_system_trait.side_effect = transition_row
 
     # When
-    result = apply_pending_memberships(cohort)
+    result = apply_pending_memberships(edge_cohort)
 
     # Then
     membership.refresh_from_db()
@@ -180,3 +184,100 @@ def test_delete_cohort__edge__drains_traits_then_deletes(
     assert not Cohort.objects.filter(id=edge_cohort.id).exists()
     assert not CohortMembership.objects.filter(cohort_id=edge_cohort.id).exists()
     assert log.has("cohort.deletion_requested", cohort__id=edge_cohort.id)
+
+
+def test_apply_pending_memberships__postgres_project__writes_system_traits(
+    cohort: Cohort,
+) -> None:
+    # Given - a non-edge cohort, one existing identity and one never seen
+    trait_key = cohort.system_trait_key
+    existing = Identity.objects.create(
+        environment=cohort.environment, identifier="existing"
+    )
+    CohortMembership.objects.create(cohort=cohort, identifier="existing")
+    CohortMembership.objects.create(cohort=cohort, identifier="unseen")
+
+    # When
+    result = apply_pending_memberships(cohort)
+
+    # Then
+    assert result is False
+    existing.refresh_from_db()
+    assert existing.system_traits == {trait_key: True}
+    unseen = Identity.objects.get(environment=cohort.environment, identifier="unseen")
+    assert unseen.system_traits == {trait_key: True}
+    assert sorted(
+        CohortMembership.objects.filter(cohort=cohort).values_list(
+            "identifier", "state"
+        )
+    ) == [
+        ("existing", CohortMembershipState.APPLIED),
+        ("unseen", CohortMembershipState.APPLIED),
+    ]
+
+
+def test_apply_pending_memberships__postgres_project__removes_only_own_key(
+    cohort: Cohort,
+) -> None:
+    # Given - an identity carrying another cohort's key as well
+    trait_key = cohort.system_trait_key
+    identity = Identity.objects.create(
+        environment=cohort.environment,
+        identifier="member",
+        system_traits={trait_key: True, "flagsmith_cohort_other": True},
+    )
+    CohortMembership.objects.create(
+        cohort=cohort,
+        identifier="member",
+        state=CohortMembershipState.PENDING_REMOVE,
+    )
+
+    # When
+    apply_pending_memberships(cohort)
+
+    # Then
+    identity.refresh_from_db()
+    assert identity.system_traits == {"flagsmith_cohort_other": True}
+    assert not CohortMembership.objects.filter(cohort=cohort).exists()
+
+
+def test_apply_pending_memberships__removal_without_identity__deletes_membership(
+    cohort: Cohort,
+) -> None:
+    # Given - a leaver who never had an identity row
+    CohortMembership.objects.create(
+        cohort=cohort,
+        identifier="ghost",
+        state=CohortMembershipState.PENDING_REMOVE,
+    )
+
+    # When
+    apply_pending_memberships(cohort)
+
+    # Then
+    assert not CohortMembership.objects.filter(cohort=cohort).exists()
+    assert not Identity.objects.filter(identifier="ghost").exists()
+
+
+def test_apply_pending_memberships__system_trait_already_unset__deletes_membership(
+    cohort: Cohort,
+) -> None:
+    # Given - a removal whose trait write already happened, as after a retry
+    identity = Identity.objects.create(
+        environment=cohort.environment,
+        identifier="member",
+        system_traits={"flagsmith_cohort_other": True},
+    )
+    CohortMembership.objects.create(
+        cohort=cohort,
+        identifier="member",
+        state=CohortMembershipState.PENDING_REMOVE,
+    )
+
+    # When
+    apply_pending_memberships(cohort)
+
+    # Then
+    identity.refresh_from_db()
+    assert identity.system_traits == {"flagsmith_cohort_other": True}
+    assert not CohortMembership.objects.filter(cohort=cohort).exists()

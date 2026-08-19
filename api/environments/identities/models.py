@@ -21,6 +21,8 @@ class Identity(models.Model):
     environment = models.ForeignKey(
         Environment, related_name="identities", on_delete=models.CASCADE
     )
+    # System-owned (e.g. cohort membership); unreachable by SDK and admin trait writes.
+    system_traits = models.JSONField(default=dict)
 
     objects = IdentityManager()
 
