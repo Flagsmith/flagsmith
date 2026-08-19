@@ -19,30 +19,41 @@ export type TrustRelationshipProvider = {
   icon: (size: number) => ReactNode
 }
 
+const GITHUB_PROVIDER: TrustRelationshipProvider = {
+  badge: 'Recommended',
+  description:
+    'Let workflows in a GitHub repository authenticate with their OIDC job token. Recommended if your CI runs on GitHub Actions.',
+  icon: (size) => (
+    <GithubIcon width={size} height={size} fill={colorIconDefault} />
+  ),
+  issuer: GITHUB_ISSUER,
+  key: 'github',
+  label: GITHUB_LABEL,
+}
+
+const OTHER_PROVIDER: TrustRelationshipProvider = {
+  description:
+    'Configure a custom issuer, audience and claim matching rules for any OIDC identity provider, such as GitLab CI or Kubernetes.',
+  icon: (size) => (
+    <Icon name='shield' width={size} height={size} fill={colorIconDefault} />
+  ),
+  key: 'other',
+  label: 'Other OIDC provider',
+}
+
 export const TRUST_RELATIONSHIP_PROVIDERS: TrustRelationshipProvider[] = [
-  {
-    badge: 'Recommended',
-    description:
-      'Let workflows in a GitHub repository authenticate with their OIDC job token. Recommended if your CI runs on GitHub Actions.',
-    icon: (size) => (
-      <GithubIcon width={size} height={size} fill={colorIconDefault} />
-    ),
-    issuer: GITHUB_ISSUER,
-    key: 'github',
-    label: GITHUB_LABEL,
-  },
-  {
-    description:
-      'Configure a custom issuer, audience and claim matching rules for any OIDC identity provider, such as GitLab CI or Kubernetes.',
-    icon: (size) => (
-      <Icon name='shield' width={size} height={size} fill={colorIconDefault} />
-    ),
-    key: 'other',
-    label: 'Other OIDC provider',
-  },
+  GITHUB_PROVIDER,
+  OTHER_PROVIDER,
 ]
 
 export const providerForIssuer = (
   issuer: string,
 ): TrustRelationshipProvider | undefined =>
   TRUST_RELATIONSHIP_PROVIDERS.find((provider) => provider.issuer === issuer)
+
+// Every list row carries an icon, so an issuer we have no preset for falls back
+// to the freeform provider's icon instead of leaving a gap in the column.
+export const providerIconForIssuer = (
+  issuer: string,
+  size: number,
+): ReactNode => (providerForIssuer(issuer) || OTHER_PROVIDER).icon(size)

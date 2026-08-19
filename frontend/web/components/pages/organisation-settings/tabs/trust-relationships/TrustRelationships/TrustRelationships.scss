@@ -1,0 +1,61 @@
+// Column widths and the issuer/audience grid: what the utilities cannot express.
+.trust-relationships {
+  // Both cells stack two lines, so they need more room than `.table-column`
+  // gives a single-line cell. Qualified so it outranks the shorthand there
+  // whichever order the two stylesheets land in.
+  &__name-column.table-column,
+  &__config-column.table-column {
+    padding-block: 0.75rem;
+  }
+
+  &__name-column {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  // The two URLs need roughly twice the room the name does.
+  &__config-column {
+    flex: 2 1 0;
+    min-width: 0;
+  }
+
+  &__narrow-column {
+    flex: 0 0 80px;
+  }
+
+  &__name-body {
+    min-width: 0;
+  }
+
+  &__name {
+    font-weight: var(--font-weight-medium);
+  }
+
+  // A grid rather than two rows, so both values start at the same edge however
+  // wide the labels render.
+  &__config {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 1rem;
+    row-gap: 0.25rem;
+    margin: 0;
+    // Keeps the label on the first line of a value that wraps.
+    align-items: baseline;
+
+    // The list's own margins would break the grid rows apart.
+    dt,
+    dd {
+      margin: 0;
+    }
+  }
+
+  &__config-label {
+    font-weight: var(--font-weight-medium);
+    letter-spacing: 0.04em;
+  }
+
+  // Issuers and audiences are long and have no spaces to break on.
+  &__config-value {
+    overflow-wrap: anywhere;
+  }
+}

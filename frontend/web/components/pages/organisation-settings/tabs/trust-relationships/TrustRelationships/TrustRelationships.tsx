@@ -11,27 +11,52 @@ import { trustRelationshipErrorMessage } from 'components/pages/organisation-set
 import NewTrustRelationshipModal from 'components/pages/organisation-settings/tabs/trust-relationships/NewTrustRelationshipModal'
 import TrustRelationshipModal from 'components/pages/organisation-settings/tabs/trust-relationships/TrustRelationshipModal'
 import { isGithubFormEditable } from 'components/pages/organisation-settings/tabs/trust-relationships/github'
-import { providerForIssuer } from 'components/pages/organisation-settings/tabs/trust-relationships/providers'
+import { providerIconForIssuer } from 'components/pages/organisation-settings/tabs/trust-relationships/providers'
 import { TrustRelationship } from 'common/types/responses'
 import {
   useDeleteTrustRelationshipMutation,
   useGetTrustRelationshipsQuery,
 } from 'common/services/useTrustRelationship'
+import './TrustRelationships.scss'
 
-// The issuer always reads in full; a known provider gets a badge alongside it.
-const IssuerCell: FC<{ issuer: string }> = ({ issuer }) => {
-  const provider = providerForIssuer(issuer)
-  return (
-    <Row className='gap-1 align-items-center'>
-      {!!provider && (
-        <span className='d-flex' aria-hidden>
-          {provider.icon(16)}
-        </span>
-      )}
-      <span className='font-monospace'>{issuer}</span>
-    </Row>
-  )
-}
+const NameCell: FC<{ trustRelationship: TrustRelationship }> = ({
+  trustRelationship,
+}) => (
+  <Row className='gap-2 align-items-center' noWrap>
+    <span
+      className='d-flex align-items-center justify-content-center flex-shrink-0 p-2 rounded-lg bg-surface-muted'
+      aria-hidden
+    >
+      {providerIconForIssuer(trustRelationship.issuer, 20)}
+    </span>
+    <div className='trust-relationships__name-body'>
+      <div className='trust-relationships__name'>{trustRelationship.name}</div>
+      <div className='list-item-subtitle'>
+        Created {moment(trustRelationship.created_at).format('Do MMM YYYY')}
+      </div>
+    </div>
+  </Row>
+)
+
+// Both URLs read in full, labelled, so one column carries the whole exchange.
+const ConfigurationCell: FC<{ trustRelationship: TrustRelationship }> = ({
+  trustRelationship,
+}) => (
+  <dl className='trust-relationships__config'>
+    <dt className='trust-relationships__config-label fs-captionSmall text-secondary text-uppercase'>
+      Issuer
+    </dt>
+    <dd className='trust-relationships__config-value font-monospace'>
+      {trustRelationship.issuer}
+    </dd>
+    <dt className='trust-relationships__config-label fs-captionSmall text-secondary text-uppercase'>
+      Audience
+    </dt>
+    <dd className='trust-relationships__config-value font-monospace'>
+      {trustRelationship.audience}
+    </dd>
+  </dl>
+)
 
 type TrustRelationshipsProps = {
   organisationId: number
@@ -134,13 +159,16 @@ const TrustRelationships: FC<TrustRelationshipsProps> = ({
           items={data.results}
           header={
             <Row className='table-header'>
-              <Flex className='table-column px-3'>Name</Flex>
-              <Flex className='table-column'>Issuer</Flex>
-              <Flex className='table-column'>Audience</Flex>
-              <div className='table-column' style={{ width: 80 }}>
+              <div className='trust-relationships__name-column table-column px-3'>
+                Name
+              </div>
+              <div className='trust-relationships__config-column table-column'>
+                OIDC configuration
+              </div>
+              <div className='trust-relationships__narrow-column table-column'>
                 Is admin
               </div>
-              <div className='table-column' style={{ width: 80 }}>
+              <div className='trust-relationships__narrow-column table-column'>
                 Remove
               </div>
             </Row>
@@ -152,29 +180,19 @@ const TrustRelationships: FC<TrustRelationshipsProps> = ({
               onClick={() => editTrustRelationship(trustRelationship)}
               data-test={`trust-relationship-${trustRelationship.id}`}
             >
-              <Flex className='table-column px-3'>
-                <div className='font-weight-medium'>
-                  {trustRelationship.name}
-                </div>
-                <div className='list-item-subtitle'>
-                  Created{' '}
-                  {moment(trustRelationship.created_at).format('Do MMM YYYY')}
-                </div>
-              </Flex>
-              <Flex className='table-column'>
-                <IssuerCell issuer={trustRelationship.issuer} />
-              </Flex>
-              <Flex className='table-column font-monospace'>
-                {trustRelationship.audience}
-              </Flex>
+              <div className='trust-relationships__name-column table-column px-3'>
+                <NameCell trustRelationship={trustRelationship} />
+              </div>
+              <div className='trust-relationships__config-column table-column'>
+                <ConfigurationCell trustRelationship={trustRelationship} />
+              </div>
               <div
-                className='table-column'
-                style={{ width: 80 }}
+                className='trust-relationships__narrow-column table-column'
                 onClick={(e) => e.stopPropagation()}
               >
                 <Switch checked={trustRelationship.is_admin} disabled />
               </div>
-              <div className='table-column' style={{ width: 80 }}>
+              <div className='trust-relationships__narrow-column table-column'>
                 <Button
                   className='btn btn-with-icon'
                   onClick={(e) => {
