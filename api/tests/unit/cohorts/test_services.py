@@ -71,7 +71,6 @@ def test_apply_pending_memberships__pending_rows__applies_and_flips(
 
 def test_apply_pending_memberships__more_rows_than_batch__returns_true(
     cohort: Cohort,
-    dynamodb_identity_wrapper: DynamoIdentityWrapper,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -187,7 +186,7 @@ def test_delete_cohort__edge__drains_traits_then_deletes(
     assert log.has("cohort.deletion_requested", cohort__id=edge_cohort.id)
 
 
-def test_apply_pending_memberships__core_project__writes_identity_system_traits(
+def test_apply_pending_memberships__postgres_project__writes_system_traits(
     cohort: Cohort,
 ) -> None:
     # Given - a non-edge cohort, one existing identity and one never seen
@@ -207,12 +206,17 @@ def test_apply_pending_memberships__core_project__writes_identity_system_traits(
     assert existing.system_traits == {trait_key: True}
     unseen = Identity.objects.get(environment=cohort.environment, identifier="unseen")
     assert unseen.system_traits == {trait_key: True}
-    assert list(
-        CohortMembership.objects.filter(cohort=cohort).values_list("state", flat=True)
-    ) == [CohortMembershipState.APPLIED, CohortMembershipState.APPLIED]
+    assert sorted(
+        CohortMembership.objects.filter(cohort=cohort).values_list(
+            "identifier", "state"
+        )
+    ) == [
+        ("existing", CohortMembershipState.APPLIED),
+        ("unseen", CohortMembershipState.APPLIED),
+    ]
 
 
-def test_apply_pending_memberships__core_project__removes_only_own_key(
+def test_apply_pending_memberships__postgres_project__removes_only_own_key(
     cohort: Cohort,
 ) -> None:
     # Given - an identity carrying another cohort's key as well
@@ -237,7 +241,7 @@ def test_apply_pending_memberships__core_project__removes_only_own_key(
     assert not CohortMembership.objects.filter(cohort=cohort).exists()
 
 
-def test_apply_pending_memberships__unknown_core_leaver__drops_row(
+def test_apply_pending_memberships__removal_without_identity__deletes_membership(
     cohort: Cohort,
 ) -> None:
     # Given - a leaver who never had an identity row
@@ -255,10 +259,10 @@ def test_apply_pending_memberships__unknown_core_leaver__drops_row(
     assert not Identity.objects.filter(identifier="ghost").exists()
 
 
-def test_apply_pending_memberships__leaver_key_already_gone__drops_row(
+def test_apply_pending_memberships__system_trait_already_unset__deletes_membership(
     cohort: Cohort,
 ) -> None:
-    # Given - an identity whose key was already removed, as after a retry
+    # Given - a removal whose trait write already happened, as after a retry
     identity = Identity.objects.create(
         environment=cohort.environment,
         identifier="member",

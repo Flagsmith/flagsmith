@@ -67,7 +67,7 @@ def test_set_system_trait__called_twice__stays_set(
 
 
 @pytest.mark.parametrize("target_environment", _ENVIRONMENTS)
-def test_unset_system_trait__member__leaves_other_keys(
+def test_unset_system_trait__other_traits_present__removes_only_given_key(
     target_environment: Environment,
 ) -> None:
     # Given
@@ -83,22 +83,32 @@ def test_unset_system_trait__member__leaves_other_keys(
 
 
 @pytest.mark.parametrize("target_environment", _ENVIRONMENTS)
-def test_unset_system_trait__never_set__no_error(
+def test_unset_system_trait__trait_never_set__leaves_identity_unchanged(
     target_environment: Environment,
 ) -> None:
     # Given / When
     unset_system_trait(target_environment, _TRAIT_KEY, ["stranger"])
 
     # Then
-    assert _stored_system_traits(target_environment, "stranger") in (None, {})
+    assert _stored_system_traits(target_environment, "stranger") is None
 
 
 @pytest.mark.parametrize("target_environment", _ENVIRONMENTS)
-def test_set_system_trait__no_identifiers__does_nothing(
+def test_set_system_trait__no_identifiers__creates_no_identity(
     target_environment: Environment,
 ) -> None:
     # Given / When
     set_system_trait(target_environment, _TRAIT_KEY, [])
+
+    # Then
+    assert not Identity.objects.filter(environment=target_environment).exists()
+
+
+@pytest.mark.parametrize("target_environment", _ENVIRONMENTS)
+def test_unset_system_trait__no_identifiers__creates_no_identity(
+    target_environment: Environment,
+) -> None:
+    # Given / When
     unset_system_trait(target_environment, _TRAIT_KEY, [])
 
     # Then

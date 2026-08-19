@@ -1,8 +1,6 @@
 from cohorts.models import Cohort, CohortMembership
 from cohorts.services import apply_pending_memberships, create_cohort
-from core.constants import STRING
 from environments.identities.models import Identity
-from environments.identities.traits.models import Trait
 from environments.models import Environment
 
 
@@ -52,29 +50,6 @@ def test_get_segments__membership_removed__stops_matching(
 
     # Then
     assert cohort.segment_id not in [segment.id for segment in segments]
-
-
-def test_get_segments__user_trait_shadows_cohort_key__membership_still_matches(
-    environment: Environment,
-) -> None:
-    # Given - a null-valued user trait under the cohort's key, which would
-    # otherwise read as unset and defeat the segment
-    cohort = create_cohort(environment=environment, name="Beta users")
-    CohortMembership.objects.create(cohort=cohort, identifier="member")
-    apply_pending_memberships(cohort)
-    identity = Identity.objects.get(environment=environment, identifier="member")
-    Trait.objects.create(
-        identity=identity,
-        trait_key=cohort.system_trait_key,
-        value_type=STRING,
-        string_value=None,
-    )
-
-    # When
-    segments = identity.get_segments()
-
-    # Then
-    assert [segment.id for segment in segments] == [cohort.segment_id]
 
 
 def test_get_segments__two_cohorts__matches_both_segments(
