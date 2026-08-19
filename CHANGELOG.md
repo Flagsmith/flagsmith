@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.264.0](https://github.com/Flagsmith/flagsmith/compare/v2.263.0...v2.264.0) (2026-08-19)
+
+
+### Features
+
+* **OIDC:** adjusts for the trust relationships UI ([#8313](https://github.com/Flagsmith/flagsmith/issues/8313)) ([aedcac7](https://github.com/Flagsmith/flagsmith/commit/aedcac7cdfadf5094777e601e8a99d355b430b1f))
+
+
+### Bug Fixes
+
+* First evaluation never reported for environments with compressed documents ([#8323](https://github.com/Flagsmith/flagsmith/issues/8323)) ([bf67ab5](https://github.com/Flagsmith/flagsmith/commit/bf67ab517467ca48bd521b33b9109731e00ef014))
+* **onboarding:** let segment overrides match the entry decision ([#8288](https://github.com/Flagsmith/flagsmith/issues/8288)) ([b563f09](https://github.com/Flagsmith/flagsmith/commit/b563f09f7148b0d64d9ad7b986cf5889e4ef9c86))
+* **value-editor:** restore the border on JSON values ([#8285](https://github.com/Flagsmith/flagsmith/issues/8285)) ([b367023](https://github.com/Flagsmith/flagsmith/commit/b3670237f47d42036b389630d0a11a9f6946b8d6))
+
 ## [2.263.0](https://github.com/Flagsmith/flagsmith/compare/v2.262.0...v2.263.0) (2026-08-19)
 
 
