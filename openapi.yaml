@@ -1681,6 +1681,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AmplitudeListResponse'
+      security:
+        - Cohort Sync Key: []
       tags:
         - Other
   '/api/v1/cohort-sync/amplitude/lists/{id}/add/':
@@ -1707,6 +1709,8 @@ paths:
       responses:
         '200':
           description: No response body
+      security:
+        - Cohort Sync Key: []
       tags:
         - Other
   '/api/v1/cohort-sync/amplitude/lists/{id}/remove/':
@@ -1733,6 +1737,8 @@ paths:
       responses:
         '200':
           description: No response body
+      security:
+        - Cohort Sync Key: []
       tags:
         - Other
   /api/v1/environment-document/:
@@ -29352,6 +29358,10 @@ components:
       required:
         - type
   securitySchemes:
+    Cohort Sync Key:
+      type: http
+      scheme: bearer
+      description: 'For cohort sync endpoints called by an external cohort source, such as Amplitude.'
     Environment API Key:
       type: apiKey
       in: header
