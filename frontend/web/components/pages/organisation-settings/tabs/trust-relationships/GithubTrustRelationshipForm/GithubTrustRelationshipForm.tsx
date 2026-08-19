@@ -1,8 +1,8 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
-import Input from 'components/base/forms/Input'
 import InputGroup from 'components/base/forms/InputGroup'
+import Link from 'components/base/link'
 import Utils from 'common/utils/utils'
 import {
   Repository,
@@ -211,14 +211,12 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
       />
       <div className='text-muted mb-3'>
         Install the{' '}
-        <Button
-          theme='text'
-          className='fw-normal'
+        <Link
           href={`/organisation/${organisationId}/integrations`}
           target='_blank'
         >
           Flagsmith GitHub integration
-        </Button>{' '}
+        </Link>{' '}
         to pick repositories from a list.
       </div>
     </>
@@ -227,13 +225,8 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
     repositoryFields = (
       <InputGroup
         title='Repository'
-        component={
-          <Input
-            className='full-width'
-            value={`Pinned by repository ID ${pinnedRepoId}`}
-            readOnly
-          />
-        }
+        value={`Pinned by repository ID ${pinnedRepoId}`}
+        inputProps={{ className: 'full-width', readOnly: true }}
       />
     )
   } else if (installationId) {
@@ -281,9 +274,8 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
         <>
           <InputGroup
             title='Audience'
-            component={
-              <Input className='full-width' value={audience} readOnly />
-            }
+            value={audience}
+            inputProps={{ className: 'full-width', readOnly: true }}
           />
           <WorkflowSetupSnippet
             audience={audience}
@@ -308,9 +300,8 @@ const GithubTrustRelationshipForm: FC<GithubTrustRelationshipFormProps> = ({
       <div className='text-right mt-4'>
         <Button
           onClick={save}
-          disabled={
-            (!repoFullName && !isUnresolvedPin) || isCreating || isUpdating
-          }
+          disabled={!repoFullName && !isUnresolvedPin}
+          isLoading={isCreating || isUpdating}
         >
           {isEdit ? 'Save trust relationship' : 'Create trust relationship'}
         </Button>

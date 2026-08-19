@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useState } from 'react'
+import React, { FC, useId, useMemo, useState } from 'react'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
 import FieldLabel from 'components/base/forms/FieldLabel'
@@ -32,6 +32,8 @@ const TrustRelationshipModal: FC<TrustRelationshipModalProps> = ({
   trustRelationship,
 }) => {
   const isEdit = !!trustRelationship
+  const claimRulesLabelId = useId()
+  const valuesHintId = useId()
   const [name, setName] = useState(trustRelationship?.name || '')
   const [issuer, setIssuer] = useState(trustRelationship?.issuer || '')
   const [audience, setAudience] = useState(trustRelationship?.audience || '')
@@ -148,53 +150,58 @@ const TrustRelationshipModal: FC<TrustRelationshipModalProps> = ({
         onChange={(e: InputEvent) => setAudience(Utils.safeParseEventValue(e))}
         placeholder='e.g. https://github.com/YourOrg'
       />
-      <FieldLabel>Claim matching rules</FieldLabel>
-      {claimRules.map((rule, index) => (
-        <Row key={index} className='mb-2 gap-2'>
-          <Flex>
-            <Input
-              value={rule.claim}
-              className='full-width'
-              onChange={(e: InputEvent) =>
-                setClaimRules((rules) =>
-                  rules.map((r, i) =>
-                    i === index
-                      ? { ...r, claim: Utils.safeParseEventValue(e) }
-                      : r,
-                  ),
-                )
+      <FieldLabel id={claimRulesLabelId}>Claim matching rules</FieldLabel>
+      <div role='group' aria-labelledby={claimRulesLabelId}>
+        {claimRules.map((rule, index) => (
+          <Row key={index} className='mb-2 gap-2'>
+            <Flex>
+              <Input
+                aria-label={`Claim for rule ${index + 1}`}
+                value={rule.claim}
+                className='full-width'
+                onChange={(e: InputEvent) =>
+                  setClaimRules((rules) =>
+                    rules.map((r, i) =>
+                      i === index
+                        ? { ...r, claim: Utils.safeParseEventValue(e) }
+                        : r,
+                    ),
+                  )
+                }
+                placeholder='Claim, e.g. repository'
+              />
+            </Flex>
+            <Flex>
+              <Input
+                aria-label={`Values for rule ${index + 1}`}
+                value={rule.values}
+                className='full-width'
+                onChange={(e: InputEvent) =>
+                  setClaimRules((rules) =>
+                    rules.map((r, i) =>
+                      i === index
+                        ? { ...r, values: Utils.safeParseEventValue(e) }
+                        : r,
+                    ),
+                  )
+                }
+                placeholder='Values, e.g. YourOrg/your-repo'
+                aria-describedby={valuesHintId}
+              />
+            </Flex>
+            <Button
+              className='btn btn-with-icon'
+              onClick={() =>
+                setClaimRules((rules) => rules.filter((_, i) => i !== index))
               }
-              placeholder='Claim, e.g. repository'
-            />
-          </Flex>
-          <Flex>
-            <Input
-              value={rule.values}
-              className='full-width'
-              onChange={(e: InputEvent) =>
-                setClaimRules((rules) =>
-                  rules.map((r, i) =>
-                    i === index
-                      ? { ...r, values: Utils.safeParseEventValue(e) }
-                      : r,
-                  ),
-                )
-              }
-              placeholder='Values, e.g. YourOrg/your-repo'
-            />
-          </Flex>
-          <Button
-            theme='text'
-            onClick={() =>
-              setClaimRules((rules) => rules.filter((_, i) => i !== index))
-            }
-            aria-label='Remove rule'
-          >
-            <Icon name='close' width={16} />
-          </Button>
-        </Row>
-      ))}
-      <div className='text-muted mb-2'>
+              aria-label={`Remove rule ${index + 1}`}
+            >
+              <Icon name='trash-2' width={20} />
+            </Button>
+          </Row>
+        ))}
+      </div>
+      <div id={valuesHintId} className='text-muted mb-2'>
         Values support * wildcards; separate alternatives with commas.
       </div>
       <Button
@@ -228,7 +235,8 @@ const TrustRelationshipModal: FC<TrustRelationshipModalProps> = ({
       <div className='text-right mt-4'>
         <Button
           onClick={save}
-          disabled={!name || !issuer || !audience || isCreating || isUpdating}
+          disabled={!name || !issuer || !audience}
+          isLoading={isCreating || isUpdating}
         >
           {isEdit ? 'Save trust relationship' : 'Create trust relationship'}
         </Button>

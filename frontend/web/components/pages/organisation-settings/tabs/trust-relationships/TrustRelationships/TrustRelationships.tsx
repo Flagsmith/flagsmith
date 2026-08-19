@@ -25,7 +25,7 @@ const IssuerCell: FC<{ issuer: string }> = ({ issuer }) => {
     <Row className='gap-1 align-items-center'>
       {!!provider && (
         <span className='d-flex' aria-hidden>
-          {provider.icon}
+          {provider.icon(16)}
         </span>
       )}
       <span className='font-monospace'>{issuer}</span>
@@ -176,14 +176,14 @@ const TrustRelationships: FC<TrustRelationshipsProps> = ({
               </div>
               <div className='table-column' style={{ width: 80 }}>
                 <Button
-                  theme='text'
+                  className='btn btn-with-icon'
                   onClick={(e) => {
                     e.stopPropagation()
                     remove(trustRelationship)
                   }}
-                  data-test={`remove-trust-relationship-${trustRelationship.id}`}
+                  aria-label={`Delete ${trustRelationship.name}`}
                 >
-                  <Icon name='trash-2' width={20} fill='#656D7B' />
+                  <Icon name='trash-2' width={20} />
                 </Button>
               </div>
             </Row>
