@@ -16,7 +16,6 @@ from cohorts.serializers import (
     AmplitudeListSerializer,
     CohortSyncMembersSerializer,
 )
-from projects.exceptions import DynamoNotEnabledError
 
 _LIST_RESPONSE = inline_serializer(
     "AmplitudeListResponse", {"list_id": serializers.UUIDField()}
@@ -43,8 +42,6 @@ class AmplitudeCohortSyncViewSet(viewsets.ViewSet):
         serializer = AmplitudeListSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         environment = self._get_key(request).environment
-        if not services.edge_sync_enabled(environment.project):
-            raise DynamoNotEnabledError()
         cohort = services.create_cohort_for_source(
             environment=environment,
             name=serializer.validated_data["name"],

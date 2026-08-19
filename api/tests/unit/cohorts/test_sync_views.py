@@ -53,12 +53,12 @@ def test_amplitude_create_list__valid_key__creates_amplitude_cohort(
     assert condition.property == cohort.system_trait_key
 
 
-def test_amplitude_create_list__non_edge_environment__returns_400(
+def test_amplitude_create_list__postgres_environment__creates_cohort(
     environment: Environment,
 ) -> None:
-    # Given
+    # Given - an environment whose identities live in Postgres
     _, plaintext = CohortSyncKey.objects.create_key(
-        name="core key", environment=environment
+        name="postgres key", environment=environment
     )
     client = _authenticated_client(plaintext)
     url = reverse("api-v1:cohort-sync:amplitude-list")
@@ -67,8 +67,9 @@ def test_amplitude_create_list__non_edge_environment__returns_400(
     response = client.post(url, data={"name": "Beta users"}, format="json")
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert not Cohort.objects.exists()
+    assert response.status_code == status.HTTP_200_OK
+    cohort = Cohort.objects.get(uuid=response.json()["list_id"])
+    assert cohort.environment == environment
 
 
 def test_amplitude_create_list__missing_credentials__returns_401(
