@@ -12,13 +12,6 @@ workflows use cases.
 
 :::info
 
-The Flagsmith CLI V2 is currently in open beta. We're excited for you to try it and provide any feedback via
-[GitHub Issues](https://github.com/Flagsmith/flagsmith-cli/issues).
-
-:::
-
-:::info
-
 Looking for the previous npm-based CLI (`@flagsmith/cli`)? Its documentation has moved to
 [Legacy CLI](/integrating-with-flagsmith/legacy-cli), along with a
 [migration guide](/integrating-with-flagsmith/legacy-cli#migrating-to-the-new-cli).
@@ -27,10 +20,16 @@ Looking for the previous npm-based CLI (`@flagsmith/cli`)? Its documentation has
 
 ## Installation
 
-Install with the install script:
+Install from Homebrew:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Flagsmith/flagsmith-cli/main/install.sh | sh
+brew install Flagsmith/tap/flagsmith
+```
+
+Or with the install script:
+
+```bash
+curl -fsSL https://get.flagsmith.com | sh
 ```
 
 This installs the binary to `$HOME/.local/bin` and adds it to your `PATH`.
@@ -39,6 +38,12 @@ On Windows:
 
 ```powershell
 irm https://raw.githubusercontent.com/Flagsmith/flagsmith-cli/main/install.ps1 | iex
+```
+
+Via NPM:
+
+```bash
+npm install -g @flagsmith/cli
 ```
 
 You can also install with Go, run it via Docker, or download a pre-built archive from
@@ -119,11 +124,22 @@ Here are some of the CI providers that support OIDC:
 - HCP Terraform / Terraform Enterprise
 - Google Cloud Platform (Cloud Build, Cloud Run, Compute Engine)
 
-On other CI systems, pass a static credential instead. Management commands expect a `FLAGSMITH_API_KEY` variable (a
+### Static credentials
+
+On CI systems that don't support OIDC, pass a static credential instead. Management commands expect a
+`FLAGSMITH_API_KEY` variable (a
 [Master API Key](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/authentication#generating-an-api-token)).
+
 If you only need `flagsmith eval`, providing an environment key via `FLAGSMITH_ENVIRONMENT_KEY` variable containing a
 [client-side](/integrating-with-flagsmith/flagsmith-api-overview/flags-api/authentication) or
 [server-side](/integrating-with-flagsmith/sdks#server-side-sdks) environment key will suffice.
+
+:::info
+
+For self-hosted Flagsmith, the CLI expects static credentials scoped to your API host. For example, for
+`https://flagsmith.corp-internal.io:8000`, the CLI will expect `FLAGSMITH_API_KEY_flagsmith_corp__internal_io_8000`.
+
+:::
 
 ### Gating pipeline steps on a flag
 
