@@ -1,6 +1,3 @@
-import pytest
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
-
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.models import Identity
 from environments.identities.system_traits import (
@@ -10,106 +7,121 @@ from environments.identities.system_traits import (
 from environments.models import Environment
 
 _TRAIT_KEY = "flagsmith_cohort_abc"
+_OTHER_KEY = "flagsmith_cohort_other"
 
 
-def _stored_system_traits(
-    environment: Environment, identifier: str
-) -> dict[str, object] | None:
-    """Read back whichever store this environment's identities live in."""
-    wrapper = DynamoIdentityWrapper()
-    if environment.project.enable_dynamo_db and wrapper.is_enabled:
-        document = wrapper.get_item(f"{environment.api_key}_{identifier}")
-        return None if document is None else dict(document.get("system_traits") or {})
-    identity = Identity.objects.filter(
-        environment=environment, identifier=identifier
-    ).first()
-    return None if identity is None else identity.system_traits
+def test_set_system_trait__postgres_unknown_identifier__creates_identity(
+    environment: Environment,
+) -> None:
+    # Given / When
+    set_system_trait(environment, _TRAIT_KEY, ["newcomer"])
+
+    # Then
+    identity = Identity.objects.get(environment=environment, identifier="newcomer")
+    assert identity.system_traits == {_TRAIT_KEY: True}
 
 
-@pytest.fixture()
-def edge_environment(
+def test_set_system_trait__postgres_called_twice__stays_set(
+    environment: Environment,
+) -> None:
+    # Given
+    set_system_trait(environment, _TRAIT_KEY, ["member"])
+
+    # When
+    set_system_trait(environment, _TRAIT_KEY, ["member"])
+
+    # Then
+    identity = Identity.objects.get(environment=environment, identifier="member")
+    assert identity.system_traits == {_TRAIT_KEY: True}
+
+
+def test_unset_system_trait__postgres_other_traits_present__removes_given_key(
+    environment: Environment,
+) -> None:
+    # Given
+    set_system_trait(environment, _TRAIT_KEY, ["member"])
+    set_system_trait(environment, _OTHER_KEY, ["member"])
+
+    # When
+    unset_system_trait(environment, _TRAIT_KEY, ["member"])
+
+    # Then
+    identity = Identity.objects.get(environment=environment, identifier="member")
+    assert identity.system_traits == {_OTHER_KEY: True}
+
+
+def test_unset_system_trait__postgres_trait_never_set__creates_no_identity(
+    environment: Environment,
+) -> None:
+    # Given / When
+    unset_system_trait(environment, _TRAIT_KEY, ["stranger"])
+
+    # Then
+    assert not Identity.objects.filter(
+        environment=environment, identifier="stranger"
+    ).exists()
+
+
+def test_set_system_trait__edge_unknown_identifier__creates_document(
     dynamo_enabled_project_environment_one: Environment,
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
-) -> Environment:
-    return dynamo_enabled_project_environment_one
-
-
-# Both stores implement one contract, so every case runs against each.
-_ENVIRONMENTS = [
-    pytest.param(lazy_fixture("environment"), id="postgres"),
-    pytest.param(lazy_fixture("edge_environment"), id="dynamodb"),
-]
-
-
-@pytest.mark.parametrize("target_environment", _ENVIRONMENTS)
-def test_set_system_trait__unknown_identifier__stores_trait(
-    target_environment: Environment,
-) -> None:
-    # Given / When
-    set_system_trait(target_environment, _TRAIT_KEY, ["newcomer"])
-
-    # Then
-    assert _stored_system_traits(target_environment, "newcomer") == {_TRAIT_KEY: True}
-
-
-@pytest.mark.parametrize("target_environment", _ENVIRONMENTS)
-def test_set_system_trait__called_twice__stays_set(
-    target_environment: Environment,
 ) -> None:
     # Given
-    set_system_trait(target_environment, _TRAIT_KEY, ["member"])
+    environment = dynamo_enabled_project_environment_one
 
     # When
-    set_system_trait(target_environment, _TRAIT_KEY, ["member"])
+    set_system_trait(environment, _TRAIT_KEY, ["newcomer"])
 
     # Then
-    assert _stored_system_traits(target_environment, "member") == {_TRAIT_KEY: True}
+    document = dynamodb_identity_wrapper.get_item(f"{environment.api_key}_newcomer")
+    assert document is not None
+    assert document["system_traits"] == {_TRAIT_KEY: True}
 
 
-@pytest.mark.parametrize("target_environment", _ENVIRONMENTS)
-def test_unset_system_trait__other_traits_present__removes_only_given_key(
-    target_environment: Environment,
+def test_set_system_trait__edge_called_twice__stays_set(
+    dynamo_enabled_project_environment_one: Environment,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
 ) -> None:
     # Given
-    other_key = "flagsmith_cohort_other"
-    set_system_trait(target_environment, _TRAIT_KEY, ["member"])
-    set_system_trait(target_environment, other_key, ["member"])
+    environment = dynamo_enabled_project_environment_one
+    set_system_trait(environment, _TRAIT_KEY, ["member"])
 
     # When
-    unset_system_trait(target_environment, _TRAIT_KEY, ["member"])
+    set_system_trait(environment, _TRAIT_KEY, ["member"])
 
     # Then
-    assert _stored_system_traits(target_environment, "member") == {other_key: True}
+    document = dynamodb_identity_wrapper.get_item(f"{environment.api_key}_member")
+    assert document is not None
+    assert document["system_traits"] == {_TRAIT_KEY: True}
 
 
-@pytest.mark.parametrize("target_environment", _ENVIRONMENTS)
-def test_unset_system_trait__trait_never_set__leaves_identity_unchanged(
-    target_environment: Environment,
+def test_unset_system_trait__edge_other_traits_present__removes_given_key(
+    dynamo_enabled_project_environment_one: Environment,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
 ) -> None:
-    # Given / When
-    unset_system_trait(target_environment, _TRAIT_KEY, ["stranger"])
+    # Given
+    environment = dynamo_enabled_project_environment_one
+    set_system_trait(environment, _TRAIT_KEY, ["member"])
+    set_system_trait(environment, _OTHER_KEY, ["member"])
+
+    # When
+    unset_system_trait(environment, _TRAIT_KEY, ["member"])
 
     # Then
-    assert _stored_system_traits(target_environment, "stranger") is None
+    document = dynamodb_identity_wrapper.get_item(f"{environment.api_key}_member")
+    assert document is not None
+    assert document["system_traits"] == {_OTHER_KEY: True}
 
 
-@pytest.mark.parametrize("target_environment", _ENVIRONMENTS)
-def test_set_system_trait__no_identifiers__creates_no_identity(
-    target_environment: Environment,
+def test_unset_system_trait__edge_trait_never_set__creates_no_document(
+    dynamo_enabled_project_environment_one: Environment,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
 ) -> None:
-    # Given / When
-    set_system_trait(target_environment, _TRAIT_KEY, [])
+    # Given
+    environment = dynamo_enabled_project_environment_one
+
+    # When
+    unset_system_trait(environment, _TRAIT_KEY, ["stranger"])
 
     # Then
-    assert not Identity.objects.filter(environment=target_environment).exists()
-
-
-@pytest.mark.parametrize("target_environment", _ENVIRONMENTS)
-def test_unset_system_trait__no_identifiers__creates_no_identity(
-    target_environment: Environment,
-) -> None:
-    # Given / When
-    unset_system_trait(target_environment, _TRAIT_KEY, [])
-
-    # Then
-    assert not Identity.objects.filter(environment=target_environment).exists()
+    assert dynamodb_identity_wrapper.get_item(f"{environment.api_key}_stranger") is None
