@@ -334,6 +334,19 @@ def test_map_environment_to_compressed_environment_document__valid_environment__
     )
 
 
+def test_map_environment_to_compressed_environment_document__not_evaluated__onboarding_pending_retained(
+    environment: "Environment",
+) -> None:
+    # Given
+    assert environment.first_evaluated_at is None
+
+    # When
+    result = dynamodb.map_environment_to_compressed_environment_document(environment)
+
+    # Then
+    assert result.document["onboarding_pending"] is True
+
+
 def test_map_environment_to_compressed_environment_document__mv_option_with_key__key_preserved(
     environment: "Environment",
     multivariate_feature: "Feature",
